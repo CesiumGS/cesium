@@ -25,6 +25,8 @@ define([
         this._showSubscription = undefined;
         this._material = undefined;
         this._materialSubscription = undefined;
+        this._vertexPositions = undefined;
+        this._vertexPositionsSubscription = undefined;
         this._width = undefined;
         this._widthSubscription = undefined;
         this._definitionChanged = new Event();
@@ -59,6 +61,13 @@ define([
         material : createDynamicPropertyDescriptor('material'),
 
         /**
+         * Gets or sets the vertex positions.
+         * @memberof DynamicPolyline.prototype
+         * @type {Property}
+         */
+        vertexPositions : createDynamicPropertyDescriptor('vertexPositions'),
+
+        /**
          * Gets or sets the numeric {@link Property} specifying the the line's width.
          * @memberof DynamicPolyline.prototype
          * @type {Property}
@@ -78,6 +87,7 @@ define([
         }
         result.show = this.show;
         result.material = this.material;
+        result.vertexPositions = this.vertexPositions;
         result.width = this.width;
         return result;
     };
@@ -97,6 +107,7 @@ define([
 
         this.show = defaultValue(this.show, source.show);
         this.material = defaultValue(this.material, source.material);
+        this.vertexPositions = defaultValue(this.vertexPositions, source.vertexPositions);
         this.width = defaultValue(this.width, source.width);
     };
 

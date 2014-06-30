@@ -49,8 +49,8 @@ defineSuite([
     function createBasicPolyline() {
         var polyline = new DynamicPolyline();
         var dynamicObject = new DynamicObject();
-        dynamicObject.vertexPositions = new ConstantProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray([new Cartographic(0, 0, 0), new Cartographic(1, 0, 0), new Cartographic(1, 1, 0), new Cartographic(0, 1, 0)]));
         dynamicObject.polyline = polyline;
+        polyline.vertexPositions = new ConstantProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray([new Cartographic(0, 0, 0), new Cartographic(1, 0, 0), new Cartographic(1, 1, 0), new Cartographic(0, 1, 0)]));
         return dynamicObject;
     }
 
@@ -125,8 +125,8 @@ defineSuite([
         var point3 = new SampledPositionProperty();
         point3.addSample(time, new Cartesian3());
 
-        dynamicObject.vertexPositions = new PropertyArray();
-        dynamicObject.vertexPositions.setValue([point1, point2, point3]);
+        dynamicObject.polyline.vertexPositions = new PropertyArray();
+        dynamicObject.polyline.vertexPositions.setValue([point1, point2, point3]);
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -271,7 +271,7 @@ defineSuite([
         var listener = jasmine.createSpy('listener');
         updater.geometryChanged.addEventListener(listener);
 
-        dynamicObject.vertexPositions = new ConstantProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray([new Cartographic(0, 0, 0), new Cartographic(1, 0, 0)]));
+        dynamicObject.polyline.vertexPositions = new ConstantProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray([new Cartographic(0, 0, 0), new Cartographic(1, 0, 0)]));
         expect(listener.callCount).toEqual(1);
 
         dynamicObject.polyline.width = new ConstantProperty(82);
@@ -280,7 +280,7 @@ defineSuite([
         dynamicObject.availability = new TimeIntervalCollection();
         expect(listener.callCount).toEqual(3);
 
-        dynamicObject.vertexPositions = undefined;
+        dynamicObject.polyline.vertexPositions = undefined;
         expect(listener.callCount).toEqual(4);
 
         //Since there's no valid geometry, changing another property should not raise the event.

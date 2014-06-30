@@ -1,24 +1,32 @@
 /*global defineSuite*/
 defineSuite([
         'DynamicScene/DynamicPolyline',
+        'Core/Color',
         'DynamicScene/ColorMaterialProperty',
-        'DynamicScene/ConstantProperty'
+        'DynamicScene/ConstantProperty',
+        'Specs/testDefinitionChanged',
+        'Specs/testMaterialDefinitionChanged'
     ], function(
         DynamicPolyline,
+        Color,
         ColorMaterialProperty,
-        ConstantProperty) {
+        ConstantProperty,
+        testDefinitionChanged,
+        testMaterialDefinitionChanged) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('merge assigns unassigned properties', function() {
         var source = new DynamicPolyline();
         source.material = new ColorMaterialProperty();
-        source.width = new ConstantProperty(1);
-        source.show = new ConstantProperty(true);
+        source.vertexPositions = new ConstantProperty();
+        source.width = new ConstantProperty();
+        source.show = new ConstantProperty();
 
         var target = new DynamicPolyline();
         target.merge(source);
         expect(target.material).toBe(source.material);
+        expect(target.vertexPositions).toBe(source.vertexPositions);
         expect(target.width).toBe(source.width);
         expect(target.show).toBe(source.show);
     });
@@ -26,20 +34,24 @@ defineSuite([
     it('merge does not assign assigned properties', function() {
         var source = new DynamicPolyline();
         source.material = new ColorMaterialProperty();
-        source.width = new ConstantProperty(1);
-        source.show = new ConstantProperty(true);
+        source.vertexPositions = new ConstantProperty();
+        source.width = new ConstantProperty();
+        source.show = new ConstantProperty();
 
         var color = new ColorMaterialProperty();
-        var width = new ConstantProperty(1);
-        var show = new ConstantProperty(true);
+        var vertexPositions = new ConstantProperty();
+        var width = new ConstantProperty();
+        var show = new ConstantProperty();
 
         var target = new DynamicPolyline();
         target.material = color;
+        target.vertexPositions = vertexPositions;
         target.width = width;
         target.show = show;
 
         target.merge(source);
         expect(target.material).toBe(color);
+        expect(target.vertexPositions).toBe(vertexPositions);
         expect(target.width).toBe(width);
         expect(target.show).toBe(show);
     });
@@ -47,11 +59,13 @@ defineSuite([
     it('clone works', function() {
         var source = new DynamicPolyline();
         source.material = new ColorMaterialProperty();
-        source.width = new ConstantProperty(1);
-        source.show = new ConstantProperty(true);
+        source.width = new ConstantProperty();
+        source.vertexPositions = new ConstantProperty();
+        source.show = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
+        expect(result.vertexPositions).toBe(source.vertexPositions);
         expect(result.width).toBe(source.width);
         expect(result.show).toBe(source.show);
     });
@@ -61,5 +75,13 @@ defineSuite([
         expect(function() {
             target.merge(undefined);
         }).toThrowDeveloperError();
+    });
+
+    it('raises definitionChanged when a property is assigned or modified', function() {
+        var property = new DynamicPolyline();
+        testMaterialDefinitionChanged(property, 'material', Color.RED, Color.BLUE);
+        testDefinitionChanged(property, 'show', true, false);
+        testDefinitionChanged(property, 'vertexPositions', [], []);
+        testDefinitionChanged(property, 'width', 3, 4);
     });
 });

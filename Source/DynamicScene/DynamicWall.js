@@ -26,6 +26,8 @@ define([
         this._showSubscription = undefined;
         this._material = undefined;
         this._materialSubscription = undefined;
+        this._vertexPositions = undefined;
+        this._vertexPositionsSubscription = undefined;
         this._minimumHeights = undefined;
         this._minimumHeightsSubscription = undefined;
         this._maximumHeights = undefined;
@@ -62,6 +64,13 @@ define([
          * @type {MaterialProperty}
          */
         material : createDynamicPropertyDescriptor('material'),
+
+        /**
+         * Gets or sets the vertex positions.
+         * @memberof DynamicWall.prototype
+         * @type {Property}
+         */
+        vertexPositions : createDynamicPropertyDescriptor('vertexPositions'),
 
         /**
          * Gets or sets the Array {@link Property} specifying the bottom heights of the wall.
@@ -124,6 +133,7 @@ define([
         }
         result.show = this.show;
         result.material = this.material;
+        result.vertexPositions = this.vertexPositions;
         result.minimumHeights = this.minimumHeights;
         result.maximumHeights = this.maximumHeights;
         result.granularity = this.granularity;
@@ -148,6 +158,7 @@ define([
 
         this.show = defaultValue(this.show, source.show);
         this.material = defaultValue(this.material, source.material);
+        this.vertexPositions = defaultValue(this.vertexPositions, source.vertexPositions);
         this.minimumHeights = defaultValue(this.minimumHeights, source.minimumHeights);
         this.maximumHeights = defaultValue(this.maximumHeights, source.maximumHeights);
         this.granularity = defaultValue(this.granularity, source.granularity);

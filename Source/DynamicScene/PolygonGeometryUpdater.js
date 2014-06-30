@@ -368,7 +368,7 @@ define([
     };
 
     PolygonGeometryUpdater.prototype._onDynamicObjectPropertyChanged = function(dynamicObject, propertyName, newValue, oldValue) {
-        if (!(propertyName === 'availability' || propertyName === 'vertexPositions' || propertyName === 'polygon')) {
+        if (!(propertyName === 'availability' || propertyName === 'polygon')) {
             return;
         }
 
@@ -401,7 +401,7 @@ define([
             return;
         }
 
-        var vertexPositions = this._dynamicObject.vertexPositions;
+        var vertexPositions = polygon.vertexPositions;
 
         var show = polygon.show;
         if ((defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE)) || //
@@ -516,7 +516,7 @@ define([
 
         var options = this._options;
 
-        var vertexPositions = dynamicObject.vertexPositions;
+        var vertexPositions = polygon.vertexPositions;
         var perPositionHeight = polygon.perPositionHeight;
         var height = polygon.height;
         var extrudedHeight = polygon.extrudedHeight;

@@ -318,7 +318,7 @@ define([
     };
 
     PolylineGeometryUpdater.prototype._onDynamicObjectPropertyChanged = function(dynamicObject, propertyName, newValue, oldValue) {
-        if (!(propertyName === 'availability' || propertyName === 'vertexPositions' || propertyName === 'polyline')) {
+        if (!(propertyName === 'availability' || propertyName === 'polyline')) {
             return;
         }
 
@@ -332,7 +332,7 @@ define([
             return;
         }
 
-        var vertexPositions = this._dynamicObject.vertexPositions;
+        var vertexPositions = polyline.vertexPositions;
 
         var show = polyline.show;
         if ((defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE)) || //
@@ -427,7 +427,7 @@ define([
         }
 
         var options = this._options;
-        var vertexPositions = dynamicObject.vertexPositions;
+        var vertexPositions = polyline.vertexPositions;
 
         var positions = vertexPositions.getValue(time, options.positions);
         //Because of the way we currently handle reference properties,

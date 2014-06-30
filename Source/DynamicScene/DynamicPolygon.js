@@ -26,6 +26,8 @@ define([
         this._showSubscription = undefined;
         this._material = undefined;
         this._materialSubscription = undefined;
+        this._vertexPositions = undefined;
+        this._vertexPositionsSubscription = undefined;
         this._height = undefined;
         this._heightSubscription = undefined;
         this._extrudedHeight = undefined;
@@ -66,6 +68,13 @@ define([
          * @type {MaterialProperty}
          */
         material : createDynamicPropertyDescriptor('material'),
+
+        /**
+         * Gets or sets the vertex positions.
+         * @memberof DynamicPolygon.prototype
+         * @type {Property}
+         */
+        vertexPositions : createDynamicPropertyDescriptor('vertexPositions'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the height of the polygon.
@@ -141,6 +150,7 @@ define([
         }
         result.show = this.show;
         result.material = this.material;
+        result.vertexPositions = this.vertexPositions;
         result.height = this.height;
         result.extrudedHeight = this.extrudedHeight;
         result.granularity = this.granularity;
@@ -167,6 +177,7 @@ define([
 
         this.show = defaultValue(this.show, source.show);
         this.material = defaultValue(this.material, source.material);
+        this.vertexPositions = defaultValue(this.vertexPositions, source.vertexPositions);
         this.height = defaultValue(this.height, source.height);
         this.extrudedHeight = defaultValue(this.extrudedHeight, source.extrudedHeight);
         this.granularity = defaultValue(this.granularity, source.granularity);

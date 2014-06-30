@@ -1,28 +1,36 @@
 /*global defineSuite*/
 defineSuite([
         'DynamicScene/DynamicPolygon',
+        'Core/Color',
         'DynamicScene/ColorMaterialProperty',
-        'DynamicScene/ConstantProperty'
+        'DynamicScene/ConstantProperty',
+        'Specs/testDefinitionChanged',
+        'Specs/testMaterialDefinitionChanged'
     ], function(
         DynamicPolygon,
+        Color,
         ColorMaterialProperty,
-        ConstantProperty) {
+        ConstantProperty,
+        testDefinitionChanged,
+        testMaterialDefinitionChanged) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('merge assigns unassigned properties', function() {
         var source = new DynamicPolygon();
         source.material = new ColorMaterialProperty();
-        source.show = new ConstantProperty(true);
-        source.height = new ConstantProperty(1);
-        source.extrudedHeight = new ConstantProperty(2);
-        source.granularity = new ConstantProperty(3);
-        source.stRotation = new ConstantProperty(4);
+        source.vertexPositions = new ConstantProperty();
+        source.show = new ConstantProperty();
+        source.height = new ConstantProperty();
+        source.extrudedHeight = new ConstantProperty();
+        source.granularity = new ConstantProperty();
+        source.stRotation = new ConstantProperty();
 
         var target = new DynamicPolygon();
         target.merge(source);
 
         expect(target.material).toBe(source.material);
+        expect(target.vertexPositions).toBe(source.vertexPositions);
         expect(target.show).toBe(source.show);
         expect(target.height).toBe(source.height);
         expect(target.extrudedHeight).toBe(source.extrudedHeight);
@@ -33,17 +41,24 @@ defineSuite([
     it('merge does not assign assigned properties', function() {
         var source = new DynamicPolygon();
         source.material = new ColorMaterialProperty();
-        source.show = new ConstantProperty(true);
+        source.vertexPositions = new ConstantProperty();
+        source.show = new ConstantProperty();
+        source.height = new ConstantProperty();
+        source.extrudedHeight = new ConstantProperty();
+        source.granularity = new ConstantProperty();
+        source.stRotation = new ConstantProperty();
 
         var material = new ColorMaterialProperty();
-        var show = new ConstantProperty(true);
-        var height = new ConstantProperty(1);
-        var extrudedHeight = new ConstantProperty(2);
-        var granularity = new ConstantProperty(3);
-        var stRotation = new ConstantProperty(4);
+        var vertexPositions = new ConstantProperty();
+        var show = new ConstantProperty();
+        var height = new ConstantProperty();
+        var extrudedHeight = new ConstantProperty();
+        var granularity = new ConstantProperty();
+        var stRotation = new ConstantProperty();
 
         var target = new DynamicPolygon();
         target.material = material;
+        target.vertexPositions = vertexPositions;
         target.show = show;
         target.height = height;
         target.extrudedHeight = extrudedHeight;
@@ -53,6 +68,7 @@ defineSuite([
         target.merge(source);
 
         expect(target.material).toBe(material);
+        expect(target.vertexPositions).toBe(vertexPositions);
         expect(target.show).toBe(show);
         expect(target.height).toBe(height);
         expect(target.extrudedHeight).toBe(extrudedHeight);
@@ -63,6 +79,7 @@ defineSuite([
     it('clone works', function() {
         var source = new DynamicPolygon();
         source.material = new ColorMaterialProperty();
+        source.vertexPositions = new ConstantProperty();
         source.show = new ConstantProperty(true);
         source.height = new ConstantProperty(1);
         source.extrudedHeight = new ConstantProperty(2);
@@ -71,6 +88,7 @@ defineSuite([
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
+        expect(result.vertexPositions).toBe(source.vertexPositions);
         expect(result.show).toBe(source.show);
         expect(result.height).toBe(source.height);
         expect(result.extrudedHeight).toBe(source.extrudedHeight);
@@ -83,5 +101,16 @@ defineSuite([
         expect(function() {
             target.merge(undefined);
         }).toThrowDeveloperError();
+    });
+
+    it('raises definitionChanged when a property is assigned or modified', function() {
+        var property = new DynamicPolygon();
+        testMaterialDefinitionChanged(property, 'material', Color.RED, Color.BLUE);
+        testDefinitionChanged(property, 'vertexPositions', [], []);
+        testDefinitionChanged(property, 'show', true, false);
+        testDefinitionChanged(property, 'height', 3, 4);
+        testDefinitionChanged(property, 'extrudedHeight', 4, 3);
+        testDefinitionChanged(property, 'granularity', 1, 2);
+        testDefinitionChanged(property, 'stRotation', 5, 6);
     });
 });

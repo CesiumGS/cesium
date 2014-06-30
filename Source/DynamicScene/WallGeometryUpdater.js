@@ -363,7 +363,7 @@ define([
     };
 
     WallGeometryUpdater.prototype._onDynamicObjectPropertyChanged = function(dynamicObject, propertyName, newValue, oldValue) {
-        if (!(propertyName === 'availability' || propertyName === 'vertexPositions' || propertyName === 'wall')) {
+        if (!(propertyName === 'availability' || propertyName === 'wall')) {
             return;
         }
 
@@ -396,7 +396,7 @@ define([
             return;
         }
 
-        var vertexPositions = this._dynamicObject.vertexPositions;
+        var vertexPositions = wall.vertexPositions;
 
         var show = wall.show;
         if ((defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE)) || //
@@ -504,7 +504,7 @@ define([
 
         var options = this._options;
 
-        var vertexPositions = dynamicObject.vertexPositions;
+        var vertexPositions = wall.vertexPositions;
         var minimumHeights = wall.minimumHeights;
         var maximumHeights = wall.maximumHeights;
         var granularity = wall.granularity;

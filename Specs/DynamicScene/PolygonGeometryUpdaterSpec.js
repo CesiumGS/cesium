@@ -49,8 +49,8 @@ defineSuite([
     function createBasicPolygon() {
         var polygon = new DynamicPolygon();
         var dynamicObject = new DynamicObject();
-        dynamicObject.vertexPositions = new ConstantProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray([new Cartographic(0, 0, 0), new Cartographic(1, 0, 0), new Cartographic(1, 1, 0), new Cartographic(0, 1, 0)]));
         dynamicObject.polygon = polygon;
+        polygon.vertexPositions = new ConstantProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray([new Cartographic(0, 0, 0), new Cartographic(1, 0, 0), new Cartographic(1, 1, 0), new Cartographic(0, 1, 0)]));
         return dynamicObject;
     }
 
@@ -133,8 +133,8 @@ defineSuite([
         var point3 = new SampledPositionProperty();
         point3.addSample(time, new Cartesian3());
 
-        dynamicObject.vertexPositions = new PropertyArray();
-        dynamicObject.vertexPositions.setValue([point1, point2, point3]);
+        dynamicObject.polygon.vertexPositions = new PropertyArray();
+        dynamicObject.polygon.vertexPositions.setValue([point1, point2, point3]);
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -377,7 +377,7 @@ defineSuite([
         var listener = jasmine.createSpy('listener');
         updater.geometryChanged.addEventListener(listener);
 
-        dynamicObject.vertexPositions = new ConstantProperty([]);
+        dynamicObject.polygon.vertexPositions = new ConstantProperty([]);
         expect(listener.callCount).toEqual(1);
 
         dynamicObject.polygon.height = new ConstantProperty(82);
@@ -386,7 +386,7 @@ defineSuite([
         dynamicObject.availability = new TimeIntervalCollection();
         expect(listener.callCount).toEqual(3);
 
-        dynamicObject.vertexPositions = undefined;
+        dynamicObject.polygon.vertexPositions = undefined;
         expect(listener.callCount).toEqual(4);
 
         //Since there's no valid geometry, changing another property should not raise the event.
