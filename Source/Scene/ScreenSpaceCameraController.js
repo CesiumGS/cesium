@@ -16,10 +16,10 @@ define([
         '../Core/Matrix4',
         '../Core/Ray',
         '../Core/Transforms',
-        './TweenCollection',
         './CameraEventAggregator',
         './CameraEventType',
-        './SceneMode'
+        './SceneMode',
+        './TweenCollection'
     ], function(
         Cartesian2,
         Cartesian3,
@@ -37,10 +37,10 @@ define([
         Matrix4,
         Ray,
         Transforms,
-        TweenCollection,
         CameraEventAggregator,
         CameraEventType,
-        SceneMode) {
+        SceneMode,
+        TweenCollection) {
     "use strict";
 
     /**
@@ -670,8 +670,6 @@ define([
     }
 
     var rotate3DRestrictedDirection = Cartesian3.clone(Cartesian3.ZERO);
-    var rotate3DScratchCartesian3 = new Cartesian3();
-    var rotate3DNegateScratch = new Cartesian3();
     var rotate3DInverseMatrixScratch = new Matrix4();
 
     function rotate3D(controller, movement, transform, constrainedAxis, restrictedAngle) {
