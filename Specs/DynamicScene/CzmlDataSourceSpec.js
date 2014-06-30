@@ -553,6 +553,31 @@ defineSuite([
         expect(dynamicObject.billboard.show.getValue(invalidTime)).toBeUndefined();
     });
 
+    it('can handle sampled billboard pixelOffset.', function() {
+        var epoch = JulianDate.now();
+
+        var billboardPacket = {
+            billboard : {
+                pixelOffset : {
+                    epoch : JulianDate.toIso8601(epoch),
+                    cartesian2 : [0, 1, 2, 1, 3, 4]
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(billboardPacket);
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+
+        expect(dynamicObject.billboard).toBeDefined();
+        // TODO: pixelOffset origin in CZML is bottom-left, Cesium is now top-left.
+        // When CZML 1.0 flips this, flip the value here to match the packet
+        var date1 = epoch;
+        var date2 = JulianDate.addSeconds(epoch, 1.0, new JulianDate());
+        expect(dynamicObject.billboard.pixelOffset.getValue(date1)).toEqual(new Cartesian2(1.0, -2.0));
+        expect(dynamicObject.billboard.pixelOffset.getValue(date2)).toEqual(new Cartesian2(3.0, -4.0));
+    });
+
     it('CZML adds clock data.', function() {
         var clockPacket = {
             id : 'document',
@@ -1164,6 +1189,31 @@ defineSuite([
         expect(dynamicObject.label.pixelOffset.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.label.scale.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.label.show.getValue(invalidTime)).toBeUndefined();
+    });
+
+    it('can handle sampled label pixelOffset.', function() {
+        var epoch = JulianDate.now();
+
+        var labelPacket = {
+            label : {
+                pixelOffset : {
+                    epoch : JulianDate.toIso8601(epoch),
+                    cartesian2 : [0, 1, 2, 1, 3, 4]
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(labelPacket);
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+
+        expect(dynamicObject.label).toBeDefined();
+        // TODO: pixelOffset origin in CZML is bottom-left, Cesium is now top-left.
+        // When CZML 1.0 flips this, flip the value here to match the packet
+        var date1 = epoch;
+        var date2 = JulianDate.addSeconds(epoch, 1.0, new JulianDate());
+        expect(dynamicObject.label.pixelOffset.getValue(date1)).toEqual(new Cartesian2(1.0, -2.0));
+        expect(dynamicObject.label.pixelOffset.getValue(date2)).toEqual(new Cartesian2(3.0, -4.0));
     });
 
     it('CZML Position works.', function() {

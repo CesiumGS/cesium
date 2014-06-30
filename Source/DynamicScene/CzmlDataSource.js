@@ -996,7 +996,17 @@ define([
     // TODO: pixelOffset origin in CZML is bottom-left, Cesium is now top-left.
     // Remove this when CZML 1.0 changes this
     function flipPixelOffsetOrigin(pixelOffsetData) {
-        pixelOffsetData.cartesian2 = [pixelOffsetData.cartesian2[0], -pixelOffsetData.cartesian2[1]];
+        var cartesian2 = pixelOffsetData.cartesian2;
+        if (cartesian2.length === 2) {
+            cartesian2 = [cartesian2[0], -cartesian2[1]];
+        } else {
+            cartesian2 = cartesian2.slice(0);
+            for (var i = 0; i < cartesian2.length; i += 3) {
+                cartesian2[i + 2] = -cartesian2[i + 2];
+            }
+        }
+
+        pixelOffsetData.cartesian2 = cartesian2;
     }
 
     function processBillboard(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
