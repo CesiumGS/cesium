@@ -1,15 +1,6 @@
 exports.defineTags = function(dictionary) {
     dictionary.lookUp('class').synonym('internalConstructor');
 
-    dictionary.defineTag('exports', {
-        mustHaveValue : true,
-        onTagged : function(doclet, tag) {
-            doclet.addTag('alias', tag.value);
-            doclet.addTag('kind', 'module');
-            doclet.longname = tag.value;
-        }
-    }).synonym('enumeration');
-
     dictionary.defineTag('glsl', {
         onTagged : function(doclet, tag) {
             doclet.addTag('kind', 'glsl');
