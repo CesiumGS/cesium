@@ -111,7 +111,7 @@ Beta Releases
   * `Event.removeEventListener` no longer throws `DeveloperError` if the `listener` does not exist; it now returns `false`.
   * Enumeration values of `SceneMode` have better correspondence with mode names to help with debugging.
   * The build process now requires [Node.js](http://nodejs.org/) to be installed on the system.
-* Cesium now supports Improved Internet Explorer 11.0.9 on desktops.  For the best results, use the new [IE Developer Channel](http://devchannel.modern.ie/) for development.
+* Cesium now supports Internet Explorer 11.0.9 on desktops.  For the best results, use the new [IE Developer Channel](http://devchannel.modern.ie/) for development.
 * `ReferenceProperty` can now handle sub-properties, for example, `myObject#billboard.scale`.
 * `DynamicObject.id` can now include period characters.
 * Added `PolylineGlowMaterialProperty` which enables data sources to use the PolylineGlow material.
