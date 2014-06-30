@@ -1,16 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/FrameRateMonitor',
-         'Core/defined',
-         'Core/getTimestamp',
-         'Specs/createScene',
-         'Specs/destroyScene'
-     ], function(
-             FrameRateMonitor,
-             defined,
-             getTimestamp,
-             createScene,
-             destroyScene) {
+        'Scene/FrameRateMonitor',
+        'Core/defined',
+        'Core/getTimestamp',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        FrameRateMonitor,
+        defined,
+        getTimestamp,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

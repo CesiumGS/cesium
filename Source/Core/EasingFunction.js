@@ -1,10 +1,10 @@
 /*global define*/
 define([
-        './freezeObject',
-        '../ThirdParty/Tween'
+        '../ThirdParty/Tween',
+        './freezeObject'
     ], function(
-        freezeObject,
-        Tween) {
+        Tween,
+        freezeObject) {
     "use strict";
 
     /**

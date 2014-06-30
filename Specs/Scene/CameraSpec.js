@@ -14,11 +14,11 @@ defineSuite([
         'Core/Rectangle',
         'Core/Transforms',
         'Core/WebMercatorProjection',
-        'Scene/TweenCollection',
         'Scene/CameraFlightPath',
         'Scene/OrthographicFrustum',
         'Scene/PerspectiveFrustum',
-        'Scene/SceneMode'
+        'Scene/SceneMode',
+        'Scene/TweenCollection'
     ], function(
         Camera,
         Cartesian2,
@@ -34,11 +34,11 @@ defineSuite([
         Rectangle,
         Transforms,
         WebMercatorProjection,
-        TweenCollection,
         CameraFlightPath,
         OrthographicFrustum,
         PerspectiveFrustum,
-        SceneMode) {
+        SceneMode,
+        TweenCollection) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
