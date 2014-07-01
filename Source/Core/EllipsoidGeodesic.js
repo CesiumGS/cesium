@@ -200,7 +200,6 @@ define([
      *
      * @alias EllipsoidGeodesic
      * @constructor
-     * @immutable
      *
      * @param {Cartographic} [start] The initial planetodetic point on the path.
      * @param {Cartographic} [end] The final planetodetic point on the path.

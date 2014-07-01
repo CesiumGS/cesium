@@ -103,6 +103,7 @@ Beta Releases
   * Replaced `color`, `outlineColor`, and `outlineWidth` in `DynamicPath` with a `material` property.
   * `ModelAnimationCollection.add` and `ModelAnimationCollection.addAll` renamed `options.startOffset` to `options.delay`.  Also renamed `ModelAnimation.startOffset` to `ModelAnimation.delay`.
   * Replaced `Scene.scene2D.projection` property with read-only `Scene.mapProjection`.  Set this with the `mapProjection` option for the `Viewer`, `CesiumWidget`, or `Scene` constructors.
+  * Moved Fresnel, Reflection, and Refraction materials to the [Materials Pack Plugin](https://github.com/AnalyticalGraphicsInc/cesium-materials-pack).
   * Renamed `Simon1994PlanetaryPositions` functions `ComputeSunPositionInEarthInertialFrame` and `ComputeMoonPositionInEarthInertialFrame` to `computeSunPositionInEarthInertialFrame` and `computeMoonPositionInEarthInertialFrame`, respectively.
   * `Scene` constructor function now takes an `options` parameter instead of individual parameters.
   * `CesiumWidget.showErrorPanel` now takes a `message` parameter in between the previous `title` and `error` parameters.
@@ -129,6 +130,7 @@ Beta Releases
 * Added `Cesium.VERSION` to the combined `Cesium.js` file.
 * Made general improvements to the [reference documentation](http://cesiumjs.org/refdoc.html).
 * Updated third-party [Tween.js](https://github.com/sole/tween.js/) from r7 to r13.
+* Updated third-party JSDoc 3.3.0-alpha5 to 3.3.0-alpha9.
 * The development web server has been rewritten in Node.js, and is now included as part of each release.
 
 ### b29 - 2014-06-02
