@@ -185,54 +185,6 @@ require(['Cesium'], function(Cesium) {
         });
     }
 
-    function applyFresnelMaterial(primitive, scene) {
-        Sandcastle.declare(applyFresnelMaterial);   // For highlighting in Sandcastle.
-
-        var imagePath = '../images/checkerboard.png';
-        primitive.material = new Cesium.Material({
-            fabric : {
-                uniforms : {
-                    image : '../images/earthspec1k.jpg'
-                },
-                materials : {
-                    fresnel : {
-                        type : 'Fresnel',
-                        materials : {
-                            reflection : {
-                                uniforms : {
-                                    cubeMap : {
-                                        positiveX : imagePath,
-                                        negativeX : imagePath,
-                                        positiveY : imagePath,
-                                        negativeY : imagePath,
-                                        positiveZ : imagePath,
-                                        negativeZ : imagePath
-                                    }
-                                }
-                            },
-                            refraction : {
-                                uniforms : {
-                                    cubeMap : {
-                                        positiveX : imagePath,
-                                        negativeX : imagePath,
-                                        positiveY : imagePath,
-                                        negativeY : imagePath,
-                                        positiveZ : imagePath,
-                                        negativeZ : imagePath
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                components: {
-                    diffuse: 'fresnel.diffuse + 0.7',
-                    alpha: '0.1 * texture2D(image, materialInput.st).r'
-                }
-            }
-        });
-    }
-
     function applyGridMaterial(primitive, scene) {
         Sandcastle.declare(applyGridMaterial); // For highlighting in Sandcastle.
         primitive.material = Cesium.Material.fromType('Grid');
@@ -273,69 +225,6 @@ require(['Cesium'], function(Cesium) {
                     diffuse : 'diffuseMaterial.diffuse',
                     specular : 0.01,
                     normal : 'normalMap.normal'
-                }
-            }
-        });
-    }
-
-    function applyReflectionMaterial(primitive, scene) {
-        Sandcastle.declare(applyReflectionMaterial);    // For highlighting in Sandcastle.
-        var imagePath = '../images/checkerboard.png';
-        primitive.material = new Cesium.Material({
-            fabric : {
-                uniforms : {
-                    image : '../images/earthspec1k.jpg'
-                },
-                materials : {
-                    reflection: {
-                        type : 'Reflection',
-                        uniforms: {
-                            cubeMap: {
-                                positiveX: imagePath,
-                                negativeX: imagePath,
-                                positiveY: imagePath,
-                                negativeY: imagePath,
-                                positiveZ: imagePath,
-                                negativeZ: imagePath
-                            }
-                        }
-                    }
-                },
-                components: {
-                    diffuse: 'reflection.diffuse + 0.7',
-                    alpha: '0.1 * texture2D(image, materialInput.st).r'
-                }
-            }
-        });
-    }
-
-    function applyRefractionMaterial(primitive, scene) {
-        Sandcastle.declare(applyRefractionMaterial);    // For highlighting in Sandcastle.
-        var imagePath = '../images/checkerboard.png';
-        primitive.material = new Cesium.Material({
-            fabric : {
-                uniforms : {
-                    image : '../images/earthspec1k.jpg'
-                },
-                materials : {
-                    refraction: {
-                        type : 'Refraction',
-                        uniforms: {
-                            cubeMap: {
-                                positiveX: imagePath,
-                                negativeX: imagePath,
-                                positiveY: imagePath,
-                                negativeY: imagePath,
-                                positiveZ: imagePath,
-                                negativeZ: imagePath
-                            },
-                            indexOfRefractionRatio: 0.9
-                        }
-                    }
-                },
-                components: {
-                    diffuse: 'refraction.diffuse + 0.7',
-                    alpha: '0.1 * texture2D(image, materialInput.st).r'
                 }
             }
         });
@@ -503,32 +392,11 @@ require(['Cesium'], function(Cesium) {
                 Sandcastle.highlight(applyEmissionMapMaterial);
             }
         }, {
-            text : 'Fresnel',
-            onselect : function() {
-                toggleWorldRectangleVisibility();
-                applyFresnelMaterial(worldRectangle, scene);
-                Sandcastle.highlight(applyFresnelMaterial);
-            }
-        }, {
             text : 'Normal Map',
             onselect : function() {
                 toggleRectangleVisibility();
                 applyNormalMapMaterial(rectangle, scene);
                 Sandcastle.highlight(applyNormalMapMaterial);
-            }
-        }, {
-            text : 'Reflection',
-            onselect : function() {
-                toggleWorldRectangleVisibility();
-                applyReflectionMaterial(worldRectangle, scene);
-                Sandcastle.highlight(applyReflectionMaterial);
-            }
-        }, {
-            text : 'Refraction',
-            onselect : function() {
-                toggleWorldRectangleVisibility();
-                applyRefractionMaterial(worldRectangle, scene);
-                Sandcastle.highlight(applyRefractionMaterial);
             }
         }, {
             text : 'Specular Map',

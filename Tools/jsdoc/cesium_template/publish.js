@@ -235,6 +235,10 @@ exports.publish = function(taffyData, opts, tutorials) {
     data().each(function(doclet) {
          doclet.attribs = '';
 
+         doclet.longname = doclet.longname.replace(/^module:/, '')
+         if (doclet.memberof)
+             doclet.memberof = doclet.memberof.replace(/^module:/, '')
+
         if (doclet.examples) {
             doclet.examples = doclet.examples.map(function(example) {
                 var caption, code;
