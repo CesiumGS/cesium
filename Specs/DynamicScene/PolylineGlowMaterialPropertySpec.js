@@ -55,8 +55,16 @@ defineSuite([
 
         var start = new JulianDate(1, 0);
         var stop = new JulianDate(2, 0);
-        property.color.intervals.addInterval(new TimeInterval(start, stop, true, true, Color.BLUE));
-        property.glowPower.intervals.addInterval(new TimeInterval(start, stop, true, true, 0.65));
+        property.color.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : Color.BLUE
+        }));
+        property.glowPower.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : 0.65
+        }));
 
         expect(property.isConstant).toBe(false);
 
@@ -72,7 +80,7 @@ defineSuite([
 
         var result = {
             color : Color.BLUE.clone(),
-            glowPower: 0.12
+            glowPower : 0.12
         };
         var returnedResult = property.getValue(JulianDate.now(), result);
         expect(returnedResult).toBe(result);

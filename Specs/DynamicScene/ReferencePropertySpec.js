@@ -7,10 +7,10 @@ defineSuite([
         'Core/ReferenceFrame',
         'Core/TimeInterval',
         'DynamicScene/ColorMaterialProperty',
-        'DynamicScene/ConstantProperty',
         'DynamicScene/ConstantPositionProperty',
-        'DynamicScene/DynamicObject',
+        'DynamicScene/ConstantProperty',
         'DynamicScene/DynamicBillboard',
+        'DynamicScene/DynamicObject',
         'DynamicScene/DynamicObjectCollection'
     ], function(
         ReferenceProperty,
@@ -20,10 +20,10 @@ defineSuite([
         ReferenceFrame,
         TimeInterval,
         ColorMaterialProperty,
-        ConstantProperty,
         ConstantPositionProperty,
-        DynamicObject,
+        ConstantProperty,
         DynamicBillboard,
+        DynamicObject,
         DynamicObjectCollection) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -76,6 +76,7 @@ defineSuite([
         var property = ReferenceProperty.fromString(collection, 'testId#billboard.scale');
         expect(property.referenceFrame).toBeUndefined();
         expect(property.isConstant).toEqual(true);
+        expect(property.resolvedProperty).toBe(testObject.billboard.scale);
         expect(property.getValue(time)).toEqual(5);
 
         var listener = jasmine.createSpy('listener');

@@ -55,8 +55,16 @@ defineSuite([
 
         var start = new JulianDate(1, 0);
         var stop = new JulianDate(2, 0);
-        property.color.intervals.addInterval(new TimeInterval(start, stop, true, true, Color.BLUE));
-        property.outlineColor.intervals.addInterval(new TimeInterval(start, stop, true, true, Color.RED));
+        property.color.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : Color.BLUE
+        }));
+        property.outlineColor.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : Color.RED
+        }));
 
         var result = property.getValue(start);
         expect(result.color).toEqual(Color.BLUE);
@@ -157,19 +165,31 @@ defineSuite([
         var start = new JulianDate(1, 0);
         var stop = new JulianDate(2, 0);
         property.color = new TimeIntervalCollectionProperty();
-        property.color.intervals.addInterval(new TimeInterval(start, stop, true, true, Color.RED));
+        property.color.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : Color.RED
+        }));
         expect(property.isConstant).toBe(false);
 
         property.color = undefined;
         expect(property.isConstant).toBe(true);
         property.outlineColor = new TimeIntervalCollectionProperty();
-        property.outlineColor.intervals.addInterval(new TimeInterval(start, stop, true, true, Color.BLUE));
+        property.outlineColor.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : Color.BLUE
+        }));
         expect(property.isConstant).toBe(false);
 
         property.outlineColor = undefined;
         expect(property.isConstant).toBe(true);
         property.outlineWidth = new TimeIntervalCollectionProperty();
-        property.outlineWidth.intervals.addInterval(new TimeInterval(start, stop, true, true, 2.0));
+        property.outlineWidth.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : 2.0
+        }));
         expect(property.isConstant).toBe(false);
     });
 });

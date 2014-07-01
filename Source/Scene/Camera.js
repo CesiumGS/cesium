@@ -8,6 +8,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/EasingFunction',
         '../Core/Ellipsoid',
         '../Core/IntersectionTests',
         '../Core/Math',
@@ -16,7 +17,6 @@ define([
         '../Core/Quaternion',
         '../Core/Ray',
         '../Core/Transforms',
-        '../ThirdParty/Tween',
         './CameraFlightPath',
         './PerspectiveFrustum',
         './SceneMode'
@@ -29,6 +29,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        EasingFunction,
         Ellipsoid,
         IntersectionTests,
         CesiumMath,
@@ -37,7 +38,6 @@ define([
         Quaternion,
         Ray,
         Transforms,
-        Tween,
         CameraFlightPath,
         PerspectiveFrustum,
         SceneMode) {
@@ -1207,13 +1207,13 @@ define([
                 var dot = Cartesian3.dot(p, constrainedAxis);
                 var angleToAxis = CesiumMath.acosClamped(dot);
                 if (angle > 0 && angle > angleToAxis) {
-                    angle = angleToAxis;
+                    angle = angleToAxis - CesiumMath.EPSILON4;
                 }
 
                 dot = Cartesian3.dot(p, Cartesian3.negate(constrainedAxis, rotateVertScratchNegate));
                 angleToAxis = CesiumMath.acosClamped(dot);
                 if (angle < 0 && -angle > angleToAxis) {
-                    angle = -angleToAxis;
+                    angle = -angleToAxis + CesiumMath.EPSILON4;
                 }
 
                 var tangent = Cartesian3.cross(constrainedAxis, p, rotateVertScratchTan);
@@ -1766,6 +1766,8 @@ define([
             result = pickMap2D(this, windowPosition, this._projection, result);
         } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
             result = pickMapColumbusView(this, windowPosition, this._projection, result);
+        } else {
+            return undefined;
         }
 
         return result;
@@ -1895,15 +1897,15 @@ define([
             };
 
             return {
-                easingFunction : Tween.Easing.Exponential.Out,
-                startValue : {
+                easingFunction : EasingFunction.EXPONENTIAL_OUT,
+                startObject : {
                     time : 0.0
                 },
-                stopValue : {
+                stopObject : {
                     time : 1.0
                 },
                 duration : duration,
-                onUpdate : update2D
+                update : update2D
             };
         }
 
@@ -1931,15 +1933,15 @@ define([
         };
 
         return {
-            easingFunction : Tween.Easing.Exponential.Out,
-            startValue : {
+            easingFunction : EasingFunction.EXPONENTIAL_OUT,
+            startObject : {
                 time : 0.0
             },
-            stopValue : {
+            stopObject : {
                 time : 1.0
             },
             duration : duration,
-            onUpdate : updateCV
+            update : updateCV
         };
     }
 
@@ -1985,12 +1987,14 @@ define([
     /**
      * Create an animation to move the map into view. This method is only valid for 2D and Columbus modes.
      *
-     * @param {Number} duration The duration, in milliseconds, of the animation.
+     * @param {Number} duration The duration, in seconds, of the animation.
      * @returns {Object} The animation or undefined if the scene mode is 3D or the map is already ion view.
      *
      * @exception {DeveloperException} duration is required.
+     *
+     * @private
      */
-    Camera.prototype.createCorrectPositionAnimation = function(duration) {
+    Camera.prototype.createCorrectPositionTween = function(duration) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(duration)) {
             throw new DeveloperError('duration is required.');
@@ -2013,9 +2017,9 @@ define([
      * @param {Cartesian3} options.destination The final position of the camera in WGS84 (world) coordinates.
      * @param {Cartesian3} [options.direction] The final direction of the camera in WGS84 (world) coordinates. By default, the direction will point towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D.
      * @param {Cartesian3} [options.up] The final up direction in WGS84 (world) coordinates. By default, the up direction will point towards local north in 3D and in the positive y direction in Columbus view or 2D.
-     * @param {Number} [options.duration=3000] The duration of the flight in milliseconds.
-     * @param {Function} [options.onComplete] The function to execute when the flight is complete.
-     * @param {Function} [options.onCancel] The function to execute if the flight is cancelled.
+     * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
+     * @param {Function} [options.complete] The function to execute when the flight is complete.
+     * @param {Function} [options.cancel] The function to execute if the flight is cancelled.
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
      * @param {Boolean} [options.convert=true] When <code>true</code>, the destination is converted to the correct coordinate system for each scene mode. When <code>false</code>, the destination is expected
      *                  to be in the correct coordinate system.
@@ -2024,7 +2028,7 @@ define([
      */
     Camera.prototype.flyTo = function(options) {
         var scene = this._scene;
-        scene.animations.add(CameraFlightPath.createAnimation(scene, options));
+        scene.tweens.add(CameraFlightPath.createTween(scene, options));
     };
 
     /**
@@ -2032,14 +2036,14 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {Rectangle} options.destination The rectangle to view, in WGS84 (world) coordinates, which determines the final position of the camera.
-     * @param {Number} [options.duration=3000] The duration of the flight in milliseconds.
-     * @param {Function} [options.onComplete] The function to execute when the flight is complete.
-     * @param {Function} [options.onCancel] The function to execute if the flight is cancelled.
+     * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
+     * @param {Function} [options.complete] The function to execute when the flight is complete.
+     * @param {Function} [options.cancel] The function to execute if the flight is cancelled.
      * @param {Matrix4} [endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
      */
     Camera.prototype.flyToRectangle = function(options) {
         var scene = this._scene;
-        scene.animations.add(CameraFlightPath.createAnimationRectangle(scene, options));
+        scene.tweens.add(CameraFlightPath.createTweenRectangle(scene, options));
     };
 
     /**

@@ -47,7 +47,7 @@ define([
          */
         isConstant : {
             get : function() {
-                return this._intervals.empty;
+                return this._intervals.isEmpty;
             }
         },
         /**

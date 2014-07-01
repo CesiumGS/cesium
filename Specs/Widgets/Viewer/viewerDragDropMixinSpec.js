@@ -60,7 +60,7 @@ defineSuite([
 
     it('clearOnDrop defaults to true when dataSourceBrowser is not used', function() {
         viewer = new Viewer(container, {
-            dataSourceBrowser: false
+            dataSourceBrowser : false
         });
         viewer.extend(viewerDragDropMixin);
         expect(viewer.clearOnDrop).toEqual(true);
@@ -126,7 +126,9 @@ defineSuite([
 
         runs(function() {
             var dataSource = viewer.dataSources.get(0);
-            var interval = TimeInterval.fromIso8601(czml1.availability);
+            var interval = TimeInterval.fromIso8601({
+                iso8601 : czml1.availability
+            });
             expect(dataSource.dynamicObjects.getById('test')).toBeDefined();
             expect(dataSource.clock.startTime).toEqual(interval.start);
             expect(dataSource.clock.stopTime).toEqual(interval.stop);
@@ -165,7 +167,9 @@ defineSuite([
             expect(source1.dynamicObjects.getById('test')).toBeDefined();
             expect(source2.dynamicObjects.getById('test2')).toBeDefined();
             //Interval of first file should be used.
-            var interval = TimeInterval.fromIso8601(czml1.availability);
+            var interval = TimeInterval.fromIso8601({
+                iso8601 : czml1.availability
+            });
             expect(source1.clock.startTime).toEqual(interval.start);
             expect(source1.clock.stopTime).toEqual(interval.stop);
         });
@@ -203,7 +207,9 @@ defineSuite([
             expect(source1.dynamicObjects.getById('test')).toBeDefined();
             expect(source2.dynamicObjects.getById('test2')).toBeDefined();
             //Interval of first file should be used.
-            var interval = TimeInterval.fromIso8601(czml1.availability);
+            var interval = TimeInterval.fromIso8601({
+                iso8601 : czml1.availability
+            });
             expect(source1.clock.startTime).toEqual(interval.start);
             expect(source1.clock.stopTime).toEqual(interval.stop);
 
@@ -240,7 +246,9 @@ defineSuite([
             expect(source1.dynamicObjects.getById('test')).toBeDefined();
             expect(source2.dynamicObjects.getById('test2')).toBeDefined();
             //Interval of first file should be used.
-            var interval = TimeInterval.fromIso8601(czml1.availability);
+            var interval = TimeInterval.fromIso8601({
+                iso8601 : czml1.availability
+            });
             expect(source1.clock.startTime).toEqual(interval.start);
             expect(source1.clock.stopTime).toEqual(interval.stop);
         });

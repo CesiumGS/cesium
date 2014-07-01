@@ -13,6 +13,7 @@ defineSuite([
         'DynamicScene/DynamicPath',
         'DynamicScene/PolylineGlowMaterialProperty',
         'DynamicScene/PolylineOutlineMaterialProperty',
+        'DynamicScene/ReferenceProperty',
         'DynamicScene/SampledPositionProperty',
         'DynamicScene/TimeIntervalCollectionPositionProperty',
         'Specs/createScene',
@@ -31,6 +32,7 @@ defineSuite([
         DynamicPath,
         PolylineGlowMaterialProperty,
         PolylineOutlineMaterialProperty,
+        ReferenceProperty,
         SampledPositionProperty,
         TimeIntervalCollectionPositionProperty,
         createScene,
@@ -129,9 +131,9 @@ defineSuite([
 
         var polylineCollection = scene.primitives.get(0);
         var primitive = polylineCollection.get(0);
-        expect(primitive.positions[0]).toEqual(testObject.position.getValue(JulianDate.addSeconds(updateTime, -path.trailTime.getValue())));
+        expect(primitive.positions[0]).toEqual(testObject.position.getValue(JulianDate.addSeconds(updateTime, -path.trailTime.getValue(), new JulianDate())));
         expect(primitive.positions[1]).toEqual(testObject.position.getValue(updateTime));
-        expect(primitive.positions[2]).toEqual(testObject.position.getValue(JulianDate.addSeconds(updateTime, path.leadTime.getValue())));
+        expect(primitive.positions[2]).toEqual(testObject.position.getValue(JulianDate.addSeconds(updateTime, path.leadTime.getValue(), new JulianDate())));
         expect(primitive.show).toEqual(testObject.path.show.getValue(updateTime));
         expect(primitive.width).toEqual(testObject.path.width.getValue(updateTime));
 
@@ -260,6 +262,24 @@ defineSuite([
         expect(result).toEqual([property._value]);
     });
 
+    it('subSample works for reference properties', function() {
+        var property = new ConstantPositionProperty(new Cartesian3(1000, 2000, 3000));
+        var start = new JulianDate(0, 0);
+        var stop = new JulianDate(1, 0);
+        var updateTime = new JulianDate(1, 43200);
+        var referenceFrame = ReferenceFrame.FIXED;
+        var maximumStep = 10;
+
+        var dynamicObjects = new DynamicObjectCollection();
+        var targetObject = dynamicObjects.getOrCreateObject('target');
+        targetObject.position = property;
+
+        var referenceProperty = new ReferenceProperty(dynamicObjects, 'target', ['position']);
+
+        var result = DynamicPathVisualizer._subSample(referenceProperty, start, stop, updateTime, referenceFrame, maximumStep);
+        expect(result).toEqual([property._value]);
+    });
+
     it('subSample works for sampled properties', function() {
         var property = new SampledPositionProperty();
 
@@ -276,40 +296,27 @@ defineSuite([
 
         //A large maximum step causes no sub-smapling.
         DynamicPathVisualizer._subSample(property, start, stop, updateTime, referenceFrame, maximumStep, result);
-        expect(result).toEqual([property.getValue(start),
-                                property.getValue(updateTime),
-                                property.getValue(stop)]);
+        expect(result).toEqual([property.getValue(start), property.getValue(updateTime), property.getValue(stop)]);
 
         //An evenly spaced maximum step causes equal steps from start to stop
         maximumStep = 28800;
         var expectedStep = 28800;
         DynamicPathVisualizer._subSample(property, start, stop, updateTime, referenceFrame, maximumStep, result);
-        expect(result).toEqual([property.getValue(start),
-                                property.getValue(JulianDate.addSeconds(start, expectedStep)),
-                                property.getValue(updateTime),
-                                property.getValue(JulianDate.addSeconds(start, expectedStep * 2)),
-                                property.getValue(stop)]);
+        expect(result).toEqual([property.getValue(start), property.getValue(JulianDate.addSeconds(start, expectedStep, new JulianDate())), property.getValue(updateTime), property.getValue(JulianDate.addSeconds(start, expectedStep * 2, new JulianDate())), property.getValue(stop)]);
 
         //An maximum step size that is slightly more than halfway between points causes a single step halfway between points
         maximumStep = 43201;
         expectedStep = 43200;
         updateTime = new JulianDate(0, 64800);
         DynamicPathVisualizer._subSample(property, start, stop, updateTime, referenceFrame, maximumStep, result);
-        expect(result).toEqual([property.getValue(start),
-                                property.getValue(JulianDate.addSeconds(start, expectedStep)),
-                                property.getValue(updateTime),
-                                property.getValue(stop)]);
+        expect(result).toEqual([property.getValue(start), property.getValue(JulianDate.addSeconds(start, expectedStep, new JulianDate())), property.getValue(updateTime), property.getValue(stop)]);
 
         //An maximum step size that is slightly less than halfway between points causes two steps of the eqaul size to be taken between points
         maximumStep = 43199;
         expectedStep = 28800;
         updateTime = new JulianDate(0, 21600);
         DynamicPathVisualizer._subSample(property, start, stop, updateTime, referenceFrame, maximumStep, result);
-        expect(result).toEqual([property.getValue(start),
-                                property.getValue(updateTime),
-                                property.getValue(JulianDate.addSeconds(start, expectedStep)),
-                                property.getValue(JulianDate.addSeconds(start, expectedStep * 2)),
-                                property.getValue(stop)]);
+        expect(result).toEqual([property.getValue(start), property.getValue(updateTime), property.getValue(JulianDate.addSeconds(start, expectedStep, new JulianDate())), property.getValue(JulianDate.addSeconds(start, expectedStep * 2, new JulianDate())), property.getValue(stop)]);
     });
 
     it('subSample works for interval properties', function() {
@@ -319,9 +326,23 @@ defineSuite([
         var t4 = new JulianDate(3, 0);
 
         var property = new TimeIntervalCollectionPositionProperty();
-        property.intervals.addInterval(new TimeInterval(t1, t2, true, true, new Cartesian3(0, 0, 1)));
-        property.intervals.addInterval(new TimeInterval(t2, t3, false, false, new Cartesian3(0, 0, 2)));
-        property.intervals.addInterval(new TimeInterval(t3, t4, true, true, new Cartesian3(0, 0, 3)));
+        property.intervals.addInterval(new TimeInterval({
+            start : t1,
+            stop : t2,
+            data : new Cartesian3(0, 0, 1)
+        }));
+        property.intervals.addInterval(new TimeInterval({
+            start : t2,
+            stop : t3,
+            isStartIncluded : false,
+            isStopIncluded : false,
+            data : new Cartesian3(0, 0, 2)
+        }));
+        property.intervals.addInterval(new TimeInterval({
+            start : t3,
+            stop : t4,
+            data : new Cartesian3(0, 0, 3)
+        }));
 
         var updateTime = new JulianDate(1, 43200);
         var referenceFrame = ReferenceFrame.FIXED;
@@ -378,14 +399,7 @@ defineSuite([
         var maximumStep = 43200;
         var result = [];
         DynamicPathVisualizer._subSample(property, t1, t4, updateTime, referenceFrame, maximumStep, result);
-        expect(result).toEqual([sampledProperty.getValue(t1),
-                                sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep)),
-                                sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep*2)),
-                                sampledProperty.getValue(updateTime),
-                                sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep*3)),
-                                sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep*4)),
-                                sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep*5)),
-                                sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep*6))]);
+        expect(result).toEqual([sampledProperty.getValue(t1), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep, new JulianDate())), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep * 2, new JulianDate())), sampledProperty.getValue(updateTime), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep * 3, new JulianDate())), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep * 4, new JulianDate())), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep * 5, new JulianDate())), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep * 6, new JulianDate()))]);
     });
 
     it('subSample works for composite properties', function() {
@@ -393,13 +407,28 @@ defineSuite([
         var t2 = new JulianDate(1, 0);
         var t3 = new JulianDate(2, 0);
         var t4 = new JulianDate(3, 0);
+        var t5 = new JulianDate(4, 0);
 
         var constantProperty = new ConstantPositionProperty(new Cartesian3(0, 0, 1));
 
         var intervalProperty = new TimeIntervalCollectionPositionProperty();
-        intervalProperty.intervals.addInterval(new TimeInterval(t1, t2, true, true, new Cartesian3(0, 0, 1)));
-        intervalProperty.intervals.addInterval(new TimeInterval(t2, t3, false, false, new Cartesian3(0, 0, 2)));
-        intervalProperty.intervals.addInterval(new TimeInterval(t3, t4, true, true, new Cartesian3(0, 0, 3)));
+        intervalProperty.intervals.addInterval(new TimeInterval({
+            start : t1,
+            stop : t2,
+            data : new Cartesian3(0, 0, 1)
+        }));
+        intervalProperty.intervals.addInterval(new TimeInterval({
+            start : t2,
+            stop : t3,
+            isStartIncluded : false,
+            isStopIncluded : false,
+            data : new Cartesian3(0, 0, 2)
+        }));
+        intervalProperty.intervals.addInterval(new TimeInterval({
+            start : t1,
+            stop : t2,
+            data : new Cartesian3(0, 0, 3)
+        }));
 
         var sampledProperty = new SampledPositionProperty();
         sampledProperty.addSample(t1, new Cartesian3(0, 0, 1));
@@ -407,21 +436,48 @@ defineSuite([
         sampledProperty.addSample(t3, new Cartesian3(0, 0, 3));
         sampledProperty.addSample(t4, new Cartesian3(0, 0, 4));
 
+        var dynamicObjects = new DynamicObjectCollection();
+        var targetObject = dynamicObjects.getOrCreateObject('target');
+        targetObject.position = new ConstantPositionProperty(new Cartesian3(0, 0, 5));
+        var referenceProperty = new ReferenceProperty(dynamicObjects, 'target', ['position']);
+
         var property = new CompositePositionProperty();
-        property.intervals.addInterval(new TimeInterval(t1, t2, true, true, intervalProperty));
-        property.intervals.addInterval(new TimeInterval(t2, t3, false, false, constantProperty));
-        property.intervals.addInterval(new TimeInterval(t3, t4, true, true, sampledProperty));
+        property.intervals.addInterval(new TimeInterval({
+            start : t1,
+            stop : t2,
+            data : intervalProperty
+        }));
+        property.intervals.addInterval(new TimeInterval({
+            start : t2,
+            stop : t3,
+            isStartIncluded : false,
+            isStopIncluded : false,
+            data : constantProperty
+        }));
+        property.intervals.addInterval(new TimeInterval({
+            start : t3,
+            stop : t4,
+            data : sampledProperty
+        }));
+        property.intervals.addInterval(new TimeInterval({
+            start : t4,
+            stop : t5,
+            isStartIncluded : false,
+            isStopIncluded : true,
+            data : referenceProperty
+        }));
 
         var updateTime = new JulianDate(0, 0);
         var referenceFrame = ReferenceFrame.FIXED;
         var maximumStep = 43200;
         var result = [];
-        DynamicPathVisualizer._subSample(property, t1, t4, updateTime, referenceFrame, maximumStep, result);
+        DynamicPathVisualizer._subSample(property, t1, t5, updateTime, referenceFrame, maximumStep, result);
         expect(result).toEqual([intervalProperty.intervals.get(0).data,
                                 constantProperty.getValue(t1),
                                 sampledProperty.getValue(t3),
-                                sampledProperty.getValue(JulianDate.addSeconds(t3, maximumStep)),
-                                sampledProperty.getValue(t4)]);
+                                sampledProperty.getValue(JulianDate.addSeconds(t3, maximumStep, new JulianDate())),
+                                sampledProperty.getValue(t4),
+                                targetObject.position.getValue(t5)]);
     });
 
 }, 'WebGL');

@@ -5,18 +5,18 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
+        '../../Core/EasingFunction',
         '../../Scene/SceneTransforms',
-        '../../ThirdParty/knockout',
-        '../../ThirdParty/Tween'
+        '../../ThirdParty/knockout'
     ], function(
         Cartesian2,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
+        EasingFunction,
         SceneTransforms,
-        knockout,
-        Tween) {
+        knockout) {
     "use strict";
 
     var screenSpacePos = new Cartesian2();
@@ -48,7 +48,7 @@ define([
         this._scene = scene;
         this._screenPositionX = '-1000px';
         this._screenPositionY = '0';
-        this._animationCollection = scene.animations;
+        this._tweens = scene.tweens;
         this._container = defaultValue(container, document.body);
         this._selectionIndicatorElement = selectionIndicatorElement;
         this._computeScreenSpacePosition = function(position, result) {
@@ -114,19 +114,13 @@ define([
      * Animate the indicator to draw attention to the selection.
      */
     SelectionIndicatorViewModel.prototype.animateAppear = function() {
-        var viewModel = this;
-        this._animationCollection.add({
-            startValue : {
-                scale : 2
-            },
-            stopValue : {
-                scale: 1
-            },
-            duration : 800,
-            easingFunction : Tween.Easing.Exponential.Out,
-            onUpdate : function (value) {
-                viewModel._scale = value.scale;
-            }
+        this._tweens.addProperty({
+            object : this,
+            property : '_scale',
+            startValue : 2,
+            stopValue : 1,
+            duration : 0.8,
+            easingFunction : EasingFunction.EXPONENTIAL_OUT
         });
     };
 
@@ -134,19 +128,13 @@ define([
      * Animate the indicator to release the selection.
      */
     SelectionIndicatorViewModel.prototype.animateDepart = function() {
-        var viewModel = this;
-        this._animationCollection.add({
-            startValue : {
-                scale : viewModel._scale
-            },
-            stopValue : {
-                scale : 1.5
-            },
-            duration : 800,
-            easingFunction : Tween.Easing.Exponential.Out,
-            onUpdate : function (value) {
-                viewModel._scale = value.scale;
-            }
+        this._tweens.addProperty({
+            object : this,
+            property : '_scale',
+            startValue : this._scale,
+            stopValue : 1.5,
+            duration : 0.8,
+            easingFunction : EasingFunction.EXPONENTIAL_OUT
         });
     };
 

@@ -31,7 +31,7 @@ define([
     var ModelAnimation = function(options, model, runtimeAnimation) {
         this._name = options.name;
         this._startTime = options.startTime;
-        this._startOffset = defaultValue(options.startOffset, 0.0); // in seconds
+        this._delay = defaultValue(options.delay, 0.0); // in seconds
         this._stopTime = options.stopTime;
 
         /**
@@ -153,7 +153,7 @@ define([
         },
 
         /**
-         * The offset, in seconds, from {@link ModelAnimation#startTime} to start playing.
+         * The delay, in seconds, from {@link ModelAnimation#startTime} to start playing.
          *
          * @memberof ModelAnimation.prototype
          *
@@ -162,9 +162,9 @@ define([
          *
          * @default undefined
          */
-        startOffset : {
+        delay : {
             get : function() {
-                return this._startOffset;
+                return this._delay;
             }
         },
 

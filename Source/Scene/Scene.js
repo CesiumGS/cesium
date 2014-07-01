@@ -27,7 +27,6 @@ define([
         '../Renderer/ClearCommand',
         '../Renderer/Context',
         '../Renderer/PassState',
-        './AnimationCollection',
         './Camera',
         './CreditDisplay',
         './CullingVolume',
@@ -47,7 +46,8 @@ define([
         './SceneTransforms',
         './SceneTransitioner',
         './ScreenSpaceCameraController',
-        './SunPostProcess'
+        './SunPostProcess',
+        './TweenCollection'
     ], function(
         BoundingRectangle,
         BoundingSphere,
@@ -76,7 +76,6 @@ define([
         ClearCommand,
         Context,
         PassState,
-        AnimationCollection,
         Camera,
         CreditDisplay,
         CullingVolume,
@@ -96,7 +95,8 @@ define([
         SceneTransforms,
         SceneTransitioner,
         ScreenSpaceCameraController,
-        SunPostProcess) {
+        SunPostProcess,
+        TweenCollection) {
     "use strict";
 
     /**
@@ -198,7 +198,7 @@ define([
         this._primitives = new PrimitiveCollection();
         this._pickFramebuffer = undefined;
 
-        this._animations = new AnimationCollection();
+        this._tweens = new TweenCollection();
 
         this._shaderFrameCount = 0;
 
@@ -518,7 +518,6 @@ define([
          * @memberof Scene.prototype
          *
          * @type {Globe}
-         * @readonly
          */
         globe : {
             get: function() {
@@ -601,15 +600,17 @@ define([
         },
 
         /**
-         * Gets the collection of animations taking place in the scene.
+         * Gets the collection of tweens taking place in the scene.
          * @memberof Scene.prototype
          *
-         * @type {AnimationCollection}
+         * @type {TweenCollection}
          * @readonly
+         *
+         * @private
          */
-        animations : {
+        tweens : {
             get : function() {
-                return this._animations;
+                return this._tweens;
             }
         },
 
@@ -1281,7 +1282,7 @@ define([
             this._context.shaderCache.destroyReleasedShaderPrograms();
         }
 
-        this._animations.update();
+        this._tweens.update();
         this._camera.update(this.mode);
         this._screenSpaceCameraController.update(this.mode);
     };
@@ -1569,36 +1570,36 @@ define([
 
     /**
      * Asynchronously transitions the scene to 2D.
-     * @param {Number} [duration=2000] The amount of time, in milliseconds, for transition animations to complete.
+     * @param {Number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
      */
     Scene.prototype.morphTo2D = function(duration) {
         var globe = this.globe;
         if (defined(globe)) {
-            duration = defaultValue(duration, 2000);
+            duration = defaultValue(duration, 2.0);
             this._transitioner.morphTo2D(duration, globe.ellipsoid);
         }
     };
 
     /**
      * Asynchronously transitions the scene to Columbus View.
-     * @param {Number} [duration=2000] The amount of time, in milliseconds, for transition animations to complete.
+     * @param {Number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
      */
     Scene.prototype.morphToColumbusView = function(duration) {
         var globe = this.globe;
         if (defined(globe)) {
-            duration = defaultValue(duration, 2000);
+            duration = defaultValue(duration, 2.0);
             this._transitioner.morphToColumbusView(duration, globe.ellipsoid);
         }
     };
 
     /**
      * Asynchronously transitions the scene to 3D.
-     * @param {Number} [duration=2000] The amount of time, in milliseconds, for transition animations to complete.
+     * @param {Number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
      */
     Scene.prototype.morphTo3D = function(duration) {
         var globe = this.globe;
         if (defined(globe)) {
-            duration = defaultValue(duration, 2000);
+            duration = defaultValue(duration, 2.0);
             this._transitioner.morphTo3D(duration, globe.ellipsoid);
         }
     };
@@ -1635,7 +1636,7 @@ define([
      * scene = scene && scene.destroy();
      */
     Scene.prototype.destroy = function() {
-        this._animations.removeAll();
+        this._tweens.removeAll();
         this._screenSpaceCameraController = this._screenSpaceCameraController && this._screenSpaceCameraController.destroy();
         this._pickFramebuffer = this._pickFramebuffer && this._pickFramebuffer.destroy();
         this._primitives = this._primitives && this._primitives.destroy();

@@ -8,6 +8,7 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/FeatureDetection',
         '../Core/Geometry',
         '../Core/GeometryAttribute',
         '../Core/GeometryAttributes',
@@ -35,6 +36,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        FeatureDetection,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
@@ -565,7 +567,7 @@ define([
         return pickColors;
     }
 
-    var numberOfCreationWorkers = 3;
+    var numberOfCreationWorkers = Math.max(FeatureDetection.hardwareConcurrency - 1, 1);
     var createGeometryTaskProcessors;
     var combineGeometryTaskProcessor = new TaskProcessor('combineGeometry', Number.POSITIVE_INFINITY);
 
