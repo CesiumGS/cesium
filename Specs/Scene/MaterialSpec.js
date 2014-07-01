@@ -156,18 +156,6 @@ defineSuite([
         verifyMaterial('NormalMap');
     });
 
-    it('draws Reflection built-in material', function() {
-        verifyMaterial('Reflection');
-    });
-
-    it('draws Refraction built-in material', function() {
-        verifyMaterial('Refraction');
-    });
-
-    it('draws Fresnel built-in material', function() {
-        verifyMaterial('Fresnel');
-    });
-
     it('draws Grid built-in material', function() {
         verifyMaterial('Grid');
     });
@@ -342,7 +330,6 @@ defineSuite([
         var material = new Material({
             strict : true,
             fabric : {
-                type : 'Reflection',
                 uniforms : {
                     cubeMap : {
                         positiveX : './Data/Images/Blue.png',
@@ -352,7 +339,14 @@ defineSuite([
                         positiveZ : './Data/Images/Blue.png',
                         negativeZ : './Data/Images/Blue.png'
                     }
-                }
+                },
+                source : 'uniform samplerCube cubeMap;\n' +
+                    'czm_material czm_getMaterial(czm_materialInput materialInput)\n' +
+                    '{\n' +
+                    '    czm_material material = czm_getDefaultMaterial(materialInput);\n' +
+                    '    material.diffuse = textureCube(cubeMap, vec3(1.0)).xyz;\n' +
+                    '    return material;\n' +
+                    '}\n'
             }
         });
         var pixel = renderMaterial(material);
