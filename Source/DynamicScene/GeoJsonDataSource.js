@@ -185,7 +185,7 @@ define([
     function processLineString(dataSource, geoJson, geometry, crsFunction, sourceUri) {
         var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
         dynamicObject.merge(dataSource.defaultLine);
-        dynamicObject.vertexPositions = new ConstantProperty(coordinatesArrayToCartesianArray(geometry.coordinates, crsFunction));
+        dynamicObject.polyline.vertexPositions = new ConstantProperty(coordinatesArrayToCartesianArray(geometry.coordinates, crsFunction));
     }
 
     function processMultiLineString(dataSource, geoJson, geometry, crsFunction, sourceUri) {
@@ -193,7 +193,7 @@ define([
         for (var i = 0; i < lineStrings.length; i++) {
             var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
             dynamicObject.merge(dataSource.defaultLine);
-            dynamicObject.vertexPositions = new ConstantProperty(coordinatesArrayToCartesianArray(lineStrings[i], crsFunction));
+            dynamicObject.polyline.vertexPositions = new ConstantProperty(coordinatesArrayToCartesianArray(lineStrings[i], crsFunction));
         }
     }
 
@@ -201,7 +201,7 @@ define([
         //TODO Holes
         var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
         dynamicObject.merge(dataSource.defaultPolygon);
-        dynamicObject.vertexPositions = new ConstantProperty(coordinatesArrayToCartesianArray(geometry.coordinates[0], crsFunction));
+        dynamicObject.polygon.vertexPositions = new ConstantProperty(coordinatesArrayToCartesianArray(geometry.coordinates[0], crsFunction));
     }
 
     function processTopology(dataSource, geoJson, geometry, crsFunction, sourceUri) {
@@ -221,7 +221,7 @@ define([
             var polygon = polygons[i];
             var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
             dynamicObject.merge(dataSource.defaultPolygon);
-            dynamicObject.vertexPositions = new ConstantProperty(coordinatesArrayToCartesianArray(polygon[0], crsFunction));
+            dynamicObject.polygon.vertexPositions = new ConstantProperty(coordinatesArrayToCartesianArray(polygon[0], crsFunction));
         }
     }
 
@@ -316,6 +316,8 @@ define([
         material = new ColorMaterialProperty();
         material.color = new ConstantProperty(new Color(1.0, 1.0, 0.0, 0.2));
         polygon.material = material;
+        polygon.outline = new ConstantProperty(true);
+        polygon.outlineColor = new ConstantProperty(new Color(1.0, 1.0, 0.0));
 
         this._changed = new Event();
         this._error = new Event();
