@@ -2,6 +2,7 @@
 define([
         '../Core/Cartesian2',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/KeyboardEventModifier',
@@ -12,6 +13,7 @@ define([
     ], function(
         Cartesian2,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
         KeyboardEventModifier,
@@ -296,15 +298,33 @@ define([
         }
     };
 
-    /**
-     * Gets the current mouse position.
-     * @memberof CameraEventAggregator
-     *
-     * @returns {Cartesian2} The current mouse position.
-     */
-    CameraEventAggregator.prototype.getCurrentMousePosition = function() {
-        return this._currentMousePosition;
-    };
+    defineProperties(CameraEventAggregator.prototype, {
+        /**
+         * Gets the current mouse position.
+         * @memberof CameraEventAggregator.prototype
+         * @type {Cartesian2}
+         */
+        currentMousePosition : {
+            get : function() {
+                return this._currentMousePosition;
+            }
+        },
+
+        /**
+         * Gets whether any mouse button is down, a touch has started, or the wheel has been moved.
+         * @memberof CameraEventAggregator.prototype
+         * @type {Boolean}
+         */
+        anyButtonDown : {
+            get : function() {
+                var wheelMoved = !this._update[getKey(CameraEventType.WHEEL)] ||
+                                 !this._update[getKey(CameraEventType.WHEEL, KeyboardEventModifier.SHIFT)] ||
+                                 !this._update[getKey(CameraEventType.WHEEL, KeyboardEventModifier.CTRL)] ||
+                                 !this._update[getKey(CameraEventType.WHEEL, KeyboardEventModifier.ALT)];
+                return this._buttonsDown > 0 || wheelMoved;
+            }
+        }
+    });
 
     /**
      * Gets if a mouse button down or touch has started and has been moved.
@@ -386,7 +406,6 @@ define([
 
     /**
      * Gets the mouse position that started the aggregation.
-     * @memberof CameraEventAggregator
      *
      * @param {CameraEventType} type The camera event type.
      * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
@@ -405,19 +424,6 @@ define([
 
         var key = getKey(type, modifier);
         return this._eventStartPosition[key];
-    };
-
-    /**
-     * Gets whether any mouse button is down, a touch has started, or the wheel has been moved.
-     *
-     * @returns {Boolean} Whether any mouse button is down, a touch has started, or the wheel has been moved.
-     */
-    CameraEventAggregator.prototype.anyButtonDown = function() {
-        var wheelMoved = !this._update[getKey(CameraEventType.WHEEL)] ||
-                        !this._update[getKey(CameraEventType.WHEEL, KeyboardEventModifier.SHIFT)] ||
-                        !this._update[getKey(CameraEventType.WHEEL, KeyboardEventModifier.CTRL)] ||
-                        !this._update[getKey(CameraEventType.WHEEL, KeyboardEventModifier.ALT)];
-        return this._buttonsDown > 0 || wheelMoved;
     };
 
     /**

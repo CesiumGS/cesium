@@ -510,7 +510,7 @@ define([
 
     function update2D(controller, frameState) {
         var tweens = controller._tweens;
-        if (controller._aggregator.anyButtonDown()) {
+        if (controller._aggregator.anyButtonDown) {
             tweens.removeAll();
         }
 
@@ -525,7 +525,7 @@ define([
             reactToInput(controller, frameState, controller.enableRotate, controller.tiltEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaTiltMovement');
         }
 
-        if (!controller._aggregator.anyButtonDown() &&
+        if (!controller._aggregator.anyButtonDown &&
                 (!defined(controller._lastInertiaZoomMovement) || !controller._lastInertiaZoomMovement.active) &&
                 (!defined(controller._lastInertiaTranslateMovement) || !controller._lastInertiaTranslateMovement.active) &&
                 !tweens.contains(controller._tween)) {
@@ -800,7 +800,7 @@ define([
         } else {
             var tweens = controller._tweens;
 
-            if (controller._aggregator.anyButtonDown()) {
+            if (controller._aggregator.anyButtonDown) {
                 tweens.removeAll();
             }
 
@@ -809,7 +809,7 @@ define([
             reactToInput(controller, frameState, controller.enableZoom, controller.zoomEventTypes, zoomCV, controller.inertiaZoom, '_lastInertiaZoomMovement');
             reactToInput(controller, frameState, controller.enableLook, controller.lookEventTypes, look3D);
 
-            if (!controller._aggregator.anyButtonDown() && (!defined(controller._lastInertiaZoomMovement) || !controller._lastInertiaZoomMovement.active) &&
+            if (!controller._aggregator.anyButtonDown && (!defined(controller._lastInertiaZoomMovement) || !controller._lastInertiaZoomMovement.active) &&
                     (!defined(controller._lastInertiaTranslateMovement) || !controller._lastInertiaTranslateMovement.active) &&
                     !tweens.contains(controller._tween)) {
                 var tween = camera.createCorrectPositionTween(controller.bounceAnimationTime);

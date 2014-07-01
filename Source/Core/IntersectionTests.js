@@ -78,7 +78,7 @@ define([
     var scratchTVec = new Cartesian3();
     var scratchQVec = new Cartesian3();
 
-    function rayTriangle(ray, p0, p1, p2, cullBackFacing) {
+    function rayTriangle(ray, p0, p1, p2, cullBackFaces) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(ray)) {
             throw new DeveloperError('ray is required.');
@@ -94,7 +94,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        cullBackFacing = defaultValue(cullBackFacing, false);
+        cullBackFaces = defaultValue(cullBackFaces, false);
 
         var origin = ray.origin;
         var direction = ray.direction;
@@ -112,7 +112,7 @@ define([
         var v;
         var t;
 
-        if (cullBackFacing) {
+        if (cullBackFaces) {
             if (det < CesiumMath.EPSILON6) {
                 return undefined;
             }
@@ -164,13 +164,13 @@ define([
      * @param {Cartesian3} p0 The first vertex of the triangle.
      * @param {Cartesian3} p1 The second vertex of the triangle.
      * @param {Cartesian3} p2 The third vertex of the triangle.
-     * @param {Boolean} [cullBackFacing=false] If <code>true<code>, will only compute an intersection with the front face of the triangle
+     * @param {Boolean} [cullBackFaces=false] If <code>true<code>, will only compute an intersection with the front face of the triangle
      *                  and return undefined for intersections with the back face.
      * @param {Cartesian3} [result] The <code>Cartesian3</code> onto which to store the result.
      * @returns {Cartesian3} The intersection point or undefined if there is no intersections.
      */
-    IntersectionTests.rayTriangle = function(ray, p0, p1, p2, cullBackFacing, result) {
-        var t = rayTriangle(ray, p0, p1, p2, cullBackFacing);
+    IntersectionTests.rayTriangle = function(ray, p0, p1, p2, cullBackFaces, result) {
+        var t = rayTriangle(ray, p0, p1, p2, cullBackFaces);
         if (!defined(t) || t < 0.0) {
             return undefined;
         }
@@ -194,12 +194,12 @@ define([
      * @param {Cartesian3} p0 The first vertex of the triangle.
      * @param {Cartesian3} p1 The second vertex of the triangle.
      * @param {Cartesian3} p2 The third vertex of the triangle.
-     * @param {Boolean} [cullBackFacing=false] If <code>true<code>, will only compute an intersection with the front face of the triangle
+     * @param {Boolean} [cullBackFaces=false] If <code>true<code>, will only compute an intersection with the front face of the triangle
      *                  and return undefined for intersections with the back face.
      * @param {Cartesian3} [result] The <code>Cartesian3</code> onto which to store the result.
      * @returns {Cartesian3} The intersection point or undefined if there is no intersections.
      */
-    IntersectionTests.lineSegmentTriangle = function(v0, v1, p0, p1, p2, cullBackFacing, result) {
+    IntersectionTests.lineSegmentTriangle = function(v0, v1, p0, p1, p2, cullBackFaces, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(v0)) {
             throw new DeveloperError('v0 is required.');
@@ -214,7 +214,7 @@ define([
         Cartesian3.subtract(v1, v0, ray.direction);
         Cartesian3.normalize(ray.direction, ray.direction);
 
-        var t = rayTriangle(ray, p0, p1, p2, cullBackFacing);
+        var t = rayTriangle(ray, p0, p1, p2, cullBackFaces);
         if (!defined(t) || t < 0.0 || t > Cartesian3.distance(v0, v1)) {
             return undefined;
         }

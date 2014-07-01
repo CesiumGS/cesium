@@ -292,27 +292,29 @@ define([
      * Prefer this method over {@link GlobeSurface#intersect} when finding an intersection with the section of
      * the globe surface that is rendered for better performance
      * </p>
-     * @memberof GlobeSurface
      *
      * @param {Ray} ray The ray to test for intersection.
-     * @param {FrameState} frameState The current frame state.
+     * @param {Scene} scene The scene.
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3|undefined} The intersection of <code>undefined</code> if none was found.
      *
      * @example
      * // find intersection of ray through a pixel and the globe
      * var ray = scene.camera.getPickRay(windowCoordinates);
-     * var intersection = surface.pick(ray, scene.frameState);
+     * var intersection = surface.pick(ray, scene);
      */
-    GlobeSurface.prototype.pick = function(ray, frameState, result) {
+    GlobeSurface.prototype.pick = function(ray, scene, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(ray)) {
             throw new DeveloperError('ray is required');
         }
-        if (!defined(frameState)) {
-            throw new DeveloperError('frameState is required');
+        if (!defined(scene)) {
+            throw new DeveloperError('scene is required');
         }
         //>>includeEnd('debug');
+
+        var mode = scene.mode;
+        var projection = scene.mapProjection;
 
         var sphereIntersections = scratchArray;
         sphereIntersections.length = 0;
@@ -332,8 +334,8 @@ define([
                 tile = tileSet[j];
 
                 var boundingVolume = tile.pickBoundingSphere;
-                if (frameState.mode !== SceneMode.SCENE3D) {
-                    BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.mapProjection, tile.minimumHeight, tile.maximumHeight, boundingVolume);
+                if (mode !== SceneMode.SCENE3D) {
+                    BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, projection, tile.minimumHeight, tile.maximumHeight, boundingVolume);
                     Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
                 } else {
                     BoundingSphere.clone(tile.boundingSphere3D, boundingVolume);
@@ -351,7 +353,7 @@ define([
         var intersection;
         length = sphereIntersections.length;
         for (i = 0; i < length; ++i) {
-            intersection = sphereIntersections[i].pick(ray, frameState, true, result);
+            intersection = sphereIntersections[i].pick(ray, scene, true, result);
             if (defined(intersection)) {
                 break;
             }
