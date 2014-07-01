@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.0 - 2014-08-01
+
+* Added northUpEast transform to help support display of glTF models because Y is their up axis.
+
 Beta Releases
 -------------
 

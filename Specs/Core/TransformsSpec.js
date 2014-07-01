@@ -138,6 +138,54 @@ defineSuite([
         expect(Matrix4.getColumn(returnedResult, 3)).toEqual(expectedTranslation); // translation
     });
 
+    it('northUpEastToFixedFrame works without a result parameter', function() {
+        var origin = new Cartesian3(1.0, 0.0, 0.0);
+        var expectedTranslation = new Cartesian4(origin.x, origin.y, origin.z, 1.0);
+
+        var returnedResult = Transforms.northUpEastToFixedFrame(origin, Ellipsoid.UNIT_SPHERE);
+        expect(Matrix4.getColumn(returnedResult, 0)).toEqual(Cartesian4.UNIT_Z); // north
+        expect(Matrix4.getColumn(returnedResult, 1)).toEqual(Cartesian4.UNIT_X); // up
+        expect(Matrix4.getColumn(returnedResult, 2)).toEqual(Cartesian4.UNIT_Y); // east
+        expect(Matrix4.getColumn(returnedResult, 3)).toEqual(expectedTranslation); // translation
+    });
+
+    it('northUpEastToFixedFrame works with a result parameter', function() {
+        var origin = new Cartesian3(1.0, 0.0, 0.0);
+        var expectedTranslation = new Cartesian4(origin.x, origin.y, origin.z, 1.0);
+        var result = new Matrix4(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+
+        var returnedResult = Transforms.northUpEastToFixedFrame(origin, Ellipsoid.UNIT_SPHERE, result);
+        expect(result).toBe(returnedResult);
+        expect(Matrix4.getColumn(returnedResult, 0)).toEqual(Cartesian4.UNIT_Z); // north
+        expect(Matrix4.getColumn(returnedResult, 1)).toEqual(Cartesian4.UNIT_X); // up
+        expect(Matrix4.getColumn(returnedResult, 2)).toEqual(Cartesian4.UNIT_Y); // east
+        expect(Matrix4.getColumn(returnedResult, 3)).toEqual(expectedTranslation); // translation
+    });
+
+    it('northUpEastToFixedFrame works at the north pole', function() {
+        var northPole = new Cartesian3(0.0, 0.0, 1.0);
+        var expectedTranslation = new Cartesian4(northPole.x, northPole.y, northPole.z, 1.0);
+
+        var result = new Matrix4();
+        var returnedResult = Transforms.northUpEastToFixedFrame(northPole, Ellipsoid.UNIT_SPHERE, result);
+        expect(returnedResult).toBe(result);
+        expect(Matrix4.getColumn(returnedResult, 0)).toEqual(negativeX); // north
+        expect(Matrix4.getColumn(returnedResult, 1)).toEqual(Cartesian4.UNIT_Z); // up
+        expect(Matrix4.getColumn(returnedResult, 2)).toEqual(Cartesian4.UNIT_Y); // east
+        expect(Matrix4.getColumn(returnedResult, 3)).toEqual(expectedTranslation); // translation
+    });
+
+    it('northUpEastToFixedFrame works at the south pole', function() {
+        var southPole = new Cartesian3(0.0, 0.0, -1.0);
+        var expectedTranslation = new Cartesian4(southPole.x, southPole.y, southPole.z, 1.0);
+
+        var returnedResult = Transforms.northUpEastToFixedFrame(southPole, Ellipsoid.UNIT_SPHERE);
+        expect(Matrix4.getColumn(returnedResult, 0)).toEqual(Cartesian4.UNIT_X); // north
+        expect(Matrix4.getColumn(returnedResult, 1)).toEqual(negativeZ); // up
+        expect(Matrix4.getColumn(returnedResult, 2)).toEqual(Cartesian4.UNIT_Y); // east
+        expect(Matrix4.getColumn(returnedResult, 3)).toEqual(expectedTranslation); // translation
+    });
+
     it('computeTemeToPseudoFixedMatrix works before noon', function() {
         var time = JulianDate.now();
         var secondsDiff = TimeConstants.SECONDS_PER_DAY - time.secondsOfDay;
