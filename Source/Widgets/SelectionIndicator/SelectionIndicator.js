@@ -42,7 +42,7 @@ define([
         var el = document.createElement('div');
         el.className = 'cesium-selection-wrapper';
         el.setAttribute('data-bind', '\
-style: { "bottom" : _screenPositionY, "left" : _screenPositionX },\
+style: { "top" : _screenPositionY, "left" : _screenPositionX },\
 css: { "cesium-selection-wrapper-visible" : isVisible }');
         container.appendChild(el);
         this._element = el;

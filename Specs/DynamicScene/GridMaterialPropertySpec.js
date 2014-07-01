@@ -46,7 +46,7 @@ defineSuite([
         property.lineThickness = new ConstantProperty(new Cartesian2(2, 3));
         property.lineOffset = new ConstantProperty(new Cartesian2(0.7, 0.8));
 
-        var result = property.getValue(new JulianDate());
+        var result = property.getValue(JulianDate.now());
         expect(result.color).toEqual(Color.RED);
         expect(result.cellAlpha).toEqual(1);
         expect(result.lineCount).toEqual(new Cartesian2(3.4, 5.0));
@@ -85,11 +85,31 @@ defineSuite([
 
         var start = new JulianDate(1, 0);
         var stop = new JulianDate(2, 0);
-        property.color.intervals.addInterval(new TimeInterval(start, stop, true, true, Color.BLUE));
-        property.cellAlpha.intervals.addInterval(new TimeInterval(start, stop, true, true, 1.0));
-        property.lineCount.intervals.addInterval(new TimeInterval(start, stop, true, true, new Cartesian2(3.4, 5.0)));
-        property.lineThickness.intervals.addInterval(new TimeInterval(start, stop, true, true, new Cartesian2(2, 3)));
-        property.lineOffset.intervals.addInterval(new TimeInterval(start, stop, true, true, new Cartesian2(0.7, 0.8)));
+        property.color.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : Color.BLUE
+        }));
+        property.cellAlpha.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : 1.0
+        }));
+        property.lineCount.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : new Cartesian2(3.4, 5.0)
+        }));
+        property.lineThickness.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : new Cartesian2(2, 3)
+        }));
+        property.lineOffset.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : new Cartesian2(0.7, 0.8)
+        }));
 
         var result = property.getValue(start);
         expect(result.color).toEqual(Color.BLUE);
@@ -108,7 +128,7 @@ defineSuite([
         property.lineOffset = new ConstantProperty(new Cartesian2(0.7, 0.8));
 
         var result = {};
-        var returnedResult = property.getValue(new JulianDate(), result);
+        var returnedResult = property.getValue(JulianDate.now(), result);
         expect(result).toBe(returnedResult);
         expect(result.color).toEqual(Color.RED);
         expect(result.cellAlpha).toEqual(1.0);
@@ -235,31 +255,31 @@ defineSuite([
         expect(property.isConstant).toBe(true);
 
         property.color = new SampledProperty(Color);
-        property.color.addSample(new JulianDate(), Color.WHITE);
+        property.color.addSample(JulianDate.now(), Color.WHITE);
         expect(property.isConstant).toBe(false);
 
         property.color = undefined;
         expect(property.isConstant).toBe(true);
         property.cellAlpha = new SampledProperty(Number);
-        property.cellAlpha.addSample(new JulianDate(), 0);
+        property.cellAlpha.addSample(JulianDate.now(), 0);
         expect(property.isConstant).toBe(false);
 
         property.cellAlpha = undefined;
         expect(property.isConstant).toBe(true);
         property.lineCount = new SampledProperty(Number);
-        property.lineCount.addSample(new JulianDate(), 1);
+        property.lineCount.addSample(JulianDate.now(), 1);
         expect(property.isConstant).toBe(false);
 
         property.lineCount = undefined;
         expect(property.isConstant).toBe(true);
         property.lineThickness = new SampledProperty(Number);
-        property.lineThickness.addSample(new JulianDate(), 1);
+        property.lineThickness.addSample(JulianDate.now(), 1);
         expect(property.isConstant).toBe(false);
 
         property.lineThickness = undefined;
         expect(property.isConstant).toBe(true);
         property.lineOffset = new SampledProperty(Number);
-        property.lineOffset.addSample(new JulianDate(), 1);
+        property.lineOffset.addSample(JulianDate.now(), 1);
         expect(property.isConstant).toBe(false);
     });
 });

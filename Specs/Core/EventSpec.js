@@ -96,6 +96,27 @@ defineSuite([
         expect(event.numberOfListeners).toEqual(1);
     });
 
+    it('removeEventListener indicates if the listener is registered with the event', function() {
+        var callback = function() {
+        };
+
+        event.addEventListener(callback);
+        expect(event.numberOfListeners).toEqual(1);
+
+        expect(event.removeEventListener(callback)).toEqual(true);
+        expect(event.numberOfListeners).toEqual(0);
+
+        expect(event.removeEventListener(callback)).toEqual(false);
+    });
+
+    it('removeEventListener does not remove a registered listener of a different scope', function() {
+        var myFunc = function() {
+        };
+        var scope = {};
+        event.addEventListener(myFunc, scope);
+        expect(event.removeEventListener(myFunc)).toEqual(false);
+    });
+
     it('works with no listeners', function() {
         event.raiseEvent(123);
     });
@@ -158,24 +179,6 @@ defineSuite([
     it('removeEventListener throws with null listener', function() {
         expect(function() {
             event.removeEventListener(null);
-        }).toThrowDeveloperError();
-    });
-
-    it('removeEventListener throws with non registered listener', function() {
-        expect(function() {
-            event.removeEventListener(function() {
-            });
-        }).toThrowDeveloperError();
-    });
-
-    it('removeEventListener throws with registered listener of a different scope', function() {
-        var myFunc = function() {
-        };
-        var scope = {};
-        event.addEventListener(myFunc, scope);
-
-        expect(function() {
-            event.removeEventListener(myFunc);
         }).toThrowDeveloperError();
     });
 });

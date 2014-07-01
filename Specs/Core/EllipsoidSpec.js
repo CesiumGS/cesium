@@ -13,8 +13,8 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var radii = new Cartesian3(1.0, 2.0, 3.0);
-    var radiiSquared = Cartesian3.multiplyComponents(radii, radii);
-    var radiiToTheFourth = Cartesian3.multiplyComponents(radiiSquared, radiiSquared);
+    var radiiSquared = Cartesian3.multiplyComponents(radii, radii, new Cartesian3());
+    var radiiToTheFourth = Cartesian3.multiplyComponents(radiiSquared, radiiSquared, new Cartesian3());
     var oneOverRadii = new Cartesian3(1 / radii.x, 1 / radii.y, 1 / radii.z);
     var oneOverRadiiSquared = new Cartesian3(1 / radiiSquared.x, 1 / radiiSquared.y, 1 / radiiSquared.z);
     var minimumRadius = 1.0;

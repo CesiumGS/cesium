@@ -103,7 +103,6 @@ define([
      * number, Cartesian, or matrix.
      *
      * @param {String} name The name of the parameter.
-     *
      * @returns {Object} The value of the parameter or <code>undefined</code> if the parameter does not exist.
      */
     ModelMaterial.prototype.getValue = function(name) {

@@ -3,11 +3,13 @@ defineSuite([
         'DynamicScene/DynamicObject',
         'Core/JulianDate',
         'Core/TimeInterval',
+        'Core/TimeIntervalCollection',
         'DynamicScene/ConstantProperty'
     ], function(
         DynamicObject,
         JulianDate,
         TimeInterval,
+        TimeIntervalCollection,
         ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -19,7 +21,7 @@ defineSuite([
 
     it('isAvailable is always true if no availability defined.', function() {
         var dynamicObject = new DynamicObject('someId');
-        expect(dynamicObject.isAvailable(new JulianDate())).toEqual(true);
+        expect(dynamicObject.isAvailable(JulianDate.now())).toEqual(true);
     });
 
     it('isAvailable throw if no time specified.', function() {
@@ -38,12 +40,16 @@ defineSuite([
 
     it('isAvailable works.', function() {
         var dynamicObject = new DynamicObject();
-        var interval = TimeInterval.fromIso8601('2000-01-01/2001-01-01');
-        dynamicObject.availability = interval;
-        expect(dynamicObject.isAvailable(interval.start.addSeconds(-1))).toEqual(false);
+        var interval = TimeInterval.fromIso8601({
+            iso8601 : '2000-01-01/2001-01-01'
+        });
+        var intervals = new TimeIntervalCollection();
+        intervals.addInterval(interval);
+        dynamicObject.availability = intervals;
+        expect(dynamicObject.isAvailable(JulianDate.addSeconds(interval.start, -1, new JulianDate()))).toEqual(false);
         expect(dynamicObject.isAvailable(interval.start)).toEqual(true);
         expect(dynamicObject.isAvailable(interval.stop)).toEqual(true);
-        expect(dynamicObject.isAvailable(interval.stop.addSeconds(1))).toEqual(false);
+        expect(dynamicObject.isAvailable(JulianDate.addSeconds(interval.stop, 1, new JulianDate()))).toEqual(false);
     });
 
     it('definitionChanged works for all properties', function() {
@@ -59,7 +65,7 @@ defineSuite([
         var newValue;
         var oldValue;
         //We loop through twice to ensure that oldValue is properly passed in.
-        for ( var x = 0; x < 2; x++) {
+        for (var x = 0; x < 2; x++) {
             for (i = 0; i < propertyNamesLength; i++) {
                 name = propertyNames[i];
                 newValue = new ConstantProperty(1);
@@ -72,11 +78,15 @@ defineSuite([
 
     it('merge always overwrites availability', function() {
         var dynamicObject = new DynamicObject();
-        var interval = TimeInterval.fromIso8601('2000-01-01/2001-01-01');
+        var interval = TimeInterval.fromIso8601({
+            iso8601 : '2000-01-01/2001-01-01'
+        });
         dynamicObject.availability = interval;
 
         var dynamicObject2 = new DynamicObject();
-        var interval2 = TimeInterval.fromIso8601('2000-01-01/2001-01-01');
+        var interval2 = TimeInterval.fromIso8601({
+            iso8601 : '2000-01-01/2001-01-01'
+        });
         dynamicObject2.availability = interval2;
 
         dynamicObject.merge(dynamicObject2);

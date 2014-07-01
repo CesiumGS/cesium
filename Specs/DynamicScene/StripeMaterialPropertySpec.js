@@ -39,7 +39,7 @@ defineSuite([
         property.offset = new ConstantProperty(10);
         property.repeat = new ConstantProperty(20);
 
-        var result = property.getValue(new JulianDate());
+        var result = property.getValue(JulianDate.now());
         expect(result.horizontal).toEqual(false);
         expect(result.evenColor).toEqual(Color.RED);
         expect(result.oddColor).toEqual(Color.BLUE);
@@ -78,11 +78,31 @@ defineSuite([
 
         var start = new JulianDate(1, 0);
         var stop = new JulianDate(2, 0);
-        property.orientation.intervals.addInterval(new TimeInterval(start, stop, true, true, false));
-        property.evenColor.intervals.addInterval(new TimeInterval(start, stop, true, true, Color.RED));
-        property.oddColor.intervals.addInterval(new TimeInterval(start, stop, true, true, Color.BLUE));
-        property.offset.intervals.addInterval(new TimeInterval(start, stop, true, true, 10));
-        property.repeat.intervals.addInterval(new TimeInterval(start, stop, true, true, 20));
+        property.orientation.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : false
+        }));
+        property.evenColor.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : Color.RED
+        }));
+        property.oddColor.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : Color.BLUE
+        }));
+        property.offset.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : 10
+        }));
+        property.repeat.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : 20
+        }));
 
         expect(property.isConstant).toBe(false);
 
@@ -109,7 +129,7 @@ defineSuite([
             offset : 3,
             repeat : 4
         };
-        var returnedResult = property.getValue(new JulianDate(), result);
+        var returnedResult = property.getValue(JulianDate.now(), result);
         expect(returnedResult).toBe(result);
         expect(result.horizontal).toEqual(false);
         expect(result.evenColor).toEqual(Color.RED);

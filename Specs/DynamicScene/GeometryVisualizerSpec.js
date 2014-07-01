@@ -38,7 +38,7 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    var time = new JulianDate();
+    var time = JulianDate.now();
 
     var scene;
     beforeAll(function() {

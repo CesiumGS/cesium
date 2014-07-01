@@ -95,7 +95,6 @@ define([
      * Determines whether or not a point, the <code>occludee</code>, is hidden from view by the occluder.
      *
      * @param {Cartesian3} occludee The point to test for visibility.
-     *
      * @returns {Boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
      *
      * @example
@@ -117,7 +116,6 @@ define([
      * into the scaled space, call {@link Ellipsoid#transformPositionToScaledSpace}.
      *
      * @param {Cartesian3} occludeeScaledSpacePosition The point to test for visibility, represented in the scaled space.
-     *
      * @returns {Boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
      *
      * @example
@@ -165,6 +163,10 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
         var ellipsoid = this._ellipsoid;
         var scaledSpaceDirectionToPoint = computeScaledSpaceDirectionToPoint(ellipsoid, directionToPoint);
         var resultMagnitude = 0.0;
@@ -210,6 +212,10 @@ define([
             throw new DeveloperError('stride is required');
         }
         //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
 
         center = defaultValue(center, Cartesian3.ZERO);
         var ellipsoid = this._ellipsoid;
@@ -275,7 +281,7 @@ define([
         magnitude = Math.max(1.0, magnitude);
 
         var cosAlpha = Cartesian3.dot(direction, scaledSpaceDirectionToPoint);
-        var sinAlpha = Cartesian3.magnitude(Cartesian3.cross(direction, scaledSpaceDirectionToPoint));
+        var sinAlpha = Cartesian3.magnitude(Cartesian3.cross(direction, scaledSpaceDirectionToPoint, direction));
         var cosBeta = 1.0 / magnitude;
         var sinBeta = Math.sqrt(magnitudeSquared - 1.0) * cosBeta;
 

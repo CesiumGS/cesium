@@ -11,7 +11,6 @@ defineSuite([
         'Core/WebMercatorProjection',
         'Renderer/DrawCommand',
         'Renderer/PixelDatatype',
-        'Scene/AnimationCollection',
         'Scene/Camera',
         'Scene/FrameState',
         'Scene/Globe',
@@ -20,6 +19,7 @@ defineSuite([
         'Scene/RectanglePrimitive',
         'Scene/Scene',
         'Scene/ScreenSpaceCameraController',
+        'Scene/TweenCollection',
         'Specs/createScene',
         'Specs/destroyScene',
         'Specs/equals',
@@ -36,7 +36,6 @@ defineSuite([
         WebMercatorProjection,
         DrawCommand,
         PixelDatatype,
-        AnimationCollection,
         Camera,
         FrameState,
         Globe,
@@ -45,6 +44,7 @@ defineSuite([
         RectanglePrimitive,
         Scene,
         ScreenSpaceCameraController,
+        TweenCollection,
         createScene,
         destroyScene,
         equals,
@@ -77,7 +77,7 @@ defineSuite([
         expect(scene.screenSpaceCameraController).toBeInstanceOf(ScreenSpaceCameraController);
         expect(scene.mapProjection).toBeInstanceOf(GeographicProjection);
         expect(scene.frameState).toBeInstanceOf(FrameState);
-        expect(scene.animations).toBeInstanceOf(AnimationCollection);
+        expect(scene.tweens).toBeInstanceOf(TweenCollection);
 
         var contextAttributes = scene.context._gl.getContextAttributes();
         // Do not check depth and antialias since they are requests not requirements
@@ -454,7 +454,7 @@ defineSuite([
         s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
         s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
         s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
-        s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position));
+        s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position, new Cartesian3()), new Cartesian3());
 
         s.initializeFrame();
         s.render();

@@ -8,6 +8,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/EasingFunction',
         '../Core/Ellipsoid',
         '../Core/IntersectionTests',
         '../Core/Math',
@@ -16,7 +17,7 @@ define([
         '../Core/Quaternion',
         '../Core/Ray',
         '../Core/Transforms',
-        '../ThirdParty/Tween',
+        './CameraFlightPath',
         './PerspectiveFrustum',
         './SceneMode'
     ], function(
@@ -28,6 +29,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        EasingFunction,
         Ellipsoid,
         IntersectionTests,
         CesiumMath,
@@ -36,7 +38,7 @@ define([
         Quaternion,
         Ray,
         Transforms,
-        Tween,
+        CameraFlightPath,
         PerspectiveFrustum,
         SceneMode) {
     "use strict";
@@ -60,7 +62,7 @@ define([
      * // with a field of view of 60 degrees, and 1:1 aspect ratio.
      * var camera = new Cesium.Camera(scene);
      * camera.position = new Cesium.Cartesian3();
-     * camera.direction = Cesium.Cartesian3.negate(Cesium.Cartesian3.UNIT_Z);
+     * camera.direction = Cesium.Cartesian3.negate(Cesium.Cartesian3.UNIT_Z, new Cartesian3());
      * camera.up = Cesium.Cartesian3.clone(Cesium.Cartesian3.UNIT_Y);
      * camera.frustum.fovy = Cesium.Math.PI_OVER_THREE;
      * camera.frustum.near = 1.0;
@@ -92,7 +94,8 @@ define([
         this._actualInvTransform = Matrix4.clone(Matrix4.IDENTITY);
 
         var maxRadii = Ellipsoid.WGS84.maximumRadius;
-        var position = Cartesian3.multiplyByScalar(Cartesian3.normalize(new Cartesian3(0.0, -2.0, 1.0)), 2.5 * maxRadii);
+        var position = new Cartesian3(0.0, -2.0, 1.0);
+        position = Cartesian3.multiplyByScalar(Cartesian3.normalize(position, position), 2.5 * maxRadii, position);
 
         /**
          * The position of the camera.
@@ -103,7 +106,8 @@ define([
         this._position = Cartesian3.clone(position);
         this._positionWC = Cartesian3.clone(position);
 
-        var direction = Cartesian3.normalize(Cartesian3.negate(position));
+        var direction = new Cartesian3();
+        direction = Cartesian3.normalize(Cartesian3.negate(position, direction), direction);
 
         /**
          * The view direction of the camera.
@@ -114,8 +118,9 @@ define([
         this._direction = Cartesian3.clone(direction);
         this._directionWC = Cartesian3.clone(direction);
 
-        var right = Cartesian3.normalize(Cartesian3.cross(direction, Cartesian3.UNIT_Z));
-        var up = Cartesian3.cross(right, direction);
+        var right = new Cartesian3();
+        right = Cartesian3.normalize(Cartesian3.cross(direction, Cartesian3.UNIT_Z, right), right);
+        var up = Cartesian3.cross(right, direction, new Cartesian3());
 
         /**
          * The up direction of the camera.
@@ -126,7 +131,7 @@ define([
         this._up = Cartesian3.clone(up);
         this._upWC = Cartesian3.clone(up);
 
-        right = Cartesian3.cross(direction, up);
+        right = Cartesian3.cross(direction, up, new Cartesian3());
 
         /**
          * The right direction of the camera.
@@ -495,8 +500,8 @@ define([
     }
 
     function getTiltCV(camera) {
-        // Math.acos(dot(camera.direction, Cartesian3.negate(Cartesian3.UNIT_Z))
-        return CesiumMath.PI_OVER_TWO - Math.acos(-camera.direction.z);
+        // CesiumMath.acosClamped(dot(camera.direction, Cartesian3.negate(Cartesian3.UNIT_Z))
+        return CesiumMath.PI_OVER_TWO - CesiumMath.acosClamped(-camera.direction.z);
     }
 
     var scratchTiltCartesian3 = new Cartesian3();
@@ -505,7 +510,7 @@ define([
         var direction = Cartesian3.normalize(camera.position, scratchTiltCartesian3);
         Cartesian3.negate(direction, direction);
 
-        return CesiumMath.PI_OVER_TWO - Math.acos(Cartesian3.dot(camera.direction, direction));
+        return CesiumMath.PI_OVER_TWO - CesiumMath.acosClamped(Cartesian3.dot(camera.direction, direction));
     }
 
     defineProperties(Camera.prototype, {
@@ -514,6 +519,8 @@ define([
          * @memberof Camera.prototype
          *
          * @type {Matrix4}
+         * @readonly
+         *
          * @default {@link Matrix4.IDENTITY}
          */
         inverseTransform : {
@@ -528,8 +535,8 @@ define([
          * @memberof Camera.prototype
          *
          * @type {Matrix4}
+         * @readonly
          *
-         * @see czm_view
          * @see Camera#inverseViewMatrix
          */
         viewMatrix : {
@@ -544,8 +551,8 @@ define([
          * @memberof Camera.prototype
          *
          * @type {Matrix4}
+         * @readonly
          *
-         * @see czm_inverseView
          * @see Camera#viewMatrix
          */
         inverseViewMatrix : {
@@ -558,7 +565,9 @@ define([
         /**
          * Gets the position of the camera in world coordinates.
          * @memberof Camera.prototype
+         *
          * @type {Cartesian3}
+         * @readonly
          */
         positionWC : {
             get : function() {
@@ -570,7 +579,9 @@ define([
         /**
          * Gets the view direction of the camera in world coordinates.
          * @memberof Camera.prototype
+         *
          * @type {Cartesian3}
+         * @readonly
          */
         directionWC : {
             get : function() {
@@ -582,7 +593,9 @@ define([
         /**
          * Gets the up direction of the camera in world coordinates.
          * @memberof Camera.prototype
+         *
          * @type {Cartesian3}
+         * @readonly
          */
         upWC : {
             get : function() {
@@ -594,7 +607,9 @@ define([
         /**
          * Gets the right direction of the camera in world coordinates.
          * @memberof Camera.prototype
+         *
          * @type {Cartesian3}
+         * @readonly
          */
         rightWC : {
             get : function() {
@@ -606,6 +621,7 @@ define([
         /**
          * Gets or sets the camera heading in radians.
          * @memberof Camera.prototype
+         *
          * @type {Number}
          */
         heading : {
@@ -638,6 +654,7 @@ define([
         /**
          * Gets or sets the camera tilt in radians
          * @memberof Camera.prototype
+         *
          * @type {Number}
          */
         tilt : {
@@ -734,7 +751,6 @@ define([
      *
      * @param {Cartesian4} cartesian The vector or point to transform.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian4} The transformed vector or point.
      */
     Camera.prototype.worldToCameraCoordinates = function(cartesian, result) {
@@ -753,7 +769,6 @@ define([
      *
      * @param {Cartesian3} cartesian The point to transform.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian3} The transformed point.
      */
     Camera.prototype.worldToCameraCoordinatesPoint = function(cartesian, result) {
@@ -772,7 +787,6 @@ define([
      *
      * @param {Cartesian3} cartesian The vector to transform.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian3} The transformed vector.
      */
     Camera.prototype.worldToCameraCoordinatesVector = function(cartesian, result) {
@@ -791,7 +805,6 @@ define([
      *
      * @param {Cartesian4} cartesian The vector or point to transform.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian4} The transformed vector or point.
      */
     Camera.prototype.cameraToWorldCoordinates = function(cartesian, result) {
@@ -810,7 +823,6 @@ define([
      *
      * @param {Cartesian3} cartesian The point to transform.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian3} The transformed point.
      */
     Camera.prototype.cameraToWorldCoordinatesPoint = function(cartesian, result) {
@@ -829,7 +841,6 @@ define([
      *
      * @param {Cartesian3} cartesian The vector to transform.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian3} The transformed vector.
      */
     Camera.prototype.cameraToWorldCoordinatesVector = function(cartesian, result) {
@@ -1176,15 +1187,15 @@ define([
                 var constrainedAxis = Cartesian3.normalize(camera.constrainedAxis, rotateVertScratchA);
 
                 var dot = Cartesian3.dot(p, constrainedAxis);
-                var angleToAxis = Math.acos(dot);
+                var angleToAxis = CesiumMath.acosClamped(dot);
                 if (angle > 0 && angle > angleToAxis) {
-                    angle = angleToAxis;
+                    angle = angleToAxis - CesiumMath.EPSILON4;
                 }
 
                 dot = Cartesian3.dot(p, Cartesian3.negate(constrainedAxis, rotateVertScratchNegate));
-                angleToAxis = Math.acos(dot);
+                angleToAxis = CesiumMath.acosClamped(dot);
                 if (angle < 0 && -angle > angleToAxis) {
-                    angle = -angleToAxis;
+                    angle = -angleToAxis + CesiumMath.EPSILON4;
                 }
 
                 var tangent = Cartesian3.cross(constrainedAxis, p, rotateVertScratchTan);
@@ -1442,6 +1453,10 @@ define([
     var viewRectangle3DCenter = new Cartesian3();
     var defaultRF = {direction: new Cartesian3(), right: new Cartesian3(), up: new Cartesian3()};
     function rectangleCameraPosition3D (camera, rectangle, ellipsoid, result, positionOnly) {
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
         var cameraRF = camera;
         if (positionOnly) {
             cameraRF = defaultRF;
@@ -1619,7 +1634,6 @@ define([
      *
      * @param {Rectangle} rectangle The rectangle to view.
      * @param {Cartesian3} [result] The camera position needed to view the rectangle
-     *
      * @returns {Cartesian3} The camera position needed to view the rectangle
      */
     Camera.prototype.getRectangleCameraCoordinates = function(rectangle, result) {
@@ -1712,7 +1726,6 @@ define([
      * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to pick.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian3} If the ellipsoid or map was picked, returns the point on the surface of the ellipsoid or map
      * in world coordinates. If the ellipsoid or map was not picked, returns undefined.
      */
@@ -1735,6 +1748,8 @@ define([
             result = pickMap2D(this, windowPosition, this._projection, result);
         } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
             result = pickMapColumbusView(this, windowPosition, this._projection, result);
+        } else {
+            return undefined;
         }
 
         return result;
@@ -1744,8 +1759,9 @@ define([
     var pickPerspXDir = new Cartesian3();
     var pickPerspYDir = new Cartesian3();
     function getPickRayPerspective(camera, windowPosition, result) {
-        var width = camera._scene.canvas.clientWidth;
-        var height = camera._scene.canvas.clientHeight;
+        var canvas = camera._scene.canvas;
+        var width = canvas.clientWidth;
+        var height = canvas.clientHeight;
 
         var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
         var tanTheta = camera.frustum.aspectRatio * tanPhi;
@@ -1772,8 +1788,9 @@ define([
     var scratchDirection = new Cartesian3();
 
     function getPickRayOrthographic(camera, windowPosition, result) {
-        var width = camera._scene.canvas.clientWidth;
-        var height = camera._scene.canvas.clientHeight;
+        var canvas = camera._scene.canvas;
+        var width = canvas.clientWidth;
+        var height = canvas.clientHeight;
 
         var x = (2.0 / width) * windowPosition.x - 1.0;
         x *= (camera.frustum.right - camera.frustum.left) * 0.5;
@@ -1799,7 +1816,6 @@ define([
      *
      * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
      * @param {Ray} [result] The object onto which to store the result.
-     *
      * @returns {Object} Returns the {@link Cartesian3} position and direction of the ray.
      */
     Camera.prototype.getPickRay = function(windowPosition, result) {
@@ -1852,7 +1868,7 @@ define([
 
             var update2D = function(value) {
                 if (animatePosition) {
-                    camera.position = Cartesian3.lerp(position, translatedPosition, value.time);
+                    camera.position = Cartesian3.lerp(position, translatedPosition, value.time, camera.position);
                 }
                 if (animateFrustum) {
                     camera.frustum.top = CesiumMath.lerp(top, startFrustum.top, value.time);
@@ -1863,15 +1879,15 @@ define([
             };
 
             return {
-                easingFunction : Tween.Easing.Exponential.Out,
-                startValue : {
+                easingFunction : EasingFunction.EXPONENTIAL_OUT,
+                startObject : {
                     time : 0.0
                 },
-                stopValue : {
+                stopObject : {
                     time : 1.0
                 },
                 duration : duration,
-                onUpdate : update2D
+                update : update2D
             };
         }
 
@@ -1894,20 +1910,20 @@ define([
         }
 
         var updateCV = function(value) {
-            var interp = Cartesian3.lerp(position, newPosition, value.time);
+            var interp = Cartesian3.lerp(position, newPosition, value.time, new Cartesian3());
             camera.worldToCameraCoordinatesPoint(interp, camera.position);
         };
 
         return {
-            easingFunction : Tween.Easing.Exponential.Out,
-            startValue : {
+            easingFunction : EasingFunction.EXPONENTIAL_OUT,
+            startObject : {
                 time : 0.0
             },
-            stopValue : {
+            stopObject : {
                 time : 1.0
             },
             duration : duration,
-            onUpdate : updateCV
+            update : updateCV
         };
     }
 
@@ -1953,13 +1969,14 @@ define([
     /**
      * Create an animation to move the map into view. This method is only valid for 2D and Columbus modes.
      *
-     * @param {Number} duration The duration, in milliseconds, of the animation.
-     *
+     * @param {Number} duration The duration, in seconds, of the animation.
      * @returns {Object} The animation or undefined if the scene mode is 3D or the map is already ion view.
      *
      * @exception {DeveloperException} duration is required.
+     *
+     * @private
      */
-    Camera.prototype.createCorrectPositionAnimation = function(duration) {
+    Camera.prototype.createCorrectPositionTween = function(duration) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(duration)) {
             throw new DeveloperError('duration is required.');
@@ -1973,6 +1990,42 @@ define([
         }
 
         return undefined;
+    };
+
+    /**
+     * Flies the camera from its current position to a new position.
+     *
+     * @param {Object} options Object with the following properties:
+     * @param {Cartesian3} options.destination The final position of the camera in WGS84 (world) coordinates.
+     * @param {Cartesian3} [options.direction] The final direction of the camera in WGS84 (world) coordinates. By default, the direction will point towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D.
+     * @param {Cartesian3} [options.up] The final up direction in WGS84 (world) coordinates. By default, the up direction will point towards local north in 3D and in the positive y direction in Columbus view or 2D.
+     * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
+     * @param {Function} [options.complete] The function to execute when the flight is complete.
+     * @param {Function} [options.cancel] The function to execute if the flight is cancelled.
+     * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
+     * @param {Boolean} [options.convert=true] When <code>true</code>, the destination is converted to the correct coordinate system for each scene mode. When <code>false</code>, the destination is expected
+     *                  to be in the correct coordinate system.
+     *
+     * @exception {DeveloperError} If either direction or up is given, then both are required.
+     */
+    Camera.prototype.flyTo = function(options) {
+        var scene = this._scene;
+        scene.tweens.add(CameraFlightPath.createTween(scene, options));
+    };
+
+    /**
+     * Flies the camera from its current position to a position where the entire rectangle is visible.
+     *
+     * @param {Object} options Object with the following properties:
+     * @param {Rectangle} options.destination The rectangle to view, in WGS84 (world) coordinates, which determines the final position of the camera.
+     * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
+     * @param {Function} [options.complete] The function to execute when the flight is complete.
+     * @param {Function} [options.cancel] The function to execute if the flight is cancelled.
+     * @param {Matrix4} [endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
+     */
+    Camera.prototype.flyToRectangle = function(options) {
+        var scene = this._scene;
+        scene.tweens.add(CameraFlightPath.createTweenRectangle(scene, options));
     };
 
     /**

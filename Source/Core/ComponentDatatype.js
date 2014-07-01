@@ -21,7 +21,7 @@ define([
      * WebGL component datatypes.  Components are intrinsics,
      * which form attributes, which form vertices.
      *
-     * @alias ComponentDatatype
+     * @exports ComponentDatatype
      */
     var ComponentDatatype = {
         /**
@@ -92,7 +92,6 @@ define([
      * Returns the size, in bytes, of the corresponding datatype.
      *
      * @param {ComponentDatatype} componentDatatype The component datatype to get the size of.
-     *
      * @returns {Number} The size in bytes.
      *
      * @exception {DeveloperError} componentDatatype is not a valid value.
@@ -130,7 +129,6 @@ define([
      * Gets the ComponentDatatype for the provided TypedArray instance.
      *
      * @param {TypedArray} array The typed array.
-     *
      * @returns {ComponentDatatype} The ComponentDatatype for the provided array, or undefined if the array is not a TypedArray.
      */
     ComponentDatatype.fromTypedArray = function(array) {
@@ -158,7 +156,6 @@ define([
      * Validates that the provided component datatype is a valid {@link ComponentDatatype}
      *
      * @param {ComponentDatatype} componentDatatype The component datatype to validate.
-     *
      * @returns {Boolean} <code>true</code> if the provided component datatype is a valid value; otherwise, <code>false</code>.
      *
      * @example
@@ -181,7 +178,6 @@ define([
      *
      * @param {ComponentDatatype} componentDatatype The component data type.
      * @param {Number|Array} valuesOrLength The length of the array to create or an array.
-     *
      * @returns {Int8Array|Uint8Array|Int16Array|Uint16Array|Float32Array|Float64Array} A typed array.
      *
      * @exception {DeveloperError} componentDatatype is not a valid value.
@@ -225,7 +221,6 @@ define([
      * @param {ArrayBuffer} buffer The buffer storage to use for the view.
      * @param {Number} [byteOffset] The offset, in bytes, to the first element in the view.
      * @param {Number} [length] The number of elements in the view.
-     *
      * @returns {Int8Array|Uint8Array|Int16Array|Uint16Array|Float32Array|Float64Array} A typed array view of the buffer.
      *
      * @exception {DeveloperError} componentDatatype is not a valid value.

@@ -74,7 +74,7 @@ defineSuite([
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
-        visualizer.update(new JulianDate());
+        visualizer.update(JulianDate.now());
         expect(scene.primitives.length).toEqual(1);
         var polylineCollection = scene.primitives.get(0);
         expect(polylineCollection.length).toEqual(0);
@@ -88,14 +88,14 @@ defineSuite([
         var vector = testObject.vector = new DynamicVector();
         vector.show = new ConstantProperty(true);
 
-        visualizer.update(new JulianDate());
+        visualizer.update(JulianDate.now());
         expect(scene.primitives.length).toEqual(1);
         var polylineCollection = scene.primitives.get(0);
         expect(polylineCollection.length).toEqual(0);
     });
 
     it('A DynamicVector causes a primtive to be created and updated.', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
 
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicVectorVisualizer(scene, dynamicObjectCollection);
@@ -120,7 +120,7 @@ defineSuite([
         var primitive = polylineCollection.get(0);
         visualizer.update(time);
         expect(primitive.show).toEqual(testObject.vector.show.getValue(time));
-        expect(primitive.positions).toEqual([testObject.position.getValue(time), Cartesian3.add(testObject.position.getValue(time), Cartesian3.multiplyByScalar(Cartesian3.normalize(vector.direction.getValue(time)), vector.length.getValue(time)))]);
+        expect(primitive.positions).toEqual([testObject.position.getValue(time), Cartesian3.add(testObject.position.getValue(time), Cartesian3.multiplyByScalar(Cartesian3.normalize(vector.direction.getValue(time), new Cartesian3()), vector.length.getValue(time), new Cartesian3()), new Cartesian3())]);
         expect(primitive.width).toEqual(testObject.vector.width.getValue(time));
 
         var material = primitive.material;
@@ -133,7 +133,7 @@ defineSuite([
         visualizer.update(time);
         expect(primitive.show).toEqual(testObject.vector.show.getValue(time));
 
-        expect(primitive.positions).toEqual([testObject.position.getValue(time), Cartesian3.add(testObject.position.getValue(time), Cartesian3.multiplyByScalar(Cartesian3.normalize(vector.direction.getValue(time)), vector.length.getValue(time)))]);
+        expect(primitive.positions).toEqual([testObject.position.getValue(time), Cartesian3.add(testObject.position.getValue(time), Cartesian3.multiplyByScalar(Cartesian3.normalize(vector.direction.getValue(time), new Cartesian3()), vector.length.getValue(time), new Cartesian3()), new Cartesian3())]);
         expect(primitive.width).toEqual(testObject.vector.width.getValue(time));
 
         material = primitive.material;
@@ -149,7 +149,7 @@ defineSuite([
         visualizer = new DynamicVectorVisualizer(scene, dynamicObjectCollection);
         expect(scene.primitives.length).toEqual(1);
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        var time = new JulianDate();
+        var time = JulianDate.now();
 
         testObject.position = new ConstantProperty(new Cartesian3(5678, 1234, 1101112));
         var vector = testObject.vector = new DynamicVector();
@@ -179,7 +179,7 @@ defineSuite([
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
 
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var vector = testObject.vector = new DynamicVector();
 
         testObject.position = new ConstantProperty(new Cartesian3(5678, 1234, 1101112));

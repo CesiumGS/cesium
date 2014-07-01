@@ -23,6 +23,7 @@ define([
      * @param {Cartesian3} [center] The center of the box; automatically computed if not supplied.
      *
      * @see BoundingSphere
+     * @see BoundingRectangle
      */
     var AxisAlignedBoundingBox = function(minimum, maximum, center) {
         /**
@@ -41,7 +42,7 @@ define([
 
         //If center was not defined, compute it.
         if (!defined(center)) {
-            center = Cartesian3.add(this.minimum, this.maximum);
+            center = Cartesian3.add(this.minimum, this.maximum, new Cartesian3());
             Cartesian3.multiplyByScalar(center, 0.5, center);
         } else {
             center = Cartesian3.clone(center);

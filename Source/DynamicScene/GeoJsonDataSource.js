@@ -89,7 +89,7 @@ define([
             var key;
             var nameProperty;
             for (key in properties) {
-                if (properties.hasOwnProperty(key)) {
+                if (properties.hasOwnProperty(key) && properties[key]) {
                     var upperKey = key.toUpperCase();
                     if (upperKey === 'NAME' || upperKey === 'TITLE') {
                         nameProperty = key;
@@ -100,7 +100,7 @@ define([
             }
             if (!defined(nameProperty)) {
                 for (key in properties) {
-                    if (properties.hasOwnProperty(key)) {
+                    if (properties.hasOwnProperty(key) && properties[key]) {
                         if (/name/i.test(key) || /title/i.test(key)) {
                             nameProperty = key;
                             dynamicObject.name = properties[key];
@@ -433,7 +433,7 @@ define([
         var dataSource = this;
         return when(loadJson(url), function(geoJson) {
             return dataSource.load(geoJson, url);
-        }, function(error) {
+        }).otherwise(function(error) {
             setLoading(dataSource, false);
             dataSource._error.raiseEvent(dataSource, error);
             return when.reject(error);
@@ -445,7 +445,6 @@ define([
      *
      * @param {Object} geoJson The object to be processed.
      * @param {String} [sourceUri] The base URI of any relative links in the geoJson object.
-     *
      * @returns {Promise} a promise that will resolve when the GeoJSON is loaded.
      *
      * @exception {DeveloperError} Unsupported GeoJSON object type.
@@ -524,7 +523,7 @@ define([
             typeHandler(dataSource, geoJson, geoJson, crsFunction, sourceUri);
             dataSource._changed.raiseEvent(dataSource);
             setLoading(dataSource, false);
-        }, function(error) {
+        }).otherwise(function(error) {
             setLoading(dataSource, false);
             dataSource._error.raiseEvent(dataSource, error);
             return when.reject(error);

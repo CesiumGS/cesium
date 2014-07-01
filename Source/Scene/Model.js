@@ -29,6 +29,7 @@ define([
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         '../ThirdParty/gltfDefaults',
+        '../ThirdParty/Uri',
         './BlendingState',
         './ModelAnimationCache',
         './ModelAnimationCollection',
@@ -68,6 +69,7 @@ define([
         TextureMinificationFilter,
         TextureWrap,
         gltfDefaults,
+        Uri,
         BlendingState,
         ModelAnimationCache,
         ModelAnimationCollection,
@@ -174,6 +176,10 @@ define([
         this._gltf = gltfDefaults(options.gltf);
         this._basePath = defaultValue(options.basePath, '');
 
+        var docUri = new Uri(document.location.href);
+        var modelUri = new Uri(this._basePath);
+        this._baseUri = modelUri.resolve(docUri);
+
         /**
          * Determines if the model primitive will be shown.
          *
@@ -196,8 +202,6 @@ define([
          * @example
          * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
          * m.modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
-         *
-         * @see Transforms.eastNorthUpToFixedFrame
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = Matrix4.clone(this.modelMatrix);
@@ -468,7 +472,6 @@ define([
      * Creates a model from a glTF asset.  When the model is ready to render, i.e., when the external binary, image,
      * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyToRender} event is fired.
      *
-     *
      * @param {Object} options Object with the following properties:
      * @param {String} options.url The url to the glTF .json file.
      * @param {Object} [options.headers] HTTP headers to send with the request.
@@ -480,8 +483,9 @@ define([
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
-     *
      * @returns {Model} The newly created model.
+     *
+     * @see Model#readyToRender
      *
      * @example
      * // Example 1. Create a model from a glTF asset
@@ -489,6 +493,7 @@ define([
      *   url : './duck/duck.json'
      * }));
      *
+     * @example
      * // Example 2. Create model and provide all properties and events
      * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
      * var modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
@@ -508,8 +513,6 @@ define([
      *   // Play all animations when the model is ready to render
      *   model.activeAnimations.addAll();
      * });
-     *
-     * @see Model#readyToRender
      */
     Model.fromGltf = function(options) {
         //>>includeStart('debug', pragmas.debug);
@@ -530,6 +533,10 @@ define([
         loadText(url, options.headers).then(function(data) {
             model._gltf = gltfDefaults(JSON.parse(data));
             model._basePath = basePath;
+
+            var docUri = new Uri(document.location.href);
+            var modelUri = new Uri(model._basePath);
+            model._baseUri = modelUri.resolve(docUri);
         });
 
         return model;
@@ -554,7 +561,6 @@ define([
      * modify a node's transform for animation outside of glTF animations.
      *
      * @param {String} name The glTF name of the node.
-     *
      * @returns {ModelNode} The node or <code>undefined</code> if no node with <code>name</code> exists.
      *
      * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event or ready property.
@@ -586,7 +592,6 @@ define([
      * Returns the glTF material with the given <code>name</code> property.
      *
      * @param {String} name The glTF name of the material.
-     *
      * @returns {ModelMaterial} The material or <code>undefined</code> if no material with <code>name</code> exists.
      *
      * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event or ready property.
@@ -697,7 +702,10 @@ define([
         for (var name in buffers) {
             if (buffers.hasOwnProperty(name)) {
                 ++model._loadResources.pendingBufferLoads;
-                var bufferPath = model.basePath + buffers[name].path;
+                var buffer = buffers[name];
+                // Backwards compatibility for now for 'path' in glTF 0.6.
+                var uri = new Uri(defined(buffer.uri) ? buffer.uri : buffer.path);
+                var bufferPath = uri.resolve(model._baseUri).toString();
                 loadArrayBuffer(bufferPath).then(bufferLoad(model, name), getFailedLoadFunction(model, 'buffer', bufferPath));
             }
         }
@@ -725,7 +733,10 @@ define([
         for (var name in shaders) {
             if (shaders.hasOwnProperty(name)) {
                 ++model._loadResources.pendingShaderLoads;
-                var shaderPath = model.basePath + shaders[name].path;
+                var shader = shaders[name];
+                // Backwards compatibility for now for 'path' in glTF 0.6.
+                var uri = new Uri(defined(shader.uri) ? shader.uri : shader.path);
+                var shaderPath = uri.resolve(model._baseUri).toString();
                 loadText(shaderPath).then(shaderLoad(model, name), getFailedLoadFunction(model, 'shader', shaderPath));
             }
         }
@@ -757,7 +768,10 @@ define([
         for (var name in textures) {
             if (textures.hasOwnProperty(name)) {
                 ++model._loadResources.pendingTextureLoads;
-                var imagePath = model.basePath + images[textures[name].source].path;
+                var texture = textures[name];
+                // Backwards compatibility for now for 'path' in glTF 0.6.
+                var uri = new Uri(defined(images[texture.source].uri) ? images[texture.source].uri : images[texture.source].path);
+                var imagePath = uri.resolve(model._baseUri).toString();
                 loadImage(imagePath).then(imageLoad(model, name), getFailedLoadFunction(model, 'image', imagePath));
             }
         }
@@ -1608,37 +1622,34 @@ define([
                 // Uniform parameters for this pass
                 for (var name in uniforms) {
                     if (uniforms.hasOwnProperty(name)) {
-                        // Only add active uniforms
-                        if (defined(activeUniforms[name])) {
-                            var parameterName = uniforms[name];
-                            var parameter = parameters[parameterName];
+                        var parameterName = uniforms[name];
+                        var parameter = parameters[parameterName];
 
-                            // GLTF_SPEC: In this implementation, material parameters with a
-                            // semantic or targeted via a source (for animation) are not
-                            // targetable for material animations.  Is this too strict?
-                            //
-                            // https://github.com/KhronosGroup/glTF/issues/142
+                        // GLTF_SPEC: In this implementation, material parameters with a
+                        // semantic or targeted via a source (for animation) are not
+                        // targetable for material animations.  Is this too strict?
+                        //
+                        // https://github.com/KhronosGroup/glTF/issues/142
 
-                            if (defined(instanceParameters[parameterName])) {
-                                // Parameter overrides by the instance technique
-                                var uv = gltfUniformFunctions[parameter.type](instanceParameters[parameterName], model);
-                                uniformMap[name] = uv.func;
-                                uniformValues[parameterName] = uv;
-                            } else if (defined(parameter.semantic)) {
-                                if (parameter.semantic !== 'JOINT_MATRIX') {
-                                    // Map glTF semantic to Cesium automatic uniform
-                                    uniformMap[name] = gltfSemanticUniforms[parameter.semantic](context.uniformState);
-                                } else {
-                                    jointMatrixUniformName = name;
-                                }
-                            } else if (defined(parameter.source)) {
-                                uniformMap[name] = getUniformFunctionFromSource(parameter.source, model);
-                            } else if (defined(parameter.value)) {
-                                // Technique value that isn't overridden by a material
-                                var uv2 = gltfUniformFunctions[parameter.type](parameter.value, model);
-                                uniformMap[name] = uv2.func;
-                                uniformValues[parameterName] = uv2;
+                        if (defined(instanceParameters[parameterName])) {
+                            // Parameter overrides by the instance technique
+                            var uv = gltfUniformFunctions[parameter.type](instanceParameters[parameterName], model);
+                            uniformMap[name] = uv.func;
+                            uniformValues[parameterName] = uv;
+                        } else if (defined(parameter.semantic)) {
+                            if (parameter.semantic !== 'JOINT_MATRIX') {
+                                // Map glTF semantic to Cesium automatic uniform
+                                uniformMap[name] = gltfSemanticUniforms[parameter.semantic](context.uniformState);
+                            } else {
+                                jointMatrixUniformName = name;
                             }
+                        } else if (defined(parameter.source)) {
+                            uniformMap[name] = getUniformFunctionFromSource(parameter.source, model);
+                        } else if (defined(parameter.value)) {
+                            // Technique value that isn't overridden by a material
+                            var uv2 = gltfUniformFunctions[parameter.type](parameter.value, model);
+                            uniformMap[name] = uv2.func;
+                            uniformValues[parameterName] = uv2;
                         }
                     }
                 }
@@ -2079,9 +2090,14 @@ define([
     }
 
     /**
-     * @exception {RuntimeError} Failed to load external reference.
+     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
+     * get the draw commands needed to render this primitive.
+     * <p>
+     * Do not call this function directly.  This is documented just to
+     * list the exceptions that may be propagated when the scene is rendered:
+     * </p>
      *
-     * @private
+     * @exception {RuntimeError} Failed to load external reference.
      */
     Model.prototype.update = function(context, frameState, commandList) {
         if (frameState.mode !== SceneMode.SCENE3D) {

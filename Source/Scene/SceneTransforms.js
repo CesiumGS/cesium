@@ -41,7 +41,6 @@ define([
      * @param {Scene} scene The scene.
      * @param {Cartesian3} position The position in WGS84 (world) coordinates.
      * @param {Cartesian2} [result] An optional object to return the input position transformed to window coordinates.
-     *
      * @returns {Cartesian2} The modified result parameter or a new Cartesian3 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
      *
      * @example
@@ -77,7 +76,9 @@ define([
         viewProjectionScratch = Matrix4.multiply(camera.frustum.projectionMatrix, camera.viewMatrix, viewProjectionScratch);
         Matrix4.multiplyByVector(viewProjectionScratch, actualPosition, positionCC);
 
-        return SceneTransforms.clipToWindowCoordinates(scene, positionCC, result);
+        result = SceneTransforms.clipToGLWindowCoordinates(scene, positionCC, result);
+        result.y = scene.canvas.clientHeight - result.y;
+        return result;
     };
 
     /**
@@ -87,7 +88,6 @@ define([
      * @param {Scene} scene The scene.
      * @param {Cartesian3} position The position in WGS84 (world) coordinates.
      * @param {Cartesian2} [result] An optional object to return the input position transformed to window coordinates.
-     *
      * @returns {Cartesian2} The modified result parameter or a new Cartesian3 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
      *
      * @example
@@ -172,7 +172,7 @@ define([
     /**
      * @private
      */
-    SceneTransforms.clipToWindowCoordinates = function(scene, position, result) {
+    SceneTransforms.clipToGLWindowCoordinates = function(scene, position, result) {
         var canvas = scene.canvas;
 
         // Perspective divide to transform from clip coordinates to normalized device coordinates

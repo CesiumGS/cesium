@@ -25,17 +25,19 @@ defineSuite([
         expect(property.referenceFrame).toEqual(ReferenceFrame.FIXED);
         expect(property.interpolationDegree).toEqual(1);
         expect(property.interpolationAlgorithm).toEqual(LinearApproximation);
+        expect(property.numberOfDerivatives).toEqual(0);
     });
 
     it('constructor sets expected values', function() {
-        var property = new SampledPositionProperty(ReferenceFrame.INERTIAL);
+        var property = new SampledPositionProperty(ReferenceFrame.INERTIAL, 1);
         expect(property.referenceFrame).toEqual(ReferenceFrame.INERTIAL);
         expect(property.interpolationDegree).toEqual(1);
         expect(property.interpolationAlgorithm).toEqual(LinearApproximation);
+        expect(property.numberOfDerivatives).toEqual(1);
     });
 
     it('getValue works without a result parameter', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var value = new Cartesian3(1, 2, 3);
         var property = new SampledPositionProperty();
         property.addSample(time, value);
@@ -46,7 +48,7 @@ defineSuite([
     });
 
     it('getValue works with a result parameter', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var value = new Cartesian3(1, 2, 3);
         var property = new SampledPositionProperty();
         property.addSample(time, value);
@@ -58,7 +60,7 @@ defineSuite([
     });
 
     it('getValue returns in fixed frame', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var valueInertial = new Cartesian3(1, 2, 3);
         var valueFixed = PositionProperty.convertToReferenceFrame(time, valueInertial, ReferenceFrame.INERTIAL, ReferenceFrame.FIXED);
         var property = new SampledPositionProperty(ReferenceFrame.INERTIAL);
@@ -69,7 +71,7 @@ defineSuite([
     });
 
     it('getValueInReferenceFrame works without a result parameter', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var value = new Cartesian3(1, 2, 3);
         var property = new SampledPositionProperty();
         property.addSample(time, value);
@@ -80,7 +82,7 @@ defineSuite([
     });
 
     it('getValueInReferenceFrame works with a result parameter', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var value = new Cartesian3(1, 2, 3);
         var property = new SampledPositionProperty(ReferenceFrame.INERTIAL);
         property.addSample(time, value);
@@ -126,6 +128,73 @@ defineSuite([
         expect(property.getValue(times[1])).toEqual(values[1]);
         expect(property.getValue(times[2])).toEqual(values[2]);
         expect(property.getValue(new JulianDate(0.5, 0))).toEqual(new Cartesian3(7.5, 8.5, 9.5));
+    });
+
+    it('addSamplesPackedArray works with derivatives', function() {
+        var data = [0, 7, 8, 9, 1, 0, 0, 1, 8, 9, 10, 0, 1, 0, 2, 9, 10, 11, 0, 0, 1];
+        var epoch = new JulianDate(0, 0);
+
+        var property = new SampledPositionProperty(ReferenceFrame.FIXED, 1);
+        property.addSamplesPackedArray(data, epoch);
+        expect(property.getValue(epoch)).toEqual(new Cartesian3(7, 8, 9));
+        expect(property.getValue(new JulianDate(0, 0.5))).toEqual(new Cartesian3(7.5, 8.5, 9.5));
+    });
+
+    it('addSample works with derivatives', function() {
+        var times = [new JulianDate(0, 0), new JulianDate(1, 0), new JulianDate(2, 0)];
+        var positions = [new Cartesian3(7, 8, 9), new Cartesian3(8, 9, 10), new Cartesian3(9, 10, 11)];
+        var velocities = [[new Cartesian3(0, 0, 1)], [new Cartesian3(0, 1, 0)], [new Cartesian3(1, 0, 0)]];
+
+        var property = new SampledPositionProperty(ReferenceFrame.FIXED, 1);
+        property.addSample(times[0], positions[0], velocities[0]);
+        property.addSample(times[1], positions[1], velocities[1]);
+        property.addSample(times[2], positions[2], velocities[2]);
+
+        expect(property.getValue(times[0])).toEqual(positions[0]);
+        expect(property.getValue(times[1])).toEqual(positions[1]);
+        expect(property.getValue(times[2])).toEqual(positions[2]);
+        expect(property.getValue(new JulianDate(0.5, 0))).toEqual(new Cartesian3(7.5, 8.5, 9.5));
+    });
+
+    it('addSamples works with derivatives', function() {
+        var times = [new JulianDate(0, 0), new JulianDate(1, 0), new JulianDate(2, 0)];
+        var positions = [new Cartesian3(7, 8, 9), new Cartesian3(8, 9, 10), new Cartesian3(9, 10, 11)];
+        var velocities = [[new Cartesian3(0, 0, 1)], [new Cartesian3(0, 1, 0)], [new Cartesian3(1, 0, 0)]];
+
+        var property = new SampledPositionProperty(ReferenceFrame.FIXED, 1);
+        property.addSamples(times, positions, velocities);
+        expect(property.getValue(times[0])).toEqual(positions[0]);
+        expect(property.getValue(times[1])).toEqual(positions[1]);
+        expect(property.getValue(times[2])).toEqual(positions[2]);
+        expect(property.getValue(new JulianDate(0.5, 0))).toEqual(new Cartesian3(7.5, 8.5, 9.5));
+    });
+
+    it('addSample throws when derivative is undefined but expected', function() {
+        var property = new SampledPositionProperty(ReferenceFrame.FIXED, 1);
+        expect(function() {
+            property.addSample(new JulianDate(0, 0), new Cartesian3(7, 8, 9), undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('addSamples throws when derivative is undefined but expected', function() {
+        var times = [new JulianDate(0, 0), new JulianDate(1, 0), new JulianDate(2, 0)];
+        var positions = [new Cartesian3(7, 8, 9), new Cartesian3(8, 9, 10), new Cartesian3(9, 10, 11)];
+
+        var property = new SampledPositionProperty(ReferenceFrame.FIXED, 1);
+        expect(function() {
+            property.addSamples(times, positions, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('addSamples throws when derivative is not the correct length', function() {
+        var times = [new JulianDate(0, 0), new JulianDate(1, 0), new JulianDate(2, 0)];
+        var positions = [new Cartesian3(7, 8, 9), new Cartesian3(8, 9, 10), new Cartesian3(9, 10, 11)];
+        var velocities = [[new Cartesian3(7, 8, 9)], [new Cartesian3(8, 9, 10)]];
+
+        var property = new SampledPositionProperty(ReferenceFrame.FIXED, 1);
+        expect(function() {
+            property.addSamples(times, positions, velocities);
+        }).toThrowDeveloperError();
     });
 
     it('can set interpolationAlgorithm and degree', function() {
@@ -190,7 +259,7 @@ defineSuite([
         property.addSample(time, value);
 
         expect(property.getValue(time)).toEqual(value);
-        expect(property.getValue(time.addSeconds(4))).toBeUndefined();
+        expect(property.getValue(JulianDate.addSeconds(time, 4, new JulianDate()))).toBeUndefined();
     });
 
     it('throws with no time parameter', function() {
@@ -202,7 +271,7 @@ defineSuite([
 
     it('throws with no reference frame parameter', function() {
         var property = new SampledPositionProperty();
-        var time = new JulianDate();
+        var time = JulianDate.now();
         expect(function() {
             property.getValueInReferenceFrame(time, undefined);
         }).toThrowDeveloperError();
@@ -253,7 +322,7 @@ defineSuite([
         var right = new SampledPositionProperty();
         expect(left.equals(right)).toEqual(true);
 
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var value = new Cartesian3(1, 2, 3);
         left.addSample(time, value);
         expect(left.equals(right)).toEqual(false);

@@ -123,7 +123,7 @@ define([
                         isBigEndian : false
                     };
                 that._hasWaterMask = true;
-            } else if (data.format === 'quantized-mesh-1.0') {
+            } else if (data.format.indexOf('quantized-mesh-1.') === 0) {
                 that._hasWaterMask = false;
             } else {
                 message = 'The tile format "' + data.format + '" is invalid or not supported.';

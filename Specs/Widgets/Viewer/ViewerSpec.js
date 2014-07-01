@@ -373,6 +373,30 @@ defineSuite([
         expect(viewer.targetFrameRate).toBe(23);
     });
 
+    it('can set dataSources at construction', function() {
+        var collection = new DataSourceCollection();
+        viewer = new Viewer(container, {
+            dataSources : collection
+        });
+        expect(viewer.dataSources).toBe(collection);
+    });
+
+    it('default DataSourceCollection is destroyed when Viewer is destroyed', function() {
+        viewer = new Viewer(container);
+        var dataSources = viewer.dataSources;
+        viewer.destroy();
+        expect(dataSources.isDestroyed()).toBe(true);
+    });
+
+    it('specified DataSourceCollection is not destroyed when Viewer is destroyed', function() {
+        var collection = new DataSourceCollection();
+        viewer = new Viewer(container, {
+            dataSources : collection
+        });
+        viewer.destroy();
+        expect(collection.isDestroyed()).toBe(false);
+    });
+
     it('throws if targetFrameRate less than 0', function() {
         viewer = new Viewer(container);
         expect(function() {
@@ -590,7 +614,17 @@ defineSuite([
 
         runs(function() {
             expect(viewer._element.querySelector('.cesium-widget-errorPanel')).not.toBeNull();
-            expect(viewer._element.querySelector('.cesium-widget-errorPanel-message').textContent).toEqual(error);
+
+            var messages = viewer._element.querySelectorAll('.cesium-widget-errorPanel-message');
+
+            var found = false;
+            for (var i = 0; i < messages.length; ++i) {
+                if (messages[i].textContent === error) {
+                    found = true;
+                }
+            }
+
+            expect(found).toBe(true);
 
             // click the OK button to dismiss the panel
             EventHelper.fireClick(viewer._element.querySelector('.cesium-button'));

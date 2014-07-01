@@ -187,7 +187,7 @@ define([
      * An immutable Cartographic instance initialized to (0.0, 0.0, 0.0).
      *
      * @type {Cartographic}
-     * @readonly
+     * @constant
      */
     Cartographic.ZERO = freezeObject(new Cartographic(0.0, 0.0, 0.0));
 
