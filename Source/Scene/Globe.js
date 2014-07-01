@@ -178,7 +178,6 @@ define([
         this.show = true;
 
         this._mode = SceneMode.SCENE3D;
-        this._projection = undefined;
 
         /**
          * The normal map to use for rendering waves in the ocean.  Setting this property will
@@ -347,27 +346,30 @@ define([
         return depthQuadScratch;
     }
 
+    var rightScratch = new Cartesian3();
+    var upScratch = new Cartesian3();
+    var negativeZ = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
     function computePoleQuad(globe, frameState, maxLat, maxGivenLat, viewProjMatrix, viewportTransformation) {
         var pt1 = globe._ellipsoid.cartographicToCartesian(new Cartographic(0.0, maxGivenLat));
         var pt2 = globe._ellipsoid.cartographicToCartesian(new Cartographic(Math.PI, maxGivenLat));
-        var radius = Cartesian3.magnitude(Cartesian3.subtract(pt1, pt2)) * 0.5;
+        var radius = Cartesian3.magnitude(Cartesian3.subtract(pt1, pt2, rightScratch), rightScratch) * 0.5;
 
         var center = globe._ellipsoid.cartographicToCartesian(new Cartographic(0.0, maxLat));
 
         var right;
         var dir = frameState.camera.direction;
-        if (1.0 - Cartesian3.dot(Cartesian3.negate(Cartesian3.UNIT_Z), dir) < CesiumMath.EPSILON6) {
+        if (1.0 - Cartesian3.dot(negativeZ, dir) < CesiumMath.EPSILON6) {
             right = Cartesian3.UNIT_X;
         } else {
-            right = Cartesian3.normalize(Cartesian3.cross(dir, Cartesian3.UNIT_Z));
+            right = Cartesian3.normalize(Cartesian3.cross(dir, Cartesian3.UNIT_Z, rightScratch), rightScratch);
         }
 
-        var screenRight = Cartesian3.add(center, Cartesian3.multiplyByScalar(right, radius));
-        var screenUp = Cartesian3.add(center, Cartesian3.multiplyByScalar(Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, right)), radius));
+        var screenRight = Cartesian3.add(center, Cartesian3.multiplyByScalar(right, radius, rightScratch), rightScratch);
+        var screenUp = Cartesian3.add(center, Cartesian3.multiplyByScalar(Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, right, upScratch), upScratch), radius, upScratch), upScratch);
 
-        Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, center, center);
-        Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenRight, screenRight);
-        Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenUp, screenUp);
+        Transforms.pointToGLWindowCoordinates(viewProjMatrix, viewportTransformation, center, center);
+        Transforms.pointToGLWindowCoordinates(viewProjMatrix, viewportTransformation, screenRight, screenRight);
+        Transforms.pointToGLWindowCoordinates(viewProjMatrix, viewportTransformation, screenUp, screenUp);
 
         var halfWidth = Math.floor(Math.max(Cartesian3.distance(screenUp, center), Cartesian3.distance(screenRight, center)));
         var halfHeight = halfWidth;
@@ -556,7 +558,7 @@ define([
         }
 
         var mode = frameState.mode;
-        var projection = frameState.scene2D.projection;
+        var projection = frameState.mapProjection;
         var modeChanged = false;
 
         if (this._mode !== mode || !defined(this._rsColor)) {
@@ -663,7 +665,6 @@ define([
         }
 
         // Initial compile or re-compile if uber-shader parameters changed
-        var projectionChanged = this._projection !== projection;
         var hasWaterMask = this._surface._terrainProvider.ready && this._surface._terrainProvider.hasWaterMask();
         var hasWaterMaskChanged = this._hasWaterMask !== hasWaterMask;
         var hasEnableLightingChanged = this._enableLighting !== this.enableLighting;
@@ -672,7 +673,6 @@ define([
             !defined(this._northPoleCommand.shaderProgram) ||
             !defined(this._southPoleCommand.shaderProgram) ||
             modeChanged ||
-            projectionChanged ||
             hasWaterMaskChanged ||
             hasEnableLightingChanged ||
             (defined(this._oceanNormalMap)) !== this._showingPrettyOcean) {
@@ -748,7 +748,6 @@ define([
         fillPoles(this, context, frameState);
 
         this._mode = mode;
-        this._projection = projection;
 
         var pass = frameState.passes;
         if (pass.render) {
@@ -777,12 +776,12 @@ define([
             this._surface._tileCacheSize = this.tileCacheSize;
             this._surface.terrainProvider = this.terrainProvider;
             this._surface.update(context,
-                    frameState,
-                    commandList,
-                    this._drawUniforms,
-                    this._surfaceShaderSet,
-                    this._rsColor,
-                    this._projection);
+                frameState,
+                commandList,
+                this._drawUniforms,
+                this._surfaceShaderSet,
+                this._rsColor,
+                projection);
 
             // render depth plane
             if (mode === SceneMode.SCENE3D || mode === SceneMode.COLUMBUS_VIEW) {
@@ -808,8 +807,6 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof Globe
-     *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see Globe#destroy
@@ -825,8 +822,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof Globe
      *
      * @returns {undefined}
      *

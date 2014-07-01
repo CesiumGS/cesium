@@ -12,6 +12,7 @@ define([
         './Ellipsoid',
         './Iau2006XysData',
         './Iau2006XysSample',
+        './JulianDate',
         './Math',
         './Matrix3',
         './Matrix4',
@@ -29,6 +30,7 @@ define([
         Ellipsoid,
         Iau2006XysData,
         Iau2006XysSample,
+        JulianDate,
         CesiumMath,
         Matrix3,
         Matrix4,
@@ -54,8 +56,6 @@ define([
      * <li>The <code>y</code> axis points in the local north direction.</li>
      * <li>The <code>z</code> axis points in the direction of the ellipsoid surface normal which passes through the position.</li>
      * </ul>
-     *
-     * @memberof Transforms
      *
      * @param {Cartesian3} origin The center point of the local reference frame.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
@@ -159,8 +159,6 @@ define([
      * <li>The <code>z</code> axis points in the opposite direction of the ellipsoid surface normal which passes through the position.</li>
      * </ul>
      *
-     * @memberof Transforms
-     *
      * @param {Cartesian3} origin The center point of the local reference frame.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
      * @param {Matrix4} [result] The object onto which to store the result.
@@ -256,12 +254,11 @@ define([
     var rateCoef = 1.1772758384668e-19;
     var wgs84WRPrecessing = 7.2921158553E-5;
     var twoPiOverSecondsInDay = CesiumMath.TWO_PI / 86400.0;
+    var dateInUtc = new JulianDate();
 
     /**
      * Computes a rotation matrix to transform a point or vector from True Equator Mean Equinox (TEME) axes to the
      * pseudo-fixed axes at a given time.  This method treats the UT1 time standard as equivalent to UTC.
-     *
-     * @memberof Transforms
      *
      * @param {JulianDate} date The time at which to compute the rotation matrix.
      * @param {Matrix3} [result] The object onto which to store the result.
@@ -285,9 +282,9 @@ define([
         // We do not want to use the function like convertTaiToUtc in JulianDate because
         // we explicitly do not want to fail when inside the leap second.
 
-        var dateInUtc = date.addSeconds(-date.getTaiMinusUtc());
-        var utcDayNumber = dateInUtc.getJulianDayNumber();
-        var utcSecondsIntoDay = dateInUtc.getSecondsOfDay();
+        dateInUtc = JulianDate.addSeconds(date, -JulianDate.getTaiMinusUtc(date), dateInUtc);
+        var utcDayNumber = dateInUtc.dayNumber;
+        var utcSecondsIntoDay = dateInUtc.secondsOfDay;
 
         var t;
         var diffDays = utcDayNumber - 2451545;
@@ -327,8 +324,6 @@ define([
      * Fixed and ICRF axes.
      * @type {Iau2006XysData}
      *
-     * @memberof Transforms
-     *
      * @see Transforms.computeIcrfToFixedMatrix
      * @see Transforms.computeFixedToIcrfMatrix
      */
@@ -339,8 +334,6 @@ define([
      * between the Fixed and ICRF axes.  By default, zero values are used for all EOP values,
      * yielding a reasonable but not completely accurate representation of the ICRF axes.
      * @type {EarthOrientationParameters}
-     *
-     * @memberof Transforms
      *
      * @see Transforms.computeIcrfToFixedMatrix
      * @see Transforms.computeFixedToIcrfMatrix
@@ -354,8 +347,6 @@ define([
      * Preloads the data necessary to transform between the ICRF and Fixed axes, in either
      * direction, over a given interval.  This function returns a promise that, when resolved,
      * indicates that the preload has completed.
-     *
-     * @memberof Transforms
      *
      * @param {TimeInterval} timeInterval The interval to preload.
      * @returns {Promise} A promise that, when resolved, indicates that the preload has completed
@@ -373,10 +364,10 @@ define([
      * });
      */
     Transforms.preloadIcrfFixed = function(timeInterval) {
-        var startDayTT = timeInterval.start.getJulianDayNumber();
-        var startSecondTT = timeInterval.start.getSecondsOfDay() + ttMinusTai;
-        var stopDayTT = timeInterval.stop.getJulianDayNumber();
-        var stopSecondTT = timeInterval.stop.getSecondsOfDay() + ttMinusTai;
+        var startDayTT = timeInterval.start.dayNumber;
+        var startSecondTT = timeInterval.start.secondsOfDay + ttMinusTai;
+        var stopDayTT = timeInterval.stop.dayNumber;
+        var stopSecondTT = timeInterval.stop.secondsOfDay + ttMinusTai;
 
         var xysPromise = Transforms.iau2006XysData.preload(startDayTT, startSecondTT, stopDayTT, stopSecondTT);
         var eopPromise = Transforms.earthOrientationParameters.getPromiseToLoad();
@@ -390,8 +381,6 @@ define([
      * at a given time.  This function may return undefined if the data necessary to
      * do the transformation is not yet loaded.
      *
-     * @memberof Transforms
-     *
      * @param {JulianDate} date The time at which to compute the rotation matrix.
      * @param {Matrix3} [result] The object onto which to store the result.  If this parameter is
      *                  not specified, a new instance is created and returned.
@@ -401,18 +390,12 @@ define([
      * @see Transforms.preloadIcrfFixed
      *
      * @example
-     * //Set the view to the inertial frame.
-     * function updateAndRender() {
-     *     var now = new Cesium.JulianDate();
-     *     scene.initializeFrame();
-     *     var icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(now);
-     *     if (Cesium.defined(icrfToFixed)) {
-     *         scene.camera.transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed, Cesium.Cartesian3.ZERO);
-     *     }
-     *     scene.render();
-     *     Cesium.requestAnimationFrame(updateAndRender);
-     * }
-     * updateAndRender();
+     * scene.preRender.addEventListener(function(scene, time) {
+     *   var icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(time);
+     *   if (Cesium.defined(icrfToFixed)) {
+     *     scene.camera.transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed, Cesium.Cartesian3.ZERO);
+     *   }
+     * });
      */
     Transforms.computeIcrfToFixedMatrix = function(date, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -439,8 +422,6 @@ define([
      * to the International Celestial Reference Frame (GCRF/ICRF) inertial frame axes
      * at a given time.  This function may return undefined if the data necessary to
      * do the transformation is not yet loaded.
-     *
-     * @memberof Transforms
      *
      * @param {JulianDate} date The time at which to compute the rotation matrix.
      * @param {Matrix3} [result] The object onto which to store the result.  If this parameter is
@@ -476,10 +457,10 @@ define([
         // There is no external conversion to Terrestrial Time (TT).
         // So use International Atomic Time (TAI) and convert using offsets.
         // Here we are assuming that dayTT and secondTT are positive
-        var dayTT = date.getJulianDayNumber();
+        var dayTT = date.dayNumber;
         // It's possible here that secondTT could roll over 86400
         // This does not seem to affect the precision (unit tests check for this)
-        var secondTT = date.getSecondsOfDay() + ttMinusTai;
+        var secondTT = date.secondsOfDay + ttMinusTai;
 
         var xys = Transforms.iau2006XysData.computeXysRadians(dayTT, secondTT, xysScratch);
         if (!defined(xys)) {
@@ -509,8 +490,8 @@ define([
         // Similar to TT conversions above
         // It's possible here that secondTT could roll over 86400
         // This does not seem to affect the precision (unit tests check for this)
-        var dateUt1day = date.getJulianDayNumber();
-        var dateUt1sec = date.getSecondsOfDay() - date.getTaiMinusUtc() + eop.ut1MinusUtc;
+        var dateUt1day = date.dayNumber;
+        var dateUt1sec = date.secondsOfDay - JulianDate.getTaiMinusUtc(date) + eop.ut1MinusUtc;
 
         // Compute Earth rotation angle
         // The IERS standard for era is
@@ -565,18 +546,22 @@ define([
     /**
      * Transform a point from model coordinates to window coordinates.
      *
-     * @memberof Transforms
-     *
      * @param {Matrix4} modelViewProjectionMatrix The 4x4 model-view-projection matrix.
      * @param {Matrix4} viewportTransformation The 4x4 viewport transformation.
      * @param {Cartesian3} point The point to transform.
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
-     *
-     * @see czm_modelViewProjection
-     * @see czm_viewportTransformation
      */
     Transforms.pointToWindowCoordinates = function (modelViewProjectionMatrix, viewportTransformation, point, result) {
+        result = Transforms.pointToGLWindowCoordinates(modelViewProjectionMatrix, viewportTransformation, point, result);
+        result.y = 2.0 * viewportTransformation[5] - result.y;
+        return result;
+    };
+
+    /**
+     * @private
+     */
+    Transforms.pointToGLWindowCoordinates = function(modelViewProjectionMatrix, viewportTransformation, point, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(modelViewProjectionMatrix)) {
             throw new DeveloperError('modelViewProjectionMatrix is required.');
@@ -590,6 +575,10 @@ define([
             throw new DeveloperError('point is required.');
         }
         //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            result = new Cartesian2();
+        }
 
         var tmp = pointToWindowCoordinatesTemp;
 

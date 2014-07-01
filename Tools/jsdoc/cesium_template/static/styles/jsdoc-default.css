@@ -1,6 +1,6 @@
 body
 {
-    font-size: 0.75em;
+    font-size: 12px;
     font-family: Arial, Geneva, sans serif;
     margin: 0;
     color: #000;
@@ -27,6 +27,20 @@ div.show-bkgd {
 
 .hide {
     display: none;
+}
+
+code {
+    margin: 0;
+    padding: 0;
+    font-family: Consolas, "Liberation Mono", Menlo, "Courier New", Courier, Monaco, monospace;
+    font-size: 12px;
+}
+
+.description code {
+    border-radius: 3px;
+    border: 1px solid #ddd;
+    background-color: #f8f8f8;
+    padding: 0 2px;
 }
 
 div.hr {
@@ -467,8 +481,6 @@ dd { margin-left: 0.8em; }
 
 .sh_sourceCode code
 {
-    font-family: Consolas, 'Lucida Console', Monaco, monospace;
-    font-size: 100%;
     line-height: 18px;
     display: block;
     padding: 4px 12px;

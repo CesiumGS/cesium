@@ -21,14 +21,11 @@ define([
         '../Shaders/Materials/CheckerboardMaterial',
         '../Shaders/Materials/DotMaterial',
         '../Shaders/Materials/FadeMaterial',
-        '../Shaders/Materials/FresnelMaterial',
         '../Shaders/Materials/GridMaterial',
         '../Shaders/Materials/NormalMapMaterial',
         '../Shaders/Materials/PolylineArrowMaterial',
         '../Shaders/Materials/PolylineGlowMaterial',
         '../Shaders/Materials/PolylineOutlineMaterial',
-        '../Shaders/Materials/ReflectionMaterial',
-        '../Shaders/Materials/RefractionMaterial',
         '../Shaders/Materials/RimLightingMaterial',
         '../Shaders/Materials/StripeMaterial',
         '../Shaders/Materials/Water',
@@ -55,14 +52,11 @@ define([
         CheckerboardMaterial,
         DotMaterial,
         FadeMaterial,
-        FresnelMaterial,
         GridMaterial,
         NormalMapMaterial,
         PolylineArrowMaterial,
         PolylineGlowMaterial,
         PolylineOutlineMaterial,
-        ReflectionMaterial,
-        RefractionMaterial,
         RimLightingMaterial,
         StripeMaterial,
         WaterMaterial,
@@ -150,22 +144,6 @@ define([
      *      <li><code>repeat</code>:  Object with x and y values specifying the number of times to repeat the image.</li>
      *      <li><code>strength</code>:  Bump strength value between 0.0 and 1.0 where 0.0 is small bumps and 1.0 is large bumps.</li>
      *  </ul>
-     *  <li>Reflection</li>
-     *  <ul>
-     *      <li><code>cubeMap</code>:  Object with positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ image paths. </li>
-     *      <li><code>channels</code>:  Three character string containing any combination of r, g, b, and a for selecting the desired image channels.</li>
-     *  </ul>
-     *  <li>Refraction</li>
-     *  <ul>
-     *      <li><code>cubeMap</code>:  Object with positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ image paths. </li>
-     *      <li><code>channels</code>:  Three character string containing any combination of r, g, b, and a for selecting the desired image channels.</li>
-     *      <li><code>indexOfRefractionRatio</code>:  Number representing the refraction strength where 1.0 is the lowest and 0.0 is the highest.</li>
-     *  </ul>
-     *  <li>Fresnel</li>
-     *  <ul>
-     *      <li><code>reflection</code>:  Reflection Material.</li>
-     *      <li><code>refraction</code>:  Refraction Material.</li>
-     *  </ul>
      *  <li>Grid</li>
      *  <ul>
      *      <li><code>color</code>:  rgba color object for the whole material.</li>
@@ -241,6 +219,7 @@ define([
      *
      * @alias Material
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.strict=false] Throws errors for issues that would normally be ignored, including unused uniforms or materials.
      * @param {Boolean|Function} [options.translucent=true] When <code>true</code> or a function that returns <code>true</code>, the geometry
      *                           with this material is expected to appear translucent.
@@ -256,6 +235,10 @@ define([
      * @exception {DeveloperError} strict: shader source does not use string.
      * @exception {DeveloperError} strict: shader source does not use uniform.
      * @exception {DeveloperError} strict: shader source does not use material.
+     *
+     * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric wiki page} for a more detailed options of Fabric.
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Materials.html|Cesium Sandcastle Materials Demo}
      *
      * @example
      * // Create a color material with fromType:
@@ -274,10 +257,6 @@ define([
      *         }
      *     }
      * });
-     *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric wiki page} for a more detailed options of Fabric.
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Materials.html|Cesium Sandcastle Materials Demo}
      */
     var Material = function(options) {
         /**
@@ -353,7 +332,6 @@ define([
      *
      * @param {String} type The base material type.
      * @param {Object} [uniforms] Overrides for the default uniforms.
-     *
      * @returns {Material} New material object.
      *
      * @exception {DeveloperError} material with that type does not exist.
@@ -497,8 +475,6 @@ define([
     * If this object was destroyed, it should not be used; calling any function other than
     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
     *
-    * @memberof Material
-    *
     * @returns {Boolean} True if this object was destroyed; otherwise, false.
     *
     * @see Material#destroy
@@ -514,8 +490,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof Material
      *
      * @returns {undefined}
      *
@@ -1127,50 +1101,6 @@ define([
                 repeat : new Cartesian2(1.0, 1.0)
             },
             source : NormalMapMaterial
-        },
-        translucent : false
-    });
-
-    Material.ReflectionType = 'Reflection';
-    Material._materialCache.addMaterial(Material.ReflectionType, {
-        fabric : {
-            type : Material.ReflectionType,
-            uniforms : {
-                cubeMap : Material.DefaultCubeMapId,
-                channels : 'rgb'
-            },
-            source : ReflectionMaterial
-        },
-        translucent : false
-    });
-
-    Material.RefractionType = 'Refraction';
-    Material._materialCache.addMaterial(Material.RefractionType, {
-        fabric : {
-            type : Material.RefractionType,
-            uniforms : {
-                cubeMap : Material.DefaultCubeMapId,
-                channels : 'rgb',
-                indexOfRefractionRatio : 0.9
-            },
-            source : RefractionMaterial
-        },
-        translucent : false
-    });
-
-    Material.FresnelType = 'Fresnel';
-    Material._materialCache.addMaterial(Material.FresnelType, {
-        fabric : {
-            type : Material.FresnelType,
-            materials : {
-                reflection : {
-                    type : Material.ReflectionType
-                },
-                refraction : {
-                    type : Material.RefractionType
-                }
-            },
-            source : FresnelMaterial
         },
         translucent : false
     });

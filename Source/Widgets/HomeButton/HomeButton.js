@@ -26,7 +26,7 @@ define([
      * @param {Element|String} container The DOM element or ID that will contain the widget.
      * @param {Scene} scene The Scene instance to use.
      * @param {Ellipsoid} [ellipsoid] The Scene's primary ellipsoid.
-     * @param {Number} [duration] The time, in milliseconds, it takes to complete the camera flight home.
+     * @param {Number} [duration] The time, in seconds, it takes to complete the camera flight home.
      */
     var HomeButton = function(container, scene, ellipsoid, duration) {
         //>>includeStart('debug', pragmas.debug);
@@ -85,7 +85,6 @@ cesiumSvgPath: { path: _svgPath, width: 28, height: 28 }');
     });
 
     /**
-     * @memberof HomeButton
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     HomeButton.prototype.isDestroyed = function() {
@@ -95,7 +94,6 @@ cesiumSvgPath: { path: _svgPath, width: 28, height: 28 }');
     /**
      * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
-     * @memberof HomeButton
      */
     HomeButton.prototype.destroy = function() {
         knockout.cleanNode(this._element);

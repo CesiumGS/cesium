@@ -79,7 +79,7 @@ defineSuite([
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
-        visualizer.update(new JulianDate());
+        visualizer.update(JulianDate.now());
         expect(scene.primitives.length).toEqual(0);
     });
 
@@ -91,7 +91,7 @@ defineSuite([
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
         var pyramid = testObject.pyramid = new DynamicPyramid();
         pyramid.directions = new ConstantProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
-        visualizer.update(new JulianDate());
+        visualizer.update(JulianDate.now());
         expect(scene.primitives.length).toEqual(0);
     });
 
@@ -103,12 +103,12 @@ defineSuite([
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         var pyramid = testObject.pyramid = new DynamicPyramid();
         pyramid.directions = new ConstantProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
-        visualizer.update(new JulianDate());
+        visualizer.update(JulianDate.now());
         expect(scene.primitives.length).toEqual(0);
     });
 
     it('A DynamicPyramid causes a CustomSensor to be created and updated.', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
 
@@ -151,7 +151,7 @@ defineSuite([
         var pyramid = testObject.pyramid = new DynamicPyramid();
         pyramid.directions = new ConstantProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
 
-        var time = new JulianDate();
+        var time = JulianDate.now();
         expect(scene.primitives.length).toEqual(0);
         visualizer.update(time);
         expect(scene.primitives.length).toEqual(1);
@@ -172,7 +172,7 @@ defineSuite([
         var pyramid = testObject.pyramid = new DynamicPyramid();
         pyramid.directions = new ConstantProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
 
-        var time = new JulianDate();
+        var time = JulianDate.now();
         visualizer.update(time);
         expect(scene.primitives.get(0).id).toEqual(testObject);
     });

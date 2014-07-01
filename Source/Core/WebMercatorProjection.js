@@ -26,7 +26,6 @@ define([
      *
      * @alias WebMercatorProjection
      * @constructor
-     * @immutable
      *
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid.
      *
@@ -41,8 +40,11 @@ define([
     defineProperties(WebMercatorProjection.prototype, {
         /**
          * Gets the {@link Ellipsoid}.
+         *
          * @memberof WebMercatorProjection.prototype
+         *
          * @type {Ellipsoid}
+         * @readonly
          */
         ellipsoid : {
             get : function() {
@@ -55,8 +57,6 @@ define([
      * Converts a Mercator angle, in the range -PI to PI, to a geodetic latitude
      * in the range -PI/2 to PI/2.
      *
-     * @memberof WebMercatorProjection
-     *
      * @param {Number} mercatorAngle The angle to convert.
      * @returns {Number} The geodetic latitude in radians.
      */
@@ -67,8 +67,6 @@ define([
     /**
      * Converts a geodetic latitude in radians, in the range -PI/2 to PI/2, to a Mercator
      * angle in the range -PI to PI.
-     *
-     * @memberof WebMercatorProjection
      *
      * @param {Number} latitude The geodetic latitude in radians.
      * @returns {Number} The Mercator angle.
@@ -96,8 +94,6 @@ define([
      * The constant value is computed by calling:
      *    WebMercatorProjection.mercatorAngleToGeodeticLatitude(Math.PI)
      *
-     * @memberof WebMercatorProjection
-     *
      * @type {Number}
      */
     WebMercatorProjection.MaximumLatitude = WebMercatorProjection.mercatorAngleToGeodeticLatitude(Math.PI);
@@ -106,8 +102,6 @@ define([
      * Converts geodetic ellipsoid coordinates, in radians, to the equivalent Web Mercator
      * X, Y, Z coordinates expressed in meters and returned in a {@link Cartesian3}.  The height
      * is copied unmodified to the Z coordinate.
-     *
-     * @memberof WebMercatorProjection
      *
      * @param {Cartographic} cartographic The cartographic coordinates in radians.
      * @param {Cartesian3} [result] The instance to which to copy the result, or undefined if a
@@ -134,8 +128,6 @@ define([
      * Converts Web Mercator X, Y coordinates, expressed in meters, to a {@link Cartographic}
      * containing geodetic ellipsoid coordinates.  The Z coordinate is copied unmodified to the
      * height.
-     *
-     * @memberof WebMercatorProjection
      *
      * @param {Cartesian3} cartesian The web mercator Cartesian position to unrproject with height (z) in meters.
      * @param {Cartographic} [result] The instance to which to copy the result, or undefined if a

@@ -66,7 +66,6 @@ define([
 
     /**
      * Creates an outline of a cube centered at the origin given its dimensions.
-     * @memberof BoxOutlineGeometry
      *
      * @param {Cartesian3} options.dimensions The width, depth, and height of the box stored in the x, y, and z coordinates of the <code>Cartesian3</code>, respectively.
      *
@@ -93,8 +92,8 @@ define([
         }
         //>>includeEnd('debug');
 
-        var corner = Cartesian3.multiplyByScalar(dimensions, 0.5);
-        var min = Cartesian3.negate(corner);
+        var corner = Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3());
+        var min = Cartesian3.negate(corner, new Cartesian3());
         var max = corner;
 
         var newOptions = {
@@ -106,7 +105,6 @@ define([
 
     /**
      * Computes the geometric representation of an outline of a box, including its vertices, indices, and a bounding sphere.
-     * @memberof BoxOutlineGeometry
      *
      * @param {BoxOutlineGeometry} boxGeometry A description of the box outline.
      * @returns {Geometry} The computed vertices and indices.

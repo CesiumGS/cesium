@@ -95,6 +95,7 @@ define([
      * @alias PolylineVolumeOutlineGeometry
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Cartesian3[]} options.polylinePositions An array of positions that define the center of the polyline volume.
      * @param {Number} options.shapePositions An array of positions that define the shape to be extruded along the polyline
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
@@ -147,10 +148,8 @@ define([
 
     /**
      * Computes the geometric representation of the outline of a polyline with a volume, including its vertices, indices, and a bounding sphere.
-     * @memberof PolylineVolumeOutlineGeometry
      *
      * @param {PolylineVolumeOutlineGeometry} polylineVolumeOutlineGeometry A description of the polyline volume outline.
-     *
      * @returns {Geometry} The computed vertices and indices.
      *
      * @exception {DeveloperError} Count of unique polyline positions must be greater than 1.

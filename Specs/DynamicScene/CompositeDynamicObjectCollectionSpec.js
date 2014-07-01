@@ -366,9 +366,13 @@ defineSuite([
         var dynamicObject3 = dynamicObjectCollection.getOrCreateObject('3');
 
         dynamicObject.availability = new TimeIntervalCollection();
-        dynamicObject.availability.addInterval(TimeInterval.fromIso8601('2012-08-01/2012-08-02'));
+        dynamicObject.availability.addInterval(TimeInterval.fromIso8601({
+            iso8601 : '2012-08-01/2012-08-02'
+        }));
         dynamicObject2.availability = new TimeIntervalCollection();
-        dynamicObject2.availability.addInterval(TimeInterval.fromIso8601('2012-08-05/2012-08-06'));
+        dynamicObject2.availability.addInterval(TimeInterval.fromIso8601({
+            iso8601 : '2012-08-05/2012-08-06'
+        }));
         dynamicObject3.availability = undefined;
 
         var composite = new CompositeDynamicObjectCollection();
@@ -386,9 +390,13 @@ defineSuite([
         var dynamicObject3 = dynamicObjectCollection.getOrCreateObject('3');
 
         dynamicObject.availability = new TimeIntervalCollection();
-        dynamicObject.availability.addInterval(TimeInterval.fromIso8601('2012-08-01/9999-12-31T24:00:00Z'));
+        dynamicObject.availability.addInterval(TimeInterval.fromIso8601({
+            iso8601 : '2012-08-01/9999-12-31T24:00:00Z'
+        }));
         dynamicObject2.availability = new TimeIntervalCollection();
-        dynamicObject2.availability.addInterval(TimeInterval.fromIso8601('0000-01-01T00:00:00Z/2012-08-06'));
+        dynamicObject2.availability.addInterval(TimeInterval.fromIso8601({
+            iso8601 : '0000-01-01T00:00:00Z/2012-08-06'
+        }));
         dynamicObject3.availability = undefined;
 
         var composite = new CompositeDynamicObjectCollection();
@@ -523,13 +531,13 @@ defineSuite([
         composite2.addCollection(collection1);
         composite2.addCollection(collection2);
 
-        expect(composite1.getById(id).billboard.show.getValue(new JulianDate())).toEqual(true);
-        expect(composite2.getById(id).billboard.show.getValue(new JulianDate())).toEqual(false);
+        expect(composite1.getById(id).billboard.show.getValue(JulianDate.now())).toEqual(true);
+        expect(composite2.getById(id).billboard.show.getValue(JulianDate.now())).toEqual(false);
 
         // switch the billboard show for the dynamic object in collection2 to true, this should affect
         // composite2 but not composite1
         dynamicObject2.billboard.show = new ConstantProperty(true);
-        expect(composite2.getById(id).billboard.show.getValue(new JulianDate())).toEqual(true);
+        expect(composite2.getById(id).billboard.show.getValue(JulianDate.now())).toEqual(true);
         expect(composite1.getById(id).billboard.show).toBe(dynamicObject1.billboard.show);
         expect(composite2.getById(id).billboard.show).toBe(dynamicObject2.billboard.show);
 

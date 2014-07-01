@@ -9,7 +9,6 @@ define([
         '../../Core/jsonp',
         '../../Core/Matrix4',
         '../../Core/Rectangle',
-        '../../Scene/CameraFlightPath',
         '../../Scene/SceneMode',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when',
@@ -24,7 +23,6 @@ define([
         jsonp,
         Matrix4,
         Rectangle,
-        CameraFlightPath,
         SceneMode,
         knockout,
         when,
@@ -36,6 +34,7 @@ define([
      * @alias GeocoderViewModel
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Scene} options.scene The Scene instance to use.
      * @param {String} [options.url='//dev.virtualearth.net'] The base URL of the Bing Maps API.
      * @param {String} [options.key] The Bing Maps key for your application, which can be
@@ -46,7 +45,7 @@ define([
      *        key as soon as possible.  Please do not deploy an application that uses
      *        this widget without creating a separate key for your application.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The Scene's primary ellipsoid.
-     * @param {Number} [options.flightDuration=1500] The duration of the camera flight to an entered location, in milliseconds.
+     * @param {Number} [options.flightDuration=1.5] The duration of the camera flight to an entered location, in seconds.
      */
     var GeocoderViewModel = function(options) {
         //>>includeStart('debug', pragmas.debug);
@@ -63,7 +62,7 @@ define([
         this._key = BingMapsApi.getKey(options.key);
         this._scene = options.scene;
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-        this._flightDuration = defaultValue(options.flightDuration, 1500);
+        this._flightDuration = defaultValue(options.flightDuration, 1.5);
         this._searchText = '';
         this._isSearchInProgress = false;
         this._geocodeInProgress = undefined;
@@ -116,11 +115,11 @@ define([
         });
 
         /**
-         * Gets or sets the the duration of the camera flight in milliseconds.
+         * Gets or sets the the duration of the camera flight in seconds.
          * A value of zero causes the camera to instantly switch to the geocoding location.
          *
          * @type {Number}
-         * @default 1500
+         * @default 1.5
          */
         this.flightDuration = undefined;
         knockout.defineProperty(this, 'flightDuration', {
@@ -254,19 +253,16 @@ define([
                 return;
             }
 
-            var options = {
+            viewModel._scene.camera.flyTo({
                 destination : position,
                 duration : viewModel._flightDuration,
-                onComplete : function() {
+                complete : function() {
                     var screenSpaceCameraController = viewModel._scene.screenSpaceCameraController;
                     screenSpaceCameraController.ellipsoid = viewModel._ellipsoid;
                 },
-                endReferenceFrame : Matrix4.IDENTITY,
+                endTransform : Matrix4.IDENTITY,
                 convert : false
-            };
-
-            var flight = CameraFlightPath.createAnimation(viewModel._scene, options);
-            viewModel._scene.animations.add(flight);
+            });
         }, function() {
             if (geocodeInProgress.cancel) {
                 return;

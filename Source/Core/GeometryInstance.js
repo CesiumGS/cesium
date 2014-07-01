@@ -20,10 +20,13 @@ define([
      * @alias GeometryInstance
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Geometry} options.geometry The geometry to instance.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The model matrix that transforms to transform the geometry from model to world coordinates.
      * @param {Object} [options.id] A user-defined object to return when the instance is picked with {@link Scene#pick} or get/set per-instance attributes with {@link Primitive#getGeometryInstanceAttributes}.
      * @param {Object} [options.attributes] Per-instance attributes like a show or color attribute shown in the example below.
+     *
+     * @see Geometry
      *
      * @example
      * // Create geometry for a box, and two instances that refer to it.
@@ -51,8 +54,6 @@ define([
      *   }
      *   id : 'top'
      * });
-     *
-     * @see Geometry
      */
     var GeometryInstance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

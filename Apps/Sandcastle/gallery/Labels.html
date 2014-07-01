@@ -27,8 +27,11 @@
 require(['Cesium'], function(Cesium) {
     "use strict";
 
-    function addLabel(scene) {
-        Sandcastle.declare(addLabel);   // For highlighting in Sandcastle.
+    var viewer = new Cesium.Viewer('cesiumContainer');
+    var scene = viewer.scene;
+    var primitives = scene.primitives;
+
+    function addLabel() {
         var labels = new Cesium.LabelCollection();
         labels.add({
             position : Cesium.Cartesian3.fromDegrees(-75.10, 39.57),
@@ -36,9 +39,16 @@ require(['Cesium'], function(Cesium) {
         });
         scene.primitives.add(labels);
     }
+    addLabel(scene);
 
-    function setLabelFont(scene) {
-        Sandcastle.declare(setLabelFont);   // For highlighting in Sandcastle.
+    Sandcastle.addToolbarButton('Add label', function() {
+        primitives.removeAll();
+        addLabel();
+    });
+
+    Sandcastle.addToolbarButton('Set font', function() {
+        primitives.removeAll();
+
         var labels = new Cesium.LabelCollection();
         labels.add({
             position  : Cesium.Cartesian3.fromDegrees(-75.10, 39.57),
@@ -51,10 +61,11 @@ require(['Cesium'], function(Cesium) {
             style : Cesium.LabelStyle.FILL_AND_OUTLINE
         });
         scene.primitives.add(labels);
-    }
+    });
 
-    function setLabelProperties(scene) {
-        Sandcastle.declare(setLabelProperties); // For highlighting in Sandcastle.
+    Sandcastle.addToolbarButton('Set properties', function() {
+        primitives.removeAll();
+
         var labels = new Cesium.LabelCollection();
         var l = labels.add({
             position : Cesium.Cartesian3.fromDegrees(-75.10, 39.57),
@@ -64,10 +75,11 @@ require(['Cesium'], function(Cesium) {
         l.position = Cesium.Cartesian3.fromDegrees(-75.10, 39.57, 300000.0);
         l.scale = 2.0;
         scene.primitives.add(labels);
-    }
+    });
 
-    function addLabelsInReferenceFrame(scene) {
-        Sandcastle.declare(addLabelsInReferenceFrame);  // For highlighting in Sandcastle.
+    Sandcastle.addToolbarButton('Add labels in reference frame', function() {
+        primitives.removeAll();
+
         var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
         var labels = new Cesium.LabelCollection(undefined);
         labels.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
@@ -88,10 +100,10 @@ require(['Cesium'], function(Cesium) {
             text     : 'Up'
         });
         scene.primitives.add(labels);
-    }
+    });
 
-    function labelPixelOffsetByDistance(scene) {
-        Sandcastle.declare(labelPixelOffsetByDistance); // For highlighting in Sandcastle.
+    Sandcastle.addToolbarButton('Offset label by distance', function() {
+        primitives.removeAll();
 
         var image = new Image();
         image.onload = function() {
@@ -114,7 +126,7 @@ require(['Cesium'], function(Cesium) {
                 text     : 'Label on top of scaling billboard',
                 font : '20px sans-serif',
                 horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
-                pixelOffset : new Cesium.Cartesian2(0.0, image.height),
+                pixelOffset : new Cesium.Cartesian2(0.0, -image.height),
                 pixelOffsetScaleByDistance : new Cesium.NearFarScalar(1.5e2, 3.0, 1.5e7, 0.5)
             });
 
@@ -122,10 +134,11 @@ require(['Cesium'], function(Cesium) {
             scene.primitives.add(labels);
         };
         image.src = '../images/facility.gif';
-    }
+    });
 
-    function labelTranslucencyByDistance(scene) {
-        Sandcastle.declare(labelTranslucencyByDistance); // For highlighting in Sandcastle.
+    Sandcastle.addToolbarButton('Fade label by distance', function() {
+        primitives.removeAll();
+
         var labels = new Cesium.LabelCollection();
         labels.add({
             position : Cesium.Cartesian3.fromDegrees(-73.94, 40.67),
@@ -138,48 +151,6 @@ require(['Cesium'], function(Cesium) {
             translucencyByDistance : new Cesium.NearFarScalar(1.5e5, 1.0, 1.5e7, 0.0)
         });
         scene.primitives.add(labels);
-    }
-
-    var viewer = new Cesium.Viewer('cesiumContainer');
-    var scene = viewer.scene;
-    var primitives = scene.primitives;
-
-    addLabel(scene);
-
-    Sandcastle.addToolbarButton('Add label', function() {
-        primitives.removeAll();
-        addLabel(scene);
-        Sandcastle.highlight(addLabel);
-    });
-
-    Sandcastle.addToolbarButton('Set font', function() {
-        primitives.removeAll();
-        setLabelFont(scene);
-        Sandcastle.highlight(setLabelFont);
-    });
-
-    Sandcastle.addToolbarButton('Set properties', function() {
-        primitives.removeAll();
-        setLabelProperties(scene);
-        Sandcastle.highlight(setLabelProperties);
-    });
-
-    Sandcastle.addToolbarButton('Add labels in reference frame', function() {
-        primitives.removeAll();
-        addLabelsInReferenceFrame(scene);
-        Sandcastle.highlight(addLabelsInReferenceFrame);
-    });
-
-    Sandcastle.addToolbarButton('Fade label by distance', function() {
-        primitives.removeAll();
-        labelTranslucencyByDistance(scene);
-        Sandcastle.highlight(labelTranslucencyByDistance);
-    });
-    
-    Sandcastle.addToolbarButton('Offset label by distance', function() {
-        primitives.removeAll();
-        labelPixelOffsetByDistance(scene);
-        Sandcastle.highlight(labelPixelOffsetByDistance);
     });
 
     Sandcastle.finishedLoading();

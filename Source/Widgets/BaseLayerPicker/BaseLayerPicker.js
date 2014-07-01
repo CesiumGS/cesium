@@ -34,6 +34,7 @@ define([
      * @constructor
      *
      * @param {Element} container The parent HTML container node for this widget.
+     * @param {Object} options Object with the following properties:
      * @param {Globe} options.globe The Globe to use.
      * @param {ProviderViewModel[]} [options.imageryProviderViewModels=[]] The array of ProviderViewModel instances to use for imagery.
      * @param {ProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available imagery layer is used.
@@ -240,7 +241,6 @@ click: function($data) { $parent.selectedTerrain = $data; }');
     });
 
     /**
-     * @memberof BaseLayerPicker
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     BaseLayerPicker.prototype.isDestroyed = function() {
@@ -250,7 +250,6 @@ click: function($data) { $parent.selectedTerrain = $data; }');
     /**
      * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
-     * @memberof BaseLayerPicker
      */
     BaseLayerPicker.prototype.destroy = function() {
         document.removeEventListener('mousedown', this._closeDropDown, true);

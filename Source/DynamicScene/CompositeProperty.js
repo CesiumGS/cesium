@@ -53,8 +53,16 @@ define([
      * //property for the first half of the day and a sampled property for the
      * //remaining half.
      * var composite = new Cesium.CompositeProperty();
-     * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601('2012-08-01T00:00:00.00Z/2012-08-01T12:00:00.00Z', true, true, constantProperty));
-     * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601('2012-08-01T12:00:00.00Z/2012-08-02T00:00:00.00Z', false, false, sampledProperty));
+     * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601({
+     *     iso8601 : '2012-08-01T00:00:00.00Z/2012-08-01T12:00:00.00Z',
+     *     data : constantProperty
+     * }));
+     * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601({
+     *     iso8601 : '2012-08-01T12:00:00.00Z/2012-08-02T00:00:00.00Z',
+     *     isStartIncluded : false,
+     *     isStopIncluded : false,
+     *     data : sampledProperty
+     * }));
      */
     var CompositeProperty = function() {
         this._eventHelper = new EventHelper();
@@ -68,11 +76,13 @@ define([
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.
          * @memberof CompositeProperty.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isConstant : {
             get : function() {
-                return this._intervals.empty;
+                return this._intervals.isEmpty;
             }
         },
         /**
@@ -80,7 +90,9 @@ define([
          * The definition is changed whenever setValue is called with data different
          * than the current value.
          * @memberof CompositeProperty.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : function() {
@@ -102,7 +114,6 @@ define([
 
     /**
      * Gets the value of the property at the provided time.
-     * @memberof CompositeProperty
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
@@ -125,7 +136,6 @@ define([
     /**
      * Compares this property to the provided property and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof CompositeProperty
      *
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.

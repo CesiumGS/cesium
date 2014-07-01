@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        '../../Core/defaultValue'
+        '../../Core/defaultValue',
+        '../../Core/JulianDate'
     ], function(
-        defaultValue) {
+        defaultValue,
+        JulianDate) {
     "use strict";
 
     function TimelineHighlightRange(color, heightInPx, base) {
@@ -35,9 +37,9 @@ define([
     TimelineHighlightRange.prototype.render = function(renderState) {
         var range = '';
         if (this._start && this._stop && this._color) {
-            var highlightStart = renderState.epochJulian.getSecondsDifference(this._start);
+            var highlightStart = JulianDate.getSecondsDifference(this._start, renderState.epochJulian);
             var highlightLeft = Math.round(renderState.timeBarWidth * renderState.getAlpha(highlightStart));
-            var highlightStop = renderState.epochJulian.getSecondsDifference(this._stop);
+            var highlightStop = JulianDate.getSecondsDifference(this._stop, renderState.epochJulian);
             var highlightWidth = Math.round(renderState.timeBarWidth * renderState.getAlpha(highlightStop)) - highlightLeft;
             if (highlightLeft < 0) {
                 highlightWidth += highlightLeft;

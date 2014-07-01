@@ -42,7 +42,6 @@ define([
     /**
      * Computes the point along the ray given by r(t) = o + t*d,
      * where o is the origin of the ray and d is the direction.
-     * @memberof Ray
      *
      * @param {Number} t A scalar value.
      * @param {Cartesian3} [result] The object in which the result will be stored.
@@ -62,6 +61,10 @@ define([
             throw new DeveloperError('t is a required number');
         }
         //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
 
         result = Cartesian3.multiplyByScalar(ray.direction, t, result);
         return Cartesian3.add(ray.origin, result, result);

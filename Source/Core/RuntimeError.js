@@ -15,25 +15,24 @@ define([
      * calling code.
      *
      * @alias RuntimeError
+     * @constructor
      *
      * @param {String} [message] The error message for this exception.
      *
      * @see DeveloperError
-     * @constructor
      */
     var RuntimeError = function(message) {
         /**
          * 'RuntimeError' indicating that this exception was thrown due to a runtime error.
          * @type {String}
-         * @constant
-         * @default
+         * @readonly
          */
         this.name = 'RuntimeError';
 
         /**
          * The explanation for why this exception was thrown.
          * @type {String}
-         * @constant
+         * @readonly
          */
         this.message = message;
 
@@ -48,7 +47,7 @@ define([
         /**
          * The stack trace of this exception, if available.
          * @type {String}
-         * @constant
+         * @readonly
          */
         this.stack = stack;
     };

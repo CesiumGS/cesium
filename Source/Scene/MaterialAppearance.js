@@ -36,6 +36,7 @@ define([
      * @alias MaterialAppearance
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.flat=false] When <code>true</code>, flat shading is used in the fragment shader, which means lighting is not taking into account.
      * @param {Boolean} [options.faceForward=!options.closed] When <code>true</code>, the fragment shader flips the surface normal as needed to ensure that the normal faces the viewer to avoid dark spots.  This is useful when both sides of a geometry should be shaded like {@link WallGeometry}.
      * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link MaterialAppearance#renderState} has alpha blending enabled.
@@ -45,6 +46,8 @@ define([
      * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
      * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
      * @param {RenderState} [options.renderState] Optional render state to override the default render state.
+     *
+     * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
      *
      * @example
      * var primitive = new Cesium.Primitive({
@@ -60,7 +63,6 @@ define([
      *   })
      *
      * });
-     * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
      */
     var MaterialAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -181,7 +183,7 @@ define([
          * @type {MaterialAppearance.MaterialSupport}
          * @readonly
          *
-         * @default @link MaterialAppearance.MaterialSupport.TEXTURED}
+         * @default {@link MaterialAppearance.MaterialSupport.TEXTURED}
          */
         materialSupport : {
             get : function() {
@@ -249,7 +251,7 @@ define([
      * this is derived from {@link MaterialAppearance#fragmentShaderSource}, {@link MaterialAppearance#material},
      * {@link MaterialAppearance#flat}, and {@link MaterialAppearance#faceForward}.
      *
-     * @memberof MaterialAppearance
+     * @function
      *
      * @returns String The full GLSL fragment shader source.
      */
@@ -258,7 +260,7 @@ define([
     /**
      * Determines if the geometry is translucent based on {@link MaterialAppearance#translucent} and {@link Material#isTranslucent}.
      *
-     * @memberof MaterialAppearance
+     * @function
      *
      * @returns {Boolean} <code>true</code> if the appearance is translucent.
      */
@@ -269,7 +271,7 @@ define([
      * it can contain a subset of render state properties identical to <code>renderState</code>
      * passed to {@link Context#createRenderState}.
      *
-     * @memberof MaterialAppearance
+     * @function
      *
      * @returns {Object} The render state.
      */
@@ -280,15 +282,13 @@ define([
      * {@link MaterialAppearance} instance.  This is a trade-off between
      * flexibility (a wide array of materials) and memory/performance
      * (required vertex format and GLSL shader complexity.
-     *
-     * @memberof MaterialAppearance
      */
     MaterialAppearance.MaterialSupport = {
         /**
          * Only basic materials, which require just <code>position</code> and
          * <code>normal</code> vertex attributes, are supported.
          *
-         * @readonly
+         * @constant
          */
         BASIC : freezeObject({
             vertexFormat : VertexFormat.POSITION_AND_NORMAL,
@@ -300,7 +300,7 @@ define([
          * <code>normal</code>, and <code>st</code> vertex attributes,
          * are supported.  The vast majority of materials fall into this category.
          *
-         * @readonly
+         * @constant
          */
         TEXTURED : freezeObject({
             vertexFormat : VertexFormat.POSITION_NORMAL_AND_ST,
@@ -312,7 +312,7 @@ define([
          * This requires <code>position</code>, <code>normal</code>, <code>st</code>,
          * <code>binormal</code>, and <code>tangent</code> vertex attributes.
          *
-         * @readonly
+         * @constant
          */
         ALL : freezeObject({
             vertexFormat : VertexFormat.ALL,

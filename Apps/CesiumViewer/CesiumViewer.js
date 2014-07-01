@@ -79,9 +79,8 @@ define([
 
     var showLoadError = function(name, error) {
         var title = 'An error occurred while loading the file: ' + name;
-        error = formatError(error);
-        viewer.cesiumWidget.showErrorPanel(title, error);
-        console.error(title + ': ' + error);
+        var message = 'An error occurred while loading the file, which may indicate that it is invalid.  A detailed error report is below:';
+        viewer.cesiumWidget.showErrorPanel(title, message, error);
     };
 
     viewer.dropError.addEventListener(function(viewerArg, name, error) {
@@ -143,8 +142,7 @@ define([
             viewer.animation.applyThemeChanges();
         } else {
             var error = 'Unknown theme: ' + theme;
-            viewer.cesiumWidget.showErrorPanel(error);
-            console.error(error);
+            viewer.cesiumWidget.showErrorPanel(error, '');
         }
     }
 

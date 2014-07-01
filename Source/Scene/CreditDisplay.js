@@ -182,8 +182,6 @@ define([
     /**
      * Adds a credit to the list of current credits to be displayed in the credit container
      *
-     * @memberof CreditDisplay
-     *
      * @param {Credit} credit The credit to display
      */
     CreditDisplay.prototype.addCredit = function(credit) {
@@ -209,8 +207,6 @@ define([
     /**
      * Adds credits that will persist until they are removed
      *
-     * @memberof CreditDisplay
-     *
      * @param {Credit} credit The credit to added to defaults
      */
     CreditDisplay.prototype.addDefaultCredit = function(credit) {
@@ -235,8 +231,6 @@ define([
 
     /**
      * Removes a default credit
-     *
-     * @memberof CreditDisplay
      *
      * @param {Credit} credit The credit to be removed from defaults
      */
@@ -264,8 +258,6 @@ define([
     /**
      * Resets the credit display to a beginning of frame state, clearing out current credits.
      *
-     * @memberof CreditDisplay
-     *
      * @param {Credit} credit The credit to display
      */
     CreditDisplay.prototype.beginFrame = function() {
@@ -275,8 +267,6 @@ define([
 
     /**
      * Sets the credit display to the end of frame state, displaying current credits in the credit container
-     *
-     * @memberof CreditDisplay
      *
      * @param {Credit} credit The credit to display
      */
@@ -298,8 +288,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof CreditDisplay
      *
      * @returns {undefined}
      *

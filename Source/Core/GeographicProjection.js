@@ -25,7 +25,6 @@ define([
      *
      * @alias GeographicProjection
      * @constructor
-     * @immutable
      *
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid.
      *
@@ -40,8 +39,11 @@ define([
     defineProperties(GeographicProjection.prototype, {
         /**
          * Gets the {@link Ellipsoid}.
+         *
          * @memberof GeographicProjection.prototype
+         *
          * @type {Ellipsoid}
+         * @readonly
          */
         ellipsoid : {
             get : function() {
@@ -54,8 +56,6 @@ define([
      * Projects a set of {@link Cartographic} coordinates, in radians, to map coordinates, in meters.
      * X and Y are the longitude and latitude, respectively, multiplied by the maximum radius of the
      * ellipsoid.  Z is the unmodified height.
-     *
-     * @memberof GeographicProjection
      *
      * @param {Cartographic} cartographic The coordinates to project.
      * @param {Cartesian3} [result] An instance into which to copy the result.  If this parameter is
@@ -85,8 +85,6 @@ define([
      * Unprojects a set of projected {@link Cartesian3} coordinates, in meters, to {@link Cartographic}
      * coordinates, in radians.  Longitude and Latitude are the X and Y coordinates, respectively,
      * divided by the maximum radius of the ellipsoid.  Height is the unmodified Z coordinate.
-     *
-     * @memberof GeographicProjection
      *
      * @param {Cartesian3} cartesian The Cartesian position to unproject with height (z) in meters.
      * @param {Cartographic} [result] An instance into which to copy the result.  If this parameter is

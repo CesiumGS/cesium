@@ -3866,8 +3866,8 @@
     },
     "vertexPositions":{
       "references":[
-        "Satellite/Geoeye1.position",
-        "Satellite/ISS.position"
+        "Satellite/Geoeye1#position",
+        "Satellite/ISS#position"
       ]
     }
   },
@@ -3946,8 +3946,8 @@
     },
     "vertexPositions":{
       "references":[
-        "Facility/AGI.position",
-        "Satellite/ISS.position"
+        "Facility/AGI#position",
+        "Satellite/ISS#position"
       ]
     }
   },
@@ -3966,8 +3966,8 @@
     },
     "vertexPositions":{
       "references":[
-        "Facility/AGI.position",
-        "Satellite/Geoeye1/Sensor/Sensor.position"
+        "Facility/AGI#position",
+        "Satellite/Geoeye1/Sensor/Sensor#position"
       ]
     }
   }

@@ -475,6 +475,7 @@ define([
      * @alias PolygonGeometry
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Object} options.polygonHierarchy A polygon hierarchy that can include holes.
      * @param {Number} [options.height=0.0] The height of the polygon.
      * @param {Number} [options.extrudedHeight] The height of the polygon.
@@ -592,8 +593,6 @@ define([
     /**
      * A description of a polygon from an array of positions.
      *
-     * @memberof PolygonGeometry
-     *
      * @param {Cartesian3[]} options.positions An array of positions that defined the corner points of the polygon.
      * @param {Number} [options.height=0.0] The height of the polygon.
      * @param {Number} [options.extrudedHeight] The height of the polygon extrusion.
@@ -644,7 +643,6 @@ define([
 
     /**
      * Computes the geometric representation of a polygon, including its vertices, indices, and a bounding sphere.
-     * @memberof PolygonGeometry
      *
      * @param {PolygonGeometry} polygonGeometry A description of the polygon.
      * @returns {Geometry} The computed vertices and indices.

@@ -96,7 +96,7 @@ define([
 
         /**
          * Determines if the browser is currently in fullscreen mode.
-         * @memberof Fullsreen
+         * @memberof Fullscreen
          * @type {Boolean}
          */
         fullscreen : {

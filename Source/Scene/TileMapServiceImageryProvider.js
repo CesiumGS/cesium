@@ -35,6 +35,7 @@ define([
      * @alias TileMapServiceImageryProvider
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {String} [options.url='.'] Path to image tiles on server.
      * @param {String} [options.fileExtension='png'] The file extension for images on the server.
      * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
@@ -413,12 +414,9 @@ define([
     /**
      * Gets the credits to be displayed when a given tile is displayed.
      *
-     * @memberof TileMapServiceImageryProvider
-     *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level;
-     *
      * @returns {Credit[]} The credits to be displayed when the tile is displayed.
      *
      * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
@@ -431,12 +429,9 @@ define([
      * Requests the image for a given tile.  This function should
      * not be called before {@link TileMapServiceImageryProvider#ready} returns true.
      *
-     * @memberof TileMapServiceImageryProvider
-     *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
-     *
      * @returns {Promise} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
