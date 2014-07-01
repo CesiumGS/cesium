@@ -20,6 +20,7 @@ define(['../Core/createGuid',
         '../Core/PolygonPipeline',
         '../Core/Rectangle',
         '../Core/TimeInterval',
+        '../Core/TimeIntervalCollection',
         '../Core/loadBlob',
         '../Core/loadXML',
         './ConstantProperty',
@@ -66,6 +67,7 @@ define(['../Core/createGuid',
         PolygonPipeline,
         Rectangle,
         TimeInterval,
+        TimeIntervalCollection,
         loadBlob,
         loadXML,
         ConstantProperty,
@@ -237,7 +239,7 @@ define(['../Core/createGuid',
                 dynamicObject.label = new DynamicLabel();
                 dynamicObject.label.font = new ConstantProperty('16pt Arial');
                 dynamicObject.label.style = new ConstantProperty(LabelStyle.FILL_AND_OUTLINE);
-                dynamicObject.label.pixelOffset = new ConstantProperty(new Cartesian2(0, 16));
+                dynamicObject.label.pixelOffset = new ConstantProperty(new Cartesian2(0, -16));
                 dynamicObject.label.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
                 dynamicObject.label.translucencyByDistance = new ConstantProperty(new NearFarScalar(1500000, 1.0, 3400000, 0.0));
             }
@@ -483,6 +485,8 @@ define(['../Core/createGuid',
     }
 
     function processTimeSpan(node) {
+        var result;
+
         var beginNode = node.getElementsByTagName('begin')[0];
         var beginDate = defined(beginNode) ? JulianDate.fromIso8601(beginNode.textContent) : undefined;
 
@@ -490,18 +494,39 @@ define(['../Core/createGuid',
         var endDate = defined(endNode) ? JulianDate.fromIso8601(endNode.textContent) : undefined;
 
         if (defined(beginDate) && defined(endDate)) {
-            return new TimeInterval(beginDate, endDate, true, true, true);
+            result = new TimeIntervalCollection();
+            result.addInterval(new TimeInterval({
+                start : beginDate,
+                stop : endDate,
+                isStartTimeIncluded : true,
+                iSStopTimeIncluded : true,
+                data : true
+            }));
         }
 
         if (defined(beginDate)) {
-            return new TimeInterval(beginDate, Iso8601.MAXIMUM_VALUE, true, false, true);
+            result = new TimeIntervalCollection();
+            result.addInterval(new TimeInterval({
+                start : beginDate,
+                stop : Iso8601.MAXIMUM_VALUE,
+                isStartTimeIncluded : true,
+                iSStopTimeIncluded : false,
+                data : true
+            }));
         }
 
         if (defined(endDate)) {
-            return new TimeInterval(Iso8601.MINIMUM_VALUE, endDate, false, true, true);
+            result = new TimeIntervalCollection();
+            result.addInterval(new TimeInterval({
+                start : Iso8601.MINIMUM_VALUE,
+                stop : endDate,
+                isStartTimeIncluded : false,
+                iSStopTimeIncluded : true,
+                data : true
+            }));
         }
 
-        return undefined;
+        return result;
     }
 
     //Object that holds all supported Geometry
@@ -558,7 +583,7 @@ define(['../Core/createGuid',
                 label.scale = defined(labelScale) ? new ConstantProperty(labelScale) : new ConstantProperty(1.0);
                 label.fillColor = defined(labelColor) ? new ConstantProperty(labelColor) : new ConstantProperty(new Color(1, 1, 1, 1));
                 label.text = defined(dynamicObject.name) ? new ConstantProperty(dynamicObject.name) : undefined;
-                label.pixelOffset = new ConstantProperty(new Cartesian2(0, 16));
+                label.pixelOffset = new ConstantProperty(new Cartesian2(0, -16));
                 label.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
                 label.font = new ConstantProperty('16pt Arial');
                 label.style = new ConstantProperty(LabelStyle.FILL_AND_OUTLINE);
@@ -937,7 +962,7 @@ define(['../Core/createGuid',
                 clock.currentTime = availability.start;
                 clock.clockRange = ClockRange.LOOP_STOP;
                 clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-                clock.multiplier = Math.min(Math.max(availability.start.getSecondsDifference(availability.stop) / 60, 60), 50000000);
+                clock.multiplier = Math.min(Math.max(JulianDate.getSecondsDifference(availability.stop, availability.start) / 60, 60), 50000000);
                 return clock;
             }
         },
