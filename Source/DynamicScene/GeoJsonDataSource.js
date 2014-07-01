@@ -433,7 +433,7 @@ define([
         var dataSource = this;
         return when(loadJson(url), function(geoJson) {
             return dataSource.load(geoJson, url);
-        }, function(error) {
+        }).otherwise(function(error) {
             setLoading(dataSource, false);
             dataSource._error.raiseEvent(dataSource, error);
             return when.reject(error);
@@ -523,7 +523,7 @@ define([
             typeHandler(dataSource, geoJson, geoJson, crsFunction, sourceUri);
             dataSource._changed.raiseEvent(dataSource);
             setLoading(dataSource, false);
-        }, function(error) {
+        }).otherwise(function(error) {
             setLoading(dataSource, false);
             dataSource._error.raiseEvent(dataSource, error);
             return when.reject(error);

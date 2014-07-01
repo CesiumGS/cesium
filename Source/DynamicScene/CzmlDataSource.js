@@ -1820,7 +1820,7 @@ define([
         return when(loadJson(url), function(czml) {
             dataSource.process(czml, url);
             setLoading(dataSource, false);
-        }, function(error) {
+        }).otherwise(function(error) {
             setLoading(dataSource, false);
             dataSource._error.raiseEvent(dataSource, error);
             return when.reject(error);
@@ -1846,7 +1846,7 @@ define([
         return when(loadJson(url), function(czml) {
             dataSource.load(czml, url);
             setLoading(dataSource, false);
-        }, function(error) {
+        }).otherwise(function(error) {
             setLoading(dataSource, false);
             dataSource._error.raiseEvent(dataSource, error);
             return when.reject(error);
