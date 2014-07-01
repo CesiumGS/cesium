@@ -523,7 +523,6 @@ define([
         var x = matrix[0] * cartesian.x + matrix[2] * cartesian.y;
         var y = matrix[1] * cartesian.x + matrix[3] * cartesian.y;
 
-
         result.x = x;
         result.y = y;
         return result;

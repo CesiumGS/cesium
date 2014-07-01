@@ -1233,7 +1233,7 @@ define([
      *
      * @param {Matrix4} matrix The matrix.
      * @param {Cartesian3} result The object onto which to store the result.
-     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Cartesian3} The modified result parameter
      */
     Matrix4.getScale = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);

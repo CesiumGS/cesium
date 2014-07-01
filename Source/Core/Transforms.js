@@ -402,9 +402,6 @@ define([
             throw new DeveloperError('date is required.');
         }
         //>>includeEnd('debug');
-        if (!defined(result)) {
-            result = new Matrix3();
-        }
 
         var fixedToIcrfMtx = Transforms.computeFixedToIcrfMatrix(date, result);
         if (!defined(fixedToIcrfMtx)) {

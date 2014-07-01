@@ -617,67 +617,67 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('getColumn throws without resut parameter', function() {
+    it('getColumn throws without result parameter', function() {
         expect(function() {
             Matrix2.getColumn(new Matrix2(), 1);
         }).toThrowDeveloperError();
     });
 
-    it('setColumn throws without resut parameter', function() {
+    it('setColumn throws without result parameter', function() {
         expect(function() {
             Matrix2.setColumn(new Matrix2(), 1, new Cartesian2());
         }).toThrowDeveloperError();
     });
 
-    it('getRow throws without resut parameter', function() {
+    it('getRow throws without result parameter', function() {
         expect(function() {
             Matrix2.getRow(new Matrix2(), 1);
         }).toThrowDeveloperError();
     });
 
-    it('setRow throws without resut parameter', function() {
+    it('setRow throws without result parameter', function() {
         expect(function() {
             Matrix2.setRow(new Matrix2(), 1, new Cartesian2());
         }).toThrowDeveloperError();
     });
 
-    it('getScale throws without resut parameter', function() {
+    it('getScale throws without result parameter', function() {
         expect(function() {
             Matrix2.getScale(new Matrix2());
         }).toThrowDeveloperError();
     });
 
-    it('multiply throws without resut parameter', function() {
+    it('multiply throws without result parameter', function() {
         expect(function() {
             Matrix2.multiply(new Matrix2(), new Matrix2());
         }).toThrowDeveloperError();
     });
 
-    it('multiplyByVector throws without resut parameter', function() {
+    it('multiplyByVector throws without result parameter', function() {
         expect(function() {
             Matrix2.multiplyByVector(new Matrix2(), new Cartesian2());
         }).toThrowDeveloperError();
     });
 
-    it('multiplyByScalar throws without resut parameter', function() {
+    it('multiplyByScalar throws without result parameter', function() {
         expect(function() {
             Matrix2.multiplyByScalar(new Matrix2(), 2);
         }).toThrowDeveloperError();
     });
 
-    it('negate throws without resut parameter', function() {
+    it('negate throws without result parameter', function() {
         expect(function() {
             Matrix2.negate(new Matrix2());
         }).toThrowDeveloperError();
     });
 
-    it('transpose throws without resut parameter', function() {
+    it('transpose throws without result parameter', function() {
         expect(function() {
             Matrix2.transpose(new Matrix2());
         }).toThrowDeveloperError();
     });
 
-    it('abs throws without resut parameter', function() {
+    it('abs throws without result parameter', function() {
         expect(function() {
             Matrix2.abs(new Matrix2());
         }).toThrowDeveloperError();
