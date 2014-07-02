@@ -95,6 +95,7 @@ define([
     var scratchCart2 = new Cartesian3();
     var scratchCart3 = new Cartesian3();
     var scratchCart4 = new Cartesian3();
+    var rotMatrixScratch = new Matrix3();
     function createPath3D(camera, ellipsoid, start, up, right, end, duration) {
         // get minimum altitude from which the whole ellipsoid is visible
         var radius = ellipsoid.maximumRadius;
@@ -141,8 +142,8 @@ define([
             var increment = incrementPercentage * angle;
             var startCondition = angle - increment;
             for ( var i = startCondition; i > 0.0; i = i - increment) {
-                rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, i));
-                points.push(Matrix3.multiplyByVector(rotation, aboveEnd));
+                rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, i), rotMatrixScratch);
+                points.push(Matrix3.multiplyByVector(rotation, aboveEnd, new Cartesian3()));
             }
 
             points.push(end);
