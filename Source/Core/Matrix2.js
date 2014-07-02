@@ -303,8 +303,8 @@ define([
      *
      * @param {Matrix2} matrix The matrix to use.
      * @param {Number} index The zero-based index of the column to retrieve.
-     * @param {Cartesian2} [result] The object onto which to store the result.
-     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
+     * @param {Cartesian2} result The object onto which to store the result.
+     * @returns {Cartesian2} The modified result parameter.
      *
      * @exception {DeveloperError} index must be 0 or 1.
      */
@@ -313,9 +313,11 @@ define([
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required.');
         }
-
         if (typeof index !== 'number' || index < 0 || index > 1) {
             throw new DeveloperError('index must be 0 or 1.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required,');
         }
         //>>includeEnd('debug');
 
@@ -323,9 +325,6 @@ define([
         var x = matrix[startIndex];
         var y = matrix[startIndex + 1];
 
-        if (!defined(result)) {
-            return new Cartesian2(x, y);
-        }
         result.x = x;
         result.y = y;
         return result;
@@ -337,8 +336,8 @@ define([
      * @param {Matrix2} matrix The matrix to use.
      * @param {Number} index The zero-based index of the column to set.
      * @param {Cartesian2} cartesian The Cartesian whose values will be assigned to the specified column.
-     * @param {Cartesian2} [result] The object onto which to store the result.
-     * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
+     * @param {Cartesian2} result The object onto which to store the result.
+     * @returns {Matrix2} The modified result parameter.
      *
      * @exception {DeveloperError} index must be 0 or 1.
      */
@@ -352,6 +351,9 @@ define([
         }
         if (typeof index !== 'number' || index < 0 || index > 1) {
             throw new DeveloperError('index must be 0 or 1.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required,');
         }
         //>>includeEnd('debug');
 
@@ -367,8 +369,8 @@ define([
      *
      * @param {Matrix2} matrix The matrix to use.
      * @param {Number} index The zero-based index of the row to retrieve.
-     * @param {Cartesian2} [result] The object onto which to store the result.
-     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
+     * @param {Cartesian2} result The object onto which to store the result.
+     * @returns {Cartesian2} The modified result parameter.
      *
      * @exception {DeveloperError} index must be 0 or 1.
      */
@@ -377,18 +379,17 @@ define([
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required.');
         }
-
         if (typeof index !== 'number' || index < 0 || index > 1) {
             throw new DeveloperError('index must be 0 or 1.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required,');
         }
         //>>includeEnd('debug');
 
         var x = matrix[index];
         var y = matrix[index + 2];
 
-        if (!defined(result)) {
-            return new Cartesian2(x, y);
-        }
         result.x = x;
         result.y = y;
         return result;
@@ -400,8 +401,8 @@ define([
      * @param {Matrix2} matrix The matrix to use.
      * @param {Number} index The zero-based index of the row to set.
      * @param {Cartesian2} cartesian The Cartesian whose values will be assigned to the specified row.
-     * @param {Cartesian2} [result] The object onto which to store the result.
-     * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
+     * @param {Matrix2} result The object onto which to store the result.
+     * @returns {Matrix2} The modified result parameter.
      *
      * @exception {DeveloperError} index must be 0 or 1.
      */
@@ -415,6 +416,9 @@ define([
         }
         if (typeof index !== 'number' || index < 0 || index > 1) {
             throw new DeveloperError('index must be 0 or 1.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required,');
         }
         //>>includeEnd('debug');
 
@@ -430,19 +434,18 @@ define([
      * Extracts the non-uniform scale assuming the matrix is an affine transformation.
      *
      * @param {Matrix2} matrix The matrix.
-     * @param {Cartesian2} [result] The object onto which to store the result.
-     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
+     * @param {Cartesian2} result The object onto which to store the result.
+     * @returns {Cartesian2} The modified result parameter.
      */
     Matrix2.getScale = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required.');
         }
-        //>>includeEnd('debug');
-
         if (!defined(result)) {
-            result = new Cartesian2();
+            throw new DeveloperError('result is required,');
         }
+        //>>includeEnd('debug');
 
         result.x = Cartesian2.magnitude(Cartesian2.fromElements(matrix[0], matrix[1], scratchColumn));
         result.y = Cartesian2.magnitude(Cartesian2.fromElements(matrix[2], matrix[3], scratchColumn));
@@ -468,8 +471,8 @@ define([
      *
      * @param {Matrix2} left The first matrix.
      * @param {Matrix2} right The second matrix.
-     * @param {Matrix2} [result] The object onto which to store the result.
-     * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
+     * @param {Matrix2} result The object onto which to store the result.
+     * @returns {Matrix2} The modified result parameter.
      */
     Matrix2.multiply = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -479,6 +482,9 @@ define([
         if (!defined(right)) {
             throw new DeveloperError('right is required');
         }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required,');
+        }
         //>>includeEnd('debug');
 
         var column0Row0 = left[0] * right[0] + left[2] * right[1];
@@ -486,10 +492,6 @@ define([
         var column0Row1 = left[1] * right[0] + left[3] * right[1];
         var column1Row1 = left[1] * right[2] + left[3] * right[3];
 
-        if (!defined(result)) {
-            return new Matrix2(column0Row0, column1Row0,
-                               column0Row1, column1Row1);
-        }
         result[0] = column0Row0;
         result[1] = column0Row1;
         result[2] = column1Row0;
@@ -502,8 +504,8 @@ define([
      *
      * @param {Matrix2} matrix The matrix.
      * @param {Cartesian2} cartesian The column.
-     * @param {Cartesian2} [result] The object onto which to store the result.
-     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
+     * @param {Cartesian2} result The object onto which to store the result.
+     * @returns {Cartesian2} The modified result parameter.
      */
     Matrix2.multiplyByVector = function(matrix, cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -513,14 +515,14 @@ define([
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required,');
+        }
         //>>includeEnd('debug');
 
         var x = matrix[0] * cartesian.x + matrix[2] * cartesian.y;
         var y = matrix[1] * cartesian.x + matrix[3] * cartesian.y;
 
-        if (!defined(result)) {
-            return new Cartesian2(x, y);
-        }
         result.x = x;
         result.y = y;
         return result;
@@ -531,8 +533,8 @@ define([
      *
      * @param {Matrix2} matrix The matrix.
      * @param {Number} scalar The number to multiply by.
-     * @param {Matrix2} [result] The object onto which to store the result.
-     * @returns {Matrix2} The modified result parameter or a new Cartesian2 instance if one was not provided.
+     * @param {Matrix2} result The object onto which to store the result.
+     * @returns {Matrix2} The modified result parameter.
      */
     Matrix2.multiplyByScalar = function(matrix, scalar, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -542,12 +544,11 @@ define([
         if (typeof scalar !== 'number') {
             throw new DeveloperError('scalar is required and must be a number');
         }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required,');
+        }
         //>>includeEnd('debug');
 
-        if (!defined(result)) {
-            return new Matrix2(matrix[0] * scalar, matrix[2] * scalar,
-                               matrix[1] * scalar, matrix[3] * scalar);
-        }
         result[0] = matrix[0] * scalar;
         result[1] = matrix[1] * scalar;
         result[2] = matrix[2] * scalar;
@@ -559,20 +560,19 @@ define([
      * Creates a negated copy of the provided matrix.
      *
      * @param {Matrix2} matrix The matrix to negate.
-     * @param {Matrix2} [result] The object onto which to store the result.
-     * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
+     * @param {Matrix2} result The object onto which to store the result.
+     * @returns {Matrix2} The modified result parameter.
      */
     Matrix2.negate = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required,');
+        }
         //>>includeEnd('debug');
 
-        if (!defined(result)) {
-            return new Matrix2(-matrix[0], -matrix[2],
-                               -matrix[1], -matrix[3]);
-        }
         result[0] = -matrix[0];
         result[1] = -matrix[1];
         result[2] = -matrix[2];
@@ -584,13 +584,16 @@ define([
      * Computes the transpose of the provided matrix.
      *
      * @param {Matrix2} matrix The matrix to transpose.
-     * @param {Matrix2} [result] The object onto which to store the result.
-     * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
+     * @param {Matrix2} result The object onto which to store the result.
+     * @returns {Matrix2} The modified result parameter.
      */
     Matrix2.transpose = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required,');
         }
         //>>includeEnd('debug');
 
@@ -599,10 +602,6 @@ define([
         var column1Row0 = matrix[1];
         var column1Row1 = matrix[3];
 
-        if (!defined(result)) {
-            return new Matrix2(column0Row0, column1Row0,
-                               column0Row1, column1Row1);
-        }
         result[0] = column0Row0;
         result[1] = column0Row1;
         result[2] = column1Row0;
@@ -614,20 +613,19 @@ define([
      * Computes a matrix, which contains the absolute (unsigned) values of the provided matrix's elements.
      *
      * @param {Matrix2} matrix The matrix with signed elements.
-     * @param {Matrix2} [result] The object onto which to store the result.
-     * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
+     * @param {Matrix2} result The object onto which to store the result.
+     * @returns {Matrix2} The modified result parameter.
      */
     Matrix2.abs = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required,');
+        }
         //>>includeEnd('debug');
 
-        if (!defined(result)) {
-            return new Matrix2(Math.abs(matrix[0]), Math.abs(matrix[2]),
-                               Math.abs(matrix[1]), Math.abs(matrix[3]));
-        }
         result[0] = Math.abs(matrix[0]);
         result[1] = Math.abs(matrix[1]);
         result[2] = Math.abs(matrix[2]);

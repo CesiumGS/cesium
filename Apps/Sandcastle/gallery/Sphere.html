@@ -36,7 +36,7 @@ require(['Cesium'], function(C) {
     var positionOnEllipsoid = C.Cartesian3.fromDegrees(-100.0, 40.0);
     var modelMatrix = C.Matrix4.multiplyByTranslation(
         C.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
-        new C.Cartesian3(0.0, 0.0, radius)
+        new C.Cartesian3(0.0, 0.0, radius), new C.Matrix4()
     );
 
     var sphereGeometry = new C.SphereGeometry({

@@ -80,10 +80,10 @@ require([
         var location = ellipsoid.cartographicToCartesian(new C.Cartographic(longitude, latitude, altitude));
         var modelMatrix = C.Transforms.northEastDownToFixedFrame(location);
         var orientation = C.Matrix3.multiply(
-                            C.Matrix3.multiply(C.Matrix3.fromRotationZ(clock), C.Matrix3.fromRotationY(cone)),
-                            C.Matrix3.fromRotationX(twist)
+                            C.Matrix3.multiply(C.Matrix3.fromRotationZ(clock), C.Matrix3.fromRotationY(cone), new C.Matrix3()),
+                            C.Matrix3.fromRotationX(twist), new C.Matrix3()
                           );
-        return C.Matrix4.multiply(modelMatrix, C.Matrix4.fromRotationTranslation(orientation, C.Cartesian3.ZERO));
+        return C.Matrix4.multiply(modelMatrix, C.Matrix4.fromRotationTranslation(orientation, C.Cartesian3.ZERO), new C.Matrix4());
     }
 
     function addRectangularSensor(sensors, ellipsoid, scene) {

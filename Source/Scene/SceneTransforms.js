@@ -32,7 +32,7 @@ define([
 
     var actualPosition = new Cartesian4(0, 0, 0, 1);
     var positionCC = new Cartesian4();
-    var viewProjectionScratch;
+    var viewProjectionScratch = new Matrix4();
 
     /**
      * Transforms a position in WGS84 coordinates to window coordinates.  This is commonly used to place an

@@ -148,7 +148,7 @@ define([
                             Color.BLUE
                         ]
                     })),
-                    modelMatrix : Matrix4.multiplyByUniformScale(this.modelMatrix, this.length),
+                    modelMatrix : Matrix4.multiplyByUniformScale(this.modelMatrix, this.length, new Matrix4()),
                     id : this.id,
                     pickPrimitive : this
                 }),

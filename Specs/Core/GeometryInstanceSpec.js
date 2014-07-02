@@ -39,7 +39,7 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLES,
             boundingSphere : new BoundingSphere(new Cartesian3(0.5, 0.5, 0.0), 1.0)
         });
-        var modelMatrix = Matrix4.multiplyByTranslation(Matrix4.IDENTITY, new Cartesian3(0.0, 0.0, 9000000.0));
+        var modelMatrix = Matrix4.multiplyByTranslation(Matrix4.IDENTITY, new Cartesian3(0.0, 0.0, 9000000.0), new Matrix4());
         var attributes = {
             color : new GeometryInstanceAttribute({
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE,

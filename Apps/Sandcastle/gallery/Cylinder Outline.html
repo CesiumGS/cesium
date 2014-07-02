@@ -38,7 +38,7 @@ require(['Cesium'], function(C) {
     var positionOnEllipsoid = C.Cartesian3.fromDegrees(-100.0, 40.0);
     var modelMatrix = C.Matrix4.multiplyByTranslation(
         C.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
-        new C.Cartesian3(0.0, 0.0, length * 0.5)
+        new C.Cartesian3(0.0, 0.0, length * 0.5), new C.Matrix4()
     );
     
     var cylinderOutlineGeometry = new C.CylinderOutlineGeometry({
@@ -75,7 +75,7 @@ require(['Cesium'], function(C) {
     positionOnEllipsoid = C.Cartesian3.fromDegrees(-95.0, 40.0);
     modelMatrix = C.Matrix4.multiplyByTranslation(
         C.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
-        new C.Cartesian3(0.0, 0.0, length * 0.5)
+        new C.Cartesian3(0.0, 0.0, length * 0.5), new C.Matrix4()
     );
     cylinderOutlineGeometry = new C.CylinderOutlineGeometry({
         length : length,

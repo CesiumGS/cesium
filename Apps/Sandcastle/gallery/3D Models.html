@@ -50,7 +50,7 @@ require(['Cesium'], function(C) {
             });
     
             // Zoom to model
-            var center = C.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center);
+            var center = C.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new C.Cartesian3());
             var transform = C.Transforms.eastNorthUpToFixedFrame(center);
             var camera = scene.camera;
             camera.transform = transform;

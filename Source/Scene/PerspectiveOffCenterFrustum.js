@@ -91,8 +91,8 @@ define([
         this._far = this.far;
 
         this._cullingVolume = new CullingVolume();
-        this._perspectiveMatrix = undefined;
-        this._infinitePerspective = undefined;
+        this._perspectiveMatrix = new Matrix4();
+        this._infinitePerspective = new Matrix4();
     };
 
     function update(frustum) {

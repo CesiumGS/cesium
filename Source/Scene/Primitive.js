@@ -138,7 +138,7 @@ define([
      *     radii : new C.Cartesian3(500000.0, 500000.0, 1000000.0)
      *   }),
      *   modelMatrix : C.Matrix4.multiplyByTranslation(C.Transforms.eastNorthUpToFixedFrame(
-     *     C.Cartesian3.fromDegrees(-95.59777, 40.03883)), new C.Cartesian3(0.0, 0.0, 500000.0)),
+     *     C.Cartesian3.fromDegrees(-95.59777, 40.03883)), new C.Cartesian3(0.0, 0.0, 500000.0), new C.Matrix4()),
      *   id : 'ellipsoid',
      *   attribute : {
      *     color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.AQUA)
@@ -158,7 +158,7 @@ define([
      *         radii : new C.Cartesian3(500000.0, 500000.0, 1000000.0)
      *       })),
      *       modelMatrix : C.Matrix4.multiplyByTranslation(C.Transforms.eastNorthUpToFixedFrame(
-     *         C.Cartesian3.fromDegrees(-95.59777, 40.03883)), new C.Cartesian3(0.0, 0.0, 500000.0)),
+     *         C.Cartesian3.fromDegrees(-95.59777, 40.03883)), new C.Cartesian3(0.0, 0.0, 500000.0), new C.Matrix4()),
      *       id : 'ellipsoid',
      *       attribute : {
      *         color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.AQUA)

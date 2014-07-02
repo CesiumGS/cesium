@@ -399,7 +399,7 @@ define([
          *
          * @example
          * // Center in WGS84 coordinates
-         * var center = C.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center);
+         * var center = C.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new C.Cartesian3());
          */
         boundingSphere : {
             get : function() {
@@ -2002,6 +2002,9 @@ define([
 
             for (var m = 0; m < inverseBindMatricesLength; ++m) {
                 // [joint-matrix] = [node-to-root^-1][joint-to-root][inverse-bind][bind-shape]
+                if (!defined(computedJointMatrices[m])) {
+                    computedJointMatrices[m] = new Matrix4();
+                }
                 computedJointMatrices[m] = Matrix4.multiplyTransformation(scratchObjectSpace, joints[m].transformToRoot, computedJointMatrices[m]);
                 computedJointMatrices[m] = Matrix4.multiplyTransformation(computedJointMatrices[m], inverseBindMatrices[m], computedJointMatrices[m]);
                 if (defined(bindShapeMatrix)) {

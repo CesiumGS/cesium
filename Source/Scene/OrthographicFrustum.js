@@ -89,7 +89,7 @@ define([
         this._far = this.far;
 
         this._cullingVolume = new CullingVolume();
-        this._orthographicMatrix = undefined;
+        this._orthographicMatrix = new Matrix4();
     };
 
     function update(frustum) {

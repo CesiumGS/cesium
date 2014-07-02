@@ -39,7 +39,7 @@ define([
      * var instanceBottom = new C.GeometryInstance({
      *   geometry : geometry,
      *   modelMatrix : C.Matrix4.multiplyByTranslation(C.Transforms.eastNorthUpToFixedFrame(
-     *     C.Cartesian3.fromDegrees(-75.59777, 40.03883)), new C.Cartesian3(0.0, 0.0, 1000000.0)),
+     *     C.Cartesian3.fromDegrees(-75.59777, 40.03883)), new C.Cartesian3(0.0, 0.0, 1000000.0), new Matrix4()),
      *   attributes : {
      *     color : new C.ColorGeometryInstanceAttribute(C.Color.AQUA)
      *   }
@@ -48,7 +48,7 @@ define([
      * var instanceTop = new C.GeometryInstance({
      *   geometry : geometry,
      *   modelMatrix : C.Matrix4.multiplyByTranslation(C.Transforms.eastNorthUpToFixedFrame(
-     *     C.Cartesian3.fromDegrees(-75.59777, 40.03883)), new C.Cartesian3(0.0, 0.0, 3000000.0)),
+     *     C.Cartesian3.fromDegrees(-75.59777, 40.03883)), new C.Cartesian3(0.0, 0.0, 3000000.0), new Matrix4()),
      *   attributes : {
      *     color : new C.ColorGeometryInstanceAttribute(C.Color.AQUA)
      *   }
