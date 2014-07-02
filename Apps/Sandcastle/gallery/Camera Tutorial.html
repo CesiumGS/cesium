@@ -30,10 +30,10 @@
 <div>left mouse button down plus mouse move changes the look direction</div>
 </div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+require(['Cesium'], function(C) {
     "use strict";
 
-    var viewer = new Cesium.Viewer('cesiumContainer');
+    var viewer = new C.Viewer('cesiumContainer');
 
     var scene = viewer.scene;
     var canvas = scene.canvas;
@@ -62,20 +62,20 @@ require(['Cesium'], function(Cesium) {
         moveRight : false
     };
 
-    var handler = new Cesium.ScreenSpaceEventHandler(canvas);
+    var handler = new C.ScreenSpaceEventHandler(canvas);
 
     handler.setInputAction(function(movement) {
         flags.looking = true;
-        mousePosition = startMousePosition = Cesium.Cartesian3.clone(movement.position);
-    }, Cesium.ScreenSpaceEventType.LEFT_DOWN);
+        mousePosition = startMousePosition = C.Cartesian3.clone(movement.position);
+    }, C.ScreenSpaceEventType.LEFT_DOWN);
 
     handler.setInputAction(function(movement) {
         mousePosition = movement.endPosition;
-    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+    }, C.ScreenSpaceEventType.MOUSE_MOVE);
 
     handler.setInputAction(function(position) {
         flags.looking = false;
-    }, Cesium.ScreenSpaceEventType.LEFT_UP);
+    }, C.ScreenSpaceEventType.LEFT_UP);
 
     function getFlagForKeyCode(keyCode) {
         switch (keyCode) {

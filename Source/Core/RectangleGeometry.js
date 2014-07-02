@@ -644,22 +644,22 @@ define([
      *
      * @example
      * // 1. create an rectangle
-     * var rectangle = new Cesium.RectangleGeometry({
-     *   ellipsoid : Cesium.Ellipsoid.WGS84,
-     *   rectangle : Cesium.Rectangle.fromDegrees(-80.0, 39.0, -74.0, 42.0),
+     * var rectangle = new C.RectangleGeometry({
+     *   ellipsoid : C.Ellipsoid.WGS84,
+     *   rectangle : C.Rectangle.fromDegrees(-80.0, 39.0, -74.0, 42.0),
      *   height : 10000.0
      * });
-     * var geometry = Cesium.RectangleGeometry.createGeometry(rectangle);
+     * var geometry = C.RectangleGeometry.createGeometry(rectangle);
      *
      * // 2. create an extruded rectangle without a top
-     * var rectangle = new Cesium.RectangleGeometry({
-     *   ellipsoid : Cesium.Ellipsoid.WGS84,
-     *   rectangle : Cesium.Rectangle.fromDegrees(-80.0, 39.0, -74.0, 42.0),
+     * var rectangle = new C.RectangleGeometry({
+     *   ellipsoid : C.Ellipsoid.WGS84,
+     *   rectangle : C.Rectangle.fromDegrees(-80.0, 39.0, -74.0, 42.0),
      *   height : 10000.0,
      *   extrudedHieght: 300000,
      *   closeTop: false
      * });
-     * var geometry = Cesium.RectangleGeometry.createGeometry(rectangle);
+     * var geometry = C.RectangleGeometry.createGeometry(rectangle);
      */
     var RectangleGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

@@ -490,9 +490,9 @@ define([
      *
      * @example
      * // 1. create a polygon from points
-     * var polygon = new Cesium.PolygonGeometry({
+     * var polygon = new C.PolygonGeometry({
      *   polygonHierarchy : {
-     *     positions : Cesium.Cartesian3.fromDegreesArray([
+     *     positions : C.Cartesian3.fromDegreesArray([
      *       -72.0, 40.0,
      *       -70.0, 35.0,
      *       -75.0, 30.0,
@@ -501,33 +501,33 @@ define([
      *     ])
      *   }
      * });
-     * var geometry = Cesium.PolygonGeometry.createGeometry(polygon);
+     * var geometry = C.PolygonGeometry.createGeometry(polygon);
      *
      * // 2. create a nested polygon with holes
-     * var polygonWithHole = new Cesium.PolygonGeometry({
+     * var polygonWithHole = new C.PolygonGeometry({
      *   polygonHierarchy : {
-     *     positions : Cesium.Cartesian3.fromDegreesArray([
+     *     positions : C.Cartesian3.fromDegreesArray([
      *       -109.0, 30.0,
      *       -95.0, 30.0,
      *       -95.0, 40.0,
      *       -109.0, 40.0
      *     ]),
      *     holes : [{
-     *       positions : Cesium.Cartesian3.fromDegreesArray([
+     *       positions : C.Cartesian3.fromDegreesArray([
      *         -107.0, 31.0,
      *         -107.0, 39.0,
      *         -97.0, 39.0,
      *         -97.0, 31.0
      *       ]),
      *       holes : [{
-     *         positions : Cesium.Cartesian3.fromDegreesArray([
+     *         positions : C.Cartesian3.fromDegreesArray([
      *           -105.0, 33.0,
      *           -99.0, 33.0,
      *           -99.0, 37.0,
      *           -105.0, 37.0
      *         ]),
      *         holes : [{
-     *           positions : Cesium.Cartesian3.fromDegreesArray([
+     *           positions : C.Cartesian3.fromDegreesArray([
      *             -103.0, 34.0,
      *             -101.0, 34.0,
      *             -101.0, 36.0,
@@ -538,11 +538,11 @@ define([
      *     }]
      *   }
      * });
-     * var geometry = PolygonGeometry.createGeometry(polygonWithHole);
+     * var geometry = C.PolygonGeometry.createGeometry(polygonWithHole);
      *
      * // 3. create extruded polygon
-     * var extrudedPolygon = new PolygonGeometry({
-     *   positions : Cesium.Cartesian3.fromDegreesArray([
+     * var extrudedPolygon = new C.PolygonGeometry({
+     *   positions : C.Cartesian3.fromDegreesArray([
      *     -72.0, 40.0,
      *     -70.0, 35.0,
      *     -75.0, 30.0,
@@ -551,7 +551,7 @@ define([
      *   ]),
      *   extrudedHeight: 300000
      * });
-     * var geometry = PolygonGeometry.createGeometry(extrudedPolygon);
+     * var geometry = C.PolygonGeometry.createGeometry(extrudedPolygon);
      */
     var PolygonGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -606,8 +606,8 @@ define([
      *
      * @example
      * // create a polygon from points
-     * var polygon = Cesium.PolygonGeometry.fromPositions({
-     *   positions : Cesium.Cartesian3.fromDegreesArray([
+     * var polygon = C.PolygonGeometry.fromPositions({
+     *   positions : C.Cartesian3.fromDegreesArray([
      *     -72.0, 40.0,
      *     -70.0, 35.0,
      *     -75.0, 30.0,
@@ -615,7 +615,7 @@ define([
      *     -68.0, 40.0
      *   ])
      * });
-     * var geometry = Cesium.PolygonGeometry.createGeometry(polygon);
+     * var geometry = C.PolygonGeometry.createGeometry(polygon);
      */
     PolygonGeometry.fromPositions = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

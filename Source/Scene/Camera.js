@@ -60,11 +60,11 @@ define([
      * @example
      * // Create a camera looking down the negative z-axis, positioned at the origin,
      * // with a field of view of 60 degrees, and 1:1 aspect ratio.
-     * var camera = new Cesium.Camera(scene);
-     * camera.position = new Cesium.Cartesian3();
-     * camera.direction = Cesium.Cartesian3.negate(Cesium.Cartesian3.UNIT_Z, new Cartesian3());
-     * camera.up = Cesium.Cartesian3.clone(Cesium.Cartesian3.UNIT_Y);
-     * camera.frustum.fovy = Cesium.Math.PI_OVER_THREE;
+     * var camera = new C.Camera(scene);
+     * camera.position = new C.Cartesian3();
+     * camera.direction = C.Cartesian3.negate(C.Cartesian3.UNIT_Z, new C.Cartesian3());
+     * camera.up = C.Cartesian3.clone(C.Cartesian3.UNIT_Y);
+     * camera.frustum.fovy = C.Math.PI_OVER_THREE;
      * camera.frustum.near = 1.0;
      * camera.frustum.far = 2.0;
      *
@@ -1121,7 +1121,7 @@ define([
      * @example
      * // Rotate about a point on the earth.
      * var center = ellipsoid.cartographicToCartesian(cartographic);
-     * var transform = Cesium.Matrix4.fromTranslation(center);
+     * var transform = C.Matrix4.fromTranslation(center);
      * camera.rotate(axis, angle, transform);
     */
     Camera.prototype.rotate = function(axis, angle, transform) {

@@ -49,8 +49,8 @@ define([
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if the primitive's commands' bounding spheres are shown.
      *
      * @example
-     * var rectanglePrimitive = new Cesium.RectanglePrimitive({
-     *   rectangle : Cesium.Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0)
+     * var rectanglePrimitive = new C.RectanglePrimitive({
+     *   rectangle : C.Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0)
      * });
      * primitives.add(rectanglePrimitive);
      */
@@ -147,10 +147,10 @@ define([
          *
          * @example
          * // 1. Change the color of the default material to yellow
-         * rectangle.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
+         * rectangle.material.uniforms.color = new C.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
-         * rectangle.material = Cesium.Material.fromType(Material.StripeType);
+         * rectangle.material = C.Material.fromType(Material.StripeType);
          */
         this.material = defaultValue(options.material, material);
 

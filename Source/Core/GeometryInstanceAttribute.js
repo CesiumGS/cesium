@@ -27,16 +27,16 @@ define([
      * @see ShowGeometryInstanceAttribute
      *
      * @example
-     * var instance = new Cesium.GeometryInstance({
-     *   geometry : new Cesium.BoxGeometry({
-     *     dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0)
+     * var instance = new C.GeometryInstance({
+     *   geometry : new C.BoxGeometry({
+     *     dimensions : new C.Cartesian3(1000000.0, 1000000.0, 500000.0)
      *   }),
-     *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-     *     Cesium.Cartesian3.fromDegrees(0.0, 0.0)), new Cesium.Cartesian3(0.0, 0.0, 1000000.0)),
+     *   modelMatrix : C.Matrix4.multiplyByTranslation(C.Transforms.eastNorthUpToFixedFrame(
+     *     C.Cartesian3.fromDegrees(0.0, 0.0)), new C.Cartesian3(0.0, 0.0, 1000000.0)),
      *   id : 'box',
      *   attributes : {
-     *     color : new Cesium.GeometryInstanceAttribute({
-     *       componentDatatype : Cesium.ComponentDatatype.UNSIGNED_BYTE,
+     *     color : new C.GeometryInstanceAttribute({
+     *       componentDatatype : C.ComponentDatatype.UNSIGNED_BYTE,
      *       componentsPerAttribute : 4,
      *       normalize : true,
      *       value : [255, 255, 0 255]
@@ -82,8 +82,8 @@ define([
          * @default undefined
          *
          * @example
-         * show : new Cesium.GeometryInstanceAttribute({
-         *   componentDatatype : Cesium.ComponentDatatype.UNSIGNED_BYTE,
+         * show : new C.GeometryInstanceAttribute({
+         *   componentDatatype : C.ComponentDatatype.UNSIGNED_BYTE,
          *   componentsPerAttribute : 1,
          *   normalize : true,
          *   value : 1.0
@@ -104,14 +104,14 @@ define([
          * @default false
          *
          * @example
-         * attribute.componentDatatype : Cesium.ComponentDatatype.UNSIGNED_BYTE,
+         * attribute.componentDatatype : C.ComponentDatatype.UNSIGNED_BYTE,
          * attribute.componentsPerAttribute : 4,
          * attribute.normalize = true;
          * attribute.value = [
-         *   Cesium.Color.floatToByte(color.red)
-         *   Cesium.Color.floatToByte(color.green)
-         *   Cesium.Color.floatToByte(color.blue)
-         *   Cesium.Color.floatToByte(color.alpha)
+         *   C.Color.floatToByte(color.red)
+         *   C.Color.floatToByte(color.green)
+         *   C.Color.floatToByte(color.blue)
+         *   C.Color.floatToByte(color.alpha)
          * ];
          */
         this.normalize = defaultValue(options.normalize, false);
@@ -124,8 +124,8 @@ define([
          * @default undefined
          *
          * @example
-         * show : new Cesium.GeometryInstanceAttribute({
-         *   componentDatatype : Cesium.ComponentDatatype.UNSIGNED_BYTE,
+         * show : new C.GeometryInstanceAttribute({
+         *   componentDatatype : C.ComponentDatatype.UNSIGNED_BYTE,
          *   componentsPerAttribute : 1,
          *   normalize : true,
          *   value : [1.0]

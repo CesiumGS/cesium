@@ -53,10 +53,10 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
-     * var provider = new Cesium.WebMapServiceImageryProvider({
+     * var provider = new C.WebMapServiceImageryProvider({
      *     url: '//sampleserver1.arcgisonline.com/ArcGIS/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/WMSServer',
      *     layers : '0',
-     *     proxy: new Cesium.DefaultProxy('/proxy/')
+     *     proxy: new C.DefaultProxy('/proxy/')
      * });
      */
     var WebMapServiceImageryProvider = function WebMapServiceImageryProvider(options) {

@@ -9,5 +9,5 @@ require([
     /*global self*/
     var scope = typeof window !== 'undefined' ? window : typeof self !== 'undefined' ? self : {};
 
-    scope.Cesium = Cesium;
+    scope.C = Cesium;
 }, undefined, true);

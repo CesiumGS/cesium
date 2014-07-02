@@ -31,11 +31,11 @@ define([
      *
      * @example
      * // Create an ObjectOrientedBoundingBox using a transformation matrix, a position where the box will be translated, and a scale.
-     * var rotation = Cesium.Matrix3.clone(Cesium.Matrix3.IDENTITY);
-     * var translation = new Cesium.Cartesian3(1,0,0);
-     * var scale = new Cesium.Cartesian3(0,5,0);
+     * var rotation = C.Matrix3.clone(C.Matrix3.IDENTITY);
+     * var translation = new C.Cartesian3(1,0,0);
+     * var scale = new C.Cartesian3(0,5,0);
      *
-     * var oobb = new Cesium.ObjectOrientedBoundingBox(rotation, translation, scale);
+     * var oobb = new C.ObjectOrientedBoundingBox(rotation, translation, scale);
      */
     var ObjectOrientedBoundingBox = function(rotation, translation, scale) {
         /**
@@ -80,7 +80,7 @@ define([
      *
      * @example
      * // Compute an object oriented bounding box enclosing two points.
-     * var box = Cesium.ObjectOrientedBoundingBox.fromPoints([new Cesium.Cartesian3(2, 0, 0), new Cesium.Cartesian3(-2, 0, 0)]);
+     * var box = C.ObjectOrientedBoundingBox.fromPoints([new C.Cartesian3(2, 0, 0), new C.Cartesian3(-2, 0, 0)]);
      */
     ObjectOrientedBoundingBox.fromPoints = function(positions, result) {
         if (!defined(result)) {
@@ -176,7 +176,7 @@ define([
      *
      * @example
      * // Compute an object oriented bounding box enclosing two points.
-     * var box = Cesium.ObjectOrientedBoundingBox.fromBoundingRectangle(boundingRectangle, 0.0);
+     * var box = C.ObjectOrientedBoundingBox.fromBoundingRectangle(boundingRectangle, 0.0);
      */
     ObjectOrientedBoundingBox.fromBoundingRectangle = function(boundingRectangle, rotation, result) {
         //>>includeStart('debug', pragmas.debug);

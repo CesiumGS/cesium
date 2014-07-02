@@ -639,9 +639,9 @@ define([
      * @see CorridorGeometry.createGeometry
      *
      * @example
-     * var corridor = new Cesium.CorridorGeometry({
-     *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
-     *   positions : Cesium.Cartesian3.fromDegreesArray([-72.0, 40.0, -70.0, 35.0]),
+     * var corridor = new C.CorridorGeometry({
+     *   vertexFormat : C.VertexFormat.POSITION_ONLY,
+     *   positions : C.Cartesian3.fromDegreesArray([-72.0, 40.0, -70.0, 35.0]),
      *   width : 100000
      * });
      */

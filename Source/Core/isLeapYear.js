@@ -14,7 +14,7 @@ define([
      * @returns {Boolean} True if <code>year</code> is a leap year.
      *
      * @example
-     * var leapYear = Cesium.isLeapYear(2000); // true
+     * var leapYear = C.isLeapYear(2000); // true
      */
     function isLeapYear(year) {
         //>>includeStart('debug', pragmas.debug);

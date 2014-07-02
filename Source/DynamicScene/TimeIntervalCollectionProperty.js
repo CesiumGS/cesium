@@ -27,30 +27,30 @@ define([
      * @example
      * //Create a Cartesian2 interval property which contains data on August 1st, 2012
      * //and uses a different value every 6 hours.
-     * var composite = new Cesium.TimeIntervalCollectionProperty();
-     * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601({
+     * var composite = new C.TimeIntervalCollectionProperty();
+     * composite.intervals.addInterval(C.TimeInterval.fromIso8601({
      *     iso8601 : '2012-08-01T00:00:00.00Z/2012-08-01T06:00:00.00Z',
      *     isStartIncluded : true,
      *     isStopIncluded : false,
-     *     data : new Cesium.Cartesian2(2.0, 3.4)
+     *     data : new C.Cartesian2(2.0, 3.4)
      * }));
-     * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601({
+     * composite.intervals.addInterval(C.TimeInterval.fromIso8601({
      *     iso8601 : '2012-08-01T06:00:00.00Z/2012-08-01T12:00:00.00Z',
      *     isStartIncluded : true,
      *     isStopIncluded : false,
-     *     data : new Cesium.Cartesian2(12.0, 2.7)
+     *     data : new C.Cartesian2(12.0, 2.7)
      * }));
-     * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601({
+     * composite.intervals.addInterval(C.TimeInterval.fromIso8601({
      *     iso8601 : '2012-08-01T12:00:00.00Z/2012-08-01T18:00:00.00Z',
      *     isStartIncluded : true,
      *     isStopIncluded : false,
-     *     data : new Cesium.Cartesian2(5.0, 12.4)
+     *     data : new C.Cartesian2(5.0, 12.4)
      * }));
-     * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601({
+     * composite.intervals.addInterval(C.TimeInterval.fromIso8601({
      *     iso8601 : '2012-08-01T18:00:00.00Z/2012-08-02T00:00:00.00Z',
      *     isStartIncluded : true,
      *     isStopIncluded : true,
-     *     data : new Cesium.Cartesian2(85.0, 4.1)
+     *     data : new C.Cartesian2(85.0, 4.1)
      * }));
      */
     var TimeIntervalCollectionProperty = function() {

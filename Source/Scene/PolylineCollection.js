@@ -112,9 +112,9 @@ define([
      *
      * @example
      * // Create a polyline collection with two polylines
-     * var polylines = new Cesium.PolylineCollection();
+     * var polylines = new C.PolylineCollection();
      * polylines.add({
-     *   position : Cartesian3.fromDegreesArray([
+     *   position : C.Cartesian3.fromDegreesArray([
      *     -75.10, 39.57,
      *     -77.02, 38.53,
      *     -80.50, 35.14,
@@ -123,7 +123,7 @@ define([
      * });
      *
      * polylines.add({
-     *   positions : Cartesian3.fromDegreesArray([
+     *   positions : C.Cartesian3.fromDegreesArray([
      *     -73.10, 37.57,
      *     -75.02, 36.53,
      *     -78.50, 33.14,
@@ -227,8 +227,8 @@ define([
      * var p = polylines.add({
      *   show : true,
      *   positions : ellipsoid.cartographicDegreesToCartesians([
-     *     new Cesium.Cartographic2(-75.10, 39.57),
-     *     new Cesium.Cartographic2(-77.02, 38.53)]),
+     *     new C.Cartographic2(-75.10, 39.57),
+     *     new C.Cartographic2(-77.02, 38.53)]),
      *     width : 1
      * });
      */

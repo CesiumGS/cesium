@@ -52,7 +52,7 @@ define([
      *
      * @example
      * // Returns 2
-     * var size = Cesium.IndexDatatype.getSizeInBytes(Cesium.IndexDatatype.UNSIGNED_SHORT);
+     * var size = C.IndexDatatype.getSizeInBytes(C.IndexDatatype.UNSIGNED_SHORT);
      */
     IndexDatatype.getSizeInBytes = function(indexDatatype) {
         switch(indexDatatype) {
@@ -76,8 +76,8 @@ define([
      * @returns {Boolean} <code>true</code> if the provided index datatype is a valid value; otherwise, <code>false</code>.
      *
      * @example
-     * if (!Cesium.IndexDatatype.validate(indexDatatype)) {
-     *   throw new Cesium.DeveloperError('indexDatatype must be a valid value.');
+     * if (!C.IndexDatatype.validate(indexDatatype)) {
+     *   throw new C.DeveloperError('indexDatatype must be a valid value.');
      * }
      */
     IndexDatatype.validate = function(indexDatatype) {
@@ -96,7 +96,7 @@ define([
      * @returns {Uint16Aray|Uint32Array} A <code>Uint16Array</code> or <code>Uint32Array</code> constructed with <code>indicesLengthOrArray</code>.
      *
      * @example
-     * this.indices = Cesium.IndexDatatype.createTypedArray(positions.length / 3, numberOfIndices);
+     * this.indices = C.IndexDatatype.createTypedArray(positions.length / 3, numberOfIndices);
      */
     IndexDatatype.createTypedArray = function(numberOfVertices, indicesLengthOrArray) {
         //>>includeStart('debug', pragmas.debug);

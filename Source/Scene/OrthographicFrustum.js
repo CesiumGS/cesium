@@ -31,8 +31,8 @@ define([
      * @example
      * var maxRadii = ellipsoid.maximumRadius;
      *
-     * var frustum = new Cesium.OrthographicFrustum();
-     * frustum.right = maxRadii * Cesium.Math.PI;
+     * var frustum = new C.OrthographicFrustum();
+     * frustum.right = maxRadii * C.Math.PI;
      * frustum.left = -c.frustum.right;
      * frustum.top = c.frustum.right * (canvas.clientHeight / canvas.clientWidth);
      * frustum.bottom = -c.frustum.top;
@@ -279,7 +279,7 @@ define([
      * @example
      * // Example 1
      * // Get the width and height of a pixel.
-     * var pixelSize = camera.frustum.getPixelSize(new Cesium.Cartesian2(canvas.clientWidth, canvas.clientHeight));
+     * var pixelSize = camera.frustum.getPixelSize(new C.Cartesian2(canvas.clientWidth, canvas.clientHeight));
      */
     OrthographicFrustum.prototype.getPixelSize = function(drawingBufferDimensions, distance, result) {
         update(this);

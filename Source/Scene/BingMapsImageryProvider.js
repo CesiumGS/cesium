@@ -80,10 +80,10 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
-     * var bing = new Cesium.BingMapsImageryProvider({
+     * var bing = new C.BingMapsImageryProvider({
      *     url : '//dev.virtualearth.net',
      *     key : 'get-yours-at-https://www.bingmapsportal.com/',
-     *     mapStyle : Cesium.BingMapsStyle.AERIAL
+     *     mapStyle : C.BingMapsStyle.AERIAL
      * });
      */
     var BingMapsImageryProvider = function BingMapsImageryProvider(options) {

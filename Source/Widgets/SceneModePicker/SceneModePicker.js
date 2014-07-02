@@ -48,7 +48,7 @@ define([
      * // and in the body, include: <div id="sceneModePickerContainer"></div>
      * // Note: This code assumes you already have a Scene instance.
      *
-     * var sceneModePicker = new Cesium.SceneModePicker('sceneModePickerContainer', scene);
+     * var sceneModePicker = new C.SceneModePicker('sceneModePickerContainer', scene);
      */
     var SceneModePicker = function(container, scene, duration) {
         //>>includeStart('debug', pragmas.debug);

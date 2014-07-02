@@ -24,33 +24,33 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+require(['Cesium'], function(C) {
     "use strict";
 
     function createPrimitives(scene) {
         var primitives = scene.primitives;
 
-        var e = primitives.add(new Cesium.EllipsoidPrimitive({
-            center : Cesium.Cartesian3.fromDegrees(-75.0, 40.0, 500000.0),
-            radii : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0),
-            material : Cesium.Material.fromType(Cesium.Material.RimLightingType)
+        var e = primitives.add(new C.EllipsoidPrimitive({
+            center : C.Cartesian3.fromDegrees(-75.0, 40.0, 500000.0),
+            radii : new C.Cartesian3(500000.0, 500000.0, 500000.0),
+            material : C.Material.fromType(C.Material.RimLightingType)
         }));
         Sandcastle.declare(e); // For Sandcastle highlighting.
 
-        var e2 = primitives.add(new Cesium.EllipsoidPrimitive({
-            modelMatrix : Cesium.Transforms.eastNorthUpToFixedFrame(
-                Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 500000.0)),
-            radii : new Cesium.Cartesian3(300000.0, 300000.0, 500000.0),
-            material : Cesium.Material.fromType(Cesium.Material.StripeType)
+        var e2 = primitives.add(new C.EllipsoidPrimitive({
+            modelMatrix : C.Transforms.eastNorthUpToFixedFrame(
+                C.Cartesian3.fromDegrees(-95.0, 40.0, 500000.0)),
+            radii : new C.Cartesian3(300000.0, 300000.0, 500000.0),
+            material : C.Material.fromType(C.Material.StripeType)
         }));
         Sandcastle.declare(e2); // For Sandcastle highlighting.
     }
 
-    var viewer = new Cesium.Viewer('cesiumContainer');
+    var viewer = new C.Viewer('cesiumContainer');
     viewer.screenSpaceEventHandler.setInputAction(function(movement) {
         var pickedPrimitive = viewer.scene.pick(movement.endPosition);
         Sandcastle.highlight(pickedPrimitive);
-    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+    }, C.ScreenSpaceEventType.MOUSE_MOVE);
 
     createPrimitives(viewer.scene);
 

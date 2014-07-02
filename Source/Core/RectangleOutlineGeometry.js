@@ -285,12 +285,12 @@ define([
      * @see RectangleOutlineGeometry#createGeometry
      *
      * @example
-     * var rectangle = new Cesium.RectangleOutlineGeometry({
-     *   ellipsoid : Cesium.Ellipsoid.WGS84,
-     *   rectangle : Cesium.Rectangle.fromDegrees(-80.0, 39.0, -74.0, 42.0),
+     * var rectangle = new C.RectangleOutlineGeometry({
+     *   ellipsoid : C.Ellipsoid.WGS84,
+     *   rectangle : C.Rectangle.fromDegrees(-80.0, 39.0, -74.0, 42.0),
      *   height : 10000.0
      * });
-     * var geometry = Cesium.RectangleOutlineGeometry.createGeometry(rectangle);
+     * var geometry = C.RectangleOutlineGeometry.createGeometry(rectangle);
      */
     var RectangleOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

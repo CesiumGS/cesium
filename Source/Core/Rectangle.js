@@ -75,7 +75,7 @@ define([
      * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
      *
      * @example
-     * var rectangle = Cesium.Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0);
+     * var rectangle = C.Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0);
      */
     Rectangle.fromDegrees = function(west, south, east, north, result) {
         west = CesiumMath.toRadians(defaultValue(west, 0.0));

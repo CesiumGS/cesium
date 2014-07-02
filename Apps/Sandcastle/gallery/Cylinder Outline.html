@@ -24,10 +24,10 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+require(['Cesium'], function(C) {
     "use strict";
     
-    var viewer = new Cesium.Viewer('cesiumContainer');
+    var viewer = new C.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
 
@@ -35,76 +35,76 @@ require(['Cesium'], function(Cesium) {
     var radius = 150000.0;
 
     // Red cylinder outline
-    var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-100.0, 40.0);
-    var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
-        Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
-        new Cesium.Cartesian3(0.0, 0.0, length * 0.5)
+    var positionOnEllipsoid = C.Cartesian3.fromDegrees(-100.0, 40.0);
+    var modelMatrix = C.Matrix4.multiplyByTranslation(
+        C.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
+        new C.Cartesian3(0.0, 0.0, length * 0.5)
     );
     
-    var cylinderOutlineGeometry = new Cesium.CylinderOutlineGeometry({
+    var cylinderOutlineGeometry = new C.CylinderOutlineGeometry({
         length : length,
         topRadius : radius,
         bottomRadius : radius
     });
     
-    var redCylinderOutline = new Cesium.GeometryInstance({
+    var redCylinderOutline = new C.GeometryInstance({
         geometry : cylinderOutlineGeometry,
         modelMatrix : modelMatrix,
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+            color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.WHITE)
         }
     });
 
     // Red cylinder
-    var fillGeometry = new Cesium.CylinderGeometry({
+    var fillGeometry = new C.CylinderGeometry({
         length : length,
         topRadius : radius,
         bottomRadius : radius,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+        vertexFormat : C.PerInstanceColorAppearance.VERTEX_FORMAT
     });
     
-    var redCylinder = new Cesium.GeometryInstance({
+    var redCylinder = new C.GeometryInstance({
         geometry : fillGeometry,
         modelMatrix : modelMatrix,
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
+            color : C.ColorGeometryInstanceAttribute.fromColor(new C.Color(1.0, 0.0, 0.0, 0.5))
         }
     });
 
     // Blue cylinder outline
-    positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-95.0, 40.0);
-    modelMatrix = Cesium.Matrix4.multiplyByTranslation(
-        Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
-        new Cesium.Cartesian3(0.0, 0.0, length * 0.5)
+    positionOnEllipsoid = C.Cartesian3.fromDegrees(-95.0, 40.0);
+    modelMatrix = C.Matrix4.multiplyByTranslation(
+        C.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
+        new C.Cartesian3(0.0, 0.0, length * 0.5)
     );
-    cylinderOutlineGeometry = new Cesium.CylinderOutlineGeometry({
+    cylinderOutlineGeometry = new C.CylinderOutlineGeometry({
         length : length,
         topRadius : radius,
         bottomRadius : radius,
         numberOfVerticalLines: 0
     });
         
-    var blueCylinderOutline = new Cesium.GeometryInstance({
+    var blueCylinderOutline = new C.GeometryInstance({
         geometry : cylinderOutlineGeometry,
         modelMatrix : modelMatrix,
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+            color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.WHITE)
         }
     });
 
     // Blue cylinder
-    var blueCylinder = new Cesium.GeometryInstance({
+    var blueCylinder = new C.GeometryInstance({
         geometry : fillGeometry,
         modelMatrix : modelMatrix,
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 0.0, 1.0, 0.5))
+            color : C.ColorGeometryInstanceAttribute.fromColor(new C.Color(0.0, 0.0, 1.0, 0.5))
         }
     });
     
     // Add outline instances to primitives
-    primitives.add(new Cesium.Primitive({
+    primitives.add(new C.Primitive({
         geometryInstances : [redCylinderOutline, blueCylinderOutline],
-        appearance : new Cesium.PerInstanceColorAppearance({
+        appearance : new C.PerInstanceColorAppearance({
             flat : true,
             renderState : {
                 depthTest : {
@@ -116,9 +116,9 @@ require(['Cesium'], function(Cesium) {
     }));
     
     // Add cylinderst to primitives
-    primitives.add(new Cesium.Primitive({
+    primitives.add(new C.Primitive({
         geometryInstances : [redCylinder, blueCylinder],
-        appearance : new Cesium.PerInstanceColorAppearance({
+        appearance : new C.PerInstanceColorAppearance({
             closed : true
         })
     }));

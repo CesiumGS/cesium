@@ -24,65 +24,65 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+require(['Cesium'], function(C) {
     "use strict";
 
-    var viewer = new Cesium.Viewer('cesiumContainer');
+    var viewer = new C.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
            
     // Red circle
-    var circleGeometry = new Cesium.CircleGeometry({
-        center : Cesium.Cartesian3.fromDegrees(-95.0, 43.0),
+    var circleGeometry = new C.CircleGeometry({
+        center : C.Cartesian3.fromDegrees(-95.0, 43.0),
         radius : 250000.0,
-        stRotation: Cesium.Math.toRadians(90.0),
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+        stRotation: C.Math.toRadians(90.0),
+        vertexFormat : C.PerInstanceColorAppearance.VERTEX_FORMAT
     });
-    var redCircleInstance = new Cesium.GeometryInstance({
+    var redCircleInstance = new C.GeometryInstance({
         geometry : circleGeometry,
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
+            color : C.ColorGeometryInstanceAttribute.fromColor(new C.Color(1.0, 0.0, 0.0, 0.5))
         }
     });
 
     // Green extruded circle
-    circleGeometry = new Cesium.CircleGeometry({
-        center : Cesium.Cartesian3.fromDegrees(-90.0, 50.0),
+    circleGeometry = new C.CircleGeometry({
+        center : C.Cartesian3.fromDegrees(-90.0, 50.0),
         radius : 250000.0,
         extrudedHeight: 300000.0,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT    });
-    var greenCircleInstance = new Cesium.GeometryInstance({
+        vertexFormat : C.PerInstanceColorAppearance.VERTEX_FORMAT    });
+    var greenCircleInstance = new C.GeometryInstance({
         geometry : circleGeometry,
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 1.0, 0.0, 0.5))
+            color : C.ColorGeometryInstanceAttribute.fromColor(new C.Color(0.0, 1.0, 0.0, 0.5))
         }
     });
        
     // Blue circle with height
-    circleGeometry = new Cesium.CircleGeometry({
-        center : Cesium.Cartesian3.fromDegrees(-85.0, 40.0),
+    circleGeometry = new C.CircleGeometry({
+        center : C.Cartesian3.fromDegrees(-85.0, 40.0),
         radius : 400000.0,
         height : 150000.0,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+        vertexFormat : C.PerInstanceColorAppearance.VERTEX_FORMAT
     });
-    var blueCircleInstance = new Cesium.GeometryInstance({
+    var blueCircleInstance = new C.GeometryInstance({
         geometry : circleGeometry,
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
+            color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.BLUE)
         }
     });
     
     // Add instances to primitives 
-    primitives.add(new Cesium.Primitive({
+    primitives.add(new C.Primitive({
         geometryInstances: [redCircleInstance, greenCircleInstance],
-        appearance: new Cesium.PerInstanceColorAppearance({
+        appearance: new C.PerInstanceColorAppearance({
             closed: true
         })
     }));
     
-    primitives.add(new Cesium.Primitive({
+    primitives.add(new C.Primitive({
         geometryInstances: blueCircleInstance,
-        appearance: new Cesium.PerInstanceColorAppearance({
+        appearance: new C.PerInstanceColorAppearance({
             closed: true,
             translucent : false
         })

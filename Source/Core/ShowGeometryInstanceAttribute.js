@@ -25,16 +25,16 @@ define([
      * @see GeometryInstanceAttribute
      *
      * @example
-     * var instance = new Cesium.GeometryInstance({
-     *   geometry : new Cesium.BoxGeometry({
-     *     vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
-     *     dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0)
+     * var instance = new C.GeometryInstance({
+     *   geometry : new C.BoxGeometry({
+     *     vertexFormat : C.VertexFormat.POSITION_AND_NORMAL,
+     *     dimensions : new C.Cartesian3(1000000.0, 1000000.0, 500000.0)
      *   }),
-     *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-     *     Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883), new Cesium.Cartesian3(0.0, 0.0, 1000000.0)),
+     *   modelMatrix : C.Matrix4.multiplyByTranslation(C.Transforms.eastNorthUpToFixedFrame(
+     *     C.Cartesian3.fromDegrees(-75.59777, 40.03883), new C.Cartesian3(0.0, 0.0, 1000000.0)),
      *   id : 'box',
      *   attributes : {
-     *     show : new Cesium.ShowGeometryInstanceAttribute(false)
+     *     show : new C.ShowGeometryInstanceAttribute(false)
      *   }
      * });
      */
@@ -113,7 +113,7 @@ define([
      *
      * @example
      * var attributes = primitive.getGeometryInstanceAttributes('an id');
-     * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true, attributes.show);
+     * attributes.show = C.ShowGeometryInstanceAttribute.toValue(true, attributes.show);
      */
     ShowGeometryInstanceAttribute.toValue = function(show, result) {
         //>>includeStart('debug', pragmas.debug);

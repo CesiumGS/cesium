@@ -24,17 +24,17 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+require(['Cesium'], function(C) {
     "use strict";
 
-    var viewer = new Cesium.Viewer('cesiumContainer');
+    var viewer = new C.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
 
     function addLabel() {
-        var labels = new Cesium.LabelCollection();
+        var labels = new C.LabelCollection();
         labels.add({
-            position : Cesium.Cartesian3.fromDegrees(-75.10, 39.57),
+            position : C.Cartesian3.fromDegrees(-75.10, 39.57),
             text     : 'Philadelphia'
         });
         scene.primitives.add(labels);
@@ -49,16 +49,16 @@ require(['Cesium'], function(Cesium) {
     Sandcastle.addToolbarButton('Set font', function() {
         primitives.removeAll();
 
-        var labels = new Cesium.LabelCollection();
+        var labels = new C.LabelCollection();
         labels.add({
-            position  : Cesium.Cartesian3.fromDegrees(-75.10, 39.57),
+            position  : C.Cartesian3.fromDegrees(-75.10, 39.57),
             text      : 'Philadelphia',
             // CSS font-family
             font      : '24px Helvetica',
-            fillColor : new Cesium.Color(0.6, 0.9, 1.0),
-            outlineColor : Cesium.Color.BLACK,
+            fillColor : new C.Color(0.6, 0.9, 1.0),
+            outlineColor : C.Color.BLACK,
             outlineWidth : 2,
-            style : Cesium.LabelStyle.FILL_AND_OUTLINE
+            style : C.LabelStyle.FILL_AND_OUTLINE
         });
         scene.primitives.add(labels);
     });
@@ -66,13 +66,13 @@ require(['Cesium'], function(Cesium) {
     Sandcastle.addToolbarButton('Set properties', function() {
         primitives.removeAll();
 
-        var labels = new Cesium.LabelCollection();
+        var labels = new C.LabelCollection();
         var l = labels.add({
-            position : Cesium.Cartesian3.fromDegrees(-75.10, 39.57),
+            position : C.Cartesian3.fromDegrees(-75.10, 39.57),
             text     : 'Philadelphia'
         });
 
-        l.position = Cesium.Cartesian3.fromDegrees(-75.10, 39.57, 300000.0);
+        l.position = C.Cartesian3.fromDegrees(-75.10, 39.57, 300000.0);
         l.scale = 2.0;
         scene.primitives.add(labels);
     });
@@ -80,23 +80,23 @@ require(['Cesium'], function(Cesium) {
     Sandcastle.addToolbarButton('Add labels in reference frame', function() {
         primitives.removeAll();
 
-        var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
-        var labels = new Cesium.LabelCollection(undefined);
-        labels.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+        var center = C.Cartesian3.fromDegrees(-75.59777, 40.03883);
+        var labels = new C.LabelCollection(undefined);
+        labels.modelMatrix = C.Transforms.eastNorthUpToFixedFrame(center);
         labels.add({
-            position : new Cesium.Cartesian3(0.0, 0.0, 0.0),
+            position : new C.Cartesian3(0.0, 0.0, 0.0),
             text     : 'Center'
         });
         labels.add({
-            position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0),
+            position : new C.Cartesian3(1000000.0, 0.0, 0.0),
             text     : 'East'
         });
         labels.add({
-            position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0),
+            position : new C.Cartesian3(0.0, 1000000.0, 0.0),
             text     : 'North'
         });
         labels.add({
-            position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0),
+            position : new C.Cartesian3(0.0, 0.0, 1000000.0),
             text     : 'Up'
         });
         scene.primitives.add(labels);
@@ -107,27 +107,27 @@ require(['Cesium'], function(Cesium) {
 
         var image = new Image();
         image.onload = function() {
-            var labels = new Cesium.LabelCollection();
-            var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = new Cesium.TextureAtlas({
+            var labels = new C.LabelCollection();
+            var billboards = new C.BillboardCollection();
+            var textureAtlas = new C.TextureAtlas({
                 scene : scene,
                 image : image
             });
             billboards.textureAtlas = textureAtlas;
 
             billboards.add({
-                position : Cesium.Cartesian3.fromDegrees(-75.10, 39.57),
-                scaleByDistance : new Cesium.NearFarScalar(1.5e2, 5.0, 1.5e7, 0.5),
+                position : C.Cartesian3.fromDegrees(-75.10, 39.57),
+                scaleByDistance : new C.NearFarScalar(1.5e2, 5.0, 1.5e7, 0.5),
                 imageIndex : 0
             });
 
             labels.add({
-                position : Cesium.Cartesian3.fromDegrees(-75.10, 39.57),
+                position : C.Cartesian3.fromDegrees(-75.10, 39.57),
                 text     : 'Label on top of scaling billboard',
                 font : '20px sans-serif',
-                horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
-                pixelOffset : new Cesium.Cartesian2(0.0, -image.height),
-                pixelOffsetScaleByDistance : new Cesium.NearFarScalar(1.5e2, 3.0, 1.5e7, 0.5)
+                horizontalOrigin : C.HorizontalOrigin.CENTER,
+                pixelOffset : new C.Cartesian2(0.0, -image.height),
+                pixelOffsetScaleByDistance : new C.NearFarScalar(1.5e2, 3.0, 1.5e7, 0.5)
             });
 
             scene.primitives.add(billboards);
@@ -139,16 +139,16 @@ require(['Cesium'], function(Cesium) {
     Sandcastle.addToolbarButton('Fade label by distance', function() {
         primitives.removeAll();
 
-        var labels = new Cesium.LabelCollection();
+        var labels = new C.LabelCollection();
         labels.add({
-            position : Cesium.Cartesian3.fromDegrees(-73.94, 40.67),
+            position : C.Cartesian3.fromDegrees(-73.94, 40.67),
             text     : 'New York',
-            translucencyByDistance : new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e8, 0.0)
+            translucencyByDistance : new C.NearFarScalar(1.5e2, 1.0, 1.5e8, 0.0)
         });
         labels.add({
-            position : Cesium.Cartesian3.fromDegrees(-84.39, 33.75),
+            position : C.Cartesian3.fromDegrees(-84.39, 33.75),
             text     : 'Atlanta',
-            translucencyByDistance : new Cesium.NearFarScalar(1.5e5, 1.0, 1.5e7, 0.0)
+            translucencyByDistance : new C.NearFarScalar(1.5e5, 1.0, 1.5e7, 0.0)
         });
         scene.primitives.add(labels);
     });

@@ -135,7 +135,7 @@ define([
      * @returns {Color} A new color instance.
      *
      * @example
-     * var color = Cesium.Color.fromRgba(0x67ADDFFF);
+     * var color = C.Color.fromRgba(0x67ADDFFF);
      *
      * @see Color#toRgba
      */
@@ -210,17 +210,17 @@ define([
      *
      * @example
      * //Create a completely random color
-     * var color = Cesium.Color.fromRandom();
+     * var color = C.Color.fromRandom();
      *
      * //Create a random shade of yellow.
-     * var color = Cesium.Color.fromRandom({
+     * var color = C.Color.fromRandom({
      *     red : 1.0,
      *     green : 1.0,
      *     alpha : 1.0
      * });
      *
      * //Create a random bright color.
-     * var color = Cesium.Color.fromRandom({
+     * var color = C.Color.fromRandom({
      *     minimumRed : 0.75,
      *     minimumGreen : 0.75,
      *     minimumBlue : 0.75,
@@ -315,8 +315,8 @@ define([
      * @see {@link http://www.w3.org/TR/css3-color|CSS color values}
      *
      * @example
-     * var cesiumBlue = Cesium.Color.fromCssColorString('#67ADDF');
-     * var green = Cesium.Color.fromCssColorString('green');
+     * var cesiumBlue = C.Color.fromCssColorString('#67ADDF');
+     * var green = C.Color.fromCssColorString('green');
      */
     Color.fromCssColorString = function(color) {
         //>>includeStart('debug', pragmas.debug);
@@ -572,7 +572,7 @@ define([
      * @see Color.fromRgba
      *
      * @example
-     * var rgba = Cesium.Color.BLUE.toRgba();
+     * var rgba = C.Color.BLUE.toRgba();
      */
     Color.prototype.toRgba = function() {
         // scratchUint32Array and scratchUint8Array share an underlying array buffer

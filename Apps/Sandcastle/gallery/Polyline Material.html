@@ -24,61 +24,61 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+require(['Cesium'], function(C) {
     "use strict";
 
-    var viewer = new Cesium.Viewer('cesiumContainer');
+    var viewer = new C.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
 
     // Polyline Glow
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.PolylineGeometry({
-                positions : Cesium.Cartesian3.fromDegreesArray([
+    primitives.add(new C.Primitive({
+        geometryInstances : new C.GeometryInstance({
+            geometry : new C.PolylineGeometry({
+                positions : C.Cartesian3.fromDegreesArray([
                     -100.0, 40.0,
                     -90.0, 40.0
                 ]),
                 width : 10.0,
-                vertexFormat : Cesium.PolylineMaterialAppearance.VERTEX_FORMAT
+                vertexFormat : C.PolylineMaterialAppearance.VERTEX_FORMAT
             })
         }),
-        appearance : new Cesium.PolylineMaterialAppearance({
-            material : Cesium.Material.fromType(Cesium.Material.PolylineGlowType)
+        appearance : new C.PolylineMaterialAppearance({
+            material : C.Material.fromType(C.Material.PolylineGlowType)
         })
     }));
     
     // Polyline Arrow
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.PolylineGeometry({
-                positions : Cesium.Cartesian3.fromDegreesArray([
+    primitives.add(new C.Primitive({
+        geometryInstances : new C.GeometryInstance({
+            geometry : new C.PolylineGeometry({
+                positions : C.Cartesian3.fromDegreesArray([
                     -100.0, 38.0,
                     -90.0, 38.0
                 ]),
                 width : 10.0,
-                vertexFormat : Cesium.PolylineMaterialAppearance.VERTEX_FORMAT
+                vertexFormat : C.PolylineMaterialAppearance.VERTEX_FORMAT
             })
         }),
-        appearance : new Cesium.PolylineMaterialAppearance({
-            material : Cesium.Material.fromType(Cesium.Material.PolylineArrowType)
+        appearance : new C.PolylineMaterialAppearance({
+            material : C.Material.fromType(C.Material.PolylineArrowType)
         })
     }));
     
     // Polyline Outline
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.PolylineGeometry({
-                positions : Cesium.Cartesian3.fromDegreesArray([
+    primitives.add(new C.Primitive({
+        geometryInstances : new C.GeometryInstance({
+            geometry : new C.PolylineGeometry({
+                positions : C.Cartesian3.fromDegreesArray([
                     -100.0, 36.0,
                     -90.0, 36.0
                 ]),
                 width : 10.0,
-                vertexFormat : Cesium.PolylineMaterialAppearance.VERTEX_FORMAT
+                vertexFormat : C.PolylineMaterialAppearance.VERTEX_FORMAT
             })
         }),
-        appearance : new Cesium.PolylineMaterialAppearance({
-            material : Cesium.Material.fromType(Cesium.Material.PolylineOutlineType)
+        appearance : new C.PolylineMaterialAppearance({
+            material : C.Material.fromType(C.Material.PolylineOutlineType)
         })
     }));
 

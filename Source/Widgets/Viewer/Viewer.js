@@ -120,22 +120,22 @@ define([
      *
      * @example
      * //Initialize the viewer widget with several custom options and mixins.
-     * var viewer = new Cesium.Viewer('cesiumContainer', {
+     * var viewer = new C.Viewer('cesiumContainer', {
      *     //Start in Columbus Viewer
-     *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
+     *     sceneMode : C.SceneMode.COLUMBUS_VIEW,
      *     //Use standard Cesium terrain
-     *     terrainProvider : new Cesium.CesiumTerrainProvider({
+     *     terrainProvider : new C.CesiumTerrainProvider({
      *         url : '//cesiumjs.org/smallterrain',
      *         credit : 'Terrain data courtesy Analytical Graphics, Inc.'
      *     }),
      *     //Hide the base layer picker
      *     baseLayerPicker : false,
      *     //Use OpenStreetMaps
-     *     imageryProvider : new Cesium.OpenStreetMapImageryProvider({
+     *     imageryProvider : new C.OpenStreetMapImageryProvider({
      *         url : '//a.tile.openstreetmap.org/'
      *     }),
      *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets
-     *     skyBox : new Cesium.SkyBox({
+     *     skyBox : new C.SkyBox({
      *         sources : {
      *           positiveX : 'stars/TychoSkymapII.t3_08192x04096_80_px.jpg',
      *           negativeX : 'stars/TychoSkymapII.t3_08192x04096_80_mx.jpg',
@@ -146,15 +146,15 @@ define([
      *         }
      *     }),
      *     // Show Columbus View map with Web Mercator projection
-     *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
-     *     mapProjection : new Cesium.WebMercatorProjection()
+     *     sceneMode : C.SceneMode.COLUMBUS_VIEW,
+     *     mapProjection : new C.WebMercatorProjection()
      * });
      *
      * //Add basic drag and drop functionality
-     * viewer.extend(Cesium.viewerDragDropMixin);
+     * viewer.extend(C.viewerDragDropMixin);
      *
      * //Allow users to zoom and follow objects loaded from CZML by clicking on it.
-     * viewer.extend(Cesium.viewerDynamicObjectMixin);
+     * viewer.extend(C.viewerDynamicObjectMixin);
      *
      * //Show a pop-up alert if we encounter an error when processing a dropped file
      * viewer.dropError.addEventListener(function(dropHandler, name, error) {

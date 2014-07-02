@@ -39,7 +39,7 @@ define([
      *
      * @example
      * // Load a single URL asynchronously. In real code, you should use loadBlob instead.
-     * Cesium.loadWithXhr({
+     * C.loadWithXhr({
      *     url : 'some/url',
      *     responseType : 'blob'
      * }).then(function(blob) {

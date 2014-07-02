@@ -8,7 +8,7 @@ define(function() {
      * @exports defined
      *
      * @example
-     * if (Cesium.defined(positions)) {
+     * if (C.defined(positions)) {
      *      doSomething();
      * } else {
      *      doSomethingElse();

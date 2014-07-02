@@ -39,15 +39,15 @@ define([
      *
      * @example
      * // throttle requests for an image
-     * var promise = Cesium.throttleRequestByServer(
+     * var promise = C.throttleRequestByServer(
      *     'http://madeupserver.agi.com/myImage.png',
      *     function(url) {
-     *        return Cesium.loadImage(url);
+     *        return C.loadImage(url);
      *     });
-     * if (!Cesium.defined(promise)) {
+     * if (!C.defined(promise)) {
      *     // too many active requests, try again later.
      * } else {
-     *     Cesium.when(promise, function(image) {
+     *     C.when(promise, function(image) {
      *         // handle loaded image
      *     });
      * }

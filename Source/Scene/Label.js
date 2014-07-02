@@ -358,7 +358,7 @@ define([
          * // Set a label's translucencyByDistance to 1.0 when the
          * // camera is 1500 meters from the label and disappear as
          * // the camera distance approaches 8.0e6 meters.
-         * text.translucencyByDistance = new Cesium.NearFarScalar(1.5e2, 1.0, 8.0e6, 0.0);
+         * text.translucencyByDistance = new C.NearFarScalar(1.5e2, 1.0, 8.0e6, 0.0);
          *
          * @example
          * // Example 2.
@@ -406,8 +406,8 @@ define([
          * // Set a label's pixel offset scale to 0.0 when the
          * // camera is 1500 meters from the label and scale pixel offset to 10.0 pixels
          * // in the y direction the camera distance approaches 8.0e6 meters.
-         * text.pixelOffset = new Cesium.Cartesian2(0.0, 1.0);
-         * text.pixelOffsetScaleByDistance = new Cesium.NearFarScalar(1.5e2, 0.0, 8.0e6, 10.0);
+         * text.pixelOffset = new C.Cartesian2(0.0, 1.0);
+         * text.pixelOffsetScaleByDistance = new C.NearFarScalar(1.5e2, 0.0, 8.0e6, 10.0);
          *
          * @example
          * // Example 2.
@@ -499,8 +499,8 @@ define([
          * @type {HorizontalOrigin}
          * @example
          * // Use a top, right origin
-         * l.horizontalOrigin = Cesium.HorizontalOrigin.RIGHT;
-         * l.verticalOrigin = Cesium.VerticalOrigin.TOP;
+         * l.horizontalOrigin = C.HorizontalOrigin.RIGHT;
+         * l.verticalOrigin = C.VerticalOrigin.TOP;
          */
         horizontalOrigin : {
             get : function() {
@@ -531,8 +531,8 @@ define([
          * @type {VerticalOrigin}
          * @example
          * // Use a top, right origin
-         * l.horizontalOrigin = Cesium.HorizontalOrigin.RIGHT;
-         * l.verticalOrigin = Cesium.VerticalOrigin.TOP;
+         * l.horizontalOrigin = C.HorizontalOrigin.RIGHT;
+         * l.verticalOrigin = C.VerticalOrigin.TOP;
          */
         verticalOrigin : {
             get : function() {

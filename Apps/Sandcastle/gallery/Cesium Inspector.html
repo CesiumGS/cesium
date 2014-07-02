@@ -28,17 +28,17 @@
 <div id="sampleButtons"></div>
 </div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+require(['Cesium'], function(C) {
     "use strict";
        
-    var viewer = new Cesium.Viewer('cesiumContainer');
+    var viewer = new C.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var globe = scene.globe;
     globe.depthTestAgainstTerrain = true;
     var ellipsoid = globe.ellipsoid;
     var primitives = scene.primitives;
 
-    var cesiumTerrainProviderHeightmaps = new Cesium.CesiumTerrainProvider({
+    var cesiumTerrainProviderHeightmaps = new C.CesiumTerrainProvider({
         url : '//cesiumjs.org/smallterrain',
         credit : 'Terrain data courtesy Analytical Graphics, Inc.'
     });
@@ -46,52 +46,52 @@ require(['Cesium'], function(Cesium) {
     scene.terrainProvider = cesiumTerrainProviderHeightmaps;
     
     //Add Cesium Inspector
-    viewer.extend(Cesium.viewerCesiumInspectorMixin);
+    viewer.extend(C.viewerCesiumInspectorMixin);
 
     //Add Primitives   
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : new Cesium.GeometryInstance({
-            geometry : Cesium.BoxGeometry.fromDimensions({
-                vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-                dimensions : new Cesium.Cartesian3(400000.0, 300000.0, 500000.0)
+    primitives.add(new C.Primitive({
+        geometryInstances : new C.GeometryInstance({
+            geometry : C.BoxGeometry.fromDimensions({
+                vertexFormat : C.PerInstanceColorAppearance.VERTEX_FORMAT,
+                dimensions : new C.Cartesian3(400000.0, 300000.0, 500000.0)
             }),
-            modelMatrix : Cesium.Matrix4.multiplyByTranslation(
-                Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-105.0, 45.0)),
-                new Cesium.Cartesian3(0.0, 0.0, 250000)),
+            modelMatrix : C.Matrix4.multiplyByTranslation(
+                C.Transforms.eastNorthUpToFixedFrame(C.Cartesian3.fromDegrees(-105.0, 45.0)),
+                new C.Cartesian3(0.0, 0.0, 250000)),
             attributes : {
-                color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
+                color : C.ColorGeometryInstanceAttribute.fromColor(new C.Color(1.0, 0.0, 0.0, 0.5))
             }
         }),
-        appearance : new Cesium.PerInstanceColorAppearance({
+        appearance : new C.PerInstanceColorAppearance({
             closed: true
         })
     }));
            
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.RectangleGeometry({
-                rectangle : Cesium.Rectangle.fromDegrees(-100.0, 30.0, -93.0, 37.0),
+    primitives.add(new C.Primitive({
+        geometryInstances : new C.GeometryInstance({
+            geometry : new C.RectangleGeometry({
+                rectangle : C.Rectangle.fromDegrees(-100.0, 30.0, -93.0, 37.0),
                 height: 100000,
-                vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+                vertexFormat : C.PerInstanceColorAppearance.VERTEX_FORMAT
             }),
             attributes : {
-                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
+                color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.BLUE)
             }
         }),
-        appearance : new Cesium.PerInstanceColorAppearance()
+        appearance : new C.PerInstanceColorAppearance()
     }));
     
     var image = new Image();
     image.onload = function() {
-        var billboards = new Cesium.BillboardCollection();
-        var textureAtlas = new Cesium.TextureAtlas({
+        var billboards = new C.BillboardCollection();
+        var textureAtlas = new C.TextureAtlas({
             scene : scene,
             image : image
         });
         billboards.textureAtlas = textureAtlas;
 
         billboards.add({
-            position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883, 150000),
+            position : C.Cartesian3.fromDegrees(-75.59777, 40.03883, 150000),
             imageIndex : 0
         });
         scene.primitives.add(billboards);

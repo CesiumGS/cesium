@@ -591,13 +591,13 @@ define([
      *
      * @example
      * // Create an ellipse.
-     * var ellipse = new Cesium.EllipseGeometry({
-     *   center : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+     * var ellipse = new C.EllipseGeometry({
+     *   center : C.Cartesian3.fromDegrees(-75.59777, 40.03883),
      *   semiMajorAxis : 500000.0,
      *   semiMinorAxis : 300000.0,
-     *   rotation : Cesium.Math.toRadians(60.0)
+     *   rotation : C.Math.toRadians(60.0)
      * });
-     * var geometry = Cesium.EllipseGeometry.createGeometry(ellipse);
+     * var geometry = C.EllipseGeometry.createGeometry(ellipse);
      */
     var EllipseGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

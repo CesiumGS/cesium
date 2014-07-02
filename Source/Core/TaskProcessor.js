@@ -182,15 +182,15 @@ define([
      *                    if there are too many active tasks,
      *
      * @example
-     * var taskProcessor = new Cesium.TaskProcessor('myWorkerName');
+     * var taskProcessor = new C.TaskProcessor('myWorkerName');
      * var promise = taskProcessor.scheduleTask({
      *     someParameter : true,
      *     another : 'hello'
      * });
-     * if (!Cesium.defined(promise)) {
+     * if (!C.defined(promise)) {
      *     // too many active tasks - try again later
      * } else {
-     *     Cesium.when(promise, function(result) {
+     *     C.when(promise, function(result) {
      *         // use the result of the task
      *     });
      * }

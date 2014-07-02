@@ -71,7 +71,7 @@ define([
      * @see HeightmapTerrainData
      *
      * @example
-     * var data = new Cesium.QuantizedMeshTerrainData({
+     * var data = new C.QuantizedMeshTerrainData({
      *     minimumHeight : -100,
      *     maximumHeight : 2101,
      *     quantizedVertices : new Uint16Array([// order is SW NW SE NE
@@ -83,8 +83,8 @@ define([
      *                                          16384, 0, 32767, 16384]),
      *     indices : new Uint16Array([0, 3, 1,
      *                                0, 2, 3]),
-     *     boundingSphere : new Cesium.BoundingSphere(new Cesium.Cartesian3(1.0, 2.0, 3.0), 10000),
-     *     horizonOcclusionPoint : new Cesium.Cartesian3(3.0, 2.0, 1.0),
+     *     boundingSphere : new C.BoundingSphere(new C.Cartesian3(1.0, 2.0, 3.0), 10000),
+     *     horizonOcclusionPoint : new C.Cartesian3(3.0, 2.0, 1.0),
      *     westIndices : [0, 1],
      *     southIndices : [0, 1],
      *     eastIndices : [2, 3],

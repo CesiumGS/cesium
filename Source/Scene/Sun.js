@@ -61,7 +61,7 @@ define([
      * @see Scene.sun
      *
      * @example
-     * scene.sun = new Cesium.Sun();
+     * scene.sun = new C.Sun();
      */
     var Sun = function() {
         /**

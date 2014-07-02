@@ -33,7 +33,7 @@ define([
      *
      * @example
      * // load a single image asynchronously
-     * Cesium.loadImageViaBlob('some/image/url.png').then(function(image) {
+     * C.loadImageViaBlob('some/image/url.png').then(function(image) {
      *     var blob = image.blob;
      *     // use the loaded image or XHR
      * }, function(error) {

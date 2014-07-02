@@ -28,8 +28,8 @@ define([
      * @exception {DeveloperError} viewer is required.
      *
      * @example
-     * var viewer = new Cesium.Viewer('cesiumContainer');
-     * viewer.extend(Cesium.viewerPerformanceWatchdogMixin, {
+     * var viewer = new C.Viewer('cesiumContainer');
+     * viewer.extend(C.viewerPerformanceWatchdogMixin, {
      *     lowFrameRateMessage : 'Why is this going so <em>slowly</em>?'
      * });
      */

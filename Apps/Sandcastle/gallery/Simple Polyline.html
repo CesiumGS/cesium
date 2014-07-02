@@ -24,10 +24,10 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+require(['Cesium'], function(C) {
     "use strict";
     
-    var viewer = new Cesium.Viewer('cesiumContainer');
+    var viewer = new C.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
            
@@ -35,19 +35,19 @@ require(['Cesium'], function(Cesium) {
     
     var positions = [];
     for (var i = 0; i <= 10; ++i) {
-        positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 30.0 + 3 * i / 2 * (i % 2)));
+        positions.push(C.Cartesian3.fromDegrees(-100.0 + i, 30.0 + 3 * i / 2 * (i % 2)));
     }
 
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.SimplePolylineGeometry({
+    primitives.add(new C.Primitive({
+        geometryInstances : new C.GeometryInstance({
+            geometry : new C.SimplePolylineGeometry({
                 positions : positions
             }),
             attributes : {
-                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+                color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.WHITE)
             }
         }),
-        appearance : new Cesium.PerInstanceColorAppearance({
+        appearance : new C.PerInstanceColorAppearance({
             flat : true,
             renderState : {
                 depthTest : {

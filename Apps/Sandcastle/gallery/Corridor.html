@@ -24,57 +24,57 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+require(['Cesium'], function(C) {
     "use strict";
     
-    var viewer = new Cesium.Viewer('cesiumContainer');
+    var viewer = new C.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
     
     var width = 200000.0;
     
     // Red Corridor
-    var corridorGeometry = new Cesium.CorridorGeometry({
-        positions : Cesium.Cartesian3.fromDegreesArray([
+    var corridorGeometry = new C.CorridorGeometry({
+        positions : C.Cartesian3.fromDegreesArray([
             -100.0, 40.0,
             -105.0, 40.0,
             -105.0, 35.0
         ]),
         width : width,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        cornerType: Cesium.CornerType.ROUNDED
+        vertexFormat : C.PerInstanceColorAppearance.VERTEX_FORMAT,
+        cornerType: C.CornerType.ROUNDED
     });
 
-    var redCorridorInstance = new Cesium.GeometryInstance({
+    var redCorridorInstance = new C.GeometryInstance({
         geometry: corridorGeometry,
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
+            color : C.ColorGeometryInstanceAttribute.fromColor(new C.Color(1.0, 0.0, 0.0, 0.5))
         }
     });
     
     // Green Corridor
-    corridorGeometry = new Cesium.CorridorGeometry({
-        positions : Cesium.Cartesian3.fromDegreesArray([
+    corridorGeometry = new C.CorridorGeometry({
+        positions : C.Cartesian3.fromDegreesArray([
             -90.0, 40.0,
             -95.0, 40.0,
             -95.0, 35.0
         ]),
         height: 100000.0,
         width : width,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        cornerType: Cesium.CornerType.MITERED
+        vertexFormat : C.PerInstanceColorAppearance.VERTEX_FORMAT,
+        cornerType: C.CornerType.MITERED
     });
 
-    var greenCorridorInstance = new Cesium.GeometryInstance({
+    var greenCorridorInstance = new C.GeometryInstance({
         geometry: corridorGeometry,
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.GREEN)
+            color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.GREEN)
         }
     });
     
     // Blue Corridor
-    corridorGeometry = new Cesium.CorridorGeometry({
-        positions : Cesium.Cartesian3.fromDegreesArray([
+    corridorGeometry = new C.CorridorGeometry({
+        positions : C.Cartesian3.fromDegreesArray([
             -80.0, 40.0,
             -85.0, 40.0,
             -85.0, 35.0
@@ -82,28 +82,28 @@ require(['Cesium'], function(Cesium) {
         height : 200000.0,
         extrudedHeight : 100000.0,
         width : width,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        cornerType: Cesium.CornerType.BEVELED
+        vertexFormat : C.PerInstanceColorAppearance.VERTEX_FORMAT,
+        cornerType: C.CornerType.BEVELED
     });
 
-    var blueCorridorInstance = new Cesium.GeometryInstance({
+    var blueCorridorInstance = new C.GeometryInstance({
         geometry: corridorGeometry,
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 0.0, 1.0, 0.5))
+            color : C.ColorGeometryInstanceAttribute.fromColor(new C.Color(0.0, 0.0, 1.0, 0.5))
         }
     });
     
     // Add three corridor instances to primitves
-    primitives.add(new Cesium.Primitive({
+    primitives.add(new C.Primitive({
         geometryInstances : [redCorridorInstance, greenCorridorInstance, blueCorridorInstance],
-        appearance : new Cesium.PerInstanceColorAppearance({
+        appearance : new C.PerInstanceColorAppearance({
             closed : true
         })
     }));
     
-    primitives.add(new Cesium.Primitive({
+    primitives.add(new C.Primitive({
         geometryInstances : greenCorridorInstance,
-        appearance : new Cesium.PerInstanceColorAppearance({
+        appearance : new C.PerInstanceColorAppearance({
             closed : true,
             translucent : false
         })

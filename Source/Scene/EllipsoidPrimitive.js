@@ -67,17 +67,17 @@ define([
      *
      * @example
      * // 1. Create a sphere using the ellipsoid primitive
-     * primitives.add(new Cesium.EllipsoidPrimitive({
-     *   center : Cesium.Cartesian3.fromDegrees(-75.0, 40.0, 500000.0),
-     *   radii : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0)
+     * primitives.add(new C.EllipsoidPrimitive({
+     *   center : C.Cartesian3.fromDegrees(-75.0, 40.0, 500000.0),
+     *   radii : new C.Cartesian3(500000.0, 500000.0, 500000.0)
      * }));
      *
      * @example
      * // 2. Create a tall ellipsoid in an east-north-up reference frame
-     * var e = new Cesium.EllipsoidPrimitive();
-     * e.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
-     *   Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0));
-     * e.radii = new Cesium.Cartesian3(100000.0, 100000.0, 200000.0);
+     * var e = new C.EllipsoidPrimitive();
+     * e.modelMatrix = C.Transforms.eastNorthUpToFixedFrame(
+     *   C.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0));
+     * e.radii = new C.Cartesian3(100000.0, 100000.0, 200000.0);
      * primitives.add(e);
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Volumes.html|Cesium Sandcastle Volumes Demo}
@@ -113,7 +113,7 @@ define([
          *
          * @example
          * // A sphere with a radius of 2.0
-         * e.radii = new Cesium.Cartesian3(2.0, 2.0, 2.0);
+         * e.radii = new C.Cartesian3(2.0, 2.0, 2.0);
          */
         this.radii = Cartesian3.clone(options.radii);
         this._radii = new Cartesian3();
@@ -131,8 +131,8 @@ define([
          * @default {@link Matrix4.IDENTITY}
          *
          * @example
-         * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
-         * e.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
+         * var origin = C.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
+         * e.modelMatrix = C.Transforms.eastNorthUpToFixedFrame(origin);
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = new Matrix4();
@@ -160,10 +160,10 @@ define([
          *
          * @example
          * // 1. Change the color of the default material to yellow
-         * e.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
+         * e.material.uniforms.color = new C.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
-         * e.material = Cesium.Material.fromType(Material.StripeType);
+         * e.material = C.Material.fromType(Material.StripeType);
          */
         this.material = defaultValue(options.material, Material.fromType(Material.ColorType));
         this._material = undefined;

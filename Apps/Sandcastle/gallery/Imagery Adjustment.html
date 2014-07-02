@@ -75,10 +75,10 @@
 </table>
 </div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+require(['Cesium'], function(C) {
     "use strict";
 
-    var viewer = new Cesium.Viewer('cesiumContainer');
+    var viewer = new C.Viewer('cesiumContainer');
     var imageryLayers = viewer.scene.imageryLayers;
 
     // The viewModel tracks the state of our mini application.
@@ -90,15 +90,15 @@ require(['Cesium'], function(Cesium) {
         gamma: 0
     };
     // Convert the viewModel members into knockout observables.
-    Cesium.knockout.track(viewModel);
+    C.knockout.track(viewModel);
 
     // Bind the viewModel to the DOM elements of the UI that call for it.
-    Cesium.knockout.applyBindings(viewModel,
+    C.knockout.applyBindings(viewModel,
         document.getElementById('toolbar'));
 
     // Make the active imagery layer a subscriber of the viewModel.
     function subscribeLayerParameter(name) {
-        Cesium.knockout.getObservable(viewModel, name).subscribe(
+        C.knockout.getObservable(viewModel, name).subscribe(
             function(newValue) {
                 if (imageryLayers.length > 0) {
                     var layer = imageryLayers.get(0);

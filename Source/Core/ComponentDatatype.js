@@ -98,7 +98,7 @@ define([
      *
      * @example
      * // Returns Int8Array.BYTES_PER_ELEMENT
-     * var size = Cesium.ComponentDatatype.getSizeInBytes(Cesium.ComponentDatatype.BYTE);
+     * var size = C.ComponentDatatype.getSizeInBytes(C.ComponentDatatype.BYTE);
      */
     ComponentDatatype.getSizeInBytes = function(componentDatatype){
         //>>includeStart('debug', pragmas.debug);
@@ -159,8 +159,8 @@ define([
      * @returns {Boolean} <code>true</code> if the provided component datatype is a valid value; otherwise, <code>false</code>.
      *
      * @example
-     * if (!Cesium.ComponentDatatype.validate(componentDatatype)) {
-     *   throw new Cesium.DeveloperError('componentDatatype must be a valid value.');
+     * if (!C.ComponentDatatype.validate(componentDatatype)) {
+     *   throw new C.DeveloperError('componentDatatype must be a valid value.');
      * }
      */
     ComponentDatatype.validate = function(componentDatatype) {
@@ -184,7 +184,7 @@ define([
      *
      * @example
      * // creates a Float32Array with length of 100
-     * var typedArray = Cesium.ComponentDatatype.createTypedArray(Cesium.ComponentDatatype.FLOAT, 100);
+     * var typedArray = C.ComponentDatatype.createTypedArray(C.ComponentDatatype.FLOAT, 100);
      */
     ComponentDatatype.createTypedArray = function(componentDatatype, valuesOrLength) {
         //>>includeStart('debug', pragmas.debug);

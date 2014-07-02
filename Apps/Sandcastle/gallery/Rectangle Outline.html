@@ -24,26 +24,26 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+require(['Cesium'], function(C) {
     "use strict";
     
-    var viewer = new Cesium.Viewer('cesiumContainer');
+    var viewer = new C.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
 
-    var rectangle = Cesium.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+    var rectangle = C.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
     
     // Rectangle outline
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.RectangleOutlineGeometry({
+    primitives.add(new C.Primitive({
+        geometryInstances : new C.GeometryInstance({
+            geometry : new C.RectangleOutlineGeometry({
                 rectangle : rectangle
             }),
             attributes : {
-                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+                color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.WHITE)
             }
         }),
-        appearance : new Cesium.PerInstanceColorAppearance({
+        appearance : new C.PerInstanceColorAppearance({
             flat : true,
             renderState : {
                 depthTest : {
@@ -55,17 +55,17 @@ require(['Cesium'], function(Cesium) {
     }));
 
     // Rectangle
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.RectangleGeometry({
+    primitives.add(new C.Primitive({
+        geometryInstances : new C.GeometryInstance({
+            geometry : new C.RectangleGeometry({
                 rectangle : rectangle,
-                vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+                vertexFormat : C.PerInstanceColorAppearance.VERTEX_FORMAT
             }),
             attributes : {
-                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
+                color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.BLUE)
             }
         }),
-        appearance : new Cesium.PerInstanceColorAppearance()
+        appearance : new C.PerInstanceColorAppearance()
     }));
     
     Sandcastle.finishedLoading();

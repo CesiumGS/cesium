@@ -42,12 +42,12 @@ define([
      * @see BoxGeometry.createGeometry
      *
      * @example
-     * var box = new Cesium.BoxGeometry({
-     *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
-     *   maximumCorner : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0),
-     *   minimumCorner : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0)
+     * var box = new C.BoxGeometry({
+     *   vertexFormat : C.VertexFormat.POSITION_ONLY,
+     *   maximumCorner : new C.Cartesian3(250000.0, 250000.0, 250000.0),
+     *   minimumCorner : new C.Cartesian3(-250000.0, -250000.0, -250000.0)
      * });
-     * var geometry = Cesium.BoxGeometry.createGeometry(box);
+     * var geometry = C.BoxGeometry.createGeometry(box);
      */
     var BoxGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -82,11 +82,11 @@ define([
      * @see BoxGeometry.createGeometry
      *
      * @example
-     * var box = Cesium.BoxGeometry.fromDimensions({
-     *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
-     *   dimensions : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0)
+     * var box = C.BoxGeometry.fromDimensions({
+     *   vertexFormat : C.VertexFormat.POSITION_ONLY,
+     *   dimensions : new C.Cartesian3(500000.0, 500000.0, 500000.0)
      * });
-     * var geometry = Cesium.BoxGeometry.createGeometry(box);
+     * var geometry = C.BoxGeometry.createGeometry(box);
      */
     BoxGeometry.fromDimensions = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

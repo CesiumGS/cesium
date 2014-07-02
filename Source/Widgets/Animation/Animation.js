@@ -317,16 +317,16 @@ define([
      * // In HTML head, include a link to Animation.css stylesheet,
      * // and in the body, include: <div id="animationContainer"></div>
      *
-     * var clock = new Cesium.Clock();
-     * var clockViewModel = new Cesium.ClockViewModel(clock);
-     * var viewModel = new Cesium.AnimationViewModel(clockViewModel);
-     * var widget = new Cesium.Animation('animationContainer', viewModel);
+     * var clock = new C.Clock();
+     * var clockViewModel = new C.ClockViewModel(clock);
+     * var viewModel = new C.AnimationViewModel(clockViewModel);
+     * var widget = new C.Animation('animationContainer', viewModel);
      *
      * function tick() {
      *     clock.tick();
-     *     Cesium.requestAnimationFrame(tick);
+     *     C.requestAnimationFrame(tick);
      * }
-     * Cesium.requestAnimationFrame(tick);
+     * C.requestAnimationFrame(tick);
      */
     var Animation = function(container, viewModel) {
         //>>includeStart('debug', pragmas.debug);

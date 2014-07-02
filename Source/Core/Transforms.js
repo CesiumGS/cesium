@@ -64,9 +64,9 @@ define([
      *
      * @example
      * // Get the transform from local east-north-up at cartographic (0.0, 0.0) to Earth's fixed frame.
-     * var ellipsoid = Cesium.Ellipsoid.WGS84;
-     * var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.ZERO);
-     * var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+     * var ellipsoid = C.Ellipsoid.WGS84;
+     * var center = ellipsoid.cartographicToCartesian(C.Cartographic.ZERO);
+     * var transform = C.Transforms.eastNorthUpToFixedFrame(center);
      */
     Transforms.eastNorthUpToFixedFrame = function(origin, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -166,9 +166,9 @@ define([
      *
      * @example
      * // Get the transform from local north-east-down at cartographic (0.0, 0.0) to Earth's fixed frame.
-     * var ellipsoid = Cesium.Ellipsoid.WGS84;
-     * var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.ZERO);
-     * var transform = Cesium.Transforms.northEastDownToFixedFrame(center);
+     * var ellipsoid = C.Ellipsoid.WGS84;
+     * var center = ellipsoid.cartographicToCartesian(C.Cartographic.ZERO);
+     * var transform = C.Transforms.northEastDownToFixedFrame(center);
      */
     Transforms.northEastDownToFixedFrame = function(origin, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -267,8 +267,8 @@ define([
      * @example
      * //Set the view to in the inertial frame.
      * scene.preRender.addEventListener(function(scene, time) {
-     *   var now = new Cesium.JulianDate();
-     *   scene.camera.transform = Cesium.Matrix4.fromRotationTranslation(Cesium.Transforms.computeTemeToPseudoFixedMatrix(now), Cesium.Cartesian3.ZERO);
+     *   var now = new C.JulianDate();
+     *   scene.camera.transform = C.Matrix4.fromRotationTranslation(C.Transforms.computeTemeToPseudoFixedMatrix(now), C.Cartesian3.ZERO);
      * });
      */
     Transforms.computeTemeToPseudoFixedMatrix = function (date, result) {
@@ -358,7 +358,7 @@ define([
      * @see when
      *
      * @example
-     * var interval = new Cesium.TimeInterval(...);
+     * var interval = new C.TimeInterval(...);
      * when(preloadIcrfFixed(interval), function() {
      *     // the data is now loaded
      * });
@@ -391,9 +391,9 @@ define([
      *
      * @example
      * scene.preRender.addEventListener(function(scene, time) {
-     *   var icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(time);
-     *   if (Cesium.defined(icrfToFixed)) {
-     *     scene.camera.transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed, Cesium.Cartesian3.ZERO);
+     *   var icrfToFixed = C.Transforms.computeIcrfToFixedMatrix(time);
+     *   if (C.defined(icrfToFixed)) {
+     *     scene.camera.transform = C.Matrix4.fromRotationTranslation(icrfToFixed, C.Cartesian3.ZERO);
      *   }
      * });
      */
@@ -433,12 +433,12 @@ define([
      *
      * @example
      * // Transform a point from the ICRF axes to the Fixed axes.
-     * var now = new Cesium.JulianDate();
-     * var pointInFixed = new Cesium.Cartesian3(...);
-     * var fixedToIcrf = Cesium.Transforms.computeIcrfToFixedMatrix(now);
+     * var now = new C.JulianDate();
+     * var pointInFixed = new C.Cartesian3(...);
+     * var fixedToIcrf = C.Transforms.computeIcrfToFixedMatrix(now);
      * var pointInInertial;
-     * if (Cesium.defined(fixedToIcrf)) {
-     *     pointInInertial = Cesium.Matrix3.multiplyByVector(fixedToIcrf, pointInFixed);
+     * if (C.defined(fixedToIcrf)) {
+     *     pointInInertial = C.Matrix3.multiplyByVector(fixedToIcrf, pointInFixed);
      * }
      */
     Transforms.computeFixedToIcrfMatrix = function(date, result) {

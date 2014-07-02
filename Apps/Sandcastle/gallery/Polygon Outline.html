@@ -24,15 +24,15 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+require(['Cesium'], function(C) {
     "use strict";
 
-    var viewer = new Cesium.Viewer('cesiumContainer');
+    var viewer = new C.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
 
     // Blue polygon outline
-    var positions = Cesium.Cartesian3.fromDegreesArray([
+    var positions = C.Cartesian3.fromDegreesArray([
         -95, 37.0,
         -95, 32.0,
         -90, 33.0,
@@ -40,36 +40,36 @@ require(['Cesium'], function(Cesium) {
         -87, 35.0
     ]);
     
-    var bluePolygonOutlineInstance = new Cesium.GeometryInstance({
-        geometry : Cesium.PolygonOutlineGeometry.fromPositions({
+    var bluePolygonOutlineInstance = new C.GeometryInstance({
+        geometry : C.PolygonOutlineGeometry.fromPositions({
             positions : positions
         }),
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+            color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.WHITE)
         }
     });
     
     // Blue polygon
-    var bluePolygonInstance = new Cesium.GeometryInstance({
-        geometry : Cesium.PolygonGeometry.fromPositions({
+    var bluePolygonInstance = new C.GeometryInstance({
+        geometry : C.PolygonGeometry.fromPositions({
             positions : positions,
-            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+            vertexFormat : C.PerInstanceColorAppearance.VERTEX_FORMAT
         }),
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 0.0, 1.0, 0.5))
+            color : C.ColorGeometryInstanceAttribute.fromColor(new C.Color(0.0, 0.0, 1.0, 0.5))
         }
     });
 
     // Green extruded polygon outline
     var polygonHierarchy = {
-        positions : Cesium.Cartesian3.fromDegreesArray([
+        positions : C.Cartesian3.fromDegreesArray([
             -108.0, 30.0,
             -98.0, 30.0,
             -98.0, 40.0,
             -108.0, 40.0
         ]),
         holes : [{
-            positions : Cesium.Cartesian3.fromDegreesArray([
+            positions : C.Cartesian3.fromDegreesArray([
                 -106.0, 31.0,
                 -106.0, 39.0,
                 -100.0, 39.0,
@@ -79,61 +79,61 @@ require(['Cesium'], function(Cesium) {
     };
     var extrudedHeight = 500000.0;
     
-    var greenPolygonOutlineInstance = new Cesium.GeometryInstance({
-        geometry : new Cesium.PolygonOutlineGeometry({
+    var greenPolygonOutlineInstance = new C.GeometryInstance({
+        geometry : new C.PolygonOutlineGeometry({
             polygonHierarchy : polygonHierarchy,
             extrudedHeight : extrudedHeight
         }),
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+            color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.WHITE)
         }
     });
     
     // Green extruded polygon
-    var greenPolygonInstance = new Cesium.GeometryInstance({
-        geometry : new Cesium.PolygonGeometry({
+    var greenPolygonInstance = new C.GeometryInstance({
+        geometry : new C.PolygonGeometry({
             polygonHierarchy : polygonHierarchy,
-            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            vertexFormat : C.PerInstanceColorAppearance.VERTEX_FORMAT,
             extrudedHeight : extrudedHeight
         }),
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 1.0, 0.0, 0.5))
+            color : C.ColorGeometryInstanceAttribute.fromColor(new C.Color(0.0, 1.0, 0.0, 0.5))
         }
     });
     
     // Red polygon outline with per position heights
-    positions = Cesium.Cartesian3.fromDegreesArrayHeights([
+    positions = C.Cartesian3.fromDegreesArrayHeights([
         -95, 44.0, 400000,
         -95, 39.0, 100000,
         -87, 42.0, 100000
     ]);
     
-    var redPolygonOutlineInstance = new Cesium.GeometryInstance({
-        geometry : Cesium.PolygonOutlineGeometry.fromPositions({
+    var redPolygonOutlineInstance = new C.GeometryInstance({
+        geometry : C.PolygonOutlineGeometry.fromPositions({
             positions : positions,
             perPositionHeight : true
         }),
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+            color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.WHITE)
         }
     });
     
     // Red polygon with per position heights
-    var redPolygonInstance = new Cesium.GeometryInstance({
-        geometry : Cesium.PolygonGeometry.fromPositions({
+    var redPolygonInstance = new C.GeometryInstance({
+        geometry : C.PolygonGeometry.fromPositions({
             positions : positions,
-            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            vertexFormat : C.PerInstanceColorAppearance.VERTEX_FORMAT,
             perPositionHeight : true
         }),
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
+            color : C.ColorGeometryInstanceAttribute.fromColor(new C.Color(1.0, 0.0, 0.0, 0.5))
         }
     });
     
     // Add polygon outline instances to primitives
-    primitives.add(new Cesium.Primitive({
+    primitives.add(new C.Primitive({
         geometryInstances : [redPolygonOutlineInstance, bluePolygonOutlineInstance, greenPolygonOutlineInstance],
-        appearance : new Cesium.PerInstanceColorAppearance({
+        appearance : new C.PerInstanceColorAppearance({
             flat : true,
             renderState : {
                 depthTest : {
@@ -145,9 +145,9 @@ require(['Cesium'], function(Cesium) {
     }));
        
     // Add polygon instances to primtives
-    primitives.add(new Cesium.Primitive({
+    primitives.add(new C.Primitive({
         geometryInstances : [redPolygonInstance, bluePolygonInstance, greenPolygonInstance],
-        appearance : new Cesium.PerInstanceColorAppearance({
+        appearance : new C.PerInstanceColorAppearance({
             closed : true
         })
     }));

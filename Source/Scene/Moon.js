@@ -41,7 +41,7 @@ define([
      * @param {Boolean} [options.onlySunLighting=true] Use the sun as the only light source.
      *
      * @example
-     * scene.moon = new Cesium.Moon();
+     * scene.moon = new C.Moon();
      */
     var Moon = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

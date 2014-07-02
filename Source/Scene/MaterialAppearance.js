@@ -50,15 +50,15 @@ define([
      * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
      *
      * @example
-     * var primitive = new Cesium.Primitive({
-     *   geometryInstances : new Cesium.GeometryInstance({
-     *     geometry : new Cesium.WallGeometry({
-            materialSupport :  Cesium.MaterialAppearance.MaterialSupport.BASIC.vertexFormat,
+     * var primitive = new C.Primitive({
+     *   geometryInstances : new C.GeometryInstance({
+     *     geometry : new C.WallGeometry({
+            materialSupport :  C.MaterialAppearance.MaterialSupport.BASIC.vertexFormat,
      *       // ...
      *     })
      *   }),
-     *   appearance : new Cesium.MaterialAppearance({
-     *     material : Cesium.Material.fromType('Color'),
+     *   appearance : new C.MaterialAppearance({
+     *     material : C.Material.fromType('Color'),
      *     faceForward : true
      *   })
      *

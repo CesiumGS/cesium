@@ -135,9 +135,9 @@ define([
          * @type {Cartesian3[]}
          * @example
          * polyline.positions = ellipsoid.cartographicArrayToCartesianArray([
-         *     new Cesium.Cartographic(...),
-         *     new Cesium.Cartographic(...),
-         *     new Cesium.Cartographic(...)
+         *     new C.Cartographic(...),
+         *     new C.Cartographic(...),
+         *     new C.Cartographic(...)
          * ]);
          */
         positions : {

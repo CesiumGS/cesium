@@ -23,8 +23,8 @@ define([
      * @see PerspectiveOffCenterFrustum
      *
      * @example
-     * var frustum = new Cesium.PerspectiveFrustum();
-     * frustum.fovy = Cesium.Math.PI_OVER_THREE;
+     * var frustum = new C.PerspectiveFrustum();
+     * frustum.fovy = C.Math.PI_OVER_THREE;
      * frustum.aspectRatio = canvas.clientWidth / canvas.clientHeight;
      * frustum.near = 1.0;
      * frustum.far = 2.0;
@@ -177,9 +177,9 @@ define([
      * // For example, get the size of a pixel of an image on a billboard.
      * var position = camera.position;
      * var direction = camera.direction;
-     * var toCenter = Cesium.Cartesian3.subtract(primitive.boundingVolume.center, position, new Cartesian3());      // vector from camera to a primitive
-     * var toCenterProj = Cesium.Cartesian3.multiplyByScalar(direction, Cesium.Cartesian3.dot(direction, toCenter)); // project vector onto camera direction vector
-     * var distance = Cesium.Cartesian3.magnitude(toCenterProj);
+     * var toCenter = C.Cartesian3.subtract(primitive.boundingVolume.center, position, new C.Cartesian3());      // vector from camera to a primitive
+     * var toCenterProj = C.Cartesian3.multiplyByScalar(direction, C.Cartesian3.dot(direction, toCenter)); // project vector onto camera direction vector
+     * var distance = C.Cartesian3.magnitude(toCenterProj);
      * var pixelSize = camera.frustum.getPixelSize({
      *     width : canvas.clientWidth,
      *     height : canvas.clientHeight

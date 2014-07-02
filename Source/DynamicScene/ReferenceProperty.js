@@ -58,35 +58,35 @@ define([
      * @param {String} targetPropertyNames The name of the property on the target object which we will use.
      *
      * @example
-     * var collection = new Cesium.DynamicObjectCollection();
+     * var collection = new C.DynamicObjectCollection();
      *
      * //Create a new object and assign a billboard scale.
-     * var object1 = new Cesium.DynamicObject('object1');
-     * object1.billboard = new Cesium.DynamicBillboard();
-     * object1.billboard.scale = new ConstantProperty(2.0);
+     * var object1 = new C.DynamicObject('object1');
+     * object1.billboard = new C.DynamicBillboard();
+     * object1.billboard.scale = new C.ConstantProperty(2.0);
      * collection.add(object1);
      *
      * //Create a second object and reference the scale from the first one.
-     * var object2 = new Cesium.DynamicObject('object2');
-     * object2.model = new Cesium.DynamicModel();
-     * object2.model.scale = new Cesium.ReferenceProperty(collection, 'object1', ['billboard', 'scale']);
+     * var object2 = new C.DynamicObject('object2');
+     * object2.model = new C.DynamicModel();
+     * object2.model.scale = new C.ReferenceProperty(collection, 'object1', ['billboard', 'scale']);
      * collection.add(object2);
      *
      * //Create a third object, but use the fromString helper function.
-     * var object3 = new Cesium.DynamicObject('object3');
-     * object3.billboard = new Cesium.DynamicBillboard();
-     * object3.billboard.scale = Cesium.ReferenceProperty.fromString(collection, 'object1#billboard.scale']);
+     * var object3 = new C.DynamicObject('object3');
+     * object3.billboard = new C.DynamicBillboard();
+     * object3.billboard.scale = C.ReferenceProperty.fromString(collection, 'object1#billboard.scale']);
      * collection.add(object3);
      *
      * //You can refer to an object with a # or . in id and property names by escaping them.
-     * var object4 = new Cesium.DynamicObject('#object.4');
-     * object4.billboard = new Cesium.DynamicBillboard();
-     * object4.billboard.scale = new ConstantProperty(2.0);
+     * var object4 = new C.DynamicObject('#object.4');
+     * object4.billboard = new C.DynamicBillboard();
+     * object4.billboard.scale = new C.ConstantProperty(2.0);
      * collection.add(object4);
      *
-     * var object5 = new Cesium.DynamicObject('object5');
-     * object5.billboard = new Cesium.DynamicBillboard();
-     * object5.billboard.scale = Cesium.ReferenceProperty.fromString(collection, '\\#object\\.4#billboard.scale');
+     * var object5 = new C.DynamicObject('object5');
+     * object5.billboard = new C.DynamicBillboard();
+     * object5.billboard.scale = C.ReferenceProperty.fromString(collection, '\\#object\\.4#billboard.scale');
      * collection.add(object5);
      */
     var ReferenceProperty = function(targetCollection, targetId, targetPropertyNames) {

@@ -28,10 +28,10 @@ define([
      * @param {Boolean} [options.destroyPrimitives=true] Determines if primitives in the collection are destroyed when they are removed.
      *
      * @example
-     * var billboards = new Cesium.BillboardCollection();
-     * var labels = new Cesium.LabelCollection();
+     * var billboards = new C.BillboardCollection();
+     * var labels = new C.LabelCollection();
      *
-     * var collection = new Cesium.PrimitiveCollection();
+     * var collection = new C.PrimitiveCollection();
      * collection.add(billboards);
      *
      * scene.primitives.add(collection);  // Add collection
@@ -61,16 +61,16 @@ define([
          *
          * @example
          * // Example 1. Primitives are destroyed by default.
-         * var primitives = new Cesium.PrimitiveCollection();
-         * var labels = primitives.add(new Cesium.LabelCollection());
+         * var primitives = new C.PrimitiveCollection();
+         * var labels = primitives.add(new C.LabelCollection());
          * primitives = primitives.destroy();
          * var b = labels.isDestroyed(); // true
          *
          * @example
          * // Example 2. Do not destroy primitives in a collection.
-         * var primitives = new Cesium.PrimitiveCollection();
+         * var primitives = new C.PrimitiveCollection();
          * primitives.destroyPrimitives = false;
-         * var labels = primitives.add(new Cesium.LabelCollection());
+         * var labels = primitives.add(new C.LabelCollection());
          * primitives = primitives.destroy();
          * var b = labels.isDestroyed(); // false
          * labels = labels.destroy();    // explicitly destroy
@@ -103,7 +103,7 @@ define([
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      * @example
-     * var billboards = scene.primitives.add(new Cesium.BillboardCollection());
+     * var billboards = scene.primitives.add(new C.BillboardCollection());
      */
     PrimitiveCollection.prototype.add = function(primitive) {
         //>>includeStart('debug', pragmas.debug);
@@ -134,7 +134,7 @@ define([
      * @see PrimitiveCollection#destroyPrimitives
      *
      * @example
-     * var billboards = scene.primitives.add(new Cesium.BillboardCollection());
+     * var billboards = scene.primitives.add(new C.BillboardCollection());
      * scene.primitives.remove(p);  // Returns true
      */
     PrimitiveCollection.prototype.remove = function(primitive) {

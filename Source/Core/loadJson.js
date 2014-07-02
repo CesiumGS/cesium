@@ -37,7 +37,7 @@ define([
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @example
-     * Cesium.loadJson('http://someUrl.com/someJson.txt').then(function(jsonData) {
+     * C.loadJson('http://someUrl.com/someJson.txt').then(function(jsonData) {
      *     // Do something with the JSON object
      * }, function(error) {
      *     // an error occurred
