@@ -816,5 +816,149 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('conjugate throws with no result', function() {
+        expect(function() {
+            Quaternion.conjugate(new Quaternion());
+        }).toThrowDeveloperError();
+    });
+
+    it('add throws with no result', function() {
+        expect(function() {
+            Quaternion.add(new Quaternion(), new Quaternion());
+        }).toThrowDeveloperError();
+    });
+
+    it('subtract throws with no result', function() {
+        expect(function() {
+            Quaternion.subtract(new Quaternion(), new Quaternion());
+        }).toThrowDeveloperError();
+    });
+
+    it('negate throws with no result', function() {
+        expect(function() {
+            Quaternion.negate(new Quaternion());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiply throws with no result', function() {
+        expect(function() {
+            Quaternion.multiply(new Quaternion(), new Quaternion());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyByScalar throws with no result', function() {
+        expect(function() {
+            Quaternion.multiplyByScalar(new Quaternion(), 3);
+        }).toThrowDeveloperError();
+    });
+
+    it('divideByScalar throws with no result', function() {
+        expect(function() {
+            Quaternion.divideByScalar(new Quaternion(), 3);
+        }).toThrowDeveloperError();
+    });
+
+    it('getAxis throws with no result', function() {
+        expect(function() {
+            Quaternion.getAxis(new Quaternion());
+        }).toThrowDeveloperError();
+    });
+
+    it('lerp throws with no result', function() {
+        expect(function() {
+            Quaternion.lerp(new Quaternion(), new Quaternion(), 2);
+        }).toThrowDeveloperError();
+    });
+
+    it('slerp throws with no result', function() {
+        expect(function() {
+            Quaternion.slerp(new Quaternion(), new Quaternion(), 2);
+        }).toThrowDeveloperError();
+    });
+
+    it('log throws with no result', function() {
+        expect(function() {
+            Quaternion.log(new Quaternion());
+        }).toThrowDeveloperError();
+    });
+
+    it('exp throws with no result', function() {
+        expect(function() {
+            Quaternion.exp(new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('innerQuadrangle throws with no result', function() {
+        expect(function() {
+            Quaternion.innerQuadrangle(new Quaternion(), new Quaternion(), new Quaternion());
+        }).toThrowDeveloperError();
+    });
+
+    it('squad throws with no result', function() {
+        expect(function() {
+            Quaternion.squad(new Quaternion(), new Quaternion(), new Quaternion(), new Quaternion(), 3);
+        }).toThrowDeveloperError();
+    });
+
+    it('fastSlerp throws with no start', function() {
+        expect(function() {
+            Quaternion.fastSlerp();
+        }).toThrowDeveloperError();
+    });
+
+    it('fastSlerp throws with no end', function() {
+        expect(function() {
+            Quaternion.fastSlerp(new Quaternion());
+        }).toThrowDeveloperError();
+    });
+
+    it('fastSlerp throws with no t', function() {
+        expect(function() {
+            Quaternion.fastSlerp(new Quaternion(), new Quaternion());
+        }).toThrowDeveloperError();
+    });
+
+    it('fastSlerp throws with no result', function() {
+        expect(function() {
+            Quaternion.fastSlerp(new Quaternion(), new Quaternion(), 2);
+        }).toThrowDeveloperError();
+    });
+
+    it('fastSquad throws with no q0', function() {
+        expect(function() {
+            Quaternion.fastSquad();
+        }).toThrowDeveloperError();
+    });
+
+    it('fastSquad throws with no q1', function() {
+        expect(function() {
+            Quaternion.fastSquad(new Quaternion());
+        }).toThrowDeveloperError();
+    });
+
+    it('fastSquad throws with no s0', function() {
+        expect(function() {
+            Quaternion.fastSquad(new Quaternion(), new Quaternion());
+        }).toThrowDeveloperError();
+    });
+
+    it('fastSquad throws with no s1', function() {
+        expect(function() {
+            Quaternion.fastSquad(new Quaternion(), new Quaternion(), new Quaternion());
+        }).toThrowDeveloperError();
+    });
+
+    it('fastSquad throws with no t', function() {
+        expect(function() {
+            Quaternion.fastSquad(new Quaternion(), new Quaternion(), new Quaternion(), new Quaternion());
+        }).toThrowDeveloperError();
+    });
+
+    it('fastSquad throws with no result', function() {
+        expect(function() {
+            Quaternion.fastSquad(new Quaternion(), new Quaternion(), new Quaternion(), new Quaternion(), 3);
+        }).toThrowDeveloperError();
+    });
+
     createPackableSpecs(Quaternion, new Quaternion(1, 2, 3, 4), [1, 2, 3, 4]);
 });

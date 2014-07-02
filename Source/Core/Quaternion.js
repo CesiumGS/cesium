@@ -639,17 +639,12 @@ define([
 
         var w = quaternion.w;
         if (Math.abs(w - 1.0) < CesiumMath.EPSILON6) {
-            if (!defined(result)) {
-                return new Cartesian3();
-            }
             result.x = result.y = result.z = 0;
             return result;
         }
 
         var scalar = 1.0 / Math.sqrt(1.0 - (w * w));
-        if (!defined(result)) {
-            return new Cartesian3(quaternion.x * scalar, quaternion.y * scalar, quaternion.z * scalar);
-        }
+
         result.x = quaternion.x * scalar;
         result.y = quaternion.y * scalar;
         result.z = quaternion.z * scalar;
