@@ -2,10 +2,12 @@
 define([
         './defined',
         './DeveloperError',
+        './freezeObject',
         './Math'
     ], function(
         defined,
         DeveloperError,
+        freezeObject,
         CesiumMath) {
     "use strict";
 
@@ -112,5 +114,5 @@ define([
         return new Uint16Array(indicesLengthOrArray);
     };
 
-    return IndexDatatype;
+    return freezeObject(IndexDatatype);
 });
