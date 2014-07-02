@@ -24,7 +24,6 @@ define([
      * which form attributes, which form vertices.
      *
      * @exports ComponentDatatype
-     * @enum
      */
     var ComponentDatatype = {
         /**

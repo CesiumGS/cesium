@@ -7,7 +7,7 @@ define(['./freezeObject'], function(freezeObject) {
      * when {@link Clock#startTime} or {@link Clock#stopTime} is reached.
      *
      * @exports ClockRange
-     * @enum
+     *
      * @see Clock
      * @see ClockStep
      */

@@ -4,7 +4,7 @@ define(['../Core/freezeObject'], function(freezeObject) {
 
     /**
      * Defined the orientation of stripes in {@link StripeMaterialProperty}.
-     * @enum
+     *
      * @exports StripeOrientation
      */
     var StripeOrientation = {

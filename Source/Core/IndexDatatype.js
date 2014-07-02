@@ -16,7 +16,6 @@ define([
      * <code>type</code> parameter of {@link http://www.khronos.org/opengles/sdk/docs/man/xhtml/glDrawElements.xml|drawElements}.
      *
      * @exports IndexDatatype
-     * @enum
      */
     var IndexDatatype = {
         /**

@@ -6,7 +6,7 @@ define(['./freezeObject'], function(freezeObject) {
      * Provides the type of time standards which JulianDate can take as input.
      *
      * @exports TimeStandard
-     * @enum
+     *
      * @see JulianDate
      */
     var TimeStandard = {

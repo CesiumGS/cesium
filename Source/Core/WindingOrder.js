@@ -6,7 +6,6 @@ define(['./freezeObject'], function(freezeObject) {
      * Winding order defines the order of vertices for a triangle to be considered front-facing.
      *
      * @exports WindingOrder
-     * @enum
      */
     var WindingOrder = {
         /**

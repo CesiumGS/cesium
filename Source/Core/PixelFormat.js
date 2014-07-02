@@ -6,7 +6,6 @@ define(['./freezeObject'], function(freezeObject) {
      * The format of a pixel, i.e., the number of components it has and what they represent.
      *
      * @exports PixelFormat
-     * @enum
      */
     var PixelFormat = {
         /**

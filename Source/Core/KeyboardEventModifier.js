@@ -7,7 +7,6 @@ define(['./freezeObject'], function(freezeObject) {
      * that are held down in addition to other event types.
      *
      * @exports KeyboardEventModifier
-     * @enum
      */
     var KeyboardEventModifier = {
         /**

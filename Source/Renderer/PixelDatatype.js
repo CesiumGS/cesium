@@ -4,7 +4,6 @@ define(['../Core/freezeObject'], function(freezeObject) {
 
     /**
      * @private
-     * @enum
      */
     var PixelDatatype = {
         UNSIGNED_BYTE : 0x1401,

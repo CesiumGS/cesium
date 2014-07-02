@@ -6,7 +6,6 @@ define(['../Core/freezeObject'], function(freezeObject) {
      * Determines the function used to compare stencil values for the stencil test.
      *
      * @exports StencilFunction
-     * @enum
      */
     var StencilFunction = {
         /**

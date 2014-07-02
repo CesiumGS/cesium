@@ -4,7 +4,6 @@ define(['../Core/freezeObject'], function(freezeObject) {
 
     /**
      * @private
-     * @enum
      */
     return freezeObject({
         STOPPED : 0,

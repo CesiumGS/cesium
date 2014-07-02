@@ -6,7 +6,6 @@ define(['../Core/freezeObject'], function(freezeObject) {
      * Determines which triangles, if any, are culled.
      *
      * @exports CullFace
-     * @enum
      */
     var CullFace = {
         /**

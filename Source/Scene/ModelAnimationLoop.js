@@ -6,7 +6,7 @@ define(['../Core/freezeObject'], function(freezeObject) {
      * Determines if and how a glTF animation is looped.
      *
      * @exports ModelAnimationLoop
-     * @enum
+     *
      * @see ModelAnimationCollection#add
      */
     var ModelAnimationLoop = {

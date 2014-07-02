@@ -4,7 +4,6 @@ define(['../Core/freezeObject'], function(freezeObject) {
 
     /**
      * @private
-     * @enum
      */
     var TextureWrap = {
         CLAMP_TO_EDGE : 0x812F,

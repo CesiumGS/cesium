@@ -4,7 +4,6 @@ define(['../Core/freezeObject'], function(freezeObject) {
 
     /**
      * @private
-     * @enum
      */
     var TextureMinificationFilter = {
         NEAREST : 0x2600,

@@ -4,7 +4,6 @@ define(['../Core/freezeObject'], function(freezeObject) {
 
     /**
      * @private
-     * @enum
      */
     var RenderbufferFormat = {
         RGBA4 : 0x8056,

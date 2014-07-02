@@ -4,7 +4,6 @@ define(['../Core/freezeObject'], function(freezeObject) {
 
     /**
      * @private
-     * @enum
      */
     var BufferUsage = {
         STREAM_DRAW : 0x88E0,

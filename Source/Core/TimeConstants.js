@@ -6,7 +6,7 @@ define(['./freezeObject'], function(freezeObject) {
      * Constants for time conversions like those done by {@link JulianDate}.
      *
      * @exports TimeConstants
-     * @enum
+     *
      * @see JulianDate
      */
     var TimeConstants = {

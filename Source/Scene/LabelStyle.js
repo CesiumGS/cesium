@@ -6,7 +6,7 @@ define(['../Core/freezeObject'], function(freezeObject) {
      * Describes how to draw a label.
      *
      * @exports LabelStyle
-     * @enum
+     *
      * @see Label#style
      */
     var LabelStyle = {

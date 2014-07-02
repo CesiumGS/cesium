@@ -9,7 +9,6 @@ define(['./freezeObject'], function(freezeObject) {
      * leading to full visibility.
      *
      * @exports Visibility
-     * @enum
      */
     var Visibility = {
         /**

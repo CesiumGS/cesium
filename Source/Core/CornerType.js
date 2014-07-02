@@ -4,7 +4,6 @@ define(['./freezeObject'], function(freezeObject) {
 
     /**
      * @exports CornerType
-     * @enum
      */
     var CornerType = {
         /**

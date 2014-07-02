@@ -6,7 +6,6 @@ define(['./freezeObject'], function(freezeObject) {
      * Constants for identifying well-known reference frames.
      *
      * @exports ReferenceFrame
-     * @enum
      */
     var ReferenceFrame = {
         /**

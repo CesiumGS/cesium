@@ -6,7 +6,7 @@ define(['../Core/freezeObject'], function(freezeObject) {
      * Indicates if the scene is viewed in 3D, 2D, or 2.5D Columbus view.
      *
      * @exports SceneMode
-     * @enum
+     *
      * @see Scene#mode
      */
     var SceneMode = {

@@ -6,7 +6,6 @@ define(['../Core/freezeObject'], function(freezeObject) {
      * Enumerates the available input for interacting with the camera.
      *
      * @exports CameraEventType
-     * @enum
      */
     var CameraEventType = {
         /**

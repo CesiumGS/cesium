@@ -6,7 +6,7 @@ define(['../Core/freezeObject'], function(freezeObject) {
      * The types of imagery provided by Bing Maps.
      *
      * @exports BingMapsStyle
-     * @enum
+     *
      * @see BingMapsImageryProvider
      */
     var BingMapsStyle = {

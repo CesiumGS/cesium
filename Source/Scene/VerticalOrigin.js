@@ -8,7 +8,7 @@ define(['../Core/freezeObject'], function(freezeObject) {
      * screen space) of the actual position.
      *
      * @exports VerticalOrigin
-     * @enum
+     *
      * @see Billboard#verticalOrigin
      */
     var VerticalOrigin = {

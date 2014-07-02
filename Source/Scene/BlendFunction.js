@@ -6,7 +6,6 @@ define(['../Core/freezeObject'], function(freezeObject) {
      * Determines how blending factors are computed.
      *
      * @exports BlendFunction
-     * @enum
      */
     var BlendFunction = {
         /**

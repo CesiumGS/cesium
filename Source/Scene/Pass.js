@@ -6,7 +6,6 @@ define(['../Core/freezeObject'], function(freezeObject) {
      * The render pass for a command.
      *
      * @private
-     * @enum
      */
     var Pass = {
         OPAQUE : 0,

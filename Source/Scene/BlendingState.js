@@ -18,7 +18,6 @@ define([
      * </p>
      *
      * @exports BlendingState
-     * @enum
      */
     var BlendingState = {
         /**

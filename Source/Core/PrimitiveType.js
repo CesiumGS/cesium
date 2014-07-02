@@ -6,7 +6,6 @@ define(['./freezeObject'], function(freezeObject) {
      * The type of a geometric primitive, i.e., points, lines, and triangles.
      *
      * @exports PrimitiveType
-     * @enum
      */
     var PrimitiveType = {
         /**

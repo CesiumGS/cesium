@@ -6,7 +6,6 @@ define(['../Core/freezeObject'], function(freezeObject) {
      * Determines how two pixels' values are combined.
      *
      * @exports BlendEquation
-     * @enum
      */
     var BlendEquation = {
         /**

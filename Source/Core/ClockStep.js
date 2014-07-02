@@ -7,7 +7,7 @@ define(['./freezeObject'], function(freezeObject) {
      * to {@link Clock#tick}.
      *
      * @exports ClockStep
-     * @enum
+     *
      * @see Clock
      * @see ClockRange
      */

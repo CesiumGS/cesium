@@ -9,7 +9,6 @@ define(['./freezeObject'], function(freezeObject) {
      * outside of the frustum's 6 planes (OUTSIDE).
      *
      * @exports Intersect
-     * @enum
      */
     var Intersect = {
         /**
