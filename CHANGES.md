@@ -1,6 +1,39 @@
 Change Log
 ==========
 
+### 1.0 - 2014-08-01
+
+* Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))
+  * The `DynamicScene` layer has been renamed to `DataSources` additionally, the following objects have all been renamed.
+    * `DynamicBillboard` -> `BillboardGraphics`
+    * `DynamicBillboardVisualizer` -> `BillboardVisualizer`
+    * `CompositeDynamicObjectCollection` -> `CompositeEntityCollection`
+    * `DynamicCone` -> `ConeGraphics`
+    * `DynamicConeVisualizerUsingCustomSensor` -> `ConeVisualizer`
+    * `DynamicClock` -> `DataSourceClock`
+    * `DynamicEllipse` -> `EllipseGraphics`
+    * `DynamicEllipsoid` -> `EllipsoidGraphics`
+    * `DynamicObject` -> `Entity`
+    * `DynamicObjectCollection` -> `EntityCollection`
+    * `DynamicObjectView` -> `EntityView`
+    * `DynamicLabel` -> `LabelGraphics`
+    * `DynamicLabelVisualizer` -> `LabelVisualizer`
+    * `DynamicModel` -> `ModelGraphics`
+    * `DynamicModelVisualizer` -> `ModelVisualizer`
+    * `DynamicPath` -> `PathGraphics`
+    * `DynamicPathVisualizer` -> `PathVisualizer`
+    * `DynamicPoint` -> `PointGraphics`
+    * `DynamicPointVisualizer` -> `PointVisualizer`
+    * `DynamicPolygon` -> `PolygonGraphics`
+    * `DynamicPolyline` -> `PolylineGraphics`
+    * `DynamicPyramid` -> `PyramidGraphics`
+    * `DynamicPyramidVisualizer` -> `PyramidVisualizer`
+    * `DynamicRectangle` -> `RectangleGraphics`
+    * `DynamicVector` -> `VectorGraphics`
+    * `DynamicVectorVisualizer` -> `VectorVisualizer`
+    * `DynamicWall` -> `WallGraphics`
+    * `viewerDynamicObjectMixin` -> `viewerEntityMixin`
+
 Beta Releases
 -------------
 
