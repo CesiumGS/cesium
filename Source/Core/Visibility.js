@@ -1,5 +1,8 @@
 /*global define*/
-define(function() {
+define([
+        './freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
@@ -36,5 +39,5 @@ define(function() {
         FULL : 1
     };
 
-    return Visibility;
+    return freezeObject(Visibility);
 });

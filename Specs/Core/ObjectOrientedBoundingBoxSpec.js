@@ -41,7 +41,7 @@ defineSuite([
         var rotation = Matrix3.fromQuaternion(quaternion);
 
         for (var i = 0; i < positions.length; ++i) {
-            points.push(Matrix3.multiplyByVector(rotation, positions[i]));
+            points.push(Matrix3.multiplyByVector(rotation, positions[i], new Cartesian3()));
         }
 
         return {

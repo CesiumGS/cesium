@@ -55,9 +55,9 @@ define([
         direction = Cartesian3.normalize(Cartesian3.negate(position, direction), direction);
         var up = Cartesian3.clone(Cartesian3.UNIT_Y);
 
-        var position2D = Matrix4.multiplyByPoint(Camera.TRANSFORM_2D, position);
-        var direction2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, direction);
-        var up2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, up);
+        var position2D = Matrix4.multiplyByPoint(Camera.TRANSFORM_2D, position, new Cartesian3());
+        var direction2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, direction, new Cartesian3());
+        var up2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, up, new Cartesian3());
 
         var frustum = new OrthographicFrustum();
         frustum.right = maxRadii * Math.PI;
@@ -84,9 +84,9 @@ define([
         up = new Cartesian3();
         up = Cartesian3.normalize(Cartesian3.cross(right, direction, up), up);
 
-        position2D = Matrix4.multiplyByPoint(Camera.TRANSFORM_2D, position);
-        direction2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, direction);
-        var right2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, right);
+        position2D = Matrix4.multiplyByPoint(Camera.TRANSFORM_2D, position, new Cartesian3());
+        direction2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, direction, new Cartesian3());
+        var right2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, right, new Cartesian3());
         up2D = new Cartesian3();
         up2D = Cartesian3.normalize(Cartesian3.cross(right2D, direction2D, up2D), up2D);
 

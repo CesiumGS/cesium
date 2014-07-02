@@ -79,5 +79,5 @@ define([
         })
     };
 
-    return BlendingState;
+    return freezeObject(BlendingState);
 });

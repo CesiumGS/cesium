@@ -22,7 +22,7 @@ defineSuite([
             vertexFormat : VertexFormat.ALL,
             radii : new Cartesian3(500000.0, 500000.0, 1000000.0)
         });
-        var modelMatrix = Matrix4.multiplyByTranslation(Matrix4.IDENTITY, new Cartesian3(0.0, 0.0, 11000000.0));
+        var modelMatrix = Matrix4.multiplyByTranslation(Matrix4.IDENTITY, new Cartesian3(0.0, 0.0, 11000000.0), new Matrix4());
 
         var primitive = createTangentSpaceDebugPrimitive({
             geometry : geometry,
