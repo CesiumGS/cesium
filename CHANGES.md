@@ -1,8 +1,6 @@
 Change Log
 ==========
 
-Beta Releases
--------------
 ### 1.0 - 2014-08-01
 
 * Breaking changes
@@ -11,6 +9,9 @@ Beta Releases
 * Added `Globe.getHeight` and `Globe.pick` for finding the terrain height at a given Cartographic coordinate and picking the terrain with a ray.
 * Modified the default camera tilt mouse behavior to tilt about the point clicked.
 * Added camera collision detection with terrain to the default mouse interaction.
+
+Beta Releases
+-------------
 
 ### b30 - 2014-07-01
 
