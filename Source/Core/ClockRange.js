@@ -1,5 +1,8 @@
 /*global define*/
-define(function() {
+define([
+        './freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
@@ -41,5 +44,5 @@ define(function() {
         LOOP_STOP : 2
     };
 
-    return ClockRange;
+    return freezeObject(ClockRange);
 });

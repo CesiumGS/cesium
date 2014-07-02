@@ -1,5 +1,8 @@
 /*global define*/
-define(function() {
+define([
+        '../Core/freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
@@ -35,5 +38,5 @@ define(function() {
         // No min and max like in ColladaFX GLES2 profile
     };
 
-    return BlendEquation;
+    return freezeObject(BlendEquation);
 });
