@@ -3,6 +3,7 @@ define([
         './AxisAlignedBoundingBox',
         './Cartesian2',
         './Cartesian3',
+        './Cartesian4',
         './defaultValue',
         './defined',
         './defineProperties',
@@ -17,6 +18,7 @@ define([
         AxisAlignedBoundingBox,
         Cartesian2,
         Cartesian3,
+        Cartesian4,
         defaultValue,
         defined,
         defineProperties,
@@ -29,6 +31,7 @@ define([
         Transforms) {
     "use strict";
 
+    var scratchCart4 = new Cartesian4();
     /**
      * A plane tangent to the provided ellipsoid at the provided origin.
      * If origin is not on the surface of the ellipsoid, it's surface projection will be used.
@@ -60,10 +63,10 @@ define([
         var eastNorthUp = Transforms.eastNorthUpToFixedFrame(origin, ellipsoid);
         this._ellipsoid = ellipsoid;
         this._origin = origin;
-        this._xAxis = Cartesian3.fromCartesian4(Matrix4.getColumn(eastNorthUp, 0));
-        this._yAxis = Cartesian3.fromCartesian4(Matrix4.getColumn(eastNorthUp, 1));
+        this._xAxis = Cartesian3.fromCartesian4(Matrix4.getColumn(eastNorthUp, 0, scratchCart4));
+        this._yAxis = Cartesian3.fromCartesian4(Matrix4.getColumn(eastNorthUp, 1, scratchCart4));
 
-        var normal = Cartesian3.fromCartesian4(Matrix4.getColumn(eastNorthUp, 2));
+        var normal = Cartesian3.fromCartesian4(Matrix4.getColumn(eastNorthUp, 2, scratchCart4));
         this._plane = Plane.fromPointNormal(origin, normal);
     };
 
