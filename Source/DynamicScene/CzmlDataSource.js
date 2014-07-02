@@ -891,37 +891,37 @@ define([
         }
     }
 
-    function processVertexData(object, vertexPositionsData, dynamicObjectCollection) {
+    function processVertexData(object, positionsData, dynamicObjectCollection) {
         var i;
         var len;
-        var references = vertexPositionsData.references;
+        var references = positionsData.references;
         if (defined(references)) {
             var properties = [];
             for (i = 0, len = references.length; i < len; i++) {
                 properties.push(makeReference(dynamicObjectCollection, references[i]));
             }
 
-            var iso8601Interval = vertexPositionsData.interval;
+            var iso8601Interval = positionsData.interval;
             if (defined(iso8601Interval)) {
                 iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
-                if (!(object.vertexPositions instanceof CompositePositionProperty)) {
-                    object.vertexPositions = new CompositePositionProperty();
+                if (!(object.positions instanceof CompositePositionProperty)) {
+                    object.positions = new CompositePositionProperty();
                     iso8601Interval.data = new PositionPropertyArray(properties);
-                    object.vertexPositions.intervals.addInterval(iso8601Interval);
+                    object.positions.intervals.addInterval(iso8601Interval);
                 }
             } else {
-                object.vertexPositions = new PositionPropertyArray(properties);
+                object.positions = new PositionPropertyArray(properties);
             }
         } else {
             var values = [];
-            var tmp = vertexPositionsData.cartesian;
+            var tmp = positionsData.cartesian;
             if (defined(tmp)) {
                 for (i = 0, len = tmp.length; i < len; i += 3) {
                     values.push(new Cartesian3(tmp[i], tmp[i + 1], tmp[i + 2]));
                 }
-                vertexPositionsData.array = values;
+                positionsData.array = values;
             } else {
-                tmp = vertexPositionsData.cartographicRadians;
+                tmp = positionsData.cartographicRadians;
                 if (defined(tmp)) {
                     for (i = 0, len = tmp.length; i < len; i += 3) {
                         scratchCartographic.longitude = tmp[i];
@@ -929,35 +929,35 @@ define([
                         scratchCartographic.height = tmp[i + 2];
                         values.push(Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic));
                     }
-                    vertexPositionsData.array = values;
+                    positionsData.array = values;
                 } else {
-                    tmp = vertexPositionsData.cartographicDegrees;
+                    tmp = positionsData.cartographicDegrees;
                     if (defined(tmp)) {
                         for (i = 0, len = tmp.length; i < len; i += 3) {
                             values.push(Cartesian3.fromDegrees(tmp[i], tmp[i + 1], tmp[i + 2]));
                         }
-                        vertexPositionsData.array = values;
+                        positionsData.array = values;
                     }
                 }
             }
-            if (defined(vertexPositionsData.array)) {
-                processPacketData(Array, object, 'vertexPositions', vertexPositionsData, undefined, undefined, dynamicObjectCollection);
+            if (defined(positionsData.array)) {
+                processPacketData(Array, object, 'positions', positionsData, undefined, undefined, dynamicObjectCollection);
             }
         }
     }
 
-    function processVertexPositions(object, vertexPositionsData, dynamicObjectCollection) {
-        if (!defined(vertexPositionsData)) {
+    function processPositions(object, positionsData, dynamicObjectCollection) {
+        if (!defined(positionsData)) {
             return;
         }
 
-        if (isArray(vertexPositionsData)) {
-            var length = vertexPositionsData.length;
+        if (isArray(positionsData)) {
+            var length = positionsData.length;
             for (var i = 0; i < length; i++) {
-                processVertexData(object, vertexPositionsData[i], dynamicObjectCollection);
+                processVertexData(object, positionsData[i], dynamicObjectCollection);
             }
         } else {
-            processVertexData(object, vertexPositionsData, dynamicObjectCollection);
+            processVertexData(object, positionsData, dynamicObjectCollection);
         }
     }
 
@@ -1345,7 +1345,7 @@ define([
         processPacketData(Boolean, polygon, 'outline', polygonData.outline, interval, sourceUri, dynamicObjectCollection);
         processPacketData(Color, polygon, 'outlineColor', polygonData.outlineColor, interval, sourceUri, dynamicObjectCollection);
         processPacketData(Boolean, polygon, 'perPositionHeight', polygonData.perPositionHeight, interval, sourceUri, dynamicObjectCollection);
-        processVertexPositions(polygon, polygonData.vertexPositions, dynamicObjectCollection);
+        processPositions(polygon, polygonData.positions, dynamicObjectCollection);
     }
 
     function processRectangle(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
@@ -1407,7 +1407,7 @@ define([
         processPacketData(Boolean, wall, 'fill', wallData.fill, interval, sourceUri, dynamicObjectCollection);
         processPacketData(Boolean, wall, 'outline', wallData.outline, interval, sourceUri, dynamicObjectCollection);
         processPacketData(Color, wall, 'outlineColor', wallData.outlineColor, interval, sourceUri, dynamicObjectCollection);
-        processVertexPositions(wall, wallData.vertexPositions, dynamicObjectCollection);
+        processPositions(wall, wallData.positions, dynamicObjectCollection);
     }
 
     function processPolyline(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
@@ -1461,7 +1461,7 @@ define([
         processPacketData(Color, materialToProcess, 'color', polylineData.color, interval, sourceUri, dynamicObjectCollection);
         processPacketData(Color, materialToProcess, 'outlineColor', polylineData.outlineColor, interval, sourceUri, dynamicObjectCollection);
         processPacketData(Number, materialToProcess, 'outlineWidth', polylineData.outlineWidth, interval, sourceUri, dynamicObjectCollection);
-        processVertexPositions(polyline, polylineData.vertexPositions, dynamicObjectCollection);
+        processPositions(polyline, polylineData.positions, dynamicObjectCollection);
     }
 
     function processDirectionData(pyramid, directions, interval, sourceUri, dynamicObjectCollection) {

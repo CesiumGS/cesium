@@ -401,11 +401,11 @@ define([
             return;
         }
 
-        var vertexPositions = polygon.vertexPositions;
+        var positions = polygon.positions;
 
         var show = polygon.show;
         if ((defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE)) || //
-            (!defined(vertexPositions))) {
+            (!defined(positions))) {
             if (this._fillEnabled || this._outlineEnabled) {
                 this._fillEnabled = false;
                 this._outlineEnabled = false;
@@ -432,7 +432,7 @@ define([
         this._fillEnabled = fillEnabled;
         this._outlineEnabled = outlineEnabled;
 
-        if (!vertexPositions.isConstant || //
+        if (!positions.isConstant || //
             !Property.isConstant(height) || //
             !Property.isConstant(extrudedHeight) || //
             !Property.isConstant(granularity) || //
@@ -445,7 +445,7 @@ define([
         } else {
             var options = this._options;
             options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.VERTEX_FORMAT;
-            options.polygonHierarchy.positions = vertexPositions.getValue(Iso8601.MINIMUM_VALUE, options.polygonHierarchy.positions);
+            options.polygonHierarchy.positions = positions.getValue(Iso8601.MINIMUM_VALUE, options.polygonHierarchy.positions);
             options.height = defined(height) ? height.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
@@ -516,14 +516,14 @@ define([
 
         var options = this._options;
 
-        var vertexPositions = polygon.vertexPositions;
+        var positions = polygon.positions;
         var perPositionHeight = polygon.perPositionHeight;
         var height = polygon.height;
         var extrudedHeight = polygon.extrudedHeight;
         var granularity = polygon.granularity;
         var stRotation = polygon.stRotation;
 
-        options.polygonHierarchy.positions = vertexPositions.getValue(time, options.polygonHierarchy.positions);
+        options.polygonHierarchy.positions = positions.getValue(time, options.polygonHierarchy.positions);
         options.height = defined(height) ? height.getValue(time, options) : undefined;
         options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(time, options) : undefined;
         options.granularity = defined(granularity) ? granularity.getValue(time) : undefined;

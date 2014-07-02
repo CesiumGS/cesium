@@ -332,11 +332,11 @@ define([
             return;
         }
 
-        var vertexPositions = polyline.vertexPositions;
+        var positionsProperty = polyline.positions;
 
         var show = polyline.show;
         if ((defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE)) || //
-            (!defined(vertexPositions))) {
+            (!defined(positionsProperty))) {
             if (this._fillEnabled) {
                 this._fillEnabled = false;
                 this._geometryChanged.raiseEvent(this);
@@ -352,14 +352,14 @@ define([
 
         var width = polyline.width;
 
-        if (!vertexPositions.isConstant || !Property.isConstant(width)) {
+        if (!positionsProperty.isConstant || !Property.isConstant(width)) {
             if (!this._dynamic) {
                 this._dynamic = true;
                 this._geometryChanged.raiseEvent(this);
             }
         } else {
             var options = this._options;
-            var positions = vertexPositions.getValue(Iso8601.MINIMUM_VALUE, options.positions);
+            var positions = positionsProperty.getValue(Iso8601.MINIMUM_VALUE, options.positions);
 
             //Because of the way we currently handle reference properties,
             //we can't automatically assume the positions are  always valid.
@@ -427,9 +427,9 @@ define([
         }
 
         var options = this._options;
-        var vertexPositions = polyline.vertexPositions;
+        var positionsProperty = polyline.positions;
 
-        var positions = vertexPositions.getValue(time, options.positions);
+        var positions = positionsProperty.getValue(time, options.positions);
         //Because of the way we currently handle reference properties,
         //we can't automatically assume the positions are  always valid.
         if (!defined(positions) || positions.length < 2) {

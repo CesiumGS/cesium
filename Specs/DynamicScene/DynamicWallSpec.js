@@ -19,7 +19,7 @@ defineSuite([
     it('merge assigns unassigned properties', function() {
         var source = new DynamicWall();
         source.material = new ColorMaterialProperty();
-        source.vertexPositions = new ConstantProperty();
+        source.positions = new ConstantProperty();
         source.show = new ConstantProperty();
         source.granularity = new ConstantProperty();
         source.fill = new ConstantProperty();
@@ -32,7 +32,7 @@ defineSuite([
         target.merge(source);
 
         expect(target.material).toBe(source.material);
-        expect(target.vertexPositions).toBe(source.vertexPositions);
+        expect(target.positions).toBe(source.positions);
         expect(target.show).toBe(source.show);
         expect(target.granularity).toBe(source.granularity);
         expect(target.fill).toBe(source.fill);
@@ -46,7 +46,7 @@ defineSuite([
         var source = new DynamicWall();
 
         var material = new ColorMaterialProperty();
-        var vertexPositions = new ColorMaterialProperty();
+        var positions = new ColorMaterialProperty();
         var show = new ConstantProperty();
         var granularity = new ConstantProperty();
         var fill = new ConstantProperty();
@@ -57,7 +57,7 @@ defineSuite([
 
         var target = new DynamicWall();
         target.material = material;
-        target.vertexPositions = vertexPositions;
+        target.positions = positions;
         target.show = show;
         target.granularity = granularity;
         target.fill = fill;
@@ -69,7 +69,7 @@ defineSuite([
         target.merge(source);
 
         expect(target.material).toBe(material);
-        expect(target.vertexPositions).toBe(vertexPositions);
+        expect(target.positions).toBe(positions);
         expect(target.show).toBe(show);
         expect(target.granularity).toBe(granularity);
         expect(target.fill).toBe(fill);
@@ -82,7 +82,7 @@ defineSuite([
     it('clone works', function() {
         var source = new DynamicWall();
         source.material = new ColorMaterialProperty();
-        source.vertexPositions = new ConstantProperty();
+        source.positions = new ConstantProperty();
         source.show = new ConstantProperty();
         source.granularity = new ConstantProperty();
         source.fill = new ConstantProperty();
@@ -93,7 +93,7 @@ defineSuite([
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
-        expect(result.vertexPositions).toBe(source.vertexPositions);
+        expect(result.positions).toBe(source.positions);
         expect(result.show).toBe(source.show);
         expect(result.granularity).toBe(source.granularity);
         expect(result.fill).toBe(source.fill);
@@ -114,7 +114,7 @@ defineSuite([
         var property = new DynamicWall();
         testMaterialDefinitionChanged(property, 'material', Color.RED, Color.BLUE);
         testDefinitionChanged(property, 'show', true, false);
-        testDefinitionChanged(property, 'vertexPositions', [], []);
+        testDefinitionChanged(property, 'positions', [], []);
         testDefinitionChanged(property, 'granularity', 3, 4);
         testDefinitionChanged(property, 'fill', false, true);
         testDefinitionChanged(property, 'outline', true, false);

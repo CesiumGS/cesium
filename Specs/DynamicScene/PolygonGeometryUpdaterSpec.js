@@ -50,7 +50,7 @@ defineSuite([
         var polygon = new DynamicPolygon();
         var dynamicObject = new DynamicObject();
         dynamicObject.polygon = polygon;
-        polygon.vertexPositions = new ConstantProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray([new Cartographic(0, 0, 0), new Cartographic(1, 0, 0), new Cartographic(1, 1, 0), new Cartographic(0, 1, 0)]));
+        polygon.positions = new ConstantProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray([new Cartographic(0, 0, 0), new Cartographic(1, 0, 0), new Cartographic(1, 1, 0), new Cartographic(0, 1, 0)]));
         return dynamicObject;
     }
 
@@ -123,7 +123,7 @@ defineSuite([
         expect(updater.isClosed).toBe(true);
     });
 
-    it('A time-varying vertexPositions causes geometry to be dynamic', function() {
+    it('A time-varying positions causes geometry to be dynamic', function() {
         var dynamicObject = createBasicPolygon();
         var updater = new PolygonGeometryUpdater(dynamicObject);
         var point1 = new SampledPositionProperty();
@@ -133,8 +133,8 @@ defineSuite([
         var point3 = new SampledPositionProperty();
         point3.addSample(time, new Cartesian3());
 
-        dynamicObject.polygon.vertexPositions = new PropertyArray();
-        dynamicObject.polygon.vertexPositions.setValue([point1, point2, point3]);
+        dynamicObject.polygon.positions = new PropertyArray();
+        dynamicObject.polygon.positions.setValue([point1, point2, point3]);
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -377,7 +377,7 @@ defineSuite([
         var listener = jasmine.createSpy('listener');
         updater.geometryChanged.addEventListener(listener);
 
-        dynamicObject.polygon.vertexPositions = new ConstantProperty([]);
+        dynamicObject.polygon.positions = new ConstantProperty([]);
         expect(listener.callCount).toEqual(1);
 
         dynamicObject.polygon.height = new ConstantProperty(82);
@@ -386,7 +386,7 @@ defineSuite([
         dynamicObject.availability = new TimeIntervalCollection();
         expect(listener.callCount).toEqual(3);
 
-        dynamicObject.polygon.vertexPositions = undefined;
+        dynamicObject.polygon.positions = undefined;
         expect(listener.callCount).toEqual(4);
 
         //Since there's no valid geometry, changing another property should not raise the event.

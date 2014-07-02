@@ -95,7 +95,7 @@ define([
             eventHelper.add(infoBoxViewModel.closeClicked, clearSelectedObject);
         }
 
-        var scratchVertexPositions;
+        var scratchPositions;
         var scratchBoundingSphere;
 
         // Subscribe to onTick so that we can update the view each update.

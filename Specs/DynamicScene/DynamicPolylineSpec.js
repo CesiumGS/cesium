@@ -19,14 +19,14 @@ defineSuite([
     it('merge assigns unassigned properties', function() {
         var source = new DynamicPolyline();
         source.material = new ColorMaterialProperty();
-        source.vertexPositions = new ConstantProperty();
+        source.positions = new ConstantProperty();
         source.width = new ConstantProperty();
         source.show = new ConstantProperty();
 
         var target = new DynamicPolyline();
         target.merge(source);
         expect(target.material).toBe(source.material);
-        expect(target.vertexPositions).toBe(source.vertexPositions);
+        expect(target.positions).toBe(source.positions);
         expect(target.width).toBe(source.width);
         expect(target.show).toBe(source.show);
     });
@@ -34,24 +34,24 @@ defineSuite([
     it('merge does not assign assigned properties', function() {
         var source = new DynamicPolyline();
         source.material = new ColorMaterialProperty();
-        source.vertexPositions = new ConstantProperty();
+        source.positions = new ConstantProperty();
         source.width = new ConstantProperty();
         source.show = new ConstantProperty();
 
         var color = new ColorMaterialProperty();
-        var vertexPositions = new ConstantProperty();
+        var positions = new ConstantProperty();
         var width = new ConstantProperty();
         var show = new ConstantProperty();
 
         var target = new DynamicPolyline();
         target.material = color;
-        target.vertexPositions = vertexPositions;
+        target.positions = positions;
         target.width = width;
         target.show = show;
 
         target.merge(source);
         expect(target.material).toBe(color);
-        expect(target.vertexPositions).toBe(vertexPositions);
+        expect(target.positions).toBe(positions);
         expect(target.width).toBe(width);
         expect(target.show).toBe(show);
     });
@@ -60,12 +60,12 @@ defineSuite([
         var source = new DynamicPolyline();
         source.material = new ColorMaterialProperty();
         source.width = new ConstantProperty();
-        source.vertexPositions = new ConstantProperty();
+        source.positions = new ConstantProperty();
         source.show = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
-        expect(result.vertexPositions).toBe(source.vertexPositions);
+        expect(result.positions).toBe(source.positions);
         expect(result.width).toBe(source.width);
         expect(result.show).toBe(source.show);
     });
@@ -81,7 +81,7 @@ defineSuite([
         var property = new DynamicPolyline();
         testMaterialDefinitionChanged(property, 'material', Color.RED, Color.BLUE);
         testDefinitionChanged(property, 'show', true, false);
-        testDefinitionChanged(property, 'vertexPositions', [], []);
+        testDefinitionChanged(property, 'positions', [], []);
         testDefinitionChanged(property, 'width', 3, 4);
     });
 });

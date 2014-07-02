@@ -50,7 +50,7 @@ defineSuite([
 
     function createBasicWall() {
         var wall = new DynamicWall();
-        wall.vertexPositions = new ConstantProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray([new Cartographic(0, 0, 0), new Cartographic(1, 0, 0), new Cartographic(1, 1, 0), new Cartographic(0, 1, 0)]));
+        wall.positions = new ConstantProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray([new Cartographic(0, 0, 0), new Cartographic(1, 0, 0), new Cartographic(1, 1, 0), new Cartographic(0, 1, 0)]));
         var dynamicObject = new DynamicObject();
         dynamicObject.wall = wall;
         return dynamicObject;
@@ -118,7 +118,7 @@ defineSuite([
         expect(updater.fillMaterialProperty).toBe(dynamicObject.wall.material);
     });
 
-    it('A time-varying vertexPositions causes geometry to be dynamic', function() {
+    it('A time-varying positions causes geometry to be dynamic', function() {
         var dynamicObject = createBasicWall();
         var updater = new WallGeometryUpdater(dynamicObject);
         var point1 = new SampledPositionProperty();
@@ -128,8 +128,8 @@ defineSuite([
         var point3 = new SampledPositionProperty();
         point3.addSample(time, new Cartesian3());
 
-        dynamicObject.wall.vertexPositions = new PropertyArray();
-        dynamicObject.wall.vertexPositions.setValue([point1, point2, point3]);
+        dynamicObject.wall.positions = new PropertyArray();
+        dynamicObject.wall.positions.setValue([point1, point2, point3]);
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -349,7 +349,7 @@ defineSuite([
         var listener = jasmine.createSpy('listener');
         updater.geometryChanged.addEventListener(listener);
 
-        dynamicObject.wall.vertexPositions = new ConstantProperty([]);
+        dynamicObject.wall.positions = new ConstantProperty([]);
         expect(listener.callCount).toEqual(1);
 
         dynamicObject.wall.granularity = new ConstantProperty(82);
@@ -358,7 +358,7 @@ defineSuite([
         dynamicObject.availability = new TimeIntervalCollection();
         expect(listener.callCount).toEqual(3);
 
-        dynamicObject.wall.vertexPositions = undefined;
+        dynamicObject.wall.positions = undefined;
         expect(listener.callCount).toEqual(4);
 
         //Since there's no valid geometry, changing another property should not raise the event.
