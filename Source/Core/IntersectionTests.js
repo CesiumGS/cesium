@@ -22,7 +22,8 @@ define([
     /**
      * Functions for computing the intersection between geometries such as rays, planes, triangles, and ellipsoids.
      *
-     * @exports IntersectionTests
+     * @namespace
+     * @alias IntersectionTests
      */
     var IntersectionTests = {};
 

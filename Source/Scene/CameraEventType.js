@@ -8,7 +8,8 @@ define([
     /**
      * Enumerates the available input for interacting with the camera.
      *
-     * @exports CameraEventType
+     * @namespace
+     * @alias CameraEventType
      */
     var CameraEventType = {
         /**

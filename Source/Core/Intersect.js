@@ -11,7 +11,8 @@ define([
      * partially inside the frustum and partially outside (INTERSECTING), or somwhere entirely
      * outside of the frustum's 6 planes (OUTSIDE).
      *
-     * @exports Intersect
+     * @namespace
+     * @alias Intersect
      */
     var Intersect = {
         /**

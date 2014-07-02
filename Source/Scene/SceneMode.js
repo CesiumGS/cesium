@@ -8,7 +8,8 @@ define([
     /**
      * Indicates if the scene is viewed in 3D, 2D, or 2.5D Columbus view.
      *
-     * @exports SceneMode
+     * @namespace
+     * @alias SceneMode
      *
      * @see Scene#mode
      */
@@ -45,7 +46,6 @@ define([
          * @constant
          */
         SCENE3D : 3
-
     };
 
     /**
