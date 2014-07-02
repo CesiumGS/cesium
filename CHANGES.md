@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.0 - 2014-08-01
+
+* Breaking changes
+  * Removed `DynamicObject.vertexPositions`.  Use `DynamicWall.positions`, `DynamicPolygon.positions`, and `DynamicPolyline.positions` instead.
+
 Beta Releases
 -------------
 
