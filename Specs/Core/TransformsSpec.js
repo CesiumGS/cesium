@@ -529,7 +529,7 @@ defineSuite([
             target : Cartesian3.ZERO,
             up : Cartesian3.UNIT_Z
         });
-        var mvpMatrix = Matrix4.multiply(perspective, view);
+        var mvpMatrix = Matrix4.multiply(perspective, view, new Matrix4());
 
         var expected = new Cartesian2(width * 0.5, height * 0.5);
         var returnedResult = Transforms.pointToGLWindowCoordinates(mvpMatrix, vpTransform, Cartesian3.ZERO);
@@ -542,7 +542,7 @@ defineSuite([
             target : Cartesian3.ZERO,
             up : Cartesian3.UNIT_Z
         });
-        var mvpMatrix = Matrix4.multiply(perspective, view);
+        var mvpMatrix = Matrix4.multiply(perspective, view, new Matrix4());
 
         var expected = new Cartesian2(width * 0.5, height * 0.5);
         var result = new Cartesian2();
