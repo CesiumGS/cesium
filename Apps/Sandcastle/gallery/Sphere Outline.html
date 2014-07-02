@@ -24,36 +24,36 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+require(['Cesium'], function(C) {
     "use strict";
     
-    var viewer = new Cesium.Viewer('cesiumContainer');
+    var viewer = new C.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
 
     var radius = 300000;
-    var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-98.0, 45.0);
-    var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
-        Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
-        new Cesium.Cartesian3(0.0, 0.0, radius), new Cesium.Matrix4()
+    var positionOnEllipsoid = C.Cartesian3.fromDegrees(-98.0, 45.0);
+    var modelMatrix = C.Matrix4.multiplyByTranslation(
+        C.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
+        new C.Cartesian3(0.0, 0.0, radius), new C.Matrix4()
     );
     
     // Sphere outline
-    var sphereOutlineInstance = new Cesium.GeometryInstance({
-        geometry : new Cesium.SphereOutlineGeometry({
+    var sphereOutlineInstance = new C.GeometryInstance({
+        geometry : new C.SphereOutlineGeometry({
             radius : radius,
             stackPartitions : 8,
             slicePartitions : 12
         }),
         modelMatrix : modelMatrix,
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+            color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.WHITE)
         }
     });
     
-    primitives.add(new Cesium.Primitive({
+    primitives.add(new C.Primitive({
         geometryInstances : sphereOutlineInstance,
-        appearance : new Cesium.PerInstanceColorAppearance({
+        appearance : new C.PerInstanceColorAppearance({
             flat : true,
             renderState : {
                 depthTest : {
@@ -65,20 +65,20 @@ require(['Cesium'], function(Cesium) {
     }));
 
     // Green Sphere
-    var sphereInstance = new Cesium.GeometryInstance({
-        geometry : new Cesium.SphereGeometry({
-            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+    var sphereInstance = new C.GeometryInstance({
+        geometry : new C.SphereGeometry({
+            vertexFormat : C.PerInstanceColorAppearance.VERTEX_FORMAT,
             radius : radius
         }),
         modelMatrix : modelMatrix,
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 1.0, 0.0, 0.5))
+            color : C.ColorGeometryInstanceAttribute.fromColor(new C.Color(0.0, 1.0, 0.0, 0.5))
         }
     });
 
-    primitives.add(new Cesium.Primitive({
+    primitives.add(new C.Primitive({
         geometryInstances : sphereInstance,
-        appearance : new Cesium.PerInstanceColorAppearance({
+        appearance : new C.PerInstanceColorAppearance({
             closed : true
         })
     }));

@@ -98,73 +98,73 @@ define([
      *
      * @example
      * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
-     * var instance = new Cesium.GeometryInstance({
-     *   geometry : new Cesium.EllipseGeometry({
-     *       vertexFormat : Cesium.VertexFormat.POSITION_AND_ST,
+     * var instance = new C.GeometryInstance({
+     *   geometry : new C.EllipseGeometry({
+     *       vertexFormat : C.VertexFormat.POSITION_AND_ST,
      *       ellipsoid : ellipsoid,
-     *       center : Cesium.Cartesian3.fromDegrees(-100.0, 20.0),
+     *       center : C.Cartesian3.fromDegrees(-100.0, 20.0),
      *       semiMinorAxis : 500000.0,
      *       semiMajorAxis : 1000000.0,
-     *       rotation : Cesium.Math.PI_OVER_FOUR
+     *       rotation : C.Math.PI_OVER_FOUR
      *   }),
      *   id : 'object returned when this instance is picked and to get/set per-instance attributes'
      * });
-     * var primitive = new Cesium.Primitive({
+     * var primitive = new C.Primitive({
      *   geometryInstances : instance,
-     *   appearance : new Cesium.EllipsoidSurfaceAppearance({
-     *     material : Cesium.Material.fromType('Checkerboard')
+     *   appearance : new C.EllipsoidSurfaceAppearance({
+     *     material : C.Material.fromType('Checkerboard')
      *   })
      * });
      * scene.primitives.add(primitive);
      *
      * // 2. Draw different instances each with a unique color
-     * var rectangleInstance = new Cesium.GeometryInstance({
-     *   geometry : new Cesium.RectangleGeometry({
-     *     vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
-     *     rectangle : new Cesium.Rectangle(
-     *       Cesium.Math.toRadians(-140.0),
-     *       Cesium.Math.toRadians(30.0),
-     *       Cesium.Math.toRadians(-100.0),
-     *       Cesium.Math.toRadians(40.0))
+     * var rectangleInstance = new C.GeometryInstance({
+     *   geometry : new C.RectangleGeometry({
+     *     vertexFormat : C.VertexFormat.POSITION_AND_NORMAL,
+     *     rectangle : new C.Rectangle(
+     *       C.Math.toRadians(-140.0),
+     *       C.Math.toRadians(30.0),
+     *       C.Math.toRadians(-100.0),
+     *       C.Math.toRadians(40.0))
      *     }),
      *   id : 'rectangle',
      *   attribute : {
-     *     color : new Cesium.ColorGeometryInstanceAttribute(0.0, 1.0, 1.0, 0.5)
+     *     color : new C.ColorGeometryInstanceAttribute(0.0, 1.0, 1.0, 0.5)
      *   }
      * });
-     * var ellipsoidInstance = new Cesium.GeometryInstance({
-     *   geometry : new Cesium.EllipsoidGeometry({
-     *     vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
-     *     radii : new Cesium.Cartesian3(500000.0, 500000.0, 1000000.0)
+     * var ellipsoidInstance = new C.GeometryInstance({
+     *   geometry : new C.EllipsoidGeometry({
+     *     vertexFormat : C.VertexFormat.POSITION_AND_NORMAL,
+     *     radii : new C.Cartesian3(500000.0, 500000.0, 1000000.0)
      *   }),
-     *   modelMatrix : Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-     *     Cesium.Cartesian3.fromDegrees(-95.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 500000.0), new Matrix4()),
+     *   modelMatrix : C.Matrix4.multiplyByTranslation(C.Transforms.eastNorthUpToFixedFrame(
+     *     C.Cartesian3.fromDegrees(-95.59777, 40.03883)), new C.Cartesian3(0.0, 0.0, 500000.0), new C.Matrix4()),
      *   id : 'ellipsoid',
      *   attribute : {
-     *     color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.AQUA)
+     *     color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.AQUA)
      *   }
      * });
-     * var primitive = new Cesium.Primitive({
+     * var primitive = new C.Primitive({
      *   geometryInstances : [rectangleInstance, ellipsoidInstance],
-     *   appearance : new Cesium.PerInstanceColorAppearance()
+     *   appearance : new C.PerInstanceColorAppearance()
      * });
      * scene.primitives.add(primitive);
      *
      * // 3. Create the geometry on the main thread.
-     * var primitive = new Cesium.Primitive({
-     *   geometryInstances : new Cesium.GeometryInstance({
-     *       geometry : Cesium.EllipsoidGeometry.createGeometry(new Cesium.EllipsoidGeometry({
-     *         vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
-     *         radii : new Cesium.Cartesian3(500000.0, 500000.0, 1000000.0)
+     * var primitive = new C.Primitive({
+     *   geometryInstances : new C.GeometryInstance({
+     *       geometry : C.EllipsoidGeometry.createGeometry(new C.EllipsoidGeometry({
+     *         vertexFormat : C.VertexFormat.POSITION_AND_NORMAL,
+     *         radii : new C.Cartesian3(500000.0, 500000.0, 1000000.0)
      *       })),
-     *       modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-     *         Cesium.Cartesian3.fromDegrees(-95.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 500000.0), new Matrix4()),
+     *       modelMatrix : C.Matrix4.multiplyByTranslation(C.Transforms.eastNorthUpToFixedFrame(
+     *         C.Cartesian3.fromDegrees(-95.59777, 40.03883)), new C.Cartesian3(0.0, 0.0, 500000.0), new C.Matrix4()),
      *       id : 'ellipsoid',
      *       attribute : {
-     *         color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.AQUA)
+     *         color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.AQUA)
      *       }
      *   }),
-     *   appearance : new Cesium.PerInstanceColorAppearance()
+     *   appearance : new C.PerInstanceColorAppearance()
      * });
      * scene.primitives.add(primitive);
      */
@@ -210,8 +210,8 @@ define([
          * @default Matrix4.IDENTITY
          *
          * @example
-         * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
-         * p.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
+         * var origin = C.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
+         * p.modelMatrix = C.Transforms.eastNorthUpToFixedFrame(origin);
          */
         this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
         this._modelMatrix = new Matrix4();
@@ -1037,8 +1037,8 @@ define([
      *
      * @example
      * var attributes = primitive.getGeometryInstanceAttributes('an id');
-     * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA);
-     * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true);
+     * attributes.color = C.ColorGeometryInstanceAttribute.toValue(C.Color.AQUA);
+     * attributes.show = C.ShowGeometryInstanceAttribute.toValue(true);
      */
     Primitive.prototype.getGeometryInstanceAttributes = function(id) {
         //>>includeStart('debug', pragmas.debug);

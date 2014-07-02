@@ -39,19 +39,19 @@ define([
      * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
      *
      * @example
-     * var primitive = new Cesium.Primitive({
-     *   geometryInstances : new Cesium.GeometryInstance({
-     *     geometry : new Cesium.PolylineGeometry({
-     *       positions : Cesium.Cartesian3.fromDegreesArray([
+     * var primitive = new C.Primitive({
+     *   geometryInstances : new C.GeometryInstance({
+     *     geometry : new C.PolylineGeometry({
+     *       positions : C.Cartesian3.fromDegreesArray([
      *         0.0, 0.0,
      *         5.0, 0.0
      *       ]),
      *       width : 10.0,
-     *       vertexFormat : Cesium.PolylineMaterialAppearance.VERTEX_FORMAT
+     *       vertexFormat : C.PolylineMaterialAppearance.VERTEX_FORMAT
      *     })
      *   }),
-     *   appearance : new Cesium.PolylineMaterialAppearance({
-     *     material : Cesium.Material.fromType('Color')
+     *   appearance : new C.PolylineMaterialAppearance({
+     *     material : C.Material.fromType('Color')
      *   })
      * }));
      */

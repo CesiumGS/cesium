@@ -119,17 +119,17 @@ define([
      * // and in the body, include: <div id="cesiumContainer"></div>
      *
      * //Widget with no terrain and default Bing Maps imagery provider.
-     * var widget = new Cesium.CesiumWidget('cesiumContainer');
+     * var widget = new C.CesiumWidget('cesiumContainer');
      *
      * //Widget with OpenStreetMaps imagery provider and Cesium terrain provider hosted by AGI.
-     * var widget = new Cesium.CesiumWidget('cesiumContainer', {
-     *     imageryProvider : new Cesium.OpenStreetMapImageryProvider(),
-     *     terrainProvider : new Cesium.CesiumTerrainProvider({
+     * var widget = new C.CesiumWidget('cesiumContainer', {
+     *     imageryProvider : new C.OpenStreetMapImageryProvider(),
+     *     terrainProvider : new C.CesiumTerrainProvider({
      *         url : '//cesiumjs.org/smallterrain',
      *         credit : 'Terrain data courtesy Analytical Graphics, Inc.'
      *     }),
      *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets
-     *     skyBox : new Cesium.SkyBox({
+     *     skyBox : new C.SkyBox({
      *         sources : {
      *           positiveX : 'stars/TychoSkymapII.t3_08192x04096_80_px.jpg',
      *           negativeX : 'stars/TychoSkymapII.t3_08192x04096_80_mx.jpg',
@@ -140,8 +140,8 @@ define([
      *         }
      *     }),
      *     // Show Columbus View map with Web Mercator projection
-     *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
-     *     mapProjection : new Cesium.WebMercatorProjection()
+     *     sceneMode : C.SceneMode.COLUMBUS_VIEW,
+     *     mapProjection : new C.WebMercatorProjection()
      * });
      */
     var CesiumWidget = function(container, options) {

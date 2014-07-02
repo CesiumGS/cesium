@@ -24,35 +24,35 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+require(['Cesium'], function(C) {
     "use strict";
     
-    var viewer = new Cesium.Viewer('cesiumContainer');
+    var viewer = new C.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
     
     // Create ellipsoid and place with model matrix
-    var radii = new Cesium.Cartesian3(200000.0, 200000.0, 300000.0);
-    var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-100.0, 40.0);
-    var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
-        Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
-        new Cesium.Cartesian3(0.0, 0.0, radii.z), new Cesium.Matrix4()
+    var radii = new C.Cartesian3(200000.0, 200000.0, 300000.0);
+    var positionOnEllipsoid = C.Cartesian3.fromDegrees(-100.0, 40.0);
+    var modelMatrix = C.Matrix4.multiplyByTranslation(
+        C.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
+        new C.Cartesian3(0.0, 0.0, radii.z), new C.Matrix4()
     );
 
-    var ellipsoidGeometry = new Cesium.EllipsoidGeometry({
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+    var ellipsoidGeometry = new C.EllipsoidGeometry({
+        vertexFormat : C.PerInstanceColorAppearance.VERTEX_FORMAT,
         radii : radii
     });
-    var ellipsoidInstance = new Cesium.GeometryInstance({
+    var ellipsoidInstance = new C.GeometryInstance({
         geometry : ellipsoidGeometry,
         modelMatrix : modelMatrix,
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
+            color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.BLUE)
         }
     });
-    primitives.add(new Cesium.Primitive({
+    primitives.add(new C.Primitive({
         geometryInstances : ellipsoidInstance,
-        appearance : new Cesium.PerInstanceColorAppearance({
+        appearance : new C.PerInstanceColorAppearance({
             translucent : false,
             closed : true
         })

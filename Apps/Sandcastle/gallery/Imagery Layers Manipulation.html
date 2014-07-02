@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
@@ -56,7 +56,7 @@ require([
     'dijit/form/DropDownButton',
     'dijit/form/HorizontalSlider'
 ], function(
-    Cesium,
+    C,
     domConstruct,
     TitlePane,
     DropDownMenu,
@@ -81,40 +81,40 @@ require([
                 undefined); // the current base layer
         addBaseLayerOption(
                 'Bing Maps Road',
-                new Cesium.BingMapsImageryProvider({
+                new C.BingMapsImageryProvider({
                     url: '//dev.virtualearth.net',
-                    mapStyle: Cesium.BingMapsStyle.ROAD
+                    mapStyle: C.BingMapsStyle.ROAD
                 }));
         addBaseLayerOption(
                 'ArcGIS World Street Maps',
-                new Cesium.ArcGisMapServerImageryProvider({
+                new C.ArcGisMapServerImageryProvider({
                     url : '//server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
                 }));
         addBaseLayerOption(
                 'OpenStreetMaps',
-                new Cesium.OpenStreetMapImageryProvider());
+                new C.OpenStreetMapImageryProvider());
         addBaseLayerOption(
                 'MapQuest OpenStreetMaps',
-                new Cesium.OpenStreetMapImageryProvider({
+                new C.OpenStreetMapImageryProvider({
                     url: '//otile1-s.mqcdn.com/tiles/1.0.0/osm/'
                 }));
         addBaseLayerOption(
                 'Stamen Maps',
-                new Cesium.OpenStreetMapImageryProvider({
+                new C.OpenStreetMapImageryProvider({
                     url: '//stamen-tiles.a.ssl.fastly.net/watercolor/',
                     fileExtension: 'jpg',
                     credit: 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
                 }));
         addBaseLayerOption(
                 'Natural Earth II (local)',
-                new Cesium.TileMapServiceImageryProvider({
+                new C.TileMapServiceImageryProvider({
                     url : require.toUrl('Assets/Textures/NaturalEarthII')
                 }));
 
         // Create the additional layers
         addAdditionalLayerOption(
                 'United States GOES infrared',
-                new Cesium.WebMapServiceImageryProvider({
+                new C.WebMapServiceImageryProvider({
                     url : '//mesonet.agron.iastate.edu/cgi-bin/wms/goes/conus_ir.cgi?',
                     layers : 'goes_conus_ir',
                     credit : 'Infrared data courtesy Iowa Environmental Mesonet',
@@ -122,11 +122,11 @@ require([
                         transparent : 'true',
                         format : 'image/png'
                     },
-                    proxy : new Cesium.DefaultProxy('/proxy/')
+                    proxy : new C.DefaultProxy('/proxy/')
                 }));
         addAdditionalLayerOption(
                 'United States weather radar',
-                new Cesium.WebMapServiceImageryProvider({
+                new C.WebMapServiceImageryProvider({
                     url : '//mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?',
                     layers : 'nexrad-n0r',
                     credit : 'Radar data courtesy Iowa Environmental Mesonet',
@@ -134,27 +134,27 @@ require([
                         transparent : 'true',
                         format : 'image/png'
                     },
-                    proxy : new Cesium.DefaultProxy('/proxy/')
+                    proxy : new C.DefaultProxy('/proxy/')
                 }));
         addAdditionalLayerOption(
                 'TMS Image',
-                new Cesium.TileMapServiceImageryProvider({
+                new C.TileMapServiceImageryProvider({
                     url : '../images/cesium_maptiler/Cesium_Logo_Color'
                 }),
                 0.2);
         addAdditionalLayerOption(
                 'Single image',
-                new Cesium.SingleTileImageryProvider({
+                new C.SingleTileImageryProvider({
                     url : '../images/Cesium_Logo_overlay.png',
-                    rectangle : Cesium.Rectangle.fromDegrees(-115.0, 38.0, -107, 39.75)
+                    rectangle : C.Rectangle.fromDegrees(-115.0, 38.0, -107, 39.75)
                 }),
                 1.0);
         addAdditionalLayerOption(
                 'Grid',
-                new Cesium.GridImageryProvider(), 1.0, false);
+                new C.GridImageryProvider(), 1.0, false);
         addAdditionalLayerOption(
                 'Tile Coordinates',
-                new Cesium.TileCoordinatesImageryProvider(), 1.0, false);
+                new C.TileCoordinatesImageryProvider(), 1.0, false);
     }
 
     function addBaseLayerOption(name, imageryProvider) {
@@ -162,7 +162,7 @@ require([
         if (typeof imageryProvider === 'undefined') {
             layer = imageryLayers.get(0);
         } else {
-            layer = new Cesium.ImageryLayer(imageryProvider);
+            layer = new C.ImageryLayer(imageryProvider);
         }
 
         layer.name = name;
@@ -171,8 +171,8 @@ require([
 
     function addAdditionalLayerOption(name, imageryProvider, alpha, show) {
         var layer = imageryLayers.addImageryProvider(imageryProvider);
-        layer.alpha = Cesium.defaultValue(alpha, 0.5);
-        layer.show = Cesium.defaultValue(show, true);
+        layer.alpha = C.defaultValue(alpha, 0.5);
+        layer.show = C.defaultValue(show, true);
         layer.name = name;
     }
 
@@ -279,7 +279,7 @@ require([
         });
     }
 
-    var viewer = new Cesium.Viewer('cesiumContainer');
+    var viewer = new C.Viewer('cesiumContainer');
 
     imageryLayers = viewer.scene.imageryLayers;
 

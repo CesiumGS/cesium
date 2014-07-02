@@ -153,26 +153,26 @@ define([
      *
      * @example
      * // Create a G<sup>1</sup> continuous Hermite spline
-     * var spline = new Cesium.HermiteSpline({
+     * var spline = new C.HermiteSpline({
      *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
      *     points : [
-     *         new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
-     *         new Cesium.Cartesian3(1372574.0, -5345182.0, 4606657.0),
-     *         new Cesium.Cartesian3(-757983.0, -5542796.0, 4514323.0),
-     *         new Cesium.Cartesian3(-2821260.0, -5248423.0, 4021290.0),
-     *         new Cesium.Cartesian3(-2539788.0, -4724797.0, 3620093.0)
+     *         new C.Cartesian3(1235398.0, -4810983.0, 4146266.0),
+     *         new C.Cartesian3(1372574.0, -5345182.0, 4606657.0),
+     *         new C.Cartesian3(-757983.0, -5542796.0, 4514323.0),
+     *         new C.Cartesian3(-2821260.0, -5248423.0, 4021290.0),
+     *         new C.Cartesian3(-2539788.0, -4724797.0, 3620093.0)
      *     ],
      *     outTangents : [
-     *         new Cesium.Cartesian3(1125196, -161816, 270551),
-     *         new Cesium.Cartesian3(-996690.5, -365906.5, 184028.5),
-     *         new Cesium.Cartesian3(-2096917, 48379.5, -292683.5),
-     *         new Cesium.Cartesian3(-890902.5, 408999.5, -447115)
+     *         new C.Cartesian3(1125196, -161816, 270551),
+     *         new C.Cartesian3(-996690.5, -365906.5, 184028.5),
+     *         new C.Cartesian3(-2096917, 48379.5, -292683.5),
+     *         new C.Cartesian3(-890902.5, 408999.5, -447115)
      *     ],
      *     inTangents : [
-     *         new Cesium.Cartesian3(-1993381, -731813, 368057),
-     *         new Cesium.Cartesian3(-4193834, 96759, -585367),
-     *         new Cesium.Cartesian3(-1781805, 817999, -894230),
-     *         new Cesium.Cartesian3(1165345, 112641, 47281)
+     *         new C.Cartesian3(-1993381, -731813, 368057),
+     *         new C.Cartesian3(-4193834, 96759, -585367),
+     *         new C.Cartesian3(-1781805, 817999, -894230),
+     *         new C.Cartesian3(1165345, 112641, 47281)
      *     ]
      * });
      *
@@ -283,23 +283,23 @@ define([
      *
      * @example
      * var points = [
-     *     new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
-     *     new Cesium.Cartesian3(1372574.0, -5345182.0, 4606657.0),
-     *     new Cesium.Cartesian3(-757983.0, -5542796.0, 4514323.0),
-     *     new Cesium.Cartesian3(-2821260.0, -5248423.0, 4021290.0),
-     *     new Cesium.Cartesian3(-2539788.0, -4724797.0, 3620093.0)
+     *     new C.Cartesian3(1235398.0, -4810983.0, 4146266.0),
+     *     new C.Cartesian3(1372574.0, -5345182.0, 4606657.0),
+     *     new C.Cartesian3(-757983.0, -5542796.0, 4514323.0),
+     *     new C.Cartesian3(-2821260.0, -5248423.0, 4021290.0),
+     *     new C.Cartesian3(-2539788.0, -4724797.0, 3620093.0)
      * ];
      *
      * // Add tangents
      * var tangents = new Array(points.length);
-     * tangents[0] = new Cesium.Cartesian3(1125196, -161816, 270551);
-     * var temp = new Cartesian3();
+     * tangents[0] = new C.Cartesian3(1125196, -161816, 270551);
+     * var temp = new C.Cartesian3();
      * for (var i = 1; i < tangents.length - 1; ++i) {
-     *     tangents[i] = Cesium.Cartesian3.multiplyByScalar(Cesium.Cartesian3.subtract(points[i + 1], points[i - 1], temp), 0.5, new Cartesian3());
+     *     tangents[i] = C.Cartesian3.multiplyByScalar(C.Cartesian3.subtract(points[i + 1], points[i - 1], temp), 0.5, new C.Cartesian3());
      * }
-     * tangents[tangents.length - 1] = new Cesium.Cartesian3(1165345, 112641, 47281);
+     * tangents[tangents.length - 1] = new C.Cartesian3(1165345, 112641, 47281);
      *
-     * var spline = new Cesium.HermiteSpline({
+     * var spline = new C.HermiteSpline({
      *     times : times,
      *     points : points,
      *     tangents : tangents
@@ -349,14 +349,14 @@ define([
      *
      * @example
      * // Create a natural cubic spline above the earth from Philadelphia to Los Angeles.
-     * var spline = new Cesium.HermiteSpline({
+     * var spline = new C.HermiteSpline({
      *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
      *     points : [
-     *         new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
-     *         new Cesium.Cartesian3(1372574.0, -5345182.0, 4606657.0),
-     *         new Cesium.Cartesian3(-757983.0, -5542796.0, 4514323.0),
-     *         new Cesium.Cartesian3(-2821260.0, -5248423.0, 4021290.0),
-     *         new Cesium.Cartesian3(-2539788.0, -4724797.0, 3620093.0)
+     *         new C.Cartesian3(1235398.0, -4810983.0, 4146266.0),
+     *         new C.Cartesian3(1372574.0, -5345182.0, 4606657.0),
+     *         new C.Cartesian3(-757983.0, -5542796.0, 4514323.0),
+     *         new C.Cartesian3(-2821260.0, -5248423.0, 4021290.0),
+     *         new C.Cartesian3(-2539788.0, -4724797.0, 3620093.0)
      *     ]
      * });
      */
@@ -413,17 +413,17 @@ define([
      *
      * @example
      * // Create a clamped cubic spline above the earth from Philadelphia to Los Angeles.
-     * var spline = new Cesium.HermiteSpline({
+     * var spline = new C.HermiteSpline({
      *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
      *     points : [
-     *         new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
-     *         new Cesium.Cartesian3(1372574.0, -5345182.0, 4606657.0),
-     *         new Cesium.Cartesian3(-757983.0, -5542796.0, 4514323.0),
-     *         new Cesium.Cartesian3(-2821260.0, -5248423.0, 4021290.0),
-     *         new Cesium.Cartesian3(-2539788.0, -4724797.0, 3620093.0)
+     *         new C.Cartesian3(1235398.0, -4810983.0, 4146266.0),
+     *         new C.Cartesian3(1372574.0, -5345182.0, 4606657.0),
+     *         new C.Cartesian3(-757983.0, -5542796.0, 4514323.0),
+     *         new C.Cartesian3(-2821260.0, -5248423.0, 4021290.0),
+     *         new C.Cartesian3(-2539788.0, -4724797.0, 3620093.0)
      *     ],
-     *     firstTangent : new Cesium.Cartesian3(1125196, -161816, 270551),
-     *     lastTangent : new Cesium.Cartesian3(1165345, 112641, 47281)
+     *     firstTangent : new C.Cartesian3(1125196, -161816, 270551),
+     *     lastTangent : new C.Cartesian3(1165345, 112641, 47281)
      * });
      */
     HermiteSpline.createClampedCubic = function(options) {

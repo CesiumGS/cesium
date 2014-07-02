@@ -24,7 +24,7 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+require(['Cesium'], function(C) {
     "use strict";
 
     var rectangle;
@@ -33,7 +33,7 @@ require(['Cesium'], function(Cesium) {
 
     function applyAlphaMapMaterial(primitive, scene) {
         Sandcastle.declare(applyAlphaMapMaterial);  // For highlighting in Sandcastle.
-        primitive.material = new Cesium.Material({
+        primitive.material = new C.Material({
             fabric : {
                 materials : {
                     alphaMaterial : {
@@ -54,7 +54,7 @@ require(['Cesium'], function(Cesium) {
 
     function applyBumpMapMaterial(primitive, scene) {
         Sandcastle.declare(applyBumpMapMaterial);   // For highlighting in Sandcastle.
-        primitive.material = new Cesium.Material({
+        primitive.material = new C.Material({
             fabric : {
                 materials : {
                     diffuseMaterial : {
@@ -82,17 +82,17 @@ require(['Cesium'], function(Cesium) {
 
     function applyCheckerboardMaterial(primitive, scene) {
         Sandcastle.declare(applyCheckerboardMaterial);  // For highlighting in Sandcastle.
-        primitive.material = Cesium.Material.fromType('Checkerboard');
+        primitive.material = C.Material.fromType('Checkerboard');
     }
 
     function applyColorMaterial(primitive, scene) {
         Sandcastle.declare(applyColorMaterial); // For highlighting in Sandcastle.
-        primitive.material = Cesium.Material.fromType('Color');
+        primitive.material = C.Material.fromType('Color');
     }
 
     function applyCompositeMaterial(primitive, scene) {
         Sandcastle.declare(applyCompositeMaterial);    // For highlighting in Sandcastle.
-        primitive.material = new Cesium.Material({
+        primitive.material = new C.Material({
                 fabric: {
                     uniforms : {
                         image: '../images/earthspec1k.jpg',
@@ -123,12 +123,12 @@ require(['Cesium'], function(Cesium) {
 
     function applyDotMaterial(primitive, scene) {
         Sandcastle.declare(applyDotMaterial);   // For highlighting in Sandcastle.
-        primitive.material = Cesium.Material.fromType('Dot');
+        primitive.material = C.Material.fromType('Dot');
     }
 
     function applyDiffuseMaterial(primitive, scene) {
         Sandcastle.declare(applyDiffuseMaterial);   // For highlighting in Sandcastle.
-        primitive.material = new Cesium.Material({
+        primitive.material = new C.Material({
             fabric : {
                 type : 'DiffuseMap',
                 uniforms : {
@@ -140,7 +140,7 @@ require(['Cesium'], function(Cesium) {
 
     function applyEmissionMapMaterial(primitive, scene) {
         Sandcastle.declare(applyEmissionMapMaterial);   // For highlighting in Sandcastle.
-        primitive.material = new Cesium.Material({
+        primitive.material = new C.Material({
             fabric : {
                 materials : {
                     diffuseMaterial : {
@@ -171,7 +171,7 @@ require(['Cesium'], function(Cesium) {
     function applyWaterMaterial(primitive, scene) {
         Sandcastle.declare(applyWaterMaterial); // For highlighting in Sandcastle.
 
-        primitive.material = new Cesium.Material({
+        primitive.material = new C.Material({
             fabric : {
                 type : 'Water',
                 uniforms : {
@@ -187,12 +187,12 @@ require(['Cesium'], function(Cesium) {
 
     function applyGridMaterial(primitive, scene) {
         Sandcastle.declare(applyGridMaterial); // For highlighting in Sandcastle.
-        primitive.material = Cesium.Material.fromType('Grid');
+        primitive.material = C.Material.fromType('Grid');
     }
 
     function applyImageMaterial(primitive, scene) {
         Sandcastle.declare(applyImageMaterial); // For highlighting in Sandcastle.
-        primitive.material = new Cesium.Material({
+        primitive.material = new C.Material({
             fabric : {
                 type : 'Image',
                 uniforms : {
@@ -204,7 +204,7 @@ require(['Cesium'], function(Cesium) {
 
     function applyNormalMapMaterial(primitive, scene) {
         Sandcastle.declare(applyNormalMapMaterial); // For highlighting in Sandcastle.
-        primitive.material = new Cesium.Material({
+        primitive.material = new C.Material({
             fabric : {
                 materials : {
                     diffuseMaterial : {
@@ -232,7 +232,7 @@ require(['Cesium'], function(Cesium) {
 
     function applySpecularMapMaterial(primitive, scene) {
         Sandcastle.declare(applySpecularMapMaterial);   // For highlighting in Sandcastle.
-        primitive.material = new Cesium.Material({
+        primitive.material = new C.Material({
             fabric : {
                 type : 'SpecularMap',
                 uniforms : {
@@ -245,23 +245,23 @@ require(['Cesium'], function(Cesium) {
 
     function applyStripeMaterial(primitive, scene) {
         Sandcastle.declare(applyStripeMaterial);    // For highlighting in Sandcastle.
-        primitive.material = Cesium.Material.fromType('Stripe');
+        primitive.material = C.Material.fromType('Stripe');
     }
 
     function applyRimLightingMaterial(primitive, scene) {
         Sandcastle.declare(applyRimLightingMaterial);  // For highlighting in Sandcastle.
-        primitive.material = Cesium.Material.fromType('RimLighting');
+        primitive.material = C.Material.fromType('RimLighting');
     }
 
     function applyPolylineArrowMaterial(primitive, scene) {
         Sandcastle.declare(applyPolylineArrowMaterial);  // For highlighting in Sandcastle.
-        var material = Cesium.Material.fromType('PolylineArrow');
+        var material = C.Material.fromType('PolylineArrow');
         primitive.material = material;
     }
 
     function applyPolylineGlowMaterial(primitive, scene) {
         Sandcastle.declare(applyPolylineGlowMaterial);  // For highlighting in Sandcastle.
-        var material = Cesium.Material.fromType('PolylineGlow', {
+        var material = C.Material.fromType('PolylineGlow', {
             innerWidth : primitive.width / 2.0
         });
         primitive.material = material;
@@ -269,7 +269,7 @@ require(['Cesium'], function(Cesium) {
 
     function applyPolylineOutlineMaterial(primitive, scene) {
         Sandcastle.declare(applyPolylineOutlineMaterial);  // For highlighting in Sandcastle.
-        var material = Cesium.Material.fromType('PolylineOutline', {
+        var material = C.Material.fromType('PolylineOutline', {
             outlineWidth : primitive.width / 2.0
         });
         primitive.material = material;
@@ -481,21 +481,21 @@ require(['Cesium'], function(Cesium) {
     function createPrimitives(scene) {
         var primitives = scene.primitives;
 
-        rectangle = new Cesium.RectanglePrimitive({
-            rectangle : Cesium.Rectangle.fromDegrees(-120.0, 20.0, -60.0, 40.0)
+        rectangle = new C.RectanglePrimitive({
+            rectangle : C.Rectangle.fromDegrees(-120.0, 20.0, -60.0, 40.0)
         });
         primitives.add(rectangle);
 
-        worldRectangle = new Cesium.Polygon();
-        worldRectangle = new Cesium.RectanglePrimitive({
-            rectangle : Cesium.Rectangle.fromDegrees(-180.0, -90.0, 180.0, 90.0),
+        worldRectangle = new C.Polygon();
+        worldRectangle = new C.RectanglePrimitive({
+            rectangle : C.Rectangle.fromDegrees(-180.0, -90.0, 180.0, 90.0),
             show : false
         });
         primitives.add(worldRectangle);
 
-        var polylines = new Cesium.PolylineCollection();
+        var polylines = new C.PolylineCollection();
         polyline = polylines.add({
-            positions : Cesium.Cartesian3.fromDegreesArray([
+            positions : C.Cartesian3.fromDegreesArray([
                 -110.0, 42.0,
                 -85.0, 36.0,
                 -100.0, 25.0,
@@ -507,7 +507,7 @@ require(['Cesium'], function(Cesium) {
         primitives.add(polylines);
     }
 
-    var viewer = new Cesium.Viewer('cesiumContainer');
+    var viewer = new C.Viewer('cesiumContainer');
     var scene = viewer.scene;
 
     createPrimitives(scene);

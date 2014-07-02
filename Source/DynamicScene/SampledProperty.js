@@ -132,37 +132,37 @@ define([
      *
      * @example
      * //Create a linearly interpolated Cartesian2
-     * var property = new Cesium.SampledProperty(Cesium.Cartesian2);
+     * var property = new C.SampledProperty(C.Cartesian2);
      * property.interpolationDegree = 1;
      * property.interpolationAlgorithm = LinearApproximation;
      *
      * //Populate it with data
-     * property.addSample(Cesium.JulianDate.fromIso8601(`2012-08-01T00:00:00.00Z`), new Cesium.Cartesian2(0, 0));
-     * property.addSample(Cesium.JulianDate.fromIso8601(`2012-08-02T00:00:00.00Z`), new Cesium.Cartesian2(4, 7));
+     * property.addSample(C.JulianDate.fromIso8601(`2012-08-01T00:00:00.00Z`), new C.Cartesian2(0, 0));
+     * property.addSample(C.JulianDate.fromIso8601(`2012-08-02T00:00:00.00Z`), new C.Cartesian2(4, 7));
      *
      * //Retrieve an interpolated value
-     * var result = property.getValue(Cesium.JulianDate.fromIso8601(`2012-08-01T12:00:00.00Z`));
+     * var result = property.getValue(C.JulianDate.fromIso8601(`2012-08-01T12:00:00.00Z`));
      *
      * @example
      * //Create a simple numeric SampledProperty that uses third degree Hermite Polynomial Approximation
-     * var property = new Cesium.SampledProperty(Number);
+     * var property = new C.SampledProperty(Number);
      * property.setInterpolationOptions({
      *     interpolationDegree : 3,
-     *     interpolationAlgorithm : Cesium.HermitePolynomialApproximation
+     *     interpolationAlgorithm : C.HermitePolynomialApproximation
      * });
      *
      * //Populate it with data
-     * property.addSample(Cesium.JulianDate.fromIso8601(`2012-08-01T00:00:00.00Z`), 1.0);
-     * property.addSample(Cesium.JulianDate.fromIso8601(`2012-08-01T00:01:00.00Z`), 6.0);
-     * property.addSample(Cesium.JulianDate.fromIso8601(`2012-08-01T00:02:00.00Z`), 12.0);
-     * property.addSample(Cesium.JulianDate.fromIso8601(`2012-08-01T00:03:30.00Z`), 5.0);
-     * property.addSample(Cesium.JulianDate.fromIso8601(`2012-08-01T00:06:30.00Z`), 2.0);
+     * property.addSample(C.JulianDate.fromIso8601(`2012-08-01T00:00:00.00Z`), 1.0);
+     * property.addSample(C.JulianDate.fromIso8601(`2012-08-01T00:01:00.00Z`), 6.0);
+     * property.addSample(C.JulianDate.fromIso8601(`2012-08-01T00:02:00.00Z`), 12.0);
+     * property.addSample(C.JulianDate.fromIso8601(`2012-08-01T00:03:30.00Z`), 5.0);
+     * property.addSample(C.JulianDate.fromIso8601(`2012-08-01T00:06:30.00Z`), 2.0);
      *
      * //Samples can be added in any order.
-     * property.addSample(Cesium.JulianDate.fromIso8601(`2012-08-01T00:00:30.00Z`), 6.2);
+     * property.addSample(C.JulianDate.fromIso8601(`2012-08-01T00:00:30.00Z`), 6.2);
      *
      * //Retrieve an interpolated value
-     * var result = property.getValue(Cesium.JulianDate.fromIso8601(`2012-08-01T00:02:34.00Z`));
+     * var result = property.getValue(C.JulianDate.fromIso8601(`2012-08-01T00:02:34.00Z`));
      */
     var SampledProperty = function(type, derivativeTypes) {
         //>>includeStart('debug', pragmas.debug);

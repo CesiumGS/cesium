@@ -29,11 +29,11 @@ define([
      *
      * @example
      * // Returns Cartesian3.UNIT_X
-     * var p = new Cesium.Cartesian3(-1.0, 0.0, 0.0);
-     * var b = Cesium.barycentricCoordinates(p,
-     *   new Cesium.Cartesian3(-1.0, 0.0, 0.0),
-     *   new Cesium.Cartesian3( 1.0, 0.0, 0.0),
-     *   new Cesium.Cartesian3( 0.0, 1.0, 1.0));
+     * var p = new C.Cartesian3(-1.0, 0.0, 0.0);
+     * var b = C.barycentricCoordinates(p,
+     *   new C.Cartesian3(-1.0, 0.0, 0.0),
+     *   new C.Cartesian3( 1.0, 0.0, 0.0),
+     *   new C.Cartesian3( 0.0, 1.0, 1.0));
      */
     var barycentricCoordinates = function(point, p0, p1, p2, result) {
         //>>includeStart('debug', pragmas.debug);

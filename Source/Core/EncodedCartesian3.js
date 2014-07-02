@@ -58,7 +58,7 @@ define([
      *
      * @example
      * var value = 1234567.1234567;
-     * var splitValue = Cesium.EncodedCartesian3.encode(value);
+     * var splitValue = C.EncodedCartesian3.encode(value);
      */
     EncodedCartesian3.encode = function(value, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -105,8 +105,8 @@ define([
      * @returns {EncodedCartesian3} The modified result parameter or a new EncodedCartesian3 instance if one was not provided.
      *
      * @example
-     * var cart = new Cesium.Cartesian3(-10000000.0, 0.0, 10000000.0);
-     * var encoded = Cesium.EncodedCartesian3.fromCartesian(cart);
+     * var cart = new C.Cartesian3(-10000000.0, 0.0, 10000000.0);
+     * var encoded = C.EncodedCartesian3.fromCartesian(cart);
      */
     EncodedCartesian3.fromCartesian = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -154,13 +154,13 @@ define([
      *
      * @example
      * var positions = [
-     *    new Cesium.Cartesian3(),
+     *    new C.Cartesian3(),
      *    // ...
      * ];
      * var encodedPositions = new Float32Array(2 * 3 * positions.length);
      * var j = 0;
      * for (var i = 0; i < positions.length; ++i) {
-     *   Cesium.EncodedCartesian3.writeElement(positions[i], encodedPositions, j);
+     *   C.EncodedCartesian3.writeElement(positions[i], encodedPositions, j);
      *   j += 6;
      * }
      */

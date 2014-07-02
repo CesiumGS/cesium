@@ -55,26 +55,26 @@ define([
      *
      * @example
      * // Example 1
-     * var polygon = new Cesium.Polygon({
+     * var polygon = new C.Polygon({
      *   positions : [
-     *     ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...)),
-     *     ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...)),
-     *     ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...))
+     *     ellipsoid.cartographicToCartesian(new C.Cartographic(...)),
+     *     ellipsoid.cartographicToCartesian(new C.Cartographic(...)),
+     *     ellipsoid.cartographicToCartesian(new C.Cartographic(...))
      *   ]
      * });
      *
      * @example
      * // Example 2
-     * var polygon = new Cesium.Polygon();
+     * var polygon = new C.Polygon();
      * polygon.material.uniforms.color = {
      *   red   : 1.0,
      *   green : 0.0,
      *   blue  : 0.0,
      *   alpha : 1.0
      * };
-     * polygon.positions = [ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...)),
-     *   ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...)),
-     *   ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...))];
+     * polygon.positions = [ellipsoid.cartographicToCartesian(new C.Cartographic(...)),
+     *   ellipsoid.cartographicToCartesian(new C.Cartographic(...)),
+     *   ellipsoid.cartographicToCartesian(new C.Cartographic(...))];
      */
     var Polygon = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -148,10 +148,10 @@ define([
          *
          * @example
          * // 1. Change the color of the default material to yellow
-         * polygon.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
+         * polygon.material.uniforms.color = new C.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
-         * polygon.material = Cesium.Material.fromType( Material.StripeType);
+         * polygon.material = C.Material.fromType(C.Material.StripeType);
          */
         this.material = defaultValue(options.material, material);
 
@@ -214,9 +214,9 @@ define([
          * @type {Cartesian3[]}
          * @example
          * polygon.positions = [
-         *   ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...)),
-         *   ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...)),
-         *   ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...))
+         *   ellipsoid.cartographicToCartesian(new C.Cartographic(...)),
+         *   ellipsoid.cartographicToCartesian(new C.Cartographic(...)),
+         *   ellipsoid.cartographicToCartesian(new C.Cartographic(...))
          * ];
          */
         positions: {
@@ -272,15 +272,15 @@ define([
      * // A triangle within a triangle
      * var hierarchy = {
      *   positions : [
-     *     new Cesium.Cartesian3(-634066.5629045101, -4608738.034138676, 4348640.761750969),
-     *     new Cesium.Cartesian3(-1321523.0597310204, -5108871.981065817, 3570395.2500986718),
-     *     new Cesium.Cartesian3(46839.74837473363, -5303481.972379478, 3530933.5841716)
+     *     new C.Cartesian3(-634066.5629045101, -4608738.034138676, 4348640.761750969),
+     *     new C.Cartesian3(-1321523.0597310204, -5108871.981065817, 3570395.2500986718),
+     *     new C.Cartesian3(46839.74837473363, -5303481.972379478, 3530933.5841716)
      *   ],
      *   holes : [{
      *     positions :[
-     *       new Cesium.Cartesian3(-646079.44483647, -4811233.11175887, 4123187.2266941597),
-     *       new Cesium.Cartesian3(-1024015.4454943262, -5072141.413164587, 3716492.6173834214),
-     *       new Cesium.Cartesian3(-234678.22583880965, -5189078.820849883, 3688809.059214336)
+     *       new C.Cartesian3(-646079.44483647, -4811233.11175887, 4123187.2266941597),
+     *       new C.Cartesian3(-1024015.4454943262, -5072141.413164587, 3716492.6173834214),
+     *       new C.Cartesian3(-234678.22583880965, -5189078.820849883, 3688809.059214336)
      *     ]
      *   }]
      * };

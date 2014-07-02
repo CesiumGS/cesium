@@ -32,25 +32,25 @@ define([
      * // Create geometry for a box, and two instances that refer to it.
      * // One instance positions the box on the bottom and colored aqua.
      * // The other instance positions the box on the top and color white.
-     * var geometry = new Cesium.BoxGeometry({
-     *   vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
-     *   dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0)
+     * var geometry = new C.BoxGeometry({
+     *   vertexFormat : C.VertexFormat.POSITION_AND_NORMAL,
+     *   dimensions : new C.Cartesian3(1000000.0, 1000000.0, 500000.0)
      * }),
-     * var instanceBottom = new Cesium.GeometryInstance({
+     * var instanceBottom = new C.GeometryInstance({
      *   geometry : geometry,
-     *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-     *     Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 1000000.0), new Matrix4()),
+     *   modelMatrix : C.Matrix4.multiplyByTranslation(C.Transforms.eastNorthUpToFixedFrame(
+     *     C.Cartesian3.fromDegrees(-75.59777, 40.03883)), new C.Cartesian3(0.0, 0.0, 1000000.0), new Matrix4()),
      *   attributes : {
-     *     color : new Cesium.ColorGeometryInstanceAttribute(Cesium.Color.AQUA)
+     *     color : new C.ColorGeometryInstanceAttribute(C.Color.AQUA)
      *   }
      *   id : 'bottom'
      * });
-     * var instanceTop = new Cesium.GeometryInstance({
+     * var instanceTop = new C.GeometryInstance({
      *   geometry : geometry,
-     *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-     *     Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 3000000.0), new Matrix4()),
+     *   modelMatrix : C.Matrix4.multiplyByTranslation(C.Transforms.eastNorthUpToFixedFrame(
+     *     C.Cartesian3.fromDegrees(-75.59777, 40.03883)), new C.Cartesian3(0.0, 0.0, 3000000.0), new Matrix4()),
      *   attributes : {
-     *     color : new Cesium.ColorGeometryInstanceAttribute(Cesium.Color.AQUA)
+     *     color : new C.ColorGeometryInstanceAttribute(C.Color.AQUA)
      *   }
      *   id : 'top'
      * });

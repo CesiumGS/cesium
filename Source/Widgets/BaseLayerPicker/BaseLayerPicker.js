@@ -55,25 +55,25 @@ define([
      * //Create the list of available providers we would like the user to select from.
      * //This example uses 3, OpenStreetMap, The Black Marble, and a single, non-streaming world image.
      * var imageryViewModels = [];
-     * imageryViewModels.push(new Cesium.ProviderViewModel({
+     * imageryViewModels.push(new C.ProviderViewModel({
      *      name : 'Open\u00adStreet\u00adMap',
-     *      iconUrl : Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/openStreetMap.png'),
+     *      iconUrl : C.buildModuleUrl('Widgets/Images/ImageryProviders/openStreetMap.png'),
      *      tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable \
      *map of the world.\nhttp://www.openstreetmap.org',
      *      creationFunction : function() {
-     *          return new Cesium.OpenStreetMapImageryProvider({
+     *          return new C.OpenStreetMapImageryProvider({
      *              url : '//a.tile.openstreetmap.org/'
      *          });
      *      }
      *  }));
      *
-     *  imageryViewModels.push(new Cesium.ProviderViewModel({
+     *  imageryViewModels.push(new C.ProviderViewModel({
      *      name : 'Black Marble',
-     *      iconUrl : Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/blackMarble.png'),
+     *      iconUrl : C.buildModuleUrl('Widgets/Images/ImageryProviders/blackMarble.png'),
      *      tooltip : 'The lights of cities and villages trace the outlines of civilization \
      *in this global view of the Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
      *      creationFunction : function() {
-     *          return new Cesium.TileMapServiceImageryProvider({
+     *          return new C.TileMapServiceImageryProvider({
      *              url : '//cesiumjs.org/blackmarble',
      *              maximumLevel : 8,
      *              credit : 'Black Marble imagery courtesy NASA Earth Observatory'
@@ -81,23 +81,23 @@ define([
      *      }
      *  }));
      *
-     *  imageryViewModels.push(new Cesium.ProviderViewModel({
+     *  imageryViewModels.push(new C.ProviderViewModel({
      *      name : 'Natural Earth\u00a0II',
-     *      iconUrl : Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/naturalEarthII.png'),
+     *      iconUrl : C.buildModuleUrl('Widgets/Images/ImageryProviders/naturalEarthII.png'),
      *      tooltip : 'Natural Earth II, darkened for contrast.\nhttp://www.naturalearthdata.com/',
      *      creationFunction : function() {
-     *          return new Cesium.TileMapServiceImageryProvider({
-     *              url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
+     *          return new C.TileMapServiceImageryProvider({
+     *              url : C.buildModuleUrl('Assets/Textures/NaturalEarthII')
      *          });
      *      }
      *  }));
      *
      * //Create a CesiumWidget without imagery, if you haven't already done so.
-     * var cesiumWidget = new Cesium.CesiumWidget('cesiumContainer', { imageryProvider: false });
+     * var cesiumWidget = new C.CesiumWidget('cesiumContainer', { imageryProvider: false });
      *
      * //Finally, create the baseLayerPicker widget using our view models.
      * var layers = cesiumWidget.scene.imageryLayers;
-     * var baseLayerPicker = new Cesium.BaseLayerPicker('baseLayerPickerContainer', layers, imageryViewModels);
+     * var baseLayerPicker = new C.BaseLayerPicker('baseLayerPickerContainer', layers, imageryViewModels);
      *
      * //Use the first item in the list as the current selection.
      * baseLayerPicker.viewModel.selectedItem = imageryViewModels[0];

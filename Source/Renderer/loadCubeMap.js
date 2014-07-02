@@ -31,7 +31,7 @@ define([
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @example
-     * Cesium.loadCubeMap(context, {
+     * C.loadCubeMap(context, {
      *     positiveX : 'skybox_px.png',
      *     negativeX : 'skybox_nx.png',
      *     positiveY : 'skybox_py.png',

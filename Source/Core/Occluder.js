@@ -37,9 +37,9 @@ define([
      *
      * @example
      * // Construct an occluder one unit away from the origin with a radius of one.
-     * var cameraPosition = new Cesium.Cartesian3.ZERO;
-     * var occluderBoundingSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -1), 1);
-     * var occluder = new Cesium.Occluder(occluderBoundingSphere, cameraPosition);
+     * var cameraPosition = new C.Cartesian3.ZERO;
+     * var occluderBoundingSphere = new C.BoundingSphere(new C.Cartesian3(0, 0, -1), 1);
+     * var occluder = new C.Occluder(occluderBoundingSphere, cameraPosition);
      */
     var Occluder = function(occluderBoundingSphere, cameraPosition) {
         //>>includeStart('debug', pragmas.debug);
@@ -168,10 +168,10 @@ define([
      * @see Occluder#getVisibility
      *
      * @example
-     * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
-     * var littleSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -1), 0.25);
-     * var occluder = new Cesium.Occluder(littleSphere, cameraPosition);
-     * var point = new Cesium.Cartesian3(0, 0, -3);
+     * var cameraPosition = new C.Cartesian3(0, 0, 0);
+     * var littleSphere = new C.BoundingSphere(new C.Cartesian3(0, 0, -1), 0.25);
+     * var occluder = new C.Occluder(littleSphere, cameraPosition);
+     * var point = new C.Cartesian3(0, 0, -3);
      * occluder.isPointVisible(point); //returns true
      */
     Occluder.prototype.isPointVisible = function(occludee) {
@@ -199,10 +199,10 @@ define([
     * @see Occluder#getVisibility
     *
     * @example
-    * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
-    * var littleSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -1), 0.25);
-    * var occluder = new Cesium.Occluder(littleSphere, cameraPosition);
-    * var bigSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -3), 1);
+    * var cameraPosition = new C.Cartesian3(0, 0, 0);
+    * var littleSphere = new C.BoundingSphere(new C.Cartesian3(0, 0, -1), 0.25);
+    * var occluder = new C.Occluder(littleSphere, cameraPosition);
+    * var bigSphere = new C.BoundingSphere(new C.Cartesian3(0, 0, -3), 1);
     * occluder.isBoundingSphereVisible(bigSphere); //returns true
     */
     Occluder.prototype.isBoundingSphereVisible = function(occludee) {
@@ -257,10 +257,10 @@ define([
      * @see Occluder#isVisible
      *
      * @example
-     * var sphere1 = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -1.5), 0.5);
-     * var sphere2 = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -2.5), 0.5);
-     * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
-     * var occluder = new Cesium.Occluder(sphere1, cameraPosition);
+     * var sphere1 = new C.BoundingSphere(new C.Cartesian3(0, 0, -1.5), 0.5);
+     * var sphere2 = new C.BoundingSphere(new C.Cartesian3(0, 0, -2.5), 0.5);
+     * var cameraPosition = new C.Cartesian3(0, 0, 0);
+     * var occluder = new C.Occluder(sphere1, cameraPosition);
      * occluder.getVisibility(sphere2); //returns Visibility.NONE
      */
     Occluder.prototype.getVisibility = function(occludeeBS) {
@@ -333,11 +333,11 @@ define([
      * @exception {DeveloperError} <code>occludeePosition</code> must have a value other than <code>occluderBoundingSphere.center</code>.
      *
      * @example
-     * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
-     * var occluderBoundingSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -8), 2);
-     * var occluder = new Cesium.Occluder(occluderBoundingSphere, cameraPosition);
-     * var positions = [new Cesium.Cartesian3(-0.25, 0, -5.3), new Cesium.Cartesian3(0.25, 0, -5.3)];
-     * var tileOccluderSphere = Cesium.BoundingSphere.fromPoints(positions);
+     * var cameraPosition = new C.Cartesian3(0, 0, 0);
+     * var occluderBoundingSphere = new C.BoundingSphere(new C.Cartesian3(0, 0, -8), 2);
+     * var occluder = new C.Occluder(occluderBoundingSphere, cameraPosition);
+     * var positions = [new C.Cartesian3(-0.25, 0, -5.3), new C.Cartesian3(0.25, 0, -5.3)];
+     * var tileOccluderSphere = C.BoundingSphere.fromPoints(positions);
      * var occludeePosition = tileOccluderSphere.center;
      * var occludeePt = occluder.getOccludeePoint(occluderBoundingSphere, occludeePosition, positions);
      */

@@ -12,7 +12,7 @@ define([
      * @exports defaultValue
      *
      * @example
-     * param = Cesium.defaultValue(param, 'default');
+     * param = C.defaultValue(param, 'default');
      */
     var defaultValue = function(a, b) {
         if (a !== undefined) {

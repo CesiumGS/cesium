@@ -23,7 +23,7 @@ define([
      *
      * @example
      * // load XML from a URL, setting a custom header
-     * Cesium.loadXML('http://someUrl.com/someXML.xml', {
+     * C.loadXML('http://someUrl.com/someXML.xml', {
      *   'X-Custom-Header' : 'some value'
      * }).then(function(document) {
      *     // Do something with the document

@@ -297,7 +297,7 @@ define([
      *
      * @example
      * // Create a label collection with two labels
-     * var labels = new Cesium.LabelCollection();
+     * var labels = new C.LabelCollection();
      * labels.add({
      *   position : { x : 1.0, y : 2.0, z : 3.0 },
      *   text : 'A label'
@@ -332,22 +332,22 @@ define([
          * @default {@link Matrix4.IDENTITY}
          *
          * @example
-         * var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
-         * labels.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+         * var center = C.Cartesian3.fromDegrees(-75.59777, 40.03883);
+         * labels.modelMatrix = C.Transforms.eastNorthUpToFixedFrame(center);
          * labels.add({
-         *   position : new Cesium.Cartesian3(0.0, 0.0, 0.0),
+         *   position : new C.Cartesian3(0.0, 0.0, 0.0),
          *   text     : 'Center'
          * });
          * labels.add({
-         *   position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0),
+         *   position : new C.Cartesian3(1000000.0, 0.0, 0.0),
          *   text     : 'East'
          * });
          * labels.add({
-         *   position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0),
+         *   position : new C.Cartesian3(0.0, 1000000.0, 0.0),
          *   text     : 'North'
          * });
          * labels.add({
-         *   position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0),
+         *   position : new C.Cartesian3(0.0, 0.0, 1000000.0),
          *   text     : 'Up'
          * });
          */
@@ -402,16 +402,16 @@ define([
      * // Example 1:  Add a label, specifying all the default values.
      * var l = labels.add({
      *   show : true,
-     *   position : Cesium.Cartesian3.ZERO,
+     *   position : C.Cartesian3.ZERO,
      *   text : '',
      *   font : '30px sans-serif',
-     *   fillColor : Cesium.Color.WHITE,
-     *   outlineColor : Cesium.Color.BLACK,
-     *   style : Cesium.LabelStyle.FILL,
-     *   pixelOffset : Cesium.Cartesian2.ZERO,
-     *   eyeOffset : Cesium.Cartesian3.ZERO,
-     *   horizontalOrigin : Cesium.HorizontalOrigin.LEFT,
-     *   verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
+     *   fillColor : C.Color.WHITE,
+     *   outlineColor : C.Color.BLACK,
+     *   style : C.LabelStyle.FILL,
+     *   pixelOffset : C.Cartesian2.ZERO,
+     *   eyeOffset : C.Cartesian3.ZERO,
+     *   horizontalOrigin : C.HorizontalOrigin.LEFT,
+     *   verticalOrigin : C.VerticalOrigin.BOTTOM,
      *   scale : 1.0
      * });
      *
@@ -419,7 +419,7 @@ define([
      * // Example 2:  Specify only the label's cartographic position,
      * // text, and font.
      * var l = labels.add({
-     *   position : Cartesian3.fromRadians(longitude, latitude, height),
+     *   position : C.Cartesian3.fromRadians(longitude, latitude, height),
      *   text : 'Hello World',
      *   font : '24px Helvetica',
      * });

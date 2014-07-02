@@ -31,7 +31,7 @@ define([
      *   return result;
      * }
      *
-     * return Cesium.createTaskProcessorWorker(doCalculation);
+     * return C.createTaskProcessorWorker(doCalculation);
      * // the resulting function is compatible with TaskProcessor
      */
     var createTaskProcessorWorker = function(workerFunction) {

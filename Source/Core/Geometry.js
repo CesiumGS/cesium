@@ -46,17 +46,17 @@ define([
      *   0.0, 7500000.0, 0.0
      * ]);
      *
-     * var geometry = new Cesium.Geometry({
+     * var geometry = new C.Geometry({
      *   attributes : {
-     *     position : new Cesium.GeometryAttribute({
-     *       componentDatatype : Cesium.ComponentDatatype.DOUBLE,
+     *     position : new C.GeometryAttribute({
+     *       componentDatatype : C.ComponentDatatype.DOUBLE,
      *       componentsPerAttribute : 3,
      *       values : positions
      *     })
      *   },
      *   indices : new Uint16Array([0, 1, 1, 2, 2, 0]),
-     *   primitiveType : Cesium.PrimitiveType.LINES,
-     *   boundingSphere : Cesium.BoundingSphere.fromVertices(positions)
+     *   primitiveType : C.PrimitiveType.LINES,
+     *   boundingSphere : C.BoundingSphere.fromVertices(positions)
      * });
      */
     var Geometry = function(options) {
@@ -110,8 +110,8 @@ define([
          * @see VertexFormat
          *
          * @example
-         * geometry.attributes.position = new Cesium.GeometryAttribute({
-         *   componentDatatype : Cesium.ComponentDatatype.FLOAT,
+         * geometry.attributes.position = new C.GeometryAttribute({
+         *   componentDatatype : C.ComponentDatatype.FLOAT,
          *   componentsPerAttribute : 3,
          *   values : new Float32Array()
          * });
@@ -157,7 +157,7 @@ define([
      * @returns {Number} The number of vertices in the geometry.
      *
      * @example
-     * var numVertices = Cesium.Geometry.computeNumberOfVertices(geometry);
+     * var numVertices = C.Geometry.computeNumberOfVertices(geometry);
      */
     Geometry.computeNumberOfVertices = function(geometry) {
         //>>includeStart('debug', pragmas.debug);

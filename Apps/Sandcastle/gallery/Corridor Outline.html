@@ -24,99 +24,99 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+require(['Cesium'], function(C) {
     "use strict";
     
-    var viewer = new Cesium.Viewer('cesiumContainer');
+    var viewer = new C.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
     
     var width = 200000.0;
-    var positions = Cesium.Cartesian3.fromDegreesArray([
+    var positions = C.Cartesian3.fromDegreesArray([
         -100.0, 40.0,
         -105.0, 40.0,
         -105.0, 35.0
     ]);
     
     // Outline of red corridor
-    var corridorOutlineGeometry = new Cesium.CorridorOutlineGeometry( {
+    var corridorOutlineGeometry = new C.CorridorOutlineGeometry( {
         positions: positions,
         width: width
     });
-    var redCorridorOutline = new Cesium.GeometryInstance({
+    var redCorridorOutline = new C.GeometryInstance({
         geometry: corridorOutlineGeometry,
         attributes: {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+            color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.WHITE)
         }
     });
 
     // Red corridor
-    var redCorridor = new Cesium.GeometryInstance({
-        geometry: new Cesium.CorridorGeometry({
+    var redCorridor = new C.GeometryInstance({
+        geometry: new C.CorridorGeometry({
             positions : positions,
             width : width,
-            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-            cornerType: Cesium.CornerType.ROUNDED
+            vertexFormat : C.PerInstanceColorAppearance.VERTEX_FORMAT,
+            cornerType: C.CornerType.ROUNDED
         }),
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
+            color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.RED)
         }
     });
     
     // Outline of blue corridor
-    positions = Cesium.Cartesian3.fromDegreesArray([
+    positions = C.Cartesian3.fromDegreesArray([
         -90.0, 40.0,
         -95.0, 40.0,
         -95.0, 35.0
     ]);
     var extrudedHeight = 100000.0;
     
-    corridorOutlineGeometry = new Cesium.CorridorOutlineGeometry( {
+    corridorOutlineGeometry = new C.CorridorOutlineGeometry( {
         positions: positions,
         width: width,
-        cornerType: Cesium.CornerType.MITERED,
+        cornerType: C.CornerType.MITERED,
         extrudedHeight: extrudedHeight
     });
-    var blueCorridorOutline = new Cesium.GeometryInstance({
+    var blueCorridorOutline = new C.GeometryInstance({
         geometry: corridorOutlineGeometry,
         attributes: {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+            color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.WHITE)
         }
     });
     
     // Blue corridor
-    var blueCorridor = new Cesium.GeometryInstance({
-        geometry: new Cesium.CorridorGeometry({
+    var blueCorridor = new C.GeometryInstance({
+        geometry: new C.CorridorGeometry({
             positions : positions,
             width : width,
-            cornerType : Cesium.CornerType.MITERED,
+            cornerType : C.CornerType.MITERED,
             extrudedHeight: extrudedHeight,
-            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+            vertexFormat : C.PerInstanceColorAppearance.VERTEX_FORMAT
         }),
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 0.0, 1.0, 0.5))
+            color : C.ColorGeometryInstanceAttribute.fromColor(new C.Color(0.0, 0.0, 1.0, 0.5))
         }
     });
     
     // Add instances to primitives
-    primitives.add(new Cesium.Primitive({
+    primitives.add(new C.Primitive({
         geometryInstances : blueCorridor,
-        appearance : new Cesium.PerInstanceColorAppearance({
+        appearance : new C.PerInstanceColorAppearance({
             closed : true
         })
     }));
     
-    primitives.add(new Cesium.Primitive({
+    primitives.add(new C.Primitive({
         geometryInstances : redCorridor,
-        appearance : new Cesium.PerInstanceColorAppearance({
+        appearance : new C.PerInstanceColorAppearance({
             closed : true,
             translucent : false
         })
     }));
     
-    primitives.add(new Cesium.Primitive({
+    primitives.add(new C.Primitive({
         geometryInstances : [redCorridorOutline, blueCorridorOutline],
-        appearance : new Cesium.PerInstanceColorAppearance({
+        appearance : new C.PerInstanceColorAppearance({
             flat : true,
             renderState : {
                 depthTest : {

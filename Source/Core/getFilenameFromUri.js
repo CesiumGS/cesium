@@ -18,7 +18,7 @@ define([
      *
      * @example
      * //fileName will be"simple.czml";
-     * var fileName = Cesium.getFilenameFromUri('/Gallery/simple.czml?value=true&example=false');
+     * var fileName = C.getFilenameFromUri('/Gallery/simple.czml?value=true&example=false');
      */
     var getFilenameFromUri = function(uri) {
         //>>includeStart('debug', pragmas.debug);

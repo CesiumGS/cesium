@@ -30,15 +30,15 @@ define([
      *
      * @example
      * // Query the terrain height of two Cartographic positions
-     * var terrainProvider = new Cesium.CesiumTerrainProvider({
+     * var terrainProvider = new C.CesiumTerrainProvider({
      *     url : '//cesiumjs.org/smallterrain'
      * });
      * var positions = [
-     *     Cesium.Cartographic.fromDegrees(86.925145, 27.988257),
-     *     Cesium.Cartographic.fromDegrees(87.0, 28.0)
+     *     C.Cartographic.fromDegrees(86.925145, 27.988257),
+     *     C.Cartographic.fromDegrees(87.0, 28.0)
      * ];
-     * var promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
-     * Cesium.when(promise, function(updatedPositions) {
+     * var promise = C.sampleTerrain(terrainProvider, 11, positions);
+     * C.when(promise, function(updatedPositions) {
      *     // positions[0].height and positions[1].height have been updated.
      *     // updatedPositions is just a reference to positions.
      * });

@@ -133,7 +133,7 @@ define([
      * @exception {DeveloperError} geometry.primitiveType must be TRIANGLES, TRIANGLE_STRIP, or TRIANGLE_FAN.
      *
      * @example
-     * geometry = Cesium.GeometryPipeline.toWireframe(geometry);
+     * geometry = C.GeometryPipeline.toWireframe(geometry);
      */
     GeometryPipeline.toWireframe = function(geometry) {
         //>>includeStart('debug', pragmas.debug);
@@ -177,7 +177,7 @@ define([
      * @exception {DeveloperError} geometry.attributes must have an attribute with the same name as the attributeName parameter.
      *
      * @example
-     * var geometry = Cesium.GeometryPipeline.createLineSegmentsForVectors(instance.geometry, 'binormal', 100000.0),
+     * var geometry = C.GeometryPipeline.createLineSegmentsForVectors(instance.geometry, 'binormal', 100000.0),
      */
     GeometryPipeline.createLineSegmentsForVectors = function(geometry, attributeName, length) {
         attributeName = defaultValue(attributeName, 'normal');
@@ -240,7 +240,7 @@ define([
      * @returns {Object} An object with attribute name / index pairs.
      *
      * @example
-     * var attributeLocations = Cesium.GeometryPipeline.createAttributeLocations(geometry);
+     * var attributeLocations = C.GeometryPipeline.createAttributeLocations(geometry);
      * // Example output
      * // {
      * //   'position' : 0,
@@ -313,7 +313,7 @@ define([
      * @see GeometryPipeline.reorderForPostVertexCache
      *
      * @example
-     * geometry = Cesium.GeometryPipeline.reorderForPreVertexCache(geometry);
+     * geometry = C.GeometryPipeline.reorderForPreVertexCache(geometry);
      */
     GeometryPipeline.reorderForPreVertexCache = function(geometry) {
         //>>includeStart('debug', pragmas.debug);
@@ -401,7 +401,7 @@ define([
      * by Sander, Nehab, and Barczak
      *
      * @example
-     * geometry = Cesium.GeometryPipeline.reorderForPostVertexCache(geometry);
+     * geometry = C.GeometryPipeline.reorderForPostVertexCache(geometry);
      */
     GeometryPipeline.reorderForPostVertexCache = function(geometry, cacheCapacity) {
         //>>includeStart('debug', pragmas.debug);
@@ -480,7 +480,7 @@ define([
      * @exception {DeveloperError} All geometry attribute lists must have the same number of attributes.
      *
      * @example
-     * var geometries = Cesium.GeometryPipeline.fitToUnsignedShortIndices(geometry);
+     * var geometries = C.GeometryPipeline.fitToUnsignedShortIndices(geometry);
      */
     GeometryPipeline.fitToUnsignedShortIndices = function(geometry) {
         //>>includeStart('debug', pragmas.debug);
@@ -585,7 +585,7 @@ define([
      * @exception {DeveloperError} Could not project a point to 2D.
      *
      * @example
-     * geometry = Cesium.GeometryPipeline.projectTo2D(geometry, 'position', 'position3D', 'position2D');
+     * geometry = C.GeometryPipeline.projectTo2D(geometry, 'position', 'position3D', 'position2D');
      */
     GeometryPipeline.projectTo2D = function(geometry, attributeName, attributeName3D, attributeName2D, projection) {
         //>>includeStart('debug', pragmas.debug);
@@ -671,7 +671,7 @@ define([
      * @see EncodedCartesian3
      *
      * @example
-     * geometry = Cesium.GeometryPipeline.encodeAttribute(geometry, 'position3D', 'position3DHigh', 'position3DLow');
+     * geometry = C.GeometryPipeline.encodeAttribute(geometry, 'position3D', 'position3DHigh', 'position3DLow');
      */
     GeometryPipeline.encodeAttribute = function(geometry, attributeName, attributeHighName, attributeLowName) {
         //>>includeStart('debug', pragmas.debug);
@@ -768,9 +768,9 @@ define([
      *
      * @example
      * for (var i = 0; i < instances.length; ++i) {
-     *   Cesium.GeometryPipeline.transformToWorldCoordinates(instances[i]);
+     *   C.GeometryPipeline.transformToWorldCoordinates(instances[i]);
      * }
-     * var geometry = Cesium.GeometryPipeline.combine(instances);
+     * var geometry = C.GeometryPipeline.combine(instances);
      */
     GeometryPipeline.transformToWorldCoordinates = function(instance) {
         //>>includeStart('debug', pragmas.debug);
@@ -888,9 +888,9 @@ define([
      *
      * @example
      * for (var i = 0; i < instances.length; ++i) {
-     *   Cesium.GeometryPipeline.transformToWorldCoordinates(instances[i]);
+     *   C.GeometryPipeline.transformToWorldCoordinates(instances[i]);
      * }
-     * var geometry = Cesium.GeometryPipeline.combine(instances);
+     * var geometry = C.GeometryPipeline.combine(instances);
      */
     GeometryPipeline.combine = function(instances) {
         //>>includeStart('debug', pragmas.debug);
@@ -1033,7 +1033,7 @@ define([
      * @exception {DeveloperError} geometry.primitiveType must be {@link PrimitiveType.TRIANGLES}.
      *
      * @example
-     * Cesium.GeometryPipeline.computeNormal(geometry);
+     * C.GeometryPipeline.computeNormal(geometry);
      */
     GeometryPipeline.computeNormal = function(geometry) {
         //>>includeStart('debug', pragmas.debug);
@@ -1176,7 +1176,7 @@ define([
      * @exception {DeveloperError} geometry.primitiveType must be {@link PrimitiveType.TRIANGLES}.
      *
      * @example
-     * Cesium.GeometryPipeline.computeBinormalAndTangent(geometry);
+     * C.GeometryPipeline.computeBinormalAndTangent(geometry);
      */
     GeometryPipeline.computeBinormalAndTangent = function(geometry) {
         //>>includeStart('debug', pragmas.debug);
@@ -1884,7 +1884,7 @@ define([
      * @returns {Geometry} The modified <code>geometry</code> argument, with it's primitives split at the International Date Line.
      *
      * @example
-     * geometry = Cesium.GeometryPipeline.wrapLongitude(geometry);
+     * geometry = C.GeometryPipeline.wrapLongitude(geometry);
      */
     GeometryPipeline.wrapLongitude = function(geometry) {
         //>>includeStart('debug', pragmas.debug);

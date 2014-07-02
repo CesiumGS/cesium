@@ -30,7 +30,7 @@ define([
      *
      * @example
      * // The plane x=0
-     * var plane = new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0.0);
+     * var plane = new C.Plane(C.Cartesian3.UNIT_X, 0.0);
      */
     var Plane = function(normal, distance) {
         //>>includeStart('debug', pragmas.debug);
@@ -70,9 +70,9 @@ define([
      * @returns {Plane} A new plane instance or the modified result parameter.
      *
      * @example
-     * var point = Cesium.Cartesian3.fromDegrees(-72.0, 40.0);
+     * var point = C.Cartesian3.fromDegrees(-72.0, 40.0);
      * var normal = ellipsoid.geodeticSurfaceNormal(point);
-     * var tangentPlane = Cesium.Plane.fromPointNormal(point, normal);
+     * var tangentPlane = C.Plane.fromPointNormal(point, normal);
      */
     Plane.fromPointNormal = function(point, normal, result) {
         //>>includeStart('debug', pragmas.debug);

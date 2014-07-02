@@ -21,7 +21,7 @@ define([
      *
      * @example
      * // Create a vertex format with position and 2D texture coordinate attributes.
-     * var format = new Cesium.VertexFormat({
+     * var format = new C.VertexFormat({
      *   position : true,
      *   st : true
      * });

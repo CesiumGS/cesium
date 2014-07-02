@@ -7,7 +7,7 @@ load(project.getProperty('tasksDirectory') + '/shared.js'); /*global forEachFile
 
 var jsHintOptions = loadJsHintOptionsFile(attributes.get('jshintoptionspath'));
 
-jsHintOptions.predef = ['require', 'console', 'Sandcastle', 'Cesium'];
+jsHintOptions.predef = ['require', 'console', 'Sandcastle', 'C'];
 
 var contents = '\
 // This file is automatically rebuilt by the Cesium build process.\n\

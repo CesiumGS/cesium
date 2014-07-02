@@ -24,33 +24,33 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+require(['Cesium'], function(C) {
     "use strict";
     
-    var viewer = new Cesium.Viewer('cesiumContainer');
+    var viewer = new C.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
        
-    var dimensions = new Cesium.Cartesian3(400000.0, 400000.0, 400000.0);
-    var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-106.0, 45.0);
-    var boxModelMatrix = Cesium.Matrix4.multiplyByTranslation(
-        Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
-        new Cesium.Cartesian3(0.0, 0.0, dimensions.z * 0.5), new Cesium.Matrix4());
+    var dimensions = new C.Cartesian3(400000.0, 400000.0, 400000.0);
+    var positionOnEllipsoid = C.Cartesian3.fromDegrees(-106.0, 45.0);
+    var boxModelMatrix = C.Matrix4.multiplyByTranslation(
+        C.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
+        new C.Cartesian3(0.0, 0.0, dimensions.z * 0.5), new C.Matrix4());
     
     // Create box outline
-    var boxOutlineGeometry = Cesium.BoxOutlineGeometry.fromDimensions({
+    var boxOutlineGeometry = C.BoxOutlineGeometry.fromDimensions({
         dimensions : dimensions
     });
-    var boxOutlineInstance = new Cesium.GeometryInstance({
+    var boxOutlineInstance = new C.GeometryInstance({
         geometry : boxOutlineGeometry,
         modelMatrix : boxModelMatrix,
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+            color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.WHITE)
         }
     });
-    primitives.add(new Cesium.Primitive({
+    primitives.add(new C.Primitive({
         geometryInstances : boxOutlineInstance,
-        appearance : new Cesium.PerInstanceColorAppearance({
+        appearance : new C.PerInstanceColorAppearance({
             flat : true,
             renderState : {
                 depthTest : {
@@ -62,18 +62,18 @@ require(['Cesium'], function(Cesium) {
     }));
     
     // Create box fill
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : new Cesium.GeometryInstance({
-            geometry : Cesium.BoxGeometry.fromDimensions({
-                vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+    primitives.add(new C.Primitive({
+        geometryInstances : new C.GeometryInstance({
+            geometry : C.BoxGeometry.fromDimensions({
+                vertexFormat : C.PerInstanceColorAppearance.VERTEX_FORMAT,
                 dimensions : dimensions
             }),
             modelMatrix : boxModelMatrix,
             attributes : {
-                color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 0.0, 1.0, 0.5))
+                color : C.ColorGeometryInstanceAttribute.fromColor(new C.Color(0.0, 0.0, 1.0, 0.5))
             }
         }),
-        appearance : new Cesium.PerInstanceColorAppearance({
+        appearance : new C.PerInstanceColorAppearance({
             closed : true
         })
     }));

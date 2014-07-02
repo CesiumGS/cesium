@@ -24,29 +24,29 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+require(['Cesium'], function(C) {
     "use strict";
     
-    var viewer = new Cesium.Viewer('cesiumContainer');
+    var viewer = new C.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
           
     // Create a glowing polyline
     var positions = [];
     for (var i = 0; i < 10; ++i) {
-        positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 36.0));
+        positions.push(C.Cartesian3.fromDegrees(-100.0 + i, 36.0));
     }
 
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.PolylineGeometry({
+    primitives.add(new C.Primitive({
+        geometryInstances : new C.GeometryInstance({
+            geometry : new C.PolylineGeometry({
                 positions : positions,
                 width : 10.0,
-                vertexFormat : Cesium.PolylineMaterialAppearance.VERTEX_FORMAT
+                vertexFormat : C.PolylineMaterialAppearance.VERTEX_FORMAT
             })
         }),
-        appearance : new Cesium.PolylineMaterialAppearance({
-            material : Cesium.Material.fromType(Cesium.Material.PolylineGlowType)
+        appearance : new C.PolylineMaterialAppearance({
+            material : C.Material.fromType(C.Material.PolylineGlowType)
         })
     }));
     
@@ -54,41 +54,41 @@ require(['Cesium'], function(Cesium) {
     positions = [];
     var colors = [];
     for (i = 0; i < 10; ++i) {
-        positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 35.0));
-        colors.push(Cesium.Color.fromRandom({alpha : 1.0}));
+        positions.push(C.Cartesian3.fromDegrees(-100.0 + i, 35.0));
+        colors.push(C.Color.fromRandom({alpha : 1.0}));
     }
 
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.PolylineGeometry({
+    primitives.add(new C.Primitive({
+        geometryInstances : new C.GeometryInstance({
+            geometry : new C.PolylineGeometry({
                 positions : positions,
                 width : 10.0,
-                vertexFormat : Cesium.PolylineColorAppearance.VERTEX_FORMAT,
+                vertexFormat : C.PolylineColorAppearance.VERTEX_FORMAT,
                 colors : colors
             })
         }),
-        appearance : new Cesium.PolylineColorAppearance()
+        appearance : new C.PolylineColorAppearance()
     }));
     
     // Polyline with per vertex color
     positions = [];
     colors = [];
     for (i = 0; i < 10; ++i) {
-        positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 34.0));
-        colors.push(Cesium.Color.fromRandom({alpha : 1.0}));
+        positions.push(C.Cartesian3.fromDegrees(-100.0 + i, 34.0));
+        colors.push(C.Color.fromRandom({alpha : 1.0}));
     }
 
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.PolylineGeometry({
+    primitives.add(new C.Primitive({
+        geometryInstances : new C.GeometryInstance({
+            geometry : new C.PolylineGeometry({
                 positions : positions,
                 width : 10.0,
-                vertexFormat : Cesium.PolylineColorAppearance.VERTEX_FORMAT,
+                vertexFormat : C.PolylineColorAppearance.VERTEX_FORMAT,
                 colors : colors,
                 colorsPerVertex : true
             })
         }),
-        appearance : new Cesium.PolylineColorAppearance()
+        appearance : new C.PolylineColorAppearance()
     }));
 
     Sandcastle.finishedLoading();

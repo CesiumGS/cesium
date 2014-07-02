@@ -8,6 +8,13 @@ require([
     "use strict";
     /*global self*/
     var scope = typeof window !== 'undefined' ? window : typeof self !== 'undefined' ? self : {};
+    var previousC = scope.C;
 
-    scope.Cesium = Cesium;
+    scope.C = Cesium;
+
+    scope.C.noConflict = function() {
+        scope.C = previousC;
+        return Cesium;
+    };
+
 }, undefined, true);

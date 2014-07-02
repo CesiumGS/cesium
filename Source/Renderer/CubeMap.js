@@ -194,7 +194,7 @@ define([
      * // minification when the cube map is sampled.
      * cubeMap.generateMipmap();
      * cubeMap.sampler = context.createSampler({
-     *   minificationFilter : Cesium.TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
+     *   minificationFilter : C.TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
      * });
      */
     CubeMap.prototype.generateMipmap = function(hint) {

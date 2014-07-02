@@ -24,10 +24,10 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+require(['Cesium'], function(C) {
     "use strict";
 
-    var viewer = new Cesium.Viewer('cesiumContainer');
+    var viewer = new C.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var clock = viewer.clock;
 
@@ -39,7 +39,7 @@ require(['Cesium'], function(Cesium) {
         controller.ellipsoid = scene.globe.ellipsoid;
         controller.enableTilt = true;
 
-        scene.camera.setTransform(Cesium.Matrix4.IDENTITY);
+        scene.camera.setTransform(C.Matrix4.IDENTITY);
 
         clock.multiplier = 1.0;
         scene.preRender.removeEventListener(icrf);
@@ -53,7 +53,7 @@ require(['Cesium'], function(Cesium) {
     Sandcastle.addToolbarButton('Fly to San Diego', function() {
         reset();
         scene.camera.flyTo({
-            destination : Cesium.Cartesian3.fromDegrees(-117.16, 32.71, 15000.0)
+            destination : C.Cartesian3.fromDegrees(-117.16, 32.71, 15000.0)
         });
     });
 
@@ -63,7 +63,7 @@ require(['Cesium'], function(Cesium) {
         // Create callback for browser's geolocation
         function fly(position) {
             scene.camera.flyTo({
-                destination : Cesium.Cartesian3.fromDegrees(position.coords.longitude, position.coords.latitude, 1000.0)
+                destination : C.Cartesian3.fromDegrees(position.coords.longitude, position.coords.latitude, 1000.0)
             });
         }
 
@@ -79,12 +79,12 @@ require(['Cesium'], function(Cesium) {
         var east = -72.0;
         var north = 42.0;
 
-        scene.camera.viewRectangle(Cesium.Rectangle.fromDegrees(west, south, east, north));
+        scene.camera.viewRectangle(C.Rectangle.fromDegrees(west, south, east, north));
 
         // Show the rectangle.  Not required; just for show.
-        var polylines = scene.primitives.add(new Cesium.PolylineCollection());
+        var polylines = scene.primitives.add(new C.PolylineCollection());
         polylines.add({
-            positions : Cesium.Cartesian3.fromDegreesArray([
+            positions : C.Cartesian3.fromDegreesArray([
                 west, south,
                 west, north,
                 east, north,
@@ -103,13 +103,13 @@ require(['Cesium'], function(Cesium) {
         var north = 40.0;
 
         scene.camera.flyToRectangle({
-            destination : Cesium.Rectangle.fromDegrees(west, south, east, north)
+            destination : C.Rectangle.fromDegrees(west, south, east, north)
         });
 
         // Show the rectangle.  Not required; just for show.
-        var polylines = scene.primitives.add(new Cesium.PolylineCollection());
+        var polylines = scene.primitives.add(new C.PolylineCollection());
         polylines.add({
-            positions : Cesium.Cartesian3.fromDegreesArray([
+            positions : C.Cartesian3.fromDegreesArray([
                 west, south,
                 west, north,
                 east, north,
@@ -122,39 +122,39 @@ require(['Cesium'], function(Cesium) {
     Sandcastle.addToolbarButton('Set camera reference frame', function() {
         reset();
 
-        var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
-        var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+        var center = C.Cartesian3.fromDegrees(-75.59777, 40.03883);
+        var transform = C.Transforms.eastNorthUpToFixedFrame(center);
 
         // View in east-north-up frame
         var camera = scene.camera;
-        Cesium.Matrix4.clone(transform, camera.transform);
-        camera.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
+        C.Matrix4.clone(transform, camera.transform);
+        camera.constrainedAxis = C.Cartesian3.UNIT_Z;
 
         var controller = scene.screenSpaceCameraController;
-        controller.ellipsoid = Cesium.Ellipsoid.UNIT_SPHERE;
+        controller.ellipsoid = C.Ellipsoid.UNIT_SPHERE;
         controller.enableTilt = false;
 
         // Zoom in
         camera.lookAt(
-            new Cesium.Cartesian3(-120000.0, -120000.0, 120000.0),
-            Cesium.Cartesian3.ZERO,
-            Cesium.Cartesian3.UNIT_Z);
+            new C.Cartesian3(-120000.0, -120000.0, 120000.0),
+            C.Cartesian3.ZERO,
+            C.Cartesian3.UNIT_Z);
 
         // Show reference frame.  Not required.
-        scene.primitives.add(new Cesium.DebugModelMatrixPrimitive({
+        scene.primitives.add(new C.DebugModelMatrixPrimitive({
             modelMatrix : transform,
             length : 100000.0
         }));
     });
 
     function icrf(scene, time) {
-        if (scene.mode !== Cesium.SceneMode.SCENE3D) {
+        if (scene.mode !== C.SceneMode.SCENE3D) {
             return;
         }
 
-        var icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(time);
-        if (Cesium.defined(icrfToFixed)) {
-            scene.camera.transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed, Cesium.Cartesian3.ZERO);
+        var icrfToFixed = C.Transforms.computeIcrfToFixedMatrix(time);
+        if (C.defined(icrfToFixed)) {
+            scene.camera.transform = C.Matrix4.fromRotationTranslation(icrfToFixed, C.Cartesian3.ZERO);
         }
     }
 

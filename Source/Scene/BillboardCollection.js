@@ -126,8 +126,8 @@ define([
      *
      * @example
      * // Create a billboard collection with two billboards
-     * var billboards = new Cesium.BillboardCollection();
-     * var atlas = new TextureAtlas({
+     * var billboards = new C.BillboardCollection();
+     * var atlas = new C.TextureAtlas({
      *   scene : scene,
      *   images : images
      * });
@@ -205,12 +205,12 @@ define([
          * @see Transforms.eastNorthUpToFixedFrame
          *
          * @example
-         * var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
-         * billboards.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-         * billboards.add({ imageIndex: 0, position : new Cesium.Cartesian3(0.0, 0.0, 0.0) }); // center
-         * billboards.add({ imageIndex: 0, position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0) }); // east
-         * billboards.add({ imageIndex: 0, position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0) }); // north
-         * billboards.add({ imageIndex: 0, position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0) }); // up
+         * var center = C.Cartesian3.fromDegrees(-75.59777, 40.03883);
+         * billboards.modelMatrix = C.Transforms.eastNorthUpToFixedFrame(center);
+         * billboards.add({ imageIndex: 0, position : new C.Cartesian3(0.0, 0.0, 0.0) }); // center
+         * billboards.add({ imageIndex: 0, position : new C.Cartesian3(1000000.0, 0.0, 0.0) }); // east
+         * billboards.add({ imageIndex: 0, position : new C.Cartesian3(0.0, 1000000.0, 0.0) }); // north
+         * billboards.add({ imageIndex: 0, position : new C.Cartesian3(0.0, 0.0, 1000000.0) }); // up
          * ]);
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
@@ -281,7 +281,7 @@ define([
          * // Assigns a texture atlas with two images to a billboard collection.
          * // Two billboards, each referring to one of the images, are then
          * // added to the collection.
-         * var billboards = new Cesium.BillboardCollection();
+         * var billboards = new C.BillboardCollection();
          * var images = [image0, image1];
          * var atlas = new TextureAtlas({
          *   scene : scene,
@@ -363,21 +363,21 @@ define([
      * // Example 1:  Add a billboard, specifying all the default values.
      * var b = billboards.add({
      *   show : true,
-     *   position : Cesium.Cartesian3.ZERO,
-     *   pixelOffset : Cesium.Cartesian2.ZERO,
-     *   eyeOffset : Cesium.Cartesian3.ZERO,
-     *   horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
-     *   verticalOrigin : Cesium.VerticalOrigin.CENTER,
+     *   position : C.Cartesian3.ZERO,
+     *   pixelOffset : C.Cartesian2.ZERO,
+     *   eyeOffset : C.Cartesian3.ZERO,
+     *   horizontalOrigin : C.HorizontalOrigin.CENTER,
+     *   verticalOrigin : C.VerticalOrigin.CENTER,
      *   scale : 1.0,
      *   imageIndex : 0,
-     *   color : Cesium.Color.WHITE,
+     *   color : C.Color.WHITE,
      *   id : undefined
      * });
      *
      * @example
      * // Example 2:  Specify only the billboard's cartographic position.
      * var b = billboards.add({
-     *   position : ellipsoid.cartographicToCartesian(new Cesium.Cartographic(longitude, latitude, height))
+     *   position : ellipsoid.cartographicToCartesian(new C.Cartographic(longitude, latitude, height))
      * });
      */
     BillboardCollection.prototype.add = function(billboard) {

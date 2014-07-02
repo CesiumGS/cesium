@@ -63,27 +63,27 @@
 require([
     'Cesium', 'dijit/form/DropDownButton', 'dijit/DropDownMenu', 'dijit/MenuItem', 'dijit/form/HorizontalSlider', 'dijit/TitlePane'
 ], function(
-    Cesium,  DropDownButton, DropDownMenu, MenuItem, HorizontalSlider, TitlePane)
+    C,  DropDownButton, DropDownMenu, MenuItem, HorizontalSlider, TitlePane)
 {
     "use strict";
   
-    var longitude = Cesium.Math.toRadians(-90.0);
-    var latitude = Cesium.Math.toRadians(30.0);
+    var longitude = C.Math.toRadians(-90.0);
+    var latitude = C.Math.toRadians(30.0);
     var altitude = 3000000.0;
     var clock = 0.0;
-    var cone = Cesium.Math.toRadians(15.0);
+    var cone = C.Math.toRadians(15.0);
     var twist = 0.0;
     var selection = 'Rectangular';
   
     function getModelMatrix(ellipsoid)
     {
-        var location = ellipsoid.cartographicToCartesian(new Cesium.Cartographic(longitude, latitude, altitude));
-        var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(location);
-        var orientation = Cesium.Matrix3.multiply(
-                            Cesium.Matrix3.multiply(Cesium.Matrix3.fromRotationZ(clock), Cesium.Matrix3.fromRotationY(cone), new Cesium.Matrix3()),
-                            Cesium.Matrix3.fromRotationX(twist), new Cesium.Matrix3()
+        var location = ellipsoid.cartographicToCartesian(new C.Cartographic(longitude, latitude, altitude));
+        var modelMatrix = C.Transforms.northEastDownToFixedFrame(location);
+        var orientation = C.Matrix3.multiply(
+                            C.Matrix3.multiply(C.Matrix3.fromRotationZ(clock), C.Matrix3.fromRotationY(cone), new C.Matrix3()),
+                            C.Matrix3.fromRotationX(twist), new C.Matrix3()
                           );
-        return Cesium.Matrix4.multiply(modelMatrix, Cesium.Matrix4.fromRotationTranslation(orientation, Cesium.Cartesian3.ZERO), new Cesium.Matrix4());
+        return C.Matrix4.multiply(modelMatrix, C.Matrix4.fromRotationTranslation(orientation, C.Cartesian3.ZERO), new C.Matrix4());
     }
 
     function addRectangularSensor(sensors, ellipsoid, scene) {
@@ -92,10 +92,10 @@ require([
 
         rectangularPyramidSensor.modelMatrix = getModelMatrix(ellipsoid);
         rectangularPyramidSensor.radius = 20000000.0;
-        rectangularPyramidSensor.xHalfAngle = Cesium.Math.toRadians(40.0);
-        rectangularPyramidSensor.yHalfAngle = Cesium.Math.toRadians(20.0);
+        rectangularPyramidSensor.xHalfAngle = C.Math.toRadians(40.0);
+        rectangularPyramidSensor.yHalfAngle = C.Math.toRadians(20.0);
 
-        rectangularPyramidSensor.material = Cesium.Material.fromType('Color');
+        rectangularPyramidSensor.material = C.Material.fromType('Color');
         rectangularPyramidSensor.material.uniforms.color = {
             red : 0.0,
             green : 1.0,
@@ -111,8 +111,8 @@ require([
         var directions = [];
         for (var i = 0; i < 8; ++i) {
             directions.push({
-                clock : Cesium.Math.toRadians(45.0 * i),
-                cone : Cesium.Math.toRadians(25.0)
+                clock : C.Math.toRadians(45.0 * i),
+                cone : C.Math.toRadians(25.0)
             });
         }
 
@@ -256,16 +256,16 @@ require([
         updateSensor();
     }
 
-    var viewer = new Cesium.Viewer('cesiumContainer', {
+    var viewer = new C.Viewer('cesiumContainer', {
         sceneModePicker : false //sensors currently only work in 3D
     });
   
     viewer.screenSpaceEventHandler.setInputAction(function(movement) {
         var pickedPrimitive = viewer.scene.pick(movement.endPosition);
         Sandcastle.highlight(pickedPrimitive);
-    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+    }, C.ScreenSpaceEventType.MOUSE_MOVE);
 
-    var sensors = new Cesium.SensorVolumeCollection();
+    var sensors = new C.SensorVolumeCollection();
     createUserInterface(viewer, sensors);
 
     Sandcastle.finishedLoading();

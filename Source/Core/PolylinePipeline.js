@@ -108,11 +108,11 @@ define([
      * @see PolylineCollection
      *
      * @example
-     * var polylines = new Cesium.PolylineCollection();
+     * var polylines = new C.PolylineCollection();
      * var polyline = polylines.add(...);
      * var positions = polyline.positions;
      * var modelMatrix = polylines.modelMatrix;
-     * var segments = Cesium.PolylinePipeline.wrapLongitude(positions, modelMatrix);
+     * var segments = C.PolylinePipeline.wrapLongitude(positions, modelMatrix);
      */
     PolylinePipeline.wrapLongitude = function(positions, modelMatrix) {
         var cartesians = [];
@@ -180,10 +180,10 @@ define([
      * @example
      * // Returns [(1.0, 1.0, 1.0), (2.0, 2.0, 2.0)]
      * var positions = [
-     *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
-     *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
-     *     new Cesium.Cartesian3(2.0, 2.0, 2.0)];
-     * var nonDuplicatePositions = Cesium.PolylinePipeline.removeDuplicates(positions);
+     *     new C.Cartesian3(1.0, 1.0, 1.0),
+     *     new C.Cartesian3(1.0, 1.0, 1.0),
+     *     new C.Cartesian3(2.0, 2.0, 2.0)];
+     * var nonDuplicatePositions = C.PolylinePipeline.removeDuplicates(positions);
      */
     PolylinePipeline.removeDuplicates = function(positions) {
         //>>includeStart('debug', pragmas.debug);
@@ -221,13 +221,13 @@ define([
      * @returns {Number[]} A new array of positions of type {Number} that have been subdivided and raised to the surface of the ellipsoid.
      *
      * @example
-     * var positions = Cesium.Cartesian3.fromDegreesArray([
+     * var positions = C.Cartesian3.fromDegreesArray([
      *   -105.0, 40.0,
      *   -100.0, 38.0,
      *   -105.0, 35.0,
      *   -100.0, 32.0
      * ]);
-     * var surfacePositions = Cesium.PolylinePipeline.scaleToSurface(positions);
+     * var surfacePositions = C.PolylinePipeline.scaleToSurface(positions);
      */
     PolylinePipeline.scaleToSurface = function(positions, granularity, ellipsoid) {
         //>>includeStart('debug', pragmas.debug);
@@ -271,12 +271,12 @@ define([
      * @exception {DeveloperError} height.length must be equal to positions.length
      *
      * @example
-     * var p1 = Cesium.Cartesian3.fromDegrees(-105.0, 40.0);
-     * var p2 = Cesium.Cartesian3.fromDegrees(-100.0, 38.0);
+     * var p1 = C.Cartesian3.fromDegrees(-105.0, 40.0);
+     * var p2 = C.Cartesian3.fromDegrees(-100.0, 38.0);
      * var positions = [p1.x, p1.y, p1.z, p2.x, p2.y, p2.z];
      * var heights = [1000, 1000, 2000, 2000];
      *
-     * var raisedPositions = Cesium.PolylinePipeline.scaleToGeodeticHeight(positions, heights);
+     * var raisedPositions = C.PolylinePipeline.scaleToGeodeticHeight(positions, heights);
      */
     PolylinePipeline.scaleToGeodeticHeight = function(positions, height, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);

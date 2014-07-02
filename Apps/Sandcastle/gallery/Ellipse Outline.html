@@ -24,48 +24,48 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+require(['Cesium'], function(C) {
     "use strict";
     
-    var viewer = new Cesium.Viewer('cesiumContainer');
+    var viewer = new C.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
 
     // Outline of red ellipse
-    var center = Cesium.Cartesian3.fromDegrees(-100.0, 40.0);
+    var center = C.Cartesian3.fromDegrees(-100.0, 40.0);
     var semiMinorAxis = 200000.0;
     var semiMajorAxis = 300000.0;
-    var ellipseOutlineGeometry = new Cesium.EllipseOutlineGeometry({
+    var ellipseOutlineGeometry = new C.EllipseOutlineGeometry({
         center : center,
         semiMinorAxis : semiMinorAxis,
         semiMajorAxis : semiMajorAxis
     });
     
-    var redEllipseOutlineInstance = new Cesium.GeometryInstance({
+    var redEllipseOutlineInstance = new C.GeometryInstance({
         geometry : ellipseOutlineGeometry,
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+            color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.WHITE)
         }
     });
   
     // Red ellipse
-    var redEllipseInstance = new Cesium.GeometryInstance({
-        geometry : new Cesium.EllipseGeometry({
+    var redEllipseInstance = new C.GeometryInstance({
+        geometry : new C.EllipseGeometry({
             center : center,
             semiMinorAxis : semiMinorAxis,
             semiMajorAxis : semiMajorAxis,
-            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+            vertexFormat : C.PerInstanceColorAppearance.VERTEX_FORMAT
         }),
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
+            color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.RED)
         }
     });
     
     // Outline of green extruded ellipse
-    center = Cesium.Cartesian3.fromDegrees(-95.0, 35.0);
+    center = C.Cartesian3.fromDegrees(-95.0, 35.0);
     var extrudedHeight = 150000.0;
-    var rotation = Cesium.Math.toRadians(45);
-    ellipseOutlineGeometry = new Cesium.EllipseOutlineGeometry({
+    var rotation = C.Math.toRadians(45);
+    ellipseOutlineGeometry = new C.EllipseOutlineGeometry({
         center : center,
         semiMinorAxis : semiMinorAxis,
         semiMajorAxis : semiMajorAxis,
@@ -74,32 +74,32 @@ require(['Cesium'], function(Cesium) {
         numberOfVerticalLines: 10
     });
     
-    var greenEllipseOutlineInstance = new Cesium.GeometryInstance({
+    var greenEllipseOutlineInstance = new C.GeometryInstance({
         geometry : ellipseOutlineGeometry,
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+            color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.WHITE)
         }
     });
 
     // Green extruded ellipse
-    var greenEllipseInstance = new Cesium.GeometryInstance({
-        geometry : new Cesium.EllipseGeometry({
+    var greenEllipseInstance = new C.GeometryInstance({
+        geometry : new C.EllipseGeometry({
             center : center,
             semiMinorAxis : semiMinorAxis,
             semiMajorAxis : semiMajorAxis,
             extrudedHeight : extrudedHeight,
             rotation: rotation,
-            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+            vertexFormat : C.PerInstanceColorAppearance.VERTEX_FORMAT
         }),
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.GREEN)
+            color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.GREEN)
         }
     });
     
     // Add ellipse outline instances to primitives
-    primitives.add(new Cesium.Primitive({
+    primitives.add(new C.Primitive({
         geometryInstances : [redEllipseOutlineInstance, greenEllipseOutlineInstance],
-        appearance : new Cesium.PerInstanceColorAppearance({
+        appearance : new C.PerInstanceColorAppearance({
             flat : true,
             renderState : {
                 depthTest : {
@@ -111,9 +111,9 @@ require(['Cesium'], function(Cesium) {
     }));
     
     // Add ellipse instances to primitives
-    primitives.add(new Cesium.Primitive({
+    primitives.add(new C.Primitive({
         geometryInstances : [redEllipseInstance, greenEllipseInstance],
-        appearance : new Cesium.PerInstanceColorAppearance({
+        appearance : new C.PerInstanceColorAppearance({
             closed : true,
             translucent : false
         })

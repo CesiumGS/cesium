@@ -42,9 +42,9 @@ define([
      *
      * @example
      * // Add support for working with DynamicObject instances to the Viewer.
-     * var dynamicObject = ... //A Cesium.DynamicObject instance
-     * var viewer = new Cesium.Viewer('cesiumContainer');
-     * viewer.extend(Cesium.viewerDynamicObjectMixin);
+     * var dynamicObject = ... //A C.DynamicObject instance
+     * var viewer = new C.Viewer('cesiumContainer');
+     * viewer.extend(C.viewerDynamicObjectMixin);
      * viewer.trackedObject = dynamicObject; //Camera will now track dynamicObject
      * viewer.selectedObject = object; //Selection will now appear over object
      */

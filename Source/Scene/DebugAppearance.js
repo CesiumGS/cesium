@@ -34,9 +34,9 @@ define([
      * @exception {DeveloperError} options.glslDatatype must be float, vec2, vec3, or vec4.
      *
      * @example
-     * var primitive = new Cesium.Primitive({
+     * var primitive = new C.Primitive({
      *   geometryInstances : // ...
-     *   appearance : new Cesium.DebugAppearance({
+     *   appearance : new C.DebugAppearance({
      *     attributeName : 'normal'
      *   })
      * });

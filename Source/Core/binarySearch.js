@@ -31,7 +31,7 @@ define([
      *     return a - b;
      * };
      * var numbers = [0, 2, 4, 6, 8];
-     * var index = Cesium.binarySearch(numbers, 6, comparator); // 3
+     * var index = C.binarySearch(numbers, 6, comparator); // 3
      */
     var binarySearch = function(array, itemToFind, comparator) {
         //>>includeStart('debug', pragmas.debug);

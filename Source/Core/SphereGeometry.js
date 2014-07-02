@@ -27,11 +27,11 @@ define([
      * @see SphereGeometry#createGeometry
      *
      * @example
-     * var sphere = new Cesium.SphereGeometry({
+     * var sphere = new C.SphereGeometry({
      *   radius : 100.0,
-     *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY
+     *   vertexFormat : C.VertexFormat.POSITION_ONLY
      * });
-     * var geometry = Cesium.SphereGeometry.createGeometry(sphere);
+     * var geometry = C.SphereGeometry.createGeometry(sphere);
      */
     var SphereGeometry = function(options) {
         var radius = defaultValue(options.radius, 1.0);

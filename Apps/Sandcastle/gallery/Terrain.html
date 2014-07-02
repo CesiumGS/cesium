@@ -28,7 +28,7 @@
 <div id="sampleButtons"></div>
 </div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+require(['Cesium'], function(C) {
     "use strict";
 
     function createTerrainMenu(terrainProviders) {
@@ -45,54 +45,54 @@ require(['Cesium'], function(Cesium) {
         Sandcastle.addToolbarButton('Mount Everest', function() {
             var eye, target, up;
 
-            if (scene.mode === Cesium.SceneMode.SCENE3D) {
-                eye = new Cesium.Cartesian3(294572.0645397696, 5637826.573008351, 2978624.6868285);
-                target = Cesium.Cartesian3.add(eye, new Cesium.Cartesian3(0.9028130862217908, -0.42449297750082904, -0.06880583840911567), new Cesium.Cartesian3());
-                up = new Cesium.Cartesian3(0.40668971896562117, 0.790807045510862, 0.45741413322152297);
+            if (scene.mode === C.SceneMode.SCENE3D) {
+                eye = new C.Cartesian3(294572.0645397696, 5637826.573008351, 2978624.6868285);
+                target = C.Cartesian3.add(eye, new C.Cartesian3(0.9028130862217908, -0.42449297750082904, -0.06880583840911567), new C.Cartesian3());
+                up = new C.Cartesian3(0.40668971896562117, 0.790807045510862, 0.45741413322152297);
                 scene.camera.lookAt(eye, target, up);
-            } else if (scene.mode === Cesium.SceneMode.COLUMBUS_VIEW) {
-                eye = new Cesium.Cartesian3(9684590.891310014, 3114799.076252769, 9849.375792522824);
-                target = Cesium.Cartesian3.add(eye, new Cesium.Cartesian3(-0.8929328433855669, -0.00005779973945286486, -0.45018988645076763), new Cesium.Cartesian3());
-                up = new Cesium.Cartesian3(-0.4501898855076042, -0.0000291369789812141, 0.8929328452557279);
+            } else if (scene.mode === C.SceneMode.COLUMBUS_VIEW) {
+                eye = new C.Cartesian3(9684590.891310014, 3114799.076252769, 9849.375792522824);
+                target = C.Cartesian3.add(eye, new C.Cartesian3(-0.8929328433855669, -0.00005779973945286486, -0.45018988645076763), new C.Cartesian3());
+                up = new C.Cartesian3(-0.4501898855076042, -0.0000291369789812141, 0.8929328452557279);
                 scene.camera.lookAt(eye, target, up);
             } else {
-                scene.camera.viewRectangle(new Cesium.Rectangle(1.516102969, 0.48744464, 1.518102969, 0.48944464));
+                scene.camera.viewRectangle(new C.Rectangle(1.516102969, 0.48744464, 1.518102969, 0.48944464));
             }
         }, 'zoomButtons');
 
         Sandcastle.addToolbarButton('Half Dome', function() {
             var eye, target, up;
 
-            if (scene.mode === Cesium.SceneMode.SCENE3D) {
-                eye = new Cesium.Cartesian3(-2496304.1498512086, -4391818.97382059, 3884176.4503971986);
-                target = Cesium.Cartesian3.add(eye, new Cesium.Cartesian3(0.9279518715011381, -0.29488412129953234, -0.22792252890604328), new Cesium.Cartesian3());
-                up = new Cesium.Cartesian3(-0.11836693744723503, -0.8130611584421428, 0.5700182635106171);
+            if (scene.mode === C.SceneMode.SCENE3D) {
+                eye = new C.Cartesian3(-2496304.1498512086, -4391818.97382059, 3884176.4503971986);
+                target = C.Cartesian3.add(eye, new C.Cartesian3(0.9279518715011381, -0.29488412129953234, -0.22792252890604328), new C.Cartesian3());
+                up = new C.Cartesian3(-0.11836693744723503, -0.8130611584421428, 0.5700182635106171);
                 scene.camera.lookAt(eye, target, up);
-            } else if (scene.mode === Cesium.SceneMode.COLUMBUS_VIEW) {
-                eye = new Cesium.Cartesian3(-13314946.646404704, 4200941.442507448, 2468.225945515426);
-                target = Cesium.Cartesian3.add(eye, new Cesium.Cartesian3(0.9624895834866811, 0.04124314776883213, -0.26816562874787864), new Cesium.Cartesian3());
-                up = new Cesium.Cartesian3(0.2679197697914868, 0.011480478929947842, 0.9633728227203466);
+            } else if (scene.mode === C.SceneMode.COLUMBUS_VIEW) {
+                eye = new C.Cartesian3(-13314946.646404704, 4200941.442507448, 2468.225945515426);
+                target = C.Cartesian3.add(eye, new C.Cartesian3(0.9624895834866811, 0.04124314776883213, -0.26816562874787864), new C.Cartesian3());
+                up = new C.Cartesian3(0.2679197697914868, 0.011480478929947842, 0.9633728227203466);
                 scene.camera.lookAt(eye, target, up);
             } else {
-                scene.camera.viewRectangle(new Cesium.Rectangle(-2.08724538, 0.6577939, -2.08524538, 0.6597939));
+                scene.camera.viewRectangle(new C.Rectangle(-2.08724538, 0.6577939, -2.08524538, 0.6597939));
             }
         }, 'zoomButtons');
 
         Sandcastle.addToolbarButton('San Francisco Bay', function() {
             var eye, target, up;
 
-            if (scene.mode === Cesium.SceneMode.SCENE3D) {
-                eye = new Cesium.Cartesian3(-2674718.9291375633, -4332137.224608461, 3888180.6614196445);
-                target = Cesium.Cartesian3.add(eye, new Cesium.Cartesian3(-0.40034097132786534, 0.9155843741828319, 0.03784653786617176), new Cesium.Cartesian3());
-                up = new Cesium.Cartesian3(-0.6502679490649945, -0.3129458646313862, 0.6922546353438556);
+            if (scene.mode === C.SceneMode.SCENE3D) {
+                eye = new C.Cartesian3(-2674718.9291375633, -4332137.224608461, 3888180.6614196445);
+                target = C.Cartesian3.add(eye, new C.Cartesian3(-0.40034097132786534, 0.9155843741828319, 0.03784653786617176), new C.Cartesian3());
+                up = new C.Cartesian3(-0.6502679490649945, -0.3129458646313862, 0.6922546353438556);
                 scene.camera.lookAt(eye, target, up);
-            } else if (scene.mode === Cesium.SceneMode.COLUMBUS_VIEW) {
-                eye = new Cesium.Cartesian3(-13562569.113918452, 4176598.9965795614, 37656.37201701476);
-                target = Cesium.Cartesian3.add(eye, new Cesium.Cartesian3(-0.8108519561707095, 0.4023795334200999, -0.42498213639958615), new Cesium.Cartesian3());
-                up = new Cesium.Cartesian3(-0.3806859699462094, 0.18891270085627615, 0.905201736488051);
+            } else if (scene.mode === C.SceneMode.COLUMBUS_VIEW) {
+                eye = new C.Cartesian3(-13562569.113918452, 4176598.9965795614, 37656.37201701476);
+                target = C.Cartesian3.add(eye, new C.Cartesian3(-0.8108519561707095, 0.4023795334200999, -0.42498213639958615), new C.Cartesian3());
+                up = new C.Cartesian3(-0.3806859699462094, 0.18891270085627615, 0.905201736488051);
                 scene.camera.lookAt(eye, target, up);
             } else {
-                scene.camera.viewRectangle(new Cesium.Rectangle(-2.147621889, 0.64829691, -2.125621889, 0.67029691));
+                scene.camera.viewRectangle(new C.Rectangle(-2.147621889, 0.64829691, -2.125621889, 0.67029691));
             }
         }, 'zoomButtons');
 
@@ -101,13 +101,13 @@ require(['Cesium'], function(Cesium) {
         var labels;
 
         function sampleTerrainSuccess() {
-            var ellipsoid = Cesium.Ellipsoid.WGS84;
+            var ellipsoid = C.Ellipsoid.WGS84;
 
             if (typeof billboards === 'undefined') {
-                billboards = new Cesium.BillboardCollection();
+                billboards = new C.BillboardCollection();
 
-                Cesium.when(Cesium.loadImage('../images/facility.gif'), function(image) {
-                    var textureAtlas = new Cesium.TextureAtlas({
+                C.when(C.loadImage('../images/facility.gif'), function(image) {
+                    var textureAtlas = new C.TextureAtlas({
                         scene : scene,
                         images : [image]
                     });
@@ -118,7 +118,7 @@ require(['Cesium'], function(Cesium) {
             }
 
             if (typeof labels === 'undefined') {
-                labels = new Cesium.LabelCollection();
+                labels = new C.LabelCollection();
             } else {
                 labels.removeAll();
             }
@@ -127,7 +127,7 @@ require(['Cesium'], function(Cesium) {
                 var position = terrainSamplePositions[i];
                 billboards.add({
                     position : ellipsoid.cartographicToCartesian(position),
-                    verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
+                    verticalOrigin : C.VerticalOrigin.BOTTOM,
                     scale : 0.7,
                     imageIndex : 0
                 });
@@ -135,11 +135,11 @@ require(['Cesium'], function(Cesium) {
                 labels.add({
                     position : ellipsoid.cartographicToCartesian(position),
                     text : position.height.toFixed(1),
-                    horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
+                    horizontalOrigin : C.HorizontalOrigin.CENTER,
                     scale : 0.3,
-                    pixelOffset : new Cesium.Cartesian2(0,-14),
-                    fillColor : new Cesium.Color(1,0,0),
-                    outlineColor : Cesium.Color.WHITE
+                    pixelOffset : new C.Cartesian2(0,-14),
+                    fillColor : new C.Color(1,0,0),
+                    outlineColor : C.Color.WHITE
                 });
 
             }
@@ -150,42 +150,42 @@ require(['Cesium'], function(Cesium) {
         Sandcastle.addToolbarButton('Sample Everest Terrain', function() {
             var gridWidth = 41;
             var gridHeight = 41;
-            var everestLatitude = Cesium.Math.toRadians(27.988257);
-            var everestLongitude = Cesium.Math.toRadians(86.925145);
+            var everestLatitude = C.Math.toRadians(27.988257);
+            var everestLongitude = C.Math.toRadians(86.925145);
             var rectangleHalfSize = 0.005;
-            var e = new Cesium.Rectangle(everestLongitude - rectangleHalfSize,everestLatitude - rectangleHalfSize,everestLongitude + rectangleHalfSize,everestLatitude + rectangleHalfSize);
+            var e = new C.Rectangle(everestLongitude - rectangleHalfSize,everestLatitude - rectangleHalfSize,everestLongitude + rectangleHalfSize,everestLatitude + rectangleHalfSize);
             terrainSamplePositions = [];
             for (var y = 0; y < gridHeight; ++y) {
                 for (var x = 0; x < gridWidth; ++x) {
-                    var longitude = Cesium.Math.lerp(e.west, e.east, x / (gridWidth - 1));
-                    var latitude = Cesium.Math.lerp(e.south, e.north, y / (gridHeight - 1));
-                    var position = new Cesium.Cartographic(longitude, latitude);
+                    var longitude = C.Math.lerp(e.west, e.east, x / (gridWidth - 1));
+                    var latitude = C.Math.lerp(e.south, e.north, y / (gridHeight - 1));
+                    var position = new C.Cartographic(longitude, latitude);
                     terrainSamplePositions.push(position);
                 }
             }
 
-            Cesium.when(Cesium.sampleTerrain(scene.terrainProvider, 9, terrainSamplePositions), sampleTerrainSuccess);
+            C.when(C.sampleTerrain(scene.terrainProvider, 9, terrainSamplePositions), sampleTerrainSuccess);
         }, 'sampleButtons');
     }
 
-    var viewer = new Cesium.Viewer('cesiumContainer');
+    var viewer = new C.Viewer('cesiumContainer');
 
     var scene = viewer.scene;
     var globe = scene.globe;
     globe.depthTestAgainstTerrain = true;
 
-    var cesiumTerrainProviderHeightmaps = new Cesium.CesiumTerrainProvider({
+    var cesiumTerrainProviderHeightmaps = new C.CesiumTerrainProvider({
         url : '//cesiumjs.org/smallterrain',
         credit : 'Terrain data courtesy Analytical Graphics, Inc.'
     });
 
-    var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
+    var cesiumTerrainProviderMeshes = new C.CesiumTerrainProvider({
         url : '//cesiumjs.org/stk-terrain/tilesets/world/tiles'
     });
 
-    var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
+    var ellipsoidProvider = new C.EllipsoidTerrainProvider();
 
-    var vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
+    var vrTheWorldProvider = new C.VRTheWorldTerrainProvider({
         url : '//www.vr-theworld.com/vr-theworld/tiles1.0.0/73/',
         credit : 'Terrain data courtesy VT MÄK'
     });

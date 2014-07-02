@@ -49,8 +49,8 @@ define([
      *
      * @example
      * //Get the first intersection point of a ray and an ellipsoid.
-     * var intersection = Cesium.IntersectionTests.rayEllipsoid(ray, ellipsoid);
-     * var point = Ray.getPoint(ray, intersection.start);
+     * var intersection = C.IntersectionTests.rayEllipsoid(ray, ellipsoid);
+     * var point = C.Ray.getPoint(ray, intersection.start);
      */
     Ray.getPoint = function(ray, t, result) {
         //>>includeStart('debug', pragmas.debug);

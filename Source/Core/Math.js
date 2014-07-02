@@ -268,7 +268,7 @@ define([
      * @returns {Number} The linearly interpolated value.
      *
      * @example
-     * var n = Cesium.Math.lerp(0.0, 2.0, 0.5); // returns 1.0
+     * var n = C.Math.lerp(0.0, 2.0, 0.5); // returns 1.0
      */
     CesiumMath.lerp = function(p, q, time) {
         return ((1.0 - time) * p) + (time * q);
@@ -409,7 +409,7 @@ define([
      *
      * @example
      * // Convert 270 degrees to -90 degrees longitude
-     * var longitude = Cesium.Math.convertLongitudeRange(Cesium.Math.toRadians(270.0));
+     * var longitude = C.Math.convertLongitudeRange(C.Math.toRadians(270.0));
      */
     CesiumMath.convertLongitudeRange = function(angle) {
         //>>includeStart('debug', pragmas.debug);
@@ -486,8 +486,8 @@ define([
      * @returns {Boolean} <code>true</code> if the values are equal within the epsilon; otherwise, <code>false</code>.
      *
      * @example
-     * var b = Cesium.Math.equalsEpsilon(0.0, 0.01, Cesium.Math.EPSILON2); // true
-     * var b = Cesium.Math.equalsEpsilon(0.0, 0.1, Cesium.Math.EPSILON2);  // false
+     * var b = C.Math.equalsEpsilon(0.0, 0.01, C.Math.EPSILON2); // true
+     * var b = C.Math.equalsEpsilon(0.0, 0.1, C.Math.EPSILON2);  // false
      */
     CesiumMath.equalsEpsilon = function(left, right, epsilon) {
         //>>includeStart('debug', pragmas.debug);
@@ -517,7 +517,7 @@ define([
      *
      * @example
      * //Compute 7!, which is equal to 5040
-     * var computedFactorial = Cesium.Math.factorial(7);
+     * var computedFactorial = C.Math.factorial(7);
      */
     CesiumMath.factorial = function(n) {
         //>>includeStart('debug', pragmas.debug);
@@ -547,8 +547,8 @@ define([
      * @exception {DeveloperError} Maximum value must be greater than minimum value.
      *
      * @example
-     * var n = Cesium.Math.incrementWrap(5, 10, 0); // returns 6
-     * var n = Cesium.Math.incrementWrap(10, 10, 0); // returns 0
+     * var n = C.Math.incrementWrap(5, 10, 0); // returns 6
+     * var n = C.Math.incrementWrap(10, 10, 0); // returns 0
      */
     CesiumMath.incrementWrap = function(n, maximumValue, minimumValue) {
         minimumValue = defaultValue(minimumValue, 0.0);
@@ -578,8 +578,8 @@ define([
      * @exception {DeveloperError} A number greater than or equal to 0 is required.
      *
      * @example
-     * var t = Cesium.Math.isPowerOfTwo(16); // true
-     * var f = Cesium.Math.isPowerOfTwo(20); // false
+     * var t = C.Math.isPowerOfTwo(16); // true
+     * var f = C.Math.isPowerOfTwo(20); // false
      */
     CesiumMath.isPowerOfTwo = function(n) {
         //>>includeStart('debug', pragmas.debug);
@@ -600,8 +600,8 @@ define([
      * @exception {DeveloperError} A number greater than or equal to 0 is required.
      *
      * @example
-     * var n = Cesium.Math.nextPowerOfTwo(29); // 32
-     * var m = Cesium.Math.nextPowerOfTwo(32); // 32
+     * var n = C.Math.nextPowerOfTwo(29); // 32
+     * var m = C.Math.nextPowerOfTwo(32); // 32
      */
     CesiumMath.nextPowerOfTwo = function(n) {
         //>>includeStart('debug', pragmas.debug);

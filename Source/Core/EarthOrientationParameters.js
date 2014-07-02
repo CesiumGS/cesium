@@ -63,8 +63,8 @@ define([
      *
      * @example
      * // Loading the EOP data
-     * var eop = new Cesium.EarthOrientationParameters({ url : 'Data/EOP.json' });
-     * Cesium.Transforms.earthOrientationParameters = eop;
+     * var eop = new C.EarthOrientationParameters({ url : 'Data/EOP.json' });
+     * C.Transforms.earthOrientationParameters = eop;
      */
     var EarthOrientationParameters = function EarthOrientationParameters(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

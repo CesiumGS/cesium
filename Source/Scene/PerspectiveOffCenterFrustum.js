@@ -33,7 +33,7 @@ define([
      * @see PerspectiveFrustum
      *
      * @example
-     * var frustum = new Cesium.PerspectiveOffCenterFrustum();
+     * var frustum = new C.PerspectiveOffCenterFrustum();
      * frustum.right = 1.0;
      * frustum.left = -1.0;
      * frustum.top = 1.0;
@@ -318,7 +318,7 @@ define([
      * @example
      * // Example 1
      * // Get the width and height of a pixel.
-     * var pixelSize = camera.frustum.getPixelSize(new Cartesian2(canvas.clientWidth, canvas.clientHeight));
+     * var pixelSize = camera.frustum.getPixelSize(new C.Cartesian2(canvas.clientWidth, canvas.clientHeight));
      *
      * @example
      * // Example 2
@@ -326,10 +326,10 @@ define([
      * // For example, get the size of a pixel of an image on a billboard.
      * var position = camera.position;
      * var direction = camera.direction;
-     * var toCenter = Cesium.Cartesian3.subtract(primitive.boundingVolume.center, position, new Cartesian3());      // vector from camera to a primitive
-     * var toCenterProj = Cesium.Cartesian3.multiplyByScalar(direction, Cesium.Cartesian3.dot(direction, toCenter), new Cartesian3()); // project vector onto camera direction vector
-     * var distance = Cesium.Cartesian3.magnitude(toCenterProj);
-     * var pixelSize = camera.frustum.getPixelSize(new Cesium.Cartesian2(canvas.clientWidth, canvas.clientHeight), distance);
+     * var toCenter = C.Cartesian3.subtract(primitive.boundingVolume.center, position, new C.Cartesian3());      // vector from camera to a primitive
+     * var toCenterProj = C.Cartesian3.multiplyByScalar(direction, C.Cartesian3.dot(direction, toCenter), new C.Cartesian3()); // project vector onto camera direction vector
+     * var distance = C.Cartesian3.magnitude(toCenterProj);
+     * var pixelSize = camera.frustum.getPixelSize(new C.Cartesian2(canvas.clientWidth, canvas.clientHeight), distance);
      */
     PerspectiveOffCenterFrustum.prototype.getPixelSize = function(drawingBufferDimensions, distance, result) {
         update(this);

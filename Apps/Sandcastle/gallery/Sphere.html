@@ -24,39 +24,39 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+require(['Cesium'], function(C) {
     "use strict";
     
-    var viewer = new Cesium.Viewer('cesiumContainer');
+    var viewer = new C.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
 
     // Create sphere are position with model matrix
     var radius = 300000.0;
-    var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-100.0, 40.0);
-    var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
-        Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
-        new Cesium.Cartesian3(0.0, 0.0, radius), new Cesium.Matrix4()
+    var positionOnEllipsoid = C.Cartesian3.fromDegrees(-100.0, 40.0);
+    var modelMatrix = C.Matrix4.multiplyByTranslation(
+        C.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
+        new C.Cartesian3(0.0, 0.0, radius), new C.Matrix4()
     );
 
-    var sphereGeometry = new Cesium.SphereGeometry({
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+    var sphereGeometry = new C.SphereGeometry({
+        vertexFormat : C.PerInstanceColorAppearance.VERTEX_FORMAT,
         radius : radius
     });
 
-    var sphereInstance = new Cesium.GeometryInstance({
+    var sphereInstance = new C.GeometryInstance({
         geometry : sphereGeometry,
         modelMatrix : modelMatrix,
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
+            color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.RED)
         }
     });
     
     // Add sphere instance to primitives
     
-    primitives.add(new Cesium.Primitive({
+    primitives.add(new C.Primitive({
         geometryInstances : sphereInstance,
-        appearance : new Cesium.PerInstanceColorAppearance({
+        appearance : new C.PerInstanceColorAppearance({
             translucent : false,
             closed : true
         })

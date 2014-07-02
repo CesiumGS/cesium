@@ -53,7 +53,7 @@ define([
      *
      * @example
      * // OpenStreetMap tile provider
-     * var osm = new Cesium.OpenStreetMapImageryProvider({
+     * var osm = new C.OpenStreetMapImageryProvider({
      *     url : '//a.tile.openstreetmap.org/'
      * });
      */

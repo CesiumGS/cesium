@@ -53,15 +53,15 @@ define([
      *
      * @example
      * // A polyline with two connected line segments
-     * var polyline = new Cesium.PolylineGeometry({
-     *   positions : Cesium.Cartesian3.fromDegreesArray([
+     * var polyline = new C.PolylineGeometry({
+     *   positions : C.Cartesian3.fromDegreesArray([
      *     0.0, 0.0,
      *     5.0, 0.0,
      *     5.0, 5.0
      *   ]),
      *   width : 10.0
      * });
-     * var geometry = Cesium.PolylineGeometry.createGeometry(polyline);
+     * var geometry = C.PolylineGeometry.createGeometry(polyline);
      */
     var PolylineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

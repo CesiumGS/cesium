@@ -30,15 +30,15 @@ define([
      * @see GeometryInstanceAttribute
      *
      * @example
-     * var instance = new Cesium.GeometryInstance({
-     *   geometry : new Cesium.BoxGeometry({
-     *     dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0)
+     * var instance = new C.GeometryInstance({
+     *   geometry : new C.BoxGeometry({
+     *     dimensions : new C.Cartesian3(1000000.0, 1000000.0, 500000.0)
      *   }),
-     *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-     *     Cesium.Cartesian3.fromDegrees(0.0, 0.0), new Cesium.Cartesian3(0.0, 0.0, 1000000.0), new Matrix4()),
+     *   modelMatrix : C.Matrix4.multiplyByTranslation(C.Transforms.eastNorthUpToFixedFrame(
+     *     C.Cartesian3.fromDegrees(0.0, 0.0), new C.Cartesian3(0.0, 0.0, 1000000.0), new Matrix4()),
      *   id : 'box',
      *   attributes : {
-     *     color : new Cesium.ColorGeometryInstanceAttribute(red, green, blue, alpha)
+     *     color : new C.ColorGeometryInstanceAttribute(red, green, blue, alpha)
      *   }
      * });
      */
@@ -123,10 +123,10 @@ define([
      * @returns {ColorGeometryInstanceAttribute} The new {@link ColorGeometryInstanceAttribute} instance.
      *
      * @example
-     * var instance = new Cesium.GeometryInstance({
+     * var instance = new C.GeometryInstance({
      *   geometry : // ...
      *   attributes : {
-     *     color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.CORNFLOWERBLUE),
+     *     color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.CORNFLOWERBLUE),
      *   }
      * });
      */
@@ -150,7 +150,7 @@ define([
      *
      * @example
      * var attributes = primitive.getGeometryInstanceAttributes('an id');
-     * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA, attributes.color);
+     * attributes.color = C.ColorGeometryInstanceAttribute.toValue(C.Color.AQUA, attributes.color);
      */
     ColorGeometryInstanceAttribute.toValue = function(color, result) {
         //>>includeStart('debug', pragmas.debug);

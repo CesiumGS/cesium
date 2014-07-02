@@ -135,8 +135,8 @@ define([
          * @example
          * // The sensor's vertex is located on the surface at -75.59777 degrees longitude and 40.03883 degrees latitude.
          * // The sensor's opens upward, along the surface normal.
-         * var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
-         * sensor.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+         * var center = C.Cartesian3.fromDegrees(-75.59777, 40.03883);
+         * sensor.modelMatrix = C.Transforms.eastNorthUpToFixedFrame(center);
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = new Matrix4();
@@ -167,10 +167,10 @@ define([
          *
          * @example
          * // 1. Change the color of the default material to yellow
-         * sensor.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
+         * sensor.material.uniforms.color = new C.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
-         * sensor.material = Cesium.Material.fromType(Material.StripeType);
+         * sensor.material = C.Material.fromType(Material.StripeType);
          */
         this.material = defined(options.material) ? options.material : Material.fromType(Material.ColorType);
         this._material = undefined;

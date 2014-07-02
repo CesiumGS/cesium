@@ -242,18 +242,18 @@ define([
      *
      * @example
      * // Create a color material with fromType:
-     * polygon.material = Cesium.Material.fromType('Color');
-     * polygon.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
+     * polygon.material = C.Material.fromType('Color');
+     * polygon.material.uniforms.color = new C.Color(1.0, 1.0, 0.0, 1.0);
      *
      * // Create the default material:
-     * polygon.material = new Cesium.Material();
+     * polygon.material = new C.Material();
      *
      * // Create a color material with full Fabric notation:
-     * polygon.material = new Cesium.Material({
+     * polygon.material = new C.Material({
      *     fabric : {
      *         type : 'Color',
      *         uniforms : {
-     *             color : new Cesium.Color(1.0, 1.0, 0.0, 1.0)
+     *             color : new C.Color(1.0, 1.0, 0.0, 1.0)
      *         }
      *     }
      * });
@@ -337,8 +337,8 @@ define([
      * @exception {DeveloperError} material with that type does not exist.
      *
      * @example
-     * var material = Cesium.Material.fromType('Color', {
-     *     color : new Cesium.Color(1.0, 0.0, 0.0, 1.0)
+     * var material = C.Material.fromType('Color', {
+     *     color : new C.Color(1.0, 0.0, 0.0, 1.0)
      * });
      */
     Material.fromType = function(type, uniforms) {

@@ -200,8 +200,8 @@ define([
          * @default {@link Matrix4.IDENTITY}
          *
          * @example
-         * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
-         * m.modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
+         * var origin = C.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
+         * m.modelMatrix = C.Transforms.eastNorthUpToFixedFrame(origin);
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = Matrix4.clone(this.modelMatrix);
@@ -399,7 +399,7 @@ define([
          *
          * @example
          * // Center in WGS84 coordinates
-         * var center = Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cartesian3());
+         * var center = C.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new C.Cartesian3());
          */
         boundingSphere : {
             get : function() {
@@ -489,16 +489,16 @@ define([
      *
      * @example
      * // Example 1. Create a model from a glTF asset
-     * var model = scene.primitives.add(Model.fromGltf({
+     * var model = scene.primitives.add(C.Model.fromGltf({
      *   url : './duck/duck.json'
      * }));
      *
      * @example
      * // Example 2. Create model and provide all properties and events
-     * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
-     * var modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
+     * var origin = C.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
+     * var modelMatrix = C.Transforms.eastNorthUpToFixedFrame(origin);
      *
-     * var model = scene.primitives.add(Model.fromGltf({
+     * var model = scene.primitives.add(C.Model.fromGltf({
      *   url : './duck/duck.json',
      *   show : true,                     // default
      *   modelMatrix : modelMatrix,
@@ -568,7 +568,7 @@ define([
      * @example
      * // Apply non-uniform scale to node LOD3sp
      * var node = model.getNode('LOD3sp');
-     * node.matrix = Matrix4.fromScale(new Cartesian3(5.0, 1.0, 1.0), node.matrix);
+     * node.matrix = C.Matrix4.fromScale(new C.Cartesian3(5.0, 1.0, 1.0), node.matrix);
      */
     Model.prototype.getNode = function(name) {
         var node = getRuntime(this, 'nodesByName', name);

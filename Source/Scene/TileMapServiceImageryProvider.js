@@ -64,15 +64,15 @@ define([
      *
      * @example
      * // TileMapService tile provider
-     * var tms = new Cesium.TileMapServiceImageryProvider({
+     * var tms = new C.TileMapServiceImageryProvider({
      *    url : '../images/cesium_maptiler/Cesium_Logo_Color',
      *    fileExtension: 'png',
      *    maximumLevel: 4,
-     *    rectangle: new Cesium.Rectangle(
-     *        Cesium.Math.toRadians(-120.0),
-     *        Cesium.Math.toRadians(20.0),
-     *        Cesium.Math.toRadians(-60.0),
-     *        Cesium.Math.toRadians(40.0))
+     *    rectangle: new C.Rectangle(
+     *        C.Math.toRadians(-120.0),
+     *        C.Math.toRadians(20.0),
+     *        C.Math.toRadians(-60.0),
+     *        C.Math.toRadians(40.0))
      * });
      */
     var TileMapServiceImageryProvider = function TileMapServiceImageryProvider(options) {

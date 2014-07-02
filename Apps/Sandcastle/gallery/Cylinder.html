@@ -24,62 +24,62 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+require(['Cesium'], function(C) {
     "use strict";
     
-    var viewer = new Cesium.Viewer('cesiumContainer');
+    var viewer = new C.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
 
     // Green Cylinder
     var length = 400000.0;
-    var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-100.0, 40.0);
-    var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
-        Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
-        new Cesium.Cartesian3(0.0, 0.0, length * 0.5), new Cesium.Matrix4()
+    var positionOnEllipsoid = C.Cartesian3.fromDegrees(-100.0, 40.0);
+    var modelMatrix = C.Matrix4.multiplyByTranslation(
+        C.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
+        new C.Cartesian3(0.0, 0.0, length * 0.5), new C.Matrix4()
     );
     
-    var cylinderGeometry = new Cesium.CylinderGeometry({
+    var cylinderGeometry = new C.CylinderGeometry({
         length : length,
         topRadius : 200000.0,
         bottomRadius : 200000.0,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+        vertexFormat : C.PerInstanceColorAppearance.VERTEX_FORMAT
     });
     
-    var greenCylinder = new Cesium.GeometryInstance({
+    var greenCylinder = new C.GeometryInstance({
         geometry : cylinderGeometry,
         modelMatrix : modelMatrix,
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.GREEN)
+            color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.GREEN)
         }
     });
     
     // Red Cone
-    positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-105.0, 40.0);
-    modelMatrix = Cesium.Matrix4.multiplyByTranslation(
-        Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
-        new Cesium.Cartesian3(0.0, 0.0, length * 0.5), new Cesium.Matrix4()
+    positionOnEllipsoid = C.Cartesian3.fromDegrees(-105.0, 40.0);
+    modelMatrix = C.Matrix4.multiplyByTranslation(
+        C.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
+        new C.Cartesian3(0.0, 0.0, length * 0.5), new C.Matrix4()
     );
     
-    cylinderGeometry = new Cesium.CylinderGeometry({
+    cylinderGeometry = new C.CylinderGeometry({
         length : length,
         topRadius : 0.0,
         bottomRadius : 200000.0,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+        vertexFormat : C.PerInstanceColorAppearance.VERTEX_FORMAT
     });
     
-    var redCone = new Cesium.GeometryInstance({
+    var redCone = new C.GeometryInstance({
         geometry : cylinderGeometry,
         modelMatrix : modelMatrix,
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
+            color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.RED)
         }
     });
     
     // Add instances to primitives
-    primitives.add(new Cesium.Primitive({
+    primitives.add(new C.Primitive({
         geometryInstances : [greenCylinder, redCone],
-        appearance : new Cesium.PerInstanceColorAppearance({
+        appearance : new C.PerInstanceColorAppearance({
             closed : true,
             translucent: false
         })

@@ -24,29 +24,29 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+require(['Cesium'], function(C) {
     "use strict";
-    var viewer = new Cesium.Viewer('cesiumContainer');
+    var viewer = new C.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
 
     var instances = [];
     
     for (var i = 0; i < 4; i++) {
-        instances.push(new Cesium.GeometryInstance({
-            geometry : new Cesium.RectangleGeometry({
-                rectangle : Cesium.Rectangle.fromDegrees(-120.0 + i * 10, 30.0, -110.0 + i * 10, 40.0),
-                vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+        instances.push(new C.GeometryInstance({
+            geometry : new C.RectangleGeometry({
+                rectangle : C.Rectangle.fromDegrees(-120.0 + i * 10, 30.0, -110.0 + i * 10, 40.0),
+                vertexFormat : C.PerInstanceColorAppearance.VERTEX_FORMAT
             }),
             attributes : {
-                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 0.7}))
+                color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.fromRandom({alpha : 0.7}))
             }
         }));
     }
     
-    primitives.add(new Cesium.Primitive({
+    primitives.add(new C.Primitive({
         geometryInstances : instances,
-        appearance : new Cesium.PerInstanceColorAppearance()
+        appearance : new C.PerInstanceColorAppearance()
     }));
 
     Sandcastle.finishedLoading();

@@ -67,8 +67,8 @@ define([
      *
      * @example
      * // create a wall that spans from ground level to 10000 meters
-     * var wall = new Cesium.WallGeometry({
-     *   positions : Cesium.Cartesian3.fromDegreesArrayHeights([
+     * var wall = new C.WallGeometry({
+     *   positions : C.Cartesian3.fromDegreesArrayHeights([
      *     19.0, 47.0, 10000.0,
      *     19.0, 48.0, 10000.0,
      *     20.0, 48.0, 10000.0,
@@ -76,7 +76,7 @@ define([
      *     19.0, 47.0, 10000.0
      *   ])
      * });
-     * var geometry = Cesium.WallGeometry.createGeometry(wall);
+     * var geometry = C.WallGeometry.createGeometry(wall);
      */
     var WallGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -126,8 +126,8 @@ define([
      *
      * @example
      * // create a wall that spans from 10000 meters to 20000 meters
-     * var wall = Cesium.WallGeometry.fromConstantHeights({
-     *   positions : Cesium.Cartesian3.fromDegreesArray([
+     * var wall = C.WallGeometry.fromConstantHeights({
+     *   positions : C.Cartesian3.fromDegreesArray([
      *     19.0, 47.0,
      *     19.0, 48.0,
      *     20.0, 48.0,
@@ -137,7 +137,7 @@ define([
      *   minimumHeight : 20000.0,
      *   maximumHeight : 10000.0
      * });
-     * var geometry = Cesium.WallGeometry.createGeometry(wall);
+     * var geometry = C.WallGeometry.createGeometry(wall);
      */
     WallGeometry.fromConstantHeights = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

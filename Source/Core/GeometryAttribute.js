@@ -28,10 +28,10 @@ define([
      * @see Geometry
      *
      * @example
-     * var geometry = new Cesium.Geometry({
+     * var geometry = new C.Geometry({
      *   attributes : {
-     *     position : new Cesium.GeometryAttribute({
-     *       componentDatatype : Cesium.ComponentDatatype.FLOAT,
+     *     position : new C.GeometryAttribute({
+     *       componentDatatype : C.ComponentDatatype.FLOAT,
      *       componentsPerAttribute : 3,
      *       values : [
      *         0.0, 0.0, 0.0,
@@ -40,7 +40,7 @@ define([
      *       ]
      *     })
      *   },
-     *   primitiveType : Cesium.PrimitiveType.LINE_LOOP
+     *   primitiveType : C.PrimitiveType.LINE_LOOP
      * });
      */
     var GeometryAttribute = function(options) {
@@ -81,7 +81,7 @@ define([
          * @default undefined
          *
          * @example
-         * attribute.componentDatatype : Cesium.ComponentDatatype.FLOAT,
+         * attribute.componentDatatype : C.ComponentDatatype.FLOAT,
          * attribute.componentsPerAttribute : 3,
          * attribute.values = new Float32Array([
          *   0.0, 0.0, 0.0,
@@ -104,14 +104,14 @@ define([
          * @default false
          *
          * @example
-         * attribute.componentDatatype : Cesium.ComponentDatatype.UNSIGNED_BYTE,
+         * attribute.componentDatatype : C.ComponentDatatype.UNSIGNED_BYTE,
          * attribute.componentsPerAttribute : 4,
          * attribute.normalize = true;
          * attribute.values = new Uint8Array([
-         *   Cesium.Color.floatToByte(color.red)
-         *   Cesium.Color.floatToByte(color.green)
-         *   Cesium.Color.floatToByte(color.blue)
-         *   Cesium.Color.floatToByte(color.alpha)
+         *   C.Color.floatToByte(color.red)
+         *   C.Color.floatToByte(color.green)
+         *   C.Color.floatToByte(color.blue)
+         *   C.Color.floatToByte(color.alpha)
          * ]);
          */
         this.normalize = defaultValue(options.normalize, false);
@@ -126,7 +126,7 @@ define([
          * @default undefined
          *
          * @example
-         * attribute.componentDatatype : Cesium.ComponentDatatype.FLOAT,
+         * attribute.componentDatatype : C.ComponentDatatype.FLOAT,
          * attribute.componentsPerAttribute : 3,
          * attribute.values = new Float32Array([
          *   0.0, 0.0, 0.0,

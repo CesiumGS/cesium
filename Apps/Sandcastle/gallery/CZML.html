@@ -24,18 +24,18 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+require(['Cesium'], function(C) {
     "use strict";
 
     var gallery = '../../CesiumViewer/Gallery/';
 
-    var viewer = new Cesium.Viewer('cesiumContainer');
-    viewer.extend(Cesium.viewerDynamicObjectMixin);
+    var viewer = new C.Viewer('cesiumContainer');
+    viewer.extend(C.viewerDynamicObjectMixin);
 
     function czmlSatellites() {
         viewer.dataSources.removeAll();
 
-        var czmlDataSource = new Cesium.CzmlDataSource();
+        var czmlDataSource = new C.CzmlDataSource();
         czmlDataSource.loadUrl(gallery + 'simple.czml').then(function() {
             viewer.dataSources.add(czmlDataSource);
             viewer.homeButton.viewModel.command();
@@ -50,7 +50,7 @@ require(['Cesium'], function(Cesium) {
     Sandcastle.addToolbarButton('Sensors', function() {
         viewer.dataSources.removeAll();
 
-        var czmlDataSource = new Cesium.CzmlDataSource();
+        var czmlDataSource = new C.CzmlDataSource();
         czmlDataSource.loadUrl(gallery + 'LotsOfSensors.czml').then(function() {
             viewer.dataSources.add(czmlDataSource);
             viewer.homeButton.viewModel.command();
@@ -60,7 +60,7 @@ require(['Cesium'], function(Cesium) {
     Sandcastle.addToolbarButton('Vehicle', function() {
         viewer.dataSources.removeAll();
 
-        var czmlDataSource = new Cesium.CzmlDataSource();
+        var czmlDataSource = new C.CzmlDataSource();
         czmlDataSource.loadUrl(gallery + 'Vehicle.czml').then(function() {
             viewer.dataSources.add(czmlDataSource);
             viewer.homeButton.viewModel.command();
@@ -136,12 +136,12 @@ require(['Cesium'], function(Cesium) {
     Sandcastle.addToolbarButton('Built-in CZML', function() {
         viewer.dataSources.removeAll();
 
-        var czmlDataSource = new Cesium.CzmlDataSource();
+        var czmlDataSource = new C.CzmlDataSource();
         czmlDataSource.load(builtInCzml, 'Built-in CZML');
         viewer.dataSources.add(czmlDataSource);
 
         // Zoom in a little closer...
-        var rectangle = new Cesium.Rectangle(-2.056, 0.587, -2.010, 0.633);
+        var rectangle = new C.Rectangle(-2.056, 0.587, -2.010, 0.633);
         viewer.scene.camera.viewRectangle(rectangle);
     });
 

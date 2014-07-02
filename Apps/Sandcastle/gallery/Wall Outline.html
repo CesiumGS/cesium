@@ -24,14 +24,14 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+require(['Cesium'], function(C) {
     "use strict";
     
-    var viewer = new Cesium.Viewer('cesiumContainer');
+    var viewer = new C.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
 
-    var positions = Cesium.Cartesian3.fromDegreesArray([
+    var positions = C.Cartesian3.fromDegreesArray([
         -100.0, 60.0,
         -90.0, 60.0
     ]);
@@ -39,18 +39,18 @@ require(['Cesium'], function(Cesium) {
     var minimumHeight =  0;
     
     // Wall outline
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.WallOutlineGeometry.fromConstantHeights({
+    primitives.add(new C.Primitive({
+        geometryInstances : new C.GeometryInstance({
+            geometry : new C.WallOutlineGeometry.fromConstantHeights({
                 positions : positions,
                 maximumHeight: maximumHeight,
                 minimumHeight: minimumHeight
             }),
             attributes : {
-                color : new Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+                color : new C.ColorGeometryInstanceAttribute.fromColor(C.Color.WHITE)
             }
         }),
-        appearance : new Cesium.PerInstanceColorAppearance({
+        appearance : new C.PerInstanceColorAppearance({
             flat : true,
             renderState : {
                 depthTest : {
@@ -62,19 +62,19 @@ require(['Cesium'], function(Cesium) {
     }));
 
     // Wall
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : new Cesium.GeometryInstance({
-            geometry : Cesium.WallGeometry.fromConstantHeights({
+    primitives.add(new C.Primitive({
+        geometryInstances : new C.GeometryInstance({
+            geometry : C.WallGeometry.fromConstantHeights({
                 positions : positions,
                 maximumHeight : maximumHeight,
                 minimumHeight : minimumHeight
                 
             }),
             attributes : {
-                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
+                color : C.ColorGeometryInstanceAttribute.fromColor(C.Color.RED)
             }
         }),
-        appearance : new Cesium.PerInstanceColorAppearance()
+        appearance : new C.PerInstanceColorAppearance()
     }));
 
     Sandcastle.finishedLoading();

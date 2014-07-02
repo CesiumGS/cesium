@@ -53,14 +53,14 @@ define([
      * // tick callback function is called for every animation frame.
      * function tick() {
      *   scene.render();
-     *   Cesium.requestAnimationFrame(tick);
+     *   C.requestAnimationFrame(tick);
      * }
      * tick();
      */
     var requestAnimationFrame = function(callback) {
         // we need this extra wrapper function because the native requestAnimationFrame
         // functions must be invoked on the global scope (window), which is not the case
-        // if invoked as Cesium.requestAnimationFrame(callback)
+        // if invoked as C.requestAnimationFrame(callback)
         return implementation(callback);
     };
 

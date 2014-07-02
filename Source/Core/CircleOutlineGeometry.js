@@ -33,11 +33,11 @@ define([
      *
      * @example
      * // Create a circle.
-     * var circle = new Cesium.CircleOutlineGeometry({
-     *   center : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+     * var circle = new C.CircleOutlineGeometry({
+     *   center : C.Cartesian3.fromDegrees(-75.59777, 40.03883),
      *   radius : 100000.0
      * });
-     * var geometry = Cesium.CircleOutlineGeometry.createGeometry(circle);
+     * var geometry = C.CircleOutlineGeometry.createGeometry(circle);
      */
     var CircleOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

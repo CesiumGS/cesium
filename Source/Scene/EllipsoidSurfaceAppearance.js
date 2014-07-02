@@ -42,15 +42,15 @@ define([
      * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
      *
      * @example
-     * var primitive = new Cesium.Primitive({
-     *   geometryInstances : new Cesium.GeometryInstance({
-     *     geometry : new Cesium.PolygonGeometry({
-     *       vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+     * var primitive = new C.Primitive({
+     *   geometryInstances : new C.GeometryInstance({
+     *     geometry : new C.PolygonGeometry({
+     *       vertexFormat : C.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
      *       // ...
      *     })
      *   }),
-     *   appearance : new Cesium.EllipsoidSurfaceAppearance({
-     *     material : Cesium.Material.fromType('Stripe')
+     *   appearance : new C.EllipsoidSurfaceAppearance({
+     *     material : C.Material.fromType('Stripe')
      *   })
      * });
      */

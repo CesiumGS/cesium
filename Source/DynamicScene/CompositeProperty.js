@@ -52,12 +52,12 @@ define([
      * //where the property is valid on August 1st, 2012 and uses a constant
      * //property for the first half of the day and a sampled property for the
      * //remaining half.
-     * var composite = new Cesium.CompositeProperty();
-     * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601({
+     * var composite = new C.CompositeProperty();
+     * composite.intervals.addInterval(C.TimeInterval.fromIso8601({
      *     iso8601 : '2012-08-01T00:00:00.00Z/2012-08-01T12:00:00.00Z',
      *     data : constantProperty
      * }));
-     * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601({
+     * composite.intervals.addInterval(C.TimeInterval.fromIso8601({
      *     iso8601 : '2012-08-01T12:00:00.00Z/2012-08-02T00:00:00.00Z',
      *     isStartIncluded : false,
      *     isStopIncluded : false,

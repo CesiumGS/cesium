@@ -22,7 +22,7 @@ define([
      * var object2 = {
      *     propTwo : 2
      * }
-     * var final = Cesium.combine(object1, object2);
+     * var final = C.combine(object1, object2);
      *
      * // final === {
      * //     propOne : 1,

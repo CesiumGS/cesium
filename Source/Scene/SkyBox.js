@@ -52,7 +52,7 @@ define([
      * @see Transforms.computeTemeToPseudoFixedMatrix
      *
      * @example
-     * scene.skyBox = new Cesium.SkyBox({
+     * scene.skyBox = new C.SkyBox({
      *   sources : {
      *     positiveX : 'skybox_px.png',
      *     negativeX : 'skybox_nx.png',

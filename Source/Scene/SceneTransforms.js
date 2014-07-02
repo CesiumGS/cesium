@@ -47,11 +47,11 @@ define([
      * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
      * var scene = widget.scene;
      * var ellipsoid = scene.globe.ellipsoid;
-     * var position = ellipsoid.cartographicToCartesian(new Cesium.Cartographic(0.0, 0.0));
-     * var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+     * var position = ellipsoid.cartographicToCartesian(new C.Cartographic(0.0, 0.0));
+     * var handler = new C.ScreenSpaceEventHandler(scene.canvas);
      * handler.setInputAction(function(movement) {
-     *     console.log(Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position));
-     * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+     *     console.log(C.SceneTransforms.wgs84ToWindowCoordinates(scene, position));
+     * }, C.ScreenSpaceEventType.MOUSE_MOVE);
      */
     SceneTransforms.wgs84ToWindowCoordinates = function(scene, position, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -94,11 +94,11 @@ define([
      * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
      * var scene = widget.scene;
      * var ellipsoid = scene.globe.ellipsoid;
-     * var position = ellipsoid.cartographicToCartesian(new Cesium.Cartographic(0.0, 0.0));
-     * var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+     * var position = ellipsoid.cartographicToCartesian(new C.Cartographic(0.0, 0.0));
+     * var handler = new C.ScreenSpaceEventHandler(scene.canvas);
      * handler.setInputAction(function(movement) {
-     *     console.log(Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position));
-     * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+     *     console.log(C.SceneTransforms.wgs84ToWindowCoordinates(scene, position));
+     * }, C.ScreenSpaceEventType.MOUSE_MOVE);
      */
     SceneTransforms.wgs84ToDrawingBufferCoordinates = function(scene, position, result) {
         //>>includeStart('debug', pragmas.debug);

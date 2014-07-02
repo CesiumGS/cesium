@@ -33,8 +33,8 @@ define([
      * @param {Material} [material] The {@link Material} defining the surface appearance of the viewport quad.
      *
      * @example
-     * var viewportQuad = new Cesium.ViewportQuad(new Cesium.BoundingRectangle(0, 0, 80, 40));
-     * viewportQuad.material.uniforms.color = new Cesium.Color(1.0, 0.0, 0.0, 1.0);
+     * var viewportQuad = new C.ViewportQuad(new C.BoundingRectangle(0, 0, 80, 40));
+     * viewportQuad.material.uniforms.color = new C.Color(1.0, 0.0, 0.0, 1.0);
      */
     var ViewportQuad = function(rectangle, material) {
         /**
@@ -55,7 +55,7 @@ define([
          * @type {BoundingRectangle}
          *
          * @example
-         * viewportQuad.rectangle = new Cesium.BoundingRectangle(0, 0, 80, 40);
+         * viewportQuad.rectangle = new C.BoundingRectangle(0, 0, 80, 40);
          */
         this.rectangle = BoundingRectangle.clone(rectangle);
 
@@ -76,10 +76,10 @@ define([
          *
          * @example
          * // 1. Change the color of the default material to yellow
-         * viewportQuad.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
+         * viewportQuad.material.uniforms.color = new C.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
-         * viewportQuad.material = Cesium.Material.fromType(Material.StripeType);
+         * viewportQuad.material = C.Material.fromType(Material.StripeType);
          *
          * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
          */

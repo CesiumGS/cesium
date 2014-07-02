@@ -24,61 +24,61 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+require(['Cesium'], function(C) {
     "use strict";
-    var viewer = new Cesium.Viewer('cesiumContainer');
+    var viewer = new C.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
 
     // Stripe Material
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.RectangleGeometry({
-                rectangle : Cesium.Rectangle.fromDegrees(-120.0, 30.0, -110.0, 40.0),
-                vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
+    primitives.add(new C.Primitive({
+        geometryInstances : new C.GeometryInstance({
+            geometry : new C.RectangleGeometry({
+                rectangle : C.Rectangle.fromDegrees(-120.0, 30.0, -110.0, 40.0),
+                vertexFormat : C.EllipsoidSurfaceAppearance.VERTEX_FORMAT
             })
         }),
-        appearance : new Cesium.EllipsoidSurfaceAppearance({
-            material : Cesium.Material.fromType('Stripe')
+        appearance : new C.EllipsoidSurfaceAppearance({
+            material : C.Material.fromType('Stripe')
         })
     }));
 
     // Dot Material
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.RectangleGeometry({
-                rectangle : Cesium.Rectangle.fromDegrees(-110.0, 30.0, -100.0, 40.0),
-                vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
+    primitives.add(new C.Primitive({
+        geometryInstances : new C.GeometryInstance({
+            geometry : new C.RectangleGeometry({
+                rectangle : C.Rectangle.fromDegrees(-110.0, 30.0, -100.0, 40.0),
+                vertexFormat : C.EllipsoidSurfaceAppearance.VERTEX_FORMAT
             })
         }),
-        appearance : new Cesium.EllipsoidSurfaceAppearance({
-            material : Cesium.Material.fromType('Dot')
+        appearance : new C.EllipsoidSurfaceAppearance({
+            material : C.Material.fromType('Dot')
         })
     }));
     
     // Checkerboard Material
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.RectangleGeometry({
-                rectangle : Cesium.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0),
-                vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
+    primitives.add(new C.Primitive({
+        geometryInstances : new C.GeometryInstance({
+            geometry : new C.RectangleGeometry({
+                rectangle : C.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0),
+                vertexFormat : C.EllipsoidSurfaceAppearance.VERTEX_FORMAT
             })
         }),
-        appearance : new Cesium.EllipsoidSurfaceAppearance({
-            material : Cesium.Material.fromType('Checkerboard')
+        appearance : new C.EllipsoidSurfaceAppearance({
+            material : C.Material.fromType('Checkerboard')
         })
     }));
     
     // Grid Material    
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.RectangleGeometry({
-                rectangle : Cesium.Rectangle.fromDegrees(-90.0, 30.0, -80.0, 40.0),
-                vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
+    primitives.add(new C.Primitive({
+        geometryInstances : new C.GeometryInstance({
+            geometry : new C.RectangleGeometry({
+                rectangle : C.Rectangle.fromDegrees(-90.0, 30.0, -80.0, 40.0),
+                vertexFormat : C.EllipsoidSurfaceAppearance.VERTEX_FORMAT
             })
         }),
-        appearance : new Cesium.EllipsoidSurfaceAppearance({
-            material : Cesium.Material.fromType('Grid')
+        appearance : new C.EllipsoidSurfaceAppearance({
+            material : C.Material.fromType('Grid')
         })
     }));
     

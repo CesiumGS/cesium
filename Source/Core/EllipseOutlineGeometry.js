@@ -157,13 +157,13 @@ define([
      * @see EllipseOutlineGeometry.createGeometry
      *
      * @example
-     * var ellipse = new Cesium.EllipseOutlineGeometry({
-     *   center : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+     * var ellipse = new C.EllipseOutlineGeometry({
+     *   center : C.Cartesian3.fromDegrees(-75.59777, 40.03883),
      *   semiMajorAxis : 500000.0,
      *   semiMinorAxis : 300000.0,
-     *   rotation : Cesium.Math.toRadians(60.0)
+     *   rotation : C.Math.toRadians(60.0)
      * });
-     * var geometry = Cesium.EllipseOutlineGeometry.createGeometry(ellipse);
+     * var geometry = C.EllipseOutlineGeometry.createGeometry(ellipse);
      */
     var EllipseOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

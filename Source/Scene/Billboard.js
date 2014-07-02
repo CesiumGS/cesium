@@ -230,7 +230,7 @@ define([
          * // Set a billboard's scaleByDistance to scale by 1.5 when the
          * // camera is 1500 meters from the billboard and disappear as
          * // the camera distance approaches 8.0e6 meters.
-         * b.scaleByDistance = new Cesium.NearFarScalar(1.5e2, 1.5, 8.0e6, 0.0);
+         * b.scaleByDistance = new C.NearFarScalar(1.5e2, 1.5, 8.0e6, 0.0);
          *
          * @example
          * // Example 2.
@@ -271,7 +271,7 @@ define([
          * // Set a billboard's translucency to 1.0 when the
          * // camera is 1500 meters from the billboard and disappear as
          * // the camera distance approaches 8.0e6 meters.
-         * b.translucencyByDistance = new Cesium.NearFarScalar(1.5e2, 1.0, 8.0e6, 0.0);
+         * b.translucencyByDistance = new C.NearFarScalar(1.5e2, 1.0, 8.0e6, 0.0);
          *
          * @example
          * // Example 2.
@@ -312,8 +312,8 @@ define([
          * // Set a billboard's pixel offset scale to 0.0 when the
          * // camera is 1500 meters from the billboard and scale pixel offset to 10.0 pixels
          * // in the y direction the camera distance approaches 8.0e6 meters.
-         * b.pixelOffset = new Cesium.Cartesian2(0.0, 1.0);
-         * b.pixelOffsetScaleByDistance = new Cesium.NearFarScalar(1.5e2, 0.0, 8.0e6, 10.0);
+         * b.pixelOffset = new C.Cartesian2(0.0, 1.0);
+         * b.pixelOffsetScaleByDistance = new C.NearFarScalar(1.5e2, 0.0, 8.0e6, 10.0);
          *
          * @example
          * // Example 2.
@@ -391,8 +391,8 @@ define([
          * @type {HorizontalOrigin}
          * @example
          * // Use a bottom, left origin
-         * b.horizontalOrigin = Cesium.HorizontalOrigin.LEFT;
-         * b.verticalOrigin = Cesium.VerticalOrigin.BOTTOM;
+         * b.horizontalOrigin = C.HorizontalOrigin.LEFT;
+         * b.verticalOrigin = C.VerticalOrigin.BOTTOM;
          */
         horizontalOrigin : {
             get : function() {
@@ -423,8 +423,8 @@ define([
          * @type {VerticalOrigin}
          * @example
          * // Use a bottom, left origin
-         * b.hHorizontalOrigin = Cesium.HorizontalOrigin.LEFT;
-         * b.verticalOrigin = Cesium.VerticalOrigin.BOTTOM;
+         * b.hHorizontalOrigin = C.HorizontalOrigin.LEFT;
+         * b.verticalOrigin = C.VerticalOrigin.BOTTOM;
          */
         verticalOrigin : {
             get : function() {
@@ -520,11 +520,11 @@ define([
          *
          * @example
          * // Example 1. Assign yellow.
-         * b.color = Cesium.Color.YELLOW;
+         * b.color = C.Color.YELLOW;
          *
          * @example
          * // Example 2. Make a billboard 50% translucent.
-         * b.color = new Cesium.Color(1.0, 1.0, 1.0, 0.5);
+         * b.color = new C.Color(1.0, 1.0, 1.0, 0.5);
          */
         color : {
             get : function() {
@@ -576,18 +576,18 @@ define([
          * @example
          * // Example 1.
          * // Have the billboard up vector point north
-         * billboard.alignedAxis = Cesium.Cartesian3.UNIT_Z;
+         * billboard.alignedAxis = C.Cartesian3.UNIT_Z;
          *
          * @example
          * // Example 2.
          * // Have the billboard point east.
          * billboard.alignedAxis = Cartesian3.UNIT_Z;
-         * billboard.rotation = -Cesium.Math.PI_OVER_TWO;
+         * billboard.rotation = -C.Math.PI_OVER_TWO;
          *
          * @example
          * // Example 3.
          * // Reset the aligned axis
-         * billboard.alignedAxis = Cesium.Cartesian3.ZERO;
+         * billboard.alignedAxis = C.Cartesian3.ZERO;
          */
         alignedAxis : {
             get : function() {

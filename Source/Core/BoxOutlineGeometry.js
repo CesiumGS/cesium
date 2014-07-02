@@ -38,11 +38,11 @@ define([
      * @see BoxOutlineGeometry.createGeometry
      *
      * @example
-     * var box = new Cesium.BoxOutlineGeometry({
-     *   maximumCorner : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0),
-     *   minimumCorner : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0)
+     * var box = new C.BoxOutlineGeometry({
+     *   maximumCorner : new C.Cartesian3(250000.0, 250000.0, 250000.0),
+     *   minimumCorner : new C.Cartesian3(-250000.0, -250000.0, -250000.0)
      * });
-     * var geometry = Cesium.BoxOutlineGeometry.createGeometry(box);
+     * var geometry = C.BoxOutlineGeometry.createGeometry(box);
      */
     var BoxOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -74,10 +74,10 @@ define([
      * @see BoxOutlineGeometry.createGeometry
      *
      * @example
-     * var box = Cesium.BoxOutlineGeometry.fromDimensions({
-     *   dimensions : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0)
+     * var box = C.BoxOutlineGeometry.fromDimensions({
+     *   dimensions : new C.Cartesian3(500000.0, 500000.0, 500000.0)
      * });
-     * var geometry = Cesium.BoxOutlineGeometry.createGeometry(box);
+     * var geometry = C.BoxOutlineGeometry.createGeometry(box);
      */
     BoxOutlineGeometry.fromDimensions = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

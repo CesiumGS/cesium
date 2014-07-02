@@ -38,42 +38,42 @@ define([
      *
      * @example
      * // A solid white line segment
-     * var primitive = new Cesium.Primitive({
-     *   geometryInstances : new Cesium.GeometryInstance({
-     *     geometry : new Cesium.SimplePolylineGeometry({
-     *       positions : Cesium.Cartesian3.fromDegreesArray([
+     * var primitive = new C.Primitive({
+     *   geometryInstances : new C.GeometryInstance({
+     *     geometry : new C.SimplePolylineGeometry({
+     *       positions : C.Cartesian3.fromDegreesArray([
      *         0.0, 0.0,
      *         5.0, 0.0
      *       ])
      *     }),
      *     attributes : {
-     *       color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 1.0, 1.0, 1.0))
+     *       color : C.ColorGeometryInstanceAttribute.fromColor(new C.Color(1.0, 1.0, 1.0, 1.0))
      *     }
      *   }),
-     *   appearance : new Cesium.PerInstanceColorAppearance({
+     *   appearance : new C.PerInstanceColorAppearance({
      *     flat : true,
      *     translucent : false
      *   })
      * }));
      *
      * // Two rectangles in a primitive, each with a different color
-     * var instance = new Cesium.GeometryInstance({
-     *   geometry : new Cesium.RectangleGeometry({
-     *     rectangle : Cesium.Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0)
+     * var instance = new C.GeometryInstance({
+     *   geometry : new C.RectangleGeometry({
+     *     rectangle : C.Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0)
      *   }),
-     *   color : new Cesium.Color(1.0, 0.0, 0.0, 0.5)
+     *   color : new C.Color(1.0, 0.0, 0.0, 0.5)
      * });
      *
-     * var anotherInstance = new Cesium.GeometryInstance({
-     *   geometry : new Cesium.RectangleGeometry({
-     *     rectangle : Cesium.Rectangle.fromDegrees(0.0, 40.0, 10.0, 50.0)
+     * var anotherInstance = new C.GeometryInstance({
+     *   geometry : new C.RectangleGeometry({
+     *     rectangle : C.Rectangle.fromDegrees(0.0, 40.0, 10.0, 50.0)
      *   }),
-     *   color : new Cesium.Color(0.0, 0.0, 1.0, 0.5)
+     *   color : new C.Color(0.0, 0.0, 1.0, 0.5)
      * });
      *
-     * var rectanglePrimitive = new Cesium.Primitive({
+     * var rectanglePrimitive = new C.Primitive({
      *   geometryInstances : [instance, anotherInstance],
-     *   appearance : new Cesium.PerInstanceColorAppearance()
+     *   appearance : new C.PerInstanceColorAppearance()
      * });
      */
     var PerInstanceColorAppearance = function(options) {
