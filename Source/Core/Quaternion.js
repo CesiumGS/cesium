@@ -329,19 +329,19 @@ define([
      * Computes the conjugate of the provided quaternion.
      *
      * @param {Quaternion} quaternion The quaternion to conjugate.
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
+     * @param {Quaternion} result The object onto which to store the result.
+     * @returns {Quaternion} The modified result parameter.
      */
     Quaternion.conjugate = function(quaternion, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(quaternion)) {
             throw new DeveloperError('quaternion is required');
         }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
         //>>includeEnd('debug');
 
-        if (!defined(result)) {
-            return new Quaternion(-quaternion.x, -quaternion.y, -quaternion.z, quaternion.w);
-        }
         result.x = -quaternion.x;
         result.y = -quaternion.y;
         result.z = -quaternion.z;
@@ -379,19 +379,22 @@ define([
      * Computes the normalized form of the provided quaternion.
      *
      * @param {Quaternion} quaternion The quaternion to normalize.
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
+     * @param {Quaternion} result The object onto which to store the result.
+     * @returns {Quaternion} The modified result parameter.
      */
     Quaternion.normalize = function(quaternion, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
+        //>>includeEnd('debug');
+
         var inverseMagnitude = 1.0 / Quaternion.magnitude(quaternion);
         var x = quaternion.x * inverseMagnitude;
         var y = quaternion.y * inverseMagnitude;
         var z = quaternion.z * inverseMagnitude;
         var w = quaternion.w * inverseMagnitude;
 
-        if (!defined(result)) {
-            return new Quaternion(x, y, z, w);
-        }
         result.x = x;
         result.y = y;
         result.z = z;
@@ -403,10 +406,16 @@ define([
      * Computes the inverse of the provided quaternion.
      *
      * @param {Quaternion} quaternion The quaternion to normalize.
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
+     * @param {Quaternion} result The object onto which to store the result.
+     * @returns {Quaternion} The modified result parameter.
      */
     Quaternion.inverse = function(quaternion, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
+        //>>includeEnd('debug');
+
         var magnitudeSquared = Quaternion.magnitudeSquared(quaternion);
         result = Quaternion.conjugate(quaternion, result);
         return Quaternion.multiplyByScalar(result, 1.0 / magnitudeSquared, result);
@@ -417,8 +426,8 @@ define([
      *
      * @param {Quaternion} left The first quaternion.
      * @param {Quaternion} right The second quaternion.
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
+     * @param {Quaternion} result The object onto which to store the result.
+     * @returns {Quaternion} The modified result parameter.
      */
     Quaternion.add = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -428,11 +437,11 @@ define([
         if (!defined(right)) {
             throw new DeveloperError('right is required');
         }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
         //>>includeEnd('debug');
 
-        if (!defined(result)) {
-            return new Quaternion(left.x + right.x, left.y + right.y, left.z + right.z, left.w + right.w);
-        }
         result.x = left.x + right.x;
         result.y = left.y + right.y;
         result.z = left.z + right.z;
@@ -445,8 +454,8 @@ define([
      *
      * @param {Quaternion} left The first quaternion.
      * @param {Quaternion} right The second quaternion.
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
+     * @param {Quaternion} result The object onto which to store the result.
+     * @returns {Quaternion} The modified result parameter.
      */
     Quaternion.subtract = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -456,11 +465,11 @@ define([
         if (!defined(right)) {
             throw new DeveloperError('right is required');
         }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
         //>>includeEnd('debug');
 
-        if (!defined(result)) {
-            return new Quaternion(left.x - right.x, left.y - right.y, left.z - right.z, left.w - right.w);
-        }
         result.x = left.x - right.x;
         result.y = left.y - right.y;
         result.z = left.z - right.z;
@@ -472,19 +481,19 @@ define([
      * Negates the provided quaternion.
      *
      * @param {Quaternion} quaternion The quaternion to be negated.
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
+     * @param {Quaternion} result The object onto which to store the result.
+     * @returns {Quaternion} The modified result parameter.
      */
     Quaternion.negate = function(quaternion, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(quaternion)) {
             throw new DeveloperError('quaternion is required');
         }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
         //>>includeEnd('debug');
 
-        if (!defined(result)) {
-            return new Quaternion(-quaternion.x, -quaternion.y, -quaternion.z, -quaternion.w);
-        }
         result.x = -quaternion.x;
         result.y = -quaternion.y;
         result.z = -quaternion.z;
@@ -517,8 +526,8 @@ define([
      *
      * @param {Quaternion} left The first quaternion.
      * @param {Quaternion} right The second quaternion.
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
+     * @param {Quaternion} result The object onto which to store the result.
+     * @returns {Quaternion} The modified result parameter.
      */
     Quaternion.multiply = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -527,6 +536,9 @@ define([
         }
         if (!defined(right)) {
             throw new DeveloperError('right is required');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -545,9 +557,6 @@ define([
         var z = leftW * rightZ + leftX * rightY - leftY * rightX + leftZ * rightW;
         var w = leftW * rightW - leftX * rightX - leftY * rightY - leftZ * rightZ;
 
-        if (!defined(result)) {
-            return new Quaternion(x, y, z, w);
-        }
         result.x = x;
         result.y = y;
         result.z = z;
@@ -560,8 +569,8 @@ define([
      *
      * @param {Quaternion} quaternion The quaternion to be scaled.
      * @param {Number} scalar The scalar to multiply with.
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
+     * @param {Quaternion} result The object onto which to store the result.
+     * @returns {Quaternion} The modified result parameter.
      */
     Quaternion.multiplyByScalar = function(quaternion, scalar, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -571,11 +580,11 @@ define([
         if (typeof scalar !== 'number') {
             throw new DeveloperError('scalar is required and must be a number.');
         }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
         //>>includeEnd('debug');
 
-        if (!defined(result)) {
-            return new Quaternion(quaternion.x * scalar, quaternion.y * scalar, quaternion.z * scalar, quaternion.w * scalar);
-        }
         result.x = quaternion.x * scalar;
         result.y = quaternion.y * scalar;
         result.z = quaternion.z * scalar;
@@ -588,8 +597,8 @@ define([
      *
      * @param {Quaternion} quaternion The quaternion to be divided.
      * @param {Number} scalar The scalar to divide by.
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
+     * @param {Quaternion} result The object onto which to store the result.
+     * @returns {Quaternion} The modified result parameter.
      */
     Quaternion.divideByScalar = function(quaternion, scalar, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -599,11 +608,11 @@ define([
         if (typeof scalar !== 'number') {
             throw new DeveloperError('scalar is required and must be a number.');
         }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
         //>>includeEnd('debug');
 
-        if (!defined(result)) {
-            return new Quaternion(quaternion.x / scalar, quaternion.y / scalar, quaternion.z / scalar, quaternion.w / scalar);
-        }
         result.x = quaternion.x / scalar;
         result.y = quaternion.y / scalar;
         result.z = quaternion.z / scalar;
@@ -615,29 +624,27 @@ define([
      * Computes the axis of rotation of the provided quaternion.
      *
      * @param {Quaternion} quaternion The quaternion to use.
-     * @param {Cartesian3} [result] The object onto which to store the result.
-     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @param {Cartesian3} result The object onto which to store the result.
+     * @returns {Cartesian3} The modified result parameter.
      */
     Quaternion.getAxis = function(quaternion, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(quaternion)) {
             throw new DeveloperError('quaternion is required');
         }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
         //>>includeEnd('debug');
 
         var w = quaternion.w;
         if (Math.abs(w - 1.0) < CesiumMath.EPSILON6) {
-            if (!defined(result)) {
-                return new Cartesian3();
-            }
             result.x = result.y = result.z = 0;
             return result;
         }
 
         var scalar = 1.0 / Math.sqrt(1.0 - (w * w));
-        if (!defined(result)) {
-            return new Cartesian3(quaternion.x * scalar, quaternion.y * scalar, quaternion.z * scalar);
-        }
+
         result.x = quaternion.x * scalar;
         result.y = quaternion.y * scalar;
         result.z = quaternion.z * scalar;
@@ -663,15 +670,15 @@ define([
         return 2.0 * Math.acos(quaternion.w);
     };
 
-    var lerpScratch;
+    var lerpScratch = new Quaternion();
     /**
      * Computes the linear interpolation or extrapolation at t using the provided quaternions.
      *
      * @param {Quaternion} start The value corresponding to t at 0.0.
      * @param {Quaternion} end The value corresponding to t at 1.0.
      * @param {Number} t The point along t at which to interpolate.
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
+     * @param {Quaternion} result The object onto which to store the result.
+     * @returns {Quaternion} The modified result parameter.
      */
     Quaternion.lerp = function(start, end, t, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -684,6 +691,9 @@ define([
         if (typeof t !== 'number') {
             throw new DeveloperError('t is required and must be a number.');
         }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
         //>>includeEnd('debug');
 
         lerpScratch = Quaternion.multiplyByScalar(end, t, lerpScratch);
@@ -691,17 +701,17 @@ define([
         return Quaternion.add(lerpScratch, result, result);
     };
 
-    var slerpEndNegated;
-    var slerpScaledP;
-    var slerpScaledR;
+    var slerpEndNegated = new Quaternion();
+    var slerpScaledP = new Quaternion();
+    var slerpScaledR = new Quaternion();
     /**
      * Computes the spherical linear interpolation or extrapolation at t using the provided quaternions.
      *
      * @param {Quaternion} start The value corresponding to t at 0.0.
      * @param {Quaternion} end The value corresponding to t at 1.0.
      * @param {Number} t The point along t at which to interpolate.
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
+     * @param {Quaternion} result The object onto which to store the result.
+     * @returns {Quaternion} The modified result parameter.
      *
      * @see Quaternion#fastSlerp
      */
@@ -715,6 +725,9 @@ define([
         }
         if (typeof t !== 'number') {
             throw new DeveloperError('t is required and must be a number.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -745,13 +758,16 @@ define([
      * The logarithmic quaternion function.
      *
      * @param {Quaternion} quaternion The unit quaternion.
-     * @param {Cartesian3} [result] The object onto which to store the result.
-     * @returns {Cartesian3} The modified result parameter or a new instance if one was not provided.
+     * @param {Cartesian3} result The object onto which to store the result.
+     * @returns {Cartesian3} The modified result parameter.
      */
     Quaternion.log = function(quaternion, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(quaternion)) {
             throw new DeveloperError('quaternion is required.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -762,10 +778,6 @@ define([
             thetaOverSinTheta = theta / Math.sin(theta);
         }
 
-        if (!defined(result)) {
-            result = new Cartesian3();
-        }
-
         return Cartesian3.multiplyByScalar(quaternion, thetaOverSinTheta, result);
     };
 
@@ -773,13 +785,16 @@ define([
      * The exponential quaternion function.
      *
      * @param {Cartesian3} cartesian The cartesian.
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new instance if one was not provided.
+     * @param {Quaternion} result The object onto which to store the result.
+     * @returns {Quaternion} The modified result parameter.
      */
     Quaternion.exp = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -788,10 +803,6 @@ define([
 
         if (theta !== 0.0) {
             sinThetaOverTheta = Math.sin(theta) / theta;
-        }
-
-        if (!defined(result)) {
-            result = new Quaternion();
         }
 
         result.x = cartesian.x * sinThetaOverTheta;
@@ -814,8 +825,8 @@ define([
      * @param {Quaternion} q0 The first quaternion.
      * @param {Quaternion} q1 The second quaternion.
      * @param {Quaternion} q2 The third quaternion.
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new instance if none was provided.
+     * @param {Quaternion} result The object onto which to store the result.
+     * @returns {Quaternion} The modified result parameter.
      *
      * @see Quaternion#squad
      */
@@ -823,6 +834,9 @@ define([
         //>>includeStart('debug', pragmas.debug);
         if (!defined(q0) || !defined(q1) || !defined(q2)) {
             throw new DeveloperError('q0, q1, and q2 are required.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -849,8 +863,8 @@ define([
      * @param {Quaternion} s0 The first inner quadrangle.
      * @param {Quaternion} s1 The second inner quadrangle.
      * @param {Number} t The time in [0,1] used to interpolate.
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new instance if none was provided.
+     * @param {Quaternion} result The object onto which to store the result.
+     * @returns {Quaternion} The modified result parameter.
      *
      * @see Quaternion#innerQuadrangle
      *
@@ -869,9 +883,11 @@ define([
         if (!defined(q0) || !defined(q1) || !defined(s0) || !defined(s1)) {
             throw new DeveloperError('q0, q1, s0, and s1 are required.');
         }
-
         if (typeof t !== 'number') {
             throw new DeveloperError('t is required and must be a number.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
@@ -904,8 +920,8 @@ define([
      * @param {Quaternion} start The value corresponding to t at 0.0.
      * @param {Quaternion} end The value corresponding to t at 1.0.
      * @param {Number} t The point along t at which to interpolate.
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
+     * @param {Quaternion} result The object onto which to store the result.
+     * @returns {Quaternion} The modified result parameter.
      *
      * @see Quaternion#slerp
      */
@@ -914,19 +930,16 @@ define([
         if (!defined(start)) {
             throw new DeveloperError('start is required.');
         }
-
         if (!defined(end)) {
             throw new DeveloperError('end is required.');
         }
-
         if (typeof t !== 'number') {
             throw new DeveloperError('t is required and must be a number.');
         }
-        //>>includeEnd('debug');
-
         if (!defined(result)) {
-            result = new Quaternion();
+            throw new DeveloperError('result is required');
         }
+        //>>includeEnd('debug');
 
         var x = Quaternion.dot(start, end);
 
@@ -979,9 +992,11 @@ define([
         if (!defined(q0) || !defined(q1) || !defined(s0) || !defined(s1)) {
             throw new DeveloperError('q0, q1, s0, and s1 are required.');
         }
-
         if (typeof t !== 'number') {
             throw new DeveloperError('t is required and must be a number.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
         }
         //>>includeEnd('debug');
 
