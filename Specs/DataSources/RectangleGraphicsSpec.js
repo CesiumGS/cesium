@@ -1,14 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/DynamicRectangle',
+        'DataSources/RectangleGraphics',
         'Core/Color',
         'Core/Rectangle',
-        'DynamicScene/ColorMaterialProperty',
-        'DynamicScene/ConstantProperty',
+        'DataSources/ColorMaterialProperty',
+        'DataSources/ConstantProperty',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
-        DynamicRectangle,
+        RectangleGraphics,
         Color,
         Rectangle,
         ColorMaterialProperty,
@@ -19,7 +19,7 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('merge assigns unassigned properties', function() {
-        var source = new DynamicRectangle();
+        var source = new RectangleGraphics();
         source.material = new ColorMaterialProperty();
         source.show = new ConstantProperty();
         source.coordinates = new ConstantProperty();
@@ -34,7 +34,7 @@ defineSuite([
         source.closeTop = new ConstantProperty();
         source.closeBottom = new ConstantProperty();
 
-        var target = new DynamicRectangle();
+        var target = new RectangleGraphics();
         target.merge(source);
 
         expect(target.material).toBe(source.material);
@@ -53,7 +53,7 @@ defineSuite([
     });
 
     it('merge does not assign assigned properties', function() {
-        var source = new DynamicRectangle();
+        var source = new RectangleGraphics();
 
         var material = new ColorMaterialProperty();
         var show = new ConstantProperty();
@@ -69,7 +69,7 @@ defineSuite([
         var closeTop = new ConstantProperty();
         var closeBottom = new ConstantProperty();
 
-        var target = new DynamicRectangle();
+        var target = new RectangleGraphics();
         target.material = material;
         target.show = show;
         target.coordinates = coordinates;
@@ -102,7 +102,7 @@ defineSuite([
     });
 
     it('clone works', function() {
-        var source = new DynamicRectangle();
+        var source = new RectangleGraphics();
         source.material = new ColorMaterialProperty();
         source.show = new ConstantProperty();
         source.coordinates = new ConstantProperty();
@@ -134,14 +134,14 @@ defineSuite([
     });
 
     it('merge throws if source undefined', function() {
-        var target = new DynamicRectangle();
+        var target = new RectangleGraphics();
         expect(function() {
             target.merge(undefined);
         }).toThrowDeveloperError();
     });
 
     it('raises definitionChanged when a property is assigned or modified', function() {
-        var property = new DynamicRectangle();
+        var property = new RectangleGraphics();
         testMaterialDefinitionChanged(property, 'material', Color.RED, Color.BLUE);
         testDefinitionChanged(property, 'show', true, false);
         testDefinitionChanged(property, 'coordinates', new Rectangle(0, 0, 0.1, 0.1), new Rectangle(0, 0, 1, 1));

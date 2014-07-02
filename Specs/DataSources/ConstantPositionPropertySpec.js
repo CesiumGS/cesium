@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/ConstantPositionProperty',
+        'DataSources/ConstantPositionProperty',
         'Core/Cartesian3',
         'Core/JulianDate',
         'Core/ReferenceFrame',
-        'DynamicScene/PositionProperty'
+        'DataSources/PositionProperty'
     ], function(
         ConstantPositionProperty,
         Cartesian3,

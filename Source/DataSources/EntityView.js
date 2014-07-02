@@ -160,19 +160,19 @@ define([
     var offset3DCrossScratch = new Cartesian3();
     /**
      * A utility object for tracking an object with the camera.
-     * @alias DynamicObjectView
+     * @alias EntityView
      * @constructor
      *
-     * @param {DynamicObject} dynamicObject The object to track with the camera.
+     * @param {Entity} entity The object to track with the camera.
      * @param {Scene} scene The scene to use.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use for orienting the camera.
      */
-    var DynamicObjectView = function(dynamicObject, scene, ellipsoid) {
+    var EntityView = function(entity, scene, ellipsoid) {
         /**
          * The object to track with the camera.
-         * @type {DynamicObject}
+         * @type {Entity}
          */
-        this.dynamicObject = dynamicObject;
+        this.entity = entity;
 
         /**
          * The scene in which to track the object.
@@ -187,7 +187,7 @@ define([
         this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
         //Shadow copies of the objects so we can detect changes.
-        this._lastDynamicObject = undefined;
+        this._lastEntity = undefined;
         this._mode = undefined;
 
         //Re-usable objects to be used for retrieving position.
@@ -212,9 +212,9 @@ define([
     * @param {JulianDate} time The current animation time.
     *
     */
-    DynamicObjectView.prototype.update = function(time) {
+    EntityView.prototype.update = function(time) {
         var scene = this.scene;
-        var dynamicObject = this.dynamicObject;
+        var entity = this.entity;
         var ellipsoid = this.ellipsoid;
 
         //>>includeStart('debug', pragmas.debug);
@@ -222,23 +222,23 @@ define([
             throw new DeveloperError('time is required.');
         }
         if (!defined(scene)) {
-            throw new DeveloperError('DynamicObjectView.scene is required.');
+            throw new DeveloperError('EntityView.scene is required.');
         }
-        if (!defined(dynamicObject)) {
-            throw new DeveloperError('DynamicObjectView.dynamicObject is required.');
+        if (!defined(entity)) {
+            throw new DeveloperError('EntityView.entity is required.');
         }
         if (!defined(ellipsoid)) {
-            throw new DeveloperError('DynamicObjectView.ellipsoid is required.');
+            throw new DeveloperError('EntityView.ellipsoid is required.');
         }
-        if (!defined(dynamicObject.position)) {
-            throw new DeveloperError('dynamicObject.position is required.');
+        if (!defined(entity.position)) {
+            throw new DeveloperError('entity.position is required.');
         }
         //>>includeEnd('debug');
 
         this._screenSpaceCameraController = scene.screenSpaceCameraController;
 
-        var positionProperty = dynamicObject.position;
-        var objectChanged = dynamicObject !== this._lastDynamicObject;
+        var positionProperty = entity.position;
+        var objectChanged = entity !== this._lastEntity;
         var sceneModeChanged = scene.mode !== this._mode && scene.mode !== SceneMode.MORPHING;
 
         var offset3D = this._offset3D;
@@ -248,7 +248,7 @@ define([
         var camera = scene.camera;
 
         if (objectChanged) {
-            var viewFromProperty = dynamicObject.viewFrom;
+            var viewFromProperty = entity.viewFrom;
             if (!defined(viewFromProperty) || !defined(viewFromProperty.getValue(time, offset3D))) {
                 Cartesian3.clone(this._defaultOffset2D, offset2D);
                 Cartesian3.clone(this._defaultUp2D, up2D);
@@ -275,7 +275,7 @@ define([
         }
 
         var updateLookAt = objectChanged || sceneModeChanged;
-        this._lastDynamicObject = dynamicObject;
+        this._lastEntity = entity;
         this._mode = scene.mode !== SceneMode.MORPHING ? scene.mode : this._mode;
 
         if (scene.mode !== SceneMode.MORPHING) {
@@ -283,5 +283,5 @@ define([
         }
     };
 
-    return DynamicObjectView;
+    return EntityView;
 });

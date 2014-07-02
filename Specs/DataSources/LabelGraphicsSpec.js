@@ -1,16 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/DynamicLabel',
+        'DataSources/LabelGraphics',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
         'Core/NearFarScalar',
-        'DynamicScene/ConstantProperty',
+        'DataSources/ConstantProperty',
         'Scene/HorizontalOrigin',
         'Scene/LabelStyle',
         'Scene/VerticalOrigin'
     ], function(
-        DynamicLabel,
+        LabelGraphics,
         Cartesian2,
         Cartesian3,
         Color,
@@ -23,7 +23,7 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('merge assigns unassigned properties', function() {
-        var source = new DynamicLabel();
+        var source = new LabelGraphics();
         source.text = new ConstantProperty('not it');
         source.font = new ConstantProperty('arial');
         source.style = new ConstantProperty(LabelStyle.FILL);
@@ -39,7 +39,7 @@ defineSuite([
         source.translucencyByDistance = new ConstantProperty(new NearFarScalar());
         source.pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar(1.0, 0.0, 3.0e9, 0.0));
 
-        var target = new DynamicLabel();
+        var target = new LabelGraphics();
         target.merge(source);
 
         expect(target.text).toBe(source.text);
@@ -59,7 +59,7 @@ defineSuite([
     });
 
     it('merge does not assign assigned properties', function() {
-        var source = new DynamicLabel();
+        var source = new LabelGraphics();
         source.text = new ConstantProperty('not it');
         source.font = new ConstantProperty('arial');
         source.style = new ConstantProperty(LabelStyle.FILL);
@@ -90,7 +90,7 @@ defineSuite([
         var translucencyByDistance = new ConstantProperty(new NearFarScalar());
         var pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar());
 
-        var target = new DynamicLabel();
+        var target = new LabelGraphics();
         target.text = text;
         target.font = font;
         target.style = style;
@@ -125,7 +125,7 @@ defineSuite([
     });
 
     it('clone works', function() {
-        var source = new DynamicLabel();
+        var source = new LabelGraphics();
         source.text = new ConstantProperty('not it');
         source.font = new ConstantProperty('arial');
         source.style = new ConstantProperty(LabelStyle.FILL);
@@ -159,7 +159,7 @@ defineSuite([
     });
 
     it('merge throws if source undefined', function() {
-        var target = new DynamicLabel();
+        var target = new LabelGraphics();
         expect(function() {
             target.merge(undefined);
         }).toThrowDeveloperError();

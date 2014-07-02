@@ -5,23 +5,23 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createDynamicPropertyDescriptor'
+        './createPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createDynamicPropertyDescriptor) {
+        createPropertyDescriptor) {
     "use strict";
 
     /**
      * An optionally time-dynamic model.
      *
-     * @alias DynamicModel
+     * @alias ModelGraphics
      * @constructor
      */
-    var DynamicModel = function() {
+    var ModelGraphics = function() {
         this._show = undefined;
         this._showSubscription = undefined;
         this._scale = undefined;
@@ -33,10 +33,10 @@ define([
         this._definitionChanged = new Event();
     };
 
-    defineProperties(DynamicModel.prototype, {
+    defineProperties(ModelGraphics.prototype, {
         /**
          * Gets the event that is raised whenever a new property is assigned.
-         * @memberof DynamicModel.prototype
+         * @memberof ModelGraphics.prototype
          *
          * @type {Event}
          * @readonly
@@ -49,39 +49,39 @@ define([
 
         /**
          * Gets or sets the boolean {@link Property} specifying the model's visibility.
-         * @memberof DynamicModel.prototype
+         * @memberof ModelGraphics.prototype
          * @type {Property}
          */
-        show : createDynamicPropertyDescriptor('show'),
+        show : createPropertyDescriptor('show'),
         /**
          * Gets or sets the Number {@link Property} specifying the model's scale.
-         * @memberof DynamicModel.prototype
+         * @memberof ModelGraphics.prototype
          * @type {Property}
          */
-        scale : createDynamicPropertyDescriptor('scale'),
+        scale : createPropertyDescriptor('scale'),
         /**
          * Gets or sets the Number {@link Property} specifying the model's approximate minimum pixel size regardless of zoom.
-         * @memberof DynamicModel.prototype
+         * @memberof ModelGraphics.prototype
          * @type {Property}
          */
-        minimumPixelSize : createDynamicPropertyDescriptor('minimumPixelSize'),
+        minimumPixelSize : createPropertyDescriptor('minimumPixelSize'),
         /**
          * Gets or sets the string {@link Property} specifying the model's uri.
-         * @memberof DynamicModel.prototype
+         * @memberof ModelGraphics.prototype
          * @type {Property}
          */
-        uri : createDynamicPropertyDescriptor('uri')
+        uri : createPropertyDescriptor('uri')
     });
 
     /**
-     * Duplicates a DynamicModel instance.
+     * Duplicates a ModelGraphics instance.
      *
-     * @param {DynamicModel} [result] The object onto which to store the result.
-     * @returns {DynamicModel} The modified result parameter or a new instance if one was not provided.
+     * @param {ModelGraphics} [result] The object onto which to store the result.
+     * @returns {ModelGraphics} The modified result parameter or a new instance if one was not provided.
      */
-    DynamicModel.prototype.clone = function(result) {
+    ModelGraphics.prototype.clone = function(result) {
         if (!defined(result)) {
-            result = new DynamicModel();
+            result = new ModelGraphics();
         }
         result.show = this.show;
         result.scale = this.scale;
@@ -94,9 +94,9 @@ define([
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
      *
-     * @param {DynamicModel} source The object to be merged into this object.
+     * @param {ModelGraphics} source The object to be merged into this object.
      */
-    DynamicModel.prototype.merge = function(source) {
+    ModelGraphics.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
@@ -109,5 +109,5 @@ define([
         this.uri = defaultValue(this.uri, source.uri);
     };
 
-    return DynamicModel;
+    return ModelGraphics;
 });

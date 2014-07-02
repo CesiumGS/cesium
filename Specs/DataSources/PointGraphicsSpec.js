@@ -1,11 +1,11 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/DynamicPoint',
+        'DataSources/PointGraphics',
         'Core/Color',
         'Core/NearFarScalar',
-        'DynamicScene/ConstantProperty'
+        'DataSources/ConstantProperty'
     ], function(
-        DynamicPoint,
+        PointGraphics,
         Color,
         NearFarScalar,
         ConstantProperty) {
@@ -13,7 +13,7 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('merge assigns unassigned properties', function() {
-        var source = new DynamicPoint();
+        var source = new PointGraphics();
         source.color = new ConstantProperty(Color.WHITE);
         source.pixelSize = new ConstantProperty(1);
         source.outlineColor = new ConstantProperty(Color.WHITE);
@@ -21,7 +21,7 @@ defineSuite([
         source.show = new ConstantProperty(true);
         source.scaleByDistance = new ConstantProperty(new NearFarScalar());
 
-        var target = new DynamicPoint();
+        var target = new PointGraphics();
         target.merge(source);
         expect(target.color).toBe(source.color);
         expect(target.pixelSize).toBe(source.pixelSize);
@@ -32,7 +32,7 @@ defineSuite([
     });
 
     it('merge does not assign assigned properties', function() {
-        var source = new DynamicPoint();
+        var source = new PointGraphics();
         source.color = new ConstantProperty(Color.WHITE);
         source.pixelSize = new ConstantProperty(1);
         source.outlineColor = new ConstantProperty(Color.WHITE);
@@ -46,7 +46,7 @@ defineSuite([
         var outlineWidth = new ConstantProperty(1);
         var show = new ConstantProperty(true);
 
-        var target = new DynamicPoint();
+        var target = new PointGraphics();
         target.color = color;
         target.pixelSize = pixelSize;
         target.outlineColor = outlineColor;
@@ -64,7 +64,7 @@ defineSuite([
     });
 
     it('clone works', function() {
-        var source = new DynamicPoint();
+        var source = new PointGraphics();
         source.color = new ConstantProperty(Color.WHITE);
         source.pixelSize = new ConstantProperty(1);
         source.outlineColor = new ConstantProperty(Color.WHITE);
@@ -82,7 +82,7 @@ defineSuite([
     });
 
     it('merge throws if source undefined', function() {
-        var target = new DynamicPoint();
+        var target = new PointGraphics();
         expect(function() {
             target.merge(undefined);
         }).toThrowDeveloperError();

@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/DynamicObject',
+        'DataSources/Entity',
         'Core/JulianDate',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
-        'DynamicScene/ConstantProperty'
+        'DataSources/ConstantProperty'
     ], function(
-        DynamicObject,
+        Entity,
         JulianDate,
         TimeInterval,
         TimeIntervalCollection,
@@ -15,50 +15,50 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('constructor sets id.', function() {
-        var dynamicObject = new DynamicObject('someId');
-        expect(dynamicObject.id).toEqual('someId');
+        var entity = new Entity('someId');
+        expect(entity.id).toEqual('someId');
     });
 
     it('isAvailable is always true if no availability defined.', function() {
-        var dynamicObject = new DynamicObject('someId');
-        expect(dynamicObject.isAvailable(JulianDate.now())).toEqual(true);
+        var entity = new Entity('someId');
+        expect(entity.isAvailable(JulianDate.now())).toEqual(true);
     });
 
     it('isAvailable throw if no time specified.', function() {
-        var dynamicObject = new DynamicObject('someId');
+        var entity = new Entity('someId');
         expect(function() {
-            dynamicObject.isAvailable();
+            entity.isAvailable();
         }).toThrowDeveloperError();
     });
 
     it('constructor creates a unique id if one is not provided.', function() {
-        var object = new DynamicObject();
-        var object2 = new DynamicObject();
+        var object = new Entity();
+        var object2 = new Entity();
         expect(object.id).toBeDefined();
         expect(object.id).toNotEqual(object2.id);
     });
 
     it('isAvailable works.', function() {
-        var dynamicObject = new DynamicObject();
+        var entity = new Entity();
         var interval = TimeInterval.fromIso8601({
             iso8601 : '2000-01-01/2001-01-01'
         });
         var intervals = new TimeIntervalCollection();
         intervals.addInterval(interval);
-        dynamicObject.availability = intervals;
-        expect(dynamicObject.isAvailable(JulianDate.addSeconds(interval.start, -1, new JulianDate()))).toEqual(false);
-        expect(dynamicObject.isAvailable(interval.start)).toEqual(true);
-        expect(dynamicObject.isAvailable(interval.stop)).toEqual(true);
-        expect(dynamicObject.isAvailable(JulianDate.addSeconds(interval.stop, 1, new JulianDate()))).toEqual(false);
+        entity.availability = intervals;
+        expect(entity.isAvailable(JulianDate.addSeconds(interval.start, -1, new JulianDate()))).toEqual(false);
+        expect(entity.isAvailable(interval.start)).toEqual(true);
+        expect(entity.isAvailable(interval.stop)).toEqual(true);
+        expect(entity.isAvailable(JulianDate.addSeconds(interval.stop, 1, new JulianDate()))).toEqual(false);
     });
 
     it('definitionChanged works for all properties', function() {
-        var dynamicObject = new DynamicObject();
-        var propertyNames = dynamicObject.propertyNames;
+        var entity = new Entity();
+        var propertyNames = entity.propertyNames;
         var propertyNamesLength = propertyNames.length;
 
         var listener = jasmine.createSpy('listener');
-        dynamicObject.definitionChanged.addEventListener(listener);
+        entity.definitionChanged.addEventListener(listener);
 
         var i;
         var name;
@@ -69,109 +69,109 @@ defineSuite([
             for (i = 0; i < propertyNamesLength; i++) {
                 name = propertyNames[i];
                 newValue = new ConstantProperty(1);
-                oldValue = dynamicObject[propertyNames[i]];
-                dynamicObject[name] = newValue;
-                expect(listener).toHaveBeenCalledWith(dynamicObject, name, newValue, oldValue);
+                oldValue = entity[propertyNames[i]];
+                entity[name] = newValue;
+                expect(listener).toHaveBeenCalledWith(entity, name, newValue, oldValue);
             }
         }
     });
 
     it('merge always overwrites availability', function() {
-        var dynamicObject = new DynamicObject();
+        var entity = new Entity();
         var interval = TimeInterval.fromIso8601({
             iso8601 : '2000-01-01/2001-01-01'
         });
-        dynamicObject.availability = interval;
+        entity.availability = interval;
 
-        var dynamicObject2 = new DynamicObject();
+        var entity2 = new Entity();
         var interval2 = TimeInterval.fromIso8601({
             iso8601 : '2000-01-01/2001-01-01'
         });
-        dynamicObject2.availability = interval2;
+        entity2.availability = interval2;
 
-        dynamicObject.merge(dynamicObject2);
-        expect(dynamicObject.availability).toBe(interval2);
+        entity.merge(entity2);
+        expect(entity.availability).toBe(interval2);
     });
 
     it('merge throws with undefined source', function() {
-        var dynamicObject = new DynamicObject();
+        var entity = new Entity();
         expect(function() {
-            dynamicObject.merge(undefined);
+            entity.merge(undefined);
         }).toThrowDeveloperError();
     });
 
     it('can add and remove custom properties.', function() {
-        var dynamicObject = new DynamicObject();
-        expect(dynamicObject.hasOwnProperty('bob')).toBe(false);
-        dynamicObject.addProperty('bob');
-        expect(dynamicObject.hasOwnProperty('bob')).toBe(true);
-        dynamicObject.removeProperty('bob');
-        expect(dynamicObject.hasOwnProperty('bob')).toBe(false);
+        var entity = new Entity();
+        expect(entity.hasOwnProperty('bob')).toBe(false);
+        entity.addProperty('bob');
+        expect(entity.hasOwnProperty('bob')).toBe(true);
+        entity.removeProperty('bob');
+        expect(entity.hasOwnProperty('bob')).toBe(false);
     });
 
     it('addProperty throws with no property specified.', function() {
-        var dynamicObject = new DynamicObject();
+        var entity = new Entity();
         expect(function() {
-            dynamicObject.addProperty(undefined);
+            entity.addProperty(undefined);
         }).toThrowDeveloperError();
     });
 
     it('addProperty throws with no property specified.', function() {
-        var dynamicObject = new DynamicObject();
+        var entity = new Entity();
         expect(function() {
-            dynamicObject.addProperty(undefined);
+            entity.addProperty(undefined);
         }).toThrowDeveloperError();
     });
 
     it('removeProperty throws with no property specified.', function() {
-        var dynamicObject = new DynamicObject();
+        var entity = new Entity();
         expect(function() {
-            dynamicObject.removeProperty(undefined);
+            entity.removeProperty(undefined);
         }).toThrowDeveloperError();
     });
 
     it('addProperty throws when adding an existing property.', function() {
-        var dynamicObject = new DynamicObject();
-        dynamicObject.addProperty('bob');
+        var entity = new Entity();
+        entity.addProperty('bob');
         expect(function() {
-            dynamicObject.addProperty('bob');
+            entity.addProperty('bob');
         }).toThrowDeveloperError();
     });
 
     it('removeProperty throws when non-existent property.', function() {
-        var dynamicObject = new DynamicObject();
+        var entity = new Entity();
         expect(function() {
-            dynamicObject.removeProperty('bob');
+            entity.removeProperty('bob');
         }).toThrowDeveloperError();
     });
 
     it('addProperty throws with defined reserved property name.', function() {
-        var dynamicObject = new DynamicObject();
+        var entity = new Entity();
         expect(function() {
-            dynamicObject.addProperty('merge');
+            entity.addProperty('merge');
         }).toThrowDeveloperError();
     });
 
     it('removeProperty throws with defined reserved property name.', function() {
-        var dynamicObject = new DynamicObject();
+        var entity = new Entity();
         expect(function() {
-            dynamicObject.removeProperty('merge');
+            entity.removeProperty('merge');
         }).toThrowDeveloperError();
     });
 
     it('addProperty throws with undefined reserved property name.', function() {
-        var dynamicObject = new DynamicObject();
-        expect(dynamicObject.name).toBeUndefined();
+        var entity = new Entity();
+        expect(entity.name).toBeUndefined();
         expect(function() {
-            dynamicObject.addProperty('name');
+            entity.addProperty('name');
         }).toThrowDeveloperError();
     });
 
     it('removeProperty throws with undefined reserved property name.', function() {
-        var dynamicObject = new DynamicObject();
-        expect(dynamicObject.name).toBeUndefined();
+        var entity = new Entity();
+        expect(entity.name).toBeUndefined();
         expect(function() {
-            dynamicObject.removeProperty('name');
+            entity.removeProperty('name');
         }).toThrowDeveloperError();
     });
 });

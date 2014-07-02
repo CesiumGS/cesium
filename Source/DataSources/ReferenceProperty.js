@@ -58,34 +58,34 @@ define([
      * @param {String} targetPropertyNames The name of the property on the target object which we will use.
      *
      * @example
-     * var collection = new Cesium.DynamicObjectCollection();
+     * var collection = new Cesium.EntityCollection();
      *
      * //Create a new object and assign a billboard scale.
-     * var object1 = new Cesium.DynamicObject('object1');
-     * object1.billboard = new Cesium.DynamicBillboard();
+     * var object1 = new Cesium.Entity('object1');
+     * object1.billboard = new Cesium.BillboardGraphics();
      * object1.billboard.scale = new ConstantProperty(2.0);
      * collection.add(object1);
      *
      * //Create a second object and reference the scale from the first one.
-     * var object2 = new Cesium.DynamicObject('object2');
-     * object2.model = new Cesium.DynamicModel();
+     * var object2 = new Cesium.Entity('object2');
+     * object2.model = new Cesium.ModelGraphics();
      * object2.model.scale = new Cesium.ReferenceProperty(collection, 'object1', ['billboard', 'scale']);
      * collection.add(object2);
      *
      * //Create a third object, but use the fromString helper function.
-     * var object3 = new Cesium.DynamicObject('object3');
-     * object3.billboard = new Cesium.DynamicBillboard();
+     * var object3 = new Cesium.Entity('object3');
+     * object3.billboard = new Cesium.BillboardGraphics();
      * object3.billboard.scale = Cesium.ReferenceProperty.fromString(collection, 'object1#billboard.scale']);
      * collection.add(object3);
      *
      * //You can refer to an object with a # or . in id and property names by escaping them.
-     * var object4 = new Cesium.DynamicObject('#object.4');
-     * object4.billboard = new Cesium.DynamicBillboard();
+     * var object4 = new Cesium.Entity('#object.4');
+     * object4.billboard = new Cesium.BillboardGraphics();
      * object4.billboard.scale = new ConstantProperty(2.0);
      * collection.add(object4);
      *
-     * var object5 = new Cesium.DynamicObject('object5');
-     * object5.billboard = new Cesium.DynamicBillboard();
+     * var object5 = new Cesium.Entity('object5');
+     * object5.billboard = new Cesium.BillboardGraphics();
      * object5.billboard.scale = Cesium.ReferenceProperty.fromString(collection, '\\#object\\.4#billboard.scale');
      * collection.add(object5);
      */
@@ -168,7 +168,7 @@ define([
         /**
          * Gets the collection containing the object being referenced.
          * @memberof ReferenceProperty.prototype
-         * @type {DynamicObjectCollection}
+         * @type {EntityCollection}
          * @readonly
          */
         targetCollection : {
@@ -201,13 +201,13 @@ define([
     });
 
     /**
-     * Creates a new instance given the dynamic object collection that will
+     * Creates a new instance given the entity collection that will
      * be used to resolve it and a string indicating the target object id and property.
      * The format of the string is "objectId#foo.bar", where # separates the id from
      * property path and . separates sub-properties.  If the reference identifier or
      * or any sub-properties contains a # . or \ they must be escaped.
      *
-     * @param {DynamicObject} targetCollection
+     * @param {Entity} targetCollection
      * @param {String} referenceString
      * @returns A new instance of ReferenceProperty.
      *

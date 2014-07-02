@@ -278,13 +278,13 @@ define([
         }
     };
 
-    PolylineUpdater.prototype.updateObject = function(time, dynamicObject) {
-        var dynamicPath = dynamicObject._path;
-        if (!defined(dynamicPath)) {
+    PolylineUpdater.prototype.updateObject = function(time, entity) {
+        var pathGraphics = entity._path;
+        if (!defined(pathGraphics)) {
             return;
         }
 
-        var positionProperty = dynamicObject._position;
+        var positionProperty = entity._position;
         if (!defined(positionProperty)) {
             return;
         }
@@ -293,27 +293,27 @@ define([
         var property;
         var sampleStart;
         var sampleStop;
-        var showProperty = dynamicPath._show;
-        var pathVisualizerIndex = dynamicObject._pathVisualizerIndex;
+        var showProperty = pathGraphics._show;
+        var pathVisualizerIndex = entity._pathVisualizerIndex;
         var show = !defined(showProperty) || showProperty.getValue(time);
 
         //While we want to show the path, there may not actually be anything to show
         //depending on lead/trail settings.  Compute the interval of the path to
         //show and check against actual availability.
         if (show) {
-            property = dynamicPath._leadTime;
+            property = pathGraphics._leadTime;
             var leadTime;
             if (defined(property)) {
                 leadTime = property.getValue(time);
             }
 
-            property = dynamicPath._trailTime;
+            property = pathGraphics._trailTime;
             var trailTime;
             if (defined(property)) {
                 trailTime = property.getValue(time);
             }
 
-            var availability = dynamicObject._availability;
+            var availability = entity._availability;
             var hasAvailability = defined(availability);
             var hasLeadTime = defined(leadTime);
             var hasTrailTime = defined(trailTime);
@@ -354,7 +354,7 @@ define([
             if (defined(pathVisualizerIndex)) {
                 polyline = this._polylineCollection.get(pathVisualizerIndex);
                 polyline.show = false;
-                dynamicObject._pathVisualizerIndex = undefined;
+                entity._pathVisualizerIndex = undefined;
                 this._unusedIndexes.push(pathVisualizerIndex);
             }
             return;
@@ -370,8 +370,8 @@ define([
                 pathVisualizerIndex = this._polylineCollection.length;
                 polyline = this._polylineCollection.add();
             }
-            dynamicObject._pathVisualizerIndex = pathVisualizerIndex;
-            polyline.id = dynamicObject;
+            entity._pathVisualizerIndex = pathVisualizerIndex;
+            polyline.id = entity;
 
             polyline.width = 1;
             var material = polyline.material;
@@ -390,7 +390,7 @@ define([
         polyline.show = true;
 
         var maxStepSize = 60.0;
-        property = dynamicPath._resolution;
+        property = pathGraphics._resolution;
         if (defined(property)) {
             var resolution = property.getValue(time);
             if (defined(resolution)) {
@@ -399,9 +399,9 @@ define([
         }
 
         polyline.positions = subSample(positionProperty, sampleStart, sampleStop, time, this._referenceFrame, maxStepSize, polyline.positions);
-        polyline.material = MaterialProperty.getValue(time, dynamicPath._material, polyline.material);
+        polyline.material = MaterialProperty.getValue(time, pathGraphics._material, polyline.material);
 
-        property = dynamicPath._width;
+        property = pathGraphics._width;
         if (defined(property)) {
             var width = property.getValue(time);
             if (defined(width)) {
@@ -410,13 +410,13 @@ define([
         }
     };
 
-    PolylineUpdater.prototype.removeObject = function(dynamicObject) {
-        var pathVisualizerIndex = dynamicObject._pathVisualizerIndex;
+    PolylineUpdater.prototype.removeObject = function(entity) {
+        var pathVisualizerIndex = entity._pathVisualizerIndex;
         if (defined(pathVisualizerIndex)) {
             var polyline = this._polylineCollection.get(pathVisualizerIndex);
             polyline.show = false;
             this._unusedIndexes.push(pathVisualizerIndex);
-            dynamicObject._pathVisualizerIndex = undefined;
+            entity._pathVisualizerIndex = undefined;
         }
     };
 
@@ -426,38 +426,38 @@ define([
     };
 
     /**
-     * A {@link Visualizer} which maps {@link DynamicObject#path} to a {@link Polyline}.
-     * @alias DynamicPathVisualizer
+     * A {@link Visualizer} which maps {@link Entity#path} to a {@link Polyline}.
+     * @alias PathVisualizer
      * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
-     * @param {DynamicObjectCollection} dynamicObjectCollection The dynamicObjectCollection to visualize.
+     * @param {EntityCollection} entityCollection The entityCollection to visualize.
      */
-    var DynamicPathVisualizer = function(scene, dynamicObjectCollection) {
+    var PathVisualizer = function(scene, entityCollection) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
-        if (!defined(dynamicObjectCollection)) {
-            throw new DeveloperError('dynamicObjectCollection is required.');
+        if (!defined(entityCollection)) {
+            throw new DeveloperError('entityCollection is required.');
         }
         //>>includeEnd('debug');
 
-        dynamicObjectCollection.collectionChanged.addEventListener(DynamicPathVisualizer.prototype._onObjectsRemoved, this);
+        entityCollection.collectionChanged.addEventListener(PathVisualizer.prototype._onObjectsRemoved, this);
 
         this._scene = scene;
         this._updaters = {};
-        this._dynamicObjectCollection = dynamicObjectCollection;
+        this._entityCollection = entityCollection;
     };
 
     /**
      * Updates all of the primitives created by this visualizer to match their
-     * DynamicObject counterpart at the given time.
+     * Entity counterpart at the given time.
      *
      * @param {JulianDate} time The time to update to.
      * @returns {Boolean} This function always returns true.
      */
-    DynamicPathVisualizer.prototype.update = function(time) {
+    PathVisualizer.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
@@ -471,20 +471,20 @@ define([
             }
         }
 
-        var dynamicObjects = this._dynamicObjectCollection.getObjects();
-        for (var i = 0, len = dynamicObjects.length; i < len; i++) {
-            var dynamicObject = dynamicObjects[i];
+        var entities = this._entityCollection.getObjects();
+        for (var i = 0, len = entities.length; i < len; i++) {
+            var entity = entities[i];
 
-            if (!defined(dynamicObject._path)) {
+            if (!defined(entity._path)) {
                 continue;
             }
 
-            var positionProperty = dynamicObject._position;
+            var positionProperty = entity._position;
             if (!defined(positionProperty)) {
                 continue;
             }
 
-            var lastUpdater = dynamicObject._pathUpdater;
+            var lastUpdater = entity._pathUpdater;
 
             var frameToVisualize = ReferenceFrame.FIXED;
             if (this._scene.mode === SceneMode.SCENE3D) {
@@ -494,12 +494,12 @@ define([
             var currentUpdater = this._updaters[frameToVisualize];
 
             if ((lastUpdater === currentUpdater) && (defined(currentUpdater))) {
-                currentUpdater.updateObject(time, dynamicObject);
+                currentUpdater.updateObject(time, entity);
                 continue;
             }
 
             if (defined(lastUpdater)) {
-                lastUpdater.removeObject(dynamicObject);
+                lastUpdater.removeObject(entity);
             }
 
             if (!defined(currentUpdater)) {
@@ -508,9 +508,9 @@ define([
                 this._updaters[frameToVisualize] = currentUpdater;
             }
 
-            dynamicObject._pathUpdater = currentUpdater;
+            entity._pathUpdater = currentUpdater;
             if (defined(currentUpdater)) {
-                currentUpdater.updateObject(time, dynamicObject);
+                currentUpdater.updateObject(time, entity);
             }
         }
         return true;
@@ -521,16 +521,16 @@ define([
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
-    DynamicPathVisualizer.prototype.isDestroyed = function() {
+    PathVisualizer.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
      * Removes and destroys all primitives created by this instance.
      */
-    DynamicPathVisualizer.prototype.destroy = function() {
-        var dynamicObjectCollection = this._dynamicObjectCollection;
-        dynamicObjectCollection.collectionChanged.removeEventListener(DynamicPathVisualizer.prototype._onObjectsRemoved, this);
+    PathVisualizer.prototype.destroy = function() {
+        var entityCollection = this._entityCollection;
+        entityCollection.collectionChanged.removeEventListener(PathVisualizer.prototype._onObjectsRemoved, this);
 
         var updaters = this._updaters;
         for ( var key in updaters) {
@@ -539,27 +539,27 @@ define([
             }
         }
 
-        var dynamicObjects = dynamicObjectCollection.getObjects();
-        var length = dynamicObjects.length;
+        var entities = entityCollection.getObjects();
+        var length = entities.length;
         for (var i = 0; i < length; i++) {
-            dynamicObjects[i]._pathUpdater = undefined;
-            dynamicObjects[i]._pathVisualizerIndex = undefined;
+            entities[i]._pathUpdater = undefined;
+            entities[i]._pathVisualizerIndex = undefined;
         }
         return destroyObject(this);
     };
 
-    DynamicPathVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, added, dynamicObjects) {
-        for (var i = dynamicObjects.length - 1; i > -1; i--) {
-            var dynamicObject = dynamicObjects[i];
-            var _pathUpdater = dynamicObject._pathUpdater;
+    PathVisualizer.prototype._onObjectsRemoved = function(entityCollection, added, entities) {
+        for (var i = entities.length - 1; i > -1; i--) {
+            var entity = entities[i];
+            var _pathUpdater = entity._pathUpdater;
             if (defined(_pathUpdater)) {
-                _pathUpdater.removeObject(dynamicObject);
+                _pathUpdater.removeObject(entity);
             }
         }
     };
 
     //for testing
-    DynamicPathVisualizer._subSample = subSample;
+    PathVisualizer._subSample = subSample;
 
-    return DynamicPathVisualizer;
+    return PathVisualizer;
 });

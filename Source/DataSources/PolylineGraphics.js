@@ -5,22 +5,22 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createDynamicPropertyDescriptor'
+        './createPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createDynamicPropertyDescriptor) {
+        createPropertyDescriptor) {
     "use strict";
 
     /**
      * An optionally time-dynamic polyline.
-     * @alias DynamicPolyline
+     * @alias PolylineGraphics
      * @constructor
      */
-    var DynamicPolyline = function() {
+    var PolylineGraphics = function() {
         this._show = undefined;
         this._showSubscription = undefined;
         this._material = undefined;
@@ -30,10 +30,10 @@ define([
         this._definitionChanged = new Event();
     };
 
-    defineProperties(DynamicPolyline.prototype, {
+    defineProperties(PolylineGraphics.prototype, {
         /**
          * Gets the event that is raised whenever a new property is assigned.
-         * @memberof DynamicPolyline.prototype
+         * @memberof PolylineGraphics.prototype
          *
          * @type {Event}
          * @readonly
@@ -46,35 +46,35 @@ define([
 
         /**
          * Gets or sets the boolean {@link Property} specifying the line's visibility.
-         * @memberof DynamicPolyline.prototype
+         * @memberof PolylineGraphics.prototype
          * @type {Property}
          */
-        show : createDynamicPropertyDescriptor('show'),
+        show : createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the polyline.
-         * @memberof DynamicPolyline.prototype
+         * @memberof PolylineGraphics.prototype
          * @type {MaterialProperty}
          */
-        material : createDynamicPropertyDescriptor('material'),
+        material : createPropertyDescriptor('material'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the line's width.
-         * @memberof DynamicPolyline.prototype
+         * @memberof PolylineGraphics.prototype
          * @type {Property}
          */
-        width : createDynamicPropertyDescriptor('width')
+        width : createPropertyDescriptor('width')
     });
 
     /**
-     * Duplicates a DynamicPolyline instance.
+     * Duplicates a PolylineGraphics instance.
      *
-     * @param {DynamicPolyline} [result] The object onto which to store the result.
-     * @returns {DynamicPolyline} The modified result parameter or a new instance if one was not provided.
+     * @param {PolylineGraphics} [result] The object onto which to store the result.
+     * @returns {PolylineGraphics} The modified result parameter or a new instance if one was not provided.
      */
-    DynamicPolyline.prototype.clone = function(result) {
+    PolylineGraphics.prototype.clone = function(result) {
         if (!defined(result)) {
-            result = new DynamicPolyline();
+            result = new PolylineGraphics();
         }
         result.show = this.show;
         result.material = this.material;
@@ -86,9 +86,9 @@ define([
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
      *
-     * @param {DynamicPolyline} source The object to be merged into this object.
+     * @param {PolylineGraphics} source The object to be merged into this object.
      */
-    DynamicPolyline.prototype.merge = function(source) {
+    PolylineGraphics.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
@@ -100,5 +100,5 @@ define([
         this.width = defaultValue(this.width, source.width);
     };
 
-    return DynamicPolyline;
+    return PolylineGraphics;
 });

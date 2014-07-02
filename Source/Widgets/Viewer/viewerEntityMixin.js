@@ -7,8 +7,8 @@ define([
         '../../Core/EventHelper',
         '../../Core/ScreenSpaceEventType',
         '../../Core/wrapFunction',
-        '../../DynamicScene/DynamicObject',
-        '../../DynamicScene/DynamicObjectView',
+        '../../DataSources/Entity',
+        '../../DataSources/EntityView',
         '../../Scene/SceneMode',
         '../../ThirdParty/knockout',
         '../subscribeAndEvaluate'
@@ -20,20 +20,20 @@ define([
         EventHelper,
         ScreenSpaceEventType,
         wrapFunction,
-        DynamicObject,
-        DynamicObjectView,
+        Entity,
+        EntityView,
         SceneMode,
         knockout,
         subscribeAndEvaluate) {
     "use strict";
 
     /**
-     * A mixin which adds behavior to the Viewer widget for dealing with DynamicObject instances.
-     * This allows for DynamicObjects to be tracked with the camera, either by the viewer clicking
+     * A mixin which adds behavior to the Viewer widget for dealing with Entity instances.
+     * This allows for Entitys to be tracked with the camera, either by the viewer clicking
      * on them, or by setting the trackedObject property.
      * Rather than being called directly, this function is normally passed as
      * a parameter to {@link Viewer#extend}, as shown in the example below.
-     * @exports viewerDynamicObjectMixin
+     * @exports viewerEntityMixin
      *
      * @param {Viewer} viewer The viewer instance.
      *
@@ -41,15 +41,15 @@ define([
      * @exception {DeveloperError} selectedObject is already defined by another mixin.
      *
      * @example
-     * // Add support for working with DynamicObject instances to the Viewer.
-     * var dynamicObject = ... //A Cesium.DynamicObject instance
+     * // Add support for working with Entity instances to the Viewer.
+     * var entity = ... //A Cesium.Entity instance
      * var viewer = new Cesium.Viewer('cesiumContainer');
-     * viewer.extend(Cesium.viewerDynamicObjectMixin);
-     * viewer.trackedObject = dynamicObject; //Camera will now track dynamicObject
+     * viewer.extend(Cesium.viewerEntityMixin);
+     * viewer.trackedObject = entity; //Camera will now track entity
      * viewer.selectedObject = object; //Selection will now appear over object
      */
 
-    var viewerDynamicObjectMixin = function(viewer) {
+    var viewerEntityMixin = function(viewer) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(viewer)) {
             throw new DeveloperError('viewer is required.');
@@ -71,7 +71,7 @@ define([
         var enableInfoOrSelection = defined(infoBox) || defined(selectionIndicator);
 
         var eventHelper = new EventHelper();
-        var dynamicObjectView;
+        var entityView;
 
         function trackSelectedObject() {
             viewer.trackedObject = viewer.selectedObject;
@@ -101,8 +101,8 @@ define([
         // Subscribe to onTick so that we can update the view each update.
         function onTick(clock) {
             var time = clock.currentTime;
-            if (defined(dynamicObjectView)) {
-                dynamicObjectView.update(time);
+            if (defined(entityView)) {
+                entityView.update(time);
             }
 
             var selectedObject = viewer.selectedObject;
@@ -153,31 +153,31 @@ define([
         }
         eventHelper.add(viewer.clock.onTick, onTick);
 
-        function pickDynamicObject(e) {
+        function pickEntity(e) {
             var picked = viewer.scene.pick(e.position);
             if (defined(picked)) {
                 var id = defaultValue(picked.id, picked.primitive.id);
-                if (id instanceof DynamicObject) {
+                if (id instanceof Entity) {
                     return id;
                 }
             }
         }
 
-        function trackObject(dynamicObject) {
-            if (defined(dynamicObject) && defined(dynamicObject.position)) {
-                viewer.trackedObject = dynamicObject;
+        function trackObject(entity) {
+            if (defined(entity) && defined(entity.position)) {
+                viewer.trackedObject = entity;
             }
         }
 
         function pickAndTrackObject(e) {
-            var dynamicObject = pickDynamicObject(e);
-            if (defined(dynamicObject)) {
-                trackObject(dynamicObject);
+            var entity = pickEntity(e);
+            if (defined(entity)) {
+                trackObject(entity);
             }
         }
 
         function pickAndSelectObject(e) {
-            viewer.selectedObject = pickDynamicObject(e);
+            viewer.selectedObject = pickEntity(e);
         }
 
         // Subscribe to the home button beforeExecute event if it exists,
@@ -194,7 +194,7 @@ define([
 
         // We need to subscribe to the data sources and collections so that we can clear the
         // tracked object when it is removed from the scene.
-        function onDynamicCollectionChanged(collection, added, removed) {
+        function onEntityCollectionChanged(collection, added, removed) {
             var length = removed.length;
             for (var i = 0; i < length; i++) {
                 var removedObject = removed[i];
@@ -208,22 +208,22 @@ define([
         }
 
         function dataSourceAdded(dataSourceCollection, dataSource) {
-            var dynamicObjectCollection = dataSource.dynamicObjects;
-            dynamicObjectCollection.collectionChanged.addEventListener(onDynamicCollectionChanged);
+            var entityCollection = dataSource.entities;
+            entityCollection.collectionChanged.addEventListener(onEntityCollectionChanged);
         }
 
         function dataSourceRemoved(dataSourceCollection, dataSource) {
-            var dynamicObjectCollection = dataSource.dynamicObjects;
-            dynamicObjectCollection.collectionChanged.removeEventListener(onDynamicCollectionChanged);
+            var entityCollection = dataSource.entities;
+            entityCollection.collectionChanged.removeEventListener(onEntityCollectionChanged);
 
             if (defined(viewer.trackedObject)) {
-                if (dynamicObjectCollection.getById(viewer.trackedObject.id) === viewer.trackedObject) {
+                if (entityCollection.getById(viewer.trackedObject.id) === viewer.trackedObject) {
                     viewer.homeButton.viewModel.command();
                 }
             }
 
             if (defined(viewer.selectedObject)) {
-                if (dynamicObjectCollection.getById(viewer.selectedObject.id) === viewer.selectedObject) {
+                if (entityCollection.getById(viewer.selectedObject.id) === viewer.selectedObject) {
                     viewer.selectedObject = undefined;
                 }
             }
@@ -245,16 +245,16 @@ define([
         viewer.screenSpaceEventHandler.setInputAction(pickAndTrackObject, ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 
         /**
-         * Gets or sets the DynamicObject instance currently being tracked by the camera.
-         * @memberof viewerDynamicObjectMixin.prototype
-         * @type {DynamicObject}
+         * Gets or sets the Entity instance currently being tracked by the camera.
+         * @memberof viewerEntityMixin.prototype
+         * @type {Entity}
          */
         viewer.trackedObject = undefined;
 
         /**
          * Gets or sets the object instance for which to display a selection indicator.
-         * @memberof viewerDynamicObjectMixin.prototype
-         * @type {DynamicObject}
+         * @memberof viewerEntityMixin.prototype
+         * @type {Entity}
          */
         viewer.selectedObject = undefined;
 
@@ -276,9 +276,9 @@ define([
             }
 
             if (isTracking && defined(value.position)) {
-                dynamicObjectView = new DynamicObjectView(value, scene, viewer.scene.globe.ellipsoid);
+                entityView = new EntityView(value, scene, viewer.scene.globe.ellipsoid);
             } else {
-                dynamicObjectView = undefined;
+                entityView = undefined;
             }
         }));
 
@@ -320,5 +320,5 @@ define([
         });
     };
 
-    return viewerDynamicObjectMixin;
+    return viewerEntityMixin;
 });

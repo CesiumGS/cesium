@@ -34,14 +34,14 @@ define([
     }
 
     /**
-     * Used to consistently define all DynamicScene graphics objects.
+     * Used to consistently define all DataSources graphics objects.
      * This is broken into two functions because the Chrome profiler does a better
      * job of optimizing lookups if it notices that the string is constant throughout the function.
      * @private
      */
-    function createDynamicPropertyDescriptor(name, configurable) {
+    function createPropertyDescriptor(name, configurable) {
         return createProperty(name, '_' + name, '_' + name + 'Subscription', defaultValue(configurable, false));
     }
 
-    return createDynamicPropertyDescriptor;
+    return createPropertyDescriptor;
 });

@@ -1,11 +1,11 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/DynamicVector',
+        'DataSources/VectorGraphics',
         'Core/Cartesian3',
         'Core/Color',
-        'DynamicScene/ConstantProperty'
+        'DataSources/ConstantProperty'
     ], function(
-        DynamicVector,
+        VectorGraphics,
         Cartesian3,
         Color,
         ConstantProperty) {
@@ -13,14 +13,14 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('merge assigns unassigned properties', function() {
-        var source = new DynamicVector();
+        var source = new VectorGraphics();
         source.color = new ConstantProperty(Color.WHITE);
         source.width = new ConstantProperty(1);
         source.length = new ConstantProperty(2);
         source.direction = new ConstantProperty(new Cartesian3(1, 0, 0));
         source.show = new ConstantProperty(true);
 
-        var target = new DynamicVector();
+        var target = new VectorGraphics();
         target.merge(source);
         expect(target.color).toBe(source.color);
         expect(target.width).toBe(source.width);
@@ -30,7 +30,7 @@ defineSuite([
     });
 
     it('merge does not assign assigned properties', function() {
-        var source = new DynamicVector();
+        var source = new VectorGraphics();
         source.color = new ConstantProperty(Color.WHITE);
         source.width = new ConstantProperty(1);
         source.length = new ConstantProperty(2);
@@ -43,7 +43,7 @@ defineSuite([
         var direction = new ConstantProperty(new Cartesian3(1, 0, 0));
         var show = new ConstantProperty(true);
 
-        var target = new DynamicVector();
+        var target = new VectorGraphics();
         target.color = color;
         target.width = width;
         target.length = length;
@@ -59,7 +59,7 @@ defineSuite([
     });
 
     it('clone works', function() {
-        var source = new DynamicVector();
+        var source = new VectorGraphics();
         source.color = new ConstantProperty(Color.WHITE);
         source.width = new ConstantProperty(1);
         source.length = new ConstantProperty(2);
@@ -75,7 +75,7 @@ defineSuite([
     });
 
     it('merge throws if source undefined', function() {
-        var target = new DynamicVector();
+        var target = new VectorGraphics();
         expect(function() {
             target.merge(undefined);
         }).toThrowDeveloperError();

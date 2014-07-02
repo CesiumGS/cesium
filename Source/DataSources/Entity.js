@@ -6,7 +6,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createDynamicPropertyDescriptor'
+        './createPropertyDescriptor'
     ], function(
         createGuid,
         defaultValue,
@@ -14,22 +14,22 @@ define([
         defineProperties,
         DeveloperError,
         Event,
-        createDynamicPropertyDescriptor) {
+        createPropertyDescriptor) {
     "use strict";
 
     /**
-     * DynamicObject instances are the primary data store for processed data.
+     * Entity instances are the primary data store for processed data.
      * They are used primarily by the visualizers to create and maintain graphic
-     * primitives that represent the DynamicObject's properties at a specific time.
-     * @alias DynamicObject
+     * primitives that represent the Entity's properties at a specific time.
+     * @alias Entity
      * @constructor
      *
      * @param {String} [id] A unique identifier for this object.  If no id is provided, a GUID is generated.
      *
      * @see Property
-     * @see DynamicObjectCollection
+     * @see EntityCollection
      */
-    var DynamicObject = function(id) {
+    var Entity = function(id) {
         if (!defined(id)) {
             id = createGuid();
         }
@@ -83,20 +83,20 @@ define([
         this._wallSubscription = undefined;
     };
 
-    defineProperties(DynamicObject.prototype, {
+    defineProperties(Entity.prototype, {
         /**
          * The availability, if any, associated with this object.
          * If availability is undefined, it is assumed that this object's
          * other properties will return valid data for any provided time.
          * If availability exists, the objects other properties will only
          * provide valid data if queried within the given interval.
-         * @memberof DynamicObject.prototype
+         * @memberof Entity.prototype
          * @type {TimeIntervalCollection}
          */
-        availability : createDynamicPropertyDescriptor('availability'),
+        availability : createPropertyDescriptor('availability'),
         /**
          * Gets the unique ID associated with this object.
-         * @memberof DynamicObject.prototype
+         * @memberof Entity.prototype
          * @type {String}
          */
         id : {
@@ -106,7 +106,7 @@ define([
         },
         /**
          * Gets the event that is raised whenever a new property is assigned.
-         * @memberof DynamicObject.prototype
+         * @memberof Entity.prototype
          *
          * @type {Event}
          * @readonly
@@ -119,7 +119,7 @@ define([
         /**
          * Gets or sets the name of the object.  The name is intended for end-user
          * consumption and does not need to be unique.
-         * @memberof DynamicObject.prototype
+         * @memberof Entity.prototype
          * @type {String}
          */
         name : {
@@ -137,13 +137,13 @@ define([
         },
         /**
          * Gets or sets the parent object.
-         * @memberof DynamicObject.prototype
-         * @type {DynamicObject}
+         * @memberof Entity.prototype
+         * @type {Entity}
          */
-        parent : createDynamicPropertyDescriptor('parent'),
+        parent : createPropertyDescriptor('parent'),
         /**
          * Gets the names of all properties registed on this instance.
-         * @memberof DynamicObject.prototype
+         * @memberof Entity.prototype
          * @type {Event}
          */
         propertyNames : {
@@ -153,119 +153,119 @@ define([
         },
         /**
          * Gets or sets the billboard.
-         * @memberof DynamicObject.prototype
-         * @type {DynamicBillboard}
+         * @memberof Entity.prototype
+         * @type {BillboardGraphics}
          */
-        billboard : createDynamicPropertyDescriptor('billboard'),
+        billboard : createPropertyDescriptor('billboard'),
         /**
          * Gets or sets the cone.
-         * @memberof DynamicObject.prototype
-         * @type {DynamicCone}
+         * @memberof Entity.prototype
+         * @type {ConeGraphics}
          */
-        cone : createDynamicPropertyDescriptor('cone'),
+        cone : createPropertyDescriptor('cone'),
         /**
          * Gets or sets the description.
-         * @memberof DynamicObject.prototype
+         * @memberof Entity.prototype
          * @type {Property}
          */
-        description : createDynamicPropertyDescriptor('description'),
+        description : createPropertyDescriptor('description'),
         /**
          * Gets or sets the ellipse.
-         * @memberof DynamicObject.prototype
-         * @type {DynamicEllipse}
+         * @memberof Entity.prototype
+         * @type {EllipseGraphics}
          */
-        ellipse : createDynamicPropertyDescriptor('ellipse'),
+        ellipse : createPropertyDescriptor('ellipse'),
         /**
          * Gets or sets the ellipsoid.
-         * @memberof DynamicObject.prototype
-         * @type {DynamicEllipsoid}
+         * @memberof Entity.prototype
+         * @type {EllipsoidGraphics}
          */
-        ellipsoid : createDynamicPropertyDescriptor('ellipsoid'),
+        ellipsoid : createPropertyDescriptor('ellipsoid'),
         /**
          * Gets or sets the label.
-         * @memberof DynamicObject.prototype
-         * @type {DynamicLabel}
+         * @memberof Entity.prototype
+         * @type {LabelGraphics}
          */
-        label : createDynamicPropertyDescriptor('label'),
+        label : createPropertyDescriptor('label'),
         /**
          * Gets or sets the model.
-         * @memberof DynamicObject.prototype
-         * @type {DynamicLabel}
+         * @memberof Entity.prototype
+         * @type {LabelGraphics}
          */
-        model : createDynamicPropertyDescriptor('model'),
+        model : createPropertyDescriptor('model'),
         /**
          * Gets or sets the orientation.
-         * @memberof DynamicObject.prototype
+         * @memberof Entity.prototype
          * @type {Property}
          */
-        orientation : createDynamicPropertyDescriptor('orientation'),
+        orientation : createPropertyDescriptor('orientation'),
         /**
          * Gets or sets the path.
-         * @memberof DynamicObject.prototype
-         * @type {DynamicPath}
+         * @memberof Entity.prototype
+         * @type {PathGraphics}
          */
-        path : createDynamicPropertyDescriptor('path'),
+        path : createPropertyDescriptor('path'),
         /**
          * Gets or sets the point graphic.
-         * @memberof DynamicObject.prototype
-         * @type {DynamicPoint}
+         * @memberof Entity.prototype
+         * @type {PointGraphics}
          */
-        point : createDynamicPropertyDescriptor('point'),
+        point : createPropertyDescriptor('point'),
         /**
          * Gets or sets the polygon.
-         * @memberof DynamicObject.prototype
-         * @type {DynamicPolygon}
+         * @memberof Entity.prototype
+         * @type {PolygonGraphics}
          */
-        polygon : createDynamicPropertyDescriptor('polygon'),
+        polygon : createPropertyDescriptor('polygon'),
         /**
          * Gets or sets the polyline.
-         * @memberof DynamicObject.prototype
-         * @type {DynamicPolyline}
+         * @memberof Entity.prototype
+         * @type {PolylineGraphics}
          */
-        polyline : createDynamicPropertyDescriptor('polyline'),
+        polyline : createPropertyDescriptor('polyline'),
         /**
          * Gets or sets the position.
-         * @memberof DynamicObject.prototype
+         * @memberof Entity.prototype
          * @type {PositionProperty}
          */
-        position : createDynamicPropertyDescriptor('position'),
+        position : createPropertyDescriptor('position'),
         /**
          * Gets or sets the pyramid.
-         * @memberof DynamicObject.prototype
-         * @type {DynamicPyramid}
+         * @memberof Entity.prototype
+         * @type {PyramidGraphics}
          */
-        pyramid : createDynamicPropertyDescriptor('pyramid'),
+        pyramid : createPropertyDescriptor('pyramid'),
         /**
          * Gets or sets the rectangle.
-         * @memberof DynamicObject.prototype
-         * @type {DynamicRectangle}
+         * @memberof Entity.prototype
+         * @type {RectangleGraphics}
          */
-        rectangle : createDynamicPropertyDescriptor('rectangle'),
+        rectangle : createPropertyDescriptor('rectangle'),
         /**
          * Gets or sets the vector.
-         * @memberof DynamicObject.prototype
-         * @type {DynamicVector}
+         * @memberof Entity.prototype
+         * @type {VectorGraphics}
          */
-        vector : createDynamicPropertyDescriptor('vector'),
+        vector : createPropertyDescriptor('vector'),
         /**
          * Gets or sets the vertex positions.
-         * @memberof DynamicObject.prototype
+         * @memberof Entity.prototype
          * @type {Property}
          */
-        vertexPositions : createDynamicPropertyDescriptor('vertexPositions'),
+        vertexPositions : createPropertyDescriptor('vertexPositions'),
         /**
          * Gets or sets the suggested initial offset for viewing this object
          * with the camera.  The offset is defined in the east-north-up reference frame.
-         * @memberof DynamicObject.prototype
+         * @memberof Entity.prototype
          * @type {Cartesian3}
          */
-        viewFrom : createDynamicPropertyDescriptor('viewFrom'),
+        viewFrom : createPropertyDescriptor('viewFrom'),
         /**
          * Gets or sets the wall.
-         * @memberof DynamicObject.prototype
-         * @type {DynamicWall}
+         * @memberof Entity.prototype
+         * @type {WallGraphics}
          */
-        wall : createDynamicPropertyDescriptor('wall')
+        wall : createPropertyDescriptor('wall')
     });
 
     /**
@@ -274,7 +274,7 @@ define([
      * @param {JulianDate} time The time to check availability for.
      * @returns true if the object should have data during the provided time, false otherwise.
      */
-    DynamicObject.prototype.isAvailable = function(time) {
+    Entity.prototype.isAvailable = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
@@ -287,15 +287,15 @@ define([
 
     /**
      * Adds a property to this object.  Once a property is added, it can be
-     * observed with {@link DynamicObject#definitionChanged} and composited
-     * with {@link CompositeDynamicObjectCollection}
+     * observed with {@link Entity#definitionChanged} and composited
+     * with {@link CompositeEntityCollection}
      *
      * @param {String} propertyName The name of the property to add.
      *
      * @exception {DeveloperError} "propertyName" is a reserved property name.
      * @exception {DeveloperError} "propertyName" is already a registered property.
      */
-    DynamicObject.prototype.addProperty = function(propertyName) {
+    Entity.prototype.addProperty = function(propertyName) {
         var propertyNames = this._propertyNames;
 
         //>>includeStart('debug', pragmas.debug);
@@ -311,7 +311,7 @@ define([
         //>>includeEnd('debug');
 
         propertyNames.push(propertyName);
-        Object.defineProperty(this, propertyName, createDynamicPropertyDescriptor(propertyName, true));
+        Object.defineProperty(this, propertyName, createPropertyDescriptor(propertyName, true));
     };
 
     /**
@@ -322,7 +322,7 @@ define([
      * @exception {DeveloperError} "propertyName" is a reserved property name.
      * @exception {DeveloperError} "propertyName" is not a registered property.
      */
-    DynamicObject.prototype.removeProperty = function(propertyName) {
+    Entity.prototype.removeProperty = function(propertyName) {
         var propertyNames = this._propertyNames;
 
         //>>includeStart('debug', pragmas.debug);
@@ -342,9 +342,9 @@ define([
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
      *
-     * @param {DynamicObject} source The object to be merged into this object.
+     * @param {Entity} source The object to be merged into this object.
      */
-    DynamicObject.prototype.merge = function(source) {
+    Entity.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
@@ -375,5 +375,5 @@ define([
         }
     };
 
-    return DynamicObject;
+    return Entity;
 });

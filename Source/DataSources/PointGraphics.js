@@ -5,22 +5,22 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createDynamicPropertyDescriptor'
+        './createPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createDynamicPropertyDescriptor) {
+        createPropertyDescriptor) {
     "use strict";
 
     /**
      * An optionally time-dynamic billboard.
-     * @alias DynamicPoint
+     * @alias PointGraphics
      * @constructor
      */
-    var DynamicPoint = function() {
+    var PointGraphics = function() {
         this._color = undefined;
         this._colorSubscription = undefined;
         this._pixelSize = undefined;
@@ -36,10 +36,10 @@ define([
         this._definitionChanged = new Event();
     };
 
-    defineProperties(DynamicPoint.prototype, {
+    defineProperties(PointGraphics.prototype, {
         /**
          * Gets the event that is raised whenever a new property is assigned.
-         * @memberof DynamicPoint.prototype
+         * @memberof PointGraphics.prototype
          *
          * @type {Event}
          * @readonly
@@ -52,57 +52,57 @@ define([
 
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the the point's color.
-         * @memberof DynamicPoint.prototype
+         * @memberof PointGraphics.prototype
          * @type {Property}
          */
-        color : createDynamicPropertyDescriptor('color'),
+        color : createPropertyDescriptor('color'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the point's size in pixels.
-         * @memberof DynamicPoint.prototype
+         * @memberof PointGraphics.prototype
          * @type {Property}
          */
-        pixelSize : createDynamicPropertyDescriptor('pixelSize'),
+        pixelSize : createPropertyDescriptor('pixelSize'),
 
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the the point's outline color.
-         * @memberof DynamicPoint.prototype
+         * @memberof PointGraphics.prototype
          * @type {Property}
          */
-        outlineColor : createDynamicPropertyDescriptor('outlineColor'),
+        outlineColor : createPropertyDescriptor('outlineColor'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the point's outline width.
-         * @memberof DynamicPoint.prototype
+         * @memberof PointGraphics.prototype
          * @type {Property}
          */
-        outlineWidth : createDynamicPropertyDescriptor('outlineWidth'),
+        outlineWidth : createPropertyDescriptor('outlineWidth'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the point's visibility.
-         * @memberof DynamicPoint.prototype
+         * @memberof PointGraphics.prototype
          * @type {Property}
          */
-        show : createDynamicPropertyDescriptor('show'),
+        show : createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link NearFarScalar} {@link Property} used to scale billboards based on distance.
          * If undefined, a constant size is used.
-         * @memberof DynamicPoint.prototype
+         * @memberof PointGraphics.prototype
          * @type {Property}
          */
-        scaleByDistance : createDynamicPropertyDescriptor('scaleByDistance')
+        scaleByDistance : createPropertyDescriptor('scaleByDistance')
     });
 
     /**
-     * Duplicates a DynamicPoint instance.
+     * Duplicates a PointGraphics instance.
      *
-     * @param {DynamicPoint} [result] The object onto which to store the result.
-     * @returns {DynamicPoint} The modified result parameter or a new instance if one was not provided.
+     * @param {PointGraphics} [result] The object onto which to store the result.
+     * @returns {PointGraphics} The modified result parameter or a new instance if one was not provided.
      */
-    DynamicPoint.prototype.clone = function(result) {
+    PointGraphics.prototype.clone = function(result) {
         if (!defined(result)) {
-            result = new DynamicPoint();
+            result = new PointGraphics();
         }
         result.color = this.color;
         result.pixelSize = this.pixelSize;
@@ -117,9 +117,9 @@ define([
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
      *
-     * @param {DynamicPoint} source The object to be merged into this object.
+     * @param {PointGraphics} source The object to be merged into this object.
      */
-    DynamicPoint.prototype.merge = function(source) {
+    PointGraphics.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
@@ -134,5 +134,5 @@ define([
         this.scaleByDistance = defaultValue(this.scaleByDistance, source.scaleByDistance);
     };
 
-    return DynamicPoint;
+    return PointGraphics;
 });

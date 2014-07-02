@@ -1,22 +1,22 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/DynamicPolyline',
-        'DynamicScene/ColorMaterialProperty',
-        'DynamicScene/ConstantProperty'
+        'DataSources/PolylineGraphics',
+        'DataSources/ColorMaterialProperty',
+        'DataSources/ConstantProperty'
     ], function(
-        DynamicPolyline,
+        PolylineGraphics,
         ColorMaterialProperty,
         ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('merge assigns unassigned properties', function() {
-        var source = new DynamicPolyline();
+        var source = new PolylineGraphics();
         source.material = new ColorMaterialProperty();
         source.width = new ConstantProperty(1);
         source.show = new ConstantProperty(true);
 
-        var target = new DynamicPolyline();
+        var target = new PolylineGraphics();
         target.merge(source);
         expect(target.material).toBe(source.material);
         expect(target.width).toBe(source.width);
@@ -24,7 +24,7 @@ defineSuite([
     });
 
     it('merge does not assign assigned properties', function() {
-        var source = new DynamicPolyline();
+        var source = new PolylineGraphics();
         source.material = new ColorMaterialProperty();
         source.width = new ConstantProperty(1);
         source.show = new ConstantProperty(true);
@@ -33,7 +33,7 @@ defineSuite([
         var width = new ConstantProperty(1);
         var show = new ConstantProperty(true);
 
-        var target = new DynamicPolyline();
+        var target = new PolylineGraphics();
         target.material = color;
         target.width = width;
         target.show = show;
@@ -45,7 +45,7 @@ defineSuite([
     });
 
     it('clone works', function() {
-        var source = new DynamicPolyline();
+        var source = new PolylineGraphics();
         source.material = new ColorMaterialProperty();
         source.width = new ConstantProperty(1);
         source.show = new ConstantProperty(true);
@@ -57,7 +57,7 @@ defineSuite([
     });
 
     it('merge throws if source undefined', function() {
-        var target = new DynamicPolyline();
+        var target = new PolylineGraphics();
         expect(function() {
             target.merge(undefined);
         }).toThrowDeveloperError();

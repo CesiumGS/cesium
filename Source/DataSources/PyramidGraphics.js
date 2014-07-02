@@ -5,23 +5,23 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createDynamicPropertyDescriptor'
+        './createPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createDynamicPropertyDescriptor) {
+        createPropertyDescriptor) {
     "use strict";
 
     /**
      * An optionally time-dynamic pyramid.
      *
-     * @alias DynamicPyramid
+     * @alias PyramidGraphics
      * @constructor
      */
-    var DynamicPyramid = function() {
+    var PyramidGraphics = function() {
         this._show = undefined;
         this._showSubscription = undefined;
         this._directions = undefined;
@@ -39,10 +39,10 @@ define([
         this._definitionChanged = new Event();
     };
 
-    defineProperties(DynamicPyramid.prototype, {
+    defineProperties(PyramidGraphics.prototype, {
         /**
          * Gets the event that is raised whenever a new property is assigned.
-         * @memberof DynamicPyramid.prototype
+         * @memberof PyramidGraphics.prototype
          *
          * @type {Event}
          * @readonly
@@ -55,63 +55,63 @@ define([
 
         /**
          * Gets or sets the boolean {@link Property} specifying the visibility of the pyramid.
-         * @memberof DynamicPyramid.prototype
+         * @memberof PyramidGraphics.prototype
          * @type {Property}
          */
-        show : createDynamicPropertyDescriptor('show'),
+        show : createPropertyDescriptor('show'),
 
         /**
          * A {@link Property} which returns an array of {@link Spherical} instances representing the pyramid's projection.
-         * @memberof DynamicPyramid.prototype
+         * @memberof PyramidGraphics.prototype
          * @type {Property}
          */
-        directions : createDynamicPropertyDescriptor('directions'),
+        directions : createPropertyDescriptor('directions'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the radius of the pyramid's projection.
-         * @memberof DynamicPyramid.prototype
+         * @memberof PyramidGraphics.prototype
          * @type {Property}
          */
-        radius : createDynamicPropertyDescriptor('radius'),
+        radius : createPropertyDescriptor('radius'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the visibility of the line formed by the intersection of the pyramid and other central bodies.
-         * @memberof DynamicPyramid.prototype
+         * @memberof PyramidGraphics.prototype
          * @type {Property}
          */
-        showIntersection : createDynamicPropertyDescriptor('showIntersection'),
+        showIntersection : createPropertyDescriptor('showIntersection'),
 
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the color of the line formed by the intersection of the pyramid and other central bodies.
-         * @memberof DynamicPyramid.prototype
+         * @memberof PyramidGraphics.prototype
          * @type {Property}
          */
-        intersectionColor : createDynamicPropertyDescriptor('intersectionColor'),
+        intersectionColor : createPropertyDescriptor('intersectionColor'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the width of the line formed by the intersection of the pyramid and other central bodies.
-         * @memberof DynamicPyramid.prototype
+         * @memberof PyramidGraphics.prototype
          * @type {Property}
          */
-        intersectionWidth : createDynamicPropertyDescriptor('intersectionWidth'),
+        intersectionWidth : createPropertyDescriptor('intersectionWidth'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the the pyramid's appearance.
-         * @memberof DynamicPyramid.prototype
+         * @memberof PyramidGraphics.prototype
          * @type {MaterialProperty}
          */
-        material : createDynamicPropertyDescriptor('material')
+        material : createPropertyDescriptor('material')
     });
 
     /**
-     * Duplicates a DynamicPyramid instance.
+     * Duplicates a PyramidGraphics instance.
      *
-     * @param {DynamicPyramid} [result] The object onto which to store the result.
-     * @returns {DynamicPyramid} The modified result parameter or a new instance if one was not provided.
+     * @param {PyramidGraphics} [result] The object onto which to store the result.
+     * @returns {PyramidGraphics} The modified result parameter or a new instance if one was not provided.
      */
-    DynamicPyramid.prototype.clone = function(result) {
+    PyramidGraphics.prototype.clone = function(result) {
         if (!defined(result)) {
-            result = new DynamicPyramid();
+            result = new PyramidGraphics();
         }
         result.show = this.show;
         result.directions = this.directions;
@@ -127,9 +127,9 @@ define([
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
      *
-     * @param {DynamicPyramid} source The object to be merged into this object.
+     * @param {PyramidGraphics} source The object to be merged into this object.
      */
-    DynamicPyramid.prototype.merge = function(source) {
+    PyramidGraphics.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
@@ -145,5 +145,5 @@ define([
         this.material = defaultValue(this.material, source.material);
     };
 
-    return DynamicPyramid;
+    return PyramidGraphics;
 });

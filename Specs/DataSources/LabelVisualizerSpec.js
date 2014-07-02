@@ -1,14 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/DynamicLabelVisualizer',
+        'DataSources/LabelVisualizer',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
         'Core/JulianDate',
         'Core/NearFarScalar',
-        'DynamicScene/ConstantProperty',
-        'DynamicScene/DynamicLabel',
-        'DynamicScene/DynamicObjectCollection',
+        'DataSources/ConstantProperty',
+        'DataSources/EntityCollection',
+        'DataSources/LabelGraphics',
         'Scene/HorizontalOrigin',
         'Scene/LabelCollection',
         'Scene/LabelStyle',
@@ -16,15 +16,15 @@ defineSuite([
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
-        DynamicLabelVisualizer,
+        LabelVisualizer,
         Cartesian2,
         Cartesian3,
         Color,
         JulianDate,
         NearFarScalar,
         ConstantProperty,
-        DynamicLabel,
-        DynamicObjectCollection,
+        EntityCollection,
+        LabelGraphics,
         HorizontalOrigin,
         LabelCollection,
         LabelStyle,
@@ -51,28 +51,28 @@ defineSuite([
 
     it('constructor throws if no scene is passed.', function() {
         expect(function() {
-            return new DynamicLabelVisualizer();
+            return new LabelVisualizer();
         }).toThrowDeveloperError();
     });
 
     it('constructor adds collection to scene.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicLabelVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new LabelVisualizer(scene, entityCollection);
         var labelCollection = scene.primitives.get(0);
         expect(labelCollection instanceof LabelCollection).toEqual(true);
     });
 
     it('update throws if no time specified.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicLabelVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new LabelVisualizer(scene, entityCollection);
         expect(function() {
             visualizer.update();
         }).toThrowDeveloperError();
     });
 
     it('isDestroy returns false until destroyed.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicLabelVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new LabelVisualizer(scene, entityCollection);
         expect(visualizer.isDestroyed()).toEqual(false);
         visualizer.destroy();
         expect(visualizer.isDestroyed()).toEqual(true);
@@ -80,10 +80,10 @@ defineSuite([
     });
 
     it('object with no label does not create a label.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicLabelVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new LabelVisualizer(scene, entityCollection);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         visualizer.update(JulianDate.now());
         var labelCollection = scene.primitives.get(0);
@@ -91,11 +91,11 @@ defineSuite([
     });
 
     it('object with no position does not create a label.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicLabelVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new LabelVisualizer(scene, entityCollection);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        var label = testObject.label = new DynamicLabel();
+        var testObject = entityCollection.getOrCreateObject('test');
+        var label = testObject.label = new LabelGraphics();
         label.show = new ConstantProperty(true);
         label.text = new ConstantProperty('lorum ipsum');
 
@@ -105,12 +105,12 @@ defineSuite([
     });
 
     it('object with no text does not create a label.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicLabelVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new LabelVisualizer(scene, entityCollection);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
-        var label = testObject.label = new DynamicLabel();
+        var label = testObject.label = new LabelGraphics();
         label.show = new ConstantProperty(true);
 
         visualizer.update(JulianDate.now());
@@ -118,17 +118,17 @@ defineSuite([
         expect(labelCollection.length).toEqual(0);
     });
 
-    it('A DynamicLabel causes a label to be created and updated.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicLabelVisualizer(scene, dynamicObjectCollection);
+    it('A LabelGraphics causes a label to be created and updated.', function() {
+        var entityCollection = new EntityCollection();
+        visualizer = new LabelVisualizer(scene, entityCollection);
 
         var labelCollection = scene.primitives.get(0);
         expect(labelCollection.length).toEqual(0);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
 
         var time = JulianDate.now();
-        var label = testObject.label = new DynamicLabel();
+        var label = testObject.label = new LabelGraphics();
         var l;
 
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
@@ -208,16 +208,16 @@ defineSuite([
     });
 
     it('clear hides labels.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicLabelVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new LabelVisualizer(scene, entityCollection);
 
         var labelCollection = scene.primitives.get(0);
         expect(labelCollection.length).toEqual(0);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
 
         var time = JulianDate.now();
-        var label = testObject.label = new DynamicLabel();
+        var label = testObject.label = new LabelGraphics();
 
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         label.show = new ConstantProperty(true);
@@ -230,22 +230,22 @@ defineSuite([
 
         //Clearing won't actually remove the label because of the
         //internal cache used by the visualizer, instead it just hides it.
-        dynamicObjectCollection.removeAll();
+        entityCollection.removeAll();
         visualizer.update(time);
         expect(l.show).toEqual(false);
     });
 
-    it('Visualizer sets dynamicObject property.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicLabelVisualizer(scene, dynamicObjectCollection);
+    it('Visualizer sets entity property.', function() {
+        var entityCollection = new EntityCollection();
+        visualizer = new LabelVisualizer(scene, entityCollection);
 
         var labelCollection = scene.primitives.get(0);
         expect(labelCollection.length).toEqual(0);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
 
         var time = JulianDate.now();
-        var label = testObject.label = new DynamicLabel();
+        var label = testObject.label = new LabelGraphics();
 
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         label.show = new ConstantProperty(true);

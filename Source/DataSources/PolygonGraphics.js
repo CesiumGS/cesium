@@ -5,23 +5,23 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createDynamicPropertyDescriptor'
+        './createPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createDynamicPropertyDescriptor) {
+        createPropertyDescriptor) {
     "use strict";
 
     /**
      * An optionally time-dynamic polygon.
      *
-     * @alias DynamicPolygon
+     * @alias PolygonGraphics
      * @constructor
      */
-    var DynamicPolygon = function() {
+    var PolygonGraphics = function() {
         this._show = undefined;
         this._showSubscription = undefined;
         this._material = undefined;
@@ -39,10 +39,10 @@ define([
         this._definitionChanged = new Event();
     };
 
-    defineProperties(DynamicPolygon.prototype, {
+    defineProperties(PolygonGraphics.prototype, {
         /**
          * Gets the event that is raised whenever a new property is assigned.
-         * @memberof DynamicPolygon.prototype
+         * @memberof PolygonGraphics.prototype
          *
          * @type {Event}
          * @readonly
@@ -55,89 +55,89 @@ define([
 
         /**
          * Gets or sets the boolean {@link Property} specifying the polygon's visibility.
-         * @memberof DynamicPolygon.prototype
+         * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        show : createDynamicPropertyDescriptor('show'),
+        show : createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the polygon.
-         * @memberof DynamicPolygon.prototype
+         * @memberof PolygonGraphics.prototype
          * @type {MaterialProperty}
          */
-        material : createDynamicPropertyDescriptor('material'),
+        material : createPropertyDescriptor('material'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the height of the polygon.
          * If undefined, the polygon will be on the surface.
-         * @memberof DynamicPolygon.prototype
+         * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        height : createDynamicPropertyDescriptor('height'),
+        height : createPropertyDescriptor('height'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the extruded height of the polygon.
          * Setting this property creates a polygon shaped volume starting at height and ending
          * at the extruded height.
-         * @memberof DynamicPolygon.prototype
+         * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        extrudedHeight : createDynamicPropertyDescriptor('extrudedHeight'),
+        extrudedHeight : createPropertyDescriptor('extrudedHeight'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the sampling distance, in radians,
          * between each latitude and longitude point.
-         * @memberof DynamicPolygon.prototype
+         * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        granularity : createDynamicPropertyDescriptor('granularity'),
+        granularity : createPropertyDescriptor('granularity'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the rotation of the texture coordinates,
          * in radians. A positive rotation is counter-clockwise.
-         * @memberof DynamicPolygon.prototype
+         * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        stRotation : createDynamicPropertyDescriptor('stRotation'),
+        stRotation : createPropertyDescriptor('stRotation'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the polygon should be filled.
-         * @memberof DynamicPolygon.prototype
+         * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        fill : createDynamicPropertyDescriptor('fill'),
+        fill : createPropertyDescriptor('fill'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the polygon should be outlined.
-         * @memberof DynamicPolygon.prototype
+         * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        outline : createDynamicPropertyDescriptor('outline'),
+        outline : createPropertyDescriptor('outline'),
 
         /**
          * Gets or sets the Color {@link Property} specifying whether the color of the outline.
-         * @memberof DynamicPolygon.prototype
+         * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        outlineColor : createDynamicPropertyDescriptor('outlineColor'),
+        outlineColor : createPropertyDescriptor('outlineColor'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the polygon uses per-position heights.
-         * @memberof DynamicPolygon.prototype
+         * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        perPositionHeight : createDynamicPropertyDescriptor('perPositionHeight')
+        perPositionHeight : createPropertyDescriptor('perPositionHeight')
     });
 
     /**
-     * Duplicates a DynamicPolygon instance.
+     * Duplicates a PolygonGraphics instance.
      *
-     * @param {DynamicPolygon} [result] The object onto which to store the result.
-     * @returns {DynamicPolygon} The modified result parameter or a new instance if one was not provided.
+     * @param {PolygonGraphics} [result] The object onto which to store the result.
+     * @returns {PolygonGraphics} The modified result parameter or a new instance if one was not provided.
      */
-    DynamicPolygon.prototype.clone = function(result) {
+    PolygonGraphics.prototype.clone = function(result) {
         if (!defined(result)) {
-            result = new DynamicPolygon();
+            result = new PolygonGraphics();
         }
         result.show = this.show;
         result.material = this.material;
@@ -156,9 +156,9 @@ define([
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
      *
-     * @param {DynamicPolygon} source The object to be merged into this object.
+     * @param {PolygonGraphics} source The object to be merged into this object.
      */
-    DynamicPolygon.prototype.merge = function(source) {
+    PolygonGraphics.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
@@ -177,5 +177,5 @@ define([
         this.perPositionHeight = defaultValue(this.perPositionHeight, source.perPositionHeight);
     };
 
-    return DynamicPolygon;
+    return PolygonGraphics;
 });

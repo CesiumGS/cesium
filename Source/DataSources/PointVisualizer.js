@@ -20,24 +20,24 @@ define([
     "use strict";
 
     /**
-     * A {@link Visualizer} which maps {@link DynamicObject#point} to a {@link Billboard}.
-     * @alias DynamicPointVisualizer
+     * A {@link Visualizer} which maps {@link Entity#point} to a {@link Billboard}.
+     * @alias PointVisualizer
      * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
-     * @param {DynamicObjectCollection} dynamicObjectCollection The dynamicObjectCollection to visualize.
+     * @param {EntityCollection} entityCollection The entityCollection to visualize.
      */
-    var DynamicPointVisualizer = function(scene, dynamicObjectCollection) {
+    var PointVisualizer = function(scene, entityCollection) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
-        if (!defined(dynamicObjectCollection)) {
-            throw new DeveloperError('dynamicObjectCollection is required.');
+        if (!defined(entityCollection)) {
+            throw new DeveloperError('entityCollection is required.');
         }
         //>>includeEnd('debug');
 
-        dynamicObjectCollection.collectionChanged.addEventListener(DynamicPointVisualizer.prototype._onObjectsRemoved, this);
+        entityCollection.collectionChanged.addEventListener(PointVisualizer.prototype._onObjectsRemoved, this);
 
         var atlas = new TextureAtlas({
             scene : scene
@@ -48,7 +48,7 @@ define([
 
         this._scene = scene;
         this._unusedIndexes = [];
-        this._dynamicObjectCollection = dynamicObjectCollection;
+        this._entityCollection = entityCollection;
         this._textureAtlas = atlas;
         this._billboardCollection = billboardCollection;
         this._textureAtlasBuilder = new TextureAtlasBuilder(atlas);
@@ -56,21 +56,21 @@ define([
 
     /**
      * Updates the primitives created by this visualizer to match their
-     * DynamicObject counterpart at the given time.
+     * Entity counterpart at the given time.
      *
      * @param {JulianDate} time The time to update to.
      * @returns {Boolean} This function always returns true.
      */
-    DynamicPointVisualizer.prototype.update = function(time) {
+    PointVisualizer.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
         }
         //>>includeEnd('debug');
 
-        var dynamicObjects = this._dynamicObjectCollection.getObjects();
-        for (var i = 0, len = dynamicObjects.length; i < len; i++) {
-            updateObject(this, time, dynamicObjects[i]);
+        var entities = this._entityCollection.getObjects();
+        for (var i = 0, len = entities.length; i < len; i++) {
+            updateObject(this, time, entities[i]);
         }
         return true;
     };
@@ -80,20 +80,20 @@ define([
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
-    DynamicPointVisualizer.prototype.isDestroyed = function() {
+    PointVisualizer.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
      * Removes and destroys all primitives created by this instance.
      */
-    DynamicPointVisualizer.prototype.destroy = function() {
-        var dynamicObjectCollection = this._dynamicObjectCollection;
-        var dynamicObjects = dynamicObjectCollection.getObjects();
-        for (var i = dynamicObjects.length - 1; i > -1; i--) {
-            dynamicObjects[i]._pointVisualizerIndex = undefined;
+    PointVisualizer.prototype.destroy = function() {
+        var entityCollection = this._entityCollection;
+        var entities = entityCollection.getObjects();
+        for (var i = entities.length - 1; i > -1; i--) {
+            entities[i]._pointVisualizerIndex = undefined;
         }
-        dynamicObjectCollection.collectionChanged.removeEventListener(DynamicPointVisualizer.prototype._onObjectsRemoved, this);
+        entityCollection.collectionChanged.removeEventListener(PointVisualizer.prototype._onObjectsRemoved, this);
         this._scene.primitives.remove(this._billboardCollection);
         return destroyObject(this);
     };
@@ -102,47 +102,47 @@ define([
     var position;
     var outlineColor;
     var scaleByDistance;
-    function updateObject(dynamicPointVisualizer, time, dynamicObject) {
-        var dynamicPoint = dynamicObject._point;
-        if (!defined(dynamicPoint)) {
+    function updateObject(pointVisualizer, time, entity) {
+        var pointGraphics = entity._point;
+        if (!defined(pointGraphics)) {
             return;
         }
 
-        var positionProperty = dynamicObject._position;
+        var positionProperty = entity._position;
         if (!defined(positionProperty)) {
             return;
         }
 
         var billboard;
-        var showProperty = dynamicPoint._show;
-        var pointVisualizerIndex = dynamicObject._pointVisualizerIndex;
-        var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
+        var showProperty = pointGraphics._show;
+        var pointVisualizerIndex = entity._pointVisualizerIndex;
+        var show = entity.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
 
         if (!show) {
             //don't bother creating or updating anything else
             if (defined(pointVisualizerIndex)) {
-                billboard = dynamicPointVisualizer._billboardCollection.get(pointVisualizerIndex);
+                billboard = pointVisualizer._billboardCollection.get(pointVisualizerIndex);
                 billboard.show = false;
                 billboard.imageIndex = -1;
-                dynamicObject._pointVisualizerIndex = undefined;
-                dynamicPointVisualizer._unusedIndexes.push(pointVisualizerIndex);
+                entity._pointVisualizerIndex = undefined;
+                pointVisualizer._unusedIndexes.push(pointVisualizerIndex);
             }
             return;
         }
 
         var needRedraw = false;
         if (!defined(pointVisualizerIndex)) {
-            var unusedIndexes = dynamicPointVisualizer._unusedIndexes;
+            var unusedIndexes = pointVisualizer._unusedIndexes;
             var length = unusedIndexes.length;
             if (length > 0) {
                 pointVisualizerIndex = unusedIndexes.pop();
-                billboard = dynamicPointVisualizer._billboardCollection.get(pointVisualizerIndex);
+                billboard = pointVisualizer._billboardCollection.get(pointVisualizerIndex);
             } else {
-                pointVisualizerIndex = dynamicPointVisualizer._billboardCollection.length;
-                billboard = dynamicPointVisualizer._billboardCollection.add();
+                pointVisualizerIndex = pointVisualizer._billboardCollection.length;
+                billboard = pointVisualizer._billboardCollection.add();
             }
-            dynamicObject._pointVisualizerIndex = pointVisualizerIndex;
-            billboard.id = dynamicObject;
+            entity._pointVisualizerIndex = pointVisualizerIndex;
+            billboard.id = entity;
 
             billboard._visualizerColor = Color.clone(Color.WHITE, billboard._visualizerColor);
             billboard._visualizerOutlineColor = Color.clone(Color.BLACK, billboard._visualizerOutlineColor);
@@ -150,7 +150,7 @@ define([
             billboard._visualizerPixelSize = 1;
             needRedraw = true;
         } else {
-            billboard = dynamicPointVisualizer._billboardCollection.get(pointVisualizerIndex);
+            billboard = pointVisualizer._billboardCollection.get(pointVisualizerIndex);
         }
 
         billboard.show = true;
@@ -160,7 +160,7 @@ define([
             billboard.position = position;
         }
 
-        var property = dynamicPoint._color;
+        var property = pointGraphics._color;
         if (defined(property)) {
             color = property.getValue(time, color);
             if (!Color.equals(billboard._visualizerColor, color)) {
@@ -169,7 +169,7 @@ define([
             }
         }
 
-        property = dynamicPoint._outlineColor;
+        property = pointGraphics._outlineColor;
         if (defined(property)) {
             outlineColor = property.getValue(time, outlineColor);
             if (!Color.equals(billboard._visualizerOutlineColor, outlineColor)) {
@@ -178,7 +178,7 @@ define([
             }
         }
 
-        property = dynamicPoint._outlineWidth;
+        property = pointGraphics._outlineWidth;
         if (defined(property)) {
             var outlineWidth = property.getValue(time);
             if (billboard._visualizerOutlineWidth !== outlineWidth) {
@@ -187,7 +187,7 @@ define([
             }
         }
 
-        property = dynamicPoint._pixelSize;
+        property = pointGraphics._pixelSize;
         if (defined(property)) {
             var pixelSize = property.getValue(time);
             if (billboard._visualizerPixelSize !== pixelSize) {
@@ -196,7 +196,7 @@ define([
             }
         }
 
-        property = dynamicPoint._scaleByDistance;
+        property = pointGraphics._scaleByDistance;
         if (defined(property)) {
             scaleByDistance = property.getValue(time, scaleByDistance);
             if (defined(scaleByDistance)) {
@@ -213,7 +213,7 @@ define([
             var cssOutlineWidth = defaultValue(billboard._visualizerOutlineWidth, 2);
             var textureId = JSON.stringify([cssColor, cssPixelSize, cssOutlineColor, cssOutlineWidth]);
 
-            dynamicPointVisualizer._textureAtlasBuilder.addTextureFromFunction(textureId, function(id, loadedCallback) {
+            pointVisualizer._textureAtlasBuilder.addTextureFromFunction(textureId, function(id, loadedCallback) {
                 var canvas = document.createElement('canvas');
 
                 var length = cssPixelSize + (2 * cssOutlineWidth);
@@ -254,21 +254,21 @@ define([
         }
     }
 
-    DynamicPointVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, added, dynamicObjects) {
+    PointVisualizer.prototype._onObjectsRemoved = function(entityCollection, added, entities) {
         var thisBillboardCollection = this._billboardCollection;
         var thisUnusedIndexes = this._unusedIndexes;
-        for (var i = dynamicObjects.length - 1; i > -1; i--) {
-            var dynamicObject = dynamicObjects[i];
-            var pointVisualizerIndex = dynamicObject._pointVisualizerIndex;
+        for (var i = entities.length - 1; i > -1; i--) {
+            var entity = entities[i];
+            var pointVisualizerIndex = entity._pointVisualizerIndex;
             if (defined(pointVisualizerIndex)) {
                 var billboard = thisBillboardCollection.get(pointVisualizerIndex);
                 billboard.show = false;
                 billboard.imageIndex = -1;
-                dynamicObject._pointVisualizerIndex = undefined;
+                entity._pointVisualizerIndex = undefined;
                 thisUnusedIndexes.push(pointVisualizerIndex);
             }
         }
     };
 
-    return DynamicPointVisualizer;
+    return PointVisualizer;
 });

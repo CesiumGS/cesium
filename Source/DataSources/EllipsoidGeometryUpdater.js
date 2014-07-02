@@ -65,8 +65,8 @@ define([
     var matrix3Scratch;
     var unitSphere = new Cartesian3(1, 1, 1);
 
-    var GeometryOptions = function(dynamicObject) {
-        this.id = dynamicObject;
+    var GeometryOptions = function(entity) {
+        this.id = entity;
         this.vertexFormat = undefined;
         this.radii = undefined;
         this.stackPartitions = undefined;
@@ -80,13 +80,13 @@ define([
      * @alias EllipsoidGeometryUpdater
      * @constructor
      *
-     * @param {DynamicObject} dynamicObject The object containing the geometry to be visualized.
+     * @param {Entity} entity The object containing the geometry to be visualized.
      * @param {Scene} scene The scene where visualization is taking place.
      */
-    var EllipsoidGeometryUpdater = function(dynamicObject, scene) {
+    var EllipsoidGeometryUpdater = function(entity, scene) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(dynamicObject)) {
-            throw new DeveloperError('dynamicObject is required');
+        if (!defined(entity)) {
+            throw new DeveloperError('entity is required');
         }
         if (!defined(scene)) {
             throw new DeveloperError('scene is required');
@@ -94,8 +94,8 @@ define([
         //>>includeEnd('debug');
 
         this._scene = scene;
-        this._dynamicObject = dynamicObject;
-        this._dynamicObjectSubscription = dynamicObject.definitionChanged.addEventListener(EllipsoidGeometryUpdater.prototype._onDynamicObjectPropertyChanged, this);
+        this._entity = entity;
+        this._entitySubscription = entity.definitionChanged.addEventListener(EllipsoidGeometryUpdater.prototype._onEntityPropertyChanged, this);
         this._fillEnabled = false;
         this._dynamic = false;
         this._outlineEnabled = false;
@@ -105,8 +105,8 @@ define([
         this._hasConstantOutline = true;
         this._showOutlineProperty = undefined;
         this._outlineColorProperty = undefined;
-        this._options = new GeometryOptions(dynamicObject);
-        this._onDynamicObjectPropertyChanged(dynamicObject, 'ellipsoid', dynamicObject.ellipsoid, undefined);
+        this._options = new GeometryOptions(entity);
+        this._onEntityPropertyChanged(entity, 'ellipsoid', entity.ellipsoid, undefined);
     };
 
     defineProperties(EllipsoidGeometryUpdater, {
@@ -133,12 +133,12 @@ define([
          * Gets the object associated with this geometry.
          * @memberof EllipsoidGeometryUpdater.prototype
          *
-         * @type {DynamicObject}
+         * @type {Entity}
          * @readonly
          */
-        dynamicObject : {
+        entity : {
             get : function() {
-                return this._dynamicObject;
+                return this._entity;
             }
         },
         /**
@@ -163,7 +163,7 @@ define([
         hasConstantFill : {
             get : function() {
                 return !this._fillEnabled ||
-                       (!defined(this._dynamicObject.availability) &&
+                       (!defined(this._entity.availability) &&
                         Property.isConstant(this._showProperty) &&
                         Property.isConstant(this._fillProperty));
             }
@@ -202,7 +202,7 @@ define([
         hasConstantOutline : {
             get : function() {
                 return !this._outlineEnabled ||
-                       (!defined(this._dynamicObject.availability) &&
+                       (!defined(this._entity.availability) &&
                         Property.isConstant(this._showProperty) &&
                         Property.isConstant(this._showOutlineProperty));
             }
@@ -266,8 +266,8 @@ define([
      * @returns {Boolean} true if geometry is outlined at the provided time, false otherwise.
      */
     EllipsoidGeometryUpdater.prototype.isOutlineVisible = function(time) {
-        var dynamicObject = this._dynamicObject;
-        return this._outlineEnabled && dynamicObject.isAvailable(time) && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time);
+        var entity = this._entity;
+        return this._outlineEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time);
     };
 
     /**
@@ -277,8 +277,8 @@ define([
      * @returns {Boolean} true if geometry is filled at the provided time, false otherwise.
      */
     EllipsoidGeometryUpdater.prototype.isFilled = function(time) {
-        var dynamicObject = this._dynamicObject;
-        return this._fillEnabled && dynamicObject.isAvailable(time) && this._showProperty.getValue(time) && this._fillProperty.getValue(time);
+        var entity = this._entity;
+        return this._fillEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._fillProperty.getValue(time);
     };
 
     /**
@@ -300,8 +300,8 @@ define([
         }
         //>>includeEnd('debug');
 
-        var dynamicObject = this._dynamicObject;
-        var isAvailable = dynamicObject.isAvailable(time);
+        var entity = this._entity;
+        var isAvailable = entity.isAvailable(time);
 
         var attributes;
 
@@ -323,12 +323,12 @@ define([
             };
         }
 
-        positionScratch = dynamicObject.position.getValue(Iso8601.MINIMUM_VALUE, positionScratch);
-        orientationScratch = dynamicObject.orientation.getValue(Iso8601.MINIMUM_VALUE, orientationScratch);
+        positionScratch = entity.position.getValue(Iso8601.MINIMUM_VALUE, positionScratch);
+        orientationScratch = entity.orientation.getValue(Iso8601.MINIMUM_VALUE, orientationScratch);
         matrix3Scratch = Matrix3.fromQuaternion(orientationScratch, matrix3Scratch);
 
         return new GeometryInstance({
-            id : dynamicObject,
+            id : entity,
             geometry : new EllipsoidGeometry(this._options),
             modelMatrix : Matrix4.fromRotationTranslation(matrix3Scratch, positionScratch),
             attributes : attributes
@@ -354,15 +354,15 @@ define([
         }
         //>>includeEnd('debug');
 
-        var dynamicObject = this._dynamicObject;
-        var isAvailable = dynamicObject.isAvailable(time);
+        var entity = this._entity;
+        var isAvailable = entity.isAvailable(time);
 
-        positionScratch = dynamicObject.position.getValue(Iso8601.MINIMUM_VALUE, positionScratch);
-        orientationScratch = dynamicObject.orientation.getValue(Iso8601.MINIMUM_VALUE, orientationScratch);
+        positionScratch = entity.position.getValue(Iso8601.MINIMUM_VALUE, positionScratch);
+        orientationScratch = entity.orientation.getValue(Iso8601.MINIMUM_VALUE, orientationScratch);
         matrix3Scratch = Matrix3.fromQuaternion(orientationScratch, matrix3Scratch);
 
         return new GeometryInstance({
-            id : dynamicObject,
+            id : entity,
             geometry : new EllipsoidOutlineGeometry(this._options),
             modelMatrix : Matrix4.fromRotationTranslation(matrix3Scratch, positionScratch),
             attributes : {
@@ -387,16 +387,16 @@ define([
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
     EllipsoidGeometryUpdater.prototype.destroy = function() {
-        this._dynamicObjectSubscription();
+        this._entitySubscription();
         destroyObject(this);
     };
 
-    EllipsoidGeometryUpdater.prototype._onDynamicObjectPropertyChanged = function(dynamicObject, propertyName, newValue, oldValue) {
+    EllipsoidGeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
         if (!(propertyName === 'availability' || propertyName === 'position' || propertyName === 'orientation' || propertyName === 'ellipsoid')) {
             return;
         }
 
-        var ellipsoid = this._dynamicObject.ellipsoid;
+        var ellipsoid = this._entity.ellipsoid;
 
         if (!defined(ellipsoid)) {
             if (this._fillEnabled || this._outlineEnabled) {
@@ -425,8 +425,8 @@ define([
             return;
         }
 
-        var position = this._dynamicObject.position;
-        var orientation = this._dynamicObject.orientation;
+        var position = this._entity.position;
+        var orientation = this._entity.orientation;
         var radii = ellipsoid.radii;
 
         var show = ellipsoid.show;
@@ -502,13 +502,13 @@ define([
      * @private
      */
     var DynamicGeometryUpdater = function(primitives, geometryUpdater) {
-        this._dynamicObject = geometryUpdater._dynamicObject;
+        this._entity = geometryUpdater._entity;
         this._scene = geometryUpdater._scene;
         this._primitives = primitives;
         this._primitive = undefined;
         this._outlinePrimitive = undefined;
         this._geometryUpdater = geometryUpdater;
-        this._options = new GeometryOptions(geometryUpdater._dynamicObject);
+        this._options = new GeometryOptions(geometryUpdater._entity);
         this._modelMatrix = new Matrix4();
         this._material = undefined;
         this._attributes = undefined;
@@ -523,11 +523,11 @@ define([
         }
         //>>includeEnd('debug');
 
-        var dynamicObject = this._dynamicObject;
-        var ellipsoid = dynamicObject.ellipsoid;
+        var entity = this._entity;
+        var ellipsoid = entity.ellipsoid;
         var show = ellipsoid.show;
 
-        if (!dynamicObject.isAvailable(time) || (defined(show) && !show.getValue(time))) {
+        if (!entity.isAvailable(time) || (defined(show) && !show.getValue(time))) {
             if (defined(this._primitive)) {
                 this._primitive.show = false;
             }
@@ -562,8 +562,8 @@ define([
         var in3D = sceneMode === SceneMode.SCENE3D;
 
         var modelMatrix = this._modelMatrix;
-        var positionProperty = dynamicObject.position;
-        var orientationProperty = dynamicObject.orientation;
+        var positionProperty = entity.position;
+        var orientationProperty = entity.orientation;
         var radiiProperty = ellipsoid.radii;
         positionScratch = positionProperty.getValue(time, positionScratch);
         orientationScratch = orientationProperty.getValue(time, orientationScratch);
@@ -594,7 +594,7 @@ define([
 
             this._primitive = new Primitive({
                 geometryInstances : new GeometryInstance({
-                    id : dynamicObject,
+                    id : entity,
                     geometry : new EllipsoidGeometry(options),
                     modelMatrix : !in3D ? modelMatrix : undefined,
                     attributes : {
@@ -609,7 +609,7 @@ define([
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
             this._outlinePrimitive = new Primitive({
                 geometryInstances : new GeometryInstance({
-                    id : dynamicObject,
+                    id : entity,
                     geometry : new EllipsoidOutlineGeometry(options),
                     modelMatrix : !in3D ? modelMatrix : undefined,
                     attributes : {
@@ -632,7 +632,7 @@ define([
 
             var attributes = this._attributes;
             if (!defined(attributes)) {
-                attributes = primitive.getGeometryInstanceAttributes(dynamicObject);
+                attributes = primitive.getGeometryInstanceAttributes(entity);
                 this._attributes = attributes;
             }
             attributes.show = ShowGeometryInstanceAttribute.toValue(showFill, attributes.show);
@@ -641,7 +641,7 @@ define([
 
             var outlineAttributes = this._outlineAttributes;
             if (!defined(outlineAttributes)) {
-                outlineAttributes = outlinePrimitive.getGeometryInstanceAttributes(dynamicObject);
+                outlineAttributes = outlinePrimitive.getGeometryInstanceAttributes(entity);
                 this._outlineAttributes = outlineAttributes;
             }
             outlineAttributes.show = ShowGeometryInstanceAttribute.toValue(showOutline, outlineAttributes.show);

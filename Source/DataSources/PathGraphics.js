@@ -5,22 +5,22 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createDynamicPropertyDescriptor'
+        './createPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createDynamicPropertyDescriptor) {
+        createPropertyDescriptor) {
     "use strict";
 
     /**
      * A time-dynamic path representing the visualization of a moving object.
-     * @alias DynamicPath
+     * @alias PathGraphics
      * @constructor
      */
-    var DynamicPath = function() {
+    var PathGraphics = function() {
         this._material = undefined;
         this._materialSubscription = undefined;
         this._show = undefined;
@@ -37,10 +37,10 @@ define([
         this._definitionChanged = new Event();
     };
 
-    defineProperties(DynamicPath.prototype, {
+    defineProperties(PathGraphics.prototype, {
         /**
          * Gets the event that is raised whenever a new property is assigned.
-         * @memberof DynamicPath.prototype
+         * @memberof PathGraphics.prototype
          *
          * @type {Event}
          * @readonly
@@ -53,56 +53,56 @@ define([
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the path.
-         * @memberof DynamicPath.prototype
+         * @memberof PathGraphics.prototype
          * @type {MaterialProperty}
          */
-        material : createDynamicPropertyDescriptor('material'),
+        material : createPropertyDescriptor('material'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the path's visibility.
-         * @memberof DynamicPath.prototype
+         * @memberof PathGraphics.prototype
          * @type {Property}
          */
-        show : createDynamicPropertyDescriptor('show'),
+        show : createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the path's width.
-         * @memberof DynamicPath.prototype
+         * @memberof PathGraphics.prototype
          * @type {Property}
          */
-        width : createDynamicPropertyDescriptor('width'),
+        width : createPropertyDescriptor('width'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the maximum step size, in seconds, to take when sampling the position.
-         * @memberof DynamicPath.prototype
+         * @memberof PathGraphics.prototype
          * @type {Property}
          */
-        resolution : createDynamicPropertyDescriptor('resolution'),
+        resolution : createPropertyDescriptor('resolution'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the number of seconds in front of the object to show.
-         * @memberof DynamicPath.prototype
+         * @memberof PathGraphics.prototype
          * @type {Property}
          */
-        leadTime : createDynamicPropertyDescriptor('leadTime'),
+        leadTime : createPropertyDescriptor('leadTime'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the number of seconds behind the object to show.
-         * @memberof DynamicPath.prototype
+         * @memberof PathGraphics.prototype
          * @type {Property}
          */
-        trailTime : createDynamicPropertyDescriptor('trailTime')
+        trailTime : createPropertyDescriptor('trailTime')
     });
 
     /**
-     * Duplicates a DynamicPath instance.
+     * Duplicates a PathGraphics instance.
      *
-     * @param {DynamicPath} [result] The object onto which to store the result.
-     * @returns {DynamicPath} The modified result parameter or a new instance if one was not provided.
+     * @param {PathGraphics} [result] The object onto which to store the result.
+     * @returns {PathGraphics} The modified result parameter or a new instance if one was not provided.
      */
-    DynamicPath.prototype.clone = function(result) {
+    PathGraphics.prototype.clone = function(result) {
         if (!defined(result)) {
-            result = new DynamicPath();
+            result = new PathGraphics();
         }
         result.material = this.material;
         result.width = this.width;
@@ -117,9 +117,9 @@ define([
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
      *
-     * @param {DynamicPath} source The object to be merged into this object.
+     * @param {PathGraphics} source The object to be merged into this object.
      */
-    DynamicPath.prototype.merge = function(source) {
+    PathGraphics.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
@@ -134,5 +134,5 @@ define([
         this.trailTime = defaultValue(this.trailTime, source.trailTime);
     };
 
-    return DynamicPath;
+    return PathGraphics;
 });

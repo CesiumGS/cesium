@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/StripeMaterialProperty',
+        'DataSources/StripeMaterialProperty',
         'Core/Color',
         'Core/JulianDate',
         'Core/TimeInterval',
-        'DynamicScene/ConstantProperty',
-        'DynamicScene/StripeOrientation',
-        'DynamicScene/TimeIntervalCollectionProperty',
+        'DataSources/ConstantProperty',
+        'DataSources/StripeOrientation',
+        'DataSources/TimeIntervalCollectionProperty',
         'Specs/testDefinitionChanged'
     ], function(
         StripeMaterialProperty,

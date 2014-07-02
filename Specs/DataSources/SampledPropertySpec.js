@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/SampledProperty',
+        'DataSources/SampledProperty',
         'Core/Cartesian3',
         'Core/defined',
         'Core/HermitePolynomialApproximation',

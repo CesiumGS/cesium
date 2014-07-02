@@ -1,17 +1,17 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/DynamicPolygon',
-        'DynamicScene/ColorMaterialProperty',
-        'DynamicScene/ConstantProperty'
+        'DataSources/PolygonGraphics',
+        'DataSources/ColorMaterialProperty',
+        'DataSources/ConstantProperty'
     ], function(
-        DynamicPolygon,
+        PolygonGraphics,
         ColorMaterialProperty,
         ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('merge assigns unassigned properties', function() {
-        var source = new DynamicPolygon();
+        var source = new PolygonGraphics();
         source.material = new ColorMaterialProperty();
         source.show = new ConstantProperty(true);
         source.height = new ConstantProperty(1);
@@ -19,7 +19,7 @@ defineSuite([
         source.granularity = new ConstantProperty(3);
         source.stRotation = new ConstantProperty(4);
 
-        var target = new DynamicPolygon();
+        var target = new PolygonGraphics();
         target.merge(source);
 
         expect(target.material).toBe(source.material);
@@ -31,7 +31,7 @@ defineSuite([
     });
 
     it('merge does not assign assigned properties', function() {
-        var source = new DynamicPolygon();
+        var source = new PolygonGraphics();
         source.material = new ColorMaterialProperty();
         source.show = new ConstantProperty(true);
 
@@ -42,7 +42,7 @@ defineSuite([
         var granularity = new ConstantProperty(3);
         var stRotation = new ConstantProperty(4);
 
-        var target = new DynamicPolygon();
+        var target = new PolygonGraphics();
         target.material = material;
         target.show = show;
         target.height = height;
@@ -61,7 +61,7 @@ defineSuite([
     });
 
     it('clone works', function() {
-        var source = new DynamicPolygon();
+        var source = new PolygonGraphics();
         source.material = new ColorMaterialProperty();
         source.show = new ConstantProperty(true);
         source.height = new ConstantProperty(1);
@@ -79,7 +79,7 @@ defineSuite([
     });
 
     it('merge throws if source undefined', function() {
-        var target = new DynamicPolygon();
+        var target = new PolygonGraphics();
         expect(function() {
             target.merge(undefined);
         }).toThrowDeveloperError();

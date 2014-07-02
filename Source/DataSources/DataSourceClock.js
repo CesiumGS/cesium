@@ -7,7 +7,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/JulianDate',
-        './createDynamicPropertyDescriptor'
+        './createPropertyDescriptor'
     ], function(
         Clock,
         defaultValue,
@@ -16,16 +16,16 @@ define([
         DeveloperError,
         Event,
         JulianDate,
-        createDynamicPropertyDescriptor) {
+        createPropertyDescriptor) {
     "use strict";
 
     /**
      * Represents CZML document-level clock settings.
      *
-     * @alias DynamicClock
+     * @alias DataSourceClock
      * @constructor
      */
-    var DynamicClock = function() {
+    var DataSourceClock = function() {
         this._startTime = undefined;
         this._stopTime = undefined;
         this._currentTime = undefined;
@@ -35,10 +35,10 @@ define([
         this._definitionChanged = new Event();
     };
 
-    defineProperties(DynamicClock.prototype, {
+    defineProperties(DataSourceClock.prototype, {
         /**
          * Gets the event that is raised whenever a new property is assigned.
-         * @memberof DynamicClock.prototype
+         * @memberof DataSourceClock.prototype
          *
          * @type {Event}
          * @readonly
@@ -51,59 +51,59 @@ define([
 
         /**
          * Gets or sets the start time of the clock to use when looping or clamped.
-         * @memberof DynamicClock.prototype
+         * @memberof DataSourceClock.prototype
          * @type {JulianDate}
          */
-        startTime : createDynamicPropertyDescriptor('startTime'),
+        startTime : createPropertyDescriptor('startTime'),
 
         /**
          * Gets or sets the stop time of the clock to use when looping or clamped.
-         * @memberof DynamicClock.prototype
+         * @memberof DataSourceClock.prototype
          * @type {JulianDate}
          */
-        stopTime : createDynamicPropertyDescriptor('stopTime'),
+        stopTime : createPropertyDescriptor('stopTime'),
 
         /**
          * Gets or sets the initial time to use when switching to this clock.
-         * @memberof DynamicClock.prototype
+         * @memberof DataSourceClock.prototype
          * @type {JulianDate}
          */
-        currentTime : createDynamicPropertyDescriptor('currentTime'),
+        currentTime : createPropertyDescriptor('currentTime'),
 
         /**
          * Gets or sets how the clock should behave when <code>startTime</code> or <code>stopTime</code> is reached.
-         * @memberof DynamicClock.prototype
+         * @memberof DataSourceClock.prototype
          * @type {ClockRange}
          */
-        clockRange : createDynamicPropertyDescriptor('clockRange'),
+        clockRange : createPropertyDescriptor('clockRange'),
 
         /**
          * Gets or sets if clock advancement is frame dependent or system clock dependent.
-         * @memberof DynamicClock.prototype
+         * @memberof DataSourceClock.prototype
          * @type {ClockStep}
          */
-        clockStep : createDynamicPropertyDescriptor('clockStep'),
+        clockStep : createPropertyDescriptor('clockStep'),
 
         /**
          * Gets or sets how much time advances with each tick, negative values allow for advancing backwards.
          * If <code>clockStep</code> is set to ClockStep.TICK_DEPENDENT this is the number of seconds to advance.
          * If <code>clockStep</code> is set to ClockStep.SYSTEM_CLOCK_MULTIPLIER this value is multiplied by the
          * elapsed system time since the last call to tick.
-         * @memberof DynamicClock.prototype
+         * @memberof DataSourceClock.prototype
          * @type {Number}
          */
-        multiplier : createDynamicPropertyDescriptor('multiplier')
+        multiplier : createPropertyDescriptor('multiplier')
     });
 
     /**
-     * Duplicates a DynamicClock instance.
+     * Duplicates a DataSourceClock instance.
      *
-     * @param {DynamicClock} [result] The object onto which to store the result.
-     * @returns {DynamicClock} The modified result parameter or a new instance if one was not provided.
+     * @param {DataSourceClock} [result] The object onto which to store the result.
+     * @returns {DataSourceClock} The modified result parameter or a new instance if one was not provided.
      */
-    DynamicClock.prototype.clone = function(result) {
+    DataSourceClock.prototype.clone = function(result) {
         if (!defined(result)) {
-            result = new DynamicClock();
+            result = new DataSourceClock();
         }
         result.startTime = this.startTime;
         result.stopTime = this.stopTime;
@@ -115,12 +115,12 @@ define([
     };
 
     /**
-     * Returns true if this DynamicClock is equivalent to the other
+     * Returns true if this DataSourceClock is equivalent to the other
      *
-     * @param {DynamicClock} other The other DynamicClock to compare to.
-     * @returns {Boolean} <code>true</code> if the DynamicClocks are equal; otherwise, <code>false</code>.
+     * @param {DataSourceClock} other The other DataSourceClock to compare to.
+     * @returns {Boolean} <code>true</code> if the DataSourceClocks are equal; otherwise, <code>false</code>.
      */
-    DynamicClock.prototype.equals = function(other) {
+    DataSourceClock.prototype.equals = function(other) {
         return this === other ||
                defined(other) &&
                JulianDate.equals(this.startTime, other.startTime) &&
@@ -135,9 +135,9 @@ define([
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
      *
-     * @param {DynamicClock} source The object to be merged into this object.
+     * @param {DataSourceClock} source The object to be merged into this object.
      */
-    DynamicClock.prototype.merge = function(source) {
+    DataSourceClock.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
@@ -157,7 +157,7 @@ define([
      *
      * @returns {Clock} The modified result parameter or a new instance if one was not provided.
      */
-    DynamicClock.prototype.getValue = function(result) {
+    DataSourceClock.prototype.getValue = function(result) {
         if (!defined(result)) {
             result = new Clock();
         }
@@ -170,5 +170,5 @@ define([
         return result;
     };
 
-    return DynamicClock;
+    return DataSourceClock;
 });

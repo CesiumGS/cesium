@@ -33,7 +33,7 @@ define([
     };
 
     Batch.prototype.add = function(updater, instance) {
-        var id = updater.dynamicObject.id;
+        var id = updater.entity.id;
         this.createPrimitive = true;
         this.geometry.set(id, instance);
         this.updaters.set(id, updater);
@@ -43,7 +43,7 @@ define([
     };
 
     Batch.prototype.remove = function(updater) {
-        var id = updater.dynamicObject.id;
+        var id = updater.entity.id;
         this.createPrimitive = this.geometry.remove(id) || this.createPrimitive;
         this.updaters.remove(id);
         this.updatersWithAttributes.remove(id);
@@ -81,7 +81,7 @@ define([
             var length = updatersWithAttributes.length;
             for (var i = 0; i < length; i++) {
                 var updater = updatersWithAttributes[i];
-                var instance = this.geometry.get(updater.dynamicObject.id);
+                var instance = this.geometry.get(updater.entity.id);
 
                 var attributes = this.attributes.get(instance.id.id);
                 if (!defined(attributes)) {

@@ -1,11 +1,11 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/DynamicClock',
+        'DataSources/DataSourceClock',
         'Core/ClockRange',
         'Core/ClockStep',
         'Core/JulianDate'
     ], function(
-        DynamicClock,
+        DataSourceClock,
         ClockRange,
         ClockStep,
         JulianDate) {
@@ -13,7 +13,7 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('merge assigns unassigned properties', function() {
-        var source = new DynamicClock();
+        var source = new DataSourceClock();
         source.startTime = JulianDate.now();
         source.stopTime = JulianDate.now();
         source.currentTime = JulianDate.now();
@@ -21,7 +21,7 @@ defineSuite([
         source.clockStep = ClockStep.TICK_DEPENDENT;
         source.multiplier = 1;
 
-        var target = new DynamicClock();
+        var target = new DataSourceClock();
         target.merge(source);
 
         expect(target.startTime).toBe(source.startTime);
@@ -33,7 +33,7 @@ defineSuite([
     });
 
     it('merge does not assign assigned properties', function() {
-        var source = new DynamicClock();
+        var source = new DataSourceClock();
         source.startTime = JulianDate.now();
         source.stopTime = JulianDate.now();
         source.currentTime = JulianDate.now();
@@ -48,7 +48,7 @@ defineSuite([
         var clockStep = ClockStep.TICK_DEPENDENT;
         var multiplier = 1;
 
-        var target = new DynamicClock();
+        var target = new DataSourceClock();
         target.startTime = startTime;
         target.stopTime = stopTime;
         target.currentTime = currentTime;
@@ -67,7 +67,7 @@ defineSuite([
     });
 
     it('clone works', function() {
-        var source = new DynamicClock();
+        var source = new DataSourceClock();
         source.startTime = JulianDate.now();
         source.stopTime = JulianDate.now();
         source.currentTime = JulianDate.now();
@@ -85,7 +85,7 @@ defineSuite([
     });
 
     it('merge throws if source undefined', function() {
-        var target = new DynamicClock();
+        var target = new DataSourceClock();
         expect(function() {
             target.merge(undefined);
         }).toThrowDeveloperError();

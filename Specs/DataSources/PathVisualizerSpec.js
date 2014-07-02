@@ -1,25 +1,25 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/DynamicPathVisualizer',
+        'DataSources/PathVisualizer',
         'Core/Cartesian3',
         'Core/Color',
         'Core/JulianDate',
         'Core/ReferenceFrame',
         'Core/TimeInterval',
-        'DynamicScene/CompositePositionProperty',
-        'DynamicScene/ConstantPositionProperty',
-        'DynamicScene/ConstantProperty',
-        'DynamicScene/DynamicObjectCollection',
-        'DynamicScene/DynamicPath',
-        'DynamicScene/PolylineGlowMaterialProperty',
-        'DynamicScene/PolylineOutlineMaterialProperty',
-        'DynamicScene/ReferenceProperty',
-        'DynamicScene/SampledPositionProperty',
-        'DynamicScene/TimeIntervalCollectionPositionProperty',
+        'DataSources/CompositePositionProperty',
+        'DataSources/ConstantPositionProperty',
+        'DataSources/ConstantProperty',
+        'DataSources/EntityCollection',
+        'DataSources/PathGraphics',
+        'DataSources/PolylineGlowMaterialProperty',
+        'DataSources/PolylineOutlineMaterialProperty',
+        'DataSources/ReferenceProperty',
+        'DataSources/SampledPositionProperty',
+        'DataSources/TimeIntervalCollectionPositionProperty',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
-        DynamicPathVisualizer,
+        PathVisualizer,
         Cartesian3,
         Color,
         JulianDate,
@@ -28,8 +28,8 @@ defineSuite([
         CompositePositionProperty,
         ConstantPositionProperty,
         ConstantProperty,
-        DynamicObjectCollection,
-        DynamicPath,
+        EntityCollection,
+        PathGraphics,
         PolylineGlowMaterialProperty,
         PolylineOutlineMaterialProperty,
         ReferenceProperty,
@@ -57,21 +57,21 @@ defineSuite([
 
     it('constructor throws if no scene is passed.', function() {
         expect(function() {
-            return new DynamicPathVisualizer();
+            return new PathVisualizer();
         }).toThrowDeveloperError();
     });
 
     it('update throws if no time specified.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicPathVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new PathVisualizer(scene, entityCollection);
         expect(function() {
             visualizer.update();
         }).toThrowDeveloperError();
     });
 
     it('isDestroy returns false until destroyed.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicPathVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new PathVisualizer(scene, entityCollection);
         expect(visualizer.isDestroyed()).toEqual(false);
         visualizer.destroy();
         expect(visualizer.isDestroyed()).toEqual(true);
@@ -79,43 +79,43 @@ defineSuite([
     });
 
     it('object with no path does not create one.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicPathVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new PathVisualizer(scene, entityCollection);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty([new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112)]);
         visualizer.update(JulianDate.now());
         expect(scene.primitives.length).toEqual(0);
     });
 
     it('object with no position does not create a polyline.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicPathVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new PathVisualizer(scene, entityCollection);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        var path = testObject.path = new DynamicPath();
+        var testObject = entityCollection.getOrCreateObject('test');
+        var path = testObject.path = new PathGraphics();
         path.show = new ConstantProperty(true);
 
         visualizer.update(JulianDate.now());
         expect(scene.primitives.length).toEqual(0);
     });
 
-    it('A DynamicPath causes a primtive to be created and updated.', function() {
+    it('A PathGraphics causes a primtive to be created and updated.', function() {
         var times = [new JulianDate(0, 0), new JulianDate(1, 0)];
         var updateTime = new JulianDate(0.5, 0);
         var positions = [new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112)];
 
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicPathVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new PathVisualizer(scene, entityCollection);
 
         expect(scene.primitives.length).toEqual(0);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
         var position = new SampledPositionProperty();
         testObject.position = position;
         position.addSamples(times, positions);
 
-        var path = testObject.path = new DynamicPath();
+        var path = testObject.path = new PathGraphics();
         path.show = new ConstantProperty(true);
         path.material = new PolylineOutlineMaterialProperty();
         path.material.color = new ConstantProperty(new Color(0.8, 0.7, 0.6, 0.5));
@@ -152,17 +152,17 @@ defineSuite([
         var updateTime = new JulianDate(0.5, 0);
         var positions = [new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112)];
 
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicPathVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new PathVisualizer(scene, entityCollection);
 
         expect(scene.primitives.length).toEqual(0);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
         var position = new SampledPositionProperty();
         testObject.position = position;
         position.addSamples(times, positions);
 
-        var path = testObject.path = new DynamicPath();
+        var path = testObject.path = new PathGraphics();
         path.show = new ConstantProperty(true);
         path.material = new PolylineGlowMaterialProperty();
         path.material.color = new ConstantProperty(new Color(0.8, 0.7, 0.6, 0.5));
@@ -188,17 +188,17 @@ defineSuite([
         var updateTime = new JulianDate(0.5, 0);
         var positions = [new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112)];
 
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicPathVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new PathVisualizer(scene, entityCollection);
 
         expect(scene.primitives.length).toEqual(0);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
         var position = new SampledPositionProperty();
         testObject.position = position;
         position.addSamples(times, positions);
 
-        var path = testObject.path = new DynamicPath();
+        var path = testObject.path = new PathGraphics();
         path.show = new ConstantProperty(true);
         path.color = new ConstantProperty(new Color(0.8, 0.7, 0.6, 0.5));
         path.width = new ConstantProperty(12.5);
@@ -217,26 +217,26 @@ defineSuite([
         visualizer.update(updateTime);
         //Clearing won't actually remove the primitive because of the
         //internal cache used by the visualizer, instead it just hides it.
-        dynamicObjectCollection.removeAll();
+        entityCollection.removeAll();
         expect(primitive.show).toEqual(false);
     });
 
-    it('Visualizer sets dynamicObject property.', function() {
+    it('Visualizer sets entity property.', function() {
         var times = [new JulianDate(0, 0), new JulianDate(1, 0)];
         var updateTime = new JulianDate(0.5, 0);
         var positions = [new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112)];
 
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicPathVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new PathVisualizer(scene, entityCollection);
 
         expect(scene.primitives.length).toEqual(0);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
         var position = new SampledPositionProperty();
         testObject.position = position;
         position.addSamples(times, positions);
 
-        var path = testObject.path = new DynamicPath();
+        var path = testObject.path = new PathGraphics();
         path.show = new ConstantProperty(true);
         path.color = new ConstantProperty(new Color(0.8, 0.7, 0.6, 0.5));
         path.width = new ConstantProperty(12.5);
@@ -258,7 +258,7 @@ defineSuite([
         var updateTime = new JulianDate(1, 43200);
         var referenceFrame = ReferenceFrame.FIXED;
         var maximumStep = 10;
-        var result = DynamicPathVisualizer._subSample(property, start, stop, updateTime, referenceFrame, maximumStep);
+        var result = PathVisualizer._subSample(property, start, stop, updateTime, referenceFrame, maximumStep);
         expect(result).toEqual([property._value]);
     });
 
@@ -270,13 +270,13 @@ defineSuite([
         var referenceFrame = ReferenceFrame.FIXED;
         var maximumStep = 10;
 
-        var dynamicObjects = new DynamicObjectCollection();
-        var targetObject = dynamicObjects.getOrCreateObject('target');
+        var entities = new EntityCollection();
+        var targetObject = entities.getOrCreateObject('target');
         targetObject.position = property;
 
-        var referenceProperty = new ReferenceProperty(dynamicObjects, 'target', ['position']);
+        var referenceProperty = new ReferenceProperty(entities, 'target', ['position']);
 
-        var result = DynamicPathVisualizer._subSample(referenceProperty, start, stop, updateTime, referenceFrame, maximumStep);
+        var result = PathVisualizer._subSample(referenceProperty, start, stop, updateTime, referenceFrame, maximumStep);
         expect(result).toEqual([property._value]);
     });
 
@@ -295,27 +295,27 @@ defineSuite([
         var result = [];
 
         //A large maximum step causes no sub-smapling.
-        DynamicPathVisualizer._subSample(property, start, stop, updateTime, referenceFrame, maximumStep, result);
+        PathVisualizer._subSample(property, start, stop, updateTime, referenceFrame, maximumStep, result);
         expect(result).toEqual([property.getValue(start), property.getValue(updateTime), property.getValue(stop)]);
 
         //An evenly spaced maximum step causes equal steps from start to stop
         maximumStep = 28800;
         var expectedStep = 28800;
-        DynamicPathVisualizer._subSample(property, start, stop, updateTime, referenceFrame, maximumStep, result);
+        PathVisualizer._subSample(property, start, stop, updateTime, referenceFrame, maximumStep, result);
         expect(result).toEqual([property.getValue(start), property.getValue(JulianDate.addSeconds(start, expectedStep, new JulianDate())), property.getValue(updateTime), property.getValue(JulianDate.addSeconds(start, expectedStep * 2, new JulianDate())), property.getValue(stop)]);
 
         //An maximum step size that is slightly more than halfway between points causes a single step halfway between points
         maximumStep = 43201;
         expectedStep = 43200;
         updateTime = new JulianDate(0, 64800);
-        DynamicPathVisualizer._subSample(property, start, stop, updateTime, referenceFrame, maximumStep, result);
+        PathVisualizer._subSample(property, start, stop, updateTime, referenceFrame, maximumStep, result);
         expect(result).toEqual([property.getValue(start), property.getValue(JulianDate.addSeconds(start, expectedStep, new JulianDate())), property.getValue(updateTime), property.getValue(stop)]);
 
         //An maximum step size that is slightly less than halfway between points causes two steps of the eqaul size to be taken between points
         maximumStep = 43199;
         expectedStep = 28800;
         updateTime = new JulianDate(0, 21600);
-        DynamicPathVisualizer._subSample(property, start, stop, updateTime, referenceFrame, maximumStep, result);
+        PathVisualizer._subSample(property, start, stop, updateTime, referenceFrame, maximumStep, result);
         expect(result).toEqual([property.getValue(start), property.getValue(updateTime), property.getValue(JulianDate.addSeconds(start, expectedStep, new JulianDate())), property.getValue(JulianDate.addSeconds(start, expectedStep * 2, new JulianDate())), property.getValue(stop)]);
     });
 
@@ -348,16 +348,16 @@ defineSuite([
         var referenceFrame = ReferenceFrame.FIXED;
         var maximumStep = 10;
         var result = [];
-        DynamicPathVisualizer._subSample(property, t1, t4, updateTime, referenceFrame, maximumStep, result);
+        PathVisualizer._subSample(property, t1, t4, updateTime, referenceFrame, maximumStep, result);
         expect(result).toEqual([new Cartesian3(0, 0, 1), new Cartesian3(0, 0, 2), new Cartesian3(0, 0, 3)]);
 
-        DynamicPathVisualizer._subSample(property, t2, t3, updateTime, referenceFrame, maximumStep, result);
+        PathVisualizer._subSample(property, t2, t3, updateTime, referenceFrame, maximumStep, result);
         expect(result).toEqual([new Cartesian3(0, 0, 1), new Cartesian3(0, 0, 2), new Cartesian3(0, 0, 3)]);
 
-        DynamicPathVisualizer._subSample(property, t1, t2, updateTime, referenceFrame, maximumStep, result);
+        PathVisualizer._subSample(property, t1, t2, updateTime, referenceFrame, maximumStep, result);
         expect(result).toEqual([new Cartesian3(0, 0, 1)]);
 
-        DynamicPathVisualizer._subSample(property, t3, t4, updateTime, referenceFrame, maximumStep, result);
+        PathVisualizer._subSample(property, t3, t4, updateTime, referenceFrame, maximumStep, result);
         expect(result).toEqual([new Cartesian3(0, 0, 3)]);
     });
 
@@ -398,7 +398,7 @@ defineSuite([
         var referenceFrame = ReferenceFrame.FIXED;
         var maximumStep = 43200;
         var result = [];
-        DynamicPathVisualizer._subSample(property, t1, t4, updateTime, referenceFrame, maximumStep, result);
+        PathVisualizer._subSample(property, t1, t4, updateTime, referenceFrame, maximumStep, result);
         expect(result).toEqual([sampledProperty.getValue(t1), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep, new JulianDate())), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep * 2, new JulianDate())), sampledProperty.getValue(updateTime), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep * 3, new JulianDate())), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep * 4, new JulianDate())), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep * 5, new JulianDate())), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep * 6, new JulianDate()))]);
     });
 
@@ -436,10 +436,10 @@ defineSuite([
         sampledProperty.addSample(t3, new Cartesian3(0, 0, 3));
         sampledProperty.addSample(t4, new Cartesian3(0, 0, 4));
 
-        var dynamicObjects = new DynamicObjectCollection();
-        var targetObject = dynamicObjects.getOrCreateObject('target');
+        var entities = new EntityCollection();
+        var targetObject = entities.getOrCreateObject('target');
         targetObject.position = new ConstantPositionProperty(new Cartesian3(0, 0, 5));
-        var referenceProperty = new ReferenceProperty(dynamicObjects, 'target', ['position']);
+        var referenceProperty = new ReferenceProperty(entities, 'target', ['position']);
 
         var property = new CompositePositionProperty();
         property.intervals.addInterval(new TimeInterval({
@@ -471,7 +471,7 @@ defineSuite([
         var referenceFrame = ReferenceFrame.FIXED;
         var maximumStep = 43200;
         var result = [];
-        DynamicPathVisualizer._subSample(property, t1, t5, updateTime, referenceFrame, maximumStep, result);
+        PathVisualizer._subSample(property, t1, t5, updateTime, referenceFrame, maximumStep, result);
         expect(result).toEqual([intervalProperty.intervals.get(0).data,
                                 constantProperty.getValue(t1),
                                 sampledProperty.getValue(t3),

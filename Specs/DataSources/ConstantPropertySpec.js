@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/ConstantProperty',
+        'DataSources/ConstantProperty',
         'Core/Cartesian3',
         'Core/JulianDate'
     ], function(

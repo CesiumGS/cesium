@@ -5,23 +5,23 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createDynamicPropertyDescriptor'
+        './createPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createDynamicPropertyDescriptor) {
+        createPropertyDescriptor) {
     "use strict";
 
     /**
      * An optionally time-dynamic billboard.
      *
-     * @alias DynamicBillboard
+     * @alias BillboardGraphics
      * @constructor
      */
-    var DynamicBillboard = function() {
+    var BillboardGraphics = function() {
         this._image = undefined;
         this._imageSubscription = undefined;
         this._width = undefined;
@@ -55,10 +55,10 @@ define([
         this._definitionChanged = new Event();
     };
 
-    defineProperties(DynamicBillboard.prototype, {
+    defineProperties(BillboardGraphics.prototype, {
         /**
          * Gets the event that is raised whenever a new property is assigned.
-         * @memberof DynamicBillboard.prototype
+         * @memberof BillboardGraphics.prototype
          *
          * @type {Event}
          * @readonly
@@ -71,124 +71,124 @@ define([
 
         /**
          * Gets or sets the string {@link Property} specifying the URL of the billboard's texture.
-         * @memberof DynamicBillboard.prototype
+         * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        image : createDynamicPropertyDescriptor('image'),
+        image : createPropertyDescriptor('image'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the billboard's scale.
-         * @memberof DynamicBillboard.prototype
+         * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        scale : createDynamicPropertyDescriptor('scale'),
+        scale : createPropertyDescriptor('scale'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the billboard's rotation.
-         * @memberof DynamicBillboard.prototype
+         * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        rotation : createDynamicPropertyDescriptor('rotation'),
+        rotation : createPropertyDescriptor('rotation'),
 
         /**
          * Gets or sets the {@link Cartesian3} {@link Property} specifying the billboard rotation's aligned axis.
-         * @memberof DynamicBillboard.prototype
+         * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        alignedAxis : createDynamicPropertyDescriptor('alignedAxis'),
+        alignedAxis : createPropertyDescriptor('alignedAxis'),
 
         /**
          * Gets or sets the {@link HorizontalOrigin} {@link Property} specifying the billboard's horizontal origin.
-         * @memberof DynamicBillboard.prototype
+         * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        horizontalOrigin : createDynamicPropertyDescriptor('horizontalOrigin'),
+        horizontalOrigin : createPropertyDescriptor('horizontalOrigin'),
 
         /**
          * Gets or sets the {@link VerticalOrigin} {@link Property} specifying the billboard's vertical origin.
-         * @memberof DynamicBillboard.prototype
+         * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        verticalOrigin : createDynamicPropertyDescriptor('verticalOrigin'),
+        verticalOrigin : createPropertyDescriptor('verticalOrigin'),
 
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the billboard's color.
-         * @memberof DynamicBillboard.prototype
+         * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        color : createDynamicPropertyDescriptor('color'),
+        color : createPropertyDescriptor('color'),
 
         /**
          * Gets or sets the {@link Cartesian3} {@link Property} specifying the billboard's eye offset.
-         * @memberof DynamicBillboard.prototype
+         * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        eyeOffset : createDynamicPropertyDescriptor('eyeOffset'),
+        eyeOffset : createPropertyDescriptor('eyeOffset'),
 
         /**
          * Gets or sets the {@link Cartesian2} {@link Property} specifying the billboard's pixel offset.
-         * @memberof DynamicBillboard.prototype
+         * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        pixelOffset : createDynamicPropertyDescriptor('pixelOffset'),
+        pixelOffset : createPropertyDescriptor('pixelOffset'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the billboard's visibility.
-         * @memberof DynamicBillboard.prototype
+         * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        show : createDynamicPropertyDescriptor('show'),
+        show : createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the billboard's width in pixels.
          * If undefined, the native width is used.
-         * @memberof DynamicBillboard.prototype
+         * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        width : createDynamicPropertyDescriptor('width'),
+        width : createPropertyDescriptor('width'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the billboard's height in pixels.
          * If undefined, the native height is used.
-         * @memberof DynamicBillboard.prototype
+         * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        height : createDynamicPropertyDescriptor('height'),
+        height : createPropertyDescriptor('height'),
 
         /**
          * Gets or sets the {@link NearFarScalar} {@link Property} used to scale billboards based on distance.
          * If undefined, a constant size is used.
-         * @memberof DynamicBillboard.prototype
+         * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        scaleByDistance : createDynamicPropertyDescriptor('scaleByDistance'),
+        scaleByDistance : createPropertyDescriptor('scaleByDistance'),
 
         /**
          * Gets or sets the {@link NearFarScalar} {@link Property} used to set translucency based on distance.
          * If undefined, a constant size is used.
-         * @memberof DynamicBillboard.prototype
+         * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        translucencyByDistance : createDynamicPropertyDescriptor('translucencyByDistance'),
+        translucencyByDistance : createPropertyDescriptor('translucencyByDistance'),
 
         /**
          * Gets or sets the {@link NearFarScalar} {@link Property} used to set pixel offset scaling based on distance.
          * If undefined, no additional scale is applied to the pixel offset
-         * @memberof DynamicBillboard.prototype
+         * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        pixelOffsetScaleByDistance : createDynamicPropertyDescriptor('pixelOffsetScaleByDistance')
+        pixelOffsetScaleByDistance : createPropertyDescriptor('pixelOffsetScaleByDistance')
     });
 
     /**
-     * Duplicates a DynamicBillboard instance.
+     * Duplicates a BillboardGraphics instance.
      *
-     * @param {DynamicBillboard} [result] The object onto which to store the result.
-     * @returns {DynamicBillboard} The modified result parameter or a new instance if one was not provided.
+     * @param {BillboardGraphics} [result] The object onto which to store the result.
+     * @returns {BillboardGraphics} The modified result parameter or a new instance if one was not provided.
      */
-    DynamicBillboard.prototype.clone = function(result) {
+    BillboardGraphics.prototype.clone = function(result) {
         if (!defined(result)) {
-            result = new DynamicBillboard();
+            result = new BillboardGraphics();
         }
         result.color = this._color;
         result.eyeOffset = this._eyeOffset;
@@ -212,9 +212,9 @@ define([
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
      *
-     * @param {DynamicBillboard} source The object to be merged into this object.
+     * @param {BillboardGraphics} source The object to be merged into this object.
      */
-    DynamicBillboard.prototype.merge = function(source) {
+    BillboardGraphics.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
@@ -238,5 +238,5 @@ define([
         this.pixelOffsetScaleByDistance = defaultValue(this._pixelOffsetScaleByDistance, source._pixelOffsetScaleByDistance);
     };
 
-    return DynamicBillboard;
+    return BillboardGraphics;
 });

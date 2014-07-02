@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/TimeIntervalCollectionProperty',
+        'DataSources/TimeIntervalCollectionProperty',
         'Core/Cartesian3',
         'Core/JulianDate',
         'Core/TimeInterval',

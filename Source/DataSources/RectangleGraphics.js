@@ -5,23 +5,23 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createDynamicPropertyDescriptor'
+        './createPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createDynamicPropertyDescriptor) {
+        createPropertyDescriptor) {
     "use strict";
 
     /**
      * An optionally time-dynamic Rectangle.
      *
-     * @alias DynamicRectangle
+     * @alias RectangleGraphics
      * @constructor
      */
-    var DynamicRectangle = function() {
+    var RectangleGraphics = function() {
         this._show = undefined;
         this._showSubscription = undefined;
         this._material = undefined;
@@ -45,10 +45,10 @@ define([
         this._definitionChanged = new Event();
     };
 
-    defineProperties(DynamicRectangle.prototype, {
+    defineProperties(RectangleGraphics.prototype, {
         /**
          * Gets the event that is raised whenever a new property is assigned.
-         * @memberof DynamicRectangle.prototype
+         * @memberof RectangleGraphics.prototype
          *
          * @type {Event}
          * @readonly
@@ -61,111 +61,111 @@ define([
 
         /**
          * Gets or sets the boolean {@link Property} specifying the rectangle's visibility.
-         * @memberof DynamicRectangle.prototype
+         * @memberof RectangleGraphics.prototype
          * @type {Property}
          */
-        show : createDynamicPropertyDescriptor('show'),
+        show : createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link Rectangle} {@link Property} specifying the extent.
-         * @memberof DynamicRectangle.prototype
+         * @memberof RectangleGraphics.prototype
          * @type {Property}
          */
-        coordinates : createDynamicPropertyDescriptor('coordinates'),
+        coordinates : createPropertyDescriptor('coordinates'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the rectangle.
-         * @memberof DynamicRectangle.prototype
+         * @memberof RectangleGraphics.prototype
          * @type {MaterialProperty}
          */
-        material : createDynamicPropertyDescriptor('material'),
+        material : createPropertyDescriptor('material'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the height of the rectangle.
          * If undefined, the rectangle will be on the surface.
-         * @memberof DynamicRectangle.prototype
+         * @memberof RectangleGraphics.prototype
          * @type {Property}
          */
-        height : createDynamicPropertyDescriptor('height'),
+        height : createPropertyDescriptor('height'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the extruded height of the rectangle.
          * Setting this property creates a rectangle shaped volume starting at height and ending
          * at the extruded height.
-         * @memberof DynamicRectangle.prototype
+         * @memberof RectangleGraphics.prototype
          * @type {Property}
          */
-        extrudedHeight : createDynamicPropertyDescriptor('extrudedHeight'),
+        extrudedHeight : createPropertyDescriptor('extrudedHeight'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the sampling distance, in radians,
          * between each latitude and longitude point.
-         * @memberof DynamicRectangle.prototype
+         * @memberof RectangleGraphics.prototype
          * @type {Property}
          */
-        granularity : createDynamicPropertyDescriptor('granularity'),
+        granularity : createPropertyDescriptor('granularity'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the rotation of the texture coordinates,
          * in radians. A positive rotation is counter-clockwise.
-         * @memberof DynamicRectangle.prototype
+         * @memberof RectangleGraphics.prototype
          * @type {Property}
          */
-        stRotation : createDynamicPropertyDescriptor('stRotation'),
+        stRotation : createPropertyDescriptor('stRotation'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the rotation of the texture coordinates,
          * in radians. A positive rotation is counter-clockwise.
-         * @memberof DynamicRectangle.prototype
+         * @memberof RectangleGraphics.prototype
          * @type {Property}
          */
-        rotation : createDynamicPropertyDescriptor('rotation'),
+        rotation : createPropertyDescriptor('rotation'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the rectangle should be filled.
-         * @memberof DynamicRectangle.prototype
+         * @memberof RectangleGraphics.prototype
          * @type {Property}
          */
-        fill : createDynamicPropertyDescriptor('fill'),
+        fill : createPropertyDescriptor('fill'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the rectangle should be outlined.
-         * @memberof DynamicRectangle.prototype
+         * @memberof RectangleGraphics.prototype
          * @type {Property}
          */
-        outline : createDynamicPropertyDescriptor('outline'),
+        outline : createPropertyDescriptor('outline'),
 
         /**
          * Gets or sets the Color {@link Property} specifying whether the color of the outline.
-         * @memberof DynamicRectangle.prototype
+         * @memberof RectangleGraphics.prototype
          * @type {Property}
          */
-        outlineColor : createDynamicPropertyDescriptor('outlineColor'),
+        outlineColor : createPropertyDescriptor('outlineColor'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether an extruded rectangle should have a closed top.
-         * @memberof DynamicRectangle.prototype
+         * @memberof RectangleGraphics.prototype
          * @type {Property}
          */
-        closeTop : createDynamicPropertyDescriptor('closeTop'),
+        closeTop : createPropertyDescriptor('closeTop'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether an extruded rectangle should have a closed bottom.
-         * @memberof DynamicRectangle.prototype
+         * @memberof RectangleGraphics.prototype
          * @type {Property}
          */
-        closeBottom : createDynamicPropertyDescriptor('closeBottom')
+        closeBottom : createPropertyDescriptor('closeBottom')
     });
 
     /**
-     * Duplicates a DynamicRectangle instance.
+     * Duplicates a RectangleGraphics instance.
      *
-     * @param {DynamicRectangle} [result] The object onto which to store the result.
-     * @returns {DynamicRectangle} The modified result parameter or a new instance if one was not provided.
+     * @param {RectangleGraphics} [result] The object onto which to store the result.
+     * @returns {RectangleGraphics} The modified result parameter or a new instance if one was not provided.
      */
-    DynamicRectangle.prototype.clone = function(result) {
+    RectangleGraphics.prototype.clone = function(result) {
         if (!defined(result)) {
-            result = new DynamicRectangle();
+            result = new RectangleGraphics();
         }
         result.show = this.show;
         result.coordinates = this.coordinates;
@@ -187,9 +187,9 @@ define([
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
      *
-     * @param {DynamicRectangle} source The object to be merged into this object.
+     * @param {RectangleGraphics} source The object to be merged into this object.
      */
-    DynamicRectangle.prototype.merge = function(source) {
+    RectangleGraphics.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
@@ -211,5 +211,5 @@ define([
         this.closeBottom = defaultValue(this.closeBottom, source.closeBottom);
     };
 
-    return DynamicRectangle;
+    return RectangleGraphics;
 });

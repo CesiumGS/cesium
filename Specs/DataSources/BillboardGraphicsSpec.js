@@ -1,15 +1,15 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/DynamicBillboard',
+        'DataSources/BillboardGraphics',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
         'Core/NearFarScalar',
-        'DynamicScene/ConstantProperty',
+        'DataSources/ConstantProperty',
         'Scene/HorizontalOrigin',
         'Scene/VerticalOrigin'
     ], function(
-        DynamicBillboard,
+        BillboardGraphics,
         Cartesian2,
         Cartesian3,
         Color,
@@ -21,7 +21,7 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('merge assigns unassigned properties', function() {
-        var source = new DynamicBillboard();
+        var source = new BillboardGraphics();
         source.image = new ConstantProperty('');
         source.rotation = new ConstantProperty(5);
         source.alignedAxis = new ConstantProperty(new Cartesian3());
@@ -38,7 +38,7 @@ defineSuite([
         source.translucencyByDistance = new ConstantProperty(new NearFarScalar());
         source.pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar(1.0, 0.0, 3.0e9, 0.0));
 
-        var target = new DynamicBillboard();
+        var target = new BillboardGraphics();
         target.merge(source);
 
         expect(target.image).toBe(source.image);
@@ -59,7 +59,7 @@ defineSuite([
     });
 
     it('merge does not assign assigned properties', function() {
-        var source = new DynamicBillboard();
+        var source = new BillboardGraphics();
         source.image = new ConstantProperty('');
         source.rotation = new ConstantProperty(5);
         source.alignedAxis = new ConstantProperty(new Cartesian3());
@@ -92,7 +92,7 @@ defineSuite([
         var translucencyByDistance = new ConstantProperty(new NearFarScalar());
         var pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar());
 
-        var target = new DynamicBillboard();
+        var target = new BillboardGraphics();
         target.image = image;
         target.rotation = rotation;
         target.alignedAxis = alignedAxis;
@@ -129,7 +129,7 @@ defineSuite([
     });
 
     it('clone works', function() {
-        var source = new DynamicBillboard();
+        var source = new BillboardGraphics();
         source.image = new ConstantProperty('');
         source.rotation = new ConstantProperty(5);
         source.alignedAxis = new ConstantProperty(new Cartesian3());
@@ -165,7 +165,7 @@ defineSuite([
     });
 
     it('merge throws if source undefined', function() {
-        var target = new DynamicBillboard();
+        var target = new BillboardGraphics();
         expect(function() {
             target.merge(undefined);
         }).toThrowDeveloperError();

@@ -7,7 +7,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         './ConstantProperty',
-        './createDynamicPropertyDescriptor',
+        './createPropertyDescriptor',
         './Property'
     ], function(
         Color,
@@ -17,7 +17,7 @@ define([
         DeveloperError,
         Event,
         ConstantProperty,
-        createDynamicPropertyDescriptor,
+        createPropertyDescriptor,
         Property) {
     "use strict";
 
@@ -67,13 +67,13 @@ define([
          * @memberof PolylineGlowProperty.prototype
          * @type {Property}
          */
-        color : createDynamicPropertyDescriptor('color'),
+        color : createPropertyDescriptor('color'),
         /**
          * A numeric {@link Property} which determines the strength of the glow, as a percentage of the total line width (less than 1.0).
          * @memberof PolylineGlowProperty.prototype
          * @type {Property}
          */
-        glowPower : createDynamicPropertyDescriptor('glowPower')
+        glowPower : createPropertyDescriptor('glowPower')
     });
 
     /**

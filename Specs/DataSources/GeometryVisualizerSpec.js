@@ -1,20 +1,20 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/GeometryVisualizer',
+        'DataSources/GeometryVisualizer',
         'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
         'Core/JulianDate',
         'Core/ShowGeometryInstanceAttribute',
-        'DynamicScene/ColorMaterialProperty',
-        'DynamicScene/ConstantPositionProperty',
-        'DynamicScene/ConstantProperty',
-        'DynamicScene/DynamicEllipse',
-        'DynamicScene/DynamicObject',
-        'DynamicScene/DynamicObjectCollection',
-        'DynamicScene/EllipseGeometryUpdater',
-        'DynamicScene/GridMaterialProperty',
-        'DynamicScene/SampledProperty',
+        'DataSources/ColorMaterialProperty',
+        'DataSources/ConstantPositionProperty',
+        'DataSources/ConstantProperty',
+        'DataSources/EllipseGeometryUpdater',
+        'DataSources/EllipseGraphics',
+        'DataSources/Entity',
+        'DataSources/EntityCollection',
+        'DataSources/GridMaterialProperty',
+        'DataSources/SampledProperty',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
@@ -27,10 +27,10 @@ defineSuite([
         ColorMaterialProperty,
         ConstantPositionProperty,
         ConstantProperty,
-        DynamicEllipse,
-        DynamicObject,
-        DynamicObjectCollection,
         EllipseGeometryUpdater,
+        EllipseGraphics,
+        Entity,
+        EntityCollection,
         GridMaterialProperty,
         SampledProperty,
         createScene,
@@ -50,7 +50,7 @@ defineSuite([
     });
 
     it('Can create and destroy', function() {
-        var objects = new DynamicObjectCollection();
+        var objects = new EntityCollection();
         var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, objects);
         expect(visualizer.update(time)).toBe(true);
         expect(scene.primitives.length).toBe(0);
@@ -60,18 +60,18 @@ defineSuite([
     });
 
     it('Creates and removes static color open geometry', function() {
-        var objects = new DynamicObjectCollection();
+        var objects = new EntityCollection();
         var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, objects);
 
-        var ellipse = new DynamicEllipse();
+        var ellipse = new EllipseGraphics();
         ellipse.semiMajorAxis = new ConstantProperty(2);
         ellipse.semiMinorAxis = new ConstantProperty(1);
         ellipse.material = new ColorMaterialProperty();
 
-        var dynamicObject = new DynamicObject();
-        dynamicObject.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
-        dynamicObject.ellipse = ellipse;
-        objects.add(dynamicObject);
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        entity.ellipse = ellipse;
+        objects.add(entity);
 
         waitsFor(function() {
             scene.initializeFrame();
@@ -82,14 +82,14 @@ defineSuite([
 
         runs(function() {
             var primitive = scene.primitives.get(0);
-            var attributes = primitive.getGeometryInstanceAttributes(dynamicObject);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
             expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
             expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(Color.WHITE));
             expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.perInstanceColorAppearanceType);
             expect(primitive.appearance.closed).toBe(false);
 
-            objects.remove(dynamicObject);
+            objects.remove(entity);
             scene.initializeFrame();
             expect(visualizer.update(time)).toBe(true);
             scene.render(time);
@@ -101,18 +101,18 @@ defineSuite([
     });
 
     it('Creates and removes static material open geometry', function() {
-        var objects = new DynamicObjectCollection();
+        var objects = new EntityCollection();
         var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, objects);
 
-        var ellipse = new DynamicEllipse();
+        var ellipse = new EllipseGraphics();
         ellipse.semiMajorAxis = new ConstantProperty(2);
         ellipse.semiMinorAxis = new ConstantProperty(1);
         ellipse.material = new GridMaterialProperty();
 
-        var dynamicObject = new DynamicObject();
-        dynamicObject.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
-        dynamicObject.ellipse = ellipse;
-        objects.add(dynamicObject);
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        entity.ellipse = ellipse;
+        objects.add(entity);
 
         waitsFor(function() {
             scene.initializeFrame();
@@ -123,14 +123,14 @@ defineSuite([
 
         runs(function() {
             var primitive = scene.primitives.get(0);
-            var attributes = primitive.getGeometryInstanceAttributes(dynamicObject);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
             expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
             expect(attributes.color).toBeUndefined();
             expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.materialAppearanceType);
             expect(primitive.appearance.closed).toBe(false);
 
-            objects.remove(dynamicObject);
+            objects.remove(entity);
             scene.initializeFrame();
             expect(visualizer.update(time)).toBe(true);
             scene.render(time);
@@ -142,19 +142,19 @@ defineSuite([
     });
 
     it('Creates and removes static color closed geometry', function() {
-        var objects = new DynamicObjectCollection();
+        var objects = new EntityCollection();
         var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, objects);
 
-        var ellipse = new DynamicEllipse();
+        var ellipse = new EllipseGraphics();
         ellipse.semiMajorAxis = new ConstantProperty(2);
         ellipse.semiMinorAxis = new ConstantProperty(1);
         ellipse.material = new ColorMaterialProperty();
         ellipse.extrudedHeight = new ConstantProperty(1000);
 
-        var dynamicObject = new DynamicObject();
-        dynamicObject.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
-        dynamicObject.ellipse = ellipse;
-        objects.add(dynamicObject);
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        entity.ellipse = ellipse;
+        objects.add(entity);
 
         waitsFor(function() {
             scene.initializeFrame();
@@ -165,14 +165,14 @@ defineSuite([
 
         runs(function() {
             var primitive = scene.primitives.get(0);
-            var attributes = primitive.getGeometryInstanceAttributes(dynamicObject);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
             expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
             expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(Color.WHITE));
             expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.perInstanceColorAppearanceType);
             expect(primitive.appearance.closed).toBe(true);
 
-            objects.remove(dynamicObject);
+            objects.remove(entity);
             scene.initializeFrame();
             expect(visualizer.update(time)).toBe(true);
             scene.render(time);
@@ -184,19 +184,19 @@ defineSuite([
     });
 
     it('Creates and removes static material closed geometry', function() {
-        var objects = new DynamicObjectCollection();
+        var objects = new EntityCollection();
         var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, objects);
 
-        var ellipse = new DynamicEllipse();
+        var ellipse = new EllipseGraphics();
         ellipse.semiMajorAxis = new ConstantProperty(2);
         ellipse.semiMinorAxis = new ConstantProperty(1);
         ellipse.material = new GridMaterialProperty();
         ellipse.extrudedHeight = new ConstantProperty(1000);
 
-        var dynamicObject = new DynamicObject();
-        dynamicObject.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
-        dynamicObject.ellipse = ellipse;
-        objects.add(dynamicObject);
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        entity.ellipse = ellipse;
+        objects.add(entity);
 
         waitsFor(function() {
             scene.initializeFrame();
@@ -207,14 +207,14 @@ defineSuite([
 
         runs(function() {
             var primitive = scene.primitives.get(0);
-            var attributes = primitive.getGeometryInstanceAttributes(dynamicObject);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
             expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
             expect(attributes.color).toBeUndefined();
             expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.materialAppearanceType);
             expect(primitive.appearance.closed).toBe(true);
 
-            objects.remove(dynamicObject);
+            objects.remove(entity);
             scene.initializeFrame();
             expect(visualizer.update(time)).toBe(true);
             scene.render(time);
@@ -226,20 +226,20 @@ defineSuite([
     });
 
     it('Creates and removes static outline geometry', function() {
-        var objects = new DynamicObjectCollection();
+        var objects = new EntityCollection();
         var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, objects);
 
-        var ellipse = new DynamicEllipse();
+        var ellipse = new EllipseGraphics();
         ellipse.semiMajorAxis = new ConstantProperty(2);
         ellipse.semiMinorAxis = new ConstantProperty(1);
         ellipse.outline = new ConstantProperty(true);
         ellipse.outlineColor = new ConstantProperty(Color.BLUE);
         ellipse.fill = new ConstantProperty(false);
 
-        var dynamicObject = new DynamicObject();
-        dynamicObject.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
-        dynamicObject.ellipse = ellipse;
-        objects.add(dynamicObject);
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        entity.ellipse = ellipse;
+        objects.add(entity);
 
         waitsFor(function() {
             scene.initializeFrame();
@@ -250,13 +250,13 @@ defineSuite([
 
         runs(function() {
             var primitive = scene.primitives.get(0);
-            var attributes = primitive.getGeometryInstanceAttributes(dynamicObject);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
             expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
             expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(Color.BLUE));
             expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.perInstanceColorAppearanceType);
 
-            objects.remove(dynamicObject);
+            objects.remove(entity);
             scene.initializeFrame();
             expect(visualizer.update(time)).toBe(true);
             scene.render(time);
@@ -268,18 +268,18 @@ defineSuite([
     });
 
     it('Correctly handles geometry changing batches', function() {
-        var objects = new DynamicObjectCollection();
+        var objects = new EntityCollection();
         var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, objects);
 
-        var ellipse = new DynamicEllipse();
+        var ellipse = new EllipseGraphics();
         ellipse.semiMajorAxis = new ConstantProperty(2);
         ellipse.semiMinorAxis = new ConstantProperty(1);
         ellipse.material = new ColorMaterialProperty();
 
-        var dynamicObject = new DynamicObject();
-        dynamicObject.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
-        dynamicObject.ellipse = ellipse;
-        objects.add(dynamicObject);
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        entity.ellipse = ellipse;
+        objects.add(entity);
 
         waitsFor(function() {
             scene.initializeFrame();
@@ -293,7 +293,7 @@ defineSuite([
 
         runs(function() {
             primitive = scene.primitives.get(0);
-            attributes = primitive.getGeometryInstanceAttributes(dynamicObject);
+            attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
             expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
             expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(Color.WHITE));
@@ -311,13 +311,13 @@ defineSuite([
 
         runs(function() {
             primitive = scene.primitives.get(0);
-            attributes = primitive.getGeometryInstanceAttributes(dynamicObject);
+            attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes).toBeDefined();
             expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
             expect(attributes.color).toBeUndefined();
             expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.materialAppearanceType);
 
-            objects.remove(dynamicObject);
+            objects.remove(entity);
             scene.initializeFrame();
             expect(visualizer.update(time)).toBe(true);
             scene.render(time);
@@ -330,24 +330,24 @@ defineSuite([
     });
 
     it('Creates and removes dynamic geometry', function() {
-        var objects = new DynamicObjectCollection();
+        var objects = new EntityCollection();
         var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, objects);
 
-        var ellipse = new DynamicEllipse();
+        var ellipse = new EllipseGraphics();
         ellipse.semiMajorAxis = new SampledProperty(Number);
         ellipse.semiMajorAxis.addSample(time, 2);
         ellipse.semiMinorAxis = new ConstantProperty(1);
         ellipse.material = new ColorMaterialProperty();
 
-        var dynamicObject = new DynamicObject();
-        dynamicObject.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
-        dynamicObject.ellipse = ellipse;
-        objects.add(dynamicObject);
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        entity.ellipse = ellipse;
+        objects.add(entity);
 
         scene.initializeFrame();
         expect(visualizer.update(time)).toBe(true);
         scene.render(time);
-        objects.remove(dynamicObject);
+        objects.remove(entity);
         scene.initializeFrame();
         expect(visualizer.update(time)).toBe(true);
         scene.render(time);
@@ -356,21 +356,21 @@ defineSuite([
     });
 
     it('Constructor throws without type', function() {
-        var objects = new DynamicObjectCollection();
+        var objects = new EntityCollection();
         expect(function() {
             return new GeometryVisualizer(undefined, scene, objects);
         }).toThrowDeveloperError();
     });
 
     it('Constructor throws without scene', function() {
-        var objects = new DynamicObjectCollection();
+        var objects = new EntityCollection();
         expect(function() {
             return new GeometryVisualizer(EllipseGeometryUpdater, undefined, objects);
         }).toThrowDeveloperError();
     });
 
     it('Update throws without time parameter', function() {
-        var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, new DynamicObjectCollection());
+        var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, new EntityCollection());
         expect(function() {
             visualizer.update(undefined);
         }).toThrowDeveloperError();

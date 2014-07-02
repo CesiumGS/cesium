@@ -5,7 +5,7 @@ define([
         '../Core/defineProperties',
         '../Core/Event',
         './ConstantProperty',
-        './createDynamicPropertyDescriptor',
+        './createPropertyDescriptor',
         './Property'
     ], function(
         Cartesian2,
@@ -13,7 +13,7 @@ define([
         defineProperties,
         Event,
         ConstantProperty,
-        createDynamicPropertyDescriptor,
+        createPropertyDescriptor,
         Property) {
     "use strict";
 
@@ -64,14 +64,14 @@ define([
          * @memberof ImageMaterialProperty.prototype
          * @type {Property}
          */
-        image : createDynamicPropertyDescriptor('image'),
+        image : createPropertyDescriptor('image'),
         /**
          * Gets or sets the {@link Cartesian2} property which determines the number of times the image repeats in each direction.
          * @memberof ImageMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(new Cartesian2(1, 1))
          */
-        repeat : createDynamicPropertyDescriptor('repeat')
+        repeat : createPropertyDescriptor('repeat')
     });
 
     /**

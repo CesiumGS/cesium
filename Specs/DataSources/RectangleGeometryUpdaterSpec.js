@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/RectangleGeometryUpdater',
+        'DataSources/RectangleGeometryUpdater',
         'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
@@ -9,13 +9,13 @@ defineSuite([
         'Core/ShowGeometryInstanceAttribute',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
-        'DynamicScene/ColorMaterialProperty',
-        'DynamicScene/ConstantProperty',
-        'DynamicScene/DynamicObject',
-        'DynamicScene/DynamicRectangle',
-        'DynamicScene/GridMaterialProperty',
-        'DynamicScene/SampledProperty',
-        'DynamicScene/TimeIntervalCollectionProperty',
+        'DataSources/ColorMaterialProperty',
+        'DataSources/ConstantProperty',
+        'DataSources/Entity',
+        'DataSources/GridMaterialProperty',
+        'DataSources/RectangleGraphics',
+        'DataSources/SampledProperty',
+        'DataSources/TimeIntervalCollectionProperty',
         'Scene/PrimitiveCollection'
     ], function(
         RectangleGeometryUpdater,
@@ -29,9 +29,9 @@ defineSuite([
         TimeIntervalCollection,
         ColorMaterialProperty,
         ConstantProperty,
-        DynamicObject,
-        DynamicRectangle,
+        Entity,
         GridMaterialProperty,
+        RectangleGraphics,
         SampledProperty,
         TimeIntervalCollectionProperty,
         PrimitiveCollection) {
@@ -43,19 +43,19 @@ defineSuite([
     var time3 = new JulianDate(20, 0);
 
     function createBasicRectangle() {
-        var rectangle = new DynamicRectangle();
-        var dynamicObject = new DynamicObject();
-        dynamicObject.rectangle = rectangle;
-        dynamicObject.rectangle.coordinates = new ConstantProperty(new Rectangle(0, 0, 1, 1));
-        return dynamicObject;
+        var rectangle = new RectangleGraphics();
+        var entity = new Entity();
+        entity.rectangle = rectangle;
+        entity.rectangle.coordinates = new ConstantProperty(new Rectangle(0, 0, 1, 1));
+        return entity;
     }
 
     it('Constructor sets expected defaults', function() {
-        var dynamicObject = new DynamicObject();
-        var updater = new RectangleGeometryUpdater(dynamicObject);
+        var entity = new Entity();
+        var updater = new RectangleGeometryUpdater(entity);
 
         expect(updater.isDestroyed()).toBe(false);
-        expect(updater.dynamicObject).toBe(dynamicObject);
+        expect(updater.entity).toBe(entity);
         expect(updater.isClosed).toBe(false);
         expect(updater.fillEnabled).toBe(false);
         expect(updater.fillMaterialProperty).toBe(undefined);
@@ -71,9 +71,9 @@ defineSuite([
     });
 
     it('No geometry available when rectangle is undefined ', function() {
-        var dynamicObject = createBasicRectangle();
-        var updater = new RectangleGeometryUpdater(dynamicObject);
-        dynamicObject.rectangle = undefined;
+        var entity = createBasicRectangle();
+        var updater = new RectangleGeometryUpdater(entity);
+        entity.rectangle = undefined;
 
         expect(updater.fillEnabled).toBe(false);
         expect(updater.outlineEnabled).toBe(false);
@@ -81,10 +81,10 @@ defineSuite([
     });
 
     it('No geometry available when not filled or outline.', function() {
-        var dynamicObject = createBasicRectangle();
-        var updater = new RectangleGeometryUpdater(dynamicObject);
-        dynamicObject.rectangle.fill = new ConstantProperty(false);
-        dynamicObject.rectangle.outline = new ConstantProperty(false);
+        var entity = createBasicRectangle();
+        var updater = new RectangleGeometryUpdater(entity);
+        entity.rectangle.fill = new ConstantProperty(false);
+        entity.rectangle.outline = new ConstantProperty(false);
 
         expect(updater.fillEnabled).toBe(false);
         expect(updater.outlineEnabled).toBe(false);
@@ -92,8 +92,8 @@ defineSuite([
     });
 
     it('Values correct when using default graphics', function() {
-        var dynamicObject = createBasicRectangle();
-        var updater = new RectangleGeometryUpdater(dynamicObject);
+        var entity = createBasicRectangle();
+        var updater = new RectangleGeometryUpdater(entity);
 
         expect(updater.isClosed).toBe(false);
         expect(updater.fillEnabled).toBe(true);
@@ -106,68 +106,68 @@ defineSuite([
     });
 
     it('Rectangle material is correctly exposed.', function() {
-        var dynamicObject = createBasicRectangle();
-        var updater = new RectangleGeometryUpdater(dynamicObject);
-        dynamicObject.rectangle.material = new GridMaterialProperty(Color.BLUE);
-        expect(updater.fillMaterialProperty).toBe(dynamicObject.rectangle.material);
+        var entity = createBasicRectangle();
+        var updater = new RectangleGeometryUpdater(entity);
+        entity.rectangle.material = new GridMaterialProperty(Color.BLUE);
+        expect(updater.fillMaterialProperty).toBe(entity.rectangle.material);
     });
 
     it('Properly detects closed geometry.', function() {
-        var dynamicObject = createBasicRectangle();
-        var updater = new RectangleGeometryUpdater(dynamicObject);
-        dynamicObject.rectangle.extrudedHeight = new ConstantProperty(1000);
+        var entity = createBasicRectangle();
+        var updater = new RectangleGeometryUpdater(entity);
+        entity.rectangle.extrudedHeight = new ConstantProperty(1000);
         expect(updater.isClosed).toBe(false);
-        dynamicObject.rectangle.closeBottom = new ConstantProperty(true);
+        entity.rectangle.closeBottom = new ConstantProperty(true);
         expect(updater.isClosed).toBe(false);
-        dynamicObject.rectangle.closeTop = new ConstantProperty(true);
+        entity.rectangle.closeTop = new ConstantProperty(true);
         expect(updater.isClosed).toBe(true);
     });
 
     it('A time-varying coordinates causes geometry to be dynamic', function() {
-        var dynamicObject = createBasicRectangle();
-        var updater = new RectangleGeometryUpdater(dynamicObject);
-        dynamicObject.rectangle.coordinates = new SampledProperty(Rectangle);
-        dynamicObject.rectangle.coordinates.addSample(JulianDate.now(), new Rectangle());
+        var entity = createBasicRectangle();
+        var updater = new RectangleGeometryUpdater(entity);
+        entity.rectangle.coordinates = new SampledProperty(Rectangle);
+        entity.rectangle.coordinates.addSample(JulianDate.now(), new Rectangle());
         expect(updater.isDynamic).toBe(true);
     });
 
     it('A time-varying height causes geometry to be dynamic', function() {
-        var dynamicObject = createBasicRectangle();
-        var updater = new RectangleGeometryUpdater(dynamicObject);
-        dynamicObject.rectangle.height = new SampledProperty(Number);
-        dynamicObject.rectangle.height.addSample(time, 1);
+        var entity = createBasicRectangle();
+        var updater = new RectangleGeometryUpdater(entity);
+        entity.rectangle.height = new SampledProperty(Number);
+        entity.rectangle.height.addSample(time, 1);
         expect(updater.isDynamic).toBe(true);
     });
 
     it('A time-varying extrudedHeight causes geometry to be dynamic', function() {
-        var dynamicObject = createBasicRectangle();
-        var updater = new RectangleGeometryUpdater(dynamicObject);
-        dynamicObject.rectangle.extrudedHeight = new SampledProperty(Number);
-        dynamicObject.rectangle.extrudedHeight.addSample(time, 1);
+        var entity = createBasicRectangle();
+        var updater = new RectangleGeometryUpdater(entity);
+        entity.rectangle.extrudedHeight = new SampledProperty(Number);
+        entity.rectangle.extrudedHeight.addSample(time, 1);
         expect(updater.isDynamic).toBe(true);
     });
 
     it('A time-varying granularity causes geometry to be dynamic', function() {
-        var dynamicObject = createBasicRectangle();
-        var updater = new RectangleGeometryUpdater(dynamicObject);
-        dynamicObject.rectangle.granularity = new SampledProperty(Number);
-        dynamicObject.rectangle.granularity.addSample(time, 1);
+        var entity = createBasicRectangle();
+        var updater = new RectangleGeometryUpdater(entity);
+        entity.rectangle.granularity = new SampledProperty(Number);
+        entity.rectangle.granularity.addSample(time, 1);
         expect(updater.isDynamic).toBe(true);
     });
 
     it('A time-varying stRotation causes geometry to be dynamic', function() {
-        var dynamicObject = createBasicRectangle();
-        var updater = new RectangleGeometryUpdater(dynamicObject);
-        dynamicObject.rectangle.stRotation = new SampledProperty(Number);
-        dynamicObject.rectangle.stRotation.addSample(time, 1);
+        var entity = createBasicRectangle();
+        var updater = new RectangleGeometryUpdater(entity);
+        entity.rectangle.stRotation = new SampledProperty(Number);
+        entity.rectangle.stRotation.addSample(time, 1);
         expect(updater.isDynamic).toBe(true);
     });
 
     it('A time-varying closeTop causes geometry to be dynamic', function() {
-        var dynamicObject = createBasicRectangle();
-        var updater = new RectangleGeometryUpdater(dynamicObject);
-        dynamicObject.rectangle.closeTop = new TimeIntervalCollectionProperty();
-        dynamicObject.rectangle.closeTop.intervals.addInterval(new TimeInterval({
+        var entity = createBasicRectangle();
+        var updater = new RectangleGeometryUpdater(entity);
+        entity.rectangle.closeTop = new TimeIntervalCollectionProperty();
+        entity.rectangle.closeTop.intervals.addInterval(new TimeInterval({
             start : time,
             stop : time2,
             data : false
@@ -176,10 +176,10 @@ defineSuite([
     });
 
     it('A time-varying closeBottom causes geometry to be dynamic', function() {
-        var dynamicObject = createBasicRectangle();
-        var updater = new RectangleGeometryUpdater(dynamicObject);
-        dynamicObject.rectangle.closeBottom = new TimeIntervalCollectionProperty();
-        dynamicObject.rectangle.closeBottom.intervals.addInterval(new TimeInterval({
+        var entity = createBasicRectangle();
+        var updater = new RectangleGeometryUpdater(entity);
+        entity.rectangle.closeBottom = new TimeIntervalCollectionProperty();
+        entity.rectangle.closeBottom.intervals.addInterval(new TimeInterval({
             start : time,
             stop : time2,
             data : false
@@ -188,9 +188,9 @@ defineSuite([
     });
 
     function validateGeometryInstance(options) {
-        var dynamicObject = createBasicRectangle();
+        var entity = createBasicRectangle();
 
-        var rectangle = dynamicObject.rectangle;
+        var rectangle = entity.rectangle;
         rectangle.show = new ConstantProperty(options.show);
         rectangle.fill = new ConstantProperty(options.fill);
         rectangle.material = options.material;
@@ -204,7 +204,7 @@ defineSuite([
         rectangle.closeTop = new ConstantProperty(options.closeTop);
         rectangle.closeBottom = new ConstantProperty(options.closeBottom);
 
-        var updater = new RectangleGeometryUpdater(dynamicObject);
+        var updater = new RectangleGeometryUpdater(entity);
 
         var instance;
         var geometry;
@@ -314,13 +314,13 @@ defineSuite([
         outlineColor.addSample(time2, Color.RED);
         outlineColor.addSample(time3, Color.YELLOW);
 
-        var dynamicObject = createBasicRectangle();
-        dynamicObject.rectangle.fill = fill;
-        dynamicObject.rectangle.material = colorMaterial;
-        dynamicObject.rectangle.outline = outline;
-        dynamicObject.rectangle.outlineColor = outlineColor;
+        var entity = createBasicRectangle();
+        entity.rectangle.fill = fill;
+        entity.rectangle.material = colorMaterial;
+        entity.rectangle.outline = outline;
+        entity.rectangle.outlineColor = outlineColor;
 
-        var updater = new RectangleGeometryUpdater(dynamicObject);
+        var updater = new RectangleGeometryUpdater(entity);
 
         var instance = updater.createFillGeometryInstance(time2);
         var attributes = instance.attributes;
@@ -356,22 +356,22 @@ defineSuite([
             return property;
         }
 
-        var dynamicObject = createBasicRectangle();
+        var entity = createBasicRectangle();
 
-        var rectangle = dynamicObject.rectangle;
+        var rectangle = entity.rectangle;
         rectangle.height = makeProperty(2, 12);
         rectangle.extrudedHeight = makeProperty(1, 11);
         rectangle.outline = makeProperty(true, false);
         rectangle.fill = makeProperty(false, true);
 
-        dynamicObject.availability = new TimeIntervalCollection();
-        dynamicObject.availability.addInterval(new TimeInterval({
+        entity.availability = new TimeIntervalCollection();
+        entity.availability.addInterval(new TimeInterval({
             start : time1,
             stop : time3,
             isStopIncluded : false
         }));
 
-        var updater = new RectangleGeometryUpdater(dynamicObject);
+        var updater = new RectangleGeometryUpdater(entity);
         var primitives = new PrimitiveCollection();
         var dynamicUpdater = updater.createDynamicUpdater(primitives);
         expect(dynamicUpdater.isDestroyed()).toBe(false);
@@ -384,74 +384,74 @@ defineSuite([
     });
 
     it('geometryChanged event is raised when expected', function() {
-        var dynamicObject = createBasicRectangle();
-        var updater = new RectangleGeometryUpdater(dynamicObject);
+        var entity = createBasicRectangle();
+        var updater = new RectangleGeometryUpdater(entity);
         var listener = jasmine.createSpy('listener');
         updater.geometryChanged.addEventListener(listener);
 
-        dynamicObject.rectangle.height = new ConstantProperty(82);
+        entity.rectangle.height = new ConstantProperty(82);
         expect(listener.callCount).toEqual(1);
 
-        dynamicObject.availability = new TimeIntervalCollection();
+        entity.availability = new TimeIntervalCollection();
         expect(listener.callCount).toEqual(2);
 
-        dynamicObject.rectangle.coordinates = undefined;
+        entity.rectangle.coordinates = undefined;
         expect(listener.callCount).toEqual(3);
 
         //Since there's no valid geometry, changing another property should not raise the event.
-        dynamicObject.rectangle.height = undefined;
+        entity.rectangle.height = undefined;
 
         //Modifying an unrelated property should not have any effect.
-        dynamicObject.viewFrom = new ConstantProperty(Cartesian3.UNIT_X);
+        entity.viewFrom = new ConstantProperty(Cartesian3.UNIT_X);
         expect(listener.callCount).toEqual(3);
     });
 
     it('createFillGeometryInstance throws if object is not filled', function() {
-        var dynamicObject = new DynamicObject();
-        var updater = new RectangleGeometryUpdater(dynamicObject);
+        var entity = new Entity();
+        var updater = new RectangleGeometryUpdater(entity);
         expect(function() {
             return updater.createFillGeometryInstance(time);
         }).toThrowDeveloperError();
     });
 
     it('createFillGeometryInstance throws if no time provided', function() {
-        var dynamicObject = createBasicRectangle();
-        var updater = new RectangleGeometryUpdater(dynamicObject);
+        var entity = createBasicRectangle();
+        var updater = new RectangleGeometryUpdater(entity);
         expect(function() {
             return updater.createFillGeometryInstance(undefined);
         }).toThrowDeveloperError();
     });
 
     it('createOutlineGeometryInstance throws if object is not outlined', function() {
-        var dynamicObject = new DynamicObject();
-        var updater = new RectangleGeometryUpdater(dynamicObject);
+        var entity = new Entity();
+        var updater = new RectangleGeometryUpdater(entity);
         expect(function() {
             return updater.createOutlineGeometryInstance(time);
         }).toThrowDeveloperError();
     });
 
     it('createOutlineGeometryInstance throws if no time provided', function() {
-        var dynamicObject = createBasicRectangle();
-        dynamicObject.rectangle.outline = new ConstantProperty(true);
-        var updater = new RectangleGeometryUpdater(dynamicObject);
+        var entity = createBasicRectangle();
+        entity.rectangle.outline = new ConstantProperty(true);
+        var updater = new RectangleGeometryUpdater(entity);
         expect(function() {
             return updater.createOutlineGeometryInstance(undefined);
         }).toThrowDeveloperError();
     });
 
     it('createDynamicUpdater throws if not dynamic', function() {
-        var dynamicObject = createBasicRectangle();
-        var updater = new RectangleGeometryUpdater(dynamicObject);
+        var entity = createBasicRectangle();
+        var updater = new RectangleGeometryUpdater(entity);
         expect(function() {
             return updater.createDynamicUpdater(new PrimitiveCollection());
         }).toThrowDeveloperError();
     });
 
     it('createDynamicUpdater throws if primitives undefined', function() {
-        var dynamicObject = createBasicRectangle();
-        dynamicObject.rectangle.height = new SampledProperty(Number);
-        dynamicObject.rectangle.height.addSample(time, 4);
-        var updater = new RectangleGeometryUpdater(dynamicObject);
+        var entity = createBasicRectangle();
+        entity.rectangle.height = new SampledProperty(Number);
+        entity.rectangle.height.addSample(time, 4);
+        var updater = new RectangleGeometryUpdater(entity);
         expect(updater.isDynamic).toBe(true);
         expect(function() {
             return updater.createDynamicUpdater(undefined);
@@ -459,17 +459,17 @@ defineSuite([
     });
 
     it('dynamicUpdater.update throws if no time specified', function() {
-        var dynamicObject = createBasicRectangle();
-        dynamicObject.rectangle.height = new SampledProperty(Number);
-        dynamicObject.rectangle.height.addSample(time, 4);
-        var updater = new RectangleGeometryUpdater(dynamicObject);
+        var entity = createBasicRectangle();
+        entity.rectangle.height = new SampledProperty(Number);
+        entity.rectangle.height.addSample(time, 4);
+        var updater = new RectangleGeometryUpdater(entity);
         var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
         expect(function() {
             dynamicUpdater.update(undefined);
         }).toThrowDeveloperError();
     });
 
-    it('Constructor throws if no DynamicObject supplied', function() {
+    it('Constructor throws if no Entity supplied', function() {
         expect(function() {
             return new RectangleGeometryUpdater(undefined);
         }).toThrowDeveloperError();

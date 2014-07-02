@@ -14,14 +14,14 @@ define([
      * @alias Visualizer
      * @constructor
      *
-     * @see DynamicBillboardVisualizer
-     * @see DynamicConeVisualizerUsingCustomSensor
-     * @see DynamicLabelVisualizer
-     * @see DynamicModelVisualizer
-     * @see DynamicPathVisualizer
-     * @see DynamicPointVisualizer
-     * @see DynamicPyramidVisualizer
-     * @see DynamicVectorVisualizer
+     * @see BillboardVisualizer
+     * @see ConeVisualizer
+     * @see LabelVisualizer
+     * @see ModelVisualizer
+     * @see PathVisualizer
+     * @see PointVisualizer
+     * @see PyramidVisualizer
+     * @see VectorVisualizer
      * @see GeometryVisualizer
      */
     var Visualizer = function() {

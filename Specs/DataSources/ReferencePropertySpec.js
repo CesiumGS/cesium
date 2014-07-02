@@ -1,17 +1,17 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/ReferenceProperty',
+        'DataSources/ReferenceProperty',
         'Core/Cartesian3',
         'Core/Color',
         'Core/JulianDate',
         'Core/ReferenceFrame',
         'Core/TimeInterval',
-        'DynamicScene/ColorMaterialProperty',
-        'DynamicScene/ConstantPositionProperty',
-        'DynamicScene/ConstantProperty',
-        'DynamicScene/DynamicBillboard',
-        'DynamicScene/DynamicObject',
-        'DynamicScene/DynamicObjectCollection'
+        'DataSources/BillboardGraphics',
+        'DataSources/ColorMaterialProperty',
+        'DataSources/ConstantPositionProperty',
+        'DataSources/ConstantProperty',
+        'DataSources/Entity',
+        'DataSources/EntityCollection'
     ], function(
         ReferenceProperty,
         Cartesian3,
@@ -19,19 +19,19 @@ defineSuite([
         JulianDate,
         ReferenceFrame,
         TimeInterval,
+        BillboardGraphics,
         ColorMaterialProperty,
         ConstantPositionProperty,
         ConstantProperty,
-        DynamicBillboard,
-        DynamicObject,
-        DynamicObjectCollection) {
+        Entity,
+        EntityCollection) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var time = JulianDate.now();
 
     it('constructor sets expected values', function() {
-        var collection = new DynamicObjectCollection();
+        var collection = new EntityCollection();
         var objectId = 'testId';
         var propertyNames = ['foo', 'bar', 'baz'];
         var property = new ReferenceProperty(collection, objectId, propertyNames);
@@ -42,7 +42,7 @@ defineSuite([
     });
 
     it('fromString sets expected values', function() {
-        var collection = new DynamicObjectCollection();
+        var collection = new EntityCollection();
         var objectId = 'testId';
         var propertyNames = ['foo', 'bar', 'baz'];
 
@@ -54,7 +54,7 @@ defineSuite([
     });
 
     it('fromString works with escaped values', function() {
-        var collection = new DynamicObjectCollection();
+        var collection = new EntityCollection();
         var objectId = '#identif\\#ier.';
         var propertyNames = ["propertyName", ".abc\\", "def"];
         var property = ReferenceProperty.fromString(collection, '\\#identif\\\\\\#ier\\.#propertyName.\\.abc\\\\.def');
@@ -65,11 +65,11 @@ defineSuite([
     });
 
     it('properly tracks resolved property', function() {
-        var testObject = new DynamicObject('testId');
-        testObject.billboard = new DynamicBillboard();
+        var testObject = new Entity('testId');
+        testObject.billboard = new BillboardGraphics();
         testObject.billboard.scale = new ConstantProperty(5);
 
-        var collection = new DynamicObjectCollection();
+        var collection = new EntityCollection();
         collection.add(testObject);
 
         //Basic property resolution
@@ -97,7 +97,7 @@ defineSuite([
         listener.reset();
 
         //Assignment of non-leaf property to existing target is reflected in reference.
-        testObject.billboard = new DynamicBillboard();
+        testObject.billboard = new BillboardGraphics();
         testObject.billboard.scale = new ConstantProperty(8);
         expect(property.isConstant).toEqual(true);
         expect(property.getValue(time)).toEqual(8);
@@ -107,8 +107,8 @@ defineSuite([
         //Removing an adding a new object is properly referenced.
         collection.remove(testObject);
 
-        var testObject2 = new DynamicObject('testId');
-        testObject2.billboard = new DynamicBillboard();
+        var testObject2 = new Entity('testId');
+        testObject2.billboard = new BillboardGraphics();
         testObject2.billboard.scale = new ConstantProperty(9);
         collection.add(testObject2);
         expect(property.isConstant).toEqual(true);
@@ -118,10 +118,10 @@ defineSuite([
     });
 
     it('works with position properties', function() {
-        var testObject = new DynamicObject('testId');
+        var testObject = new Entity('testId');
         testObject.position = new ConstantPositionProperty(new Cartesian3(1, 2, 3), ReferenceFrame.FIXED);
 
-        var collection = new DynamicObjectCollection();
+        var collection = new EntityCollection();
         collection.add(testObject);
 
         //Basic property resolution
@@ -133,11 +133,11 @@ defineSuite([
     });
 
     it('works with material properties', function() {
-        var testObject = new DynamicObject('testId');
+        var testObject = new Entity('testId');
         testObject.addProperty('testMaterial');
         testObject.testMaterial = ColorMaterialProperty.fromColor(Color.WHITE);
 
-        var collection = new DynamicObjectCollection();
+        var collection = new EntityCollection();
         collection.add(testObject);
 
         //Basic property resolution
@@ -148,26 +148,26 @@ defineSuite([
     });
 
     it('equals works', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
+        var entityCollection = new EntityCollection();
 
-        var left = ReferenceProperty.fromString(dynamicObjectCollection, 'objectId#foo.bar');
-        var right = ReferenceProperty.fromString(dynamicObjectCollection, 'objectId#foo.bar');
+        var left = ReferenceProperty.fromString(entityCollection, 'objectId#foo.bar');
+        var right = ReferenceProperty.fromString(entityCollection, 'objectId#foo.bar');
         expect(left.equals(right)).toEqual(true);
 
         //collection differs
-        right = ReferenceProperty.fromString(new DynamicObjectCollection(), 'objectId#foo.bar');
+        right = ReferenceProperty.fromString(new EntityCollection(), 'objectId#foo.bar');
         expect(left.equals(right)).toEqual(false);
 
         //target id differs
-        right = ReferenceProperty.fromString(dynamicObjectCollection, 'otherObjectId#foo.bar');
+        right = ReferenceProperty.fromString(entityCollection, 'otherObjectId#foo.bar');
         expect(left.equals(right)).toEqual(false);
 
         //number of sub-properties differ
-        right = ReferenceProperty.fromString(dynamicObjectCollection, 'objectId#foo');
+        right = ReferenceProperty.fromString(entityCollection, 'objectId#foo');
         expect(left.equals(right)).toEqual(false);
 
         //sub-properties of same length differ
-        right = ReferenceProperty.fromString(dynamicObjectCollection, 'objectId#foo.baz');
+        right = ReferenceProperty.fromString(entityCollection, 'objectId#foo.baz');
         expect(left.equals(right)).toEqual(false);
     });
 
@@ -179,25 +179,25 @@ defineSuite([
 
     it('constructor throws with undefined targetId', function() {
         expect(function() {
-            return new ReferenceProperty(new DynamicObjectCollection(), undefined, ['property']);
+            return new ReferenceProperty(new EntityCollection(), undefined, ['property']);
         }).toThrowDeveloperError();
     });
 
     it('constructor throws with undefined targetPropertyNames', function() {
         expect(function() {
-            return new ReferenceProperty(new DynamicObjectCollection(), 'objectId', undefined);
+            return new ReferenceProperty(new EntityCollection(), 'objectId', undefined);
         }).toThrowDeveloperError();
     });
 
     it('constructor throws with empty targetPropertyNames', function() {
         expect(function() {
-            return new ReferenceProperty(new DynamicObjectCollection(), 'objectId', []);
+            return new ReferenceProperty(new EntityCollection(), 'objectId', []);
         }).toThrowDeveloperError();
     });
 
     it('constructor throws with empty targetId', function() {
         expect(function() {
-            return new ReferenceProperty(new DynamicObjectCollection(), '', ['property']);
+            return new ReferenceProperty(new EntityCollection(), '', ['property']);
         }).toThrowDeveloperError();
     });
 
@@ -209,26 +209,26 @@ defineSuite([
 
     it('fromString throws with undefined referenceString', function() {
         expect(function() {
-            return ReferenceProperty.fromString(new DynamicObjectCollection(), undefined);
+            return ReferenceProperty.fromString(new EntityCollection(), undefined);
         }).toThrowDeveloperError();
     });
 
     it('fromString throws with invalid referenceString', function() {
         expect(function() {
-            return ReferenceProperty.fromString(new DynamicObjectCollection(), 'foo');
+            return ReferenceProperty.fromString(new EntityCollection(), 'foo');
         }).toThrowDeveloperError();
 
         expect(function() {
-            return ReferenceProperty.fromString(new DynamicObjectCollection(), 'foo#');
+            return ReferenceProperty.fromString(new EntityCollection(), 'foo#');
         }).toThrowDeveloperError();
 
         expect(function() {
-            return ReferenceProperty.fromString(new DynamicObjectCollection(), '#bar');
+            return ReferenceProperty.fromString(new EntityCollection(), '#bar');
         }).toThrowDeveloperError();
     });
 
     it('throws RuntimeError if targetId can not be resolved', function() {
-        var collection = new DynamicObjectCollection();
+        var collection = new EntityCollection();
         var property = ReferenceProperty.fromString(collection, 'testId#foo.bar');
         expect(function() {
             property.getValue(time);
@@ -236,9 +236,9 @@ defineSuite([
     });
 
     it('throws RuntimeError if property can not be resolved', function() {
-        var collection = new DynamicObjectCollection();
+        var collection = new EntityCollection();
 
-        var testObject = new DynamicObject('testId');
+        var testObject = new Entity('testId');
         collection.add(testObject);
 
         var property = ReferenceProperty.fromString(collection, 'testId#billboard');
@@ -248,10 +248,10 @@ defineSuite([
     });
 
     it('throws RuntimeError if sub-property can not be resolved', function() {
-        var collection = new DynamicObjectCollection();
+        var collection = new EntityCollection();
 
-        var testObject = new DynamicObject('testId');
-        testObject.billboard = new DynamicBillboard();
+        var testObject = new Entity('testId');
+        testObject.billboard = new BillboardGraphics();
         collection.add(testObject);
 
         var property = ReferenceProperty.fromString(collection, 'testId#billboard.foo');

@@ -27,11 +27,11 @@ define([
     };
 
     DynamicGeometryBatch.prototype.add = function(time, updater) {
-        this._dynamicUpdaters.set(updater.dynamicObject.id, updater.createDynamicUpdater(this._primitives));
+        this._dynamicUpdaters.set(updater.entity.id, updater.createDynamicUpdater(this._primitives));
     };
 
     DynamicGeometryBatch.prototype.remove = function(updater) {
-        var id = updater.dynamicObject.id;
+        var id = updater.entity.id;
         var dynamicUpdater = this._dynamicUpdaters.get(id);
         if (defined(dynamicUpdater)) {
             this._dynamicUpdaters.remove(id);
@@ -99,9 +99,9 @@ define([
      *
      * @param {GeometryUpdater} type The updater to be used for creating the geometry.
      * @param {Scene} scene The scene the primitives will be rendered in.
-     * @param {DynamicObjectCollection} dynamicObjectCollection The dynamicObjectCollection to visualize.
+     * @param {EntityCollection} entityCollection The entityCollection to visualize.
      */
-    var GeometryVisualizer = function(type, scene, dynamicObjectCollection) {
+    var GeometryVisualizer = function(type, scene, entityCollection) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
@@ -109,8 +109,8 @@ define([
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
-        if (!defined(dynamicObjectCollection)) {
-            throw new DeveloperError('dynamicObjectCollection is required.');
+        if (!defined(entityCollection)) {
+            throw new DeveloperError('entityCollection is required.');
         }
         //>>includeEnd('debug');
 
@@ -119,7 +119,7 @@ define([
         var primitives = scene.primitives;
         this._scene = scene;
         this._primitives = primitives;
-        this._dynamicObjectCollection = undefined;
+        this._entityCollection = undefined;
         this._addedObjects = new AssociativeArray();
         this._removedObjects = new AssociativeArray();
         this._changedObjects = new AssociativeArray();
@@ -134,14 +134,14 @@ define([
         this._subscriptions = new AssociativeArray();
         this._updaters = new AssociativeArray();
 
-        this._dynamicObjectCollection = dynamicObjectCollection;
-        dynamicObjectCollection.collectionChanged.addEventListener(GeometryVisualizer.prototype._onCollectionChanged, this);
-        this._onCollectionChanged(dynamicObjectCollection, dynamicObjectCollection.getObjects(), emptyArray);
+        this._entityCollection = entityCollection;
+        entityCollection.collectionChanged.addEventListener(GeometryVisualizer.prototype._onCollectionChanged, this);
+        this._onCollectionChanged(entityCollection, entityCollection.getObjects(), emptyArray);
     };
 
     /**
      * Updates all of the primitives created by this visualizer to match their
-     * DynamicObject counterpart at the given time.
+     * Entity counterpart at the given time.
      *
      * @param {JulianDate} time The time to update to.
      * @returns {Boolean} True if the visualizer successfully updated to the provided time,
@@ -162,13 +162,13 @@ define([
         var changed = changedObjects.values;
 
         var i;
-        var dynamicObject;
+        var entity;
         var id;
         var updater;
 
         for (i = removed.length - 1; i > -1; i--) {
-            dynamicObject = removed[i];
-            id = dynamicObject.id;
+            entity = removed[i];
+            id = entity.id;
             updater = this._updaters.get(id);
             removeUpdater(this, updater);
             updater.destroy();
@@ -178,17 +178,17 @@ define([
         }
 
         for (i = added.length - 1; i > -1; i--) {
-            dynamicObject = added[i];
-            id = dynamicObject.id;
-            updater = new this._type(dynamicObject, this._scene);
+            entity = added[i];
+            id = entity.id;
+            updater = new this._type(entity, this._scene);
             this._updaters.set(id, updater);
             insertUpdaterIntoBatch(this, time, updater);
             this._subscriptions.set(id, updater.geometryChanged.addEventListener(GeometryVisualizer._onGeometryChanged, this));
         }
 
         for (i = changed.length - 1; i > -1; i--) {
-            dynamicObject = changed[i];
-            id = dynamicObject.id;
+            entity = changed[i];
+            id = entity.id;
             updater = this._updaters.get(id);
             removeUpdater(this, updater);
             insertUpdaterIntoBatch(this, time, updater);
@@ -246,41 +246,41 @@ define([
         var removedObjects = this._removedObjects;
         var changedObjects = this._changedObjects;
 
-        var dynamicObject = updater.dynamicObject;
-        var id = dynamicObject.id;
+        var entity = updater.entity;
+        var id = entity.id;
 
         if (!defined(removedObjects.get(id)) && !defined(changedObjects.get(id))) {
-            changedObjects.set(id, dynamicObject);
+            changedObjects.set(id, entity);
         }
     };
 
     /**
      * @private
      */
-    GeometryVisualizer.prototype._onCollectionChanged = function(dynamicObjectCollection, added, removed) {
+    GeometryVisualizer.prototype._onCollectionChanged = function(entityCollection, added, removed) {
         var addedObjects = this._addedObjects;
         var removedObjects = this._removedObjects;
         var changedObjects = this._changedObjects;
 
         var i;
         var id;
-        var dynamicObject;
+        var entity;
         for (i = removed.length - 1; i > -1; i--) {
-            dynamicObject = removed[i];
-            id = dynamicObject.id;
+            entity = removed[i];
+            id = entity.id;
             if (!addedObjects.remove(id)) {
-                removedObjects.set(id, dynamicObject);
+                removedObjects.set(id, entity);
                 changedObjects.remove(id);
             }
         }
 
         for (i = added.length - 1; i > -1; i--) {
-            dynamicObject = added[i];
-            id = dynamicObject.id;
+            entity = added[i];
+            id = entity.id;
             if (removedObjects.remove(id)) {
-                changedObjects.set(id, dynamicObject);
+                changedObjects.set(id, entity);
             } else {
-                addedObjects.set(id, dynamicObject);
+                addedObjects.set(id, entity);
             }
         }
     };

@@ -5,22 +5,22 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createDynamicPropertyDescriptor'
+        './createPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createDynamicPropertyDescriptor) {
+        createPropertyDescriptor) {
     "use strict";
 
     /**
      * An optionally time-dynamic label.
-     * @alias DynamicLabel
+     * @alias LabelGraphics
      * @constructor
      */
-    var DynamicLabel = function() {
+    var LabelGraphics = function() {
         this._text = undefined;
         this._textSubscription = undefined;
         this._font = undefined;
@@ -52,10 +52,10 @@ define([
         this._definitionChanged = new Event();
     };
 
-    defineProperties(DynamicLabel.prototype, {
+    defineProperties(LabelGraphics.prototype, {
         /**
          * Gets the event that is raised whenever a new property is assigned.
-         * @memberof DynamicLabel.prototype
+         * @memberof LabelGraphics.prototype
          *
          * @type {Event}
          * @readonly
@@ -68,115 +68,115 @@ define([
 
         /**
          * Gets or sets the string {@link Property} specifying the the label's text.
-         * @memberof DynamicLabel.prototype
+         * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        text : createDynamicPropertyDescriptor('text'),
+        text : createPropertyDescriptor('text'),
 
         /**
          * Gets or sets the string {@link Property} specifying the the label's font.
-         * @memberof DynamicLabel.prototype
+         * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        font : createDynamicPropertyDescriptor('font'),
+        font : createPropertyDescriptor('font'),
 
         /**
          * Gets or sets the {@link LabelStyle} {@link Property} specifying the the label's style.
-         * @memberof DynamicLabel.prototype
+         * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        style : createDynamicPropertyDescriptor('style'),
+        style : createPropertyDescriptor('style'),
 
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the the label's fill color.
-         * @memberof DynamicLabel.prototype
+         * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        fillColor : createDynamicPropertyDescriptor('fillColor'),
+        fillColor : createPropertyDescriptor('fillColor'),
 
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the the label's outline color.
-         * @memberof DynamicLabel.prototype
+         * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        outlineColor : createDynamicPropertyDescriptor('outlineColor'),
+        outlineColor : createPropertyDescriptor('outlineColor'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the label outline's width.
-         * @memberof DynamicLabel.prototype
+         * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        outlineWidth : createDynamicPropertyDescriptor('outlineWidth'),
+        outlineWidth : createPropertyDescriptor('outlineWidth'),
 
         /**
          * Gets or sets the {@link HorizontalOrigin} {@link Property} specifying the label's horizontal origin.
-         * @memberof DynamicLabel.prototype
+         * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        horizontalOrigin : createDynamicPropertyDescriptor('horizontalOrigin'),
+        horizontalOrigin : createPropertyDescriptor('horizontalOrigin'),
 
         /**
          * Gets or sets the {@link VerticalOrigin} {@link Property} specifying the label's vertical origin.
-         * @memberof DynamicLabel.prototype
+         * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        verticalOrigin : createDynamicPropertyDescriptor('verticalOrigin'),
+        verticalOrigin : createPropertyDescriptor('verticalOrigin'),
 
         /**
          * Gets or sets the {@link Cartesian3} {@link Property} specifying the label's eye offset.
-         * @memberof DynamicLabel.prototype
+         * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        eyeOffset : createDynamicPropertyDescriptor('eyeOffset'),
+        eyeOffset : createPropertyDescriptor('eyeOffset'),
 
         /**
          * Gets or sets the {@link Cartesian2} {@link Property} specifying the label's pixel offset.
-         * @memberof DynamicLabel.prototype
+         * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        pixelOffset : createDynamicPropertyDescriptor('pixelOffset'),
+        pixelOffset : createPropertyDescriptor('pixelOffset'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the label's scale.
-         * @memberof DynamicLabel.prototype
+         * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        scale : createDynamicPropertyDescriptor('scale'),
+        scale : createPropertyDescriptor('scale'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the label's visibility.
-         * @memberof DynamicLabel.prototype
+         * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        show : createDynamicPropertyDescriptor('show'),
+        show : createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link NearFarScalar} {@link Property} used to set translucency based on distance.
          * If undefined, a constant size is used.
-         * @memberof DynamicLabel.prototype
+         * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        translucencyByDistance : createDynamicPropertyDescriptor('translucencyByDistance'),
+        translucencyByDistance : createPropertyDescriptor('translucencyByDistance'),
 
         /**
          * Gets or sets the {@link NearFarScalar} {@link Property} used to set pixel offset scaling based on distance.
          * If undefined, no additional scale is applied to the pixel offset
-         * @memberof DynamicLabel.prototype
+         * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        pixelOffsetScaleByDistance : createDynamicPropertyDescriptor('pixelOffsetScaleByDistance')
+        pixelOffsetScaleByDistance : createPropertyDescriptor('pixelOffsetScaleByDistance')
 
     });
 
     /**
-     * Duplicates a DynamicLabel instance.
+     * Duplicates a LabelGraphics instance.
      *
-     * @param {DynamicLabel} [result] The object onto which to store the result.
-     * @returns {DynamicLabel} The modified result parameter or a new instance if one was not provided.
+     * @param {LabelGraphics} [result] The object onto which to store the result.
+     * @returns {LabelGraphics} The modified result parameter or a new instance if one was not provided.
      */
-    DynamicLabel.prototype.clone = function(result) {
+    LabelGraphics.prototype.clone = function(result) {
         if (!defined(result)) {
-            result = new DynamicLabel();
+            result = new LabelGraphics();
         }
         result.text = this.text;
         result.font = this.font;
@@ -199,9 +199,9 @@ define([
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
      *
-     * @param {DynamicLabel} source The object to be merged into this object.
+     * @param {LabelGraphics} source The object to be merged into this object.
      */
-    DynamicLabel.prototype.merge = function(source) {
+    LabelGraphics.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
@@ -224,5 +224,5 @@ define([
         this.pixelOffsetScaleByDistance = defaultValue(this._pixelOffsetScaleByDistance, source._pixelOffsetScaleByDistance);
     };
 
-    return DynamicLabel;
+    return LabelGraphics;
 });

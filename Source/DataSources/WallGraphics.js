@@ -5,23 +5,23 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createDynamicPropertyDescriptor'
+        './createPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createDynamicPropertyDescriptor) {
+        createPropertyDescriptor) {
     "use strict";
 
     /**
      * An optionally time-dynamic two dimensional wall.
      *
-     * @alias DynamicWall
+     * @alias WallGraphics
      * @constructor
      */
-    var DynamicWall = function() {
+    var WallGraphics = function() {
         this._show = undefined;
         this._showSubscription = undefined;
         this._material = undefined;
@@ -35,10 +35,10 @@ define([
         this._definitionChanged = new Event();
     };
 
-    defineProperties(DynamicWall.prototype, {
+    defineProperties(WallGraphics.prototype, {
         /**
          * Gets the event that is raised whenever a new property is assigned.
-         * @memberof DynamicWall.prototype
+         * @memberof WallGraphics.prototype
          *
          * @type {Event}
          * @readonly
@@ -51,76 +51,76 @@ define([
 
         /**
          * Gets or sets the boolean {@link Property} specifying the wall's visibility.
-         * @memberof DynamicWall.prototype
+         * @memberof WallGraphics.prototype
          * @type {Property}
          */
-        show : createDynamicPropertyDescriptor('show'),
+        show : createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the wall.
-         * @memberof DynamicWall.prototype
+         * @memberof WallGraphics.prototype
          * @type {MaterialProperty}
          */
-        material : createDynamicPropertyDescriptor('material'),
+        material : createPropertyDescriptor('material'),
 
         /**
          * Gets or sets the Array {@link Property} specifying the bottom heights of the wall.
          * This array must be the same length as vertexPositions, containing a height for
          * each position.  If undefined, the bottom of the wall will be on the surface of the
          * ellipsoid.
-         * @memberof DynamicWall.prototype
+         * @memberof WallGraphics.prototype
          * @type {Property}
          */
-        minimumHeights : createDynamicPropertyDescriptor('minimumHeights'),
+        minimumHeights : createPropertyDescriptor('minimumHeights'),
 
         /**
          * Gets or sets the Array {@link Property} specifying the top heights along the wall.
          * This array must be the same length as vertexPositions, containing a height for
          * each position.  If undefined, the heights from vertexPositions are used.
-         * @memberof DynamicWall.prototype
+         * @memberof WallGraphics.prototype
          * @type {Property}
          */
-        maximumHeights : createDynamicPropertyDescriptor('maximumHeights'),
+        maximumHeights : createPropertyDescriptor('maximumHeights'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the sampling distance, in radians,
          * between each latitude and longitude point.
-         * @memberof DynamicWall.prototype
+         * @memberof WallGraphics.prototype
          * @type {Property}
          */
-        granularity : createDynamicPropertyDescriptor('granularity'),
+        granularity : createPropertyDescriptor('granularity'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the wall should be filled.
-         * @memberof DynamicWall.prototype
+         * @memberof WallGraphics.prototype
          * @type {Property}
          */
-        fill : createDynamicPropertyDescriptor('fill'),
+        fill : createPropertyDescriptor('fill'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the wall should be outlined.
-         * @memberof DynamicWall.prototype
+         * @memberof WallGraphics.prototype
          * @type {Property}
          */
-        outline : createDynamicPropertyDescriptor('outline'),
+        outline : createPropertyDescriptor('outline'),
 
         /**
          * Gets or sets the Color {@link Property} specifying whether the color of the outline.
-         * @memberof DynamicWall.prototype
+         * @memberof WallGraphics.prototype
          * @type {Property}
          */
-        outlineColor : createDynamicPropertyDescriptor('outlineColor')
+        outlineColor : createPropertyDescriptor('outlineColor')
     });
 
     /**
-     * Duplicates a DynamicWall instance.
+     * Duplicates a WallGraphics instance.
      *
-     * @param {DynamicWall} [result] The object onto which to store the result.
-     * @returns {DynamicWall} The modified result parameter or a new instance if one was not provided.
+     * @param {WallGraphics} [result] The object onto which to store the result.
+     * @returns {WallGraphics} The modified result parameter or a new instance if one was not provided.
      */
-    DynamicWall.prototype.clone = function(result) {
+    WallGraphics.prototype.clone = function(result) {
         if (!defined(result)) {
-            result = new DynamicWall();
+            result = new WallGraphics();
         }
         result.show = this.show;
         result.material = this.material;
@@ -137,9 +137,9 @@ define([
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
      *
-     * @param {DynamicWall} source The object to be merged into this object.
+     * @param {WallGraphics} source The object to be merged into this object.
      */
-    DynamicWall.prototype.merge = function(source) {
+    WallGraphics.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
@@ -156,5 +156,5 @@ define([
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
     };
 
-    return DynamicWall;
+    return WallGraphics;
 });

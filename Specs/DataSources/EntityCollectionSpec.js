@@ -1,18 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/DynamicObjectCollection',
+        'DataSources/EntityCollection',
         'Core/Iso8601',
         'Core/JulianDate',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
-        'DynamicScene/DynamicObject'
+        'DataSources/Entity'
     ], function(
-        DynamicObjectCollection,
+        EntityCollection,
         Iso8601,
         JulianDate,
         TimeInterval,
         TimeIntervalCollection,
-        DynamicObject) {
+        Entity) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -29,310 +29,310 @@ defineSuite([
     };
 
     it('constructor has expected defaults', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        expect(dynamicObjectCollection.getObjects().length).toEqual(0);
+        var entityCollection = new EntityCollection();
+        expect(entityCollection.getObjects().length).toEqual(0);
     });
 
     it('add/remove works', function() {
-        var dynamicObject = new DynamicObject();
-        var dynamicObject2 = new DynamicObject();
-        var dynamicObjectCollection = new DynamicObjectCollection();
+        var entity = new Entity();
+        var entity2 = new Entity();
+        var entityCollection = new EntityCollection();
 
-        dynamicObjectCollection.add(dynamicObject);
-        expect(dynamicObjectCollection.getObjects().length).toEqual(1);
+        entityCollection.add(entity);
+        expect(entityCollection.getObjects().length).toEqual(1);
 
-        dynamicObjectCollection.add(dynamicObject2);
-        expect(dynamicObjectCollection.getObjects().length).toEqual(2);
+        entityCollection.add(entity2);
+        expect(entityCollection.getObjects().length).toEqual(2);
 
-        dynamicObjectCollection.remove(dynamicObject2);
-        expect(dynamicObjectCollection.getObjects().length).toEqual(1);
+        entityCollection.remove(entity2);
+        expect(entityCollection.getObjects().length).toEqual(1);
 
-        dynamicObjectCollection.remove(dynamicObject);
-        expect(dynamicObjectCollection.getObjects().length).toEqual(0);
+        entityCollection.remove(entity);
+        expect(entityCollection.getObjects().length).toEqual(0);
     });
 
     it('add/remove raises expected events', function() {
-        var dynamicObject = new DynamicObject();
-        var dynamicObject2 = new DynamicObject();
-        var dynamicObjectCollection = new DynamicObjectCollection();
+        var entity = new Entity();
+        var entity2 = new Entity();
+        var entityCollection = new EntityCollection();
 
         var listener = new CollectionListener();
-        dynamicObjectCollection.collectionChanged.addEventListener(listener.onCollectionChanged, listener);
+        entityCollection.collectionChanged.addEventListener(listener.onCollectionChanged, listener);
 
-        dynamicObjectCollection.add(dynamicObject);
+        entityCollection.add(entity);
         expect(listener.timesCalled).toEqual(1);
         expect(listener.added.length).toEqual(1);
-        expect(listener.added[0]).toBe(dynamicObject);
+        expect(listener.added[0]).toBe(entity);
         expect(listener.removed.length).toEqual(0);
 
-        dynamicObjectCollection.add(dynamicObject2);
+        entityCollection.add(entity2);
         expect(listener.timesCalled).toEqual(2);
         expect(listener.added.length).toEqual(1);
-        expect(listener.added[0]).toBe(dynamicObject2);
+        expect(listener.added[0]).toBe(entity2);
         expect(listener.removed.length).toEqual(0);
 
-        dynamicObjectCollection.remove(dynamicObject2);
+        entityCollection.remove(entity2);
         expect(listener.timesCalled).toEqual(3);
         expect(listener.added.length).toEqual(0);
         expect(listener.removed.length).toEqual(1);
-        expect(listener.removed[0]).toBe(dynamicObject2);
+        expect(listener.removed[0]).toBe(entity2);
 
-        dynamicObjectCollection.remove(dynamicObject);
+        entityCollection.remove(entity);
         expect(listener.timesCalled).toEqual(4);
         expect(listener.added.length).toEqual(0);
         expect(listener.removed.length).toEqual(1);
-        expect(listener.removed[0]).toBe(dynamicObject);
+        expect(listener.removed[0]).toBe(entity);
 
-        dynamicObjectCollection.collectionChanged.removeEventListener(listener.onCollectionChanged, listener);
+        entityCollection.collectionChanged.removeEventListener(listener.onCollectionChanged, listener);
     });
 
     it('suspended add/remove raises expected events', function() {
-        var dynamicObject = new DynamicObject();
-        var dynamicObject2 = new DynamicObject();
-        var dynamicObject3 = new DynamicObject();
+        var entity = new Entity();
+        var entity2 = new Entity();
+        var entity3 = new Entity();
 
-        var dynamicObjectCollection = new DynamicObjectCollection();
+        var entityCollection = new EntityCollection();
 
         var listener = new CollectionListener();
-        dynamicObjectCollection.collectionChanged.addEventListener(listener.onCollectionChanged, listener);
+        entityCollection.collectionChanged.addEventListener(listener.onCollectionChanged, listener);
 
-        dynamicObjectCollection.suspendEvents();
-        dynamicObjectCollection.suspendEvents();
-        dynamicObjectCollection.add(dynamicObject);
-        dynamicObjectCollection.add(dynamicObject2);
-        dynamicObjectCollection.add(dynamicObject3);
-        dynamicObjectCollection.remove(dynamicObject2);
-
-        expect(listener.timesCalled).toEqual(0);
-        dynamicObjectCollection.resumeEvents();
+        entityCollection.suspendEvents();
+        entityCollection.suspendEvents();
+        entityCollection.add(entity);
+        entityCollection.add(entity2);
+        entityCollection.add(entity3);
+        entityCollection.remove(entity2);
 
         expect(listener.timesCalled).toEqual(0);
-        dynamicObjectCollection.resumeEvents();
+        entityCollection.resumeEvents();
+
+        expect(listener.timesCalled).toEqual(0);
+        entityCollection.resumeEvents();
 
         expect(listener.timesCalled).toEqual(1);
         expect(listener.added.length).toEqual(2);
-        expect(listener.added[0]).toBe(dynamicObject);
-        expect(listener.added[1]).toBe(dynamicObject3);
+        expect(listener.added[0]).toBe(entity);
+        expect(listener.added[1]).toBe(entity3);
         expect(listener.removed.length).toEqual(0);
 
-        dynamicObjectCollection.suspendEvents();
-        dynamicObjectCollection.remove(dynamicObject);
-        dynamicObjectCollection.remove(dynamicObject3);
-        dynamicObjectCollection.add(dynamicObject);
-        dynamicObjectCollection.add(dynamicObject3);
-        dynamicObjectCollection.resumeEvents();
+        entityCollection.suspendEvents();
+        entityCollection.remove(entity);
+        entityCollection.remove(entity3);
+        entityCollection.add(entity);
+        entityCollection.add(entity3);
+        entityCollection.resumeEvents();
 
         expect(listener.timesCalled).toEqual(1);
 
-        dynamicObjectCollection.collectionChanged.removeEventListener(listener.onCollectionChanged, listener);
+        entityCollection.collectionChanged.removeEventListener(listener.onCollectionChanged, listener);
     });
 
     it('removeAll works', function() {
-        var dynamicObject = new DynamicObject();
-        var dynamicObject2 = new DynamicObject();
-        var dynamicObjectCollection = new DynamicObjectCollection();
+        var entity = new Entity();
+        var entity2 = new Entity();
+        var entityCollection = new EntityCollection();
 
-        dynamicObjectCollection.add(dynamicObject);
-        dynamicObjectCollection.add(dynamicObject2);
-        dynamicObjectCollection.removeAll();
-        expect(dynamicObjectCollection.getObjects().length).toEqual(0);
+        entityCollection.add(entity);
+        entityCollection.add(entity2);
+        entityCollection.removeAll();
+        expect(entityCollection.getObjects().length).toEqual(0);
     });
 
     it('removeAll raises expected events', function() {
-        var dynamicObject = new DynamicObject();
-        var dynamicObject2 = new DynamicObject();
-        var dynamicObjectCollection = new DynamicObjectCollection();
+        var entity = new Entity();
+        var entity2 = new Entity();
+        var entityCollection = new EntityCollection();
 
         var listener = new CollectionListener();
 
-        dynamicObjectCollection.add(dynamicObject);
-        dynamicObjectCollection.add(dynamicObject2);
+        entityCollection.add(entity);
+        entityCollection.add(entity2);
 
-        dynamicObjectCollection.collectionChanged.addEventListener(listener.onCollectionChanged, listener);
-        dynamicObjectCollection.removeAll();
+        entityCollection.collectionChanged.addEventListener(listener.onCollectionChanged, listener);
+        entityCollection.removeAll();
 
         expect(listener.timesCalled).toEqual(1);
         expect(listener.removed.length).toEqual(2);
-        expect(listener.removed[0]).toBe(dynamicObject);
-        expect(listener.removed[1]).toBe(dynamicObject2);
+        expect(listener.removed[0]).toBe(entity);
+        expect(listener.removed[1]).toBe(entity2);
         expect(listener.added.length).toEqual(0);
 
-        dynamicObjectCollection.removeAll();
+        entityCollection.removeAll();
         expect(listener.timesCalled).toEqual(1);
 
-        dynamicObjectCollection.collectionChanged.removeEventListener(listener.onCollectionChanged, listener);
+        entityCollection.collectionChanged.removeEventListener(listener.onCollectionChanged, listener);
     });
 
     it('suspended removeAll raises expected events', function() {
-        var dynamicObject = new DynamicObject();
-        var dynamicObject2 = new DynamicObject();
-        var dynamicObjectCollection = new DynamicObjectCollection();
+        var entity = new Entity();
+        var entity2 = new Entity();
+        var entityCollection = new EntityCollection();
 
         var listener = new CollectionListener();
 
-        dynamicObjectCollection.add(dynamicObject);
-        dynamicObjectCollection.add(dynamicObject2);
+        entityCollection.add(entity);
+        entityCollection.add(entity2);
 
-        dynamicObjectCollection.collectionChanged.addEventListener(listener.onCollectionChanged, listener);
+        entityCollection.collectionChanged.addEventListener(listener.onCollectionChanged, listener);
 
-        dynamicObjectCollection.suspendEvents();
-        dynamicObjectCollection.removeAll();
-        dynamicObjectCollection.resumeEvents();
+        entityCollection.suspendEvents();
+        entityCollection.removeAll();
+        entityCollection.resumeEvents();
         expect(listener.timesCalled).toEqual(1);
         expect(listener.removed.length).toEqual(2);
-        expect(listener.removed[0]).toBe(dynamicObject);
-        expect(listener.removed[1]).toBe(dynamicObject2);
+        expect(listener.removed[0]).toBe(entity);
+        expect(listener.removed[1]).toBe(entity2);
         expect(listener.added.length).toEqual(0);
 
-        dynamicObjectCollection.suspendEvents();
-        dynamicObjectCollection.add(dynamicObject);
-        dynamicObjectCollection.add(dynamicObject2);
-        dynamicObjectCollection.remove(dynamicObject2);
-        dynamicObjectCollection.removeAll();
-        dynamicObjectCollection.resumeEvents();
+        entityCollection.suspendEvents();
+        entityCollection.add(entity);
+        entityCollection.add(entity2);
+        entityCollection.remove(entity2);
+        entityCollection.removeAll();
+        entityCollection.resumeEvents();
         expect(listener.timesCalled).toEqual(1);
 
-        dynamicObjectCollection.collectionChanged.removeEventListener(listener.onCollectionChanged, listener);
+        entityCollection.collectionChanged.removeEventListener(listener.onCollectionChanged, listener);
     });
 
     it('getById works', function() {
-        var dynamicObject = new DynamicObject();
-        var dynamicObject2 = new DynamicObject();
-        var dynamicObjectCollection = new DynamicObjectCollection();
+        var entity = new Entity();
+        var entity2 = new Entity();
+        var entityCollection = new EntityCollection();
 
-        dynamicObjectCollection.add(dynamicObject);
-        dynamicObjectCollection.add(dynamicObject2);
+        entityCollection.add(entity);
+        entityCollection.add(entity2);
 
-        expect(dynamicObjectCollection.getById(dynamicObject.id)).toBe(dynamicObject);
-        expect(dynamicObjectCollection.getById(dynamicObject2.id)).toBe(dynamicObject2);
+        expect(entityCollection.getById(entity.id)).toBe(entity);
+        expect(entityCollection.getById(entity2.id)).toBe(entity2);
     });
 
     it('getById returns undefined for non-existent object', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        expect(dynamicObjectCollection.getById('123')).toBeUndefined();
+        var entityCollection = new EntityCollection();
+        expect(entityCollection.getById('123')).toBeUndefined();
     });
 
     it('getOrCreateObject creates a new object if it does not exist.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        expect(dynamicObjectCollection.getObjects().length).toEqual(0);
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        expect(dynamicObjectCollection.getObjects().length).toEqual(1);
-        expect(dynamicObjectCollection.getObjects()[0]).toEqual(testObject);
+        var entityCollection = new EntityCollection();
+        expect(entityCollection.getObjects().length).toEqual(0);
+        var testObject = entityCollection.getOrCreateObject('test');
+        expect(entityCollection.getObjects().length).toEqual(1);
+        expect(entityCollection.getObjects()[0]).toEqual(testObject);
     });
 
     it('getOrCreateObject does not create a new object if it already exists.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        expect(dynamicObjectCollection.getObjects().length).toEqual(0);
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        expect(dynamicObjectCollection.getObjects().length).toEqual(1);
-        expect(dynamicObjectCollection.getObjects()[0]).toEqual(testObject);
-        var testObject2 = dynamicObjectCollection.getOrCreateObject('test');
-        expect(dynamicObjectCollection.getObjects().length).toEqual(1);
-        expect(dynamicObjectCollection.getObjects()[0]).toEqual(testObject);
+        var entityCollection = new EntityCollection();
+        expect(entityCollection.getObjects().length).toEqual(0);
+        var testObject = entityCollection.getOrCreateObject('test');
+        expect(entityCollection.getObjects().length).toEqual(1);
+        expect(entityCollection.getObjects()[0]).toEqual(testObject);
+        var testObject2 = entityCollection.getOrCreateObject('test');
+        expect(entityCollection.getObjects().length).toEqual(1);
+        expect(entityCollection.getObjects()[0]).toEqual(testObject);
         expect(testObject2).toEqual(testObject);
     });
 
     it('computeAvailability returns infinite with no data.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        var availability = dynamicObjectCollection.computeAvailability();
+        var entityCollection = new EntityCollection();
+        var availability = entityCollection.computeAvailability();
         expect(availability.start).toEqual(Iso8601.MINIMUM_VALUE);
         expect(availability.stop).toEqual(Iso8601.MAXIMUM_VALUE);
     });
 
     it('computeAvailability returns intersction of collections.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
+        var entityCollection = new EntityCollection();
 
-        var dynamicObject = dynamicObjectCollection.getOrCreateObject('1');
-        var dynamicObject2 = dynamicObjectCollection.getOrCreateObject('2');
-        var dynamicObject3 = dynamicObjectCollection.getOrCreateObject('3');
+        var entity = entityCollection.getOrCreateObject('1');
+        var entity2 = entityCollection.getOrCreateObject('2');
+        var entity3 = entityCollection.getOrCreateObject('3');
 
-        dynamicObject.availability = new TimeIntervalCollection();
-        dynamicObject.availability.addInterval(TimeInterval.fromIso8601({
+        entity.availability = new TimeIntervalCollection();
+        entity.availability.addInterval(TimeInterval.fromIso8601({
             iso8601 : '2012-08-01/2012-08-02'
         }));
-        dynamicObject2.availability = new TimeIntervalCollection();
-        dynamicObject2.availability.addInterval(TimeInterval.fromIso8601({
+        entity2.availability = new TimeIntervalCollection();
+        entity2.availability.addInterval(TimeInterval.fromIso8601({
             iso8601 : '2012-08-05/2012-08-06'
         }));
-        dynamicObject3.availability = undefined;
+        entity3.availability = undefined;
 
-        var availability = dynamicObjectCollection.computeAvailability();
+        var availability = entityCollection.computeAvailability();
         expect(availability.start).toEqual(JulianDate.fromIso8601('2012-08-01'));
         expect(availability.stop).toEqual(JulianDate.fromIso8601('2012-08-06'));
     });
 
     it('computeAvailability works if only start or stop time is infinite.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
+        var entityCollection = new EntityCollection();
 
-        var dynamicObject = dynamicObjectCollection.getOrCreateObject('1');
-        var dynamicObject2 = dynamicObjectCollection.getOrCreateObject('2');
-        var dynamicObject3 = dynamicObjectCollection.getOrCreateObject('3');
+        var entity = entityCollection.getOrCreateObject('1');
+        var entity2 = entityCollection.getOrCreateObject('2');
+        var entity3 = entityCollection.getOrCreateObject('3');
 
-        dynamicObject.availability = new TimeIntervalCollection();
-        dynamicObject.availability.addInterval(TimeInterval.fromIso8601({
+        entity.availability = new TimeIntervalCollection();
+        entity.availability.addInterval(TimeInterval.fromIso8601({
             iso8601 : '2012-08-01/9999-12-31T24:00:00Z'
         }));
-        dynamicObject2.availability = new TimeIntervalCollection();
-        dynamicObject2.availability.addInterval(TimeInterval.fromIso8601({
+        entity2.availability = new TimeIntervalCollection();
+        entity2.availability.addInterval(TimeInterval.fromIso8601({
             iso8601 : '0000-01-01T00:00:00Z/2012-08-06'
         }));
-        dynamicObject3.availability = undefined;
+        entity3.availability = undefined;
 
-        var availability = dynamicObjectCollection.computeAvailability();
+        var availability = entityCollection.computeAvailability();
         expect(availability.start).toEqual(JulianDate.fromIso8601('2012-08-01'));
         expect(availability.stop).toEqual(JulianDate.fromIso8601('2012-08-06'));
     });
 
     it('resumeEvents throws if no matching suspendEvents ', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
+        var entityCollection = new EntityCollection();
         expect(function() {
-            dynamicObjectCollection.resumeEvents();
+            entityCollection.resumeEvents();
         }).toThrowDeveloperError();
     });
 
-    it('add throws with undefined DynamicObject', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
+    it('add throws with undefined Entity', function() {
+        var entityCollection = new EntityCollection();
         expect(function() {
-            dynamicObjectCollection.add(undefined);
+            entityCollection.add(undefined);
         }).toThrowDeveloperError();
     });
 
-    it('add throws for DynamicObject with same id', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        var dynamicObject = new DynamicObject('1');
-        var dynamicObject2 = new DynamicObject('1');
-        dynamicObjectCollection.add(dynamicObject);
+    it('add throws for Entity with same id', function() {
+        var entityCollection = new EntityCollection();
+        var entity = new Entity('1');
+        var entity2 = new Entity('1');
+        entityCollection.add(entity);
 
         expect(function() {
-            dynamicObjectCollection.add(dynamicObject2);
+            entityCollection.add(entity2);
         }).toThrowRuntimeError();
     });
 
-    it('remove throws with undefined DynamicObject', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
+    it('remove throws with undefined Entity', function() {
+        var entityCollection = new EntityCollection();
         expect(function() {
-            dynamicObjectCollection.remove(undefined);
+            entityCollection.remove(undefined);
         }).toThrowDeveloperError();
     });
 
     it('removeById throws for undefined id', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
+        var entityCollection = new EntityCollection();
         expect(function() {
-            dynamicObjectCollection.removeById(undefined);
+            entityCollection.removeById(undefined);
         }).toThrowDeveloperError();
     });
 
     it('getById throws if no id specified', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
+        var entityCollection = new EntityCollection();
         expect(function() {
-            dynamicObjectCollection.getById(undefined);
+            entityCollection.getById(undefined);
         }).toThrowDeveloperError();
     });
 
     it('getOrCreateObject throws if no id specified', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
+        var entityCollection = new EntityCollection();
         expect(function() {
-            dynamicObjectCollection.getOrCreateObject(undefined);
+            entityCollection.getOrCreateObject(undefined);
         }).toThrowDeveloperError();
     });
 });

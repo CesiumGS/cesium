@@ -1,11 +1,11 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/CompositeProperty',
+        'DataSources/CompositeProperty',
         'Core/Cartesian3',
         'Core/JulianDate',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
-        'DynamicScene/ConstantProperty'
+        'DataSources/ConstantProperty'
     ], function(
         CompositeProperty,
         Cartesian3,

@@ -1,8 +1,8 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/DataSourceDisplay',
+        'DataSources/DataSourceDisplay',
         'Core/Iso8601',
-        'DynamicScene/DataSourceCollection',
+        'DataSources/DataSourceCollection',
         'Specs/createScene',
         'Specs/destroyScene',
         'Specs/MockDataSource'
@@ -27,9 +27,9 @@ defineSuite([
         destroyScene(scene);
     });
 
-    var MockVisualizer = function(scene, dynamicObjectCollection) {
+    var MockVisualizer = function(scene, entityCollection) {
         this.scene = scene;
-        this.dynamicObjectCollection = dynamicObjectCollection;
+        this.entityCollection = entityCollection;
         this.updatesCalled = 0;
         this.lastUpdateTime = undefined;
         this.destroyed = false;

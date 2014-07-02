@@ -1,11 +1,11 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/PolylineOutlineMaterialProperty',
+        'DataSources/PolylineOutlineMaterialProperty',
         'Core/Color',
         'Core/JulianDate',
         'Core/TimeInterval',
-        'DynamicScene/ConstantProperty',
-        'DynamicScene/TimeIntervalCollectionProperty'
+        'DataSources/ConstantProperty',
+        'DataSources/TimeIntervalCollectionProperty'
     ], function(
         PolylineOutlineMaterialProperty,
         Color,

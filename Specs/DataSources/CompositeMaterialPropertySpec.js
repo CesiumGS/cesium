@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/CompositeMaterialProperty',
+        'DataSources/CompositeMaterialProperty',
         'Core/Color',
         'Core/JulianDate',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
-        'DynamicScene/ColorMaterialProperty',
-        'DynamicScene/GridMaterialProperty'
+        'DataSources/ColorMaterialProperty',
+        'DataSources/GridMaterialProperty'
     ], function(
         CompositeMaterialProperty,
         Color,

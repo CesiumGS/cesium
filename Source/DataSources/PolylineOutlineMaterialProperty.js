@@ -5,7 +5,7 @@ define([
         '../Core/defineProperties',
         '../Core/Event',
         './ConstantProperty',
-        './createDynamicPropertyDescriptor',
+        './createPropertyDescriptor',
         './Property'
     ], function(
         Color,
@@ -13,7 +13,7 @@ define([
         defineProperties,
         Event,
         ConstantProperty,
-        createDynamicPropertyDescriptor,
+        createPropertyDescriptor,
         Property) {
     "use strict";
 
@@ -69,21 +69,21 @@ define([
          * @type {Property}
          * @default new ConstantProperty(Color.WHITE)
          */
-        color : createDynamicPropertyDescriptor('color'),
+        color : createPropertyDescriptor('color'),
         /**
          * Gets or sets the {@link Color} property which determines the polyline's outline color.
          * @memberof PolylineOutlineMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(Color.BLACK)
          */
-        outlineColor : createDynamicPropertyDescriptor('outlineColor'),
+        outlineColor : createPropertyDescriptor('outlineColor'),
         /**
          * Gets or sets the numberic property which determines the polyline's outline width.
          * @memberof PolylineOutlineMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(0)
          */
-        outlineWidth : createDynamicPropertyDescriptor('outlineWidth')
+        outlineWidth : createPropertyDescriptor('outlineWidth')
     });
 
     /**

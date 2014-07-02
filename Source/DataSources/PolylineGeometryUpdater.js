@@ -44,8 +44,8 @@ define([
     var defaultMaterial = ColorMaterialProperty.fromColor(Color.WHITE);
     var defaultShow = new ConstantProperty(true);
 
-    var GeometryOptions = function(dynamicObject) {
-        this.id = dynamicObject;
+    var GeometryOptions = function(entity) {
+        this.id = entity;
         this.vertexFormat = undefined;
         this.positions = undefined;
         this.width = undefined;
@@ -57,24 +57,24 @@ define([
      * @alias PolylineGeometryUpdater
      * @constructor
      *
-     * @param {DynamicObject} dynamicObject The object containing the geometry to be visualized.
+     * @param {Entity} entity The object containing the geometry to be visualized.
      */
-    var PolylineGeometryUpdater = function(dynamicObject) {
+    var PolylineGeometryUpdater = function(entity) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(dynamicObject)) {
-            throw new DeveloperError('dynamicObject is required');
+        if (!defined(entity)) {
+            throw new DeveloperError('entity is required');
         }
         //>>includeEnd('debug');
 
-        this._dynamicObject = dynamicObject;
-        this._dynamicObjectSubscription = dynamicObject.definitionChanged.addEventListener(PolylineGeometryUpdater.prototype._onDynamicObjectPropertyChanged, this);
+        this._entity = entity;
+        this._entitySubscription = entity.definitionChanged.addEventListener(PolylineGeometryUpdater.prototype._onEntityPropertyChanged, this);
         this._fillEnabled = false;
         this._dynamic = false;
         this._geometryChanged = new Event();
         this._showProperty = undefined;
         this._materialProperty = undefined;
-        this._options = new GeometryOptions(dynamicObject);
-        this._onDynamicObjectPropertyChanged(dynamicObject, 'polyline', dynamicObject.polyline, undefined);
+        this._options = new GeometryOptions(entity);
+        this._onEntityPropertyChanged(entity, 'polyline', entity.polyline, undefined);
     };
 
     defineProperties(PolylineGeometryUpdater, {
@@ -101,12 +101,12 @@ define([
          * Gets the object associated with this geometry.
          * @memberof PolylineGeometryUpdater.prototype
          *
-         * @type {DynamicObject}
+         * @type {Entity}
          * @readonly
          */
-        dynamicObject :{
+        entity :{
             get : function() {
-                return this._dynamicObject;
+                return this._entity;
             }
         },
         /**
@@ -130,7 +130,7 @@ define([
          */
         hasConstantFill : {
             get : function() {
-                return !this._fillEnabled || (!defined(this._dynamicObject.availability) && Property.isConstant(this._showProperty));
+                return !this._fillEnabled || (!defined(this._entity.availability) && Property.isConstant(this._showProperty));
             }
         },
         /**
@@ -232,8 +232,8 @@ define([
      * @returns {Boolean} true if geometry is filled at the provided time, false otherwise.
      */
     PolylineGeometryUpdater.prototype.isFilled = function(time) {
-        var dynamicObject = this._dynamicObject;
-        return this._fillEnabled && dynamicObject.isAvailable(time) && this._showProperty.getValue(time);
+        var entity = this._entity;
+        return this._fillEnabled && entity.isAvailable(time) && this._showProperty.getValue(time);
     };
 
     /**
@@ -257,8 +257,8 @@ define([
 
         var color;
         var attributes;
-        var dynamicObject = this._dynamicObject;
-        var isAvailable = dynamicObject.isAvailable(time);
+        var entity = this._entity;
+        var isAvailable = entity.isAvailable(time);
         var show = new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time));
 
         if (this._materialProperty instanceof ColorMaterialProperty) {
@@ -278,7 +278,7 @@ define([
         }
 
         return new GeometryInstance({
-            id : dynamicObject,
+            id : entity,
             geometry : new PolylineGeometry(this._options),
             attributes : attributes
         });
@@ -313,16 +313,16 @@ define([
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
     PolylineGeometryUpdater.prototype.destroy = function() {
-        this._dynamicObjectSubscription();
+        this._entitySubscription();
         destroyObject(this);
     };
 
-    PolylineGeometryUpdater.prototype._onDynamicObjectPropertyChanged = function(dynamicObject, propertyName, newValue, oldValue) {
+    PolylineGeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
         if (!(propertyName === 'availability' || propertyName === 'vertexPositions' || propertyName === 'polyline')) {
             return;
         }
 
-        var polyline = this._dynamicObject.polyline;
+        var polyline = this._entity.polyline;
 
         if (!defined(polyline)) {
             if (this._fillEnabled) {
@@ -332,7 +332,7 @@ define([
             return;
         }
 
-        var vertexPositions = this._dynamicObject.vertexPositions;
+        var vertexPositions = this._entity.vertexPositions;
 
         var show = polyline.show;
         if ((defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE)) || //
@@ -408,7 +408,7 @@ define([
         this._primitives = primitives;
         this._primitive = undefined;
         this._geometryUpdater = geometryUpdater;
-        this._options = new GeometryOptions(geometryUpdater._dynamicObject);
+        this._options = new GeometryOptions(geometryUpdater._entity);
     };
 
     DynamicGeometryUpdater.prototype.update = function(time) {
@@ -418,16 +418,16 @@ define([
             this._primitives.remove(this._primitive);
         }
 
-        var dynamicObject = geometryUpdater._dynamicObject;
-        var polyline = dynamicObject.polyline;
+        var entity = geometryUpdater._entity;
+        var polyline = entity.polyline;
         var show = polyline.show;
 
-        if (!dynamicObject.isAvailable(time) || (defined(show) && !show.getValue(time))) {
+        if (!entity.isAvailable(time) || (defined(show) && !show.getValue(time))) {
             return;
         }
 
         var options = this._options;
-        var vertexPositions = dynamicObject.vertexPositions;
+        var vertexPositions = entity.vertexPositions;
 
         var positions = vertexPositions.getValue(time, options.positions);
         //Because of the way we currently handle reference properties,
@@ -452,7 +452,7 @@ define([
 
         this._primitive = new Primitive({
             geometryInstances : new GeometryInstance({
-                id : dynamicObject,
+                id : entity,
                 geometry : new PolylineGeometry(options)
             }),
             appearance : appearance,

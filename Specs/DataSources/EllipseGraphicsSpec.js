@@ -1,20 +1,20 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/DynamicEllipse',
-        'DynamicScene/ConstantProperty'
+        'DataSources/EllipseGraphics',
+        'DataSources/ConstantProperty'
     ], function(
-        DynamicEllipse,
+        EllipseGraphics,
         ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('merge assigns unassigned properties', function() {
-        var source = new DynamicEllipse();
+        var source = new EllipseGraphics();
         source.semiMajorAxis = new ConstantProperty(1);
         source.semiMinorAxis = new ConstantProperty(2);
         source.rotation = new ConstantProperty(3);
 
-        var target = new DynamicEllipse();
+        var target = new EllipseGraphics();
         target.merge(source);
         expect(target.semiMajorAxis).toBe(source.semiMajorAxis);
         expect(target.semiMinorAxis).toBe(source.semiMinorAxis);
@@ -22,7 +22,7 @@ defineSuite([
     });
 
     it('merge does not assign assigned properties', function() {
-        var source = new DynamicEllipse();
+        var source = new EllipseGraphics();
         source.semiMajorAxis = new ConstantProperty(1);
         source.semiMinorAxis = new ConstantProperty(2);
         source.rotation = new ConstantProperty(3);
@@ -31,7 +31,7 @@ defineSuite([
         var semiMinorAxis = new ConstantProperty(2);
         var rotation = new ConstantProperty(3);
 
-        var target = new DynamicEllipse();
+        var target = new EllipseGraphics();
         target.semiMajorAxis = semiMajorAxis;
         target.semiMinorAxis = semiMinorAxis;
         target.rotation = rotation;
@@ -43,7 +43,7 @@ defineSuite([
     });
 
     it('clone works', function() {
-        var source = new DynamicEllipse();
+        var source = new EllipseGraphics();
         source.semiMajorAxis = new ConstantProperty(1);
         source.semiMinorAxis = new ConstantProperty(2);
         source.rotation = new ConstantProperty(3);
@@ -55,7 +55,7 @@ defineSuite([
     });
 
     it('merge throws if source undefined', function() {
-        var target = new DynamicEllipse();
+        var target = new EllipseGraphics();
         expect(function() {
             target.merge(undefined);
         }).toThrowDeveloperError();

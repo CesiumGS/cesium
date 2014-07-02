@@ -5,22 +5,22 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createDynamicPropertyDescriptor'
+        './createPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createDynamicPropertyDescriptor) {
+        createPropertyDescriptor) {
     "use strict";
 
     /**
      * An optionally time-dynamic vector.
-     * @alias DynamicVector
+     * @alias VectorGraphics
      * @constructor
      */
-    var DynamicVector = function() {
+    var VectorGraphics = function() {
         this._color = undefined;
         this._colorSubscription = undefined;
         this._show = undefined;
@@ -34,10 +34,10 @@ define([
         this._definitionChanged = new Event();
     };
 
-    defineProperties(DynamicVector.prototype, {
+    defineProperties(VectorGraphics.prototype, {
         /**
          * Gets the event that is raised whenever a new property is assigned.
-         * @memberof DynamicVector.prototype
+         * @memberof VectorGraphics.prototype
          *
          * @type {Event}
          * @readonly
@@ -50,49 +50,49 @@ define([
 
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the the vector's color.
-         * @memberof DynamicVector.prototype
+         * @memberof VectorGraphics.prototype
          * @type {Property}
          */
-        color : createDynamicPropertyDescriptor('color'),
+        color : createPropertyDescriptor('color'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the vector's visibility.
-         * @memberof DynamicVector.prototype
+         * @memberof VectorGraphics.prototype
          * @type {Property}
          */
-        show : createDynamicPropertyDescriptor('show'),
+        show : createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the vector's width.
-         * @memberof DynamicVector.prototype
+         * @memberof VectorGraphics.prototype
          * @type {Property}
          */
-        width : createDynamicPropertyDescriptor('width'),
+        width : createPropertyDescriptor('width'),
 
         /**
          * Gets or sets the {@link Cartesian3} {@link Property} specifying the the vector's direction.
-         * @memberof DynamicVector.prototype
+         * @memberof VectorGraphics.prototype
          * @type {Property}
          */
-        direction : createDynamicPropertyDescriptor('direction'),
+        direction : createPropertyDescriptor('direction'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the vector's graphical length in meters.
-         * @memberof DynamicVector.prototype
+         * @memberof VectorGraphics.prototype
          * @type {Property}
          */
-        length : createDynamicPropertyDescriptor('length')
+        length : createPropertyDescriptor('length')
     });
 
     /**
-     * Duplicates a DynamicVector instance.
+     * Duplicates a VectorGraphics instance.
      *
-     * @param {DynamicVector} [result] The object onto which to store the result.
-     * @returns {DynamicVector} The modified result parameter or a new instance if one was not provided.
+     * @param {VectorGraphics} [result] The object onto which to store the result.
+     * @returns {VectorGraphics} The modified result parameter or a new instance if one was not provided.
      */
-    DynamicVector.prototype.clone = function(result) {
+    VectorGraphics.prototype.clone = function(result) {
         if (!defined(result)) {
-            result = new DynamicVector();
+            result = new VectorGraphics();
         }
         result.color = this.color;
         result.width = this.width;
@@ -106,9 +106,9 @@ define([
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
      *
-     * @param {DynamicVector} source The object to be merged into this object.
+     * @param {VectorGraphics} source The object to be merged into this object.
      */
-    DynamicVector.prototype.merge = function(source) {
+    VectorGraphics.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
@@ -122,5 +122,5 @@ define([
         this.show = defaultValue(this.show, source.show);
     };
 
-    return DynamicVector;
+    return VectorGraphics;
 });

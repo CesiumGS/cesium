@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/CzmlDataSource',
+        'DataSources/CzmlDataSource',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartographic',
@@ -18,8 +18,8 @@ defineSuite([
         'Core/ReferenceFrame',
         'Core/Spherical',
         'Core/TimeInterval',
-        'DynamicScene/DynamicObjectCollection',
-        'DynamicScene/ReferenceProperty',
+        'DataSources/EntityCollection',
+        'DataSources/ReferenceProperty',
         'Scene/HorizontalOrigin',
         'Scene/LabelStyle',
         'Scene/VerticalOrigin',
@@ -43,7 +43,7 @@ defineSuite([
         ReferenceFrame,
         Spherical,
         TimeInterval,
-        DynamicObjectCollection,
+        EntityCollection,
         ReferenceProperty,
         HorizontalOrigin,
         LabelStyle,
@@ -118,8 +118,8 @@ defineSuite([
         expect(dataSource.errorEvent).toBeInstanceOf(Event);
         expect(dataSource.name).toBeUndefined();
         expect(dataSource.clock).toBeUndefined();
-        expect(dataSource.dynamicObjects).toBeInstanceOf(DynamicObjectCollection);
-        expect(dataSource.dynamicObjects.getObjects().length).toEqual(0);
+        expect(dataSource.entities).toBeInstanceOf(EntityCollection);
+        expect(dataSource.entities.getObjects().length).toEqual(0);
     });
 
     it('name returns CZML defined name', function() {
@@ -174,7 +174,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.processUrl(simpleUrl);
         waitsFor(function() {
-            return dataSource.dynamicObjects.getObjects().length === 11;
+            return dataSource.entities.getObjects().length === 11;
         });
     });
 
@@ -182,7 +182,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.processUrl(simpleUrl);
         waitsFor(function() {
-            return dataSource.dynamicObjects.getObjects().length === 11;
+            return dataSource.entities.getObjects().length === 11;
         });
 
         runs(function() {
@@ -190,7 +190,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return dataSource.dynamicObjects.getObjects().length === 12;
+            return dataSource.entities.getObjects().length === 12;
         });
     });
 
@@ -198,7 +198,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.processUrl(simpleUrl);
         waitsFor(function() {
-            return dataSource.dynamicObjects.getObjects().length === 11;
+            return dataSource.entities.getObjects().length === 11;
         });
 
         runs(function() {
@@ -206,7 +206,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return dataSource.dynamicObjects.getObjects().length === 1;
+            return dataSource.entities.getObjects().length === 1;
         });
     });
 
@@ -218,7 +218,7 @@ defineSuite([
         runs(function() {
             var dataSource = new CzmlDataSource();
             dataSource.process(simple, simpleUrl);
-            expect(dataSource.dynamicObjects.getObjects().length).toEqual(11);
+            expect(dataSource.entities.getObjects().length).toEqual(11);
         });
     });
 
@@ -230,10 +230,10 @@ defineSuite([
         runs(function() {
             var dataSource = new CzmlDataSource();
             dataSource.process(simple, simpleUrl);
-            expect(dataSource.dynamicObjects.getObjects().length === 11);
+            expect(dataSource.entities.getObjects().length === 11);
 
             dataSource.process(vehicle, vehicleUrl);
-            expect(dataSource.dynamicObjects.getObjects().length === 12);
+            expect(dataSource.entities.getObjects().length === 12);
         });
     });
 
@@ -245,10 +245,10 @@ defineSuite([
         runs(function() {
             var dataSource = new CzmlDataSource();
             dataSource.process(simple, simpleUrl);
-            expect(dataSource.dynamicObjects.getObjects().length).toEqual(11);
+            expect(dataSource.entities.getObjects().length).toEqual(11);
 
             dataSource.load(vehicle, vehicleUrl);
-            expect(dataSource.dynamicObjects.getObjects().length).toEqual(1);
+            expect(dataSource.entities.getObjects().length).toEqual(1);
         });
     });
 
@@ -440,21 +440,21 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(billboardPacket, sourceUri);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
-        expect(dynamicObject.billboard).toBeDefined();
-        expect(dynamicObject.billboard.image.getValue(Iso8601.MINIMUM_VALUE)).toEqual(sourceUri + 'image.png');
-        expect(dynamicObject.billboard.scale.getValue(Iso8601.MINIMUM_VALUE)).toEqual(billboardPacket.billboard.scale);
-        expect(dynamicObject.billboard.horizontalOrigin.getValue(Iso8601.MINIMUM_VALUE)).toEqual(HorizontalOrigin.CENTER);
-        expect(dynamicObject.billboard.verticalOrigin.getValue(Iso8601.MINIMUM_VALUE)).toEqual(VerticalOrigin.CENTER);
-        expect(dynamicObject.billboard.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(1.0, 1.0, 1.0, 1.0));
-        expect(dynamicObject.billboard.eyeOffset.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(3.0, 4.0, 5.0));
+        expect(entity.billboard).toBeDefined();
+        expect(entity.billboard.image.getValue(Iso8601.MINIMUM_VALUE)).toEqual(sourceUri + 'image.png');
+        expect(entity.billboard.scale.getValue(Iso8601.MINIMUM_VALUE)).toEqual(billboardPacket.billboard.scale);
+        expect(entity.billboard.horizontalOrigin.getValue(Iso8601.MINIMUM_VALUE)).toEqual(HorizontalOrigin.CENTER);
+        expect(entity.billboard.verticalOrigin.getValue(Iso8601.MINIMUM_VALUE)).toEqual(VerticalOrigin.CENTER);
+        expect(entity.billboard.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(1.0, 1.0, 1.0, 1.0));
+        expect(entity.billboard.eyeOffset.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(3.0, 4.0, 5.0));
 
         // TODO: pixelOffset origin in CZML is bottom-left, Cesium is now top-left.
         // When CZML 1.0 flips this, flip the value here to match the packet
-        expect(dynamicObject.billboard.pixelOffset.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian2(1.0, -2.0));
+        expect(entity.billboard.pixelOffset.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian2(1.0, -2.0));
 
-        expect(dynamicObject.billboard.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.billboard.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
     });
 
     it('can handle image intervals both of type uri and image', function() {
@@ -473,8 +473,8 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(packet, source);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
-        var imageProperty = dynamicObject.billboard.image;
+        var entity = dataSource.entities.getObjects()[0];
+        var imageProperty = entity.billboard.image;
         expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual(source + 'image.png');
         expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toEqual(source + 'image2.png');
 
@@ -492,8 +492,8 @@ defineSuite([
 
         dataSource = new CzmlDataSource();
         dataSource.load(packet, source);
-        dynamicObject = dataSource.dynamicObjects.getObjects()[0];
-        imageProperty = dynamicObject.billboard.image;
+        entity = dataSource.entities.getObjects()[0];
+        imageProperty = entity.billboard.image;
         expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual(source + 'image.png');
         expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toEqual(source + 'image2.png');
     });
@@ -526,31 +526,31 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(billboardPacket);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
-        expect(dynamicObject.billboard).toBeDefined();
-        expect(dynamicObject.billboard.image.getValue(validTime)).toEqual(billboardPacket.billboard.image);
-        expect(dynamicObject.billboard.scale.getValue(validTime)).toEqual(billboardPacket.billboard.scale);
-        expect(dynamicObject.billboard.horizontalOrigin.getValue(validTime)).toEqual(HorizontalOrigin.CENTER);
-        expect(dynamicObject.billboard.verticalOrigin.getValue(validTime)).toEqual(VerticalOrigin.CENTER);
-        expect(dynamicObject.billboard.color.getValue(validTime)).toEqual(new Color(1.0, 1.0, 1.0, 1.0));
-        expect(dynamicObject.billboard.eyeOffset.getValue(validTime)).toEqual(new Cartesian3(3.0, 4.0, 5.0));
+        expect(entity.billboard).toBeDefined();
+        expect(entity.billboard.image.getValue(validTime)).toEqual(billboardPacket.billboard.image);
+        expect(entity.billboard.scale.getValue(validTime)).toEqual(billboardPacket.billboard.scale);
+        expect(entity.billboard.horizontalOrigin.getValue(validTime)).toEqual(HorizontalOrigin.CENTER);
+        expect(entity.billboard.verticalOrigin.getValue(validTime)).toEqual(VerticalOrigin.CENTER);
+        expect(entity.billboard.color.getValue(validTime)).toEqual(new Color(1.0, 1.0, 1.0, 1.0));
+        expect(entity.billboard.eyeOffset.getValue(validTime)).toEqual(new Cartesian3(3.0, 4.0, 5.0));
 
         // TODO: pixelOffset origin in CZML is bottom-left, Cesium is now top-left.
         // When CZML 1.0 flips this, flip the value here to match the packet
-        expect(dynamicObject.billboard.pixelOffset.getValue(validTime)).toEqual(new Cartesian2(1.0, -2.0));
+        expect(entity.billboard.pixelOffset.getValue(validTime)).toEqual(new Cartesian2(1.0, -2.0));
 
-        expect(dynamicObject.billboard.show.getValue(validTime)).toEqual(true);
+        expect(entity.billboard.show.getValue(validTime)).toEqual(true);
 
-        expect(dynamicObject.billboard).toBeDefined();
-        expect(dynamicObject.billboard.image.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.billboard.scale.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.billboard.horizontalOrigin.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.billboard.verticalOrigin.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.billboard.color.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.billboard.eyeOffset.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.billboard.pixelOffset.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.billboard.show.getValue(invalidTime)).toBeUndefined();
+        expect(entity.billboard).toBeDefined();
+        expect(entity.billboard.image.getValue(invalidTime)).toBeUndefined();
+        expect(entity.billboard.scale.getValue(invalidTime)).toBeUndefined();
+        expect(entity.billboard.horizontalOrigin.getValue(invalidTime)).toBeUndefined();
+        expect(entity.billboard.verticalOrigin.getValue(invalidTime)).toBeUndefined();
+        expect(entity.billboard.color.getValue(invalidTime)).toBeUndefined();
+        expect(entity.billboard.eyeOffset.getValue(invalidTime)).toBeUndefined();
+        expect(entity.billboard.pixelOffset.getValue(invalidTime)).toBeUndefined();
+        expect(entity.billboard.show.getValue(invalidTime)).toBeUndefined();
     });
 
     it('can handle sampled billboard pixelOffset.', function() {
@@ -567,15 +567,15 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(billboardPacket);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
-        expect(dynamicObject.billboard).toBeDefined();
+        expect(entity.billboard).toBeDefined();
         // TODO: pixelOffset origin in CZML is bottom-left, Cesium is now top-left.
         // When CZML 1.0 flips this, flip the value here to match the packet
         var date1 = epoch;
         var date2 = JulianDate.addSeconds(epoch, 1.0, new JulianDate());
-        expect(dynamicObject.billboard.pixelOffset.getValue(date1)).toEqual(new Cartesian2(1.0, -2.0));
-        expect(dynamicObject.billboard.pixelOffset.getValue(date2)).toEqual(new Cartesian2(3.0, -4.0));
+        expect(entity.billboard.pixelOffset.getValue(date1)).toEqual(new Cartesian2(1.0, -2.0));
+        expect(entity.billboard.pixelOffset.getValue(date2)).toEqual(new Cartesian2(3.0, -4.0));
     });
 
     it('CZML adds clock data.', function() {
@@ -600,7 +600,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(clockPacket);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
         expect(dataSource.clock).toBeDefined();
         expect(dataSource.clock.startTime).toEqual(interval.start);
@@ -675,22 +675,22 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(conePacket);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
-        expect(dynamicObject.cone).toBeDefined();
-        expect(dynamicObject.cone.innerHalfAngle.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.innerHalfAngle);
-        expect(dynamicObject.cone.outerHalfAngle.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.outerHalfAngle);
-        expect(dynamicObject.cone.minimumClockAngle.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.minimumClockAngle);
-        expect(dynamicObject.cone.maximumClockAngle.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.maximumClockAngle);
-        expect(dynamicObject.cone.radius.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.radius);
-        expect(dynamicObject.cone.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.show);
-        expect(dynamicObject.cone.showIntersection.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.showIntersection);
-        expect(dynamicObject.cone.capMaterial.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(dynamicObject.cone.innerMaterial.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(dynamicObject.cone.outerMaterial.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.3, 0.3, 0.3, 0.3));
-        expect(dynamicObject.cone.silhouetteMaterial.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.4, 0.4, 0.4, 0.4));
-        expect(dynamicObject.cone.intersectionColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.5, 0.5, 0.5, 0.5));
-        expect(dynamicObject.cone.intersectionWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.intersectionWidth);
+        expect(entity.cone).toBeDefined();
+        expect(entity.cone.innerHalfAngle.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.innerHalfAngle);
+        expect(entity.cone.outerHalfAngle.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.outerHalfAngle);
+        expect(entity.cone.minimumClockAngle.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.minimumClockAngle);
+        expect(entity.cone.maximumClockAngle.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.maximumClockAngle);
+        expect(entity.cone.radius.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.radius);
+        expect(entity.cone.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.show);
+        expect(entity.cone.showIntersection.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.showIntersection);
+        expect(entity.cone.capMaterial.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(entity.cone.innerMaterial.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(entity.cone.outerMaterial.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.3, 0.3, 0.3, 0.3));
+        expect(entity.cone.silhouetteMaterial.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.4, 0.4, 0.4, 0.4));
+        expect(entity.cone.intersectionColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.5, 0.5, 0.5, 0.5));
+        expect(entity.cone.intersectionWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.intersectionWidth);
     });
 
     it('CZML adds data for constrained cone.', function() {
@@ -746,36 +746,36 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(conePacket);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
-        expect(dynamicObject.cone).toBeDefined();
-        expect(dynamicObject.cone.innerHalfAngle.getValue(validTime)).toEqual(conePacket.cone.innerHalfAngle);
-        expect(dynamicObject.cone.outerHalfAngle.getValue(validTime)).toEqual(conePacket.cone.outerHalfAngle);
-        expect(dynamicObject.cone.minimumClockAngle.getValue(validTime)).toEqual(conePacket.cone.minimumClockAngle);
-        expect(dynamicObject.cone.maximumClockAngle.getValue(validTime)).toEqual(conePacket.cone.maximumClockAngle);
-        expect(dynamicObject.cone.radius.getValue(validTime)).toEqual(conePacket.cone.radius);
-        expect(dynamicObject.cone.show.getValue(validTime)).toEqual(conePacket.cone.show);
-        expect(dynamicObject.cone.showIntersection.getValue(validTime)).toEqual(conePacket.cone.showIntersection);
-        expect(dynamicObject.cone.capMaterial.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(dynamicObject.cone.innerMaterial.getValue(validTime).color).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(dynamicObject.cone.outerMaterial.getValue(validTime).color).toEqual(new Color(0.3, 0.3, 0.3, 0.3));
-        expect(dynamicObject.cone.silhouetteMaterial.getValue(validTime).color).toEqual(new Color(0.4, 0.4, 0.4, 0.4));
-        expect(dynamicObject.cone.intersectionColor.getValue(validTime)).toEqual(new Color(0.5, 0.5, 0.5, 0.5));
-        expect(dynamicObject.cone.intersectionWidth.getValue(validTime)).toEqual(conePacket.cone.intersectionWidth);
+        expect(entity.cone).toBeDefined();
+        expect(entity.cone.innerHalfAngle.getValue(validTime)).toEqual(conePacket.cone.innerHalfAngle);
+        expect(entity.cone.outerHalfAngle.getValue(validTime)).toEqual(conePacket.cone.outerHalfAngle);
+        expect(entity.cone.minimumClockAngle.getValue(validTime)).toEqual(conePacket.cone.minimumClockAngle);
+        expect(entity.cone.maximumClockAngle.getValue(validTime)).toEqual(conePacket.cone.maximumClockAngle);
+        expect(entity.cone.radius.getValue(validTime)).toEqual(conePacket.cone.radius);
+        expect(entity.cone.show.getValue(validTime)).toEqual(conePacket.cone.show);
+        expect(entity.cone.showIntersection.getValue(validTime)).toEqual(conePacket.cone.showIntersection);
+        expect(entity.cone.capMaterial.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(entity.cone.innerMaterial.getValue(validTime).color).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(entity.cone.outerMaterial.getValue(validTime).color).toEqual(new Color(0.3, 0.3, 0.3, 0.3));
+        expect(entity.cone.silhouetteMaterial.getValue(validTime).color).toEqual(new Color(0.4, 0.4, 0.4, 0.4));
+        expect(entity.cone.intersectionColor.getValue(validTime)).toEqual(new Color(0.5, 0.5, 0.5, 0.5));
+        expect(entity.cone.intersectionWidth.getValue(validTime)).toEqual(conePacket.cone.intersectionWidth);
 
-        expect(dynamicObject.cone.innerHalfAngle.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.cone.outerHalfAngle.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.cone.minimumClockAngle.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.cone.maximumClockAngle.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.cone.radius.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.cone.show.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.cone.showIntersection.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.cone.capMaterial.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.cone.innerMaterial.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.cone.outerMaterial.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.cone.silhouetteMaterial.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.cone.intersectionColor.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.cone.intersectionWidth.getValue(invalidTime)).toBeUndefined();
+        expect(entity.cone.innerHalfAngle.getValue(invalidTime)).toBeUndefined();
+        expect(entity.cone.outerHalfAngle.getValue(invalidTime)).toBeUndefined();
+        expect(entity.cone.minimumClockAngle.getValue(invalidTime)).toBeUndefined();
+        expect(entity.cone.maximumClockAngle.getValue(invalidTime)).toBeUndefined();
+        expect(entity.cone.radius.getValue(invalidTime)).toBeUndefined();
+        expect(entity.cone.show.getValue(invalidTime)).toBeUndefined();
+        expect(entity.cone.showIntersection.getValue(invalidTime)).toBeUndefined();
+        expect(entity.cone.capMaterial.getValue(invalidTime)).toBeUndefined();
+        expect(entity.cone.innerMaterial.getValue(invalidTime)).toBeUndefined();
+        expect(entity.cone.outerMaterial.getValue(invalidTime)).toBeUndefined();
+        expect(entity.cone.silhouetteMaterial.getValue(invalidTime)).toBeUndefined();
+        expect(entity.cone.intersectionColor.getValue(invalidTime)).toBeUndefined();
+        expect(entity.cone.intersectionWidth.getValue(invalidTime)).toBeUndefined();
     });
 
     it('CZML constant cartographicsDegrees positions work.', function() {
@@ -789,8 +789,8 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.load(czml);
 
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
-        var resultCartesian = dynamicObject.position.getValue(JulianDate.now());
+        var entity = dataSource.entities.getObjects()[0];
+        var resultCartesian = entity.position.getValue(JulianDate.now());
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
     });
 
@@ -809,11 +809,11 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.load(czml);
 
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
-        var resultCartesian = dynamicObject.position.getValue(epoch);
+        var entity = dataSource.entities.getObjects()[0];
+        var resultCartesian = entity.position.getValue(epoch);
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
 
-        resultCartesian = dynamicObject.position.getValue(JulianDate.addSeconds(epoch, 1, new JulianDate()));
+        resultCartesian = entity.position.getValue(JulianDate.addSeconds(epoch, 1, new JulianDate()));
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic2));
     });
 
@@ -832,11 +832,11 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.load(czml);
 
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
-        var resultCartesian = dynamicObject.position.getValue(firstDate);
+        var entity = dataSource.entities.getObjects()[0];
+        var resultCartesian = entity.position.getValue(firstDate);
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
 
-        resultCartesian = dynamicObject.position.getValue(lastDate);
+        resultCartesian = entity.position.getValue(lastDate);
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic2));
     });
 
@@ -851,8 +851,8 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.load(czml);
 
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
-        var resultCartesian = dynamicObject.position.getValue(JulianDate.now());
+        var entity = dataSource.entities.getObjects()[0];
+        var resultCartesian = entity.position.getValue(JulianDate.now());
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
     });
 
@@ -869,8 +869,8 @@ defineSuite([
         };
 
         dataSource.load(czml);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
-        expect(dynamicObject.position.referenceFrame).toBe(ReferenceFrame.INERTIAL);
+        var entity = dataSource.entities.getObjects()[0];
+        expect(entity.position.referenceFrame).toBe(ReferenceFrame.INERTIAL);
 
         czml = {
             position : {
@@ -881,8 +881,8 @@ defineSuite([
         };
 
         dataSource.load(czml);
-        dynamicObject = dataSource.dynamicObjects.getObjects()[0];
-        expect(dynamicObject.position.referenceFrame).toBe(ReferenceFrame.FIXED);
+        entity = dataSource.entities.getObjects()[0];
+        expect(entity.position.referenceFrame).toBe(ReferenceFrame.FIXED);
     });
 
     it('Default reference frame on existing interval does not reset value to FIXED.', function() {
@@ -898,8 +898,8 @@ defineSuite([
         };
 
         dataSource.process(czml);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
-        expect(dynamicObject.position.referenceFrame).toBe(ReferenceFrame.INERTIAL);
+        var entity = dataSource.entities.getObjects()[0];
+        expect(entity.position.referenceFrame).toBe(ReferenceFrame.INERTIAL);
 
         var czml2 = {
             position : {
@@ -909,7 +909,7 @@ defineSuite([
         };
         dataSource.process(czml2);
 
-        expect(dynamicObject.position.referenceFrame).toBe(ReferenceFrame.INERTIAL);
+        expect(entity.position.referenceFrame).toBe(ReferenceFrame.INERTIAL);
     });
 
     it('CZML sampled cartographicRadians positions work.', function() {
@@ -927,11 +927,11 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.load(czml);
 
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
-        var resultCartesian = dynamicObject.position.getValue(epoch);
+        var entity = dataSource.entities.getObjects()[0];
+        var resultCartesian = entity.position.getValue(epoch);
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
 
-        resultCartesian = dynamicObject.position.getValue(JulianDate.addSeconds(epoch, 1, new JulianDate()));
+        resultCartesian = entity.position.getValue(JulianDate.addSeconds(epoch, 1, new JulianDate()));
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic2));
     });
 
@@ -950,12 +950,12 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(ellipsePacket);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
-        expect(dynamicObject.ellipse).toBeDefined();
-        expect(dynamicObject.ellipse.semiMajorAxis.getValue(firstDate)).toEqual(0);
-        expect(dynamicObject.ellipse.semiMajorAxis.getValue(midDate)).toEqual(5);
-        expect(dynamicObject.ellipse.semiMajorAxis.getValue(lastDate)).toEqual(10);
+        expect(entity.ellipse).toBeDefined();
+        expect(entity.ellipse.semiMajorAxis.getValue(firstDate)).toEqual(0);
+        expect(entity.ellipse.semiMajorAxis.getValue(midDate)).toEqual(5);
+        expect(entity.ellipse.semiMajorAxis.getValue(lastDate)).toEqual(10);
     });
 
     it('CZML adds data for infinite ellipse.', function() {
@@ -969,12 +969,12 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(ellipsePacket);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
-        expect(dynamicObject.ellipse).toBeDefined();
-        expect(dynamicObject.ellipse.semiMajorAxis.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ellipsePacket.ellipse.semiMajorAxis);
-        expect(dynamicObject.ellipse.semiMinorAxis.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ellipsePacket.ellipse.semiMinorAxis);
-        expect(dynamicObject.ellipse.rotation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ellipsePacket.ellipse.rotation);
+        expect(entity.ellipse).toBeDefined();
+        expect(entity.ellipse.semiMajorAxis.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ellipsePacket.ellipse.semiMajorAxis);
+        expect(entity.ellipse.semiMinorAxis.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ellipsePacket.ellipse.semiMinorAxis);
+        expect(entity.ellipse.rotation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ellipsePacket.ellipse.rotation);
     });
 
     it('CZML adds data for constrained ellipse.', function() {
@@ -989,21 +989,21 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(ellipsePacketInterval);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
         var validTime = TimeInterval.fromIso8601({
             iso8601 : ellipsePacketInterval.ellipse.interval
         }).start;
         var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
-        expect(dynamicObject.ellipse).toBeDefined();
-        expect(dynamicObject.ellipse.semiMajorAxis.getValue(validTime)).toEqual(ellipsePacketInterval.ellipse.semiMajorAxis);
-        expect(dynamicObject.ellipse.semiMinorAxis.getValue(validTime)).toEqual(ellipsePacketInterval.ellipse.semiMinorAxis);
-        expect(dynamicObject.ellipse.rotation.getValue(validTime)).toEqual(ellipsePacketInterval.ellipse.rotation);
+        expect(entity.ellipse).toBeDefined();
+        expect(entity.ellipse.semiMajorAxis.getValue(validTime)).toEqual(ellipsePacketInterval.ellipse.semiMajorAxis);
+        expect(entity.ellipse.semiMinorAxis.getValue(validTime)).toEqual(ellipsePacketInterval.ellipse.semiMinorAxis);
+        expect(entity.ellipse.rotation.getValue(validTime)).toEqual(ellipsePacketInterval.ellipse.rotation);
 
-        expect(dynamicObject.ellipse.semiMajorAxis.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.ellipse.semiMinorAxis.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.ellipse.rotation.getValue(invalidTime)).toBeUndefined();
+        expect(entity.ellipse.semiMajorAxis.getValue(invalidTime)).toBeUndefined();
+        expect(entity.ellipse.semiMinorAxis.getValue(invalidTime)).toBeUndefined();
+        expect(entity.ellipse.rotation.getValue(invalidTime)).toBeUndefined();
     });
 
     it('CZML adds data for infinite ellipsoid.', function() {
@@ -1027,12 +1027,12 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(ellipsoidPacket);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
-        expect(dynamicObject.ellipsoid).toBeDefined();
-        expect(dynamicObject.ellipsoid.radii.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedRadii);
-        expect(dynamicObject.ellipsoid.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ellipsoidPacket.ellipsoid.show);
-        expect(dynamicObject.ellipsoid.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(entity.ellipsoid).toBeDefined();
+        expect(entity.ellipsoid.radii.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedRadii);
+        expect(entity.ellipsoid.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ellipsoidPacket.ellipsoid.show);
+        expect(entity.ellipsoid.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
     });
 
     it('CZML adds data for constrained ellipsoid.', function() {
@@ -1062,16 +1062,16 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(ellipsoidPacketInterval);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
-        expect(dynamicObject.ellipsoid).toBeDefined();
-        expect(dynamicObject.ellipsoid.radii.getValue(validTime)).toEqual(expectedRadii);
-        expect(dynamicObject.ellipsoid.show.getValue(validTime)).toEqual(ellipsoidPacketInterval.ellipsoid.show);
-        expect(dynamicObject.ellipsoid.material.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(entity.ellipsoid).toBeDefined();
+        expect(entity.ellipsoid.radii.getValue(validTime)).toEqual(expectedRadii);
+        expect(entity.ellipsoid.show.getValue(validTime)).toEqual(ellipsoidPacketInterval.ellipsoid.show);
+        expect(entity.ellipsoid.material.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
 
-        expect(dynamicObject.ellipsoid.radii.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.ellipsoid.show.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.ellipsoid.material.getValue(invalidTime)).toBeUndefined();
+        expect(entity.ellipsoid.radii.getValue(invalidTime)).toBeUndefined();
+        expect(entity.ellipsoid.show.getValue(invalidTime)).toBeUndefined();
+        expect(entity.ellipsoid.material.getValue(invalidTime)).toBeUndefined();
     });
 
     it('CZML adds data for infinite label.', function() {
@@ -1102,25 +1102,25 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(labelPacket);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
-        expect(dynamicObject.label).toBeDefined();
-        expect(dynamicObject.label.text.getValue(Iso8601.MINIMUM_VALUE)).toEqual(labelPacket.label.text);
-        expect(dynamicObject.label.font.getValue(Iso8601.MINIMUM_VALUE)).toEqual(labelPacket.label.font);
-        expect(dynamicObject.label.style.getValue(Iso8601.MINIMUM_VALUE)).toEqual(LabelStyle.FILL);
-        expect(dynamicObject.label.fillColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(dynamicObject.label.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(dynamicObject.label.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(labelPacket.label.outlineWidth);
-        expect(dynamicObject.label.horizontalOrigin.getValue(Iso8601.MINIMUM_VALUE)).toEqual(HorizontalOrigin.LEFT);
-        expect(dynamicObject.label.verticalOrigin.getValue(Iso8601.MINIMUM_VALUE)).toEqual(VerticalOrigin.CENTER);
-        expect(dynamicObject.label.eyeOffset.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+        expect(entity.label).toBeDefined();
+        expect(entity.label.text.getValue(Iso8601.MINIMUM_VALUE)).toEqual(labelPacket.label.text);
+        expect(entity.label.font.getValue(Iso8601.MINIMUM_VALUE)).toEqual(labelPacket.label.font);
+        expect(entity.label.style.getValue(Iso8601.MINIMUM_VALUE)).toEqual(LabelStyle.FILL);
+        expect(entity.label.fillColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(entity.label.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(entity.label.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(labelPacket.label.outlineWidth);
+        expect(entity.label.horizontalOrigin.getValue(Iso8601.MINIMUM_VALUE)).toEqual(HorizontalOrigin.LEFT);
+        expect(entity.label.verticalOrigin.getValue(Iso8601.MINIMUM_VALUE)).toEqual(VerticalOrigin.CENTER);
+        expect(entity.label.eyeOffset.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
 
         // TODO: pixelOffset origin in CZML is bottom-left, Cesium is now top-left.
         // When CZML 1.0 flips this, flip the value here to match the packet
-        expect(dynamicObject.label.pixelOffset.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian2(4.0, -5.0));
+        expect(entity.label.pixelOffset.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian2(4.0, -5.0));
 
-        expect(dynamicObject.label.scale.getValue(Iso8601.MINIMUM_VALUE)).toEqual(labelPacket.label.scale);
-        expect(dynamicObject.label.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(labelPacket.label.show);
+        expect(entity.label.scale.getValue(Iso8601.MINIMUM_VALUE)).toEqual(labelPacket.label.scale);
+        expect(entity.label.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(labelPacket.label.show);
     });
 
     it('CZML adds data for constrained label.', function() {
@@ -1157,38 +1157,38 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(labelPacket);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
-        expect(dynamicObject.label).toBeDefined();
-        expect(dynamicObject.label.text.getValue(validTime)).toEqual(labelPacket.label.text);
-        expect(dynamicObject.label.font.getValue(validTime)).toEqual(labelPacket.label.font);
-        expect(dynamicObject.label.style.getValue(validTime)).toEqual(LabelStyle.FILL);
-        expect(dynamicObject.label.fillColor.getValue(validTime)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(dynamicObject.label.outlineColor.getValue(validTime)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(dynamicObject.label.outlineWidth.getValue(validTime)).toEqual(labelPacket.label.outlineWidth);
-        expect(dynamicObject.label.horizontalOrigin.getValue(validTime)).toEqual(HorizontalOrigin.LEFT);
-        expect(dynamicObject.label.verticalOrigin.getValue(validTime)).toEqual(VerticalOrigin.CENTER);
-        expect(dynamicObject.label.eyeOffset.getValue(validTime)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+        expect(entity.label).toBeDefined();
+        expect(entity.label.text.getValue(validTime)).toEqual(labelPacket.label.text);
+        expect(entity.label.font.getValue(validTime)).toEqual(labelPacket.label.font);
+        expect(entity.label.style.getValue(validTime)).toEqual(LabelStyle.FILL);
+        expect(entity.label.fillColor.getValue(validTime)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(entity.label.outlineColor.getValue(validTime)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(entity.label.outlineWidth.getValue(validTime)).toEqual(labelPacket.label.outlineWidth);
+        expect(entity.label.horizontalOrigin.getValue(validTime)).toEqual(HorizontalOrigin.LEFT);
+        expect(entity.label.verticalOrigin.getValue(validTime)).toEqual(VerticalOrigin.CENTER);
+        expect(entity.label.eyeOffset.getValue(validTime)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
 
         // TODO: pixelOffset origin in CZML is bottom-left, Cesium is now top-left.
         // When CZML 1.0 flips this, flip the value here to match the packet
-        expect(dynamicObject.label.pixelOffset.getValue(validTime)).toEqual(new Cartesian2(4.0, -5.0));
+        expect(entity.label.pixelOffset.getValue(validTime)).toEqual(new Cartesian2(4.0, -5.0));
 
-        expect(dynamicObject.label.scale.getValue(validTime)).toEqual(labelPacket.label.scale);
-        expect(dynamicObject.label.show.getValue(validTime)).toEqual(labelPacket.label.show);
+        expect(entity.label.scale.getValue(validTime)).toEqual(labelPacket.label.scale);
+        expect(entity.label.show.getValue(validTime)).toEqual(labelPacket.label.show);
 
-        expect(dynamicObject.label.text.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.label.font.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.label.style.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.label.fillColor.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.label.outlineColor.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.label.outlineWidth.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.label.horizontalOrigin.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.label.verticalOrigin.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.label.eyeOffset.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.label.pixelOffset.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.label.scale.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.label.show.getValue(invalidTime)).toBeUndefined();
+        expect(entity.label.text.getValue(invalidTime)).toBeUndefined();
+        expect(entity.label.font.getValue(invalidTime)).toBeUndefined();
+        expect(entity.label.style.getValue(invalidTime)).toBeUndefined();
+        expect(entity.label.fillColor.getValue(invalidTime)).toBeUndefined();
+        expect(entity.label.outlineColor.getValue(invalidTime)).toBeUndefined();
+        expect(entity.label.outlineWidth.getValue(invalidTime)).toBeUndefined();
+        expect(entity.label.horizontalOrigin.getValue(invalidTime)).toBeUndefined();
+        expect(entity.label.verticalOrigin.getValue(invalidTime)).toBeUndefined();
+        expect(entity.label.eyeOffset.getValue(invalidTime)).toBeUndefined();
+        expect(entity.label.pixelOffset.getValue(invalidTime)).toBeUndefined();
+        expect(entity.label.scale.getValue(invalidTime)).toBeUndefined();
+        expect(entity.label.show.getValue(invalidTime)).toBeUndefined();
     });
 
     it('can handle sampled label pixelOffset.', function() {
@@ -1205,15 +1205,15 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(labelPacket);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
-        expect(dynamicObject.label).toBeDefined();
+        expect(entity.label).toBeDefined();
         // TODO: pixelOffset origin in CZML is bottom-left, Cesium is now top-left.
         // When CZML 1.0 flips this, flip the value here to match the packet
         var date1 = epoch;
         var date2 = JulianDate.addSeconds(epoch, 1.0, new JulianDate());
-        expect(dynamicObject.label.pixelOffset.getValue(date1)).toEqual(new Cartesian2(1.0, -2.0));
-        expect(dynamicObject.label.pixelOffset.getValue(date2)).toEqual(new Cartesian2(3.0, -4.0));
+        expect(entity.label.pixelOffset.getValue(date1)).toEqual(new Cartesian2(1.0, -2.0));
+        expect(entity.label.pixelOffset.getValue(date2)).toEqual(new Cartesian2(3.0, -4.0));
     });
 
     it('CZML Position works.', function() {
@@ -1225,8 +1225,8 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(packet);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
-        expect(dynamicObject.position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+        var entity = dataSource.entities.getObjects()[0];
+        expect(entity.position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
     });
 
     it('CZML Orientation works.', function() {
@@ -1238,8 +1238,8 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(packet);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
-        expect(dynamicObject.orientation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Quaternion(0.0, 0.0, 0.0, 1.0));
+        var entity = dataSource.entities.getObjects()[0];
+        expect(entity.orientation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Quaternion(0.0, 0.0, 0.0, 1.0));
     });
 
     it('vertexPositions work with cartesians.', function() {
@@ -1253,8 +1253,8 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(packet);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
-        expect(dynamicObject.vertexPositions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedResult);
+        var entity = dataSource.entities.getObjects()[0];
+        expect(entity.vertexPositions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedResult);
     });
 
     it('vertexPositions work with cartographicRadians.', function() {
@@ -1269,8 +1269,8 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(packet);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
-        expect(dynamicObject.vertexPositions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedResult);
+        var entity = dataSource.entities.getObjects()[0];
+        expect(entity.vertexPositions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedResult);
     });
 
     it('vertexPositions work with cartographicDegrees.', function() {
@@ -1284,8 +1284,8 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(packet);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
-        expect(dynamicObject.vertexPositions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedResult);
+        var entity = dataSource.entities.getObjects()[0];
+        expect(entity.vertexPositions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedResult);
     });
 
     it('CZML ViewFrom works.', function() {
@@ -1297,8 +1297,8 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(packet);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
-        expect(dynamicObject.viewFrom.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+        var entity = dataSource.entities.getObjects()[0];
+        expect(entity.viewFrom.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
     });
 
     it('CZML description works.', function() {
@@ -1308,8 +1308,8 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(packet);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
-        expect(dynamicObject.description.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet.description);
+        var entity = dataSource.entities.getObjects()[0];
+        expect(entity.description.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet.description);
     });
 
     it('CZML Availability works with a single interval.', function() {
@@ -1320,13 +1320,13 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.process(packet1);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
         var interval = TimeInterval.fromIso8601({
             iso8601 : packet1.availability
         });
-        expect(dynamicObject.availability.length).toEqual(1);
-        expect(dynamicObject.availability.get(0)).toEqual(interval);
+        expect(entity.availability.length).toEqual(1);
+        expect(entity.availability.get(0)).toEqual(interval);
 
         var packet2 = {
             id : 'testObject',
@@ -1337,8 +1337,8 @@ defineSuite([
         interval = TimeInterval.fromIso8601({
             iso8601 : packet2.availability
         });
-        expect(dynamicObject.availability.length).toEqual(1);
-        expect(dynamicObject.availability.get(0)).toEqual(interval);
+        expect(entity.availability.length).toEqual(1);
+        expect(entity.availability.get(0)).toEqual(interval);
     });
 
     it('CZML Availability works with multiple intervals.', function() {
@@ -1349,7 +1349,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.process(packet1);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
         var interval1 = TimeInterval.fromIso8601({
             iso8601 : packet1.availability[0]
@@ -1357,9 +1357,9 @@ defineSuite([
         var interval2 = TimeInterval.fromIso8601({
             iso8601 : packet1.availability[1]
         });
-        expect(dynamicObject.availability.length).toEqual(2);
-        expect(dynamicObject.availability.get(0)).toEqual(interval1);
-        expect(dynamicObject.availability.get(1)).toEqual(interval2);
+        expect(entity.availability.length).toEqual(2);
+        expect(entity.availability.get(0)).toEqual(interval1);
+        expect(entity.availability.get(1)).toEqual(interval2);
 
         var packet2 = {
             id : 'testObject',
@@ -1373,9 +1373,9 @@ defineSuite([
         interval2 = TimeInterval.fromIso8601({
             iso8601 : packet2.availability[1]
         });
-        expect(dynamicObject.availability.length).toEqual(2);
-        expect(dynamicObject.availability.get(0)).toEqual(interval1);
-        expect(dynamicObject.availability.get(1)).toEqual(interval2);
+        expect(entity.availability.length).toEqual(2);
+        expect(entity.availability.get(0)).toEqual(interval1);
+        expect(entity.availability.get(1)).toEqual(interval2);
     });
 
     it('CZML adds data for infinite path.', function() {
@@ -1398,17 +1398,17 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(pathPacket);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
-        expect(dynamicObject.path).toBeDefined();
-        expect(dynamicObject.path.material.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(dynamicObject.path.width.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.width);
-        expect(dynamicObject.path.resolution.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.resolution);
-        expect(dynamicObject.path.material.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(dynamicObject.path.material.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.outlineWidth);
-        expect(dynamicObject.path.leadTime.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.leadTime);
-        expect(dynamicObject.path.trailTime.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.trailTime);
-        expect(dynamicObject.path.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.path).toBeDefined();
+        expect(entity.path.material.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(entity.path.width.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.width);
+        expect(entity.path.resolution.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.resolution);
+        expect(entity.path.material.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(entity.path.material.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.outlineWidth);
+        expect(entity.path.leadTime.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.leadTime);
+        expect(entity.path.trailTime.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.trailTime);
+        expect(entity.path.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
     });
 
     it('CZML adds data for constrained path.', function() {
@@ -1437,23 +1437,23 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(pathPacket);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
-        expect(dynamicObject.path).toBeDefined();
-        expect(dynamicObject.path.width.getValue(validTime)).toEqual(pathPacket.path.width);
-        expect(dynamicObject.path.resolution.getValue(validTime)).toEqual(pathPacket.path.resolution);
-        expect(dynamicObject.path.leadTime.getValue(validTime)).toEqual(pathPacket.path.leadTime);
-        expect(dynamicObject.path.trailTime.getValue(validTime)).toEqual(pathPacket.path.trailTime);
-        expect(dynamicObject.path.show.getValue(validTime)).toEqual(true);
-        expect(dynamicObject.path.material.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(dynamicObject.path.material.getValue(validTime).outlineColor).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(dynamicObject.path.material.getValue(validTime).outlineWidth).toEqual(pathPacket.path.outlineWidth);
+        expect(entity.path).toBeDefined();
+        expect(entity.path.width.getValue(validTime)).toEqual(pathPacket.path.width);
+        expect(entity.path.resolution.getValue(validTime)).toEqual(pathPacket.path.resolution);
+        expect(entity.path.leadTime.getValue(validTime)).toEqual(pathPacket.path.leadTime);
+        expect(entity.path.trailTime.getValue(validTime)).toEqual(pathPacket.path.trailTime);
+        expect(entity.path.show.getValue(validTime)).toEqual(true);
+        expect(entity.path.material.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(entity.path.material.getValue(validTime).outlineColor).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(entity.path.material.getValue(validTime).outlineWidth).toEqual(pathPacket.path.outlineWidth);
 
-        expect(dynamicObject.path.material.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.path.width.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.path.leadTime.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.path.trailTime.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.path.show.getValue(invalidTime)).toBeUndefined();
+        expect(entity.path.material.getValue(invalidTime)).toBeUndefined();
+        expect(entity.path.width.getValue(invalidTime)).toBeUndefined();
+        expect(entity.path.leadTime.getValue(invalidTime)).toBeUndefined();
+        expect(entity.path.trailTime.getValue(invalidTime)).toBeUndefined();
+        expect(entity.path.show.getValue(invalidTime)).toBeUndefined();
     });
 
     it('CZML adds data for infinite point.', function() {
@@ -1473,14 +1473,14 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(pointPacket);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
-        expect(dynamicObject.point).toBeDefined();
-        expect(dynamicObject.point.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(dynamicObject.point.pixelSize.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pointPacket.point.pixelSize);
-        expect(dynamicObject.point.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(dynamicObject.point.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pointPacket.point.outlineWidth);
-        expect(dynamicObject.point.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.point).toBeDefined();
+        expect(entity.point.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(entity.point.pixelSize.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pointPacket.point.pixelSize);
+        expect(entity.point.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(entity.point.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pointPacket.point.outlineWidth);
+        expect(entity.point.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
     });
 
     it('CZML adds data for constrained point.', function() {
@@ -1506,20 +1506,20 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(pointPacket);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
-        expect(dynamicObject.point).toBeDefined();
-        expect(dynamicObject.point.color.getValue(validTime)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(dynamicObject.point.pixelSize.getValue(validTime)).toEqual(pointPacket.point.pixelSize);
-        expect(dynamicObject.point.outlineColor.getValue(validTime)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(dynamicObject.point.outlineWidth.getValue(validTime)).toEqual(pointPacket.point.outlineWidth);
-        expect(dynamicObject.point.show.getValue(validTime)).toEqual(true);
+        expect(entity.point).toBeDefined();
+        expect(entity.point.color.getValue(validTime)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(entity.point.pixelSize.getValue(validTime)).toEqual(pointPacket.point.pixelSize);
+        expect(entity.point.outlineColor.getValue(validTime)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(entity.point.outlineWidth.getValue(validTime)).toEqual(pointPacket.point.outlineWidth);
+        expect(entity.point.show.getValue(validTime)).toEqual(true);
 
-        expect(dynamicObject.point.color.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.point.pixelSize.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.point.outlineColor.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.point.outlineWidth.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.point.show.getValue(invalidTime)).toBeUndefined();
+        expect(entity.point.color.getValue(invalidTime)).toBeUndefined();
+        expect(entity.point.pixelSize.getValue(invalidTime)).toBeUndefined();
+        expect(entity.point.outlineColor.getValue(invalidTime)).toBeUndefined();
+        expect(entity.point.outlineWidth.getValue(invalidTime)).toBeUndefined();
+        expect(entity.point.show.getValue(invalidTime)).toBeUndefined();
     });
 
     it('CZML adds data for infinite polygon.', function() {
@@ -1542,15 +1542,15 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(polygonPacket);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
-        expect(dynamicObject.polygon).toBeDefined();
-        expect(dynamicObject.polygon.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(dynamicObject.polygon.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
-        expect(dynamicObject.polygon.height.getValue(Iso8601.MINIMUM_VALUE)).toEqual(1);
-        expect(dynamicObject.polygon.extrudedHeight.getValue(Iso8601.MINIMUM_VALUE)).toEqual(2);
-        expect(dynamicObject.polygon.granularity.getValue(Iso8601.MINIMUM_VALUE)).toEqual(3);
-        expect(dynamicObject.polygon.stRotation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(4);
+        expect(entity.polygon).toBeDefined();
+        expect(entity.polygon.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(entity.polygon.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.polygon.height.getValue(Iso8601.MINIMUM_VALUE)).toEqual(1);
+        expect(entity.polygon.extrudedHeight.getValue(Iso8601.MINIMUM_VALUE)).toEqual(2);
+        expect(entity.polygon.granularity.getValue(Iso8601.MINIMUM_VALUE)).toEqual(3);
+        expect(entity.polygon.stRotation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(4);
     });
 
     it('CZML adds data for constrained polygon.', function() {
@@ -1575,14 +1575,14 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(polygonPacket);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
-        expect(dynamicObject.polygon).toBeDefined();
-        expect(dynamicObject.polygon.material.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(dynamicObject.polygon.show.getValue(validTime)).toEqual(true);
+        expect(entity.polygon).toBeDefined();
+        expect(entity.polygon.material.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(entity.polygon.show.getValue(validTime)).toEqual(true);
 
-        expect(dynamicObject.polygon.material.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.polygon.show.getValue(invalidTime)).toBeUndefined();
+        expect(entity.polygon.material.getValue(invalidTime)).toBeUndefined();
+        expect(entity.polygon.show.getValue(invalidTime)).toBeUndefined();
     });
 
     it('CZML adds data for infinite polyline.', function() {
@@ -1602,14 +1602,14 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(polylinePacket);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
-        expect(dynamicObject.polyline).toBeDefined();
-        expect(dynamicObject.polyline.material.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(dynamicObject.polyline.width.getValue(Iso8601.MINIMUM_VALUE)).toEqual(polylinePacket.polyline.width);
-        expect(dynamicObject.polyline.material.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(dynamicObject.polyline.material.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(polylinePacket.polyline.outlineWidth);
-        expect(dynamicObject.polyline.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.polyline).toBeDefined();
+        expect(entity.polyline.material.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(entity.polyline.width.getValue(Iso8601.MINIMUM_VALUE)).toEqual(polylinePacket.polyline.width);
+        expect(entity.polyline.material.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(entity.polyline.material.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(polylinePacket.polyline.outlineWidth);
+        expect(entity.polyline.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
     });
 
     it('CZML adds data for constrained polyline.', function() {
@@ -1635,18 +1635,18 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(polylinePacket);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
-        expect(dynamicObject.polyline).toBeDefined();
-        expect(dynamicObject.polyline.material.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(dynamicObject.polyline.width.getValue(validTime)).toEqual(polylinePacket.polyline.width);
-        expect(dynamicObject.polyline.material.getValue(validTime).outlineColor).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(dynamicObject.polyline.material.getValue(validTime).outlineWidth).toEqual(polylinePacket.polyline.outlineWidth);
-        expect(dynamicObject.polyline.show.getValue(validTime)).toEqual(true);
+        expect(entity.polyline).toBeDefined();
+        expect(entity.polyline.material.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(entity.polyline.width.getValue(validTime)).toEqual(polylinePacket.polyline.width);
+        expect(entity.polyline.material.getValue(validTime).outlineColor).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(entity.polyline.material.getValue(validTime).outlineWidth).toEqual(polylinePacket.polyline.outlineWidth);
+        expect(entity.polyline.show.getValue(validTime)).toEqual(true);
 
-        expect(dynamicObject.polyline.material.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.polyline.width.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.polyline.show.getValue(invalidTime)).toBeUndefined();
+        expect(entity.polyline.material.getValue(invalidTime)).toBeUndefined();
+        expect(entity.polyline.width.getValue(invalidTime)).toBeUndefined();
+        expect(entity.polyline.show.getValue(invalidTime)).toBeUndefined();
     });
 
     it('CZML adds data for infinite pyramid.', function() {
@@ -1674,16 +1674,16 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(pyramidPacket);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
-        expect(dynamicObject.pyramid).toBeDefined();
-        expect(dynamicObject.pyramid.directions.getValue(Iso8601.MINIMUM_VALUE)).toEqual([new Spherical(pyramidPacket.pyramid.directions.unitSpherical[0], pyramidPacket.pyramid.directions.unitSpherical[1]), new Spherical(pyramidPacket.pyramid.directions.unitSpherical[2], pyramidPacket.pyramid.directions.unitSpherical[3])]);
-        expect(dynamicObject.pyramid.radius.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pyramidPacket.pyramid.radius);
-        expect(dynamicObject.pyramid.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pyramidPacket.pyramid.show);
-        expect(dynamicObject.pyramid.showIntersection.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pyramidPacket.pyramid.showIntersection);
-        expect(dynamicObject.pyramid.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(dynamicObject.pyramid.intersectionColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.5, 0.5, 0.5, 0.5));
-        expect(dynamicObject.pyramid.intersectionWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(7.0);
+        expect(entity.pyramid).toBeDefined();
+        expect(entity.pyramid.directions.getValue(Iso8601.MINIMUM_VALUE)).toEqual([new Spherical(pyramidPacket.pyramid.directions.unitSpherical[0], pyramidPacket.pyramid.directions.unitSpherical[1]), new Spherical(pyramidPacket.pyramid.directions.unitSpherical[2], pyramidPacket.pyramid.directions.unitSpherical[3])]);
+        expect(entity.pyramid.radius.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pyramidPacket.pyramid.radius);
+        expect(entity.pyramid.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pyramidPacket.pyramid.show);
+        expect(entity.pyramid.showIntersection.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pyramidPacket.pyramid.showIntersection);
+        expect(entity.pyramid.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(entity.pyramid.intersectionColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.5, 0.5, 0.5, 0.5));
+        expect(entity.pyramid.intersectionWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(7.0);
     });
 
     it('pyramid directions supports intervals.', function() {
@@ -1704,9 +1704,9 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(pyramidPacket);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
-        expect(dynamicObject.pyramid.directions.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual(expected1);
-        expect(dynamicObject.pyramid.directions.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toEqual(expected2);
+        var entity = dataSource.entities.getObjects()[0];
+        expect(entity.pyramid.directions.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual(expected1);
+        expect(entity.pyramid.directions.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toEqual(expected2);
     });
 
     it('CZML adds data for constrained pyramid.', function() {
@@ -1740,24 +1740,24 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(pyramidPacket);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
-        expect(dynamicObject.pyramid).toBeDefined();
-        expect(dynamicObject.pyramid.directions.getValue(validTime)).toEqual([new Spherical(pyramidPacket.pyramid.directions.unitSpherical[0], pyramidPacket.pyramid.directions.unitSpherical[1]), new Spherical(pyramidPacket.pyramid.directions.unitSpherical[2], pyramidPacket.pyramid.directions.unitSpherical[3])]);
-        expect(dynamicObject.pyramid.radius.getValue(validTime)).toEqual(pyramidPacket.pyramid.radius);
-        expect(dynamicObject.pyramid.show.getValue(validTime)).toEqual(pyramidPacket.pyramid.show);
-        expect(dynamicObject.pyramid.showIntersection.getValue(validTime)).toEqual(pyramidPacket.pyramid.showIntersection);
-        expect(dynamicObject.pyramid.material.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(dynamicObject.pyramid.intersectionColor.getValue(validTime)).toEqual(new Color(0.5, 0.5, 0.5, 0.5));
-        expect(dynamicObject.pyramid.intersectionWidth.getValue(validTime)).toEqual(8.0);
+        expect(entity.pyramid).toBeDefined();
+        expect(entity.pyramid.directions.getValue(validTime)).toEqual([new Spherical(pyramidPacket.pyramid.directions.unitSpherical[0], pyramidPacket.pyramid.directions.unitSpherical[1]), new Spherical(pyramidPacket.pyramid.directions.unitSpherical[2], pyramidPacket.pyramid.directions.unitSpherical[3])]);
+        expect(entity.pyramid.radius.getValue(validTime)).toEqual(pyramidPacket.pyramid.radius);
+        expect(entity.pyramid.show.getValue(validTime)).toEqual(pyramidPacket.pyramid.show);
+        expect(entity.pyramid.showIntersection.getValue(validTime)).toEqual(pyramidPacket.pyramid.showIntersection);
+        expect(entity.pyramid.material.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(entity.pyramid.intersectionColor.getValue(validTime)).toEqual(new Color(0.5, 0.5, 0.5, 0.5));
+        expect(entity.pyramid.intersectionWidth.getValue(validTime)).toEqual(8.0);
 
-        expect(dynamicObject.pyramid.directions.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.pyramid.radius.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.pyramid.show.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.pyramid.showIntersection.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.pyramid.material.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.pyramid.intersectionColor.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.pyramid.intersectionWidth.getValue(invalidTime)).toBeUndefined();
+        expect(entity.pyramid.directions.getValue(invalidTime)).toBeUndefined();
+        expect(entity.pyramid.radius.getValue(invalidTime)).toBeUndefined();
+        expect(entity.pyramid.show.getValue(invalidTime)).toBeUndefined();
+        expect(entity.pyramid.showIntersection.getValue(invalidTime)).toBeUndefined();
+        expect(entity.pyramid.material.getValue(invalidTime)).toBeUndefined();
+        expect(entity.pyramid.intersectionColor.getValue(invalidTime)).toBeUndefined();
+        expect(entity.pyramid.intersectionWidth.getValue(invalidTime)).toBeUndefined();
     });
 
     it('CZML adds data for infinite vector.', function() {
@@ -1778,14 +1778,14 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(vectorPacket);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
-        expect(dynamicObject.vector).toBeDefined();
-        expect(dynamicObject.vector.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(dynamicObject.vector.width.getValue(Iso8601.MINIMUM_VALUE)).toEqual(vectorPacket.vector.width);
-        expect(dynamicObject.vector.direction.getValue(Iso8601.MINIMUM_VALUE)).toEqual(direction);
-        expect(dynamicObject.vector.length.getValue(Iso8601.MINIMUM_VALUE)).toEqual(vectorPacket.vector.length);
-        expect(dynamicObject.vector.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.vector).toBeDefined();
+        expect(entity.vector.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(entity.vector.width.getValue(Iso8601.MINIMUM_VALUE)).toEqual(vectorPacket.vector.width);
+        expect(entity.vector.direction.getValue(Iso8601.MINIMUM_VALUE)).toEqual(direction);
+        expect(entity.vector.length.getValue(Iso8601.MINIMUM_VALUE)).toEqual(vectorPacket.vector.length);
+        expect(entity.vector.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
     });
 
     it('CZML adds data for constrained vector.', function() {
@@ -1812,26 +1812,26 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(vectorPacket);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
-        expect(dynamicObject.vector).toBeDefined();
-        expect(dynamicObject.vector.color.getValue(validTime)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(dynamicObject.vector.width.getValue(validTime)).toEqual(vectorPacket.vector.width);
-        expect(dynamicObject.vector.direction.getValue(validTime)).toEqual(direction);
-        expect(dynamicObject.vector.length.getValue(validTime)).toEqual(vectorPacket.vector.length);
-        expect(dynamicObject.vector.show.getValue(validTime)).toEqual(true);
+        expect(entity.vector).toBeDefined();
+        expect(entity.vector.color.getValue(validTime)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(entity.vector.width.getValue(validTime)).toEqual(vectorPacket.vector.width);
+        expect(entity.vector.direction.getValue(validTime)).toEqual(direction);
+        expect(entity.vector.length.getValue(validTime)).toEqual(vectorPacket.vector.length);
+        expect(entity.vector.show.getValue(validTime)).toEqual(true);
 
-        expect(dynamicObject.vector.color.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.vector.width.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.vector.direction.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.vector.length.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.vector.show.getValue(invalidTime)).toBeUndefined();
+        expect(entity.vector.color.getValue(invalidTime)).toBeUndefined();
+        expect(entity.vector.width.getValue(invalidTime)).toBeUndefined();
+        expect(entity.vector.direction.getValue(invalidTime)).toBeUndefined();
+        expect(entity.vector.length.getValue(invalidTime)).toBeUndefined();
+        expect(entity.vector.show.getValue(invalidTime)).toBeUndefined();
     });
 
     it('processCzml deletes an existing object.', function() {
         var dataSource = new CzmlDataSource();
         dataSource.load(staticCzml);
-        var objects = dataSource.dynamicObjects.getObjects();
+        var objects = dataSource.entities.getObjects();
         expect(objects.length).toEqual(1);
         dataSource.load(czmlDelete);
         expect(objects.length).toEqual(0);
@@ -1847,7 +1847,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(parentChildCzml);
-        var objects = dataSource.dynamicObjects;
+        var objects = dataSource.entities;
 
         var parent = objects.getById('parent');
         expect(parent.parent).toBeUndefined();
@@ -1877,7 +1877,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(parentChildCzml);
-        var objects = dataSource.dynamicObjects;
+        var objects = dataSource.entities;
 
         var grandparent = objects.getById('grandparent');
         expect(grandparent.parent).toBeUndefined();
@@ -1947,7 +1947,7 @@ defineSuite([
         var spy = jasmine.createSpy('changedEvent');
 
         var dataSource = new CzmlDataSource();
-        dataSource.dynamicObjects.collectionChanged.addEventListener(spy);
+        dataSource.entities.collectionChanged.addEventListener(spy);
         dataSource.load(packets);
 
         expect(spy.callCount).toEqual(1);
@@ -1995,12 +1995,12 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(packet);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
-        expect(dynamicObject.polygon.material.getType(solid)).toBe('Color');
-        expect(dynamicObject.polygon.material.getType(grid1)).toBe('Grid');
-        expect(dynamicObject.polygon.material.getType(grid2)).toBe('Grid');
-        expect(dynamicObject.polygon.material.getType(before)).toBeUndefined();
-        expect(dynamicObject.polygon.material.getType(after)).toBeUndefined();
+        var entity = dataSource.entities.getObjects()[0];
+        expect(entity.polygon.material.getType(solid)).toBe('Color');
+        expect(entity.polygon.material.getType(grid1)).toBe('Grid');
+        expect(entity.polygon.material.getType(grid2)).toBe('Grid');
+        expect(entity.polygon.material.getType(before)).toBeUndefined();
+        expect(entity.polygon.material.getType(after)).toBeUndefined();
     });
 
     it('CZML adds data for rectangle.', function() {
@@ -2031,19 +2031,19 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(rectanglePacket);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
-        expect(dynamicObject.rectangle).toBeDefined();
-        expect(dynamicObject.rectangle.coordinates.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Rectangle(0, 1, 2, 3));
-        expect(dynamicObject.rectangle.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.2, 0.3, 0.4));
-        expect(dynamicObject.rectangle.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.show);
-        expect(dynamicObject.rectangle.height.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.height);
-        expect(dynamicObject.rectangle.extrudedHeight.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.extrudedHeight);
-        expect(dynamicObject.rectangle.granularity.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.granularity);
-        expect(dynamicObject.rectangle.rotation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.rotation);
-        expect(dynamicObject.rectangle.stRotation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.stRotation);
-        expect(dynamicObject.rectangle.closeBottom.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.closeBottom);
-        expect(dynamicObject.rectangle.closeTop.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.closeTop);
+        expect(entity.rectangle).toBeDefined();
+        expect(entity.rectangle.coordinates.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Rectangle(0, 1, 2, 3));
+        expect(entity.rectangle.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.2, 0.3, 0.4));
+        expect(entity.rectangle.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.show);
+        expect(entity.rectangle.height.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.height);
+        expect(entity.rectangle.extrudedHeight.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.extrudedHeight);
+        expect(entity.rectangle.granularity.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.granularity);
+        expect(entity.rectangle.rotation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.rotation);
+        expect(entity.rectangle.stRotation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.stRotation);
+        expect(entity.rectangle.closeBottom.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.closeBottom);
+        expect(entity.rectangle.closeTop.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.closeTop);
     });
 
     it('CZML adds data for rectangle in degrees.', function() {
@@ -2057,8 +2057,8 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(rectanglePacket);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
-        expect(dynamicObject.rectangle.coordinates.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Rectangle.fromDegrees(0, 1, 2, 3));
+        var entity = dataSource.entities.getObjects()[0];
+        expect(entity.rectangle.coordinates.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Rectangle.fromDegrees(0, 1, 2, 3));
     });
 
     it('CZML adds data for wall.', function() {
@@ -2086,14 +2086,14 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(wallPacket);
-        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        var entity = dataSource.entities.getObjects()[0];
 
-        expect(dynamicObject.wall).toBeDefined();
-        expect(dynamicObject.wall.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.2, 0.3, 0.4));
-        expect(dynamicObject.wall.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.show);
-        expect(dynamicObject.wall.granularity.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.granularity);
-        expect(dynamicObject.wall.minimumHeights.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.minimumHeights.array);
-        expect(dynamicObject.wall.maximumHeights.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.maximumHeights.array);
+        expect(entity.wall).toBeDefined();
+        expect(entity.wall.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.2, 0.3, 0.4));
+        expect(entity.wall.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.show);
+        expect(entity.wall.granularity.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.granularity);
+        expect(entity.wall.minimumHeights.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.minimumHeights.array);
+        expect(entity.wall.maximumHeights.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.maximumHeights.array);
     });
 
     it('Can use constant reference properties', function() {
@@ -2115,8 +2115,8 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.load(packets);
 
-        var targetObject = dataSource.dynamicObjects.getById('targetId');
-        var referenceObject = dataSource.dynamicObjects.getById('referenceId');
+        var targetObject = dataSource.entities.getById('targetId');
+        var referenceObject = dataSource.entities.getById('referenceId');
 
         expect(referenceObject.point.pixelSize instanceof ReferenceProperty).toBe(true);
         expect(targetObject.point.pixelSize.getValue(time)).toEqual(referenceObject.point.pixelSize.getValue(time));
@@ -2152,9 +2152,9 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.load(packets);
 
-        var targetObject = dataSource.dynamicObjects.getById('targetId');
-        var targetObject2 = dataSource.dynamicObjects.getById('targetId2');
-        var referenceObject = dataSource.dynamicObjects.getById('referenceId');
+        var targetObject = dataSource.entities.getById('targetId');
+        var targetObject2 = dataSource.entities.getById('targetId2');
+        var referenceObject = dataSource.entities.getById('referenceId');
 
         expect(targetObject.point.pixelSize.getValue(time1)).toEqual(referenceObject.point.pixelSize.getValue(time1));
         expect(targetObject2.point.pixelSize.getValue(time2)).toEqual(referenceObject.point.pixelSize.getValue(time2));
@@ -2178,8 +2178,8 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.load(packets);
 
-        var targetObject = dataSource.dynamicObjects.getById('targetId');
-        var referenceObject = dataSource.dynamicObjects.getById('referenceId');
+        var targetObject = dataSource.entities.getById('targetId');
+        var referenceObject = dataSource.entities.getById('referenceId');
 
         expect(referenceObject.position instanceof ReferenceProperty).toBe(true);
         expect(targetObject.position.getValue(time)).toEqual(referenceObject.position.getValue(time));
@@ -2215,9 +2215,9 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.load(packets);
 
-        var targetObject = dataSource.dynamicObjects.getById('targetId');
-        var targetObject2 = dataSource.dynamicObjects.getById('targetId2');
-        var referenceObject = dataSource.dynamicObjects.getById('referenceId');
+        var targetObject = dataSource.entities.getById('targetId');
+        var targetObject2 = dataSource.entities.getById('targetId2');
+        var referenceObject = dataSource.entities.getById('referenceId');
 
         expect(targetObject.position.getValue(time1)).toEqual(referenceObject.position.getValue(time1));
         expect(targetObject2.position.getValue(time2)).toEqual(referenceObject.position.getValue(time2));
@@ -2242,8 +2242,8 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.load(packets);
 
-        var targetObject = dataSource.dynamicObjects.getById('targetId');
-        var referenceObject = dataSource.dynamicObjects.getById('referenceId');
+        var targetObject = dataSource.entities.getById('targetId');
+        var referenceObject = dataSource.entities.getById('referenceId');
 
         expect(referenceObject.point.pixelSize instanceof ReferenceProperty).toBe(true);
         expect(targetObject.point.pixelSize.getValue(time)).toEqual(referenceObject.point.pixelSize.getValue(time));
@@ -2264,7 +2264,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.load(packet);
 
-        var targetObject = dataSource.dynamicObjects.getById('testObject');
+        var targetObject = dataSource.entities.getById('testObject');
         expect(targetObject.point.outlineWidth instanceof ReferenceProperty).toBe(true);
         expect(targetObject.point.outlineWidth.getValue(time)).toEqual(targetObject.point.pixelSize.getValue(time));
     });

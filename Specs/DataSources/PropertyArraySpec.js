@@ -1,9 +1,9 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/PropertyArray',
+        'DataSources/PropertyArray',
         'Core/JulianDate',
-        'DynamicScene/ConstantProperty',
-        'DynamicScene/SampledProperty'
+        'DataSources/ConstantProperty',
+        'DataSources/SampledProperty'
     ], function(
         PropertyArray,
         JulianDate,

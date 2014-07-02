@@ -1,19 +1,19 @@
 /*global defineSuite*/
 defineSuite([
-        'Widgets/Viewer/viewerDynamicObjectMixin',
+        'Widgets/Viewer/viewerEntityMixin',
         'Core/Cartesian3',
-        'DynamicScene/ConstantPositionProperty',
-        'DynamicScene/ConstantProperty',
-        'DynamicScene/DynamicObject',
+        'DataSources/ConstantPositionProperty',
+        'DataSources/ConstantProperty',
+        'DataSources/Entity',
         'Scene/CameraFlightPath',
         'Specs/MockDataSource',
         'Widgets/Viewer/Viewer'
     ], function(
-        viewerDynamicObjectMixin,
+        viewerEntityMixin,
         Cartesian3,
         ConstantPositionProperty,
         ConstantProperty,
-        DynamicObject,
+        Entity,
         CameraFlightPath,
         MockDataSource,
         Viewer) {
@@ -39,20 +39,20 @@ defineSuite([
 
     it('adds properties', function() {
         viewer = new Viewer(container);
-        viewer.extend(viewerDynamicObjectMixin);
+        viewer.extend(viewerEntityMixin);
         expect(viewer.hasOwnProperty('trackedObject')).toEqual(true);
         expect(viewer.hasOwnProperty('selectedObject')).toEqual(true);
     });
 
     it('can get and set trackedObject', function() {
         viewer = new Viewer(container);
-        viewer.extend(viewerDynamicObjectMixin);
+        viewer.extend(viewerEntityMixin);
 
-        var dynamicObject = new DynamicObject();
-        dynamicObject.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
+        var entity = new Entity();
+        entity.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
 
-        viewer.trackedObject = dynamicObject;
-        expect(viewer.trackedObject).toBe(dynamicObject);
+        viewer.trackedObject = entity;
+        expect(viewer.trackedObject).toBe(entity);
 
         viewer.trackedObject = undefined;
         expect(viewer.trackedObject).toBeUndefined();
@@ -60,18 +60,18 @@ defineSuite([
 
     it('can get and set selectedObject', function() {
         var viewer = new Viewer(container);
-        viewer.extend(viewerDynamicObjectMixin);
+        viewer.extend(viewerEntityMixin);
 
         var dataSource = new MockDataSource();
         viewer.dataSources.add(dataSource);
 
-        var dynamicObject = new DynamicObject();
-        dynamicObject.position = new ConstantPositionProperty(new Cartesian3(123456, 123456, 123456));
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(new Cartesian3(123456, 123456, 123456));
 
-        dataSource.dynamicObjects.add(dynamicObject);
+        dataSource.entities.add(entity);
 
-        viewer.selectedObject = dynamicObject;
-        expect(viewer.selectedObject).toBe(dynamicObject);
+        viewer.selectedObject = entity;
+        expect(viewer.selectedObject).toBe(entity);
 
         viewer.selectedObject = undefined;
         expect(viewer.selectedObject).toBeUndefined();
@@ -81,13 +81,13 @@ defineSuite([
 
     it('home button resets tracked object', function() {
         viewer = new Viewer(container);
-        viewer.extend(viewerDynamicObjectMixin);
+        viewer.extend(viewerEntityMixin);
 
-        var dynamicObject = new DynamicObject();
-        dynamicObject.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
+        var entity = new Entity();
+        entity.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
 
-        viewer.trackedObject = dynamicObject;
-        expect(viewer.trackedObject).toBe(dynamicObject);
+        viewer.trackedObject = entity;
+        expect(viewer.trackedObject).toBe(entity);
 
         //Needed to avoid actually creating a flight when we issue the home command.
         spyOn(CameraFlightPath, 'createTween').andReturn({
@@ -102,7 +102,7 @@ defineSuite([
 
     it('throws with undefined viewer', function() {
         expect(function() {
-            viewerDynamicObjectMixin(undefined);
+            viewerEntityMixin(undefined);
         }).toThrowDeveloperError();
     });
 
@@ -110,7 +110,7 @@ defineSuite([
         viewer = new Viewer(container);
         viewer.trackedObject = true;
         expect(function() {
-            viewer.extend(viewerDynamicObjectMixin);
+            viewer.extend(viewerEntityMixin);
         }).toThrowDeveloperError();
     });
 
@@ -118,7 +118,7 @@ defineSuite([
         viewer = new Viewer(container);
         viewer.selectedObject = true;
         expect(function() {
-            viewer.extend(viewerDynamicObjectMixin);
+            viewer.extend(viewerEntityMixin);
         }).toThrowDeveloperError();
     });
 
@@ -129,37 +129,37 @@ defineSuite([
         var preMixinDataSource = new MockDataSource();
         viewer.dataSources.add(preMixinDataSource);
 
-        var beforeDynamicObject = new DynamicObject();
-        beforeDynamicObject.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
-        preMixinDataSource.dynamicObjects.add(beforeDynamicObject);
+        var beforeEntity = new Entity();
+        beforeEntity.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
+        preMixinDataSource.entities.add(beforeEntity);
 
-        viewer.extend(viewerDynamicObjectMixin);
+        viewer.extend(viewerEntityMixin);
 
         //one data source that is added after mixing in
         var postMixinDataSource = new MockDataSource();
         viewer.dataSources.add(postMixinDataSource);
 
-        var dynamicObject = new DynamicObject();
-        dynamicObject.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
-        postMixinDataSource.dynamicObjects.add(dynamicObject);
+        var entity = new Entity();
+        entity.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
+        postMixinDataSource.entities.add(entity);
 
-        viewer.trackedObject = dynamicObject;
-        expect(viewer.trackedObject).toBe(dynamicObject);
+        viewer.trackedObject = entity;
+        expect(viewer.trackedObject).toBe(entity);
 
         // spy on the home button's command
         Object.defineProperty(viewer.homeButton.viewModel, 'command', {
             value : jasmine.createSpy('command')
         });
 
-        postMixinDataSource.dynamicObjects.remove(dynamicObject);
+        postMixinDataSource.entities.remove(entity);
 
         expect(viewer.homeButton.viewModel.command).toHaveBeenCalled();
 
-        // reset the spy before removing the other dynamic object
+        // reset the spy before removing the other entity
         viewer.homeButton.viewModel.command.reset();
 
-        viewer.trackedObject = beforeDynamicObject;
-        preMixinDataSource.dynamicObjects.remove(beforeDynamicObject);
+        viewer.trackedObject = beforeEntity;
+        preMixinDataSource.entities.remove(beforeEntity);
 
         expect(viewer.homeButton.viewModel.command).toHaveBeenCalled();
     });
@@ -171,18 +171,18 @@ defineSuite([
         var preMixinDataSource = new MockDataSource();
         viewer.dataSources.add(preMixinDataSource);
 
-        viewer.extend(viewerDynamicObjectMixin);
+        viewer.extend(viewerEntityMixin);
 
         //one data source that is added after mixing in
         var postMixinDataSource = new MockDataSource();
         viewer.dataSources.add(postMixinDataSource);
 
-        var preMixinListenerCount = preMixinDataSource.dynamicObjects.collectionChanged._listeners.length;
-        var postMixinListenerCount = postMixinDataSource.dynamicObjects.collectionChanged._listeners.length;
+        var preMixinListenerCount = preMixinDataSource.entities.collectionChanged._listeners.length;
+        var postMixinListenerCount = postMixinDataSource.entities.collectionChanged._listeners.length;
 
         viewer = viewer.destroy();
 
-        expect(preMixinDataSource.dynamicObjects.collectionChanged._listeners.length).not.toEqual(preMixinListenerCount);
-        expect(postMixinDataSource.dynamicObjects.collectionChanged._listeners.length).not.toEqual(postMixinListenerCount);
+        expect(preMixinDataSource.entities.collectionChanged._listeners.length).not.toEqual(preMixinListenerCount);
+        expect(postMixinDataSource.entities.collectionChanged._listeners.length).not.toEqual(postMixinListenerCount);
     });
 }, 'WebGL');

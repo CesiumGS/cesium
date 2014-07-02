@@ -1,11 +1,11 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/PositionPropertyArray',
+        'DataSources/PositionPropertyArray',
         'Core/Cartesian3',
         'Core/JulianDate',
         'Core/ReferenceFrame',
-        'DynamicScene/ConstantPositionProperty',
-        'DynamicScene/SampledPositionProperty'
+        'DataSources/ConstantPositionProperty',
+        'DataSources/SampledPositionProperty'
     ], function(
         PositionPropertyArray,
         Cartesian3,

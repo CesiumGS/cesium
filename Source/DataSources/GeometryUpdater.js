@@ -9,7 +9,7 @@ define([
 
     /**
      * Defines the interface for a geometry updater.  A GeometryUpdater maps
-     * geometry defined as part of a {@link DynamicObject} into {@link Geometry}
+     * geometry defined as part of a {@link Entity} into {@link Geometry}
      * instances.  These instances are then visualized by {@link GeometryVisualizer}.
      *
      * This type defines an interface and cannot be instantiated directly.
@@ -17,7 +17,7 @@ define([
      * @alias GeometryUpdater
      * @constructor
      *
-     * @param {DynamicObject} dynamicObject The object containing the geometry to be visualized.
+     * @param {Entity} entity The object containing the geometry to be visualized.
      * @param {Scene} scene The scene where visualization is taking place.
      *
      * @see EllipseGeometryUpdater
@@ -25,7 +25,7 @@ define([
      * @see PolygonGeometryUpdater
      * @see PolylineGeometryUpdater
      */
-    var GeometryUpdater = function(dynamicObject, scene) {
+    var GeometryUpdater = function(entity, scene) {
         DeveloperError.throwInstantiationError();
     };
 
@@ -53,10 +53,10 @@ define([
          * Gets the object associated with this geometry.
          * @memberof GeometryUpdater.prototype
          *
-         * @type {DynamicObject}
+         * @type {Entity}
          * @readonly
          */
-        dynamicObject : {
+        entity : {
             get : DeveloperError.throwInstantiationError
         },
         /**

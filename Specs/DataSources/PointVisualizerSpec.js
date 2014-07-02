@@ -1,25 +1,25 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/DynamicPointVisualizer',
+        'DataSources/PointVisualizer',
         'Core/Cartesian3',
         'Core/Color',
         'Core/JulianDate',
         'Core/NearFarScalar',
-        'DynamicScene/ConstantProperty',
-        'DynamicScene/DynamicObjectCollection',
-        'DynamicScene/DynamicPoint',
+        'DataSources/ConstantProperty',
+        'DataSources/EntityCollection',
+        'DataSources/PointGraphics',
         'Scene/BillboardCollection',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
-        DynamicPointVisualizer,
+        PointVisualizer,
         Cartesian3,
         Color,
         JulianDate,
         NearFarScalar,
         ConstantProperty,
-        DynamicObjectCollection,
-        DynamicPoint,
+        EntityCollection,
+        PointGraphics,
         BillboardCollection,
         createScene,
         destroyScene) {
@@ -43,29 +43,29 @@ defineSuite([
 
     it('constructor throws if no scene is passed.', function() {
         expect(function() {
-            return new DynamicPointVisualizer();
+            return new PointVisualizer();
         }).toThrowDeveloperError();
     });
 
     it('constructor adds collection to scene.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicPointVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new PointVisualizer(scene, entityCollection);
         expect(scene.primitives.length).toEqual(1);
         var billboardCollection = scene.primitives.get(0);
         expect(billboardCollection instanceof BillboardCollection).toEqual(true);
     });
 
     it('update throws if no time specified.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicPointVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new PointVisualizer(scene, entityCollection);
         expect(function() {
             visualizer.update();
         }).toThrowDeveloperError();
     });
 
     it('isDestroy returns false until destroyed.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicPointVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new PointVisualizer(scene, entityCollection);
         expect(visualizer.isDestroyed()).toEqual(false);
         visualizer.destroy();
         expect(visualizer.isDestroyed()).toEqual(true);
@@ -73,10 +73,10 @@ defineSuite([
     });
 
     it('object with no point does not create a billboard.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicPointVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new PointVisualizer(scene, entityCollection);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         visualizer.update(JulianDate.now());
         var billboardCollection = scene.primitives.get(0);
@@ -84,11 +84,11 @@ defineSuite([
     });
 
     it('object with no position does not create a billboard.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicPointVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new PointVisualizer(scene, entityCollection);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        var point = testObject.point = new DynamicPoint();
+        var testObject = entityCollection.getOrCreateObject('test');
+        var point = testObject.point = new PointGraphics();
         point.show = new ConstantProperty(true);
 
         visualizer.update(JulianDate.now());
@@ -96,19 +96,19 @@ defineSuite([
         expect(billboardCollection.length).toEqual(0);
     });
 
-    it('A DynamicPoint causes a Billboard to be created and updated.', function() {
+    it('A PointGraphics causes a Billboard to be created and updated.', function() {
         var time = JulianDate.now();
 
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicPointVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new PointVisualizer(scene, entityCollection);
 
         var billboardCollection = scene.primitives.get(0);
         expect(billboardCollection.length).toEqual(0);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
 
-        var point = testObject.point = new DynamicPoint();
+        var point = testObject.point = new PointGraphics();
         point.show = new ConstantProperty(true);
         point.color = new ConstantProperty(new Color(0.8, 0.7, 0.6, 0.5));
         point.pixelSize = new ConstantProperty(12.5);
@@ -155,15 +155,15 @@ defineSuite([
     });
 
     it('clear hides billboards.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicPointVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new PointVisualizer(scene, entityCollection);
         var billboardCollection = scene.primitives.get(0);
         expect(billboardCollection.length).toEqual(0);
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
         var time = JulianDate.now();
 
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
-        var point = testObject.point = new DynamicPoint();
+        var point = testObject.point = new PointGraphics();
         point.show = new ConstantProperty(true);
         visualizer.update(time);
 
@@ -173,21 +173,21 @@ defineSuite([
         visualizer.update(time);
         //Clearing won't actually remove the billboard because of the
         //internal cache used by the visualizer, instead it just hides it.
-        dynamicObjectCollection.removeAll();
+        entityCollection.removeAll();
         expect(bb.show).toEqual(false);
     });
 
-    it('Visualizer sets dynamicObject property.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicPointVisualizer(scene, dynamicObjectCollection);
+    it('Visualizer sets entity property.', function() {
+        var entityCollection = new EntityCollection();
+        visualizer = new PointVisualizer(scene, entityCollection);
 
         var billboardCollection = scene.primitives.get(0);
         expect(billboardCollection.length).toEqual(0);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
 
         var time = JulianDate.now();
-        var point = testObject.point = new DynamicPoint();
+        var point = testObject.point = new PointGraphics();
 
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         point.show = new ConstantProperty(true);

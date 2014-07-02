@@ -71,49 +71,49 @@ define([
     }
 
     /**
-     * A {@link Visualizer} which maps {@link DynamicObject#cone} to a {@link CustomSensor}.
-     * @alias DynamicConeVisualizerUsingCustomSensor
+     * A {@link Visualizer} which maps {@link Entity#cone} to a {@link CustomSensor}.
+     * @alias ConeVisualizer
      * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
-     * @param {DynamicObjectCollection} dynamicObjectCollection The dynamicObjectCollection to visualize.
+     * @param {EntityCollection} entityCollection The entityCollection to visualize.
      */
-    var DynamicConeVisualizerUsingCustomSensor = function(scene, dynamicObjectCollection) {
+    var ConeVisualizer = function(scene, entityCollection) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
-        if (!defined(dynamicObjectCollection)) {
-            throw new DeveloperError('dynamicObjectCollection is required.');
+        if (!defined(entityCollection)) {
+            throw new DeveloperError('entityCollection is required.');
         }
         //>>includeEnd('debug');
 
-        dynamicObjectCollection.collectionChanged.addEventListener(DynamicConeVisualizerUsingCustomSensor.prototype._onObjectsRemoved, this);
+        entityCollection.collectionChanged.addEventListener(ConeVisualizer.prototype._onObjectsRemoved, this);
 
         this._scene = scene;
         this._unusedIndexes = [];
         this._primitives = scene.primitives;
         this._coneCollection = [];
-        this._dynamicObjectCollection = dynamicObjectCollection;
+        this._entityCollection = entityCollection;
     };
 
     /**
      * Updates the primitives created by this visualizer to match their
-     * DynamicObject counterpart at the given time.
+     * Entity counterpart at the given time.
      *
      * @param {JulianDate} time The time to update to.
      * @returns {Boolean} This function always returns true.
      */
-    DynamicConeVisualizerUsingCustomSensor.prototype.update = function(time) {
+    ConeVisualizer.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
         }
         //>>includeEnd('debug');
 
-        var dynamicObjects = this._dynamicObjectCollection.getObjects();
-        for (var i = 0, len = dynamicObjects.length; i < len; i++) {
-            updateObject(this, time, dynamicObjects[i]);
+        var entities = this._entityCollection.getObjects();
+        for (var i = 0, len = entities.length; i < len; i++) {
+            updateObject(this, time, entities[i]);
         }
         return true;
     };
@@ -123,22 +123,22 @@ define([
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
-    DynamicConeVisualizerUsingCustomSensor.prototype.isDestroyed = function() {
+    ConeVisualizer.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
      * Removes and destroys all primitives created by this instance.
      */
-    DynamicConeVisualizerUsingCustomSensor.prototype.destroy = function() {
-        var dynamicObjectCollection = this._dynamicObjectCollection;
-        dynamicObjectCollection.collectionChanged.removeEventListener(DynamicConeVisualizerUsingCustomSensor.prototype._onObjectsRemoved, this);
+    ConeVisualizer.prototype.destroy = function() {
+        var entityCollection = this._entityCollection;
+        entityCollection.collectionChanged.removeEventListener(ConeVisualizer.prototype._onObjectsRemoved, this);
 
         var i;
-        var dynamicObjects = dynamicObjectCollection.getObjects();
-        var length = dynamicObjects.length;
+        var entities = entityCollection.getObjects();
+        var length = entities.length;
         for (i = 0; i < length; i++) {
-            dynamicObjects[i]._coneVisualizerIndex = undefined;
+            entities[i]._coneVisualizerIndex = undefined;
         }
 
         length = this._coneCollection.length;
@@ -151,53 +151,53 @@ define([
 
     var cachedPosition = new Cartesian3();
     var cachedOrientation = new Quaternion();
-    function updateObject(dynamicConeVisualizerUsingCustomSensor, time, dynamicObject) {
-        var dynamicCone = dynamicObject._cone;
-        if (!defined(dynamicCone)) {
+    function updateObject(coneVisualizer, time, entity) {
+        var coneGraphics = entity._cone;
+        if (!defined(coneGraphics)) {
             return;
         }
 
-        var positionProperty = dynamicObject._position;
+        var positionProperty = entity._position;
         if (!defined(positionProperty)) {
             return;
         }
 
-        var orientationProperty = dynamicObject._orientation;
+        var orientationProperty = entity._orientation;
         if (!defined(orientationProperty)) {
             return;
         }
 
         var cone;
-        var showProperty = dynamicCone._show;
-        var coneVisualizerIndex = dynamicObject._coneVisualizerIndex;
-        var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
+        var showProperty = coneGraphics._show;
+        var coneVisualizerIndex = entity._coneVisualizerIndex;
+        var show = entity.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
 
         if (!show) {
             //don't bother creating or updating anything else
             if (defined(coneVisualizerIndex)) {
-                cone = dynamicConeVisualizerUsingCustomSensor._coneCollection[coneVisualizerIndex];
+                cone = coneVisualizer._coneCollection[coneVisualizerIndex];
                 cone.show = false;
-                dynamicObject._coneVisualizerIndex = undefined;
-                dynamicConeVisualizerUsingCustomSensor._unusedIndexes.push(coneVisualizerIndex);
+                entity._coneVisualizerIndex = undefined;
+                coneVisualizer._unusedIndexes.push(coneVisualizerIndex);
             }
             return;
         }
 
         if (!defined(coneVisualizerIndex)) {
-            var unusedIndexes = dynamicConeVisualizerUsingCustomSensor._unusedIndexes;
+            var unusedIndexes = coneVisualizer._unusedIndexes;
             var length = unusedIndexes.length;
             if (length > 0) {
                 coneVisualizerIndex = unusedIndexes.pop();
-                cone = dynamicConeVisualizerUsingCustomSensor._coneCollection[coneVisualizerIndex];
+                cone = coneVisualizer._coneCollection[coneVisualizerIndex];
             } else {
-                coneVisualizerIndex = dynamicConeVisualizerUsingCustomSensor._coneCollection.length;
+                coneVisualizerIndex = coneVisualizer._coneCollection.length;
                 cone = new CustomSensorVolume();
                 cone._directionsScratch = [];
-                dynamicConeVisualizerUsingCustomSensor._coneCollection.push(cone);
-                dynamicConeVisualizerUsingCustomSensor._primitives.add(cone);
+                coneVisualizer._coneCollection.push(cone);
+                coneVisualizer._primitives.add(cone);
             }
-            dynamicObject._coneVisualizerIndex = coneVisualizerIndex;
-            cone.id = dynamicObject;
+            entity._coneVisualizerIndex = coneVisualizerIndex;
+            cone.id = entity;
 
             cone.material = Material.fromType(Material.ColorType);
             cone.intersectionColor = Color.clone(Color.YELLOW);
@@ -205,13 +205,13 @@ define([
             cone.radius = Number.POSITIVE_INFINITY;
             cone.showIntersection = true;
         } else {
-            cone = dynamicConeVisualizerUsingCustomSensor._coneCollection[coneVisualizerIndex];
+            cone = coneVisualizer._coneCollection[coneVisualizerIndex];
         }
 
         cone.show = true;
 
         var minimumClockAngle;
-        var property = dynamicCone._minimumClockAngle;
+        var property = coneGraphics._minimumClockAngle;
         if (defined(property)) {
             minimumClockAngle = property.getValue(time);
         }
@@ -220,7 +220,7 @@ define([
         }
 
         var maximumClockAngle;
-        property = dynamicCone._maximumClockAngle;
+        property = coneGraphics._maximumClockAngle;
         if (defined(property)) {
             maximumClockAngle = property.getValue(time);
         }
@@ -229,7 +229,7 @@ define([
         }
 
         var innerHalfAngle;
-        property = dynamicCone._innerHalfAngle;
+        property = coneGraphics._innerHalfAngle;
         if (defined(property)) {
             innerHalfAngle = property.getValue(time);
         }
@@ -238,7 +238,7 @@ define([
         }
 
         var outerHalfAngle;
-        property = dynamicCone._outerHalfAngle;
+        property = coneGraphics._outerHalfAngle;
         if (defined(property)) {
             outerHalfAngle = property.getValue(time);
         }
@@ -258,7 +258,7 @@ define([
             cone.minimumClockAngle = minimumClockAngle;
         }
 
-        property = dynamicCone._radius;
+        property = coneGraphics._radius;
         if (defined(property)) {
             var radius = property.getValue(time);
             if (defined(radius)) {
@@ -278,14 +278,14 @@ define([
             cone._visualizerOrientation = Quaternion.clone(orientation, cone._visualizerOrientation);
         }
 
-        cone.material = MaterialProperty.getValue(time, dynamicCone._outerMaterial, cone.material);
+        cone.material = MaterialProperty.getValue(time, coneGraphics._outerMaterial, cone.material);
 
-        property = dynamicCone._intersectionColor;
+        property = coneGraphics._intersectionColor;
         if (defined(property)) {
             property.getValue(time, cone.intersectionColor);
         }
 
-        property = dynamicCone._intersectionWidth;
+        property = coneGraphics._intersectionWidth;
         if (defined(property)) {
             var intersectionWidth = property.getValue(time);
             if (defined(intersectionWidth)) {
@@ -294,20 +294,20 @@ define([
         }
     }
 
-    DynamicConeVisualizerUsingCustomSensor.prototype._onObjectsRemoved = function(dynamicObjectCollection, added, dynamicObjects) {
+    ConeVisualizer.prototype._onObjectsRemoved = function(entityCollection, added, entities) {
         var thisConeCollection = this._coneCollection;
         var thisUnusedIndexes = this._unusedIndexes;
-        for (var i = dynamicObjects.length - 1; i > -1; i--) {
-            var dynamicObject = dynamicObjects[i];
-            var coneVisualizerIndex = dynamicObject._coneVisualizerIndex;
+        for (var i = entities.length - 1; i > -1; i--) {
+            var entity = entities[i];
+            var coneVisualizerIndex = entity._coneVisualizerIndex;
             if (defined(coneVisualizerIndex)) {
                 var cone = thisConeCollection[coneVisualizerIndex];
                 cone.show = false;
                 thisUnusedIndexes.push(coneVisualizerIndex);
-                dynamicObject._coneVisualizerIndex = undefined;
+                entity._coneVisualizerIndex = undefined;
             }
         }
     };
 
-    return DynamicConeVisualizerUsingCustomSensor;
+    return ConeVisualizer;
 });

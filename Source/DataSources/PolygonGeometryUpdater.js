@@ -49,8 +49,8 @@ define([
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
 
-    var GeometryOptions = function(dynamicObject) {
-        this.id = dynamicObject;
+    var GeometryOptions = function(entity) {
+        this.id = entity;
         this.vertexFormat = undefined;
         this.polygonHierarchy = {
             positions : undefined
@@ -68,17 +68,17 @@ define([
      * @alias PolygonGeometryUpdater
      * @constructor
      *
-     * @param {DynamicObject} dynamicObject The object containing the geometry to be visualized.
+     * @param {Entity} entity The object containing the geometry to be visualized.
      */
-    var PolygonGeometryUpdater = function(dynamicObject) {
+    var PolygonGeometryUpdater = function(entity) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(dynamicObject)) {
-            throw new DeveloperError('dynamicObject is required');
+        if (!defined(entity)) {
+            throw new DeveloperError('entity is required');
         }
         //>>includeEnd('debug');
 
-        this._dynamicObject = dynamicObject;
-        this._dynamicObjectSubscription = dynamicObject.definitionChanged.addEventListener(PolygonGeometryUpdater.prototype._onDynamicObjectPropertyChanged, this);
+        this._entity = entity;
+        this._entitySubscription = entity.definitionChanged.addEventListener(PolygonGeometryUpdater.prototype._onEntityPropertyChanged, this);
         this._fillEnabled = false;
         this._isClosed = false;
         this._dynamic = false;
@@ -89,8 +89,8 @@ define([
         this._hasConstantOutline = true;
         this._showOutlineProperty = undefined;
         this._outlineColorProperty = undefined;
-        this._options = new GeometryOptions(dynamicObject);
-        this._onDynamicObjectPropertyChanged(dynamicObject, 'polygon', dynamicObject.polygon, undefined);
+        this._options = new GeometryOptions(entity);
+        this._onEntityPropertyChanged(entity, 'polygon', entity.polygon, undefined);
     };
 
     defineProperties(PolygonGeometryUpdater, {
@@ -117,12 +117,12 @@ define([
          * Gets the object associated with this geometry.
          * @memberof PolygonGeometryUpdater.prototype
          *
-         * @type {DynamicObject}
+         * @type {Entity}
          * @readonly
          */
-        dynamicObject :{
+        entity :{
             get : function() {
-                return this._dynamicObject;
+                return this._entity;
             }
         },
         /**
@@ -147,7 +147,7 @@ define([
         hasConstantFill : {
             get : function() {
                 return !this._fillEnabled ||
-                       (!defined(this._dynamicObject.availability) &&
+                       (!defined(this._entity.availability) &&
                         Property.isConstant(this._showProperty) &&
                         Property.isConstant(this._fillProperty));
             }
@@ -186,7 +186,7 @@ define([
         hasConstantOutline : {
             get : function() {
                 return !this._outlineEnabled ||
-                       (!defined(this._dynamicObject.availability) &&
+                       (!defined(this._entity.availability) &&
                         Property.isConstant(this._showProperty) &&
                         Property.isConstant(this._showOutlineProperty));
             }
@@ -252,8 +252,8 @@ define([
      * @returns {Boolean} true if geometry is outlined at the provided time, false otherwise.
      */
     PolygonGeometryUpdater.prototype.isOutlineVisible = function(time) {
-        var dynamicObject = this._dynamicObject;
-        return this._outlineEnabled && dynamicObject.isAvailable(time) && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time);
+        var entity = this._entity;
+        return this._outlineEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time);
     };
 
     /**
@@ -263,8 +263,8 @@ define([
      * @returns {Boolean} true if geometry is filled at the provided time, false otherwise.
      */
     PolygonGeometryUpdater.prototype.isFilled = function(time) {
-        var dynamicObject = this._dynamicObject;
-        return this._fillEnabled && dynamicObject.isAvailable(time) && this._showProperty.getValue(time) && this._fillProperty.getValue(time);
+        var entity = this._entity;
+        return this._fillEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._fillProperty.getValue(time);
     };
 
     /**
@@ -286,8 +286,8 @@ define([
         }
         //>>includeEnd('debug');
 
-        var dynamicObject = this._dynamicObject;
-        var isAvailable = dynamicObject.isAvailable(time);
+        var entity = this._entity;
+        var isAvailable = entity.isAvailable(time);
 
         var attributes;
 
@@ -310,7 +310,7 @@ define([
         }
 
         return new GeometryInstance({
-            id : dynamicObject,
+            id : entity,
             geometry : new PolygonGeometry(this._options),
             attributes : attributes
         });
@@ -335,11 +335,11 @@ define([
         }
         //>>includeEnd('debug');
 
-        var dynamicObject = this._dynamicObject;
-        var isAvailable = dynamicObject.isAvailable(time);
+        var entity = this._entity;
+        var isAvailable = entity.isAvailable(time);
 
         return new GeometryInstance({
-            id : dynamicObject,
+            id : entity,
             geometry : new PolygonOutlineGeometry(this._options),
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
@@ -363,16 +363,16 @@ define([
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
     PolygonGeometryUpdater.prototype.destroy = function() {
-        this._dynamicObjectSubscription();
+        this._entitySubscription();
         destroyObject(this);
     };
 
-    PolygonGeometryUpdater.prototype._onDynamicObjectPropertyChanged = function(dynamicObject, propertyName, newValue, oldValue) {
+    PolygonGeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
         if (!(propertyName === 'availability' || propertyName === 'vertexPositions' || propertyName === 'polygon')) {
             return;
         }
 
-        var polygon = this._dynamicObject.polygon;
+        var polygon = this._entity.polygon;
 
         if (!defined(polygon)) {
             if (this._fillEnabled || this._outlineEnabled) {
@@ -401,7 +401,7 @@ define([
             return;
         }
 
-        var vertexPositions = this._dynamicObject.vertexPositions;
+        var vertexPositions = this._entity.vertexPositions;
 
         var show = polygon.show;
         if ((defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE)) || //
@@ -486,7 +486,7 @@ define([
         this._primitive = undefined;
         this._outlinePrimitive = undefined;
         this._geometryUpdater = geometryUpdater;
-        this._options = new GeometryOptions(geometryUpdater._dynamicObject);
+        this._options = new GeometryOptions(geometryUpdater._entity);
     };
 
     DynamicGeometryUpdater.prototype.update = function(time) {
@@ -506,17 +506,17 @@ define([
             this._primitives.remove(this._outlinePrimitive);
         }
 
-        var dynamicObject = geometryUpdater._dynamicObject;
-        var polygon = dynamicObject.polygon;
+        var entity = geometryUpdater._entity;
+        var polygon = entity.polygon;
         var show = polygon.show;
 
-        if (!dynamicObject.isAvailable(time) || (defined(show) && !show.getValue(time))) {
+        if (!entity.isAvailable(time) || (defined(show) && !show.getValue(time))) {
             return;
         }
 
         var options = this._options;
 
-        var vertexPositions = dynamicObject.vertexPositions;
+        var vertexPositions = entity.vertexPositions;
         var perPositionHeight = polygon.perPositionHeight;
         var height = polygon.height;
         var extrudedHeight = polygon.extrudedHeight;
@@ -543,7 +543,7 @@ define([
 
             this._primitive = new Primitive({
                 geometryInstances : new GeometryInstance({
-                    id : dynamicObject,
+                    id : entity,
                     geometry : new PolygonGeometry(options)
                 }),
                 appearance : appearance,
@@ -558,7 +558,7 @@ define([
             var outlineColor = defined(polygon.outlineColor) ? polygon.outlineColor.getValue(time) : Color.BLACK;
             this._outlinePrimitive = new Primitive({
                 geometryInstances : new GeometryInstance({
-                    id : dynamicObject,
+                    id : entity,
                     geometry : new PolygonOutlineGeometry(options),
                     attributes : {
                         color : ColorGeometryInstanceAttribute.fromColor(outlineColor)

@@ -24,51 +24,51 @@ define([
     "use strict";
 
     /**
-     * A {@link Visualizer} which maps the {@link DynamicLabel} instance
-     * in {@link DynamicObject#label} to a {@link Label}.
-     * @alias DynamicLabelVisualizer
+     * A {@link Visualizer} which maps the {@link LabelGraphics} instance
+     * in {@link Entity#label} to a {@link Label}.
+     * @alias LabelVisualizer
      * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
-     * @param {DynamicObjectCollection} dynamicObjectCollection The dynamicObjectCollection to visualize.
+     * @param {EntityCollection} entityCollection The entityCollection to visualize.
      */
-    var DynamicLabelVisualizer = function(scene, dynamicObjectCollection) {
+    var LabelVisualizer = function(scene, entityCollection) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
-        if (!defined(dynamicObjectCollection)) {
-            throw new DeveloperError('dynamicObjectCollection is required.');
+        if (!defined(entityCollection)) {
+            throw new DeveloperError('entityCollection is required.');
         }
         //>>includeEnd('debug');
 
         var labelCollection = new LabelCollection();
         scene.primitives.add(labelCollection);
-        dynamicObjectCollection.collectionChanged.addEventListener(DynamicLabelVisualizer.prototype._onObjectsRemoved, this);
+        entityCollection.collectionChanged.addEventListener(LabelVisualizer.prototype._onObjectsRemoved, this);
 
         this._scene = scene;
         this._unusedIndexes = [];
         this._labelCollection = labelCollection;
-        this._dynamicObjectCollection = dynamicObjectCollection;
+        this._entityCollection = entityCollection;
     };
 
     /**
      * Updates the primitives created by this visualizer to match their
-     * DynamicObject counterpart at the given time.
+     * Entity counterpart at the given time.
      *
      * @param {JulianDate} time The time to update to.
      * @returns {Boolean} This function always returns true.
      */
-    DynamicLabelVisualizer.prototype.update = function(time) {
+    LabelVisualizer.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
         }
         //>>includeEnd('debug');
 
-        var dynamicObjects = this._dynamicObjectCollection.getObjects();
-        for (var i = 0, len = dynamicObjects.length; i < len; i++) {
-            updateObject(this, time, dynamicObjects[i]);
+        var entities = this._entityCollection.getObjects();
+        for (var i = 0, len = entities.length; i < len; i++) {
+            updateObject(this, time, entities[i]);
         }
         return true;
     };
@@ -78,21 +78,21 @@ define([
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
-    DynamicLabelVisualizer.prototype.isDestroyed = function() {
+    LabelVisualizer.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
      * Removes and destroys all primitives created by this instance.
      */
-    DynamicLabelVisualizer.prototype.destroy = function() {
-        var dynamicObjectCollection = this._dynamicObjectCollection;
-        dynamicObjectCollection.collectionChanged.removeEventListener(DynamicLabelVisualizer.prototype._onObjectsRemoved, this);
+    LabelVisualizer.prototype.destroy = function() {
+        var entityCollection = this._entityCollection;
+        entityCollection.collectionChanged.removeEventListener(LabelVisualizer.prototype._onObjectsRemoved, this);
 
-        var dynamicObjects = dynamicObjectCollection.getObjects();
-        var length = dynamicObjects.length;
+        var entities = entityCollection.getObjects();
+        var length = entities.length;
         for (var i = 0; i < length; i++) {
-            dynamicObjects[i]._labelVisualizerIndex = undefined;
+            entities[i]._labelVisualizerIndex = undefined;
         }
         this._scene.primitives.remove(this._labelCollection);
         return destroyObject(this);
@@ -103,50 +103,50 @@ define([
     var outlineColor;
     var eyeOffset;
     var pixelOffset;
-    function updateObject(dynamicLabelVisualizer, time, dynamicObject) {
-        var dynamicLabel = dynamicObject._label;
-        if (!defined(dynamicLabel)) {
+    function updateObject(labelVisualizer, time, entity) {
+        var labelGraphics = entity._label;
+        if (!defined(labelGraphics)) {
             return;
         }
 
-        var textProperty = dynamicLabel._text;
+        var textProperty = labelGraphics._text;
         if (!defined(textProperty)) {
             return;
         }
 
-        var positionProperty = dynamicObject._position;
+        var positionProperty = entity._position;
         if (!defined(positionProperty)) {
             return;
         }
 
         var label;
-        var showProperty = dynamicLabel._show;
-        var labelVisualizerIndex = dynamicObject._labelVisualizerIndex;
-        var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
+        var showProperty = labelGraphics._show;
+        var labelVisualizerIndex = entity._labelVisualizerIndex;
+        var show = entity.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
 
         if (!show) {
             //don't bother creating or updating anything else
             if (defined(labelVisualizerIndex)) {
-                label = dynamicLabelVisualizer._labelCollection.get(labelVisualizerIndex);
+                label = labelVisualizer._labelCollection.get(labelVisualizerIndex);
                 label.show = false;
-                dynamicLabelVisualizer._unusedIndexes.push(labelVisualizerIndex);
-                dynamicObject._labelVisualizerIndex = undefined;
+                labelVisualizer._unusedIndexes.push(labelVisualizerIndex);
+                entity._labelVisualizerIndex = undefined;
             }
             return;
         }
 
         if (!defined(labelVisualizerIndex)) {
-            var unusedIndexes = dynamicLabelVisualizer._unusedIndexes;
+            var unusedIndexes = labelVisualizer._unusedIndexes;
             var length = unusedIndexes.length;
             if (length > 0) {
                 labelVisualizerIndex = unusedIndexes.pop();
-                label = dynamicLabelVisualizer._labelCollection.get(labelVisualizerIndex);
+                label = labelVisualizer._labelCollection.get(labelVisualizerIndex);
             } else {
-                labelVisualizerIndex = dynamicLabelVisualizer._labelCollection.length;
-                label = dynamicLabelVisualizer._labelCollection.add();
+                labelVisualizerIndex = labelVisualizer._labelCollection.length;
+                label = labelVisualizer._labelCollection.add();
             }
-            dynamicObject._labelVisualizerIndex = labelVisualizerIndex;
-            label.id = dynamicObject;
+            entity._labelVisualizerIndex = labelVisualizerIndex;
+            label.id = entity;
 
             label.text = '';
             label.scale = 1.0;
@@ -160,7 +160,7 @@ define([
             label.horizontalOrigin = HorizontalOrigin.CENTER;
             label.verticalOrigin = VerticalOrigin.CENTER;
         } else {
-            label = dynamicLabelVisualizer._labelCollection.get(labelVisualizerIndex);
+            label = labelVisualizer._labelCollection.get(labelVisualizerIndex);
         }
 
         label.show = show;
@@ -175,7 +175,7 @@ define([
             label.position = position;
         }
 
-        var property = dynamicLabel._scale;
+        var property = labelGraphics._scale;
         if (defined(property)) {
             var scale = property.getValue(time);
             if (defined(scale)) {
@@ -183,7 +183,7 @@ define([
             }
         }
 
-        property = dynamicLabel._font;
+        property = labelGraphics._font;
         if (defined(property)) {
             var font = property.getValue(time);
             if (defined(font)) {
@@ -191,7 +191,7 @@ define([
             }
         }
 
-        property = dynamicLabel._fillColor;
+        property = labelGraphics._fillColor;
         if (defined(property)) {
             fillColor = property.getValue(time, fillColor);
             if (defined(fillColor)) {
@@ -199,7 +199,7 @@ define([
             }
         }
 
-        property = dynamicLabel._outlineColor;
+        property = labelGraphics._outlineColor;
         if (defined(property)) {
             outlineColor = property.getValue(time, outlineColor);
             if (defined(outlineColor)) {
@@ -207,7 +207,7 @@ define([
             }
         }
 
-        property = dynamicLabel._outlineWidth;
+        property = labelGraphics._outlineWidth;
         if (defined(property)) {
             var outlineWidth = property.getValue(time);
             if (defined(outlineWidth)) {
@@ -215,7 +215,7 @@ define([
             }
         }
 
-        property = dynamicLabel._style;
+        property = labelGraphics._style;
         if (defined(property)) {
             var style = property.getValue(time);
             if (defined(style)) {
@@ -223,7 +223,7 @@ define([
             }
         }
 
-        property = dynamicLabel._pixelOffset;
+        property = labelGraphics._pixelOffset;
         if (defined(property)) {
             pixelOffset = property.getValue(time, pixelOffset);
             if (defined(pixelOffset)) {
@@ -231,7 +231,7 @@ define([
             }
         }
 
-        property = dynamicLabel._eyeOffset;
+        property = labelGraphics._eyeOffset;
         if (defined(property)) {
             eyeOffset = property.getValue(time, eyeOffset);
             if (defined(eyeOffset)) {
@@ -239,7 +239,7 @@ define([
             }
         }
 
-        property = dynamicLabel._horizontalOrigin;
+        property = labelGraphics._horizontalOrigin;
         if (defined(property)) {
             var horizontalOrigin = property.getValue(time);
             if (defined(horizontalOrigin)) {
@@ -247,7 +247,7 @@ define([
             }
         }
 
-        property = dynamicLabel._verticalOrigin;
+        property = labelGraphics._verticalOrigin;
         if (defined(property)) {
             var verticalOrigin = property.getValue(time);
             if (defined(verticalOrigin)) {
@@ -255,31 +255,31 @@ define([
             }
         }
 
-        property = dynamicLabel._translucencyByDistance;
+        property = labelGraphics._translucencyByDistance;
         if (defined(property)) {
             label.translucencyByDistance = property.getValue(time);
         }
 
-        property = dynamicLabel._pixelOffsetScaleByDistance;
+        property = labelGraphics._pixelOffsetScaleByDistance;
         if (defined(property)) {
             label.pixelOffsetScaleByDistance = property.getValue(time);
         }
     }
 
-    DynamicLabelVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, added, dynamicObjects) {
+    LabelVisualizer.prototype._onObjectsRemoved = function(entityCollection, added, entities) {
         var thisLabelCollection = this._labelCollection;
         var thisUnusedIndexes = this._unusedIndexes;
-        for (var i = dynamicObjects.length - 1; i > -1; i--) {
-            var dynamicObject = dynamicObjects[i];
-            var labelVisualizerIndex = dynamicObject._labelVisualizerIndex;
+        for (var i = entities.length - 1; i > -1; i--) {
+            var entity = entities[i];
+            var labelVisualizerIndex = entity._labelVisualizerIndex;
             if (defined(labelVisualizerIndex)) {
                 var label = thisLabelCollection.get(labelVisualizerIndex);
                 label.show = false;
                 thisUnusedIndexes.push(labelVisualizerIndex);
-                dynamicObject._labelVisualizerIndex = undefined;
+                entity._labelVisualizerIndex = undefined;
             }
         }
     };
 
-    return DynamicLabelVisualizer;
+    return LabelVisualizer;
 });

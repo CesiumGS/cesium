@@ -1,13 +1,13 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/GridMaterialProperty',
+        'DataSources/GridMaterialProperty',
         'Core/Cartesian2',
         'Core/Color',
         'Core/JulianDate',
         'Core/TimeInterval',
-        'DynamicScene/ConstantProperty',
-        'DynamicScene/SampledProperty',
-        'DynamicScene/TimeIntervalCollectionProperty'
+        'DataSources/ConstantProperty',
+        'DataSources/SampledProperty',
+        'DataSources/TimeIntervalCollectionProperty'
     ], function(
         GridMaterialProperty,
         Cartesian2,

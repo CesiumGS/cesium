@@ -30,49 +30,49 @@ define([
     var matrix3Scratch = new Matrix3();
 
     /**
-     * A {@link Visualizer} which maps {@link DynamicObject#pyramid} to a {@link CustomSensorVolume}.
-     * @alias DynamicPyramidVisualizer
+     * A {@link Visualizer} which maps {@link Entity#pyramid} to a {@link CustomSensorVolume}.
+     * @alias PyramidVisualizer
      * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
-     * @param {DynamicObjectCollection} dynamicObjectCollection The dynamicObjectCollection to visualize.
+     * @param {EntityCollection} entityCollection The entityCollection to visualize.
      */
-    var DynamicPyramidVisualizer = function(scene, dynamicObjectCollection) {
+    var PyramidVisualizer = function(scene, entityCollection) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
-        if (!defined(dynamicObjectCollection)) {
-            throw new DeveloperError('dynamicObjectCollection is required.');
+        if (!defined(entityCollection)) {
+            throw new DeveloperError('entityCollection is required.');
         }
         //>>includeEnd('debug');
 
-        dynamicObjectCollection.collectionChanged.addEventListener(DynamicPyramidVisualizer.prototype._onObjectsRemoved, this);
+        entityCollection.collectionChanged.addEventListener(PyramidVisualizer.prototype._onObjectsRemoved, this);
 
         this._scene = scene;
         this._unusedIndexes = [];
         this._primitives = scene.primitives;
         this._pyramidCollection = [];
-        this._dynamicObjectCollection = dynamicObjectCollection;
+        this._entityCollection = entityCollection;
     };
 
     /**
      * Updates the sensors created by this visualizer to match their
-     * DynamicObject counterpart at the given time.
+     * Entity counterpart at the given time.
      *
      * @param {JulianDate} time The time to update to.
      * @returns {Boolean} This function always returns true.
      */
-    DynamicPyramidVisualizer.prototype.update = function(time) {
+    PyramidVisualizer.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
         }
         //>>includeEnd('debug');
 
-        var dynamicObjects = this._dynamicObjectCollection.getObjects();
-        for (var i = 0, len = dynamicObjects.length; i < len; i++) {
-            updateObject(this, time, dynamicObjects[i]);
+        var entities = this._entityCollection.getObjects();
+        for (var i = 0, len = entities.length; i < len; i++) {
+            updateObject(this, time, entities[i]);
         }
         return true;
     };
@@ -82,14 +82,14 @@ define([
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
-    DynamicPyramidVisualizer.prototype.isDestroyed = function() {
+    PyramidVisualizer.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
      * Removes and destroys all primitives created by this instance.
      */
-    DynamicPyramidVisualizer.prototype.destroy = function() {
+    PyramidVisualizer.prototype.destroy = function() {
         var i;
         var length = this._pyramidCollection.length;
         var primitives = this._primitives;
@@ -97,10 +97,10 @@ define([
             primitives.remove(this._pyramidCollection[i]);
         }
 
-        var dynamicObjects = this._dynamicObjectCollection.getObjects();
-        length = dynamicObjects.length;
+        var entities = this._entityCollection.getObjects();
+        length = entities.length;
         for (i = 0; i < length; i++) {
-            dynamicObjects[i]._pyramidVisualizerIndex = undefined;
+            entities[i]._pyramidVisualizerIndex = undefined;
         }
 
         return destroyObject(this);
@@ -108,58 +108,58 @@ define([
 
     var position;
     var orientation;
-    function updateObject(dynamicPyramidVisualizer, time, dynamicObject) {
-        var dynamicPyramid = dynamicObject._pyramid;
-        if (!defined(dynamicPyramid)) {
+    function updateObject(pyramidVisualizer, time, entity) {
+        var pyramidGraphics = entity._pyramid;
+        if (!defined(pyramidGraphics)) {
             return;
         }
 
-        var directionsProperty = dynamicPyramid._directions;
+        var directionsProperty = pyramidGraphics._directions;
         if (!defined(directionsProperty)) {
             return;
         }
 
-        var positionProperty = dynamicObject._position;
+        var positionProperty = entity._position;
         if (!defined(positionProperty)) {
             return;
         }
 
-        var orientationProperty = dynamicObject._orientation;
+        var orientationProperty = entity._orientation;
         if (!defined(orientationProperty)) {
             return;
         }
 
         var pyramid;
-        var showProperty = dynamicPyramid._show;
-        var pyramidVisualizerIndex = dynamicObject._pyramidVisualizerIndex;
-        var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
+        var showProperty = pyramidGraphics._show;
+        var pyramidVisualizerIndex = entity._pyramidVisualizerIndex;
+        var show = entity.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
 
         if (!show) {
             //don't bother creating or updating anything else
             if (defined(pyramidVisualizerIndex)) {
-                pyramid = dynamicPyramidVisualizer._pyramidCollection[pyramidVisualizerIndex];
+                pyramid = pyramidVisualizer._pyramidCollection[pyramidVisualizerIndex];
                 pyramid.show = false;
-                dynamicObject._pyramidVisualizerIndex = undefined;
-                dynamicPyramidVisualizer._unusedIndexes.push(pyramidVisualizerIndex);
+                entity._pyramidVisualizerIndex = undefined;
+                pyramidVisualizer._unusedIndexes.push(pyramidVisualizerIndex);
             }
             return;
         }
 
         if (!defined(pyramidVisualizerIndex)) {
-            var unusedIndexes = dynamicPyramidVisualizer._unusedIndexes;
+            var unusedIndexes = pyramidVisualizer._unusedIndexes;
             var length = unusedIndexes.length;
             if (length > 0) {
                 pyramidVisualizerIndex = unusedIndexes.pop();
-                pyramid = dynamicPyramidVisualizer._pyramidCollection[pyramidVisualizerIndex];
+                pyramid = pyramidVisualizer._pyramidCollection[pyramidVisualizerIndex];
             } else {
-                pyramidVisualizerIndex = dynamicPyramidVisualizer._pyramidCollection.length;
+                pyramidVisualizerIndex = pyramidVisualizer._pyramidCollection.length;
                 pyramid = new CustomSensorVolume();
 
-                dynamicPyramidVisualizer._pyramidCollection.push(pyramid);
-                dynamicPyramidVisualizer._primitives.add(pyramid);
+                pyramidVisualizer._pyramidCollection.push(pyramid);
+                pyramidVisualizer._primitives.add(pyramid);
             }
-            dynamicObject._pyramidVisualizerIndex = pyramidVisualizerIndex;
-            pyramid.id = dynamicObject;
+            entity._pyramidVisualizerIndex = pyramidVisualizerIndex;
+            pyramid.id = entity;
 
             pyramid.radius = Number.POSITIVE_INFINITY;
             pyramid.showIntersection = true;
@@ -167,7 +167,7 @@ define([
             pyramid.intersectionWidth = 5.0;
             pyramid.material = Material.fromType(Material.ColorType);
         } else {
-            pyramid = dynamicPyramidVisualizer._pyramidCollection[pyramidVisualizerIndex];
+            pyramid = pyramidVisualizer._pyramidCollection[pyramidVisualizerIndex];
         }
 
         pyramid.show = true;
@@ -190,9 +190,9 @@ define([
             Quaternion.clone(orientation, pyramid._visualizerOrientation);
         }
 
-        pyramid.material = MaterialProperty.getValue(time, dynamicPyramid._material, pyramid.material);
+        pyramid.material = MaterialProperty.getValue(time, pyramidGraphics._material, pyramid.material);
 
-        var property = dynamicPyramid._intersectionColor;
+        var property = pyramidGraphics._intersectionColor;
         if (defined(property)) {
             var intersectionColor = property.getValue(time, intersectionColor);
             if (defined(intersectionColor)) {
@@ -200,7 +200,7 @@ define([
             }
         }
 
-        property = dynamicPyramid._intersectionWidth;
+        property = pyramidGraphics._intersectionWidth;
         if (defined(property)) {
             var intersectionWidth = property.getValue(time, intersectionWidth);
             if (defined(intersectionWidth)) {
@@ -208,7 +208,7 @@ define([
             }
         }
 
-        property = dynamicPyramid._radius;
+        property = pyramidGraphics._radius;
         if (defined(property)) {
             var radius = property.getValue(time, radius);
             if (defined(radius)) {
@@ -217,20 +217,20 @@ define([
         }
     }
 
-    DynamicPyramidVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, added, dynamicObjects) {
+    PyramidVisualizer.prototype._onObjectsRemoved = function(entityCollection, added, entities) {
         var thisPyramidCollection = this._pyramidCollection;
         var thisUnusedIndexes = this._unusedIndexes;
-        for (var i = dynamicObjects.length - 1; i > -1; i--) {
-            var dynamicObject = dynamicObjects[i];
-            var pyramidVisualizerIndex = dynamicObject._pyramidVisualizerIndex;
+        for (var i = entities.length - 1; i > -1; i--) {
+            var entity = entities[i];
+            var pyramidVisualizerIndex = entity._pyramidVisualizerIndex;
             if (defined(pyramidVisualizerIndex)) {
                 var pyramid = thisPyramidCollection[pyramidVisualizerIndex];
                 pyramid.show = false;
                 thisUnusedIndexes.push(pyramidVisualizerIndex);
-                dynamicObject._pyramidVisualizerIndex = undefined;
+                entity._pyramidVisualizerIndex = undefined;
             }
         }
     };
 
-    return DynamicPyramidVisualizer;
+    return PyramidVisualizer;
 });

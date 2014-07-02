@@ -1,11 +1,11 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/DynamicCone',
+        'DataSources/ConeGraphics',
         'Core/Color',
-        'DynamicScene/ColorMaterialProperty',
-        'DynamicScene/ConstantProperty'
+        'DataSources/ColorMaterialProperty',
+        'DataSources/ConstantProperty'
     ], function(
-        DynamicCone,
+        ConeGraphics,
         Color,
         ColorMaterialProperty,
         ConstantProperty) {
@@ -13,7 +13,7 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('merge assigns unassigned properties', function() {
-        var source = new DynamicCone();
+        var source = new ConeGraphics();
         source.capMaterial = new ColorMaterialProperty();
         source.innerMaterial = new ColorMaterialProperty();
         source.silhouetteMaterial = new ColorMaterialProperty();
@@ -29,7 +29,7 @@ defineSuite([
         source.intersectionWidth = new ConstantProperty(1);
 
 
-        var target = new DynamicCone();
+        var target = new ConeGraphics();
         target.merge(source);
 
         expect(target.capMaterial).toBe(source.capMaterial);
@@ -48,7 +48,7 @@ defineSuite([
     });
 
     it('merge does not assign assigned properties', function() {
-        var source = new DynamicCone();
+        var source = new ConeGraphics();
         source.capMaterial = new ColorMaterialProperty();
         source.innerMaterial = new ColorMaterialProperty();
         source.silhouetteMaterial = new ColorMaterialProperty();
@@ -77,7 +77,7 @@ defineSuite([
         var showIntersection = new ConstantProperty(true);
         var intersectionWidth = new ConstantProperty(1);
 
-        var target = new DynamicCone();
+        var target = new ConeGraphics();
         source.capMaterial = capMaterial;
         source.innerMaterial = innerMaterial;
         source.silhouetteMaterial = silhouetteMaterial;
@@ -110,7 +110,7 @@ defineSuite([
     });
 
     it('clone works', function() {
-        var source = new DynamicCone();
+        var source = new ConeGraphics();
         source.capMaterial = new ColorMaterialProperty();
         source.innerMaterial = new ColorMaterialProperty();
         source.silhouetteMaterial = new ColorMaterialProperty();
@@ -142,7 +142,7 @@ defineSuite([
     });
 
     it('merge throws if source undefined', function() {
-        var target = new DynamicCone();
+        var target = new ConeGraphics();
         expect(function() {
             target.merge(undefined);
         }).toThrowDeveloperError();

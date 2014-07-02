@@ -1,13 +1,13 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/DynamicWall',
+        'DataSources/WallGraphics',
         'Core/Color',
-        'DynamicScene/ColorMaterialProperty',
-        'DynamicScene/ConstantProperty',
+        'DataSources/ColorMaterialProperty',
+        'DataSources/ConstantProperty',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
-        DynamicWall,
+        WallGraphics,
         Color,
         ColorMaterialProperty,
         ConstantProperty,
@@ -17,7 +17,7 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('merge assigns unassigned properties', function() {
-        var source = new DynamicWall();
+        var source = new WallGraphics();
         source.material = new ColorMaterialProperty();
         source.show = new ConstantProperty();
         source.granularity = new ConstantProperty();
@@ -27,7 +27,7 @@ defineSuite([
         source.minimumHeights = new ConstantProperty();
         source.maximumHeights = new ConstantProperty();
 
-        var target = new DynamicWall();
+        var target = new WallGraphics();
         target.merge(source);
 
         expect(target.material).toBe(source.material);
@@ -41,7 +41,7 @@ defineSuite([
     });
 
     it('merge does not assign assigned properties', function() {
-        var source = new DynamicWall();
+        var source = new WallGraphics();
 
         var material = new ColorMaterialProperty();
         var show = new ConstantProperty();
@@ -52,7 +52,7 @@ defineSuite([
         var minimumHeights = new ConstantProperty();
         var maximumHeights = new ConstantProperty();
 
-        var target = new DynamicWall();
+        var target = new WallGraphics();
         target.material = material;
         target.show = show;
         target.granularity = granularity;
@@ -75,7 +75,7 @@ defineSuite([
     });
 
     it('clone works', function() {
-        var source = new DynamicWall();
+        var source = new WallGraphics();
         source.material = new ColorMaterialProperty();
         source.show = new ConstantProperty();
         source.granularity = new ConstantProperty();
@@ -97,14 +97,14 @@ defineSuite([
     });
 
     it('merge throws if source undefined', function() {
-        var target = new DynamicWall();
+        var target = new WallGraphics();
         expect(function() {
             target.merge(undefined);
         }).toThrowDeveloperError();
     });
 
     it('raises definitionChanged when a property is assigned or modified', function() {
-        var property = new DynamicWall();
+        var property = new WallGraphics();
         testMaterialDefinitionChanged(property, 'material', Color.RED, Color.BLUE);
         testDefinitionChanged(property, 'show', true, false);
         testDefinitionChanged(property, 'granularity', 3, 4);

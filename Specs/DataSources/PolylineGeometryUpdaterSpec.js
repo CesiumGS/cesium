@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/PolylineGeometryUpdater',
+        'DataSources/PolylineGeometryUpdater',
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Color',
@@ -10,15 +10,15 @@ defineSuite([
         'Core/ShowGeometryInstanceAttribute',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
-        'DynamicScene/ColorMaterialProperty',
-        'DynamicScene/ConstantProperty',
-        'DynamicScene/DynamicObject',
-        'DynamicScene/DynamicPolyline',
-        'DynamicScene/GridMaterialProperty',
-        'DynamicScene/PropertyArray',
-        'DynamicScene/SampledPositionProperty',
-        'DynamicScene/SampledProperty',
-        'DynamicScene/TimeIntervalCollectionProperty',
+        'DataSources/ColorMaterialProperty',
+        'DataSources/ConstantProperty',
+        'DataSources/Entity',
+        'DataSources/GridMaterialProperty',
+        'DataSources/PolylineGraphics',
+        'DataSources/PropertyArray',
+        'DataSources/SampledPositionProperty',
+        'DataSources/SampledProperty',
+        'DataSources/TimeIntervalCollectionProperty',
         'Scene/PrimitiveCollection'
     ], function(
         PolylineGeometryUpdater,
@@ -33,9 +33,9 @@ defineSuite([
         TimeIntervalCollection,
         ColorMaterialProperty,
         ConstantProperty,
-        DynamicObject,
-        DynamicPolyline,
+        Entity,
         GridMaterialProperty,
+        PolylineGraphics,
         PropertyArray,
         SampledPositionProperty,
         SampledProperty,
@@ -47,19 +47,19 @@ defineSuite([
     var time = JulianDate.now();
 
     function createBasicPolyline() {
-        var polyline = new DynamicPolyline();
-        var dynamicObject = new DynamicObject();
-        dynamicObject.vertexPositions = new ConstantProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray([new Cartographic(0, 0, 0), new Cartographic(1, 0, 0), new Cartographic(1, 1, 0), new Cartographic(0, 1, 0)]));
-        dynamicObject.polyline = polyline;
-        return dynamicObject;
+        var polyline = new PolylineGraphics();
+        var entity = new Entity();
+        entity.vertexPositions = new ConstantProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray([new Cartographic(0, 0, 0), new Cartographic(1, 0, 0), new Cartographic(1, 1, 0), new Cartographic(0, 1, 0)]));
+        entity.polyline = polyline;
+        return entity;
     }
 
     it('Constructor sets expected defaults', function() {
-        var dynamicObject = new DynamicObject();
-        var updater = new PolylineGeometryUpdater(dynamicObject);
+        var entity = new Entity();
+        var updater = new PolylineGeometryUpdater(entity);
 
         expect(updater.isDestroyed()).toBe(false);
-        expect(updater.dynamicObject).toBe(dynamicObject);
+        expect(updater.entity).toBe(entity);
         expect(updater.isClosed).toBe(false);
         expect(updater.fillEnabled).toBe(false);
         expect(updater.fillMaterialProperty).toBe(undefined);
@@ -75,9 +75,9 @@ defineSuite([
     });
 
     it('No geometry available when polyline is undefined ', function() {
-        var dynamicObject = createBasicPolyline();
-        var updater = new PolylineGeometryUpdater(dynamicObject);
-        dynamicObject.polyline = undefined;
+        var entity = createBasicPolyline();
+        var updater = new PolylineGeometryUpdater(entity);
+        entity.polyline = undefined;
 
         expect(updater.fillEnabled).toBe(false);
         expect(updater.outlineEnabled).toBe(false);
@@ -85,9 +85,9 @@ defineSuite([
     });
 
     it('No geometry available when not shown.', function() {
-        var dynamicObject = createBasicPolyline();
-        var updater = new PolylineGeometryUpdater(dynamicObject);
-        dynamicObject.polyline.show = new ConstantProperty(false);
+        var entity = createBasicPolyline();
+        var updater = new PolylineGeometryUpdater(entity);
+        entity.polyline.show = new ConstantProperty(false);
 
         expect(updater.fillEnabled).toBe(false);
         expect(updater.outlineEnabled).toBe(false);
@@ -95,8 +95,8 @@ defineSuite([
     });
 
     it('Values correct when using default graphics', function() {
-        var dynamicObject = createBasicPolyline();
-        var updater = new PolylineGeometryUpdater(dynamicObject);
+        var entity = createBasicPolyline();
+        var updater = new PolylineGeometryUpdater(entity);
 
         expect(updater.isClosed).toBe(false);
         expect(updater.fillEnabled).toBe(true);
@@ -109,15 +109,15 @@ defineSuite([
     });
 
     it('Polyline material is correctly exposed.', function() {
-        var dynamicObject = createBasicPolyline();
-        var updater = new PolylineGeometryUpdater(dynamicObject);
-        dynamicObject.polyline.material = new ColorMaterialProperty();
-        expect(updater.fillMaterialProperty).toBe(dynamicObject.polyline.material);
+        var entity = createBasicPolyline();
+        var updater = new PolylineGeometryUpdater(entity);
+        entity.polyline.material = new ColorMaterialProperty();
+        expect(updater.fillMaterialProperty).toBe(entity.polyline.material);
     });
 
     it('A time-varying vertexPositions causes geometry to be dynamic', function() {
-        var dynamicObject = createBasicPolyline();
-        var updater = new PolylineGeometryUpdater(dynamicObject);
+        var entity = createBasicPolyline();
+        var updater = new PolylineGeometryUpdater(entity);
         var point1 = new SampledPositionProperty();
         point1.addSample(time, new Cartesian3());
         var point2 = new SampledPositionProperty();
@@ -125,29 +125,29 @@ defineSuite([
         var point3 = new SampledPositionProperty();
         point3.addSample(time, new Cartesian3());
 
-        dynamicObject.vertexPositions = new PropertyArray();
-        dynamicObject.vertexPositions.setValue([point1, point2, point3]);
+        entity.vertexPositions = new PropertyArray();
+        entity.vertexPositions.setValue([point1, point2, point3]);
         expect(updater.isDynamic).toBe(true);
     });
 
     it('A time-varying width causes geometry to be dynamic', function() {
-        var dynamicObject = createBasicPolyline();
-        var updater = new PolylineGeometryUpdater(dynamicObject);
-        dynamicObject.polyline.width = new SampledProperty(Number);
-        dynamicObject.polyline.width.addSample(time, 1);
+        var entity = createBasicPolyline();
+        var updater = new PolylineGeometryUpdater(entity);
+        entity.polyline.width = new SampledProperty(Number);
+        entity.polyline.width.addSample(time, 1);
         expect(updater.isDynamic).toBe(true);
     });
 
     function validateGeometryInstance(options) {
-        var dynamicObject = createBasicPolyline();
+        var entity = createBasicPolyline();
 
-        var polyline = dynamicObject.polyline;
+        var polyline = entity.polyline;
         polyline.show = new ConstantProperty(options.show);
         polyline.material = options.material;
 
         polyline.width = new ConstantProperty(options.width);
 
-        var updater = new PolylineGeometryUpdater(dynamicObject);
+        var updater = new PolylineGeometryUpdater(entity);
 
         var instance;
         var geometry;
@@ -205,11 +205,11 @@ defineSuite([
         colorMaterial.color.addSample(time2, Color.BLUE);
         colorMaterial.color.addSample(time3, Color.RED);
 
-        var dynamicObject = createBasicPolyline();
-        dynamicObject.polyline.show = show;
-        dynamicObject.polyline.material = colorMaterial;
+        var entity = createBasicPolyline();
+        entity.polyline.show = show;
+        entity.polyline.material = colorMaterial;
 
-        var updater = new PolylineGeometryUpdater(dynamicObject);
+        var updater = new PolylineGeometryUpdater(entity);
 
         var instance = updater.createFillGeometryInstance(time2);
         var attributes = instance.attributes;
@@ -240,20 +240,20 @@ defineSuite([
             return property;
         }
 
-        var dynamicObject = createBasicPolyline();
+        var entity = createBasicPolyline();
 
-        var polyline = dynamicObject.polyline;
+        var polyline = entity.polyline;
         polyline.width = makeProperty(2, 12);
         polyline.show = makeProperty(true, false);
 
-        dynamicObject.availability = new TimeIntervalCollection();
-        dynamicObject.availability.addInterval(new TimeInterval({
+        entity.availability = new TimeIntervalCollection();
+        entity.availability.addInterval(new TimeInterval({
             start : time1,
             stop : time3,
             isStopIncluded : false
         }));
 
-        var updater = new PolylineGeometryUpdater(dynamicObject);
+        var updater = new PolylineGeometryUpdater(entity);
         var primitives = new PrimitiveCollection();
         var dynamicUpdater = updater.createDynamicUpdater(primitives);
         expect(dynamicUpdater.isDestroyed()).toBe(false);
@@ -266,68 +266,68 @@ defineSuite([
     });
 
     it('geometryChanged event is raised when expected', function() {
-        var dynamicObject = createBasicPolyline();
-        var updater = new PolylineGeometryUpdater(dynamicObject);
+        var entity = createBasicPolyline();
+        var updater = new PolylineGeometryUpdater(entity);
         var listener = jasmine.createSpy('listener');
         updater.geometryChanged.addEventListener(listener);
 
-        dynamicObject.vertexPositions = new ConstantProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray([new Cartographic(0, 0, 0), new Cartographic(1, 0, 0)]));
+        entity.vertexPositions = new ConstantProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray([new Cartographic(0, 0, 0), new Cartographic(1, 0, 0)]));
         expect(listener.callCount).toEqual(1);
 
-        dynamicObject.polyline.width = new ConstantProperty(82);
+        entity.polyline.width = new ConstantProperty(82);
         expect(listener.callCount).toEqual(2);
 
-        dynamicObject.availability = new TimeIntervalCollection();
+        entity.availability = new TimeIntervalCollection();
         expect(listener.callCount).toEqual(3);
 
-        dynamicObject.vertexPositions = undefined;
+        entity.vertexPositions = undefined;
         expect(listener.callCount).toEqual(4);
 
         //Since there's no valid geometry, changing another property should not raise the event.
-        dynamicObject.polyline.width = undefined;
+        entity.polyline.width = undefined;
 
         //Modifying an unrelated property should not have any effect.
-        dynamicObject.viewFrom = new ConstantProperty(Cartesian3.UNIT_X);
+        entity.viewFrom = new ConstantProperty(Cartesian3.UNIT_X);
         expect(listener.callCount).toEqual(4);
     });
 
     it('createFillGeometryInstance throws if object is not shown', function() {
-        var dynamicObject = new DynamicObject();
-        var updater = new PolylineGeometryUpdater(dynamicObject);
+        var entity = new Entity();
+        var updater = new PolylineGeometryUpdater(entity);
         expect(function() {
             return updater.createFillGeometryInstance(time);
         }).toThrowDeveloperError();
     });
 
     it('createFillGeometryInstance throws if no time provided', function() {
-        var dynamicObject = createBasicPolyline();
-        var updater = new PolylineGeometryUpdater(dynamicObject);
+        var entity = createBasicPolyline();
+        var updater = new PolylineGeometryUpdater(entity);
         expect(function() {
             return updater.createFillGeometryInstance(undefined);
         }).toThrowDeveloperError();
     });
 
     it('createOutlineGeometryInstance throws', function() {
-        var dynamicObject = new DynamicObject();
-        var updater = new PolylineGeometryUpdater(dynamicObject);
+        var entity = new Entity();
+        var updater = new PolylineGeometryUpdater(entity);
         expect(function() {
             return updater.createOutlineGeometryInstance();
         }).toThrowDeveloperError();
     });
 
     it('createDynamicUpdater throws if not dynamic', function() {
-        var dynamicObject = createBasicPolyline();
-        var updater = new PolylineGeometryUpdater(dynamicObject);
+        var entity = createBasicPolyline();
+        var updater = new PolylineGeometryUpdater(entity);
         expect(function() {
             return updater.createDynamicUpdater(new PrimitiveCollection());
         }).toThrowDeveloperError();
     });
 
     it('createDynamicUpdater throws if primitives undefined', function() {
-        var dynamicObject = createBasicPolyline();
-        dynamicObject.polyline.width = new SampledProperty(Number);
-        dynamicObject.polyline.width.addSample(time, 4);
-        var updater = new PolylineGeometryUpdater(dynamicObject);
+        var entity = createBasicPolyline();
+        entity.polyline.width = new SampledProperty(Number);
+        entity.polyline.width.addSample(time, 4);
+        var updater = new PolylineGeometryUpdater(entity);
         expect(updater.isDynamic).toBe(true);
         expect(function() {
             return updater.createDynamicUpdater(undefined);
@@ -335,17 +335,17 @@ defineSuite([
     });
 
     it('dynamicUpdater.update throws if no time specified', function() {
-        var dynamicObject = createBasicPolyline();
-        dynamicObject.polyline.width = new SampledProperty(Number);
-        dynamicObject.polyline.width.addSample(time, 4);
-        var updater = new PolylineGeometryUpdater(dynamicObject);
+        var entity = createBasicPolyline();
+        entity.polyline.width = new SampledProperty(Number);
+        entity.polyline.width.addSample(time, 4);
+        var updater = new PolylineGeometryUpdater(entity);
         var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
         expect(function() {
             dynamicUpdater.update(undefined);
         }).toThrowDeveloperError();
     });
 
-    it('Constructor throws if no DynamicObject supplied', function() {
+    it('Constructor throws if no Entity supplied', function() {
         expect(function() {
             return new PolylineGeometryUpdater(undefined);
         }).toThrowDeveloperError();

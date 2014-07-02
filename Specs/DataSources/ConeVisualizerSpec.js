@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/DynamicConeVisualizerUsingCustomSensor',
+        'DataSources/ConeVisualizer',
         'Core/Cartesian3',
         'Core/Color',
         'Core/JulianDate',
@@ -8,14 +8,14 @@ defineSuite([
         'Core/Matrix3',
         'Core/Matrix4',
         'Core/Quaternion',
-        'DynamicScene/ColorMaterialProperty',
-        'DynamicScene/ConstantProperty',
-        'DynamicScene/DynamicCone',
-        'DynamicScene/DynamicObjectCollection',
+        'DataSources/ColorMaterialProperty',
+        'DataSources/ConeGraphics',
+        'DataSources/ConstantProperty',
+        'DataSources/EntityCollection',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
-        DynamicConeVisualizerUsingCustomSensor,
+        ConeVisualizer,
         Cartesian3,
         Color,
         JulianDate,
@@ -24,9 +24,9 @@ defineSuite([
         Matrix4,
         Quaternion,
         ColorMaterialProperty,
+        ConeGraphics,
         ConstantProperty,
-        DynamicCone,
-        DynamicObjectCollection,
+        EntityCollection,
         createScene,
         destroyScene) {
     "use strict";
@@ -49,21 +49,21 @@ defineSuite([
 
     it('constructor throws if no scene is passed.', function() {
         expect(function() {
-            return new DynamicConeVisualizerUsingCustomSensor();
+            return new ConeVisualizer();
         }).toThrowDeveloperError();
     });
 
     it('update throws if no time specified.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new ConeVisualizer(scene, entityCollection);
         expect(function() {
             visualizer.update();
         }).toThrowDeveloperError();
     });
 
     it('isDestroy returns false until destroyed.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new ConeVisualizer(scene, entityCollection);
         expect(visualizer.isDestroyed()).toEqual(false);
         visualizer.destroy();
         expect(visualizer.isDestroyed()).toEqual(true);
@@ -71,10 +71,10 @@ defineSuite([
     });
 
     it('object with no cone does not create a primitive.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new ConeVisualizer(scene, entityCollection);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
         visualizer.update(JulianDate.now());
@@ -82,12 +82,12 @@ defineSuite([
     });
 
     it('object with no position does not create a primitive.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new ConeVisualizer(scene, entityCollection);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
-        var cone = testObject.cone = new DynamicCone();
+        var cone = testObject.cone = new ConeGraphics();
         cone.maximumClockAngle = new ConstantProperty(1);
         cone.outerHalfAngle = new ConstantProperty(1);
         visualizer.update(JulianDate.now());
@@ -95,28 +95,28 @@ defineSuite([
     });
 
     it('object with no orientation does not create a primitive.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new ConeVisualizer(scene, entityCollection);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
-        var cone = testObject.cone = new DynamicCone();
+        var cone = testObject.cone = new ConeGraphics();
         cone.maximumClockAngle = new ConstantProperty(1);
         cone.outerHalfAngle = new ConstantProperty(1);
         visualizer.update(JulianDate.now());
         expect(scene.primitives.length).toEqual(0);
     });
 
-    it('A DynamicCone causes a ComplexConicSensor to be created and updated.', function() {
+    it('A ConeGraphics causes a ComplexConicSensor to be created and updated.', function() {
         var time = JulianDate.now();
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new ConeVisualizer(scene, entityCollection);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, Math.sin(CesiumMath.PI_OVER_FOUR), Math.cos(CesiumMath.PI_OVER_FOUR)));
 
-        var cone = testObject.cone = new DynamicCone();
+        var cone = testObject.cone = new ConeGraphics();
         cone.minimumClockAngle = new ConstantProperty(0.1);
         cone.maximumClockAngle = new ConstantProperty(0.2);
         cone.innerHalfAngle = new ConstantProperty(0.3);
@@ -151,21 +151,21 @@ defineSuite([
 
     it('IntersectionColor is set correctly with multiple cones.', function() {
         var time = JulianDate.now();
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new ConeVisualizer(scene, entityCollection);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
 
-        var testObject2 = dynamicObjectCollection.getOrCreateObject('test2');
+        var testObject2 = entityCollection.getOrCreateObject('test2');
         testObject2.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject2.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
 
-        var cone = testObject.cone = new DynamicCone();
+        var cone = testObject.cone = new ConeGraphics();
         cone.intersectionColor = new ConstantProperty(new Color(0.1, 0.2, 0.3, 0.4));
 
-        var cone2 = testObject2.cone = new DynamicCone();
+        var cone2 = testObject2.cone = new ConeGraphics();
         cone2.intersectionColor = new ConstantProperty(new Color(0.4, 0.3, 0.2, 0.1));
 
         visualizer.update(time);
@@ -178,16 +178,16 @@ defineSuite([
         expect(c.intersectionColor).toEqual(testObject2.cone.intersectionColor.getValue(time));
     });
 
-    it('An empty DynamicCone causes a ComplexConicSensor to be created with CZML defaults.', function() {
+    it('An empty ConeGraphics causes a ComplexConicSensor to be created with CZML defaults.', function() {
         var time = JulianDate.now();
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new ConeVisualizer(scene, entityCollection);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
 
-        testObject.cone = new DynamicCone();
+        testObject.cone = new ConeGraphics();
         visualizer.update(time);
 
         expect(scene.primitives.length).toEqual(1);
@@ -201,13 +201,13 @@ defineSuite([
     });
 
     it('clear hides cones.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new ConeVisualizer(scene, entityCollection);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
-        var cone = testObject.cone = new DynamicCone();
+        var cone = testObject.cone = new ConeGraphics();
         cone.maximumClockAngle = new ConstantProperty(1);
         cone.outerHalfAngle = new ConstantProperty(1);
 
@@ -216,20 +216,20 @@ defineSuite([
         visualizer.update(time);
         expect(scene.primitives.length).toEqual(1);
         expect(scene.primitives.get(0).show).toEqual(true);
-        dynamicObjectCollection.removeAll();
+        entityCollection.removeAll();
         visualizer.update(time);
         expect(scene.primitives.length).toEqual(1);
         expect(scene.primitives.get(0).show).toEqual(false);
     });
 
-    it('Visualizer sets dynamicObject property.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
+    it('Visualizer sets entity property.', function() {
+        var entityCollection = new EntityCollection();
+        visualizer = new ConeVisualizer(scene, entityCollection);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
-        var cone = testObject.cone = new DynamicCone();
+        var cone = testObject.cone = new ConeGraphics();
         cone.maximumClockAngle = new ConstantProperty(1);
         cone.outerHalfAngle = new ConstantProperty(1);
 

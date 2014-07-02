@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/DataSourceCollection',
+        'DataSources/DataSourceCollection',
         'Specs/MockDataSource'
     ], function(
         DataSourceCollection,

@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/TimeIntervalCollectionPositionProperty',
+        'DataSources/TimeIntervalCollectionPositionProperty',
         'Core/Cartesian3',
         'Core/JulianDate',
         'Core/ReferenceFrame',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
-        'DynamicScene/PositionProperty'
+        'DataSources/PositionProperty'
     ], function(
         TimeIntervalCollectionPositionProperty,
         Cartesian3,

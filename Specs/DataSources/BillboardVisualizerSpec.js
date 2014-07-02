@@ -1,31 +1,31 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/DynamicBillboardVisualizer',
+        'DataSources/BillboardVisualizer',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
         'Core/defined',
         'Core/JulianDate',
         'Core/NearFarScalar',
-        'DynamicScene/ConstantProperty',
-        'DynamicScene/DynamicBillboard',
-        'DynamicScene/DynamicObjectCollection',
+        'DataSources/BillboardGraphics',
+        'DataSources/ConstantProperty',
+        'DataSources/EntityCollection',
         'Scene/BillboardCollection',
         'Scene/HorizontalOrigin',
         'Scene/VerticalOrigin',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
-        DynamicBillboardVisualizer,
+        BillboardVisualizer,
         Cartesian2,
         Cartesian3,
         Color,
         defined,
         JulianDate,
         NearFarScalar,
+        BillboardGraphics,
         ConstantProperty,
-        DynamicBillboard,
-        DynamicObjectCollection,
+        EntityCollection,
         BillboardCollection,
         HorizontalOrigin,
         VerticalOrigin,
@@ -51,28 +51,28 @@ defineSuite([
 
     it('constructor throws if no scene is passed.', function() {
         expect(function() {
-            return new DynamicBillboardVisualizer();
+            return new BillboardVisualizer();
         }).toThrowDeveloperError();
     });
 
     it('constructor adds collection to scene.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicBillboardVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new BillboardVisualizer(scene, entityCollection);
         var billboardCollection = scene.primitives.get(0);
         expect(billboardCollection instanceof BillboardCollection).toEqual(true);
     });
 
     it('update throws if no time specified.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicBillboardVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new BillboardVisualizer(scene, entityCollection);
         expect(function() {
             visualizer.update();
         }).toThrowDeveloperError();
     });
 
     it('isDestroy returns false until destroyed.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicBillboardVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new BillboardVisualizer(scene, entityCollection);
         expect(visualizer.isDestroyed()).toEqual(false);
         visualizer.destroy();
         expect(visualizer.isDestroyed()).toEqual(true);
@@ -80,10 +80,10 @@ defineSuite([
     });
 
     it('object with no billboard does not create a billboard.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicBillboardVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new BillboardVisualizer(scene, entityCollection);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         visualizer.update(JulianDate.now());
         var billboardCollection = scene.primitives.get(0);
@@ -91,11 +91,11 @@ defineSuite([
     });
 
     it('object with no position does not create a billboard.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicBillboardVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new BillboardVisualizer(scene, entityCollection);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        var billboard = testObject.billboard = new DynamicBillboard();
+        var testObject = entityCollection.getOrCreateObject('test');
+        var billboard = testObject.billboard = new BillboardGraphics();
         billboard.show = new ConstantProperty(true);
         billboard.image = new ConstantProperty('Data/Images/Blue.png');
 
@@ -105,12 +105,12 @@ defineSuite([
     });
 
     it('object with no image does not create a billboard.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicBillboardVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new BillboardVisualizer(scene, entityCollection);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
-        var billboard = testObject.billboard = new DynamicBillboard();
+        var billboard = testObject.billboard = new BillboardGraphics();
         billboard.show = new ConstantProperty(true);
 
         visualizer.update(JulianDate.now());
@@ -118,17 +118,17 @@ defineSuite([
         expect(billboardCollection.length).toEqual(0);
     });
 
-    it('A DynamicBillboard causes a Billboard to be created and updated.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicBillboardVisualizer(scene, dynamicObjectCollection);
+    it('A BillboardGraphics causes a Billboard to be created and updated.', function() {
+        var entityCollection = new EntityCollection();
+        visualizer = new BillboardVisualizer(scene, entityCollection);
 
         var billboardCollection = scene.primitives.get(0);
         expect(billboardCollection.length).toEqual(0);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
 
         var time = JulianDate.now();
-        var billboard = testObject.billboard = new DynamicBillboard();
+        var billboard = testObject.billboard = new BillboardGraphics();
         var bb;
 
         runs(function() {
@@ -228,16 +228,16 @@ defineSuite([
     });
 
     it('clear hides billboards.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicBillboardVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new BillboardVisualizer(scene, entityCollection);
 
         var billboardCollection = scene.primitives.get(0);
         expect(billboardCollection.length).toEqual(0);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
 
         var time = JulianDate.now();
-        var billboard = testObject.billboard = new DynamicBillboard();
+        var billboard = testObject.billboard = new BillboardGraphics();
 
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         billboard.show = new ConstantProperty(true);
@@ -251,7 +251,7 @@ defineSuite([
             if (bb.show) {
                 //Clearing won't actually remove the billboard because of the
                 //internal cache used by the visualizer, instead it just hides it.
-                dynamicObjectCollection.removeAll();
+                entityCollection.removeAll();
                 expect(bb.show).toEqual(false);
                 return true;
             }
@@ -259,17 +259,17 @@ defineSuite([
         });
     });
 
-    it('Visualizer sets dynamicObject property.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicBillboardVisualizer(scene, dynamicObjectCollection);
+    it('Visualizer sets entity property.', function() {
+        var entityCollection = new EntityCollection();
+        visualizer = new BillboardVisualizer(scene, entityCollection);
 
         var billboardCollection = scene.primitives.get(0);
         expect(billboardCollection.length).toEqual(0);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
 
         var time = JulianDate.now();
-        var billboard = testObject.billboard = new DynamicBillboard();
+        var billboard = testObject.billboard = new BillboardGraphics();
 
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         billboard.show = new ConstantProperty(true);

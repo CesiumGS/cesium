@@ -1,11 +1,11 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/ImageMaterialProperty',
+        'DataSources/ImageMaterialProperty',
         'Core/Cartesian2',
         'Core/JulianDate',
         'Core/TimeInterval',
-        'DynamicScene/ConstantProperty',
-        'DynamicScene/TimeIntervalCollectionProperty'
+        'DataSources/ConstantProperty',
+        'DataSources/TimeIntervalCollectionProperty'
     ], function(
         ImageMaterialProperty,
         Cartesian2,

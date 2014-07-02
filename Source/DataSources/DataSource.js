@@ -9,12 +9,12 @@ define([
 
     /**
      * Defines the interface for data sources, which turn arbitrary data into a
-     * {@link DynamicObjectCollection} for generic consumption. This object is an interface
+     * {@link EntityCollection} for generic consumption. This object is an interface
      * for documentation purposes and is not intended to be instantiated directly.
      * @alias DataSource
      * @constructor
      *
-     * @see DynamicObject
+     * @see Entity
      * @see DataSourceDisplay
      */
     var DataSource = function() {
@@ -33,17 +33,17 @@ define([
         /**
          * Gets the preferred clock settings for this data source.
          * @memberof DataSource.prototype
-         * @type {DynamicClock}
+         * @type {DataSourceClock}
          */
         clock : {
             get : DeveloperError.throwInstantiationError
         },
         /**
-         * Gets the collection of {@link DynamicObject} instances.
+         * Gets the collection of {@link Entity} instances.
          * @memberof DataSource.prototype
-         * @type {DynamicObjectCollection}
+         * @type {EntityCollection}
          */
-        dynamicObjects : {
+        entities : {
             get : DeveloperError.throwInstantiationError
         },
         /**

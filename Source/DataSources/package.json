@@ -1,6 +1,6 @@
 {
-	"name": "DynamicScene",
-	"description": "Cesium DynamicScene",
+	"name": "DataSources",
+	"description": "Cesium DataSources",
 	"version": "0.6.0",
-	"dojoBuild": "DynamicScene.profile.js"
+	"dojoBuild": "DataSources.profile.js"
 }

@@ -5,23 +5,23 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createDynamicPropertyDescriptor'
+        './createPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createDynamicPropertyDescriptor) {
+        createPropertyDescriptor) {
     "use strict";
 
     /**
      * An optionally time-dynamic ellipsoid.
      *
-     * @alias DynamicEllipsoid
+     * @alias EllipsoidGraphics
      * @constructor
      */
-    var DynamicEllipsoid = function() {
+    var EllipsoidGraphics = function() {
         this._show = undefined;
         this._showSubscription = undefined;
         this._radii = undefined;
@@ -37,10 +37,10 @@ define([
         this._definitionChanged = new Event();
     };
 
-    defineProperties(DynamicEllipsoid.prototype, {
+    defineProperties(EllipsoidGraphics.prototype, {
         /**
          * Gets the event that is raised whenever a new property is assigned.
-         * @memberof DynamicEllipsoid.prototype
+         * @memberof EllipsoidGraphics.prototype
          *
          * @type {Event}
          * @readonly
@@ -53,77 +53,77 @@ define([
 
         /**
          * Gets or sets the boolean {@link Property} specifying the visibility of the ellipsoid.
-         * @memberof DynamicEllipsoid.prototype
+         * @memberof EllipsoidGraphics.prototype
          * @type {Property}
          */
-        show : createDynamicPropertyDescriptor('show'),
+        show : createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link Cartesian3} {@link Property} specifying the radii of the ellipsoid.
-         * @memberof DynamicEllipsoid.prototype
+         * @memberof EllipsoidGraphics.prototype
          * @type {Property}
          */
-        radii : createDynamicPropertyDescriptor('radii'),
+        radii : createPropertyDescriptor('radii'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the ellipsoid.
-         * @memberof DynamicEllipsoid.prototype
+         * @memberof EllipsoidGraphics.prototype
          * @type {MaterialProperty}
          */
-        material : createDynamicPropertyDescriptor('material'),
+        material : createPropertyDescriptor('material'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the ellipsoid should be filled.
-         * @memberof DynamicEllipsoid.prototype
+         * @memberof EllipsoidGraphics.prototype
          * @type {Property}
          */
-        fill : createDynamicPropertyDescriptor('fill'),
+        fill : createPropertyDescriptor('fill'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the ellipsoid should be outlined.
-         * @memberof DynamicEllipsoid.prototype
+         * @memberof EllipsoidGraphics.prototype
          * @type {Property}
          */
-        outline : createDynamicPropertyDescriptor('outline'),
+        outline : createPropertyDescriptor('outline'),
 
         /**
          * Gets or sets the Color {@link Property} specifying whether the color of the outline.
-         * @memberof DynamicEllipsoid.prototype
+         * @memberof EllipsoidGraphics.prototype
          * @type {Property}
          */
-        outlineColor : createDynamicPropertyDescriptor('outlineColor'),
+        outlineColor : createPropertyDescriptor('outlineColor'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the number of times to partition the ellipsoid into stacks.
-         * @memberof DynamicEllipsoid.prototype
+         * @memberof EllipsoidGraphics.prototype
          * @type {Property}
          */
-        stackPartitions : createDynamicPropertyDescriptor('stackPartitions'),
+        stackPartitions : createPropertyDescriptor('stackPartitions'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the number of times to partition the ellipsoid into radial slices.
-         * @memberof DynamicEllipsoid.prototype
+         * @memberof EllipsoidGraphics.prototype
          * @type {Property}
          */
-        slicePartitions : createDynamicPropertyDescriptor('slicePartitions'),
+        slicePartitions : createPropertyDescriptor('slicePartitions'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the number of points per line, determining the granularity of the curvature .
-         * @memberof DynamicEllipsoid.prototype
+         * @memberof EllipsoidGraphics.prototype
          * @type {Property}
          */
-        subdivisions : createDynamicPropertyDescriptor('subdivisions')
+        subdivisions : createPropertyDescriptor('subdivisions')
     });
 
     /**
-     * Duplicates a DynamicEllipsoid instance.
+     * Duplicates a EllipsoidGraphics instance.
      *
-     * @param {DynamicEllipsoid} [result] The object onto which to store the result.
-     * @returns {DynamicEllipsoid} The modified result parameter or a new instance if one was not provided.
+     * @param {EllipsoidGraphics} [result] The object onto which to store the result.
+     * @returns {EllipsoidGraphics} The modified result parameter or a new instance if one was not provided.
      */
-    DynamicEllipsoid.prototype.clone = function(result) {
+    EllipsoidGraphics.prototype.clone = function(result) {
         if (!defined(result)) {
-            result = new DynamicEllipsoid();
+            result = new EllipsoidGraphics();
         }
         result.show = this.show;
         result.radii = this.radii;
@@ -142,9 +142,9 @@ define([
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
      *
-     * @param {DynamicEllipsoid} source The object to be merged into this object.
+     * @param {EllipsoidGraphics} source The object to be merged into this object.
      */
-    DynamicEllipsoid.prototype.merge = function(source) {
+    EllipsoidGraphics.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
@@ -162,5 +162,5 @@ define([
         this.subdivisions = defaultValue(this.subdivisions, source.subdivisions);
     };
 
-    return DynamicEllipsoid;
+    return EllipsoidGraphics;
 });

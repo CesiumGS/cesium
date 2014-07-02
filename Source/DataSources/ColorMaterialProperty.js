@@ -7,7 +7,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         './ConstantProperty',
-        './createDynamicPropertyDescriptor',
+        './createPropertyDescriptor',
         './Property'
     ], function(
         Color,
@@ -17,7 +17,7 @@ define([
         DeveloperError,
         Event,
         ConstantProperty,
-        createDynamicPropertyDescriptor,
+        createPropertyDescriptor,
         Property) {
     "use strict";
 
@@ -84,7 +84,7 @@ define([
          * @memberof ColorMaterialProperty.prototype
          * @type {Property}
          */
-        color : createDynamicPropertyDescriptor('color')
+        color : createPropertyDescriptor('color')
     });
 
     /**

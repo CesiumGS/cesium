@@ -1,11 +1,11 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/DynamicPyramid',
+        'DataSources/PyramidGraphics',
         'Core/Color',
-        'DynamicScene/ColorMaterialProperty',
-        'DynamicScene/ConstantProperty'
+        'DataSources/ColorMaterialProperty',
+        'DataSources/ConstantProperty'
     ], function(
-        DynamicPyramid,
+        PyramidGraphics,
         Color,
         ColorMaterialProperty,
         ConstantProperty) {
@@ -13,7 +13,7 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('merge assigns unassigned properties', function() {
-        var source = new DynamicPyramid();
+        var source = new PyramidGraphics();
         source.material = new ColorMaterialProperty();
         source.directions = new ConstantProperty([]);
         source.intersectionColor = new ConstantProperty(Color.WHITE);
@@ -22,7 +22,7 @@ defineSuite([
         source.showIntersection = new ConstantProperty(true);
         source.intersectionWidth = new ConstantProperty(1);
 
-        var target = new DynamicPyramid();
+        var target = new PyramidGraphics();
         target.merge(source);
 
         expect(target.material).toBe(source.material);
@@ -35,7 +35,7 @@ defineSuite([
     });
 
     it('merge does not assign assigned properties', function() {
-        var source = new DynamicPyramid();
+        var source = new PyramidGraphics();
         source.material = new ColorMaterialProperty();
         source.directions = new ConstantProperty([]);
         source.intersectionColor = new ConstantProperty(Color.WHITE);
@@ -52,7 +52,7 @@ defineSuite([
         var showIntersection = new ConstantProperty(true);
         var intersectionWidth = new ConstantProperty(1);
 
-        var target = new DynamicPyramid();
+        var target = new PyramidGraphics();
         target.material = material;
         target.directions = directions;
         target.intersectionColor = intersectionColor;
@@ -73,7 +73,7 @@ defineSuite([
     });
 
     it('clone works', function() {
-        var source = new DynamicPyramid();
+        var source = new PyramidGraphics();
         source.material = new ColorMaterialProperty();
         source.directions = new ConstantProperty([]);
         source.intersectionColor = new ConstantProperty(Color.WHITE);
@@ -93,7 +93,7 @@ defineSuite([
     });
 
     it('merge throws if source undefined', function() {
-        var target = new DynamicPyramid();
+        var target = new PyramidGraphics();
         expect(function() {
             target.merge(undefined);
         }).toThrowDeveloperError();

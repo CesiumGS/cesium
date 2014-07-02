@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/DynamicPyramidVisualizer',
+        'DataSources/PyramidVisualizer',
         'Core/Cartesian3',
         'Core/Color',
         'Core/JulianDate',
@@ -9,14 +9,14 @@ defineSuite([
         'Core/Matrix4',
         'Core/Quaternion',
         'Core/Spherical',
-        'DynamicScene/ColorMaterialProperty',
-        'DynamicScene/ConstantProperty',
-        'DynamicScene/DynamicObjectCollection',
-        'DynamicScene/DynamicPyramid',
+        'DataSources/ColorMaterialProperty',
+        'DataSources/ConstantProperty',
+        'DataSources/EntityCollection',
+        'DataSources/PyramidGraphics',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
-        DynamicPyramidVisualizer,
+        PyramidVisualizer,
         Cartesian3,
         Color,
         JulianDate,
@@ -27,8 +27,8 @@ defineSuite([
         Spherical,
         ColorMaterialProperty,
         ConstantProperty,
-        DynamicObjectCollection,
-        DynamicPyramid,
+        EntityCollection,
+        PyramidGraphics,
         createScene,
         destroyScene) {
     "use strict";
@@ -51,21 +51,21 @@ defineSuite([
 
     it('constructor throws if no scene is passed.', function() {
         expect(function() {
-            return new DynamicPyramidVisualizer();
+            return new PyramidVisualizer();
         }).toThrowDeveloperError();
     });
 
     it('update throws if no time specified.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new PyramidVisualizer(scene, entityCollection);
         expect(function() {
             visualizer.update();
         }).toThrowDeveloperError();
     });
 
     it('isDestroy returns false until destroyed.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new PyramidVisualizer(scene, entityCollection);
         expect(visualizer.isDestroyed()).toEqual(false);
         visualizer.destroy();
         expect(visualizer.isDestroyed()).toEqual(true);
@@ -73,10 +73,10 @@ defineSuite([
     });
 
     it('object with no pyramid does not create a primitive.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new PyramidVisualizer(scene, entityCollection);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
         visualizer.update(JulianDate.now());
@@ -84,39 +84,39 @@ defineSuite([
     });
 
     it('object with no position does not create a primitive.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new PyramidVisualizer(scene, entityCollection);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
-        var pyramid = testObject.pyramid = new DynamicPyramid();
+        var pyramid = testObject.pyramid = new PyramidGraphics();
         pyramid.directions = new ConstantProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
         visualizer.update(JulianDate.now());
         expect(scene.primitives.length).toEqual(0);
     });
 
     it('object with no orientation does not create a primitive.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new PyramidVisualizer(scene, entityCollection);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
-        var pyramid = testObject.pyramid = new DynamicPyramid();
+        var pyramid = testObject.pyramid = new PyramidGraphics();
         pyramid.directions = new ConstantProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
         visualizer.update(JulianDate.now());
         expect(scene.primitives.length).toEqual(0);
     });
 
-    it('A DynamicPyramid causes a CustomSensor to be created and updated.', function() {
+    it('A PyramidGraphics causes a CustomSensor to be created and updated.', function() {
         var time = JulianDate.now();
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new PyramidVisualizer(scene, entityCollection);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, Math.sin(CesiumMath.PI_OVER_FOUR), Math.cos(CesiumMath.PI_OVER_FOUR)));
 
-        var pyramid = testObject.pyramid = new DynamicPyramid();
+        var pyramid = testObject.pyramid = new PyramidGraphics();
         pyramid.directions = new ConstantProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
         pyramid.intersectionColor = new ConstantProperty(new Color(0.1, 0.2, 0.3, 0.4));
         pyramid.intersectionWidth = new ConstantProperty(0.5);
@@ -142,13 +142,13 @@ defineSuite([
     });
 
     it('clear hides pyramids.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
+        var entityCollection = new EntityCollection();
+        visualizer = new PyramidVisualizer(scene, entityCollection);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
-        var pyramid = testObject.pyramid = new DynamicPyramid();
+        var pyramid = testObject.pyramid = new PyramidGraphics();
         pyramid.directions = new ConstantProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
 
         var time = JulianDate.now();
@@ -156,20 +156,20 @@ defineSuite([
         visualizer.update(time);
         expect(scene.primitives.length).toEqual(1);
         expect(scene.primitives.get(0).show).toEqual(true);
-        dynamicObjectCollection.removeAll();
+        entityCollection.removeAll();
         visualizer.update(time);
         expect(scene.primitives.length).toEqual(1);
         expect(scene.primitives.get(0).show).toEqual(false);
     });
 
-    it('Visualizer sets dynamicObject property.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
+    it('Visualizer sets entity property.', function() {
+        var entityCollection = new EntityCollection();
+        visualizer = new PyramidVisualizer(scene, entityCollection);
 
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
-        var pyramid = testObject.pyramid = new DynamicPyramid();
+        var pyramid = testObject.pyramid = new PyramidGraphics();
         pyramid.directions = new ConstantProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
 
         var time = JulianDate.now();

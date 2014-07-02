@@ -5,23 +5,23 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createDynamicPropertyDescriptor'
+        './createPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createDynamicPropertyDescriptor) {
+        createPropertyDescriptor) {
     "use strict";
 
     /**
      * An optionally time-dynamic cone.
      *
-     * @alias DynamicCone
+     * @alias ConeGraphics
      * @constructor
      */
-    var DynamicCone = function() {
+    var ConeGraphics = function() {
         this._minimumClockAngle = undefined;
         this._minimumClockAngleSubscription = undefined;
         this._maximumClockAngle = undefined;
@@ -51,10 +51,10 @@ define([
         this._definitionChanged = new Event();
     };
 
-    defineProperties(DynamicCone.prototype, {
+    defineProperties(ConeGraphics.prototype, {
         /**
          * Gets the event that is raised whenever a new property is assigned.
-         * @memberof DynamicCone.prototype
+         * @memberof ConeGraphics.prototype
          *
          * @type {Event}
          * @readonly
@@ -67,105 +67,105 @@ define([
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the cone's minimum clock angle.
-         * @memberof DynamicCone.prototype
+         * @memberof ConeGraphics.prototype
          * @type {Property}
          */
-        minimumClockAngle : createDynamicPropertyDescriptor('minimumClockAngle'),
+        minimumClockAngle : createPropertyDescriptor('minimumClockAngle'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the cone's maximum clock angle.
-         * @memberof DynamicCone.prototype
+         * @memberof ConeGraphics.prototype
          * @type {Property}
          */
-        maximumClockAngle : createDynamicPropertyDescriptor('maximumClockAngle'),
+        maximumClockAngle : createPropertyDescriptor('maximumClockAngle'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the cone's inner half-angle.
-         * @memberof DynamicCone.prototype
+         * @memberof ConeGraphics.prototype
          * @type {Property}
          */
-        innerHalfAngle : createDynamicPropertyDescriptor('innerHalfAngle'),
+        innerHalfAngle : createPropertyDescriptor('innerHalfAngle'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the cone's outer half-angle.
-         * @memberof DynamicCone.prototype
+         * @memberof ConeGraphics.prototype
          * @type {Property}
          */
-        outerHalfAngle : createDynamicPropertyDescriptor('outerHalfAngle'),
+        outerHalfAngle : createPropertyDescriptor('outerHalfAngle'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the the cone's cap material.
-         * @memberof DynamicCone.prototype
+         * @memberof ConeGraphics.prototype
          * @type {MaterialProperty}
          */
-        capMaterial : createDynamicPropertyDescriptor('capMaterial'),
+        capMaterial : createPropertyDescriptor('capMaterial'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the the cone's inner material.
-         * @memberof DynamicCone.prototype
+         * @memberof ConeGraphics.prototype
          * @type {MaterialProperty}
          */
-        innerMaterial : createDynamicPropertyDescriptor('innerMaterial'),
+        innerMaterial : createPropertyDescriptor('innerMaterial'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the the cone's outer material.
-         * @memberof DynamicCone.prototype
+         * @memberof ConeGraphics.prototype
          * @type {MaterialProperty}
          */
-        outerMaterial : createDynamicPropertyDescriptor('outerMaterial'),
+        outerMaterial : createPropertyDescriptor('outerMaterial'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the the cone's silhouette material.
-         * @memberof DynamicCone.prototype
+         * @memberof ConeGraphics.prototype
          * @type {MaterialProperty}
          */
-        silhouetteMaterial : createDynamicPropertyDescriptor('silhouetteMaterial'),
+        silhouetteMaterial : createPropertyDescriptor('silhouetteMaterial'),
 
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the color of the line formed by the intersection of the cone and other central bodies.
-         * @memberof DynamicCone.prototype
+         * @memberof ConeGraphics.prototype
          * @type {Property}
          */
-        intersectionColor : createDynamicPropertyDescriptor('intersectionColor'),
+        intersectionColor : createPropertyDescriptor('intersectionColor'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the width of the line formed by the intersection of the cone and other central bodies.
-         * @memberof DynamicCone.prototype
+         * @memberof ConeGraphics.prototype
          * @type {Property}
          */
-        intersectionWidth : createDynamicPropertyDescriptor('intersectionWidth'),
+        intersectionWidth : createPropertyDescriptor('intersectionWidth'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the visibility of the line formed by the intersection of the cone and other central bodies.
-         * @memberof DynamicCone.prototype
+         * @memberof ConeGraphics.prototype
          * @type {Property}
          */
-        showIntersection : createDynamicPropertyDescriptor('showIntersection'),
+        showIntersection : createPropertyDescriptor('showIntersection'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the radius of the cone's projection.
-         * @memberof DynamicCone.prototype
+         * @memberof ConeGraphics.prototype
          * @type {Property}
          */
-        radius : createDynamicPropertyDescriptor('radius'),
+        radius : createPropertyDescriptor('radius'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the visibility of the cone.
-         * @memberof DynamicCone.prototype
+         * @memberof ConeGraphics.prototype
          * @type {Property}
          */
-        show : createDynamicPropertyDescriptor('show')
+        show : createPropertyDescriptor('show')
     });
 
     /**
-     * Duplicates a DynamicCone instance.
+     * Duplicates a ConeGraphics instance.
      *
-     * @param {DynamicCone} [result] The object onto which to store the result.
-     * @returns {DynamicCone} The modified result parameter or a new instance if one was not provided.
+     * @param {ConeGraphics} [result] The object onto which to store the result.
+     * @returns {ConeGraphics} The modified result parameter or a new instance if one was not provided.
      */
-    DynamicCone.prototype.clone = function(result) {
+    ConeGraphics.prototype.clone = function(result) {
         if (!defined(result)) {
-            result = new DynamicCone();
+            result = new ConeGraphics();
         }
         result.show = this.show;
         result.innerHalfAngle = this.innerHalfAngle;
@@ -187,9 +187,9 @@ define([
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
      *
-     * @param {DynamicCone} source The object to be merged into this object.
+     * @param {ConeGraphics} source The object to be merged into this object.
      */
-    DynamicCone.prototype.merge = function(source) {
+    ConeGraphics.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
@@ -211,5 +211,5 @@ define([
         this.silhouetteMaterial = defaultValue(this.silhouetteMaterial, source.silhouetteMaterial);
     };
 
-    return DynamicCone;
+    return ConeGraphics;
 });

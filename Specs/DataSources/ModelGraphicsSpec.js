@@ -1,21 +1,21 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/DynamicModel',
-        'DynamicScene/ConstantProperty'
+        'DataSources/ModelGraphics',
+        'DataSources/ConstantProperty'
     ], function(
-        DynamicModel,
+        ModelGraphics,
         ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('merge assigns unassigned properties', function() {
-        var source = new DynamicModel();
+        var source = new ModelGraphics();
         source.uri = new ConstantProperty('');
         source.show = new ConstantProperty(true);
         source.scale = new ConstantProperty(1.0);
         source.minimumPixelSize = new ConstantProperty(2.0);
 
-        var target = new DynamicModel();
+        var target = new ModelGraphics();
         target.merge(source);
 
         expect(target.uri).toBe(source.uri);
@@ -25,7 +25,7 @@ defineSuite([
     });
 
     it('merge does not assign assigned properties', function() {
-        var source = new DynamicModel();
+        var source = new ModelGraphics();
         source.uri = new ConstantProperty('');
         source.show = new ConstantProperty(true);
         source.scale = new ConstantProperty(1.0);
@@ -36,7 +36,7 @@ defineSuite([
         var scale = new ConstantProperty(1.0);
         var minimumPixelSize = new ConstantProperty(2.0);
 
-        var target = new DynamicModel();
+        var target = new ModelGraphics();
         target.uri = uri;
         target.show = show;
         target.scale = scale;
@@ -51,7 +51,7 @@ defineSuite([
     });
 
     it('clone works', function() {
-        var source = new DynamicModel();
+        var source = new ModelGraphics();
         source.uri = new ConstantProperty('');
         source.show = new ConstantProperty(true);
         source.scale = new ConstantProperty(1.0);
@@ -65,7 +65,7 @@ defineSuite([
     });
 
     it('merge throws if source undefined', function() {
-        var target = new DynamicModel();
+        var target = new ModelGraphics();
         expect(function() {
             target.merge(undefined);
         }).toThrowDeveloperError();

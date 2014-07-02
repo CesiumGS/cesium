@@ -1,11 +1,11 @@
 /*global defineSuite*/
 defineSuite([
-        'DynamicScene/DynamicEllipsoid',
+        'DataSources/EllipsoidGraphics',
         'Core/Cartesian3',
-        'DynamicScene/ColorMaterialProperty',
-        'DynamicScene/ConstantProperty'
+        'DataSources/ColorMaterialProperty',
+        'DataSources/ConstantProperty'
     ], function(
-        DynamicEllipsoid,
+        EllipsoidGraphics,
         Cartesian3,
         ColorMaterialProperty,
         ConstantProperty) {
@@ -13,7 +13,7 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('merge assigns unassigned properties', function() {
-        var source = new DynamicEllipsoid();
+        var source = new EllipsoidGraphics();
         source.material = new ColorMaterialProperty();
         source.radii = new ConstantProperty(new Cartesian3());
         source.show = new ConstantProperty(true);
@@ -21,7 +21,7 @@ defineSuite([
         source.slicePartitions = new ConstantProperty(32);
         source.subdivisions = new ConstantProperty(64);
 
-        var target = new DynamicEllipsoid();
+        var target = new EllipsoidGraphics();
         target.merge(source);
 
         expect(target.material).toBe(source.material);
@@ -33,7 +33,7 @@ defineSuite([
     });
 
     it('merge does not assign assigned properties', function() {
-        var source = new DynamicEllipsoid();
+        var source = new EllipsoidGraphics();
         source.material = new ColorMaterialProperty();
         source.radii = new ConstantProperty(new Cartesian3());
         source.show = new ConstantProperty(true);
@@ -48,7 +48,7 @@ defineSuite([
         var slicePartitions = new ConstantProperty(2);
         var subdivisions = new ConstantProperty(3);
 
-        var target = new DynamicEllipsoid();
+        var target = new EllipsoidGraphics();
         target.material = material;
         target.radii = radii;
         target.show = show;
@@ -67,7 +67,7 @@ defineSuite([
     });
 
     it('clone works', function() {
-        var source = new DynamicEllipsoid();
+        var source = new EllipsoidGraphics();
         source.material = new ColorMaterialProperty();
         source.radii = new ConstantProperty(new Cartesian3());
         source.show = new ConstantProperty(true);
@@ -85,7 +85,7 @@ defineSuite([
     });
 
     it('merge throws if source undefined', function() {
-        var target = new DynamicEllipsoid();
+        var target = new EllipsoidGraphics();
         expect(function() {
             target.merge(undefined);
         }).toThrowDeveloperError();
