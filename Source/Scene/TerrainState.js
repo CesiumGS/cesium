@@ -1,9 +1,10 @@
 /*global define*/
-define(function() {
+define(['../Core/freezeObject'], function(freezeObject) {
     "use strict";
 
     /**
      * @private
+     * @enum
      */
     var TerrainState = {
         FAILED : 0,
@@ -15,5 +16,5 @@ define(function() {
         READY : 6
     };
 
-    return TerrainState;
+    return freezeObject(TerrainState);
 });

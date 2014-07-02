@@ -1,9 +1,10 @@
 /*global define*/
-define(function() {
+define(['../Core/freezeObject'], function(freezeObject) {
     "use strict";
 
     /**
      * @private
+     * @enum
      */
     var PixelDatatype = {
         UNSIGNED_BYTE : 0x1401,
@@ -27,5 +28,5 @@ define(function() {
         }
     };
 
-    return PixelDatatype;
+    return freezeObject(PixelDatatype);
 });

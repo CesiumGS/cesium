@@ -1,9 +1,10 @@
 /*global define*/
-define(function() {
+define(['../Core/freezeObject'], function(freezeObject) {
     "use strict";
 
     /**
      * @private
+     * @enum
      */
     var TextureWrap = {
         CLAMP_TO_EDGE : 0x812F,
@@ -17,5 +18,5 @@ define(function() {
         }
     };
 
-    return TextureWrap;
+    return freezeObject(TextureWrap);
 });

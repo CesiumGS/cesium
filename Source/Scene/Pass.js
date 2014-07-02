@@ -1,11 +1,12 @@
 /*global define*/
-define(function() {
+define(['../Core/freezeObject'], function(freezeObject) {
     "use strict";
 
     /**
      * The render pass for a command.
      *
      * @private
+     * @enum
      */
     var Pass = {
         OPAQUE : 0,
@@ -13,5 +14,5 @@ define(function() {
         OVERLAY : 2
     };
 
-    return Pass;
+    return freezeObject(Pass);
 });

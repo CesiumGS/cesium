@@ -1,11 +1,12 @@
 /*global define*/
-define(function() {
+define(['../Core/freezeObject'], function(freezeObject) {
     "use strict";
 
     /**
      * Determines how blending factors are computed.
      *
      * @exports BlendFunction
+     * @enum
      */
     var BlendFunction = {
         /**
@@ -129,5 +130,5 @@ define(function() {
         SOURCE_ALPHA_SATURATE : 0x0308 // WebGL: SRC_ALPHA_SATURATE
     };
 
-    return BlendFunction;
+    return freezeObject(BlendFunction);
 });

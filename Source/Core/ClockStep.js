@@ -1,5 +1,5 @@
 /*global define*/
-define(function() {
+define(['./freezeObject'], function(freezeObject) {
     "use strict";
 
     /**
@@ -7,7 +7,7 @@ define(function() {
      * to {@link Clock#tick}.
      *
      * @exports ClockStep
-     *
+     * @enum
      * @see Clock
      * @see ClockRange
      */
@@ -40,5 +40,5 @@ define(function() {
         SYSTEM_CLOCK : 2
     };
 
-    return ClockStep;
+    return freezeObject(ClockStep);
 });

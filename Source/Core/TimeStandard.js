@@ -1,12 +1,12 @@
 /*global define*/
-define(function() {
+define(['./freezeObject'], function(freezeObject) {
     "use strict";
 
     /**
      * Provides the type of time standards which JulianDate can take as input.
      *
      * @exports TimeStandard
-     *
+     * @enum
      * @see JulianDate
      */
     var TimeStandard = {
@@ -27,5 +27,5 @@ define(function() {
         TAI : 1
     };
 
-    return TimeStandard;
+    return freezeObject(TimeStandard);
 });

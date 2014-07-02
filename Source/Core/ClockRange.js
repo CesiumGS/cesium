@@ -1,5 +1,5 @@
 /*global define*/
-define(function() {
+define(['./freezeObject'], function(freezeObject) {
     "use strict";
 
     /**
@@ -7,7 +7,7 @@ define(function() {
      * when {@link Clock#startTime} or {@link Clock#stopTime} is reached.
      *
      * @exports ClockRange
-     *
+     * @enum
      * @see Clock
      * @see ClockStep
      */
@@ -41,5 +41,5 @@ define(function() {
         LOOP_STOP : 2
     };
 
-    return ClockRange;
+    return freezeObject(ClockRange);
 });

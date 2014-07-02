@@ -1,9 +1,10 @@
 /*global define*/
-define(function() {
+define(['../Core/freezeObject'], function(freezeObject) {
     "use strict";
 
     /**
      * @private
+     * @enum
      */
     var RenderbufferFormat = {
         RGBA4 : 0x8056,
@@ -23,5 +24,5 @@ define(function() {
         }
     };
 
-    return RenderbufferFormat;
+    return freezeObject(RenderbufferFormat);
 });

@@ -1,9 +1,10 @@
 /*global define*/
-define(function() {
+define(['../Core/freezeObject'], function(freezeObject) {
     "use strict";
 
     /**
      * @private
+     * @enum
      */
     var MipmapHint = {
         DONT_CARE : 0x1100,
@@ -17,5 +18,5 @@ define(function() {
         }
     };
 
-    return MipmapHint;
+    return freezeObject(MipmapHint);
 });

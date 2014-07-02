@@ -1,10 +1,10 @@
 /*global define*/
-define(function() {
+define(['../Core/freezeObject'], function(freezeObject) {
     "use strict";
 
     /**
      * Defined the orientation of stripes in {@link StripeMaterialProperty}.
-     *
+     * @enum
      * @exports StripeOrientation
      */
     var StripeOrientation = {
@@ -20,5 +20,5 @@ define(function() {
         VERTICAL : 1
     };
 
-    return StripeOrientation;
+    return freezeObject(StripeOrientation);
 });

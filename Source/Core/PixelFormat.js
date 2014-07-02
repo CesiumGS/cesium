@@ -1,11 +1,12 @@
 /*global define*/
-define(function() {
+define(['./freezeObject'], function(freezeObject) {
     "use strict";
 
     /**
      * The format of a pixel, i.e., the number of components it has and what they represent.
      *
      * @exports PixelFormat
+     * @enum
      */
     var PixelFormat = {
         /**
@@ -98,5 +99,5 @@ define(function() {
         }
     };
 
-    return PixelFormat;
+    return freezeObject(PixelFormat);
 });

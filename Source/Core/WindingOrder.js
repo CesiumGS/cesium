@@ -1,11 +1,12 @@
 /*global define*/
-define(function() {
+define(['./freezeObject'], function(freezeObject) {
     "use strict";
 
     /**
      * Winding order defines the order of vertices for a triangle to be considered front-facing.
      *
      * @exports WindingOrder
+     * @enum
      */
     var WindingOrder = {
         /**
@@ -32,5 +33,5 @@ define(function() {
         }
     };
 
-    return WindingOrder;
+    return freezeObject(WindingOrder);
 });

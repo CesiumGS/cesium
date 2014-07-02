@@ -1,9 +1,10 @@
 /*global define*/
-define(function() {
+define(['../Core/freezeObject'], function(freezeObject) {
     "use strict";
 
     /**
      * @private
+     * @enum
      */
     var TileState = {
         START : 0,
@@ -12,5 +13,5 @@ define(function() {
         UPSAMPLED_ONLY : 3
     };
 
-    return TileState;
+    return freezeObject(TileState);
 });

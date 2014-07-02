@@ -1,5 +1,5 @@
 /*global define*/
-define(function() {
+define(['./freezeObject'], function(freezeObject) {
     "use strict";
 
     /**
@@ -7,6 +7,7 @@ define(function() {
      * that are held down in addition to other event types.
      *
      * @exports KeyboardEventModifier
+     * @enum
      */
     var KeyboardEventModifier = {
         /**
@@ -34,5 +35,5 @@ define(function() {
         ALT : 2
     };
 
-    return KeyboardEventModifier;
+    return freezeObject(KeyboardEventModifier);
 });

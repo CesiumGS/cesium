@@ -1,12 +1,12 @@
 /*global define*/
-define(function() {
+define(['../Core/freezeObject'], function(freezeObject) {
     "use strict";
 
     /**
      * Indicates if the scene is viewed in 3D, 2D, or 2.5D Columbus view.
      *
      * @exports SceneMode
-     *
+     * @enum
      * @see Scene#mode
      */
     var SceneMode = {
@@ -60,5 +60,5 @@ define(function() {
         return 0.0;
     };
 
-    return SceneMode;
+    return freezeObject(SceneMode);
 });

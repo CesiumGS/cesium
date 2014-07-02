@@ -1,5 +1,5 @@
 /*global define*/
-define(function() {
+define(['../Core/freezeObject'], function(freezeObject) {
     "use strict";
 
     /**
@@ -8,7 +8,7 @@ define(function() {
      * screen space) of the actual position.
      *
      * @exports VerticalOrigin
-     *
+     * @enum
      * @see Billboard#verticalOrigin
      */
     var VerticalOrigin = {
@@ -37,5 +37,5 @@ define(function() {
         TOP : -1
     };
 
-    return VerticalOrigin;
+    return freezeObject(VerticalOrigin);
 });

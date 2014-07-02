@@ -1,11 +1,12 @@
 /*global define*/
-define(function() {
+define(['./freezeObject'], function(freezeObject) {
     "use strict";
 
     /**
      * This enumerated type is for classifying mouse events: down, up, click, double click, move and move while a button is held down.
      *
      * @exports ScreenSpaceEventType
+     * @enum
      */
     var ScreenSpaceEventType = {
         /**
@@ -145,5 +146,5 @@ define(function() {
         PINCH_MOVE : 19
     };
 
-    return ScreenSpaceEventType;
+    return freezeObject(ScreenSpaceEventType);
 });

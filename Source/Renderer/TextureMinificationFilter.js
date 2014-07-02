@@ -1,9 +1,10 @@
 /*global define*/
-define(function() {
+define(['../Core/freezeObject'], function(freezeObject) {
     "use strict";
 
     /**
      * @private
+     * @enum
      */
     var TextureMinificationFilter = {
         NEAREST : 0x2600,
@@ -23,5 +24,5 @@ define(function() {
         }
     };
 
-    return TextureMinificationFilter;
+    return freezeObject(TextureMinificationFilter);
 });

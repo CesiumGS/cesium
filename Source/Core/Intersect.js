@@ -1,5 +1,5 @@
 /*global define*/
-define(function() {
+define(['./freezeObject'], function(freezeObject) {
     "use strict";
 
     /**
@@ -9,6 +9,7 @@ define(function() {
      * outside of the frustum's 6 planes (OUTSIDE).
      *
      * @exports Intersect
+     * @enum
      */
     var Intersect = {
         /**
@@ -36,5 +37,5 @@ define(function() {
         INSIDE : 1
     };
 
-    return Intersect;
+    return freezeObject(Intersect);
 });

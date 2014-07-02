@@ -1,9 +1,10 @@
 /*global define*/
-define(function() {
+define(['./freezeObject'], function(freezeObject) {
     "use strict";
 
     /**
      * @exports CornerType
+     * @enum
      */
     var CornerType = {
         /**
@@ -40,5 +41,5 @@ define(function() {
         BEVELED : 2
     };
 
-    return CornerType;
+    return freezeObject(CornerType);
 });

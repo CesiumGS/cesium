@@ -1,9 +1,10 @@
 /*global define*/
-define(function() {
+define(['../Core/freezeObject'], function(freezeObject) {
     "use strict";
 
     /**
      * @private
+     * @enum
      */
     var PrimitiveState = {
         READY : 0,
@@ -15,5 +16,5 @@ define(function() {
         FAILED : 6
     };
 
-    return PrimitiveState;
+    return freezeObject(PrimitiveState);
 });

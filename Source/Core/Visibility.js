@@ -1,5 +1,5 @@
 /*global define*/
-define(function() {
+define(['./freezeObject'], function(freezeObject) {
     "use strict";
 
     /**
@@ -9,6 +9,7 @@ define(function() {
      * leading to full visibility.
      *
      * @exports Visibility
+     * @enum
      */
     var Visibility = {
         /**
@@ -36,5 +37,5 @@ define(function() {
         FULL : 1
     };
 
-    return Visibility;
+    return freezeObject(Visibility);
 });

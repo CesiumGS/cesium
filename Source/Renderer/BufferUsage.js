@@ -1,9 +1,10 @@
 /*global define*/
-define(function() {
+define(['../Core/freezeObject'], function(freezeObject) {
     "use strict";
 
     /**
      * @private
+     * @enum
      */
     var BufferUsage = {
         STREAM_DRAW : 0x88E0,
@@ -17,5 +18,5 @@ define(function() {
         }
     };
 
-    return BufferUsage;
+    return freezeObject(BufferUsage);
 });

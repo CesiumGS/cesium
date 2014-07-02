@@ -3,12 +3,14 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
-        './FeatureDetection'
+        './FeatureDetection',
+        './freezeObject'
     ], function(
         defaultValue,
         defined,
         DeveloperError,
-        FeatureDetection) {
+        FeatureDetection,
+        freezeObject) {
     "use strict";
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
@@ -22,6 +24,7 @@ define([
      * which form attributes, which form vertices.
      *
      * @exports ComponentDatatype
+     * @enum
      */
     var ComponentDatatype = {
         /**
@@ -256,5 +259,5 @@ define([
         }
     };
 
-    return ComponentDatatype;
+    return freezeObject(ComponentDatatype);
 });

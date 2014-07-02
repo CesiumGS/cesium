@@ -1,11 +1,12 @@
 /*global define*/
-define(function() {
+define(['./freezeObject'], function(freezeObject) {
     "use strict";
 
     /**
      * The type of a geometric primitive, i.e., points, lines, and triangles.
      *
      * @exports PrimitiveType
+     * @enum
      */
     var PrimitiveType = {
         /**
@@ -76,5 +77,5 @@ define(function() {
         }
     };
 
-    return PrimitiveType;
+    return freezeObject(PrimitiveType);
 });

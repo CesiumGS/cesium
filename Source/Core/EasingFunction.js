@@ -13,7 +13,7 @@ define([
      * {@link http://sole.github.io/tween.js/examples/03_graphs.html|Tween.js graphs for each function}.
      *
      * @exports EasingFunction
-     *
+     * @enum
      * @private
      */
     var EasingFunction = {

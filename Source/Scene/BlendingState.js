@@ -18,6 +18,7 @@ define([
      * </p>
      *
      * @exports BlendingState
+     * @enum
      */
     var BlendingState = {
         /**
@@ -79,5 +80,5 @@ define([
         })
     };
 
-    return BlendingState;
+    return freezeObject(BlendingState);
 });

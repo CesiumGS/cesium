@@ -1,11 +1,12 @@
 /*global define*/
-define(function() {
+define(['../Core/freezeObject'], function(freezeObject) {
     "use strict";
 
     /**
      * Determines the action taken based on the result of the stencil test.
      *
      * @exports StencilOperation
+     * @enum
      */
     var StencilOperation = {
         /**
@@ -73,5 +74,5 @@ define(function() {
         DECREMENT_WRAP : 0x8508  // WebGL: DECR_WRAP
     };
 
-    return StencilOperation;
+    return freezeObject(StencilOperation);
 });

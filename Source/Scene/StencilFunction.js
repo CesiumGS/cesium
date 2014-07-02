@@ -1,11 +1,12 @@
 /*global define*/
-define(function() {
+define(['../Core/freezeObject'], function(freezeObject) {
     "use strict";
 
     /**
      * Determines the function used to compare stencil values for the stencil test.
      *
      * @exports StencilFunction
+     * @enum
      */
     var StencilFunction = {
         /**
@@ -73,5 +74,5 @@ define(function() {
         ALWAYS : 0x0207
     };
 
-    return StencilFunction;
+    return freezeObject(StencilFunction);
 });
