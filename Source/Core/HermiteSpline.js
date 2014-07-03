@@ -293,9 +293,9 @@ define([
      * // Add tangents
      * var tangents = new Array(points.length);
      * tangents[0] = new Cesium.Cartesian3(1125196, -161816, 270551);
-     * var temp = new Cartesian3();
+     * var temp = new Cesium.Cartesian3();
      * for (var i = 1; i < tangents.length - 1; ++i) {
-     *     tangents[i] = Cesium.Cartesian3.multiplyByScalar(Cesium.Cartesian3.subtract(points[i + 1], points[i - 1], temp), 0.5, new Cartesian3());
+     *     tangents[i] = Cesium.Cartesian3.multiplyByScalar(Cesium.Cartesian3.subtract(points[i + 1], points[i - 1], temp), 0.5, new Cesium.Cartesian3());
      * }
      * tangents[tangents.length - 1] = new Cesium.Cartesian3(1165345, 112641, 47281);
      *
