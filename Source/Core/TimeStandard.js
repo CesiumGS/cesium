@@ -1,5 +1,8 @@
 /*global define*/
-define(function() {
+define([
+        './freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
@@ -27,5 +30,5 @@ define(function() {
         TAI : 1
     };
 
-    return TimeStandard;
+    return freezeObject(TimeStandard);
 });

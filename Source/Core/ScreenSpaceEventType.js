@@ -1,5 +1,8 @@
 /*global define*/
-define(function() {
+define([
+        './freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
@@ -145,5 +148,5 @@ define(function() {
         PINCH_MOVE : 19
     };
 
-    return ScreenSpaceEventType;
+    return freezeObject(ScreenSpaceEventType);
 });

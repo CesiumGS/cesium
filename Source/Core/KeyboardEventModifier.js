@@ -1,5 +1,8 @@
 /*global define*/
-define(function() {
+define([
+        './freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
@@ -34,5 +37,5 @@ define(function() {
         ALT : 2
     };
 
-    return KeyboardEventModifier;
+    return freezeObject(KeyboardEventModifier);
 });
