@@ -10,8 +10,10 @@ define([
         '../Core/freezeObject',
         '../Core/GeographicTilingScheme',
         '../Core/loadJson',
+        '../Core/loadXML',
         '../Core/Rectangle',
-        './ImageryProvider'
+        './ImageryProvider',
+        '../ThirdParty/when'
     ], function(
         clone,
         Credit,
@@ -23,8 +25,10 @@ define([
         freezeObject,
         GeographicTilingScheme,
         loadJson,
+        loadXML,
         Rectangle,
-        ImageryProvider) {
+        ImageryProvider,
+        when) {
     "use strict";
 
     /**
@@ -378,8 +382,16 @@ define([
         parameters.x = i;
         parameters.y = j;
 
+        var that = this;
+
         var url = buildUrl(this, parameters, x, y, level);
-        return loadJson(url);
+        return when(loadJson(url), function(json) {
+            return json;
+        }, function (e) {
+            // If something goes wrong, try requesting XML instead of GeoJSON.  Then try to interpret it.
+            parameters.info_format = 'text/xml';
+            return loadXML(buildUrl(that, parameters, x, y, level));
+        });
     };
 
     /**
