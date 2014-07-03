@@ -80,7 +80,7 @@ defineSuite([
 
         model.readyToRender.addEventListener(function(model) {
             model.zoomTo = function() {
-                var center = Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center);
+                var center = Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cartesian3());
                 var transform = Transforms.eastNorthUpToFixedFrame(center);
 
                 // View in east-north-up frame
@@ -250,7 +250,7 @@ defineSuite([
 
         // Change node transform and render
         expect(duckModel._cesiumAnimationsDirty).toEqual(false);
-        node.matrix = Matrix4.fromUniformScale(1.25);
+        node.matrix = Matrix4.fromUniformScale(1.25, new Matrix4());
         expect(duckModel._cesiumAnimationsDirty).toEqual(true);
 
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
@@ -261,7 +261,7 @@ defineSuite([
 
         expect(duckModel._cesiumAnimationsDirty).toEqual(false);
 
-        node.matrix = Matrix4.fromUniformScale(1.0);
+        node.matrix = Matrix4.fromUniformScale(1.0, new Matrix4());
     });
 
     it('getMesh throws when model is not loaded', function() {

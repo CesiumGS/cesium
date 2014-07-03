@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
@@ -80,10 +80,10 @@ require([
         var location = ellipsoid.cartographicToCartesian(new Cesium.Cartographic(longitude, latitude, altitude));
         var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(location);
         var orientation = Cesium.Matrix3.multiply(
-                            Cesium.Matrix3.multiply(Cesium.Matrix3.fromRotationZ(clock), Cesium.Matrix3.fromRotationY(cone)),
-                            Cesium.Matrix3.fromRotationX(twist)
+                            Cesium.Matrix3.multiply(Cesium.Matrix3.fromRotationZ(clock), Cesium.Matrix3.fromRotationY(cone), new Cesium.Matrix3()),
+                            Cesium.Matrix3.fromRotationX(twist), new Cesium.Matrix3()
                           );
-        return Cesium.Matrix4.multiply(modelMatrix, Cesium.Matrix4.fromRotationTranslation(orientation, Cesium.Cartesian3.ZERO));
+        return Cesium.Matrix4.multiply(modelMatrix, Cesium.Matrix4.fromRotationTranslation(orientation, Cesium.Cartesian3.ZERO), new Cesium.Matrix4());
     }
 
     function addRectangularSensor(sensors, ellipsoid, scene) {

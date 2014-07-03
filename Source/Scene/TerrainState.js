@@ -1,5 +1,8 @@
 /*global define*/
-define(function() {
+define([
+        '../Core/freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
@@ -15,5 +18,5 @@ define(function() {
         READY : 6
     };
 
-    return TerrainState;
+    return freezeObject(TerrainState);
 });

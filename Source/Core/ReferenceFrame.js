@@ -1,5 +1,8 @@
 /*global define*/
-define(function() {
+define([
+        './freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
@@ -25,5 +28,5 @@ define(function() {
         INERTIAL : 1
     };
 
-    return ReferenceFrame;
+    return freezeObject(ReferenceFrame);
 });

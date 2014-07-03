@@ -95,7 +95,7 @@ defineSuite([
                 ellipsoid : ellipsoid,
                 rectangle : rectangle1
             }),
-            modelMatrix : Matrix4.fromTranslation(translation),
+            modelMatrix : Matrix4.fromTranslation(translation, new Matrix4()),
             id : 'rectangle1',
             attributes : {
                 color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0),
@@ -110,7 +110,7 @@ defineSuite([
                 ellipsoid : ellipsoid,
                 rectangle : rectangle2
             }),
-            modelMatrix : Matrix4.fromTranslation(translation),
+            modelMatrix : Matrix4.fromTranslation(translation, new Matrix4()),
             id : 'rectangle2',
             attributes : {
                 color : new ColorGeometryInstanceAttribute(0.0, 1.0, 1.0, 1.0),

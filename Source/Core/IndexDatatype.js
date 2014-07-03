@@ -2,10 +2,12 @@
 define([
         './defined',
         './DeveloperError',
+        './freezeObject',
         './Math'
     ], function(
         defined,
         DeveloperError,
+        freezeObject,
         CesiumMath) {
     "use strict";
 
@@ -13,7 +15,7 @@ define([
      * Constants for WebGL index datatypes.  These corresponds to the
      * <code>type</code> parameter of {@link http://www.khronos.org/opengles/sdk/docs/man/xhtml/glDrawElements.xml|drawElements}.
      *
-     * @alias IndexDatatype
+     * @exports IndexDatatype
      */
     var IndexDatatype = {
         /**
@@ -112,5 +114,5 @@ define([
         return new Uint16Array(indicesLengthOrArray);
     };
 
-    return IndexDatatype;
+    return freezeObject(IndexDatatype);
 });

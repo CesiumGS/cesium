@@ -107,6 +107,9 @@ define([
         if (!defined(value)) {
             return value;
         }
+        if (!defined(result)){
+            result = new Cartesian3();
+        }
 
         if (inputFrame === outputFrame) {
             return Cartesian3.clone(value, result);

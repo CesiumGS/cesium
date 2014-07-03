@@ -1,5 +1,8 @@
 /*global define*/
-define(function() {
+define([
+        './freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
@@ -83,5 +86,5 @@ define(function() {
         MODIFIED_JULIAN_DATE_DIFFERENCE : 2400000.5
     };
 
-    return TimeConstants;
+    return freezeObject(TimeConstants);
 });

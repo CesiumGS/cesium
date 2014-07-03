@@ -1,5 +1,8 @@
 /*global define*/
-define(function() {
+define([
+        '../Core/freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
@@ -33,5 +36,5 @@ define(function() {
         FRONT_AND_BACK : 0x0408
     };
 
-    return CullFace;
+    return freezeObject(CullFace);
 });

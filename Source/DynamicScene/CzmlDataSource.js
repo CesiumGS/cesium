@@ -993,6 +993,22 @@ define([
         iso8601 : undefined
     };
 
+    // TODO: pixelOffset origin in CZML is bottom-left, Cesium is now top-left.
+    // Remove this when CZML 1.0 changes this
+    function flipPixelOffsetOrigin(pixelOffsetData) {
+        var cartesian2 = pixelOffsetData.cartesian2;
+        if (cartesian2.length === 2) {
+            cartesian2 = [cartesian2[0], -cartesian2[1]];
+        } else {
+            cartesian2 = cartesian2.slice(0);
+            for (var i = 0; i < cartesian2.length; i += 3) {
+                cartesian2[i + 2] = -cartesian2[i + 2];
+            }
+        }
+
+        pixelOffsetData.cartesian2 = cartesian2;
+    }
+
     function processBillboard(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var billboardData = packet.billboard;
         if (!defined(billboardData)) {
@@ -1015,6 +1031,13 @@ define([
         processPacketData(Cartesian3, billboard, 'eyeOffset', billboardData.eyeOffset, interval, sourceUri, dynamicObjectCollection);
         processPacketData(HorizontalOrigin, billboard, 'horizontalOrigin', billboardData.horizontalOrigin, interval, sourceUri, dynamicObjectCollection);
         processPacketData(Image, billboard, 'image', billboardData.image, interval, sourceUri, dynamicObjectCollection);
+
+        // TODO: pixelOffset origin in CZML is bottom-left, Cesium is now top-left.
+        // Until CZML 1.0 flips this, flip the value here
+        if (defined(billboardData.pixelOffset)) {
+            flipPixelOffsetOrigin(billboardData.pixelOffset);
+        }
+
         processPacketData(Cartesian2, billboard, 'pixelOffset', billboardData.pixelOffset, interval, sourceUri, dynamicObjectCollection);
         processPacketData(Number, billboard, 'scale', billboardData.scale, interval, sourceUri, dynamicObjectCollection);
         processPacketData(Number, billboard, 'rotation', billboardData.rotation, interval, sourceUri, dynamicObjectCollection);
@@ -1175,6 +1198,13 @@ define([
         processPacketData(Cartesian3, label, 'eyeOffset', labelData.eyeOffset, interval, sourceUri, dynamicObjectCollection);
         processPacketData(HorizontalOrigin, label, 'horizontalOrigin', labelData.horizontalOrigin, interval, sourceUri, dynamicObjectCollection);
         processPacketData(String, label, 'text', labelData.text, interval, sourceUri, dynamicObjectCollection);
+
+        // TODO: pixelOffset origin in CZML is bottom-left, Cesium is now top-left.
+        // Until CZML 1.0 flips this, flip the value here
+        if (defined(labelData.pixelOffset)) {
+            flipPixelOffsetOrigin(labelData.pixelOffset);
+        }
+
         processPacketData(Cartesian2, label, 'pixelOffset', labelData.pixelOffset, interval, sourceUri, dynamicObjectCollection);
         processPacketData(Number, label, 'scale', labelData.scale, interval, sourceUri, dynamicObjectCollection);
         processPacketData(Boolean, label, 'show', labelData.show, interval, sourceUri, dynamicObjectCollection);
@@ -1790,7 +1820,7 @@ define([
         return when(loadJson(url), function(czml) {
             dataSource.process(czml, url);
             setLoading(dataSource, false);
-        }, function(error) {
+        }).otherwise(function(error) {
             setLoading(dataSource, false);
             dataSource._error.raiseEvent(dataSource, error);
             return when.reject(error);
@@ -1816,7 +1846,7 @@ define([
         return when(loadJson(url), function(czml) {
             dataSource.load(czml, url);
             setLoading(dataSource, false);
-        }, function(error) {
+        }).otherwise(function(error) {
             setLoading(dataSource, false);
             dataSource._error.raiseEvent(dataSource, error);
             return when.reject(error);
