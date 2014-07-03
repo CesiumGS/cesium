@@ -2,9 +2,10 @@ Change Log
 ==========
 
 ### 1.0 - 2014-08-01
- 
- * Breaking changes
+
+* Breaking changes
   * All `Matrix2`, `Matrix3`, `Matrix4` and `Quaternion` functions that take a `result` parameter now require the parameter (except for functions starting with `from`).
+* Added northUpEast transform to help support display of glTF models because Y is their up axis.
 
 Beta Releases
 -------------
