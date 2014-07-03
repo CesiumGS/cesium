@@ -62,11 +62,13 @@ define([
         var data = options.data;
         var headers = options.headers;
         var overrideMimeType = options.overrideMimeType;
+        var username = options.username;
+        var password = options.password;
 
         return when(options.url, function(url) {
             var deferred = when.defer();
 
-            loadWithXhr.load(url, responseType, method, data, headers, deferred, overrideMimeType);
+            loadWithXhr.load(url, responseType, method, data, headers, deferred, overrideMimeType, username, password);
 
             return deferred.promise;
         });
@@ -120,7 +122,7 @@ define([
     }
 
     // This is broken out into a separate function so that it can be mocked for testing purposes.
-    loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+    loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType, username, password) {
         var dataUriRegexResult = dataUriRegex.exec(url);
         if (dataUriRegexResult !== null) {
             deferred.resolve(decodeDataUri(dataUriRegexResult, responseType));
@@ -133,7 +135,7 @@ define([
             xhr.overrideMimeType(overrideMimeType);
         }
 
-        xhr.open(method, url, true);
+        xhr.open(method, url, true, username, password);
 
         if (defined(headers)) {
             for ( var key in headers) {
