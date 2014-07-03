@@ -62,7 +62,7 @@ define([
      * // with a field of view of 60 degrees, and 1:1 aspect ratio.
      * var camera = new Cesium.Camera(scene);
      * camera.position = new Cesium.Cartesian3();
-     * camera.direction = Cesium.Cartesian3.negate(Cesium.Cartesian3.UNIT_Z, new Cartesian3());
+     * camera.direction = Cesium.Cartesian3.negate(Cesium.Cartesian3.UNIT_Z, new Cesium.Cartesian3());
      * camera.up = Cesium.Cartesian3.clone(Cesium.Cartesian3.UNIT_Y);
      * camera.frustum.fovy = Cesium.Math.PI_OVER_THREE;
      * camera.frustum.near = 1.0;

@@ -63,7 +63,7 @@ define([
      * //Create a new object and assign a billboard scale.
      * var object1 = new Cesium.DynamicObject('object1');
      * object1.billboard = new Cesium.DynamicBillboard();
-     * object1.billboard.scale = new ConstantProperty(2.0);
+     * object1.billboard.scale = new Cesium.ConstantProperty(2.0);
      * collection.add(object1);
      *
      * //Create a second object and reference the scale from the first one.
@@ -81,7 +81,7 @@ define([
      * //You can refer to an object with a # or . in id and property names by escaping them.
      * var object4 = new Cesium.DynamicObject('#object.4');
      * object4.billboard = new Cesium.DynamicBillboard();
-     * object4.billboard.scale = new ConstantProperty(2.0);
+     * object4.billboard.scale = new Cesium.ConstantProperty(2.0);
      * collection.add(object4);
      *
      * var object5 = new Cesium.DynamicObject('object5');
