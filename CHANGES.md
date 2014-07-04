@@ -3,7 +3,7 @@ Change Log
 
 ### 1.0 - 2014-08-01
 
-* Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))
+* Breaking changes
   * All `Matrix2`, `Matrix3`, `Matrix4` and `Quaternion` functions that take a `result` parameter now require the parameter (except for functions starting with `from`).
   * The `DynamicScene` layer has been renamed to `DataSources` additionally, the following objects have all been renamed.
     * `DynamicBillboard` -> `BillboardGraphics`
@@ -34,6 +34,7 @@ Change Log
     * `DynamicVectorVisualizer` -> `VectorVisualizer`
     * `DynamicWall` -> `WallGraphics`
     * `viewerDynamicObjectMixin` -> `viewerEntityMixin`
+* Added northUpEast transform to help support display of glTF models because Y is their up axis.
 
 Beta Releases
 -------------
