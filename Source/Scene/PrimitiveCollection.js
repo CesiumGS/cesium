@@ -345,10 +345,11 @@ define([
         }
 
         var primitives = this._primitives;
-        var length = primitives.length;
+        // Using primitives.length in the loop is a temporary workaround
+        // to allow quadtree updates to add and remove primitives in
+        // update().  This will be changed to manage added and removed lists.
         for (var i = 0; i < primitives.length; ++i) {
-            var primitive = primitives[i];
-            primitive.update(context, frameState, commandList);
+            primitives[i].update(context, frameState, commandList);
         }
     };
 
