@@ -114,7 +114,7 @@ define([
      * // Create a polyline collection with two polylines
      * var polylines = new Cesium.PolylineCollection();
      * polylines.add({
-     *   position : Cartesian3.fromDegreesArray([
+     *   position : Cesium.Cartesian3.fromDegreesArray([
      *     -75.10, 39.57,
      *     -77.02, 38.53,
      *     -80.50, 35.14,
@@ -123,7 +123,7 @@ define([
      * });
      *
      * polylines.add({
-     *   positions : Cartesian3.fromDegreesArray([
+     *   positions : Cesium.Cartesian3.fromDegreesArray([
      *     -73.10, 37.57,
      *     -75.02, 36.53,
      *     -78.50, 33.14,

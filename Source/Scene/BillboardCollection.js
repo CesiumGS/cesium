@@ -127,7 +127,7 @@ define([
      * @example
      * // Create a billboard collection with two billboards
      * var billboards = new Cesium.BillboardCollection();
-     * var atlas = new TextureAtlas({
+     * var atlas = new Cesium.TextureAtlas({
      *   scene : scene,
      *   images : images
      * });

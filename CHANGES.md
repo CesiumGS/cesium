@@ -6,6 +6,7 @@ Change Log
 * Breaking changes
   * All `Matrix2`, `Matrix3`, `Matrix4` and `Quaternion` functions that take a `result` parameter now require the parameter (except for functions starting with `from`).
   * Removed `DynamicObject.vertexPositions`.  Use `DynamicWall.positions`, `DynamicPolygon.positions`, and `DynamicPolyline.positions` instead.
+* Added northUpEast transform to help support display of glTF models because Y is their up axis.
 
 Beta Releases
 -------------

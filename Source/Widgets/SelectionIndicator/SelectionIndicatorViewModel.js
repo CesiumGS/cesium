@@ -181,7 +181,7 @@ define([
          *
          * @example
          * selectionIndicatorViewModel.computeScreenSpacePosition = function(position, result) {
-         *     return Cartesian2.clone(position, result);
+         *     return Cesium.Cartesian2.clone(position, result);
          * };
          *
          * @memberof SelectionIndicatorViewModel.prototype
