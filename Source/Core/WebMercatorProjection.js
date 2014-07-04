@@ -26,7 +26,6 @@ define([
      *
      * @alias WebMercatorProjection
      * @constructor
-     * @immutable
      *
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid.
      *

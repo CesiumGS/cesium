@@ -538,10 +538,10 @@ define([
      *     }]
      *   }
      * });
-     * var geometry = PolygonGeometry.createGeometry(polygonWithHole);
+     * var geometry = Cesium.PolygonGeometry.createGeometry(polygonWithHole);
      *
      * // 3. create extruded polygon
-     * var extrudedPolygon = new PolygonGeometry({
+     * var extrudedPolygon = new Cesium.PolygonGeometry({
      *   positions : Cesium.Cartesian3.fromDegreesArray([
      *     -72.0, 40.0,
      *     -70.0, 35.0,
@@ -551,7 +551,7 @@ define([
      *   ]),
      *   extrudedHeight: 300000
      * });
-     * var geometry = PolygonGeometry.createGeometry(extrudedPolygon);
+     * var geometry = Cesium.PolygonGeometry.createGeometry(extrudedPolygon);
      */
     var PolygonGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

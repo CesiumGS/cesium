@@ -1,5 +1,8 @@
 /*global define*/
-define(function() {
+define([
+        '../Core/freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
@@ -49,5 +52,5 @@ define(function() {
         PINCH : 4
     };
 
-    return CameraEventType;
+    return freezeObject(CameraEventType);
 });

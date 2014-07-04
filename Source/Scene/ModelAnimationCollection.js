@@ -112,17 +112,17 @@ define([
      *
      * @example
      * // Example 2. Add an animation and provide all properties and events
-     * var startTime = JulianDate.now();
+     * var startTime = Cesium.JulianDate.now();
      *
      * var animation = model.activeAnimations.add({
      *   name : 'another animation name',
      *   startTime : startTime,
      *   delay : 0.0,                          // Play at startTime (default)
-     *   stopTime : JulianDate.addSeconds(startTime, 4.0, new JulianDate()),
+     *   stopTime : Cesium.JulianDate.addSeconds(startTime, 4.0, new Cesium.JulianDate()),
      *   removeOnStop : false,                 // Do not remove when animation stops (default)
      *   speedup : 2.0,                        // Play at double speed
      *   reverse : true,                       // Play in reverse
-     *   loop : ModelAnimationLoop.REPEAT      // Loop the animation
+     *   loop : Cesium.ModelAnimationLoop.REPEAT      // Loop the animation
      * });
      *
      * animation.start.addEventListener(function(model, animation) {
@@ -188,7 +188,7 @@ define([
      * @example
      * model.activeAnimations.addAll({
      *   speedup : 0.5,                        // Play at half-speed
-     *   loop : ModelAnimationLoop.REPEAT      // Loop the animations
+     *   loop : Cesium.ModelAnimationLoop.REPEAT      // Loop the animations
      * });
      */
     ModelAnimationCollection.prototype.addAll = function(options) {

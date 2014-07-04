@@ -83,7 +83,7 @@ defineSuite([
 
         var quads = qs.innerQuadrangles;
         var actual = qs.evaluate(time);
-        var expected = Quaternion.squad(points[1], points[2], quads[1], quads[2], t);
+        var expected = Quaternion.squad(points[1], points[2], quads[1], quads[2], t, new Quaternion());
         expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
     });
 
@@ -110,7 +110,7 @@ defineSuite([
 
         var t = (times[0] + times[1]) * 0.5;
         var actual = qs.evaluate(t);
-        var expected = Quaternion.slerp(points[0], points[1], t);
+        var expected = Quaternion.slerp(points[0], points[1], t, new Quaternion());
         expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
     });
 
@@ -126,7 +126,7 @@ defineSuite([
         var t = (times[0] + times[1]) * 0.5;
         var result = new Cartesian3();
         var actual = qs.evaluate(t, result);
-        var expected = Quaternion.slerp(points[0], points[1], t);
+        var expected = Quaternion.slerp(points[0], points[1], t, new Quaternion());
         expect(actual).toBe(result);
         expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
     });

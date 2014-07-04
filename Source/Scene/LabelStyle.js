@@ -1,5 +1,8 @@
 /*global define*/
-define(function() {
+define([
+        '../Core/freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
@@ -35,5 +38,5 @@ define(function() {
         FILL_AND_OUTLINE : 2
     };
 
-    return LabelStyle;
+    return freezeObject(LabelStyle);
 });

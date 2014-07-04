@@ -62,7 +62,7 @@ define([
      * // with a field of view of 60 degrees, and 1:1 aspect ratio.
      * var camera = new Cesium.Camera(scene);
      * camera.position = new Cesium.Cartesian3();
-     * camera.direction = Cesium.Cartesian3.negate(Cesium.Cartesian3.UNIT_Z, new Cartesian3());
+     * camera.direction = Cesium.Cartesian3.negate(Cesium.Cartesian3.UNIT_Z, new Cesium.Cartesian3());
      * camera.up = Cesium.Cartesian3.clone(Cesium.Cartesian3.UNIT_Y);
      * camera.frustum.fovy = Cesium.Math.PI_OVER_THREE;
      * camera.frustum.near = 1.0;
@@ -223,7 +223,7 @@ define([
         0.0, 1.0, 0.0, 0.0,
         0.0, 0.0, 0.0, 1.0);
 
-    Camera.TRANSFORM_2D_INVERSE = Matrix4.inverseTransformation(Camera.TRANSFORM_2D);
+    Camera.TRANSFORM_2D_INVERSE = Matrix4.inverseTransformation(Camera.TRANSFORM_2D, new Matrix4());
 
     function updateViewMatrix(camera) {
         var r = camera._right;
@@ -760,6 +760,9 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (!defined(result)){
+            result = new Cartesian4();
+        }
         updateMembers(this);
         return Matrix4.multiplyByVector(this._actualInvTransform, cartesian, result);
     };
@@ -778,6 +781,9 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (!defined(result)){
+            result = new Cartesian3();
+        }
         updateMembers(this);
         return Matrix4.multiplyByPoint(this._actualInvTransform, cartesian, result);
     };
@@ -796,6 +802,9 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (!defined(result)){
+            result = new Cartesian3();
+        }
         updateMembers(this);
         return Matrix4.multiplyByPointAsVector(this._actualInvTransform, cartesian, result);
     };
@@ -814,6 +823,9 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (!defined(result)){
+            result = new Cartesian4();
+        }
         updateMembers(this);
         return Matrix4.multiplyByVector(this._actualTransform, cartesian, result);
     };
@@ -832,6 +844,9 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (!defined(result)){
+            result = new Cartesian3();
+        }
         updateMembers(this);
         return Matrix4.multiplyByPoint(this._actualTransform, cartesian, result);
     };
@@ -850,6 +865,9 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (!defined(result)){
+            result = new Cartesian3();
+        }
         updateMembers(this);
         return Matrix4.multiplyByPointAsVector(this._actualTransform, cartesian, result);
     };

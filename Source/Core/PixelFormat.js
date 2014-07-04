@@ -1,5 +1,8 @@
 /*global define*/
-define(function() {
+define([
+        './freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
@@ -98,5 +101,5 @@ define(function() {
         }
     };
 
-    return PixelFormat;
+    return freezeObject(PixelFormat);
 });
