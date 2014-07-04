@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+### 1.0 - 2014-08-01
+
+* Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))
+  *
+* Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
+* Added `Primitive.ready`.
+
 Beta Releases
 -------------
 
@@ -65,8 +72,6 @@ Beta Releases
 * `Viewer` can now optionally be constructed with a `DataSourceCollection`.  Previously, it always created one itself internally.
 * `GeoJsonDataSource` no longer uses the `name` or `title` property of the feature as the dynamic object's name if the value of the property is null.
 * Improved Internet Explorer 11 support including fixes for 3D models and geometries.  For the best results, use the new [IE Developer Channel](http://devchannel.modern.ie/) for development.
-* Added `Primitive.ready`.
-* Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
 
 ### b29 - 2014-06-02
 
