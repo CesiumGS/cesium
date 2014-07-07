@@ -50,8 +50,8 @@ define([
      *
      * @param {Scene} scene The scene in which to display the data.
      * @param {DataSourceCollection} dataSourceCollection The data sources to display.
-     * @param {Function} [visualizersCallback=DataSourceDisplay.defaultVisualizersCallback] A function
-     *        which takes a scene and dataSource and returns the array of visualizers used for visualization.
+     * @param {DataSourceDisplay~VisualizersCallback} [visualizersCallback=DataSourceDisplay.defaultVisualizersCallback]
+     *        A function which creates an array of visualizers used for visualization.
      *        If undefined, all standard visualizers are used.
      */
     var DataSourceDisplay = function(scene, dataSourceCollection, visualizersCallback) {
@@ -78,10 +78,11 @@ define([
     };
 
     /**
-     * Gets or sets the default function which takes a scene and dataSource and returns the
-     * array of visualizers used for visualization.  By default, this function uses all standard visualizers.
+     * Gets or sets the default function which creates an array of visualizers used for visualization.
+     * By default, this function uses all standard visualizers.
      *
-     * @type {Function}
+     * @member
+     * @type {DataSourceDisplay~VisualizersCallback}
      */
     DataSourceDisplay.defaultVisualizersCallback = function(scene, dataSource) {
         var entities = dataSource.entities;
@@ -210,6 +211,20 @@ define([
             dataSource._visualizers = undefined;
         }
     };
+
+    /**
+     * A function which creates an array of visualizers used for visualization.
+     * @callback DataSourceDisplay~VisualizersCallback
+     *
+     * @param {Scene} scene The scene to create visualizers for.
+     * @param {DataSource} dataSource The data source to create visualizers for.
+     * @returns {Visualizer[]} An array of visualizers used for visualization.
+     *
+     * @example
+     * function createVisualizers(scene, dataSource) {
+     *     return [new DynamicBillboardVisualizer(scene, dataSource.dynamicObjects)];
+     * }
+     */
 
     return DataSourceDisplay;
 });

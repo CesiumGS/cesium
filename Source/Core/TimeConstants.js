@@ -8,9 +8,12 @@ define([
     /**
      * Constants for time conversions like those done by {@link JulianDate}.
      *
-     * @exports TimeConstants
+     * @namespace
+     * @alias TimeConstants
      *
      * @see JulianDate
+     *
+     * @private
      */
     var TimeConstants = {
         /**

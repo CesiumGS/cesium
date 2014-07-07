@@ -45,9 +45,10 @@ define([
         this._complete = complete;
 
         /**
-         * The callback to call if the tween is canceled either because {@link Tween#cancelTween} was called or because the tween was removed from the collection.
+         * The callback to call if the tween is canceled either because {@link Tween#cancelTween}
+         * was called or because the tween was removed from the collection.
          *
-         * @type {Function}
+         * @type {TweenCollection~TweenCancelledCallback}
          */
         this.cancel = cancel;
 
@@ -127,7 +128,7 @@ define([
          * The callback to call at each animation update (usually tied to the a rendered frame).
          * @memberof Tween.prototype
          *
-         * @type {Function}
+         * @type {TweenCollection~TweenUpdateCallback}
          * @readonly
          */
         update : {
@@ -140,7 +141,7 @@ define([
          * The callback to call when the tween finishes animating.
          * @memberof Tween.prototype
          *
-         * @type {Function}
+         * @type {TweenCollection~TweenCompleteCallback}
          * @readonly
          */
         complete : {
@@ -206,9 +207,9 @@ define([
      * @param {Number} options.duration The duration, in seconds, for the tween.  The tween is automatically removed from the collection when it stops.
      * @param {Number} [options.delay=0.0] The delay, in seconds, before the tween starts animating.
      * @param {EasingFunction} [options.easingFunction=EasingFunction.LINEAR_NONE] Determines the curve for animtion.
-     * @param {Function} [options.update] The callback to call at each animation update (usually tied to the a rendered frame).
-     * @param {Function} [options.complete] The callback to call when the tween finishes animating.
-     * @param {Function} [options.cancel] The callback to call if the tween is canceled either because {@link Tween#cancelTween} was called or because the tween was removed from the collection.
+     * @param {TweenCollection~TweenUpdateCallback} [options.update] The callback to call at each animation update (usually tied to the a rendered frame).
+     * @param {TweenCollection~TweenCompleteCallback} [options.complete] The callback to call when the tween finishes animating.
+     * @param {TweenCollection~TweenCancelledCallback} [options.cancel] The callback to call if the tween is canceled either because {@link Tween#cancelTween} was called or because the tween was removed from the collection.
      * @returns {Tween} The tween.
      *
      * @exception {DeveloperError} options.duration must be positive.
@@ -268,9 +269,9 @@ define([
      * @param {Number} [options.duration=3.0] The duration, in seconds, for the tween.  The tween is automatically removed from the collection when it stops.
      * @param {Number} [options.delay=0.0] The delay, in seconds, before the tween starts animating.
      * @param {EasingFunction} [options.easingFunction=EasingFunction.LINEAR_NONE] Determines the curve for animtion.
-     * @param {Function} [options.update] The callback to call at each animation update (usually tied to the a rendered frame).
-     * @param {Function} [options.complete] The callback to call when the tween finishes animating.
-     * @param {Function} [options.cancel] The callback to call if the tween is canceled either because {@link Tween#cancelTween} was called or because the tween was removed from the collection.
+     * @param {TweenCollection~TweenUpdateCallback} [options.update] The callback to call at each animation update (usually tied to the a rendered frame).
+     * @param {TweenCollection~TweenCompleteCallback} [options.complete] The callback to call when the tween finishes animating.
+     * @param {TweenCollection~TweenCancelledCallback} [options.cancel] The callback to call if the tween is canceled either because {@link Tween#cancelTween} was called or because the tween was removed from the collection.
      * @returns {Tween} The tween.
      *
      * @exception {DeveloperError} options.object must have the specified property.
@@ -328,9 +329,9 @@ define([
      * @param {Number} [options.duration=3.0] The duration, in seconds, for the tween.  The tween is automatically removed from the collection when it stops.
      * @param {Number} [options.delay=0.0] The delay, in seconds, before the tween starts animating.
      * @param {EasingFunction} [options.easingFunction=EasingFunction.LINEAR_NONE] Determines the curve for animtion.
-     * @param {Function} [options.update] The callback to call at each animation update (usually tied to the a rendered frame).
-     * @param {Function} [options.complete] The callback to call when the tween finishes animating.
-     * @param {Function} [options.cancel] The callback to call if the tween is canceled either because {@link Tween#cancelTween} was called or because the tween was removed from the collection.
+     * @param {TweenCollection~TweenUpdateCallback} [options.update] The callback to call at each animation update (usually tied to the a rendered frame).
+     * @param {TweenCollection~TweenCompleteCallback} [options.complete] The callback to call when the tween finishes animating.
+     * @param {TweenCollection~TweenCancelledCallback} [options.cancel] The callback to call if the tween is canceled either because {@link Tween#cancelTween} was called or because the tween was removed from the collection.
      * @returns {Tween} The tween.
      *
      * @exception {DeveloperError} material has no properties with alpha components.
@@ -397,8 +398,8 @@ define([
      * @param {Number} [options.duration=3.0] The duration, in seconds, for the tween.  The tween is automatically removed from the collection when it stops.
      * @param {Number} [options.delay=0.0] The delay, in seconds, before the tween starts animating.
      * @param {EasingFunction} [options.easingFunction=EasingFunction.LINEAR_NONE] Determines the curve for animtion.
-     * @param {Function} [options.update] The callback to call at each animation update (usually tied to the a rendered frame).
-     * @param {Function} [options.cancel] The callback to call if the tween is canceled either because {@link Tween#cancelTween} was called or because the tween was removed from the collection.
+     * @param {TweenCollection~TweenUpdateCallback} [options.update] The callback to call at each animation update (usually tied to the a rendered frame).
+     * @param {TweenCollection~TweenCancelledCallback} [options.cancel] The callback to call if the tween is canceled either because {@link Tween#cancelTween} was called or because the tween was removed from the collection.
      * @returns {Tween} The tween.
      *
      * @exception {DeveloperError} material.uniforms must have an offset property.
@@ -544,6 +545,21 @@ define([
             }
         }
     };
+
+    /**
+     * A function that will execute when a tween completes.
+     * @callback TweenCollection~TweenCompleteCallback
+     */
+
+    /**
+     * A function that will execute when a tween updates.
+     * @callback TweenCollection~TweenUpdateCallback
+     */
+
+    /**
+     * A function that will execute when a tween is cancelled.
+     * @callback TweenCollection~TweenCancelledCallback
+     */
 
     return TweenCollection;
 });
