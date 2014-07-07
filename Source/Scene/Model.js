@@ -1332,6 +1332,12 @@ define([
                 for (var i = 0; i < primitivesLength; ++i) {
                     var primitive = primitives[i];
 
+                    // GLTF_SPEC: This does not take into account attribute arrays,
+                    // indicated by when an attribute points to a parameter with a
+                    // count property.
+                    //
+                    // https://github.com/KhronosGroup/glTF/issues/258
+
                     var attributeLocations = getAttributeLocations(model, primitive);
                     var attrs = [];
                     var primitiveAttributes = primitive.attributes;
@@ -1625,6 +1631,11 @@ define([
                     if (uniforms.hasOwnProperty(name)) {
                         var parameterName = uniforms[name];
                         var parameter = parameters[parameterName];
+
+                        // GLTF_SPEC: This does not take into account uniform arrays,
+                        // indicated by parameters with a count property.
+                        //
+                        // https://github.com/KhronosGroup/glTF/issues/258
 
                         // GLTF_SPEC: In this implementation, material parameters with a
                         // semantic or targeted via a source (for animation) are not
