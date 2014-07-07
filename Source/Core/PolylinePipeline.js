@@ -32,6 +32,11 @@ define([
      */
     var PolylinePipeline = {};
 
+    PolylinePipeline.numberOfPoints = function(p0, p1, granularity) {
+        var angleBetween = Cartesian3.angleBetween(p0, p1);
+        return Math.ceil(angleBetween / granularity);
+    };
+
     var wrapLongitudeInversMatrix = new Matrix4();
     var wrapLongitudeOrigin = new Cartesian3();
     var wrapLongitudeXZNormal = new Cartesian3();
@@ -72,12 +77,10 @@ define([
     //Returns subdivided line scaled to ellipsoid surface starting at p1 and ending at p2.
     //Result includes p1, but not include p2.  This function is called for a sequence of line segments,
     //and this prevents duplication of end point.
-    function generateCartesianArc(p0, p1, granularity, ellipsoid, h0, h1) {
+    function generateCartesianArc(p0, p1, granularity, ellipsoid, h0, h1, array, offset) {
         var first = ellipsoid.scaleToGeodeticSurface(p0, scaleFirst);
         var last = ellipsoid.scaleToGeodeticSurface(p1, scaleLast);
-        var separationAngle = Cartesian3.angleBetween(first, last);
-        var numPoints = Math.ceil(separationAngle / granularity);
-        var result = new Array(numPoints * 3);
+        var numPoints = PolylinePipeline.numberOfPoints(p0, p1, granularity);
         var start = ellipsoid.cartesianToCartographic(first, carto1);
         var end = ellipsoid.cartesianToCartographic(last, carto2);
         var heights = subdivideHeights(numPoints, h0, h1);
@@ -85,23 +88,23 @@ define([
         ellipsoidGeodesic.setEndPoints(start, end);
         var surfaceDistanceBetweenPoints = ellipsoidGeodesic.surfaceDistance / (numPoints);
 
-        var index = 0;
+        var index = offset;
         start.height = h0;
         var cart = ellipsoid.cartographicToCartesian(start, cartesian);
-        result[index++] = cart.x;
-        result[index++] = cart.y;
-        result[index++] = cart.z;
+        array[index++] = cart.x;
+        array[index++] = cart.y;
+        array[index++] = cart.z;
 
         for (var i = 1; i < numPoints; i++) {
             var carto = ellipsoidGeodesic.interpolateUsingSurfaceDistance(i * surfaceDistanceBetweenPoints, carto2);
             carto.height = heights[i];
             cart = ellipsoid.cartographicToCartesian(carto, cartesian);
-            result[index++] = cart.x;
-            result[index++] = cart.y;
-            result[index++] = cart.z;
+            array[index++] = cart.x;
+            array[index++] = cart.y;
+            array[index++] = cart.z;
         }
 
-        return result;
+        return index;
     }
 
     /**
@@ -257,10 +260,23 @@ define([
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
 
         var length = positions.length;
-        var newPositions = [];
-        for (var i = 0; i < length - 1; i++) {
-            var p0 = positions[i];
-            var p1 = positions[i + 1];
+        var numPoints = 0;
+        var i;
+        var p0;
+        var p1;
+
+        for (i = 0; i < length-1; i++) {
+            p0 = positions[i];
+            p1 = positions[i+1];
+            numPoints += PolylinePipeline.numberOfPoints(p0, p1, granularity);
+        }
+        numPoints++;
+        var arrayLength = numPoints * 3;
+        var newPositions = new Float64Array(arrayLength);
+        var offset = 0;
+        for (i = 0; i < length - 1; i++) {
+            p0 = positions[i];
+            p1 = positions[i + 1];
 
             var h0;
             var h1;
@@ -272,14 +288,16 @@ define([
                 h1 = height;
             }
 
-            newPositions = newPositions.concat(generateCartesianArc(p0, p1, granularity, ellipsoid, h0, h1));
+            offset = generateCartesianArc(p0, p1, granularity, ellipsoid, h0, h1, newPositions, offset);
         }
 
         var lastPoint = positions[length - 1];
         var carto = ellipsoid.cartesianToCartographic(lastPoint, carto1);
         carto.height = isArray(height) ? height[length - 1] : height;
         var cart = ellipsoid.cartographicToCartesian(carto, cartesian);
-        newPositions.push(cart.x, cart.y, cart.z);
+        newPositions[arrayLength - 3] = cart.x;
+        newPositions[arrayLength - 2] = cart.y;
+        newPositions[arrayLength - 1] = cart.z;
 
         return newPositions;
     };

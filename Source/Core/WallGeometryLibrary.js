@@ -115,30 +115,48 @@ define([
 
         var i;
         var length = wallPositions.length;
-        var topPositions = [];
-        var bottomPositions = [];
+        var topPositions;
+        var bottomPositions;
+        var p0;
+        var p1;
         if (duplicateCorners) {
+            var l = 0;
             for (i = 0; i < length-1; i++) {
-                var p1 = wallPositions[i];
-                var p2 = wallPositions[i + 1];
-                var h1 = maximumHeights[i];
-                var h2 = maximumHeights[i + 1];
-                topPositions = topPositions.concat(PolylinePipeline.generateArc({
-                    positions: [p1, p2],
-                    height: [h1, h2],
+                p0 = wallPositions[i];
+                p1 = wallPositions[i+1];
+
+                l += PolylinePipeline.numberOfPoints(p0, p1, granularity);
+                l++;
+            }
+
+            topPositions = new Float64Array(l*3);
+            bottomPositions = new Float64Array(l*3);
+
+            var offset = 0;
+            for (i = 0; i < length-1; i++) {
+                p0 = wallPositions[i];
+                p1 = wallPositions[i + 1];
+                var h0 = maximumHeights[i];
+                var h1 = maximumHeights[i + 1];
+                var pos = PolylinePipeline.generateArc({
+                    positions: [p0, p1],
+                    height: [h0, h1],
                     granularity: granularity,
                     ellipsoid: ellipsoid
-                }));
+                });
+                topPositions.set(pos, offset);
 
-                h1 = minimumHeights[i];
-                h2 = minimumHeights[i + 1];
 
-                bottomPositions = bottomPositions.concat(PolylinePipeline.generateArc({
-                    positions: [p1, p2],
-                    height: [h1, h2],
+                h0 = minimumHeights[i];
+                h1 = minimumHeights[i + 1];
+
+                bottomPositions.set(PolylinePipeline.generateArc({
+                    positions: [p0, p1],
+                    height: [h0, h1],
                     granularity: granularity,
                     ellipsoid: ellipsoid
-                }));
+                }), offset);
+                offset += pos.length;
             }
         } else {
             topPositions = PolylinePipeline.generateArc({

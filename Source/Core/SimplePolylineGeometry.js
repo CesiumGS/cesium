@@ -33,10 +33,8 @@ define([
         PolylinePipeline) {
     "use strict";
 
-    function interpolateColors(p0, p1, color0, color1, granularity) {
-        var angleBetween = Cartesian3.angleBetween(p0, p1);
-        var numPoints = Math.ceil(angleBetween / granularity);
-        var colors = new Array(numPoints*4);
+    function interpolateColors(p0, p1, color0, color1, granularity, array, offset) {
+        var numPoints = PolylinePipeline.numberOfPoints(p0, p1, granularity);
         var i;
 
         var r0 = color0.red;
@@ -51,12 +49,12 @@ define([
 
         if (Color.equals(color0, color1)) {
             for (i = 0; i < numPoints; i++) {
-                colors[i] = Color.floatToByte(r0);
-                colors[i+1] = Color.floatToByte(g0);
-                colors[i+2] = Color.floatToByte(b0);
-                colors[i+3] = Color.floatToByte(a0);
+                array[offset++] = Color.floatToByte(r0);
+                array[offset++] = Color.floatToByte(g0);
+                array[offset++] = Color.floatToByte(b0);
+                array[offset++] = Color.floatToByte(a0);
             }
-            return colors;
+            return offset;
         }
 
         var redPerVertex = (r1 - r0) / numPoints;
@@ -64,20 +62,15 @@ define([
         var bluePerVertex = (b1 - b0) / numPoints;
         var alphaPerVertex = (a1 - a0) / numPoints;
 
-        for (i = 1; i < numPoints; i++) {
-            var ci = i*4;
-            colors[ci] = Color.floatToByte(r0 + i * redPerVertex);
-            colors[ci + 1] = Color.floatToByte(g0 + i * greenPerVertex);
-            colors[ci + 2] = Color.floatToByte(b0 + i * bluePerVertex);
-            colors[ci + 3] = Color.floatToByte(a0 + i * alphaPerVertex);
+        var index = offset;
+        for (i = 0; i < numPoints; i++) {
+            array[index++] = Color.floatToByte(r0 + i * redPerVertex);
+            array[index++] = Color.floatToByte(g0 + i * greenPerVertex);
+            array[index++] = Color.floatToByte(b0 + i * bluePerVertex);
+            array[index++] = Color.floatToByte(a0 + i * alphaPerVertex);
         }
 
-        colors[0] = Color.floatToByte(r0);
-        colors[1] = Color.floatToByte(g0);
-        colors[2] = Color.floatToByte(b0);
-        colors[3] = Color.floatToByte(a0);
-
-        return colors;
+        return index;
     }
 
     /**
@@ -149,16 +142,28 @@ define([
         var perSegmentColors = defined(colors) && !perVertex;
 
         var i;
-
         var length = positions.length;
-        var numberOfPositions = perSegmentColors ? positions.length * 2 - 2 : positions.length;
 
-        var positionValues = [];
-        var colorValues = [];//defined(colors) ? new Uint8Array(numberOfPositions * 4) : undefined;
+        var positionValues;
+        var colorValues;
         var p0, p1, c0, c1;
+        var offset = 0;
+        var l = 0;
 
         if (perSegmentColors) {
-            for (i = 0; i < length-1; ++i) {
+            for (i = 0; i < length-1; i++) {
+                p0 = positions[i];
+                p1 = positions[i+1];
+
+                l += PolylinePipeline.numberOfPoints(p0, p1, granularity);
+                l++;
+            }
+
+            positionValues = new Float64Array(l*3);
+            colorValues = new Uint8Array(l*4);
+
+            var ci = 0;
+            for (i = 0; i < length-1; i++) {
                 p0 = positions[i];
                 p1 = positions[i+1];
 
@@ -173,11 +178,15 @@ define([
                     var segLen = pos.length/3;
                     var color = colors[i];
                     for(var k = 0; k < segLen; k++) {
-                        colorValues.push(Color.floatToByte(color.red), Color.floatToByte(color.green), Color.floatToByte(color.blue), Color.floatToByte(color.alpha));
+                        colorValues[ci++] = Color.floatToByte(color.red);
+                        colorValues[ci++] = Color.floatToByte(color.green);
+                        colorValues[ci++] = Color.floatToByte(color.blue);
+                        colorValues[ci++] = Color.floatToByte(color.alpha);
                     }
                 }
 
-                positionValues = positionValues.concat(pos);
+                positionValues.set(pos, offset);
+                offset += pos.length;
             }
         } else {
             positionValues = PolylinePipeline.generateArc({
@@ -187,14 +196,20 @@ define([
             });
 
             if (defined(colors)) {
+                colorValues = new Uint8Array(positionValues.length/3*4);
+
                 for (i = 0; i < length-1; i++) {
                     p0 = positions[i];
                     p1 = positions[i+1];
                     c0 = colors[i];
                     c1 = colors[i+1];
-                    colorValues = colorValues.concat(interpolateColors(p0, p1, c0, c1, granularity));
+                    offset = interpolateColors(p0, p1, c0, c1, granularity, colorValues, offset);
                 }
-                colorValues.push(Color.floatToByte(c1.red), Color.floatToByte(c1.green), Color.floatToByte(c1.blue), Color.floatToByte(c1.alpha));
+                l = colorValues.length;
+                colorValues[offset++] = Color.floatToByte(c1.red);
+                colorValues[offset++] = Color.floatToByte(c1.green);
+                colorValues[offset++] = Color.floatToByte(c1.blue);
+                colorValues[offset++] = Color.floatToByte(c1.alpha);
             }
         }
 
@@ -202,20 +217,20 @@ define([
         attributes.position = new GeometryAttribute({
             componentDatatype : ComponentDatatype.DOUBLE,
             componentsPerAttribute : 3,
-            values : new Float64Array(positionValues)
+            values : positionValues
         });
 
         if (defined(colors)) {
             attributes.color = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                 componentsPerAttribute : 4,
-                values : new Uint8Array(colorValues),
+                values : colorValues,
                 normalize : true
             });
         }
 
 
-        numberOfPositions = positionValues.length / 3;
+        var numberOfPositions = positionValues.length / 3;
         var numberOfIndices = (numberOfPositions - 1) * 2;
         var indices = IndexDatatype.createTypedArray(numberOfPositions, numberOfIndices);
 
