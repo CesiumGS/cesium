@@ -642,7 +642,7 @@ define([
                 n = nodeStack.pop();
                 var transformToRoot = n._transformToRoot;
 
-                var meshes = defaultValue(n.meshes, defined(n.instanceSkin) ? n.instanceSkin.sources : undefined);
+                var meshes = defaultValue(n.meshes, defined(n.instanceSkin) ? n.instanceSkin.meshes : undefined);
                 if (defined(meshes)) {
                     var meshesLength = meshes.length;
                     for (var j = 0; j < meshesLength; ++j) {
@@ -1696,7 +1696,7 @@ define([
         var techniques = gltf.techniques;
         var materials = gltf.materials;
 
-        var meshes = defined(gltfNode.meshes) ? gltfNode.meshes : gltfNode.instanceSkin.sources;
+        var meshes = defined(gltfNode.meshes) ? gltfNode.meshes : gltfNode.instanceSkin.meshes;
         var meshesLength = meshes.length;
 
         for (var j = 0; j < meshesLength; ++j) {
