@@ -18,7 +18,6 @@ defineSuite([
         'Specs/createContext',
         'Specs/createFrameState',
         'Specs/destroyContext',
-        'Specs/frameState',
         'Specs/pick',
         'Specs/render'
     ], function(
@@ -40,7 +39,6 @@ defineSuite([
         createContext,
         createFrameState,
         destroyContext,
-        frameState,
         pick,
         render) {
     "use strict";
@@ -49,13 +47,22 @@ defineSuite([
     // TODO: rendering tests for pixel offset, eye offset, horizontal origin, vertical origin, font, style, outlineColor, outlineWidth, and fillColor properties
 
     var context;
+    var frameState;
+    var mockScene;
     var labels;
 
     beforeAll(function() {
         context = createContext();
+        frameState = createFrameState();
 
-        var us = context.uniformState;
-        us.update(context, createFrameState(createCamera()));
+        context.uniformState.update(context, createFrameState(createCamera()));
+
+        mockScene = {
+            canvas: context._canvas,
+            context : context,
+            camera : frameState.camera,
+            frameState : frameState
+        };
     });
 
     afterAll(function() {
@@ -907,8 +914,7 @@ defineSuite([
                 position : Cartesian3.ZERO
             });
             labels.update(context, frameState, []);
-            var fakeScene = {context : context, frameState : frameState, canvas: context._canvas};
-            expect(label.computeScreenSpacePosition(fakeScene)).toEqual(new Cartesian2(0.5, 0.5));
+            expect(label.computeScreenSpacePosition(mockScene)).toEqual(new Cartesian2(0.5, 0.5));
         });
 
         it('can compute screen space position (2)', function() {
@@ -919,8 +925,7 @@ defineSuite([
                 pixelOffset : new Cartesian2(1.0, 2.0)
             });
             labels.update(context, frameState, []);
-            var fakeScene = {context : context, frameState : frameState, canvas: context._canvas};
-            expect(label.computeScreenSpacePosition(fakeScene)).toEqual(new Cartesian2(1.5, 2.5));
+            expect(label.computeScreenSpacePosition(mockScene)).toEqual(new Cartesian2(1.5, 2.5));
         });
 
         it('can compute screen space position (3)', function() {
@@ -931,8 +936,7 @@ defineSuite([
                 eyeOffset : new Cartesian3(5.0, -5.0, 0.0)
             });
             labels.update(context, frameState, []);
-            var fakeScene = {context : context, frameState : frameState, canvas: context._canvas};
-            var p = label.computeScreenSpacePosition(fakeScene);
+            var p = label.computeScreenSpacePosition(mockScene);
             expect(p.x).toBeGreaterThan(0.5);
             expect(p.y).toBeGreaterThan(0.5);
         });
@@ -1507,14 +1511,13 @@ defineSuite([
 
     it('computes bounding sphere in 3D', function() {
         var projection = frameState.mapProjection;
-        var ellipsoid = projection.ellipsoid;
 
         var one = labels.add({
-            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
+            position : Cartesian3.fromDegrees(-50.0, -50.0, 0.0),
             text : 'one'
         });
         var two = labels.add({
-            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0)),
+            position : Cartesian3.fromDegrees(-50.0, 50.0, 0.0),
             text : 'two'
         });
 
@@ -1533,11 +1536,11 @@ defineSuite([
         var ellipsoid = projection.ellipsoid;
 
         var one = labels.add({
-            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
+            position : Cartesian3.fromDegrees(-50.0, -50.0, 0.0),
             text : 'one'
         });
         var two = labels.add({
-            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0)),
+            position : Cartesian3.fromDegrees(-50.0, 50.0, 0.0),
             text : 'two'
         });
 

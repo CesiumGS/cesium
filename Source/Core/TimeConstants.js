@@ -11,6 +11,8 @@ define([
      * @exports TimeConstants
      *
      * @see JulianDate
+     *
+     * @private
      */
     var TimeConstants = {
         /**

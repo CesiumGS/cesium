@@ -654,7 +654,7 @@ define([
 
     /**
      * Encodes floating-point geometry attribute values as two separate attributes to improve
-     * rendering precision using the same encoding as {@link EncodedCartesian3}.
+     * rendering precision.
      * <p>
      * This is commonly used to create high-precision position vertex attributes.
      * </p>

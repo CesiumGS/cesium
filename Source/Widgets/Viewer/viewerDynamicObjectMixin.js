@@ -264,7 +264,7 @@ define([
 
         knockoutSubscriptions.push(subscribeAndEvaluate(viewer, 'trackedObject', function(value) {
             var scene = viewer.scene;
-            var sceneMode = scene.frameState.mode;
+            var sceneMode = scene.mode;
             var isTracking = defined(value);
 
             if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
