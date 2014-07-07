@@ -8,7 +8,8 @@ define([
     /**
      * Determines if and how a glTF animation is looped.
      *
-     * @exports ModelAnimationLoop
+     * @namespace
+     * @alias ModelAnimationLoop
      *
      * @see ModelAnimationCollection#add
      */

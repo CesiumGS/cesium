@@ -8,7 +8,8 @@ define([
     /**
      * Determines the function used to compare stencil values for the stencil test.
      *
-     * @exports StencilFunction
+     * @namespace
+     * @alias StencilFunction
      */
     var StencilFunction = {
         /**

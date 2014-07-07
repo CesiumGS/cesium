@@ -52,7 +52,8 @@ define([
     /**
      * Content pipeline functions for geometries.
      *
-     * @exports GeometryPipeline
+     * @namespace
+     * @alias GeometryPipeline
      *
      * @see Geometry
      */

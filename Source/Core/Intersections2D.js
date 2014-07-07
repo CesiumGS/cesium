@@ -11,7 +11,9 @@ define([
 
     /**
      * Contains functions for operating on 2D triangles.
-     * @exports Intersections2D
+     *
+     * @namespace
+     * @alias Intersections2D
      */
     var Intersections2D = {};
 

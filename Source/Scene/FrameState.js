@@ -108,7 +108,7 @@ define([
          * directly in <code>update</code> functions.
          * </p>
          *
-         * @type {Function[]}
+         * @type {FrameState~AfterRenderCallback[]}
          *
          * @example
          * frameState.afterRender.push(function() {
@@ -117,6 +117,11 @@ define([
          */
         this.afterRender = [];
     };
+
+    /**
+     * A function that will be called at the end of the frame.
+     * @callback FrameState~AfterRenderCallback
+     */
 
     return FrameState;
 });
