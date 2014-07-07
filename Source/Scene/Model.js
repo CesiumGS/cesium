@@ -1191,6 +1191,7 @@ define([
 
         var gltf = model.gltf;
         var buffers = loadResources.buffers;
+        var accessors = gltf.accessors;
         var bufferViews = gltf.bufferViews;
         var skins = gltf.skins;
         var runtimeSkins = {};
@@ -1198,7 +1199,7 @@ define([
         for (var name in skins) {
             if (skins.hasOwnProperty(name)) {
                 var skin = skins[name];
-                var inverseBindMatrices = skin.inverseBindMatrices;
+                var inverseBindMatrices = accessors[skin.inverseBindMatrices];
                 var bufferView = bufferViews[inverseBindMatrices.bufferView];
 
                 var type = inverseBindMatrices.type;
