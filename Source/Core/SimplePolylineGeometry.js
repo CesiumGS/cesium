@@ -8,6 +8,7 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
+        './Ellipsoid',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
@@ -23,6 +24,7 @@ define([
         defaultValue,
         defined,
         DeveloperError,
+        Ellipsoid,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
@@ -34,7 +36,7 @@ define([
     function interpolateColors(p0, p1, color0, color1, granularity) {
         var angleBetween = Cartesian3.angleBetween(p0, p1);
         var numPoints = Math.ceil(angleBetween / granularity);
-        var colors = new Array((numPoints+1)*4);
+        var colors = new Array(numPoints*4);
         var i;
 
         var r0 = color0.red;
@@ -48,11 +50,11 @@ define([
         var a1 = color1.alpha;
 
         if (Color.equals(color0, color1)) {
-            for (i = 0; i < numPoints+1; i++) {
-                colors[i] = r0;
-                colors[i+1] = g0;
-                colors[i+2] = b0;
-                colors[i+3] = a0;
+            for (i = 0; i < numPoints; i++) {
+                colors[i] = Color.floatToByte(r0);
+                colors[i+1] = Color.floatToByte(g0);
+                colors[i+2] = Color.floatToByte(b0);
+                colors[i+3] = Color.floatToByte(a0);
             }
             return colors;
         }
@@ -63,21 +65,17 @@ define([
         var alphaPerVertex = (a1 - a0) / numPoints;
 
         for (i = 1; i < numPoints; i++) {
-            colors[i] = r0 + i * redPerVertex;
-            colors[i + 1] = g0 + i * greenPerVertex;
-            colors[i + 2] = b0 + i * bluePerVertex;
-            colors[i + 3] = a0 + i * alphaPerVertex;
+            var ci = i*4;
+            colors[ci] = Color.floatToByte(r0 + i * redPerVertex);
+            colors[ci + 1] = Color.floatToByte(g0 + i * greenPerVertex);
+            colors[ci + 2] = Color.floatToByte(b0 + i * bluePerVertex);
+            colors[ci + 3] = Color.floatToByte(a0 + i * alphaPerVertex);
         }
 
-        colors[0] = r0;
-        colors[1] = g0;
-        colors[2] = b0;
-        colors[3] = a0;
-
-        colors[numPoints] = r1;
-        colors[numPoints + 1] = g1;
-        colors[numPoints + 2] = b1;
-        colors[numPoints + 3] = a1;
+        colors[0] = Color.floatToByte(r0);
+        colors[1] = Color.floatToByte(g0);
+        colors[2] = Color.floatToByte(b0);
+        colors[3] = Color.floatToByte(a0);
 
         return colors;
     }
@@ -94,6 +92,7 @@ define([
      * @param {Color[]} [options.colors] An Array of {@link Color} defining the per vertex or per segment colors.
      * @param {Boolean} [options.colorsPerVertex=false] A boolean that determines whether the colors will be flat across each segment of the line or interpolated across the vertices.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      *
      * @exception {DeveloperError} At least two positions are required.
      * @exception {DeveloperError} colors has an invalid length.
@@ -130,6 +129,7 @@ define([
         this._colors = colors;
         this._perVertex = perVertex;
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         this._workerName = 'createSimplePolylineGeometry';
     };
 
@@ -144,6 +144,7 @@ define([
         var colors = simplePolylineGeometry._colors;
         var perVertex = simplePolylineGeometry._perVertex;
         var granularity = simplePolylineGeometry._granularity;
+        var ellipsoid = simplePolylineGeometry._ellipsoid;
 
         var perSegmentColors = defined(colors) && !perVertex;
 
@@ -163,7 +164,8 @@ define([
 
                 var pos = PolylinePipeline.generateArc({
                     positions : [p0, p1],
-                    granularity : granularity
+                    granularity : granularity,
+                    ellipsoid: ellipsoid
 
                 });
 
@@ -171,7 +173,7 @@ define([
                     var segLen = pos.length/3;
                     var color = colors[i];
                     for(var k = 0; k < segLen; k++) {
-                        colorValues.push(color.red, color.green, color.blue, color.alpha);
+                        colorValues.push(Color.floatToByte(color.red), Color.floatToByte(color.green), Color.floatToByte(color.blue), Color.floatToByte(color.alpha));
                     }
                 }
 
@@ -180,7 +182,8 @@ define([
         } else {
             positionValues = PolylinePipeline.generateArc({
                 positions: positions,
-                granularity: granularity
+                granularity: granularity,
+                ellipsoid: ellipsoid
             });
 
             if (defined(colors)) {
@@ -191,6 +194,7 @@ define([
                     c1 = colors[i+1];
                     colorValues = colorValues.concat(interpolateColors(p0, p1, c0, c1, granularity));
                 }
+                colorValues.push(Color.floatToByte(c1.red), Color.floatToByte(c1.green), Color.floatToByte(c1.blue), Color.floatToByte(c1.alpha));
             }
         }
 
@@ -214,10 +218,9 @@ define([
         numberOfPositions = positionValues.length / 3;
         var numberOfIndices = (numberOfPositions - 1) * 2;
         var indices = IndexDatatype.createTypedArray(numberOfPositions, numberOfIndices);
-        var indicesIncrement = perSegmentColors ? 2 : 1;
 
         var j = 0;
-        for (i = 0; i < numberOfPositions - 1; i += indicesIncrement) {
+        for (i = 0; i < numberOfPositions - 1; i++) {
             indices[j++] = i;
             indices[j++] = i + 1;
         }
