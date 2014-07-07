@@ -926,15 +926,15 @@ define([
         var accessors = model.gltf.accessors;
         for (var name in accessors) {
             if (accessors.hasOwnProperty(name)) {
-                var instance = accessors[name];
-                bufferView = bufferViews[instance.bufferView];
+                var accessor = accessors[name];
+                bufferView = bufferViews[accessor.bufferView];
 
-                if ((bufferView.target === WebGLRenderingContext.ELEMENT_ARRAY_BUFFER) && !defined(rendererBuffers[instance.bufferView])) {
+                if ((bufferView.target === WebGLRenderingContext.ELEMENT_ARRAY_BUFFER) && !defined(rendererBuffers[accessor.bufferView])) {
                     raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
-                    var indexBuffer = context.createIndexBuffer(raw, BufferUsage.STATIC_DRAW, instance.type);
+                    var indexBuffer = context.createIndexBuffer(raw, BufferUsage.STATIC_DRAW, accessor.componentType);
                     indexBuffer.vertexArrayDestroyable = false;
-                    rendererBuffers[instance.bufferView] = indexBuffer;
-                    // In theory, several glTF accessors with different types could
+                    rendererBuffers[accessor.bufferView] = indexBuffer;
+                    // In theory, several glTF accessors with different componentTypes could
                     // point to the same glTF bufferView, which would break this.
                     // In practice, it is unlikely as it will be UNSIGNED_SHORT.
                 }
@@ -1199,15 +1199,16 @@ define([
         for (var name in skins) {
             if (skins.hasOwnProperty(name)) {
                 var skin = skins[name];
-                var inverseBindMatrices = accessors[skin.inverseBindMatrices];
-                var bufferView = bufferViews[inverseBindMatrices.bufferView];
+                var accessor = accessors[skin.inverseBindMatrices];
+                var bufferView = bufferViews[accessor.bufferView];
 
-                var type = inverseBindMatrices.type;
-                var count = inverseBindMatrices.count;
-                var typedArray = ModelTypes[type].createArrayBufferView(buffers[bufferView.buffer], bufferView.byteOffset + inverseBindMatrices.byteOffset, count);
+                var componentType = accessor.componentType;
+                var type = accessor.type;
+                var count = accessor.count;
+                var typedArray = ModelTypes.get(accessor).createArrayBufferView(buffers[bufferView.buffer], bufferView.byteOffset + accessor.byteOffset, count);
                 var matrices =  new Array(count);
 
-                if (type === WebGLRenderingContext.FLOAT_MAT4) {
+                if ((componentType === WebGLRenderingContext.FLOAT) && (type === 'VEC4')) {
                     for (var i = 0; i < count; ++i) {
                         matrices[i] = Matrix4.fromArray(typedArray, 16 * i);
                     }
@@ -1348,12 +1349,11 @@ define([
                             // with an attribute that wasn't used and the asset wasn't optimized.
                             if (defined(attributeLocation)) {
                                 var a = accessors[primitiveAttributes[attrName]];
-                                var type = ModelTypes[a.type];
                                 attrs.push({
                                     index                  : attributeLocation,
                                     vertexBuffer           : rendererBuffers[a.bufferView],
-                                    componentsPerAttribute : type.componentsPerAttribute,
-                                    componentDatatype      : type.componentDatatype,
+                                    componentsPerAttribute : ModelTypes.get(a).componentsPerAttribute,
+                                    componentDatatype      : a.componentType,
                                     normalize              : false,
                                     offsetInBytes          : a.byteOffset,
                                     strideInBytes          : a.byteStride
@@ -1738,7 +1738,7 @@ define([
 
                 var vertexArray = rendererVertexArrays[name + '.primitive.' + i];
                 var count = ix.count;
-                var offset = (ix.byteOffset / IndexDatatype.getSizeInBytes(ix.type));  // glTF has offset in bytes.  Cesium has offsets in indices
+                var offset = (ix.byteOffset / IndexDatatype.getSizeInBytes(ix.componentType));  // glTF has offset in bytes.  Cesium has offsets in indices
 
                 var um = rendererUniformMaps[primitive.material];
                 var uniformMap = um.uniformMap;

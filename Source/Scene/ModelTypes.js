@@ -4,68 +4,34 @@ define([
     ], function(
         ComponentDatatype) {
     "use strict";
-    /*global WebGLRenderingContext*/
 
     /**
      * @private
      */
     var ModelTypes = {};
 
-    // Bail out if the browser doesn't support WebGL, to prevent the setup function from crashing.
-    // This check must use typeof, not defined, because defined doesn't work with undeclared variables.
-    if (typeof WebGLRenderingContext === 'undefined') {
-        return ModelTypes;
-    }
-
-    ModelTypes[WebGLRenderingContext.FLOAT] = {
-        componentsPerAttribute : 1,
-        componentDatatype : ComponentDatatype.FLOAT,
-        createArrayBufferView : function(buffer, byteOffset, length) {
-            return new Float32Array(buffer, byteOffset, length);
-        }
-    };
-    ModelTypes[WebGLRenderingContext.FLOAT_VEC2] = {
-        componentsPerAttribute : 2,
-        componentDatatype : ComponentDatatype.FLOAT,
-        createArrayBufferView : function(buffer, byteOffset, length) {
-            return new Float32Array(buffer, byteOffset, this.componentsPerAttribute * length);
-        }
-    };
-    ModelTypes[WebGLRenderingContext.FLOAT_VEC3] = {
-        componentsPerAttribute : 3,
-        componentDatatype : ComponentDatatype.FLOAT,
-        createArrayBufferView : function(buffer, byteOffset, length) {
-            return new Float32Array(buffer, byteOffset, this.componentsPerAttribute * length);
-        }
-    };
-    ModelTypes[WebGLRenderingContext.FLOAT_VEC4] = {
-        componentsPerAttribute : 4,
-        componentDatatype : ComponentDatatype.FLOAT,
-        createArrayBufferView : function(buffer, byteOffset, length) {
-            return new Float32Array(buffer, byteOffset, this.componentsPerAttribute * length);
-        }
+    var ComponentsPerAttribute = {
+        'SCALAR' : 1,
+        'VEC2' : 2,
+        'VEC3' : 3,
+        'VEC4' : 4,
+        'MAT2' : 4,
+        'MAT3' : 9,
+        'MAT4' : 16
     };
 
-    ModelTypes[WebGLRenderingContext.FLOAT_MAT2] = {
-        componentsPerAttribute : 4,
-        componentDatatype : ComponentDatatype.FLOAT,
-        createArrayBufferView : function(buffer, byteOffset, length) {
-            return new Float32Array(buffer, byteOffset, this.componentsPerAttribute * length);
-        }
-    };
-    ModelTypes[WebGLRenderingContext.FLOAT_MAT3] = {
-        componentsPerAttribute : 9,
-        componentDatatype : ComponentDatatype.FLOAT,
-        createArrayBufferView : function(buffer, byteOffset, length) {
-            return new Float32Array(buffer, byteOffset, this.componentsPerAttribute * length);
-        }
-    };
-    ModelTypes[WebGLRenderingContext.FLOAT_MAT4] = {
-        componentsPerAttribute : 16,
-        componentDatatype : ComponentDatatype.FLOAT,
-        createArrayBufferView : function(buffer, byteOffset, length) {
-            return new Float32Array(buffer, byteOffset, this.componentsPerAttribute * length);
-        }
+// TODO: make this a standalone function
+
+    ModelTypes.get = function(accessor) {
+        var componentDatatype = accessor.componentType;
+        var componentsPerAttribute = ComponentsPerAttribute[accessor.type];
+
+        return {
+            componentsPerAttribute : componentsPerAttribute,
+            createArrayBufferView : function(buffer, byteOffset, length) {
+                ComponentDatatype.createArrayBufferView(componentDatatype, buffer, byteOffset, componentsPerAttribute * length);
+            }
+        };
     };
 
     return ModelTypes;
