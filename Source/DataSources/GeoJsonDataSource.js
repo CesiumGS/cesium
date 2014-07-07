@@ -185,7 +185,7 @@ define([
     function processLineString(dataSource, geoJson, geometry, crsFunction, sourceUri) {
         var entity = createObject(geoJson, dataSource._entityCollection);
         entity.merge(dataSource.defaultLine);
-        entity.vertexPositions = new ConstantProperty(coordinatesArrayToCartesianArray(geometry.coordinates, crsFunction));
+        entity.polyline.positions = new ConstantProperty(coordinatesArrayToCartesianArray(geometry.coordinates, crsFunction));
     }
 
     function processMultiLineString(dataSource, geoJson, geometry, crsFunction, sourceUri) {
@@ -193,7 +193,7 @@ define([
         for (var i = 0; i < lineStrings.length; i++) {
             var entity = createObject(geoJson, dataSource._entityCollection);
             entity.merge(dataSource.defaultLine);
-            entity.vertexPositions = new ConstantProperty(coordinatesArrayToCartesianArray(lineStrings[i], crsFunction));
+            entity.polyline.positions = new ConstantProperty(coordinatesArrayToCartesianArray(lineStrings[i], crsFunction));
         }
     }
 
@@ -201,7 +201,7 @@ define([
         //TODO Holes
         var entity = createObject(geoJson, dataSource._entityCollection);
         entity.merge(dataSource.defaultPolygon);
-        entity.vertexPositions = new ConstantProperty(coordinatesArrayToCartesianArray(geometry.coordinates[0], crsFunction));
+        entity.polygon.positions = new ConstantProperty(coordinatesArrayToCartesianArray(geometry.coordinates[0], crsFunction));
     }
 
     function processTopology(dataSource, geoJson, geometry, crsFunction, sourceUri) {
@@ -221,7 +221,7 @@ define([
             var polygon = polygons[i];
             var entity = createObject(geoJson, dataSource._entityCollection);
             entity.merge(dataSource.defaultPolygon);
-            entity.vertexPositions = new ConstantProperty(coordinatesArrayToCartesianArray(polygon[0], crsFunction));
+            entity.polygon.positions = new ConstantProperty(coordinatesArrayToCartesianArray(polygon[0], crsFunction));
         }
     }
 
@@ -316,6 +316,8 @@ define([
         material = new ColorMaterialProperty();
         material.color = new ConstantProperty(new Color(1.0, 1.0, 0.0, 0.2));
         polygon.material = material;
+        polygon.outline = new ConstantProperty(true);
+        polygon.outlineColor = new ConstantProperty(new Color(1.0, 1.0, 0.0));
 
         this._changed = new Event();
         this._error = new Event();

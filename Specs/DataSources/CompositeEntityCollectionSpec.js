@@ -444,17 +444,15 @@ defineSuite([
         expect(compositeObject.orientation).toBe(entity2.orientation);
         expect(compositeObject.viewFrom).toBe(entity3.viewFrom);
 
-        //Add a higher priority object with position and vertexPositions
+        //Add a higher priority object with position
         var entity1 = new Entity(entity2.id);
         collection1.add(entity1);
         entity1.position = new CompositePositionProperty();
-        entity1.vertexPositions = new CompositeProperty();
 
-        //We now use the position and vertexPositions from the higher priority
+        //We now use the position from the higher priority
         //object with other properties unchanged.
         expect(composite.getObjects().length).toEqual(1);
         expect(compositeObject.position).toBe(entity1.position);
-        expect(compositeObject.vertexPositions).toBe(entity1.vertexPositions);
         expect(compositeObject.orientation).toBe(entity2.orientation);
         expect(compositeObject.viewFrom).toBe(entity3.viewFrom);
     });

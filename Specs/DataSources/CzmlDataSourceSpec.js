@@ -174,7 +174,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.processUrl(simpleUrl);
         waitsFor(function() {
-            return dataSource.entities.getObjects().length === 11;
+            return dataSource.entities.getObjects().length === 10;
         });
     });
 
@@ -182,7 +182,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.processUrl(simpleUrl);
         waitsFor(function() {
-            return dataSource.entities.getObjects().length === 11;
+            return dataSource.entities.getObjects().length === 10;
         });
 
         runs(function() {
@@ -190,7 +190,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return dataSource.entities.getObjects().length === 12;
+            return dataSource.entities.getObjects().length === 11;
         });
     });
 
@@ -198,7 +198,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.processUrl(simpleUrl);
         waitsFor(function() {
-            return dataSource.entities.getObjects().length === 11;
+            return dataSource.entities.getObjects().length === 10;
         });
 
         runs(function() {
@@ -218,7 +218,7 @@ defineSuite([
         runs(function() {
             var dataSource = new CzmlDataSource();
             dataSource.process(simple, simpleUrl);
-            expect(dataSource.entities.getObjects().length).toEqual(11);
+            expect(dataSource.entities.getObjects().length).toEqual(10);
         });
     });
 
@@ -230,10 +230,10 @@ defineSuite([
         runs(function() {
             var dataSource = new CzmlDataSource();
             dataSource.process(simple, simpleUrl);
-            expect(dataSource.entities.getObjects().length === 11);
+            expect(dataSource.entities.getObjects().length === 10);
 
             dataSource.process(vehicle, vehicleUrl);
-            expect(dataSource.entities.getObjects().length === 12);
+            expect(dataSource.entities.getObjects().length === 11);
         });
     });
 
@@ -245,7 +245,7 @@ defineSuite([
         runs(function() {
             var dataSource = new CzmlDataSource();
             dataSource.process(simple, simpleUrl);
-            expect(dataSource.entities.getObjects().length).toEqual(11);
+            expect(dataSource.entities.getObjects().length).toEqual(10);
 
             dataSource.load(vehicle, vehicleUrl);
             expect(dataSource.entities.getObjects().length).toEqual(1);
@@ -1242,50 +1242,56 @@ defineSuite([
         expect(entity.orientation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Quaternion(0.0, 0.0, 0.0, 1.0));
     });
 
-    it('vertexPositions work with cartesians.', function() {
+    it('positions work with cartesians.', function() {
         var expectedResult = [new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(5.0, 6.0, 7.0)];
 
         var packet = {
-            vertexPositions : {
-                cartesian : [expectedResult[0].x, expectedResult[0].y, expectedResult[0].z, expectedResult[1].x, expectedResult[1].y, expectedResult[1].z]
+            polyline : {
+                positions : {
+                    cartesian : [expectedResult[0].x, expectedResult[0].y, expectedResult[0].z, expectedResult[1].x, expectedResult[1].y, expectedResult[1].z]
+                }
             }
         };
 
         var dataSource = new CzmlDataSource();
         dataSource.load(packet);
         var entity = dataSource.entities.getObjects()[0];
-        expect(entity.vertexPositions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedResult);
+        expect(entity.polyline.positions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedResult);
     });
 
-    it('vertexPositions work with cartographicRadians.', function() {
+    it('positions work with cartographicRadians.', function() {
         var input = [new Cartographic(1.0, 2.0, 4.0), new Cartographic(5.0, 6.0, 7.0)];
         var expectedResult = Ellipsoid.WGS84.cartographicArrayToCartesianArray(input);
 
         var packet = {
-            vertexPositions : {
-                cartographicRadians : [input[0].longitude, input[0].latitude, input[0].height, input[1].longitude, input[1].latitude, input[1].height]
+            polyline : {
+                positions : {
+                    cartographicRadians : [input[0].longitude, input[0].latitude, input[0].height, input[1].longitude, input[1].latitude, input[1].height]
+                }
             }
         };
 
         var dataSource = new CzmlDataSource();
         dataSource.load(packet);
         var entity = dataSource.entities.getObjects()[0];
-        expect(entity.vertexPositions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedResult);
+        expect(entity.polyline.positions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedResult);
     });
 
-    it('vertexPositions work with cartographicDegrees.', function() {
+    it('positions work with cartographicDegrees.', function() {
         var expectedResult = Ellipsoid.WGS84.cartographicArrayToCartesianArray([Cartographic.fromDegrees(1.0, 2.0, 3.0), Cartographic.fromDegrees(5.0, 6.0, 7.0)]);
 
         var packet = {
-            vertexPositions : {
-                cartographicDegrees : [1.0, 2.0, 3.0, 5.0, 6.0, 7.0]
+            polyline : {
+                positions : {
+                    cartographicDegrees : [1.0, 2.0, 3.0, 5.0, 6.0, 7.0]
+                }
             }
         };
 
         var dataSource = new CzmlDataSource();
         dataSource.load(packet);
         var entity = dataSource.entities.getObjects()[0];
-        expect(entity.vertexPositions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedResult);
+        expect(entity.polyline.positions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedResult);
     });
 
     it('CZML ViewFrom works.', function() {
