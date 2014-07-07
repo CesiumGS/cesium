@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian3',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/Ellipsoid',
         '../Core/IauOrientationAxes',
@@ -18,6 +19,7 @@ define([
         Cartesian3,
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         Ellipsoid,
         IauOrientationAxes,
@@ -66,12 +68,7 @@ define([
          */
         this.textureUrl = url;
 
-        /**
-         * The moon ellipsoid.
-         * @type {Ellipsoid}
-         * @default Ellipsoid.MOON
-         */
-        this.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.MOON);
+        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.MOON);
 
         /**
          * Use the sun as the only light source.
@@ -83,7 +80,6 @@ define([
         this._ellipsoidPrimitive = new EllipsoidPrimitive({
             radii : this.ellipsoid.radii,
             material : Material.fromType(Material.ImageType),
-            onlySunLighting : this.onlySunLighting,
             _owner : this
         });
         this._ellipsoidPrimitive.material.translucent = false;
@@ -91,10 +87,31 @@ define([
         this._axes = new IauOrientationAxes();
     };
 
+    defineProperties(Moon.prototype, {
+        /**
+         * Get the ellipsoid that defines the shape of the moon.
+         *
+         * @memberof Moon.prototype
+         *
+         * @type {Ellipsoid}
+         * @readonly
+         *
+         * @default {@link Ellipsoid.MOON}
+         */
+        ellipsoid : {
+            get : function() {
+                return this._ellipsoid;
+            }
+        }
+    });
+
     var icrfToFixed = new Matrix3();
     var rotationScratch = new Matrix3();
     var translationScratch = new Cartesian3();
 
+    /**
+     * @private
+     */
     Moon.prototype.update = function(context, frameState, commandList) {
         if (!this.show) {
             return;
@@ -152,7 +169,7 @@ define([
      * moon = moon && moon.destroy();
      */
     Moon.prototype.destroy = function() {
-        this._ellipsoid = this._ellipsoid && this._ellipsoid.destroy();
+        this._ellipsoidPrimitive = this._ellipsoidPrimitive && this._ellipsoidPrimitive.destroy();
         return destroyObject(this);
     };
 

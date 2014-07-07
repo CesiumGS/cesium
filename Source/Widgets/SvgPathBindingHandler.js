@@ -9,16 +9,19 @@ define(function() {
      * A Knockout binding handler that creates a DOM element for a single SVG path.
      * This binding handler will be registered as cesiumSvgPath.
      *
-     * The parameter to this binding is an object with the following required properties:
+     * <p>
+     * The parameter to this binding is an object with the following properties:
+     * </p>
      *
-     * path: The SVG path as a string.
-     * width: The width of the SVG path with no transformations applied.
-     * height: The height of the SVG path with no transformations applied.
+     * <ul>
+     * <li>path: The SVG path as a string.</li>
+     * <li>width: The width of the SVG path with no transformations applied.</li>
+     * <li>height: The height of the SVG path with no transformations applied.</li>
+     * <li>css: Optional. A string containing additional CSS classes to apply to the SVG. 'cesium-svgPath-svg' is always applied.</li>
+     * </ul>
      *
-     * and the following optional properties:
-     * css: A string containing additional CSS classes to apply to the SVG.  'cesium-svgPath-svg' is always applied.
-     *
-     * @exports SvgPathBindingHandler
+     * @namespace
+     * @alias SvgPathBindingHandler
      *
      * @example
      * // Create an SVG as a child of a div

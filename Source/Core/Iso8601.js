@@ -19,7 +19,8 @@ define([
     /**
      * Constants related to ISO8601 support.
      *
-     * @exports Iso8601
+     * @namespace
+     * @alias Iso8601
      *
      * @see {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601 on Wikipedia}
      * @see JulianDate

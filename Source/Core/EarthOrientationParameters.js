@@ -30,7 +30,7 @@ define([
     /**
      * Specifies Earth polar motion coordinates and the difference between UT1 and UTC.
      * These Earth Orientation Parameters (EOP) are primarily used in the transformation from
-     * the International Celestial Reference Frame (ITRF) to the International Terrestrial
+     * the International Celestial Reference Frame (ICRF) to the International Terrestrial
      * Reference Frame (ITRF).
      *
      * @alias EarthOrientationParameters
@@ -65,6 +65,8 @@ define([
      * // Loading the EOP data
      * var eop = new Cesium.EarthOrientationParameters({ url : 'Data/EOP.json' });
      * Cesium.Transforms.earthOrientationParameters = eop;
+     *
+     * @private
      */
     var EarthOrientationParameters = function EarthOrientationParameters(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

@@ -765,7 +765,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * A mixin may add additional properties, functions, or other behavior
      * to the provided viewer instance.
      *
-     * @param {Function} mixin The Viewer mixin to add to this instance.
+     * @param {Viewer~ViewerMixin} mixin The Viewer mixin to add to this instance.
      * @param {Object} options The options object to be passed to the mixin function.
      *
      * @see viewerDragDropMixin
@@ -962,6 +962,15 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         viewer._lastWidth = width;
         viewer._lastHeight = height;
     }
+
+    /**
+     * A function that augments a Viewer instance with additional functionality.
+     * @callback Viewer~ViewerMixin
+     * @param {Viewer} viewer The viewer instance.
+     * @param {Object} options Options object to be passed to the mixin function.
+     *
+     * @see Viewer#extend
+     */
 
     return Viewer;
 });

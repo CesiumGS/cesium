@@ -8,7 +8,8 @@ define([
     /**
      * Determines the function used to compare two depths for the depth test.
      *
-     * @exports DepthFunction
+     * @namespace
+     * @alias DepthFunction
      */
     var DepthFunction = {
         /**
