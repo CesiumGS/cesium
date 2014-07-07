@@ -811,7 +811,7 @@ define([
                     computedJointMatrices : [],         // empty when node is not skinned
 
                     // Joint node
-                    jointId : node.jointId,             // undefined when node is not a joint
+                    jointId : node.joint,               // undefined when node is not a joint
 
                     // Graph pointers
                     children : [],                      // empty for leaf nodes
