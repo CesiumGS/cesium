@@ -67,8 +67,8 @@ define([
      * // Assume array contains BoundingSpheres in world coordinates.
      * // Sort them in ascending order of distance from the camera.
      * var position = camera.positionWC;
-     * mergeSort(array, function(a, b, position) {
-     *     return BoundingSphere.distanceSquaredTo(b, position) - BoundingSphere.distanceSquaredTo(a, position);
+     * Cesium.mergeSort(array, function(a, b, position) {
+     *     return Cesium.BoundingSphere.distanceSquaredTo(b, position) - Cesium.BoundingSphere.distanceSquaredTo(a, position);
      * }, position);
      */
     var mergeSort = function(array, comparator, userDefinedObject) {
