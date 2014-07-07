@@ -44,5 +44,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [You Lu](https://github.com/YouLu)
 * [David Hite](https://github.com/dav3hit3)
 * [Kevin Ring](https://github.com/kring)
+* [M.Eng. René Schwarz](https://github.com/DigNative)
 
 Also see [our contributors page](http://cesiumjs.org/contributors.html) for more information.

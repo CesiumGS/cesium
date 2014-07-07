@@ -39,7 +39,7 @@ defineSuite([
     var duckUrl = './Data/Models/duck/duck.json';
     var customDuckUrl = './Data/Models/customDuck/duck.json';
     var embeddedDuckUrl = './Data/Models/embeddedDuck/duck.json';
-    var cesiumAirUrl = './Data/Models/CesiumAir/CesiumAir.json';
+    var cesiumAirUrl = './Data/Models/CesiumAir/Cesium_Air.gltf';
     var animBoxesUrl = './Data/Models/anim-test-1-boxes/anim-test-1-boxes.json';
     var riggedFigureUrl = './Data/Models/rigged-figure-test/rigged-figure-test.json';
 

@@ -1145,7 +1145,7 @@ define([
      *
      * @example
      * //Example 2: Sets values for a Cartesian instance
-     * var a = new Cartesian4();
+     * var a = new Cesium.Cartesian4();
      * Cesium.Matrix4.getRow(m, 2, a);
      *
      * // a.x = 18.0; a.y = 19.0; a.z = 20.0; a.w = 21.0;
@@ -1466,7 +1466,7 @@ define([
      * @see Matrix4.fromTranslation
      *
      * @example
-     * // Instead of Matrix4.multiply(m, Cesium.Matrix4.fromTranslation(position), m);
+     * // Instead of Cesium.Matrix4.multiply(m, Cesium.Matrix4.fromTranslation(position), m);
      * Cesium.Matrix4.multiplyByTranslation(m, position, m);
      */
     Matrix4.multiplyByTranslation = function(matrix, translation, result) {
@@ -1525,7 +1525,7 @@ define([
      * @see Matrix4.multiplyByScale
      *
      * @example
-     * // Instead of Matrix4.multiply(m, Cesium.Matrix4.fromUniformScale(scale), m);
+     * // Instead of Cesium.Matrix4.multiply(m, Cesium.Matrix4.fromUniformScale(scale), m);
      * Cesium.Matrix4.multiplyByUniformScale(m, scale, m);
      */
     Matrix4.multiplyByUniformScale = function(matrix, scale, result) {
@@ -1561,7 +1561,7 @@ define([
      * @see Matrix4.multiplyByUniformScale
      *
      * @example
-     * // Instead of Matrix4.multiply(m, Cesium.Matrix4.fromScale(scale), m);
+     * // Instead of Cesium.Matrix4.multiply(m, Cesium.Matrix4.fromScale(scale), m);
      * Cesium.Matrix4.multiplyByUniformScale(m, scale, m);
      */
     Matrix4.multiplyByScale = function(matrix, scale, result) {
