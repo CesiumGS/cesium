@@ -1459,7 +1459,7 @@ define([
                 return uniformState.viewportCartesian4;
             };
         }
-        // JOINT_MATRIX created in createCommands()
+        // JOINTMATRIX created in createCommands()
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1638,7 +1638,7 @@ define([
                             uniformMap[name] = uv.func;
                             uniformValues[parameterName] = uv;
                         } else if (defined(parameter.semantic)) {
-                            if (parameter.semantic !== 'JOINT_MATRIX') {
+                            if (parameter.semantic !== 'JOINTMATRIX') {
                                 // Map glTF semantic to Cesium automatic uniform
                                 uniformMap[name] = gltfSemanticUniforms[parameter.semantic](context.uniformState);
                             } else {
