@@ -3,14 +3,14 @@ define([
         'Core/defined',
         'Core/formatError',
         'Core/getFilenameFromUri',
-        'DynamicScene/CzmlDataSource',
-        'DynamicScene/GeoJsonDataSource',
-        'DynamicScene/KmlDataSource',
+        'DataSources/CzmlDataSource',
+        'DataSources/GeoJsonDataSource',
+        'DataSources/KmlDataSource',
         'Scene/TileMapServiceImageryProvider',
         'Widgets/Viewer/Viewer',
         'Widgets/Viewer/viewerCesiumInspectorMixin',
         'Widgets/Viewer/viewerDragDropMixin',
-        'Widgets/Viewer/viewerDynamicObjectMixin',
+        'Widgets/Viewer/viewerEntityMixin',
         'domReady!'
     ], function(
         defined,
@@ -23,7 +23,7 @@ define([
         Viewer,
         viewerCesiumInspectorMixin,
         viewerDragDropMixin,
-        viewerDynamicObjectMixin) {
+        viewerEntityMixin) {
     "use strict";
     /*global console*/
 
@@ -74,7 +74,7 @@ define([
     }
 
     viewer.extend(viewerDragDropMixin);
-    viewer.extend(viewerDynamicObjectMixin);
+    viewer.extend(viewerEntityMixin);
     if (endUserOptions.inspector) {
         viewer.extend(viewerCesiumInspectorMixin);
     }
@@ -122,11 +122,11 @@ define([
             loadPromise.then(function() {
                 var lookAt = endUserOptions.lookAt;
                 if (defined(lookAt)) {
-                    var dynamicObject = dataSource.dynamicObjects.getById(lookAt);
-                    if (defined(dynamicObject)) {
-                        viewer.trackedObject = dynamicObject;
+                    var entity = dataSource.entities.getById(lookAt);
+                    if (defined(entity)) {
+                        viewer.trackedEntity = entity;
                     } else {
-                        var error = 'No object with id "' + lookAt + '" exists in the provided source.';
+                        var error = 'No entity with id "' + lookAt + '" exists in the provided data source.';
                         showLoadError(source, error);
                     }
                 }

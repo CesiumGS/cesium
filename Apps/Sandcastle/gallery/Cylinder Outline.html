@@ -38,7 +38,7 @@ require(['Cesium'], function(Cesium) {
     var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-100.0, 40.0);
     var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
         Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
-        new Cesium.Cartesian3(0.0, 0.0, length * 0.5)
+        new Cesium.Cartesian3(0.0, 0.0, length * 0.5), new Cesium.Matrix4()
     );
     
     var cylinderOutlineGeometry = new Cesium.CylinderOutlineGeometry({
@@ -75,7 +75,7 @@ require(['Cesium'], function(Cesium) {
     positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-95.0, 40.0);
     modelMatrix = Cesium.Matrix4.multiplyByTranslation(
         Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
-        new Cesium.Cartesian3(0.0, 0.0, length * 0.5)
+        new Cesium.Cartesian3(0.0, 0.0, length * 0.5), new Cesium.Matrix4()
     );
     cylinderOutlineGeometry = new Cesium.CylinderOutlineGeometry({
         length : length,

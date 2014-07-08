@@ -1,5 +1,8 @@
 /*global define*/
-define(function() {
+define([
+        '../Core/freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
@@ -12,5 +15,5 @@ define(function() {
         UPSAMPLED_ONLY : 3
     };
 
-    return TileState;
+    return freezeObject(TileState);
 });

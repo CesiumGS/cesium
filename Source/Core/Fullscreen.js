@@ -20,7 +20,8 @@ define([
     /**
      * Browser-independent functions for working with the standard fullscreen API.
      *
-     * @exports Fullscreen
+     * @namespace
+     * @alias Fullscreen
      *
      * @see {@link http://dvcs.w3.org/hg/fullscreen/raw-file/tip/Overview.html|W3C Fullscreen Living Specification}
      */
@@ -33,7 +34,7 @@ define([
          * @memberof Fullscreen
          * @type {Object}
          */
-        element: {
+        element : {
             get : function() {
                 if (!Fullscreen.supportsFullscreen()) {
                     return undefined;
@@ -139,7 +140,7 @@ define([
         //check for the correct combination of prefix plus the various names that browsers use
         var prefixes = ['webkit', 'moz', 'o', 'ms', 'khtml'];
         var name;
-        for ( var i = 0, len = prefixes.length; i < len; ++i) {
+        for (var i = 0, len = prefixes.length; i < len; ++i) {
             var prefix = prefixes[i];
 
             // casing of Fullscreen differs across browsers

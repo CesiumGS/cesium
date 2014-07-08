@@ -769,7 +769,7 @@ define([
      * @example
      * // Sort bounding spheres from back to front
      * spheres.sort(function(a, b) {
-     *     return BoundingSphere.distanceSquaredTo(b, camera.positionWC) - BoundingSphere.distanceSquaredTo(a, camera.positionWC);
+     *     return Cesium.BoundingSphere.distanceSquaredTo(b, camera.positionWC) - Cesium.BoundingSphere.distanceSquaredTo(a, camera.positionWC);
      * });
      */
     BoundingSphere.distanceSquaredTo = function(sphere, cartesian) {

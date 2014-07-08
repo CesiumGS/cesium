@@ -201,7 +201,7 @@ define([
          *
          * @example
          * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
-         * m.modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
+         * m.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = Matrix4.clone(this.modelMatrix);
@@ -399,7 +399,7 @@ define([
          *
          * @example
          * // Center in WGS84 coordinates
-         * var center = Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center);
+         * var center = Cesium.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cesium.Cartesian3());
          */
         boundingSphere : {
             get : function() {
@@ -489,14 +489,14 @@ define([
      *
      * @example
      * // Example 1. Create a model from a glTF asset
-     * var model = scene.primitives.add(Model.fromGltf({
+     * var model = scene.primitives.add(Cesium.Model.fromGltf({
      *   url : './duck/duck.json'
      * }));
      *
      * @example
      * // Example 2. Create model and provide all properties and events
      * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
-     * var modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
+     * var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
      *
      * var model = scene.primitives.add(Model.fromGltf({
      *   url : './duck/duck.json',
@@ -568,7 +568,7 @@ define([
      * @example
      * // Apply non-uniform scale to node LOD3sp
      * var node = model.getNode('LOD3sp');
-     * node.matrix = Matrix4.fromScale(new Cartesian3(5.0, 1.0, 1.0), node.matrix);
+     * node.matrix =Cesium. Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
      */
     Model.prototype.getNode = function(name) {
         var node = getRuntime(this, 'nodesByName', name);
@@ -2002,6 +2002,9 @@ define([
 
             for (var m = 0; m < inverseBindMatricesLength; ++m) {
                 // [joint-matrix] = [node-to-root^-1][joint-to-root][inverse-bind][bind-shape]
+                if (!defined(computedJointMatrices[m])) {
+                    computedJointMatrices[m] = new Matrix4();
+                }
                 computedJointMatrices[m] = Matrix4.multiplyTransformation(scratchObjectSpace, joints[m].transformToRoot, computedJointMatrices[m]);
                 computedJointMatrices[m] = Matrix4.multiplyTransformation(computedJointMatrices[m], inverseBindMatrices[m], computedJointMatrices[m]);
                 if (defined(bindShapeMatrix)) {

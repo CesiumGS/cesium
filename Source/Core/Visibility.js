@@ -1,5 +1,8 @@
 /*global define*/
-define(function() {
+define([
+        './freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
@@ -8,7 +11,8 @@ define(function() {
      * it has no visibility, may partially block an occludee from view, or may not block it at all,
      * leading to full visibility.
      *
-     * @exports Visibility
+     * @namespace
+     * @alias Visibility
      */
     var Visibility = {
         /**
@@ -36,5 +40,5 @@ define(function() {
         FULL : 1
     };
 
-    return Visibility;
+    return freezeObject(Visibility);
 });

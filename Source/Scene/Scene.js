@@ -592,6 +592,8 @@ define([
          *
          * @type {FrameState}
          * @readonly
+         *
+         * @private
          */
         frameState : {
             get: function() {
@@ -973,12 +975,11 @@ define([
         }
     }
 
-    var transformFrom2D = Matrix4.inverseTransformation(//
-                            new Matrix4(0.0, 0.0, 1.0, 0.0, //
-                                        1.0, 0.0, 0.0, 0.0, //
-                                        0.0, 1.0, 0.0, 0.0, //
-                                        0.0, 0.0, 0.0, 1.0));
-
+    var transformFrom2D = new Matrix4(0.0, 0.0, 1.0, 0.0,
+                                        1.0, 0.0, 0.0, 0.0,
+                                        0.0, 1.0, 0.0, 0.0,
+                                        0.0, 0.0, 0.0, 1.0);
+    transformFrom2D = Matrix4.inverseTransformation(transformFrom2D, transformFrom2D);
     function executeCommand(command, scene, context, passState, renderState, shaderProgram, debugFramebuffer) {
         if ((defined(scene.debugCommandFilter)) && !scene.debugCommandFilter(command)) {
             return;
@@ -1008,7 +1009,7 @@ define([
             })));
 
             if (frameState.mode !== SceneMode.SCENE3D) {
-                center = Matrix4.multiplyByPoint(transformFrom2D, center);
+                center = Matrix4.multiplyByPoint(transformFrom2D, center, center);
                 var projection = frameState.mapProjection;
                 var centerCartographic = projection.unproject(center);
                 center = projection.ellipsoid.cartographicToCartesian(centerCartographic);
@@ -1017,7 +1018,7 @@ define([
             scene._debugSphere = new Primitive({
                 geometryInstances : new GeometryInstance({
                     geometry : geometry,
-                    modelMatrix : Matrix4.multiplyByTranslation(Matrix4.IDENTITY, center),
+                    modelMatrix : Matrix4.multiplyByTranslation(Matrix4.IDENTITY, center, new Matrix4()),
                     attributes : {
                         color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
                     }

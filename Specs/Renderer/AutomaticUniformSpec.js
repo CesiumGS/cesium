@@ -47,7 +47,7 @@ defineSuite([
     function createMockCamera(view, projection, infiniteProjection, position, direction, right, up) {
         return {
             viewMatrix : defaultValue(view, Matrix4.clone(Matrix4.IDENTITY)),
-            inverseViewMatrix : Matrix4.inverseTransformation(defaultValue(view, Matrix4.clone(Matrix4.IDENTITY))),
+            inverseViewMatrix : Matrix4.inverseTransformation(defaultValue(view, Matrix4.clone(Matrix4.IDENTITY)), new Matrix4()),
             frustum : {
                 near : 1.0,
                 far : 1000.0,

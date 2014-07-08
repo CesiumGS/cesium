@@ -60,18 +60,15 @@ define([
      * @exports mergeSort
      *
      * @param {Array} array The array to sort.
-     * @param {Function} comparator The function to use to compare the item to elements in the array.
-     *        If the first parameter is less than the second parameter, the function should return a
-     *        negative value.  If it is greater, the function should return a positive value.  If the
-     *        items are equal, it should return 0.
-     * @param {Object} [userDefinedObject] An object to pass as the third parameter to comparator.
+     * @param {mergeSort~Comparator} comparator The function to use to compare elements in the array.
+     * @param {Object} [userDefinedObject] An object to pass as the third parameter to <code>comparator</code>.
      *
      * @example
-     * // Sort an array of numbers in increasing order
-     * var array = // Array of bounding spheres in world coordinates
+     * // Assume array contains BoundingSpheres in world coordinates.
+     * // Sort them in ascending order of distance from the camera.
      * var position = camera.positionWC;
-     * mergeSort(array, function(a, b, position) {
-     *     return BoundingSphere.distanceSquaredTo(b.sphere, position) - BounsingSphere.distanceSquaredTo(a.sphere, position);
+     * Cesium.mergeSort(array, function(a, b, position) {
+     *     return Cesium.BoundingSphere.distanceSquaredTo(b, position) - Cesium.BoundingSphere.distanceSquaredTo(a, position);
      * }, position);
      */
     var mergeSort = function(array, comparator, userDefinedObject) {
@@ -97,6 +94,23 @@ define([
         leftScratchArray.length = 0;
         rightScratchArray.length = 0;
     };
+
+    /**
+     * A function used to compare two items while performing a merge sort.
+     * @callback mergeSort~Comparator
+     *
+     * @param {Object} a An item in the array.
+     * @param {Object} b An item in the array.
+     * @param {Object} [userDefinedObject] An object that was passed to {@link mergeSort}.
+     * @returns {Number} Returns a negative value if <code>a</code> is less than <code>b</code>,
+     *          a positive value if <code>a</code> is greater than <code>b</code>, or
+     *          0 if <code>a</code> is equal to <code>b</code>.
+     *
+     * @example
+     * function compareNumbers(a, b, userDefinedObject) {
+     *     return a - b;
+     * }
+     */
 
     return mergeSort;
 });

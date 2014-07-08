@@ -208,7 +208,7 @@ defineSuite([
             this._va = undefined;
             this._sp = undefined;
             this._rs = undefined;
-            this._modelMatrix = Matrix4.fromTranslation(new Cartesian3(0.0, 0.0, -50000.0));
+            this._modelMatrix = Matrix4.fromTranslation(new Cartesian3(0.0, 0.0, -50000.0), new Matrix4());
 
             this.color = new Color(1.0, 1.0, 0.0, 1.0);
 

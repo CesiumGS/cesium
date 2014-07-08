@@ -129,6 +129,8 @@
 	<property name="clocPath" location="${toolsDirectory}/cloc-1.60/cloc-1.60.pl" />
 	<property name="clocDefinitionsPath" location="${toolsDirectory}/cloc-1.60/cloc_definitions" />
 	<property name="jsHintOptionsPath" location=".jshintrc" />
+	<property name="nodePath" value="node" />
+	<property name="npmPath" value="npm" />
 
 	<!-- Outputs -->
 	<property name="buildDirectory" location="Build" />
@@ -264,7 +266,7 @@
 			<arg value="${clocPath}" />
 			<arg value="--read-lang-def=${clocDefinitionsPath}" />
 			<arg value="Source/Core/" />
-			<arg value="Source/DynamicScene/" />
+			<arg value="Source/DataSources/" />
 			<arg value="Source/Renderer/" />
 			<arg value="Source/Scene/" />
 			<arg value="Source/Widgets/" />
@@ -284,7 +286,7 @@
 	</target>
 
 	<target name="checkForNode">
-		<exec executable="node" failonerror="false" failifexecutionfails="false" resultproperty="node.exec.result">
+		<exec executable="${nodePath}" failonerror="false" failifexecutionfails="false" resultproperty="node.exec.result">
 			<arg value="--version" />
 		</exec>
 		<fail message="Node.js is required to run this part of the build.  Install from http://nodejs.org/">
@@ -337,7 +339,7 @@
 	</target>
 
 	<target name="combineJavaScript.combineCesium" depends="combineJavaScript.combineCesium.check" unless="no.combineCesium.create">
-		<exec executable="node" dir="${sourceDirectory}">
+		<exec executable="${nodePath}" dir="${sourceDirectory}">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />
@@ -353,7 +355,7 @@
 
 	<target name="combineJavaScript.combineCesiumWorkers" depends="combineJavaScript.combineCesiumWorkers.check" unless="no.combineCesiumWorkers.create">
 		<!-- create standalone worker files -->
-		<apply executable="node" dir="${sourceDirectory}" relative="true" force="true">
+		<apply executable="${nodePath}" dir="${sourceDirectory}" relative="true" force="true">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />
@@ -378,7 +380,7 @@
 		</apply>
 
 		<!-- create combined worker layer files -->
-		<apply executable="node" dir="${sourceDirectory}" relative="true" force="true">
+		<apply executable="${nodePath}" dir="${sourceDirectory}" relative="true" force="true">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />
@@ -454,7 +456,7 @@
 				<include name="**/*.css" />
 			</fileset>
 		</copy>
-		<apply executable="node" dir="${buildOutputDirectory}" relative="true">
+		<apply executable="${nodePath}" dir="${buildOutputDirectory}" relative="true">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />
@@ -472,7 +474,7 @@
 	</condition>
 
 	<target name="npmInstall.nonWindows" unless="os.windows">
-		<exec executable="npm" dir="${basedir}" failonerror="true">
+		<exec executable="${npmPath}" dir="${basedir}" failonerror="true">
 			<arg value="install" />
 		</exec>
 	</target>
@@ -480,7 +482,7 @@
 	<target name="npmInstall.windows" if="os.windows">
 		<exec executable="cmd" dir="${basedir}" failonerror="true">
 			<arg value="/c" />
-			<arg value="npm.cmd" />
+			<arg value="${npmPath}" />
 			<arg value="install" />
 		</exec>
 	</target>
@@ -488,7 +490,7 @@
 	<target name="npmInstall" depends="npmInstall.windows,npmInstall.nonWindows" />
 
 	<target name="generateDocumentation" depends="checkForNode,npmInstall" description="Generates HTML documentation.">
-		<exec executable="node" dir="${basedir}" failonerror="true">
+		<exec executable="${nodePath}" dir="${basedir}" failonerror="true">
 			<env key="CESIUM_VERSION" value="${version}" />
 			<arg value="node_modules/jsdoc/jsdoc.js" />
 			<arg line="--configure Tools/jsdoc/conf.json" />
@@ -504,7 +506,7 @@
 		<condition property="runServer.arg.public" value="--public" else="">
 			<istrue value="${runServer.public}" />
 		</condition>
-		<exec executable="node" dir="${basedir}" failonerror="true">
+		<exec executable="${nodePath}" dir="${basedir}" failonerror="true">
 			<arg value="server.js" />
 			<arg line="${runServer.arg.public}" />
 			<arg line="--port ${runServer.port}" />
@@ -528,7 +530,7 @@
 		<property name="relativeCesiumViewerOutputDirectory" location="${cesiumViewerOutputDirectory}" relative="true" basedir="${cesiumViewerDirectory}" />
 
 		<!-- mainConfigFile is relative to the build.js file -->
-		<exec executable="node" dir="${cesiumViewerDirectory}">
+		<exec executable="${nodePath}" dir="${cesiumViewerDirectory}">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />
@@ -539,7 +541,7 @@
 			<arg value="out=${relativeCesiumViewerOutputDirectory}/CesiumViewerStartup.js" />
 		</exec>
 
-		<exec executable="node" dir="${cesiumViewerDirectory}">
+		<exec executable="${nodePath}" dir="${cesiumViewerDirectory}">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />

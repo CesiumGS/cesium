@@ -34,41 +34,41 @@ define([
      * @example
      * // Create an instance that spans August 1st, 1980 and is associated
      * // with a Cartesian position.
-     * var timeInterval = new TimeInterval({
-     *     start : JulianDate.fromIso8601('1980-08-01T00:00:00Z'),
-     *     stop : JulianDate.fromIso8601('1980-08-02T00:00:00Z'),
+     * var timeInterval = new Cesium.TimeInterval({
+     *     start : Cesium.JulianDate.fromIso8601('1980-08-01T00:00:00Z'),
+     *     stop : Cesium.JulianDate.fromIso8601('1980-08-02T00:00:00Z'),
      *     isStartTimeIncluded : true,
      *     iSStopTimeIncluded : false,
-     *     data : Cartesian.fromDegrees(39.921037, -75.170082)
+     *     data : Cesium.Cartesian.fromDegrees(39.921037, -75.170082)
      * });
      *
      * @example
      * // Create two instances from ISO 8601 intervals with associated numeric data
      * // then compute their intersection, summing the data they contain.
-     * var left = TimeInterval.fromIso8601({
+     * var left = Cesium.TimeInterval.fromIso8601({
      *     iso8601 : '2000/2010',
      *     data : 2
      * });
      *
-     * var right = TimeInterval.fromIso8601({
+     * var right = Cesium.TimeInterval.fromIso8601({
      *     iso8601 : '1995/2005',
      *     data : 3
      * });
      *
      * //The result of the below intersection will be an interval equivalent to
-     * //var intersection = TimeInterval.fromIso8601({
+     * //var intersection = Cesium.TimeInterval.fromIso8601({
      * //  iso8601 : '2000/2005',
      * //  data : 5
      * //});
-     * var intersection = new TimeInterval();
-     * TimeInterval.intersect(left, right, intersection, function(leftData, rightData) {
+     * var intersection = new Cesium.TimeInterval();
+     * Cesium.TimeInterval.intersect(left, right, intersection, function(leftData, rightData) {
      *     return leftData + rightData;
      * });
      *
      * @example
      * // Check if an interval contains a specific time.
-     * var dateToCheck = JulianDate.fromIso8601('1982-09-08T11:30:00Z');
-     * var containsDate = TimeInterval.contains(timeInterval, dateToCheck);
+     * var dateToCheck = Cesium.JulianDate.fromIso8601('1982-09-08T11:30:00Z');
+     * var containsDate = Cesium.TimeInterval.contains(timeInterval, dateToCheck);
      */
     var TimeInterval = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
