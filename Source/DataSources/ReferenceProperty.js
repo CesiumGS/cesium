@@ -25,7 +25,7 @@ define([
 
                 targetEntity = targetCollection.getById(that._targetId);
                 if (!defined(targetEntity)) {
-                    throw new RuntimeError('target object could not be resolved.');
+                    throw new RuntimeError('target entity "' + that._targetId + '" could not be resolved.');
                 }
                 targetEntity.definitionChanged.addEventListener(ReferenceProperty.prototype._onTargetEntityDefinitionChanged, that);
                 that._targetEntity = targetEntity;
@@ -38,7 +38,7 @@ define([
             for (var i = 0; i < length; i++) {
                 targetProperty = targetProperty[names[i]];
                 if (!defined(targetProperty)) {
-                    throw new RuntimeError('targetProperty could not be resolved.');
+                    throw new RuntimeError('targetProperty "' + names[i] + '" could not be resolved.');
                 }
             }
 
@@ -53,20 +53,20 @@ define([
      * @alias ReferenceProperty
      * @constructor
      *
-     * @param {targetCollection} targetCollection The object collection which will be used to resolve the reference.
-     * @param {String} targetId The id of the object which is being referenced.
-     * @param {String} targetPropertyNames The name of the property on the target object which we will use.
+     * @param {EntityCollection} targetCollection The entity collection which will be used to resolve the reference.
+     * @param {String} targetId The id of the entity which is being referenced.
+     * @param {String} targetPropertyNames The name of the property on the target entity which we will use.
      *
      * @example
      * var collection = new Cesium.EntityCollection();
      *
-     * //Create a new object and assign a billboard scale.
+     * //Create a new entity and assign a billboard scale.
      * var object1 = new Cesium.Entity('object1');
      * object1.billboard = new Cesium.BillboardGraphics();
      * object1.billboard.scale = new Cesium.ConstantProperty(2.0);
      * collection.add(object1);
      *
-     * //Create a second object and reference the scale from the first one.
+     * //Create a second entity and reference the scale from the first one.
      * var object2 = new Cesium.Entity('object2');
      * object2.model = new Cesium.ModelGraphics();
      * object2.model.scale = new Cesium.ReferenceProperty(collection, 'object1', ['billboard', 'scale']);
@@ -78,7 +78,7 @@ define([
      * object3.billboard.scale = Cesium.ReferenceProperty.fromString(collection, 'object1#billboard.scale']);
      * collection.add(object3);
      *
-     * //You can refer to an object with a # or . in id and property names by escaping them.
+     * //You can refer to an entity with a # or . in id and property names by escaping them.
      * var object4 = new Cesium.Entity('#object.4');
      * object4.billboard = new Cesium.BillboardGraphics();
      * object4.billboard.scale = new Cesium.ConstantProperty(2.0);
@@ -155,7 +155,7 @@ define([
             }
         },
         /**
-         * Gets the id of the object being referenced.
+         * Gets the id of the entity being referenced.
          * @memberof ReferenceProperty.prototype
          * @type {String}
          * @readonly
@@ -166,7 +166,7 @@ define([
             }
         },
         /**
-         * Gets the collection containing the object being referenced.
+         * Gets the collection containing the entity being referenced.
          * @memberof ReferenceProperty.prototype
          * @type {EntityCollection}
          * @readonly
@@ -202,7 +202,7 @@ define([
 
     /**
      * Creates a new instance given the entity collection that will
-     * be used to resolve it and a string indicating the target object id and property.
+     * be used to resolve it and a string indicating the target entity id and property.
      * The format of the string is "objectId#foo.bar", where # separates the id from
      * property path and . separates sub-properties.  If the reference identifier or
      * or any sub-properties contains a # . or \ they must be escaped.
