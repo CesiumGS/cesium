@@ -85,4 +85,49 @@ defineSuite([
         var numVertices = positions.length;
         expect(line.attributes.color.values.length).toEqual(numVertices * 4);
     });
+
+
+    it('constructor computes all vertex attributes, no subdivision', function() {
+        var positions = [new Cartesian3(), new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(2.0, 0.0, 0.0)];
+        var line = SimplePolylineGeometry.createGeometry(new SimplePolylineGeometry({
+            positions : positions,
+            raiseToSurface: false
+        }));
+
+        expect(line.attributes.position.values).toEqual([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 2.0, 0.0, 0.0]);
+        expect(line.indices).toEqual([0, 1, 1, 2]);
+        expect(line.primitiveType).toEqual(PrimitiveType.LINES);
+        expect(line.boundingSphere).toEqual(BoundingSphere.fromPoints(positions));
+    });
+
+    it('constructor computes per segment colors, no subdivision', function() {
+        var positions = [new Cartesian3(), new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(2.0, 0.0, 0.0)];
+        var colors = [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0), new Color(0.0, 0.0, 1.0, 1.0)];
+        var line = SimplePolylineGeometry.createGeometry(new SimplePolylineGeometry({
+            positions : positions,
+            colors : colors,
+            raiseToSurface: false
+        }));
+
+        expect(line.attributes.color).toBeDefined();
+
+        var numVertices = (positions.length * 2 - 2);
+        expect(line.attributes.color.values.length).toEqual(numVertices * 4);
+    });
+
+    it('constructor computes per vertex colors, no subdivision', function() {
+        var positions = [new Cartesian3(), new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(2.0, 0.0, 0.0)];
+        var colors = [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0), new Color(0.0, 0.0, 1.0, 1.0)];
+        var line = SimplePolylineGeometry.createGeometry(new SimplePolylineGeometry({
+            positions : positions,
+            colors : colors,
+            colorsPerVertex : true,
+            raiseToSurface: false
+        }));
+
+        expect(line.attributes.color).toBeDefined();
+
+        var numVertices = positions.length;
+        expect(line.attributes.color.values.length).toEqual(numVertices * 4);
+    });
 });

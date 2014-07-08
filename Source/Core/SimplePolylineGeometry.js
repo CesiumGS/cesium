@@ -148,6 +148,7 @@ define([
         var length = positions.length;
 
         var positionValues;
+        var numberOfPositions;
         var colorValues;
         var p0, p1, c0, c1, ci;
         var color;
@@ -219,6 +220,9 @@ define([
                 }
             }
         } else {
+            numberOfPositions = perSegmentColors ? positions.length * 2 - 2 : positions.length;
+            positionValues = new Float64Array(numberOfPositions * 3);
+            colorValues = defined(colors) ? new Uint8Array(numberOfPositions * 4) : undefined;
             for (i = 0; i < length; ++i) {
                 var p = positions[i];
 
@@ -267,7 +271,7 @@ define([
         }
 
 
-        var numberOfPositions = positionValues.length / 3;
+        numberOfPositions = positionValues.length / 3;
         var numberOfIndices = (numberOfPositions - 1) * 2;
         var indices = IndexDatatype.createTypedArray(numberOfPositions, numberOfIndices);
 
