@@ -143,7 +143,7 @@ define([
         var startTime = Iso8601.MAXIMUM_VALUE;
         var stopTime = Iso8601.MINIMUM_VALUE;
         var entities = this._entities.values;
-        for ( var i = 0, len = entities.length; i < len; i++) {
+        for (var i = 0, len = entities.length; i < len; i++) {
             var object = entities[i];
             var availability = object.availability;
             if (defined(availability)) {
