@@ -45,7 +45,7 @@ function needsSignature(doclet) {
     var needsSig = false;
 
     // function and class definitions always get a signature
-    if (doclet.kind === 'function' || doclet.kind === 'class') {
+    if (doclet.kind === 'function' || doclet.kind === 'class' || doclet.kind === 'module') {
         needsSig = true;
     }
     // typedefs that contain functions get a signature, too
@@ -180,7 +180,7 @@ function buildNav(members) {
         classNav = '',
         globalNav = '';
 
-    var items = members.modules.concat(members.classes).sort(function(a, b) {
+    var items = members.modules.concat(members.classes).concat(members.namespaces).sort(function(a, b) {
         return a.longname.toLowerCase().localeCompare(b.longname.toLowerCase());
     });
 
@@ -375,6 +375,7 @@ exports.publish = function(taffyData, opts, tutorials) {
     // set up the lists that we'll use to generate pages
     var classes = taffy(members.classes);
     var modules = taffy(members.modules);
+    var namespaces = taffy(members.namespaces);
 
     var typesJson = {};
 
@@ -383,6 +384,10 @@ exports.publish = function(taffyData, opts, tutorials) {
 
         if (!items.length) {
             items = helper.find(modules, {longname: longname});
+        }
+
+        if (!items.length) {
+            items = helper.find(namespaces, {longname: longname});
         }
 
         if (items.length) {

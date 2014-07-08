@@ -13,7 +13,6 @@ defineSuite([
         'Specs/createContext',
         'Specs/createFrameState',
         'Specs/destroyContext',
-        'Specs/frameState',
         'Specs/render'
     ], function(
         Material,
@@ -29,12 +28,12 @@ defineSuite([
         createContext,
         createFrameState,
         destroyContext,
-        frameState,
         render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
+    var frameState;
     var polygon;
     var polylines;
     var polyline;
@@ -42,6 +41,7 @@ defineSuite([
 
     beforeAll(function() {
         context = createContext();
+        frameState = createFrameState();
     });
 
     afterAll(function() {

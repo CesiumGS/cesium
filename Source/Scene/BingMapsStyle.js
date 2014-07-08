@@ -8,7 +8,8 @@ define([
     /**
      * The types of imagery provided by Bing Maps.
      *
-     * @exports BingMapsStyle
+     * @namespace
+     * @alias BingMapsStyle
      *
      * @see BingMapsImageryProvider
      */

@@ -8,7 +8,8 @@ define([
     /**
      * Defined the orientation of stripes in {@link StripeMaterialProperty}.
      *
-     * @exports StripeOrientation
+     * @namespace
+     * @alias StripeOrientation
      */
     var StripeOrientation = {
         /**
@@ -16,6 +17,7 @@ define([
          * @type {Number}
          */
         HORIZONTAL : 0,
+
         /**
          * Vertical orientation.
          * @type {Number}

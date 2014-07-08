@@ -8,7 +8,8 @@ define([
     /**
      * Determines the action taken based on the result of the stencil test.
      *
-     * @exports StencilOperation
+     * @namespace
+     * @alias StencilOperation
      */
     var StencilOperation = {
         /**

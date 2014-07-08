@@ -267,7 +267,7 @@ define([
 
         var position = SceneTransforms.computeActualWgs84Position(frameState, sunPosition, scratchCartesian4);
 
-        var dist = Cartesian3.magnitude(Cartesian3.subtract(position, frameState.camera.position, scratchCartesian4));
+        var dist = Cartesian3.magnitude(Cartesian3.subtract(position, scene.camera.position, scratchCartesian4));
         var projMatrix = context.uniformState.projection;
 
         var positionEC = scratchPositionEC;
