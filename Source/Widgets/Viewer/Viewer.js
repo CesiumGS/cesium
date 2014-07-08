@@ -7,8 +7,8 @@ define([
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/EventHelper',
-        '../../DynamicScene/DataSourceCollection',
-        '../../DynamicScene/DataSourceDisplay',
+        '../../DataSources/DataSourceCollection',
+        '../../DataSources/DataSourceDisplay',
         '../../ThirdParty/knockout',
         '../Animation/Animation',
         '../Animation/AnimationViewModel',
@@ -116,7 +116,7 @@ define([
      * @see SceneModePicker
      * @see Timeline
      * @see viewerDragDropMixin
-     * @see viewerDynamicObjectMixin
+     * @see viewerEntityMixin
      *
      * @example
      * //Initialize the viewer widget with several custom options and mixins.
@@ -154,7 +154,7 @@ define([
      * viewer.extend(Cesium.viewerDragDropMixin);
      *
      * //Allow users to zoom and follow objects loaded from CZML by clicking on it.
-     * viewer.extend(Cesium.viewerDynamicObjectMixin);
+     * viewer.extend(Cesium.viewerEntityMixin);
      *
      * //Show a pop-up alert if we encounter an error when processing a dropped file
      * viewer.dropError.addEventListener(function(dropHandler, name, error) {
@@ -415,14 +415,14 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             if (automaticallyTrackDataSourceClocks) {
                 that.clockTrackedDataSource = dataSource;
             }
-            var id = dataSource.dynamicObjects.id;
+            var id = dataSource.entities.id;
             var removalFunc = eventHelper.add(dataSource.changedEvent, onDataSourceChanged);
             that._dataSourceChangedListeners[id] = removalFunc;
         };
 
         var onDataSourceRemoved = function(dataSourceCollection, dataSource) {
             var resetClock = (that.clockTrackedDataSource === dataSource);
-            var id = dataSource.dynamicObjects.id;
+            var id = dataSource.entities.id;
             that._dataSourceChangedListeners[id]();
             that._dataSourceChangedListeners[id] = undefined;
             if (resetClock) {
@@ -769,7 +769,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * @param {Object} options The options object to be passed to the mixin function.
      *
      * @see viewerDragDropMixin
-     * @see viewerDynamicObjectMixin
+     * @see viewerEntityMixin
      */
     Viewer.prototype.extend = function(mixin, options) {
         //>>includeStart('debug', pragmas.debug);
