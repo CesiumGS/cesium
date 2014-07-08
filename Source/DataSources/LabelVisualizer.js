@@ -66,7 +66,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var entities = this._entityCollection.getObjects();
+        var entities = this._entityCollection.entities;
         for (var i = 0, len = entities.length; i < len; i++) {
             updateObject(this, time, entities[i]);
         }
@@ -89,7 +89,7 @@ define([
         var entityCollection = this._entityCollection;
         entityCollection.collectionChanged.removeEventListener(LabelVisualizer.prototype._onObjectsRemoved, this);
 
-        var entities = entityCollection.getObjects();
+        var entities = entityCollection.entities;
         var length = entities.length;
         for (var i = 0; i < length; i++) {
             entities[i]._labelVisualizerIndex = undefined;

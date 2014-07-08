@@ -54,23 +54,23 @@ define([
         var collectionsCopyLength = collectionsCopy.length;
 
         var i;
-        var object;
-        var objects;
-        var iObjects;
+        var entity;
+        var entities;
+        var iEntities;
         var collection;
         var composite = that._composite;
-        var newObjects = new EntityCollection();
+        var newEntities = new EntityCollection();
         var eventHash = that._eventHash;
         var collectionId;
 
         for (i = 0; i < collectionsCopyLength; i++) {
             collection = collectionsCopy[i];
             collection.collectionChanged.removeEventListener(CompositeEntityCollection.prototype._onCollectionChanged, that);
-            objects = collection.getObjects();
+            entities = collection.entities;
             collectionId = collection.id;
-            for (iObjects = objects.length - 1; iObjects > -1; iObjects--) {
-                object = objects[iObjects];
-                unsubscribeFromEntity(that, eventHash, collectionId, object);
+            for (iEntities = entities.length - 1; iEntities > -1; iEntities--) {
+                entity = entities[iEntities];
+                unsubscribeFromEntity(that, eventHash, collectionId, entity);
             }
         }
 
@@ -78,33 +78,33 @@ define([
             collection = collections[i];
             collection.collectionChanged.addEventListener(CompositeEntityCollection.prototype._onCollectionChanged, that);
 
-            //Merge all of the existing objects.
-            objects = collection.getObjects();
+            //Merge all of the existing entities.
+            entities = collection.entities;
             collectionId = collection.id;
-            for (iObjects = objects.length - 1; iObjects > -1; iObjects--) {
-                object = objects[iObjects];
-                subscribeToEntity(that, eventHash, collectionId, object);
+            for (iEntities = entities.length - 1; iEntities > -1; iEntities--) {
+                entity = entities[iEntities];
+                subscribeToEntity(that, eventHash, collectionId, entity);
 
-                var compositeObject = newObjects.getById(object.id);
-                if (!defined(compositeObject)) {
-                    compositeObject = composite.getById(object.id);
-                    if (!defined(compositeObject)) {
-                        compositeObject = new Entity(object.id);
+                var compositeEntity = newEntities.getById(entity.id);
+                if (!defined(compositeEntity)) {
+                    compositeEntity = composite.getById(entity.id);
+                    if (!defined(compositeEntity)) {
+                        compositeEntity = new Entity(entity.id);
                     } else {
-                        clean(compositeObject);
+                        clean(compositeEntity);
                     }
-                    newObjects.add(compositeObject);
+                    newEntities.add(compositeEntity);
                 }
-                compositeObject.merge(object);
+                compositeEntity.merge(entity);
             }
         }
         that._collectionsCopy = collections.slice(0);
 
         composite.suspendEvents();
         composite.removeAll();
-        var newObjectsArray = newObjects.getObjects();
-        for (i = 0; i < newObjectsArray.length; i++) {
-            composite.add(newObjectsArray[i]);
+        var newEntitiesArray = newEntities.entities;
+        for (i = 0; i < newEntitiesArray.length; i++) {
+            composite.add(newEntitiesArray[i]);
         }
         composite.resumeEvents();
     }
@@ -112,7 +112,7 @@ define([
     /**
      * Non-destructively composites multiple {@link EntityCollection} instances into a single collection.
      * If a Entity with the same ID exists in multiple collections, it is non-destructively
-     * merged into a single new object instance.  If an object has the same property in multiple
+     * merged into a single new entity instance.  If an entity has the same property in multiple
      * collections, the property of the Entity in the last collection of the list it
      * belongs to is used.  CompositeEntityCollection can be used almost anywhere that a
      * EntityCollection is used.
@@ -135,10 +135,10 @@ define([
 
     defineProperties(CompositeEntityCollection.prototype, {
         /**
-         * Gets the event that is fired when objects are added or removed from the collection.
+         * Gets the event that is fired when entities are added or removed from the collection.
          * The generated event is a {@link EntityCollection.collectionChangedEventCallback}.
          * @memberof CompositeEntityCollection.prototype
-         *
+         * @readonly
          * @type {Event}
          */
         collectionChanged : {
@@ -149,12 +149,24 @@ define([
         /**
          * Gets a globally unique identifier for this collection.
          * @memberof CompositeEntityCollection.prototype
-         *
+         * @readonly
          * @type {String}
          */
         id : {
             get : function() {
                 return this._id;
+            }
+        },
+        /**
+         * Gets the array of Entity instances in the collection.
+         * This array should not be modified directly.
+         * @memberof CompositeEntityCollection.prototype
+         * @readonly
+         * @type {Entity[]}
+         */
+        entities : {
+            get : function() {
+                return this._composite.entities;
             }
         }
     });
@@ -409,23 +421,13 @@ define([
     };
 
     /**
-     * Gets an object with the specified id.
+     * Gets an entity with the specified id.
      *
-     * @param {Object} id The id of the object to retrieve.
-     * @returns {Entity} The object with the provided id or undefined if the id did not exist in the collection.
+     * @param {Object} id The id of the entity to retrieve.
+     * @returns {Entity} The entity with the provided id or undefined if the id did not exist in the collection.
      */
     CompositeEntityCollection.prototype.getById = function(id) {
         return this._composite.getById(id);
-    };
-
-    /**
-     * Gets the array of Entity instances in the collection.
-     * The array should not be modified directly.
-     *
-     * @returns {Entity[]} the array of Entity instances in the collection.
-     */
-    CompositeEntityCollection.prototype.getObjects = function() {
-        return this._composite.getObjects();
     };
 
     CompositeEntityCollection.prototype._onCollectionChanged = function(collection, added, removed) {
@@ -436,57 +438,57 @@ define([
 
         var i;
         var q;
-        var object;
-        var compositeObject;
+        var entity;
+        var compositeEntity;
         var removedLength = removed.length;
         var eventHash = this._eventHash;
         var collectionId = collection.id;
         for (i = 0; i < removedLength; i++) {
-            var removedObject = removed[i];
-            unsubscribeFromEntity(this, eventHash, collectionId, removedObject);
+            var removedEntity = removed[i];
+            unsubscribeFromEntity(this, eventHash, collectionId, removedEntity);
 
-            var removedId = removedObject.id;
-            //Check if the removed object exists in any of the remaining collections
+            var removedId = removedEntity.id;
+            //Check if the removed entity exists in any of the remaining collections
             //If so, we clean and remerge it.
             for (q = collectionsLength - 1; q >= 0; q--) {
-                object = collections[q].getById(removedId);
-                if (defined(object)) {
-                    if (!defined(compositeObject)) {
-                        compositeObject = composite.getById(removedId);
-                        clean(compositeObject);
+                entity = collections[q].getById(removedId);
+                if (defined(entity)) {
+                    if (!defined(compositeEntity)) {
+                        compositeEntity = composite.getById(removedId);
+                        clean(compositeEntity);
                     }
-                    compositeObject.merge(object);
+                    compositeEntity.merge(entity);
                 }
             }
-            //We never retrieved the compositeObject, which means it no longer
+            //We never retrieved the compositeEntity, which means it no longer
             //exists in any of the collections, remove it from the composite.
-            if (!defined(compositeObject)) {
+            if (!defined(compositeEntity)) {
                 composite.removeById(removedId);
             }
         }
 
         var addedLength = added.length;
         for (i = 0; i < addedLength; i++) {
-            var addedObject = added[i];
-            subscribeToEntity(this, eventHash, collectionId, addedObject);
+            var addedEntity = added[i];
+            subscribeToEntity(this, eventHash, collectionId, addedEntity);
 
-            var addedId = addedObject.id;
-            //We know the added object exists in at least one collection,
+            var addedId = addedEntity.id;
+            //We know the added entity exists in at least one collection,
             //but we need to check all collections and re-merge in order
             //to maintain the priority of properties.
             for (q = collectionsLength - 1; q >= 0; q--) {
-                object = collections[q].getById(addedId);
-                if (defined(object)) {
-                    if (!defined(compositeObject)) {
-                        compositeObject = composite.getById(addedId);
-                        if (!defined(compositeObject)) {
-                            compositeObject = new Entity(addedId);
-                            composite.add(compositeObject);
+                entity = collections[q].getById(addedId);
+                if (defined(entity)) {
+                    if (!defined(compositeEntity)) {
+                        compositeEntity = composite.getById(addedId);
+                        if (!defined(compositeEntity)) {
+                            compositeEntity = new Entity(addedId);
+                            composite.add(compositeEntity);
                         } else {
-                            clean(compositeObject);
+                            clean(compositeEntity);
                         }
                     }
-                    compositeObject.merge(object);
+                    compositeEntity.merge(entity);
                 }
             }
         }
@@ -500,14 +502,14 @@ define([
 
         var collectionsLength = collections.length;
         var id = entity.id;
-        var compositeObject = composite.getById(id);
-        var compositeProperty = compositeObject[propertyName];
+        var compositeEntity = composite.getById(id);
+        var compositeProperty = compositeEntity[propertyName];
 
         var firstTime = true;
         for (var q = collectionsLength - 1; q >= 0; q--) {
-            var object = collections[q].getById(entity.id);
-            if (defined(object)) {
-                var property = object[propertyName];
+            var innerEntity = collections[q].getById(entity.id);
+            if (defined(innerEntity)) {
+                var property = innerEntity[propertyName];
                 if (defined(property)) {
                     if (firstTime) {
                         firstTime = false;
@@ -525,7 +527,7 @@ define([
                 }
             }
         }
-        compositeObject[propertyName] = compositeProperty;
+        compositeEntity[propertyName] = compositeProperty;
     };
 
     return CompositeEntityCollection;

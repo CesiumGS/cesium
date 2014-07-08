@@ -30,23 +30,23 @@ define([
     /**
      * A mixin which adds behavior to the Viewer widget for dealing with Entity instances.
      * This allows for Entitys to be tracked with the camera, either by the viewer clicking
-     * on them, or by setting the trackedObject property.
+     * on them, or by setting the trackedEntity property.
      * Rather than being called directly, this function is normally passed as
      * a parameter to {@link Viewer#extend}, as shown in the example below.
      * @exports viewerEntityMixin
      *
      * @param {Viewer} viewer The viewer instance.
      *
-     * @exception {DeveloperError} trackedObject is already defined by another mixin.
-     * @exception {DeveloperError} selectedObject is already defined by another mixin.
+     * @exception {DeveloperError} trackedEntity is already defined by another mixin.
+     * @exception {DeveloperError} selectedEntity is already defined by another mixin.
      *
      * @example
      * // Add support for working with Entity instances to the Viewer.
      * var entity = ... //A Cesium.Entity instance
      * var viewer = new Cesium.Viewer('cesiumContainer');
      * viewer.extend(Cesium.viewerEntityMixin);
-     * viewer.trackedObject = entity; //Camera will now track entity
-     * viewer.selectedObject = object; //Selection will now appear over object
+     * viewer.trackedEntity = entity; //Camera will now track entity
+     * viewer.selectedEntity = entity; //Selection will now appear over object
      */
 
     var viewerEntityMixin = function(viewer) {
@@ -54,11 +54,11 @@ define([
         if (!defined(viewer)) {
             throw new DeveloperError('viewer is required.');
         }
-        if (viewer.hasOwnProperty('trackedObject')) {
-            throw new DeveloperError('trackedObject is already defined by another mixin.');
+        if (viewer.hasOwnProperty('trackedEntity')) {
+            throw new DeveloperError('trackedEntity is already defined by another mixin.');
         }
-        if (viewer.hasOwnProperty('selectedObject')) {
-            throw new DeveloperError('selectedObject is already defined by another mixin.');
+        if (viewer.hasOwnProperty('selectedEntity')) {
+            throw new DeveloperError('selectedEntity is already defined by another mixin.');
         }
         //>>includeEnd('debug');
 
@@ -73,26 +73,26 @@ define([
         var eventHelper = new EventHelper();
         var entityView;
 
-        function trackSelectedObject() {
-            viewer.trackedObject = viewer.selectedObject;
+        function trackSelectedEntity() {
+            viewer.trackedEntity = viewer.selectedEntity;
         }
 
         function clearTrackedObject() {
-            viewer.trackedObject = undefined;
+            viewer.trackedEntity = undefined;
         }
 
-        function clearSelectedObject() {
-            viewer.selectedObject = undefined;
+        function clearSelectedEntity() {
+            viewer.selectedEntity = undefined;
         }
 
         function clearObjects() {
-            viewer.trackedObject = undefined;
-            viewer.selectedObject = undefined;
+            viewer.trackedEntity = undefined;
+            viewer.selectedEntity = undefined;
         }
 
         if (defined(infoBoxViewModel)) {
-            eventHelper.add(infoBoxViewModel.cameraClicked, trackSelectedObject);
-            eventHelper.add(infoBoxViewModel.closeClicked, clearSelectedObject);
+            eventHelper.add(infoBoxViewModel.cameraClicked, trackSelectedEntity);
+            eventHelper.add(infoBoxViewModel.closeClicked, clearSelectedEntity);
         }
 
         var scratchVertexPositions;
@@ -105,19 +105,19 @@ define([
                 entityView.update(time);
             }
 
-            var selectedObject = viewer.selectedObject;
-            var showSelection = defined(selectedObject) && enableInfoOrSelection;
+            var selectedEntity = viewer.selectedEntity;
+            var showSelection = defined(selectedEntity) && enableInfoOrSelection;
             if (showSelection) {
                 var oldPosition = defined(selectionIndicatorViewModel) ? selectionIndicatorViewModel.position : undefined;
                 var position;
                 var enableCamera = false;
 
-                if (selectedObject.isAvailable(time)) {
-                    if (defined(selectedObject.position)) {
-                        position = selectedObject.position.getValue(time, oldPosition);
-                        enableCamera = defined(position) && (viewer.trackedObject !== viewer.selectedObject);
-                    } else if (defined(selectedObject.vertexPositions)) {
-                        scratchVertexPositions = selectedObject.vertexPositions.getValue(time, scratchVertexPositions);
+                if (selectedEntity.isAvailable(time)) {
+                    if (defined(selectedEntity.position)) {
+                        position = selectedEntity.position.getValue(time, oldPosition);
+                        enableCamera = defined(position) && (viewer.trackedEntity !== viewer.selectedEntity);
+                    } else if (defined(selectedEntity.vertexPositions)) {
+                        scratchVertexPositions = selectedEntity.vertexPositions.getValue(time, scratchVertexPositions);
                         scratchBoundingSphere = BoundingSphere.fromPoints(scratchVertexPositions, scratchBoundingSphere);
                         position = scratchBoundingSphere.center;
                         // Can't track scratch positions: "enableCamera" is false.
@@ -132,10 +132,10 @@ define([
 
                 if (defined(infoBoxViewModel)) {
                     infoBoxViewModel.enableCamera = enableCamera;
-                    infoBoxViewModel.isCameraTracking = (viewer.trackedObject === viewer.selectedObject);
+                    infoBoxViewModel.isCameraTracking = (viewer.trackedEntity === viewer.selectedEntity);
 
-                    if (defined(selectedObject.description)) {
-                        infoBoxViewModel.descriptionRawHtml = defaultValue(selectedObject.description.getValue(time), '');
+                    if (defined(selectedEntity.description)) {
+                        infoBoxViewModel.descriptionRawHtml = defaultValue(selectedEntity.description.getValue(time), '');
                     } else {
                         infoBoxViewModel.descriptionRawHtml = '';
                     }
@@ -165,7 +165,7 @@ define([
 
         function trackObject(entity) {
             if (defined(entity) && defined(entity.position)) {
-                viewer.trackedObject = entity;
+                viewer.trackedEntity = entity;
             }
         }
 
@@ -177,17 +177,17 @@ define([
         }
 
         function pickAndSelectObject(e) {
-            viewer.selectedObject = pickEntity(e);
+            viewer.selectedEntity = pickEntity(e);
         }
 
         // Subscribe to the home button beforeExecute event if it exists,
-        // so that we can clear the trackedObject.
+        // so that we can clear the trackedEntity.
         if (defined(viewer.homeButton)) {
             eventHelper.add(viewer.homeButton.viewModel.command.beforeExecute, clearTrackedObject);
         }
 
         // Subscribe to the geocoder search if it exists, so that we can
-        // clear the trackedObject when it is clicked.
+        // clear the trackedEntity when it is clicked.
         if (defined(viewer.geocoder)) {
             eventHelper.add(viewer.geocoder.viewModel.search.beforeExecute, clearObjects);
         }
@@ -198,11 +198,11 @@ define([
             var length = removed.length;
             for (var i = 0; i < length; i++) {
                 var removedObject = removed[i];
-                if (viewer.trackedObject === removedObject) {
+                if (viewer.trackedEntity === removedObject) {
                     viewer.homeButton.viewModel.command();
                 }
-                if (viewer.selectedObject === removedObject) {
-                    viewer.selectedObject = undefined;
+                if (viewer.selectedEntity === removedObject) {
+                    viewer.selectedEntity = undefined;
                 }
             }
         }
@@ -216,15 +216,15 @@ define([
             var entityCollection = dataSource.entities;
             entityCollection.collectionChanged.removeEventListener(onEntityCollectionChanged);
 
-            if (defined(viewer.trackedObject)) {
-                if (entityCollection.getById(viewer.trackedObject.id) === viewer.trackedObject) {
+            if (defined(viewer.trackedEntity)) {
+                if (entityCollection.getById(viewer.trackedEntity.id) === viewer.trackedEntity) {
                     viewer.homeButton.viewModel.command();
                 }
             }
 
-            if (defined(viewer.selectedObject)) {
-                if (entityCollection.getById(viewer.selectedObject.id) === viewer.selectedObject) {
-                    viewer.selectedObject = undefined;
+            if (defined(viewer.selectedEntity)) {
+                if (entityCollection.getById(viewer.selectedEntity.id) === viewer.selectedEntity) {
+                    viewer.selectedEntity = undefined;
                 }
             }
         }
@@ -249,20 +249,20 @@ define([
          * @memberof viewerEntityMixin.prototype
          * @type {Entity}
          */
-        viewer.trackedObject = undefined;
+        viewer.trackedEntity = undefined;
 
         /**
          * Gets or sets the object instance for which to display a selection indicator.
          * @memberof viewerEntityMixin.prototype
          * @type {Entity}
          */
-        viewer.selectedObject = undefined;
+        viewer.selectedEntity = undefined;
 
-        knockout.track(viewer, ['trackedObject', 'selectedObject']);
+        knockout.track(viewer, ['trackedEntity', 'selectedEntity']);
 
         var knockoutSubscriptions = [];
 
-        knockoutSubscriptions.push(subscribeAndEvaluate(viewer, 'trackedObject', function(value) {
+        knockoutSubscriptions.push(subscribeAndEvaluate(viewer, 'trackedEntity', function(value) {
             var scene = viewer.scene;
             var sceneMode = scene.mode;
             var isTracking = defined(value);
@@ -282,7 +282,7 @@ define([
             }
         }));
 
-        knockoutSubscriptions.push(subscribeAndEvaluate(viewer, 'selectedObject', function(value) {
+        knockoutSubscriptions.push(subscribeAndEvaluate(viewer, 'selectedEntity', function(value) {
             if (defined(value)) {
                 if (defined(infoBoxViewModel)) {
                     infoBoxViewModel.titleText = defined(value.name) ? value.name : value.id;

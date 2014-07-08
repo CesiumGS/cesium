@@ -70,7 +70,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var entities = this._entityCollection.getObjects();
+        var entities = this._entityCollection.entities;
         for (var i = 0, len = entities.length; i < len; i++) {
             updateObject(this, time, entities[i]);
         }
@@ -97,7 +97,7 @@ define([
             primitives.remove(this._pyramidCollection[i]);
         }
 
-        var entities = this._entityCollection.getObjects();
+        var entities = this._entityCollection.entities;
         length = entities.length;
         for (i = 0; i < length; i++) {
             entities[i]._pyramidVisualizerIndex = undefined;

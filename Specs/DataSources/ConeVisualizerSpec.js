@@ -74,7 +74,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new ConeVisualizer(scene, entityCollection);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
         visualizer.update(JulianDate.now());
@@ -85,7 +85,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new ConeVisualizer(scene, entityCollection);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
         var cone = testObject.cone = new ConeGraphics();
         cone.maximumClockAngle = new ConstantProperty(1);
@@ -98,7 +98,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new ConeVisualizer(scene, entityCollection);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         var cone = testObject.cone = new ConeGraphics();
         cone.maximumClockAngle = new ConstantProperty(1);
@@ -112,7 +112,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new ConeVisualizer(scene, entityCollection);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, Math.sin(CesiumMath.PI_OVER_FOUR), Math.cos(CesiumMath.PI_OVER_FOUR)));
 
@@ -154,11 +154,11 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new ConeVisualizer(scene, entityCollection);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
 
-        var testObject2 = entityCollection.getOrCreateObject('test2');
+        var testObject2 = entityCollection.getOrCreateEntity('test2');
         testObject2.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject2.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
 
@@ -183,7 +183,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new ConeVisualizer(scene, entityCollection);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
 
@@ -204,7 +204,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new ConeVisualizer(scene, entityCollection);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
         var cone = testObject.cone = new ConeGraphics();
@@ -226,7 +226,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new ConeVisualizer(scene, entityCollection);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
         var cone = testObject.cone = new ConeGraphics();

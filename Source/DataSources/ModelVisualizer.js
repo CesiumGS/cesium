@@ -63,7 +63,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var entities = this._entityCollection.getObjects();
+        var entities = this._entityCollection.entities;
         for (var i = 0, len = entities.length; i < len; i++) {
             this._updateObject(time, entities[i]);
         }
@@ -83,7 +83,7 @@ define([
      * Removes and destroys all primitives created by this instance.
      */
     ModelVisualizer.prototype.destroy = function() {
-        var entities = this._entityCollection.getObjects();
+        var entities = this._entityCollection.entities;
         for (var i = entities.length - 1; i > -1; i--) {
             var entity = entities[i];
             var model = entity._modelPrimitive;

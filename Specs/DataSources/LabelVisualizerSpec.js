@@ -83,7 +83,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new LabelVisualizer(scene, entityCollection);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         visualizer.update(JulianDate.now());
         var labelCollection = scene.primitives.get(0);
@@ -94,7 +94,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new LabelVisualizer(scene, entityCollection);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         var label = testObject.label = new LabelGraphics();
         label.show = new ConstantProperty(true);
         label.text = new ConstantProperty('lorum ipsum');
@@ -108,7 +108,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new LabelVisualizer(scene, entityCollection);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         var label = testObject.label = new LabelGraphics();
         label.show = new ConstantProperty(true);
@@ -125,7 +125,7 @@ defineSuite([
         var labelCollection = scene.primitives.get(0);
         expect(labelCollection.length).toEqual(0);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
 
         var time = JulianDate.now();
         var label = testObject.label = new LabelGraphics();
@@ -214,7 +214,7 @@ defineSuite([
         var labelCollection = scene.primitives.get(0);
         expect(labelCollection.length).toEqual(0);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
 
         var time = JulianDate.now();
         var label = testObject.label = new LabelGraphics();
@@ -242,7 +242,7 @@ defineSuite([
         var labelCollection = scene.primitives.get(0);
         expect(labelCollection.length).toEqual(0);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
 
         var time = JulianDate.now();
         var label = testObject.label = new LabelGraphics();

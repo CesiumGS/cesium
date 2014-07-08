@@ -40,25 +40,25 @@ defineSuite([
     it('adds properties', function() {
         viewer = new Viewer(container);
         viewer.extend(viewerEntityMixin);
-        expect(viewer.hasOwnProperty('trackedObject')).toEqual(true);
-        expect(viewer.hasOwnProperty('selectedObject')).toEqual(true);
+        expect(viewer.hasOwnProperty('trackedEntity')).toEqual(true);
+        expect(viewer.hasOwnProperty('selectedEntity')).toEqual(true);
     });
 
-    it('can get and set trackedObject', function() {
+    it('can get and set trackedEntity', function() {
         viewer = new Viewer(container);
         viewer.extend(viewerEntityMixin);
 
         var entity = new Entity();
         entity.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
 
-        viewer.trackedObject = entity;
-        expect(viewer.trackedObject).toBe(entity);
+        viewer.trackedEntity = entity;
+        expect(viewer.trackedEntity).toBe(entity);
 
-        viewer.trackedObject = undefined;
-        expect(viewer.trackedObject).toBeUndefined();
+        viewer.trackedEntity = undefined;
+        expect(viewer.trackedEntity).toBeUndefined();
     });
 
-    it('can get and set selectedObject', function() {
+    it('can get and set selectedEntity', function() {
         var viewer = new Viewer(container);
         viewer.extend(viewerEntityMixin);
 
@@ -70,11 +70,11 @@ defineSuite([
 
         dataSource.entities.add(entity);
 
-        viewer.selectedObject = entity;
-        expect(viewer.selectedObject).toBe(entity);
+        viewer.selectedEntity = entity;
+        expect(viewer.selectedEntity).toBe(entity);
 
-        viewer.selectedObject = undefined;
-        expect(viewer.selectedObject).toBeUndefined();
+        viewer.selectedEntity = undefined;
+        expect(viewer.selectedEntity).toBeUndefined();
 
         viewer.destroy();
     });
@@ -86,8 +86,8 @@ defineSuite([
         var entity = new Entity();
         entity.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
 
-        viewer.trackedObject = entity;
-        expect(viewer.trackedObject).toBe(entity);
+        viewer.trackedEntity = entity;
+        expect(viewer.trackedEntity).toBe(entity);
 
         //Needed to avoid actually creating a flight when we issue the home command.
         spyOn(CameraFlightPath, 'createTween').andReturn({
@@ -97,7 +97,7 @@ defineSuite([
         });
 
         viewer.homeButton.viewModel.command();
-        expect(viewer.trackedObject).toBeUndefined();
+        expect(viewer.trackedEntity).toBeUndefined();
     });
 
     it('throws with undefined viewer', function() {
@@ -106,17 +106,17 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws if trackedObject property already added by another mixin.', function() {
+    it('throws if trackedEntity property already added by another mixin.', function() {
         viewer = new Viewer(container);
-        viewer.trackedObject = true;
+        viewer.trackedEntity = true;
         expect(function() {
             viewer.extend(viewerEntityMixin);
         }).toThrowDeveloperError();
     });
 
-    it('throws if selectedObject property already added by another mixin.', function() {
+    it('throws if selectedEntity property already added by another mixin.', function() {
         viewer = new Viewer(container);
-        viewer.selectedObject = true;
+        viewer.selectedEntity = true;
         expect(function() {
             viewer.extend(viewerEntityMixin);
         }).toThrowDeveloperError();
@@ -143,8 +143,8 @@ defineSuite([
         entity.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
         postMixinDataSource.entities.add(entity);
 
-        viewer.trackedObject = entity;
-        expect(viewer.trackedObject).toBe(entity);
+        viewer.trackedEntity = entity;
+        expect(viewer.trackedEntity).toBe(entity);
 
         // spy on the home button's command
         Object.defineProperty(viewer.homeButton.viewModel, 'command', {
@@ -158,7 +158,7 @@ defineSuite([
         // reset the spy before removing the other entity
         viewer.homeButton.viewModel.command.reset();
 
-        viewer.trackedObject = beforeEntity;
+        viewer.trackedEntity = beforeEntity;
         preMixinDataSource.entities.remove(beforeEntity);
 
         expect(viewer.homeButton.viewModel.command).toHaveBeenCalled();

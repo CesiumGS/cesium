@@ -79,7 +79,7 @@ define([
             id = finalId;
         }
 
-        var entity = entityCollection.getOrCreateObject(id);
+        var entity = entityCollection.getOrCreateEntity(id);
         entity.geoJson = geoJson;
 
         var properties = geoJson.properties;

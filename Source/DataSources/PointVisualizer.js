@@ -68,7 +68,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var entities = this._entityCollection.getObjects();
+        var entities = this._entityCollection.entities;
         for (var i = 0, len = entities.length; i < len; i++) {
             updateObject(this, time, entities[i]);
         }
@@ -89,7 +89,7 @@ define([
      */
     PointVisualizer.prototype.destroy = function() {
         var entityCollection = this._entityCollection;
-        var entities = entityCollection.getObjects();
+        var entities = entityCollection.entities;
         for (var i = entities.length - 1; i > -1; i--) {
             entities[i]._pointVisualizerIndex = undefined;
         }

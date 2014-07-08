@@ -30,7 +30,7 @@ defineSuite([
 
     it('constructor has expected defaults', function() {
         var entityCollection = new EntityCollection();
-        expect(entityCollection.getObjects().length).toEqual(0);
+        expect(entityCollection.entities.length).toEqual(0);
     });
 
     it('add/remove works', function() {
@@ -39,16 +39,16 @@ defineSuite([
         var entityCollection = new EntityCollection();
 
         entityCollection.add(entity);
-        expect(entityCollection.getObjects().length).toEqual(1);
+        expect(entityCollection.entities.length).toEqual(1);
 
         entityCollection.add(entity2);
-        expect(entityCollection.getObjects().length).toEqual(2);
+        expect(entityCollection.entities.length).toEqual(2);
 
         entityCollection.remove(entity2);
-        expect(entityCollection.getObjects().length).toEqual(1);
+        expect(entityCollection.entities.length).toEqual(1);
 
         entityCollection.remove(entity);
-        expect(entityCollection.getObjects().length).toEqual(0);
+        expect(entityCollection.entities.length).toEqual(0);
     });
 
     it('add/remove raises expected events', function() {
@@ -135,7 +135,7 @@ defineSuite([
         entityCollection.add(entity);
         entityCollection.add(entity2);
         entityCollection.removeAll();
-        expect(entityCollection.getObjects().length).toEqual(0);
+        expect(entityCollection.entities.length).toEqual(0);
     });
 
     it('removeAll raises expected events', function() {
@@ -212,23 +212,23 @@ defineSuite([
         expect(entityCollection.getById('123')).toBeUndefined();
     });
 
-    it('getOrCreateObject creates a new object if it does not exist.', function() {
+    it('getOrCreateEntity creates a new object if it does not exist.', function() {
         var entityCollection = new EntityCollection();
-        expect(entityCollection.getObjects().length).toEqual(0);
-        var testObject = entityCollection.getOrCreateObject('test');
-        expect(entityCollection.getObjects().length).toEqual(1);
-        expect(entityCollection.getObjects()[0]).toEqual(testObject);
+        expect(entityCollection.entities.length).toEqual(0);
+        var testObject = entityCollection.getOrCreateEntity('test');
+        expect(entityCollection.entities.length).toEqual(1);
+        expect(entityCollection.entities[0]).toEqual(testObject);
     });
 
-    it('getOrCreateObject does not create a new object if it already exists.', function() {
+    it('getOrCreateEntity does not create a new object if it already exists.', function() {
         var entityCollection = new EntityCollection();
-        expect(entityCollection.getObjects().length).toEqual(0);
-        var testObject = entityCollection.getOrCreateObject('test');
-        expect(entityCollection.getObjects().length).toEqual(1);
-        expect(entityCollection.getObjects()[0]).toEqual(testObject);
-        var testObject2 = entityCollection.getOrCreateObject('test');
-        expect(entityCollection.getObjects().length).toEqual(1);
-        expect(entityCollection.getObjects()[0]).toEqual(testObject);
+        expect(entityCollection.entities.length).toEqual(0);
+        var testObject = entityCollection.getOrCreateEntity('test');
+        expect(entityCollection.entities.length).toEqual(1);
+        expect(entityCollection.entities[0]).toEqual(testObject);
+        var testObject2 = entityCollection.getOrCreateEntity('test');
+        expect(entityCollection.entities.length).toEqual(1);
+        expect(entityCollection.entities[0]).toEqual(testObject);
         expect(testObject2).toEqual(testObject);
     });
 
@@ -242,9 +242,9 @@ defineSuite([
     it('computeAvailability returns intersction of collections.', function() {
         var entityCollection = new EntityCollection();
 
-        var entity = entityCollection.getOrCreateObject('1');
-        var entity2 = entityCollection.getOrCreateObject('2');
-        var entity3 = entityCollection.getOrCreateObject('3');
+        var entity = entityCollection.getOrCreateEntity('1');
+        var entity2 = entityCollection.getOrCreateEntity('2');
+        var entity3 = entityCollection.getOrCreateEntity('3');
 
         entity.availability = new TimeIntervalCollection();
         entity.availability.addInterval(TimeInterval.fromIso8601({
@@ -264,9 +264,9 @@ defineSuite([
     it('computeAvailability works if only start or stop time is infinite.', function() {
         var entityCollection = new EntityCollection();
 
-        var entity = entityCollection.getOrCreateObject('1');
-        var entity2 = entityCollection.getOrCreateObject('2');
-        var entity3 = entityCollection.getOrCreateObject('3');
+        var entity = entityCollection.getOrCreateEntity('1');
+        var entity2 = entityCollection.getOrCreateEntity('2');
+        var entity3 = entityCollection.getOrCreateEntity('3');
 
         entity.availability = new TimeIntervalCollection();
         entity.availability.addInterval(TimeInterval.fromIso8601({
@@ -329,10 +329,10 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('getOrCreateObject throws if no id specified', function() {
+    it('getOrCreateEntity throws if no id specified', function() {
         var entityCollection = new EntityCollection();
         expect(function() {
-            entityCollection.getOrCreateObject(undefined);
+            entityCollection.getOrCreateEntity(undefined);
         }).toThrowDeveloperError();
     });
 });

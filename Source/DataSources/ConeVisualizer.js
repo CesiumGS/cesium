@@ -111,7 +111,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var entities = this._entityCollection.getObjects();
+        var entities = this._entityCollection.entities;
         for (var i = 0, len = entities.length; i < len; i++) {
             updateObject(this, time, entities[i]);
         }
@@ -135,7 +135,7 @@ define([
         entityCollection.collectionChanged.removeEventListener(ConeVisualizer.prototype._onObjectsRemoved, this);
 
         var i;
-        var entities = entityCollection.getObjects();
+        var entities = entityCollection.entities;
         var length = entities.length;
         for (i = 0; i < length; i++) {
             entities[i]._coneVisualizerIndex = undefined;

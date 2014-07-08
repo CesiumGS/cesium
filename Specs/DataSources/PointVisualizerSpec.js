@@ -76,7 +76,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new PointVisualizer(scene, entityCollection);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         visualizer.update(JulianDate.now());
         var billboardCollection = scene.primitives.get(0);
@@ -87,7 +87,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new PointVisualizer(scene, entityCollection);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         var point = testObject.point = new PointGraphics();
         point.show = new ConstantProperty(true);
 
@@ -105,7 +105,7 @@ defineSuite([
         var billboardCollection = scene.primitives.get(0);
         expect(billboardCollection.length).toEqual(0);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
 
         var point = testObject.point = new PointGraphics();
@@ -159,7 +159,7 @@ defineSuite([
         visualizer = new PointVisualizer(scene, entityCollection);
         var billboardCollection = scene.primitives.get(0);
         expect(billboardCollection.length).toEqual(0);
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         var time = JulianDate.now();
 
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
@@ -184,7 +184,7 @@ defineSuite([
         var billboardCollection = scene.primitives.get(0);
         expect(billboardCollection.length).toEqual(0);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
 
         var time = JulianDate.now();
         var point = testObject.point = new PointGraphics();

@@ -76,7 +76,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new PyramidVisualizer(scene, entityCollection);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
         visualizer.update(JulianDate.now());
@@ -87,7 +87,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new PyramidVisualizer(scene, entityCollection);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
         var pyramid = testObject.pyramid = new PyramidGraphics();
         pyramid.directions = new ConstantProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
@@ -99,7 +99,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new PyramidVisualizer(scene, entityCollection);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         var pyramid = testObject.pyramid = new PyramidGraphics();
         pyramid.directions = new ConstantProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
@@ -112,7 +112,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new PyramidVisualizer(scene, entityCollection);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, Math.sin(CesiumMath.PI_OVER_FOUR), Math.cos(CesiumMath.PI_OVER_FOUR)));
 
@@ -145,7 +145,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new PyramidVisualizer(scene, entityCollection);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
         var pyramid = testObject.pyramid = new PyramidGraphics();
@@ -166,7 +166,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new PyramidVisualizer(scene, entityCollection);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
         var pyramid = testObject.pyramid = new PyramidGraphics();
