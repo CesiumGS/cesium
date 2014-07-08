@@ -1,6 +1,6 @@
 /*global define*/
 define([
-        'DynamicScene/ColorMaterialProperty'
+        'DataSources/ColorMaterialProperty'
     ], function(
         ColorMaterialProperty) {
     "use strict";
