@@ -121,7 +121,7 @@ define([
                     if (defined(entity)) {
                         viewer.trackedEntity = entity;
                     } else {
-                        var error = 'No object with id "' + lookAt + '" exists in the provided source.';
+                        var error = 'No entity with id "' + lookAt + '" exists in the provided data source.';
                         showLoadError(source, error);
                     }
                 }

@@ -159,17 +159,17 @@ define([
 
     var offset3DCrossScratch = new Cartesian3();
     /**
-     * A utility object for tracking an object with the camera.
+     * A utility object for tracking an entity with the camera.
      * @alias EntityView
      * @constructor
      *
-     * @param {Entity} entity The object to track with the camera.
+     * @param {Entity} entity The entity to track with the camera.
      * @param {Scene} scene The scene to use.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use for orienting the camera.
      */
     var EntityView = function(entity, scene, ellipsoid) {
         /**
-         * The object to track with the camera.
+         * The entity to track with the camera.
          * @type {Entity}
          */
         this.entity = entity;

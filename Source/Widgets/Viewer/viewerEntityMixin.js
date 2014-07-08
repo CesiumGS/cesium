@@ -48,7 +48,6 @@ define([
      * viewer.trackedEntity = entity; //Camera will now track entity
      * viewer.selectedEntity = entity; //Selection will now appear over object
      */
-
     var viewerEntityMixin = function(viewer) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(viewer)) {

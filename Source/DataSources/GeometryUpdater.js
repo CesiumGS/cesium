@@ -17,7 +17,7 @@ define([
      * @alias GeometryUpdater
      * @constructor
      *
-     * @param {Entity} entity The object containing the geometry to be visualized.
+     * @param {Entity} entity The entity containing the geometry to be visualized.
      * @param {Scene} scene The scene where visualization is taking place.
      *
      * @see EllipseGeometryUpdater
@@ -50,7 +50,7 @@ define([
 
     defineProperties(GeometryUpdater.prototype, {
         /**
-         * Gets the object associated with this geometry.
+         * Gets the entity associated with this geometry.
          * @memberof GeometryUpdater.prototype
          *
          * @type {Entity}

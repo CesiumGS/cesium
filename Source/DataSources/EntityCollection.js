@@ -38,7 +38,7 @@ define([
     }
 
     /**
-     * An observable collection of {@link Entity} instances where each object has a unique id.
+     * An observable collection of {@link Entity} instances where each entity has a unique id.
      * @alias EntityCollection
      * @constructor
      */
@@ -143,9 +143,9 @@ define([
         var startTime = Iso8601.MAXIMUM_VALUE;
         var stopTime = Iso8601.MINIMUM_VALUE;
         var entities = this._entities.values;
-        for ( var i = 0, len = entities.length; i < len; i++) {
-            var object = entities[i];
-            var availability = object.availability;
+        for (var i = 0, len = entities.length; i < len; i++) {
+            var entity = entities[i];
+            var availability = entity.availability;
             if (defined(availability)) {
                 var start = availability.start;
                 var stop = availability.stop;
@@ -171,10 +171,10 @@ define([
     };
 
     /**
-     * Add an object to the collection.
+     * Add an entity to the collection.
      *
-     * @param {Entity} entity The object to be added.
-     * @exception {DeveloperError} An object with <entity.id> already exists in this collection.
+     * @param {Entity} entity The entity to be added.
+     * @exception {DeveloperError} An entity with <entity.id> already exists in this collection.
      */
     EntityCollection.prototype.add = function(entity) {
         //>>includeStart('debug', pragmas.debug);
@@ -186,7 +186,7 @@ define([
         var id = entity.id;
         var entities = this._entities;
         if (defined(entities.get(id))) {
-            throw new RuntimeError('An object with id ' + id + ' already exists in this collection.');
+            throw new RuntimeError('An entity with id ' + id + ' already exists in this collection.');
         }
 
         entities.set(id, entity);
@@ -199,9 +199,9 @@ define([
     };
 
     /**
-     * Removes an object from the collection.
+     * Removes an entity from the collection.
      *
-     * @param {Entity} entity The object to be added.
+     * @param {Entity} entity The entity to be added.
      * @returns {Boolean} true if the item was removed, false if it did not exist in the collection.
      */
     EntityCollection.prototype.remove = function(entity) {
@@ -215,9 +215,9 @@ define([
     };
 
     /**
-     * Removes an object with the provided id from the collection.
+     * Removes an entity with the provided id from the collection.
      *
-     * @param {Object} id The id of the object to remove.
+     * @param {Object} id The id of the entity to remove.
      * @returns {Boolean} true if the item was removed, false if no item with the provided id existed in the collection.
      */
     EntityCollection.prototype.removeById = function(id) {
@@ -269,10 +269,10 @@ define([
     };
 
     /**
-     * Gets an object with the specified id.
+     * Gets an entity with the specified id.
      *
-     * @param {Object} id The id of the object to retrieve.
-     * @returns {Entity} The object with the provided id or undefined if the id did not exist in the collection.
+     * @param {Object} id The id of the entity to retrieve.
+     * @returns {Entity} The entity with the provided id or undefined if the id did not exist in the collection.
      */
     EntityCollection.prototype.getById = function(id) {
         //>>includeStart('debug', pragmas.debug);
@@ -285,9 +285,9 @@ define([
     };
 
     /**
-     * Gets an object with the specified id or creates it and adds it to the collection if it does not exist.
+     * Gets an entity with the specified id or creates it and adds it to the collection if it does not exist.
      *
-     * @param {Object} id The id of the object to retrieve or create.
+     * @param {Object} id The id of the entity to retrieve or create.
      * @returns {Entity} The new or existing object.
      */
     EntityCollection.prototype.getOrCreateEntity = function(id) {
