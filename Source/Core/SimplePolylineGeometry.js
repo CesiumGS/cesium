@@ -128,6 +128,9 @@ define([
         this._workerName = 'createSimplePolylineGeometry';
     };
 
+    var scratchArray1 = new Array(2);
+    var scratchArray2 = new Array(2);
+
     /**
      * Computes the geometric representation of a simple polyline, including its vertices, indices, and a bounding sphere.
      *
@@ -158,6 +161,7 @@ define([
         var j = 0;
 
         if (raiseToSurface) {
+            var heights = PolylinePipeline.extractHeights(positions, ellipsoid);
             if (perSegmentColors) {
                 for (i = 0; i < length-1; i++) {
                     p0 = positions[i];
@@ -172,13 +176,17 @@ define([
 
                 ci = 0;
                 for (i = 0; i < length-1; i++) {
-                    p0 = positions[i];
-                    p1 = positions[i+1];
+                    scratchArray1[0] = positions[i];
+                    scratchArray1[1] = positions[i+1];
+
+                    scratchArray2[0] = heights[i];
+                    scratchArray2[1] = heights[i+1];
 
                     var pos = PolylinePipeline.generateArc({
-                        positions : [p0, p1],
+                        positions : scratchArray1,
                         granularity : granularity,
-                        ellipsoid: ellipsoid
+                        ellipsoid: ellipsoid,
+                        height: scratchArray2
                     });
 
                     if (defined(colors)) {
@@ -199,7 +207,8 @@ define([
                 positionValues = new Float64Array(PolylinePipeline.generateArc({
                     positions: positions,
                     granularity: granularity,
-                    ellipsoid: ellipsoid
+                    ellipsoid: ellipsoid,
+                    height: heights
                 }));
 
                 if (defined(colors)) {
@@ -269,7 +278,6 @@ define([
                 normalize : true
             });
         }
-
 
         numberOfPositions = positionValues.length / 3;
         var numberOfIndices = (numberOfPositions - 1) * 2;

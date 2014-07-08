@@ -31,20 +31,14 @@ require(['Cesium'], function(Cesium) {
     var scene = viewer.scene;
     var primitives = scene.primitives;
            
-    // Create a simple polyline
-    
-    var positions = [];
-    for (var i = 0; i <= 10; ++i) {
-        positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 30.0 + 3 * i / 2 * (i % 2)));
-    }
-
+    // Create a simple yellow polyline
     primitives.add(new Cesium.Primitive({
         geometryInstances : new Cesium.GeometryInstance({
             geometry : new Cesium.SimplePolylineGeometry({
-                positions : positions
+                positions : [Cesium.Cartesian3.fromDegrees(-127, 70), Cesium.Cartesian3.fromDegrees(-80, 20)]
             }),
             attributes : {
-                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.YELLOW)
             }
         }),
         appearance : new Cesium.PerInstanceColorAppearance({
@@ -57,6 +51,54 @@ require(['Cesium'], function(Cesium) {
             }
         })
     }));
+        
+
+    // Create a simple polyline with per vertex coloring
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : new Cesium.GeometryInstance({
+            geometry : new Cesium.SimplePolylineGeometry({
+                positions : [Cesium.Cartesian3.fromDegrees(-100, 40), Cesium.Cartesian3.fromDegrees(-80, 30)],
+                colors: [Cesium.Color.RED, Cesium.Color.BLUE],
+                colorsPerVertex: true
+            })
+        }),
+        appearance : new Cesium.PerInstanceColorAppearance({
+            flat : true,
+            renderState : {
+                depthTest : {
+                    enabled : true
+                },
+                lineWidth : Math.min(2.0, scene.maximumAliasedLineWidth)
+            }
+        })
+    }));
+    
+    // Create a simple polyline with per segment coloring
+    var positions = [];
+    var colors = [];
+    for (var j = 0; j <= 50; j+=5) {
+        positions.push(Cesium.Cartesian3.fromDegrees(-124.0 + j, 40, 50000.0 *(j % 10)));
+        colors.push(Cesium.Color.fromRandom({alpha : 1.0}));
+    }
+
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : new Cesium.GeometryInstance({
+            geometry : new Cesium.SimplePolylineGeometry({
+                positions : positions,
+                colors : colors
+            })
+        }),
+        appearance : new Cesium.PerInstanceColorAppearance({
+            flat : true,
+            renderState : {
+                depthTest : {
+                    enabled : true
+                },
+                lineWidth : Math.min(2.0, scene.maximumAliasedLineWidth)
+            }
+        })
+    }));
+
 
     Sandcastle.finishedLoading();
 });

@@ -37,6 +37,17 @@ define([
         return Math.ceil(angleBetween / granularity);
     };
 
+    var cartoScratch = new Cartographic();
+    PolylinePipeline.extractHeights = function(positions, ellipsoid) {
+        var length = positions.length;
+        var heights = new Array(length);
+        for (var i = 0; i < length; i++) {
+            var p = positions[i];
+            heights[i] = ellipsoid.cartesianToCartographic(p, cartoScratch).height;
+        }
+        return heights;
+    };
+
     var wrapLongitudeInversMatrix = new Matrix4();
     var wrapLongitudeOrigin = new Cartesian3();
     var wrapLongitudeXZNormal = new Cartesian3();
