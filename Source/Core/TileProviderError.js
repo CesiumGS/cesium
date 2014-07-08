@@ -94,7 +94,7 @@ define([
      *        error is not specific to a particular tile.
      * @param {Number} level The level-of-detail of the tile that experienced the error, or undefined if the
      *        error is not specific to a particular tile.
-     * @param {Function} retryFunction The function to call to retry the operation.  If undefined, the
+     * @param {TileProviderError~RetryFunction} retryFunction The function to call to retry the operation.  If undefined, the
      *        operation will not be retried.
      * @returns {TileProviderError} The error instance that was passed to the event listeners and that
      *          should be passed to this function the next time it is called for the same error in order
@@ -140,6 +140,11 @@ define([
             previousError.timesRetried = -1;
         }
     };
+
+    /**
+     * A function that will be called to retry the operation.
+     * @callback TileProviderError~RetryFunction
+     */
 
     return TileProviderError;
 });

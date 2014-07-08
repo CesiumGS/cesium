@@ -1,5 +1,8 @@
 /*global define*/
-define(function() {
+define([
+        '../Core/freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
@@ -13,5 +16,5 @@ define(function() {
         OVERLAY : 2
     };
 
-    return Pass;
+    return freezeObject(Pass);
 });

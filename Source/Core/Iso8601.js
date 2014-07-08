@@ -11,12 +11,16 @@ define([
 
     var MINIMUM_VALUE = freezeObject(JulianDate.fromIso8601('0000-01-01T00:00:00Z'));
     var MAXIMUM_VALUE = freezeObject(JulianDate.fromIso8601('9999-12-31T24:00:00Z'));
-    var MAXIMUM_INTERVAL = freezeObject(new TimeInterval(MINIMUM_VALUE, MAXIMUM_VALUE, true, true));
+    var MAXIMUM_INTERVAL = freezeObject(new TimeInterval({
+        start : MINIMUM_VALUE,
+        stop : MAXIMUM_VALUE
+    }));
 
     /**
      * Constants related to ISO8601 support.
      *
-     * @exports Iso8601
+     * @namespace
+     * @alias Iso8601
      *
      * @see {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601 on Wikipedia}
      * @see JulianDate

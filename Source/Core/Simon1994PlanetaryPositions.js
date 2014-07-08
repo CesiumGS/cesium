@@ -20,8 +20,11 @@ define([
     "use strict";
 
     /**
-     * Contains functions for finding the Cartesian coordinates of the sun and the moon in the Earth-centered inertial frame.
-     * @exports Simon1994PlanetaryPositions
+     * Contains functions for finding the Cartesian coordinates of the sun and the moon in the
+     * Earth-centered inertial frame.
+     *
+     * @namespace
+     * @alias Simon1994PlanetaryPositions
      */
     var Simon1994PlanetaryPositions = {};
 
@@ -515,6 +518,7 @@ define([
         if (!defined(date)) {
             date = JulianDate.now();
         }
+
         result = computeSimonMoon(date, result);
         Matrix3.multiplyByVector(axesTransformation, result, result);
 

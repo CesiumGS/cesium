@@ -7,8 +7,8 @@ define([
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/EventHelper',
-        '../../DynamicScene/DataSourceCollection',
-        '../../DynamicScene/DataSourceDisplay',
+        '../../DataSources/DataSourceCollection',
+        '../../DataSources/DataSourceDisplay',
         '../../ThirdParty/knockout',
         '../Animation/Animation',
         '../Animation/AnimationViewModel',
@@ -99,7 +99,8 @@ define([
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
      * @param {Element|String} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added to the bottom of the widget itself.
-     * @param {DataSourceCollection} [options.dataSources=new DataSourceCollection()] The collection of data sources visualized by the widget.
+     * @param {DataSourceCollection} [options.dataSources=new DataSourceCollection()] The collection of data sources visualized by the widget.  If this parameter is provided,
+                                     the instance is assumed to be owned by the caller and will not be destroyed when the viewer is destroyed.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      * @exception {DeveloperError} options.imageryProvider is not available when using the BaseLayerPicker widget, specify options.selectedImageryProviderViewModel instead.
@@ -115,7 +116,7 @@ define([
      * @see SceneModePicker
      * @see Timeline
      * @see viewerDragDropMixin
-     * @see viewerDynamicObjectMixin
+     * @see viewerEntityMixin
      *
      * @example
      * //Initialize the viewer widget with several custom options and mixins.
@@ -153,7 +154,7 @@ define([
      * viewer.extend(Cesium.viewerDragDropMixin);
      *
      * //Allow users to zoom and follow objects loaded from CZML by clicking on it.
-     * viewer.extend(Cesium.viewerDynamicObjectMixin);
+     * viewer.extend(Cesium.viewerEntityMixin);
      *
      * //Show a pop-up alert if we encounter an error when processing a dropped file
      * viewer.dropError.addEventListener(function(dropHandler, name, error) {
@@ -229,8 +230,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         });
 
         var dataSourceCollection = options.dataSources;
+        var destroyDataSourceCollection = false;
         if (!defined(dataSourceCollection)) {
             dataSourceCollection = new DataSourceCollection();
+            destroyDataSourceCollection = true;
         }
 
         var dataSourceDisplay = new DataSourceDisplay(cesiumWidget.scene, dataSourceCollection);
@@ -412,14 +415,14 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             if (automaticallyTrackDataSourceClocks) {
                 that.clockTrackedDataSource = dataSource;
             }
-            var id = dataSource.dynamicObjects.id;
+            var id = dataSource.entities.id;
             var removalFunc = eventHelper.add(dataSource.changedEvent, onDataSourceChanged);
             that._dataSourceChangedListeners[id] = removalFunc;
         };
 
         var onDataSourceRemoved = function(dataSourceCollection, dataSource) {
             var resetClock = (that.clockTrackedDataSource === dataSource);
-            var id = dataSource.dynamicObjects.id;
+            var id = dataSource.entities.id;
             that._dataSourceChangedListeners[id]();
             that._dataSourceChangedListeners[id] = undefined;
             if (resetClock) {
@@ -442,6 +445,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._selectionIndicator = selectionIndicator;
         this._infoBox = infoBox;
         this._dataSourceCollection = dataSourceCollection;
+        this._destroyDataSourceCollection = destroyDataSourceCollection;
         this._dataSourceDisplay = dataSourceDisplay;
         this._clockViewModel = clockViewModel;
         this._toolbar = toolbar;
@@ -761,11 +765,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * A mixin may add additional properties, functions, or other behavior
      * to the provided viewer instance.
      *
-     * @param {Function} mixin The Viewer mixin to add to this instance.
+     * @param {Viewer~ViewerMixin} mixin The Viewer mixin to add to this instance.
      * @param {Object} options The options object to be passed to the mixin function.
      *
      * @see viewerDragDropMixin
-     * @see viewerDynamicObjectMixin
+     * @see viewerEntityMixin
      */
     Viewer.prototype.extend = function(mixin, options) {
         //>>includeStart('debug', pragmas.debug);
@@ -875,7 +879,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._dataSourceDisplay = this._dataSourceDisplay.destroy();
         this._cesiumWidget = this._cesiumWidget.destroy();
 
-        this._dataSourceCollection = this._dataSourceCollection.destroy();
+        if (this._destroyDataSourceCollection) {
+            this._dataSourceCollection = this._dataSourceCollection.destroy();
+        }
 
         return destroyObject(this);
     };
@@ -956,6 +962,15 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         viewer._lastWidth = width;
         viewer._lastHeight = height;
     }
+
+    /**
+     * A function that augments a Viewer instance with additional functionality.
+     * @callback Viewer~ViewerMixin
+     * @param {Viewer} viewer The viewer instance.
+     * @param {Object} options Options object to be passed to the mixin function.
+     *
+     * @see Viewer#extend
+     */
 
     return Viewer;
 });

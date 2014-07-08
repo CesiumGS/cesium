@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
         'Core/RectangleGeometry',
+        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/GeographicProjection',
@@ -10,6 +11,7 @@ defineSuite([
         'Core/VertexFormat'
     ], function(
         RectangleGeometry,
+        Cartesian2,
         Cartesian3,
         Ellipsoid,
         GeographicProjection,
@@ -72,7 +74,7 @@ defineSuite([
         var projection = new GeographicProjection();
         var projectedSECorner = projection.project(unrotatedSECorner);
         var rotation = Matrix2.fromRotation(angle);
-        var rotatedSECornerCartographic = projection.unproject(Matrix2.multiplyByVector(rotation, projectedSECorner));
+        var rotatedSECornerCartographic = projection.unproject(Matrix2.multiplyByVector(rotation, projectedSECorner, new Cartesian2()));
         var rotatedSECorner = Ellipsoid.WGS84.cartographicToCartesian(rotatedSECornerCartographic);
         var actual = new Cartesian3(positions[length - 3], positions[length - 2], positions[length - 1]);
         expect(actual).toEqualEpsilon(rotatedSECorner, CesiumMath.EPSILON6);
@@ -202,7 +204,7 @@ defineSuite([
         var projection = new GeographicProjection();
         var projectedSECorner = projection.project(unrotatedSECorner);
         var rotation = Matrix2.fromRotation(angle);
-        var rotatedSECornerCartographic = projection.unproject(Matrix2.multiplyByVector(rotation, projectedSECorner));
+        var rotatedSECornerCartographic = projection.unproject(Matrix2.multiplyByVector(rotation, projectedSECorner, new Cartesian2()));
         var rotatedSECorner = Ellipsoid.WGS84.cartographicToCartesian(rotatedSECornerCartographic);
         var actual = new Cartesian3(positions[length - 21], positions[length - 20], positions[length - 19]);
         expect(actual).toEqualEpsilon(rotatedSECorner, CesiumMath.EPSILON6);

@@ -78,33 +78,33 @@ define([
     "use strict";
     /*global WebGLRenderingContext*/
 
-    function _errorToString(gl, error) {
-        var message = 'OpenGL Error:  ';
+    function errorToString(gl, error) {
+        var message = 'WebGL Error:  ';
         switch (error) {
         case gl.INVALID_ENUM:
-            message += 'Invalid enumeration';
+            message += 'INVALID_ENUM';
             break;
         case gl.INVALID_VALUE:
-            message += 'Invalid value';
+            message += 'INVALID_VALUE';
             break;
         case gl.INVALID_OPERATION:
-            message += 'Invalid operation';
+            message += 'INVALID_OPERATION';
             break;
         case gl.OUT_OF_MEMORY:
-            message += 'Out of memory';
+            message += 'OUT_OF_MEMORY';
             break;
         case gl.CONTEXT_LOST_WEBGL:
-            message += 'Context lost';
+            message += 'CONTEXT_LOST_WEBGL lost';
             break;
         default:
-            message += 'Unknown';
+            message += 'Unknown (' + error + ')';
         }
 
         return message;
     }
 
-    function _createErrorMessage(gl, glFunc, glFuncArguments, error) {
-        var message = _errorToString(gl, error) + ': ' + glFunc.name + '(';
+    function createErrorMessage(gl, glFunc, glFuncArguments, error) {
+        var message = errorToString(gl, error) + ': ' + glFunc.name + '(';
 
         for ( var i = 0; i < glFuncArguments.length; ++i) {
             if (i !== 0) {
@@ -120,7 +120,7 @@ define([
     function throwOnError(gl, glFunc, glFuncArguments) {
         var error = gl.getError();
         if (error !== gl.NO_ERROR) {
-            throw new RuntimeError(_createErrorMessage(gl, glFunc, glFuncArguments, error));
+            throw new RuntimeError(createErrorMessage(gl, glFunc, glFuncArguments, error));
         }
     }
 
@@ -918,6 +918,7 @@ define([
          * Gets an object representing the currently bound framebuffer.  While this instance is not an actual
          * {@link Framebuffer}, it is used to represent the default framebuffer in calls to
          * {@link Context.createTexture2DFromFramebuffer}.
+         * @memberof Context.prototype
          * @type {Object}
          */
         defaultFramebuffer : {

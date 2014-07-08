@@ -9,7 +9,6 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
-        '../Core/FAR',
         '../Core/IntersectionTests',
         '../Core/isArray',
         '../Core/KeyboardEventModifier',
@@ -17,10 +16,10 @@ define([
         '../Core/Matrix4',
         '../Core/Ray',
         '../Core/Transforms',
-        './AnimationCollection',
         './CameraEventAggregator',
         './CameraEventType',
-        './SceneMode'
+        './SceneMode',
+        './TweenCollection'
     ], function(
         Cartesian2,
         Cartesian3,
@@ -31,7 +30,6 @@ define([
         destroyObject,
         DeveloperError,
         Ellipsoid,
-        FAR,
         IntersectionTests,
         isArray,
         KeyboardEventModifier,
@@ -39,10 +37,10 @@ define([
         Matrix4,
         Ray,
         Transforms,
-        AnimationCollection,
         CameraEventAggregator,
         CameraEventType,
-        SceneMode) {
+        SceneMode,
+        TweenCollection) {
     "use strict";
 
     /**
@@ -143,11 +141,11 @@ define([
          */
         this.maximumMovementRatio = 0.1;
         /**
-         * Sets the duration, in milliseconds, of the bounce back animations in 2D and Columbus view. The default value is 3000.
+         * Sets the duration, in seconds, of the bounce back animations in 2D and Columbus view.
          * @type {Number}
-         * @default 3000.0
+         * @default 3.0
          */
-        this.bounceAnimationTime = 3000.0;
+        this.bounceAnimationTime = 3.0;
         /**
          * The minimum magnitude, in meters, of the camera position when zooming. Defaults to 20.0.
          * @type {Number}
@@ -237,8 +235,8 @@ define([
         this._lastInertiaWheelZoomMovement = undefined;
         this._lastInertiaTiltMovement = undefined;
 
-        this._animations = new AnimationCollection();
-        this._animation = undefined;
+        this._tweens = new TweenCollection();
+        this._tween = undefined;
 
         this._horizontalRotationAxis = undefined;
 
@@ -251,7 +249,7 @@ define([
         this._minimumRotateRate = 1.0 / 5000.0;
         this._translateFactor = 1.0;
         this._minimumZoomRate = 20.0;
-        this._maximumZoomRate = FAR;
+        this._maximumZoomRate = 5906376272000.0;  // distance from the Sun to Pluto in meters.
     };
 
     defineProperties(ScreenSpaceCameraController.prototype, {
@@ -511,9 +509,9 @@ define([
     }
 
     function update2D(controller) {
-        var animations = controller._animations;
+        var tweens = controller._tweens;
         if (controller._aggregator.anyButtonDown()) {
-            animations.removeAll();
+            tweens.removeAll();
         }
 
         if (!Matrix4.equals(Matrix4.IDENTITY, controller._camera.transform)) {
@@ -528,14 +526,14 @@ define([
         if (!controller._aggregator.anyButtonDown() &&
                 (!defined(controller._lastInertiaZoomMovement) || !controller._lastInertiaZoomMovement.active) &&
                 (!defined(controller._lastInertiaTranslateMovement) || !controller._lastInertiaTranslateMovement.active) &&
-                !animations.contains(controller._animation)) {
-            var animation = controller._camera.createCorrectPositionAnimation(controller.bounceAnimationTime);
-            if (defined(animation)) {
-                controller._animation = animations.add(animation);
+                !tweens.contains(controller._tween)) {
+            var tween = controller._camera.createCorrectPositionTween(controller.bounceAnimationTime);
+            if (defined(tween)) {
+                controller._tween = tweens.add(tween);
             }
         }
 
-        animations.update();
+        tweens.update();
     }
 
     var translateCVStartRay = new Ray();
@@ -638,10 +636,10 @@ define([
             reactToInput(controller, controller.enableRotate, controller.rotateEventTypes, rotate3D, controller.inertiaSpin, '_lastInertiaSpinMovement');
             reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom3D, controller.inertiaZoom, '_lastInertiaZoomMovement');
         } else {
-            var animations = controller._animations;
+            var tweens = controller._tweens;
 
             if (controller._aggregator.anyButtonDown()) {
-                animations.removeAll();
+                tweens.removeAll();
             }
 
             reactToInput(controller, controller.enableTilt, controller.tiltEventTypes, rotateCV, controller.inertiaSpin, '_lastInertiaTiltMovement');
@@ -651,14 +649,14 @@ define([
 
             if (!controller._aggregator.anyButtonDown() && (!defined(controller._lastInertiaZoomMovement) || !controller._lastInertiaZoomMovement.active) &&
                     (!defined(controller._lastInertiaTranslateMovement) || !controller._lastInertiaTranslateMovement.active) &&
-                    !animations.contains(controller._animation)) {
-                var animation = controller._camera.createCorrectPositionAnimation(controller.bounceAnimationTime);
-                if (defined(animation)) {
-                    controller._animation = animations.add(animation);
+                    !tweens.contains(controller._tween)) {
+                var tween = controller._camera.createCorrectPositionTween(controller.bounceAnimationTime);
+                if (defined(tween)) {
+                    controller._tween = tweens.add(tween);
                 }
             }
 
-            animations.update();
+            tweens.update();
         }
     }
 
@@ -672,8 +670,6 @@ define([
     }
 
     var rotate3DRestrictedDirection = Cartesian3.clone(Cartesian3.ZERO);
-    var rotate3DScratchCartesian3 = new Cartesian3();
-    var rotate3DNegateScratch = new Cartesian3();
     var rotate3DInverseMatrixScratch = new Matrix4();
 
     function rotate3D(controller, movement, transform, constrainedAxis, restrictedAngle) {
@@ -701,41 +697,6 @@ define([
 
         var deltaPhi = rotateRate * phiWindowRatio * Math.PI * 2.0;
         var deltaTheta = rotateRate * thetaWindowRatio * Math.PI;
-
-        if (defined(camera.constrainedAxis) && !defined(transform)) {
-            var positionNormal = Cartesian3.normalize(camera.position, rotate3DScratchCartesian3);
-            var northParallel = Cartesian3.equalsEpsilon(positionNormal, camera.constrainedAxis, CesiumMath.EPSILON2);
-            var southParallel = Cartesian3.equalsEpsilon(positionNormal, Cartesian3.negate(camera.constrainedAxis, rotate3DNegateScratch), CesiumMath.EPSILON2);
-
-            if (!northParallel && !southParallel) {
-                var up;
-                if (Cartesian3.dot(camera.position, camera.direction) + 1 < CesiumMath.EPSILON4) {
-                    up = camera.up;
-                } else {
-                    up = camera.direction;
-                }
-
-                var east;
-                if (Cartesian3.equalsEpsilon(camera.constrainedAxis, positionNormal, CesiumMath.EPSILON2)) {
-                    east = camera.right;
-                } else {
-                    east = Cartesian3.cross(camera.constrainedAxis, positionNormal, rotate3DScratchCartesian3);
-                    Cartesian3.normalize(east, east);
-                }
-
-                var rDotE = Cartesian3.dot(camera.right, east);
-                var signRDotE = (CesiumMath.sign(rDotE) < 0.0) ? -1.0 : 1.0;
-                rDotE = Math.abs(rDotE);
-                var uDotA = Cartesian3.dot(up, camera.constrainedAxis);
-                var uDotE = Cartesian3.dot(up, east);
-                var signInnerSum = ((uDotA > 0.0 && uDotE > 0.0) || (uDotA < 0.0 && uDotE < 0.0)) ? -1.0 : 1.0;
-                uDotA = Math.abs(uDotA);
-
-                var originalDeltaTheta = deltaTheta;
-                deltaTheta = signRDotE * (deltaTheta * uDotA - signInnerSum * deltaPhi * (1.0 - rDotE));
-                deltaPhi = signRDotE * (deltaPhi * rDotE + signInnerSum * originalDeltaTheta * (1.0 - uDotA));
-            }
-        }
 
         camera.rotateRight(deltaPhi, transform);
         camera.rotateUp(deltaTheta, transform);
@@ -1014,7 +975,7 @@ define([
      * controller = controller && controller.destroy();
      */
     ScreenSpaceCameraController.prototype.destroy = function() {
-        this._animations.removeAll();
+        this._tweens.removeAll();
         this._spinHandler = this._spinHandler && this._spinHandler.destroy();
         this._translateHandler = this._translateHandler && this._translateHandler.destroy();
         this._lookHandler = this._lookHandler && this._lookHandler.destroy();

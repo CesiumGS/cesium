@@ -18,7 +18,6 @@ defineSuite([
         'Specs/createContext',
         'Specs/createFrameState',
         'Specs/destroyContext',
-        'Specs/frameState',
         'Specs/pick',
         'Specs/render'
     ], function(
@@ -40,7 +39,6 @@ defineSuite([
         createContext,
         createFrameState,
         destroyContext,
-        frameState,
         pick,
         render) {
     "use strict";
@@ -49,13 +47,22 @@ defineSuite([
     // TODO: rendering tests for pixel offset, eye offset, horizontal origin, vertical origin, font, style, outlineColor, outlineWidth, and fillColor properties
 
     var context;
+    var frameState;
+    var mockScene;
     var labels;
 
     beforeAll(function() {
         context = createContext();
+        frameState = createFrameState();
 
-        var us = context.uniformState;
-        us.update(context, createFrameState(createCamera()));
+        context.uniformState.update(context, createFrameState(createCamera()));
+
+        mockScene = {
+            canvas: context._canvas,
+            context : context,
+            camera : frameState.camera,
+            frameState : frameState
+        };
     });
 
     afterAll(function() {
@@ -907,8 +914,7 @@ defineSuite([
                 position : Cartesian3.ZERO
             });
             labels.update(context, frameState, []);
-            var fakeScene = {context : context, frameState : frameState, canvas: context._canvas};
-            expect(label.computeScreenSpacePosition(fakeScene)).toEqual(new Cartesian2(0.5, 0.5));
+            expect(label.computeScreenSpacePosition(mockScene)).toEqual(new Cartesian2(0.5, 0.5));
         });
 
         it('can compute screen space position (2)', function() {
@@ -919,8 +925,7 @@ defineSuite([
                 pixelOffset : new Cartesian2(1.0, 2.0)
             });
             labels.update(context, frameState, []);
-            var fakeScene = {context : context, frameState : frameState, canvas: context._canvas};
-            expect(label.computeScreenSpacePosition(fakeScene)).toEqual(new Cartesian2(1.5, 2.5));
+            expect(label.computeScreenSpacePosition(mockScene)).toEqual(new Cartesian2(1.5, 2.5));
         });
 
         it('can compute screen space position (3)', function() {
@@ -928,11 +933,10 @@ defineSuite([
             var label = labels.add({
                 text : 'abc',
                 position : Cartesian3.ZERO,
-                eyeOffset : new Cartesian3(5.0, 5.0, 0.0)
+                eyeOffset : new Cartesian3(5.0, -5.0, 0.0)
             });
             labels.update(context, frameState, []);
-            var fakeScene = {context : context, frameState : frameState, canvas: context._canvas};
-            var p = label.computeScreenSpacePosition(fakeScene);
+            var p = label.computeScreenSpacePosition(mockScene);
             expect(p.x).toBeGreaterThan(0.5);
             expect(p.y).toBeGreaterThan(0.5);
         });
@@ -1064,6 +1068,142 @@ defineSuite([
 
                 expect(billboard.pickPrimitive).toEqual(label);
             }
+        });
+
+        describe('sets individual billboard properties properly when they change on the label', function() {
+            var label;
+            beforeEach(function() {
+                label = labels.add({
+                    position : new Cartesian3(1.0, 2.0, 3.0),
+                    text : 'abc',
+                    pixelOffset : new Cartesian2(4.0, 5.0),
+                    eyeOffset : new Cartesian3(6.0, 7.0, 8.0),
+                    verticalOrigin : VerticalOrigin.TOP,
+                    scale : 2.0,
+                    id : 'id1',
+                    translucencyByDistance : new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0),
+                    pixelOffsetScaleByDistance : new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0)
+                });
+                labels.update(context, frameState, []);
+            });
+
+            function getGlyphBillboards() {
+                return label._glyphs.map(function(glyph) {
+                    return glyph.billboard;
+                });
+            }
+
+            it('position', function() {
+                var newValue = new Cartesian3(4.0, 5.0, 6.0);
+                expect(label.position).not.toEqual(newValue);
+                label.position = newValue;
+                labels.update(context, frameState, []);
+
+                getGlyphBillboards().forEach(function(billboard) {
+                    expect(billboard.position).toEqual(label.position);
+                });
+            });
+
+            it('eyeOffset', function() {
+                var newValue = new Cartesian3(16.0, 17.0, 18.0);
+                expect(label.eyeOffset).not.toEqual(newValue);
+                label.eyeOffset = newValue;
+                labels.update(context, frameState, []);
+
+                getGlyphBillboards().forEach(function(billboard) {
+                    expect(billboard.eyeOffset).toEqual(label.eyeOffset);
+                });
+            });
+
+            it('pixelOffset', function() {
+                var newValue = new Cartesian3(16.0, 17.0, 18.0);
+                expect(label.pixelOffset).not.toEqual(newValue);
+                label.pixelOffset = newValue;
+                labels.update(context, frameState, []);
+
+                getGlyphBillboards().forEach(function(billboard) {
+                    expect(billboard.pixelOffset).toEqual(label.pixelOffset);
+                });
+            });
+
+            it('verticalOrigin', function() {
+                var newValue = VerticalOrigin.BOTTOM;
+                expect(label.verticalOrigin).not.toEqual(newValue);
+                label.verticalOrigin = newValue;
+                labels.update(context, frameState, []);
+
+                getGlyphBillboards().forEach(function(billboard) {
+                    expect(billboard.verticalOrigin).toEqual(label.verticalOrigin);
+                });
+            });
+
+            // glyph horizontal origin is always LEFT
+
+            it('scale', function() {
+                var newValue = 3.0;
+                expect(label.scale).not.toEqual(newValue);
+                label.scale = newValue;
+                labels.update(context, frameState, []);
+
+                getGlyphBillboards().forEach(function(billboard) {
+                    expect(billboard.scale).toEqual(label.scale);
+                });
+            });
+
+            it('id', function() {
+                var newValue = 'id2';
+                expect(label.id).not.toEqual(newValue);
+                label.id = newValue;
+                labels.update(context, frameState, []);
+
+                getGlyphBillboards().forEach(function(billboard) {
+                    expect(billboard.id).toEqual(label.id);
+                });
+            });
+
+            it('translucencyByDistance', function() {
+                var newValue = new NearFarScalar(1.1e4, 1.2, 1.3e6, 4.0);
+                expect(label.translucencyByDistance).not.toEqual(newValue);
+                label.translucencyByDistance = newValue;
+                labels.update(context, frameState, []);
+
+                getGlyphBillboards().forEach(function(billboard) {
+                    expect(billboard.translucencyByDistance).toEqual(label.translucencyByDistance);
+                });
+            });
+
+            it('pixelOffsetScaleByDistance', function() {
+                var newValue = new NearFarScalar(1.5e4, 1.6, 1.7e6, 8.0);
+                expect(label.pixelOffsetScaleByDistance).not.toEqual(newValue);
+                label.pixelOffsetScaleByDistance = newValue;
+                labels.update(context, frameState, []);
+
+                getGlyphBillboards().forEach(function(billboard) {
+                    expect(billboard.pixelOffsetScaleByDistance).toEqual(label.pixelOffsetScaleByDistance);
+                });
+            });
+
+            it('translucencyByDistance to undefined', function() {
+                var newValue;
+                expect(label.translucencyByDistance).not.toEqual(newValue);
+                label.translucencyByDistance = newValue;
+                labels.update(context, frameState, []);
+
+                getGlyphBillboards().forEach(function(billboard) {
+                    expect(billboard.translucencyByDistance).toEqual(label.translucencyByDistance);
+                });
+            });
+
+            it('pixelOffsetScaleByDistance to undefined', function() {
+                var newValue;
+                expect(label.pixelOffsetScaleByDistance).not.toEqual(newValue);
+                label.pixelOffsetScaleByDistance = newValue;
+                labels.update(context, frameState, []);
+
+                getGlyphBillboards().forEach(function(billboard) {
+                    expect(billboard.pixelOffsetScaleByDistance).toEqual(label.pixelOffsetScaleByDistance);
+                });
+            });
         });
 
         it('should set vertexTranslate of billboards correctly when vertical origin is changed', function() {
@@ -1371,14 +1511,13 @@ defineSuite([
 
     it('computes bounding sphere in 3D', function() {
         var projection = frameState.mapProjection;
-        var ellipsoid = projection.ellipsoid;
 
         var one = labels.add({
-            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
+            position : Cartesian3.fromDegrees(-50.0, -50.0, 0.0),
             text : 'one'
         });
         var two = labels.add({
-            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0)),
+            position : Cartesian3.fromDegrees(-50.0, 50.0, 0.0),
             text : 'two'
         });
 
@@ -1397,11 +1536,11 @@ defineSuite([
         var ellipsoid = projection.ellipsoid;
 
         var one = labels.add({
-            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
+            position : Cartesian3.fromDegrees(-50.0, -50.0, 0.0),
             text : 'one'
         });
         var two = labels.add({
-            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0)),
+            position : Cartesian3.fromDegrees(-50.0, 50.0, 0.0),
             text : 'two'
         });
 

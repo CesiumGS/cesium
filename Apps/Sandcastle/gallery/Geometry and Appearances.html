@@ -239,7 +239,7 @@ require(['Cesium'], function(Cesium) {
     var bottomRadius = 150000.0;
     var modelMatrix = Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
         Cesium.Cartesian3.fromDegrees(-70.0, 45.0)),
-        new Cesium.Cartesian3(0.0, 0.0, 100000.0));
+        new Cesium.Cartesian3(0.0, 0.0, 100000.0), new Cesium.Matrix4());
     var cylinderInstance = new Cesium.GeometryInstance({
         geometry : new Cesium.CylinderGeometry({
             length : length,
@@ -327,11 +327,11 @@ require(['Cesium'], function(Cesium) {
     for (i = 0; i < 5; ++i) {
         height = 100000.0 + (200000.0 * i);
         boxModelMatrix = Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-            Cesium.Cartesian3.fromDegrees(-106.0, 45.0)), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0);
+            Cesium.Cartesian3.fromDegrees(-106.0, 45.0)), new Cesium.Cartesian3(0.0, 0.0, height), new Cesium.Matrix4()), 90000.0, new Cesium.Matrix4());
         ellipsoidModelMatrix = Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-            Cesium.Cartesian3.fromDegrees(-102.0, 45.0)), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0);
+            Cesium.Cartesian3.fromDegrees(-102.0, 45.0)), new Cesium.Cartesian3(0.0, 0.0, height), new Cesium.Matrix4()), 90000.0, new Cesium.Matrix4());
         sphereModelMatrix = Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-            Cesium.Cartesian3.fromDegrees(-98.0, 45.0)), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0);
+            Cesium.Cartesian3.fromDegrees(-98.0, 45.0)), new Cesium.Cartesian3(0.0, 0.0, height), new Cesium.Matrix4()), 90000.0, new Cesium.Matrix4());
 
         instances.push(new Cesium.GeometryInstance({
             geometry : boxGeometry,
@@ -594,7 +594,7 @@ require(['Cesium'], function(Cesium) {
     topRadius = 0.0;
     bottomRadius = 200000.0;
     modelMatrix = Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-        Cesium.Cartesian3.fromDegrees(-70.0, 40.0)), new Cesium.Cartesian3(0.0, 0.0, 200000.0));
+        Cesium.Cartesian3.fromDegrees(-70.0, 40.0)), new Cesium.Cartesian3(0.0, 0.0, 200000.0), new Cesium.Matrix4());
     cylinderInstance = new Cesium.GeometryInstance({
         geometry : new Cesium.CylinderGeometry({
             length : length,
@@ -681,11 +681,11 @@ require(['Cesium'], function(Cesium) {
     for (i = 0; i < 5; ++i) {
         height = 100000.0 + (200000.0 * i);
         boxModelMatrix = Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-            Cesium.Cartesian3.fromDegrees(-108.0, 45.0)), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0);
+            Cesium.Cartesian3.fromDegrees(-108.0, 45.0)), new Cesium.Cartesian3(0.0, 0.0, height), new Cesium.Matrix4()), 90000.0, new Cesium.Matrix4());
         ellipsoidModelMatrix = Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-            Cesium.Cartesian3.fromDegrees(-104.0, 45.0)), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0);
+            Cesium.Cartesian3.fromDegrees(-104.0, 45.0)), new Cesium.Cartesian3(0.0, 0.0, height), new Cesium.Matrix4()), 90000.0, new Cesium.Matrix4());
         sphereModelMatrix = Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-            Cesium.Cartesian3.fromDegrees(-100.0, 45.0)), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0);
+            Cesium.Cartesian3.fromDegrees(-100.0, 45.0)), new Cesium.Cartesian3(0.0, 0.0, height), new Cesium.Matrix4()), 90000.0, new Cesium.Matrix4());
         instances.push(new Cesium.GeometryInstance({
             geometry : boxGeometry,
             modelMatrix : boxModelMatrix,

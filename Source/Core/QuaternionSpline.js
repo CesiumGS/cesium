@@ -23,7 +23,7 @@ define([
         quads[length - 1] = defined(lastInnerQuadrangle) ? lastInnerQuadrangle : points[length - 1];
 
         for (var i = 1; i < length - 1; ++i) {
-            quads[i] = Quaternion.innerQuadrangle(points[i - 1], points[i], points[i + 1]);
+            quads[i] = Quaternion.innerQuadrangle(points[i - 1], points[i], points[i + 1], new Quaternion());
         }
 
         return quads;
@@ -43,6 +43,9 @@ define([
             var q1 = points[1];
 
             return function(time, result) {
+                if (!defined(result)){
+                    result = new Quaternion();
+                }
                 var u = (time - t0) * invSpan;
                 return Quaternion.fastSlerp(q0, q1, u, result);
             };
@@ -50,6 +53,9 @@ define([
 
         // use quad interpolation for more than 3 points
         return function(time, result) {
+            if (!defined(result)){
+                result = new Quaternion();
+            }
             var i = spline._lastTimeIndex = spline.findTimeInterval(time, spline._lastTimeIndex);
             var u = (time - times[i]) / (times[i + 1] - times[i]);
 

@@ -1,11 +1,15 @@
 /*global define*/
-define(function() {
+define([
+        './freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
      * The format of a pixel, i.e., the number of components it has and what they represent.
      *
-     * @exports PixelFormat
+     * @namespace
+     * @alias PixelFormat
      */
     var PixelFormat = {
         /**
@@ -69,34 +73,34 @@ define(function() {
          * @private
          */
         validate : function(pixelFormat) {
-            return ((pixelFormat === PixelFormat.DEPTH_COMPONENT) ||
-                    (pixelFormat === PixelFormat.DEPTH_STENCIL) ||
-                    (pixelFormat === PixelFormat.ALPHA) ||
-                    (pixelFormat === PixelFormat.RGB) ||
-                    (pixelFormat === PixelFormat.RGBA) ||
-                    (pixelFormat === PixelFormat.LUMINANCE) ||
-                    (pixelFormat === PixelFormat.LUMINANCE_ALPHA));
+            return pixelFormat === PixelFormat.DEPTH_COMPONENT ||
+                   pixelFormat === PixelFormat.DEPTH_STENCIL ||
+                   pixelFormat === PixelFormat.ALPHA ||
+                   pixelFormat === PixelFormat.RGB ||
+                   pixelFormat === PixelFormat.RGBA ||
+                   pixelFormat === PixelFormat.LUMINANCE ||
+                   pixelFormat === PixelFormat.LUMINANCE_ALPHA;
         },
 
         /**
          * @private
          */
         isColorFormat : function(pixelFormat) {
-            return ((pixelFormat === PixelFormat.ALPHA) ||
-                    (pixelFormat === PixelFormat.RGB) ||
-                    (pixelFormat === PixelFormat.RGBA) ||
-                    (pixelFormat === PixelFormat.LUMINANCE) ||
-                    (pixelFormat === PixelFormat.LUMINANCE_ALPHA));
+            return pixelFormat === PixelFormat.ALPHA ||
+                   pixelFormat === PixelFormat.RGB ||
+                   pixelFormat === PixelFormat.RGBA ||
+                   pixelFormat === PixelFormat.LUMINANCE ||
+                   pixelFormat === PixelFormat.LUMINANCE_ALPHA;
         },
 
         /**
          * @private
          */
         isDepthFormat : function(pixelFormat) {
-            return ((pixelFormat === PixelFormat.DEPTH_COMPONENT) ||
-                    (pixelFormat === PixelFormat.DEPTH_STENCIL));
+            return pixelFormat === PixelFormat.DEPTH_COMPONENT ||
+                   pixelFormat === PixelFormat.DEPTH_STENCIL;
         }
     };
 
-    return PixelFormat;
+    return freezeObject(PixelFormat);
 });
