@@ -136,6 +136,8 @@ require(['Cesium'], function(Cesium) {
     DemoTileProvider.prototype.showTileThisFrame = function(tile, context, frameState, commandList) {
         tile.data.primitive.update(context, frameState, commandList);
     };
+    
+    var subtractScratch = new Cesium.Cartesian3();
 
     DemoTileProvider.prototype.computeDistanceToTile = function(tile, frameState) {
         var boundingSphere;
@@ -146,7 +148,7 @@ require(['Cesium'], function(Cesium) {
             boundingSphere = tile.data.boundingSphere2D;
         }
 
-        return Math.max(0.0, Cesium.Cartesian3.magnitude(Cesium.Cartesian3.subtract(boundingSphere.center, frameState.camera.positionWC)) - boundingSphere.radius);
+        return Math.max(0.0, Cesium.Cartesian3.magnitude(Cesium.Cartesian3.subtract(boundingSphere.center, frameState.camera.positionWC, subtractScratch)) - boundingSphere.radius);
     };
 
     DemoTileProvider.prototype.isDestroyed = function() {
