@@ -159,18 +159,18 @@ define([
                 offset += pos.length;
             }
         } else {
-            topPositions = PolylinePipeline.generateArc({
+            topPositions = new Float64Array(PolylinePipeline.generateArc({
                 positions: wallPositions,
                 height: maximumHeights,
                 granularity: granularity,
                 ellipsoid: ellipsoid
-            });
-            bottomPositions = PolylinePipeline.generateArc({
+            }));
+            bottomPositions = new Float64Array(PolylinePipeline.generateArc({
                 positions: wallPositions,
                 height: minimumHeights,
                 granularity: granularity,
                 ellipsoid: ellipsoid
-            });
+            }));
         }
 
         return {

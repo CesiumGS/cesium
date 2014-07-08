@@ -91,17 +91,15 @@ define([
         var index = offset;
         start.height = h0;
         var cart = ellipsoid.cartographicToCartesian(start, cartesian);
-        array[index++] = cart.x;
-        array[index++] = cart.y;
-        array[index++] = cart.z;
+        Cartesian3.pack(cart, array, index);
+        index += 3;
 
         for (var i = 1; i < numPoints; i++) {
             var carto = ellipsoidGeodesic.interpolateUsingSurfaceDistance(i * surfaceDistanceBetweenPoints, carto2);
             carto.height = heights[i];
             cart = ellipsoid.cartographicToCartesian(carto, cartesian);
-            array[index++] = cart.x;
-            array[index++] = cart.y;
-            array[index++] = cart.z;
+            Cartesian3.pack(cart, array, index);
+            index += 3;
         }
 
         return index;
@@ -272,7 +270,7 @@ define([
         }
         numPoints++;
         var arrayLength = numPoints * 3;
-        var newPositions = new Float64Array(arrayLength);
+        var newPositions = new Array(arrayLength);
         var offset = 0;
         for (i = 0; i < length - 1; i++) {
             p0 = positions[i];
@@ -295,10 +293,35 @@ define([
         var carto = ellipsoid.cartesianToCartographic(lastPoint, carto1);
         carto.height = isArray(height) ? height[length - 1] : height;
         var cart = ellipsoid.cartographicToCartesian(carto, cartesian);
-        newPositions[arrayLength - 3] = cart.x;
-        newPositions[arrayLength - 2] = cart.y;
-        newPositions[arrayLength - 1] = cart.z;
+        Cartesian3.pack(cart, newPositions, arrayLength - 3);
 
+        return newPositions;
+    };
+
+    /**
+     * Subdivides polyline and raises all points to the specified height.
+     * @param {Cartesian3[]} positions The array of type {Cartesian3} representing positions.
+     * @param {Number|Number[]} [height=0.0] A number or array of numbers representing the heights of each position.
+     * @param {Number} [granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+     * @returns {Cartesian3[]} A new array of cartesian3 positions that have been subdivided and raised to the surface of the ellipsoid.
+     *
+     * @example
+     * var positions = Cesium.Cartesian3.fromDegreesArray([
+     *   -105.0, 40.0,
+     *   -100.0, 38.0,
+     *   -105.0, 35.0,
+     *   -100.0, 32.0
+     * ]);
+     * var surfacePositions = Cesium.PolylinePipeline.generateCartesianArc(positions);
+     */
+    PolylinePipeline.generateCartesianArc = function(options) {
+        var numberArray = PolylinePipeline.generateArc(options);
+        var size = numberArray.length/3;
+        var newPositions = new Array(size);
+        for (var i = 0; i < size; i++) {
+            newPositions[i] = Cartesian3.unpack(numberArray, i*3);
+        }
         return newPositions;
     };
 

@@ -3,11 +3,13 @@ defineSuite([
         'Core/PolylineGeometry',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/Ellipsoid',
         'Core/VertexFormat'
     ], function(
         PolylineGeometry,
         Cartesian3,
         Color,
+        Ellipsoid,
         VertexFormat) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -45,11 +47,13 @@ defineSuite([
     });
 
     it('constructor computes all vertex attributes', function() {
-        var positions = [new Cartesian3(), new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(2.0, 0.0, 0.0)];
+        var positions = [new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(0.0, 1.0, 0.0), new Cartesian3(0.0, 0.0, 1.0)];
         var line = PolylineGeometry.createGeometry(new PolylineGeometry({
             positions : positions,
             width : 10.0,
-            vertexFormat : VertexFormat.ALL
+            vertexFormat : VertexFormat.ALL,
+            granularity : Math.PI,
+            ellipsoid: Ellipsoid.UNIT_SPHERE
         }));
 
         expect(line.attributes.position).toBeDefined();
@@ -68,13 +72,15 @@ defineSuite([
     });
 
     it('constructor computes per segment colors', function() {
-        var positions = [new Cartesian3(), new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(2.0, 0.0, 0.0)];
+        var positions = [new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(0.0, 1.0, 0.0), new Cartesian3(0.0, 0.0, 1.0)];
         var colors = [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0), new Color(0.0, 0.0, 1.0, 1.0)];
         var line = PolylineGeometry.createGeometry(new PolylineGeometry({
             positions : positions,
             colors : colors,
             width : 10.0,
-            vertexFormat : VertexFormat.ALL
+            vertexFormat : VertexFormat.ALL,
+            granularity : Math.PI,
+            ellipsoid: Ellipsoid.UNIT_SPHERE
         }));
 
         expect(line.attributes.color).toBeDefined();
@@ -84,14 +90,16 @@ defineSuite([
     });
 
     it('constructor computes per vertex colors', function() {
-        var positions = [new Cartesian3(), new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(2.0, 0.0, 0.0)];
+        var positions = [new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(0.0, 1.0, 0.0), new Cartesian3(0.0, 0.0, 1.0)];
         var colors = [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0), new Color(0.0, 0.0, 1.0, 1.0)];
         var line = PolylineGeometry.createGeometry(new PolylineGeometry({
             positions : positions,
             colors : colors,
             colorsPerVertex : true,
             width : 10.0,
-            vertexFormat : VertexFormat.ALL
+            vertexFormat : VertexFormat.ALL,
+            granularity : Math.PI,
+            ellipsoid: Ellipsoid.UNIT_SPHERE
         }));
 
         expect(line.attributes.color).toBeDefined();

@@ -1501,7 +1501,8 @@ defineSuite([
                         Cartographic.fromDegrees(5.0, 0.0)
                     ]),
                     width : 20.0,
-                    colors : [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0)]
+                    colors : [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0)],
+                    raiseToSurface: false
                 }),
                 id : 'polyline'
             });
@@ -1517,7 +1518,8 @@ defineSuite([
                     ]),
                     width : 20.0,
                     colors : [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0)],
-                    colorsPerVertex : true
+                    colorsPerVertex : true,
+                    raiseToSurface: false
                 }),
                 id : 'polyline'
             });
