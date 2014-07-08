@@ -180,7 +180,7 @@ define([
             if (meshes.hasOwnProperty(name)) {
                 var mesh = meshes[name];
 
-                if (!defined(mesh.primitives) {
+                if (!defined(mesh.primitives)) {
                     mesh.primitives = [];
                 }
 
