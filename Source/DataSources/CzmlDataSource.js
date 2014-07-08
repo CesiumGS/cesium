@@ -67,7 +67,6 @@ define([
         './StripeOrientation',
         './TimeIntervalCollectionPositionProperty',
         './TimeIntervalCollectionProperty',
-        './VectorGraphics',
         './WallGraphics'
     ], function(
         Cartesian2,
@@ -137,7 +136,6 @@ define([
         StripeOrientation,
         TimeIntervalCollectionPositionProperty,
         TimeIntervalCollectionProperty,
-        VectorGraphics,
         WallGraphics) {
     "use strict";
 
@@ -1524,31 +1522,6 @@ define([
         }
     }
 
-    function processVector(entity, packet, entityCollection, sourceUri) {
-        var vectorData = packet.vector;
-        if (!defined(vectorData)) {
-            return;
-        }
-
-        var interval;
-        var intervalString = vectorData.interval;
-        if (defined(intervalString)) {
-            iso8601Scratch.iso8601 = intervalString;
-            interval = TimeInterval.fromIso8601(iso8601Scratch);
-        }
-
-        var vector = entity.vector;
-        if (!defined(vector)) {
-            entity.vector = vector = new VectorGraphics();
-        }
-
-        processPacketData(Color, vector, 'color', vectorData.color, interval, sourceUri, entityCollection);
-        processPacketData(Boolean, vector, 'show', vectorData.show, interval, sourceUri, entityCollection);
-        processPacketData(Number, vector, 'width', vectorData.width, interval, sourceUri, entityCollection);
-        processPacketData(Cartesian3, vector, 'direction', vectorData.direction, interval, sourceUri, entityCollection);
-        processPacketData(Number, vector, 'length', vectorData.length, interval, sourceUri, entityCollection);
-    }
-
     function processCzmlPacket(packet, entityCollection, updaterFunctions, sourceUri, dataSource) {
         var objectId = packet.id;
         if (!defined(objectId)) {
@@ -1759,7 +1732,6 @@ define([
     processPolyline, //
     processPyramid, //
     processRectangle, //
-    processVector, //
     processPosition, //
     processViewFrom, //
     processWall, //

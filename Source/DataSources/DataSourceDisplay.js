@@ -18,7 +18,6 @@ define([
         './PolylineGeometryUpdater',
         './PyramidVisualizer',
         './RectangleGeometryUpdater',
-        './VectorVisualizer',
         './WallGeometryUpdater'
     ], function(
         defaultValue,
@@ -39,7 +38,6 @@ define([
         PolylineGeometryUpdater,
         PyramidVisualizer,
         RectangleGeometryUpdater,
-        VectorVisualizer,
         WallGeometryUpdater) {
     "use strict";
 
@@ -97,7 +95,6 @@ define([
                 new LabelVisualizer(scene, entities),
                 new ModelVisualizer(scene, entities),
                 new PointVisualizer(scene, entities),
-                new VectorVisualizer(scene, entities),
                 new PyramidVisualizer(scene, entities),
                 new PathVisualizer(scene, entities)];
     };

@@ -41,7 +41,7 @@ define([
         this._parent = undefined;
         this._propertyNames = ['billboard', 'cone', 'description', 'ellipse', 'ellipsoid', 'label', 'model', //
                                'orientation', 'path', 'point', 'polygon', 'polyline', 'position', 'pyramid', //
-                               'rectangle', 'vector', 'vertexPositions', 'viewFrom', 'wall'];
+                               'rectangle', 'vertexPositions', 'viewFrom', 'wall'];
 
         this._billboard = undefined;
         this._billboardSubscription = undefined;
@@ -73,8 +73,6 @@ define([
         this._pyramidSubscription = undefined;
         this._rectangle = undefined;
         this._rectangleSubscription = undefined;
-        this._vector = undefined;
-        this._vectorSubscription = undefined;
         this._vertexPositions = undefined;
         this._vertexPositionsSubscription = undefined;
         this._viewFrom = undefined;
@@ -241,12 +239,6 @@ define([
          * @type {RectangleGraphics}
          */
         rectangle : createPropertyDescriptor('rectangle'),
-        /**
-         * Gets or sets the vector.
-         * @memberof Entity.prototype
-         * @type {VectorGraphics}
-         */
-        vector : createPropertyDescriptor('vector'),
         /**
          * Gets or sets the vertex positions.
          * @memberof Entity.prototype

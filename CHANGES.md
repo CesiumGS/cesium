@@ -31,10 +31,9 @@ Change Log
     * `DynamicPyramid` -> `PyramidGraphics`
     * `DynamicPyramidVisualizer` -> `PyramidVisualizer`
     * `DynamicRectangle` -> `RectangleGraphics`
-    * `DynamicVector` -> `VectorGraphics`
-    * `DynamicVectorVisualizer` -> `VectorVisualizer`
     * `DynamicWall` -> `WallGraphics`
     * `viewerDynamicObjectMixin` -> `viewerEntityMixin`
+  * Removed `DynamicVector` and `DynamicVectorVisualizer`
   * `DataSource.dynamicObjects` has been renamed to `DataSource.entities`
   * `EntityCollection.getObjects()` and `CompositeEntityCollection.getObjects()` have been made properties and renamed `EntityCollection.entities` and `CompositeEntityCollection.entities`. 
   * `Viewer.trackedObject` and `Viewer.selectedObject` have been renamed to `Viewer.trackedEntity` and `Viewer.selectedEntity` when using the `viewerEntityMixin`.
