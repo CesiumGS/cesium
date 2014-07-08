@@ -5,14 +5,14 @@ define([
         '../Core/LinearSpline',
         '../Core/Quaternion',
         '../Core/QuaternionSpline',
-        './ModelTypes'
+        './getModelAccessor'
     ], function(
         Cartesian3,
         defined,
         LinearSpline,
         Quaternion,
         QuaternionSpline,
-        ModelTypes) {
+        getModelAccessor) {
     "use strict";
     /*global WebGLRenderingContext*/
 
@@ -34,7 +34,7 @@ define([
         var buffer = buffers[bufferView.buffer];
 
         var byteOffset = bufferView.byteOffset + accessor.byteOffset;
-        var byteLength = accessor.count * ModelTypes.get(accessor).componentsPerAttribute;
+        var byteLength = accessor.count * getModelAccessor(accessor).componentsPerAttribute;
 
         return model.basePath + buffer.path + ':' + byteOffset + ':' + byteLength;
     }
@@ -58,7 +58,7 @@ define([
             var count = accessor.count;
 
             // Convert typed array to Cesium types
-            var typedArray = ModelTypes.get(accessor).createArrayBufferView(buffers[bufferView.buffer], bufferView.byteOffset + accessor.byteOffset, count);
+            var typedArray = getModelAccessor(accessor).createArrayBufferView(buffers[bufferView.buffer], bufferView.byteOffset + accessor.byteOffset, count);
             var i;
 
             if ((componentType === WebGLRenderingContext.FLOAT) && (type === 'SCALAR')) {

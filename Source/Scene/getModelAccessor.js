@@ -5,11 +5,6 @@ define([
         ComponentDatatype) {
     "use strict";
 
-    /**
-     * @private
-     */
-    var ModelTypes = {};
-
     var ComponentsPerAttribute = {
         'SCALAR' : 1,
         'VEC2' : 2,
@@ -20,9 +15,10 @@ define([
         'MAT4' : 16
     };
 
-// TODO: make this a standalone function
-
-    ModelTypes.get = function(accessor) {
+    /**
+     * @private
+     */
+    var getModelAccessor = function(accessor) {
         var componentDatatype = accessor.componentType;
         var componentsPerAttribute = ComponentsPerAttribute[accessor.type];
 
@@ -34,5 +30,5 @@ define([
         };
     };
 
-    return ModelTypes;
+    return getModelAccessor;
 });

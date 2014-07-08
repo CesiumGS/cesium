@@ -31,12 +31,12 @@ define([
         '../ThirdParty/gltfDefaults',
         '../ThirdParty/Uri',
         './BlendingState',
+        './getModelAccessor',
         './ModelAnimationCache',
         './ModelAnimationCollection',
         './ModelMaterial',
         './ModelMesh',
         './ModelNode',
-        './ModelTypes',
         './Pass',
         './SceneMode'
     ], function(
@@ -71,12 +71,12 @@ define([
         gltfDefaults,
         Uri,
         BlendingState,
+        getModelAccessor,
         ModelAnimationCache,
         ModelAnimationCollection,
         ModelMaterial,
         ModelMesh,
         ModelNode,
-        ModelTypes,
         Pass,
         SceneMode) {
     "use strict";
@@ -1205,7 +1205,7 @@ define([
                 var componentType = accessor.componentType;
                 var type = accessor.type;
                 var count = accessor.count;
-                var typedArray = ModelTypes.get(accessor).createArrayBufferView(buffers[bufferView.buffer], bufferView.byteOffset + accessor.byteOffset, count);
+                var typedArray = getModelAccessor(accessor).createArrayBufferView(buffers[bufferView.buffer], bufferView.byteOffset + accessor.byteOffset, count);
                 var matrices =  new Array(count);
 
                 if ((componentType === WebGLRenderingContext.FLOAT) && (type === 'VEC4')) {
@@ -1352,7 +1352,7 @@ define([
                                 attrs.push({
                                     index                  : attributeLocation,
                                     vertexBuffer           : rendererBuffers[a.bufferView],
-                                    componentsPerAttribute : ModelTypes.get(a).componentsPerAttribute,
+                                    componentsPerAttribute : getModelAccessor(a).componentsPerAttribute,
                                     componentDatatype      : a.componentType,
                                     normalize              : false,
                                     offsetInBytes          : a.byteOffset,
