@@ -1566,12 +1566,12 @@ define([
             if (objectId === 'document') {
                 entity = dataSource._document;
             } else {
-                entity = entityCollection.getOrCreateObject(objectId);
+                entity = entityCollection.getOrCreateEntity(objectId);
             }
 
             var parentId = packet.parent;
             if (defined(parentId)) {
-                entity.parent = entityCollection.getOrCreateObject(parentId);
+                entity.parent = entityCollection.getOrCreateEntity(parentId);
             }
 
             for (var i = updaterFunctions.length - 1; i > -1; i--) {

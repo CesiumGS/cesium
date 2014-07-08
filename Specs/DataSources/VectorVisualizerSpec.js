@@ -72,7 +72,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new VectorVisualizer(scene, entityCollection);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         visualizer.update(JulianDate.now());
         expect(scene.primitives.length).toEqual(1);
@@ -84,7 +84,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new VectorVisualizer(scene, entityCollection);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         var vector = testObject.vector = new VectorGraphics();
         vector.show = new ConstantProperty(true);
 
@@ -102,7 +102,7 @@ defineSuite([
 
         expect(scene.primitives.length).toEqual(1);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
 
         var vector = testObject.vector = new VectorGraphics();
@@ -148,7 +148,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new VectorVisualizer(scene, entityCollection);
         expect(scene.primitives.length).toEqual(1);
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         var time = JulianDate.now();
 
         testObject.position = new ConstantProperty(new Cartesian3(5678, 1234, 1101112));
@@ -177,7 +177,7 @@ defineSuite([
 
         expect(scene.primitives.length).toEqual(1);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
 
         var time = JulianDate.now();
         var vector = testObject.vector = new VectorGraphics();

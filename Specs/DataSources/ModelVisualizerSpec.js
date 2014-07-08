@@ -66,7 +66,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new ModelVisualizer(scene, entityCollection);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         visualizer.update(JulianDate.now());
         expect(scene.primitives.length).toEqual(0);
@@ -76,7 +76,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new ModelVisualizer(scene, entityCollection);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         var model = testObject.model = new ModelGraphics();
         model.uri = new ConstantProperty(duckUrl);
 
@@ -95,7 +95,7 @@ defineSuite([
         model.minimumPixelSize = new ConstantProperty(24.0);
         model.uri = new ConstantProperty(duckUrl);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.model = model;
 
@@ -118,7 +118,7 @@ defineSuite([
         model.uri = new ConstantProperty(duckUrl);
 
         var time = JulianDate.now();
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty(new Cartesian3(5678, 1234, 1101112));
         testObject.model = model;
         visualizer.update(time);
@@ -135,7 +135,7 @@ defineSuite([
         visualizer = new ModelVisualizer(scene, entityCollection);
 
         var time = JulianDate.now();
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         var model = new ModelGraphics();
         testObject.model = model;
 

@@ -471,7 +471,7 @@ define([
             }
         }
 
-        var entities = this._entityCollection.getObjects();
+        var entities = this._entityCollection.entities;
         for (var i = 0, len = entities.length; i < len; i++) {
             var entity = entities[i];
 
@@ -539,7 +539,7 @@ define([
             }
         }
 
-        var entities = entityCollection.getObjects();
+        var entities = entityCollection.entities;
         var length = entities.length;
         for (var i = 0; i < length; i++) {
             entities[i]._pathUpdater = undefined;

@@ -207,7 +207,7 @@ defineSuite([
         expect(dataSource.clock).toBeUndefined();
         expect(dataSource.name).toBeUndefined();
         expect(dataSource.entities).toBeInstanceOf(EntityCollection);
-        expect(dataSource.entities.getObjects().length).toEqual(0);
+        expect(dataSource.entities.entities.length).toEqual(0);
     });
 
     it('Works with null geometry', function() {
@@ -216,10 +216,10 @@ defineSuite([
 
         var entityCollection = dataSource.entities;
         waitsFor(function() {
-            return entityCollection.getObjects().length === 1;
+            return entityCollection.entities.length === 1;
         });
         runs(function() {
-            var pointObject = entityCollection.getObjects()[0];
+            var pointObject = entityCollection.entities[0];
             expect(pointObject.geoJson).toBe(featureNullGeometry);
             expect(pointObject.position).toBeUndefined();
         });
@@ -231,10 +231,10 @@ defineSuite([
 
         var entityCollection = dataSource.entities;
         waitsFor(function() {
-            return entityCollection.getObjects().length === 1;
+            return entityCollection.entities.length === 1;
         });
         runs(function() {
-            var pointObject = entityCollection.getObjects()[0];
+            var pointObject = entityCollection.entities[0];
             expect(pointObject.geoJson).toBe(feature);
             expect(pointObject.position.getValue()).toEqual(coordinatesToCartesian(feature.geometry.coordinates));
             expect(pointObject.point).toBeDefined();
@@ -247,10 +247,10 @@ defineSuite([
 
         var entityCollection = dataSource.entities;
         waitsFor(function() {
-            return entityCollection.getObjects().length === 1;
+            return entityCollection.entities.length === 1;
         });
         runs(function() {
-            var pointObject = entityCollection.getObjects()[0];
+            var pointObject = entityCollection.entities[0];
             expect(pointObject.name).toBeUndefined();
             expect(pointObject.geoJson).toBe(featureWithNullName);
             expect(pointObject.position.getValue()).toEqual(coordinatesToCartesian(featureWithNullName.geometry.coordinates));
@@ -264,12 +264,12 @@ defineSuite([
 
         var entityCollection = dataSource.entities;
         waitsFor(function() {
-            return entityCollection.getObjects().length === 2;
+            return entityCollection.entities.length === 2;
         });
         runs(function() {
-            var pointObject = entityCollection.getObjects()[0];
+            var pointObject = entityCollection.entities[0];
             expect(pointObject.id).toEqual(featureWithId.id);
-            var lineString = entityCollection.getObjects()[1];
+            var lineString = entityCollection.entities[1];
             expect(lineString.id).toEqual(featureWithId.id + '_2');
         });
     });
@@ -280,10 +280,10 @@ defineSuite([
 
         var entityCollection = dataSource.entities;
         waitsFor(function() {
-            return entityCollection.getObjects().length === 1;
+            return entityCollection.entities.length === 1;
         });
         runs(function() {
-            var pointObject = entityCollection.getObjects()[0];
+            var pointObject = entityCollection.entities[0];
             expect(pointObject.geoJson).toBe(point);
             expect(pointObject.position.getValue()).toEqual(coordinatesToCartesian(point.coordinates));
             expect(pointObject.point).toBeDefined();
@@ -296,10 +296,10 @@ defineSuite([
 
         var entityCollection = dataSource.entities;
         waitsFor(function() {
-            return entityCollection.getObjects().length === multiPoint.coordinates.length;
+            return entityCollection.entities.length === multiPoint.coordinates.length;
         });
         runs(function() {
-            var objects = entityCollection.getObjects();
+            var objects = entityCollection.entities;
             var expectedPositions = coordinatesArrayToCartesian(multiPoint.coordinates);
             for ( var i = 0; i < multiPoint.coordinates.length; i++) {
                 var object = objects[i];
@@ -316,10 +316,10 @@ defineSuite([
 
         var entityCollection = dataSource.entities;
         waitsFor(function() {
-            return entityCollection.getObjects().length === 1;
+            return entityCollection.entities.length === 1;
         });
         runs(function() {
-            var object = entityCollection.getObjects()[0];
+            var object = entityCollection.entities[0];
             expect(object.geoJson).toBe(lineString);
             expect(object.polyline.positions.getValue()).toEqual(coordinatesArrayToCartesian(lineString.coordinates));
         });
@@ -331,10 +331,10 @@ defineSuite([
 
         var entityCollection = dataSource.entities;
         waitsFor(function() {
-            return entityCollection.getObjects().length === 2;
+            return entityCollection.entities.length === 2;
         });
         runs(function() {
-            var objects = entityCollection.getObjects();
+            var objects = entityCollection.entities;
             var lines = multiLineToCartesian(multiLineString);
             for ( var i = 0; i < multiLineString.coordinates.length; i++) {
                 var object = objects[i];
@@ -350,10 +350,10 @@ defineSuite([
 
         var entityCollection = dataSource.entities;
         waitsFor(function() {
-            return entityCollection.getObjects().length === 1;
+            return entityCollection.entities.length === 1;
         });
         runs(function() {
-            var object = entityCollection.getObjects()[0];
+            var object = entityCollection.entities[0];
             expect(object.geoJson).toBe(polygon);
             expect(object.polygon.positions.getValue()).toEqual(polygonCoordinatesToCartesian(polygon.coordinates));
         });
@@ -365,10 +365,10 @@ defineSuite([
 
         var entityCollection = dataSource.entities;
         waitsFor(function() {
-            return entityCollection.getObjects().length === 1;
+            return entityCollection.entities.length === 1;
         });
         runs(function() {
-            var object = entityCollection.getObjects()[0];
+            var object = entityCollection.entities[0];
             expect(object.geoJson).toBe(polygonWithHoles);
             expect(object.polygon.positions.getValue()).toEqual(polygonCoordinatesToCartesian(polygonWithHoles.coordinates));
         });
@@ -380,10 +380,10 @@ defineSuite([
 
         var entityCollection = dataSource.entities;
         waitsFor(function() {
-            return entityCollection.getObjects().length === 2;
+            return entityCollection.entities.length === 2;
         });
         runs(function() {
-            var objects = entityCollection.getObjects();
+            var objects = entityCollection.entities;
             var positions = multiPolygonCoordinatesToCartesian(multiPolygon.coordinates);
             for ( var i = 0; i < multiPolygon.coordinates.length; i++) {
                 var object = objects[i];
@@ -399,10 +399,10 @@ defineSuite([
 
         var entityCollection = dataSource.entities;
         waitsFor(function() {
-            return entityCollection.getObjects().length === 2;
+            return entityCollection.entities.length === 2;
         });
         runs(function() {
-            var objects = entityCollection.getObjects();
+            var objects = entityCollection.entities;
 
             var polygon = objects[0];
             expect(polygon.geoJson.properties).toBe(topoJson.objects.polygon.properties);
@@ -420,10 +420,10 @@ defineSuite([
 
         var entityCollection = dataSource.entities;
         waitsFor(function() {
-            return entityCollection.getObjects().length === 2;
+            return entityCollection.entities.length === 2;
         });
         runs(function() {
-            var objects = entityCollection.getObjects();
+            var objects = entityCollection.entities;
             var polygon = objects[0];
             expect(polygon.description).toBeDefined();
         });
@@ -435,15 +435,15 @@ defineSuite([
 
         var entityCollection = dataSource.entities;
         waitsFor(function() {
-            return entityCollection.getObjects().length === 2;
+            return entityCollection.entities.length === 2;
         });
         runs(function() {
-            var object = entityCollection.getObjects()[0];
+            var object = entityCollection.entities[0];
             expect(object.geoJson).toBe(geometryCollection);
             expect(object.position.getValue()).toEqual(coordinatesToCartesian(geometryCollection.geometries[0].coordinates));
             expect(object.point).toBeDefined();
 
-            object = entityCollection.getObjects()[1];
+            object = entityCollection.entities[1];
             expect(object.geoJson).toBe(geometryCollection);
             expect(object.polyline.positions.getValue()).toEqual(coordinatesArrayToCartesian(geometryCollection.geometries[1].coordinates));
         });
@@ -455,10 +455,10 @@ defineSuite([
 
         var entityCollection = dataSource.entities;
         waitsFor(function() {
-            return entityCollection.getObjects().length === 1;
+            return entityCollection.entities.length === 1;
         });
         runs(function() {
-            var pointObject = entityCollection.getObjects()[0];
+            var pointObject = entityCollection.entities[0];
             expect(pointObject.position.getValue()).toEqual(coordinatesToCartesian(point.coordinates));
         });
     });
@@ -480,10 +480,10 @@ defineSuite([
 
         var entityCollection = dataSource.entities;
         waitsFor(function() {
-            return entityCollection.getObjects().length === 1;
+            return entityCollection.entities.length === 1;
         });
         runs(function() {
-            var pointObject = entityCollection.getObjects()[0];
+            var pointObject = entityCollection.entities[0];
             expect(pointObject.position.getValue()).toEqual(projectedPosition);
         });
     });
@@ -494,10 +494,10 @@ defineSuite([
 
         var entityCollection = dataSource.entities;
         waitsFor(function() {
-            return entityCollection.getObjects().length === 1;
+            return entityCollection.entities.length === 1;
         });
         runs(function() {
-            var pointObject = entityCollection.getObjects()[0];
+            var pointObject = entityCollection.entities[0];
             expect(pointObject.position.getValue()).toEqual(coordinatesToCartesian(point.coordinates));
         });
     });
@@ -507,7 +507,7 @@ defineSuite([
         dataSource.loadUrl('Data/test.geojson');
 
         waitsFor(function() {
-            return dataSource.entities.getObjects().length === 4;
+            return dataSource.entities.entities.length === 4;
         });
 
         runs(function() {

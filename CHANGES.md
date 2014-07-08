@@ -36,6 +36,9 @@ Change Log
     * `DynamicVectorVisualizer` -> `VectorVisualizer`
     * `DynamicWall` -> `WallGraphics`
     * `viewerDynamicObjectMixin` -> `viewerEntityMixin`
+  * `DataSource.dynamicObjects` has been renamed to `DataSource.entities`
+  * `EntityCollection.getObjects()` and `CompositeEntityCollection.getObjects()` have been made properties and renamed `EntityCollection.entities` and `CompositeEntityCollection.entities`. 
+  * `Viewer.trackedObject` and `Viewer.selectedObject` have been renamed to `Viewer.trackedEntity` and `Viewer.selectedEntity` when using the `viewerEntityMixin`.
 * Added northUpEast transform to help support display of glTF models because Y is their up axis.
 
 Beta Releases

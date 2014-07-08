@@ -27,8 +27,8 @@ define([
 
     function fireChangedEvent(collection) {
         if (collection._suspendCount === 0) {
-            var added = collection._addedObjects;
-            var removed = collection._removedObjects;
+            var added = collection._addedEntities;
+            var removed = collection._removedEntities;
             if (added.length !== 0 || removed.length !== 0) {
                 collection._collectionChanged.raiseEvent(collection, added.values, removed.values);
                 added.removeAll();
@@ -43,9 +43,9 @@ define([
      * @constructor
      */
     var EntityCollection = function() {
-        this._objects = new AssociativeArray();
-        this._addedObjects = new AssociativeArray();
-        this._removedObjects = new AssociativeArray();
+        this._entities = new AssociativeArray();
+        this._addedEntities = new AssociativeArray();
+        this._removedEntities = new AssociativeArray();
         this._suspendCount = 0;
         this._collectionChanged = new Event();
         this._id = createGuid();
@@ -95,10 +95,10 @@ define([
 
     defineProperties(EntityCollection.prototype, {
         /**
-         * Gets the event that is fired when objects are added or removed from the collection.
+         * Gets the event that is fired when entities are added or removed from the collection.
          * The generated event is a {@link EntityCollection.collectionChangedEventCallback}.
          * @memberof EntityCollection.prototype
-         *
+         * @readonly
          * @type {Event}
          */
         collectionChanged : {
@@ -109,12 +109,24 @@ define([
         /**
          * Gets a globally unique identifier for this collection.
          * @memberof EntityCollection.prototype
-         *
+         * @readonly
          * @type {String}
          */
         id : {
             get : function() {
                 return this._id;
+            }
+        },
+        /**
+         * Gets the array of Entity instances in the collection.
+         * This array should not be modified directly.
+         * @memberof EntityCollection.prototype
+         * @readonly
+         * @type {Entity[]}
+         */
+        entities : {
+            get : function() {
+                return this._entities.values;
             }
         }
     });
@@ -130,7 +142,7 @@ define([
     EntityCollection.prototype.computeAvailability = function() {
         var startTime = Iso8601.MAXIMUM_VALUE;
         var stopTime = Iso8601.MINIMUM_VALUE;
-        var entities = this._objects.values;
+        var entities = this._entities.values;
         for ( var i = 0, len = entities.length; i < len; i++) {
             var object = entities[i];
             var availability = object.availability;
@@ -172,16 +184,16 @@ define([
         //>>includeEnd('debug');
 
         var id = entity.id;
-        var objects = this._objects;
-        if (defined(objects.get(id))) {
+        var entities = this._entities;
+        if (defined(entities.get(id))) {
             throw new RuntimeError('An object with id ' + id + ' already exists in this collection.');
         }
 
-        objects.set(id, entity);
+        entities.set(id, entity);
 
-        var removedObjects = this._removedObjects;
-        if (!this._removedObjects.remove(id)) {
-            this._addedObjects.set(id, entity);
+        var removedEntities = this._removedEntities;
+        if (!this._removedEntities.remove(id)) {
+            this._addedEntities.set(id, entity);
         }
         fireChangedEvent(this);
     };
@@ -215,14 +227,14 @@ define([
         }
         //>>includeEnd('debug');
 
-        var objects = this._objects;
-        var entity = objects.get(id);
-        if (!this._objects.remove(id)) {
+        var entities = this._entities;
+        var entity = entities.get(id);
+        if (!this._entities.remove(id)) {
             return false;
         }
 
-        if (!this._addedObjects.remove(id)) {
-            this._removedObjects.set(id, entity);
+        if (!this._addedEntities.remove(id)) {
+            this._removedEntities.set(id, entity);
         }
         fireChangedEvent(this);
 
@@ -230,29 +242,29 @@ define([
     };
 
     /**
-     * Removes all objects from the collection.
+     * Removes all Entities from the collection.
      */
     EntityCollection.prototype.removeAll = function() {
         //The event should only contain items added before events were suspended
         //and the contents of the collection.
-        var objects = this._objects;
-        var objectsLength = objects.length;
-        var array = objects.values;
+        var entities = this._entities;
+        var entitiesLength = entities.length;
+        var array = entities.values;
 
-        var addedObjects = this._addedObjects;
-        var removed = this._removedObjects;
+        var addedEntities = this._addedEntities;
+        var removed = this._removedEntities;
 
-        for (var i = 0; i < objectsLength; i++) {
+        for (var i = 0; i < entitiesLength; i++) {
             var existingItem = array[i];
             var existingItemId = existingItem.id;
-            var addedItem = addedObjects.get(existingItemId);
+            var addedItem = addedEntities.get(existingItemId);
             if (!defined(addedItem)) {
                 removed.set(existingItemId, existingItem);
             }
         }
 
-        objects.removeAll();
-        addedObjects.removeAll();
+        entities.removeAll();
+        addedEntities.removeAll();
         fireChangedEvent(this);
     };
 
@@ -269,17 +281,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        return this._objects.get(id);
-    };
-
-    /**
-     * Gets the array of Entity instances in the collection.
-     * The array should not be modified directly.
-     *
-     * @returns {Entity[]} the array of Entity instances in the collection.
-     */
-    EntityCollection.prototype.getObjects = function() {
-        return this._objects.values;
+        return this._entities.get(id);
     };
 
     /**
@@ -288,14 +290,14 @@ define([
      * @param {Object} id The id of the object to retrieve or create.
      * @returns {Entity} The new or existing object.
      */
-    EntityCollection.prototype.getOrCreateObject = function(id) {
+    EntityCollection.prototype.getOrCreateEntity = function(id) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(id)) {
             throw new DeveloperError('id is required.');
         }
         //>>includeEnd('debug');
 
-        var entity = this._objects.get(id);
+        var entity = this._entities.get(id);
         if (!defined(entity)) {
             entity = new Entity(id);
             this.add(entity);

@@ -82,7 +82,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new PathVisualizer(scene, entityCollection);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty([new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112)]);
         visualizer.update(JulianDate.now());
         expect(scene.primitives.length).toEqual(0);
@@ -92,7 +92,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new PathVisualizer(scene, entityCollection);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         var path = testObject.path = new PathGraphics();
         path.show = new ConstantProperty(true);
 
@@ -110,7 +110,7 @@ defineSuite([
 
         expect(scene.primitives.length).toEqual(0);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         var position = new SampledPositionProperty();
         testObject.position = position;
         position.addSamples(times, positions);
@@ -157,7 +157,7 @@ defineSuite([
 
         expect(scene.primitives.length).toEqual(0);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         var position = new SampledPositionProperty();
         testObject.position = position;
         position.addSamples(times, positions);
@@ -193,7 +193,7 @@ defineSuite([
 
         expect(scene.primitives.length).toEqual(0);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         var position = new SampledPositionProperty();
         testObject.position = position;
         position.addSamples(times, positions);
@@ -231,7 +231,7 @@ defineSuite([
 
         expect(scene.primitives.length).toEqual(0);
 
-        var testObject = entityCollection.getOrCreateObject('test');
+        var testObject = entityCollection.getOrCreateEntity('test');
         var position = new SampledPositionProperty();
         testObject.position = position;
         position.addSamples(times, positions);
@@ -271,8 +271,8 @@ defineSuite([
         var maximumStep = 10;
 
         var entities = new EntityCollection();
-        var targetObject = entities.getOrCreateObject('target');
-        targetObject.position = property;
+        var targetEntity = entities.getOrCreateEntity('target');
+        targetEntity.position = property;
 
         var referenceProperty = new ReferenceProperty(entities, 'target', ['position']);
 
@@ -437,8 +437,8 @@ defineSuite([
         sampledProperty.addSample(t4, new Cartesian3(0, 0, 4));
 
         var entities = new EntityCollection();
-        var targetObject = entities.getOrCreateObject('target');
-        targetObject.position = new ConstantPositionProperty(new Cartesian3(0, 0, 5));
+        var targetEntity = entities.getOrCreateEntity('target');
+        targetEntity.position = new ConstantPositionProperty(new Cartesian3(0, 0, 5));
         var referenceProperty = new ReferenceProperty(entities, 'target', ['position']);
 
         var property = new CompositePositionProperty();
@@ -477,7 +477,7 @@ defineSuite([
                                 sampledProperty.getValue(t3),
                                 sampledProperty.getValue(JulianDate.addSeconds(t3, maximumStep, new JulianDate())),
                                 sampledProperty.getValue(t4),
-                                targetObject.position.getValue(t5)]);
+                                targetEntity.position.getValue(t5)]);
     });
 
 }, 'WebGL');

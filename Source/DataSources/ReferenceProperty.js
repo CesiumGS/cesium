@@ -18,22 +18,22 @@ define([
     function resolve(that) {
         var targetProperty = that._targetProperty;
         if (!defined(targetProperty)) {
-            var targetObject = that._targetObject;
+            var targetEntity = that._targetEntity;
 
-            if (!defined(targetObject)) {
+            if (!defined(targetEntity)) {
                 var targetCollection = that._targetCollection;
 
-                targetObject = targetCollection.getById(that._targetId);
-                if (!defined(targetObject)) {
+                targetEntity = targetCollection.getById(that._targetId);
+                if (!defined(targetEntity)) {
                     throw new RuntimeError('target object could not be resolved.');
                 }
-                targetObject.definitionChanged.addEventListener(ReferenceProperty.prototype._onTargetObjectDefinitionChanged, that);
-                that._targetObject = targetObject;
+                targetEntity.definitionChanged.addEventListener(ReferenceProperty.prototype._onTargetEntityDefinitionChanged, that);
+                that._targetEntity = targetEntity;
             }
 
             var names = that._targetPropertyNames;
 
-            targetProperty = targetObject;
+            targetProperty = targetEntity;
             var length = names.length;
             for (var i = 0; i < length; i++) {
                 targetProperty = targetProperty[names[i]];
@@ -112,7 +112,7 @@ define([
         this._targetId = targetId;
         this._targetPropertyNames = targetPropertyNames;
         this._targetProperty = undefined;
-        this._targetObject = undefined;
+        this._targetEntity = undefined;
         this._definitionChanged = new Event();
 
         targetCollection.collectionChanged.addEventListener(ReferenceProperty.prototype._onCollectionChanged, this);
@@ -319,7 +319,7 @@ define([
         return true;
     };
 
-    ReferenceProperty.prototype._onTargetObjectDefinitionChanged = function(targetObject, name, value, oldValue) {
+    ReferenceProperty.prototype._onTargetEntityDefinitionChanged = function(targetEntity, name, value, oldValue) {
         if (this._targetPropertyNames[0] === name) {
             this._targetProperty = undefined;
             this._definitionChanged.raiseEvent(this);
@@ -327,12 +327,12 @@ define([
     };
 
     ReferenceProperty.prototype._onCollectionChanged = function(collection, added, removed) {
-        var targetObject = this._targetObject;
-        if (defined(targetObject)) {
-            if (removed.indexOf(targetObject) === -1) {
-                targetObject.definitionChanged.removeEventListener(ReferenceProperty.prototype._onTargetObjectDefinitionChanged, this);
+        var targetEntity = this._targetEntity;
+        if (defined(targetEntity)) {
+            if (removed.indexOf(targetEntity) === -1) {
+                targetEntity.definitionChanged.removeEventListener(ReferenceProperty.prototype._onTargetEntityDefinitionChanged, this);
                 this._targetProperty = undefined;
-                this._targetObject = undefined;
+                this._targetEntity = undefined;
                 this._definitionChanged.raiseEvent(this);
             }
         }

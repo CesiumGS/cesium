@@ -42,7 +42,7 @@ defineSuite([
         var composite = new CompositeEntityCollection();
         expect(composite.collectionChanged).toBeDefined();
         expect(composite.getCollectionsLength()).toEqual(0);
-        expect(composite.getObjects().length).toEqual(0);
+        expect(composite.entities.length).toEqual(0);
     });
 
     it('addCollection/removeCollection works', function() {
@@ -55,17 +55,17 @@ defineSuite([
         var composite = new CompositeEntityCollection();
         composite.addCollection(entityCollection);
         expect(composite.getCollectionsLength()).toEqual(1);
-        expect(composite.getObjects().length).toEqual(1);
+        expect(composite.entities.length).toEqual(1);
 
         composite.addCollection(entityCollection2);
         expect(composite.getCollectionsLength()).toEqual(2);
-        expect(composite.getObjects().length).toEqual(2);
+        expect(composite.entities.length).toEqual(2);
 
         expect(composite.removeCollection(entityCollection)).toEqual(true);
-        expect(composite.getObjects().length).toEqual(1);
+        expect(composite.entities.length).toEqual(1);
 
         expect(composite.removeCollection(entityCollection2)).toEqual(true);
-        expect(composite.getObjects().length).toEqual(0);
+        expect(composite.entities.length).toEqual(0);
         expect(composite.getCollectionsLength()).toEqual(0);
 
         expect(composite.removeCollection(entityCollection)).toEqual(false);
@@ -169,16 +169,16 @@ defineSuite([
         var composite = new CompositeEntityCollection([entityCollection]);
 
         entityCollection.add(entity);
-        expect(composite.getObjects().length).toEqual(1);
+        expect(composite.entities.length).toEqual(1);
 
         entityCollection.add(entity2);
-        expect(composite.getObjects().length).toEqual(2);
+        expect(composite.entities.length).toEqual(2);
 
         entityCollection.remove(entity2);
-        expect(composite.getObjects().length).toEqual(1);
+        expect(composite.entities.length).toEqual(1);
 
         entityCollection.remove(entity);
-        expect(composite.getObjects().length).toEqual(0);
+        expect(composite.entities.length).toEqual(0);
     });
 
     it('add/remove raises expected events', function() {
@@ -269,7 +269,7 @@ defineSuite([
         entityCollection.add(entity);
         entityCollection.add(entity2);
         composite.removeAllCollections();
-        expect(composite.getObjects().length).toEqual(0);
+        expect(composite.entities.length).toEqual(0);
     });
 
     it('removeAllCollections raises expected events', function() {
@@ -361,9 +361,9 @@ defineSuite([
     it('computeAvailability returns intersection of collections.', function() {
         var entityCollection = new EntityCollection();
 
-        var entity = entityCollection.getOrCreateObject('1');
-        var entity2 = entityCollection.getOrCreateObject('2');
-        var entity3 = entityCollection.getOrCreateObject('3');
+        var entity = entityCollection.getOrCreateEntity('1');
+        var entity2 = entityCollection.getOrCreateEntity('2');
+        var entity3 = entityCollection.getOrCreateEntity('3');
 
         entity.availability = new TimeIntervalCollection();
         entity.availability.addInterval(TimeInterval.fromIso8601({
@@ -385,9 +385,9 @@ defineSuite([
     it('computeAvailability works if only start or stop time is infinite.', function() {
         var entityCollection = new EntityCollection();
 
-        var entity = entityCollection.getOrCreateObject('1');
-        var entity2 = entityCollection.getOrCreateObject('2');
-        var entity3 = entityCollection.getOrCreateObject('3');
+        var entity = entityCollection.getOrCreateEntity('1');
+        var entity2 = entityCollection.getOrCreateEntity('2');
+        var entity3 = entityCollection.getOrCreateEntity('3');
 
         entity.availability = new TimeIntervalCollection();
         entity.availability.addInterval(TimeInterval.fromIso8601({
@@ -427,7 +427,7 @@ defineSuite([
         //Initial composite should match both properties
         var compositeObject = composite.getById(entity2.id);
         expect(compositeObject).toBeDefined();
-        expect(composite.getObjects().length).toEqual(1);
+        expect(composite.entities.length).toEqual(1);
         expect(compositeObject.position).toBe(entity2.position);
         expect(compositeObject.orientation).toBe(entity2.orientation);
 
@@ -439,7 +439,7 @@ defineSuite([
 
         //We keep the orientation and position from higher priority entity2
         //But add the viewFrom from 3.
-        expect(composite.getObjects().length).toEqual(1);
+        expect(composite.entities.length).toEqual(1);
         expect(compositeObject.position).toBe(entity2.position);
         expect(compositeObject.orientation).toBe(entity2.orientation);
         expect(compositeObject.viewFrom).toBe(entity3.viewFrom);
@@ -451,7 +451,7 @@ defineSuite([
 
         //We now use the position from the higher priority
         //object with other properties unchanged.
-        expect(composite.getObjects().length).toEqual(1);
+        expect(composite.entities.length).toEqual(1);
         expect(compositeObject.position).toBe(entity1.position);
         expect(compositeObject.orientation).toBe(entity2.orientation);
         expect(compositeObject.viewFrom).toBe(entity3.viewFrom);
