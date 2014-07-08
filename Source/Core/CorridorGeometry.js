@@ -634,7 +634,7 @@ define([
      * @param {Number} [options.height=0] The distance in meters between the ellipsoid surface and the positions.
      * @param {Number} [options.extrudedHeight] The distance in meters between the ellipsoid surface and the extrusion.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
-     * @param {Boolean} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.
+     * @param {CornerType} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.
      *
      * @see CorridorGeometry.createGeometry
      *

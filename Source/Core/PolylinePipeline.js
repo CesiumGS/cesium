@@ -86,7 +86,7 @@ define([
         var heights = subdivideHeights(numPoints, h0, h1);
 
         ellipsoidGeodesic.setEndPoints(start, end);
-        var surfaceDistanceBetweenPoints = ellipsoidGeodesic.surfaceDistance / (numPoints);
+        var surfaceDistanceBetweenPoints = ellipsoidGeodesic.surfaceDistance / numPoints;
 
         var index = offset;
         start.height = h0;

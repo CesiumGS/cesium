@@ -754,7 +754,7 @@ define([
      * @returns {Cartesian3} The position
      *
      * @example
-     * var position = Cartesian3.fromDegrees(-115.0, 37.0);
+     * var position = Cesium.Cartesian3.fromDegrees(-115.0, 37.0);
      */
     Cartesian3.fromDegrees = function(longitude, latitude, height, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -786,7 +786,7 @@ define([
      * @returns {Cartesian3} The position
      *
      * @example
-     * var position = Cartesian3.fromRadians(-2.007, 0.645);
+     * var position = Cesium.Cartesian3.fromRadians(-2.007, 0.645);
      */
     Cartesian3.fromRadians = function(longitude, latitude, height, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -827,7 +827,7 @@ define([
      * @returns {Cartesian3[]} The array of positions.
      *
      * @example
-     * var positions = Cartesian3.fromDegreesArray([-115.0, 37.0, -107.0, 33.0]);
+     * var positions = Cesium.Cartesian3.fromDegreesArray([-115.0, 37.0, -107.0, 33.0]);
      */
     Cartesian3.fromDegreesArray = function(coordinates, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -853,7 +853,7 @@ define([
      * @returns {Cartesian3[]} The array of positions.
      *
      * @example
-     * var positions = Cartesian3.fromRadiansArray([-2.007, 0.645, -1.867, .575]);
+     * var positions = Cesium.Cartesian3.fromRadiansArray([-2.007, 0.645, -1.867, .575]);
      */
     Cartesian3.fromRadiansArray = function(coordinates, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -893,7 +893,7 @@ define([
      * @returns {Cartesian3[]} The array of positions.
      *
      * @example
-     * var positions = Cartesian3.fromDegreesArrayHeights([-115.0, 37.0, 100000.0, -107.0, 33.0, 150000.0]);
+     * var positions = Cesium.Cartesian3.fromDegreesArrayHeights([-115.0, 37.0, 100000.0, -107.0, 33.0, 150000.0]);
      */
     Cartesian3.fromDegreesArrayHeights = function(coordinates, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -927,7 +927,7 @@ define([
      * @returns {Cartesian3[]} The array of positions.
      *
      * @example
-     * var positions = Cartesian3.fromRadiansArrayHeights([-2.007, 0.645, 100000.0, -1.867, .575, 150000.0]);
+     * var positions = Cesium.Cartesian3.fromRadiansArrayHeights([-2.007, 0.645, 100000.0, -1.867, .575, 150000.0]);
      */
     Cartesian3.fromRadiansArrayHeights = function(coordinates, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);

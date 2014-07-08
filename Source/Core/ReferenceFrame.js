@@ -8,7 +8,8 @@ define([
     /**
      * Constants for identifying well-known reference frames.
      *
-     * @exports ReferenceFrame
+     * @namespace
+     * @alias ReferenceFrame
      */
     var ReferenceFrame = {
         /**

@@ -6,13 +6,18 @@ define([
     "use strict";
 
     /**
-     * @exports CornerType
+     * Style options for corners.
+     *
+     * @namespace
+     * @alias CornerType
      */
     var CornerType = {
         /**
-         *   ___
+         * <pre>
+         *  _____
          * (  ___
          * | |
+         * </pre>
          *
          * Corner is circular.
          * @type {Number}
@@ -21,9 +26,11 @@ define([
         ROUNDED : 0,
 
         /**
+         * <pre>
          *  ______
-         * |  ___
+         * |  ____
          * | |
+         * </pre>
          *
          * Corner point is the intersection of adjacent edges.
          * @type {Number}
@@ -32,9 +39,11 @@ define([
         MITERED : 1,
 
         /**
-         *   ___
+         * <pre>
+         *  _____
          * /  ___
          * | |
+         * </pre>
          *
          * Corner is clipped.
          * @type {Number}
