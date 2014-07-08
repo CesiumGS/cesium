@@ -80,7 +80,7 @@ define([
      * @alias EllipsoidGeometryUpdater
      * @constructor
      *
-     * @param {Entity} entity The object containing the geometry to be visualized.
+     * @param {Entity} entity The entity containing the geometry to be visualized.
      * @param {Scene} scene The scene where visualization is taking place.
      */
     var EllipsoidGeometryUpdater = function(entity, scene) {
@@ -130,7 +130,7 @@ define([
 
     defineProperties(EllipsoidGeometryUpdater.prototype, {
         /**
-         * Gets the object associated with this geometry.
+         * Gets the entity associated with this geometry.
          * @memberof EllipsoidGeometryUpdater.prototype
          *
          * @type {Entity}

@@ -69,7 +69,7 @@ define([
      * @alias EllipseGeometryUpdater
      * @constructor
      *
-     * @param {Entity} entity The object containing the geometry to be visualized.
+     * @param {Entity} entity The entity containing the geometry to be visualized.
      */
     var EllipseGeometryUpdater = function(entity) {
         //>>includeStart('debug', pragmas.debug);
@@ -115,13 +115,13 @@ define([
 
     defineProperties(EllipseGeometryUpdater.prototype, {
         /**
-         * Gets the object associated with this geometry.
+         * Gets the entity associated with this geometry.
          * @memberof EllipseGeometryUpdater.prototype
          *
          * @type {Entity}
          * @readonly
          */
-        entity :{
+        entity : {
             get : function() {
                 return this._entity;
             }

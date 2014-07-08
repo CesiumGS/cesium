@@ -68,7 +68,7 @@ define([
      * @alias PolygonGeometryUpdater
      * @constructor
      *
-     * @param {Entity} entity The object containing the geometry to be visualized.
+     * @param {Entity} entity The entity containing the geometry to be visualized.
      */
     var PolygonGeometryUpdater = function(entity) {
         //>>includeStart('debug', pragmas.debug);
@@ -114,13 +114,13 @@ define([
 
     defineProperties(PolygonGeometryUpdater.prototype, {
         /**
-         * Gets the object associated with this geometry.
+         * Gets the entity associated with this geometry.
          * @memberof PolygonGeometryUpdater.prototype
          *
          * @type {Entity}
          * @readonly
          */
-        entity :{
+        entity : {
             get : function() {
                 return this._entity;
             }
