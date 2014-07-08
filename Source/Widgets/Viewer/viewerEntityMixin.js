@@ -29,7 +29,7 @@ define([
 
     /**
      * A mixin which adds behavior to the Viewer widget for dealing with Entity instances.
-     * This allows for Entitys to be tracked with the camera, either by the viewer clicking
+     * This allows for entities to be tracked with the camera, either by the viewer clicking
      * on them, or by setting the trackedEntity property.
      * Rather than being called directly, this function is normally passed as
      * a parameter to {@link Viewer#extend}, as shown in the example below.

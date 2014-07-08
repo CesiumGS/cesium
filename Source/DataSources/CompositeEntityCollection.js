@@ -409,12 +409,12 @@ define([
     };
 
     /**
-     * Computes the maximum availability of the Entitys in the collection.
+     * Computes the maximum availability of the entities in the collection.
      * If the collection contains a mix of infinitely available data and non-infinite data,
      * It will return the interval pertaining to the non-infinite data only.  If all
      * data is infinite, an infinite interval will be returned.
      *
-     * @returns {TimeInterval} The availability of Entitys in the collection.
+     * @returns {TimeInterval} The availability of entities in the collection.
      */
     CompositeEntityCollection.prototype.computeAvailability = function() {
         return this._composite.computeAvailability();
