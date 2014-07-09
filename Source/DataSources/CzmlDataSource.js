@@ -889,7 +889,7 @@ define([
         }
     }
 
-    function processVertexData(entity, positionsData, entityCollection) {
+    function processVertexData(object, positionsData, entityCollection) {
         var i;
         var len;
         var references = positionsData.references;
@@ -902,13 +902,13 @@ define([
             var iso8601Interval = positionsData.interval;
             if (defined(iso8601Interval)) {
                 iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
-                if (!(entity.positions instanceof CompositePositionProperty)) {
-                    entity.positions = new CompositePositionProperty();
+                if (!(object.positions instanceof CompositePositionProperty)) {
+                    object.positions = new CompositePositionProperty();
                     iso8601Interval.data = new PositionPropertyArray(properties);
-                    entity.positions.intervals.addInterval(iso8601Interval);
+                    object.positions.intervals.addInterval(iso8601Interval);
                 }
             } else {
-                entity.positions = new PositionPropertyArray(properties);
+                object.positions = new PositionPropertyArray(properties);
             }
         } else {
             var values = [];
@@ -939,12 +939,12 @@ define([
                 }
             }
             if (defined(positionsData.array)) {
-                processPacketData(Array, entity, 'positions', positionsData, undefined, undefined, entityCollection);
+                processPacketData(Array, object, 'positions', positionsData, undefined, undefined, entityCollection);
             }
         }
     }
 
-    function processPositions(entity, positionsData, entityCollection) {
+    function processPositions(object, positionsData, entityCollection) {
         if (!defined(positionsData)) {
             return;
         }
@@ -952,10 +952,10 @@ define([
         if (isArray(positionsData)) {
             var length = positionsData.length;
             for (var i = 0; i < length; i++) {
-                processVertexData(entity, positionsData[i], entityCollection);
+                processVertexData(object, positionsData[i], entityCollection);
             }
         } else {
-            processVertexData(entity, positionsData, entityCollection);
+            processVertexData(object, positionsData, entityCollection);
         }
     }
 
