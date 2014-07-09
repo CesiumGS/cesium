@@ -25,6 +25,7 @@ define([
         this.primitives = primitives;
         this.createPrimitive = false;
         this.primitive = undefined;
+        this.oldPrimitive = undefined;
         this.geometry = new AssociativeArray();
         this.updaters = new AssociativeArray();
         this.updatersWithAttributes = new AssociativeArray();
@@ -51,6 +52,7 @@ define([
 
     var colorScratch = new Color();
     Batch.prototype.update = function(time) {
+        var show = true;
         var isUpdated = true;
         var removedCount = 0;
         var primitive = this.primitive;
@@ -58,7 +60,12 @@ define([
         if (this.createPrimitive) {
             this.attributes.removeAll();
             if (defined(primitive)) {
-                primitives.remove(primitive);
+                if (primitive.ready) {
+                    this.oldPrimitive = primitive;
+                } else {
+                    primitives.remove(primitive);
+                }
+                show = false;
             }
             var geometry = this.geometry.values;
             if (geometry.length > 0) {
@@ -73,10 +80,17 @@ define([
 
                 primitives.add(primitive);
                 isUpdated = false;
+                primitive.show = show;
             }
             this.primitive = primitive;
             this.createPrimitive = false;
-        } else if (defined(primitive) && primitive._state === PrimitiveState.COMPLETE) {
+        } else if (defined(primitive) && primitive.ready) {
+            if (defined(this.oldPrimitive)) {
+                primitives.remove(this.oldPrimitive);
+                this.oldPrimitive = undefined;
+                primitive.show = true;
+            }
+
             var updatersWithAttributes = this.updatersWithAttributes.values;
             var length = updatersWithAttributes.length;
             for (var i = 0; i < length; i++) {
@@ -102,14 +116,14 @@ define([
                 }
 
                 if (!updater.hasConstantOutline) {
-                    var show = updater.isOutlineVisible(time);
+                    show = updater.isOutlineVisible(time);
                     if (show !== attributes._lastShow) {
                         attributes._lastShow = show;
                         attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
                     }
                 }
             }
-        } else if (defined(primitive) && primitive._state !== PrimitiveState.COMPLETE) {
+        } else if (defined(primitive) && !primitive.ready) {
             isUpdated = false;
         }
 
