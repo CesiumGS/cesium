@@ -265,7 +265,7 @@
 			<arg value="${clocPath}" />
 			<arg value="--read-lang-def=${clocDefinitionsPath}" />
 			<arg value="Source/Core/" />
-			<arg value="Source/DynamicScene/" />
+			<arg value="Source/DataSources/" />
 			<arg value="Source/Renderer/" />
 			<arg value="Source/Scene/" />
 			<arg value="Source/Widgets/" />

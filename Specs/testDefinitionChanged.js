@@ -1,6 +1,6 @@
 /*global define*/
 define([
-        'DynamicScene/ConstantProperty'
+        'DataSources/ConstantProperty'
     ], function(
         ConstantProperty) {
     "use strict";

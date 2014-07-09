@@ -30,7 +30,7 @@ require(['Cesium'], function(Cesium) {
     var gallery = '../../CesiumViewer/Gallery/';
 
     var viewer = new Cesium.Viewer('cesiumContainer');
-    viewer.extend(Cesium.viewerDynamicObjectMixin);
+    viewer.extend(Cesium.viewerEntityMixin);
 
     function czmlSatellites() {
         viewer.dataSources.removeAll();
