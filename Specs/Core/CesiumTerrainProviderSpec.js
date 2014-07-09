@@ -171,6 +171,7 @@ defineSuite([
         });
 
         runs(function() {
+            expect(provider.requestVertexNormals).toBe(true);
             expect(provider.hasVertexNormals).toBe(true);
         });
     });
@@ -188,6 +189,7 @@ defineSuite([
         });
 
         runs(function() {
+            expect(provider.requestVertexNormals).toBe(false);
             expect(provider.hasVertexNormals).toBe(false);
         });
     });

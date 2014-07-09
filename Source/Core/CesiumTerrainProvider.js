@@ -92,8 +92,9 @@ define([
          * Boolean flag that indicates if the client should request vertex normals from the server.
          * @type {Boolean}
          * @default false
+         * @private
          */
-        this.requestVertexNormals = defaultValue(options.requestVertexNormals, false);
+        this._requestVertexNormals = defaultValue(options.requestVertexNormals, false);
 
         this._errorEvent = new Event();
 
@@ -422,7 +423,7 @@ define([
         var promise;
 
         var tileLoader = loadTile;
-        if (this.requestVertexNormals && this._hasVertexNormals) {
+        if (this._requestVertexNormals && this._hasVertexNormals) {
             tileLoader = loadTileVertexNormals;
         }
 
@@ -544,7 +545,23 @@ define([
                 //>>includeEnd('debug');
 
                 // returns true if we can request vertex normals from the server
-                return this._hasVertexNormals && this.requestVertexNormals;
+                return this._hasVertexNormals && this._requestVertexNormals;
+            }
+        },
+
+        /**
+         * Boolean flag that indicates if the client should request vertex normals from the server.
+         * Vertex normals data is appended to the standard tile mesh data only if the client requests the vertex normals and
+         * if the server provides vertex normals.
+         *
+         * This property is read only. To change this value, a new CesiumTerrainProvider must be constructed that requests
+         * vertex normals to ensure that all existing tiles are requested that includes/excludes vertex normal extension data.
+         * @memberof CesiumTerrainProvider.prototype
+         * @type {Boolean}
+         */
+        requestVertexNormals : {
+            get : function() {
+                return this._requestVertexNormals;
             }
         }
     });
