@@ -196,7 +196,7 @@ define([
     * @param {BoundingSphere} occludee The bounding sphere surrounding the occludee object.
     * @returns {Boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
     *
-    * @see Occluder#compute Visibility
+    * @see Occluder#computeVisibility
     *
     * @example
     * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
