@@ -130,7 +130,7 @@ require(['Cesium'], function(Cesium) {
             boundingSphere = tile.data.boundingSphere2D;
         }
 
-        return frameState.cullingVolume.getVisibility(boundingSphere);
+        return frameState.cullingVolume.computeVisibility(boundingSphere);
     };
 
     DemoTileProvider.prototype.showTileThisFrame = function(tile, context, frameState, commandList) {

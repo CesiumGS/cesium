@@ -167,7 +167,7 @@ defineSuite([
         expect(clock.currentTime).toEqual(interval.start);
         expect(clock.clockRange).toEqual(ClockRange.LOOP_STOP);
         expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_MULTIPLIER);
-        expect(clock.multiplier).toEqual(JulianDate.getSecondsDifference(interval.stop, interval.start) / 120.0);
+        expect(clock.multiplier).toEqual(JulianDate.secondsDifference(interval.stop, interval.start) / 120.0);
     });
 
     it('processUrl loads expected data', function() {

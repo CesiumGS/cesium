@@ -24,7 +24,7 @@ define([
      * @param {Number} d The coefficient of the 0th order monomial.
      * @returns {Number} The value of the discriminant.
      */
-    CubicRealPolynomial.discriminant = function(a, b, c, d) {
+    CubicRealPolynomial.computeDiscriminant = function(a, b, c, d) {
         //>>includeStart('debug', pragmas.debug);
         if (typeof a !== 'number') {
             throw new DeveloperError('a is a required number.');
@@ -163,7 +163,7 @@ define([
      * @param {Number} d The coefficient of the 0th order monomial.
      * @returns {Number[]} The real valued roots.
      */
-    CubicRealPolynomial.realRoots = function(a, b, c, d) {
+    CubicRealPolynomial.computeRealRoots = function(a, b, c, d) {
         //>>includeStart('debug', pragmas.debug);
         if (typeof a !== 'number') {
             throw new DeveloperError('a is a required number.');
@@ -183,7 +183,7 @@ define([
         var ratio;
         if (a === 0.0) {
             // Quadratic function: b * x^2 + c * x + d = 0.
-            return QuadraticRealPolynomial.realRoots(b, c, d);
+            return QuadraticRealPolynomial.computeRealRoots(b, c, d);
         } else if (b === 0.0) {
             if (c === 0.0) {
                 if (d === 0.0) {
@@ -197,7 +197,7 @@ define([
                 return [root, root, root];
             } else if (d === 0.0) {
                 // x * (a * x^2 + c) = 0.
-                roots = QuadraticRealPolynomial.realRoots(a, 0, c);
+                roots = QuadraticRealPolynomial.computeRealRoots(a, 0, c);
 
                 // Return the roots in ascending order.
                 if (roots.Length === 0) {
@@ -221,7 +221,7 @@ define([
             return computeRealRoots(a, b, 0, d);
         } else if (d === 0.0) {
             // x * (a * x^2 + b * x + c) = 0
-            roots = QuadraticRealPolynomial.realRoots(a, b, c);
+            roots = QuadraticRealPolynomial.computeRealRoots(a, b, c);
 
             // Return the roots in ascending order.
             if (roots.length === 0) {

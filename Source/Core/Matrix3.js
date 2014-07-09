@@ -670,7 +670,7 @@ define([
      */
     Matrix3.getMaximumScale = function(matrix) {
         Matrix3.getScale(matrix, scratchScale);
-        return Cartesian3.getMaximumComponent(scratchScale);
+        return Cartesian3.maximumComponent(scratchScale);
     };
 
     /**
@@ -959,7 +959,7 @@ define([
      *     unitary : new Cesium.Matrix3(),
      *     diagonal : new Cesium.Matrix3()
      * };
-     * Cesium.Matrix3.getEigenDecomposition(a, result);
+     * Cesium.Matrix3.computeEigenDecomposition(a, result);
      *
      * var unitaryTranspose = Cesium.Matrix3.transpose(result.unitary);
      * var b = Cesium.Matrix3.multiply(result.unitary, result.diagonal);
@@ -969,7 +969,7 @@ define([
      * var v = Cesium.Matrix3.getColumn(result.unitary, 0);          // first eigenvector
      * var c = Cesium.Cartesian3.multiplyByScalar(v, lambda, new Cartesian3());        // equal to Cesium.Matrix3.multiplyByVector(a, v)
      */
-    Matrix3.getEigenDecomposition = function(matrix, result) {
+    Matrix3.computeEigenDecomposition = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required.');
