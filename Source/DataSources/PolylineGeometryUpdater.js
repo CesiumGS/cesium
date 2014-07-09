@@ -49,6 +49,7 @@ define([
         this.vertexFormat = undefined;
         this.positions = undefined;
         this.width = undefined;
+        this.raiseToSurface = false;
     };
 
     /**
@@ -427,6 +428,7 @@ define([
         }
 
         var options = this._options;
+        options.raiseToSurface = false;
         var positionsProperty = polyline.positions;
 
         var positions = positionsProperty.getValue(time, options.positions);
