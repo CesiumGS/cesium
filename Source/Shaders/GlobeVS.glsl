@@ -96,7 +96,7 @@ void main()
     vec2 encodedNormal = textureCoordAndEncodedNormals.zw;
     encodedNormal = encodedNormal / 255.0 * 2.0 - 1.0;
     v_normalMC = czm_octDecode(encodedNormal);
-    v_normalEC = czm_normal3D * normalMC;
+    v_normalEC = czm_normal3D * v_normalMC;
 #endif
 
     v_textureCoordinates = textureCoordAndEncodedNormals.xy;
