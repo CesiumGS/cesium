@@ -192,6 +192,26 @@ define([
         requestMetadata();
     };
 
+    /**
+     * When using the Quantized-Mesh format, a tile may be returned that includes additional extensions, such as PerVertexNormals, watermask, etc.
+     * This enumeration defines the bitwise flags that define the type of extension data that has been appended to the standard mesh data.
+     *
+     * @namespace
+     * @alias QuantizedMeshExtensionFlags
+     * @see CesiumTerrainProvider
+     * @private
+     */
+    var QuantizedMeshExtensionFlags = {
+        /**
+         * Oct-Encoded Per-Vertex Normals are included as an extension to the tile mesh
+         *
+         * @type {Number}
+         * @constant
+         * @default 0x1
+         */
+        OCT_VERTEX_NORMALS: 0x1
+    };
+
     var requestHeadersVertexNormals = {
             // prefer quantized-mesh media-type
             // only request vertex normals if Lighting is enabled on the CesiumTerrainProvider
@@ -328,7 +348,7 @@ define([
             var extensionsflag = view.getUint8(pos);
             pos += Uint8Array.BYTES_PER_ELEMENT;
 
-            if (extensionsflag & 0x1) {
+            if (extensionsflag & QuantizedMeshExtensionFlags.OCT_VERTEX_NORMALS !== 0) {
                 encodedNormalBuffer = new Uint8Array(buffer, pos, vertexCount * 2);
                 pos += vertexCount * 2 * Uint8Array.BYTES_PER_ELEMENT;
             }
