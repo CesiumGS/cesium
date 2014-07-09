@@ -48,7 +48,8 @@ uniform vec2 u_lightingFadeDistance;
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 varying vec2 v_textureCoordinates;
-varying vec3 v_normal;
+varying vec3 v_normalMC;
+varying vec3 v_normalEC;
 
 vec3 sampleAndBlend(
     vec3 previousColor,
@@ -132,8 +133,8 @@ void main()
     vec3 normalMC = normalize(czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));   // normalized surface normal in model coordinates
     vec3 normalEC = normalize(czm_normal3D * normalMC);                                         // normalized surface normal in eye coordiantes
 #elif defined(ENABLE_VERTEX_LIGHTING)
-    vec3 normalMC = normalize(v_normal);														// normalized surface normal in model coordinates
-    vec3 normalEC = normalize(czm_normal3D * normalMC);                                         // normalized surface normal in eye coordiantes
+    vec3 normalMC = normalize(v_normalMC);														// normalized surface normal in model coordinates
+    vec3 normalEC = normalize(v_normalEC);                                                      // normalized surface normal in eye coordiantes
 #endif
 
 #ifdef SHOW_REFLECTIVE_OCEAN

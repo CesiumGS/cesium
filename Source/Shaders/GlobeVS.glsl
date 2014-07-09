@@ -13,7 +13,8 @@ varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 
 varying vec2 v_textureCoordinates;
-varying vec3 v_normal;
+varying vec3 v_normalMC;
+varying vec3 v_normalEC;
 
 // These functions are generated at runtime.
 vec4 getPosition(vec3 position3DWC);
@@ -94,7 +95,8 @@ void main()
     v_positionMC = position3DWC;                                 // position in model coordinates
     vec2 encodedNormal = textureCoordAndEncodedNormals.zw;
     encodedNormal = encodedNormal / 255.0 * 2.0 - 1.0;
-    v_normal = czm_octDecode(encodedNormal);
+    v_normalMC = czm_octDecode(encodedNormal);
+    v_normalEC = czm_normal3D * normalMC;
 #endif
 
     v_textureCoordinates = textureCoordAndEncodedNormals.xy;
