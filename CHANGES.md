@@ -57,8 +57,8 @@ Change Log
     * `QuadraticRealPolynomial.realRoots` -> `QuadraticRealPolynomial.computeRealRoots`
     * `QuarticRealPolynomial.discriminant` -> `QuarticRealPolynomial.computeDiscriminant`
     * `QuarticRealPolynomial.realRoots` -> `QuarticRealPolynomial.computeRealRoots`
-    * `Quaternion.getAxis` -> `Quaternion.axis`
-    * `Quaternion.getAngle` -> `Quaternion.angle`
+    * `Quaternion.getAxis` -> `Quaternion.computeAxis`
+    * `Quaternion.getAngle` -> `Quaternion.computeAngle`
     * `Quaternion.innerQuadrangle` -> `Quaternion.computeInnerQuadrangle`
     * `Rectangle.getSouthwest` -> `Rectangle.southwest`
     * `Rectangle.getNorthwest` -> `Rectangle.northwest`
