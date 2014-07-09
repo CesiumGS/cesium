@@ -64,7 +64,7 @@
       },
       "width":1,
       "show":true,
-      "raiseToSurface":false
+      "followSurface":false
     },
     "position":{
       "cartesian":[
@@ -3772,7 +3772,7 @@
         ]
       },
       "width":1,
-      "raiseToSurface":false,
+      "followSurface":false,
       "show":[
         {
           "interval":"0000-01-01T00:00:00Z/2012-03-15T10:16:06.97400000000198Z",
@@ -3881,7 +3881,7 @@
         ]
       },
       "width":1,
-      "raiseToSurface":false,
+      "followSurface":false,
       "show":[
         {
           "interval":"0000-01-01T00:00:00Z/2012-03-15T10:52:19.3940000000002Z",
@@ -3959,7 +3959,7 @@
         ]
       },
       "width":1,
-      "raiseToSurface":false,
+      "followSurface":false,
       "show":false
     }
   }

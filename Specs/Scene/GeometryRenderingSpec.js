@@ -1502,7 +1502,7 @@ defineSuite([
                     ]),
                     width : 20.0,
                     colors : [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0)],
-                    raiseToSurface: false
+                    followSurface: false
                 }),
                 id : 'polyline'
             });
@@ -1519,7 +1519,7 @@ defineSuite([
                     width : 20.0,
                     colors : [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0)],
                     colorsPerVertex : true,
-                    raiseToSurface: false
+                    followSurface: false
                 }),
                 id : 'polyline'
             });

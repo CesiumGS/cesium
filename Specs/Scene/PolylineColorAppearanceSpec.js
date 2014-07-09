@@ -72,7 +72,7 @@ defineSuite([
                     ],
                     width : 10.0,
                     vertexFormat : PolylineColorAppearance.VERTEX_FORMAT,
-                    raiseToSurface: false
+                    followSurface: false
                 }),
                 attributes : {
                     color : ColorGeometryInstanceAttribute.fromColor(new Color(1.0, 1.0, 0.0, 1.0))

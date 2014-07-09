@@ -71,7 +71,7 @@ defineSuite([
                     ],
                     width : 10.0,
                     vertexFormat : PolylineMaterialAppearance.VERTEX_FORMAT,
-                    raiseToSurface: false
+                    followSurface: false
                 })
             }),
             appearance : new PolylineMaterialAppearance({

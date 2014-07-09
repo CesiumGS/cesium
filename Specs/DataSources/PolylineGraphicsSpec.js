@@ -22,7 +22,7 @@ defineSuite([
         source.positions = new ConstantProperty();
         source.width = new ConstantProperty();
         source.show = new ConstantProperty();
-        source.raiseToSurface = new ConstantProperty();
+        source.followSurface = new ConstantProperty();
         source.granularity = new ConstantProperty();
 
         var target = new PolylineGraphics();
@@ -31,7 +31,7 @@ defineSuite([
         expect(target.positions).toBe(source.positions);
         expect(target.width).toBe(source.width);
         expect(target.show).toBe(source.show);
-        expect(target.raiseToSurface).toBe(source.raiseToSurface);
+        expect(target.followSurface).toBe(source.followSurface);
         expect(target.granularity).toBe(source.granularity);
     });
 
@@ -41,14 +41,14 @@ defineSuite([
         source.positions = new ConstantProperty();
         source.width = new ConstantProperty();
         source.show = new ConstantProperty();
-        source.raiseToSurface = new ConstantProperty();
+        source.followSurface = new ConstantProperty();
         source.granularity = new ConstantProperty();
 
         var color = new ColorMaterialProperty();
         var positions = new ConstantProperty();
         var width = new ConstantProperty();
         var show = new ConstantProperty();
-        var raiseToSurface = new ConstantProperty();
+        var followSurface = new ConstantProperty();
         var granularity = new ConstantProperty();
 
         var target = new PolylineGraphics();
@@ -56,7 +56,7 @@ defineSuite([
         target.positions = positions;
         target.width = width;
         target.show = show;
-        target.raiseToSurface = raiseToSurface;
+        target.followSurface = followSurface;
         target.granularity = granularity;
 
         target.merge(source);
@@ -64,7 +64,7 @@ defineSuite([
         expect(target.positions).toBe(positions);
         expect(target.width).toBe(width);
         expect(target.show).toBe(show);
-        expect(target.raiseToSurface).toBe(raiseToSurface);
+        expect(target.followSurface).toBe(followSurface);
         expect(target.granularity).toBe(granularity);
     });
 
@@ -74,7 +74,7 @@ defineSuite([
         source.width = new ConstantProperty();
         source.positions = new ConstantProperty();
         source.show = new ConstantProperty();
-        source.raiseToSurface = new ConstantProperty();
+        source.followSurface = new ConstantProperty();
         source.granularity = new ConstantProperty();
 
         var result = source.clone();
@@ -82,7 +82,7 @@ defineSuite([
         expect(result.positions).toBe(source.positions);
         expect(result.width).toBe(source.width);
         expect(result.show).toBe(source.show);
-        expect(result.raiseToSurface).toBe(source.raiseToSurface);
+        expect(result.followSurface).toBe(source.followSurface);
         expect(result.granularity).toBe(source.granularity);
     });
 
@@ -99,7 +99,7 @@ defineSuite([
         testDefinitionChanged(property, 'show', true, false);
         testDefinitionChanged(property, 'positions', [], []);
         testDefinitionChanged(property, 'width', 3, 4);
-        testDefinitionChanged(property, 'raiseToSurface', false, true);
+        testDefinitionChanged(property, 'followSurface', false, true);
         testDefinitionChanged(property, 'granularity', 2, 1);
     });
 });

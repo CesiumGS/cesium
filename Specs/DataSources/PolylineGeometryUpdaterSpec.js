@@ -138,9 +138,9 @@ defineSuite([
         expect(updater.isDynamic).toBe(true);
     });
 
-    it('A time-varying raiseToSurface causes geometry to be dynamic', function() {
-        var raiseToSurface = new TimeIntervalCollectionProperty();
-        raiseToSurface.intervals.addInterval(new TimeInterval({
+    it('A time-varying followSurface causes geometry to be dynamic', function() {
+        var followSurface = new TimeIntervalCollectionProperty();
+        followSurface.intervals.addInterval(new TimeInterval({
             start : new JulianDate(0, 0),
             stop : new JulianDate(10, 0),
             data : false
@@ -148,7 +148,7 @@ defineSuite([
 
         var entity = createBasicPolyline();
         var updater = new PolylineGeometryUpdater(entity);
-        entity.polyline.raiseToSurface = raiseToSurface;
+        entity.polyline.followSurface = followSurface;
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -168,7 +168,7 @@ defineSuite([
         polyline.material = options.material;
 
         polyline.width = new ConstantProperty(options.width);
-        polyline.raiseToSurface = new ConstantProperty(options.raiseToSurface);
+        polyline.followSurface = new ConstantProperty(options.followSurface);
         polyline.granularity = new ConstantProperty(options.granularity);
 
         var updater = new PolylineGeometryUpdater(entity);
@@ -179,7 +179,7 @@ defineSuite([
         instance = updater.createFillGeometryInstance(time);
         geometry = instance.geometry;
         expect(geometry._width).toEqual(options.width);
-        expect(geometry._raiseToSurface).toEqual(options.raiseToSurface);
+        expect(geometry._followSurface).toEqual(options.followSurface);
         expect(geometry._granularity).toEqual(options.granularity);
 
         attributes = instance.attributes;
@@ -196,7 +196,7 @@ defineSuite([
             show : true,
             material : ColorMaterialProperty.fromColor(Color.RED),
             width : 3,
-            raiseToSurface : false,
+            followSurface : false,
             granularity : 1.0
         });
     });
@@ -206,7 +206,7 @@ defineSuite([
             show : true,
             material : new GridMaterialProperty(),
             width : 4,
-            raiseToSurface : true,
+            followSurface : true,
             granularity : 0.5
         });
     });

@@ -27,8 +27,8 @@ define([
         this._materialSubscription = undefined;
         this._positions = undefined;
         this._positionsSubscription = undefined;
-        this._raiseToSurface = undefined;
-        this._raiseToSurfaceSubscription = undefined;
+        this._followSurface = undefined;
+        this._followSurfaceSubscription = undefined;
         this._granularity = undefined;
         this._granularitySubscription = undefined;
         this._widthSubscription = undefined;
@@ -85,11 +85,11 @@ define([
          * @memberof PolylineGraphics.prototype
          * @type {Property}
          */
-        raiseToSurface : createPropertyDescriptor('raiseToSurface'),
+        followSurface : createPropertyDescriptor('followSurface'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the granularity
-         * of the resulting curve when raiseToSurface is true.
+         * of the resulting curve when followSurface is true.
          * @memberof PolylineGraphics.prototype
          * @type {Property}
          */
@@ -110,7 +110,7 @@ define([
         result.material = this.material;
         result.positions = this.positions;
         result.width = this.width;
-        result.raiseToSurface = this.raiseToSurface;
+        result.followSurface = this.followSurface;
         result.granularity = this.granularity;
         return result;
     };
@@ -132,7 +132,7 @@ define([
         this.material = defaultValue(this.material, source.material);
         this.positions = defaultValue(this.positions, source.positions);
         this.width = defaultValue(this.width, source.width);
-        this.raiseToSurface = defaultValue(this.raiseToSurface, source.raiseToSurface);
+        this.followSurface = defaultValue(this.followSurface, source.followSurface);
         this.granularity = defaultValue(this.granularity, source.granularity);
     };
 

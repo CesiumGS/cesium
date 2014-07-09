@@ -84,9 +84,9 @@ define([
      * @param {Cartesian3[]} options.positions An array of {@link Cartesian3} defining the positions in the polyline as a line strip.
      * @param {Color[]} [options.colors] An Array of {@link Color} defining the per vertex or per segment colors.
      * @param {Boolean} [options.colorsPerVertex=false] A boolean that determines whether the colors will be flat across each segment of the line or interpolated across the vertices.
-     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude if options.raiseToSurface=true. Determines the number of positions in the buffer.
+     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude if options.followSurface=true. Determines the number of positions in the buffer.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
-     * @param {Boolean} [options.raiseToSurface=true] A boolean that determines whether positions will be adjusted to the surface of the ellipsoid via a great arc.
+     * @param {Boolean} [options.followSurface=true] A boolean that determines whether positions will be adjusted to the surface of the ellipsoid via a great arc.
      *
      * @exception {DeveloperError} At least two positions are required.
      * @exception {DeveloperError} colors has an invalid length.
@@ -123,7 +123,7 @@ define([
         this._colors = colors;
         this._perVertex = perVertex;
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
-        this._raiseToSurface = defaultValue(options.raiseToSurface, true);
+        this._followSurface = defaultValue(options.followSurface, true);
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         this._workerName = 'createSimplePolylineGeometry';
     };
@@ -143,7 +143,7 @@ define([
         var perVertex = simplePolylineGeometry._perVertex;
         var granularity = simplePolylineGeometry._granularity;
         var ellipsoid = simplePolylineGeometry._ellipsoid;
-        var raiseToSurface = simplePolylineGeometry._raiseToSurface;
+        var followSurface = simplePolylineGeometry._followSurface;
 
         var perSegmentColors = defined(colors) && !perVertex;
 
@@ -160,7 +160,7 @@ define([
         var k = 0;
         var j = 0;
 
-        if (raiseToSurface) {
+        if (followSurface) {
             var heights = PolylinePipeline.extractHeights(positions, ellipsoid);
             if (perSegmentColors) {
                 for (i = 0; i < length-1; i++) {
