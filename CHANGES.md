@@ -49,6 +49,7 @@ Change Log
 * Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
 * Added `czm_octDecode` and `czm_signNotZero` builtin functions.
 * Added `CesiumTerrainProvider.requestVertexNormals` to request per vertex normals from the provider, if they are available.
+* Added new property to all terrain providers: `TerrainProvider.hasVertexNormals`, `CesiumTerrainProvider.hasVertexNormals`, `ArcGisImageServerTerrainProvider.hasVertexNormals`, `EllipsoidTerrainProvider.hasVertexNormals`, `VRTheWorldTerrainProvider.hasVertexNormals`.  This property indicates whether or not vertex normals will be included in the terrain tile responses.
 * Added support for rendering the globe with oct-encoded per vertex normals .
 * Added `Primitive.ready`.
 

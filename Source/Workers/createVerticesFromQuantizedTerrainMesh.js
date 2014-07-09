@@ -128,7 +128,6 @@ define([
 
         var vertexIndex = vertexBufferIndex / vertexStride;
 
-
         for (var i = start; i !== end; i += increment) {
             var index = edgeVertices[i];
             var offset = index * vertexStride;
