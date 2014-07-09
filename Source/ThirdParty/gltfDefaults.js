@@ -318,7 +318,13 @@ define([
     }
 
     function statesDefaults(states) {
-        // TODO:
+        if (!defined(states.enable)) {
+            states.enable = [];
+        }
+
+        if (!defined(states.disable)) {
+            states.disable = [];
+        }
     }
 
     function techniqueDefaults(gltf) {
@@ -336,7 +342,7 @@ define([
 
                 var passes = technique.passes;
                 for (var passName in passes) {
-                    if (techniques.hasOwnProperty(passName)) {
+                    if (passes.hasOwnProperty(passName)) {
                         var pass = passes[passName];
                         var instanceProgram = pass.instanceProgram;
 

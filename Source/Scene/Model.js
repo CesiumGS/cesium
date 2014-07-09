@@ -1208,7 +1208,7 @@ define([
                 var typedArray = getModelAccessor(accessor).createArrayBufferView(buffers[bufferView.buffer], bufferView.byteOffset + accessor.byteOffset, count);
                 var matrices =  new Array(count);
 
-                if ((componentType === WebGLRenderingContext.FLOAT) && (type === 'VEC4')) {
+                if ((componentType === WebGLRenderingContext.FLOAT) && (type === 'MAT4')) {
                     for (var i = 0; i < count; ++i) {
                         matrices[i] = Matrix4.fromArray(typedArray, 16 * i);
                     }
@@ -1370,6 +1370,30 @@ define([
         }
     }
 
+    function getBooleanStates(states) {
+        // GLTF_SPEC: Support all render states.
+        var booleanStates = {};
+        booleanStates[WebGLRenderingContext.CULL_FACE] = false;
+        booleanStates[WebGLRenderingContext.DEPTH_TEST] = false;
+        booleanStates[WebGLRenderingContext.DEPTH_WRITEMASK] = true;
+        booleanStates[WebGLRenderingContext.BLEND] = false;
+
+        var enable = states.enable;
+        var length = enable.length;
+        var i;
+        for (i = 0; i < length; ++i) {
+            booleanStates[enable[i]] = true;
+        }
+
+        var disable = states.disable;
+        length = disable.length;
+        for (i = 0; i < length; ++i) {
+            booleanStates[disable[i]] = false;
+        }
+
+        return booleanStates;
+    }
+
     function createRenderStates(model, context) {
         var loadResources = model._loadResources;
 
@@ -1382,16 +1406,17 @@ define([
                     var technique = techniques[name];
                     var pass = technique.passes[technique.pass];
                     var states = pass.states;
+                    var booleanStates = getBooleanStates(states);
 
                     rendererRenderStates[name] = context.createRenderState({
                         cull : {
-                            enabled : !!states.cullFaceEnable
+                            enabled : booleanStates[WebGLRenderingContext.CULL_FACE]
                         },
                         depthTest : {
-                            enabled : !!states.depthTestEnable
+                            enabled : booleanStates[WebGLRenderingContext.DEPTH_TEST]
                         },
-                        depthMask : !!states.depthMask,
-                        blending : !!states.blendEnable ? BlendingState.ALPHA_BLEND : BlendingState.DISABLED
+                        depthMask : booleanStates[WebGLRenderingContext.DEPTH_WRITEMASK],
+                        blending : booleanStates[WebGLRenderingContext.BLEND] ? BlendingState.ALPHA_BLEND : BlendingState.DISABLED
                     });
                 }
             }
@@ -1749,9 +1774,9 @@ define([
                     uniformMap = combine(uniformMap, jointUniformMap);
                 }
 
-                // GLTF_SPEC: Offical means to determine translucency. https://github.com/KhronosGroup/glTF/issues/105
-                var isTranslucent = pass.states.blendEnable;
                 var rs = rendererRenderStates[instanceTechnique.technique];
+                // GLTF_SPEC: Offical means to determine translucency. https://github.com/KhronosGroup/glTF/issues/105
+                var isTranslucent = rs.blending.enabled;
                 var owner = {
                     primitive : defaultValue(model.pickPrimitive, model),
                     id : model.id,
