@@ -24,88 +24,93 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+function startup(Cesium) {
     "use strict";
-    
-    var viewer = new Cesium.Viewer('cesiumContainer');
-    var scene = viewer.scene;
-    var primitives = scene.primitives;
-   
-    // Red wall,constant min and max heights
-    var positions = Cesium.Cartesian3.fromDegreesArray([
-        -115.0, 44.0,
-        -90.0, 44.0
-    ]);
-    
-    var redWallInstance = new Cesium.GeometryInstance({
-        geometry : Cesium.WallGeometry.fromConstantHeights({
-            positions : positions,
-            maximumHeight : 200000.0,
-            minimumHeight : 100000.0
-        }),
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
-        }
-    });
-    
-    // Green wall, contsant height
-    positions = Cesium.Cartesian3.fromDegreesArray([
-        -107.0, 43.0,
-        -97.0, 43.0,
-        -97.0, 40.0,
-        -107.0, 40.0,
-        -107.0, 43.0
-    ]);
-    
-    var greenWallInstance = new Cesium.GeometryInstance({
-        geometry : Cesium.WallGeometry.fromConstantHeights({
-            positions : positions,
-            maximumHeight : 100000.0
-        }),
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.GREEN)
-        }
-    });
-    
-    // Blue wall, height specified at each position
-    positions = Cesium.Cartesian3.fromDegreesArray([
-        -115.0, 50.0,
-        -112.5, 50.0,
-        -110.0, 50.0,
-        -107.5, 50.0,
-        -105.0, 50.0,
-        -102.5, 50.0,
-        -100.0, 50.0,
-        -97.5, 50.0,
-        -95.0, 50.0,
-        -92.5, 50.0,
-        -90.0, 50.0
-    ]);
-    var maximumHeights = [100000, 200000, 100000, 200000, 100000, 200000, 100000, 200000, 100000, 200000, 100000];
-    var minimumHeights =  [0, 100000,  0, 100000, 0, 100000, 0, 100000, 0, 100000, 0];
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer');
+var scene = viewer.scene;
+var primitives = scene.primitives;
 
-    var blueWallInstance = new Cesium.GeometryInstance({
-        geometry : new Cesium.WallGeometry({
-            positions : positions,
-            maximumHeights: maximumHeights,
-            minimumHeights: minimumHeights
-            
-        }),
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
-        }
-    });
-   
-    // Add wall instances to primitives
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : [blueWallInstance, redWallInstance, greenWallInstance],
-        appearance : new Cesium.PerInstanceColorAppearance({
-            translucent : false
-        })
-    }));
-    
-    Sandcastle.finishedLoading();
+// Red wall,constant min and max heights
+var positions = Cesium.Cartesian3.fromDegreesArray([
+    -115.0, 44.0,
+    -90.0, 44.0
+]);
+
+var redWallInstance = new Cesium.GeometryInstance({
+    geometry : Cesium.WallGeometry.fromConstantHeights({
+        positions : positions,
+        maximumHeight : 200000.0,
+        minimumHeight : 100000.0
+    }),
+    attributes : {
+        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
+    }
 });
+
+// Green wall, contsant height
+positions = Cesium.Cartesian3.fromDegreesArray([
+    -107.0, 43.0,
+    -97.0, 43.0,
+    -97.0, 40.0,
+    -107.0, 40.0,
+    -107.0, 43.0
+]);
+
+var greenWallInstance = new Cesium.GeometryInstance({
+    geometry : Cesium.WallGeometry.fromConstantHeights({
+        positions : positions,
+        maximumHeight : 100000.0
+    }),
+    attributes : {
+        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.GREEN)
+    }
+});
+
+// Blue wall, height specified at each position
+positions = Cesium.Cartesian3.fromDegreesArray([
+    -115.0, 50.0,
+    -112.5, 50.0,
+    -110.0, 50.0,
+    -107.5, 50.0,
+    -105.0, 50.0,
+    -102.5, 50.0,
+    -100.0, 50.0,
+    -97.5, 50.0,
+    -95.0, 50.0,
+    -92.5, 50.0,
+    -90.0, 50.0
+]);
+var maximumHeights = [100000, 200000, 100000, 200000, 100000, 200000, 100000, 200000, 100000, 200000, 100000];
+var minimumHeights =  [0, 100000,  0, 100000, 0, 100000, 0, 100000, 0, 100000, 0];
+
+var blueWallInstance = new Cesium.GeometryInstance({
+    geometry : new Cesium.WallGeometry({
+        positions : positions,
+        maximumHeights: maximumHeights,
+        minimumHeights: minimumHeights
+        
+    }),
+    attributes : {
+        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
+    }
+});
+
+// Add wall instances to primitives
+primitives.add(new Cesium.Primitive({
+    geometryInstances : [blueWallInstance, redWallInstance, greenWallInstance],
+    appearance : new Cesium.PerInstanceColorAppearance({
+        translucent : false
+    })
+}));
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
 </script>
 </body>
 </html>

@@ -24,61 +24,66 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+function startup(Cesium) {
     "use strict";
-    
-    var viewer = new Cesium.Viewer('cesiumContainer');
-    var scene = viewer.scene;
-    var primitives = scene.primitives;
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer');
+var scene = viewer.scene;
+var primitives = scene.primitives;
 
-    var positions = Cesium.Cartesian3.fromDegreesArray([
-        -100.0, 60.0,
-        -90.0, 60.0
-    ]);
-    var maximumHeight = 400000;
-    var minimumHeight =  0;
-    
-    // Wall outline
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.WallOutlineGeometry.fromConstantHeights({
-                positions : positions,
-                maximumHeight: maximumHeight,
-                minimumHeight: minimumHeight
-            }),
-            attributes : {
-                color : new Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
-            }
+var positions = Cesium.Cartesian3.fromDegreesArray([
+    -100.0, 60.0,
+    -90.0, 60.0
+]);
+var maximumHeight = 400000;
+var minimumHeight =  0;
+
+// Wall outline
+primitives.add(new Cesium.Primitive({
+    geometryInstances : new Cesium.GeometryInstance({
+        geometry : new Cesium.WallOutlineGeometry.fromConstantHeights({
+            positions : positions,
+            maximumHeight: maximumHeight,
+            minimumHeight: minimumHeight
         }),
-        appearance : new Cesium.PerInstanceColorAppearance({
-            flat : true,
-            renderState : {
-                depthTest : {
-                    enabled : true
-                },
-                lineWidth : Math.min(4.0, scene.maximumAliasedLineWidth)
-            }
-        })
-    }));
+        attributes : {
+            color : new Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+        }
+    }),
+    appearance : new Cesium.PerInstanceColorAppearance({
+        flat : true,
+        renderState : {
+            depthTest : {
+                enabled : true
+            },
+            lineWidth : Math.min(4.0, scene.maximumAliasedLineWidth)
+        }
+    })
+}));
 
-    // Wall
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : new Cesium.GeometryInstance({
-            geometry : Cesium.WallGeometry.fromConstantHeights({
-                positions : positions,
-                maximumHeight : maximumHeight,
-                minimumHeight : minimumHeight
-                
-            }),
-            attributes : {
-                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
-            }
+// Wall
+primitives.add(new Cesium.Primitive({
+    geometryInstances : new Cesium.GeometryInstance({
+        geometry : Cesium.WallGeometry.fromConstantHeights({
+            positions : positions,
+            maximumHeight : maximumHeight,
+            minimumHeight : minimumHeight
+            
         }),
-        appearance : new Cesium.PerInstanceColorAppearance()
-    }));
-
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
+        }
+    }),
+    appearance : new Cesium.PerInstanceColorAppearance()
+}));
+//Sandcastle_End
     Sandcastle.finishedLoading();
-});
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
 </script>
 </body>
 </html>
