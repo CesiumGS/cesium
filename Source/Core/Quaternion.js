@@ -333,7 +333,7 @@ define([
      * @returns {Quaternion} The modified result parameter.
      */
     Quaternion.conjugate = function(quaternion, result) {
-        //>>inclfudeStart('debug', pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(quaternion)) {
             throw new DeveloperError('quaternion is required');
         }
