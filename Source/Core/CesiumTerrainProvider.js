@@ -52,7 +52,7 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {String} options.url The URL of the Cesium terrain server.
      * @param {Proxy} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
-     * @param {Boolean} [options.requestVertexNormals=false] If true, the client will request that vertex normals be included in terrain tile response from the server.
+     * @param {Boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server, in the form of per vertex normals if available.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
      * @see TerrainProvider
