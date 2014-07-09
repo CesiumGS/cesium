@@ -6,9 +6,10 @@ defineSuite([
         'Core/Rectangle',
         'Core/WebMercatorTilingScheme',
         'Scene/Globe',
+        'Scene/GlobeSurfaceTile',
         'Scene/Material',
+        'Scene/QuadtreeTile',
         'Scene/RectanglePrimitive',
-        'Scene/Tile',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
@@ -18,9 +19,10 @@ defineSuite([
         Rectangle,
         WebMercatorTilingScheme,
         Globe,
+        GlobeSurfaceTile,
         Material,
+        QuadtreeTile,
         RectanglePrimitive,
-        Tile,
         createScene,
         destroyScene) {
     "use strict";
@@ -169,11 +171,11 @@ defineSuite([
         var viewModel = new CesiumInspectorViewModel(scene);
         viewModel.wireframe = true;
         viewModel.showWireframe();
-        expect(viewModel.scene.globe._surface._debug.wireframe).toBe(true);
+        expect(viewModel.scene.globe._surface.tileProvider._debug.wireframe).toBe(true);
 
         viewModel.wireframe = false;
         viewModel.showWireframe();
-        expect(viewModel.scene.globe._surface._debug.wireframe).toBe(false);
+        expect(viewModel.scene.globe._surface.tileProvider._debug.wireframe).toBe(false);
     });
 
     it('suspend updates', function() {
@@ -202,26 +204,28 @@ defineSuite([
 
     it('show tile bounding sphere', function() {
         var viewModel = new CesiumInspectorViewModel(scene);
-        var tile = new Tile({tilingScheme : new WebMercatorTilingScheme(), x : 0, y : 0, level : 0});
+        var tile = new QuadtreeTile({tilingScheme : new WebMercatorTilingScheme(), x : 0, y : 0, level : 0});
+        tile.data = new GlobeSurfaceTile();
         viewModel.tile = tile;
 
         viewModel.tileBoundingSphere  = true;
         viewModel.showTileBoundingSphere();
-        expect(viewModel.scene.globe._surface._debug.boundingSphereTile).toBe(tile);
+        expect(viewModel.scene.globe._surface.tileProvider._debug.boundingSphereTile).toBe(tile);
 
         viewModel.tileBoundingSphere = false;
         viewModel.showTileBoundingSphere();
-        expect(viewModel.scene.globe._surface._debug.boundingSphereTile).toBe(undefined);
+        expect(viewModel.scene.globe._surface.tileProvider._debug.boundingSphereTile).toBe(undefined);
     });
 
     it('filter tile', function() {
         var viewModel = new CesiumInspectorViewModel(scene);
-        var tile = new Tile({tilingScheme : new WebMercatorTilingScheme(), x : 0, y : 0, level : 0});
+        var tile = new QuadtreeTile({tilingScheme : new WebMercatorTilingScheme(), x : 0, y : 0, level : 0});
+        tile.data = new GlobeSurfaceTile();
         viewModel.tile = tile;
 
         viewModel.filterTile  = true;
         viewModel.doFilterTile();
-        expect(viewModel.scene.globe._surface._tilesToRenderByTextureCount[0][0]).toBe(tile);
+        expect(viewModel.scene.globe._surface._tilesToRender[0]).toBe(tile);
         expect(viewModel.suspendUpdates).toBe(true);
 
         viewModel.filterTile = false;

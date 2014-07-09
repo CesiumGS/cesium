@@ -38,6 +38,8 @@ Change Log
   * `EntityCollection.getObjects()` and `CompositeEntityCollection.getObjects()` have been made properties and renamed `EntityCollection.entities` and `CompositeEntityCollection.entities`. 
   * `Viewer.trackedObject` and `Viewer.selectedObject` have been renamed to `Viewer.trackedEntity` and `Viewer.selectedEntity` when using the `viewerEntityMixin`.
 * Added northUpEast transform to help support display of glTF models because Y is their up axis.
+* Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
+* Added `Primitive.ready`.
 
 Beta Releases
 -------------

@@ -374,6 +374,22 @@ define([
             get : function() {
                 return this._asynchronous;
             }
+        },
+
+        /**
+         * Determines if the primitive is complete and ready to render.  If this property is
+         * true, the primitive will be rendered the next time that {@link Primitive#update}
+         * is called.
+         *
+         * @memberof Primitive.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         */
+        ready : {
+            get : function() {
+                return this._state === PrimitiveState.COMPLETE;
+            }
         }
     });
 
