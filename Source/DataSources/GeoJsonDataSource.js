@@ -302,14 +302,6 @@ define([
 
         //default polygon
         var defaultPolygon = new Entity('GeoJsonDataSource.defaultPolygon');
-
-        polyline = new PolylineGraphics();
-        material = new ColorMaterialProperty();
-        material.color = new ConstantProperty(Color.YELLOW);
-        polyline.material = material;
-        polyline.width = new ConstantProperty(1);
-        defaultPolygon.polyline = polyline;
-
         var polygon = new PolygonGraphics();
         defaultPolygon.polygon = polygon;
 
