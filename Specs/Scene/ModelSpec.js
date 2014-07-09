@@ -36,16 +36,16 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    var duckUrl = './Data/Models/duck/duck.json';
-    var customDuckUrl = './Data/Models/customDuck/duck.json';
-    var embeddedDuckUrl = './Data/Models/embeddedDuck/duck.json';
+    var duckUrl = './Data/Models/duck/duck.gltf';
+    var customDuckUrl = './Data/Models/customDuck/duck.gltf';
+    var separateDuckUrl = './Data/Models/separateDuck/duck.gltf';
     var cesiumAirUrl = './Data/Models/CesiumAir/Cesium_Air.gltf';
-    var animBoxesUrl = './Data/Models/anim-test-1-boxes/anim-test-1-boxes.json';
-    var riggedFigureUrl = './Data/Models/rigged-figure-test/rigged-figure-test.json';
+    var animBoxesUrl = './Data/Models/anim-test-1-boxes/anim-test-1-boxes.gltf';
+    var riggedFigureUrl = './Data/Models/rigged-figure-test/rigged-figure-test.gltf';
 
     var duckModel;
     var customDuckModel;
-    var embeddedDuckModel;
+    var separateDuckModel;
     var cesiumAirModel;
     var animBoxesModel;
     var riggedFigureModel;
@@ -250,7 +250,7 @@ defineSuite([
 
         // Change node transform and render
         expect(duckModel._cesiumAnimationsDirty).toEqual(false);
-        node.matrix = Matrix4.fromUniformScale(1.25, new Matrix4());
+        node.matrix = Matrix4.fromUniformScale(1.01, new Matrix4());
         expect(duckModel._cesiumAnimationsDirty).toEqual(true);
 
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
@@ -361,8 +361,8 @@ defineSuite([
 
     it('boundingSphere returns the bounding sphere', function() {
         var boundingSphere = duckModel.boundingSphere;
-        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(13.440, 86.949, -3.701), CesiumMath.EPSILON3);
-        expect(boundingSphere.radius).toEqualEpsilon(126.880, CesiumMath.EPSILON3);
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.134, 0.869, -0.037), CesiumMath.EPSILON3);
+        expect(boundingSphere.radius).toEqualEpsilon(1.268, CesiumMath.EPSILON3);
     });
 
     it('destroys', function() {
@@ -392,17 +392,17 @@ defineSuite([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    it('loads embeddedDuck', function() {
-        embeddedDuckModel = loadModel(embeddedDuckUrl);
+    it('loads separateDuck', function() {
+        separateDuckModel = loadModel(separateDuckUrl);
     });
 
-    it('renders embeddedDuckModel (NPOT textures and all uniform semantics)', function() {
+    it('renders separateDuckModel (external .glsl, .bin, and .png files)', function() {
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        embeddedDuckModel.show = true;
-        embeddedDuckModel.zoomTo();
+        separateDuckModel.show = true;
+        separateDuckModel.zoomTo();
         expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
-        embeddedDuckModel.show = false;
+        separateDuckModel.show = false;
     });
 
     ///////////////////////////////////////////////////////////////////////////
