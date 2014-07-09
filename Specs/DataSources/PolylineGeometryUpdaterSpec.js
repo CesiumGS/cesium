@@ -48,8 +48,8 @@ defineSuite([
 
     function createBasicPolyline() {
         var polyline = new PolylineGraphics();
+        polyline.positions = new ConstantProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray([new Cartographic(0, 0, 0), new Cartographic(1, 0, 0), new Cartographic(1, 1, 0), new Cartographic(0, 1, 0)]));
         var entity = new Entity();
-        entity.vertexPositions = new ConstantProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray([new Cartographic(0, 0, 0), new Cartographic(1, 0, 0), new Cartographic(1, 1, 0), new Cartographic(0, 1, 0)]));
         entity.polyline = polyline;
         return entity;
     }
@@ -115,7 +115,7 @@ defineSuite([
         expect(updater.fillMaterialProperty).toBe(entity.polyline.material);
     });
 
-    it('A time-varying vertexPositions causes geometry to be dynamic', function() {
+    it('A time-varying positions causes geometry to be dynamic', function() {
         var entity = createBasicPolyline();
         var updater = new PolylineGeometryUpdater(entity);
         var point1 = new SampledPositionProperty();
@@ -125,8 +125,8 @@ defineSuite([
         var point3 = new SampledPositionProperty();
         point3.addSample(time, new Cartesian3());
 
-        entity.vertexPositions = new PropertyArray();
-        entity.vertexPositions.setValue([point1, point2, point3]);
+        entity.polyline.positions = new PropertyArray();
+        entity.polyline.positions.setValue([point1, point2, point3]);
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -271,7 +271,7 @@ defineSuite([
         var listener = jasmine.createSpy('listener');
         updater.geometryChanged.addEventListener(listener);
 
-        entity.vertexPositions = new ConstantProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray([new Cartographic(0, 0, 0), new Cartographic(1, 0, 0)]));
+        entity.polyline.positions = new ConstantProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray([new Cartographic(0, 0, 0), new Cartographic(1, 0, 0)]));
         expect(listener.callCount).toEqual(1);
 
         entity.polyline.width = new ConstantProperty(82);
@@ -280,7 +280,7 @@ defineSuite([
         entity.availability = new TimeIntervalCollection();
         expect(listener.callCount).toEqual(3);
 
-        entity.vertexPositions = undefined;
+        entity.polyline.positions = undefined;
         expect(listener.callCount).toEqual(4);
 
         //Since there's no valid geometry, changing another property should not raise the event.

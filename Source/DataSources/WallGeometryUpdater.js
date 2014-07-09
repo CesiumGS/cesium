@@ -363,7 +363,7 @@ define([
     };
 
     WallGeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
-        if (!(propertyName === 'availability' || propertyName === 'vertexPositions' || propertyName === 'wall')) {
+        if (!(propertyName === 'availability' || propertyName === 'wall')) {
             return;
         }
 
@@ -396,11 +396,11 @@ define([
             return;
         }
 
-        var vertexPositions = this._entity.vertexPositions;
+        var positions = wall.positions;
 
         var show = wall.show;
         if ((defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE)) || //
-            (!defined(vertexPositions))) {
+            (!defined(positions))) {
             if (this._fillEnabled || this._outlineEnabled) {
                 this._fillEnabled = false;
                 this._outlineEnabled = false;
@@ -424,7 +424,7 @@ define([
         this._fillEnabled = fillEnabled;
         this._outlineEnabled = outlineEnabled;
 
-        if (!vertexPositions.isConstant || //
+        if (!positions.isConstant || //
             !Property.isConstant(minimumHeights) || //
             !Property.isConstant(maximumHeights) || //
             !Property.isConstant(granularity)) {
@@ -435,7 +435,7 @@ define([
         } else {
             var options = this._options;
             options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.VERTEX_FORMAT;
-            options.positions = vertexPositions.getValue(Iso8601.MINIMUM_VALUE, options.positions);
+            options.positions = positions.getValue(Iso8601.MINIMUM_VALUE, options.positions);
             options.minimumHeights = defined(minimumHeights) ? minimumHeights.getValue(Iso8601.MINIMUM_VALUE, options.minimumHeights) : undefined;
             options.maximumHeights = defined(maximumHeights) ? maximumHeights.getValue(Iso8601.MINIMUM_VALUE, options.maximumHeights) : undefined;
             options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
@@ -504,12 +504,12 @@ define([
 
         var options = this._options;
 
-        var vertexPositions = entity.vertexPositions;
+        var positions = wall.positions;
         var minimumHeights = wall.minimumHeights;
         var maximumHeights = wall.maximumHeights;
         var granularity = wall.granularity;
 
-        options.positions = vertexPositions.getValue(time, options.positions);
+        options.positions = positions.getValue(time, options.positions);
         options.minimumHeights = defined(minimumHeights) ? minimumHeights.getValue(time, options.minimumHeights) : undefined;
         options.maximumHeights = defined(maximumHeights) ? maximumHeights.getValue(time, options.maximumHeights) : undefined;
         options.granularity = defined(granularity) ? granularity.getValue(time) : undefined;
