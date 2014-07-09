@@ -19,6 +19,7 @@ defineSuite([
     it('merge assigns unassigned properties', function() {
         var source = new WallGraphics();
         source.material = new ColorMaterialProperty();
+        source.positions = new ConstantProperty();
         source.show = new ConstantProperty();
         source.granularity = new ConstantProperty();
         source.fill = new ConstantProperty();
@@ -31,6 +32,7 @@ defineSuite([
         target.merge(source);
 
         expect(target.material).toBe(source.material);
+        expect(target.positions).toBe(source.positions);
         expect(target.show).toBe(source.show);
         expect(target.granularity).toBe(source.granularity);
         expect(target.fill).toBe(source.fill);
@@ -44,6 +46,7 @@ defineSuite([
         var source = new WallGraphics();
 
         var material = new ColorMaterialProperty();
+        var positions = new ColorMaterialProperty();
         var show = new ConstantProperty();
         var granularity = new ConstantProperty();
         var fill = new ConstantProperty();
@@ -54,6 +57,7 @@ defineSuite([
 
         var target = new WallGraphics();
         target.material = material;
+        target.positions = positions;
         target.show = show;
         target.granularity = granularity;
         target.fill = fill;
@@ -65,6 +69,7 @@ defineSuite([
         target.merge(source);
 
         expect(target.material).toBe(material);
+        expect(target.positions).toBe(positions);
         expect(target.show).toBe(show);
         expect(target.granularity).toBe(granularity);
         expect(target.fill).toBe(fill);
@@ -77,6 +82,7 @@ defineSuite([
     it('clone works', function() {
         var source = new WallGraphics();
         source.material = new ColorMaterialProperty();
+        source.positions = new ConstantProperty();
         source.show = new ConstantProperty();
         source.granularity = new ConstantProperty();
         source.fill = new ConstantProperty();
@@ -87,6 +93,7 @@ defineSuite([
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
+        expect(result.positions).toBe(source.positions);
         expect(result.show).toBe(source.show);
         expect(result.granularity).toBe(source.granularity);
         expect(result.fill).toBe(source.fill);
@@ -107,6 +114,7 @@ defineSuite([
         var property = new WallGraphics();
         testMaterialDefinitionChanged(property, 'material', Color.RED, Color.BLUE);
         testDefinitionChanged(property, 'show', true, false);
+        testDefinitionChanged(property, 'positions', [], []);
         testDefinitionChanged(property, 'granularity', 3, 4);
         testDefinitionChanged(property, 'fill', false, true);
         testDefinitionChanged(property, 'outline', true, false);

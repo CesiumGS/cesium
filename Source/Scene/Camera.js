@@ -105,6 +105,7 @@ define([
         this.position = position;
         this._position = Cartesian3.clone(position);
         this._positionWC = Cartesian3.clone(position);
+        this._positionCartographic = new Cartographic();
 
         var direction = new Cartesian3();
         direction = Cartesian3.normalize(Cartesian3.negate(position, direction), direction);
@@ -429,6 +430,28 @@ define([
 
         if (positionChanged || transformChanged) {
             camera._positionWC = Matrix4.multiplyByPoint(transform, position, camera._positionWC);
+
+            // Compute the Cartographic position of the camera.
+            var mode = camera._mode;
+            if (mode === SceneMode.SCENE3D || mode === SceneMode.MORPHING) {
+                camera._positionCartographic = camera._projection.ellipsoid.cartesianToCartographic(camera._positionWC, camera._positionCartographic);
+            } else {
+                // The camera position is expressed in the 2D coordinate system where the Y axis is to the East,
+                // the Z axis is to the North, and the X axis is out of the map.  Express them instead in the ENU axes where
+                // X is to the East, Y is to the North, and Z is out of the local horizontal plane.
+                var positionENU = scratchCartesian;
+                positionENU.x = camera._positionWC.y;
+                positionENU.y = camera._positionWC.z;
+                positionENU.z = camera._positionWC.x;
+
+                // In 2D, the camera height is always 12.7 million meters.
+                // The apparent height is equal to half the frustum width.
+                if (mode === SceneMode.SCENE2D) {
+                    positionENU.z = (camera.frustum.right - camera.frustum.left) * 0.5;
+                }
+
+                camera._projection.unproject(positionENU, camera._positionCartographic);
+            }
         }
 
         if (directionChanged || upChanged || rightChanged) {
@@ -559,6 +582,22 @@ define([
             get : function() {
                 updateMembers(this);
                 return this._invViewMatrix;
+            }
+        },
+
+        /**
+         * Gets the {@link Cartographic} position of the camera, with longitude and latitude
+         * expressed in radians and height in meters.  In 2D and Columbus View, it is possible
+         * for the returned longitude and latitude to be outside the range of valid longitudes
+         * and latitudes when the camera is outside the map.
+         * @memberof Camera.prototype
+         * 
+         * @type {Cartographic}
+         */
+        positionCartographic : {
+            get : function() {
+                updateMembers(this);
+                return this._positionCartographic;
             }
         },
 

@@ -7,8 +7,7 @@ defineSuite([
         'Core/Math',
         'Core/Rectangle',
         'Core/TilingScheme',
-        'Core/WebMercatorProjection',
-        'Scene/Tile'
+        'Core/WebMercatorProjection'
     ], function(
         WebMercatorTilingScheme,
         Cartesian2,
@@ -17,8 +16,7 @@ defineSuite([
         CesiumMath,
         Rectangle,
         TilingScheme,
-        WebMercatorProjection,
-        Tile) {
+        WebMercatorProjection) {
     "use strict";
     /*global document,describe,it,expect,beforeEach*/
 

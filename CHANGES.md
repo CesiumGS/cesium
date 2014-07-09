@@ -6,6 +6,7 @@ Change Log
 * Breaking changes
   * All `Matrix2`, `Matrix3`, `Matrix4` and `Quaternion` functions that take a `result` parameter now require the parameter (except for functions starting with `from`).
   * Removed the following from the Cesium API: `Transforms.earthOrientationParameters`, `EarthOrientationParameters`, `EarthOrientationParametersSample`, `Transforms.iau2006XysData`, `Iau2006XysData`, `Iau2006XysSample`, `IauOrientationAxes`, `TimeConstants`, `Scene.frameState`, `FrameState`, `EncodedCartesian3`, `EllipsoidalOccluder`, and `FAR`.  These are still available but are not part of the official API and may change in future versions.
+  * Removed `DynamicObject.vertexPositions`.  Use `DynamicWall.positions`, `DynamicPolygon.positions`, and `DynamicPolyline.positions` instead.
   * The `DynamicScene` layer has been renamed to `DataSources` additionally, the following objects have all been renamed.
     * `DynamicBillboard` -> `BillboardGraphics`
     * `DynamicBillboardVisualizer` -> `BillboardVisualizer`
@@ -38,6 +39,8 @@ Change Log
   * `EntityCollection.getObjects()` and `CompositeEntityCollection.getObjects()` have been made properties and renamed `EntityCollection.entities` and `CompositeEntityCollection.entities`. 
   * `Viewer.trackedObject` and `Viewer.selectedObject` have been renamed to `Viewer.trackedEntity` and `Viewer.selectedEntity` when using the `viewerEntityMixin`.
 * Added northUpEast transform to help support display of glTF models because Y is their up axis.
+* Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
+* Added `Primitive.ready`.
 
 Beta Releases
 -------------
