@@ -263,7 +263,7 @@ define([
      * var occluder = new Cesium.Occluder(sphere1, cameraPosition);
      * occluder.getVisibility(sphere2); //returns Visibility.NONE
      */
-    Occluder.prototype.getVisibility = function(occludeeBS) {
+    Occluder.prototype.computeVisibility = function(occludeeBS) {
         if (!defined(occludeeBS)) {
             throw new DeveloperError('occludeeBS is required.');
         }
@@ -341,7 +341,7 @@ define([
      * var occludeePosition = tileOccluderSphere.center;
      * var occludeePt = occluder.getOccludeePoint(occluderBoundingSphere, occludeePosition, positions);
      */
-    Occluder.getOccludeePoint = function(occluderBoundingSphere, occludeePosition, positions) {
+    Occluder.computeOccludeePoint = function(occluderBoundingSphere, occludeePosition, positions) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(occluderBoundingSphere)) {
             throw new DeveloperError('occluderBoundingSphere is required.');

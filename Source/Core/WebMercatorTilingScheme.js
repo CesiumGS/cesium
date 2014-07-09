@@ -108,7 +108,7 @@ define([
      * @param {Number} level The level-of-detail.
      * @returns {Number} The number of tiles in the X direction at the given level.
      */
-    WebMercatorTilingScheme.prototype.getNumberOfXTilesAtLevel = function(level) {
+    WebMercatorTilingScheme.prototype.numberOfXTilesAtLevel = function(level) {
         return this._numberOfLevelZeroTilesX << level;
     };
 
@@ -118,7 +118,7 @@ define([
      * @param {Number} level The level-of-detail.
      * @returns {Number} The number of tiles in the Y direction at the given level.
      */
-    WebMercatorTilingScheme.prototype.getNumberOfYTilesAtLevel = function(level) {
+    WebMercatorTilingScheme.prototype.numberOfYTilesAtLevel = function(level) {
         return this._numberOfLevelZeroTilesY << level;
     };
 

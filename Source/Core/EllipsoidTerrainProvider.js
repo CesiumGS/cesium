@@ -136,7 +136,7 @@ define([
      * @param {Number} level The tile level for which to get the maximum geometric error.
      * @returns {Number} The maximum geometric error.
      */
-    EllipsoidTerrainProvider.prototype.getLevelMaximumGeometricError = function(level) {
+    EllipsoidTerrainProvider.prototype.levelMaximumGeometricError = function(level) {
         return this._levelZeroMaximumGeometricError / (1 << level);
     };
 

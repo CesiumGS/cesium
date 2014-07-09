@@ -63,7 +63,7 @@ define([
      * @param {Number} level The level-of-detail.
      * @returns {Number} The number of tiles in the X direction at the given level.
      */
-    TilingScheme.prototype.getNumberOfXTilesAtLevel = DeveloperError.throwInstantiationError;
+    TilingScheme.prototype.numberOfXTilesAtLevel = DeveloperError.throwInstantiationError;
 
     /**
      * Gets the total number of tiles in the Y direction at a specified level-of-detail.
@@ -72,7 +72,7 @@ define([
      * @param {Number} level The level-of-detail.
      * @returns {Number} The number of tiles in the Y direction at the given level.
      */
-    TilingScheme.prototype.getNumberOfYTilesAtLevel = DeveloperError.throwInstantiationError;
+    TilingScheme.prototype.numberOfYTilesAtLevel = DeveloperError.throwInstantiationError;
 
     /**
      * Transforms an rectangle specified in geodetic radians to the native coordinate system

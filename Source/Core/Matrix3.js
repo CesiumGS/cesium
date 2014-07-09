@@ -484,7 +484,7 @@ define([
      * var column1Row0 = myMatrix[column1Row0Index]
      * myMatrix[column1Row0Index] = 10.0;
      */
-    Matrix3.getElementIndex = function(column, row) {
+    Matrix3.elementIndex = function(column, row) {
         //>>includeStart('debug', pragmas.debug);
         if (typeof row !== 'number' || row < 0 || row > 2) {
             throw new DeveloperError('row must be 0, 1, or 2.');

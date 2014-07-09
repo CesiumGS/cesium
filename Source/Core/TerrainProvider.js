@@ -80,7 +80,7 @@ define([
      * @param {Number} height The number of vertices in the regular grid in the vertical direction.
      * @returns {Uint16Array} The list of indices.
      */
-    TerrainProvider.getRegularGridIndices = function(width, height) {
+    TerrainProvider.computeRegularGridIndices = function(width, height) {
         //>>includeStart('debug', pragmas.debug);
         if (width * height > 64 * 1024) {
             throw new DeveloperError('The total number of vertices (width * height) must be less than or equal to 65536.');
@@ -138,7 +138,7 @@ define([
      * @param {Number} numberOfTilesAtLevelZero The number of tiles in the horizontal direction at tile level zero.
      * @returns {Number} An estimated geometric error.
      */
-    TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap = function(ellipsoid, tileImageWidth, numberOfTilesAtLevelZero) {
+    TerrainProvider.estimatedLevelZeroGeometricErrorForAHeightmap = function(ellipsoid, tileImageWidth, numberOfTilesAtLevelZero) {
         return ellipsoid.maximumRadius * 2 * Math.PI * TerrainProvider.heightmapTerrainQuality / (tileImageWidth * numberOfTilesAtLevelZero);
     };
 
@@ -168,7 +168,7 @@ define([
      * @param {Number} level The tile level for which to get the maximum geometric error.
      * @returns {Number} The maximum geometric error.
      */
-    TerrainProvider.prototype.getLevelMaximumGeometricError = DeveloperError.throwInstantiationError;
+    TerrainProvider.prototype.levelMaximumGeometricError = DeveloperError.throwInstantiationError;
 
     /**
      * Gets a value indicating whether or not the provider includes a water mask.  The water mask

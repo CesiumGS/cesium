@@ -106,7 +106,7 @@ define([
      * @param {Cartesian3} point The point.
      * @returns {Number} The signed shortest distance of the point to the plane.
      */
-    Plane.getPointDistance = function(plane, point) {
+    Plane.pointDistance = function(plane, point) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(plane)) {
             throw new DeveloperError('plane is required.');

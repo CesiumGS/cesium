@@ -92,7 +92,7 @@ define([
      * @param {Number} level The level-of-detail.
      * @returns {Number} The number of tiles in the X direction at the given level.
      */
-    GeographicTilingScheme.prototype.getNumberOfXTilesAtLevel = function(level) {
+    GeographicTilingScheme.prototype.numberOfXTilesAtLevel = function(level) {
         return this._numberOfLevelZeroTilesX << level;
     };
 
@@ -102,7 +102,7 @@ define([
      * @param {Number} level The level-of-detail.
      * @returns {Number} The number of tiles in the Y direction at the given level.
      */
-    GeographicTilingScheme.prototype.getNumberOfYTilesAtLevel = function(level) {
+    GeographicTilingScheme.prototype.numberOfYTilesAtLevel = function(level) {
         return this._numberOfLevelZeroTilesY << level;
     };
 

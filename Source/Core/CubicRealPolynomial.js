@@ -24,7 +24,7 @@ define([
      * @param {Number} d The coefficient of the 0th order monomial.
      * @returns {Number} The value of the discriminant.
      */
-    CubicRealPolynomial.discriminant = function(a, b, c, d) {
+    CubicRealPolynomial.computeDiscriminant = function(a, b, c, d) {
         //>>includeStart('debug', pragmas.debug);
         if (typeof a !== 'number') {
             throw new DeveloperError('a is a required number.');
@@ -163,7 +163,7 @@ define([
      * @param {Number} d The coefficient of the 0th order monomial.
      * @returns {Number[]} The real valued roots.
      */
-    CubicRealPolynomial.realRoots = function(a, b, c, d) {
+    CubicRealPolynomial.computeRealRoots = function(a, b, c, d) {
         //>>includeStart('debug', pragmas.debug);
         if (typeof a !== 'number') {
             throw new DeveloperError('a is a required number.');

@@ -627,7 +627,7 @@ define([
      * @param {Cartesian3} result The object onto which to store the result.
      * @returns {Cartesian3} The modified result parameter.
      */
-    Quaternion.getAxis = function(quaternion, result) {
+    Quaternion.axis = function(quaternion, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(quaternion)) {
             throw new DeveloperError('quaternion is required');
@@ -657,7 +657,7 @@ define([
      * @param {Quaternion} quaternion The quaternion to use.
      * @returns {Number} The angle of rotation.
      */
-    Quaternion.getAngle = function(quaternion) {
+    Quaternion.angle = function(quaternion) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(quaternion)) {
             throw new DeveloperError('quaternion is required');
@@ -830,7 +830,7 @@ define([
      *
      * @see Quaternion#squad
      */
-    Quaternion.innerQuadrangle = function(q0, q1, q2, result) {
+    Quaternion.computeInnerQuadrangle = function(q0, q1, q2, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(q0) || !defined(q1) || !defined(q2)) {
             throw new DeveloperError('q0, q1, and q2 are required.');

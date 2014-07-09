@@ -29,7 +29,7 @@ define([
      * @param {Number} e The coefficient of the 0th order monomial.
      * @returns {Number} The value of the discriminant.
      */
-    QuarticRealPolynomial.discriminant = function(a, b, c, d, e) {
+    QuarticRealPolynomial.computeDiscriminant = function(a, b, c, d, e) {
         //>>includeStart('debug', pragmas.debug);
         if (typeof a !== 'number') {
             throw new DeveloperError('a is a required number.');
@@ -255,7 +255,7 @@ define([
      * @param {Number} e The coefficient of the 0th order monomial.
      * @returns {Number[]} The real valued roots.
      */
-    QuarticRealPolynomial.realRoots = function(a, b, c, d, e) {
+    QuarticRealPolynomial.computeRealRoots = function(a, b, c, d, e) {
         //>>includeStart('debug', pragmas.debug);
         if (typeof a !== 'number') {
             throw new DeveloperError('a is a required number.');

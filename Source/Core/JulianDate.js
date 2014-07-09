@@ -725,7 +725,7 @@ define([
      * @param {JulianDate} julianDate The date.
      * @returns {Number} The Julian date as single floating point number.
      */
-    JulianDate.getTotalDays = function(julianDate) {
+    JulianDate.totalDays = function(julianDate) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(julianDate)) {
             throw new DeveloperError('julianDate is required.');
@@ -741,7 +741,7 @@ define([
      * @param {JulianDate} right The second instance.
      * @returns {Number} The difference, in seconds, when subtracting <code>right</code> from <code>left</code>.
      */
-    JulianDate.getSecondsDifference = function(left, right) {
+    JulianDate.secondsDifference = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(left)) {
             throw new DeveloperError('left is required.');
@@ -762,7 +762,7 @@ define([
      * @param {JulianDate} right The second instance.
      * @returns {Number} The difference, in days, when subtracting <code>right</code> from <code>left</code>.
      */
-    JulianDate.getDaysDifference = function(left, right) {
+    JulianDate.daysDifference = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(left)) {
             throw new DeveloperError('left is required.');
@@ -783,7 +783,7 @@ define([
      * @param {JulianDate} julianDate The date.
      * @returns {Number} The number of seconds the provided instance is ahead of UTC
      */
-    JulianDate.getTaiMinusUtc = function(julianDate) {
+    JulianDate.computeTaiMinusUtc = function(julianDate) {
         binarySearchScratchLeapSecond.julianDate = julianDate;
         var leapSeconds = JulianDate.leapSeconds;
         var index = binarySearch(leapSeconds, binarySearchScratchLeapSecond, compareLeapSecondDates);

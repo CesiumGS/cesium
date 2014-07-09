@@ -836,7 +836,7 @@ define([
      * @param {Cartesian2} [result] A Cartesian2 to store the nearest and farthest distances.
      * @returns {Interval} The nearest and farthest distances on the bounding sphere from position in direction.
      */
-    BoundingSphere.getPlaneDistances = function(sphere, position, direction, result) {
+    BoundingSphere.planeDistances = function(sphere, position, direction, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(sphere)) {
             throw new DeveloperError('sphere is required.');
