@@ -43,7 +43,7 @@ define([
      *
      * @exports requestAnimationFrame
      *
-     * @param {Function} callback The function to call when animation is ready.
+     * @param {requestAnimationFrame~Callback} callback The function to call when the next frame should be drawn.
      * @returns An ID that can be passed to {@link cancelAnimationFrame} to cancel the request.
      *
      * @see {@link http://www.w3.org/TR/animation-timing/#the-WindowAnimationTiming-interface|The WindowAnimationTiming interface}
@@ -63,6 +63,13 @@ define([
         // if invoked as Cesium.requestAnimationFrame(callback)
         return implementation(callback);
     };
+
+    /**
+     * A function that will be called when the next frame should be drawn.
+     * @callback requestAnimationFrame~Callback
+     *
+     * @param {Number} timestamp A timestamp for the frame, in milliseconds.
+     */
 
     return requestAnimationFrame;
 });

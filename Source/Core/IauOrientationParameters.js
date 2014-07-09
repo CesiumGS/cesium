@@ -9,7 +9,9 @@ define(function() {
      * These parameters correspond to the parameters in the Report from the IAU/IAG Working Group
      * except that they are expressed in radians.
      * </p>
-     * @exports IauOrientationParameters
+     *
+     * @namespace
+     * @alias IauOrientationParameters
      *
      * @private
      */

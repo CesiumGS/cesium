@@ -35,6 +35,8 @@ define([
      * @param {Number} [options.stepSizeDays=1.0] The step size, in days, between successive XYS samples.
      * @param {Number} [options.samplesPerXysFile=1000] The number of samples in each XYS file.
      * @param {Number} [options.totalSamples=27426] The total number of samples in all XYS files.
+     *
+     * @private
      */
     var Iau2006XysData = function Iau2006XysData(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

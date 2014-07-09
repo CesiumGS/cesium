@@ -8,7 +8,8 @@ define([
     /**
      * Provides the type of time standards which JulianDate can take as input.
      *
-     * @exports TimeStandard
+     * @namespace
+     * @alias TimeStandard
      *
      * @see JulianDate
      */

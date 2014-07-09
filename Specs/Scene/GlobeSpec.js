@@ -76,7 +76,7 @@ defineSuite([
             globe._surface._debug.enableDebugOutput = true;
             var commandList = [];
             globe.update(context, frameState, commandList);
-            return !defined(globe._surface._tileLoadQueue.head) && globe._surface._debug.tilesWaitingForChildren === 0;
+            return globe._surface.tileProvider.ready && !defined(globe._surface._tileLoadQueue.head) && globe._surface._debug.tilesWaitingForChildren === 0;
         }, 'updating to complete');
     }
 

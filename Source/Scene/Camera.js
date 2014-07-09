@@ -105,6 +105,7 @@ define([
         this.position = position;
         this._position = Cartesian3.clone(position);
         this._positionWC = Cartesian3.clone(position);
+        this._positionCartographic = new Cartographic();
 
         var direction = new Cartesian3();
         direction = Cartesian3.normalize(Cartesian3.negate(position, direction), direction);
@@ -429,6 +430,28 @@ define([
 
         if (positionChanged || transformChanged) {
             camera._positionWC = Matrix4.multiplyByPoint(transform, position, camera._positionWC);
+
+            // Compute the Cartographic position of the camera.
+            var mode = camera._mode;
+            if (mode === SceneMode.SCENE3D || mode === SceneMode.MORPHING) {
+                camera._positionCartographic = camera._projection.ellipsoid.cartesianToCartographic(camera._positionWC, camera._positionCartographic);
+            } else {
+                // The camera position is expressed in the 2D coordinate system where the Y axis is to the East,
+                // the Z axis is to the North, and the X axis is out of the map.  Express them instead in the ENU axes where
+                // X is to the East, Y is to the North, and Z is out of the local horizontal plane.
+                var positionENU = scratchCartesian;
+                positionENU.x = camera._positionWC.y;
+                positionENU.y = camera._positionWC.z;
+                positionENU.z = camera._positionWC.x;
+
+                // In 2D, the camera height is always 12.7 million meters.
+                // The apparent height is equal to half the frustum width.
+                if (mode === SceneMode.SCENE2D) {
+                    positionENU.z = (camera.frustum.right - camera.frustum.left) * 0.5;
+                }
+
+                camera._projection.unproject(positionENU, camera._positionCartographic);
+            }
         }
 
         if (directionChanged || upChanged || rightChanged) {
@@ -559,6 +582,22 @@ define([
             get : function() {
                 updateMembers(this);
                 return this._invViewMatrix;
+            }
+        },
+
+        /**
+         * Gets the {@link Cartographic} position of the camera, with longitude and latitude
+         * expressed in radians and height in meters.  In 2D and Columbus View, it is possible
+         * for the returned longitude and latitude to be outside the range of valid longitudes
+         * and latitudes when the camera is outside the map.
+         * @memberof Camera.prototype
+         * 
+         * @type {Cartographic}
+         */
+        positionCartographic : {
+            get : function() {
+                updateMembers(this);
+                return this._positionCartographic;
             }
         },
 
@@ -2018,8 +2057,8 @@ define([
      * @param {Cartesian3} [options.direction] The final direction of the camera in WGS84 (world) coordinates. By default, the direction will point towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D.
      * @param {Cartesian3} [options.up] The final up direction in WGS84 (world) coordinates. By default, the up direction will point towards local north in 3D and in the positive y direction in Columbus view or 2D.
      * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
-     * @param {Function} [options.complete] The function to execute when the flight is complete.
-     * @param {Function} [options.cancel] The function to execute if the flight is cancelled.
+     * @param {Camera~FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
+     * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
      * @param {Boolean} [options.convert=true] When <code>true</code>, the destination is converted to the correct coordinate system for each scene mode. When <code>false</code>, the destination is expected
      *                  to be in the correct coordinate system.
@@ -2037,8 +2076,8 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {Rectangle} options.destination The rectangle to view, in WGS84 (world) coordinates, which determines the final position of the camera.
      * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
-     * @param {Function} [options.complete] The function to execute when the flight is complete.
-     * @param {Function} [options.cancel] The function to execute if the flight is cancelled.
+     * @param {Camera~FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
+     * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
      * @param {Matrix4} [endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
      */
     Camera.prototype.flyToRectangle = function(options) {
@@ -2061,6 +2100,16 @@ define([
         camera.frustum = this.frustum.clone();
         return camera;
     };
+
+    /**
+     * A function that will execute when a flight completes.
+     * @callback Camera~FlightCompleteCallback
+     */
+
+    /**
+     * A function that will execute when a flight is cancelled.
+     * @callback Camera~FlightCancelledCallback
+     */
 
     return Camera;
 });

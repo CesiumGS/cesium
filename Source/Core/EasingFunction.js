@@ -12,7 +12,8 @@ define([
      * {@link https://github.com/sole/tween.js/|Tween.js} and Robert Penner.  See the
      * {@link http://sole.github.io/tween.js/examples/03_graphs.html|Tween.js graphs for each function}.
      *
-     * @exports EasingFunction
+     * @namespace
+     * @alias EasingFunction
      *
      * @private
      */
