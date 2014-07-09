@@ -26,6 +26,8 @@ define([
         this._showSubscription = undefined;
         this._material = undefined;
         this._materialSubscription = undefined;
+        this._positions = undefined;
+        this._positionsSubscription = undefined;
         this._minimumHeights = undefined;
         this._minimumHeightsSubscription = undefined;
         this._maximumHeights = undefined;
@@ -64,8 +66,15 @@ define([
         material : createPropertyDescriptor('material'),
 
         /**
+         * Gets or sets the vertex positions.
+         * @memberof DynamicWall.prototype
+         * @type {Property}
+         */
+        positions : createPropertyDescriptor('positions'),
+
+        /**
          * Gets or sets the Array {@link Property} specifying the bottom heights of the wall.
-         * This array must be the same length as vertexPositions, containing a height for
+         * This array must be the same length as positions, containing a height for
          * each position.  If undefined, the bottom of the wall will be on the surface of the
          * ellipsoid.
          * @memberof WallGraphics.prototype
@@ -75,8 +84,8 @@ define([
 
         /**
          * Gets or sets the Array {@link Property} specifying the top heights along the wall.
-         * This array must be the same length as vertexPositions, containing a height for
-         * each position.  If undefined, the heights from vertexPositions are used.
+         * This array must be the same length as positions, containing a height for
+         * each position.  If undefined, the heights from positions are used.
          * @memberof WallGraphics.prototype
          * @type {Property}
          */
@@ -124,6 +133,7 @@ define([
         }
         result.show = this.show;
         result.material = this.material;
+        result.positions = this.positions;
         result.minimumHeights = this.minimumHeights;
         result.maximumHeights = this.maximumHeights;
         result.granularity = this.granularity;
@@ -148,6 +158,7 @@ define([
 
         this.show = defaultValue(this.show, source.show);
         this.material = defaultValue(this.material, source.material);
+        this.positions = defaultValue(this.positions, source.positions);
         this.minimumHeights = defaultValue(this.minimumHeights, source.minimumHeights);
         this.maximumHeights = defaultValue(this.maximumHeights, source.maximumHeights);
         this.granularity = defaultValue(this.granularity, source.granularity);

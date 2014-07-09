@@ -889,37 +889,37 @@ define([
         }
     }
 
-    function processVertexData(entity, vertexPositionsData, entityCollection) {
+    function processVertexData(object, positionsData, entityCollection) {
         var i;
         var len;
-        var references = vertexPositionsData.references;
+        var references = positionsData.references;
         if (defined(references)) {
             var properties = [];
             for (i = 0, len = references.length; i < len; i++) {
                 properties.push(makeReference(entityCollection, references[i]));
             }
 
-            var iso8601Interval = vertexPositionsData.interval;
+            var iso8601Interval = positionsData.interval;
             if (defined(iso8601Interval)) {
                 iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
-                if (!(entity.vertexPositions instanceof CompositePositionProperty)) {
-                    entity.vertexPositions = new CompositePositionProperty();
+                if (!(object.positions instanceof CompositePositionProperty)) {
+                    object.positions = new CompositePositionProperty();
                     iso8601Interval.data = new PositionPropertyArray(properties);
-                    entity.vertexPositions.intervals.addInterval(iso8601Interval);
+                    object.positions.intervals.addInterval(iso8601Interval);
                 }
             } else {
-                entity.vertexPositions = new PositionPropertyArray(properties);
+                object.positions = new PositionPropertyArray(properties);
             }
         } else {
             var values = [];
-            var tmp = vertexPositionsData.cartesian;
+            var tmp = positionsData.cartesian;
             if (defined(tmp)) {
                 for (i = 0, len = tmp.length; i < len; i += 3) {
                     values.push(new Cartesian3(tmp[i], tmp[i + 1], tmp[i + 2]));
                 }
-                vertexPositionsData.array = values;
+                positionsData.array = values;
             } else {
-                tmp = vertexPositionsData.cartographicRadians;
+                tmp = positionsData.cartographicRadians;
                 if (defined(tmp)) {
                     for (i = 0, len = tmp.length; i < len; i += 3) {
                         scratchCartographic.longitude = tmp[i];
@@ -927,36 +927,35 @@ define([
                         scratchCartographic.height = tmp[i + 2];
                         values.push(Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic));
                     }
-                    vertexPositionsData.array = values;
+                    positionsData.array = values;
                 } else {
-                    tmp = vertexPositionsData.cartographicDegrees;
+                    tmp = positionsData.cartographicDegrees;
                     if (defined(tmp)) {
                         for (i = 0, len = tmp.length; i < len; i += 3) {
                             values.push(Cartesian3.fromDegrees(tmp[i], tmp[i + 1], tmp[i + 2]));
                         }
-                        vertexPositionsData.array = values;
+                        positionsData.array = values;
                     }
                 }
             }
-            if (defined(vertexPositionsData.array)) {
-                processPacketData(Array, entity, 'vertexPositions', vertexPositionsData, undefined, undefined, entityCollection);
+            if (defined(positionsData.array)) {
+                processPacketData(Array, object, 'positions', positionsData, undefined, undefined, entityCollection);
             }
         }
     }
 
-    function processVertexPositions(entity, packet, entityCollection, sourceUri) {
-        var vertexPositionsData = packet.vertexPositions;
-        if (!defined(vertexPositionsData)) {
+    function processPositions(object, positionsData, entityCollection) {
+        if (!defined(positionsData)) {
             return;
         }
 
-        if (isArray(vertexPositionsData)) {
-            var length = vertexPositionsData.length;
+        if (isArray(positionsData)) {
+            var length = positionsData.length;
             for (var i = 0; i < length; i++) {
-                processVertexData(entity, vertexPositionsData[i], entityCollection);
+                processVertexData(object, positionsData[i], entityCollection);
             }
         } else {
-            processVertexData(entity, vertexPositionsData, entityCollection);
+            processVertexData(object, positionsData, entityCollection);
         }
     }
 
@@ -1344,6 +1343,7 @@ define([
         processPacketData(Boolean, polygon, 'outline', polygonData.outline, interval, sourceUri, entityCollection);
         processPacketData(Color, polygon, 'outlineColor', polygonData.outlineColor, interval, sourceUri, entityCollection);
         processPacketData(Boolean, polygon, 'perPositionHeight', polygonData.perPositionHeight, interval, sourceUri, entityCollection);
+        processPositions(polygon, polygonData.positions, entityCollection);
     }
 
     function processRectangle(entity, packet, entityCollection, sourceUri) {
@@ -1405,6 +1405,7 @@ define([
         processPacketData(Boolean, wall, 'fill', wallData.fill, interval, sourceUri, entityCollection);
         processPacketData(Boolean, wall, 'outline', wallData.outline, interval, sourceUri, entityCollection);
         processPacketData(Color, wall, 'outlineColor', wallData.outlineColor, interval, sourceUri, entityCollection);
+        processPositions(wall, wallData.positions, entityCollection);
     }
 
     function processPolyline(entity, packet, entityCollection, sourceUri) {
@@ -1458,6 +1459,7 @@ define([
         processPacketData(Color, materialToProcess, 'color', polylineData.color, interval, sourceUri, entityCollection);
         processPacketData(Color, materialToProcess, 'outlineColor', polylineData.outlineColor, interval, sourceUri, entityCollection);
         processPacketData(Number, materialToProcess, 'outlineWidth', polylineData.outlineWidth, interval, sourceUri, entityCollection);
+        processPositions(polyline, polylineData.positions, entityCollection);
     }
 
     function processDirectionData(pyramid, directions, interval, sourceUri, entityCollection) {
@@ -1736,7 +1738,6 @@ define([
     processViewFrom, //
     processWall, //
     processOrientation, //
-    processVertexPositions, //
     processAvailability];
 
     /**

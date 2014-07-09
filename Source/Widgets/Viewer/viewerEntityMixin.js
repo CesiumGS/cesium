@@ -94,7 +94,7 @@ define([
             eventHelper.add(infoBoxViewModel.closeClicked, clearSelectedEntity);
         }
 
-        var scratchVertexPositions;
+        var scratchPositions;
         var scratchBoundingSphere;
 
         // Subscribe to onTick so that we can update the view each update.
@@ -111,15 +111,11 @@ define([
                 var position;
                 var enableCamera = false;
 
+
                 if (selectedEntity.isAvailable(time)) {
                     if (defined(selectedEntity.position)) {
                         position = selectedEntity.position.getValue(time, oldPosition);
                         enableCamera = defined(position) && (viewer.trackedEntity !== viewer.selectedEntity);
-                    } else if (defined(selectedEntity.vertexPositions)) {
-                        scratchVertexPositions = selectedEntity.vertexPositions.getValue(time, scratchVertexPositions);
-                        scratchBoundingSphere = BoundingSphere.fromPoints(scratchVertexPositions, scratchBoundingSphere);
-                        position = scratchBoundingSphere.center;
-                        // Can't track scratch positions: "enableCamera" is false.
                     }
                     // else "position" is undefined and "enableCamera" is false.
                 }
