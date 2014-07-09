@@ -598,8 +598,7 @@ define([
      * @exception {DeveloperError} All instance geometries must have the same primitiveType..
      */
     Primitive.prototype.update = function(context, frameState, commandList) {
-        if (!this.show ||
-            ((!defined(this.geometryInstances)) && (this._va.length === 0)) ||
+        if (((!defined(this.geometryInstances)) && (this._va.length === 0)) ||
             (defined(this.geometryInstances) && isArray(this.geometryInstances) && this.geometryInstances.length === 0) ||
             (!defined(this.appearance)) ||
             (frameState.mode !== SceneMode.SCENE3D && this.allow3DOnly) ||
@@ -783,7 +782,7 @@ define([
             this._state = PrimitiveState.COMPLETE;
         }
 
-        if (this._state !== PrimitiveState.COMPLETE) {
+        if (!this.show || this._state !== PrimitiveState.COMPLETE) {
             return;
         }
 
