@@ -657,8 +657,8 @@ define([
                                 if (defined(min) && defined(max)) {
                                     Matrix4.multiplyByPoint(transformToRoot, aMin, aMin);
                                     Matrix4.multiplyByPoint(transformToRoot, aMax, aMax);
-                                    Cartesian3.getMinimumByComponent(min, aMin, min);
-                                    Cartesian3.getMaximumByComponent(max, aMax, max);
+                                    Cartesian3.minimumByComponent(min, aMin, min);
+                                    Cartesian3.maximumByComponent(max, aMax, max);
                                 }
                             }
                         }

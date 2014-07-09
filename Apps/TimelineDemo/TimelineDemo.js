@@ -103,7 +103,7 @@ define([
             stop : endJulian
         }), 8, Color.LIME);
 
-        var middle = JulianDate.getSecondsDifference(endJulian, startJulian) / 4;
+        var middle = JulianDate.secondsDifference(endJulian, startJulian) / 4;
         timeline.addTrack(new TimeInterval({
             start : JulianDate.addSeconds(startJulian, middle, new JulianDate()),
             stop : JulianDate.addSeconds(startJulian, middle * 3, new JulianDate())
@@ -134,7 +134,7 @@ define([
         }
 
         if (startJulian && endJulian) {
-            if (JulianDate.getSecondsDifference(endJulian, startJulian) < 0.1) {
+            if (JulianDate.secondsDifference(endJulian, startJulian) < 0.1) {
                 endBeforeStart.style.display = 'block';
                 containerElement.style.visibility = 'hidden';
             } else {

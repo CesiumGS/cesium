@@ -203,8 +203,8 @@ defineSuite([
 
         time = JulianDate.addHours(time, 23.93447, new JulianDate()); // add one sidereal day
         var u = Transforms.computeTemeToPseudoFixedMatrix(time);
-        var tAngle = Quaternion.getAngle(Quaternion.fromRotationMatrix(t));
-        var uAngle = Quaternion.getAngle(Quaternion.fromRotationMatrix(u));
+        var tAngle = Quaternion.computeAngle(Quaternion.fromRotationMatrix(t));
+        var uAngle = Quaternion.computeAngle(Quaternion.fromRotationMatrix(u));
         expect(tAngle).toEqualEpsilon(uAngle, CesiumMath.EPSILON6);
     });
 
@@ -225,8 +225,8 @@ defineSuite([
 
         time = JulianDate.addHours(time, 23.93447, new JulianDate()); // add one sidereal day
         var u = Transforms.computeTemeToPseudoFixedMatrix(time);
-        var tAngle = Quaternion.getAngle(Quaternion.fromRotationMatrix(t));
-        var uAngle = Quaternion.getAngle(Quaternion.fromRotationMatrix(u));
+        var tAngle = Quaternion.computeAngle(Quaternion.fromRotationMatrix(t));
+        var uAngle = Quaternion.computeAngle(Quaternion.fromRotationMatrix(u));
         expect(tAngle).toEqualEpsilon(uAngle, CesiumMath.EPSILON6);
     });
 
@@ -251,8 +251,8 @@ defineSuite([
         var resultU = new Matrix3();
         var u = Transforms.computeTemeToPseudoFixedMatrix(time, resultU);
         expect(u).toBe(resultU);
-        var tAngle = Quaternion.getAngle(Quaternion.fromRotationMatrix(t));
-        var uAngle = Quaternion.getAngle(Quaternion.fromRotationMatrix(u));
+        var tAngle = Quaternion.computeAngle(Quaternion.fromRotationMatrix(t));
+        var uAngle = Quaternion.computeAngle(Quaternion.fromRotationMatrix(u));
         expect(tAngle).toEqualEpsilon(uAngle, CesiumMath.EPSILON6);
     });
 
@@ -369,8 +369,8 @@ defineSuite([
                 var resultU = new Matrix3();
                 var u = Transforms.computeIcrfToFixedMatrix(time, resultU);
                 expect(u).toBe(resultU);
-                var tAngle = Quaternion.getAngle(Quaternion.fromRotationMatrix(t));
-                var uAngle = Quaternion.getAngle(Quaternion.fromRotationMatrix(u));
+                var tAngle = Quaternion.computeAngle(Quaternion.fromRotationMatrix(t));
+                var uAngle = Quaternion.computeAngle(Quaternion.fromRotationMatrix(u));
                 expect(tAngle).toEqualEpsilon(uAngle, CesiumMath.EPSILON6);
 
                 // The rotation matrix from STK Components corresponding to the time and data inputs above

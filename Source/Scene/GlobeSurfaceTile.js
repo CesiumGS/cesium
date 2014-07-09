@@ -330,8 +330,8 @@ define([
         // Compute tile rectangle boundaries for estimating the distance to the tile.
         var rectangle = tile.rectangle;
 
-        ellipsoid.cartographicToCartesian(Rectangle.getSouthwest(rectangle), surfaceTile.southwestCornerCartesian);
-        ellipsoid.cartographicToCartesian(Rectangle.getNortheast(rectangle), surfaceTile.northeastCornerCartesian);
+        ellipsoid.cartographicToCartesian(Rectangle.southwest(rectangle), surfaceTile.southwestCornerCartesian);
+        ellipsoid.cartographicToCartesian(Rectangle.northeast(rectangle), surfaceTile.northeastCornerCartesian);
 
         // The middle latitude on the western edge.
         cartographicScratch.longitude = rectangle.west;
@@ -352,13 +352,13 @@ define([
         Cartesian3.normalize(eastNormal, surfaceTile.eastNormal);
 
         // Compute the normal of the plane bounding the southern edge of the tile.
-        var southeastCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(Rectangle.getSoutheast(rectangle), cartesian3Scratch2);
+        var southeastCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(Rectangle.southeast(rectangle), cartesian3Scratch2);
         var westVector = Cartesian3.subtract(westernMidpointCartesian, easternMidpointCartesian, cartesian3Scratch);
         var southNormal = Cartesian3.cross(southeastCornerNormal, westVector, cartesian3Scratch2);
         Cartesian3.normalize(southNormal, surfaceTile.southNormal);
 
         // Compute the normal of the plane bounding the northern edge of the tile.
-        var northwestCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(Rectangle.getNorthwest(rectangle), cartesian3Scratch2);
+        var northwestCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(Rectangle.northwest(rectangle), cartesian3Scratch2);
         var northNormal = Cartesian3.cross(westVector, northwestCornerNormal, cartesian3Scratch2);
         Cartesian3.normalize(northNormal, surfaceTile.northNormal);
     }

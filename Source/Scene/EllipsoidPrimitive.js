@@ -334,7 +334,7 @@ define([
 
         if (boundingSphereDirty) {
             Cartesian3.clone(Cartesian3.ZERO, this._boundingSphere.center);
-            this._boundingSphere.radius = Cartesian3.getMaximumComponent(radii);
+            this._boundingSphere.radius = Cartesian3.maximumComponent(radii);
             BoundingSphere.transform(this._boundingSphere, this._computedModelMatrix, this._boundingSphere);
         }
 
