@@ -50,8 +50,8 @@ defineSuite([
 
     function createBasicWall() {
         var wall = new WallGraphics();
+        wall.positions = new ConstantProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray([new Cartographic(0, 0, 0), new Cartographic(1, 0, 0), new Cartographic(1, 1, 0), new Cartographic(0, 1, 0)]));
         var entity = new Entity();
-        entity.vertexPositions = new ConstantProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray([new Cartographic(0, 0, 0), new Cartographic(1, 0, 0), new Cartographic(1, 1, 0), new Cartographic(0, 1, 0)]));
         entity.wall = wall;
         return entity;
     }
@@ -118,7 +118,7 @@ defineSuite([
         expect(updater.fillMaterialProperty).toBe(entity.wall.material);
     });
 
-    it('A time-varying vertexPositions causes geometry to be dynamic', function() {
+    it('A time-varying positions causes geometry to be dynamic', function() {
         var entity = createBasicWall();
         var updater = new WallGeometryUpdater(entity);
         var point1 = new SampledPositionProperty();
@@ -128,8 +128,8 @@ defineSuite([
         var point3 = new SampledPositionProperty();
         point3.addSample(time, new Cartesian3());
 
-        entity.vertexPositions = new PropertyArray();
-        entity.vertexPositions.setValue([point1, point2, point3]);
+        entity.wall.positions = new PropertyArray();
+        entity.wall.positions.setValue([point1, point2, point3]);
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -349,7 +349,7 @@ defineSuite([
         var listener = jasmine.createSpy('listener');
         updater.geometryChanged.addEventListener(listener);
 
-        entity.vertexPositions = new ConstantProperty([]);
+        entity.wall.positions = new ConstantProperty([]);
         expect(listener.callCount).toEqual(1);
 
         entity.wall.granularity = new ConstantProperty(82);
@@ -358,7 +358,7 @@ defineSuite([
         entity.availability = new TimeIntervalCollection();
         expect(listener.callCount).toEqual(3);
 
-        entity.vertexPositions = undefined;
+        entity.wall.positions = undefined;
         expect(listener.callCount).toEqual(4);
 
         //Since there's no valid geometry, changing another property should not raise the event.
