@@ -47,7 +47,7 @@ Change Log
     * `CubicRealPolynomial.realRoots` -> `CubicRealPolynomial.computeRealRoots`
     * `CubicRealPolynomial.discriminant` -> `CubicRealPolynomial.computeDiscriminant`
     * `JulianDate.getTotalDays` -> `JulianDate.totalDyas`
-    * `JulianDate.getSecondsDifference` -> `JulianDate.sedondsDifference`
+    * `JulianDate.getSecondsDifference` -> `JulianDate.secondsDifference`
     * `JulianDate.getDaysDifference` -> `JulianDate.daysDifference`
     * `JulianDate.getTaiMinusUtc` -> `JulianDate.computeTaiMinusUtc`
     * `Matrix3.getEigenDecompostion` -> `Matrix3.computeEigenDecomposition`
