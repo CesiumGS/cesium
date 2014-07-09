@@ -59,7 +59,7 @@ define([
             //However, if the difference between the UTC date being converted and the TAI
             //defined leap second is greater than the offset, we are off by one and need to use
             //the previous leap second.
-            var difference = JulianDate.getSecondsDifference(leapSeconds[index].julianDate, julianDate);
+            var difference = JulianDate.secondsDifference(leapSeconds[index].julianDate, julianDate);
             if (difference > offset) {
                 index--;
                 offset = leapSeconds[index].offset;
@@ -88,7 +88,7 @@ define([
         }
 
         //Compute the difference between the found leap second and the time we are converting.
-        var difference = JulianDate.getSecondsDifference(leapSeconds[index].julianDate, julianDate);
+        var difference = JulianDate.secondsDifference(leapSeconds[index].julianDate, julianDate);
 
         if (difference === 0) {
             //The date is in our leap second table.
@@ -716,7 +716,7 @@ define([
         return (left === right) ||
                (defined(left) &&
                 defined(right) &&
-                Math.abs(JulianDate.getSecondsDifference(left, right)) <= epsilon);
+                Math.abs(JulianDate.secondsDifference(left, right)) <= epsilon);
     };
 
     /**

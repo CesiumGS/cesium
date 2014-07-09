@@ -61,7 +61,7 @@ define([
         result = JulianDate.addSeconds(date, TdtMinusTai, result);
 
         //Converts TT to TDB
-        var days = JulianDate.getTotalDays(result) - J2000d;
+        var days = JulianDate.totalDays(result) - J2000d;
         result = JulianDate.addSeconds(result, computeTdbMinusTtSpice(days), result);
 
         return result;

@@ -670,7 +670,7 @@ define([
      */
     Matrix3.getMaximumScale = function(matrix) {
         Matrix3.getScale(matrix, scratchScale);
-        return Cartesian3.getMaximumComponent(scratchScale);
+        return Cartesian3.maximumComponent(scratchScale);
     };
 
     /**

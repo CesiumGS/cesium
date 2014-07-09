@@ -140,7 +140,7 @@ define([
         covarianceMatrix[7] = eyz;
         covarianceMatrix[8] = ezz;
 
-        var eigenDecomposition = Matrix3.getEigenDecomposition(covarianceMatrix, scratchEigenResult);
+        var eigenDecomposition = Matrix3.computeEigenDecomposition(covarianceMatrix, scratchEigenResult);
         var rotation = Matrix3.transpose(eigenDecomposition.unitary, result.rotation);
 
         p = Cartesian3.subtract(positions[0], meanPoint, scratchCartesian2);
@@ -151,8 +151,8 @@ define([
         for (i = 1; i < length; i++) {
             p = Cartesian3.subtract(positions[i], meanPoint, p);
             Matrix3.multiplyByVector(rotation, p, tempPoint);
-            Cartesian3.getMinimumByComponent(minPoint, tempPoint, minPoint);
-            Cartesian3.getMaximumByComponent(maxPoint, tempPoint, maxPoint);
+            Cartesian3.minimumByComponent(minPoint, tempPoint, minPoint);
+            Cartesian3.maximumByComponent(maxPoint, tempPoint, maxPoint);
         }
 
         var center = Cartesian3.add(minPoint, maxPoint, scratchCartesian3);

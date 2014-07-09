@@ -267,8 +267,8 @@ define([
                 Quaternion.negate(sampledQuaternionTempQuaternion, sampledQuaternionTempQuaternion);
             }
 
-            Quaternion.getAxis(sampledQuaternionTempQuaternion, sampledQuaternionAxis);
-            var angle = Quaternion.getAngle(sampledQuaternionTempQuaternion);
+            Quaternion.axis(sampledQuaternionTempQuaternion, sampledQuaternionAxis);
+            var angle = Quaternion.angle(sampledQuaternionTempQuaternion);
             result[offset] = sampledQuaternionAxis.x * angle;
             result[offset + 1] = sampledQuaternionAxis.y * angle;
             result[offset + 2] = sampledQuaternionAxis.z * angle;
@@ -866,16 +866,16 @@ define([
      * @param {Quaternion} result The object onto which to store the result.
      * @returns {Quaternion} The modified result parameter.
      *
-     * @see Quaternion#innerQuadrangle
+     * @see Quaternion#computeInnerQuadrangle
      *
      * @example
      * // 1. compute the squad interpolation between two quaternions on a curve
-     * var s0 = Cesium.Quaternion.innerQuadrangle(quaternions[i - 1], quaternions[i], quaternions[i + 1]);
-     * var s1 = Cesium.Quaternion.innerQuadrangle(quaternions[i], quaternions[i + 1], quaternions[i + 2]);
+     * var s0 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[i - 1], quaternions[i], quaternions[i + 1]);
+     * var s1 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[i], quaternions[i + 1], quaternions[i + 2]);
      * var q = Cesium.Quaternion.squad(quaternions[i], quaternions[i + 1], s0, s1, t);
      *
      * // 2. compute the squad interpolation as above but where the first quaternion is a end point.
-     * var s1 = Cesium.Quaternion.innerQuadrangle(quaternions[0], quaternions[1], quaternions[2]);
+     * var s1 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[0], quaternions[1], quaternions[2]);
      * var q = Cesium.Quaternion.squad(quaternions[0], quaternions[1], quaternions[0], s1, t);
      */
     Quaternion.squad = function(q0, q1, s0, s1, t, result) {
