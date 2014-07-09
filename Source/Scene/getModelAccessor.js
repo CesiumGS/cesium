@@ -25,7 +25,7 @@ define([
         return {
             componentsPerAttribute : componentsPerAttribute,
             createArrayBufferView : function(buffer, byteOffset, length) {
-                ComponentDatatype.createArrayBufferView(componentDatatype, buffer, byteOffset, componentsPerAttribute * length);
+                return ComponentDatatype.createArrayBufferView(componentDatatype, buffer, byteOffset, componentsPerAttribute * length);
             }
         };
     };
