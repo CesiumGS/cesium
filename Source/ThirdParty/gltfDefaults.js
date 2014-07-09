@@ -317,6 +317,10 @@ define([
         }
     }
 
+    function statesDefaults(states) {
+        // TODO:
+    }
+
     function techniqueDefaults(gltf) {
         if (!defined(gltf.techniques)) {
             gltf.techniques = {};
@@ -333,7 +337,8 @@ define([
                 var passes = technique.passes;
                 for (var passName in passes) {
                     if (techniques.hasOwnProperty(passName)) {
-                        var instanceProgram = passes[passName].instanceProgram;
+                        var pass = passes[passName];
+                        var instanceProgram = pass.instanceProgram;
 
                         if (!defined(instanceProgram.attributes)) {
                             instanceProgram.attributes = {};
@@ -342,6 +347,11 @@ define([
                         if (!defined(instanceProgram.uniforms)) {
                             instanceProgram.uniforms = {};
                         }
+
+                        if (!defined(pass.states)) {
+                            pass.states = {};
+                        }
+                        statesDefaults(pass.states);
                     }
                 }
             }
