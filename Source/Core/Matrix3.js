@@ -484,7 +484,7 @@ define([
      * var column1Row0 = myMatrix[column1Row0Index]
      * myMatrix[column1Row0Index] = 10.0;
      */
-    Matrix3.elementIndex = function(column, row) {
+    Matrix3.getElementIndex = function(column, row) {
         //>>includeStart('debug', pragmas.debug);
         if (typeof row !== 'number' || row < 0 || row > 2) {
             throw new DeveloperError('row must be 0, 1, or 2.');
@@ -959,7 +959,7 @@ define([
      *     unitary : new Cesium.Matrix3(),
      *     diagonal : new Cesium.Matrix3()
      * };
-     * Cesium.Matrix3.getEigenDecomposition(a, result);
+     * Cesium.Matrix3.computeEigenDecomposition(a, result);
      *
      * var unitaryTranspose = Cesium.Matrix3.transpose(result.unitary);
      * var b = Cesium.Matrix3.multiply(result.unitary, result.diagonal);
@@ -969,7 +969,7 @@ define([
      * var v = Cesium.Matrix3.getColumn(result.unitary, 0);          // first eigenvector
      * var c = Cesium.Cartesian3.multiplyByScalar(v, lambda, new Cartesian3());        // equal to Cesium.Matrix3.multiplyByVector(a, v)
      */
-    Matrix3.getEigenDecomposition = function(matrix, result) {
+    Matrix3.computeEigenDecomposition = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required.');

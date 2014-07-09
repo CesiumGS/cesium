@@ -259,7 +259,7 @@ define([
      * @param {Number} level The tile level for which to get the maximum geometric error.
      * @returns {Number} The maximum geometric error.
      */
-    VRTheWorldTerrainProvider.prototype.levelMaximumGeometricError = function(level) {
+    VRTheWorldTerrainProvider.prototype.getLevelMaximumGeometricError = function(level) {
         if (!this.ready) {
             throw new DeveloperError('requestTileGeometry must not be called before ready returns true.');
         }

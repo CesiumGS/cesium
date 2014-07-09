@@ -21,7 +21,7 @@ define([
      * @param {Number} degree The desired degree of interpolation.
      * @returns The number of required data points needed for the desired degree of interpolation.
      */
-    LagrangePolynomialApproximation.requiredDataPoints = function(degree) {
+    LagrangePolynomialApproximation.getRequiredDataPoints = function(degree) {
         return Math.max(degree + 1.0, 2);
     };
 
