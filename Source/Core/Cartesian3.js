@@ -211,7 +211,7 @@ define([
      * @param {Cartesian3} cartesian The cartesian to use.
      * @returns {Number} The value of the maximum component.
      */
-    Cartesian3.getMaximumComponent = function(cartesian) {
+    Cartesian3.maximumComponent = function(cartesian) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
@@ -227,7 +227,7 @@ define([
      * @param {Cartesian3} cartesian The cartesian to use.
      * @returns {Number} The value of the minimum component.
      */
-    Cartesian3.getMinimumComponent = function(cartesian) {
+    Cartesian3.minimumComponent = function(cartesian) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
@@ -245,7 +245,7 @@ define([
      * @param {Cartesian3} result The object into which to store the result.
      * @returns {Cartesian3} A cartesian with the minimum components.
      */
-    Cartesian3.getMinimumByComponent = function(first, second, result) {
+    Cartesian3.minimumByComponent = function(first, second, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(first)) {
             throw new DeveloperError('first is required.');
@@ -273,7 +273,7 @@ define([
      * @param {Cartesian3} result The object into which to store the result.
      * @returns {Cartesian3} A cartesian with the maximum components.
      */
-    Cartesian3.getMaximumByComponent = function(first, second, result) {
+    Cartesian3.maximumByComponent = function(first, second, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(first)) {
             throw new DeveloperError('first is required.');

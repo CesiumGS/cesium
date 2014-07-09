@@ -876,12 +876,12 @@ define([
                 var boundingVolume = command.boundingVolume;
                 if (defined(boundingVolume)) {
                     if (command.cull &&
-                            ((cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE) ||
+                            ((cullingVolume.computeVisibility(boundingVolume) === Intersect.OUTSIDE) ||
                              (defined(occluder) && !occluder.isBoundingSphereVisible(boundingVolume)))) {
                         continue;
                     }
 
-                    distances = BoundingSphere.getPlaneDistances(boundingVolume, position, direction, distances);
+                    distances = BoundingSphere.computePlaneDistances(boundingVolume, position, direction, distances);
                     near = Math.min(near, distances.start);
                     far = Math.max(far, distances.stop);
                 } else {
@@ -1067,7 +1067,7 @@ define([
         return ((defined(command)) &&
                  ((!defined(command.boundingVolume)) ||
                   !command.cull ||
-                  ((cullingVolume.getVisibility(boundingVolume) !== Intersect.OUTSIDE) &&
+                  ((cullingVolume.computeVisibility(boundingVolume) !== Intersect.OUTSIDE) &&
                    (!defined(occluder) || occluder.isBoundingSphereVisible(boundingVolume)))));
     }
 
