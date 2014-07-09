@@ -38,6 +38,34 @@ Change Log
   * `DataSource.dynamicObjects` has been renamed to `DataSource.entities`
   * `EntityCollection.getObjects()` and `CompositeEntityCollection.getObjects()` have been made properties and renamed `EntityCollection.entities` and `CompositeEntityCollection.entities`. 
   * `Viewer.trackedObject` and `Viewer.selectedObject` have been renamed to `Viewer.trackedEntity` and `Viewer.selectedEntity` when using the `viewerEntityMixin`.
+  * Renamed functions for naming consistency
+    * `BoundingSphere.getPlaneDistances` -> `BoundingSphere.computePlaneDistances`
+    * `Cartesian[2,3,4].getMaximumComponent` -> `Cartesian[2,3,4].maximumComponent`
+    * `Cartesian[2,3,4].getMinimumComponent` -> `Cartesian[2,3,4].minimumComponent`
+    * `Cartesian[2,3,4].getMaximumByComponent` -> `Cartesian[2,3,4].maximumByComponent`
+    * `Cartesian[2,3,4].getMinimumByComponent` -> `Cartesian[2,3,4].minimumByComponent`
+    * `CubicRealPolynomial.realRoots` -> `CubicRealPolynomial.computeRealRoots`
+    * `CubicRealPolynomial.discriminant` -> `CubicRealPolynomial.computeDiscriminant`
+    * `JulianDate.getTotalDays` -> `JulianDate.totalDyas`
+    * `JulianDate.getSecondsDifference` -> `JulianDate.sedondsDifference`
+    * `JulianDate.getDaysDifference` -> `JulianDate.daysDifference`
+    * `JulianDate.getTaiMinusUtc` -> `JulianDate.computeTaiMinusUtc`
+    * `Matrix3.getEigenDecompostion` -> `Matrix3.computeEigenDecomposition`
+    * `Occluder.getVisibility` -> `Occluder.computeVisibility`
+    * `Occluder.getOccludeePoint` -> `Occluder.computerOccludeePoint`
+    * `QuadraticRealPolynomial.discriminant` -> `QuadraticRealPolynomial.computeDiscriminant`
+    * `QuadraticRealPolynomial.realRoots` -> `QuadraticRealPolynomial.computeRealRoots`
+    * `QuarticRealPolynomial.discriminant` -> `QuarticRealPolynomial.computeDiscriminant`
+    * `QuarticRealPolynomial.realRoots` -> `QuarticRealPolynomial.computeRealRoots`
+    * `Quaternion.getAxis` -> `Quaternion.axis`
+    * `Quaternion.getAngle` -> `Quaternion.angle`
+    * `Quaternion.innerQuadrangle` -> `Quaternion.computeInnerQuadrangle`
+    * `Rectangle.getSouthwest` -> `Rectangle.southwest`
+    * `Rectangle.getNorthwest` -> `Rectangle.northwest`
+    * `Rectangle.getSoutheast` -> `Rectangle.southeast`
+    * `Rectangle.getNortheast` -> `Rectangle.northeast`
+    * `Rectangle.getCenter` -> `Rectangle.center`
+    * `CullingVolume.getVisibility` -> `CullingVolume.computeVisibility`
 * Added northUpEast transform to help support display of glTF models because Y is their up axis.
 * Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
 * Added `Primitive.ready`.
