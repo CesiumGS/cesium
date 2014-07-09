@@ -1456,6 +1456,8 @@ define([
 
         processPacketData(Boolean, polyline, 'show', polylineData.show, interval, sourceUri, entityCollection);
         processPacketData(Number, polyline, 'width', polylineData.width, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, polyline, 'raiseToSurface', polylineData.raiseToSurface, interval, sourceUri, entityCollection);
+        processPacketData(Number, polyline, 'granularity', polylineData.granularity, interval, sourceUri, entityCollection);
         processPacketData(Color, materialToProcess, 'color', polylineData.color, interval, sourceUri, entityCollection);
         processPacketData(Color, materialToProcess, 'outlineColor', polylineData.outlineColor, interval, sourceUri, entityCollection);
         processPacketData(Number, materialToProcess, 'outlineWidth', polylineData.outlineWidth, interval, sourceUri, entityCollection);

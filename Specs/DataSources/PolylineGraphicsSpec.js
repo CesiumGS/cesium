@@ -22,6 +22,8 @@ defineSuite([
         source.positions = new ConstantProperty();
         source.width = new ConstantProperty();
         source.show = new ConstantProperty();
+        source.raiseToSurface = new ConstantProperty();
+        source.granularity = new ConstantProperty();
 
         var target = new PolylineGraphics();
         target.merge(source);
@@ -29,6 +31,8 @@ defineSuite([
         expect(target.positions).toBe(source.positions);
         expect(target.width).toBe(source.width);
         expect(target.show).toBe(source.show);
+        expect(target.raiseToSurface).toBe(source.raiseToSurface);
+        expect(target.granularity).toBe(source.granularity);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -37,23 +41,31 @@ defineSuite([
         source.positions = new ConstantProperty();
         source.width = new ConstantProperty();
         source.show = new ConstantProperty();
+        source.raiseToSurface = new ConstantProperty();
+        source.granularity = new ConstantProperty();
 
         var color = new ColorMaterialProperty();
         var positions = new ConstantProperty();
         var width = new ConstantProperty();
         var show = new ConstantProperty();
+        var raiseToSurface = new ConstantProperty();
+        var granularity = new ConstantProperty();
 
         var target = new PolylineGraphics();
         target.material = color;
         target.positions = positions;
         target.width = width;
         target.show = show;
+        target.raiseToSurface = raiseToSurface;
+        target.granularity = granularity;
 
         target.merge(source);
         expect(target.material).toBe(color);
         expect(target.positions).toBe(positions);
         expect(target.width).toBe(width);
         expect(target.show).toBe(show);
+        expect(target.raiseToSurface).toBe(raiseToSurface);
+        expect(target.granularity).toBe(granularity);
     });
 
     it('clone works', function() {
@@ -62,12 +74,16 @@ defineSuite([
         source.width = new ConstantProperty();
         source.positions = new ConstantProperty();
         source.show = new ConstantProperty();
+        source.raiseToSurface = new ConstantProperty();
+        source.granularity = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
         expect(result.positions).toBe(source.positions);
         expect(result.width).toBe(source.width);
         expect(result.show).toBe(source.show);
+        expect(result.raiseToSurface).toBe(source.raiseToSurface);
+        expect(result.granularity).toBe(source.granularity);
     });
 
     it('merge throws if source undefined', function() {
@@ -83,5 +99,7 @@ defineSuite([
         testDefinitionChanged(property, 'show', true, false);
         testDefinitionChanged(property, 'positions', [], []);
         testDefinitionChanged(property, 'width', 3, 4);
+        testDefinitionChanged(property, 'raiseToSurface', false, true);
+        testDefinitionChanged(property, 'granularity', 2, 1);
     });
 });

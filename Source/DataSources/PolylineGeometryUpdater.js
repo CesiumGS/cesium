@@ -49,7 +49,8 @@ define([
         this.vertexFormat = undefined;
         this.positions = undefined;
         this.width = undefined;
-        this.raiseToSurface = false;
+        this.raiseToSurface = undefined;
+        this.granularity = undefined;
     };
 
     /**
@@ -352,8 +353,11 @@ define([
         this._fillEnabled = true;
 
         var width = polyline.width;
+        var raiseToSurface = polyline.raiseToSurface;
+        var granularity = polyline.granularity;
 
-        if (!positionsProperty.isConstant || !Property.isConstant(width)) {
+        if (!positionsProperty.isConstant || !Property.isConstant(width) ||
+            !Property.isConstant(raiseToSurface) || !Property.isConstant(granularity)) {
             if (!this._dynamic) {
                 this._dynamic = true;
                 this._geometryChanged.raiseEvent(this);
@@ -375,6 +379,8 @@ define([
             options.vertexFormat = isColorMaterial ? PolylineColorAppearance.VERTEX_FORMAT : PolylineMaterialAppearance.VERTEX_FORMAT;
             options.positions = positions;
             options.width = defined(width) ? width.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.raiseToSurface = defined(raiseToSurface) ? raiseToSurface.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             this._dynamic = false;
             this._geometryChanged.raiseEvent(this);
         }
@@ -442,6 +448,12 @@ define([
 
         var width = polyline.width;
         options.width = defined(width) ? width.getValue(time) : undefined;
+
+        var raiseToSurface = polyline.raiseToSurface;
+        options.raiseToSurface = defined(raiseToSurface) ? raiseToSurface.getValue(time) : undefined;
+
+        var granularity = polyline.granularity;
+        options.granularity = defined(granularity) ? granularity.getValue(time) : undefined;
 
         this._material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
         var material = this._material;
