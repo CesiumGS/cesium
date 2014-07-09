@@ -306,7 +306,7 @@ defineSuite([
         var expected = Cartesian3.normalize(new Cartesian3(2.0, 3.0, 6.0), new Cartesian3());
         var quaternion = new Quaternion(sin * expected.x, sin * expected.y, sin * expected.z, cos);
         var result = new Cartesian3();
-        var returnedResult = Quaternion.axis(quaternion, result);
+        var returnedResult = Quaternion.computeAxis(quaternion, result);
         expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
         expect(result).toBe(returnedResult);
     });
@@ -315,7 +315,7 @@ defineSuite([
         var expected = new Cartesian3(0.0, 0.0, 0.0);
         var quaternion = new Quaternion(4.0, 2.0, 3.0, 1.0);
         var result = new Cartesian3(1, 2, 3);
-        var returnedResult = Quaternion.axis(quaternion, result);
+        var returnedResult = Quaternion.computeAxis(quaternion, result);
         expect(returnedResult).toEqual(expected);
         expect(result).toBe(returnedResult);
     });
@@ -327,7 +327,7 @@ defineSuite([
         var sin = Math.sin(angle / 2.0);
         var axis = Cartesian3.normalize(new Cartesian3(2.0, 3.0, 6.0), new Cartesian3());
         var quaternion = new Quaternion(sin * axis.x, sin * axis.y, sin * axis.z, cos);
-        var result = Quaternion.angle(quaternion);
+        var result = Quaternion.computeAngle(quaternion);
         expect(result).toEqualEpsilon(angle, CesiumMath.EPSILON15);
     });
 
@@ -716,13 +716,13 @@ defineSuite([
 
     it('axis throws with no parameter', function() {
         expect(function() {
-            Quaternion.axis(undefined);
+            Quaternion.computeAxis(undefined);
         }).toThrowDeveloperError();
     });
 
     it('angle throws with no parameter', function() {
         expect(function() {
-            Quaternion.angle(undefined);
+            Quaternion.computeAngle(undefined);
         }).toThrowDeveloperError();
     });
 
@@ -860,7 +860,7 @@ defineSuite([
 
     it('axis throws with no result', function() {
         expect(function() {
-            Quaternion.axis(new Quaternion());
+            Quaternion.computeAxis(new Quaternion());
         }).toThrowDeveloperError();
     });
 

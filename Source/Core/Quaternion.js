@@ -267,8 +267,8 @@ define([
                 Quaternion.negate(sampledQuaternionTempQuaternion, sampledQuaternionTempQuaternion);
             }
 
-            Quaternion.axis(sampledQuaternionTempQuaternion, sampledQuaternionAxis);
-            var angle = Quaternion.angle(sampledQuaternionTempQuaternion);
+            Quaternion.computeAxis(sampledQuaternionTempQuaternion, sampledQuaternionAxis);
+            var angle = Quaternion.computeAngle(sampledQuaternionTempQuaternion);
             result[offset] = sampledQuaternionAxis.x * angle;
             result[offset + 1] = sampledQuaternionAxis.y * angle;
             result[offset + 2] = sampledQuaternionAxis.z * angle;
@@ -333,7 +333,7 @@ define([
      * @returns {Quaternion} The modified result parameter.
      */
     Quaternion.conjugate = function(quaternion, result) {
-        //>>includeStart('debug', pragmas.debug);
+        //>>inclfudeStart('debug', pragmas.debug);
         if (!defined(quaternion)) {
             throw new DeveloperError('quaternion is required');
         }
@@ -627,7 +627,7 @@ define([
      * @param {Cartesian3} result The object onto which to store the result.
      * @returns {Cartesian3} The modified result parameter.
      */
-    Quaternion.axis = function(quaternion, result) {
+    Quaternion.computeAxis = function(quaternion, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(quaternion)) {
             throw new DeveloperError('quaternion is required');
@@ -657,7 +657,7 @@ define([
      * @param {Quaternion} quaternion The quaternion to use.
      * @returns {Number} The angle of rotation.
      */
-    Quaternion.angle = function(quaternion) {
+    Quaternion.computeAngle = function(quaternion) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(quaternion)) {
             throw new DeveloperError('quaternion is required');
