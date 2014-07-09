@@ -4,13 +4,15 @@
             "bufferView": "bufferView_84",
             "byteOffset": 864,
             "byteStride": 0,
+            "componentType": 5123,
             "count": 17088,
-            "type": 5123
+            "type": "SCALAR"
         },
         "accessor_31": {
             "bufferView": "bufferView_85",
             "byteOffset": 3296,
             "byteStride": 12,
+            "componentType": 5126,
             "count": 4180,
             "max": [
                 8.0047,
@@ -22,12 +24,13 @@
                 -2.296,
                 -12.8683
             ],
-            "type": 35665
+            "type": "VEC3"
         },
         "accessor_33": {
             "bufferView": "bufferView_85",
             "byteOffset": 53456,
             "byteStride": 12,
+            "componentType": 5126,
             "count": 4180,
             "max": [
                 0.999997,
@@ -39,12 +42,13 @@
                 -0.999999,
                 -1
             ],
-            "type": 35665
+            "type": "VEC3"
         },
         "accessor_35": {
             "bufferView": "bufferView_85",
             "byteOffset": 103616,
             "byteStride": 8,
+            "componentType": 5126,
             "count": 4180,
             "max": [
                 0.952677,
@@ -54,26 +58,29 @@
                 0.025,
                 0.025
             ],
-            "type": 35664
+            "type": "VEC2"
         },
         "accessor_73": {
             "bufferView": "bufferView_84",
             "byteOffset": 0,
             "byteStride": 0,
+            "componentType": 5123,
             "count": 360,
-            "type": 5123
+            "type": "SCALAR"
         },
         "accessor_76": {
             "bufferView": "bufferView_84",
             "byteOffset": 720,
             "byteStride": 0,
+            "componentType": 5123,
             "count": 72,
-            "type": 5123
+            "type": "SCALAR"
         },
         "accessor_78": {
             "bufferView": "bufferView_85",
             "byteOffset": 0,
             "byteStride": 12,
+            "componentType": 5126,
             "count": 103,
             "max": [
                 0.589514,
@@ -85,12 +92,13 @@
                 -1.59623,
                 -1.59625
             ],
-            "type": 35665
+            "type": "VEC3"
         },
         "accessor_80": {
             "bufferView": "bufferView_85",
             "byteOffset": 1236,
             "byteStride": 12,
+            "componentType": 5126,
             "count": 103,
             "max": [
                 1,
@@ -102,12 +110,13 @@
                 -0.984109,
                 -0.989423
             ],
-            "type": 35665
+            "type": "VEC3"
         },
         "accessor_82": {
             "bufferView": "bufferView_85",
             "byteOffset": 2472,
             "byteStride": 8,
+            "componentType": 5126,
             "count": 103,
             "max": [
                 0.894426,
@@ -117,19 +126,21 @@
                 0.105574,
                 0.105574
             ],
-            "type": 35664
+            "type": "VEC2"
         },
         "animAccessor_0": {
             "bufferView": "bufferView_83",
             "byteOffset": 0,
+            "componentType": 5126,
             "count": 8,
-            "type": 5126
+            "type": "SCALAR"
         },
         "animAccessor_1": {
             "bufferView": "bufferView_83",
             "byteOffset": 32,
+            "componentType": 5126,
             "count": 8,
-            "type": 35666
+            "type": "VEC4"
         }
     },
     "animations": {
@@ -181,7 +192,7 @@
         }
     },
     "asset": {
-        "generator": "collada2gltf@61ba2b4c28110063ba0e74c1c99cfcb1fa34a6c1",
+        "generator": "collada2gltf@5c6f69a3cd68316533ea73e3f21af681818badaf",
         "premultipliedAlpha": true,
         "profile": "WebGL 1.0.2",
         "version": 0.7
@@ -593,10 +604,10 @@
                         }
                     },
                     "states": {
-                        "blendEnable": 0,
-                        "cullFaceEnable": 1,
-                        "depthMask": 1,
-                        "depthTestEnable": 1
+                        "enable": [
+                            2884,
+                            2929
+                        ]
                     }
                 }
             }
@@ -677,10 +688,11 @@
                         }
                     },
                     "states": {
-                        "blendEnable": 1,
-                        "cullFaceEnable": 1,
-                        "depthMask": 1,
-                        "depthTestEnable": 1
+                        "enable": [
+                            2884,
+                            2929,
+                            3042
+                        ]
                     }
                 }
             }

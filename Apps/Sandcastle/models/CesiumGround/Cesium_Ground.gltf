@@ -4,20 +4,23 @@
             "bufferView": "bufferView_88",
             "byteOffset": 5184,
             "byteStride": 0,
+            "componentType": 5123,
             "count": 2592,
-            "type": 5123
+            "type": "SCALAR"
         },
         "accessor_53": {
             "bufferView": "bufferView_88",
             "byteOffset": 10368,
             "byteStride": 0,
+            "componentType": 5123,
             "count": 13212,
-            "type": 5123
+            "type": "SCALAR"
         },
         "accessor_55": {
             "bufferView": "bufferView_89",
             "byteOffset": 16640,
             "byteStride": 12,
+            "componentType": 5126,
             "count": 6158,
             "max": [
                 3.67691,
@@ -29,12 +32,13 @@
                 0.350313,
                 -1.40994
             ],
-            "type": 35665
+            "type": "VEC3"
         },
         "accessor_57": {
             "bufferView": "bufferView_89",
             "byteOffset": 90536,
             "byteStride": 12,
+            "componentType": 5126,
             "count": 6158,
             "max": [
                 1,
@@ -46,12 +50,13 @@
                 -1,
                 -1
             ],
-            "type": 35665
+            "type": "VEC3"
         },
         "accessor_59": {
             "bufferView": "bufferView_89",
             "byteOffset": 164432,
             "byteStride": 8,
+            "componentType": 5126,
             "count": 6158,
             "max": [
                 0.996889,
@@ -61,19 +66,21 @@
                 0.00147199,
                 0.00671202
             ],
-            "type": 35664
+            "type": "VEC2"
         },
         "accessor_80": {
             "bufferView": "bufferView_88",
             "byteOffset": 0,
             "byteStride": 0,
+            "componentType": 5123,
             "count": 2592,
-            "type": 5123
+            "type": "SCALAR"
         },
         "accessor_82": {
             "bufferView": "bufferView_89",
             "byteOffset": 0,
             "byteStride": 12,
+            "componentType": 5126,
             "count": 520,
             "max": [
                 0.594,
@@ -85,12 +92,13 @@
                 -0.594,
                 -2.1
             ],
-            "type": 35665
+            "type": "VEC3"
         },
         "accessor_84": {
             "bufferView": "bufferView_89",
             "byteOffset": 6240,
             "byteStride": 12,
+            "componentType": 5126,
             "count": 520,
             "max": [
                 1,
@@ -102,12 +110,13 @@
                 -1,
                 -1
             ],
-            "type": 35665
+            "type": "VEC3"
         },
         "accessor_86": {
             "bufferView": "bufferView_89",
             "byteOffset": 12480,
             "byteStride": 8,
+            "componentType": 5126,
             "count": 520,
             "max": [
                 0.982767,
@@ -117,19 +126,21 @@
                 0.00147199,
                 0.012253
             ],
-            "type": 35664
+            "type": "VEC2"
         },
         "animAccessor_0": {
             "bufferView": "bufferView_87",
             "byteOffset": 0,
+            "componentType": 5126,
             "count": 8,
-            "type": 5126
+            "type": "SCALAR"
         },
         "animAccessor_1": {
             "bufferView": "bufferView_87",
             "byteOffset": 32,
+            "componentType": 5126,
             "count": 8,
-            "type": 35666
+            "type": "VEC4"
         }
     },
     "animations": {
@@ -204,7 +215,7 @@
         }
     },
     "asset": {
-        "generator": "collada2gltf@61ba2b4c28110063ba0e74c1c99cfcb1fa34a6c1",
+        "generator": "collada2gltf@5c6f69a3cd68316533ea73e3f21af681818badaf",
         "premultipliedAlpha": true,
         "profile": "WebGL 1.0.2",
         "version": 0.7
@@ -640,10 +651,10 @@
                         }
                     },
                     "states": {
-                        "blendEnable": 0,
-                        "cullFaceEnable": 1,
-                        "depthMask": 1,
-                        "depthTestEnable": 1
+                        "enable": [
+                            2884,
+                            2929
+                        ]
                     }
                 }
             }

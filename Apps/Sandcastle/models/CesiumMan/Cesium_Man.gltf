@@ -1,16 +1,25 @@
 {
     "accessors": {
+        "IBM_Controller-mesh019": {
+            "bufferView": "bufferView_462",
+            "byteOffset": 0,
+            "componentType": 5126,
+            "count": 19,
+            "type": "MAT4"
+        },
         "accessor_441": {
             "bufferView": "bufferView_463",
             "byteOffset": 0,
             "byteStride": 0,
+            "componentType": 5123,
             "count": 14016,
-            "type": 5123
+            "type": "SCALAR"
         },
         "accessor_443": {
             "bufferView": "bufferView_464",
             "byteOffset": 0,
             "byteStride": 12,
+            "componentType": 5126,
             "count": 2675,
             "max": [
                 0.180954,
@@ -22,12 +31,13 @@
                 -1.15297e-017,
                 -0.569137
             ],
-            "type": 35665
+            "type": "VEC3"
         },
         "accessor_445": {
             "bufferView": "bufferView_464",
             "byteOffset": 32100,
             "byteStride": 12,
+            "componentType": 5126,
             "count": 2675,
             "max": [
                 1,
@@ -39,12 +49,13 @@
                 -1,
                 -0.999969
             ],
-            "type": 35665
+            "type": "VEC3"
         },
         "accessor_447": {
             "bufferView": "bufferView_464",
             "byteOffset": 64200,
             "byteStride": 8,
+            "componentType": 5126,
             "count": 2675,
             "max": [
                 0.990806,
@@ -54,12 +65,13 @@
                 0.0140794,
                 0.00844598
             ],
-            "type": 35664
+            "type": "VEC2"
         },
         "accessor_456": {
             "bufferView": "bufferView_464",
             "byteOffset": 85600,
             "byteStride": 16,
+            "componentType": 5126,
             "count": 2675,
             "max": [
                 1,
@@ -73,12 +85,13 @@
                 0,
                 0
             ],
-            "type": 35666
+            "type": "VEC4"
         },
         "accessor_459": {
             "bufferView": "bufferView_464",
             "byteOffset": 128400,
             "byteStride": 16,
+            "componentType": 5126,
             "count": 2675,
             "max": [
                 18,
@@ -92,319 +105,371 @@
                 0,
                 0
             ],
-            "type": 35666
+            "type": "VEC4"
         },
         "animAccessor_0": {
             "bufferView": "bufferView_462",
             "byteOffset": 1216,
+            "componentType": 5126,
             "count": 49,
-            "type": 5126
+            "type": "SCALAR"
         },
         "animAccessor_1": {
             "bufferView": "bufferView_462",
             "byteOffset": 1412,
+            "componentType": 5126,
             "count": 49,
-            "type": 35666
+            "type": "VEC4"
         },
         "animAccessor_10": {
             "bufferView": "bufferView_462",
             "byteOffset": 7684,
+            "componentType": 5126,
             "count": 49,
-            "type": 35666
+            "type": "VEC4"
         },
         "animAccessor_11": {
             "bufferView": "bufferView_462",
             "byteOffset": 8468,
+            "componentType": 5126,
             "count": 49,
-            "type": 35665
+            "type": "VEC3"
         },
         "animAccessor_12": {
             "bufferView": "bufferView_462",
             "byteOffset": 9056,
+            "componentType": 5126,
             "count": 49,
-            "type": 35666
+            "type": "VEC4"
         },
         "animAccessor_13": {
             "bufferView": "bufferView_462",
             "byteOffset": 9840,
+            "componentType": 5126,
             "count": 49,
-            "type": 35665
+            "type": "VEC3"
         },
         "animAccessor_14": {
             "bufferView": "bufferView_462",
             "byteOffset": 10428,
+            "componentType": 5126,
             "count": 49,
-            "type": 35666
+            "type": "VEC4"
         },
         "animAccessor_15": {
             "bufferView": "bufferView_462",
             "byteOffset": 11212,
+            "componentType": 5126,
             "count": 49,
-            "type": 35665
+            "type": "VEC3"
         },
         "animAccessor_16": {
             "bufferView": "bufferView_462",
             "byteOffset": 11800,
+            "componentType": 5126,
             "count": 49,
-            "type": 35665
+            "type": "VEC3"
         },
         "animAccessor_17": {
             "bufferView": "bufferView_462",
             "byteOffset": 12388,
+            "componentType": 5126,
             "count": 49,
-            "type": 35666
+            "type": "VEC4"
         },
         "animAccessor_18": {
             "bufferView": "bufferView_462",
             "byteOffset": 13172,
+            "componentType": 5126,
             "count": 49,
-            "type": 35665
+            "type": "VEC3"
         },
         "animAccessor_19": {
             "bufferView": "bufferView_462",
             "byteOffset": 13760,
+            "componentType": 5126,
             "count": 49,
-            "type": 35666
+            "type": "VEC4"
         },
         "animAccessor_2": {
             "bufferView": "bufferView_462",
             "byteOffset": 2196,
+            "componentType": 5126,
             "count": 49,
-            "type": 35666
+            "type": "VEC4"
         },
         "animAccessor_20": {
             "bufferView": "bufferView_462",
             "byteOffset": 14544,
+            "componentType": 5126,
             "count": 49,
-            "type": 35665
+            "type": "VEC3"
         },
         "animAccessor_21": {
             "bufferView": "bufferView_462",
             "byteOffset": 15132,
+            "componentType": 5126,
             "count": 49,
-            "type": 35666
+            "type": "VEC4"
         },
         "animAccessor_22": {
             "bufferView": "bufferView_462",
             "byteOffset": 15916,
+            "componentType": 5126,
             "count": 49,
-            "type": 35665
+            "type": "VEC3"
         },
         "animAccessor_23": {
             "bufferView": "bufferView_462",
             "byteOffset": 16504,
+            "componentType": 5126,
             "count": 49,
-            "type": 35666
+            "type": "VEC4"
         },
         "animAccessor_24": {
             "bufferView": "bufferView_462",
             "byteOffset": 17288,
+            "componentType": 5126,
             "count": 49,
-            "type": 35665
+            "type": "VEC3"
         },
         "animAccessor_25": {
             "bufferView": "bufferView_462",
             "byteOffset": 17876,
+            "componentType": 5126,
             "count": 49,
-            "type": 35666
+            "type": "VEC4"
         },
         "animAccessor_26": {
             "bufferView": "bufferView_462",
             "byteOffset": 18660,
+            "componentType": 5126,
             "count": 49,
-            "type": 35665
+            "type": "VEC3"
         },
         "animAccessor_27": {
             "bufferView": "bufferView_462",
             "byteOffset": 19248,
+            "componentType": 5126,
             "count": 49,
-            "type": 35666
+            "type": "VEC4"
         },
         "animAccessor_28": {
             "bufferView": "bufferView_462",
             "byteOffset": 20032,
+            "componentType": 5126,
             "count": 49,
-            "type": 35665
+            "type": "VEC3"
         },
         "animAccessor_29": {
             "bufferView": "bufferView_462",
             "byteOffset": 20620,
+            "componentType": 5126,
             "count": 49,
-            "type": 35666
+            "type": "VEC4"
         },
         "animAccessor_3": {
             "bufferView": "bufferView_462",
             "byteOffset": 2980,
+            "componentType": 5126,
             "count": 49,
-            "type": 35665
+            "type": "VEC3"
         },
         "animAccessor_30": {
             "bufferView": "bufferView_462",
             "byteOffset": 21404,
+            "componentType": 5126,
             "count": 49,
-            "type": 35666
+            "type": "VEC4"
         },
         "animAccessor_31": {
             "bufferView": "bufferView_462",
             "byteOffset": 22188,
+            "componentType": 5126,
             "count": 49,
-            "type": 35665
+            "type": "VEC3"
         },
         "animAccessor_32": {
             "bufferView": "bufferView_462",
             "byteOffset": 22776,
+            "componentType": 5126,
             "count": 49,
-            "type": 35666
+            "type": "VEC4"
         },
         "animAccessor_33": {
             "bufferView": "bufferView_462",
             "byteOffset": 23560,
+            "componentType": 5126,
             "count": 49,
-            "type": 35665
+            "type": "VEC3"
         },
         "animAccessor_34": {
             "bufferView": "bufferView_462",
             "byteOffset": 24148,
+            "componentType": 5126,
             "count": 49,
-            "type": 35666
+            "type": "VEC4"
         },
         "animAccessor_35": {
             "bufferView": "bufferView_462",
             "byteOffset": 24932,
+            "componentType": 5126,
             "count": 49,
-            "type": 35665
+            "type": "VEC3"
         },
         "animAccessor_36": {
             "bufferView": "bufferView_462",
             "byteOffset": 25520,
+            "componentType": 5126,
             "count": 49,
-            "type": 35666
+            "type": "VEC4"
         },
         "animAccessor_37": {
             "bufferView": "bufferView_462",
             "byteOffset": 26304,
+            "componentType": 5126,
             "count": 49,
-            "type": 35665
+            "type": "VEC3"
         },
         "animAccessor_38": {
             "bufferView": "bufferView_462",
             "byteOffset": 26892,
+            "componentType": 5126,
             "count": 49,
-            "type": 35666
+            "type": "VEC4"
         },
         "animAccessor_39": {
             "bufferView": "bufferView_462",
             "byteOffset": 27676,
+            "componentType": 5126,
             "count": 49,
-            "type": 35665
+            "type": "VEC3"
         },
         "animAccessor_4": {
             "bufferView": "bufferView_462",
             "byteOffset": 3568,
+            "componentType": 5126,
             "count": 49,
-            "type": 35666
+            "type": "VEC4"
         },
         "animAccessor_40": {
             "bufferView": "bufferView_462",
             "byteOffset": 28264,
+            "componentType": 5126,
             "count": 49,
-            "type": 35666
+            "type": "VEC4"
         },
         "animAccessor_41": {
             "bufferView": "bufferView_462",
             "byteOffset": 29048,
+            "componentType": 5126,
             "count": 49,
-            "type": 35665
+            "type": "VEC3"
         },
         "animAccessor_42": {
             "bufferView": "bufferView_462",
             "byteOffset": 29636,
+            "componentType": 5126,
             "count": 49,
-            "type": 35666
+            "type": "VEC4"
         },
         "animAccessor_43": {
             "bufferView": "bufferView_462",
             "byteOffset": 30420,
+            "componentType": 5126,
             "count": 49,
-            "type": 35665
+            "type": "VEC3"
         },
         "animAccessor_44": {
             "bufferView": "bufferView_462",
             "byteOffset": 31008,
+            "componentType": 5126,
             "count": 49,
-            "type": 35666
+            "type": "VEC4"
         },
         "animAccessor_45": {
             "bufferView": "bufferView_462",
             "byteOffset": 31792,
+            "componentType": 5126,
             "count": 49,
-            "type": 35665
+            "type": "VEC3"
         },
         "animAccessor_46": {
             "bufferView": "bufferView_462",
             "byteOffset": 32380,
+            "componentType": 5126,
             "count": 49,
-            "type": 35666
+            "type": "VEC4"
         },
         "animAccessor_47": {
             "bufferView": "bufferView_462",
             "byteOffset": 33164,
+            "componentType": 5126,
             "count": 49,
-            "type": 35665
+            "type": "VEC3"
         },
         "animAccessor_48": {
             "bufferView": "bufferView_462",
             "byteOffset": 33752,
+            "componentType": 5126,
             "count": 49,
-            "type": 35665
+            "type": "VEC3"
         },
         "animAccessor_49": {
             "bufferView": "bufferView_462",
             "byteOffset": 34340,
+            "componentType": 5126,
             "count": 49,
-            "type": 35666
+            "type": "VEC4"
         },
         "animAccessor_5": {
             "bufferView": "bufferView_462",
             "byteOffset": 4352,
+            "componentType": 5126,
             "count": 49,
-            "type": 35665
+            "type": "VEC3"
         },
         "animAccessor_50": {
             "bufferView": "bufferView_462",
             "byteOffset": 35124,
+            "componentType": 5126,
             "count": 49,
-            "type": 35665
+            "type": "VEC3"
         },
         "animAccessor_51": {
             "bufferView": "bufferView_462",
             "byteOffset": 35712,
+            "componentType": 5126,
             "count": 49,
-            "type": 35666
+            "type": "VEC4"
         },
         "animAccessor_6": {
             "bufferView": "bufferView_462",
             "byteOffset": 4940,
+            "componentType": 5126,
             "count": 49,
-            "type": 35665
+            "type": "VEC3"
         },
         "animAccessor_7": {
             "bufferView": "bufferView_462",
             "byteOffset": 5528,
+            "componentType": 5126,
             "count": 49,
-            "type": 35666
+            "type": "VEC4"
         },
         "animAccessor_8": {
             "bufferView": "bufferView_462",
             "byteOffset": 6312,
+            "componentType": 5126,
             "count": 49,
-            "type": 35665
+            "type": "VEC3"
         },
         "animAccessor_9": {
             "bufferView": "bufferView_462",
             "byteOffset": 6900,
+            "componentType": 5126,
             "count": 49,
-            "type": 35666
+            "type": "VEC4"
         }
     },
     "animations": {
@@ -2015,7 +2080,7 @@
         }
     },
     "asset": {
-        "generator": "collada2gltf@61ba2b4c28110063ba0e74c1c99cfcb1fa34a6c1",
+        "generator": "collada2gltf@5c6f69a3cd68316533ea73e3f21af681818badaf",
         "premultipliedAlpha": true,
         "profile": "WebGL 1.0.2",
         "version": 0.7
@@ -2092,6 +2157,9 @@
         "Geometry-mesh019Node": {
             "children": [],
             "instanceSkin": {
+                "meshes": [
+                    "Geometry-mesh019"
+                ],
                 "skeletons": [
                     "locator047Node",
                     "locator051Node",
@@ -2113,10 +2181,7 @@
                     "locator135Node",
                     "locator138Node"
                 ],
-                "skin": "Controller-mesh019",
-                "sources": [
-                    "Geometry-mesh019"
-                ]
+                "skin": "Controller-mesh019"
             },
             "matrix": [
                 1,
@@ -2144,7 +2209,7 @@
                 "locator103Node",
                 "locator106Node"
             ],
-            "jointId": "locator047Node",
+            "joint": "locator047Node",
             "name": "Skeleton_torso_joint_1",
             "rotation": [
                 -0.562643,
@@ -2167,7 +2232,7 @@
             "children": [
                 "locator055Node"
             ],
-            "jointId": "locator051Node",
+            "joint": "locator051Node",
             "name": "Skeleton_torso_joint_2",
             "rotation": [
                 0.998774,
@@ -2192,7 +2257,7 @@
                 "locator071Node",
                 "locator074Node"
             ],
-            "jointId": "locator055Node",
+            "joint": "locator055Node",
             "name": "torso_joint_3",
             "rotation": [
                 0.998174,
@@ -2215,7 +2280,7 @@
             "children": [
                 "locator063Node"
             ],
-            "jointId": "locator059Node",
+            "joint": "locator059Node",
             "name": "Skeleton_neck_joint_1",
             "rotation": [
                 -0.93147,
@@ -2238,7 +2303,7 @@
             "children": [
                 "locator067Node"
             ],
-            "jointId": "locator063Node",
+            "joint": "locator063Node",
             "name": "Skeleton_neck_joint_2",
             "rotation": [
                 -0.0936272,
@@ -2281,7 +2346,7 @@
             "children": [
                 "locator079Node"
             ],
-            "jointId": "locator071Node",
+            "joint": "locator071Node",
             "name": "Skeleton_arm_joint_L__4_",
             "rotation": [
                 0.722701,
@@ -2304,7 +2369,7 @@
             "children": [
                 "locator082Node"
             ],
-            "jointId": "locator074Node",
+            "joint": "locator074Node",
             "name": "Skeleton_arm_joint_R",
             "rotation": [
                 0.850151,
@@ -2327,7 +2392,7 @@
             "children": [
                 "locator087Node"
             ],
-            "jointId": "locator079Node",
+            "joint": "locator079Node",
             "name": "Skeleton_arm_joint_L__3_",
             "rotation": [
                 0.402193,
@@ -2350,7 +2415,7 @@
             "children": [
                 "locator090Node"
             ],
-            "jointId": "locator082Node",
+            "joint": "locator082Node",
             "name": "Skeleton_arm_joint_R__2_",
             "rotation": [
                 -0.438478,
@@ -2373,7 +2438,7 @@
             "children": [
                 "locator095Node"
             ],
-            "jointId": "locator087Node",
+            "joint": "locator087Node",
             "name": "Skeleton_arm_joint_L__2_",
             "rotation": [
                 -0.49696,
@@ -2396,7 +2461,7 @@
             "children": [
                 "locator098Node"
             ],
-            "jointId": "locator090Node",
+            "joint": "locator090Node",
             "name": "Skeleton_arm_joint_R__3_",
             "rotation": [
                 0.611968,
@@ -2459,7 +2524,7 @@
             "children": [
                 "locator111Node"
             ],
-            "jointId": "locator103Node",
+            "joint": "locator103Node",
             "name": "leg_joint_L_1",
             "rotation": [
                 0.0875928,
@@ -2482,7 +2547,7 @@
             "children": [
                 "locator114Node"
             ],
-            "jointId": "locator106Node",
+            "joint": "locator106Node",
             "name": "leg_joint_R_1",
             "rotation": [
                 0.0916766,
@@ -2505,7 +2570,7 @@
             "children": [
                 "locator119Node"
             ],
-            "jointId": "locator111Node",
+            "joint": "locator111Node",
             "name": "leg_joint_L_2",
             "rotation": [
                 -0.954699,
@@ -2528,7 +2593,7 @@
             "children": [
                 "locator122Node"
             ],
-            "jointId": "locator114Node",
+            "joint": "locator114Node",
             "name": "leg_joint_R_2",
             "rotation": [
                 -0.965863,
@@ -2552,7 +2617,7 @@
                 "locator127Node",
                 "locator135Node"
             ],
-            "jointId": "locator119Node",
+            "joint": "locator119Node",
             "name": "leg_joint_L_3",
             "rotation": [
                 -0.999778,
@@ -2576,7 +2641,7 @@
                 "locator130Node",
                 "locator138Node"
             ],
-            "jointId": "locator122Node",
+            "joint": "locator122Node",
             "name": "leg_joint_R_3",
             "rotation": [
                 -0.998916,
@@ -2639,7 +2704,7 @@
             "children": [
                 "locator143Node"
             ],
-            "jointId": "locator135Node",
+            "joint": "locator135Node",
             "name": "leg_joint_L_5",
             "rotation": [
                 0.0114404,
@@ -2662,7 +2727,7 @@
             "children": [
                 "locator146Node"
             ],
-            "jointId": "locator138Node",
+            "joint": "locator138Node",
             "name": "leg_joint_R_5",
             "rotation": [
                 -0.0296875,
@@ -2782,12 +2847,7 @@
                 0,
                 1
             ],
-            "inverseBindMatrices": {
-                "bufferView": "bufferView_462",
-                "byteOffset": 0,
-                "count": 19,
-                "type": 35676
-            },
+            "inverseBindMatrices": "IBM_Controller-mesh019",
             "joints": [
                 "locator047Node",
                 "locator051Node",
@@ -2822,7 +2882,8 @@
                     "type": 35666
                 },
                 "jointMat": {
-                    "semantic": "JOINT_MATRIX",
+                    "count": 19,
+                    "semantic": "JOINTMATRIX",
                     "type": 35676
                 },
                 "modelViewMatrix": {
@@ -2904,10 +2965,10 @@
                         }
                     },
                     "states": {
-                        "blendEnable": 0,
-                        "cullFaceEnable": 1,
-                        "depthMask": 1,
-                        "depthTestEnable": 1
+                        "enable": [
+                            2884,
+                            2929
+                        ]
                     }
                 }
             }
