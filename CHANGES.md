@@ -69,6 +69,7 @@ Change Log
 * Added northUpEast transform to help support display of glTF models because Y is their up axis.
 * Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
 * Added `Primitive.ready`.
+* Prevent primitives from flashing off and on when modifying static DataSources.
 
 Beta Releases
 -------------
