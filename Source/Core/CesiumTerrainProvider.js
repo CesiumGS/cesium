@@ -52,7 +52,7 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {String} options.url The URL of the Cesium terrain server.
      * @param {Proxy} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
-     * @param {Boolean} [options.requestVertexNormals] If true, the client will request that vertex normals be included in terrain tile response from the server.
+     * @param {Boolean} [options.requestVertexNormals=false] If true, the client will request that vertex normals be included in terrain tile response from the server.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
      * @see TerrainProvider
@@ -225,29 +225,24 @@ define([
 
     function createQuantizedMeshTerrainData(provider, buffer, level, x, y, tmsY) {
         var pos = 0;
-        var uint8Length = 1;
-        var uint16Length = 2;
-        var uint32Length = 4;
-        var float32Length = 4;
-        var float64Length = 8;
         var cartesian3Elements = 3;
         var boundingSphereElements = cartesian3Elements + 1;
-        var cartesian3Length = float64Length * cartesian3Elements;
-        var boundingSphereLength = float64Length * boundingSphereElements;
+        var cartesian3Length = Float64Array.BYTES_PER_ELEMENT * cartesian3Elements;
+        var boundingSphereLength = Float64Array.BYTES_PER_ELEMENT * boundingSphereElements;
         var vertexElements = 6;
         var encodedVertexElements = 3;
-        var encodedVertexLength = uint16Length * encodedVertexElements;
+        var encodedVertexLength = Uint16Array.BYTES_PER_ELEMENT * encodedVertexElements;
         var triangleElements = 3;
-        var triangleLength = uint16Length * triangleElements;
+        var triangleLength = Uint16Array.BYTES_PER_ELEMENT * triangleElements;
 
         var view = new DataView(buffer);
         var center = new Cartesian3(view.getFloat64(pos, true), view.getFloat64(pos + 8, true), view.getFloat64(pos + 16, true));
         pos += cartesian3Length;
 
         var minimumHeight = view.getFloat32(pos, true);
-        pos += float32Length;
+        pos += Float32Array.BYTES_PER_ELEMENT;
         var maximumHeight = view.getFloat32(pos, true);
-        pos += float32Length;
+        pos += Float32Array.BYTES_PER_ELEMENT;
 
         var boundingSphere = new BoundingSphere(
                 new Cartesian3(view.getFloat64(pos, true), view.getFloat64(pos + 8, true), view.getFloat64(pos + 16, true)),
@@ -258,7 +253,7 @@ define([
         pos += cartesian3Length;
 
         var vertexCount = view.getUint32(pos, true);
-        pos += uint32Length;
+        pos += Uint32Array.BYTES_PER_ELEMENT;
         var encodedVertexBuffer = new Uint16Array(buffer, pos, vertexCount * 3);
         pos += vertexCount * encodedVertexLength;
 
@@ -292,7 +287,7 @@ define([
         }
 
         var triangleCount = view.getUint32(pos, true);
-        pos += uint32Length;
+        pos += Uint32Array.BYTES_PER_ELEMENT;
         var indices = new Uint16Array(buffer, pos, triangleCount * triangleElements);
         pos += triangleCount * triangleLength;
 
@@ -309,33 +304,33 @@ define([
         }
 
         var westVertexCount = view.getUint32(pos, true);
-        pos += uint32Length;
+        pos += Uint32Array.BYTES_PER_ELEMENT;
         var westIndices = new Uint16Array(buffer, pos, westVertexCount);
-        pos += westVertexCount * uint16Length;
+        pos += westVertexCount * Uint16Array.BYTES_PER_ELEMENT;
 
         var southVertexCount = view.getUint32(pos, true);
-        pos += uint32Length;
+        pos += Uint32Array.BYTES_PER_ELEMENT;
         var southIndices = new Uint16Array(buffer, pos, southVertexCount);
-        pos += southVertexCount * uint16Length;
+        pos += southVertexCount * Uint16Array.BYTES_PER_ELEMENT;
 
         var eastVertexCount = view.getUint32(pos, true);
-        pos += uint32Length;
+        pos += Uint32Array.BYTES_PER_ELEMENT;
         var eastIndices = new Uint16Array(buffer, pos, eastVertexCount);
-        pos += eastVertexCount * uint16Length;
+        pos += eastVertexCount * Uint16Array.BYTES_PER_ELEMENT;
 
         var northVertexCount = view.getUint32(pos, true);
-        pos += uint32Length;
+        pos += Uint32Array.BYTES_PER_ELEMENT;
         var northIndices = new Uint16Array(buffer, pos, northVertexCount);
-        pos += northVertexCount * uint16Length;
+        pos += northVertexCount * Uint16Array.BYTES_PER_ELEMENT;
 
         var encodedNormalBuffer;
         if (pos < view.byteLength) {
             var extensionsflag = view.getUint8(pos);
-            pos += uint8Length;
+            pos += Uint8Array.BYTES_PER_ELEMENT;
 
             if (extensionsflag & 0x1) {
                 encodedNormalBuffer = new Uint8Array(buffer, pos, vertexCount * 2);
-                pos += vertexCount * 2 * uint8Length;
+                pos += vertexCount * 2 * Uint8Array.BYTES_PER_ELEMENT;
             }
         }
 
