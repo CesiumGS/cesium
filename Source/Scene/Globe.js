@@ -673,7 +673,7 @@ define([
 
         // Initial compile or re-compile if uber-shader parameters changed
         var hasWaterMask = this._surface.tileProvider.ready && this._surface.tileProvider.terrainProvider.hasWaterMask;
-        var hasVertexNormals = this._surface._terrainProvider.ready && this._surface._terrainProvider.hasVertexNormals;
+        var hasVertexNormals = this._surface.tileProvider.ready && this._surface.tileProvider.terrainProvider.hasVertexNormals;
         var hasWaterMaskChanged = this._hasWaterMask !== hasWaterMask;
         var hasVertexNormalsChanged = this._hasVertexNormals !== hasVertexNormalsChanged;
         var hasEnableLightingChanged = this._enableLighting !== this.enableLighting;

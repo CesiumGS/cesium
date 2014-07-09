@@ -7,6 +7,13 @@ Change Log
   * All `Matrix2`, `Matrix3`, `Matrix4` and `Quaternion` functions that take a `result` parameter now require the parameter (except for functions starting with `from`).
   * Removed the following from the Cesium API: `Transforms.earthOrientationParameters`, `EarthOrientationParameters`, `EarthOrientationParametersSample`, `Transforms.iau2006XysData`, `Iau2006XysData`, `Iau2006XysSample`, `IauOrientationAxes`, `TimeConstants`, `Scene.frameState`, `FrameState`, `EncodedCartesian3`, `EllipsoidalOccluder`, and `FAR`.  These are still available but are not part of the official API and may change in future versions.
   * Removed `DynamicObject.vertexPositions`.  Use `DynamicWall.positions`, `DynamicPolygon.positions`, and `DynamicPolyline.positions` instead.
+  * Transformed the following class the methods to a property:
+    * `TerrainProvider.hasWaterMask`
+    * `CesiumTerrainProvider.hasWaterMask`
+    * `ArcGisImageServerTerrainProvider.hasWaterMask`
+    * `EllipsoidTerrainProvider.hasWaterMask`
+    * `VRTheWorldTerrainProvider.hasWaterMask`
+  * Renamed preprocessor define, `ENABLE_LIGHTING` used by `Globe` shaders to `ENABLE_DAYNIGHT_SHADING`
   * The `DynamicScene` layer has been renamed to `DataSources` additionally, the following objects have all been renamed.
     * `DynamicBillboard` -> `BillboardGraphics`
     * `DynamicBillboardVisualizer` -> `BillboardVisualizer`
@@ -40,6 +47,9 @@ Change Log
   * `Viewer.trackedObject` and `Viewer.selectedObject` have been renamed to `Viewer.trackedEntity` and `Viewer.selectedEntity` when using the `viewerEntityMixin`.
 * Added northUpEast transform to help support display of glTF models because Y is their up axis.
 * Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
+* Added `czm_octDecode` and `czm_signNotZero` builtin functions.
+* Added `CesiumTerrainProvider.requestVertexNormals` to request per vertex normals from the provider, if they are available.
+* Added support for rendering the globe with oct-encoded per vertex normals .
 * Added `Primitive.ready`.
 
 Beta Releases
