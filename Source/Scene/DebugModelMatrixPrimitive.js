@@ -127,7 +127,7 @@ define([
             }
 
             // Workaround projecting (0, 0, 0)
-            if((this.modelMatrix[12] === 0.0 && this.modelMatrix[13] === 0.0 && this.modelMatrix[14] === 0.0)){
+            if ((this.modelMatrix[12] === 0.0 && this.modelMatrix[13] === 0.0 && this.modelMatrix[14] === 0.0)) {
                 this.modelMatrix[14] = 0.01;
             }
 
