@@ -13,7 +13,7 @@ define([
      *
      * @alias FrameState
      * @constructor
-     * 
+     *
      * @private
      */
     var FrameState = function(creditDisplay) {
@@ -116,6 +116,13 @@ define([
          * });
          */
         this.afterRender = [];
+
+        /**
+         * Gets whether or not to optimized for 3D only.
+         * @type {Boolean}
+         * @default false
+         */
+        this.scene3DOnly = false;
     };
 
     /**

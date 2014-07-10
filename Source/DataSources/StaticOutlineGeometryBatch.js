@@ -19,9 +19,8 @@ define([
         PrimitiveState) {
     "use strict";
 
-    var Batch = function(primitives, translucent, appearanceType) {
+    var Batch = function(primitives, translucent) {
         this.translucent = translucent;
-        this.appearanceType = appearanceType;
         this.primitives = primitives;
         this.createPrimitive = false;
         this.primitive = undefined;
@@ -144,9 +143,9 @@ define([
     /**
      * @private
      */
-    var StaticOutlineGeometryBatch = function(primitives, appearanceType) {
-        this._solidBatch = new Batch(primitives, false, appearanceType);
-        this._translucentBatch = new Batch(primitives, true, appearanceType);
+    var StaticOutlineGeometryBatch = function(primitives) {
+        this._solidBatch = new Batch(primitives, false);
+        this._translucentBatch = new Batch(primitives, true);
     };
 
     StaticOutlineGeometryBatch.prototype.add = function(time, updater) {
