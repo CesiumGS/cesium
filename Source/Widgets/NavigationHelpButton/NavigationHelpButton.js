@@ -70,10 +70,10 @@ click: command,\
 cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
         wrapper.appendChild(button);
 
-        var instructions = document.createElement('div');
-        instructions.className = 'cesium-navigation-help';
-        instructions.setAttribute('data-bind', 'css: { "cesium-navigation-help-visible" : showInstructions }');
-        instructions.innerHTML = '\
+        var clickInstructions = document.createElement('div');
+        clickInstructions.className = 'cesium-navigation-help';
+        clickInstructions.setAttribute('data-bind', 'css: { "cesium-click-navigation-help-visible" : showInstructions && !touch}');
+        clickInstructions.innerHTML = '\
             <table>\
                 <tr>\
                     <td><img src="' + buildModuleUrl('Widgets/Images/NavigationHelp/MouseLeft.svg') + '" width="48" height="48" /></td>\
@@ -100,7 +100,39 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
                 </tr>\
             </table>';
 
-        wrapper.appendChild(instructions);
+        wrapper.appendChild(clickInstructions);
+
+        var touchInstructions = document.createElement('div');
+        touchInstructions.className = 'cesium-navigation-help';
+        touchInstructions.setAttribute('data-bind', 'css: { "cesium-touch-navigation-help-visible" : showInstructions && touch}');
+        touchInstructions.innerHTML = '\
+            <table>\
+                <tr>\
+                    <td><img src="' + buildModuleUrl('Widgets/Images/NavigationHelp/MouseLeft.svg') + '" width="48" height="48" /></td>\
+                    <td>\
+                        <div class="cesium-navigation-help-pan">Pan view</div>\
+                        <div class="cesium-navigation-help-details">Touch stuff</div>\
+                    </td>\
+                </tr>\
+                <tr>\
+                    <td><img src="' + buildModuleUrl('Widgets/Images/NavigationHelp/MouseRight.svg') + '" width="48" height="48" /></td>\
+                    <td>\
+                        <div class="cesium-navigation-help-zoom">Zoom view</div>\
+                        <div class="cesium-navigation-help-details">Touch stuff</div>\
+                        <div class="cesium-navigation-help-details">Touch stuff</div>\
+                    </td>\
+                </tr>\
+                <tr>\
+                    <td><img src="' + buildModuleUrl('Widgets/Images/NavigationHelp/MouseMiddle.svg') + '" width="48" height="48" /></td>\
+                    <td>\
+                        <div class="cesium-navigation-help-rotate">Rotate view</div>\
+                        <div class="cesium-navigation-help-details">Touch stuff or</div>\
+                        <div class="cesium-navigation-help-details">Touch stuff</div>\
+                    </td>\
+                </tr>\
+            </table>';
+
+        wrapper.appendChild(touchInstructions);
 
         knockout.applyBindings(viewModel, wrapper);
 

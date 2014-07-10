@@ -30,7 +30,21 @@
     transition: visibility 0s 0.25s, transform 0.25s ease-in;
 }
 
-.cesium-navigation-help-visible {
+.cesium-click-navigation-help-visible {
+    visibility: visible;
+    -webkit-transform: scale(1);
+    -moz-transform: scale(1);
+    -ms-transform: scale(1);
+    -o-transform: scale(1);
+    transform: scale(1);
+    transition: transform 0.25s ease-out;
+    -webkit-transition: -webkit-transform 0.25s ease-out;
+    -moz-transition: -moz-transform 0.25s ease-out;
+    -ms-transition: -ms-transform 0.25s ease-out;
+    -o-transition: -o-transform 0.25s ease-out;
+}
+
+.cesium-touch-navigation-help-visible {
     visibility: visible;
     -webkit-transform: scale(1);
     -moz-transform: scale(1);

@@ -1,13 +1,34 @@
 /*global define*/
 define([
-        '../../Core/defineProperties',
-        '../../ThirdParty/knockout',
+        'Core/defined',
+        'Core/defineProperties',
+        'ThirdParty/knockout',
         '../createCommand'
     ], function(
+        defined,
         defineProperties,
         knockout,
         createCommand) {
     "use strict";
+
+    function addListeners(viewModel) {
+        var touchListener = function(){
+            viewModel._touch = true;
+            document.removeEventListener('touchstart', touchListener, false);
+            document.removeEventListener('mouseMove', mouseMoveListener, false);
+        };
+
+        var mouseMoveListener = function(){
+            if (!viewModel._touch) {
+                document.removeEventListener('touchstart', touchListener, false);
+                document.removeEventListener('mouseMove', mouseMoveListener, false);
+            }
+        }
+
+        document.addEventListener('touchstart', touchListener, false);
+        document.addEventListener('mousemove', mouseMoveListener, false);
+
+    }
 
     /**
      * The view model for {@link NavigationHelpButton}.
@@ -26,6 +47,9 @@ define([
         this._command = createCommand(function() {
             that.showInstructions = !that.showInstructions;
         });
+        this._touch = false;
+
+        addListeners();
 
         /**
          * Gets or sets the tooltip.  This property is observable.
@@ -47,6 +71,18 @@ define([
         command : {
             get : function() {
                 return this._command;
+            }
+        },
+
+        /**
+         * True if document has been touched via a touchscreen
+         * @memberof NavigationHelpButtonViewModel.prototype
+         *
+         * @type {Boolean}
+         */
+        touch : {
+            get: function() {
+                return this._touch;
             }
         }
     });
