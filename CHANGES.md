@@ -7,6 +7,7 @@ Change Log
   * All `Matrix2`, `Matrix3`, `Matrix4` and `Quaternion` functions that take a `result` parameter now require the parameter (except for functions starting with `from`).
   * Removed the following from the Cesium API: `Transforms.earthOrientationParameters`, `EarthOrientationParameters`, `EarthOrientationParametersSample`, `Transforms.iau2006XysData`, `Iau2006XysData`, `Iau2006XysSample`, `IauOrientationAxes`, `TimeConstants`, `Scene.frameState`, `FrameState`, `EncodedCartesian3`, `EllipsoidalOccluder`, and `FAR`.  These are still available but are not part of the official API and may change in future versions.
   * Removed `DynamicObject.vertexPositions`.  Use `DynamicWall.positions`, `DynamicPolygon.positions`, and `DynamicPolyline.positions` instead.
+  * Removed `Primitive.allow3DOnly`, set the `Scene` level option, `scene3DOnly`, instead;
   * The `DynamicScene` layer has been renamed to `DataSources` additionally, the following objects have all been renamed.
     * `DynamicBillboard` -> `BillboardGraphics`
     * `DynamicBillboardVisualizer` -> `BillboardVisualizer`
@@ -70,6 +71,7 @@ Change Log
 * Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
 * Added `Primitive.ready`.
 * Prevent primitives from flashing off and on when modifying static DataSources.
+* Added `scene3DOnly` options to `Viewer`, `CesiumWidget`, and `Scene` constructors. This setting optimizes memory usage and performance for 3D mode at the cost of losing the ability to use 2D or Columbus View.
 
 Beta Releases
 -------------
