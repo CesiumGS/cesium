@@ -3,9 +3,9 @@ define([
         './Cartesian3',
         './CornerType',
         './defined',
+        './isArray',
         './Math',
         './Matrix3',
-        './isArray',
         './PolylinePipeline',
         './PolylineVolumeGeometryLibrary',
         './Quaternion'
@@ -13,9 +13,9 @@ define([
         Cartesian3,
         CornerType,
         defined,
+        isArray,
         CesiumMath,
         Matrix3,
-        isArray,
         PolylinePipeline,
         PolylineVolumeGeometryLibrary,
         Quaternion) {

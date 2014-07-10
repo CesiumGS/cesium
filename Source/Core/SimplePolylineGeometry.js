@@ -2,7 +2,6 @@
 define([
         './BoundingSphere',
         './Cartesian3',
-        './Math',
         './Color',
         './ComponentDatatype',
         './defaultValue',
@@ -13,12 +12,12 @@ define([
         './GeometryAttribute',
         './GeometryAttributes',
         './IndexDatatype',
-        './PrimitiveType',
-        './PolylinePipeline'
+        './Math',
+        './PolylinePipeline',
+        './PrimitiveType'
     ], function(
         BoundingSphere,
         Cartesian3,
-        CesiumMath,
         Color,
         ComponentDatatype,
         defaultValue,
@@ -29,8 +28,9 @@ define([
         GeometryAttribute,
         GeometryAttributes,
         IndexDatatype,
-        PrimitiveType,
-        PolylinePipeline) {
+        CesiumMath,
+        PolylinePipeline,
+        PrimitiveType) {
     "use strict";
 
     function interpolateColors(p0, p1, color0, color1, granularity, array, offset) {
