@@ -157,7 +157,7 @@ define([
      * @example
      * // Check if a bounding volume intersects the frustum.
      * var cullingVolume = frustum.computeCullingVolume(cameraPosition, cameraDirection, cameraUp);
-     * var intersect = cullingVolume.getVisibility(boundingVolume);
+     * var intersect = cullingVolume.computeVisibility(boundingVolume);
      */
     OrthographicFrustum.prototype.computeCullingVolume = function(position, direction, up) {
         //>>includeStart('debug', pragmas.debug);

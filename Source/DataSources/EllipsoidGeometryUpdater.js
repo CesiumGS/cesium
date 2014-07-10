@@ -624,7 +624,7 @@ define([
                 asynchronous : false
             });
             this._primitives.add(this._outlinePrimitive);
-        } else if (this._primitive._state === PrimitiveState.COMPLETE) {
+        } else if (this._primitive.ready) {
             //Update attributes only.
             var primitive = this._primitive;
             appearance = primitive.appearance;

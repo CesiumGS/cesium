@@ -387,7 +387,7 @@ define([
         // We do not want to use the function like convertTaiToUtc in JulianDate because
         // we explicitly do not want to fail when inside the leap second.
 
-        dateInUtc = JulianDate.addSeconds(date, -JulianDate.getTaiMinusUtc(date), dateInUtc);
+        dateInUtc = JulianDate.addSeconds(date, -JulianDate.computeTaiMinusUtc(date), dateInUtc);
         var utcDayNumber = dateInUtc.dayNumber;
         var utcSecondsIntoDay = dateInUtc.secondsOfDay;
 
@@ -607,7 +607,7 @@ define([
         // It's possible here that secondTT could roll over 86400
         // This does not seem to affect the precision (unit tests check for this)
         var dateUt1day = date.dayNumber;
-        var dateUt1sec = date.secondsOfDay - JulianDate.getTaiMinusUtc(date) + eop.ut1MinusUtc;
+        var dateUt1sec = date.secondsOfDay - JulianDate.computeTaiMinusUtc(date) + eop.ut1MinusUtc;
 
         // Compute Earth rotation angle
         // The IERS standard for era is

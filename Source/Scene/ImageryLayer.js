@@ -460,8 +460,8 @@ define([
         }
 
         var imageryTilingScheme = imageryProvider.tilingScheme;
-        var northwestTileCoordinates = imageryTilingScheme.positionToTileXY(Rectangle.getNorthwest(rectangle), imageryLevel);
-        var southeastTileCoordinates = imageryTilingScheme.positionToTileXY(Rectangle.getSoutheast(rectangle), imageryLevel);
+        var northwestTileCoordinates = imageryTilingScheme.positionToTileXY(Rectangle.northwest(rectangle), imageryLevel);
+        var southeastTileCoordinates = imageryTilingScheme.positionToTileXY(Rectangle.southeast(rectangle), imageryLevel);
 
         // If the southeast corner of the rectangle lies very close to the north or west side
         // of the southeast tile, we don't actually need the southernmost or easternmost

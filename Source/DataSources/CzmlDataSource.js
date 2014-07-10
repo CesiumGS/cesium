@@ -1574,7 +1574,7 @@ define([
             if (!availability.start.equals(Iso8601.MINIMUM_VALUE)) {
                 var startTime = availability.start;
                 var stopTime = availability.stop;
-                var totalSeconds = JulianDate.getSecondsDifference(stopTime, startTime);
+                var totalSeconds = JulianDate.secondsDifference(stopTime, startTime);
                 var multiplier = Math.round(totalSeconds / 120.0);
 
                 czmlClock = new DataSourceClock();

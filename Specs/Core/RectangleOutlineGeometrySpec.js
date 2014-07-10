@@ -31,7 +31,7 @@ defineSuite([
         expect(positions.length).toEqual(8 * 3);
         expect(m.indices.length).toEqual(8 * 2);
 
-        var expectedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(Rectangle.getNorthwest(rectangle));
+        var expectedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(Rectangle.northwest(rectangle));
         expect(new Cartesian3(positions[0], positions[1], positions[2])).toEqualEpsilon(expectedNWCorner, CesiumMath.EPSILON9);
     });
 
@@ -49,7 +49,7 @@ defineSuite([
         expect(length).toEqual(8 * 3);
         expect(m.indices.length).toEqual(8 * 2);
 
-        var unrotatedNWCorner = Rectangle.getNorthwest(rectangle);
+        var unrotatedNWCorner = Rectangle.northwest(rectangle);
         var projection = new GeographicProjection();
         var projectedNWCorner = projection.project(unrotatedNWCorner);
         var rotation = Matrix2.fromRotation(angle);
@@ -118,7 +118,7 @@ defineSuite([
         expect(length).toEqual(8 * 3 * 2);
         expect(m.indices.length).toEqual(8 * 2 * 2 + 4 * 2);
 
-        var unrotatedNWCorner = Rectangle.getNorthwest(rectangle);
+        var unrotatedNWCorner = Rectangle.northwest(rectangle);
         var projection = new GeographicProjection();
         var projectedNWCorner = projection.project(unrotatedNWCorner);
         var rotation = Matrix2.fromRotation(angle);

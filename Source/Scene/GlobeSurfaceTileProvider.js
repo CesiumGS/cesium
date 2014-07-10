@@ -363,7 +363,7 @@ define([
             }
         }
 
-        var intersection = cullingVolume.getVisibility(boundingVolume);
+        var intersection = cullingVolume.computeVisibility(boundingVolume);
         if (intersection === Intersect.OUTSIDE) {
             return Visibility.NONE;
         }
@@ -453,11 +453,11 @@ define([
         var maximumHeight = surfaceTile.maximumHeight;
 
         if (frameState.mode !== SceneMode.SCENE3D) {
-            southwestCornerCartesian = frameState.mapProjection.project(Rectangle.getSouthwest(tile.rectangle), southwestCornerScratch);
+            southwestCornerCartesian = frameState.mapProjection.project(Rectangle.southwest(tile.rectangle), southwestCornerScratch);
             southwestCornerCartesian.z = southwestCornerCartesian.y;
             southwestCornerCartesian.y = southwestCornerCartesian.x;
             southwestCornerCartesian.x = 0.0;
-            northeastCornerCartesian = frameState.mapProjection.project(Rectangle.getNortheast(tile.rectangle), northeastCornerScratch);
+            northeastCornerCartesian = frameState.mapProjection.project(Rectangle.northeast(tile.rectangle), northeastCornerScratch);
             northeastCornerCartesian.z = northeastCornerCartesian.y;
             northeastCornerCartesian.y = northeastCornerCartesian.x;
             northeastCornerCartesian.x = 0.0;
@@ -784,8 +784,8 @@ define([
 
         if (frameState.mode !== SceneMode.SCENE3D) {
             var projection = frameState.mapProjection;
-            var southwest = projection.project(Rectangle.getSouthwest(tile.rectangle), southwestScratch);
-            var northeast = projection.project(Rectangle.getNortheast(tile.rectangle), northeastScratch);
+            var southwest = projection.project(Rectangle.southwest(tile.rectangle), southwestScratch);
+            var northeast = projection.project(Rectangle.northeast(tile.rectangle), northeastScratch);
 
             tileRectangle.x = southwest.x;
             tileRectangle.y = southwest.y;

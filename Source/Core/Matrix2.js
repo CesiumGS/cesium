@@ -463,7 +463,7 @@ define([
      */
     Matrix2.getMaximumScale = function(matrix) {
         Matrix2.getScale(matrix, scratchScale);
-        return Cartesian2.getMaximumComponent(scratchScale);
+        return Cartesian2.maximumComponent(scratchScale);
     };
 
     /**

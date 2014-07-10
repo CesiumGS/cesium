@@ -23,6 +23,7 @@ define([
         this.updaters = new AssociativeArray();
         this.createPrimitive = true;
         this.primitive = undefined;
+        this.oldPrimitive = undefined;
         this.geometry = new AssociativeArray();
         this.material = undefined;
         this.updatersWithAttributes = new AssociativeArray();
@@ -66,13 +67,19 @@ define([
     };
 
     Batch.prototype.update = function(time) {
+        var show = true;
         var isUpdated = true;
         var primitive = this.primitive;
         var primitives = this.primitives;
         var geometries = this.geometry.values;
         if (this.createPrimitive) {
             if (defined(primitive)) {
-                primitives.remove(primitive);
+                if (primitive.ready) {
+                    this.oldPrimitive = primitive;
+                } else {
+                    primitives.remove(primitive);
+                }
+                show = false;
             }
             if (geometries.length > 0) {
                 this.material = MaterialProperty.getValue(time, this.materialProperty, this.material);
@@ -86,12 +93,19 @@ define([
                     })
                 });
 
+                primitive.show = show;
                 primitives.add(primitive);
                 isUpdated = false;
             }
             this.primitive = primitive;
             this.createPrimitive = false;
-        } else if (defined(primitive) && primitive._state === PrimitiveState.COMPLETE) {
+        } else if (defined(primitive) && primitive.ready) {
+            if (defined(this.oldPrimitive)) {
+                primitives.remove(this.oldPrimitive);
+                this.oldPrimitive = undefined;
+                primitive.show = true;
+            }
+
             this.material = MaterialProperty.getValue(time, this.materialProperty, this.material);
             this.primitive.appearance.material = this.material;
 
@@ -108,14 +122,14 @@ define([
                 }
 
                 if (!updater.hasConstantFill) {
-                    var show = updater.isFilled(time);
+                    show = updater.isFilled(time);
                     if (show !== attributes._lastShow) {
                         attributes._lastShow = show;
                         attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
                     }
                 }
             }
-        } else if (defined(primitive) && primitive._state !== PrimitiveState.COMPLETE) {
+        } else if (defined(primitive) && !primitive.ready) {
             isUpdated = false;
         }
         return isUpdated;
