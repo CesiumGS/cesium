@@ -19,6 +19,26 @@ define([
         NavigationHelpButtonViewModel) {
     "use strict";
 
+    function addListeners(viewModel) {
+        var touchListener = function(){
+            viewModel._hasTouchscreen = true;
+            viewModel._touch = true;
+            viewModel.showInstructions = true;
+            document.removeEventListener('touchstart', touchListener, false);
+            document.removeEventListener('mousemove', mouseMoveListener, false);
+        };
+
+        var mouseMoveListener = function() {
+            if (!viewModel._hasTouchscreen) {
+                viewModel._touch = false;
+            }
+            document.removeEventListener('mousemove', mouseMoveListener, false);
+        };
+
+        document.addEventListener('touchstart', touchListener, false);
+        document.addEventListener('mousemove', mouseMoveListener, false);
+    }
+
     /**
      * <p>The NavigationHelpButton is a single button widget for displaying instructions for
      * navigating the globe with the mouse.</p><p style="clear: both;"></p><br/>
@@ -140,6 +160,8 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
         wrapper.appendChild(touchInstructions);
 
         knockout.applyBindings(viewModel, wrapper);
+
+        addListeners(viewModel);
 
         this._container = container;
         this._viewModel = viewModel;

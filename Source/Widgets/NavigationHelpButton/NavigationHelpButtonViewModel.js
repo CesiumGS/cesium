@@ -11,26 +11,6 @@ define([
         createCommand) {
     "use strict";
 
-    function addListeners(viewModel) {
-        var touchListener = function(){
-            viewModel._hasTouchscreen = true;
-            viewModel._touch = true;
-            viewModel.showInstructions = true;
-            document.removeEventListener('touchstart', touchListener, false);
-            document.removeEventListener('mousemove', mouseMoveListener, false);
-        };
-
-        var mouseMoveListener = function() {
-            if (!viewModel._hasTouchscreen) {
-                viewModel._touch = false;
-            }
-            document.removeEventListener('mousemove', mouseMoveListener, false);
-        };
-
-        document.addEventListener('touchstart', touchListener, false);
-        document.addEventListener('mousemove', mouseMoveListener, false);
-    }
-
     /**
      * The view model for {@link NavigationHelpButton}.
      * @alias NavigationHelpButtonViewModel
@@ -50,8 +30,6 @@ define([
         });
         this._touch = true;
         this._hasTouchscreen = false;
-
-        addListeners(that);
 
         /**
          * Gets or sets the tooltip.  This property is observable.
