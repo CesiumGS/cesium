@@ -368,32 +368,6 @@ define([
         return ImageryProvider.loadImage(this, url);
     };
 
-    WebMapServiceImageryProvider.prototype.getFeatureInfo = function(x, y, level, i, j) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('getFeatureInfo must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        var parameters = clone(this._parameters);
-        parameters.request = 'GetFeatureInfo';
-        parameters.info_format = 'application/json';
-        parameters.query_layers = this._layers;
-        parameters.x = i;
-        parameters.y = j;
-
-        var that = this;
-
-        var url = buildUrl(this, parameters, x, y, level);
-        return when(loadJson(url), function(json) {
-            return json;
-        }, function (e) {
-            // If something goes wrong, try requesting XML instead of GeoJSON.  Then try to interpret it.
-            parameters.info_format = 'text/xml';
-            return loadXML(buildUrl(that, parameters, x, y, level));
-        });
-    };
-
     /**
      * The default parameters to include in the WMS URL to obtain images.  The values are as follows:
      *    service=WMS
