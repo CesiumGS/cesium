@@ -190,42 +190,36 @@ require(['Cesium'], function(Cesium) {
         }, {
             text : 'Fly to San Diego',
             onselect : function() {
-                selected = 1;
                 flyToSanDiego();
                 Sandcastle.highlight(flyToSanDiego);
             }
         }, {
             text : 'Fly to My Location',
             onselect : function() {
-                selected = 2;
                 flyToLocation();
                 Sandcastle.highlight(flyToLocation);
             }
         }, {
             text : 'Fly to Rectangle',
             onselect : function() {
-                selected = 3;
                 flyToRectangle();
                 Sandcastle.highlight(flyToRectangle);
             }
         }, {
             text : 'View a Rectangle',
             onselect : function() {
-                selected = 4;
                 viewRectangle();
                 Sandcastle.highlight(viewRectangle);
             }
         }, {
             text : 'Set camera reference frame',
             onselect : function() {
-                selected = 5;
                 setReferenceFrame();
                 Sandcastle.highlight(setReferenceFrame);
             }
         }, {
             text : 'View in ICRF',
             onselect : function() {
-                selected = 6;
                 viewInICRF();
                 Sandcastle.highlight(viewInICRF);
             }
