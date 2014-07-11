@@ -73,6 +73,11 @@
     font-weight: bold;
 }
 
+.cesium-navigation-help-tilt {
+    color: #d800d8;
+    font-weight: bold;
+}
+
 .cesium-navigation-help-details {
     color: #ffffff;
 }
