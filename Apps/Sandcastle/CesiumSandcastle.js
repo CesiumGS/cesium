@@ -660,6 +660,7 @@ require({
 
         var scriptCode = scriptMatch[1];
         jsEditor.setValue(scriptCode);
+        jsEditor.clearHistory();
 
         var htmlText = '';
         var childIndex = 0;
@@ -670,6 +671,7 @@ require({
         }
 
         htmlEditor.setValue(htmlText);
+        htmlEditor.clearHistory();
 
         if (typeof demo.bucket === 'string') {
             loadBucket(demo.bucket);
