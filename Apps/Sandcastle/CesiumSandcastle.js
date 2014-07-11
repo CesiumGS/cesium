@@ -577,9 +577,6 @@ require({
                     var attributeValue = attributeMatch[2];
                     if (attributeName === 'class') {
                         bucketDoc.body.className = attributeValue;
-                    } else if (attributeName === 'data-sandcastle-title') {
-                        bucketPane.set('title', attributeValue);
-                        document.getElementById('includes').textContent = attributeValue;
                     } else {
                         bucketDoc.body.setAttribute(attributeName, attributeValue);
                     }
@@ -810,7 +807,7 @@ require({
 
     registry.byId('dropDownSaveAs').on('show', function() {
         var currentDemoName = ioQuery.queryToObject(window.location.search.substring(1)).src;
-        currentDemoName = window.decodeURIComponent(currentDemoName.replace('.html', ''));
+        currentDemoName = currentDemoName.replace('.html', '');
         var description = encodeHTML(registry.byId('description').get('value').replace(/\n/g, '\\n')).replace(/\"/g, '&quot;');
         var label = encodeHTML(registry.byId('label').get('value').replace(/\n/g, '\\n')).replace(/\"/g, '&quot;');
 
@@ -879,7 +876,7 @@ require({
 
     function requestDemo(name) {
         return xhr.get({
-            url : 'gallery/' + window.encodeURIComponent(name) + '.html',
+            url : 'gallery/' + name + '.html',
             handleAs : 'text',
             sync : true,
             error : function(error) {
@@ -902,9 +899,6 @@ require({
             var bucket = doc.body.getAttribute('data-sandcastle-bucket');
             demo.bucket = bucket ? bucket : 'bucket-requirejs.html';
 
-            var bucketTitle = doc.body.getAttribute('data-sandcastle-title');
-            demo.bucketTitle = bucketTitle ? bucketTitle : 'Cesium + Dojo';
-
             var descriptionMeta = doc.querySelector('meta[name="description"]');
             var description = descriptionMeta && descriptionMeta.getAttribute('content');
             demo.description = description ? description : '';
@@ -915,7 +909,7 @@ require({
 
             // Select the demo to load upon opening based on the query parameter.
             if (defined(queryObject.src)) {
-                if (demo.name === window.decodeURIComponent(queryObject.src.replace('.html', ''))) {
+                if (demo.name === queryObject.src.replace('.html', '')) {
                     loadFromGallery(demo);
                     window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html&label=' + queryObject.label);
                     document.title = demo.name + ' - Cesium Sandcastle';
@@ -926,7 +920,7 @@ require({
             demoTooltips[demo.name] = new TooltipDialog({
                 id : demo.name + 'TooltipDialog',
                 style : 'width: 200px; font-size: 12px;',
-                content : '<div class="demoTooltipType">' + demo.bucketTitle + '</div>' + demo.description.replace(/\\n/g, '<br/>')
+                content : demo.description.replace(/\\n/g, '<br/>')
             });
 
             addFileToTab(index);
@@ -977,7 +971,7 @@ require({
         var demo = gallery_demos[index];
         var imgSrc = 'templates/Gallery_tile.jpg';
         if (defined(demo.img)) {
-            imgSrc = 'gallery/' + window.encodeURIComponent(demo.img);
+            imgSrc = 'gallery/' + demo.img;
         }
 
         var demoLink = document.createElement('a');
@@ -1040,7 +1034,7 @@ require({
         });
 
         var queryInGalleryIndex = false;
-        var queryName = window.decodeURIComponent(queryObject.src.replace('.html', ''));
+        var queryName = queryObject.src.replace('.html', '');
         for (i = 0; i < len; ++i) {
             addFileToGallery(i);
             if (gallery_demos[i].name === queryName) {
