@@ -55,6 +55,7 @@ define([
         './PathGraphics',
         './PointGraphics',
         './PolygonGraphics',
+        './PolylineGlowMaterialProperty',
         './PolylineGraphics',
         './PolylineOutlineMaterialProperty',
         './PositionPropertyArray',
@@ -124,6 +125,7 @@ define([
         PathGraphics,
         PointGraphics,
         PolygonGraphics,
+        PolylineGlowMaterialProperty,
         PolylineGraphics,
         PolylineOutlineMaterialProperty,
         PositionPropertyArray,
@@ -782,6 +784,21 @@ define([
             processPacketData(Color, existingMaterial, 'oddColor', materialData.oddColor, undefined, sourceUri, entityCollection);
             processPacketData(Number, existingMaterial, 'offset', materialData.offset, undefined, sourceUri, entityCollection);
             processPacketData(Number, existingMaterial, 'repeat', materialData.repeat, undefined, sourceUri, entityCollection);
+        } else if (defined(packetData.polylineOutline)) {
+            if (!(existingMaterial instanceof PolylineOutlineMaterialProperty)) {
+                existingMaterial = new PolylineOutlineMaterialProperty();
+            }
+            materialData = packetData.polylineOutline;
+            processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, sourceUri, entityCollection);
+            processPacketData(Color, existingMaterial, 'outlineColor', materialData.outlineColor, undefined, sourceUri, entityCollection);
+            processPacketData(Number, existingMaterial, 'outlineWidth', materialData.outlineWidth, undefined, sourceUri, entityCollection);
+        } else if (defined(packetData.polylineOutline)) {
+            if (!(existingMaterial instanceof PolylineGlowMaterialProperty)) {
+                existingMaterial = new PolylineGlowMaterialProperty();
+            }
+            materialData = packetData.polylineOutline;
+            processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, sourceUri, entityCollection);
+            processPacketData(Number, existingMaterial, 'glowPower', materialData.glowPower, undefined, sourceUri, entityCollection);
         }
 
         if (defined(existingInterval)) {
@@ -1200,42 +1217,12 @@ define([
             entity.path = path = new PathGraphics();
         }
 
-        //Since CZML does not support PolylineOutlineMaterial, we map its properties into one.
-        var materialToProcess = path.material;
-        if (defined(interval)) {
-            var materialInterval;
-            var composite = materialToProcess;
-            if (!(composite instanceof CompositeMaterialProperty)) {
-                composite = new CompositeMaterialProperty();
-                path.material = composite;
-                if (defined(materialToProcess)) {
-                    materialInterval = Iso8601.MAXIMUM_INTERVAL.clone();
-                    materialInterval.data = materialToProcess;
-                    composite.intervals.addInterval(materialInterval);
-                }
-            }
-            materialInterval = composite.intervals.findInterval(interval);
-            if (defined(materialInterval)) {
-                materialToProcess = materialInterval.data;
-            } else {
-                materialToProcess = new PolylineOutlineMaterialProperty();
-                materialInterval = interval.clone();
-                materialInterval.data = materialToProcess;
-                composite.intervals.addInterval(materialInterval);
-            }
-        } else if (!(materialToProcess instanceof PolylineOutlineMaterialProperty)) {
-            materialToProcess = new PolylineOutlineMaterialProperty();
-            path.material = materialToProcess;
-        }
-
         processPacketData(Boolean, path, 'show', pathData.show, interval, sourceUri, entityCollection);
         processPacketData(Number, path, 'width', pathData.width, interval, sourceUri, entityCollection);
         processPacketData(Number, path, 'resolution', pathData.resolution, interval, sourceUri, entityCollection);
         processPacketData(Number, path, 'leadTime', pathData.leadTime, interval, sourceUri, entityCollection);
         processPacketData(Number, path, 'trailTime', pathData.trailTime, interval, sourceUri, entityCollection);
-        processPacketData(Color, materialToProcess, 'color', pathData.color, interval, sourceUri, entityCollection);
-        processPacketData(Color, materialToProcess, 'outlineColor', pathData.outlineColor, interval, sourceUri, entityCollection);
-        processPacketData(Number, materialToProcess, 'outlineWidth', pathData.outlineWidth, interval, sourceUri, entityCollection);
+        processMaterialPacketData(path, 'material', pathData.material, interval, sourceUri, entityCollection);
     }
 
     function processPoint(entity, packet, entityCollection, sourceUri) {
@@ -1374,39 +1361,9 @@ define([
             entity.polyline = polyline = new PolylineGraphics();
         }
 
-        //Since CZML does not support PolylineOutlineMaterial, we map its properties into one.
-        var materialToProcess = polyline.material;
-        if (defined(interval)) {
-            var materialInterval;
-            var composite = materialToProcess;
-            if (!(composite instanceof CompositeMaterialProperty)) {
-                composite = new CompositeMaterialProperty();
-                polyline.material = composite;
-                if (defined(materialToProcess)) {
-                    materialInterval = Iso8601.MAXIMUM_INTERVAL.clone();
-                    materialInterval.data = materialToProcess;
-                    composite.intervals.addInterval(materialInterval);
-                }
-            }
-            materialInterval = composite.intervals.findInterval(interval);
-            if (defined(materialInterval)) {
-                materialToProcess = materialInterval.data;
-            } else {
-                materialToProcess = new PolylineOutlineMaterialProperty();
-                materialInterval = interval.clone();
-                materialInterval.data = materialToProcess;
-                composite.intervals.addInterval(materialInterval);
-            }
-        } else if (!(materialToProcess instanceof PolylineOutlineMaterialProperty)) {
-            materialToProcess = new PolylineOutlineMaterialProperty();
-            polyline.material = materialToProcess;
-        }
-
         processPacketData(Boolean, polyline, 'show', polylineData.show, interval, sourceUri, entityCollection);
         processPacketData(Number, polyline, 'width', polylineData.width, interval, sourceUri, entityCollection);
-        processPacketData(Color, materialToProcess, 'color', polylineData.color, interval, sourceUri, entityCollection);
-        processPacketData(Color, materialToProcess, 'outlineColor', polylineData.outlineColor, interval, sourceUri, entityCollection);
-        processPacketData(Number, materialToProcess, 'outlineWidth', polylineData.outlineWidth, interval, sourceUri, entityCollection);
+        processMaterialPacketData(polyline, 'material', polylineData.material, interval, sourceUri, entityCollection);
         processPositions(polyline, polylineData.positions, entityCollection);
     }
 
