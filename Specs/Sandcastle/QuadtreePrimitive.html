@@ -112,7 +112,7 @@ DemoTileProvider.prototype.loadTile = function(context, frameState, tile) {
 
         tile.state = Cesium.QuadtreeTileLoadState.LOADING;
     }
-    
+
     if (tile.state === Cesium.QuadtreeTileLoadState.LOADING) {
         tile.data.primitive.update(context, frameState, []);
         if (tile.data.primitive.ready) {
@@ -130,7 +130,7 @@ DemoTileProvider.prototype.computeTileVisibility = function(tile, frameState, oc
         boundingSphere = tile.data.boundingSphere2D;
     }
 
-    return frameState.cullingVolume.getVisibility(boundingSphere);
+    return frameState.cullingVolume.computeVisibility(boundingSphere);
 };
 
 DemoTileProvider.prototype.showTileThisFrame = function(tile, context, frameState, commandList) {

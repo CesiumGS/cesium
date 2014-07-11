@@ -48,12 +48,16 @@ defineSuite([
         this.destroyed = true;
     };
 
-    var visualizerCallback = function() {
+    var visualizersCallback = function() {
         return [new MockVisualizer()];
     };
 
     it('constructor sets expected values', function() {
-        var display = new DataSourceDisplay(scene, dataSourceCollection, visualizerCallback);
+        var display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : visualizersCallback
+        });
         expect(display.getScene()).toBe(scene);
         expect(display.getDataSources()).toBe(dataSourceCollection);
         expect(display.isDestroyed()).toEqual(false);
@@ -64,7 +68,10 @@ defineSuite([
         var dataSource = new MockDataSource();
         dataSourceCollection.add(dataSource);
 
-        var display = new DataSourceDisplay(scene, dataSourceCollection);
+        var display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection
+        });
 
         expect(dataSource.destroyed).toEqual(false);
 
@@ -78,7 +85,11 @@ defineSuite([
         var source1 = new MockDataSource();
         var source2 = new MockDataSource();
 
-        var display = new DataSourceDisplay(scene, dataSourceCollection, visualizerCallback);
+        var display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : visualizersCallback
+        });
         dataSourceCollection.add(source1);
         dataSourceCollection.add(source2);
 
@@ -104,18 +115,30 @@ defineSuite([
 
     it('constructor throws if scene undefined', function() {
         expect(function(){
-            return new DataSourceDisplay(undefined, dataSourceCollection, []);
+            return new DataSourceDisplay({
+                scene : undefined,
+                dataSourceCollection : dataSourceCollection,
+                visualizersCallback : visualizersCallback
+            });
         }).toThrowDeveloperError();
     });
 
     it('constructor throws if dataSourceCollection undefined', function() {
         expect(function(){
-            return new DataSourceDisplay(scene, undefined, []);
+            return new DataSourceDisplay({
+                scene : scene,
+                dataSourceCollection : undefined,
+                visualizersCallback : visualizersCallback
+            });
         }).toThrowDeveloperError();
     });
 
     it('update throws if time undefined', function() {
-        var display = new DataSourceDisplay(scene, dataSourceCollection);
+        var display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : visualizersCallback
+        });
         expect(function(){
             return display.update();
         }).toThrowDeveloperError();

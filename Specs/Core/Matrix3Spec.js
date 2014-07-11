@@ -474,9 +474,9 @@ defineSuite([
         expect(matrix).toEqual(expected);
     });
 
-    it('getEigenDecomposition throws without a matrix', function() {
+    it('computeEigenDecomposition throws without a matrix', function() {
         expect(function() {
-            return Matrix3.getEigenDecomposition();
+            return Matrix3.computeEigenDecomposition();
         }).toThrowDeveloperError();
     });
 
@@ -489,7 +489,7 @@ defineSuite([
                                            0.0, 6.0, 0.0,
                                            0.0, 0.0, 1.0);
 
-        var decomposition = Matrix3.getEigenDecomposition(a);
+        var decomposition = Matrix3.computeEigenDecomposition(a);
         expect(decomposition.diagonal).toEqualEpsilon(expectedDiagonal, CesiumMath.EPSILON14);
 
         var v = Matrix3.getColumn(decomposition.unitary, 0, new Cartesian3());
@@ -518,7 +518,7 @@ defineSuite([
             diagonal : new Matrix3()
         };
 
-        var decomposition = Matrix3.getEigenDecomposition(a, result);
+        var decomposition = Matrix3.computeEigenDecomposition(a, result);
         expect(decomposition).toBe(result);
         expect(decomposition.diagonal).toEqualEpsilon(expectedDiagonal, CesiumMath.EPSILON14);
 

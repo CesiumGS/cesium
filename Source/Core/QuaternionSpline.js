@@ -23,7 +23,7 @@ define([
         quads[length - 1] = defined(lastInnerQuadrangle) ? lastInnerQuadrangle : points[length - 1];
 
         for (var i = 1; i < length - 1; ++i) {
-            quads[i] = Quaternion.innerQuadrangle(points[i - 1], points[i], points[i + 1], new Quaternion());
+            quads[i] = Quaternion.computeInnerQuadrangle(points[i - 1], points[i], points[i + 1], new Quaternion());
         }
 
         return quads;

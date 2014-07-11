@@ -165,7 +165,7 @@ define([
      * @param {Cartesian3} occludee The point surrounding the occludee object.
      * @returns {Boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
      *
-     * @see Occluder#getVisibility
+     * @see Occluder#computeVisibility
      *
      * @example
      * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
@@ -196,7 +196,7 @@ define([
     * @param {BoundingSphere} occludee The bounding sphere surrounding the occludee object.
     * @returns {Boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
     *
-    * @see Occluder#getVisibility
+    * @see Occluder#computeVisibility
     *
     * @example
     * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
@@ -261,9 +261,9 @@ define([
      * var sphere2 = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -2.5), 0.5);
      * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
      * var occluder = new Cesium.Occluder(sphere1, cameraPosition);
-     * occluder.getVisibility(sphere2); //returns Visibility.NONE
+     * occluder.computeVisibility(sphere2); //returns Visibility.NONE
      */
-    Occluder.prototype.getVisibility = function(occludeeBS) {
+    Occluder.prototype.computeVisibility = function(occludeeBS) {
         if (!defined(occludeeBS)) {
             throw new DeveloperError('occludeeBS is required.');
         }
@@ -339,9 +339,9 @@ define([
      * var positions = [new Cesium.Cartesian3(-0.25, 0, -5.3), new Cesium.Cartesian3(0.25, 0, -5.3)];
      * var tileOccluderSphere = Cesium.BoundingSphere.fromPoints(positions);
      * var occludeePosition = tileOccluderSphere.center;
-     * var occludeePt = occluder.getOccludeePoint(occluderBoundingSphere, occludeePosition, positions);
+     * var occludeePt = occluder.computeOccludeePoint(occluderBoundingSphere, occludeePosition, positions);
      */
-    Occluder.getOccludeePoint = function(occluderBoundingSphere, occludeePosition, positions) {
+    Occluder.computeOccludeePoint = function(occluderBoundingSphere, occludeePosition, positions) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(occluderBoundingSphere)) {
             throw new DeveloperError('occluderBoundingSphere is required.');
@@ -418,7 +418,7 @@ define([
         // TODO: get correct ellipsoid center
         var ellipsoidCenter = Cartesian3.ZERO;
         if (!Cartesian3.equals(ellipsoidCenter, bs.center)) {
-            return Occluder.getOccludeePoint(new BoundingSphere(ellipsoidCenter, ellipsoid.minimumRadius), bs.center, positions);
+            return Occluder.computeOccludeePoint(new BoundingSphere(ellipsoidCenter, ellipsoid.minimumRadius), bs.center, positions);
         }
 
         return undefined;
