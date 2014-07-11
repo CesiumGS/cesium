@@ -148,58 +148,6 @@ define([
         return ReferenceProperty.fromString(collection, referenceString);
     }
 
-    //This class is a workaround for CZML represented as two properties which get turned into a single Cartesian2 property once loaded.
-    var Cartesian2WrapperProperty = function() {
-        this._definitionChanged = new Event();
-        this._x = undefined;
-        this._xSubscription = undefined;
-        this._y = undefined;
-        this._ySubscription = undefined;
-
-        this.x = new ConstantProperty(0);
-        this.y = new ConstantProperty(0.1);
-    };
-
-    defineProperties(Cartesian2WrapperProperty.prototype, {
-        isConstant : {
-            get : function() {
-                return this._x.isConstant && this._y.isConstant;
-            }
-        },
-        definitionChanged : {
-            get : function() {
-                return this._definitionChanged;
-            }
-        },
-        x : createPropertyDescriptor('x'),
-        y : createPropertyDescriptor('y')
-    });
-
-    Cartesian2WrapperProperty.prototype.getValue = function(time, result) {
-        if (!defined(result)) {
-            result = new Cartesian2();
-        }
-        result.x = this._x.getValue(time);
-        result.y = this._y.getValue(time);
-        return result;
-    };
-
-    Cartesian2WrapperProperty.prototype._raiseDefinitionChanged = function() {
-        this._definitionChanged.raiseEvent(this);
-    };
-
-    function combineIntoCartesian2(object, packetDataX, packetDataY) {
-        if (!defined(packetDataX) && !defined(packetDataY)) {
-            return object;
-        }
-        if (!(object instanceof Cartesian2WrapperProperty)) {
-            object = new Cartesian2WrapperProperty();
-        }
-        processPacketData(Number, object, 'x', packetDataX);
-        processPacketData(Number, object, 'y', packetDataY);
-        return object;
-    }
-
     var scratchCartesian = new Cartesian3();
     var scratchSpherical = new Spherical();
     var scratchCartographic = new Cartographic();
@@ -814,16 +762,16 @@ define([
             materialData = packetData.grid;
             processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, sourceUri, entityCollection);
             processPacketData(Number, existingMaterial, 'cellAlpha', materialData.cellAlpha, undefined, sourceUri, entityCollection);
-            existingMaterial.lineThickness = combineIntoCartesian2(existingMaterial.lineThickness, materialData.rowThickness, materialData.columnThickness, undefined, undefined, entityCollection);
-            existingMaterial.lineOffset = combineIntoCartesian2(existingMaterial.lineOffset, materialData.rowOffset, materialData.columnOffset, undefined, undefined, entityCollection);
-            existingMaterial.lineCount = combineIntoCartesian2(existingMaterial.lineCount, materialData.rowCount, materialData.columnCount, undefined, undefined, entityCollection);
+            processPacketData(Cartesian2, existingMaterial, 'lineThickness', materialData.lineThickness, undefined, sourceUri, entityCollection);
+            processPacketData(Cartesian2, existingMaterial, 'lineOffset', materialData.lineOffset, undefined, sourceUri, entityCollection);
+            processPacketData(Cartesian2, existingMaterial, 'lineCount', materialData.lineCount, undefined, sourceUri, entityCollection);
         } else if (defined(packetData.image)) {
             if (!(existingMaterial instanceof ImageMaterialProperty)) {
                 existingMaterial = new ImageMaterialProperty();
             }
             materialData = packetData.image;
             processPacketData(Image, existingMaterial, 'image', materialData.image, undefined, sourceUri, entityCollection);
-            existingMaterial.repeat = combineIntoCartesian2(existingMaterial.repeat, materialData.horizontalRepeat, materialData.verticalRepeat);
+            processPacketData(Cartesian2, existingMaterial, 'repeat', materialData.repeat, undefined, sourceUri, entityCollection);
         } else if (defined(packetData.stripe)) {
             if (!(existingMaterial instanceof StripeMaterialProperty)) {
                 existingMaterial = new StripeMaterialProperty();
