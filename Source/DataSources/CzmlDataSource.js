@@ -1366,9 +1366,6 @@ define([
         processMaterialPacketData(polyline, 'material', polylineData.material, interval, sourceUri, entityCollection);
         processPacketData(Boolean, polyline, 'followSurface', polylineData.followSurface, interval, sourceUri, entityCollection);
         processPacketData(Number, polyline, 'granularity', polylineData.granularity, interval, sourceUri, entityCollection);
-        processPacketData(Color, materialToProcess, 'color', polylineData.color, interval, sourceUri, entityCollection);
-        processPacketData(Color, materialToProcess, 'outlineColor', polylineData.outlineColor, interval, sourceUri, entityCollection);
-        processPacketData(Number, materialToProcess, 'outlineWidth', polylineData.outlineWidth, interval, sourceUri, entityCollection);
         processPositions(polyline, polylineData.positions, entityCollection);
     }
 
