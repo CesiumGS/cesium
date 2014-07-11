@@ -1920,12 +1920,15 @@ defineSuite([
                             rgba : [240, 255, 255, 255]
                         },
                         cellAlpha : 0,
-                        rowCount : 36,
-                        rowThickness : 1,
-                        rowOffset : 0.5,
-                        columnCount : 9,
-                        columnThickness : 1,
-                        columnOffset : 0.5
+                        lineCount : {
+                            cartesian2 : [36, 9]
+                        },
+                        lineThickness : {
+                            cartesian2 : [1, 1]
+                        },
+                        lineOffset : {
+                            cartesian2 : [0.5, 0.5]
+                        }
                     }
                 }]
             }
