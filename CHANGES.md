@@ -38,6 +38,7 @@ Change Log
   * `DataSource.dynamicObjects` has been renamed to `DataSource.entities`
   * `EntityCollection.getObjects()` and `CompositeEntityCollection.getObjects()` have been made properties and renamed `EntityCollection.entities` and `CompositeEntityCollection.entities`. 
   * `Viewer.trackedObject` and `Viewer.selectedObject` have been renamed to `Viewer.trackedEntity` and `Viewer.selectedEntity` when using the `viewerEntityMixin`.
+  * Sandcastle examples now automatically wrap the example code in RequireJS boilerplate.  To upgrade any custom examples, copy the code into an existing example (such as Hello World) and save a new file.
 * Added northUpEast transform to help support display of glTF models because Y is their up axis.
 * Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
 * Added `Primitive.ready`.
