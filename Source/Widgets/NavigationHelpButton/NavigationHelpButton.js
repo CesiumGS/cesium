@@ -19,11 +19,11 @@ define([
         NavigationHelpButtonViewModel) {
     "use strict";
 
-    function addListeners(viewModel) {
+    function addListeners(viewModel, showByDefault) {
         var touchListener = function(){
             viewModel._hasTouchscreen = true;
             viewModel._touch = true;
-            viewModel.showInstructions = true;
+            viewModel.showInstructions = showByDefault;
             document.removeEventListener('touchstart', touchListener, false);
             document.removeEventListener('mousemove', mouseMoveListener, false);
         };
@@ -161,7 +161,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
 
         knockout.applyBindings(viewModel, wrapper);
 
-        addListeners(viewModel);
+        addListeners(viewModel, options.instructionsInitiallyVisible);
 
         this._container = container;
         this._viewModel = viewModel;
