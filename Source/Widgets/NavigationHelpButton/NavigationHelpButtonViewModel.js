@@ -15,19 +15,9 @@ define([
         var touchListener = function(){
             viewModel._touch = true;
             document.removeEventListener('touchstart', touchListener, false);
-            document.removeEventListener('mouseMove', mouseMoveListener, false);
         };
 
-        var mouseMoveListener = function(){
-            if (!viewModel._touch) {
-                document.removeEventListener('touchstart', touchListener, false);
-                document.removeEventListener('mouseMove', mouseMoveListener, false);
-            }
-        }
-
         document.addEventListener('touchstart', touchListener, false);
-        document.addEventListener('mousemove', mouseMoveListener, false);
-
     }
 
     /**
@@ -49,7 +39,7 @@ define([
         });
         this._touch = false;
 
-        addListeners();
+        addListeners(that);
 
         /**
          * Gets or sets the tooltip.  This property is observable.
@@ -58,7 +48,7 @@ define([
          */
         this.tooltip = 'Navigation Instructions';
 
-        knockout.track(this, ['tooltip', 'showInstructions']);
+        knockout.track(this, ['tooltip', 'showInstructions', '_touch']);
     };
 
     defineProperties(NavigationHelpButtonViewModel.prototype, {
@@ -71,18 +61,6 @@ define([
         command : {
             get : function() {
                 return this._command;
-            }
-        },
-
-        /**
-         * True if document has been touched via a touchscreen
-         * @memberof NavigationHelpButtonViewModel.prototype
-         *
-         * @type {Boolean}
-         */
-        touch : {
-            get: function() {
-                return this._touch;
             }
         }
     });

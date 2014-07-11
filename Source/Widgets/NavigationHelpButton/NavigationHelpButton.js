@@ -72,7 +72,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
 
         var clickInstructions = document.createElement('div');
         clickInstructions.className = 'cesium-navigation-help';
-        clickInstructions.setAttribute('data-bind', 'css: { "cesium-click-navigation-help-visible" : showInstructions && !touch}');
+        clickInstructions.setAttribute('data-bind', 'css: { "cesium-click-navigation-help-visible" : showInstructions && !_touch}');
         clickInstructions.innerHTML = '\
             <table>\
                 <tr>\
@@ -104,7 +104,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
 
         var touchInstructions = document.createElement('div');
         touchInstructions.className = 'cesium-navigation-help';
-        touchInstructions.setAttribute('data-bind', 'css: { "cesium-touch-navigation-help-visible" : showInstructions && touch}');
+        touchInstructions.setAttribute('data-bind', 'css: { "cesium-touch-navigation-help-visible" : showInstructions && _touch}');
         touchInstructions.innerHTML = '\
             <table>\
                 <tr>\
@@ -152,7 +152,6 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
         };
 
         document.addEventListener('mousedown', this._closeInstructions, true);
-        document.addEventListener('touchstart', this._closeInstructions, true);
     };
 
     defineProperties(NavigationHelpButton.prototype, {
@@ -194,7 +193,6 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
      */
     NavigationHelpButton.prototype.destroy = function() {
         document.removeEventListener('mousedown', this._closeInstructions, true);
-        document.removeEventListener('touchstart', this._closeInstructions, true);
 
         knockout.cleanNode(this._wrapper);
         this._container.removeChild(this._wrapper);
