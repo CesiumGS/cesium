@@ -32,7 +32,6 @@ require(['Cesium'], function(Cesium) {
     var viewer = new Cesium.Viewer('cesiumContainer', {
         infoBox: false
     });
-    viewer.extend(Cesium.viewerEntityMixin);
 
     function coastlineTopoJSON() {
         viewer.dataSources.removeAll();
