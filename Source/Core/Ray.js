@@ -50,7 +50,7 @@ define([
      * @example
      * //Get the first intersection point of a ray and an ellipsoid.
      * var intersection = Cesium.IntersectionTests.rayEllipsoid(ray, ellipsoid);
-     * var point = Ray.getPoint(ray, intersection.start);
+     * var point = Cesium.Ray.getPoint(ray, intersection.start);
      */
     Ray.getPoint = function(ray, t, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -61,6 +61,10 @@ define([
             throw new DeveloperError('t is a required number');
         }
         //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
 
         result = Cartesian3.multiplyByScalar(ray.direction, t, result);
         return Cartesian3.add(ray.origin, result, result);

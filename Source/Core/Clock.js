@@ -64,28 +64,28 @@ define([
         var currentTimeUndefined = !defined(currentTime);
 
         if (startTimeUndefined && stopTimeUndefined && currentTimeUndefined) {
-            currentTime = new JulianDate();
+            currentTime = JulianDate.now();
             startTime = JulianDate.clone(currentTime);
-            stopTime = currentTime.addDays(1.0);
+            stopTime = JulianDate.addDays(currentTime, 1.0, new JulianDate());
         } else if (startTimeUndefined && stopTimeUndefined) {
             startTime = JulianDate.clone(currentTime);
-            stopTime = currentTime.addDays(1.0);
+            stopTime = JulianDate.addDays(currentTime, 1.0, new JulianDate());
         } else if (startTimeUndefined && currentTimeUndefined) {
-            startTime = stopTime.addDays(-1.0);
+            startTime = JulianDate.addDays(stopTime, -1.0, new JulianDate());
             currentTime = JulianDate.clone(startTime);
         } else if (currentTimeUndefined && stopTimeUndefined) {
             currentTime = JulianDate.clone(startTime);
-            stopTime = startTime.addDays(1.0);
+            stopTime = JulianDate.addDays(startTime, 1.0, new JulianDate());
         } else if (currentTimeUndefined) {
             currentTime = JulianDate.clone(startTime);
         } else if (stopTimeUndefined) {
-            stopTime = currentTime.addDays(1.0);
+            stopTime = JulianDate.addDays(currentTime, 1.0, new JulianDate());
         } else if (startTimeUndefined) {
             startTime = JulianDate.clone(currentTime);
         }
 
         //>>includeStart('debug', pragmas.debug);
-        if (startTime.greaterThan(stopTime)) {
+        if (JulianDate.greaterThan(startTime, stopTime)) {
             throw new DeveloperError('startTime must come before stopTime.');
         }
         //>>includeEnd('debug');
@@ -165,34 +165,34 @@ define([
      */
     Clock.prototype.tick = function() {
         var currentSystemTime = getTimestamp();
-        var currentTime = this.currentTime;
+        var currentTime = JulianDate.clone(this.currentTime);
         var startTime = this.startTime;
         var stopTime = this.stopTime;
         var multiplier = this.multiplier;
 
         if (this.canAnimate && this.shouldAnimate) {
             if (this.clockStep === ClockStep.SYSTEM_CLOCK) {
-                currentTime = new JulianDate();
+                currentTime = JulianDate.now(currentTime);
             } else {
                 if (this.clockStep === ClockStep.TICK_DEPENDENT) {
-                    currentTime = currentTime.addSeconds(multiplier);
+                    currentTime = JulianDate.addSeconds(currentTime, multiplier, currentTime);
                 } else {
                     var milliseconds = currentSystemTime - this._lastSystemTime;
-                    currentTime = currentTime.addSeconds(multiplier * (milliseconds / 1000.0));
+                    currentTime = JulianDate.addSeconds(currentTime, multiplier * (milliseconds / 1000.0), currentTime);
                 }
 
                 if (this.clockRange === ClockRange.CLAMPED) {
-                    if (currentTime.lessThan(startTime)) {
-                        currentTime = startTime;
-                    } else if (currentTime.greaterThan(stopTime)) {
-                        currentTime = stopTime;
+                    if (JulianDate.lessThan(currentTime, startTime)) {
+                        currentTime = JulianDate.clone(startTime, currentTime);
+                    } else if (JulianDate.greaterThan(currentTime, stopTime)) {
+                        currentTime = JulianDate.clone(stopTime, currentTime);
                     }
                 } else if (this.clockRange === ClockRange.LOOP_STOP) {
-                    if (currentTime.lessThan(startTime)) {
-                        currentTime = JulianDate.clone(startTime);
+                    if (JulianDate.lessThan(currentTime, startTime)) {
+                        currentTime = JulianDate.clone(startTime, currentTime);
                     }
-                    while (currentTime.greaterThan(stopTime)) {
-                        currentTime = startTime.addSeconds(stopTime.getSecondsDifference(currentTime));
+                    while (JulianDate.greaterThan(currentTime, stopTime)) {
+                        currentTime = JulianDate.addSeconds(startTime, JulianDate.secondsDifference(currentTime, stopTime), currentTime);
                     }
                 }
             }

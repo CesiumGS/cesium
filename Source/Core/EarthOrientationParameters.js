@@ -30,7 +30,7 @@ define([
     /**
      * Specifies Earth polar motion coordinates and the difference between UT1 and UTC.
      * These Earth Orientation Parameters (EOP) are primarily used in the transformation from
-     * the International Celestial Reference Frame (ITRF) to the International Terrestrial
+     * the International Celestial Reference Frame (ICRF) to the International Terrestrial
      * Reference Frame (ITRF).
      *
      * @alias EarthOrientationParameters
@@ -65,6 +65,8 @@ define([
      * // Loading the EOP data
      * var eop = new Cesium.EarthOrientationParameters({ url : 'Data/EOP.json' });
      * Cesium.Transforms.earthOrientationParameters = eop;
+     *
+     * @private
      */
     var EarthOrientationParameters = function EarthOrientationParameters(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -187,9 +189,9 @@ define([
         if (defined(lastIndex)) {
             var previousIndexDate = dates[lastIndex];
             var nextIndexDate = dates[lastIndex + 1];
-            var isAfterPrevious = previousIndexDate.lessThanOrEquals(date);
+            var isAfterPrevious = JulianDate.lessThanOrEquals(previousIndexDate, date);
             var isAfterLastSample = !defined(nextIndexDate);
-            var isBeforeNext = isAfterLastSample || nextIndexDate.greaterThanOrEquals(date);
+            var isBeforeNext = isAfterLastSample || JulianDate.greaterThanOrEquals(nextIndexDate, date);
 
             if (isAfterPrevious && isBeforeNext) {
                 before = lastIndex;
@@ -288,7 +290,7 @@ define([
                 if (taiMinusUtc !== lastTaiMinusUtc && defined(lastTaiMinusUtc)) {
                     // We crossed a leap second boundary, so add the leap second
                     // if it does not already exist.
-                    var leapSeconds = LeapSecond._leapSeconds;
+                    var leapSeconds = JulianDate.leapSeconds;
                     var leapSecondIndex = binarySearch(leapSeconds, date, compareLeapSecondDates);
                     if (leapSecondIndex < 0) {
                         var leapSecond = new LeapSecond(date, taiMinusUtc);
@@ -338,7 +340,7 @@ define([
             return result;
         }
 
-        var factor = beforeDate.getSecondsDifference(date) / beforeDate.getSecondsDifference(afterDate);
+        var factor = JulianDate.secondsDifference(date, beforeDate) / JulianDate.secondsDifference(afterDate, beforeDate);
 
         var startBefore = before * columnCount;
         var startAfter = after * columnCount;

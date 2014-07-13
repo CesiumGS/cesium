@@ -33,13 +33,13 @@ defineSuite([
 
     function getPositions() {
         return [
-                Cartesian3.add(center, new Cartesian3(1, 0, 0)),
-                Cartesian3.add(center, new Cartesian3(2, 0, 0)),
-                Cartesian3.add(center, new Cartesian3(0, 0, 0)),
-                Cartesian3.add(center, new Cartesian3(1, 1, 0)),
-                Cartesian3.add(center, new Cartesian3(1, -1, 0)),
-                Cartesian3.add(center, new Cartesian3(1, 0, 1)),
-                Cartesian3.add(center, new Cartesian3(1, 0, -1))
+                Cartesian3.add(center, new Cartesian3(1, 0, 0), new Cartesian3()),
+                Cartesian3.add(center, new Cartesian3(2, 0, 0), new Cartesian3()),
+                Cartesian3.add(center, new Cartesian3(0, 0, 0), new Cartesian3()),
+                Cartesian3.add(center, new Cartesian3(1, 1, 0), new Cartesian3()),
+                Cartesian3.add(center, new Cartesian3(1, -1, 0), new Cartesian3()),
+                Cartesian3.add(center, new Cartesian3(1, 0, 1), new Cartesian3()),
+                Cartesian3.add(center, new Cartesian3(1, 0, -1), new Cartesian3())
             ];
     }
 
@@ -146,8 +146,8 @@ defineSuite([
         var center = sphere.center;
 
         var r = new Cartesian3(radius, radius, radius);
-        var max = Cartesian3.add(r, center);
-        var min = Cartesian3.subtract(center, r);
+        var max = Cartesian3.add(r, center, new Cartesian3());
+        var min = Cartesian3.subtract(center, r, new Cartesian3());
 
         var positions = getPositions();
         var numPositions = positions.length;
@@ -167,8 +167,8 @@ defineSuite([
         var center = sphere.center;
 
         var r = new Cartesian3(radius, radius, radius);
-        var max = Cartesian3.add(r, center);
-        var min = Cartesian3.subtract(center, r);
+        var max = Cartesian3.add(r, center, new Cartesian3());
+        var min = Cartesian3.subtract(center, r, new Cartesian3());
 
         var numPositions = positions.length;
         for ( var i = 0; i < numPositions; i++) {
@@ -204,8 +204,8 @@ defineSuite([
         var center = sphere.center;
 
         var r = new Cartesian3(radius, radius, radius);
-        var max = Cartesian3.add(r, center);
-        var min = Cartesian3.subtract(center, r);
+        var max = Cartesian3.add(r, center, new Cartesian3());
+        var min = Cartesian3.subtract(center, r, new Cartesian3());
 
         var positions = getPositions();
         var numPositions = positions.length;
@@ -225,8 +225,8 @@ defineSuite([
         var center = sphere.center;
 
         var r = new Cartesian3(radius, radius, radius);
-        var max = Cartesian3.add(r, center);
-        var min = Cartesian3.subtract(center, r);
+        var max = Cartesian3.add(r, center, new Cartesian3());
+        var min = Cartesian3.subtract(center, r, new Cartesian3());
 
         var numElements = positions.length;
         for (var i = 0; i < numElements; i += 3) {
@@ -245,7 +245,7 @@ defineSuite([
     it('fromVertices works with defined center', function() {
         var center = new Cartesian3(1.0, 2.0, 3.0);
         var sphere = BoundingSphere.fromVertices(getPositionsAsFlatArrayWithStride5(), center, 5);
-        expect(sphere.center).toEqual(Cartesian3.add(positionsCenter, center));
+        expect(sphere.center).toEqual(Cartesian3.add(positionsCenter, center, new Cartesian3()));
         expect(sphere.radius).toEqual(positionsRadius);
     });
 
@@ -261,7 +261,7 @@ defineSuite([
         var result = new BoundingSphere();
         var sphere = BoundingSphere.fromVertices(getPositionsAsFlatArrayWithStride5(), center, 5, result);
         expect(sphere).toEqual(result);
-        expect(result.center).toEqual(Cartesian3.add(positionsCenter, center));
+        expect(result.center).toEqual(Cartesian3.add(positionsCenter, center, new Cartesian3()));
         expect(result.radius).toEqual(positionsRadius);
     });
 
@@ -347,7 +347,7 @@ defineSuite([
 
     it('sphere on the positive side of a plane', function() {
         var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
-        var normal = Cartesian3.negate(Cartesian3.UNIT_X);
+        var normal = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
         var position = Cartesian3.UNIT_X;
         var plane = new Cartesian4(normal.x, normal.y, normal.z, -Cartesian3.dot(normal, position));
         expect(sphere.intersect(plane)).toEqual(Intersect.INSIDE);
@@ -370,24 +370,24 @@ defineSuite([
     });
 
     it('expands to contain another sphere', function() {
-        var bs1 = new BoundingSphere(Cartesian3.negate(Cartesian3.UNIT_X), 1.0);
+        var bs1 = new BoundingSphere(Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()), 1.0);
         var bs2 = new BoundingSphere(Cartesian3.UNIT_X, 1.0);
         var expected = new BoundingSphere(Cartesian3.ZERO, 2.0);
         expect(BoundingSphere.union(bs1, bs2)).toEqual(expected);
     });
 
     it('union result parameter is caller', function() {
-        var bs1 = new BoundingSphere(Cartesian3.multiplyByScalar(Cartesian3.negate(Cartesian3.UNIT_X), 3.0), 3.0);
+        var bs1 = new BoundingSphere(Cartesian3.multiplyByScalar(Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()), 3.0, new Cartesian3()), 3.0);
         var bs2 = new BoundingSphere(Cartesian3.UNIT_X, 1.0);
-        var expected = new BoundingSphere(Cartesian3.negate(Cartesian3.UNIT_X), 5.0);
+        var expected = new BoundingSphere(Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()), 5.0);
         BoundingSphere.union(bs1, bs2, bs1);
         expect(bs1).toEqual(expected);
     });
 
     it('expands to contain another point', function() {
-        var bs = new BoundingSphere(Cartesian3.negate(Cartesian3.UNIT_X), 1.0);
+        var bs = new BoundingSphere(Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()), 1.0);
         var point = Cartesian3.UNIT_X;
-        var expected = new BoundingSphere(Cartesian3.negate(Cartesian3.UNIT_X), 2.0);
+        var expected = new BoundingSphere(Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()), 2.0);
         expect(BoundingSphere.expand(bs, point)).toEqual(expected);
     });
 
@@ -424,7 +424,7 @@ defineSuite([
         var position = new Cartesian3(-2.0, 1.0, 0.0);
         var direction = Cartesian3.UNIT_X;
         var expected = new Interval(1.0, 3.0);
-        expect(BoundingSphere.getPlaneDistances(bs, position, direction)).toEqual(expected);
+        expect(BoundingSphere.computePlaneDistances(bs, position, direction)).toEqual(expected);
     });
 
     it('estimated distance squared to point', function() {
@@ -612,27 +612,27 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('getPlaneDistances throws without a sphere', function() {
+    it('computePlaneDistances throws without a sphere', function() {
         expect(function() {
-            BoundingSphere.getPlaneDistances();
+            BoundingSphere.computePlaneDistances();
         }).toThrowDeveloperError();
     });
 
-    it('getPlaneDistances throws without a position', function() {
+    it('computePlaneDistances throws without a position', function() {
         expect(function() {
-            BoundingSphere.getPlaneDistances(new BoundingSphere());
+            BoundingSphere.computePlaneDistances(new BoundingSphere());
         }).toThrowDeveloperError();
     });
 
-    it('getPlaneDistances throws without a direction', function() {
+    it('computePlaneDistances throws without a direction', function() {
         expect(function() {
-            BoundingSphere.getPlaneDistances(new BoundingSphere(), new Cartesian3());
+            BoundingSphere.computePlaneDistances(new BoundingSphere(), new Cartesian3());
         }).toThrowDeveloperError();
     });
 
     function expectBoundingSphereToContainPoint(boundingSphere, point, projection) {
         var pointInCartesian = projection.project(point);
-        var distanceFromCenter = Cartesian3.magnitude(Cartesian3.subtract(pointInCartesian, boundingSphere.center));
+        var distanceFromCenter = Cartesian3.magnitude(Cartesian3.subtract(pointInCartesian, boundingSphere.center, new Cartesian3()));
 
         // The distanceFromCenter for corner points at the height extreme should equal the
         // bounding sphere's radius.  But due to rounding errors it can end up being
@@ -651,70 +651,70 @@ defineSuite([
         var boundingSphere = BoundingSphere.fromRectangleWithHeights2D(rectangle, projection, minHeight, maxHeight);
 
         // Test that the corners are inside the bounding sphere.
-        var point = Rectangle.getSouthwest(rectangle).clone();
+        var point = Rectangle.southwest(rectangle).clone();
         point.height = minHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = Rectangle.getSouthwest(rectangle).clone();
+        point = Rectangle.southwest(rectangle).clone();
         point.height = maxHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = Rectangle.getNortheast(rectangle).clone();
+        point = Rectangle.northeast(rectangle).clone();
         point.height = minHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = Rectangle.getNortheast(rectangle).clone();
+        point = Rectangle.northeast(rectangle).clone();
         point.height = maxHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = Rectangle.getSoutheast(rectangle).clone();
+        point = Rectangle.southeast(rectangle).clone();
         point.height = minHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = Rectangle.getSoutheast(rectangle).clone();
+        point = Rectangle.southeast(rectangle).clone();
         point.height = maxHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = Rectangle.getNorthwest(rectangle).clone();
+        point = Rectangle.northwest(rectangle).clone();
         point.height = minHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = Rectangle.getNorthwest(rectangle).clone();
+        point = Rectangle.northwest(rectangle).clone();
         point.height = maxHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
         // Test that the center is inside the bounding sphere
-        point = Rectangle.getCenter(rectangle).clone();
+        point = Rectangle.center(rectangle).clone();
         point.height = minHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = Rectangle.getCenter(rectangle).clone();
+        point = Rectangle.center(rectangle).clone();
         point.height = maxHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
         // Test that the edge midpoints are inside the bounding sphere.
-        point = new Cartographic(Rectangle.getCenter(rectangle).longitude, rectangle.south, minHeight);
+        point = new Cartographic(Rectangle.center(rectangle).longitude, rectangle.south, minHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = new Cartographic(Rectangle.getCenter(rectangle).longitude, rectangle.south, maxHeight);
+        point = new Cartographic(Rectangle.center(rectangle).longitude, rectangle.south, maxHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = new Cartographic(Rectangle.getCenter(rectangle).longitude, rectangle.north, minHeight);
+        point = new Cartographic(Rectangle.center(rectangle).longitude, rectangle.north, minHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = new Cartographic(Rectangle.getCenter(rectangle).longitude, rectangle.north, maxHeight);
+        point = new Cartographic(Rectangle.center(rectangle).longitude, rectangle.north, maxHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = new Cartographic(rectangle.west, Rectangle.getCenter(rectangle).latitude, minHeight);
+        point = new Cartographic(rectangle.west, Rectangle.center(rectangle).latitude, minHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = new Cartographic(rectangle.west, Rectangle.getCenter(rectangle).latitude, maxHeight);
+        point = new Cartographic(rectangle.west, Rectangle.center(rectangle).latitude, maxHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = new Cartographic(rectangle.east, Rectangle.getCenter(rectangle).latitude, minHeight);
+        point = new Cartographic(rectangle.east, Rectangle.center(rectangle).latitude, minHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = new Cartographic(rectangle.east, Rectangle.getCenter(rectangle).latitude, maxHeight);
+        point = new Cartographic(rectangle.east, Rectangle.center(rectangle).latitude, maxHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
     });
 });

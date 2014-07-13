@@ -201,7 +201,7 @@ define([
          *
          * @example
          * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
-         * m.modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
+         * m.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = Matrix4.clone(this.modelMatrix);
@@ -399,7 +399,7 @@ define([
          *
          * @example
          * // Center in WGS84 coordinates
-         * var center = Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center);
+         * var center = Cesium.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cesium.Cartesian3());
          */
         boundingSphere : {
             get : function() {
@@ -472,7 +472,6 @@ define([
      * Creates a model from a glTF asset.  When the model is ready to render, i.e., when the external binary, image,
      * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyToRender} event is fired.
      *
-     *
      * @param {Object} options Object with the following properties:
      * @param {String} options.url The url to the glTF .json file.
      * @param {Object} [options.headers] HTTP headers to send with the request.
@@ -490,14 +489,14 @@ define([
      *
      * @example
      * // Example 1. Create a model from a glTF asset
-     * var model = scene.primitives.add(Model.fromGltf({
+     * var model = scene.primitives.add(Cesium.Model.fromGltf({
      *   url : './duck/duck.json'
      * }));
      *
      * @example
      * // Example 2. Create model and provide all properties and events
      * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
-     * var modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
+     * var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
      *
      * var model = scene.primitives.add(Model.fromGltf({
      *   url : './duck/duck.json',
@@ -569,7 +568,7 @@ define([
      * @example
      * // Apply non-uniform scale to node LOD3sp
      * var node = model.getNode('LOD3sp');
-     * node.matrix = Matrix4.fromScale(new Cartesian3(5.0, 1.0, 1.0), node.matrix);
+     * node.matrix =Cesium. Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
      */
     Model.prototype.getNode = function(name) {
         var node = getRuntime(this, 'nodesByName', name);
@@ -658,8 +657,8 @@ define([
                                 if (defined(min) && defined(max)) {
                                     Matrix4.multiplyByPoint(transformToRoot, aMin, aMin);
                                     Matrix4.multiplyByPoint(transformToRoot, aMax, aMax);
-                                    Cartesian3.getMinimumByComponent(min, aMin, min);
-                                    Cartesian3.getMaximumByComponent(max, aMax, max);
+                                    Cartesian3.minimumByComponent(min, aMin, min);
+                                    Cartesian3.maximumByComponent(max, aMax, max);
                                 }
                             }
                         }
@@ -1623,37 +1622,34 @@ define([
                 // Uniform parameters for this pass
                 for (var name in uniforms) {
                     if (uniforms.hasOwnProperty(name)) {
-                        // Only add active uniforms
-                        if (defined(activeUniforms[name])) {
-                            var parameterName = uniforms[name];
-                            var parameter = parameters[parameterName];
+                        var parameterName = uniforms[name];
+                        var parameter = parameters[parameterName];
 
-                            // GLTF_SPEC: In this implementation, material parameters with a
-                            // semantic or targeted via a source (for animation) are not
-                            // targetable for material animations.  Is this too strict?
-                            //
-                            // https://github.com/KhronosGroup/glTF/issues/142
+                        // GLTF_SPEC: In this implementation, material parameters with a
+                        // semantic or targeted via a source (for animation) are not
+                        // targetable for material animations.  Is this too strict?
+                        //
+                        // https://github.com/KhronosGroup/glTF/issues/142
 
-                            if (defined(instanceParameters[parameterName])) {
-                                // Parameter overrides by the instance technique
-                                var uv = gltfUniformFunctions[parameter.type](instanceParameters[parameterName], model);
-                                uniformMap[name] = uv.func;
-                                uniformValues[parameterName] = uv;
-                            } else if (defined(parameter.semantic)) {
-                                if (parameter.semantic !== 'JOINT_MATRIX') {
-                                    // Map glTF semantic to Cesium automatic uniform
-                                    uniformMap[name] = gltfSemanticUniforms[parameter.semantic](context.uniformState);
-                                } else {
-                                    jointMatrixUniformName = name;
-                                }
-                            } else if (defined(parameter.source)) {
-                                uniformMap[name] = getUniformFunctionFromSource(parameter.source, model);
-                            } else if (defined(parameter.value)) {
-                                // Technique value that isn't overridden by a material
-                                var uv2 = gltfUniformFunctions[parameter.type](parameter.value, model);
-                                uniformMap[name] = uv2.func;
-                                uniformValues[parameterName] = uv2;
+                        if (defined(instanceParameters[parameterName])) {
+                            // Parameter overrides by the instance technique
+                            var uv = gltfUniformFunctions[parameter.type](instanceParameters[parameterName], model);
+                            uniformMap[name] = uv.func;
+                            uniformValues[parameterName] = uv;
+                        } else if (defined(parameter.semantic)) {
+                            if (parameter.semantic !== 'JOINT_MATRIX') {
+                                // Map glTF semantic to Cesium automatic uniform
+                                uniformMap[name] = gltfSemanticUniforms[parameter.semantic](context.uniformState);
+                            } else {
+                                jointMatrixUniformName = name;
                             }
+                        } else if (defined(parameter.source)) {
+                            uniformMap[name] = getUniformFunctionFromSource(parameter.source, model);
+                        } else if (defined(parameter.value)) {
+                            // Technique value that isn't overridden by a material
+                            var uv2 = gltfUniformFunctions[parameter.type](parameter.value, model);
+                            uniformMap[name] = uv2.func;
+                            uniformValues[parameterName] = uv2;
                         }
                     }
                 }
@@ -2006,6 +2002,9 @@ define([
 
             for (var m = 0; m < inverseBindMatricesLength; ++m) {
                 // [joint-matrix] = [node-to-root^-1][joint-to-root][inverse-bind][bind-shape]
+                if (!defined(computedJointMatrices[m])) {
+                    computedJointMatrices[m] = new Matrix4();
+                }
                 computedJointMatrices[m] = Matrix4.multiplyTransformation(scratchObjectSpace, joints[m].transformToRoot, computedJointMatrices[m]);
                 computedJointMatrices[m] = Matrix4.multiplyTransformation(computedJointMatrices[m], inverseBindMatrices[m], computedJointMatrices[m]);
                 if (defined(bindShapeMatrix)) {
@@ -2179,7 +2178,7 @@ define([
         }
 
         // We don't check show at the top of the function since we
-        // want to be able to progressively load models when they are shown,
+        // want to be able to progressively load models when they are not shown,
         // and then have them visibile immediately when show is set to true.
         if (show) {
 // PERFORMANCE_IDEA: This is terriable

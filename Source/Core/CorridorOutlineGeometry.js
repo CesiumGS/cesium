@@ -313,7 +313,7 @@ define([
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Number} [options.height=0] The distance between the ellipsoid surface and the positions.
      * @param {Number} [options.extrudedHeight] The distance between the ellipsoid surface and the extrusion.
-     * @param {Boolean} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.
+     * @param {CornerType} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.
      *
      * @see CorridorOutlineGeometry.createGeometry
      *

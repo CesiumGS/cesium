@@ -14,7 +14,7 @@ define([
     "use strict";
 
     /**
-     * A view model that represents each item in the BaseLayerPicker.
+     * A view model that represents each item in the {@link BaseLayerPicker}.
      *
      * @alias ProviderViewModel
      * @constructor
@@ -23,10 +23,12 @@ define([
      * @param {String} options.name The name of the layer.
      * @param {String} options.tooltip The tooltip to show when the item is moused over.
      * @param {String} options.iconUrl An icon representing the layer.
-     * @param {Function|Command} options.creationFunction A function or Command which creates the ImageryProvider or array of ImageryProviders to be added to the layers collection.
+     * @param {ProviderViewModel~CreationFunction|Command} options.creationFunction A function or Command
+     *        that creates one or more providers which will be added to the globe when this item is selected.
      *
      * @see BaseLayerPicker
      * @see ImageryProvider
+     * @see TerrainProvider
      */
     var ProviderViewModel = function(options) {
         //>>includeStart('debug', pragmas.debug);
@@ -74,8 +76,8 @@ define([
 
     defineProperties(ProviderViewModel.prototype, {
         /**
-         * Gets the Command called to create the imagery provider or array of
-         * imagery providers to be added to the bottom of the layer collection.
+         * Gets the Command that creates one or more providers which will be added to
+         * the globe when this item is selected.
          * @memberof ProviderViewModel.prototype
          *
          * @type {Command}
@@ -86,6 +88,14 @@ define([
             }
         }
     });
+
+    /**
+     * A function which creates one or more providers.
+     * @callback ProviderViewModel~CreationFunction
+     * @returns {ImageryProvider|TerrainProvider|ImageryProvider[]|TerrainProvider[]}
+     *          The ImageryProvider or TerrainProvider, or array of providers, to be added
+     *          to the globe.
+     */
 
     return ProviderViewModel;
 });

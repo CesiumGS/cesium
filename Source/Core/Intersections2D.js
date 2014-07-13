@@ -11,7 +11,9 @@ define([
 
     /**
      * Contains functions for operating on 2D triangles.
-     * @exports Intersections2D
+     *
+     * @namespace
+     * @alias Intersections2D
      */
     var Intersections2D = {};
 
@@ -38,7 +40,7 @@ define([
      *                     vertex to the second one.
      *
      * @example
-     * var result = Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, false, 0.2, 0.6, 0.4);
+     * var result = Cesium.Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, false, 0.2, 0.6, 0.4);
      * // result === [2, 0, -1, 1, 0, 0.25, -1, 1, 2, 0.5]
      */
     Intersections2D.clipTriangleAtAxisAlignedThreshold = function(threshold, keepAbove, u0, u1, u2, result) {
@@ -228,8 +230,8 @@ define([
      * @returns {Cartesian3} The barycentric coordinates of the position within the triangle.
      *
      * @example
-     * var result = Intersections2D.computeBarycentricCoordinates(0.0, 0.0, 0.0, 1.0, -1, -0.5, 1, -0.5);
-     * // result === new Cartesian3(1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0);
+     * var result = Cesium.Intersections2D.computeBarycentricCoordinates(0.0, 0.0, 0.0, 1.0, -1, -0.5, 1, -0.5);
+     * // result === new Cesium.Cartesian3(1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0);
      */
     Intersections2D.computeBarycentricCoordinates = function(x, y, x1, y1, x2, y2, x3, y3, result) {
         //>>includeStart('debug', pragmas.debug);

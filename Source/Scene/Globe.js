@@ -39,10 +39,11 @@ define([
         '../Shaders/GlobeVSPole',
         '../ThirdParty/when',
         './DepthFunction',
-        './GlobeSurface',
         './GlobeSurfaceShaderSet',
+        './GlobeSurfaceTileProvider',
         './ImageryLayerCollection',
         './Pass',
+        './QuadtreePrimitive',
         './SceneMode',
         './terrainAttributeLocations'
     ], function(
@@ -85,10 +86,11 @@ define([
         GlobeVSPole,
         when,
         DepthFunction,
-        GlobeSurface,
         GlobeSurfaceShaderSet,
+        GlobeSurfaceTileProvider,
         ImageryLayerCollection,
         Pass,
+        QuadtreePrimitive,
         SceneMode,
         terrainAttributeLocations) {
     "use strict";
@@ -116,14 +118,18 @@ define([
 
         this._ellipsoid = ellipsoid;
         this._imageryLayerCollection = imageryLayerCollection;
-        this._surface = new GlobeSurface({
-            terrainProvider : terrainProvider,
-            imageryLayerCollection : imageryLayerCollection
+
+        this._surfaceShaderSet = new GlobeSurfaceShaderSet();
+
+        this._surface = new QuadtreePrimitive({
+            tileProvider : new GlobeSurfaceTileProvider({
+                terrainProvider : terrainProvider,
+                imageryLayers : imageryLayerCollection,
+                surfaceShaderSet : this._surfaceShaderSet
+            })
         });
 
         this._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.minimumRadius), Cartesian3.ZERO);
-
-        this._surfaceShaderSet = new GlobeSurfaceShaderSet(terrainAttributeLocations);
 
         this._rsColor = undefined;
         this._rsColorWithoutDepthTest = undefined;
@@ -346,27 +352,30 @@ define([
         return depthQuadScratch;
     }
 
+    var rightScratch = new Cartesian3();
+    var upScratch = new Cartesian3();
+    var negativeZ = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
     function computePoleQuad(globe, frameState, maxLat, maxGivenLat, viewProjMatrix, viewportTransformation) {
         var pt1 = globe._ellipsoid.cartographicToCartesian(new Cartographic(0.0, maxGivenLat));
         var pt2 = globe._ellipsoid.cartographicToCartesian(new Cartographic(Math.PI, maxGivenLat));
-        var radius = Cartesian3.magnitude(Cartesian3.subtract(pt1, pt2)) * 0.5;
+        var radius = Cartesian3.magnitude(Cartesian3.subtract(pt1, pt2, rightScratch), rightScratch) * 0.5;
 
         var center = globe._ellipsoid.cartographicToCartesian(new Cartographic(0.0, maxLat));
 
         var right;
         var dir = frameState.camera.direction;
-        if (1.0 - Cartesian3.dot(Cartesian3.negate(Cartesian3.UNIT_Z), dir) < CesiumMath.EPSILON6) {
+        if (1.0 - Cartesian3.dot(negativeZ, dir) < CesiumMath.EPSILON6) {
             right = Cartesian3.UNIT_X;
         } else {
-            right = Cartesian3.normalize(Cartesian3.cross(dir, Cartesian3.UNIT_Z));
+            right = Cartesian3.normalize(Cartesian3.cross(dir, Cartesian3.UNIT_Z, rightScratch), rightScratch);
         }
 
-        var screenRight = Cartesian3.add(center, Cartesian3.multiplyByScalar(right, radius));
-        var screenUp = Cartesian3.add(center, Cartesian3.multiplyByScalar(Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, right)), radius));
+        var screenRight = Cartesian3.add(center, Cartesian3.multiplyByScalar(right, radius, rightScratch), rightScratch);
+        var screenUp = Cartesian3.add(center, Cartesian3.multiplyByScalar(Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, right, upScratch), upScratch), radius, upScratch), upScratch);
 
-        Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, center, center);
-        Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenRight, screenRight);
-        Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenUp, screenUp);
+        Transforms.pointToGLWindowCoordinates(viewProjMatrix, viewportTransformation, center, center);
+        Transforms.pointToGLWindowCoordinates(viewProjMatrix, viewportTransformation, screenRight, screenRight);
+        Transforms.pointToGLWindowCoordinates(viewProjMatrix, viewportTransformation, screenUp, screenUp);
 
         var halfWidth = Math.floor(Math.max(Cartesian3.distance(screenUp, center), Cartesian3.distance(screenRight, center)));
         var halfHeight = halfWidth;
@@ -383,7 +392,7 @@ define([
     var polePositionsScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(8) : [];
 
     function fillPoles(globe, context, frameState) {
-        var terrainProvider = globe._surface._terrainProvider;
+        var terrainProvider = globe._surface.tileProvider.terrainProvider;
         if (frameState.mode !== SceneMode.SCENE3D) {
             return;
         }
@@ -418,7 +427,7 @@ define([
                 CesiumMath.PI_OVER_TWO
             );
             boundingVolume = BoundingSphere.fromRectangle3D(rectangle, globe._ellipsoid);
-            frustumCull = frameState.cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE;
+            frustumCull = frameState.cullingVolume.computeVisibility(boundingVolume) === Intersect.OUTSIDE;
             occludeePoint = Occluder.computeOccludeePointFromRectangle(rectangle, globe._ellipsoid);
             occluded = (occludeePoint && !occluder.isPointVisible(occludeePoint, 0.0)) || !occluder.isBoundingSphereVisible(boundingVolume);
 
@@ -467,7 +476,7 @@ define([
                 terrainMaxRectangle.south
             );
             boundingVolume = BoundingSphere.fromRectangle3D(rectangle, globe._ellipsoid);
-            frustumCull = frameState.cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE;
+            frustumCull = frameState.cullingVolume.computeVisibility(boundingVolume) === Intersect.OUTSIDE;
             occludeePoint = Occluder.computeOccludeePointFromRectangle(rectangle, globe._ellipsoid);
             occluded = (occludeePoint && !occluder.isPointVisible(occludeePoint)) || !occluder.isBoundingSphereVisible(boundingVolume);
 
@@ -646,8 +655,8 @@ define([
                 });
         }
 
-        if (this._surface._terrainProvider.ready &&
-            this._surface._terrainProvider.hasWaterMask() &&
+        if (this._surface.tileProvider.ready &&
+            this._surface.tileProvider.terrainProvider.hasWaterMask() &&
             this.oceanNormalMapUrl !== this._lastOceanNormalMapUrl) {
 
             this._lastOceanNormalMapUrl = this.oceanNormalMapUrl;
@@ -662,12 +671,11 @@ define([
         }
 
         // Initial compile or re-compile if uber-shader parameters changed
-        var hasWaterMask = this._surface._terrainProvider.ready && this._surface._terrainProvider.hasWaterMask();
+        var hasWaterMask = this._surface.tileProvider.ready && this._surface.tileProvider.terrainProvider.hasWaterMask();
         var hasWaterMaskChanged = this._hasWaterMask !== hasWaterMask;
         var hasEnableLightingChanged = this._enableLighting !== this.enableLighting;
 
-        if (!defined(this._surfaceShaderSet) ||
-            !defined(this._northPoleCommand.shaderProgram) ||
+        if (!defined(this._northPoleCommand.shaderProgram) ||
             !defined(this._southPoleCommand.shaderProgram) ||
             modeChanged ||
             hasWaterMaskChanged ||
@@ -766,19 +774,18 @@ define([
                 this._zoomedOutOceanSpecularIntensity = 0.0;
             }
 
-            this._lightingFadeDistance.x = this.lightingFadeOutDistance;
-            this._lightingFadeDistance.y = this.lightingFadeInDistance;
+            var surface = this._surface;
+            surface.maximumScreenSpaceError = this.maximumScreenSpaceError;
+            surface.tileCacheSize = this.tileCacheSize;
 
-            this._surface._maximumScreenSpaceError = this.maximumScreenSpaceError;
-            this._surface._tileCacheSize = this.tileCacheSize;
-            this._surface.terrainProvider = this.terrainProvider;
-            this._surface.update(context,
-                frameState,
-                commandList,
-                this._drawUniforms,
-                this._surfaceShaderSet,
-                this._rsColor,
-                projection);
+            var tileProvider = surface.tileProvider;
+            tileProvider.terrainProvider = this.terrainProvider;
+            tileProvider.lightingFadeOutDistance = this.lightingFadeOutDistance;
+            tileProvider.lightingFadeInDistance = this.lightingFadeInDistance;
+            tileProvider.zoomedOutOceanSpecularIntensity = this._zoomedOutOceanSpecularIntensity;
+            tileProvider.oceanNormalMap = this._oceanNormalMap;
+
+            this._surface.update(context, frameState, commandList);
 
             // render depth plane
             if (mode === SceneMode.SCENE3D || mode === SceneMode.COLUMBUS_VIEW) {

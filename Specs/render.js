@@ -26,7 +26,7 @@ define([
             var command = commands[i];
             var boundingVolume = command.boundingVolume;
             if (defined(boundingVolume)) {
-                if (cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE ||
+                if (cullingVolume.computeVisibility(boundingVolume) === Intersect.OUTSIDE ||
                         (defined(occluder) && !occluder.isBoundingSphereVisible(boundingVolume))) {
                     continue;
                 }

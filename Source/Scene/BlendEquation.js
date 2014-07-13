@@ -1,11 +1,15 @@
 /*global define*/
-define(function() {
+define([
+        '../Core/freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
      * Determines how two pixels' values are combined.
      *
-     * @exports BlendEquation
+     * @namespace
+     * @alias BlendEquation
      */
     var BlendEquation = {
         /**
@@ -35,5 +39,5 @@ define(function() {
         // No min and max like in ColladaFX GLES2 profile
     };
 
-    return BlendEquation;
+    return freezeObject(BlendEquation);
 });

@@ -22,7 +22,6 @@ defineSuite([
         'Specs/createScene',
         'Specs/destroyContext',
         'Specs/destroyScene',
-        'Specs/frameState',
         'Specs/pick',
         'Specs/render'
     ], function(
@@ -48,13 +47,14 @@ defineSuite([
         createScene,
         destroyContext,
         destroyScene,
-        frameState,
         pick,
         render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
+    var frameState;
+    var mockScene;
     var billboards;
 
     var greenImage;
@@ -63,9 +63,16 @@ defineSuite([
 
     beforeAll(function() {
         context = createContext();
+        frameState = createFrameState();
 
-        var us = context.uniformState;
-        us.update(context, createFrameState(createCamera()));
+        context.uniformState.update(context, frameState);
+
+        mockScene = {
+            canvas: context._canvas,
+            context : context,
+            camera : frameState.camera,
+            frameState : frameState
+        };
     });
 
     afterAll(function() {
@@ -228,19 +235,25 @@ defineSuite([
     });
 
     it('disable billboard scaleByDistance', function() {
-        var b = billboards.add();
+        var b = billboards.add({
+            scaleByDistance : new NearFarScalar(1.0, 3.0, 1.0e6, 0.0)
+        });
         b.scaleByDistance = undefined;
         expect(b.scaleByDistance).not.toBeDefined();
     });
 
     it('disable billboard translucencyByDistance', function() {
-        var b = billboards.add();
+        var b = billboards.add({
+            translucencyByDistance : new NearFarScalar(1.0, 1.0, 1.0e6, 0.0)
+        });
         b.translucencyByDistance = undefined;
         expect(b.translucencyByDistance).not.toBeDefined();
     });
 
     it('disable billboard pixelOffsetScaleByDistance', function() {
-        var b = billboards.add();
+        var b = billboards.add({
+            pixelOffsetScaleByDistance : new NearFarScalar(1.0, 1.0, 1.0e6, 0.0)
+        });
         b.pixelOffsetScaleByDistance = undefined;
         expect(b.pixelOffsetScaleByDistance).not.toBeDefined();
     });
@@ -767,26 +780,6 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 255, 255]);
     });
 
-    it('renders with a different buffer usage', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [greenImage]);
-        billboards.add({
-            position : Cartesian3.ZERO,
-            imageIndex : 0
-        });
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, billboards);
-        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, billboards);
-        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
-    });
-
     it('renders using billboard show property', function() {
         billboards.textureAtlas = createTextureAtlas(context, [greenImage, blueImage]);
         var greenBillboard = billboards.add({
@@ -1000,30 +993,19 @@ defineSuite([
     });
 
     it('renders bounding volume with debugShowBoundingVolume', function() {
-        var scene = createScene();
-        var b = scene.primitives.add(new BillboardCollection({
-            debugShowBoundingVolume : true
-        }));
-        b.textureAtlas = createTextureAtlas(context, [greenImage]);
-        b.add({
+        billboards.textureAtlas = createTextureAtlas(context, [greenImage]);
+        billboards.add({
             position : Cartesian3.ZERO,
-            imageIndex : 0
+            imageIndex : 0,
+            scale : 0.5 // bring bounding volume in view
         });
+        billboards.debugShowBoundingVolume = true;
 
-        var camera = scene.camera;
-        camera.position = new Cartesian3(2.0, 0.0, 0.0);
-        camera.direction = Cartesian3.negate(Cartesian3.UNIT_X);
-        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        scene.initializeFrame();
-        scene.render();
-        var pixels = scene.context.readPixels();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).toEqual(0);
-        expect(pixels[2]).toEqual(0);
-        expect(pixels[3]).toEqual(255);
-
-        destroyScene(scene);
+        render(context, frameState, billboards);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('updates 10% of billboards', function() {
@@ -1169,8 +1151,7 @@ defineSuite([
             position : Cartesian3.ZERO
         });
         billboards.update(context, frameState, []);
-        var fakeScene = {context : context, frameState : frameState, canvas: context._canvas};
-        expect(b.computeScreenSpacePosition(fakeScene)).toEqual(new Cartesian2(0.5, 0.5));
+        expect(b.computeScreenSpacePosition(mockScene)).toEqual(new Cartesian2(0.5, 0.5));
     });
 
     it('computes screen space position (2)', function() {
@@ -1180,19 +1161,17 @@ defineSuite([
             pixelOffset : new Cartesian2(1.0, 2.0)
         });
         billboards.update(context, frameState, []);
-        var fakeScene = {context : context, frameState : frameState, canvas: context._canvas};
-        expect(b.computeScreenSpacePosition(fakeScene)).toEqual(new Cartesian2(1.5, 2.5));
+        expect(b.computeScreenSpacePosition(mockScene)).toEqual(new Cartesian2(1.5, 2.5));
     });
 
     it('computes screen space position (3)', function() {
         billboards.textureAtlas = createTextureAtlas(context, [whiteImage]);
         var b = billboards.add({
             position : Cartesian3.ZERO,
-            eyeOffset : new Cartesian3(5.0, 5.0, 0.0)
+            eyeOffset : new Cartesian3(5.0, -5.0, 0.0)
         });
         billboards.update(context, frameState, []);
-        var fakeScene = {context : context, frameState : frameState, canvas: context._canvas};
-        var p = b.computeScreenSpacePosition(fakeScene);
+        var p = b.computeScreenSpacePosition(mockScene);
         expect(p.x).toBeGreaterThan(0.5);
         expect(p.y).toBeGreaterThan(0.5);
     });
@@ -1202,9 +1181,8 @@ defineSuite([
             position : Cartesian3.ZERO
         });
         billboards.remove(b);
-        var fakeScene = {context : context, frameState : frameState, canvas: context._canvas};
         expect(function() {
-            b.computeScreenSpacePosition(fakeScene);
+            b.computeScreenSpacePosition(mockScene);
         }).toThrowDeveloperError();
     });
 
@@ -1366,5 +1344,42 @@ defineSuite([
         bs.center = new Cartesian3(0.0, bs.center.x, bs.center.y);
         expect(bs.center).toEqualEpsilon(actual.center, CesiumMath.EPSILON8);
         expect(bs.radius).toBeLessThan(actual.radius);
+    });
+
+    it('computes bounding sphere with pixel offset', function() {
+        var atlas = createTextureAtlas(context, [greenImage]);
+        billboards.textureAtlas = atlas;
+
+        var projection = frameState.mapProjection;
+        var ellipsoid = projection.ellipsoid;
+
+        var one = billboards.add({
+            imageIndex : 0,
+            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
+            pixelOffset : new Cartesian2(0.0, 200.0)
+        });
+        var two = billboards.add({
+            imageIndex : 0,
+            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0)),
+            pixelOffset : new Cartesian2(0.0, 200.0)
+        });
+
+        var commandList = [];
+        billboards.update(context, frameState, commandList);
+        var actual = commandList[0].boundingVolume;
+
+        var positions = [one.position, two.position];
+        var bs = BoundingSphere.fromPoints(positions);
+
+        var dimensions = new Cartesian2(1.0, 1.0);
+        var diff = Cartesian3.subtract(actual.center, frameState.camera.position, new Cartesian3());
+        var vectorProjection = Cartesian3.multiplyByScalar(frameState.camera.direction, Cartesian3.dot(diff, frameState.camera.direction), new Cartesian3());
+        var distance = Math.max(0.0, Cartesian3.magnitude(vectorProjection) - bs.radius);
+
+        var pixelSize = frameState.camera.frustum.getPixelSize(dimensions, distance);
+        bs.radius += pixelSize.y * 0.25 * Math.max(greenImage.width, greenImage.height) + pixelSize.y * one.pixelOffset.y;
+
+        expect(actual.center).toEqual(bs.center);
+        expect(actual.radius).toBeGreaterThan(bs.radius);
     });
 }, 'WebGL');

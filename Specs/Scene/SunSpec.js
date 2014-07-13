@@ -37,7 +37,7 @@ defineSuite([
         var camera = scene.camera;
 
         var sunPosition = us.sunPositionWC;
-        var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition), 1e8);
+        var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition, new Cartesian3()), 1e8, new Cartesian3());
         camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
         scene.initializeFrame();
@@ -56,7 +56,7 @@ defineSuite([
         var camera = scene.camera;
 
         var sunPosition = us.sunPositionColumbusView;
-        var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition), 1e8);
+        var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition, new Cartesian3()), 1e8, new Cartesian3());
         camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
         scene.initializeFrame();
@@ -77,7 +77,7 @@ defineSuite([
         us.update(context, frameState);
 
         var sunPosition = us.sunPositionWC;
-        var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition), 1e8);
+        var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition, new Cartesian3()), 1e8, new Cartesian3());
         frameState.camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
         us.update(context, frameState);
@@ -101,7 +101,7 @@ defineSuite([
         us.update(context, frameState);
 
         var sunPosition = us.sunPositionWC;
-        var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition), 1e8);
+        var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition, new Cartesian3()), 1e8, new Cartesian3());
         frameState.camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
         us.update(context, frameState);
@@ -125,7 +125,7 @@ defineSuite([
         us.update(context, frameState);
 
         var sunPosition = us.sunPositionWC;
-        var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition), 1e8);
+        var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition, new Cartesian3()), 1e8, new Cartesian3());
         frameState.camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
         us.update(context, frameState);
@@ -154,7 +154,7 @@ defineSuite([
         var camera = scene.camera;
 
         var sunPosition = us.sunPositionWC;
-        var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition), 1e8);
+        var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition, new Cartesian3()), 1e8, new Cartesian3());
         camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
         scene.initializeFrame();

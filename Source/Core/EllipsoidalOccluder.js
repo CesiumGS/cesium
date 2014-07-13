@@ -37,6 +37,8 @@ define([
      * var cameraPosition = new Cesium.Cartesian3(5.0, 6.0, 7.0);
      * var occluderEllipsoid = new Cesium.Ellipsoid(1.0, 1.1, 0.9);
      * var occluder = new Cesium.EllipsoidalOccluder(occluderEllipsoid, cameraPosition);
+     *
+     * @private
      */
     var EllipsoidalOccluder = function(ellipsoid, cameraPosition) {
         //>>includeStart('debug', pragmas.debug);
@@ -163,6 +165,10 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
         var ellipsoid = this._ellipsoid;
         var scaledSpaceDirectionToPoint = computeScaledSpaceDirectionToPoint(ellipsoid, directionToPoint);
         var resultMagnitude = 0.0;
@@ -208,6 +214,10 @@ define([
             throw new DeveloperError('stride is required');
         }
         //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
 
         center = defaultValue(center, Cartesian3.ZERO);
         var ellipsoid = this._ellipsoid;
@@ -273,7 +283,7 @@ define([
         magnitude = Math.max(1.0, magnitude);
 
         var cosAlpha = Cartesian3.dot(direction, scaledSpaceDirectionToPoint);
-        var sinAlpha = Cartesian3.magnitude(Cartesian3.cross(direction, scaledSpaceDirectionToPoint));
+        var sinAlpha = Cartesian3.magnitude(Cartesian3.cross(direction, scaledSpaceDirectionToPoint, direction));
         var cosBeta = 1.0 / magnitude;
         var sinBeta = Math.sqrt(magnitudeSquared - 1.0) * cosBeta;
 

@@ -60,7 +60,7 @@ define([
         var end = ellipsoid.cartesianToCartographic(last, carto2);
 
         ellipsoidGeodesic.setEndPoints(start, end);
-        var surfaceDistanceBetweenPoints = ellipsoidGeodesic.surfaceDistance / (numPoints);
+        var surfaceDistanceBetweenPoints = ellipsoidGeodesic.surfaceDistance / numPoints;
 
         var index = 0;
         start.height = 0;
@@ -147,11 +147,11 @@ define([
                             Cartesian3.negate(offset, offset);
                         }
 
-                        cartesians.push(Cartesian3.add(intersection, offset));
+                        cartesians.push(Cartesian3.add(intersection, offset, new Cartesian3()));
                         segments.push(count + 1);
 
                         Cartesian3.negate(offset, offset);
-                        cartesians.push(Cartesian3.add(intersection, offset));
+                        cartesians.push(Cartesian3.add(intersection, offset, new Cartesian3()));
                         count = 1;
                     }
                 }

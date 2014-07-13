@@ -31,7 +31,7 @@ define([
      *     dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0)
      *   }),
      *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-     *     Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883), new Cesium.Cartesian3(0.0, 0.0, 1000000.0)),
+     *     Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 1000000.0), new Cesium.Matrix4()),
      *   id : 'box',
      *   attributes : {
      *     show : new Cesium.ShowGeometryInstanceAttribute(false)
