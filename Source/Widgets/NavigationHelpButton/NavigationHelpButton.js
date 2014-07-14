@@ -21,26 +21,6 @@ define([
         NavigationHelpButtonViewModel) {
     "use strict";
 
-    function addListeners(viewModel, showByDefault) {
-        var touchListener = function(){
-            viewModel._hasTouchscreen = true;
-            viewModel._touch = true;
-            viewModel.showInstructions = showByDefault;
-            document.removeEventListener('touchstart', touchListener, false);
-            document.removeEventListener('mousemove', mouseMoveListener, false);
-        };
-
-        var mouseMoveListener = function() {
-            if (!viewModel._hasTouchscreen) {
-                viewModel._touch = false;
-            }
-            document.removeEventListener('mousemove', mouseMoveListener, false);
-        };
-
-        document.addEventListener('touchstart', touchListener, false);
-        document.addEventListener('mousemove', mouseMoveListener, false);
-    }
-
     /**
      * <p>The NavigationHelpButton is a single button widget for displaying instructions for
      * navigating the globe with the mouse.</p><p style="clear: both;"></p><br/>
@@ -96,8 +76,34 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
         instructionContainer.setAttribute('data-bind', 'css: { "cesium-navigation-help-visible" : showInstructions}');
         wrapper.appendChild(instructionContainer);
 
+        var mouseButton = document.createElement('button');
+        mouseButton.className = 'cesium-navigation-button cesium-navigation-button-left';
+        mouseButton.setAttribute('data-bind', 'click: showClick, css: {"cesium-navigation-button-selected": !_touch, "cesium-navigation-button-unselected": _touch}');
+        var mouseIcon = document.createElement('img');
+        mouseIcon.src = buildModuleUrl('Widgets/Images/NavigationHelp/Mouse.svg');
+        mouseIcon.className = 'cesium-navigation-button-icon';
+        mouseIcon.style.width = '25px';
+        mouseIcon.style.height = '25px';
+        mouseButton.appendChild(mouseIcon);
+        mouseButton.appendChild(document.createTextNode('Mouse'));
+
+        var touchButton = document.createElement('button');
+        touchButton.className = 'cesium-navigation-button cesium-navigation-button-right';
+        touchButton.setAttribute('data-bind', 'click: showTouch, css: {"cesium-navigation-button-selected": _touch, "cesium-navigation-button-unselected": !_touch}');
+        var touchIcon = document.createElement('img');
+        touchIcon.src = buildModuleUrl('Widgets/Images/NavigationHelp/Touch.svg');
+        touchIcon.className = 'cesium-navigation-button-icon';
+        touchIcon.style.width = '25px';
+        touchIcon.style.height = '25px';
+        touchButton.appendChild(touchIcon);
+        touchButton.appendChild(document.createTextNode('Touch'));
+
+        instructionContainer.appendChild(mouseButton);
+        instructionContainer.appendChild(touchButton);
+
+
         var clickInstructions = document.createElement('div');
-        clickInstructions.className = 'cesium-click-navigation-help';
+        clickInstructions.className = 'cesium-click-navigation-help cesium-navigation-help-instructions';
         clickInstructions.setAttribute('data-bind', 'css: { "cesium-click-navigation-help-visible" : !_touch}');
         clickInstructions.innerHTML = '\
             <table>\
@@ -129,7 +135,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
         instructionContainer.appendChild(clickInstructions);
 
         var touchInstructions = document.createElement('div');
-        touchInstructions.className = 'cesium-touch-navigation-help';
+        touchInstructions.className = 'cesium-touch-navigation-help cesium-navigation-help-instructions';
         touchInstructions.setAttribute('data-bind', 'css: { "cesium-touch-navigation-help-visible" : _touch}');
         touchInstructions.innerHTML = '\
             <table>\
@@ -166,8 +172,6 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
         instructionContainer.appendChild(touchInstructions);
 
         knockout.applyBindings(viewModel, wrapper);
-
-        addListeners(viewModel, showInsructionsDefault);
 
         this._container = container;
         this._viewModel = viewModel;
