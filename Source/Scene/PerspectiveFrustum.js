@@ -95,7 +95,7 @@ define([
 
             frustum._aspectRatio = frustum.aspectRatio;
             frustum._fov = frustum.fov;
-            frustum._fovy = (frustum.aspectRatio <= 1) ? frustum.fov : (frustum.fov / frustum.aspectRatio);
+            frustum._fovy = (frustum.aspectRatio <= 1) ? frustum.fov : Math.atan(Math.tan(frustum.fov * 0.5) / frustum.aspectRatio) * 2.0;
             frustum._near = frustum.near;
             frustum._far = frustum.far;
 
