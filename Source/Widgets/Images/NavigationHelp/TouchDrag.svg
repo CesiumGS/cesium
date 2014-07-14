@@ -13,10 +13,9 @@
    id="Capa_1"
    x="0px"
    y="0px"
-   width="76.665px"
-   height="133.417px"
-   viewBox="0 0 76.665 133.417"
-   style="enable-background:new 0 0 76.665 133.417;"
+   width="76.664284"
+   height="133.41701"
+   viewBox="0 0 76.664283 133.417"
    xml:space="preserve"
    inkscape:version="0.48.4 r9939"
    sodipodi:docname="TouchDrag.svg"><metadata
@@ -36,19 +35,25 @@
    inkscape:window-height="780"
    id="namedview3464"
    showgrid="false"
-   inkscape:zoom="1.76889"
-   inkscape:cx="-0.077143381"
-   inkscape:cy="94.239297"
+   inkscape:zoom="1.7688899"
+   inkscape:cx="-0.077942171"
+   inkscape:cy="94.239298"
    inkscape:window-x="161"
    inkscape:window-y="225"
    inkscape:window-maximized="0"
-   inkscape:current-layer="g3428" />
+   inkscape:current-layer="g3428"
+   fit-margin-top="0"
+   fit-margin-left="0"
+   fit-margin-right="0"
+   fit-margin-bottom="0" />
 <g
-   id="g3428">
+   id="g3428"
+   transform="translate(-7.9878665e-4,-2.9265169e-6)">
 	<path
-   style="fill-rule:evenodd;clip-rule:evenodd;fill:#ffffff;fill-opacity:1"
-   d="M18.653,0C12.359,0,7.258,5.102,7.258,11.395   c0,6.293,5.102,11.395,11.396,11.395c6.293,0,11.395-5.102,11.395-11.395C30.048,5.102,24.946,0,18.653,0z M18.653,20.43   c-4.989,0-9.036-4.046-9.036-9.036c0-4.989,4.047-9.035,9.036-9.035s9.035,4.046,9.035,9.035   C27.688,16.384,23.643,20.43,18.653,20.43z"
-   id="path3430" />
+   style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd"
+   d="M 18.653,0 C 12.359,0 7.258,5.102 7.258,11.395 c 0,6.293 5.102,11.395 11.396,11.395 6.293,0 11.395,-5.102 11.395,-11.395 C 30.048,5.102 24.946,0 18.653,0 z m 0,20.43 c -4.989,0 -9.036,-4.046 -9.036,-9.036 0,-4.989 4.047,-9.035 9.036,-9.035 4.989,0 9.035,4.046 9.035,9.035 0,4.99 -4.045,9.036 -9.035,9.036 z"
+   id="path3430"
+   inkscape:connector-curvature="0" />
 	<path
    d="M 76.151,80.896 C 77.465,66.89 62.145,65.577 62.145,65.577 57.771,52.885 46.39,59.45 46.39,59.45 40.701,46.758 29.322,55.511 29.322,55.511 27.912,55.092 25.613,11.796 24.414,11.604 23.44,7.068 14.011,-1.728 12.511,14.772 c 0,36.5 -1.135,47.304 -1.135,47.304 C 9.188,67.328 5.31,80.458 5.31,80.458 -3.006,89.649 0.933,96.214 0.933,96.214 c 7.002,12.255 21.385,28.449 21.385,28.449 6.129,5.252 2.627,8.316 2.627,8.316 l 42.455,0.438 2.334,-7.878 c 9.628,-18.382 6.417,-44.643 6.417,-44.643 z"
    id="path3432"
@@ -62,48 +67,63 @@
    sodipodi:nodetypes="cccccccccccccccccccccsscccccccccccccccccccccccccccccccc"
    style="fill:#66ccff;fill-opacity:1" /></g>
 <g
-   id="g3434">
+   id="g3434"
+   transform="translate(-7.9878665e-4,-2.9265169e-6)">
 </g>
 <g
-   id="g3436">
+   id="g3436"
+   transform="translate(-7.9878665e-4,-2.9265169e-6)">
 </g>
 <g
-   id="g3438">
+   id="g3438"
+   transform="translate(-7.9878665e-4,-2.9265169e-6)">
 </g>
 <g
-   id="g3440">
+   id="g3440"
+   transform="translate(-7.9878665e-4,-2.9265169e-6)">
 </g>
 <g
-   id="g3442">
+   id="g3442"
+   transform="translate(-7.9878665e-4,-2.9265169e-6)">
 </g>
 <g
-   id="g3444">
+   id="g3444"
+   transform="translate(-7.9878665e-4,-2.9265169e-6)">
 </g>
 <g
-   id="g3446">
+   id="g3446"
+   transform="translate(-7.9878665e-4,-2.9265169e-6)">
 </g>
 <g
-   id="g3448">
+   id="g3448"
+   transform="translate(-7.9878665e-4,-2.9265169e-6)">
 </g>
 <g
-   id="g3450">
+   id="g3450"
+   transform="translate(-7.9878665e-4,-2.9265169e-6)">
 </g>
 <g
-   id="g3452">
+   id="g3452"
+   transform="translate(-7.9878665e-4,-2.9265169e-6)">
 </g>
 <g
-   id="g3454">
+   id="g3454"
+   transform="translate(-7.9878665e-4,-2.9265169e-6)">
 </g>
 <g
-   id="g3456">
+   id="g3456"
+   transform="translate(-7.9878665e-4,-2.9265169e-6)">
 </g>
 <g
-   id="g3458">
+   id="g3458"
+   transform="translate(-7.9878665e-4,-2.9265169e-6)">
 </g>
 <g
-   id="g3460">
+   id="g3460"
+   transform="translate(-7.9878665e-4,-2.9265169e-6)">
 </g>
 <g
-   id="g3462">
+   id="g3462"
+   transform="translate(-7.9878665e-4,-2.9265169e-6)">
 </g>
 </svg>
