@@ -344,7 +344,7 @@ defineSuite([
                     dimensions : new Cartesian3(1000000.0, 1000000.0, 2000000.0)
                 }),
                 modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-                    ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 3000000.0)),
+                    ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 3000000.0), new Matrix4()),
                 id : 'box',
                 attributes : {
                     color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
@@ -423,7 +423,7 @@ defineSuite([
                 }),
                 id: 'cylinder',
                 modelMatrix : Matrix4.multiplyByUniformScale(Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-                        ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-90.0, 45.0))), new Cartesian3(0.0, 0.0, 500000.0)), 90000.0),
+                        ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-90.0, 45.0))), new Cartesian3(0.0, 0.0, 500000.0), new Matrix4()), 90000.0, new Matrix4()),
                 attributes : {
                     color : new ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 0.5)
                 }
@@ -575,7 +575,7 @@ defineSuite([
                 var height = (extrudedHeight - geometryHeight) * 0.5;
                 var transform = Matrix4.multiplyByTranslation(
                         Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
-                        new Cartesian3(0.0, 0.0, height));
+                        new Cartesian3(0.0, 0.0, height), new Matrix4());
                 frameState.camera.setTransform(transform);
                 frameState.camera.rotateDown(CesiumMath.PI);
             };
@@ -601,7 +601,7 @@ defineSuite([
                     radii : new Cartesian3(1000000.0, 1000000.0, 500000.0)
                 }),
                 modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-                    ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20))), new Cartesian3(0.0, 0.0, 1000000.0)),
+                    ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20))), new Cartesian3(0.0, 0.0, 1000000.0), new Matrix4()),
                 id : 'ellipsoid',
                 attributes : {
                     color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
@@ -639,7 +639,7 @@ defineSuite([
                     radius : 1000000.0
                 }),
                 modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-                    ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20))), new Cartesian3(0.0, 0.0, 1000000.0)),
+                    ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20))), new Cartesian3(0.0, 0.0, 1000000.0), new Matrix4()),
                 id : 'sphere',
                 attributes : {
                     color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
@@ -997,7 +997,7 @@ defineSuite([
                 var height = (extrudedHeight - geometryHeight) * 0.5;
                 var transform = Matrix4.multiplyByTranslation(
                         Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
-                        new Cartesian3(0.0, 0.0, height));
+                        new Cartesian3(0.0, 0.0, height), new Matrix4());
                 frameState.camera.setTransform(transform);
                 frameState.camera.rotateDown(CesiumMath.PI);
             };
@@ -1264,7 +1264,7 @@ defineSuite([
                 var height = (extrudedHeight - geometryHeight) * 0.5;
                 var transform = Matrix4.multiplyByTranslation(
                         Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
-                        new Cartesian3(0.0, 0.0, height));
+                        new Cartesian3(0.0, 0.0, height), new Matrix4());
                 frameState.camera.setTransform(transform);
                 frameState.camera.rotateDown(CesiumMath.PI);
             };
@@ -1361,7 +1361,7 @@ defineSuite([
                 var height = geometryHeight * 0.5;
                 var transform = Matrix4.multiplyByTranslation(
                         Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
-                        new Cartesian3(0.0, 0.0, height));
+                        new Cartesian3(0.0, 0.0, height), new Matrix4());
                 frameState.camera.setTransform(transform);
                 frameState.camera.rotateDown(CesiumMath.PI);
             };
@@ -1525,7 +1525,8 @@ defineSuite([
                         Cartographic.fromDegrees(5.0, 0.0)
                     ]),
                     width : 20.0,
-                    colors : [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0)]
+                    colors : [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0)],
+                    followSurface: false
                 }),
                 id : 'polyline'
             });
@@ -1541,7 +1542,8 @@ defineSuite([
                     ]),
                     width : 20.0,
                     colors : [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0)],
-                    colorsPerVertex : true
+                    colorsPerVertex : true,
+                    followSurface: false
                 }),
                 id : 'polyline'
             });

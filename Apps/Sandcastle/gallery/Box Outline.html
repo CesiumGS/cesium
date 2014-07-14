@@ -35,7 +35,7 @@ require(['Cesium'], function(Cesium) {
     var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-106.0, 45.0);
     var boxModelMatrix = Cesium.Matrix4.multiplyByTranslation(
         Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
-        new Cesium.Cartesian3(0.0, 0.0, dimensions.z * 0.5));
+        new Cesium.Cartesian3(0.0, 0.0, dimensions.z * 0.5), new Cesium.Matrix4());
     
     // Create box outline
     var boxOutlineGeometry = Cesium.BoxOutlineGeometry.fromDimensions({

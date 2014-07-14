@@ -3,13 +3,13 @@ define([
         'Core/defined',
         'Core/formatError',
         'Core/getFilenameFromUri',
-        'DynamicScene/CzmlDataSource',
-        'DynamicScene/GeoJsonDataSource',
+        'DataSources/CzmlDataSource',
+        'DataSources/GeoJsonDataSource',
         'Scene/TileMapServiceImageryProvider',
         'Widgets/Viewer/Viewer',
         'Widgets/Viewer/viewerCesiumInspectorMixin',
         'Widgets/Viewer/viewerDragDropMixin',
-        'Widgets/Viewer/viewerDynamicObjectMixin',
+        'Widgets/Viewer/viewerEntityMixin',
         'domReady!'
     ], function(
         defined,
@@ -21,7 +21,7 @@ define([
         Viewer,
         viewerCesiumInspectorMixin,
         viewerDragDropMixin,
-        viewerDynamicObjectMixin) {
+        viewerEntityMixin) {
     "use strict";
     /*global console*/
 
@@ -31,6 +31,7 @@ define([
      * 'source' : 'file.czml',  // The relative URL of the CZML file to load at startup.
      * 'stats'  : true,         // Enable the FPS performance display.
      * 'theme'  : 'lighter',    // Use the dark-text-on-light-background theme.
+     * 'scene3DOnly' : false    // Enable 3D only mode
      */
     var endUserOptions = {};
     var queryString = window.location.search.substring(1);
@@ -59,7 +60,8 @@ define([
     try {
         viewer = new Viewer('cesiumContainer', {
             imageryProvider : imageryProvider,
-            baseLayerPicker : !defined(imageryProvider)
+            baseLayerPicker : !defined(imageryProvider),
+            scene3DOnly : endUserOptions.scene3DOnly
         });
     } catch (exception) {
         loadingIndicator.style.display = 'none';
@@ -72,7 +74,7 @@ define([
     }
 
     viewer.extend(viewerDragDropMixin);
-    viewer.extend(viewerDynamicObjectMixin);
+    viewer.extend(viewerEntityMixin);
     if (endUserOptions.inspector) {
         viewer.extend(viewerCesiumInspectorMixin);
     }
@@ -117,11 +119,11 @@ define([
             loadPromise.then(function() {
                 var lookAt = endUserOptions.lookAt;
                 if (defined(lookAt)) {
-                    var dynamicObject = dataSource.dynamicObjects.getById(lookAt);
-                    if (defined(dynamicObject)) {
-                        viewer.trackedObject = dynamicObject;
+                    var entity = dataSource.entities.getById(lookAt);
+                    if (defined(entity)) {
+                        viewer.trackedEntity = entity;
                     } else {
-                        var error = 'No object with id "' + lookAt + '" exists in the provided source.';
+                        var error = 'No entity with id "' + lookAt + '" exists in the provided data source.';
                         showLoadError(source, error);
                     }
                 }

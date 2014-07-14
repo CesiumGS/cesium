@@ -153,8 +153,8 @@ define([
      * By default, the Google Caja HTML/CSS sanitizer is loaded in a worker.
      * A specific instance can override this property by setting its sanitizer property.
      *
-     * This property returns a function which takes a unsanitized HTML String and returns a
-     * sanitized String, or a Promise which resolves to the sanitized version.
+     * @member
+     * @type {InfoBoxViewModel~Sanitizer}
      */
     InfoBoxViewModel.defaultSanitizer = defaultSanitizer;
 
@@ -182,7 +182,7 @@ define([
         /**
          * Gets the HTML sanitization function to use for the selection description.
          * @memberof InfoBoxViewModel.prototype
-         * @type {Function}
+         * @type {InfoBoxViewModel~Sanitizer}
          */
         sanitizer : {
             get : function() {
@@ -197,6 +197,17 @@ define([
             }
         }
     });
+
+    /**
+     * A function that sanitizes HTML from a potentially untrusted source, for display in the
+     * info box.
+     * @callback InfoBoxViewModel~Sanitizer
+     *
+     * @param {String} rawHTML Raw HTML to display.
+     * @returns {String|Promise} Sanitized HTML, or a Promise for sanitized HTML.
+     *
+     * @see InfoBoxViewModel.defaultSanitizer
+     */
 
     return InfoBoxViewModel;
 });

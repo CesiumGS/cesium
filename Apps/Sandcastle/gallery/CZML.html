@@ -27,10 +27,10 @@
 require(['Cesium'], function(Cesium) {
     "use strict";
 
-    var gallery = '../../CesiumViewer/Gallery/';
+    var gallery = '../../SampleData/';
 
     var viewer = new Cesium.Viewer('cesiumContainer');
-    viewer.extend(Cesium.viewerDynamicObjectMixin);
+    viewer.extend(Cesium.viewerEntityMixin);
 
     function czmlSatellites() {
         viewer.dataSources.removeAll();
@@ -109,11 +109,14 @@ require(['Cesium'], function(Cesium) {
             "verticalOrigin" : "CENTER"
         },
         "path" : {
-            "color" : [{
-                "interval" : "2012-08-04T16:00:00Z/2012-08-04T18:00:00Z",
-                "rgba" : [255, 255, 0, 255]
-            }],
-            "outlineWidth" : 0.0,
+            "material":{
+                "solidColor":{
+                    "color" : [{
+                        "interval" : "2012-08-04T16:00:00Z/2012-08-04T18:00:00Z",
+                        "rgba" : [255, 255, 0, 255]
+                    }]
+                }
+            },
             "width" : [{
                 "interval" : "2012-08-04T16:00:00Z/2012-08-04T18:00:00Z",
                 "number" : 5.0

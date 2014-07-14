@@ -178,7 +178,7 @@ define([
         var rectangle = tilingScheme.tileXYToRectangle(x, y, level);
 
         // Compute the center of the tile for RTC rendering.
-        var center = ellipsoid.cartographicToCartesian(Rectangle.getCenter(rectangle));
+        var center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangle));
 
         var structure = this._structure;
 

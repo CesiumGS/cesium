@@ -1,11 +1,15 @@
 /*global define*/
-define(function() {
+define([
+        '../Core/freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
      * Describes how to draw a label.
      *
-     * @exports LabelStyle
+     * @namespace
+     * @alias LabelStyle
      *
      * @see Label#style
      */
@@ -35,5 +39,5 @@ define(function() {
         FILL_AND_OUTLINE : 2
     };
 
-    return LabelStyle;
+    return freezeObject(LabelStyle);
 });

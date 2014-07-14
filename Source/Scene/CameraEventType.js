@@ -1,11 +1,15 @@
 /*global define*/
-define(function() {
+define([
+        '../Core/freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
      * Enumerates the available input for interacting with the camera.
      *
-     * @exports CameraEventType
+     * @namespace
+     * @alias CameraEventType
      */
     var CameraEventType = {
         /**
@@ -49,5 +53,5 @@ define(function() {
         PINCH : 4
     };
 
-    return CameraEventType;
+    return freezeObject(CameraEventType);
 });

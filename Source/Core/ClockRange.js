@@ -1,12 +1,16 @@
 /*global define*/
-define(function() {
+define([
+        './freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
      * Constants used by {@link Clock#tick} to determine behavior
      * when {@link Clock#startTime} or {@link Clock#stopTime} is reached.
      *
-     * @exports ClockRange
+     * @namespace
+     * @alias ClockRange
      *
      * @see Clock
      * @see ClockStep
@@ -41,5 +45,5 @@ define(function() {
         LOOP_STOP : 2
     };
 
-    return ClockRange;
+    return freezeObject(ClockRange);
 });

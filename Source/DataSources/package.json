@@ -1,0 +1,6 @@
+{
+	"name": "DataSources",
+	"description": "Cesium DataSources",
+	"version": "0.6.0",
+	"dojoBuild": "DataSources.profile.js"
+}
