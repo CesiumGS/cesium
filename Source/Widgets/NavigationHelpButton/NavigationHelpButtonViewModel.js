@@ -33,7 +33,7 @@ define([
         });
         this._showTouch = createCommand(function() {
             that._touch = true;
-        })
+        });
 
         this._touch = false;
 
