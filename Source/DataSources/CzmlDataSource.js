@@ -55,6 +55,7 @@ define([
         './PathGraphics',
         './PointGraphics',
         './PolygonGraphics',
+        './PolylineGlowMaterialProperty',
         './PolylineGraphics',
         './PolylineOutlineMaterialProperty',
         './PositionPropertyArray',
@@ -124,6 +125,7 @@ define([
         PathGraphics,
         PointGraphics,
         PolygonGraphics,
+        PolylineGlowMaterialProperty,
         PolylineGraphics,
         PolylineOutlineMaterialProperty,
         PositionPropertyArray,
@@ -146,58 +148,6 @@ define([
             referenceString = currentId + referenceString;
         }
         return ReferenceProperty.fromString(collection, referenceString);
-    }
-
-    //This class is a workaround for CZML represented as two properties which get turned into a single Cartesian2 property once loaded.
-    var Cartesian2WrapperProperty = function() {
-        this._definitionChanged = new Event();
-        this._x = undefined;
-        this._xSubscription = undefined;
-        this._y = undefined;
-        this._ySubscription = undefined;
-
-        this.x = new ConstantProperty(0);
-        this.y = new ConstantProperty(0.1);
-    };
-
-    defineProperties(Cartesian2WrapperProperty.prototype, {
-        isConstant : {
-            get : function() {
-                return this._x.isConstant && this._y.isConstant;
-            }
-        },
-        definitionChanged : {
-            get : function() {
-                return this._definitionChanged;
-            }
-        },
-        x : createPropertyDescriptor('x'),
-        y : createPropertyDescriptor('y')
-    });
-
-    Cartesian2WrapperProperty.prototype.getValue = function(time, result) {
-        if (!defined(result)) {
-            result = new Cartesian2();
-        }
-        result.x = this._x.getValue(time);
-        result.y = this._y.getValue(time);
-        return result;
-    };
-
-    Cartesian2WrapperProperty.prototype._raiseDefinitionChanged = function() {
-        this._definitionChanged.raiseEvent(this);
-    };
-
-    function combineIntoCartesian2(object, packetDataX, packetDataY) {
-        if (!defined(packetDataX) && !defined(packetDataY)) {
-            return object;
-        }
-        if (!(object instanceof Cartesian2WrapperProperty)) {
-            object = new Cartesian2WrapperProperty();
-        }
-        processPacketData(Number, object, 'x', packetDataX);
-        processPacketData(Number, object, 'y', packetDataY);
-        return object;
     }
 
     var scratchCartesian = new Cartesian3();
@@ -814,16 +764,16 @@ define([
             materialData = packetData.grid;
             processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, sourceUri, entityCollection);
             processPacketData(Number, existingMaterial, 'cellAlpha', materialData.cellAlpha, undefined, sourceUri, entityCollection);
-            existingMaterial.lineThickness = combineIntoCartesian2(existingMaterial.lineThickness, materialData.rowThickness, materialData.columnThickness, undefined, undefined, entityCollection);
-            existingMaterial.lineOffset = combineIntoCartesian2(existingMaterial.lineOffset, materialData.rowOffset, materialData.columnOffset, undefined, undefined, entityCollection);
-            existingMaterial.lineCount = combineIntoCartesian2(existingMaterial.lineCount, materialData.rowCount, materialData.columnCount, undefined, undefined, entityCollection);
+            processPacketData(Cartesian2, existingMaterial, 'lineThickness', materialData.lineThickness, undefined, sourceUri, entityCollection);
+            processPacketData(Cartesian2, existingMaterial, 'lineOffset', materialData.lineOffset, undefined, sourceUri, entityCollection);
+            processPacketData(Cartesian2, existingMaterial, 'lineCount', materialData.lineCount, undefined, sourceUri, entityCollection);
         } else if (defined(packetData.image)) {
             if (!(existingMaterial instanceof ImageMaterialProperty)) {
                 existingMaterial = new ImageMaterialProperty();
             }
             materialData = packetData.image;
             processPacketData(Image, existingMaterial, 'image', materialData.image, undefined, sourceUri, entityCollection);
-            existingMaterial.repeat = combineIntoCartesian2(existingMaterial.repeat, materialData.horizontalRepeat, materialData.verticalRepeat);
+            processPacketData(Cartesian2, existingMaterial, 'repeat', materialData.repeat, undefined, sourceUri, entityCollection);
         } else if (defined(packetData.stripe)) {
             if (!(existingMaterial instanceof StripeMaterialProperty)) {
                 existingMaterial = new StripeMaterialProperty();
@@ -834,6 +784,21 @@ define([
             processPacketData(Color, existingMaterial, 'oddColor', materialData.oddColor, undefined, sourceUri, entityCollection);
             processPacketData(Number, existingMaterial, 'offset', materialData.offset, undefined, sourceUri, entityCollection);
             processPacketData(Number, existingMaterial, 'repeat', materialData.repeat, undefined, sourceUri, entityCollection);
+        } else if (defined(packetData.polylineOutline)) {
+            if (!(existingMaterial instanceof PolylineOutlineMaterialProperty)) {
+                existingMaterial = new PolylineOutlineMaterialProperty();
+            }
+            materialData = packetData.polylineOutline;
+            processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, sourceUri, entityCollection);
+            processPacketData(Color, existingMaterial, 'outlineColor', materialData.outlineColor, undefined, sourceUri, entityCollection);
+            processPacketData(Number, existingMaterial, 'outlineWidth', materialData.outlineWidth, undefined, sourceUri, entityCollection);
+        } else if (defined(packetData.polylineGlow)) {
+            if (!(existingMaterial instanceof PolylineGlowMaterialProperty)) {
+                existingMaterial = new PolylineGlowMaterialProperty();
+            }
+            materialData = packetData.polylineGlow;
+            processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, sourceUri, entityCollection);
+            processPacketData(Number, existingMaterial, 'glowPower', materialData.glowPower, undefined, sourceUri, entityCollection);
         }
 
         if (defined(existingInterval)) {
@@ -1252,42 +1217,12 @@ define([
             entity.path = path = new PathGraphics();
         }
 
-        //Since CZML does not support PolylineOutlineMaterial, we map its properties into one.
-        var materialToProcess = path.material;
-        if (defined(interval)) {
-            var materialInterval;
-            var composite = materialToProcess;
-            if (!(composite instanceof CompositeMaterialProperty)) {
-                composite = new CompositeMaterialProperty();
-                path.material = composite;
-                if (defined(materialToProcess)) {
-                    materialInterval = Iso8601.MAXIMUM_INTERVAL.clone();
-                    materialInterval.data = materialToProcess;
-                    composite.intervals.addInterval(materialInterval);
-                }
-            }
-            materialInterval = composite.intervals.findInterval(interval);
-            if (defined(materialInterval)) {
-                materialToProcess = materialInterval.data;
-            } else {
-                materialToProcess = new PolylineOutlineMaterialProperty();
-                materialInterval = interval.clone();
-                materialInterval.data = materialToProcess;
-                composite.intervals.addInterval(materialInterval);
-            }
-        } else if (!(materialToProcess instanceof PolylineOutlineMaterialProperty)) {
-            materialToProcess = new PolylineOutlineMaterialProperty();
-            path.material = materialToProcess;
-        }
-
         processPacketData(Boolean, path, 'show', pathData.show, interval, sourceUri, entityCollection);
         processPacketData(Number, path, 'width', pathData.width, interval, sourceUri, entityCollection);
         processPacketData(Number, path, 'resolution', pathData.resolution, interval, sourceUri, entityCollection);
         processPacketData(Number, path, 'leadTime', pathData.leadTime, interval, sourceUri, entityCollection);
         processPacketData(Number, path, 'trailTime', pathData.trailTime, interval, sourceUri, entityCollection);
-        processPacketData(Color, materialToProcess, 'color', pathData.color, interval, sourceUri, entityCollection);
-        processPacketData(Color, materialToProcess, 'outlineColor', pathData.outlineColor, interval, sourceUri, entityCollection);
-        processPacketData(Number, materialToProcess, 'outlineWidth', pathData.outlineWidth, interval, sourceUri, entityCollection);
+        processMaterialPacketData(path, 'material', pathData.material, interval, sourceUri, entityCollection);
     }
 
     function processPoint(entity, packet, entityCollection, sourceUri) {
@@ -1426,39 +1361,9 @@ define([
             entity.polyline = polyline = new PolylineGraphics();
         }
 
-        //Since CZML does not support PolylineOutlineMaterial, we map its properties into one.
-        var materialToProcess = polyline.material;
-        if (defined(interval)) {
-            var materialInterval;
-            var composite = materialToProcess;
-            if (!(composite instanceof CompositeMaterialProperty)) {
-                composite = new CompositeMaterialProperty();
-                polyline.material = composite;
-                if (defined(materialToProcess)) {
-                    materialInterval = Iso8601.MAXIMUM_INTERVAL.clone();
-                    materialInterval.data = materialToProcess;
-                    composite.intervals.addInterval(materialInterval);
-                }
-            }
-            materialInterval = composite.intervals.findInterval(interval);
-            if (defined(materialInterval)) {
-                materialToProcess = materialInterval.data;
-            } else {
-                materialToProcess = new PolylineOutlineMaterialProperty();
-                materialInterval = interval.clone();
-                materialInterval.data = materialToProcess;
-                composite.intervals.addInterval(materialInterval);
-            }
-        } else if (!(materialToProcess instanceof PolylineOutlineMaterialProperty)) {
-            materialToProcess = new PolylineOutlineMaterialProperty();
-            polyline.material = materialToProcess;
-        }
-
         processPacketData(Boolean, polyline, 'show', polylineData.show, interval, sourceUri, entityCollection);
         processPacketData(Number, polyline, 'width', polylineData.width, interval, sourceUri, entityCollection);
-        processPacketData(Color, materialToProcess, 'color', polylineData.color, interval, sourceUri, entityCollection);
-        processPacketData(Color, materialToProcess, 'outlineColor', polylineData.outlineColor, interval, sourceUri, entityCollection);
-        processPacketData(Number, materialToProcess, 'outlineWidth', polylineData.outlineWidth, interval, sourceUri, entityCollection);
+        processMaterialPacketData(polyline, 'material', polylineData.material, interval, sourceUri, entityCollection);
         processPositions(polyline, polylineData.positions, entityCollection);
     }
 

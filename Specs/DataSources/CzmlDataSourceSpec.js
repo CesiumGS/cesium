@@ -1387,15 +1387,19 @@ defineSuite([
     it('CZML adds data for infinite path.', function() {
         var pathPacket = {
             path : {
-                color : {
-                    rgbaf : [0.1, 0.1, 0.1, 0.1]
+                material : {
+                    polylineOutline : {
+                        color : {
+                            rgbaf : [0.1, 0.1, 0.1, 0.1]
+                        },
+                        outlineColor : {
+                            rgbaf : [0.2, 0.2, 0.2, 0.2]
+                        },
+                        outlineWidth : 1.0
+                    }
                 },
                 width : 1.0,
                 resolution : 23.0,
-                outlineColor : {
-                    rgbaf : [0.2, 0.2, 0.2, 0.2]
-                },
-                outlineWidth : 1.0,
                 leadTime : 2.0,
                 trailTime : 3.0,
                 show : true
@@ -1411,7 +1415,7 @@ defineSuite([
         expect(entity.path.width.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.width);
         expect(entity.path.resolution.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.resolution);
         expect(entity.path.material.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(entity.path.material.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.outlineWidth);
+        expect(entity.path.material.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(1.0);
         expect(entity.path.leadTime.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.leadTime);
         expect(entity.path.trailTime.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.trailTime);
         expect(entity.path.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
@@ -1421,15 +1425,19 @@ defineSuite([
         var pathPacket = {
             path : {
                 interval : '2000-01-01/2001-01-01',
-                color : {
-                    rgbaf : [0.1, 0.1, 0.1, 0.1]
+                material : {
+                    polylineOutline : {
+                        color : {
+                            rgbaf : [0.1, 0.1, 0.1, 0.1]
+                        },
+                        outlineColor : {
+                            rgbaf : [0.2, 0.2, 0.2, 0.2]
+                        },
+                        outlineWidth : 1.0
+                    }
                 },
                 width : 1.0,
                 resolution : 23.0,
-                outlineColor : {
-                    rgbaf : [0.2, 0.2, 0.2, 0.2]
-                },
-                outlineWidth : 1.0,
                 leadTime : 2.0,
                 trailTime : 3.0,
                 show : true
@@ -1453,7 +1461,7 @@ defineSuite([
         expect(entity.path.show.getValue(validTime)).toEqual(true);
         expect(entity.path.material.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(entity.path.material.getValue(validTime).outlineColor).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(entity.path.material.getValue(validTime).outlineWidth).toEqual(pathPacket.path.outlineWidth);
+        expect(entity.path.material.getValue(validTime).outlineWidth).toEqual(1.0);
 
         expect(entity.path.material.getValue(invalidTime)).toBeUndefined();
         expect(entity.path.width.getValue(invalidTime)).toBeUndefined();
@@ -1594,14 +1602,18 @@ defineSuite([
     it('CZML adds data for infinite polyline.', function() {
         var polylinePacket = {
             polyline : {
-                color : {
-                    rgbaf : [0.1, 0.1, 0.1, 0.1]
+                material : {
+                    polylineOutline : {
+                        color : {
+                            rgbaf : [0.1, 0.1, 0.1, 0.1]
+                        },
+                        outlineColor : {
+                            rgbaf : [0.2, 0.2, 0.2, 0.2]
+                        },
+                        outlineWidth : 1.0
+                    }
                 },
                 width : 1.0,
-                outlineColor : {
-                    rgbaf : [0.2, 0.2, 0.2, 0.2]
-                },
-                outlineWidth : 1.0,
                 show : true
             }
         };
@@ -1614,7 +1626,7 @@ defineSuite([
         expect(entity.polyline.material.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(entity.polyline.width.getValue(Iso8601.MINIMUM_VALUE)).toEqual(polylinePacket.polyline.width);
         expect(entity.polyline.material.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(entity.polyline.material.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(polylinePacket.polyline.outlineWidth);
+        expect(entity.polyline.material.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(1.0);
         expect(entity.polyline.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
     });
 
@@ -1622,14 +1634,18 @@ defineSuite([
         var polylinePacket = {
             polyline : {
                 interval : '2000-01-01/2001-01-01',
-                color : {
-                    rgbaf : [0.1, 0.1, 0.1, 0.1]
+                material : {
+                    polylineOutline : {
+                        color : {
+                            rgbaf : [0.1, 0.1, 0.1, 0.1]
+                        },
+                        outlineColor : {
+                            rgbaf : [0.2, 0.2, 0.2, 0.2]
+                        },
+                        outlineWidth : 1.0
+                    }
                 },
                 width : 1.0,
-                outlineColor : {
-                    rgbaf : [0.2, 0.2, 0.2, 0.2]
-                },
-                outlineWidth : 1.0,
                 show : true
             }
         };
@@ -1647,7 +1663,7 @@ defineSuite([
         expect(entity.polyline.material.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(entity.polyline.width.getValue(validTime)).toEqual(polylinePacket.polyline.width);
         expect(entity.polyline.material.getValue(validTime).outlineColor).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(entity.polyline.material.getValue(validTime).outlineWidth).toEqual(polylinePacket.polyline.outlineWidth);
+        expect(entity.polyline.material.getValue(validTime).outlineWidth).toEqual(1.0);
         expect(entity.polyline.show.getValue(validTime)).toEqual(true);
 
         expect(entity.polyline.material.getValue(invalidTime)).toBeUndefined();
@@ -1920,12 +1936,15 @@ defineSuite([
                             rgba : [240, 255, 255, 255]
                         },
                         cellAlpha : 0,
-                        rowCount : 36,
-                        rowThickness : 1,
-                        rowOffset : 0.5,
-                        columnCount : 9,
-                        columnThickness : 1,
-                        columnOffset : 0.5
+                        lineCount : {
+                            cartesian2 : [36, 9]
+                        },
+                        lineThickness : {
+                            cartesian2 : [1, 1]
+                        },
+                        lineOffset : {
+                            cartesian2 : [0.5, 0.5]
+                        }
                     }
                 }]
             }
@@ -2205,5 +2224,29 @@ defineSuite([
         var targetEntity = dataSource.entities.getById('testObject');
         expect(targetEntity.point.outlineWidth instanceof ReferenceProperty).toBe(true);
         expect(targetEntity.point.outlineWidth.getValue(time)).toEqual(targetEntity.point.pixelSize.getValue(time));
+    });
+
+    it('Polyline glow.', function() {
+        var time = JulianDate.now();
+        var packet = {
+            id : 'polylineGlow',
+            polyline : {
+                material : {
+                    polylineGlow : {
+                        color : {
+                            rgbaf : [0.1, 0.2, 0.3, 0.4]
+                        },
+                        glowPower : 0.75
+                    }
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(packet);
+
+        var entity = dataSource.entities.getById('polylineGlow');
+        expect(entity.polyline.material.color.getValue()).toEqual(new Color(0.1, 0.2, 0.3, 0.4));
+        expect(entity.polyline.material.glowPower.getValue()).toEqual(0.75);
     });
 });
