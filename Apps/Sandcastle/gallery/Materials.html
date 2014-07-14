@@ -476,6 +476,8 @@ require(['Cesium'], function(Cesium) {
         Sandcastle.addToolbarMenu(polylineMaterialOptions, function() {
             selectMenuOption(this, polylineMaterialOptions);
         });
+        
+        document.getElementById('toolbar').style.width = '10%';
     }
 
     function createPrimitives(scene) {
