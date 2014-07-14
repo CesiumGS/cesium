@@ -745,8 +745,5 @@ define([
         surfaceTile.waterMaskTranslationAndScale.w = scaleY;
     }
 
-    return Tile;
-});
-    return Tile;
     return GlobeSurfaceTile;
 });
