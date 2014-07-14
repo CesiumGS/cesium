@@ -1364,6 +1364,8 @@ define([
         processPacketData(Boolean, polyline, 'show', polylineData.show, interval, sourceUri, entityCollection);
         processPacketData(Number, polyline, 'width', polylineData.width, interval, sourceUri, entityCollection);
         processMaterialPacketData(polyline, 'material', polylineData.material, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, polyline, 'followSurface', polylineData.followSurface, interval, sourceUri, entityCollection);
+        processPacketData(Number, polyline, 'granularity', polylineData.granularity, interval, sourceUri, entityCollection);
         processPositions(polyline, polylineData.positions, entityCollection);
     }
 
