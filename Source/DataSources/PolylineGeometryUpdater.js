@@ -49,6 +49,8 @@ define([
         this.vertexFormat = undefined;
         this.positions = undefined;
         this.width = undefined;
+        this.followSurface = undefined;
+        this.granularity = undefined;
     };
 
     /**
@@ -351,8 +353,11 @@ define([
         this._fillEnabled = true;
 
         var width = polyline.width;
+        var followSurface = polyline.followSurface;
+        var granularity = polyline.granularity;
 
-        if (!positionsProperty.isConstant || !Property.isConstant(width)) {
+        if (!positionsProperty.isConstant || !Property.isConstant(width) ||
+            !Property.isConstant(followSurface) || !Property.isConstant(granularity)) {
             if (!this._dynamic) {
                 this._dynamic = true;
                 this._geometryChanged.raiseEvent(this);
@@ -374,6 +379,8 @@ define([
             options.vertexFormat = isColorMaterial ? PolylineColorAppearance.VERTEX_FORMAT : PolylineMaterialAppearance.VERTEX_FORMAT;
             options.positions = positions;
             options.width = defined(width) ? width.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.followSurface = defined(followSurface) ? followSurface.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             this._dynamic = false;
             this._geometryChanged.raiseEvent(this);
         }
@@ -427,6 +434,7 @@ define([
         }
 
         var options = this._options;
+        options.followSurface = false;
         var positionsProperty = polyline.positions;
 
         var positions = positionsProperty.getValue(time, options.positions);
@@ -440,6 +448,12 @@ define([
 
         var width = polyline.width;
         options.width = defined(width) ? width.getValue(time) : undefined;
+
+        var followSurface = polyline.followSurface;
+        options.followSurface = defined(followSurface) ? followSurface.getValue(time) : undefined;
+
+        var granularity = polyline.granularity;
+        options.granularity = defined(granularity) ? granularity.getValue(time) : undefined;
 
         this._material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
         var material = this._material;

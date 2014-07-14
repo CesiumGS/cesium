@@ -66,7 +66,8 @@
             }
           }
       },
-      "show":true
+      "show":true,
+      "followSurface":false
     },
     "position":{
       "cartesian":[
@@ -3786,6 +3787,7 @@
           "Satellite/ISS#position"
         ]
       },
+      "followSurface":false,
       "show":[
         {
           "interval":"0000-01-01T00:00:00Z/2012-03-15T10:16:06.97400000000198Z",
@@ -3897,6 +3899,7 @@
           "Satellite/ISS#position"
         ]
       },
+      "followSurface":false,
       "show":[
         {
           "interval":"0000-01-01T00:00:00Z/2012-03-15T10:52:19.3940000000002Z",
@@ -3977,6 +3980,7 @@
           "Satellite/Geoeye1/Sensor/Sensor#position"
         ]
       },
+      "followSurface":false,
       "show":false
     }
   }

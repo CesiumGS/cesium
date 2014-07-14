@@ -151,7 +151,8 @@ define([
                             Color.GREEN,
                             Color.BLUE,
                             Color.BLUE
-                        ]
+                        ],
+                        followSurface: false
                     })),
                     modelMatrix : Matrix4.multiplyByUniformScale(this.modelMatrix, this.length, new Matrix4()),
                     id : this.id,
