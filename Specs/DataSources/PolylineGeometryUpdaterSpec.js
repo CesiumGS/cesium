@@ -138,6 +138,28 @@ defineSuite([
         expect(updater.isDynamic).toBe(true);
     });
 
+    it('A time-varying followSurface causes geometry to be dynamic', function() {
+        var followSurface = new TimeIntervalCollectionProperty();
+        followSurface.intervals.addInterval(new TimeInterval({
+            start : new JulianDate(0, 0),
+            stop : new JulianDate(10, 0),
+            data : false
+        }));
+
+        var entity = createBasicPolyline();
+        var updater = new PolylineGeometryUpdater(entity);
+        entity.polyline.followSurface = followSurface;
+        expect(updater.isDynamic).toBe(true);
+    });
+
+    it('A time-varying granularity causes geometry to be dynamic', function() {
+        var entity = createBasicPolyline();
+        var updater = new PolylineGeometryUpdater(entity);
+        entity.polyline.granularity = new SampledProperty(Number);
+        entity.polyline.granularity.addSample(time, 1);
+        expect(updater.isDynamic).toBe(true);
+    });
+
     function validateGeometryInstance(options) {
         var entity = createBasicPolyline();
 
@@ -146,6 +168,8 @@ defineSuite([
         polyline.material = options.material;
 
         polyline.width = new ConstantProperty(options.width);
+        polyline.followSurface = new ConstantProperty(options.followSurface);
+        polyline.granularity = new ConstantProperty(options.granularity);
 
         var updater = new PolylineGeometryUpdater(entity);
 
@@ -155,6 +179,8 @@ defineSuite([
         instance = updater.createFillGeometryInstance(time);
         geometry = instance.geometry;
         expect(geometry._width).toEqual(options.width);
+        expect(geometry._followSurface).toEqual(options.followSurface);
+        expect(geometry._granularity).toEqual(options.granularity);
 
         attributes = instance.attributes;
         if (options.material instanceof ColorMaterialProperty) {
@@ -169,7 +195,9 @@ defineSuite([
         validateGeometryInstance({
             show : true,
             material : ColorMaterialProperty.fromColor(Color.RED),
-            width : 3
+            width : 3,
+            followSurface : false,
+            granularity : 1.0
         });
     });
 
@@ -177,7 +205,9 @@ defineSuite([
         validateGeometryInstance({
             show : true,
             material : new GridMaterialProperty(),
-            width : 4
+            width : 4,
+            followSurface : true,
+            granularity : 0.5
         });
     });
 

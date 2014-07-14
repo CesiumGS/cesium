@@ -26,7 +26,7 @@
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     "use strict";
-//Sandcastle_Begin    
+//Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
 var primitives = scene.primitives;
@@ -34,8 +34,8 @@ var primitives = scene.primitives;
 // Per segment colors
 var positions = [];
 var colors = [];
-for (var i = 0; i < 20; ++i) {
-    positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 40.0));
+for (var i = 0; i < 12; ++i) {
+    positions.push(Cesium.Cartesian3.fromDegrees(-124.0 + 5*i, 40.0));
     colors.push(Cesium.Color.fromRandom({alpha : 1.0}));
 }
 
@@ -43,7 +43,7 @@ primitives.add(new Cesium.Primitive({
     geometryInstances : new Cesium.GeometryInstance({
         geometry : new Cesium.PolylineGeometry({
             positions : positions,
-            width : 10.0,
+            width : 5.0,
             vertexFormat : Cesium.PolylineColorAppearance.VERTEX_FORMAT,
             colors : colors
         })
@@ -54,8 +54,8 @@ primitives.add(new Cesium.Primitive({
 // Per vertex colors
 positions = [];
 colors = [];
-for (i = 0; i < 20; ++i) {
-    positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 35.0));
+for (i = 0; i < 12; ++i) {
+    positions.push(Cesium.Cartesian3.fromDegrees(-124.0 + 5*i, 35.0));
     colors.push(Cesium.Color.fromRandom({alpha : 1.0}));
 }
 
@@ -63,7 +63,7 @@ primitives.add(new Cesium.Primitive({
     geometryInstances : new Cesium.GeometryInstance({
         geometry : new Cesium.PolylineGeometry({
             positions : positions,
-            width : 10.0,
+            width : 5.0,
             vertexFormat : Cesium.PolylineColorAppearance.VERTEX_FORMAT,
             colors : colors,
             colorsPerVertex : true

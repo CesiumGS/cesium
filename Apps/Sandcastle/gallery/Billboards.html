@@ -36,6 +36,8 @@ function reset() {
 }
 
 function addBillboard() {
+    Sandcastle.declare(addBillboard);
+    reset();
     var image = new Image();
     image.onload = function() {
         var billboards = new Cesium.BillboardCollection();
@@ -53,16 +55,10 @@ function addBillboard() {
     };
     image.src = '../images/Cesium_Logo_overlay.png';
 }
-addBillboard();
 
-Sandcastle.addToolbarButton('Add billboard', function() {
+function setBillboardProperties() {
+    Sandcastle.declare(setBillboardProperties);
     reset();
-    addBillboard();
-});
-
-Sandcastle.addToolbarButton('Set billboard properties at creation', function() {
-    reset();
-
     var image = new Image();
     image.onload = function() {
         var billboards = new Cesium.BillboardCollection();
@@ -90,11 +86,11 @@ Sandcastle.addToolbarButton('Set billboard properties at creation', function() {
         scene.primitives.add(billboards);
     };
     image.src = '../images/Cesium_Logo_overlay.png';
-});
+}
 
-Sandcastle.addToolbarButton('Change billboard properties', function() {
+function changeBillboardProperties() {
+    Sandcastle.declare(changeBillboardProperties);
     reset();
-
     var image = new Image();
     image.onload = function() {
         var billboards = new Cesium.BillboardCollection();
@@ -118,11 +114,11 @@ Sandcastle.addToolbarButton('Change billboard properties', function() {
         scene.primitives.add(billboards);
     };
     image.src = '../images/Cesium_Logo_overlay.png';
-});
+}
 
-Sandcastle.addToolbarButton('Add multiple billboards', function() {
+function addMultipleBillboards() {
+    Sandcastle.declare(addMultipleBillboards);
     reset();
-
     Cesium.when.all([
                      Cesium.loadImage('../images/Cesium_Logo_overlay.png'),
                      Cesium.loadImage('../images/facility.gif')
@@ -160,11 +156,11 @@ Sandcastle.addToolbarButton('Add multiple billboards', function() {
 
         scene.primitives.add(billboards);
     });
-});
+}
 
-Sandcastle.addToolbarButton('Scale by viewer distance', function() {
+function scaleByDistance() {
+    Sandcastle.declare(scaleByDistance);
     reset();
-
     var image = new Image();
     image.onload = function() {
         var billboards = new Cesium.BillboardCollection();
@@ -182,11 +178,11 @@ Sandcastle.addToolbarButton('Scale by viewer distance', function() {
         scene.primitives.add(billboards);
     };
     image.src = '../images/facility.gif';
-});
-
-Sandcastle.addToolbarButton('Fade by viewer distance', function() {
+}
+    
+function fadeByDistance() {
+    Sandcastle.declare(fadeByDistance);
     reset();
-
     var image = new Image();
     image.onload = function() {
         var billboards = new Cesium.BillboardCollection();
@@ -204,16 +200,16 @@ Sandcastle.addToolbarButton('Fade by viewer distance', function() {
         scene.primitives.add(billboards);
     };
     image.src = '../images/Cesium_Logo_overlay.png';
-});
+}
 
-Sandcastle.addToolbarButton('Offset by viewer distance', function() {
+function offsetByDistance() {
+    Sandcastle.declare(offsetByDistance);
     reset();
-
     Cesium.when.all([
-                     Cesium.loadImage('../images/Cesium_Logo_overlay.png'),
-                     Cesium.loadImage('../images/facility.gif')
-                    ],
-                    function(images) {
+         Cesium.loadImage('../images/Cesium_Logo_overlay.png'),
+         Cesium.loadImage('../images/facility.gif')
+        ],
+        function(images) {
         var billboards = new Cesium.BillboardCollection();
         var textureAtlas = new Cesium.TextureAtlas({
             scene : scene,
@@ -243,11 +239,11 @@ Sandcastle.addToolbarButton('Offset by viewer distance', function() {
         });
         scene.primitives.add(billboards);
     });
-});
+}
 
-Sandcastle.addToolbarButton('Add point billboards', function() {
+function addPointBillboards() {
+    Sandcastle.declare(addPointBillboards);
     reset();
-
     // A white circle is drawn into a 2D canvas.  The canvas is used as
     // a texture for billboards, each of which applies a different color
     // and scale to change the point's appearance.
@@ -292,11 +288,11 @@ Sandcastle.addToolbarButton('Add point billboards', function() {
     });
 
     scene.primitives.add(billboards);
-});
+}
 
-Sandcastle.addToolbarButton('Add marker billboards', function() {
+function addMarkerBillboards() {
+    Sandcastle.declare(addMarkerBillboards);
     reset();
-
     var image = new Image();
     image.onload = function() {
         var billboards = new Cesium.BillboardCollection();
@@ -393,11 +389,11 @@ Sandcastle.addToolbarButton('Add marker billboards', function() {
         scene.primitives.add(billboards);
     };
     image.src = '../images/whiteShapes.png';
-});
+}
 
-Sandcastle.addToolbarButton('Add billboards in reference frame', function() {
+function inReferenceFrame() {
+    Sandcastle.declare(inReferenceFrame);
     reset();
-
     var image = new Image();
     image.onload = function() {
         var billboards = new Cesium.BillboardCollection();
@@ -432,8 +428,83 @@ Sandcastle.addToolbarButton('Add billboards in reference frame', function() {
         scene.primitives.add(billboards);
     };
     image.src = '../images/facility.gif';
-});
-//Sandcastle_End
+}
+
+function createUI() {
+    function selectMenuOption(menu, options) {
+        options[menu.selectedIndex].onselect();
+    }
+    
+    var options = [{
+        text : 'Add billboard',
+        onselect : function() {
+            addBillboard();
+            Sandcastle.highlight(addBillboard);
+        }
+    }, {
+        text : 'Set billboard properties at creation',
+        onselect : function() {
+            setBillboardProperties();
+            Sandcastle.highlight(setBillboardProperties);
+        }
+    }, {
+        text : 'Change billboard properties',
+        onselect : function() {
+            changeBillboardProperties();
+            Sandcastle.highlight(changeBillboardProperties);
+        }
+    }, {
+        text : 'Add multiple billboards',
+        onselect : function() {
+            addMultipleBillboards();
+            Sandcastle.highlight(addMultipleBillboards);
+        }
+    }, {
+        text : 'Scale by viewer distance',
+        onselect : function() {
+            scaleByDistance();
+            Sandcastle.highlight(scaleByDistance);
+        }
+    }, {
+        text : 'Fade by viewer distance',
+        onselect : function() {
+            fadeByDistance();
+            Sandcastle.highlight(fadeByDistance);
+        }
+    }, {
+        text : 'Offset by viewer distance',
+        onselect : function() {
+            offsetByDistance();
+            Sandcastle.highlight(offsetByDistance);
+        }
+    }, {
+        text : 'Add point billboards',
+        onselect : function() {
+            addPointBillboards();
+            Sandcastle.highlight(addPointBillboards);
+        }
+    }, {
+        text : 'Add marker billboards',
+        onselect : function() {
+            addMarkerBillboards();
+            Sandcastle.highlight(addMarkerBillboards);
+        }
+    }, {
+        text : 'Add billboards in reference frame',
+        onselect : function() {
+            inReferenceFrame();
+            Sandcastle.highlight(inReferenceFrame);
+        }
+    }];
+
+    Sandcastle.addToolbarMenu(options, function() {
+        selectMenuOption(this, options);
+    });
+}
+
+createUI();
+addBillboard();
+Sandcastle.highlight(addBillboard);//Sandcastle_End
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {

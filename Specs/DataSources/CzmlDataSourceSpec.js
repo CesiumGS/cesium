@@ -2225,4 +2225,28 @@ defineSuite([
         expect(targetEntity.point.outlineWidth instanceof ReferenceProperty).toBe(true);
         expect(targetEntity.point.outlineWidth.getValue(time)).toEqual(targetEntity.point.pixelSize.getValue(time));
     });
+
+    it('Polyline glow.', function() {
+        var time = JulianDate.now();
+        var packet = {
+            id : 'polylineGlow',
+            polyline : {
+                material : {
+                    polylineGlow : {
+                        color : {
+                            rgbaf : [0.1, 0.2, 0.3, 0.4]
+                        },
+                        glowPower : 0.75
+                    }
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(packet);
+
+        var entity = dataSource.entities.getById('polylineGlow');
+        expect(entity.polyline.material.color.getValue()).toEqual(new Color(0.1, 0.2, 0.3, 0.4));
+        expect(entity.polyline.material.glowPower.getValue()).toEqual(0.75);
+    });
 });

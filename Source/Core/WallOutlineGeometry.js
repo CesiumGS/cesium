@@ -186,11 +186,10 @@ define([
         var ellipsoid = wallGeometry._ellipsoid;
 
         var pos = WallGeometryLibrary.computePositions(ellipsoid, wallPositions, maximumHeights, minimumHeights, granularity, false);
-        var newWallPositions = pos.newWallPositions;
         var bottomPositions = pos.bottomPositions;
         var topPositions = pos.topPositions;
 
-        var length = newWallPositions.length;
+        var length = topPositions.length;
         var size = length * 2;
 
         var positions = new Float64Array(size);

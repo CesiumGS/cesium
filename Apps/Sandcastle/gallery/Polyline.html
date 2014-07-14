@@ -34,7 +34,7 @@ var primitives = scene.primitives;
 // Create a glowing polyline
 var positions = [];
 for (var i = 0; i < 10; ++i) {
-    positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 36.0));
+    positions.push(Cesium.Cartesian3.fromDegrees(-124.0 + 5*i, 40.0));
 }
 
 primitives.add(new Cesium.Primitive({
@@ -54,7 +54,7 @@ primitives.add(new Cesium.Primitive({
 positions = [];
 var colors = [];
 for (i = 0; i < 10; ++i) {
-    positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 35.0));
+    positions.push(Cesium.Cartesian3.fromDegrees(-124.0 + 5*i, 35.0));
     colors.push(Cesium.Color.fromRandom({alpha : 1.0}));
 }
 
@@ -74,7 +74,7 @@ primitives.add(new Cesium.Primitive({
 positions = [];
 colors = [];
 for (i = 0; i < 10; ++i) {
-    positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 34.0));
+    positions.push(Cesium.Cartesian3.fromDegrees(-124.0 + 5*i, 30.0));
     colors.push(Cesium.Color.fromRandom({alpha : 1.0}));
 }
 

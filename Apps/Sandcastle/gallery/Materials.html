@@ -476,6 +476,8 @@ function createButtons(scene) {
     Sandcastle.addToolbarMenu(polylineMaterialOptions, function() {
         selectMenuOption(this, polylineMaterialOptions);
     });
+    
+    document.getElementById('toolbar').style.width = '10%';
 }
 
 function createPrimitives(scene) {
@@ -511,8 +513,7 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
 
 createPrimitives(scene);
-createButtons(scene);
-//Sandcastle_End
+createButtons(scene);//Sandcastle_End
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {

@@ -792,11 +792,11 @@ define([
             processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, sourceUri, entityCollection);
             processPacketData(Color, existingMaterial, 'outlineColor', materialData.outlineColor, undefined, sourceUri, entityCollection);
             processPacketData(Number, existingMaterial, 'outlineWidth', materialData.outlineWidth, undefined, sourceUri, entityCollection);
-        } else if (defined(packetData.polylineOutline)) {
+        } else if (defined(packetData.polylineGlow)) {
             if (!(existingMaterial instanceof PolylineGlowMaterialProperty)) {
                 existingMaterial = new PolylineGlowMaterialProperty();
             }
-            materialData = packetData.polylineOutline;
+            materialData = packetData.polylineGlow;
             processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, sourceUri, entityCollection);
             processPacketData(Number, existingMaterial, 'glowPower', materialData.glowPower, undefined, sourceUri, entityCollection);
         }
@@ -1364,6 +1364,8 @@ define([
         processPacketData(Boolean, polyline, 'show', polylineData.show, interval, sourceUri, entityCollection);
         processPacketData(Number, polyline, 'width', polylineData.width, interval, sourceUri, entityCollection);
         processMaterialPacketData(polyline, 'material', polylineData.material, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, polyline, 'followSurface', polylineData.followSurface, interval, sourceUri, entityCollection);
+        processPacketData(Number, polyline, 'granularity', polylineData.granularity, interval, sourceUri, entityCollection);
         processPositions(polyline, polylineData.positions, entityCollection);
     }
 
