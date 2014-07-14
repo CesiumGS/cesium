@@ -237,7 +237,7 @@ define([
     };
 
     /**
-     * Subdivides polyline and raises all points to the specified height.
+     * Subdivides polyline and raises all points to the specified height.  Returns an array of numbers to represent the positions.
      * @param {Cartesian3[]} positions The array of type {Cartesian3} representing positions.
      * @param {Number|Number[]} [height=0.0] A number or array of numbers representing the heights of each position.
      * @param {Number} [granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
@@ -251,7 +251,9 @@ define([
      *   -105.0, 35.0,
      *   -100.0, 32.0
      * ]);
-     * var surfacePositions = Cesium.PolylinePipeline.generateArc(positions);
+     * var surfacePositions = Cesium.PolylinePipeline.generateArc({
+     *   positons: positions
+     * });
      */
     PolylinePipeline.generateArc = function(options) {
         if (!defined(options)) {
@@ -310,7 +312,7 @@ define([
     };
 
     /**
-     * Subdivides polyline and raises all points to the specified height.
+     * Subdivides polyline and raises all points to the specified height. Returns an array of new {Cartesian3} positions.
      * @param {Cartesian3[]} positions The array of type {Cartesian3} representing positions.
      * @param {Number|Number[]} [height=0.0] A number or array of numbers representing the heights of each position.
      * @param {Number} [granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
@@ -324,7 +326,9 @@ define([
      *   -105.0, 35.0,
      *   -100.0, 32.0
      * ]);
-     * var surfacePositions = Cesium.PolylinePipeline.generateCartesianArc(positions);
+     * var surfacePositions = Cesium.PolylinePipeline.generateCartesianArc({
+     *   positons: positions
+     * });
      */
     PolylinePipeline.generateCartesianArc = function(options) {
         var numberArray = PolylinePipeline.generateArc(options);

@@ -221,7 +221,6 @@ define([
                         c1 = colors[i+1];
                         offset = interpolateColors(p0, p1, c0, c1, granularity, colorValues, offset);
                     }
-                    l = colorValues.length;
                     colorValues[offset++] = Color.floatToByte(c1.red);
                     colorValues[offset++] = Color.floatToByte(c1.green);
                     colorValues[offset++] = Color.floatToByte(c1.blue);
