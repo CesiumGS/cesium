@@ -343,17 +343,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var navigationHelpButton;
         if (!defined(options.navigationHelpButton) || options.navigationHelpButton !== false) {
             var showNavHelp = true;
-            if (window.localStorage) {
-                var  navHelpCount = Number(window.localStorage.getItem('cesium-navHelpCount'));
-                if (defined(navHelpCount)) {
-                    if (navHelpCount >= 5) {
-                        showNavHelp = false;
-                    } else {
-                        navHelpCount++;
-                        window.localStorage.setItem('cesium-navHelpCount', navHelpCount);
-                    }
+            if (defined(window.localStorage)) {
+                var  hasSeenNavHelp = window.localStorage.getItem('cesium-hasSeenNavHelp');
+                if (defined(hasSeenNavHelp) && Boolean(hasSeenNavHelp)) {
+                    showNavHelp = false;
                 } else {
-                    window.localStorage.setItem('cesium-navHelpCount', '1');
+                    window.localStorage.setItem('cesium-hasSeenNavHelp', 'true');
                 }
             }
             navigationHelpButton = new NavigationHelpButton({
