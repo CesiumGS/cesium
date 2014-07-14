@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
         'Core/RectangleOutlineGeometry',
+        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/GeographicProjection',
@@ -9,6 +10,7 @@ defineSuite([
         'Core/Rectangle'
     ], function(
         RectangleOutlineGeometry,
+        Cartesian2,
         Cartesian3,
         Ellipsoid,
         GeographicProjection,
@@ -29,7 +31,7 @@ defineSuite([
         expect(positions.length).toEqual(8 * 3);
         expect(m.indices.length).toEqual(8 * 2);
 
-        var expectedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(Rectangle.getNorthwest(rectangle));
+        var expectedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(Rectangle.northwest(rectangle));
         expect(new Cartesian3(positions[0], positions[1], positions[2])).toEqualEpsilon(expectedNWCorner, CesiumMath.EPSILON9);
     });
 
@@ -47,11 +49,11 @@ defineSuite([
         expect(length).toEqual(8 * 3);
         expect(m.indices.length).toEqual(8 * 2);
 
-        var unrotatedNWCorner = Rectangle.getNorthwest(rectangle);
+        var unrotatedNWCorner = Rectangle.northwest(rectangle);
         var projection = new GeographicProjection();
         var projectedNWCorner = projection.project(unrotatedNWCorner);
         var rotation = Matrix2.fromRotation(angle);
-        var rotatedNWCornerCartographic = projection.unproject(Matrix2.multiplyByVector(rotation, projectedNWCorner));
+        var rotatedNWCornerCartographic = projection.unproject(Matrix2.multiplyByVector(rotation, projectedNWCorner, new Cartesian2()));
         var rotatedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(rotatedNWCornerCartographic);
         var actual = new Cartesian3(positions[0], positions[1], positions[2]);
         expect(actual).toEqualEpsilon(rotatedNWCorner, CesiumMath.EPSILON6);
@@ -116,11 +118,11 @@ defineSuite([
         expect(length).toEqual(8 * 3 * 2);
         expect(m.indices.length).toEqual(8 * 2 * 2 + 4 * 2);
 
-        var unrotatedNWCorner = Rectangle.getNorthwest(rectangle);
+        var unrotatedNWCorner = Rectangle.northwest(rectangle);
         var projection = new GeographicProjection();
         var projectedNWCorner = projection.project(unrotatedNWCorner);
         var rotation = Matrix2.fromRotation(angle);
-        var rotatedNWCornerCartographic = projection.unproject(Matrix2.multiplyByVector(rotation, projectedNWCorner));
+        var rotatedNWCornerCartographic = projection.unproject(Matrix2.multiplyByVector(rotation, projectedNWCorner, new Cartesian2()));
         rotatedNWCornerCartographic.height = 2;
         var rotatedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(rotatedNWCornerCartographic);
         var actual = new Cartesian3(positions[0], positions[1], positions[2]);

@@ -37,6 +37,8 @@ define([
      * var cameraPosition = new Cesium.Cartesian3(5.0, 6.0, 7.0);
      * var occluderEllipsoid = new Cesium.Ellipsoid(1.0, 1.1, 0.9);
      * var occluder = new Cesium.EllipsoidalOccluder(occluderEllipsoid, cameraPosition);
+     *
+     * @private
      */
     var EllipsoidalOccluder = function(ellipsoid, cameraPosition) {
         //>>includeStart('debug', pragmas.debug);

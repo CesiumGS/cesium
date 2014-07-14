@@ -1,5 +1,8 @@
 /*global define*/
-define(function() {
+define([
+        '../Core/freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
@@ -16,5 +19,5 @@ define(function() {
         PLACEHOLDER : 7
     };
 
-    return ImageryState;
+    return freezeObject(ImageryState);
 });

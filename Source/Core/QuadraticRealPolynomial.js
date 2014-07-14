@@ -10,7 +10,8 @@ define([
     /**
      * Defines functions for 2nd order polynomial functions of one variable with only real coefficients.
      *
-     * @exports QuadraticRealPolynomial
+     * @namespace
+     * @alias QuadraticRealPolynomial
      */
     var QuadraticRealPolynomial = {};
 
@@ -22,7 +23,7 @@ define([
      * @param {Number} c The coefficient of the 0th order monomial.
      * @returns {Number} The value of the discriminant.
      */
-    QuadraticRealPolynomial.discriminant = function(a, b, c) {
+    QuadraticRealPolynomial.computeDiscriminant = function(a, b, c) {
         //>>includeStart('debug', pragmas.debug);
         if (typeof a !== 'number') {
             throw new DeveloperError('a is a required number.');
@@ -57,7 +58,7 @@ define([
      * @param {Number} c The coefficient of the 0th order monomial.
      * @returns {Number[]} The real valued roots.
      */
-    QuadraticRealPolynomial.realRoots = function(a, b, c) {
+    QuadraticRealPolynomial.computeRealRoots = function(a, b, c) {
         //>>includeStart('debug', pragmas.debug);
         if (typeof a !== 'number') {
             throw new DeveloperError('a is a required number.');

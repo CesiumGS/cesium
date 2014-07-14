@@ -10,7 +10,6 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
-        '../Core/FAR',
         '../Core/IntersectionTests',
         '../Core/isArray',
         '../Core/KeyboardEventModifier',
@@ -36,7 +35,6 @@ define([
         destroyObject,
         DeveloperError,
         Ellipsoid,
-        FAR,
         IntersectionTests,
         isArray,
         KeyboardEventModifier,
@@ -271,7 +269,7 @@ define([
         this._minimumRotateRate = 1.0 / 5000.0;
         this._translateFactor = 1.0;
         this._minimumZoomRate = 20.0;
-        this._maximumZoomRate = FAR;
+        this._maximumZoomRate = 5906376272000.0;  // distance from the Sun to Pluto in meters.
     };
 
     function decay(time, coefficient) {

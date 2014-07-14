@@ -75,7 +75,7 @@ define([
 
         this._fCameraHeight = undefined;
         this._fCameraHeight2 = undefined;
-        this._outerRadius = Cartesian3.getMaximumComponent(Cartesian3.multiplyByScalar(ellipsoid.radii, 1.025, new Cartesian3()));
+        this._outerRadius = Cartesian3.maximumComponent(Cartesian3.multiplyByScalar(ellipsoid.radii, 1.025, new Cartesian3()));
         var innerRadius = ellipsoid.maximumRadius;
         var rayleighScaleDepth = 0.25;
 
@@ -113,7 +113,9 @@ define([
         /**
          * Gets the ellipsoid the atmosphere is drawn around.
          * @memberof SkyAtmosphere.prototype
+         *
          * @type {Ellipsoid}
+         * @readonly
          */
         ellipsoid : {
             get : function() {

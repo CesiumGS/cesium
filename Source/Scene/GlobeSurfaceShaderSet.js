@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../Core/defined',
-        '../Core/destroyObject'
+        '../Core/destroyObject',
+        '../Scene/terrainAttributeLocations'
     ], function(
         defined,
-        destroyObject) {
+        destroyObject,
+        terrainAttributeLocations) {
     "use strict";
 
     /**
@@ -13,10 +15,10 @@ define([
      * @alias GlobeSurfaceShaderSet
      * @private
      */
-    function GlobeSurfaceShaderSet(attributeLocations) {
+    function GlobeSurfaceShaderSet() {
         this.baseVertexShaderString = undefined;
         this.baseFragmentShaderString = undefined;
-        this._attributeLocations = attributeLocations;
+        this._attributeLocations = terrainAttributeLocations;
         this._shaders = {};
     }
 
@@ -76,9 +78,9 @@ define([
                 (applyAlpha ? '#define APPLY_ALPHA\n' : '') +
                 '#define TEXTURE_UNITS ' + textureCount + '\n' +
                 this.baseFragmentShaderString + '\n' +
-                'vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates)\n' +
+                'vec4 computeDayColor(vec4 initialColor, vec2 textureCoordinates)\n' +
                 '{\n' +
-                '    vec3 color = initialColor;\n';
+                '    vec4 color = initialColor;\n';
 
             for (var i = 0; i < textureCount; ++i) {
                 fs +=

@@ -17,7 +17,8 @@ define([
      * This is a helper when using custom render states with {@link Appearance#renderState}.
      * </p>
      *
-     * @exports BlendingState
+     * @namespace
+     * @alias BlendingState
      */
     var BlendingState = {
         /**
@@ -79,5 +80,5 @@ define([
         })
     };
 
-    return BlendingState;
+    return freezeObject(BlendingState);
 });
