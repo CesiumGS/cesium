@@ -54,6 +54,7 @@
 
 .cesium-touch-navigation-help {
     display: none;
+    padding-top: 5px;
 }
 
 .cesium-click-navigation-help-visible {
@@ -95,12 +96,13 @@
     border-top: 1px solid #444;
     border-right: 1px solid #444;
     margin: 0;
-    width: 50%
+    width: 50%;
+    cursor: pointer;
 }
 
 .cesium-navigation-button-icon {
     vertical-align: middle;
-    padding: 3px;
+    padding: 5px 1px;
 }
 
 .cesium-navigation-button:focus {
@@ -123,4 +125,8 @@
 
 .cesium-navigation-button-unselected {
     background-color: rgba(0, 0, 0, 0.75);
+}
+
+.cesium-navigation-button-unselected:hover {
+    background-color: rgba(76, 76, 76, 0.75);
 }
