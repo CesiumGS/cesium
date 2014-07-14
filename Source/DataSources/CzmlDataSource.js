@@ -792,11 +792,11 @@ define([
             processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, sourceUri, entityCollection);
             processPacketData(Color, existingMaterial, 'outlineColor', materialData.outlineColor, undefined, sourceUri, entityCollection);
             processPacketData(Number, existingMaterial, 'outlineWidth', materialData.outlineWidth, undefined, sourceUri, entityCollection);
-        } else if (defined(packetData.polylineOutline)) {
+        } else if (defined(packetData.polylineGlow)) {
             if (!(existingMaterial instanceof PolylineGlowMaterialProperty)) {
                 existingMaterial = new PolylineGlowMaterialProperty();
             }
-            materialData = packetData.polylineOutline;
+            materialData = packetData.polylineGlow;
             processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, sourceUri, entityCollection);
             processPacketData(Number, existingMaterial, 'glowPower', materialData.glowPower, undefined, sourceUri, entityCollection);
         }
