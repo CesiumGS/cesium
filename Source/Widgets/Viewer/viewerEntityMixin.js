@@ -94,9 +94,6 @@ define([
             eventHelper.add(infoBoxViewModel.closeClicked, clearSelectedEntity);
         }
 
-        var scratchPositions;
-        var scratchBoundingSphere;
-
         // Subscribe to onTick so that we can update the view each update.
         function onTick(clock) {
             var time = clock.currentTime;
