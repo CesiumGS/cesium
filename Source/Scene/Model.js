@@ -30,7 +30,6 @@ define([
         '../Renderer/TextureWrap',
         '../ThirdParty/gltfDefaults',
         '../ThirdParty/Uri',
-        './BlendingState',
         './getModelAccessor',
         './ModelAnimationCache',
         './ModelAnimationCollection',
@@ -70,7 +69,6 @@ define([
         TextureWrap,
         gltfDefaults,
         Uri,
-        BlendingState,
         getModelAccessor,
         ModelAnimationCache,
         ModelAnimationCollection,
@@ -1371,12 +1369,15 @@ define([
     }
 
     function getBooleanStates(states) {
-        // GLTF_SPEC: Support all render states.
+        // GLTF_SPEC: SAMPLE_ALPHA_TO_COVERAGE not used by Cesium
         var booleanStates = {};
+        booleanStates[WebGLRenderingContext.BLEND] = false;
         booleanStates[WebGLRenderingContext.CULL_FACE] = false;
         booleanStates[WebGLRenderingContext.DEPTH_TEST] = false;
-        booleanStates[WebGLRenderingContext.DEPTH_WRITEMASK] = true;
-        booleanStates[WebGLRenderingContext.BLEND] = false;
+        booleanStates[WebGLRenderingContext.POLYGON_OFFSET_FILL] = false;
+        booleanStates[WebGLRenderingContext.SAMPLE_COVERAGE] = false;
+        booleanStates[WebGLRenderingContext.SCISSOR_TEST] = false;
+        booleanStates[WebGLRenderingContext.STENCIL_TEST] = false;
 
         var enable = states.enable;
         var length = enable.length;
@@ -1406,17 +1407,169 @@ define([
                     var technique = techniques[name];
                     var pass = technique.passes[technique.pass];
                     var states = pass.states;
+
                     var booleanStates = getBooleanStates(states);
+                    var statesFunctions = defaultValue(states.functions, defaultValue.EMPTY_OBJECT);
+                    var blendColor = defaultValue(statesFunctions.blendColor, [0.0, 0.0, 0.0, 0.0]);
+                    var blendEquationSeparate = defaultValue(statesFunctions.blendEquationSeparate, [
+                        WebGLRenderingContext.FUNC_ADD,
+                        WebGLRenderingContext.FUNC_ADD]);
+                    var blendFuncSeparate = defaultValue(statesFunctions.blendFuncSeparate, [
+                        WebGLRenderingContext.ONE,
+                        WebGLRenderingContext.ONE,
+                        WebGLRenderingContext.ZERO,
+                        WebGLRenderingContext.ZERO]);
+                    var colorMask = defaultValue(statesFunctions.colorMask, [false, false, false, false]);
+                    var depthRange = defaultValue(statesFunctions.depthRange, [0.0, 1.0]);
+                    var polygonOffset = defaultValue(statesFunctions.polygonOffset, [0.0, 0.0]);
+                    var sampleCoverage = defaultValue(statesFunctions.sampleCoverage, [0.0, 0.0]);
+                    var scissor = defaultValue(statesFunctions.scissor, [0.0, 0.0, 0.0, 0.0]);
+                    var stencilFunctions = defaultValue(states.stencilFunctions, defaultValue.EMPTY_OBJECT);
+
+                    var stencilFunc = {};
+                    stencilFunc[WebGLRenderingContext.FRONT] = WebGLRenderingContext.ALWAYS;
+                    stencilFunc[WebGLRenderingContext.BACK] = WebGLRenderingContext.ALWAYS;
+                    var stencilFuncReference = 0;
+                    var stencilFuncMask = ~0;
+
+                    var i;
+                    var length;
+                    var face;
+                    var stencilFuncSeparate = stencilFunctions.stencilFuncSeparate;
+                    if (defined(stencilFuncSeparate)) {
+                        stencilFuncReference = (stencilFuncSeparate[0])[2]; // Must be the same for front and back
+                        stencilFuncMask = (stencilFuncSeparate[0])[3]; // Must be the same for front and back
+
+                        length = stencilFuncSeparate.length;
+                        for (i = 0; i < length; ++i) {
+                            face = (stencilFuncSeparate[i])[0];
+                            var func = (stencilFuncSeparate[i])[1];
+                            if (face === WebGLRenderingContext.FRONT_AND_BACK) {
+                                stencilFunc[WebGLRenderingContext.FRONT] = func;
+                                stencilFunc[WebGLRenderingContext.BACK] = func;
+                            } else {
+                                stencilFunc[face] = func;
+                            }
+                        }
+                    }
+
+                    var stencilFail = {};
+                    stencilFail[WebGLRenderingContext.FRONT] = WebGLRenderingContext.KEEP;
+                    stencilFail[WebGLRenderingContext.BACK] = WebGLRenderingContext.KEEP;
+
+                    var stencilZFail = {};
+                    stencilZFail[WebGLRenderingContext.FRONT] = WebGLRenderingContext.KEEP;
+                    stencilZFail[WebGLRenderingContext.BACK] = WebGLRenderingContext.KEEP;
+
+                    var stencilZPass = {};
+                    stencilZPass[WebGLRenderingContext.FRONT] = WebGLRenderingContext.KEEP;
+                    stencilZPass[WebGLRenderingContext.BACK] = WebGLRenderingContext.KEEP;
+
+                    var stencilOpSeparate = stencilFunctions.stencilOpSeparate;
+                    if (defined(stencilOpSeparate)) {
+                        length = stencilOpSeparate.length;
+                        for (i = 0; i < length; ++i) {
+                            face = (stencilOpSeparate[i])[0];
+                            if (face === WebGLRenderingContext.FRONT_AND_BACK) {
+                                stencilFail[WebGLRenderingContext.FRONT] = (stencilOpSeparate[i])[1];
+                                stencilFail[WebGLRenderingContext.BACK] = (stencilOpSeparate[i])[1];
+                                stencilZFail[WebGLRenderingContext.FRONT] = (stencilOpSeparate[i])[2];
+                                stencilZFail[WebGLRenderingContext.BACK] = (stencilOpSeparate[i])[2];
+                                stencilZPass[WebGLRenderingContext.FRONT] = (stencilOpSeparate[i])[3];
+                                stencilZPass[WebGLRenderingContext.BACK] = (stencilOpSeparate[i])[3];
+                            } else {
+                                stencilFail[face] = (stencilOpSeparate[i])[1];
+                                stencilZFail[face] = (stencilOpSeparate[i])[2];
+                                stencilZPass[face] = (stencilOpSeparate[i])[3];
+                            }
+                        }
+                    }
 
                     rendererRenderStates[name] = context.createRenderState({
+                        frontFace : defined(statesFunctions.frontFace) ? statesFunctions.frontFace[0] : WebGLRenderingContext.CCW,
                         cull : {
-                            enabled : booleanStates[WebGLRenderingContext.CULL_FACE]
+                            enabled : booleanStates[WebGLRenderingContext.CULL_FACE],
+                            face : defined(statesFunctions.cullFace) ? statesFunctions.cullFace[0] : WebGLRenderingContext.BACK
+                        },
+                        lineWidth : defined(statesFunctions.lineWidth) ? statesFunctions.lineWidth[0] : 1.0,
+                        polygonOffset : {
+                            enabled : booleanStates[WebGLRenderingContext.POLYGON_OFFSET_FILL],
+                            factor : polygonOffset[0],
+                            units : polygonOffset[1]
+                        },
+                        scissorTest : {
+                            enabled : booleanStates[WebGLRenderingContext.SCISSOR_TEST],
+                            rectangle : {
+                                x : scissor[0],
+                                y : scissor[1],
+                                width : scissor[2],
+                                height : scissor[3]
+                            }
+                        },
+                        depthRange : {
+                            near : depthRange[0],
+                            far : depthRange[1]
                         },
                         depthTest : {
-                            enabled : booleanStates[WebGLRenderingContext.DEPTH_TEST]
+                            enabled : booleanStates[WebGLRenderingContext.DEPTH_TEST],
+                            func : defined(statesFunctions.depthFunc) ? statesFunctions.depthFunc[0] : WebGLRenderingContext.LESS
                         },
-                        depthMask : booleanStates[WebGLRenderingContext.DEPTH_WRITEMASK],
-                        blending : booleanStates[WebGLRenderingContext.BLEND] ? BlendingState.ALPHA_BLEND : BlendingState.DISABLED
+                        colorMask : {
+                            red : colorMask[0],
+                            green : colorMask[1],
+                            blue : colorMask[2],
+                            alpha : colorMask[3]
+                        },
+                        depthMask : defined(statesFunctions.depthMask) ? statesFunctions.depthMask[0] : true,
+                        stencilMask : defined(statesFunctions.stencilMask) ? statesFunctions.stencilMask[0] : ~0,
+                        blending : {
+                            enabled : booleanStates[WebGLRenderingContext.BLEND],
+
+// TODO: workaround this not being in the converter.
+/*
+                            color : {
+                                red : blendColor[0],
+                                green : blendColor[1],
+                                blue : blendColor[2],
+                                alpha : blendColor[3]
+                            },
+                            equationRgb : blendEquationSeparate[0],
+                            equationAlpha : blendEquationSeparate[1],
+                            functionSourceRgb : blendFuncSeparate[0],
+                            functionSourceAlpha : blendFuncSeparate[1],
+                            functionDestinationRgb : blendFuncSeparate[2],
+                            functionDestinationAlpha : blendFuncSeparate[3]
+*/
+
+                            equationRgb : WebGLRenderingContext.ADD,
+                            equationAlpha : WebGLRenderingContext.ADD,
+                            functionSourceRgb : WebGLRenderingContext.SRC_ALPHA,
+                            functionSourceAlpha : WebGLRenderingContext.SRC_ALPHA,
+                            functionDestinationRgb : WebGLRenderingContext.ONE_MINUS_SRC_ALPHA,
+                            functionDestinationAlpha : WebGLRenderingContext.ONE_MINUS_SRC_ALPHA
+                        },
+                        stencilTest : {
+                            enabled : booleanStates[WebGLRenderingContext.STENCIL_TEST],
+                            frontFunction : stencilFunc[WebGLRenderingContext.FRONT],
+                            backFunction : stencilFunc[WebGLRenderingContext.BACK],
+                            reference : stencilFuncReference,
+                            mask : stencilFuncMask,
+                            frontOperation : {
+                                fail : stencilFail[WebGLRenderingContext.FRONT],
+                                zFail : stencilZFail[WebGLRenderingContext.FRONT],
+                                zPass : stencilZPass[WebGLRenderingContext.FRONT]
+                            },
+                            backOperation : {
+                                fail : stencilFail[WebGLRenderingContext.BACK],
+                                zFail : stencilZFail[WebGLRenderingContext.BACK],
+                                zPass : stencilZPass[WebGLRenderingContext.BACK]
+                            }
+                        },
+                        sampleCoverage : {
+                            enabled : booleanStates[WebGLRenderingContext.SAMPLE_COVERAGE],
+                            value : sampleCoverage[0],
+                            invert : sampleCoverage[1]
+                        }
                     });
                 }
             }
