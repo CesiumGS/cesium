@@ -110,6 +110,53 @@ defineSuite([
         expect(returnedResult).toEqual(expected);
     });
 
+    it('fromCrossProduct works without a result parameter', function() {
+        var expected = new Matrix3(
+                0.0, -3.0, -2.0,
+                3.0,  0.0, -1.0,
+                2.0,  1.0,  0.0);
+        var left = new Cartesian3(1.0, -2.0, 3.0);
+        var returnedResult = Matrix3.fromCrossProduct(left);
+        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).toEqual(expected);
+
+        var right = new Cartesian3(2.0, 3.0, 4.0);
+        var crossProductExpected = new Cartesian3(-17.0, 2.0, 7.0);
+
+        var crossProductResult = new Cartesian3();
+        // Check Cartesian3 cross product.
+        crossProductResult = Cartesian3.cross(left, right, crossProductResult);
+        expect(crossProductResult).toEqual(crossProductExpected);
+
+        // Check Matrix3 cross product equivalent.
+        crossProductResult = Matrix3.multiply(returnedResult, right, crossProductResult);
+        expect(crossProductResult).toEqual(crossProductExpected);
+    });
+
+    it('fromCrossProduct works with a result parameter', function() {
+        var expected = new Matrix3(
+                0.0, -3.0, -2.0,
+                3.0,  0.0, -1.0,
+                2.0,  1.0,  0.0);
+        var left = new Cartesian3(1.0, -2.0, 3.0);
+        var result = new Matrix3();
+        var returnedResult = Matrix3.fromCrossProduct(left, result);
+        expect(returnedResult).toBe(result);
+        expect(returnedResult).toEqual(expected);
+
+        var right = new Cartesian3(2.0, 3.0, 4.0);
+        var crossProductExpected = new Cartesian3(-17.0, 2.0, 7.0);
+
+        var crossProductResult = new Cartesian3();
+        // Check Cartesian3 cross product.
+        crossProductResult = Cartesian3.cross(left, right, crossProductResult);
+        expect(crossProductResult).toEqual(crossProductExpected);
+
+        // Check Matrix3 cross product equivalent.
+        crossProductResult = Matrix3.multiply(returnedResult, right, crossProductResult);
+        expect(crossProductResult).toEqual(crossProductExpected);
+    });
+
     it('fromArray works without a result parameter', function() {
         var expected = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         var matrix = Matrix3.fromArray([1.0, 4.0, 7.0, 2.0, 5.0, 8.0, 3.0, 6.0, 9.0]);
@@ -392,6 +439,44 @@ defineSuite([
         var right = new Matrix3(10, 11, 12, 13, 14, 15, 16, 17, 18);
         var expected = new Matrix3(84, 90, 96, 201, 216, 231, 318, 342, 366);
         var returnedResult = Matrix3.multiply(left, right, left);
+        expect(returnedResult).toBe(left);
+        expect(left).toEqual(expected);
+    });
+
+    it('add works', function() {
+        var left = new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+        var right = new Matrix3(10, 11, 12, 13, 14, 15, 16, 17, 18);
+        var expected = new Matrix3(11, 13, 15, 17, 19, 21, 23, 25, 27);
+        var result = new Matrix3();
+        var returnedResult = Matrix3.add(left, right, result);
+        expect(returnedResult).toBe(result);
+        expect(result).toEqual(expected);
+    });
+
+    it('add works with a result parameter that is an input result parameter', function() {
+        var left = new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+        var right = new Matrix3(10, 11, 12, 13, 14, 15, 16, 17, 18);
+        var expected = new Matrix3(11, 13, 15, 17, 19, 21, 23, 25, 27);
+        var returnedResult = Matrix3.add(left, right, left);
+        expect(returnedResult).toBe(left);
+        expect(left).toEqual(expected);
+    });
+
+    it('subtract works', function() {
+        var left = new Matrix3(11, 13, 15, 17, 19, 21, 23, 25, 27);
+        var right = new Matrix3(10, 11, 12, 13, 14, 15, 16, 17, 18);
+        var expected = new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+        var result = new Matrix3();
+        var returnedResult = Matrix3.subtract(left, right, result);
+        expect(returnedResult).toBe(result);
+        expect(result).toEqual(expected);
+    });
+
+    it('subtract works with a result parameter that is an input result parameter', function() {
+        var left = new Matrix3(11, 13, 15, 17, 19, 21, 23, 25, 27);
+        var right = new Matrix3(10, 11, 12, 13, 14, 15, 16, 17, 18);
+        var expected = new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9);
+        var returnedResult = Matrix3.subtract(left, right, left);
         expect(returnedResult).toBe(left);
         expect(left).toEqual(expected);
     });

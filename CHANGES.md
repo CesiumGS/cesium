@@ -75,6 +75,8 @@ Change Log
 * Added `Primitive.ready`.
 * Prevent primitives from flashing off and on when modifying static DataSources.
 * Added `scene3DOnly` options to `Viewer`, `CesiumWidget`, and `Scene` constructors. This setting optimizes memory usage and performance for 3D mode at the cost of losing the ability to use 2D or Columbus View.
+* Matrix types now have `add` and `subtract` functions.
+* `Matrix3` type now has a `fromCrossProduct` function.
 
 Beta Releases
 -------------
