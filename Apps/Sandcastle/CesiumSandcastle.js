@@ -675,6 +675,7 @@ require({
             htmlText += childNode.nodeType === 1 ? childNode.outerHTML : childNode.nodeValue;
             childNode = doc.body.childNodes[++childIndex];
         }
+        htmlText = htmlText.replace(/^\s+/, '');
 
         htmlEditor.setValue(htmlText);
         htmlEditor.clearHistory();
@@ -815,7 +816,7 @@ require({
     });
 
     function getDemoHtml() {
-        return local.headers +
+        return local.headers + '\n' +
                htmlEditor.getValue() +
                '<script id="cesium_sandcastle_script">\n' +
                getScriptFromEditor() +
