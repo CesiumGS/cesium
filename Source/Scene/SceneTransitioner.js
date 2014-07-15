@@ -91,8 +91,8 @@ define([
         up2D = Cartesian3.normalize(Cartesian3.cross(right2D, direction2D, up2D), up2D);
 
         frustum = new PerspectiveFrustum();
-        frustum.fovy = CesiumMath.toRadians(60.0);
         frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        frustum.fov = CesiumMath.toRadians(60.0);
 
         this._cameraCV = {
             position : position,
@@ -329,15 +329,15 @@ define([
         var camera = scene.camera;
 
         var startPos = camera.position;
-        var startFOVy = camera.frustum.fovy;
-        var endFOVy = CesiumMath.RADIANS_PER_DEGREE * 0.5;
-        var d = Cartesian3.magnitude(startPos) * Math.tan(startFOVy * 0.5);
-        camera.frustum.far = d / Math.tan(endFOVy * 0.5) + 10000000.0;
+        var startFOV = camera.frustum.fov;
+        var endFOV = CesiumMath.RADIANS_PER_DEGREE * 0.5;
+        var d = Cartesian3.magnitude(startPos) * Math.tan(startFOV * 0.5);
+        camera.frustum.far = d / Math.tan(endFOV * 0.5) + 10000000.0;
 
         var update = function(value) {
-            camera.frustum.fovy = CesiumMath.lerp(startFOVy, endFOVy, value.time);
+            camera.frustum.fov = CesiumMath.lerp(startFOV, endFOV, value.time);
 
-            var distance = d / Math.tan(camera.frustum.fovy * 0.5);
+            var distance = d / Math.tan(camera.frustum.fov * 0.5);
             var pos = new Cartesian3();
             camera.position = Cartesian3.multiplyByScalar(Cartesian3.normalize(camera.position, pos), distance, pos);
         };
