@@ -75,7 +75,11 @@
 
     window.onerror = function(errorMsg, url, lineNumber) {
         if (defined(lineNumber)) {
-            if (lineNumber < 1 || (defined(url) && url && url.indexOf(Sandcastle.bucket) < 0)) {
+            if (defined(url) && url.indexOf(Sandcastle.bucket) > -1) {
+                // if the URL is the bucket itself, ignore it
+                url = '';
+            }
+            if (lineNumber < 1) {
                 // Change lineNumber to the local one for highlighting.
                 try {
                     var pos = errorMsg.indexOf(Sandcastle.bucket + ':');

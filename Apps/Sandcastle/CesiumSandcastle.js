@@ -143,7 +143,7 @@ require({
     galleryErrorMsg.textContent = 'No demos match your search terms.';
 
     if (navigator.userAgent.indexOf('Firefox/') >= 0) {
-        // FireFox line numbers are zero-based, not one-based.
+        // Firefox line numbers are zero-based, not one-based.
         addExtraLine = true;
     }
 
@@ -212,7 +212,7 @@ require({
             };
             cesiumContainer.selectChild(docTabs[title]);
         } else {
-            // Tab already exists, but maybe not visible.  FireFox needs the tab to
+            // Tab already exists, but maybe not visible.  Firefox needs the tab to
             // be revealed before a re-scroll can happen.  Chrome works either way.
             cesiumContainer.selectChild(docTabs[title]);
             docTabs[title].domNode.childNodes[0].src = link;
@@ -341,6 +341,10 @@ require({
             for (i = 0, len = hints.length; i < len; ++i) {
                 var hint = hints[i];
                 if (hint !== null && defined(hint.reason) && hint.line > 0) {
+                    // Firefox may use zero-indexed line numbers, but JSHint does not.
+                    if (addExtraLine) {
+                        --hint.line;
+                    }
                     line = jsEditor.setMarker(scriptLineToEditorLine(hint.line), makeLineLabel(hint.reason), 'hintMarker');
                     jsEditor.setLineClass(line, 'hintLine');
                     errorLines.push(line);
@@ -487,6 +491,7 @@ require({
         return 'function startup(Cesium) {\n' +
                '    "use strict";\n' +
                '//Sandcastle_Begin\n' +
+               (addExtraLine ? '\n' : '') +
                jsEditor.getValue() +
                '//Sandcastle_End\n' +
                '    Sandcastle.finishedLoading();\n' +
