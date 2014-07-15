@@ -302,6 +302,11 @@ require({
         }
     }
 
+    function scriptLineToEditorLine(line) {
+        // editor lines are zero-indexed, plus 3 lines of boilerplate
+        return line - 4;
+    }
+
     function clearErrorsAddHints() {
         var line;
         var i;
@@ -331,13 +336,12 @@ require({
         }
         // make a copy of the options, JSHint modifies the object it's given
         var options = JSON.parse(JSON.stringify(sandcastleJsHintOptions));
-        var jsHintCode = 'function startup(Cesium){"use strict";\n' + code + '}';
-        if (!JSHINT(jsHintCode, options)) {
+        if (!JSHINT(getScriptFromEditor(), options)) {
             var hints = JSHINT.errors;
             for (i = 0, len = hints.length; i < len; ++i) {
                 var hint = hints[i];
                 if (hint !== null && defined(hint.reason) && hint.line > 0) {
-                    line = jsEditor.setMarker(hint.line - 2, makeLineLabel(hint.reason), 'hintMarker');
+                    line = jsEditor.setMarker(scriptLineToEditorLine(hint.line), makeLineLabel(hint.reason), 'hintMarker');
                     jsEditor.setLineClass(line, 'hintLine');
                     errorLines.push(line);
                 }
@@ -389,7 +393,7 @@ require({
             jsEditor.clearMarker(line);
         }
         if (lineNum > 0) {
-            line = jsEditor.setMarker(lineNum - 1, makeLineLabel('highlighted by demo'), 'highlightMarker');
+            line = jsEditor.setMarker(scriptLineToEditorLine(lineNum), makeLineLabel('highlighted by demo'), 'highlightMarker');
             jsEditor.setLineClass(line, 'highlightLine');
             highlightLines.push(line);
             scrollToLine(lineNum);
@@ -714,13 +718,23 @@ require({
             appendConsole('consoleLog', e.data.log, false);
         } else if (defined(e.data.error)) {
             // Console error messages from the iframe display in Sandcastle
-            appendConsole('consoleError', e.data.error, true);
-            if (defined(e.data.lineNumber)) {
-                line = jsEditor.setMarker(e.data.lineNumber - 1, makeLineLabel(e.data.rawErrorMsg), 'errorMarker');
-                jsEditor.setLineClass(line, 'errorLine');
-                errorLines.push(line);
-                scrollToLine(e.data.lineNumber);
+            var errorMsg = e.data.error;
+            var lineNumber = e.data.lineNumber;
+            if (defined(lineNumber)) {
+                errorMsg += ' (on line ';
+
+                if (e.data.url) {
+                    errorMsg += lineNumber + ' of ' + e.data.url + ')';
+                } else {
+                    lineNumber = scriptLineToEditorLine(lineNumber);
+                    errorMsg += (lineNumber + 1) + ')';
+                    line = jsEditor.setMarker(lineNumber, makeLineLabel(e.data.error), 'errorMarker');
+                    jsEditor.setLineClass(line, 'errorLine');
+                    errorLines.push(line);
+                    scrollToLine(e.data.lineNumber);
+                }
             }
+            appendConsole('consoleError', errorMsg, true);
         } else if (defined(e.data.warn)) {
             // Console warning messages from the iframe display in Sandcastle.
             appendConsole('consoleWarn', e.data.warn, true);
