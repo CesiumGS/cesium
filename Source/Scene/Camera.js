@@ -16,6 +16,7 @@ define([
         '../Core/Matrix4',
         '../Core/Quaternion',
         '../Core/Ray',
+        '../Core/Rectangle',
         '../Core/Transforms',
         './CameraFlightPath',
         './PerspectiveFrustum',
@@ -37,6 +38,7 @@ define([
         Matrix4,
         Quaternion,
         Ray,
+        Rectangle,
         Transforms,
         CameraFlightPath,
         PerspectiveFrustum,
@@ -64,7 +66,7 @@ define([
      * camera.position = new Cesium.Cartesian3();
      * camera.direction = Cesium.Cartesian3.negate(Cesium.Cartesian3.UNIT_Z, new Cesium.Cartesian3());
      * camera.up = Cesium.Cartesian3.clone(Cesium.Cartesian3.UNIT_Y);
-     * camera.frustum.fovy = Cesium.Math.PI_OVER_THREE;
+     * camera.frustum.fov = Cesium.Math.PI_OVER_THREE;
      * camera.frustum.near = 1.0;
      * camera.frustum.far = 2.0;
      *
@@ -93,55 +95,42 @@ define([
         this._actualTransform = Matrix4.clone(Matrix4.IDENTITY);
         this._actualInvTransform = Matrix4.clone(Matrix4.IDENTITY);
 
-        var maxRadii = Ellipsoid.WGS84.maximumRadius;
-        var position = new Cartesian3(0.0, -2.0, 1.0);
-        position = Cartesian3.multiplyByScalar(Cartesian3.normalize(position, position), 2.5 * maxRadii, position);
-
         /**
          * The position of the camera.
          *
          * @type {Cartesian3}
          */
-        this.position = position;
-        this._position = Cartesian3.clone(position);
-        this._positionWC = Cartesian3.clone(position);
+        this.position = new Cartesian3();
+        this._position = new Cartesian3();
+        this._positionWC = new Cartesian3();
         this._positionCartographic = new Cartographic();
-
-        var direction = new Cartesian3();
-        direction = Cartesian3.normalize(Cartesian3.negate(position, direction), direction);
 
         /**
          * The view direction of the camera.
          *
          * @type {Cartesian3}
          */
-        this.direction = direction;
-        this._direction = Cartesian3.clone(direction);
-        this._directionWC = Cartesian3.clone(direction);
-
-        var right = new Cartesian3();
-        right = Cartesian3.normalize(Cartesian3.cross(direction, Cartesian3.UNIT_Z, right), right);
-        var up = Cartesian3.cross(right, direction, new Cartesian3());
+        this.direction = new Cartesian3();
+        this._direction = new Cartesian3();
+        this._directionWC = new Cartesian3();
 
         /**
          * The up direction of the camera.
          *
          * @type {Cartesian3}
          */
-        this.up = up;
-        this._up = Cartesian3.clone(up);
-        this._upWC = Cartesian3.clone(up);
-
-        right = Cartesian3.cross(direction, up, new Cartesian3());
+        this.up = new Cartesian3();
+        this._up = new Cartesian3();
+        this._upWC = new Cartesian3();
 
         /**
          * The right direction of the camera.
          *
          * @type {Cartesian3}
          */
-        this.right = right;
-        this._right = Cartesian3.clone(right);
-        this._rightWC = Cartesian3.clone(right);
+        this.right = new Cartesian3();
+        this._right = new Cartesian3();
+        this._rightWC = new Cartesian3();
 
         /**
          * The region of space in view.
@@ -154,8 +143,8 @@ define([
          * @see OrthographicFrustum
          */
         this.frustum = new PerspectiveFrustum();
-        this.frustum.fovy = CesiumMath.toRadians(60.0);
         this.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        this.frustum.fov = CesiumMath.toRadians(60.0);
 
         /**
          * The default amount to move the camera when an argument is not
@@ -216,6 +205,14 @@ define([
         this._projection = projection;
         this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
         this._max2Dfrustum = undefined;
+
+        // set default view
+        this.viewRectangle(Camera.DEFAULT_VIEW_RECTANGLE);
+
+        var mag = Cartesian3.magnitude(this.position);
+        mag += mag * Camera.DEFAULT_VIEW_FACTOR;
+        Cartesian3.normalize(this.position, this.position);
+        Cartesian3.multiplyByScalar(this.position, mag, this.position);
     };
 
     Camera.TRANSFORM_2D = new Matrix4(
@@ -225,6 +222,9 @@ define([
         0.0, 0.0, 0.0, 1.0);
 
     Camera.TRANSFORM_2D_INVERSE = Matrix4.inverseTransformation(Camera.TRANSFORM_2D, new Matrix4());
+
+    Camera.DEFAULT_VIEW_RECTANGLE = Rectangle.fromDegrees(-95.0, -20.0, -70.0, 90.0);
+    Camera.DEFAULT_VIEW_FACTOR = 0.5;
 
     function updateViewMatrix(camera) {
         var r = camera._right;
@@ -591,7 +591,7 @@ define([
          * for the returned longitude and latitude to be outside the range of valid longitudes
          * and latitudes when the camera is outside the map.
          * @memberof Camera.prototype
-         * 
+         *
          * @type {Cartographic}
          */
         positionCartographic : {
@@ -1887,7 +1887,7 @@ define([
         }
 
         var frustum = this.frustum;
-        if (defined(frustum.aspectRatio) && defined(frustum.fovy) && defined(frustum.near)) {
+        if (defined(frustum.aspectRatio) && defined(frustum.fov) && defined(frustum.near)) {
             return getPickRayPerspective(this, windowPosition, result);
         }
 

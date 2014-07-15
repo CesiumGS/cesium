@@ -283,6 +283,44 @@ defineSuite([
         expect(left).toEqual(expected);
     });
 
+    it('add works', function() {
+        var left = new Matrix2(1, 2, 3, 4);
+        var right = new Matrix2(10, 11, 12, 13);
+        var expected = new Matrix2(11, 13, 15, 17);
+        var result = new Matrix2();
+        var returnedResult = Matrix2.add(left, right, result);
+        expect(returnedResult).toBe(result);
+        expect(result).toEqual(expected);
+    });
+
+    it('add works with a result parameter that is an input result parameter', function() {
+        var left = new Matrix2(1, 2, 3, 4);
+        var right = new Matrix2(10, 11, 12, 13);
+        var expected = new Matrix2(11, 13, 15, 17);
+        var returnedResult = Matrix2.add(left, right, left);
+        expect(returnedResult).toBe(left);
+        expect(left).toEqual(expected);
+    });
+
+    it('subtract works', function() {
+        var left = new Matrix2(11, 13, 15, 17);
+        var right = new Matrix2(10, 11, 12, 13);
+        var expected = new Matrix2(1, 2, 3, 4);
+        var result = new Matrix2();
+        var returnedResult = Matrix2.subtract(left, right, result);
+        expect(returnedResult).toBe(result);
+        expect(result).toEqual(expected);
+    });
+
+    it('subtract works with a result parameter that is an input result parameter', function() {
+        var left = new Matrix2(11, 13, 15, 17);
+        var right = new Matrix2(10, 11, 12, 13);
+        var expected = new Matrix2(1, 2, 3, 4);
+        var returnedResult = Matrix2.subtract(left, right, left);
+        expect(returnedResult).toBe(left);
+        expect(left).toEqual(expected);
+    });
+
     it('multiplyByVector works', function() {
         var left = new Matrix2(1, 2, 3, 4);
         var right = new Cartesian2(5, 6);
