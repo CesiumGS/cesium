@@ -361,19 +361,21 @@ require({
     function scrollToLine(lineNumber) {
         if (defined(lineNumber)) {
             jsEditor.setCursor(lineNumber);
+            // set selection twice in order to force the editor to scroll
+            // to this location if the cursor is already there
             jsEditor.setSelection({
-                line : lineNumber - 2,
+                line : lineNumber - 1,
                 ch : 0
             }, {
-                line : lineNumber - 2,
+                line : lineNumber - 1,
                 ch : 0
             });
             jsEditor.focus();
             jsEditor.setSelection({
-                line : lineNumber - 1,
+                line : lineNumber,
                 ch : 0
             }, {
-                line : lineNumber - 1,
+                line : lineNumber,
                 ch : 0
             });
         }
@@ -387,7 +389,8 @@ require({
             jsEditor.clearMarker(line);
         }
         if (lineNum > 0) {
-            line = jsEditor.setMarker(scriptLineToEditorLine(lineNum), makeLineLabel('highlighted by demo'), 'highlightMarker');
+            lineNum = scriptLineToEditorLine(lineNum);
+            line = jsEditor.setMarker(lineNum, makeLineLabel('highlighted by demo'), 'highlightMarker');
             jsEditor.setLineClass(line, 'highlightLine');
             highlightLines.push(line);
             scrollToLine(lineNum);
@@ -731,7 +734,7 @@ require({
                     line = jsEditor.setMarker(lineNumber, makeLineLabel(e.data.error), 'errorMarker');
                     jsEditor.setLineClass(line, 'errorLine');
                     errorLines.push(line);
-                    scrollToLine(e.data.lineNumber);
+                    scrollToLine(lineNumber);
                 }
             }
             appendConsole('consoleError', errorMsg, true);
