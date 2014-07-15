@@ -16,7 +16,7 @@
     });
     </script>
 </head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
 </style>
@@ -24,31 +24,37 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+function startup(Cesium) {
     "use strict";
-
-    var viewer = new Cesium.Viewer('cesiumContainer', {
-        imageryProvider : new Cesium.ArcGisMapServerImageryProvider({
-            url : '//server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
-        }),
-        baseLayerPicker : false
-    });
-
-    var layers = viewer.scene.imageryLayers;
-    var blackMarble = layers.addImageryProvider(new Cesium.TileMapServiceImageryProvider({
-        url : '//cesiumjs.org/blackmarble',
-        maximumLevel : 8,
-        credit : 'Black Marble imagery courtesy NASA Earth Observatory'
-    }));
-    blackMarble.alpha = 0.5;
-    blackMarble.brightness = 2.0;
-    layers.addImageryProvider(new Cesium.SingleTileImageryProvider({
-        url : '../images/Cesium_Logo_overlay.png',
-        rectangle : Cesium.Rectangle.fromDegrees(-75.0, 28.0, -67.0, 29.75)
-    }));
-
-    Sandcastle.finishedLoading();
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    imageryProvider : new Cesium.ArcGisMapServerImageryProvider({
+        url : '//server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
+    }),
+    baseLayerPicker : false
 });
+
+var layers = viewer.scene.imageryLayers;
+var blackMarble = layers.addImageryProvider(new Cesium.TileMapServiceImageryProvider({
+    url : '//cesiumjs.org/blackmarble',
+    maximumLevel : 8,
+    credit : 'Black Marble imagery courtesy NASA Earth Observatory'
+}));
+blackMarble.alpha = 0.5;
+blackMarble.brightness = 2.0;
+
+layers.addImageryProvider(new Cesium.SingleTileImageryProvider({
+    url : '../images/Cesium_Logo_overlay.png',
+    rectangle : Cesium.Rectangle.fromDegrees(-75.0, 28.0, -67.0, 29.75)
+}));
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
 </script>
 </body>
 </html>
