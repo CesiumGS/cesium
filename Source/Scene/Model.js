@@ -1419,7 +1419,7 @@ define([
                         WebGLRenderingContext.ONE,
                         WebGLRenderingContext.ZERO,
                         WebGLRenderingContext.ZERO]);
-                    var colorMask = defaultValue(statesFunctions.colorMask, [false, false, false, false]);
+                    var colorMask = defaultValue(statesFunctions.colorMask, [true, true, true, true]);
                     var depthRange = defaultValue(statesFunctions.depthRange, [0.0, 1.0]);
                     var polygonOffset = defaultValue(statesFunctions.polygonOffset, [0.0, 0.0]);
                     var sampleCoverage = defaultValue(statesFunctions.sampleCoverage, [0.0, 0.0]);
@@ -1485,6 +1485,7 @@ define([
                         }
                     }
 
+// TODO: Add unit test that spys on createRenderState()
                     rendererRenderStates[name] = context.createRenderState({
                         frontFace : defined(statesFunctions.frontFace) ? statesFunctions.frontFace[0] : WebGLRenderingContext.CCW,
                         cull : {
@@ -1524,8 +1525,7 @@ define([
                         stencilMask : defined(statesFunctions.stencilMask) ? statesFunctions.stencilMask[0] : ~0,
                         blending : {
                             enabled : booleanStates[WebGLRenderingContext.BLEND],
-
-// TODO: workaround this not being in the converter.
+// TODO: workaround this not being written by the converter yet.
 /*
                             color : {
                                 red : blendColor[0],
@@ -1540,7 +1540,6 @@ define([
                             functionDestinationRgb : blendFuncSeparate[2],
                             functionDestinationAlpha : blendFuncSeparate[3]
 */
-
                             equationRgb : WebGLRenderingContext.ADD,
                             equationAlpha : WebGLRenderingContext.ADD,
                             functionSourceRgb : WebGLRenderingContext.SRC_ALPHA,
