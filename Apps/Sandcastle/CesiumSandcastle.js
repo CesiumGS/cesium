@@ -109,7 +109,6 @@ require({
 
     var jsEditor;
     var htmlEditor;
-    var addExtraLine = false;
     var suggestButton = registry.byId('buttonSuggest');
     var docTimer;
     var docTabs = {};
@@ -141,11 +140,6 @@ require({
     galleryErrorMsg.className = 'galleryError';
     galleryErrorMsg.style.display = 'none';
     galleryErrorMsg.textContent = 'No demos match your search terms.';
-
-    if (navigator.userAgent.indexOf('Firefox/') >= 0) {
-        // Firefox line numbers are zero-based, not one-based.
-        addExtraLine = true;
-    }
 
     var bucketFrame = document.getElementById('bucketFrame');
     var bucketPane = registry.byId('bucketPane');
@@ -336,15 +330,11 @@ require({
         }
         // make a copy of the options, JSHint modifies the object it's given
         var options = JSON.parse(JSON.stringify(sandcastleJsHintOptions));
-        if (!JSHINT(getScriptFromEditor(), options)) {
+        if (!JSHINT(getScriptFromEditor(false), options)) {
             var hints = JSHINT.errors;
             for (i = 0, len = hints.length; i < len; ++i) {
                 var hint = hints[i];
                 if (hint !== null && defined(hint.reason) && hint.line > 0) {
-                    // Firefox may use zero-indexed line numbers, but JSHint does not.
-                    if (addExtraLine) {
-                        --hint.line;
-                    }
                     line = jsEditor.setMarker(scriptLineToEditorLine(hint.line), makeLineLabel(hint.reason), 'hintMarker');
                     jsEditor.setLineClass(line, 'hintLine');
                     errorLines.push(line);
@@ -487,7 +477,7 @@ require({
         }
     });
 
-    function getScriptFromEditor() {
+    function getScriptFromEditor(addExtraLine) {
         return 'function startup(Cesium) {\n' +
                '    "use strict";\n' +
                '//Sandcastle_Begin\n' +
@@ -563,7 +553,11 @@ require({
             } else {
                 // Apply user JS to bucket
                 var element = bucketDoc.createElement('script');
-                element.textContent = getScriptFromEditor();
+
+                // Firefox line numbers are zero-based, not one-based.
+                var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
+
+                element.textContent = getScriptFromEditor(isFirefox);
                 bucketDoc.body.appendChild(element);
             }
         };
@@ -819,7 +813,7 @@ require({
         return local.headers + '\n' +
                htmlEditor.getValue() +
                '<script id="cesium_sandcastle_script">\n' +
-               getScriptFromEditor() +
+               getScriptFromEditor(false) +
                '</script>\n' +
                '</body>\n' +
                '</html>\n';
