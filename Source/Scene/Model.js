@@ -1370,26 +1370,14 @@ define([
 
     function getBooleanStates(states) {
         // GLTF_SPEC: SAMPLE_ALPHA_TO_COVERAGE not used by Cesium
+        var statesEnable = states.enable;
         var booleanStates = {};
-        booleanStates[WebGLRenderingContext.BLEND] = false;
-        booleanStates[WebGLRenderingContext.CULL_FACE] = false;
-        booleanStates[WebGLRenderingContext.DEPTH_TEST] = false;
-        booleanStates[WebGLRenderingContext.POLYGON_OFFSET_FILL] = false;
-        booleanStates[WebGLRenderingContext.SAMPLE_COVERAGE] = false;
-        booleanStates[WebGLRenderingContext.SCISSOR_TEST] = false;
-
-        var enable = states.enable;
-        var length = enable.length;
-        var i;
-        for (i = 0; i < length; ++i) {
-            booleanStates[enable[i]] = true;
-        }
-
-        var disable = states.disable;
-        length = disable.length;
-        for (i = 0; i < length; ++i) {
-            booleanStates[disable[i]] = false;
-        }
+        booleanStates[WebGLRenderingContext.BLEND] = defaultValue(statesEnable[WebGLRenderingContext.BLEND], false);
+        booleanStates[WebGLRenderingContext.CULL_FACE] = defaultValue(statesEnable[WebGLRenderingContext.CULL_FACE], false);
+        booleanStates[WebGLRenderingContext.DEPTH_TEST] = defaultValue(statesEnable[WebGLRenderingContext.DEPTH_TEST], false);
+        booleanStates[WebGLRenderingContext.POLYGON_OFFSET_FILL] = defaultValue(statesEnable[WebGLRenderingContext.POLYGON_OFFSET_FILL], false);
+        booleanStates[WebGLRenderingContext.SAMPLE_COVERAGE] = defaultValue(statesEnable[WebGLRenderingContext.SAMPLE_COVERAGE], false);
+        booleanStates[WebGLRenderingContext.SCISSOR_TEST] = defaultValue(statesEnable[WebGLRenderingContext.SCISSOR_TEST], false);
 
         return booleanStates;
     }
