@@ -1123,7 +1123,7 @@ define([
         var us = context.uniformState;
 
         var frustum;
-        if (defined(camera.frustum.fovy)) {
+        if (defined(camera.frustum.fov)) {
             frustum = camera.frustum.clone(scratchPerspectiveFrustum);
         } else if (defined(camera.frustum.infiniteProjectionMatrix)){
             frustum = camera.frustum.clone(scratchPerspectiveOffCenterFrustum);

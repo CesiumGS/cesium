@@ -500,6 +500,62 @@ define([
     };
 
     /**
+     * Computes the sum of two matrices.
+     *
+     * @param {Matrix2} left The first matrix.
+     * @param {Matrix2} right The second matrix.
+     * @param {Matrix2} result The object onto which to store the result.
+     * @returns {Matrix2} The modified result parameter.
+     */
+    Matrix2.add = function(left, right, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(left)) {
+            throw new DeveloperError('left is required');
+        }
+        if (!defined(right)) {
+            throw new DeveloperError('right is required');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required,');
+        }
+        //>>includeEnd('debug');
+
+        result[0] = left[0] + right[0];
+        result[1] = left[1] + right[1];
+        result[2] = left[2] + right[2];
+        result[3] = left[3] + right[3];
+        return result;
+    };
+
+    /**
+     * Computes the difference of two matrices.
+     *
+     * @param {Matrix2} left The first matrix.
+     * @param {Matrix2} right The second matrix.
+     * @param {Matrix2} result The object onto which to store the result.
+     * @returns {Matrix2} The modified result parameter.
+     */
+    Matrix2.subtract = function(left, right, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(left)) {
+            throw new DeveloperError('left is required');
+        }
+        if (!defined(right)) {
+            throw new DeveloperError('right is required');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required,');
+        }
+        //>>includeEnd('debug');
+
+        result[0] = left[0] - right[0];
+        result[1] = left[1] - right[1];
+        result[2] = left[2] - right[2];
+        result[3] = left[3] - right[3];
+        return result;
+    };
+
+    /**
      * Computes the product of a matrix and a column vector.
      *
      * @param {Matrix2} matrix The matrix.

@@ -834,7 +834,7 @@ defineSuite([
             Math.PI,
             CesiumMath.PI_OVER_TWO);
         camera.viewRectangle(rectangle);
-        expect(camera.position).toEqualEpsilon(new Cartesian3(11010217.979403382, 0.0, 0.0), CesiumMath.EPSILON6);
+        expect(camera.position).toEqualEpsilon(new Cartesian3(14680290.639204923, 0.0, 0.0), CesiumMath.EPSILON6);
         expect(camera.direction).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()), CesiumMath.EPSILON10);
         expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON10);
         expect(camera.right).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON10);
@@ -847,7 +847,7 @@ defineSuite([
             CesiumMath.toRadians(21.51),
             CesiumMath.toRadians(41.38));
         camera.viewRectangle(rectangle, Ellipsoid.WGS84);
-        expect(camera.position).toEqualEpsilon(new Cartesian3(4478207.335705587, 1753173.8165311918, 4197410.895448539), CesiumMath.EPSILON6);
+        expect(camera.position).toEqualEpsilon(new Cartesian3(4481581.128950368, 1754494.6231700405, 4200573.14218324), CesiumMath.EPSILON6);
         expect(camera.direction).toEqualEpsilon(new Cartesian3(-0.6995107725362416, -0.2738515389883838, -0.6600681886740524), CesiumMath.EPSILON10);
         expect(camera.up).toEqualEpsilon(new Cartesian3(-0.6146449843355883, -0.24062742347984528, 0.7512056884106748), CesiumMath.EPSILON10);
         expect(camera.right).toEqualEpsilon(new Cartesian3(-0.36454934142973716, 0.9311840729217532, 0.0), CesiumMath.EPSILON10);
@@ -860,7 +860,7 @@ defineSuite([
             CesiumMath.toRadians(157.0),
             CesiumMath.toRadians(0.0));
         camera.viewRectangle(rectangle);
-        expect(camera.position).toEqualEpsilon(new Cartesian3(-6141929.663019788, 6904446.963087202, -5087100.779249599), CesiumMath.EPSILON6);
+        expect(camera.position).toEqualEpsilon(new Cartesian3(-7210721.873278953, 8105929.1576369405, -5972336.199381728), CesiumMath.EPSILON6);
         expect(camera.direction).toEqualEpsilon(new Cartesian3(0.5813363216621468, -0.6535089167170689, 0.48474135050314004), CesiumMath.EPSILON10);
         expect(camera.up).toEqualEpsilon(new Cartesian3(-0.3221806693208934, 0.3621792280122498, 0.8746575461930182), CesiumMath.EPSILON10);
         expect(camera.right).toEqualEpsilon(new Cartesian3(-0.7471597536218517, -0.6646444933705039, 0.0), CesiumMath.EPSILON10);
@@ -873,7 +873,7 @@ defineSuite([
             -0.1,
             CesiumMath.PI_OVER_TWO);
         camera.viewRectangle(rectangle);
-        expect(camera.position).toEqualEpsilon(new Cartesian3(-11010217.979403382, 0.0, 0.0), CesiumMath.EPSILON6);
+        expect(camera.position).toEqualEpsilon(new Cartesian3(-14680290.639204923, 0.0, 0.0), CesiumMath.EPSILON6);
         expect(camera.direction).toEqualEpsilon(Cartesian3.UNIT_X, CesiumMath.EPSILON10);
         expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON10);
         expect(camera.right).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Y, new Cartesian3()), CesiumMath.EPSILON10);
@@ -951,7 +951,7 @@ defineSuite([
         camera._mode = SceneMode.COLUMBUS_VIEW;
         camera._projection = projection;
         camera.viewRectangle(rectangle);
-        expect(camera.position).toEqualEpsilon(new Cartesian3(0.0, 0.0, 17352991.253398113), CesiumMath.EPSILON8);
+        expect(camera.position).toEqualEpsilon(new Cartesian3(0.0, 0.0, 23137321.67119748), CesiumMath.EPSILON8);
         expect(camera.direction).toEqualEpsilon(new Cartesian3(0.0, 0.0, -1.0), CesiumMath.EPSILON2);
         expect(camera.up).toEqualEpsilon(new Cartesian3(0.0, 1.0, 0.0), CesiumMath.EPSILON2);
         expect(camera.right).toEqualEpsilon(new Cartesian3(1.0, 0.0, 0.0), CesiumMath.EPSILON10);
@@ -975,7 +975,7 @@ defineSuite([
         var right = Cartesian3.clone(camera.right);
         camera._mode = SceneMode.SCENE3D;
         camera.getRectangleCameraCoordinates(rectangle, position);
-        expect(position).toEqualEpsilon(new Cartesian3(11010217.979403382, 0.0, 0.0), CesiumMath.EPSILON6);
+        expect(position).toEqualEpsilon(new Cartesian3(14680290.639204923, 0.0, 0.0), CesiumMath.EPSILON6);
         expect(camera.direction).toEqual(direction);
         expect(camera.up).toEqual(up);
         expect(camera.right).toEqual(right);
@@ -993,7 +993,7 @@ defineSuite([
         var right = Cartesian3.clone(camera.right);
         camera._mode = SceneMode.SCENE3D;
         position = camera.getRectangleCameraCoordinates(rectangle);
-        expect(position).toEqualEpsilon(new Cartesian3(-11010217.979403382, 0.0, 0.0), CesiumMath.EPSILON6);
+        expect(position).toEqualEpsilon(new Cartesian3(-14680290.639204923, 0.0, 0.0), CesiumMath.EPSILON6);
         expect(camera.direction).toEqual(direction);
         expect(camera.up).toEqual(up);
         expect(camera.right).toEqual(right);
@@ -1043,7 +1043,7 @@ defineSuite([
         var up = Cartesian3.clone(camera.up);
         var right = Cartesian3.clone(camera.right);
         camera.position = camera.getRectangleCameraCoordinates(rectangle);
-        expect(camera.position).toEqualEpsilon(new Cartesian3(0.0, 0.0, 17352991.253398113), CesiumMath.EPSILON8);
+        expect(camera.position).toEqualEpsilon(new Cartesian3(0.0, 0.0, 23137321.67119748), CesiumMath.EPSILON8);
         expect(camera.direction).toEqual(direction);
         expect(camera.up).toEqual(up);
         expect(camera.right).toEqual(right);
@@ -1086,7 +1086,7 @@ defineSuite([
         camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
 
         var frustum = new PerspectiveFrustum();
-        frustum.fovy = CesiumMath.toRadians(60.0);
+        frustum.fov = CesiumMath.toRadians(60.0);
         frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
         frustum.near = 100;
         frustum.far = 60.0 * maxRadii;
@@ -1178,7 +1178,7 @@ defineSuite([
         camera.up = Cartesian3.cross(camera.right, camera.direction, new Cartesian3());
 
         var frustum = new PerspectiveFrustum();
-        frustum.fovy = CesiumMath.toRadians(60.0);
+        frustum.fov = CesiumMath.toRadians(60.0);
         frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
         frustum.near = 0.01 * maxRadii;
         frustum.far = 60.0 * maxRadii;
@@ -1205,7 +1205,7 @@ defineSuite([
         camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
 
         var frustum = new PerspectiveFrustum();
-        frustum.fovy = CesiumMath.toRadians(60.0);
+        frustum.fov = CesiumMath.toRadians(60.0);
         frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
         frustum.near = 100;
         frustum.far = 60.0 * maxRadii;
@@ -1443,7 +1443,7 @@ defineSuite([
     it('animates position to visible map in Columbus view', function() {
         var maxRadii = Ellipsoid.WGS84.maximumRadius;
         var frustum = new PerspectiveFrustum();
-        frustum.fovy = CesiumMath.toRadians(60.0);
+        frustum.fov = CesiumMath.toRadians(60.0);
         frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
         frustum.near = 100;
         frustum.far = 60.0 * maxRadii;
@@ -1497,7 +1497,7 @@ defineSuite([
 
         var maxRadii = Ellipsoid.WGS84.maximumRadius;
         var frustum = new PerspectiveFrustum();
-        frustum.fovy = CesiumMath.toRadians(60.0);
+        frustum.fov = CesiumMath.toRadians(60.0);
         frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
         frustum.near = 100;
         frustum.far = 60.0 * maxRadii;
