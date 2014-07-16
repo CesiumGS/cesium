@@ -3,7 +3,6 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
-        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -17,7 +16,6 @@ define([
         Cartesian2,
         Cartesian3,
         Color,
-        defaultValue,
         defined,
         destroyObject,
         DeveloperError,
@@ -122,7 +120,7 @@ define([
 
         var label;
         var labelVisualizerIndex = entity._labelVisualizerIndex;
-        var show = defined(position) && defined(text) && entity.isAvailable(time) && defaultValue(Property.getValueOrUndefined(labelGraphics._show, time), true);
+        var show = defined(position) && defined(text) && entity.isAvailable(time) && Property.getValueOrDefault(labelGraphics._show, time, true);
 
         if (!show) {
             //don't bother creating or updating anything else
@@ -154,16 +152,16 @@ define([
         label.show = true;
         label.position = position;
         label.text = text;
-        label.scale = defaultValue(Property.getValueOrUndefined(labelGraphics._scale, time), 1.0);
-        label.font = defaultValue(Property.getValueOrUndefined(labelGraphics._font, time), '30px sans-serif');
-        label.style = defaultValue(Property.getValueOrUndefined(labelGraphics._style, time), LabelStyle.FILL);
-        label.fillColor = defaultValue(Property.getValueOrUndefined(labelGraphics._fillColor, time, fillColor), Color.WHITE);
-        label.outlineColor = defaultValue(Property.getValueOrUndefined(labelGraphics._outlineColor, time, outlineColor), Color.BLACK);
-        label.outlineWidth = defaultValue(Property.getValueOrUndefined(labelGraphics._outlineWidth, time), 1);
-        label.pixelOffset = defaultValue(Property.getValueOrUndefined(labelGraphics._pixelOffset, time, pixelOffset), Cartesian2.ZERO);
-        label.eyeOffset = defaultValue(Property.getValueOrUndefined(labelGraphics._eyeOffset, time, eyeOffset), Cartesian3.ZERO);
-        label.horizontalOrigin = defaultValue(Property.getValueOrUndefined(labelGraphics._horizontalOrigin, time), HorizontalOrigin.CENTER);
-        label.verticalOrigin = defaultValue(Property.getValueOrUndefined(labelGraphics._verticalOrigin, time), VerticalOrigin.CENTER);
+        label.scale = Property.getValueOrDefault(labelGraphics._scale, time, 1.0);
+        label.font = Property.getValueOrDefault(labelGraphics._font, time, '30px sans-serif');
+        label.style = Property.getValueOrDefault(labelGraphics._style, time, LabelStyle.FILL);
+        label.fillColor = Property.getValueOrDefault(labelGraphics._fillColor, time, Color.WHITE, fillColor);
+        label.outlineColor = Property.getValueOrDefault(labelGraphics._outlineColor, time, Color.BLACK, outlineColor);
+        label.outlineWidth = Property.getValueOrDefault(labelGraphics._outlineWidth, time, 1);
+        label.pixelOffset = Property.getValueOrDefault(labelGraphics._pixelOffset, time, Cartesian2.ZERO, pixelOffset);
+        label.eyeOffset = Property.getValueOrDefault(labelGraphics._eyeOffset, time, Cartesian3.ZERO, eyeOffset);
+        label.horizontalOrigin = Property.getValueOrDefault(labelGraphics._horizontalOrigin, time, HorizontalOrigin.CENTER);
+        label.verticalOrigin = Property.getValueOrDefault(labelGraphics._verticalOrigin, time, VerticalOrigin.CENTER);
         label.translucencyByDistance = Property.getValueOrUndefined(labelGraphics._translucencyByDistance, time, translucencyByDistance);
         label.pixelOffsetScaleByDistance = Property.getValueOrUndefined(labelGraphics._pixelOffsetScaleByDistance, time, pixelOffsetScaleByDistance);
     }

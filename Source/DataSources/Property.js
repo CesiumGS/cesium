@@ -117,5 +117,19 @@ define([
         return undefined;
     };
 
+    /**
+     * @private
+     */
+    Property.getValueOrDefault = function(property, time, defaultValue, result) {
+        var value;
+        if (defined(property)) {
+            value = property.getValue(time, result);
+        }
+        if (!defined(value)) {
+            value = defaultValue;
+        }
+        return value;
+    };
+
     return Property;
 });

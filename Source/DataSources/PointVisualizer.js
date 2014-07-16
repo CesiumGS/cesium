@@ -2,7 +2,6 @@
 define([
         '../Core/Cartesian3',
         '../Core/Color',
-        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -14,7 +13,6 @@ define([
     ], function(
         Cartesian3,
         Color,
-        defaultValue,
         defined,
         destroyObject,
         DeveloperError,
@@ -117,9 +115,8 @@ define([
         position = Property.getValueOrUndefined(entity._position, time, position);
 
         var billboard;
-        var showProperty = pointGraphics._show;
         var pointVisualizerIndex = entity._pointVisualizerIndex;
-        var show = entity.isAvailable(time) && defined(position) && (!defined(showProperty) || showProperty.getValue(time));
+        var show = entity.isAvailable(time) && defined(position) && Property.getValueOrDefault(pointGraphics._show, time, true);
 
         if (!show) {
             //don't bother creating or updating anything else
@@ -160,10 +157,10 @@ define([
         billboard.position = position;
         billboard.scaleByDistance = Property.getValueOrUndefined(pointGraphics._scaleByDistance, time, scaleByDistance);
 
-        var newColor = defaultValue(Property.getValueOrUndefined(pointGraphics._color, time, color), Color.WHITE);
-        var newOutlineColor = defaultValue(Property.getValueOrUndefined(pointGraphics._outlineColor, time, outlineColor), Color.BLACK);
-        var newOutlineWidth = defaultValue(Property.getValueOrUndefined(pointGraphics._outlineWidth, time), 0);
-        var newPixelSize = defaultValue(Property.getValueOrUndefined(pointGraphics._pixelSize, time), 1);
+        var newColor = Property.getValueOrDefault(pointGraphics._color, time, Color.WHITE, color);
+        var newOutlineColor = Property.getValueOrDefault(pointGraphics._outlineColor, time, Color.BLACK, outlineColor);
+        var newOutlineWidth = Property.getValueOrDefault(pointGraphics._outlineWidth, time, 0);
+        var newPixelSize = Property.getValueOrDefault(pointGraphics._pixelSize, time, 1);
 
         needRedraw = needRedraw || //
                      newOutlineWidth !== billboard._visualizerOutlineWidth || //
