@@ -3,24 +3,30 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/NearFarScalar',
         '../Scene/HorizontalOrigin',
         '../Scene/LabelCollection',
         '../Scene/LabelStyle',
-        '../Scene/VerticalOrigin'
+        '../Scene/VerticalOrigin',
+        './Property'
     ], function(
         Cartesian2,
         Cartesian3,
         Color,
+        defaultValue,
         defined,
         destroyObject,
         DeveloperError,
+        NearFarScalar,
         HorizontalOrigin,
         LabelCollection,
         LabelStyle,
-        VerticalOrigin) {
+        VerticalOrigin,
+        Property) {
     "use strict";
 
     /**
@@ -98,31 +104,25 @@ define([
         return destroyObject(this);
     };
 
-    var position;
-    var fillColor;
-    var outlineColor;
-    var eyeOffset;
-    var pixelOffset;
+    var position = new Cartesian3();
+    var fillColor = new Color();
+    var outlineColor = new Color();
+    var eyeOffset = new Cartesian3();
+    var pixelOffset = new Cartesian2();
+    var translucencyByDistance = new NearFarScalar();
+    var pixelOffsetScaleByDistance = new NearFarScalar();
     function updateObject(labelVisualizer, time, entity) {
         var labelGraphics = entity._label;
         if (!defined(labelGraphics)) {
             return;
         }
 
-        var textProperty = labelGraphics._text;
-        if (!defined(textProperty)) {
-            return;
-        }
-
-        var positionProperty = entity._position;
-        if (!defined(positionProperty)) {
-            return;
-        }
+        position = Property.getValueOrUndefined(entity._position, time, position);
+        var text = Property.getValueOrUndefined(labelGraphics._text, time);
 
         var label;
-        var showProperty = labelGraphics._show;
         var labelVisualizerIndex = entity._labelVisualizerIndex;
-        var show = entity.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
+        var show = defined(position) && defined(text) && entity.isAvailable(time) && defaultValue(Property.getValueOrUndefined(labelGraphics._show, time), true);
 
         if (!show) {
             //don't bother creating or updating anything else
@@ -147,123 +147,25 @@ define([
             }
             entity._labelVisualizerIndex = labelVisualizerIndex;
             label.id = entity;
-
-            label.text = '';
-            label.scale = 1.0;
-            label.font = '30px sans-serif';
-            label.fillColor = Color.WHITE;
-            label.outlineColor = Color.BLACK;
-            label.outlineWidth = 1;
-            label.style = LabelStyle.FILL;
-            label.pixelOffset = Cartesian2.ZERO;
-            label.eyeOffset = Cartesian3.ZERO;
-            label.horizontalOrigin = HorizontalOrigin.CENTER;
-            label.verticalOrigin = VerticalOrigin.CENTER;
         } else {
             label = labelVisualizer._labelCollection.get(labelVisualizerIndex);
         }
 
-        label.show = show;
-
-        var text = textProperty.getValue(time);
-        if (defined(text)) {
-            label.text = text;
-        }
-
-        position = positionProperty.getValue(time, position);
-        if (defined(position)) {
-            label.position = position;
-        }
-
-        var property = labelGraphics._scale;
-        if (defined(property)) {
-            var scale = property.getValue(time);
-            if (defined(scale)) {
-                label.scale = scale;
-            }
-        }
-
-        property = labelGraphics._font;
-        if (defined(property)) {
-            var font = property.getValue(time);
-            if (defined(font)) {
-                label.font = font;
-            }
-        }
-
-        property = labelGraphics._fillColor;
-        if (defined(property)) {
-            fillColor = property.getValue(time, fillColor);
-            if (defined(fillColor)) {
-                label.fillColor = fillColor;
-            }
-        }
-
-        property = labelGraphics._outlineColor;
-        if (defined(property)) {
-            outlineColor = property.getValue(time, outlineColor);
-            if (defined(outlineColor)) {
-                label.outlineColor = outlineColor;
-            }
-        }
-
-        property = labelGraphics._outlineWidth;
-        if (defined(property)) {
-            var outlineWidth = property.getValue(time);
-            if (defined(outlineWidth)) {
-                label.outlineWidth = outlineWidth;
-            }
-        }
-
-        property = labelGraphics._style;
-        if (defined(property)) {
-            var style = property.getValue(time);
-            if (defined(style)) {
-                label.style = style;
-            }
-        }
-
-        property = labelGraphics._pixelOffset;
-        if (defined(property)) {
-            pixelOffset = property.getValue(time, pixelOffset);
-            if (defined(pixelOffset)) {
-                label.pixelOffset = pixelOffset;
-            }
-        }
-
-        property = labelGraphics._eyeOffset;
-        if (defined(property)) {
-            eyeOffset = property.getValue(time, eyeOffset);
-            if (defined(eyeOffset)) {
-                label.eyeOffset = eyeOffset;
-            }
-        }
-
-        property = labelGraphics._horizontalOrigin;
-        if (defined(property)) {
-            var horizontalOrigin = property.getValue(time);
-            if (defined(horizontalOrigin)) {
-                label.horizontalOrigin = horizontalOrigin;
-            }
-        }
-
-        property = labelGraphics._verticalOrigin;
-        if (defined(property)) {
-            var verticalOrigin = property.getValue(time);
-            if (defined(verticalOrigin)) {
-                label.verticalOrigin = verticalOrigin;
-            }
-        }
-
-        property = labelGraphics._translucencyByDistance;
-        if (defined(property)) {
-            label.translucencyByDistance = property.getValue(time);
-        }
-
-        property = labelGraphics._pixelOffsetScaleByDistance;
-        if (defined(property)) {
-            label.pixelOffsetScaleByDistance = property.getValue(time);
-        }
+        label.show = true;
+        label.position = position;
+        label.text = text;
+        label.scale = defaultValue(Property.getValueOrUndefined(labelGraphics._scale, time), 1.0);
+        label.font = defaultValue(Property.getValueOrUndefined(labelGraphics._font, time), '30px sans-serif');
+        label.style = defaultValue(Property.getValueOrUndefined(labelGraphics._style, time), LabelStyle.FILL);
+        label.fillColor = defaultValue(Property.getValueOrUndefined(labelGraphics._fillColor, time, fillColor), Color.WHITE);
+        label.outlineColor = defaultValue(Property.getValueOrUndefined(labelGraphics._outlineColor, time, outlineColor), Color.BLACK);
+        label.outlineWidth = defaultValue(Property.getValueOrUndefined(labelGraphics._outlineWidth, time), 1);
+        label.pixelOffset = defaultValue(Property.getValueOrUndefined(labelGraphics._pixelOffset, time, pixelOffset), Cartesian2.ZERO);
+        label.eyeOffset = defaultValue(Property.getValueOrUndefined(labelGraphics._eyeOffset, time, eyeOffset), Cartesian3.ZERO);
+        label.horizontalOrigin = defaultValue(Property.getValueOrUndefined(labelGraphics._horizontalOrigin, time), HorizontalOrigin.CENTER);
+        label.verticalOrigin = defaultValue(Property.getValueOrUndefined(labelGraphics._verticalOrigin, time), VerticalOrigin.CENTER);
+        label.translucencyByDistance = Property.getValueOrUndefined(labelGraphics._translucencyByDistance, time, translucencyByDistance);
+        label.pixelOffsetScaleByDistance = Property.getValueOrUndefined(labelGraphics._pixelOffsetScaleByDistance, time, pixelOffsetScaleByDistance);
     }
 
     LabelVisualizer.prototype._onObjectsRemoved = function(entityCollection, added, entities) {

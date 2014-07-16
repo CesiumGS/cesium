@@ -107,5 +107,15 @@ define([
         return !defined(property) || property.isConstant;
     };
 
+    /**
+     * @private
+     */
+    Property.getValueOrUndefined = function(property, time, result) {
+        if (defined(property)) {
+            return property.getValue(time, result);
+        }
+        return undefined;
+    };
+
     return Property;
 });

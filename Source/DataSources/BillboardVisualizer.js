@@ -3,26 +3,32 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/NearFarScalar',
         '../Scene/BillboardCollection',
         '../Scene/HorizontalOrigin',
         '../Scene/TextureAtlas',
         '../Scene/TextureAtlasBuilder',
-        '../Scene/VerticalOrigin'
+        '../Scene/VerticalOrigin',
+        './Property'
     ], function(
         Cartesian2,
         Cartesian3,
         Color,
+        defaultValue,
         defined,
         destroyObject,
         DeveloperError,
+        NearFarScalar,
         BillboardCollection,
         HorizontalOrigin,
         TextureAtlas,
         TextureAtlasBuilder,
-        VerticalOrigin) {
+        VerticalOrigin,
+        Property) {
     "use strict";
 
     function textureReady(entity, billboardCollection, textureValue) {
@@ -121,30 +127,26 @@ define([
         return destroyObject(this);
     };
 
-    var position;
-    var color;
-    var eyeOffset;
-    var pixelOffset;
+    var position = new Cartesian3();
+    var color = new Color();
+    var eyeOffset = new Cartesian3();
+    var pixelOffset = new Cartesian2();
+    var scaleByDistance = new NearFarScalar();
+    var translucencyByDistance = new NearFarScalar();
+    var pixelOffsetScaleByDistance = new NearFarScalar();
     function updateObject(billboardVisualizer, time, entity) {
         var billboardGraphics = entity._billboard;
         if (!defined(billboardGraphics)) {
             return;
         }
 
-        var positionProperty = entity._position;
-        if (!defined(positionProperty)) {
-            return;
-        }
-
-        var textureProperty = billboardGraphics._image;
-        if (!defined(textureProperty)) {
-            return;
-        }
+        position = Property.getValueOrUndefined(entity._position, time, position);
+        var textureValue = Property.getValueOrUndefined(billboardGraphics._image, time);
 
         var billboard;
         var showProperty = billboardGraphics._show;
         var billboardVisualizerIndex = entity._billboardVisualizerIndex;
-        var show = entity.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
+        var show = defined(position) && defined(textureValue) && entity.isAvailable(time) && (!defined(showProperty) || (showProperty.getValue(time) !== false));
 
         if (!show) {
             //don't bother creating or updating anything else
@@ -174,18 +176,10 @@ define([
             billboard.id = entity;
             billboard._visualizerUrl = undefined;
             billboard._visualizerTextureAvailable = false;
-
-            billboard.color = Color.WHITE;
-            billboard.eyeOffset = Cartesian3.ZERO;
-            billboard.pixelOffset = Cartesian2.ZERO;
-            billboard.scale = 1.0;
-            billboard.horizontalOrigin = HorizontalOrigin.CENTER;
-            billboard.verticalOrigin = VerticalOrigin.CENTER;
         } else {
             billboard = billboardVisualizer._billboardCollection.get(billboardVisualizerIndex);
         }
 
-        var textureValue = textureProperty.getValue(time);
         if (textureValue !== billboard._visualizerUrl) {
             billboard._visualizerUrl = textureValue;
             billboard._visualizerTextureAvailable = false;
@@ -197,100 +191,20 @@ define([
             return;
         }
 
-        position = positionProperty.getValue(time, position);
-        if (defined(position)) {
-            billboard.position = position;
-        }
-
-        var property = billboardGraphics._color;
-
-        if (defined(property)) {
-            color = property.getValue(time, color);
-            if (defined(color)) {
-                billboard.color = color;
-            }
-        }
-
-        property = billboardGraphics._eyeOffset;
-        if (defined(property)) {
-            eyeOffset = property.getValue(time, eyeOffset);
-            if (defined(eyeOffset)) {
-                billboard.eyeOffset = eyeOffset;
-            }
-        }
-
-        property = billboardGraphics._pixelOffset;
-        if (defined(property)) {
-            pixelOffset = property.getValue(time, pixelOffset);
-            if (defined(pixelOffset)) {
-                billboard.pixelOffset = pixelOffset;
-            }
-        }
-
-        property = billboardGraphics._scale;
-        if (defined(property)) {
-            var scale = property.getValue(time);
-            if (defined(scale)) {
-                billboard.scale = scale;
-            }
-        }
-
-        property = billboardGraphics._rotation;
-        if (defined(property)) {
-            var rotation = property.getValue(time);
-            if (defined(rotation)) {
-                billboard.rotation = rotation;
-            }
-        }
-
-        property = billboardGraphics._alignedAxis;
-        if (defined(property)) {
-            var alignedAxis = property.getValue(time);
-            if (defined(alignedAxis)) {
-                billboard.alignedAxis = alignedAxis;
-            }
-        }
-
-        property = billboardGraphics._horizontalOrigin;
-        if (defined(property)) {
-            var horizontalOrigin = property.getValue(time);
-            if (defined(horizontalOrigin)) {
-                billboard.horizontalOrigin = horizontalOrigin;
-            }
-        }
-
-        property = billboardGraphics._verticalOrigin;
-        if (defined(property)) {
-            var verticalOrigin = property.getValue(time);
-            if (defined(verticalOrigin)) {
-                billboard.verticalOrigin = verticalOrigin;
-            }
-        }
-
-        property = billboardGraphics._width;
-        if (defined(property)) {
-            billboard.width = property.getValue(time);
-        }
-
-        property = billboardGraphics._height;
-        if (defined(property)) {
-            billboard.height = property.getValue(time);
-        }
-
-        property = billboardGraphics._scaleByDistance;
-        if (defined(property)) {
-            billboard.scaleByDistance = property.getValue(time);
-        }
-
-        property = billboardGraphics._translucencyByDistance;
-        if (defined(property)) {
-            billboard.translucencyByDistance = property.getValue(time);
-        }
-
-        property = billboardGraphics._pixelOffsetScaleByDistance;
-        if (defined(property)) {
-            billboard.pixelOffsetScaleByDistance = property.getValue(time);
-        }
+        billboard.position = position;
+        billboard.color = defaultValue(Property.getValueOrUndefined(billboardGraphics._color, time, color), Color.WHITE);
+        billboard.eyeOffset = defaultValue(Property.getValueOrUndefined(billboardGraphics._eyeOffset, time, eyeOffset), Cartesian3.ZERO);
+        billboard.pixelOffset = defaultValue(Property.getValueOrUndefined(billboardGraphics._pixelOffset, time, pixelOffset), Cartesian2.ZERO);
+        billboard.scale = defaultValue(Property.getValueOrUndefined(billboardGraphics._scale, time), 1.0);
+        billboard.rotation = defaultValue(Property.getValueOrUndefined(billboardGraphics._rotation, time), 0);
+        billboard.alignedAxis = defaultValue(Property.getValueOrUndefined(billboardGraphics._alignedAxis, time), Cartesian3.ZERO);
+        billboard.horizontalOrigin = defaultValue(Property.getValueOrUndefined(billboardGraphics._horizontalOrigin, time), HorizontalOrigin.CENTER);
+        billboard.verticalOrigin = defaultValue(Property.getValueOrUndefined(billboardGraphics._verticalOrigin, time), VerticalOrigin.CENTER);
+        billboard.width = Property.getValueOrUndefined(billboardGraphics._width, time);
+        billboard.height = Property.getValueOrUndefined(billboardGraphics._height, time);
+        billboard.scaleByDistance = Property.getValueOrUndefined(billboardGraphics._scaleByDistance, time, scaleByDistance);
+        billboard.translucencyByDistance = Property.getValueOrUndefined(billboardGraphics._translucencyByDistance, time, translucencyByDistance);
+        billboard.pixelOffsetScaleByDistance = Property.getValueOrUndefined(billboardGraphics._pixelOffsetScaleByDistance, time, pixelOffsetScaleByDistance);
     }
 
     BillboardVisualizer.prototype._onObjectsRemoved = function(entityCollection, added, entities) {
