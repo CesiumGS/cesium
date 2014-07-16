@@ -10,6 +10,7 @@ defineSuite([
         'Core/defined',
         'Core/Ellipsoid',
         'Core/Event',
+        'Core/ExtrapolationType',
         'Core/Iso8601',
         'Core/JulianDate',
         'Core/loadJson',
@@ -35,6 +36,7 @@ defineSuite([
         defined,
         Ellipsoid,
         Event,
+        ExtrapolationType,
         Iso8601,
         JulianDate,
         loadJson,
@@ -2195,5 +2197,43 @@ defineSuite([
         var entity = dataSource.entities.getById('polylineGlow');
         expect(entity.polyline.material.color.getValue()).toEqual(new Color(0.1, 0.2, 0.3, 0.4));
         expect(entity.polyline.material.glowPower.getValue()).toEqual(0.75);
+    });
+
+    it('Processes extrapolation options', function() {
+        var packet = {
+            id : 'point',
+            position : {
+                forwardExtrapolationType : "HOLD",
+                forwardExtrapolationDuration : 2.0,
+                backwardExtrapolationType : "NONE",
+                backwardExtrapolationDuration : 1.0,
+                cartesian : ['2012', 0, 0, 0]
+            },
+            point : {
+                color : {
+                    forwardExtrapolationType : "NONE",
+                    forwardExtrapolationDuration : 1.0,
+                    backwardExtrapolationType : "HOLD",
+                    backwardExtrapolationDuration : 2.0,
+                    rgbaf : ['2012', 0.1, 0.2, 0.3, 0.4]
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(packet);
+
+        var entity = dataSource.entities.getById('point');
+        var color = entity.point.color;
+        expect(color.forwardExtrapolationType).toEqual(ExtrapolationType.NONE);
+        expect(color.forwardExtrapolationDuration).toEqual(1.0);
+        expect(color.backwardExtrapolationType).toEqual(ExtrapolationType.HOLD);
+        expect(color.backwardExtrapolationDuration).toEqual(2.0);
+
+        var position = entity.position;
+        expect(position.forwardExtrapolationType).toEqual(ExtrapolationType.HOLD);
+        expect(position.forwardExtrapolationDuration).toEqual(2.0);
+        expect(position.backwardExtrapolationType).toEqual(ExtrapolationType.NONE);
+        expect(position.backwardExtrapolationDuration).toEqual(1.0);
     });
 });
