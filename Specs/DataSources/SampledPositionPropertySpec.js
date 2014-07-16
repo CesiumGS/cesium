@@ -3,6 +3,7 @@ defineSuite([
         'DataSources/SampledPositionProperty',
         'Core/Cartesian3',
         'Core/defined',
+        'Core/ExtrapolationType',
         'Core/JulianDate',
         'Core/LagrangePolynomialApproximation',
         'Core/LinearApproximation',
@@ -12,6 +13,7 @@ defineSuite([
         SampledPositionProperty,
         Cartesian3,
         defined,
+        ExtrapolationType,
         JulianDate,
         LagrangePolynomialApproximation,
         LinearApproximation,
@@ -329,5 +331,40 @@ defineSuite([
 
         right.addSample(time, value);
         expect(left.equals(right)).toEqual(true);
+    });
+
+    it('raises definitionChanged when extrapolation options change', function() {
+        var property = new SampledPositionProperty();
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+
+        property.forwardExtrapolationType = ExtrapolationType.NONE;
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
+
+        property.forwardExtrapolationDuration = 1.0;
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
+
+        property.backwardExtrapolationType = ExtrapolationType.NONE;
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
+
+        property.backwardExtrapolationDuration = 1.0;
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
+
+        //No events when reassigning to the same value.
+        property.forwardExtrapolationType = ExtrapolationType.NONE;
+        expect(listener).not.toHaveBeenCalled();
+
+        property.forwardExtrapolationDuration = 1.0;
+        expect(listener).not.toHaveBeenCalled();
+
+        property.backwardExtrapolationType = ExtrapolationType.NONE;
+        expect(listener).not.toHaveBeenCalled();
+
+        property.backwardExtrapolationDuration = 1.0;
+        expect(listener).not.toHaveBeenCalled();
     });
 });

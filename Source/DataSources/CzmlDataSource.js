@@ -13,6 +13,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Event',
+        '../Core/ExtrapolationType',
         '../Core/getFilenameFromUri',
         '../Core/HermitePolynomialApproximation',
         '../Core/isArray',
@@ -83,6 +84,7 @@ define([
         DeveloperError,
         Ellipsoid,
         Event,
+        ExtrapolationType,
         getFilenameFromUri,
         HermitePolynomialApproximation,
         isArray,
@@ -386,6 +388,26 @@ define([
                 interpolationAlgorithm : interpolator,
                 interpolationDegree : packetData.interpolationDegree
             });
+        }
+
+        var forwardExtrapolationType = ExtrapolationType[packetData.forwardExtrapolationType];
+        if (defined(forwardExtrapolationType)) {
+            property.forwardExtrapolationType = forwardExtrapolationType;
+        }
+
+        var forwardExtrapolationDuration = packetData.forwardExtrapolationDuration;
+        if (defined(forwardExtrapolationDuration)) {
+            property.forwardExtrapolationDuration = forwardExtrapolationDuration;
+        }
+
+        var backwardExtrapolationType = ExtrapolationType[packetData.backwardExtrapolationType];
+        if (defined(backwardExtrapolationType)) {
+            property.backwardExtrapolationType = backwardExtrapolationType;
+        }
+
+        var backwardExtrapolationDuration = packetData.backwardExtrapolationDuration;
+        if (defined(backwardExtrapolationDuration)) {
+            property.backwardExtrapolationDuration = backwardExtrapolationDuration;
         }
     }
 
