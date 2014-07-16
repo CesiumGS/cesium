@@ -215,9 +215,9 @@ define([
         this._derivativeTypes = derivativeTypes;
         this._innerDerivativeTypes = innerDerivativeTypes;
         this._inputOrder = inputOrder;
-        this._forwardExtrapolationType = ExtrapolationType.EXTRAPOLATE;
+        this._forwardExtrapolationType = ExtrapolationType.NONE;
         this._forwardExtrapolationDuration = 0;
-        this._backwardExtrapolationType = ExtrapolationType.EXTRAPOLATE;
+        this._backwardExtrapolationType = ExtrapolationType.NONE;
         this._backwardExtrapolationDuration = 0;
     };
 
@@ -296,7 +296,7 @@ define([
          * is requested at a time after any available samples.
          * @memberof SampledProperty.prototype
          * @type {ExtrapolationType}
-         * @default ExtrapolationType.EXTRAPOLATE
+         * @default ExtrapolationType.NONE
          */
         forwardExtrapolationType : {
             get : function() {
@@ -332,7 +332,7 @@ define([
          * is requested at a time before any available samples.
          * @memberof SampledProperty.prototype
          * @type {ExtrapolationType}
-         * @default ExtrapolationType.EXTRAPOLATE
+         * @default ExtrapolationType.NONE
          */
         backwardExtrapolationType : {
             get : function() {

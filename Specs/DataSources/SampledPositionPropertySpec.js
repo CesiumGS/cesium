@@ -28,6 +28,10 @@ defineSuite([
         expect(property.interpolationDegree).toEqual(1);
         expect(property.interpolationAlgorithm).toEqual(LinearApproximation);
         expect(property.numberOfDerivatives).toEqual(0);
+        expect(property.forwardExtrapolationType).toEqual(ExtrapolationType.NONE);
+        expect(property.forwardExtrapolationDuration).toEqual(0);
+        expect(property.backwardExtrapolationType).toEqual(ExtrapolationType.NONE);
+        expect(property.backwardExtrapolationDuration).toEqual(0);
     });
 
     it('constructor sets expected values', function() {
@@ -36,6 +40,10 @@ defineSuite([
         expect(property.interpolationDegree).toEqual(1);
         expect(property.interpolationAlgorithm).toEqual(LinearApproximation);
         expect(property.numberOfDerivatives).toEqual(1);
+        expect(property.forwardExtrapolationType).toEqual(ExtrapolationType.NONE);
+        expect(property.forwardExtrapolationDuration).toEqual(0);
+        expect(property.backwardExtrapolationType).toEqual(ExtrapolationType.NONE);
+        expect(property.backwardExtrapolationDuration).toEqual(0);
     });
 
     it('getValue works without a result parameter', function() {
@@ -242,6 +250,7 @@ defineSuite([
         };
 
         var property = new SampledPositionProperty();
+        property.forwardExtrapolationType = ExtrapolationType.EXTRAPOLATE;
         property.addSamplesPackedArray(data, epoch);
         property.setInterpolationOptions({
             interpolationDegree : 2,
@@ -338,7 +347,7 @@ defineSuite([
         var listener = jasmine.createSpy('listener');
         property.definitionChanged.addEventListener(listener);
 
-        property.forwardExtrapolationType = ExtrapolationType.NONE;
+        property.forwardExtrapolationType = ExtrapolationType.EXTRAPOLATE;
         expect(listener).toHaveBeenCalledWith(property);
         listener.reset();
 
@@ -346,7 +355,7 @@ defineSuite([
         expect(listener).toHaveBeenCalledWith(property);
         listener.reset();
 
-        property.backwardExtrapolationType = ExtrapolationType.NONE;
+        property.backwardExtrapolationType = ExtrapolationType.HOLD;
         expect(listener).toHaveBeenCalledWith(property);
         listener.reset();
 
@@ -355,13 +364,13 @@ defineSuite([
         listener.reset();
 
         //No events when reassigning to the same value.
-        property.forwardExtrapolationType = ExtrapolationType.NONE;
+        property.forwardExtrapolationType = ExtrapolationType.EXTRAPOLATE;
         expect(listener).not.toHaveBeenCalled();
 
         property.forwardExtrapolationDuration = 1.0;
         expect(listener).not.toHaveBeenCalled();
 
-        property.backwardExtrapolationType = ExtrapolationType.NONE;
+        property.backwardExtrapolationType = ExtrapolationType.HOLD;
         expect(listener).not.toHaveBeenCalled();
 
         property.backwardExtrapolationDuration = 1.0;

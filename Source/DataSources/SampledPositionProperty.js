@@ -133,7 +133,7 @@ define([
          * is requested at a time after any available samples.
          * @memberof SampledPositionProperty.prototype
          * @type {ExtrapolationType}
-         * @default ExtrapolationType.EXTRAPOLATE
+         * @default ExtrapolationType.NONE
          */
         forwardExtrapolationType : {
             get : function() {
@@ -163,7 +163,7 @@ define([
          * is requested at a time before any available samples.
          * @memberof SampledPositionProperty.prototype
          * @type {ExtrapolationType}
-         * @default ExtrapolationType.EXTRAPOLATE
+         * @default ExtrapolationType.NONE
          */
         backwardExtrapolationType : {
             get : function() {
