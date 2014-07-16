@@ -260,6 +260,10 @@ define([
         this._tiltCenter = new Cartesian3();
         this._rotateMousePosition = new Cartesian2();
         this._rotateStartPosition = new Cartesian3();
+        this._tiltCVOffMap = false;
+
+        var projection = scene.mapProjection;
+        this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
 
         // Constants, Make any of these public?
         this._zoomFactor = 5.0;
@@ -611,6 +615,69 @@ define([
             movement = movement.angleAndHeight;
         }
 
+        if (!Cartesian2.equals(startPosition, controller._tiltCenterMousePosition)) {
+            controller._tiltCVOffMap = false;
+        }
+
+        var camera = controller._scene.camera;
+        var maxCoord = controller._maxCoord;
+        var onMap = Math.abs(camera.position.x) - maxCoord.x < 0 && Math.abs(camera.position.y) - maxCoord.y < 0;
+
+        if (controller._tiltCVOffMap || !onMap || camera.position.z > controller.minimumPickingTerrainHeight) {
+            controller._tiltCVOffMap = true;
+            rotateCVOnPlane(controller, startPosition, movement, frameState);
+        } else {
+            rotateCVOnTerrain(controller, startPosition, movement, frameState);
+        }
+    }
+
+    function rotateCVOnPlane(controller, startPosition, movement, frameState) {
+        var camera = controller._scene.camera;
+        var canvas = controller._scene.canvas;
+
+        var windowPosition = rotateCVWindowPos;
+        windowPosition.x = canvas.clientWidth / 2;
+        windowPosition.y = canvas.clientHeight / 2;
+        var ray = camera.getPickRay(windowPosition, rotateCVWindowRay);
+        var normal = Cartesian3.UNIT_X;
+
+        var position = ray.origin;
+        var direction = ray.direction;
+        var scalar = -Cartesian3.dot(normal, position) / Cartesian3.dot(normal, direction);
+        var center = Cartesian3.multiplyByScalar(direction, scalar, rotateCVCenter);
+        Cartesian3.add(position, center, center);
+
+        var projection = controller._scene.mapProjection;
+        var ellipsoid = projection.ellipsoid;
+
+        Cartesian3.fromElements(center.y, center.z, center.x, center);
+        var cart = projection.unproject(center, rotateCVCart);
+        ellipsoid.cartographicToCartesian(cart, center);
+
+        var transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid, rotateCVTransform);
+
+        var oldGlobe = controller._globe;
+        var oldEllipsoid = controller._ellipsoid;
+        controller._globe = undefined;
+        controller._ellipsoid = Ellipsoid.UNIT_SPHERE;
+        controller._rotateFactor = 1.0;
+        controller._rotateRateRangeAdjustment = 1.0;
+
+        var oldTransform = Matrix4.clone(camera.transform, rotateCVOldTransform);
+        camera.setTransform(transform);
+
+        rotate3D(controller, startPosition, movement, frameState, Cartesian3.UNIT_Z);
+
+        camera.setTransform(oldTransform);
+        controller._globe = oldGlobe;
+        controller._ellipsoid = oldEllipsoid;
+
+        var radius = oldEllipsoid.maximumRadius;
+        controller._rotateFactor = 1.0 / radius;
+        controller._rotateRateRangeAdjustment = radius;
+    }
+
+    function rotateCVOnTerrain(controller, startPosition, movement, frameState) {
         var ellipsoid = controller._ellipsoid;
         var camera = controller._scene.camera;
 
