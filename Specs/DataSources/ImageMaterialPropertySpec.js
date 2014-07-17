@@ -35,18 +35,6 @@ defineSuite([
         expect(result.repeat).toEqual(new Cartesian2(2, 3));
     });
 
-    it('works with undefined values', function() {
-        var property = new ImageMaterialProperty();
-        property.image = new ConstantProperty();
-        property.repeat = new ConstantProperty();
-
-        var result = property.getValue();
-        expect(result.hasOwnProperty('image')).toEqual(true);
-        expect(result.hasOwnProperty('repeat')).toEqual(true);
-        expect(result.image).toBeUndefined();
-        expect(result.repeat).toBeUndefined();
-    });
-
     it('works with dynamic values', function() {
         var property = new ImageMaterialProperty();
         property.image = new TimeIntervalCollectionProperty();

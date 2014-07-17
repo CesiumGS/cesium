@@ -131,5 +131,19 @@ define([
         return value;
     };
 
+    /**
+     * @private
+     */
+    Property.getValueOrClonedDefault = function(property, time, defaultValue, result) {
+        var value;
+        if (defined(property)) {
+            value = property.getValue(time, result);
+        }
+        if (!defined(value)) {
+            value = defaultValue.clone(value);
+        }
+        return value;
+    };
+
     return Property;
 });

@@ -22,6 +22,9 @@ define([
      * @see CompositeMaterialProperty
      * @see GridMaterialProperty
      * @see ImageMaterialProperty
+     * @see PolylineGlowMaterialProperty
+     * @see PolylineOutlineMaterialProperty
+     * @see StripeMaterialProperty
      */
     var MaterialProperty = function() {
         DeveloperError.throwInstantiationError();

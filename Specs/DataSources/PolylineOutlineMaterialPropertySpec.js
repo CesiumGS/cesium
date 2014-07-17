@@ -36,18 +36,6 @@ defineSuite([
         expect(result.outlineColor).toEqual(Color.BLUE);
     });
 
-    it('works with undefined values', function() {
-        var property = new PolylineOutlineMaterialProperty();
-        property.color.setValue(undefined);
-        property.outlineColor.setValue(undefined);
-
-        var result = property.getValue();
-        expect(result.hasOwnProperty('color')).toEqual(true);
-        expect(result.hasOwnProperty('outlineColor')).toEqual(true);
-        expect(result.color).toBeUndefined();
-        expect(result.outlineColor).toBeUndefined();
-    });
-
     it('works with dynamic values', function() {
         var property = new PolylineOutlineMaterialProperty();
         property.color = new TimeIntervalCollectionProperty();

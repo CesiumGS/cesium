@@ -21,6 +21,9 @@ define([
         Property) {
     "use strict";
 
+    var defaultColor = Color.WHITE;
+    var defaultGlowPower = 0.25;
+
     /**
      * A {@link MaterialProperty} that maps to polyline glow {@link Material} uniforms.
      * @alias PolylineGlowProperty
@@ -32,8 +35,6 @@ define([
         this._colorSubscription = undefined;
         this._glowPower = undefined;
         this._glowPowerSubscription = undefined;
-        this.color = new ConstantProperty(Color.WHITE);
-        this.glowPower = new ConstantProperty(0.25);
     };
 
     defineProperties(PolylineGlowProperty.prototype, {
@@ -97,8 +98,8 @@ define([
         if (!defined(result)) {
             result = {};
         }
-        result.color = defined(this._color) ? this._color.getValue(time, result.color) : undefined;
-        result.glowPower = defined(this._glowPower) ? this._glowPower.getValue(time) : undefined;
+        result.color = Property.getValueOrClonedDefault(this._color, time, defaultColor, result.color);
+        result.glowPower = Property.getValueOrDefault(this._glowPower, time, defaultGlowPower, result.glowPower);
         return result;
     };
 

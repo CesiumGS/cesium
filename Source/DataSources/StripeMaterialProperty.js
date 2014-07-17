@@ -19,6 +19,12 @@ define([
         StripeOrientation) {
     "use strict";
 
+    var defaultOrientation = StripeOrientation.HORIZONTAL;
+    var defaultEvenColor = Color.WHITE;
+    var defaultOddColor = Color.BLACK;
+    var defaultOffset = 0;
+    var defaultRepeat = 1;
+
     /**
      * A {@link MaterialProperty} that maps to stripe {@link Material} uniforms.
      *
@@ -42,12 +48,6 @@ define([
 
         this._repeat = undefined;
         this._repeatSubscription = undefined;
-
-        this.orientation = new ConstantProperty(StripeOrientation.HORIZONTAL);
-        this.evenColor = new ConstantProperty(Color.WHITE);
-        this.oddColor = new ConstantProperty(Color.BLACK);
-        this.offset = new ConstantProperty(0);
-        this.repeat = new ConstantProperty(1);
     };
 
     defineProperties(StripeMaterialProperty.prototype, {
@@ -138,12 +138,11 @@ define([
         if (!defined(result)) {
             result = {};
         }
-        var orientation = defined(this._orientation) ? this._orientation.getValue(time) : undefined;
-        result.horizontal = defined(orientation) ? orientation === StripeOrientation.HORIZONTAL : undefined;
-        result.evenColor = defined(this._evenColor) ? this._evenColor.getValue(time, result.evenColor) : undefined;
-        result.oddColor = defined(this._oddColor) ? this._oddColor.getValue(time, result.oddColor) : undefined;
-        result.offset = defined(this._offset) ? this._offset.getValue(time) : undefined;
-        result.repeat = defined(this._repeat) ? this._repeat.getValue(time) : undefined;
+        result.horizontal = Property.getValueOrDefault(this._orientation, time, StripeOrientation.HORIZONTAL) === StripeOrientation.HORIZONTAL;
+        result.evenColor = Property.getValueOrClonedDefault(this._evenColor, time, defaultEvenColor, result.evenColor);
+        result.oddColor = Property.getValueOrClonedDefault(this._oddColor, time, defaultOddColor, result.oddColor);
+        result.offset = Property.getValueOrDefault(this._offset, time, defaultOffset);
+        result.repeat = Property.getValueOrDefault(this._repeat, time, defaultRepeat);
         return result;
     };
 
