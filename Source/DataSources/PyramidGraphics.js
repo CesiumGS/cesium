@@ -22,20 +22,24 @@ define([
      * @constructor
      */
     var PyramidGraphics = function() {
-        this._show = undefined;
-        this._showSubscription = undefined;
         this._directions = undefined;
         this._directionsSubscription = undefined;
-        this._radius = undefined;
-        this._radiusSubscription = undefined;
-        this._showIntersection = undefined;
-        this._showIntersectionSubscription = undefined;
+
+        this._lateralSurfaceMaterial = undefined;
+        this._lateralSurfaceMaterialSubscription = undefined;
+
+        this._portionToDisplay = undefined;
+        this._portionToDisplaySubscription = undefined;
         this._intersectionColor = undefined;
         this._intersectionColorSubscription = undefined;
         this._intersectionWidth = undefined;
         this._intersectionWidthSubscription = undefined;
-        this._material = undefined;
-        this._materialSubscription = undefined;
+        this._showIntersection = undefined;
+        this._showIntersectionSubscription = undefined;
+        this._radius = undefined;
+        this._radiusSubscription = undefined;
+        this._show = undefined;
+        this._showSubscription = undefined;
         this._definitionChanged = new Event();
     };
 
@@ -54,13 +58,6 @@ define([
         },
 
         /**
-         * Gets or sets the boolean {@link Property} specifying the visibility of the pyramid.
-         * @memberof PyramidGraphics.prototype
-         * @type {Property}
-         */
-        show : createPropertyDescriptor('show'),
-
-        /**
          * A {@link Property} which returns an array of {@link Spherical} instances representing the pyramid's projection.
          * @memberof PyramidGraphics.prototype
          * @type {Property}
@@ -68,18 +65,11 @@ define([
         directions : createPropertyDescriptor('directions'),
 
         /**
-         * Gets or sets the numeric {@link Property} specifying the radius of the pyramid's projection.
+         * Gets or sets the {@link MaterialProperty} specifying the the pyramid's appearance.
          * @memberof PyramidGraphics.prototype
-         * @type {Property}
+         * @type {MaterialProperty}
          */
-        radius : createPropertyDescriptor('radius'),
-
-        /**
-         * Gets or sets the boolean {@link Property} specifying the visibility of the line formed by the intersection of the pyramid and other central bodies.
-         * @memberof PyramidGraphics.prototype
-         * @type {Property}
-         */
-        showIntersection : createPropertyDescriptor('showIntersection'),
+        lateralSurfaceMaterial : createPropertyDescriptor('lateralSurfaceMaterial'),
 
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the color of the line formed by the intersection of the pyramid and other central bodies.
@@ -96,11 +86,25 @@ define([
         intersectionWidth : createPropertyDescriptor('intersectionWidth'),
 
         /**
-         * Gets or sets the {@link MaterialProperty} specifying the the pyramid's appearance.
+         * Gets or sets the boolean {@link Property} specifying the visibility of the line formed by the intersection of the pyramid and other central bodies.
          * @memberof PyramidGraphics.prototype
-         * @type {MaterialProperty}
+         * @type {Property}
          */
-        material : createPropertyDescriptor('material')
+        showIntersection : createPropertyDescriptor('showIntersection'),
+
+        /**
+         * Gets or sets the numeric {@link Property} specifying the radius of the pyramid's projection.
+         * @memberof PyramidGraphics.prototype
+         * @type {Property}
+         */
+        radius : createPropertyDescriptor('radius'),
+
+        /**
+         * Gets or sets the boolean {@link Property} specifying the visibility of the pyramid.
+         * @memberof PyramidGraphics.prototype
+         * @type {Property}
+         */
+        show : createPropertyDescriptor('show')
     });
 
     /**
@@ -113,13 +117,13 @@ define([
         if (!defined(result)) {
             result = new PyramidGraphics();
         }
-        result.show = this.show;
         result.directions = this.directions;
         result.radius = this.radius;
+        result.show = this.show;
         result.showIntersection = this.showIntersection;
         result.intersectionColor = this.intersectionColor;
         result.intersectionWidth = this.intersectionWidth;
-        result.material = this.material;
+        result.lateralSurfaceMaterial = this.lateralSurfaceMaterial;
         return result;
     };
 
@@ -136,13 +140,13 @@ define([
         }
         //>>includeEnd('debug');
 
-        this.show = defaultValue(this.show, source.show);
         this.directions = defaultValue(this.directions, source.directions);
         this.radius = defaultValue(this.radius, source.radius);
+        this.show = defaultValue(this.show, source.show);
         this.showIntersection = defaultValue(this.showIntersection, source.showIntersection);
         this.intersectionColor = defaultValue(this.intersectionColor, source.intersectionColor);
         this.intersectionWidth = defaultValue(this.intersectionWidth, source.intersectionWidth);
-        this.material = defaultValue(this.material, source.material);
+        this.lateralSurfaceMaterial = defaultValue(this.lateralSurfaceMaterial, source.lateralSurfaceMaterial);
     };
 
     return PyramidGraphics;

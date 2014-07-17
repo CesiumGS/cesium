@@ -41,7 +41,8 @@ define([
         spherical.magnitude = 1.0;
     }
 
-    function computeDirections(minimumClockAngle, maximumClockAngle, innerHalfAngle, outerHalfAngle, result) {
+    function computeDirections(cone, minimumClockAngle, maximumClockAngle, innerHalfAngle, outerHalfAngle) {
+        var directions = cone.directions;
         var angle;
         var i = 0;
         var angleStep = CesiumMath.toRadians(2.0);
@@ -49,25 +50,25 @@ define([
             // No clock angle limits, so this is just a circle.
             // There might be a hole but we're ignoring it for now.
             for (angle = 0.0; angle < CesiumMath.TWO_PI; angle += angleStep) {
-                assignSpherical(i++, result, angle, outerHalfAngle);
+                assignSpherical(i++, directions, angle, outerHalfAngle);
             }
         } else {
             // There are clock angle limits.
             for (angle = minimumClockAngle; angle < maximumClockAngle; angle += angleStep) {
-                assignSpherical(i++, result, angle, outerHalfAngle);
+                assignSpherical(i++, directions, angle, outerHalfAngle);
             }
-            assignSpherical(i++, result, maximumClockAngle, outerHalfAngle);
+            assignSpherical(i++, directions, maximumClockAngle, outerHalfAngle);
             if (innerHalfAngle) {
                 for (angle = maximumClockAngle; angle > minimumClockAngle; angle -= angleStep) {
-                    assignSpherical(i++, result, angle, innerHalfAngle);
+                    assignSpherical(i++, directions, angle, innerHalfAngle);
                 }
-                assignSpherical(i++, result, minimumClockAngle, innerHalfAngle);
+                assignSpherical(i++, directions, minimumClockAngle, innerHalfAngle);
             } else {
-                assignSpherical(i++, result, maximumClockAngle, 0.0);
+                assignSpherical(i++, directions, maximumClockAngle, 0.0);
             }
         }
-        result.length = i;
-        return result;
+        directions.length = i;
+        cone.directions = directions;
     }
 
     /**
@@ -91,9 +92,7 @@ define([
         entityCollection.collectionChanged.addEventListener(ConeVisualizer.prototype._onObjectsRemoved, this);
 
         this._scene = scene;
-        this._unusedIndexes = [];
         this._primitives = scene.primitives;
-        this._coneCollection = [];
         this._entityCollection = entityCollection;
     };
 
@@ -133,27 +132,15 @@ define([
     ConeVisualizer.prototype.destroy = function() {
         var entityCollection = this._entityCollection;
         entityCollection.collectionChanged.removeEventListener(ConeVisualizer.prototype._onObjectsRemoved, this);
-
-        var i;
-        var entities = entityCollection.entities;
-        var length = entities.length;
-        for (i = 0; i < length; i++) {
-            entities[i]._coneVisualizerIndex = undefined;
-        }
-
-        length = this._coneCollection.length;
-        for (i = 0; i < length; i++) {
-            this._primitives.remove(this._coneCollection[i]);
-        }
-
+        this._onObjectsRemoved(entityCollection, undefined, entityCollection.entities);
         return destroyObject(this);
     };
 
     var cachedPosition = new Cartesian3();
     var cachedOrientation = new Quaternion();
-    function updateObject(coneVisualizer, time, entity) {
-        var coneGraphics = entity._cone;
-        if (!defined(coneGraphics)) {
+    function updateObject(visualizer, time, entity) {
+        var dynamicCone = entity._cone;
+        if (!defined(dynamicCone)) {
             return;
         }
 
@@ -167,51 +154,29 @@ define([
             return;
         }
 
-        var cone;
-        var showProperty = coneGraphics._show;
-        var coneVisualizerIndex = entity._coneVisualizerIndex;
+        var cone = entity._conePrimitive;
+        var showProperty = dynamicCone._show;
         var show = entity.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
 
         if (!show) {
             //don't bother creating or updating anything else
-            if (defined(coneVisualizerIndex)) {
-                cone = coneVisualizer._coneCollection[coneVisualizerIndex];
+            if (defined(cone)) {
                 cone.show = false;
-                entity._coneVisualizerIndex = undefined;
-                coneVisualizer._unusedIndexes.push(coneVisualizerIndex);
             }
             return;
         }
 
-        if (!defined(coneVisualizerIndex)) {
-            var unusedIndexes = coneVisualizer._unusedIndexes;
-            var length = unusedIndexes.length;
-            if (length > 0) {
-                coneVisualizerIndex = unusedIndexes.pop();
-                cone = coneVisualizer._coneCollection[coneVisualizerIndex];
-            } else {
-                coneVisualizerIndex = coneVisualizer._coneCollection.length;
-                cone = new CustomSensorVolume();
-                cone._directionsScratch = [];
-                coneVisualizer._coneCollection.push(cone);
-                coneVisualizer._primitives.add(cone);
-            }
-            entity._coneVisualizerIndex = coneVisualizerIndex;
+        if (!defined(cone)) {
+            cone = new CustomSensorVolume();
             cone.id = entity;
-
-            cone.material = Material.fromType(Material.ColorType);
-            cone.intersectionColor = Color.clone(Color.YELLOW);
-            cone.intersectionWidth = 5.0;
-            cone.radius = Number.POSITIVE_INFINITY;
-            cone.showIntersection = true;
-        } else {
-            cone = coneVisualizer._coneCollection[coneVisualizerIndex];
+            cone.lateralSurfaceMaterial = Material.fromType(Material.ColorType);
+            entity._conePrimitive = cone;
+            visualizer._primitives.add(cone);
         }
-
         cone.show = true;
 
         var minimumClockAngle;
-        var property = coneGraphics._minimumClockAngle;
+        var property = dynamicCone._minimumClockAngle;
         if (defined(property)) {
             minimumClockAngle = property.getValue(time);
         }
@@ -220,7 +185,7 @@ define([
         }
 
         var maximumClockAngle;
-        property = coneGraphics._maximumClockAngle;
+        property = dynamicCone._maximumClockAngle;
         if (defined(property)) {
             maximumClockAngle = property.getValue(time);
         }
@@ -229,7 +194,7 @@ define([
         }
 
         var innerHalfAngle;
-        property = coneGraphics._innerHalfAngle;
+        property = dynamicCone._innerHalfAngle;
         if (defined(property)) {
             innerHalfAngle = property.getValue(time);
         }
@@ -238,7 +203,7 @@ define([
         }
 
         var outerHalfAngle;
-        property = coneGraphics._outerHalfAngle;
+        property = dynamicCone._outerHalfAngle;
         if (defined(property)) {
             outerHalfAngle = property.getValue(time);
         }
@@ -251,14 +216,14 @@ define([
             innerHalfAngle !== cone.innerHalfAngle ||
             outerHalfAngle !== cone.outerHalfAngle) {
 
-            cone.setDirections(computeDirections(minimumClockAngle, maximumClockAngle, innerHalfAngle, outerHalfAngle, cone._directionsScratch));
+            computeDirections(cone, minimumClockAngle, maximumClockAngle, innerHalfAngle, outerHalfAngle);
             cone.innerHalfAngle = innerHalfAngle;
             cone.maximumClockAngle = maximumClockAngle;
             cone.outerHalfAngle = outerHalfAngle;
             cone.minimumClockAngle = minimumClockAngle;
         }
 
-        property = coneGraphics._radius;
+        property = dynamicCone._radius;
         if (defined(property)) {
             var radius = property.getValue(time);
             if (defined(radius)) {
@@ -278,14 +243,14 @@ define([
             cone._visualizerOrientation = Quaternion.clone(orientation, cone._visualizerOrientation);
         }
 
-        cone.material = MaterialProperty.getValue(time, coneGraphics._outerMaterial, cone.material);
+        cone.lateralSurfaceMaterial = MaterialProperty.getValue(time, dynamicCone._lateralSurfaceMaterial, cone.lateralSurfaceMaterial);
 
-        property = coneGraphics._intersectionColor;
+        property = dynamicCone._intersectionColor;
         if (defined(property)) {
             property.getValue(time, cone.intersectionColor);
         }
 
-        property = coneGraphics._intersectionWidth;
+        property = dynamicCone._intersectionWidth;
         if (defined(property)) {
             var intersectionWidth = property.getValue(time);
             if (defined(intersectionWidth)) {
@@ -294,17 +259,14 @@ define([
         }
     }
 
-    ConeVisualizer.prototype._onObjectsRemoved = function(entityCollection, added, entities) {
-        var thisConeCollection = this._coneCollection;
-        var thisUnusedIndexes = this._unusedIndexes;
-        for (var i = entities.length - 1; i > -1; i--) {
-            var entity = entities[i];
-            var coneVisualizerIndex = entity._coneVisualizerIndex;
-            if (defined(coneVisualizerIndex)) {
-                var cone = thisConeCollection[coneVisualizerIndex];
-                cone.show = false;
-                thisUnusedIndexes.push(coneVisualizerIndex);
-                entity._coneVisualizerIndex = undefined;
+    ConeVisualizer.prototype._onObjectsRemoved = function(entityCollection, added, removed) {
+        var primitives = this._primitives;
+        for (var i = removed.length - 1; i > -1; i--) {
+            var entity = removed[i];
+            var cone = entity._conePrimitive;
+            if (defined(cone)) {
+                primitives.remove(cone);
+                entity._conePrimitive = undefined;
             }
         }
     };

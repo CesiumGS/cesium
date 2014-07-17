@@ -7,6 +7,7 @@ define([
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Matrix4',
@@ -30,6 +31,7 @@ define([
         ComponentDatatype,
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
         Matrix4,
@@ -59,8 +61,6 @@ define([
      *
      * @alias CustomSensorVolume
      * @constructor
-     *
-     * @see SensorVolumeCollection#addCustom
      */
     var CustomSensorVolume = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -151,7 +151,7 @@ define([
 
         this._directions = undefined;
         this._directionsDirty = false;
-        this.setDirections(options.directions);
+        this.directions = defined(options.directions) ? options.directions : [];
 
         /**
          * The surface appearance of the sensor.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
@@ -172,8 +172,8 @@ define([
          * // 2. Change material to horizontal stripes
          * sensor.material = Cesium.Material.fromType(Material.StripeType);
          */
-        this.material = defined(options.material) ? options.material : Material.fromType(Material.ColorType);
-        this._material = undefined;
+        this.lateralSurfaceMaterial = defined(options.lateralSurfaceMaterial) ? options.lateralSurfaceMaterial : Material.fromType(Material.ColorType);
+        this._lateralSurfaceMaterial = undefined;
         this._translucent = undefined;
 
         /**
@@ -233,24 +233,17 @@ define([
         this._mode = SceneMode.SCENE3D;
     };
 
-    /**
-     * DOC_TBA
-     *
-     * @see CustomSensorVolume#getDirections
-     */
-    CustomSensorVolume.prototype.setDirections = function(directions) {
-        this._directions = directions;
-        this._directionsDirty = true;
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @see CustomSensorVolume#setDirections
-     */
-    CustomSensorVolume.prototype.getDirections = function() {
-        return this._directions;
-    };
+    defineProperties(CustomSensorVolume.prototype, {
+        directions : {
+            get : function() {
+                return this._directions;
+            },
+            set : function(value) {
+                this._directions = value;
+                this._directionsDirty = true;
+            }
+        }
+    });
 
     var n0Scratch = new Cartesian3();
     var n1Scratch = new Cartesian3();
@@ -352,7 +345,7 @@ define([
      * </p>
      *
      * @exception {DeveloperError} this.radius must be greater than or equal to zero.
-     * @exception {DeveloperError} this.material must be defined.
+     * @exception {DeveloperError} this.lateralSurfaceMaterial must be defined.
      */
     CustomSensorVolume.prototype.update = function(context, frameState, commandList) {
         this._mode = frameState.mode;
@@ -364,12 +357,12 @@ define([
         if (this.radius < 0.0) {
             throw new DeveloperError('this.radius must be greater than or equal to zero.');
         }
-        if (!defined(this.material)) {
-            throw new DeveloperError('this.material must be defined.');
+        if (!defined(this.lateralSurfaceMaterial)) {
+            throw new DeveloperError('this.lateralSurfaceMaterial must be defined.');
         }
         //>>includeEnd('debug');
 
-        var translucent = this.material.isTranslucent();
+        var translucent = this.lateralSurfaceMaterial.isTranslucent();
 
         // Initial render state creation
         if ((this._showThroughEllipsoid !== this.showThroughEllipsoid) ||
@@ -476,9 +469,9 @@ define([
         this._backFaceColorCommand.modelMatrix = this._frontFaceColorCommand.modelMatrix;
         this._pickCommand.modelMatrix = this._frontFaceColorCommand.modelMatrix;
 
-        var materialChanged = this._material !== this.material;
-        this._material = this.material;
-        this._material.update(context);
+        var materialChanged = this._lateralSurfaceMaterial !== this.lateralSurfaceMaterial;
+        this._lateralSurfaceMaterial = this.lateralSurfaceMaterial;
+        this._lateralSurfaceMaterial.update(context);
 
         if (pass.render) {
             var frontFaceColorCommand = this._frontFaceColorCommand;
@@ -487,15 +480,15 @@ define([
             // Recompile shader when material changes
             if (materialChanged || !defined(frontFaceColorCommand.shaderProgram)) {
                 var fsSource = createShaderSource({
-                    sources : [ShadersSensorVolume, this._material.shaderSource, CustomSensorVolumeFS]
+                    sources : [ShadersSensorVolume, this._lateralSurfaceMaterial.shaderSource, CustomSensorVolumeFS]
                 });
 
                 frontFaceColorCommand.shaderProgram = context.replaceShaderProgram(
                         frontFaceColorCommand.shaderProgram, CustomSensorVolumeVS, fsSource, attributeLocations);
-                frontFaceColorCommand.uniformMap = combine(this._uniforms, this._material._uniforms);
+                frontFaceColorCommand.uniformMap = combine(this._uniforms, this._lateralSurfaceMaterial._uniforms);
 
                 backFaceColorCommand.shaderProgram = frontFaceColorCommand.shaderProgram;
-                backFaceColorCommand.uniformMap = combine(this._uniforms, this._material._uniforms);
+                backFaceColorCommand.uniformMap = combine(this._uniforms, this._lateralSurfaceMaterial._uniforms);
                 backFaceColorCommand.uniformMap.u_normalDirection = function() {
                     return -1.0;
                 };
@@ -523,7 +516,7 @@ define([
             // Recompile shader when material changes
             if (materialChanged || !defined(pickCommand.shaderProgram)) {
                 var pickFS = createShaderSource({
-                    sources : [ShadersSensorVolume, this._material.shaderSource, CustomSensorVolumeFS],
+                    sources : [ShadersSensorVolume, this._lateralSurfaceMaterial.shaderSource, CustomSensorVolumeFS],
                     pickColorQualifier : 'uniform'
                 });
 
@@ -536,7 +529,7 @@ define([
                         return that._pickId.color;
                     }
                 };
-                pickCommand.uniformMap = combine(combine(this._uniforms, this._material._uniforms), uniforms);
+                pickCommand.uniformMap = combine(combine(this._uniforms, this._lateralSurfaceMaterial._uniforms), uniforms);
             }
 
             pickCommand.pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
