@@ -139,8 +139,8 @@ define([
     var cachedPosition = new Cartesian3();
     var cachedOrientation = new Quaternion();
     function updateObject(visualizer, time, entity) {
-        var dynamicCone = entity._cone;
-        if (!defined(dynamicCone)) {
+        var coneGraphics = entity._cone;
+        if (!defined(coneGraphics)) {
             return;
         }
 
@@ -155,7 +155,7 @@ define([
         }
 
         var cone = entity._conePrimitive;
-        var showProperty = dynamicCone._show;
+        var showProperty = coneGraphics._show;
         var show = entity.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
 
         if (!show) {
@@ -176,7 +176,7 @@ define([
         cone.show = true;
 
         var minimumClockAngle;
-        var property = dynamicCone._minimumClockAngle;
+        var property = coneGraphics._minimumClockAngle;
         if (defined(property)) {
             minimumClockAngle = property.getValue(time);
         }
@@ -185,7 +185,7 @@ define([
         }
 
         var maximumClockAngle;
-        property = dynamicCone._maximumClockAngle;
+        property = coneGraphics._maximumClockAngle;
         if (defined(property)) {
             maximumClockAngle = property.getValue(time);
         }
@@ -194,7 +194,7 @@ define([
         }
 
         var innerHalfAngle;
-        property = dynamicCone._innerHalfAngle;
+        property = coneGraphics._innerHalfAngle;
         if (defined(property)) {
             innerHalfAngle = property.getValue(time);
         }
@@ -203,7 +203,7 @@ define([
         }
 
         var outerHalfAngle;
-        property = dynamicCone._outerHalfAngle;
+        property = coneGraphics._outerHalfAngle;
         if (defined(property)) {
             outerHalfAngle = property.getValue(time);
         }
@@ -223,7 +223,7 @@ define([
             cone.minimumClockAngle = minimumClockAngle;
         }
 
-        property = dynamicCone._radius;
+        property = coneGraphics._radius;
         if (defined(property)) {
             var radius = property.getValue(time);
             if (defined(radius)) {
@@ -243,14 +243,14 @@ define([
             cone._visualizerOrientation = Quaternion.clone(orientation, cone._visualizerOrientation);
         }
 
-        cone.lateralSurfaceMaterial = MaterialProperty.getValue(time, dynamicCone._lateralSurfaceMaterial, cone.lateralSurfaceMaterial);
+        cone.lateralSurfaceMaterial = MaterialProperty.getValue(time, coneGraphics._lateralSurfaceMaterial, cone.lateralSurfaceMaterial);
 
-        property = dynamicCone._intersectionColor;
+        property = coneGraphics._intersectionColor;
         if (defined(property)) {
             property.getValue(time, cone.intersectionColor);
         }
 
-        property = dynamicCone._intersectionWidth;
+        property = coneGraphics._intersectionWidth;
         if (defined(property)) {
             var intersectionWidth = property.getValue(time);
             if (defined(intersectionWidth)) {

@@ -97,12 +97,12 @@ define([
     var position;
     var orientation;
     function updateObject(visualizer, time, entity) {
-        var dynamicPyramid = entity._pyramid;
-        if (!defined(dynamicPyramid)) {
+        var pyramidGraphics = entity._pyramid;
+        if (!defined(pyramidGraphics)) {
             return;
         }
 
-        var directionsProperty = dynamicPyramid._directions;
+        var directionsProperty = pyramidGraphics._directions;
         if (!defined(directionsProperty)) {
             return;
         }
@@ -118,7 +118,7 @@ define([
         }
 
         var pyramid = entity._pyramidPrimitive;
-        var showProperty = dynamicPyramid._show;
+        var showProperty = pyramidGraphics._show;
         var show = entity.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
 
         if (!show) {
@@ -144,7 +144,7 @@ define([
             pyramid._visualizerDirections = directions;
         }
 
-        var property = dynamicPyramid._radius;
+        var property = pyramidGraphics._radius;
         if (defined(property)) {
             var radius = property.getValue(time);
             if (defined(radius)) {
@@ -164,9 +164,9 @@ define([
             pyramid._visualizerOrientation = Quaternion.clone(orientation, pyramid._visualizerOrientation);
         }
 
-        pyramid.lateralSurfaceMaterial = MaterialProperty.getValue(time, dynamicPyramid._lateralSurfaceMaterial, pyramid.lateralSurfaceMaterial);
+        pyramid.lateralSurfaceMaterial = MaterialProperty.getValue(time, pyramidGraphics._lateralSurfaceMaterial, pyramid.lateralSurfaceMaterial);
 
-        property = dynamicPyramid._intersectionColor;
+        property = pyramidGraphics._intersectionColor;
         if (defined(property)) {
             var intersectionColor = property.getValue(time, pyramid.intersectionColor);
             if (defined(intersectionColor)) {
@@ -174,7 +174,7 @@ define([
             }
         }
 
-        property = dynamicPyramid._intersectionWidth;
+        property = pyramidGraphics._intersectionWidth;
         if (defined(property)) {
             var intersectionWidth = property.getValue(time);
             if (defined(intersectionWidth)) {
