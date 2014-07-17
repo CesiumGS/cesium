@@ -17,6 +17,7 @@ define([
         './CompositePositionProperty',
         './ConstantPositionProperty',
         './MaterialProperty',
+        './Property',
         './ReferenceProperty',
         './SampledPositionProperty',
         './TimeIntervalCollectionPositionProperty'
@@ -38,6 +39,7 @@ define([
         CompositePositionProperty,
         ConstantPositionProperty,
         MaterialProperty,
+        Property,
         ReferenceProperty,
         SampledPositionProperty,
         TimeIntervalCollectionPositionProperty) {
@@ -290,7 +292,6 @@ define([
         }
 
         var polyline;
-        var property;
         var sampleStart;
         var sampleStop;
         var showProperty = pathGraphics._show;
@@ -301,18 +302,8 @@ define([
         //depending on lead/trail settings.  Compute the interval of the path to
         //show and check against actual availability.
         if (show) {
-            property = pathGraphics._leadTime;
-            var leadTime;
-            if (defined(property)) {
-                leadTime = property.getValue(time);
-            }
-
-            property = pathGraphics._trailTime;
-            var trailTime;
-            if (defined(property)) {
-                trailTime = property.getValue(time);
-            }
-
+            var leadTime = Property.getValueOrUndefined(pathGraphics._leadTime, time);
+            var trailTime = Property.getValueOrUndefined(pathGraphics._trailTime, time);
             var availability = entity._availability;
             var hasAvailability = defined(availability);
             var hasLeadTime = defined(leadTime);
@@ -372,42 +363,16 @@ define([
             }
             entity._pathVisualizerIndex = pathVisualizerIndex;
             polyline.id = entity;
-
-            polyline.width = 1;
-            var material = polyline.material;
-            if (!defined(material) || (material.type !== Material.PolylineOutlineType)) {
-                material = Material.fromType(Material.PolylineOutlineType);
-                polyline.material = material;
-            }
-            var uniforms = material.uniforms;
-            Color.clone(Color.WHITE, uniforms.color);
-            Color.clone(Color.BLACK, uniforms.outlineColor);
-            uniforms.outlineWidth = 0;
         } else {
             polyline = this._polylineCollection.get(pathVisualizerIndex);
         }
 
+        var resolution = Property.getValueOrDefault(pathGraphics._resolution, time, 60.0);
+
         polyline.show = true;
-
-        var maxStepSize = 60.0;
-        property = pathGraphics._resolution;
-        if (defined(property)) {
-            var resolution = property.getValue(time);
-            if (defined(resolution)) {
-                maxStepSize = resolution;
-            }
-        }
-
-        polyline.positions = subSample(positionProperty, sampleStart, sampleStop, time, this._referenceFrame, maxStepSize, polyline.positions);
+        polyline.positions = subSample(positionProperty, sampleStart, sampleStop, time, this._referenceFrame, resolution, polyline.positions);
         polyline.material = MaterialProperty.getValue(time, pathGraphics._material, polyline.material);
-
-        property = pathGraphics._width;
-        if (defined(property)) {
-            var width = property.getValue(time);
-            if (defined(width)) {
-                polyline.width = width;
-            }
-        }
+        polyline.width = Property.getValueOrDefault(pathGraphics._width, time, 1);
     };
 
     PolylineUpdater.prototype.removeObject = function(entity) {
