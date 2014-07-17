@@ -14,7 +14,7 @@ defineSuite([
 
     it('merge assigns unassigned properties', function() {
         var source = new PyramidGraphics();
-        source.material = new ColorMaterialProperty();
+        source.lateralSurfaceMaterial = new ColorMaterialProperty();
         source.directions = new ConstantProperty([]);
         source.intersectionColor = new ConstantProperty(Color.WHITE);
         source.radius = new ConstantProperty(1);
@@ -25,7 +25,7 @@ defineSuite([
         var target = new PyramidGraphics();
         target.merge(source);
 
-        expect(target.material).toBe(source.material);
+        expect(target.lateralSurfaceMaterial).toBe(source.lateralSurfaceMaterial);
         expect(target.directions).toBe(source.directions);
         expect(target.intersectionColor).toBe(source.intersectionColor);
         expect(target.radius).toBe(source.radius);
@@ -36,7 +36,7 @@ defineSuite([
 
     it('merge does not assign assigned properties', function() {
         var source = new PyramidGraphics();
-        source.material = new ColorMaterialProperty();
+        source.lateralSurfaceMaterial = new ColorMaterialProperty();
         source.directions = new ConstantProperty([]);
         source.intersectionColor = new ConstantProperty(Color.WHITE);
         source.radius = new ConstantProperty(1);
@@ -44,7 +44,7 @@ defineSuite([
         source.showIntersection = new ConstantProperty(true);
         source.intersectionWidth = new ConstantProperty(1);
 
-        var material = new ColorMaterialProperty();
+        var lateralSurfaceMaterial = new ColorMaterialProperty();
         var directions = new ConstantProperty([]);
         var intersectionColor = new ConstantProperty(Color.WHITE);
         var radius = new ConstantProperty(1);
@@ -53,7 +53,7 @@ defineSuite([
         var intersectionWidth = new ConstantProperty(1);
 
         var target = new PyramidGraphics();
-        target.material = material;
+        target.lateralSurfaceMaterial = lateralSurfaceMaterial;
         target.directions = directions;
         target.intersectionColor = intersectionColor;
         target.radius = radius;
@@ -63,7 +63,7 @@ defineSuite([
 
         target.merge(source);
 
-        expect(target.material).toBe(material);
+        expect(target.lateralSurfaceMaterial).toBe(lateralSurfaceMaterial);
         expect(target.directions).toBe(directions);
         expect(target.intersectionColor).toBe(intersectionColor);
         expect(target.radius).toBe(radius);
@@ -74,7 +74,7 @@ defineSuite([
 
     it('clone works', function() {
         var source = new PyramidGraphics();
-        source.material = new ColorMaterialProperty();
+        source.lateralSurfaceMaterial = new ColorMaterialProperty();
         source.directions = new ConstantProperty([]);
         source.intersectionColor = new ConstantProperty(Color.WHITE);
         source.radius = new ConstantProperty(1);
@@ -83,7 +83,7 @@ defineSuite([
         source.intersectionWidth = new ConstantProperty(1);
 
         var result = source.clone();
-        expect(result.material).toBe(source.material);
+        expect(result.lateralSurfaceMaterial).toBe(source.lateralSurfaceMaterial);
         expect(result.directions).toBe(source.directions);
         expect(result.intersectionColor).toBe(source.intersectionColor);
         expect(result.radius).toBe(source.radius);

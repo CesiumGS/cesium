@@ -846,7 +846,7 @@
         }
       },
       "portionToDisplay":"COMPLETE",
-      "material":{
+      "lateralSurfaceMaterial":{
         "solidColor":{
           "color":{
             "rgba":[

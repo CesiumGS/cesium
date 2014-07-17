@@ -123,7 +123,7 @@ defineSuite([
         pyramid.showIntersection = new ConstantProperty(true);
         pyramid.radius = new ConstantProperty(123.5);
         pyramid.show = new ConstantProperty(true);
-        pyramid.material = new ColorMaterialProperty();
+        pyramid.lateralSurfaceMaterial = ColorMaterialProperty.fromColor(Color.WHITE);
         visualizer.update(time);
 
         expect(scene.primitives.length).toEqual(1);
@@ -132,16 +132,16 @@ defineSuite([
         expect(p.intersectionWidth).toEqual(testObject.pyramid.intersectionWidth.getValue(time));
         expect(p.showIntersection).toEqual(testObject.pyramid.showIntersection.getValue(time));
         expect(p.radius).toEqual(testObject.pyramid.radius.getValue(time));
-        expect(p.show).toEqual(testObject.pyramid.show.getValue(time));
-        expect(p.material.uniforms).toEqual(testObject.pyramid.material.getValue(time));
         expect(p.modelMatrix).toEqual(Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(testObject.orientation.getValue(time)), testObject.position.getValue(time)));
+        expect(p.show).toEqual(testObject.pyramid.show.getValue(time));
+        expect(p.lateralSurfaceMaterial.uniforms).toEqual(testObject.pyramid.lateralSurfaceMaterial.getValue(time));
 
         pyramid.show.value = false;
         visualizer.update(time);
         expect(p.show).toEqual(testObject.pyramid.show.getValue(time));
     });
 
-    it('clear hides pyramids.', function() {
+    it('clear removes pyramids.', function() {
         var entityCollection = new EntityCollection();
         visualizer = new PyramidVisualizer(scene, entityCollection);
 
@@ -158,8 +158,7 @@ defineSuite([
         expect(scene.primitives.get(0).show).toEqual(true);
         entityCollection.removeAll();
         visualizer.update(time);
-        expect(scene.primitives.length).toEqual(1);
-        expect(scene.primitives.get(0).show).toEqual(false);
+        expect(scene.primitives.length).toEqual(0);
     });
 
     it('Visualizer sets entity property.', function() {

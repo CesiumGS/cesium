@@ -1071,10 +1071,7 @@ define([
         processPacketData(Number, cone, 'outerHalfAngle', coneData.outerHalfAngle, interval, sourceUri, entityCollection);
         processPacketData(Number, cone, 'minimumClockAngle', coneData.minimumClockAngle, interval, sourceUri, entityCollection);
         processPacketData(Number, cone, 'maximumClockAngle', coneData.maximumClockAngle, interval, sourceUri, entityCollection);
-        processMaterialPacketData(cone, 'capMaterial', coneData.capMaterial, interval, sourceUri, entityCollection);
-        processMaterialPacketData(cone, 'innerMaterial', coneData.innerMaterial, interval, sourceUri, entityCollection);
-        processMaterialPacketData(cone, 'outerMaterial', coneData.outerMaterial, interval, sourceUri, entityCollection);
-        processMaterialPacketData(cone, 'silhouetteMaterial', coneData.silhouetteMaterial, interval, sourceUri, entityCollection);
+        processMaterialPacketData(cone, 'lateralSurfaceMaterial', coneData.lateralSurfaceMaterial, interval, sourceUri, entityCollection);
     }
 
     function processEllipse(entity, packet, entityCollection, sourceUri) {
@@ -1373,18 +1370,23 @@ define([
         var i;
         var len;
         var values = [];
-        var tmp = directions.unitSpherical;
-        if (defined(tmp)) {
-            for (i = 0, len = tmp.length; i < len; i += 2) {
-                values.push(new Spherical(tmp[i], tmp[i + 1]));
+        var unitSphericals = directions.unitSpherical;
+        var sphericals = directions.spherical;
+        var unitCartesians = directions.unitCartesian;
+
+        if (defined(unitSphericals)) {
+            for (i = 0, len = unitSphericals.length; i < len; i += 2) {
+                values.push(new Spherical(unitSphericals[i], unitSphericals[i + 1]));
             }
             directions.array = values;
+        } else if (defined(sphericals)) {
+            for (i = 0, len = sphericals.length; i < len; i += 3) {
+                values.push(new Spherical(sphericals[i], sphericals[i + 1], sphericals[i + 2]));
         }
-
-        tmp = directions.unitCartesian;
-        if (defined(tmp)) {
-            for (i = 0, len = tmp.length; i < len; i += 3) {
-                values.push(Spherical.fromCartesian3(new Cartesian3(tmp[i], tmp[i + 1], tmp[i + 2])));
+            directions.array = values;
+        } else if (defined(unitCartesians)) {
+            for (i = 0, len = unitCartesians.length; i < len; i += 3) {
+                values.push(Spherical.fromCartesian3(new Cartesian3(unitCartesians[i], unitCartesians[i + 1], unitCartesians[i + 2])));
             }
             directions.array = values;
         }
@@ -1414,7 +1416,7 @@ define([
         processPacketData(Boolean, pyramid, 'showIntersection', pyramidData.showIntersection, interval, sourceUri, entityCollection);
         processPacketData(Color, pyramid, 'intersectionColor', pyramidData.intersectionColor, interval, sourceUri, entityCollection);
         processPacketData(Number, pyramid, 'intersectionWidth', pyramidData.intersectionWidth, interval, sourceUri, entityCollection);
-        processMaterialPacketData(pyramid, 'material', pyramidData.material, interval, sourceUri, entityCollection);
+        processMaterialPacketData(pyramid, 'lateralSurfaceMaterial', pyramidData.lateralSurfaceMaterial, interval, sourceUri, entityCollection);
 
         //The directions property is a special case value that can be an array of unitSpherical or unit Cartesians.
         //We pre-process this into Spherical instances and then process it like any other array.
