@@ -105,7 +105,7 @@ define(['../Core/createGuid',
     }
 
     function createId(node) {
-        return defined(node.id) && node.id.length !== 0 ? node.id : createGuid();
+        return defined(node) && defined(node.id) && node.id.length !== 0 ? node.id : createGuid();
     }
 
     //Helper functions
@@ -401,21 +401,24 @@ define(['../Core/createGuid',
         coordinates = PolygonPipeline.removeDuplicates(coordinates);
 
         if (coordinates.length > 3) {
-            entity.vertexPositions = new ConstantProperty(coordinates);
+            return new ConstantProperty(coordinates);
         }
     }
 
     function processPolygon(dataSource, entity, kml, node) {
         //TODO innerBoundaryIS, tessellate, altitudeMode
         var el = node.getElementsByTagName('outerBoundaryIs');
+        var positions;
         for (var j = 0; j < el.length; j++) {
-            processLinearRing(dataSource, entity, kml, el[j]);
+            positions = processLinearRing(dataSource, entity, kml, el[j]);
+            break;
         }
 
-        if (defined(entity.vertexPositions)) {
+        if (defined(positions)) {
             if (!defined(entity.polygon)) {
                 entity.polygon = new PolygonGraphics();
             }
+            entity.polygon.positions = positions;
 
             var altitudeMode = getStringValue(node, 'altitudeMode');
             var perPositionHeight = defined(altitudeMode) && (altitudeMode !== 'clampToGround') && (altitudeMode !== 'clampToSeaFloor');
@@ -962,7 +965,7 @@ define(['../Core/createGuid',
                 clock.currentTime = availability.start;
                 clock.clockRange = ClockRange.LOOP_STOP;
                 clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-                clock.multiplier = Math.min(Math.max(JulianDate.getSecondsDifference(availability.stop, availability.start) / 60, 60), 50000000);
+                clock.multiplier = Math.min(Math.max(JulianDate.secondsDifference(availability.stop, availability.start) / 60, 60), 50000000);
                 return clock;
             }
         },
