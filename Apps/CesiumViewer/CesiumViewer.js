@@ -33,6 +33,7 @@ define([
      * 'source' : 'file.czml',  // The relative URL of the CZML file to load at startup.
      * 'stats'  : true,         // Enable the FPS performance display.
      * 'theme'  : 'lighter',    // Use the dark-text-on-light-background theme.
+     * 'scene3DOnly' : false    // Enable 3D only mode
      */
     var endUserOptions = {};
     var queryString = window.location.search.substring(1);
@@ -61,7 +62,8 @@ define([
     try {
         viewer = new Viewer('cesiumContainer', {
             imageryProvider : imageryProvider,
-            baseLayerPicker : !defined(imageryProvider)
+            baseLayerPicker : !defined(imageryProvider),
+            scene3DOnly : endUserOptions.scene3DOnly
         });
     } catch (exception) {
         loadingIndicator.style.display = 'none';

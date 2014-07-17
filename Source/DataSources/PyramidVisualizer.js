@@ -50,9 +50,7 @@ define([
         entityCollection.collectionChanged.addEventListener(PyramidVisualizer.prototype._onObjectsRemoved, this);
 
         this._scene = scene;
-        this._unusedIndexes = [];
         this._primitives = scene.primitives;
-        this._pyramidCollection = [];
         this._entityCollection = entityCollection;
     };
 
@@ -90,25 +88,15 @@ define([
      * Removes and destroys all primitives created by this instance.
      */
     PyramidVisualizer.prototype.destroy = function() {
-        var i;
-        var length = this._pyramidCollection.length;
-        var primitives = this._primitives;
-        for (i = 0; i < length; i++) {
-            primitives.remove(this._pyramidCollection[i]);
-        }
-
-        var entities = this._entityCollection.entities;
-        length = entities.length;
-        for (i = 0; i < length; i++) {
-            entities[i]._pyramidVisualizerIndex = undefined;
-        }
-
+        var entityCollection = this._entityCollection;
+        entityCollection.collectionChanged.removeEventListener(PyramidVisualizer.prototype._onObjectsRemoved, this);
+        this._onObjectsRemoved(entityCollection, undefined, entityCollection.entities);
         return destroyObject(this);
     };
 
     var position;
     var orientation;
-    function updateObject(pyramidVisualizer, time, entity) {
+    function updateObject(visualizer, time, entity) {
         var pyramidGraphics = entity._pyramid;
         if (!defined(pyramidGraphics)) {
             return;
@@ -129,53 +117,39 @@ define([
             return;
         }
 
-        var pyramid;
+        var pyramid = entity._pyramidPrimitive;
         var showProperty = pyramidGraphics._show;
-        var pyramidVisualizerIndex = entity._pyramidVisualizerIndex;
         var show = entity.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
 
         if (!show) {
             //don't bother creating or updating anything else
-            if (defined(pyramidVisualizerIndex)) {
-                pyramid = pyramidVisualizer._pyramidCollection[pyramidVisualizerIndex];
+            if (defined(pyramid)) {
                 pyramid.show = false;
-                entity._pyramidVisualizerIndex = undefined;
-                pyramidVisualizer._unusedIndexes.push(pyramidVisualizerIndex);
             }
             return;
         }
 
-        if (!defined(pyramidVisualizerIndex)) {
-            var unusedIndexes = pyramidVisualizer._unusedIndexes;
-            var length = unusedIndexes.length;
-            if (length > 0) {
-                pyramidVisualizerIndex = unusedIndexes.pop();
-                pyramid = pyramidVisualizer._pyramidCollection[pyramidVisualizerIndex];
-            } else {
-                pyramidVisualizerIndex = pyramidVisualizer._pyramidCollection.length;
-                pyramid = new CustomSensorVolume();
-
-                pyramidVisualizer._pyramidCollection.push(pyramid);
-                pyramidVisualizer._primitives.add(pyramid);
-            }
-            entity._pyramidVisualizerIndex = pyramidVisualizerIndex;
+        if (!defined(pyramid)) {
+            pyramid = new CustomSensorVolume();
             pyramid.id = entity;
-
-            pyramid.radius = Number.POSITIVE_INFINITY;
-            pyramid.showIntersection = true;
-            pyramid.intersectionColor = Color.YELLOW;
-            pyramid.intersectionWidth = 5.0;
-            pyramid.material = Material.fromType(Material.ColorType);
-        } else {
-            pyramid = pyramidVisualizer._pyramidCollection[pyramidVisualizerIndex];
+            pyramid.lateralSurfaceMaterial = Material.fromType(Material.ColorType);
+            entity._pyramidPrimitive = pyramid;
+            visualizer._primitives.add(pyramid);
         }
-
         pyramid.show = true;
 
         var directions = directionsProperty.getValue(time);
         if (defined(directions) && pyramid._visualizerDirections !== directions) {
-            pyramid.setDirections(directions);
+            pyramid.directions = directions;
             pyramid._visualizerDirections = directions;
+        }
+
+        var property = pyramidGraphics._radius;
+        if (defined(property)) {
+            var radius = property.getValue(time);
+            if (defined(radius)) {
+                pyramid.radius = radius;
+            }
         }
 
         position = defaultValue(positionProperty.getValue(time, position), pyramid._visualizerPosition);
@@ -186,15 +160,15 @@ define([
             (!Cartesian3.equals(position, pyramid._visualizerPosition) ||
              !Quaternion.equals(orientation, pyramid._visualizerOrientation))) {
             Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, pyramid.modelMatrix);
-            Cartesian3.clone(position, pyramid._visualizerPosition);
-            Quaternion.clone(orientation, pyramid._visualizerOrientation);
+            pyramid._visualizerPosition = Cartesian3.clone(position, pyramid._visualizerPosition);
+            pyramid._visualizerOrientation = Quaternion.clone(orientation, pyramid._visualizerOrientation);
         }
 
-        pyramid.material = MaterialProperty.getValue(time, pyramidGraphics._material, pyramid.material);
+        pyramid.lateralSurfaceMaterial = MaterialProperty.getValue(time, pyramidGraphics._lateralSurfaceMaterial, pyramid.lateralSurfaceMaterial);
 
-        var property = pyramidGraphics._intersectionColor;
+        property = pyramidGraphics._intersectionColor;
         if (defined(property)) {
-            var intersectionColor = property.getValue(time, intersectionColor);
+            var intersectionColor = property.getValue(time, pyramid.intersectionColor);
             if (defined(intersectionColor)) {
                 pyramid.intersectionColor = intersectionColor;
             }
@@ -202,32 +176,21 @@ define([
 
         property = pyramidGraphics._intersectionWidth;
         if (defined(property)) {
-            var intersectionWidth = property.getValue(time, intersectionWidth);
+            var intersectionWidth = property.getValue(time);
             if (defined(intersectionWidth)) {
                 pyramid.intersectionWidth = intersectionWidth;
             }
         }
-
-        property = pyramidGraphics._radius;
-        if (defined(property)) {
-            var radius = property.getValue(time, radius);
-            if (defined(radius)) {
-                pyramid.radius = radius;
-            }
-        }
     }
 
-    PyramidVisualizer.prototype._onObjectsRemoved = function(entityCollection, added, entities) {
-        var thisPyramidCollection = this._pyramidCollection;
-        var thisUnusedIndexes = this._unusedIndexes;
-        for (var i = entities.length - 1; i > -1; i--) {
-            var entity = entities[i];
-            var pyramidVisualizerIndex = entity._pyramidVisualizerIndex;
-            if (defined(pyramidVisualizerIndex)) {
-                var pyramid = thisPyramidCollection[pyramidVisualizerIndex];
-                pyramid.show = false;
-                thisUnusedIndexes.push(pyramidVisualizerIndex);
-                entity._pyramidVisualizerIndex = undefined;
+    PyramidVisualizer.prototype._onObjectsRemoved = function(entityCollection, added, removed) {
+        var primitives = this._primitives;
+        for (var i = removed.length - 1; i > -1; i--) {
+            var entity = removed[i];
+            var pyramid = entity._pyramidPrimitive;
+            if (defined(pyramid)) {
+                primitives.remove(pyramid);
+                entity._pyramidPrimitive = undefined;
             }
         }
     };

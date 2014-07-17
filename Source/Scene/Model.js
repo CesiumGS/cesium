@@ -657,8 +657,8 @@ define([
                                 if (defined(min) && defined(max)) {
                                     Matrix4.multiplyByPoint(transformToRoot, aMin, aMin);
                                     Matrix4.multiplyByPoint(transformToRoot, aMax, aMax);
-                                    Cartesian3.getMinimumByComponent(min, aMin, min);
-                                    Cartesian3.getMaximumByComponent(max, aMax, max);
+                                    Cartesian3.minimumByComponent(min, aMin, min);
+                                    Cartesian3.maximumByComponent(max, aMax, max);
                                 }
                             }
                         }
@@ -2178,7 +2178,7 @@ define([
         }
 
         // We don't check show at the top of the function since we
-        // want to be able to progressively load models when they are shown,
+        // want to be able to progressively load models when they are not shown,
         // and then have them visibile immediately when show is set to true.
         if (show) {
 // PERFORMANCE_IDEA: This is terriable

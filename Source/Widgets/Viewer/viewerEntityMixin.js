@@ -29,7 +29,7 @@ define([
 
     /**
      * A mixin which adds behavior to the Viewer widget for dealing with Entity instances.
-     * This allows for Entitys to be tracked with the camera, either by the viewer clicking
+     * This allows for entities to be tracked with the camera, either by the viewer clicking
      * on them, or by setting the trackedEntity property.
      * Rather than being called directly, this function is normally passed as
      * a parameter to {@link Viewer#extend}, as shown in the example below.
@@ -94,9 +94,6 @@ define([
             eventHelper.add(infoBoxViewModel.closeClicked, clearSelectedEntity);
         }
 
-        var scratchVertexPositions;
-        var scratchBoundingSphere;
-
         // Subscribe to onTick so that we can update the view each update.
         function onTick(clock) {
             var time = clock.currentTime;
@@ -111,15 +108,11 @@ define([
                 var position;
                 var enableCamera = false;
 
+
                 if (selectedEntity.isAvailable(time)) {
                     if (defined(selectedEntity.position)) {
                         position = selectedEntity.position.getValue(time, oldPosition);
                         enableCamera = defined(position) && (viewer.trackedEntity !== viewer.selectedEntity);
-                    } else if (defined(selectedEntity.vertexPositions)) {
-                        scratchVertexPositions = selectedEntity.vertexPositions.getValue(time, scratchVertexPositions);
-                        scratchBoundingSphere = BoundingSphere.fromPoints(scratchVertexPositions, scratchBoundingSphere);
-                        position = scratchBoundingSphere.center;
-                        // Can't track scratch positions: "enableCamera" is false.
                     }
                     // else "position" is undefined and "enableCamera" is false.
                 }

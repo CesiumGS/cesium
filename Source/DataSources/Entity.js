@@ -41,7 +41,7 @@ define([
         this._parent = undefined;
         this._propertyNames = ['billboard', 'cone', 'description', 'ellipse', 'ellipsoid', 'label', 'model', //
                                'orientation', 'path', 'point', 'polygon', 'polyline', 'position', 'pyramid', //
-                               'rectangle', 'vector', 'vertexPositions', 'viewFrom', 'wall'];
+                               'rectangle', 'viewFrom', 'wall'];
 
         this._billboard = undefined;
         this._billboardSubscription = undefined;
@@ -73,10 +73,6 @@ define([
         this._pyramidSubscription = undefined;
         this._rectangle = undefined;
         this._rectangleSubscription = undefined;
-        this._vector = undefined;
-        this._vectorSubscription = undefined;
-        this._vertexPositions = undefined;
-        this._vertexPositionsSubscription = undefined;
         this._viewFrom = undefined;
         this._viewFromSubscription = undefined;
         this._wall = undefined;
@@ -241,18 +237,6 @@ define([
          * @type {RectangleGraphics}
          */
         rectangle : createPropertyDescriptor('rectangle'),
-        /**
-         * Gets or sets the vector.
-         * @memberof Entity.prototype
-         * @type {VectorGraphics}
-         */
-        vector : createPropertyDescriptor('vector'),
-        /**
-         * Gets or sets the vertex positions.
-         * @memberof Entity.prototype
-         * @type {Property}
-         */
-        vertexPositions : createPropertyDescriptor('vertexPositions'),
         /**
          * Gets or sets the suggested initial offset for viewing this object
          * with the camera.  The offset is defined in the east-north-up reference frame.

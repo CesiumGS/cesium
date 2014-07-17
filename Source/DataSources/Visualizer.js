@@ -21,7 +21,6 @@ define([
      * @see PathVisualizer
      * @see PointVisualizer
      * @see PyramidVisualizer
-     * @see VectorVisualizer
      * @see GeometryVisualizer
      */
     var Visualizer = function() {

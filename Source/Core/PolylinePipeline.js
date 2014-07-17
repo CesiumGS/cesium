@@ -32,6 +32,22 @@ define([
      */
     var PolylinePipeline = {};
 
+    PolylinePipeline.numberOfPoints = function(p0, p1, granularity) {
+        var angleBetween = Cartesian3.angleBetween(p0, p1);
+        return Math.ceil(angleBetween / granularity);
+    };
+
+    var cartoScratch = new Cartographic();
+    PolylinePipeline.extractHeights = function(positions, ellipsoid) {
+        var length = positions.length;
+        var heights = new Array(length);
+        for (var i = 0; i < length; i++) {
+            var p = positions[i];
+            heights[i] = ellipsoid.cartesianToCartographic(p, cartoScratch).height;
+        }
+        return heights;
+    };
+
     var wrapLongitudeInversMatrix = new Matrix4();
     var wrapLongitudeOrigin = new Cartesian3();
     var wrapLongitudeXZNormal = new Cartesian3();
@@ -40,6 +56,28 @@ define([
     var wrapLongitudeYZPlane = new Plane(Cartesian3.ZERO, 0.0);
     var wrapLongitudeIntersection = new Cartesian3();
     var wrapLongitudeOffset = new Cartesian3();
+
+    function subdivideHeights(numPoints, h0, h1) {
+        var heights = new Array(numPoints);
+        var i;
+        if (h0 === h1) {
+            for (i = 0; i < numPoints; i++) {
+                heights[i] = h0;
+            }
+            return heights;
+        }
+
+        var dHeight = h1 - h0;
+        var heightPerVertex = dHeight / (numPoints);
+
+        for (i = 1; i < numPoints; i++) {
+            var h = h0 + i*heightPerVertex;
+            heights[i] = h;
+        }
+
+        heights[0] = h0;
+        return heights;
+    }
 
     var carto1 = new Cartographic();
     var carto2 = new Cartographic();
@@ -50,46 +88,32 @@ define([
     //Returns subdivided line scaled to ellipsoid surface starting at p1 and ending at p2.
     //Result includes p1, but not include p2.  This function is called for a sequence of line segments,
     //and this prevents duplication of end point.
-    function generateCartesianArc(p1, p2, granularity, ellipsoid) {
-        var first = ellipsoid.scaleToGeodeticSurface(p1, scaleFirst);
-        var last = ellipsoid.scaleToGeodeticSurface(p2, scaleLast);
-        var separationAngle = Cartesian3.angleBetween(first, last);
-        var numPoints = Math.ceil(separationAngle / granularity);
-        var result = new Array(numPoints * 3);
+    function generateCartesianArc(p0, p1, granularity, ellipsoid, h0, h1, array, offset) {
+        var first = ellipsoid.scaleToGeodeticSurface(p0, scaleFirst);
+        var last = ellipsoid.scaleToGeodeticSurface(p1, scaleLast);
+        var numPoints = PolylinePipeline.numberOfPoints(p0, p1, granularity);
         var start = ellipsoid.cartesianToCartographic(first, carto1);
         var end = ellipsoid.cartesianToCartographic(last, carto2);
+        var heights = subdivideHeights(numPoints, h0, h1);
 
         ellipsoidGeodesic.setEndPoints(start, end);
         var surfaceDistanceBetweenPoints = ellipsoidGeodesic.surfaceDistance / numPoints;
 
-        var index = 0;
-        start.height = 0;
+        var index = offset;
+        start.height = h0;
         var cart = ellipsoid.cartographicToCartesian(start, cartesian);
-        result[index++] = cart.x;
-        result[index++] = cart.y;
-        result[index++] = cart.z;
+        Cartesian3.pack(cart, array, index);
+        index += 3;
 
         for (var i = 1; i < numPoints; i++) {
             var carto = ellipsoidGeodesic.interpolateUsingSurfaceDistance(i * surfaceDistanceBetweenPoints, carto2);
+            carto.height = heights[i];
             cart = ellipsoid.cartographicToCartesian(carto, cartesian);
-            result[index++] = cart.x;
-            result[index++] = cart.y;
-            result[index++] = cart.z;
+            Cartesian3.pack(cart, array, index);
+            index += 3;
         }
 
-        return result;
-    }
-
-    var scaleN = new Cartesian3();
-    var scaleP = new Cartesian3();
-    function computeHeight(p, h, ellipsoid) {
-        var n = scaleN;
-
-        ellipsoid.geodeticSurfaceNormal(p, n);
-        Cartesian3.multiplyByScalar(n, h, n);
-        Cartesian3.add(p, n, p);
-
-        return p;
+        return index;
     }
 
     /**
@@ -213,9 +237,9 @@ define([
     };
 
     /**
-     * Subdivides polyline and raises all points to the ellipsoid surface
-     *
-     * @param {Cartesian3[]} positions The array of positions of type {Cartesian3}.
+     * Subdivides polyline and raises all points to the specified height.  Returns an array of numbers to represent the positions.
+     * @param {Cartesian3[]} positions The array of type {Cartesian3} representing positions.
+     * @param {Number|Number[]} [height=0.0] A number or array of numbers representing the heights of each position.
      * @param {Number} [granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
      * @returns {Number[]} A new array of positions of type {Number} that have been subdivided and raised to the surface of the ellipsoid.
@@ -227,115 +251,92 @@ define([
      *   -105.0, 35.0,
      *   -100.0, 32.0
      * ]);
-     * var surfacePositions = Cesium.PolylinePipeline.scaleToSurface(positions);
+     * var surfacePositions = Cesium.PolylinePipeline.generateArc({
+     *   positons: positions
+     * });
      */
-    PolylinePipeline.scaleToSurface = function(positions, granularity, ellipsoid) {
+    PolylinePipeline.generateArc = function(options) {
+        if (!defined(options)) {
+            options = {};
+        }
+        var positions = options.positions;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(positions)) {
-            throw new DeveloperError('positions is required');
+            throw new DeveloperError('options.positions is required.');
         }
         //>>includeEnd('debug');
 
-        granularity = defaultValue(granularity, CesiumMath.RADIANS_PER_DEGREE);
-        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+        var height = defaultValue(options.height, 0);
+        var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
 
         var length = positions.length;
-        var newPositions = [];
-        for (var i = 0; i < length - 1; i++) {
-            var p0 = positions[i];
-            var p1 = positions[i + 1];
-            newPositions = newPositions.concat(generateCartesianArc(p0, p1, granularity, ellipsoid));
+        var numPoints = 0;
+        var i;
+        var p0;
+        var p1;
+
+        for (i = 0; i < length-1; i++) {
+            p0 = positions[i];
+            p1 = positions[i+1];
+            numPoints += PolylinePipeline.numberOfPoints(p0, p1, granularity);
+        }
+        numPoints++;
+        var arrayLength = numPoints * 3;
+        var newPositions = new Array(arrayLength);
+        var offset = 0;
+        for (i = 0; i < length - 1; i++) {
+            p0 = positions[i];
+            p1 = positions[i + 1];
+
+            var h0;
+            var h1;
+            if (isArray(height)) {
+                h0 = height[i];
+                h1 = height[i + 1];
+            } else {
+                h0 = height;
+                h1 = height;
+            }
+
+            offset = generateCartesianArc(p0, p1, granularity, ellipsoid, h0, h1, newPositions, offset);
         }
 
         var lastPoint = positions[length - 1];
         var carto = ellipsoid.cartesianToCartographic(lastPoint, carto1);
-        carto.height = 0;
+        carto.height = isArray(height) ? height[length - 1] : height;
         var cart = ellipsoid.cartographicToCartesian(carto, cartesian);
-        newPositions.push(cart.x, cart.y, cart.z);
+        Cartesian3.pack(cart, newPositions, arrayLength - 3);
 
         return newPositions;
     };
 
     /**
-     * Raises the positions to the given height.
-     *
-     * @param {Number[]} positions The array of type {Number} representing positions.
-     * @param {Number|Number[]} height A number or array of numbers representing the heights of each position.
+     * Subdivides polyline and raises all points to the specified height. Returns an array of new {Cartesian3} positions.
+     * @param {Cartesian3[]} positions The array of type {Cartesian3} representing positions.
+     * @param {Number|Number[]} [height=0.0] A number or array of numbers representing the heights of each position.
+     * @param {Number} [granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
-     * @param {Number[]} [result] An array to place the resultant positions in.
-     * @returns {Number[]} The array of positions scaled to height.
-
-     * @exception {DeveloperError} positions must be defined.
-     * @exception {DeveloperError} height must be defined.
-     * @exception {DeveloperError} result.length must be equal to positions.length
-     * @exception {DeveloperError} height.length must be equal to positions.length
+     * @returns {Cartesian3[]} A new array of cartesian3 positions that have been subdivided and raised to the surface of the ellipsoid.
      *
      * @example
-     * var p1 = Cesium.Cartesian3.fromDegrees(-105.0, 40.0);
-     * var p2 = Cesium.Cartesian3.fromDegrees(-100.0, 38.0);
-     * var positions = [p1.x, p1.y, p1.z, p2.x, p2.y, p2.z];
-     * var heights = [1000, 1000, 2000, 2000];
-     *
-     * var raisedPositions = Cesium.PolylinePipeline.scaleToGeodeticHeight(positions, heights);
+     * var positions = Cesium.Cartesian3.fromDegreesArray([
+     *   -105.0, 40.0,
+     *   -100.0, 38.0,
+     *   -105.0, 35.0,
+     *   -100.0, 32.0
+     * ]);
+     * var surfacePositions = Cesium.PolylinePipeline.generateCartesianArc({
+     *   positons: positions
+     * });
      */
-    PolylinePipeline.scaleToGeodeticHeight = function(positions, height, ellipsoid, result) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(positions)) {
-            throw new DeveloperError('positions must be defined.');
+    PolylinePipeline.generateCartesianArc = function(options) {
+        var numberArray = PolylinePipeline.generateArc(options);
+        var size = numberArray.length/3;
+        var newPositions = new Array(size);
+        for (var i = 0; i < size; i++) {
+            newPositions[i] = Cartesian3.unpack(numberArray, i*3);
         }
-        if (!defined(height)) {
-            throw new DeveloperError('height must be defined');
-        }
-        //>>includeEnd('debug');
-
-        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        var length = positions.length;
-        var i;
-        var p = scaleP;
-        var newPositions;
-        if (defined(result)) {
-            if (result.length !== positions.length) {
-                throw new DeveloperError('result.length must be equal to positions.length');
-            }
-            newPositions = result;
-        } else {
-            newPositions = new Array(positions.length);
-        }
-
-        if (height === 0.0) {
-            for (i = 0; i < length; i += 3) {
-                p = ellipsoid.scaleToGeodeticSurface(Cartesian3.fromArray(positions, i, p), p);
-                newPositions[i] = p.x;
-                newPositions[i + 1] = p.y;
-                newPositions[i + 2] = p.z;
-            }
-            return newPositions;
-        }
-
-        var h;
-        if (isArray(height)) {
-            if (height.length !== length / 3) {
-                throw new DeveloperError('height.length must be equal to positions.length');
-            }
-            for (i = 0; i < length; i += 3) {
-                h = height[i / 3];
-                p = Cartesian3.fromArray(positions, i, p);
-                p = computeHeight(p, h, ellipsoid);
-                newPositions[i] = p.x;
-                newPositions[i + 1] = p.y;
-                newPositions[i + 2] = p.z;
-            }
-        } else {
-            h = height;
-            for (i = 0; i < length; i += 3) {
-                p = Cartesian3.fromArray(positions, i, p);
-                p = computeHeight(p, h, ellipsoid);
-                newPositions[i] = p.x;
-                newPositions[i + 1] = p.y;
-                newPositions[i + 2] = p.z;
-            }
-        }
-
         return newPositions;
     };
 

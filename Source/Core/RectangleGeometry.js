@@ -726,8 +726,8 @@ define([
         var radiiSquared = ellipsoid.radiiSquared;
 
         Rectangle.clone(rectangle, stRectangle);
-        Rectangle.getNorthwest(rectangle, nwCartographic);
-        Rectangle.getCenter(rectangle, centerCartographic);
+        Rectangle.northwest(rectangle, nwCartographic);
+        Rectangle.center(rectangle, centerCartographic);
 
         var granYCos = granularityY;
         var granXCos = granularityX;

@@ -914,7 +914,7 @@ defineSuite([
                 position : Cartesian3.ZERO
             });
             labels.update(context, frameState, []);
-            expect(label.computeScreenSpacePosition(mockScene)).toEqual(new Cartesian2(0.5, 0.5));
+            expect(label.computeScreenSpacePosition(mockScene)).toEqualEpsilon(new Cartesian2(0.5, 0.5), CesiumMath.EPSILON1);
         });
 
         it('can compute screen space position (2)', function() {
@@ -925,7 +925,7 @@ defineSuite([
                 pixelOffset : new Cartesian2(1.0, 2.0)
             });
             labels.update(context, frameState, []);
-            expect(label.computeScreenSpacePosition(mockScene)).toEqual(new Cartesian2(1.5, 2.5));
+            expect(label.computeScreenSpacePosition(mockScene)).toEqualEpsilon(new Cartesian2(1.5, 2.5), CesiumMath.EPSILON1);
         });
 
         it('can compute screen space position (3)', function() {
@@ -936,9 +936,7 @@ defineSuite([
                 eyeOffset : new Cartesian3(5.0, -5.0, 0.0)
             });
             labels.update(context, frameState, []);
-            var p = label.computeScreenSpacePosition(mockScene);
-            expect(p.x).toBeGreaterThan(0.5);
-            expect(p.y).toBeGreaterThan(0.5);
+            expect(label.computeScreenSpacePosition(mockScene)).toEqualEpsilon(new Cartesian2(0.5, 0.5), CesiumMath.EPSILON1);
         });
 
         it('can equal another label', function() {

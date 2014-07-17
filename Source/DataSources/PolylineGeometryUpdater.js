@@ -49,6 +49,8 @@ define([
         this.vertexFormat = undefined;
         this.positions = undefined;
         this.width = undefined;
+        this.followSurface = undefined;
+        this.granularity = undefined;
     };
 
     /**
@@ -318,7 +320,7 @@ define([
     };
 
     PolylineGeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
-        if (!(propertyName === 'availability' || propertyName === 'vertexPositions' || propertyName === 'polyline')) {
+        if (!(propertyName === 'availability' || propertyName === 'polyline')) {
             return;
         }
 
@@ -332,11 +334,11 @@ define([
             return;
         }
 
-        var vertexPositions = this._entity.vertexPositions;
+        var positionsProperty = polyline.positions;
 
         var show = polyline.show;
         if ((defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE)) || //
-            (!defined(vertexPositions))) {
+            (!defined(positionsProperty))) {
             if (this._fillEnabled) {
                 this._fillEnabled = false;
                 this._geometryChanged.raiseEvent(this);
@@ -351,15 +353,18 @@ define([
         this._fillEnabled = true;
 
         var width = polyline.width;
+        var followSurface = polyline.followSurface;
+        var granularity = polyline.granularity;
 
-        if (!vertexPositions.isConstant || !Property.isConstant(width)) {
+        if (!positionsProperty.isConstant || !Property.isConstant(width) ||
+            !Property.isConstant(followSurface) || !Property.isConstant(granularity)) {
             if (!this._dynamic) {
                 this._dynamic = true;
                 this._geometryChanged.raiseEvent(this);
             }
         } else {
             var options = this._options;
-            var positions = vertexPositions.getValue(Iso8601.MINIMUM_VALUE, options.positions);
+            var positions = positionsProperty.getValue(Iso8601.MINIMUM_VALUE, options.positions);
 
             //Because of the way we currently handle reference properties,
             //we can't automatically assume the positions are  always valid.
@@ -374,6 +379,8 @@ define([
             options.vertexFormat = isColorMaterial ? PolylineColorAppearance.VERTEX_FORMAT : PolylineMaterialAppearance.VERTEX_FORMAT;
             options.positions = positions;
             options.width = defined(width) ? width.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.followSurface = defined(followSurface) ? followSurface.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             this._dynamic = false;
             this._geometryChanged.raiseEvent(this);
         }
@@ -427,9 +434,10 @@ define([
         }
 
         var options = this._options;
-        var vertexPositions = entity.vertexPositions;
+        options.followSurface = false;
+        var positionsProperty = polyline.positions;
 
-        var positions = vertexPositions.getValue(time, options.positions);
+        var positions = positionsProperty.getValue(time, options.positions);
         //Because of the way we currently handle reference properties,
         //we can't automatically assume the positions are  always valid.
         if (!defined(positions) || positions.length < 2) {
@@ -440,6 +448,12 @@ define([
 
         var width = polyline.width;
         options.width = defined(width) ? width.getValue(time) : undefined;
+
+        var followSurface = polyline.followSurface;
+        options.followSurface = defined(followSurface) ? followSurface.getValue(time) : undefined;
+
+        var granularity = polyline.granularity;
+        options.granularity = defined(granularity) ? granularity.getValue(time) : undefined;
 
         this._material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
         var material = this._material;

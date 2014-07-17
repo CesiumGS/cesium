@@ -54,7 +54,7 @@ defineSuite([
         camera.frustum = new PerspectiveFrustum();
         camera.frustum.near = 0.01;
         camera.frustum.far = 2.0;
-        camera.frustum.fovy = CesiumMath.toRadians(60.0);
+        camera.frustum.fov = CesiumMath.toRadians(60.0);
         camera.frustum.aspectRatio = 1.0;
 
         scene.mode = SceneMode.SCENE3D;

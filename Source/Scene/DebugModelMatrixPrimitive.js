@@ -126,6 +126,11 @@ define([
                 this._primitive.destroy();
             }
 
+            // Workaround projecting (0, 0, 0)
+            if ((this.modelMatrix[12] === 0.0 && this.modelMatrix[13] === 0.0 && this.modelMatrix[14] === 0.0)) {
+                this.modelMatrix[14] = 0.01;
+            }
+
             this._primitive = new Primitive({
                 geometryInstances : new GeometryInstance({
                     geometry : PolylineGeometry.createGeometry(new PolylineGeometry({
@@ -146,16 +151,15 @@ define([
                             Color.GREEN,
                             Color.BLUE,
                             Color.BLUE
-                        ]
+                        ],
+                        followSurface: false
                     })),
                     modelMatrix : Matrix4.multiplyByUniformScale(this.modelMatrix, this.length, new Matrix4()),
                     id : this.id,
                     pickPrimitive : this
                 }),
                 appearance : new PolylineColorAppearance(),
-                asynchronous : false,
-                // Workaround projecting (0, 0, 0)
-                allow3DOnly : (this.modelMatrix[12] === 0.0 && this.modelMatrix[13] === 0.0 && this.modelMatrix[14] === 0.0)
+                asynchronous : false
             });
         }
 

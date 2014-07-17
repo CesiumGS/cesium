@@ -254,9 +254,9 @@ define([
 
         projection = defaultValue(projection, defaultProjection);
 
-        Rectangle.getSouthwest(rectangle, fromRectangle2DSouthwest);
+        Rectangle.southwest(rectangle, fromRectangle2DSouthwest);
         fromRectangle2DSouthwest.height = minimumHeight;
-        Rectangle.getNortheast(rectangle, fromRectangle2DNortheast);
+        Rectangle.northeast(rectangle, fromRectangle2DNortheast);
         fromRectangle2DNortheast.height = maximumHeight;
 
         var lowerLeft = projection.project(fromRectangle2DSouthwest, fromRectangle2DLowerLeft);
@@ -836,7 +836,7 @@ define([
      * @param {Cartesian2} [result] A Cartesian2 to store the nearest and farthest distances.
      * @returns {Interval} The nearest and farthest distances on the bounding sphere from position in direction.
      */
-    BoundingSphere.getPlaneDistances = function(sphere, position, direction, result) {
+    BoundingSphere.computePlaneDistances = function(sphere, position, direction, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(sphere)) {
             throw new DeveloperError('sphere is required.');

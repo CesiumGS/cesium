@@ -25,6 +25,13 @@ define([
         this._showSubscription = undefined;
         this._material = undefined;
         this._materialSubscription = undefined;
+        this._positions = undefined;
+        this._positionsSubscription = undefined;
+        this._followSurface = undefined;
+        this._followSurfaceSubscription = undefined;
+        this._granularity = undefined;
+        this._granularitySubscription = undefined;
+        this._widthSubscription = undefined;
         this._width = undefined;
         this._widthSubscription = undefined;
         this._definitionChanged = new Event();
@@ -59,11 +66,34 @@ define([
         material : createPropertyDescriptor('material'),
 
         /**
+         * Gets or sets the vertex positions.
+         * @memberof DynamicPolyline.prototype
+         * @type {Property}
+         */
+        positions : createPropertyDescriptor('positions'),
+
+        /**
          * Gets or sets the numeric {@link Property} specifying the the line's width.
          * @memberof PolylineGraphics.prototype
          * @type {Property}
          */
-        width : createPropertyDescriptor('width')
+        width : createPropertyDescriptor('width'),
+
+        /**
+         * Gets or sets the boolean {@link Property} specifying whether or not the
+         * points connecting the line should follow the curve of globe's surface.
+         * @memberof PolylineGraphics.prototype
+         * @type {Property}
+         */
+        followSurface : createPropertyDescriptor('followSurface'),
+
+        /**
+         * Gets or sets the numeric {@link Property} specifying the granularity
+         * of the resulting curve when followSurface is true.
+         * @memberof PolylineGraphics.prototype
+         * @type {Property}
+         */
+        granularity : createPropertyDescriptor('granularity')
     });
 
     /**
@@ -78,7 +108,10 @@ define([
         }
         result.show = this.show;
         result.material = this.material;
+        result.positions = this.positions;
         result.width = this.width;
+        result.followSurface = this.followSurface;
+        result.granularity = this.granularity;
         return result;
     };
 
@@ -97,7 +130,10 @@ define([
 
         this.show = defaultValue(this.show, source.show);
         this.material = defaultValue(this.material, source.material);
+        this.positions = defaultValue(this.positions, source.positions);
         this.width = defaultValue(this.width, source.width);
+        this.followSurface = defaultValue(this.followSurface, source.followSurface);
+        this.granularity = defaultValue(this.granularity, source.granularity);
     };
 
     return PolylineGraphics;

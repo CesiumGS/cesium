@@ -83,6 +83,7 @@ define([
      * @param {Boolean} [options.timeline=true] If set to false, the Timeline widget will not be created.
      * @param {Boolean} [options.navigationHelpButton=true] If set to the false, the navigation help button will not be created.
      * @param {Boolean} [options.navigationInstructionsInitiallyVisible=true] True if the navigation instructions should initially be visible, or false if the should not be shown until the user explicitly clicks the button.
+     * @param {Boolean} [options.scene3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
      * @param {ProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
      * @param {ProviderViewModel[]} [options.imageryProviderViewModels=createDefaultImageryProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if options.baseLayerPicker is set to true.
      * @param {ProviderViewModel} [options.selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
@@ -215,6 +216,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         viewerContainer.appendChild(bottomContainer);
 
+        var scene3DOnly = defaultValue(options.scene3DOnly, false);
+
         // Cesium widget
         var cesiumWidget = new CesiumWidget(cesiumWidgetContainer, {
             terrainProvider : options.terrainProvider,
@@ -226,7 +229,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             useDefaultRenderLoop : options.useDefaultRenderLoop,
             targetFrameRate : options.targetFrameRate,
             showRenderLoopErrors : options.showRenderLoopErrors,
-            creditContainer : defined(options.creditContainer) ? options.creditContainer : bottomContainer
+            creditContainer : defined(options.creditContainer) ? options.creditContainer : bottomContainer,
+            scene3DOnly : scene3DOnly
         });
 
         var dataSourceCollection = options.dataSources;
@@ -236,7 +240,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             destroyDataSourceCollection = true;
         }
 
-        var dataSourceDisplay = new DataSourceDisplay(cesiumWidget.scene, dataSourceCollection);
+        var dataSourceDisplay = new DataSourceDisplay({
+            scene : cesiumWidget.scene,
+            dataSourceCollection : dataSourceCollection
+        });
 
         var clock = cesiumWidget.clock;
         var clockViewModel = new ClockViewModel(clock);
@@ -302,8 +309,14 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         }
 
         // SceneModePicker
+        // By default, we silently disable the scene mode picker if scene3DOnly is true,
+        // but if sceneModePicker is explicitly set to true, throw an error.
+        if ((options.sceneModePicker === true) && scene3DOnly) {
+            throw new DeveloperError('options.sceneModePicker is not available when options.scene3DOnly is set to true.');
+        }
+
         var sceneModePicker;
-        if (!defined(options.sceneModePicker) || options.sceneModePicker !== false) {
+        if (!scene3DOnly && (!defined(options.sceneModePicker) || options.sceneModePicker !== false)) {
             sceneModePicker = new SceneModePicker(toolbar, cesiumWidget.scene);
         }
 
@@ -329,9 +342,18 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         // Navigation Help Button
         var navigationHelpButton;
         if (!defined(options.navigationHelpButton) || options.navigationHelpButton !== false) {
+            var showNavHelp = true;
+            if (defined(window.localStorage)) {
+                var  hasSeenNavHelp = window.localStorage.getItem('cesium-hasSeenNavHelp');
+                if (defined(hasSeenNavHelp) && Boolean(hasSeenNavHelp)) {
+                    showNavHelp = false;
+                } else {
+                    window.localStorage.setItem('cesium-hasSeenNavHelp', 'true');
+                }
+            }
             navigationHelpButton = new NavigationHelpButton({
                 container : toolbar,
-                instructionsInitiallyVisible : defaultValue(options.navigationInstructionsInitiallyVisible, true)
+                instructionsInitiallyVisible : defaultValue(options.navigationInstructionsInitiallyVisible, showNavHelp)
             });
         }
 

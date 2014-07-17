@@ -167,14 +167,14 @@ defineSuite([
         expect(clock.currentTime).toEqual(interval.start);
         expect(clock.clockRange).toEqual(ClockRange.LOOP_STOP);
         expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_MULTIPLIER);
-        expect(clock.multiplier).toEqual(JulianDate.getSecondsDifference(interval.stop, interval.start) / 120.0);
+        expect(clock.multiplier).toEqual(JulianDate.secondsDifference(interval.stop, interval.start) / 120.0);
     });
 
     it('processUrl loads expected data', function() {
         var dataSource = new CzmlDataSource();
         dataSource.processUrl(simpleUrl);
         waitsFor(function() {
-            return dataSource.entities.entities.length === 11;
+            return dataSource.entities.entities.length === 10;
         });
     });
 
@@ -182,7 +182,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.processUrl(simpleUrl);
         waitsFor(function() {
-            return dataSource.entities.entities.length === 11;
+            return dataSource.entities.entities.length === 10;
         });
 
         runs(function() {
@@ -190,7 +190,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return dataSource.entities.entities.length === 12;
+            return dataSource.entities.entities.length === 10;
         });
     });
 
@@ -198,7 +198,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.processUrl(simpleUrl);
         waitsFor(function() {
-            return dataSource.entities.entities.length === 11;
+            return dataSource.entities.entities.length === 10;
         });
 
         runs(function() {
@@ -218,7 +218,7 @@ defineSuite([
         runs(function() {
             var dataSource = new CzmlDataSource();
             dataSource.process(simple, simpleUrl);
-            expect(dataSource.entities.entities.length).toEqual(11);
+            expect(dataSource.entities.entities.length).toEqual(10);
         });
     });
 
@@ -230,10 +230,10 @@ defineSuite([
         runs(function() {
             var dataSource = new CzmlDataSource();
             dataSource.process(simple, simpleUrl);
-            expect(dataSource.entities.entities.length === 11);
+            expect(dataSource.entities.entities.length === 10);
 
             dataSource.process(vehicle, vehicleUrl);
-            expect(dataSource.entities.entities.length === 12);
+            expect(dataSource.entities.entities.length === 11);
         });
     });
 
@@ -245,7 +245,7 @@ defineSuite([
         runs(function() {
             var dataSource = new CzmlDataSource();
             dataSource.process(simple, simpleUrl);
-            expect(dataSource.entities.entities.length).toEqual(11);
+            expect(dataSource.entities.entities.length).toEqual(10);
 
             dataSource.load(vehicle, vehicleUrl);
             expect(dataSource.entities.entities.length).toEqual(1);
@@ -637,38 +637,17 @@ defineSuite([
                 maximumClockAngle : 1.3,
                 radius : 2.0,
                 show : true,
+                intersectionColor : {
+                    rgbaf : [0.5, 0.5, 0.5, 0.5]
+                },
                 showIntersection : false,
                 intersectionWidth : 6.0,
-                capMaterial : {
+                lateralSurfaceMaterial : {
                     solidColor : {
                         color : {
                             rgbaf : [0.1, 0.1, 0.1, 0.1]
                         }
                     }
-                },
-                innerMaterial : {
-                    solidColor : {
-                        color : {
-                            rgbaf : [0.2, 0.2, 0.2, 0.2]
-                        }
-                    }
-                },
-                outerMaterial : {
-                    solidColor : {
-                        color : {
-                            rgbaf : [0.3, 0.3, 0.3, 0.3]
-                        }
-                    }
-                },
-                silhouetteMaterial : {
-                    solidColor : {
-                        color : {
-                            rgbaf : [0.4, 0.4, 0.4, 0.4]
-                        }
-                    }
-                },
-                intersectionColor : {
-                    rgbaf : [0.5, 0.5, 0.5, 0.5]
                 }
             }
         };
@@ -685,12 +664,7 @@ defineSuite([
         expect(entity.cone.radius.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.radius);
         expect(entity.cone.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.show);
         expect(entity.cone.showIntersection.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.showIntersection);
-        expect(entity.cone.capMaterial.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(entity.cone.innerMaterial.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(entity.cone.outerMaterial.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.3, 0.3, 0.3, 0.3));
-        expect(entity.cone.silhouetteMaterial.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.4, 0.4, 0.4, 0.4));
-        expect(entity.cone.intersectionColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.5, 0.5, 0.5, 0.5));
-        expect(entity.cone.intersectionWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.intersectionWidth);
+        expect(entity.cone.lateralSurfaceMaterial.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
     });
 
     it('CZML adds data for constrained cone.', function() {
@@ -703,38 +677,17 @@ defineSuite([
                 maximumClockAngle : 1.3,
                 radius : 2.0,
                 show : true,
+                intersectionColor : {
+                    rgbaf : [0.5, 0.5, 0.5, 0.5]
+                },
                 showIntersection : false,
-                intersectionWidth : 4.0,
-                capMaterial : {
+                intersectionWidth : 6.0,
+                lateralSurfaceMaterial : {
                     solidColor : {
                         color : {
                             rgbaf : [0.1, 0.1, 0.1, 0.1]
                         }
                     }
-                },
-                innerMaterial : {
-                    solidColor : {
-                        color : {
-                            rgbaf : [0.2, 0.2, 0.2, 0.2]
-                        }
-                    }
-                },
-                outerMaterial : {
-                    solidColor : {
-                        color : {
-                            rgbaf : [0.3, 0.3, 0.3, 0.3]
-                        }
-                    }
-                },
-                silhouetteMaterial : {
-                    solidColor : {
-                        color : {
-                            rgbaf : [0.4, 0.4, 0.4, 0.4]
-                        }
-                    }
-                },
-                intersectionColor : {
-                    rgbaf : [0.5, 0.5, 0.5, 0.5]
                 }
             }
         };
@@ -756,10 +709,7 @@ defineSuite([
         expect(entity.cone.radius.getValue(validTime)).toEqual(conePacket.cone.radius);
         expect(entity.cone.show.getValue(validTime)).toEqual(conePacket.cone.show);
         expect(entity.cone.showIntersection.getValue(validTime)).toEqual(conePacket.cone.showIntersection);
-        expect(entity.cone.capMaterial.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(entity.cone.innerMaterial.getValue(validTime).color).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(entity.cone.outerMaterial.getValue(validTime).color).toEqual(new Color(0.3, 0.3, 0.3, 0.3));
-        expect(entity.cone.silhouetteMaterial.getValue(validTime).color).toEqual(new Color(0.4, 0.4, 0.4, 0.4));
+        expect(entity.cone.lateralSurfaceMaterial.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(entity.cone.intersectionColor.getValue(validTime)).toEqual(new Color(0.5, 0.5, 0.5, 0.5));
         expect(entity.cone.intersectionWidth.getValue(validTime)).toEqual(conePacket.cone.intersectionWidth);
 
@@ -770,10 +720,7 @@ defineSuite([
         expect(entity.cone.radius.getValue(invalidTime)).toBeUndefined();
         expect(entity.cone.show.getValue(invalidTime)).toBeUndefined();
         expect(entity.cone.showIntersection.getValue(invalidTime)).toBeUndefined();
-        expect(entity.cone.capMaterial.getValue(invalidTime)).toBeUndefined();
-        expect(entity.cone.innerMaterial.getValue(invalidTime)).toBeUndefined();
-        expect(entity.cone.outerMaterial.getValue(invalidTime)).toBeUndefined();
-        expect(entity.cone.silhouetteMaterial.getValue(invalidTime)).toBeUndefined();
+        expect(entity.cone.lateralSurfaceMaterial.getValue(invalidTime)).toBeUndefined();
         expect(entity.cone.intersectionColor.getValue(invalidTime)).toBeUndefined();
         expect(entity.cone.intersectionWidth.getValue(invalidTime)).toBeUndefined();
     });
@@ -1242,50 +1189,56 @@ defineSuite([
         expect(entity.orientation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Quaternion(0.0, 0.0, 0.0, 1.0));
     });
 
-    it('vertexPositions work with cartesians.', function() {
+    it('positions work with cartesians.', function() {
         var expectedResult = [new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(5.0, 6.0, 7.0)];
 
         var packet = {
-            vertexPositions : {
-                cartesian : [expectedResult[0].x, expectedResult[0].y, expectedResult[0].z, expectedResult[1].x, expectedResult[1].y, expectedResult[1].z]
+            polyline : {
+                positions : {
+                    cartesian : [expectedResult[0].x, expectedResult[0].y, expectedResult[0].z, expectedResult[1].x, expectedResult[1].y, expectedResult[1].z]
+                }
             }
         };
 
         var dataSource = new CzmlDataSource();
         dataSource.load(packet);
         var entity = dataSource.entities.entities[0];
-        expect(entity.vertexPositions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedResult);
+        expect(entity.polyline.positions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedResult);
     });
 
-    it('vertexPositions work with cartographicRadians.', function() {
+    it('positions work with cartographicRadians.', function() {
         var input = [new Cartographic(1.0, 2.0, 4.0), new Cartographic(5.0, 6.0, 7.0)];
         var expectedResult = Ellipsoid.WGS84.cartographicArrayToCartesianArray(input);
 
         var packet = {
-            vertexPositions : {
-                cartographicRadians : [input[0].longitude, input[0].latitude, input[0].height, input[1].longitude, input[1].latitude, input[1].height]
+            polyline : {
+                positions : {
+                    cartographicRadians : [input[0].longitude, input[0].latitude, input[0].height, input[1].longitude, input[1].latitude, input[1].height]
+                }
             }
         };
 
         var dataSource = new CzmlDataSource();
         dataSource.load(packet);
         var entity = dataSource.entities.entities[0];
-        expect(entity.vertexPositions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedResult);
+        expect(entity.polyline.positions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedResult);
     });
 
-    it('vertexPositions work with cartographicDegrees.', function() {
+    it('positions work with cartographicDegrees.', function() {
         var expectedResult = Ellipsoid.WGS84.cartographicArrayToCartesianArray([Cartographic.fromDegrees(1.0, 2.0, 3.0), Cartographic.fromDegrees(5.0, 6.0, 7.0)]);
 
         var packet = {
-            vertexPositions : {
-                cartographicDegrees : [1.0, 2.0, 3.0, 5.0, 6.0, 7.0]
+            polyline : {
+                positions : {
+                    cartographicDegrees : [1.0, 2.0, 3.0, 5.0, 6.0, 7.0]
+                }
             }
         };
 
         var dataSource = new CzmlDataSource();
         dataSource.load(packet);
         var entity = dataSource.entities.entities[0];
-        expect(entity.vertexPositions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedResult);
+        expect(entity.polyline.positions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedResult);
     });
 
     it('CZML ViewFrom works.', function() {
@@ -1381,15 +1334,19 @@ defineSuite([
     it('CZML adds data for infinite path.', function() {
         var pathPacket = {
             path : {
-                color : {
-                    rgbaf : [0.1, 0.1, 0.1, 0.1]
+                material : {
+                    polylineOutline : {
+                        color : {
+                            rgbaf : [0.1, 0.1, 0.1, 0.1]
+                        },
+                        outlineColor : {
+                            rgbaf : [0.2, 0.2, 0.2, 0.2]
+                        },
+                        outlineWidth : 1.0
+                    }
                 },
                 width : 1.0,
                 resolution : 23.0,
-                outlineColor : {
-                    rgbaf : [0.2, 0.2, 0.2, 0.2]
-                },
-                outlineWidth : 1.0,
                 leadTime : 2.0,
                 trailTime : 3.0,
                 show : true
@@ -1405,7 +1362,7 @@ defineSuite([
         expect(entity.path.width.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.width);
         expect(entity.path.resolution.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.resolution);
         expect(entity.path.material.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(entity.path.material.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.outlineWidth);
+        expect(entity.path.material.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(1.0);
         expect(entity.path.leadTime.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.leadTime);
         expect(entity.path.trailTime.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.trailTime);
         expect(entity.path.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
@@ -1415,15 +1372,19 @@ defineSuite([
         var pathPacket = {
             path : {
                 interval : '2000-01-01/2001-01-01',
-                color : {
-                    rgbaf : [0.1, 0.1, 0.1, 0.1]
+                material : {
+                    polylineOutline : {
+                        color : {
+                            rgbaf : [0.1, 0.1, 0.1, 0.1]
+                        },
+                        outlineColor : {
+                            rgbaf : [0.2, 0.2, 0.2, 0.2]
+                        },
+                        outlineWidth : 1.0
+                    }
                 },
                 width : 1.0,
                 resolution : 23.0,
-                outlineColor : {
-                    rgbaf : [0.2, 0.2, 0.2, 0.2]
-                },
-                outlineWidth : 1.0,
                 leadTime : 2.0,
                 trailTime : 3.0,
                 show : true
@@ -1447,7 +1408,7 @@ defineSuite([
         expect(entity.path.show.getValue(validTime)).toEqual(true);
         expect(entity.path.material.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(entity.path.material.getValue(validTime).outlineColor).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(entity.path.material.getValue(validTime).outlineWidth).toEqual(pathPacket.path.outlineWidth);
+        expect(entity.path.material.getValue(validTime).outlineWidth).toEqual(1.0);
 
         expect(entity.path.material.getValue(invalidTime)).toBeUndefined();
         expect(entity.path.width.getValue(invalidTime)).toBeUndefined();
@@ -1588,14 +1549,18 @@ defineSuite([
     it('CZML adds data for infinite polyline.', function() {
         var polylinePacket = {
             polyline : {
-                color : {
-                    rgbaf : [0.1, 0.1, 0.1, 0.1]
+                material : {
+                    polylineOutline : {
+                        color : {
+                            rgbaf : [0.1, 0.1, 0.1, 0.1]
+                        },
+                        outlineColor : {
+                            rgbaf : [0.2, 0.2, 0.2, 0.2]
+                        },
+                        outlineWidth : 1.0
+                    }
                 },
                 width : 1.0,
-                outlineColor : {
-                    rgbaf : [0.2, 0.2, 0.2, 0.2]
-                },
-                outlineWidth : 1.0,
                 show : true
             }
         };
@@ -1608,7 +1573,7 @@ defineSuite([
         expect(entity.polyline.material.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(entity.polyline.width.getValue(Iso8601.MINIMUM_VALUE)).toEqual(polylinePacket.polyline.width);
         expect(entity.polyline.material.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(entity.polyline.material.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(polylinePacket.polyline.outlineWidth);
+        expect(entity.polyline.material.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(1.0);
         expect(entity.polyline.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
     });
 
@@ -1616,14 +1581,18 @@ defineSuite([
         var polylinePacket = {
             polyline : {
                 interval : '2000-01-01/2001-01-01',
-                color : {
-                    rgbaf : [0.1, 0.1, 0.1, 0.1]
+                material : {
+                    polylineOutline : {
+                        color : {
+                            rgbaf : [0.1, 0.1, 0.1, 0.1]
+                        },
+                        outlineColor : {
+                            rgbaf : [0.2, 0.2, 0.2, 0.2]
+                        },
+                        outlineWidth : 1.0
+                    }
                 },
                 width : 1.0,
-                outlineColor : {
-                    rgbaf : [0.2, 0.2, 0.2, 0.2]
-                },
-                outlineWidth : 1.0,
                 show : true
             }
         };
@@ -1641,7 +1610,7 @@ defineSuite([
         expect(entity.polyline.material.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(entity.polyline.width.getValue(validTime)).toEqual(polylinePacket.polyline.width);
         expect(entity.polyline.material.getValue(validTime).outlineColor).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(entity.polyline.material.getValue(validTime).outlineWidth).toEqual(polylinePacket.polyline.outlineWidth);
+        expect(entity.polyline.material.getValue(validTime).outlineWidth).toEqual(1.0);
         expect(entity.polyline.show.getValue(validTime)).toEqual(true);
 
         expect(entity.polyline.material.getValue(invalidTime)).toBeUndefined();
@@ -1657,17 +1626,17 @@ defineSuite([
                 },
                 radius : 2.0,
                 show : true,
+                intersectionColor : {
+                    rgbaf : [0.5, 0.5, 0.5, 0.5]
+                },
                 showIntersection : false,
                 intersectionWidth : 7.0,
-                material : {
+                lateralSurfaceMaterial : {
                     solidColor : {
                         color : {
                             rgbaf : [0.1, 0.1, 0.1, 0.1]
                         }
                     }
-                },
-                intersectionColor : {
-                    rgbaf : [0.5, 0.5, 0.5, 0.5]
                 }
             }
         };
@@ -1681,7 +1650,7 @@ defineSuite([
         expect(entity.pyramid.radius.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pyramidPacket.pyramid.radius);
         expect(entity.pyramid.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pyramidPacket.pyramid.show);
         expect(entity.pyramid.showIntersection.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pyramidPacket.pyramid.showIntersection);
-        expect(entity.pyramid.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(entity.pyramid.lateralSurfaceMaterial.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(entity.pyramid.intersectionColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.5, 0.5, 0.5, 0.5));
         expect(entity.pyramid.intersectionWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(7.0);
     });
@@ -1718,17 +1687,17 @@ defineSuite([
                 },
                 radius : 2.0,
                 show : true,
+                intersectionColor : {
+                    rgbaf : [0.5, 0.5, 0.5, 0.5]
+                },
                 showIntersection : false,
                 intersectionWidth : 8.0,
-                material : {
+                lateralSurfaceMaterial : {
                     solidColor : {
                         color : {
                             rgbaf : [0.1, 0.1, 0.1, 0.1]
                         }
                     }
-                },
-                intersectionColor : {
-                    rgbaf : [0.5, 0.5, 0.5, 0.5]
                 }
             }
         };
@@ -1747,7 +1716,7 @@ defineSuite([
         expect(entity.pyramid.radius.getValue(validTime)).toEqual(pyramidPacket.pyramid.radius);
         expect(entity.pyramid.show.getValue(validTime)).toEqual(pyramidPacket.pyramid.show);
         expect(entity.pyramid.showIntersection.getValue(validTime)).toEqual(pyramidPacket.pyramid.showIntersection);
-        expect(entity.pyramid.material.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(entity.pyramid.lateralSurfaceMaterial.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(entity.pyramid.intersectionColor.getValue(validTime)).toEqual(new Color(0.5, 0.5, 0.5, 0.5));
         expect(entity.pyramid.intersectionWidth.getValue(validTime)).toEqual(8.0);
 
@@ -1755,77 +1724,9 @@ defineSuite([
         expect(entity.pyramid.radius.getValue(invalidTime)).toBeUndefined();
         expect(entity.pyramid.show.getValue(invalidTime)).toBeUndefined();
         expect(entity.pyramid.showIntersection.getValue(invalidTime)).toBeUndefined();
-        expect(entity.pyramid.material.getValue(invalidTime)).toBeUndefined();
+        expect(entity.pyramid.lateralSurfaceMaterial.getValue(invalidTime)).toBeUndefined();
         expect(entity.pyramid.intersectionColor.getValue(invalidTime)).toBeUndefined();
         expect(entity.pyramid.intersectionWidth.getValue(invalidTime)).toBeUndefined();
-    });
-
-    it('CZML adds data for infinite vector.', function() {
-        var direction = Cartesian3.normalize(new Cartesian3(1, 2, 3), new Cartesian3());
-        var vectorPacket = {
-            vector : {
-                color : {
-                    rgbaf : [0.1, 0.1, 0.1, 0.1]
-                },
-                width : 1.0,
-                length : 10.0,
-                direction : {
-                    unitCartesian : [direction.x, direction.y, direction.z]
-                },
-                show : true
-            }
-        };
-
-        var dataSource = new CzmlDataSource();
-        dataSource.load(vectorPacket);
-        var entity = dataSource.entities.entities[0];
-
-        expect(entity.vector).toBeDefined();
-        expect(entity.vector.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(entity.vector.width.getValue(Iso8601.MINIMUM_VALUE)).toEqual(vectorPacket.vector.width);
-        expect(entity.vector.direction.getValue(Iso8601.MINIMUM_VALUE)).toEqual(direction);
-        expect(entity.vector.length.getValue(Iso8601.MINIMUM_VALUE)).toEqual(vectorPacket.vector.length);
-        expect(entity.vector.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
-    });
-
-    it('CZML adds data for constrained vector.', function() {
-        var direction = Cartesian3.normalize(new Cartesian3(1, 2, 3), new Cartesian3());
-        var vectorPacket = {
-            vector : {
-                interval : '2000-01-01/2001-01-01',
-                color : {
-                    rgbaf : [0.1, 0.1, 0.1, 0.1]
-                },
-                width : 1.0,
-                length : 10.0,
-                direction : {
-                    unitCartesian : [direction.x, direction.y, direction.z]
-                },
-                show : true
-            }
-        };
-
-        var validTime = TimeInterval.fromIso8601({
-            iso8601 : vectorPacket.vector.interval
-        }).start;
-        var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
-
-        var dataSource = new CzmlDataSource();
-        dataSource.load(vectorPacket);
-        var entity = dataSource.entities.entities[0];
-
-        expect(entity.vector).toBeDefined();
-        expect(entity.vector.color.getValue(validTime)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(entity.vector.width.getValue(validTime)).toEqual(vectorPacket.vector.width);
-        expect(entity.vector.direction.getValue(validTime)).toEqual(direction);
-        expect(entity.vector.length.getValue(validTime)).toEqual(vectorPacket.vector.length);
-        expect(entity.vector.show.getValue(validTime)).toEqual(true);
-
-        expect(entity.vector.color.getValue(invalidTime)).toBeUndefined();
-        expect(entity.vector.width.getValue(invalidTime)).toBeUndefined();
-        expect(entity.vector.direction.getValue(invalidTime)).toBeUndefined();
-        expect(entity.vector.length.getValue(invalidTime)).toBeUndefined();
-        expect(entity.vector.show.getValue(invalidTime)).toBeUndefined();
     });
 
     it('processCzml deletes an existing object.', function() {
@@ -1982,12 +1883,15 @@ defineSuite([
                             rgba : [240, 255, 255, 255]
                         },
                         cellAlpha : 0,
-                        rowCount : 36,
-                        rowThickness : 1,
-                        rowOffset : 0.5,
-                        columnCount : 9,
-                        columnThickness : 1,
-                        columnOffset : 0.5
+                        lineCount : {
+                            cartesian2 : [36, 9]
+                        },
+                        lineThickness : {
+                            cartesian2 : [1, 1]
+                        },
+                        lineOffset : {
+                            cartesian2 : [0.5, 0.5]
+                        }
                     }
                 }]
             }
@@ -2267,5 +2171,29 @@ defineSuite([
         var targetEntity = dataSource.entities.getById('testObject');
         expect(targetEntity.point.outlineWidth instanceof ReferenceProperty).toBe(true);
         expect(targetEntity.point.outlineWidth.getValue(time)).toEqual(targetEntity.point.pixelSize.getValue(time));
+    });
+
+    it('Polyline glow.', function() {
+        var time = JulianDate.now();
+        var packet = {
+            id : 'polylineGlow',
+            polyline : {
+                material : {
+                    polylineGlow : {
+                        color : {
+                            rgbaf : [0.1, 0.2, 0.3, 0.4]
+                        },
+                        glowPower : 0.75
+                    }
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(packet);
+
+        var entity = dataSource.entities.getById('polylineGlow');
+        expect(entity.polyline.material.color.getValue()).toEqual(new Color(0.1, 0.2, 0.3, 0.4));
+        expect(entity.polyline.material.glowPower.getValue()).toEqual(0.75);
     });
 });

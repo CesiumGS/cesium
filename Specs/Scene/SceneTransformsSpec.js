@@ -50,8 +50,8 @@ defineSuite([
         scene.initializeFrame();
 
         var windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(scene, position);
-        expect(windowCoordinates.x).toEqualEpsilon(0.5, CesiumMath.EPSILON3);
-        expect(windowCoordinates.y).toEqualEpsilon(0.5, CesiumMath.EPSILON3);
+        expect(windowCoordinates.x).toEqualEpsilon(0.5, CesiumMath.EPSILON1);
+        expect(windowCoordinates.y).toEqualEpsilon(0.5, CesiumMath.EPSILON1);
     });
 
     it('returns correct drawing buffer position', function() {
@@ -65,8 +65,8 @@ defineSuite([
         scene.render();
 
         var drawingBufferCoordinates = SceneTransforms.wgs84ToDrawingBufferCoordinates(scene, position);
-        expect(drawingBufferCoordinates.x).toEqualEpsilon(0.5, CesiumMath.EPSILON3);
-        expect(drawingBufferCoordinates.y).toEqualEpsilon(0.5, CesiumMath.EPSILON3);
+        expect(drawingBufferCoordinates.x).toEqualEpsilon(0.5, CesiumMath.EPSILON1);
+        expect(drawingBufferCoordinates.y).toEqualEpsilon(0.5, CesiumMath.EPSILON1);
     });
 
 }, 'WebGL');

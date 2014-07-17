@@ -48,8 +48,8 @@ defineSuite([
 
     function createBasicPolyline() {
         var polyline = new PolylineGraphics();
+        polyline.positions = new ConstantProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray([new Cartographic(0, 0, 0), new Cartographic(1, 0, 0), new Cartographic(1, 1, 0), new Cartographic(0, 1, 0)]));
         var entity = new Entity();
-        entity.vertexPositions = new ConstantProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray([new Cartographic(0, 0, 0), new Cartographic(1, 0, 0), new Cartographic(1, 1, 0), new Cartographic(0, 1, 0)]));
         entity.polyline = polyline;
         return entity;
     }
@@ -115,7 +115,7 @@ defineSuite([
         expect(updater.fillMaterialProperty).toBe(entity.polyline.material);
     });
 
-    it('A time-varying vertexPositions causes geometry to be dynamic', function() {
+    it('A time-varying positions causes geometry to be dynamic', function() {
         var entity = createBasicPolyline();
         var updater = new PolylineGeometryUpdater(entity);
         var point1 = new SampledPositionProperty();
@@ -125,8 +125,8 @@ defineSuite([
         var point3 = new SampledPositionProperty();
         point3.addSample(time, new Cartesian3());
 
-        entity.vertexPositions = new PropertyArray();
-        entity.vertexPositions.setValue([point1, point2, point3]);
+        entity.polyline.positions = new PropertyArray();
+        entity.polyline.positions.setValue([point1, point2, point3]);
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -138,6 +138,28 @@ defineSuite([
         expect(updater.isDynamic).toBe(true);
     });
 
+    it('A time-varying followSurface causes geometry to be dynamic', function() {
+        var followSurface = new TimeIntervalCollectionProperty();
+        followSurface.intervals.addInterval(new TimeInterval({
+            start : new JulianDate(0, 0),
+            stop : new JulianDate(10, 0),
+            data : false
+        }));
+
+        var entity = createBasicPolyline();
+        var updater = new PolylineGeometryUpdater(entity);
+        entity.polyline.followSurface = followSurface;
+        expect(updater.isDynamic).toBe(true);
+    });
+
+    it('A time-varying granularity causes geometry to be dynamic', function() {
+        var entity = createBasicPolyline();
+        var updater = new PolylineGeometryUpdater(entity);
+        entity.polyline.granularity = new SampledProperty(Number);
+        entity.polyline.granularity.addSample(time, 1);
+        expect(updater.isDynamic).toBe(true);
+    });
+
     function validateGeometryInstance(options) {
         var entity = createBasicPolyline();
 
@@ -146,6 +168,8 @@ defineSuite([
         polyline.material = options.material;
 
         polyline.width = new ConstantProperty(options.width);
+        polyline.followSurface = new ConstantProperty(options.followSurface);
+        polyline.granularity = new ConstantProperty(options.granularity);
 
         var updater = new PolylineGeometryUpdater(entity);
 
@@ -155,6 +179,8 @@ defineSuite([
         instance = updater.createFillGeometryInstance(time);
         geometry = instance.geometry;
         expect(geometry._width).toEqual(options.width);
+        expect(geometry._followSurface).toEqual(options.followSurface);
+        expect(geometry._granularity).toEqual(options.granularity);
 
         attributes = instance.attributes;
         if (options.material instanceof ColorMaterialProperty) {
@@ -169,7 +195,9 @@ defineSuite([
         validateGeometryInstance({
             show : true,
             material : ColorMaterialProperty.fromColor(Color.RED),
-            width : 3
+            width : 3,
+            followSurface : false,
+            granularity : 1.0
         });
     });
 
@@ -177,7 +205,9 @@ defineSuite([
         validateGeometryInstance({
             show : true,
             material : new GridMaterialProperty(),
-            width : 4
+            width : 4,
+            followSurface : true,
+            granularity : 0.5
         });
     });
 
@@ -271,7 +301,7 @@ defineSuite([
         var listener = jasmine.createSpy('listener');
         updater.geometryChanged.addEventListener(listener);
 
-        entity.vertexPositions = new ConstantProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray([new Cartographic(0, 0, 0), new Cartographic(1, 0, 0)]));
+        entity.polyline.positions = new ConstantProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray([new Cartographic(0, 0, 0), new Cartographic(1, 0, 0)]));
         expect(listener.callCount).toEqual(1);
 
         entity.polyline.width = new ConstantProperty(82);
@@ -280,7 +310,7 @@ defineSuite([
         entity.availability = new TimeIntervalCollection();
         expect(listener.callCount).toEqual(3);
 
-        entity.vertexPositions = undefined;
+        entity.polyline.positions = undefined;
         expect(listener.callCount).toEqual(4);
 
         //Since there's no valid geometry, changing another property should not raise the event.

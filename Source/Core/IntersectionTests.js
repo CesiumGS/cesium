@@ -191,7 +191,7 @@ define([
         var cosines;
         var solutions = [];
         if (r0 === 0.0 && r1 === 0.0) {
-            cosines = QuadraticRealPolynomial.realRoots(l2, l1, l0);
+            cosines = QuadraticRealPolynomial.computeRealRoots(l2, l1, l0);
             if (cosines.length === 0) {
                 return solutions;
             }
@@ -226,7 +226,7 @@ define([
             return solutions;
         }
 
-        cosines = QuarticRealPolynomial.realRoots(c4, c3, c2, c1, c0);
+        cosines = QuarticRealPolynomial.computeRealRoots(c4, c3, c2, c1, c0);
         var length = cosines.length;
         if (length === 0) {
             return solutions;

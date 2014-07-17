@@ -264,6 +264,8 @@
 		<echo message="Source:" />
 		<apply executable="perl" parallel="true">
 			<arg value="${clocPath}" />
+			<arg value="--quiet" />
+			<arg value="--progress-rate=0" />
 			<arg value="--read-lang-def=${clocDefinitionsPath}" />
 			<arg value="Source/Core/" />
 			<arg value="Source/DataSources/" />
@@ -280,6 +282,8 @@
 		<echo message="${line.separator}Specs:" />
 		<exec executable="perl">
 			<arg value="${clocPath}" />
+			<arg value="--quiet" />
+			<arg value="--progress-rate=0" />
 			<arg value="--read-lang-def=${clocDefinitionsPath}" />
 			<arg value="Specs/" />
 		</exec>

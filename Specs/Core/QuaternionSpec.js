@@ -298,7 +298,7 @@ defineSuite([
         expect(quaternion).toEqual(expectedResult);
     });
 
-    it('getAxis works', function() {
+    it('axis works', function() {
         // 60 degrees is used here to ensure that the sine and cosine of the half angle are not equal.
         var angle = Math.PI / 3.0;
         var cos = Math.cos(angle / 2.0);
@@ -306,28 +306,28 @@ defineSuite([
         var expected = Cartesian3.normalize(new Cartesian3(2.0, 3.0, 6.0), new Cartesian3());
         var quaternion = new Quaternion(sin * expected.x, sin * expected.y, sin * expected.z, cos);
         var result = new Cartesian3();
-        var returnedResult = Quaternion.getAxis(quaternion, result);
+        var returnedResult = Quaternion.computeAxis(quaternion, result);
         expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
         expect(result).toBe(returnedResult);
     });
 
-    it('getAxis returns Cartesian3 0 when w equals 1.0', function() {
+    it('axis returns Cartesian3 0 when w equals 1.0', function() {
         var expected = new Cartesian3(0.0, 0.0, 0.0);
         var quaternion = new Quaternion(4.0, 2.0, 3.0, 1.0);
         var result = new Cartesian3(1, 2, 3);
-        var returnedResult = Quaternion.getAxis(quaternion, result);
+        var returnedResult = Quaternion.computeAxis(quaternion, result);
         expect(returnedResult).toEqual(expected);
         expect(result).toBe(returnedResult);
     });
 
-    it('getAngle works', function() {
+    it('angle works', function() {
         // 60 degrees is used here to ensure that the sine and cosine of the half angle are not equal.
         var angle = Math.PI / 3.0;
         var cos = Math.cos(angle / 2.0);
         var sin = Math.sin(angle / 2.0);
         var axis = Cartesian3.normalize(new Cartesian3(2.0, 3.0, 6.0), new Cartesian3());
         var quaternion = new Quaternion(sin * axis.x, sin * axis.y, sin * axis.z, cos);
-        var result = Quaternion.getAngle(quaternion);
+        var result = Quaternion.computeAngle(quaternion);
         expect(result).toEqualEpsilon(angle, CesiumMath.EPSILON15);
     });
 
@@ -460,17 +460,17 @@ defineSuite([
         expect(exp).toEqualEpsilon(expected, CesiumMath.EPSILON15);
     });
 
-    it('squad and innerQuadrangle work', function() {
+    it('squad and computeInnerQuadrangle work', function() {
         var q0 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, 0.0);
         var q1 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.PI_OVER_FOUR);
         var q2 = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, CesiumMath.PI_OVER_FOUR);
         var q3 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, -CesiumMath.PI_OVER_FOUR);
 
         var s1Result = new Quaternion();
-        var s1 = Quaternion.innerQuadrangle(q0, q1, q2, s1Result);
+        var s1 = Quaternion.computeInnerQuadrangle(q0, q1, q2, s1Result);
         expect(s1).toBe(s1Result);
 
-        var s2 = Quaternion.innerQuadrangle(q1, q2, q3, new Quaternion());
+        var s2 = Quaternion.computeInnerQuadrangle(q1, q2, q3, new Quaternion());
 
         var squadResult = new Quaternion();
         var squad = Quaternion.squad(q1, q2, s1, s2, 0.0, squadResult);
@@ -529,8 +529,8 @@ defineSuite([
         var q2 = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, CesiumMath.PI_OVER_FOUR);
         var q3 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, -CesiumMath.PI_OVER_FOUR);
 
-        var s1 = Quaternion.innerQuadrangle(q0, q1, q2, new Quaternion());
-        var s2 = Quaternion.innerQuadrangle(q1, q2, q3, new Quaternion());
+        var s1 = Quaternion.computeInnerQuadrangle(q0, q1, q2, new Quaternion());
+        var s2 = Quaternion.computeInnerQuadrangle(q1, q2, q3, new Quaternion());
 
         var squadResult = new Quaternion();
         var squad = Quaternion.fastSquad(q1, q2, s1, s2, 0.0, squadResult);
@@ -544,8 +544,8 @@ defineSuite([
         var q2 = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, CesiumMath.PI_OVER_FOUR);
         var q3 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, -CesiumMath.PI_OVER_FOUR);
 
-        var s1 = Quaternion.innerQuadrangle(q0, q1, q2, new Quaternion());
-        var s2 = Quaternion.innerQuadrangle(q1, q2, q3, new Quaternion());
+        var s1 = Quaternion.computeInnerQuadrangle(q0, q1, q2, new Quaternion());
+        var s2 = Quaternion.computeInnerQuadrangle(q1, q2, q3, new Quaternion());
 
         var actual = Quaternion.fastSquad(q1, q2, s1, s2, 0.25, new Quaternion());
         var expected = Quaternion.squad(q1, q2, s1, s2, 0.25, new Quaternion());
@@ -714,15 +714,15 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('getAxis throws with no parameter', function() {
+    it('axis throws with no parameter', function() {
         expect(function() {
-            Quaternion.getAxis(undefined);
+            Quaternion.computeAxis(undefined);
         }).toThrowDeveloperError();
     });
 
-    it('getAngle throws with no parameter', function() {
+    it('angle throws with no parameter', function() {
         expect(function() {
-            Quaternion.getAngle(undefined);
+            Quaternion.computeAngle(undefined);
         }).toThrowDeveloperError();
     });
 
@@ -792,9 +792,9 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('innerQuadrangle throws without q0, q1, or q2 parameter', function() {
+    it('computeInnerQuadrangle throws without q0, q1, or q2 parameter', function() {
         expect(function() {
-            Quaternion.innerQuadrangle();
+            Quaternion.computeInnerQuadrangle();
         }).toThrowDeveloperError();
     });
 
@@ -858,9 +858,9 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('getAxis throws with no result', function() {
+    it('axis throws with no result', function() {
         expect(function() {
-            Quaternion.getAxis(new Quaternion());
+            Quaternion.computeAxis(new Quaternion());
         }).toThrowDeveloperError();
     });
 
@@ -888,9 +888,9 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('innerQuadrangle throws with no result', function() {
+    it('computeInnerQuadrangle throws with no result', function() {
         expect(function() {
-            Quaternion.innerQuadrangle(new Quaternion(), new Quaternion(), new Quaternion());
+            Quaternion.computeInnerQuadrangle(new Quaternion(), new Quaternion(), new Quaternion());
         }).toThrowDeveloperError();
     });
 
