@@ -1361,6 +1361,86 @@ define([
     };
 
     /**
+     * Computes the sum of two matrices.
+     *
+     * @param {Matrix4} left The first matrix.
+     * @param {Matrix4} right The second matrix.
+     * @param {Matrix4} result The object onto which to store the result.
+     * @returns {Matrix4} The modified result parameter.
+     */
+    Matrix4.add = function(left, right, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(left)) {
+            throw new DeveloperError('left is required');
+        }
+        if (!defined(right)) {
+            throw new DeveloperError('right is required');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required,');
+        }
+        //>>includeEnd('debug');
+
+        result[0] = left[0] + right[0];
+        result[1] = left[1] + right[1];
+        result[2] = left[2] + right[2];
+        result[3] = left[3] + right[3];
+        result[4] = left[4] + right[4];
+        result[5] = left[5] + right[5];
+        result[6] = left[6] + right[6];
+        result[7] = left[7] + right[7];
+        result[8] = left[8] + right[8];
+        result[9] = left[9] + right[9];
+        result[10] = left[10] + right[10];
+        result[11] = left[11] + right[11];
+        result[12] = left[12] + right[12];
+        result[13] = left[13] + right[13];
+        result[14] = left[14] + right[14];
+        result[15] = left[15] + right[15];
+        return result;
+    };
+
+    /**
+     * Computes the difference of two matrices.
+     *
+     * @param {Matrix4} left The first matrix.
+     * @param {Matrix4} right The second matrix.
+     * @param {Matrix4} result The object onto which to store the result.
+     * @returns {Matrix4} The modified result parameter.
+     */
+    Matrix4.subtract = function(left, right, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(left)) {
+            throw new DeveloperError('left is required');
+        }
+        if (!defined(right)) {
+            throw new DeveloperError('right is required');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required,');
+        }
+        //>>includeEnd('debug');
+
+        result[0] = left[0] - right[0];
+        result[1] = left[1] - right[1];
+        result[2] = left[2] - right[2];
+        result[3] = left[3] - right[3];
+        result[4] = left[4] - right[4];
+        result[5] = left[5] - right[5];
+        result[6] = left[6] - right[6];
+        result[7] = left[7] - right[7];
+        result[8] = left[8] - right[8];
+        result[9] = left[9] - right[9];
+        result[10] = left[10] - right[10];
+        result[11] = left[11] - right[11];
+        result[12] = left[12] - right[12];
+        result[13] = left[13] - right[13];
+        result[14] = left[14] - right[14];
+        result[15] = left[15] - right[15];
+        return result;
+    };
+
+    /**
      * Computes the product of two matrices assuming the matrices are
      * affine transformation matrices, where the upper left 3x3 elements
      * are a rotation matrix, and the upper three elements in the fourth

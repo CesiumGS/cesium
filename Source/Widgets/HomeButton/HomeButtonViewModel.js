@@ -37,6 +37,10 @@ define([
             scene.completeMorph();
         }
 
+        var direction;
+        var right;
+        var up;
+
         if (mode === SceneMode.SCENE2D) {
             scene.camera.flyToRectangle({
                 destination : Rectangle.MAX_VALUE,
@@ -44,22 +48,33 @@ define([
                 endTransform : Matrix4.IDENTITY
             });
         } else if (mode === SceneMode.SCENE3D) {
-            var defaultCamera = new Camera(scene);
+            var destination = scene.camera.getRectangleCameraCoordinates(Camera.DEFAULT_VIEW_RECTANGLE);
+
+            var mag = Cartesian3.magnitude(destination);
+            mag += mag * Camera.DEFAULT_VIEW_FACTOR;
+            Cartesian3.normalize(destination, destination);
+            Cartesian3.multiplyByScalar(destination, mag, destination);
+
+            direction = Cartesian3.normalize(destination, new Cartesian3());
+            Cartesian3.negate(direction, direction);
+            right = Cartesian3.cross(direction, Cartesian3.UNIT_Z, new Cartesian3());
+            up = Cartesian3.cross(right, direction, new Cartesian3());
+
             scene.camera.flyTo({
-                destination : defaultCamera.position,
+                destination : destination,
+                direction: direction,
+                up : up,
                 duration : duration,
-                up : defaultCamera.up,
-                direction : defaultCamera.direction,
                 endTransform : Matrix4.IDENTITY
             });
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
             var maxRadii = ellipsoid.maximumRadius;
             var position = new Cartesian3(0.0, -1.0, 1.0);
             position = Cartesian3.multiplyByScalar(Cartesian3.normalize(position, position), 5.0 * maxRadii, position);
-            var direction = new Cartesian3();
+            direction = new Cartesian3();
             direction = Cartesian3.normalize(Cartesian3.subtract(Cartesian3.ZERO, position, direction), direction);
-            var right = Cartesian3.cross(direction, Cartesian3.UNIT_Z, new Cartesian3());
-            var up = Cartesian3.cross(right, direction, new Cartesian3());
+            right = Cartesian3.cross(direction, Cartesian3.UNIT_Z, new Cartesian3());
+            up = Cartesian3.cross(right, direction, new Cartesian3());
 
             scene.camera.flyTo({
                 destination : position,

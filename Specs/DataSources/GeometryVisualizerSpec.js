@@ -90,12 +90,16 @@ defineSuite([
             expect(primitive.appearance.closed).toBe(false);
 
             objects.remove(entity);
+        });
+
+        waitsFor(function() {
             scene.initializeFrame();
             expect(visualizer.update(time)).toBe(true);
             scene.render(time);
+            return scene.primitives.length === 0;
+        });
 
-            expect(scene.primitives.length).toBe(0);
-
+        runs(function(){
             visualizer.destroy();
         });
     });
@@ -131,12 +135,16 @@ defineSuite([
             expect(primitive.appearance.closed).toBe(false);
 
             objects.remove(entity);
+        });
+
+        waitsFor(function() {
             scene.initializeFrame();
             expect(visualizer.update(time)).toBe(true);
             scene.render(time);
+            return scene.primitives.length === 0;
+        });
 
-            expect(scene.primitives.length).toBe(0);
-
+        runs(function(){
             visualizer.destroy();
         });
     });
@@ -173,12 +181,16 @@ defineSuite([
             expect(primitive.appearance.closed).toBe(true);
 
             objects.remove(entity);
+        });
+
+        waitsFor(function() {
             scene.initializeFrame();
             expect(visualizer.update(time)).toBe(true);
             scene.render(time);
+            return scene.primitives.length === 0;
+        });
 
-            expect(scene.primitives.length).toBe(0);
-
+        runs(function(){
             visualizer.destroy();
         });
     });
@@ -215,12 +227,16 @@ defineSuite([
             expect(primitive.appearance.closed).toBe(true);
 
             objects.remove(entity);
+        });
+
+        waitsFor(function() {
             scene.initializeFrame();
             expect(visualizer.update(time)).toBe(true);
             scene.render(time);
+            return scene.primitives.length === 0;
+        });
 
-            expect(scene.primitives.length).toBe(0);
-
+        runs(function(){
             visualizer.destroy();
         });
     });
@@ -257,12 +273,16 @@ defineSuite([
             expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.perInstanceColorAppearanceType);
 
             objects.remove(entity);
+        });
+
+        waitsFor(function() {
             scene.initializeFrame();
             expect(visualizer.update(time)).toBe(true);
             scene.render(time);
+            return scene.primitives.length === 0;
+        });
 
-            expect(scene.primitives.length).toBe(0);
-
+        runs(function(){
             visualizer.destroy();
         });
     });

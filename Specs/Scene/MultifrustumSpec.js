@@ -68,7 +68,7 @@ defineSuite([
 
         camera.frustum.near = 1.0;
         camera.frustum.far = 1000000000.0;
-        camera.frustum.fovy = CesiumMath.toRadians(60.0);
+        camera.frustum.fov = CesiumMath.toRadians(60.0);
         camera.frustum.aspectRatio = 1.0;
 
         greenImage = new Image();

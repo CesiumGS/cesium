@@ -7,6 +7,7 @@ Change Log
   * All `Matrix2`, `Matrix3`, `Matrix4` and `Quaternion` functions that take a `result` parameter now require the parameter (except for functions starting with `from`).
   * Removed the following from the Cesium API: `Transforms.earthOrientationParameters`, `EarthOrientationParameters`, `EarthOrientationParametersSample`, `Transforms.iau2006XysData`, `Iau2006XysData`, `Iau2006XysSample`, `IauOrientationAxes`, `TimeConstants`, `Scene.frameState`, `FrameState`, `EncodedCartesian3`, `EllipsoidalOccluder`, and `FAR`.  These are still available but are not part of the official API and may change in future versions.
   * Removed `DynamicObject.vertexPositions`.  Use `DynamicWall.positions`, `DynamicPolygon.positions`, and `DynamicPolyline.positions` instead.
+  * Removed `Primitive.allow3DOnly`, set the `Scene` level option, `scene3DOnly`, instead.
   * Refactored the following methods into a properties:
     * `TerrainProvider.hasWaterMask`
     * `CesiumTerrainProvider.hasWaterMask`
@@ -73,6 +74,9 @@ Change Log
     * `Rectangle.getNortheast` -> `Rectangle.northeast`
     * `Rectangle.getCenter` -> `Rectangle.center`
     * `CullingVolume.getVisibility` -> `CullingVolume.computeVisibility`
+  * `SimplePolylineGeometry` and `PolylineGeometry` positions curve to follow the ellipsoid surface by default. To disable this behavior, set the option `followSurface=false`.
+  * Sandcastle examples now automatically wrap the example code in RequireJS boilerplate.  To upgrade any custom examples, copy the code into an existing example (such as Hello World) and save a new file.
+  * Replaced `PerspectiveFrustum.fovy` with `PerspectiveFrustum.fov` which will change the field of view angle in either the x or y direction depending on the aspect ratio.
 * Added northUpEast transform to help support display of glTF models because Y is their up axis.
 * Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
 * Added `czm_octDecode` and `czm_signNotZero` builtin functions.
@@ -80,6 +84,10 @@ Change Log
 * Added new property to all terrain providers: `TerrainProvider.hasVertexNormals`, `CesiumTerrainProvider.hasVertexNormals`, `ArcGisImageServerTerrainProvider.hasVertexNormals`, `EllipsoidTerrainProvider.hasVertexNormals`, `VRTheWorldTerrainProvider.hasVertexNormals`.  This property indicates whether or not vertex normals will be included in the terrain tile responses.
 * Added support for rendering the globe with oct-encoded per vertex normals .
 * Added `Primitive.ready`.
+* Prevent primitives from flashing off and on when modifying static DataSources.
+* Added `scene3DOnly` options to `Viewer`, `CesiumWidget`, and `Scene` constructors. This setting optimizes memory usage and performance for 3D mode at the cost of losing the ability to use 2D or Columbus View.
+* Matrix types now have `add` and `subtract` functions.
+* `Matrix3` type now has a `fromCrossProduct` function.
 
 Beta Releases
 -------------

@@ -46,18 +46,25 @@ define([
      * @alias DataSourceDisplay
      * @constructor
      *
-     * @param {Scene} scene The scene in which to display the data.
-     * @param {DataSourceCollection} dataSourceCollection The data sources to display.
-     * @param {DataSourceDisplay~VisualizersCallback} [visualizersCallback=DataSourceDisplay.defaultVisualizersCallback]
+     * @param {Object} options Object with the following properties:
+     * @param {Scene} options.scene The scene in which to display the data.
+     * @param {DataSourceCollection} options.dataSourceCollection The data sources to display.
+     * @param {DataSourceDisplay~VisualizersCallback} [options.visualizersCallback=DataSourceDisplay.defaultVisualizersCallback]
      *        A function which creates an array of visualizers used for visualization.
      *        If undefined, all standard visualizers are used.
      */
-    var DataSourceDisplay = function(scene, dataSourceCollection, visualizersCallback) {
+    var DataSourceDisplay = function(options) {
+        var scene = options.scene;
+        var dataSourceCollection = options.dataSourceCollection;
+
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(scene)) {
+        if (!defined(options)) {
+            throw new DeveloperError('options is required.');
+        }
+        if (!defined(options.scene)) {
             throw new DeveloperError('scene is required.');
         }
-        if (!defined(dataSourceCollection)) {
+        if (!defined(options.dataSourceCollection)) {
             throw new DeveloperError('dataSourceCollection is required.');
         }
         //>>includeEnd('debug');
@@ -68,7 +75,7 @@ define([
 
         this._dataSourceCollection = dataSourceCollection;
         this._scene = scene;
-        this._visualizersCallback = defaultValue(visualizersCallback, DataSourceDisplay.defaultVisualizersCallback);
+        this._visualizersCallback = defaultValue(options.visualizersCallback, DataSourceDisplay.defaultVisualizersCallback);
 
         for (var i = 0, len = dataSourceCollection.length; i < len; i++) {
             this._onDataSourceAdded(dataSourceCollection, dataSourceCollection.get(i));

@@ -32,7 +32,7 @@
 <div id="toolbar">
 <div id="pane">
 <table id="layerTable">
-  <tr>
+  <tbody><tr>
       <td>Longitude</td>
       <td id="longitudeSlider"></td>
   </tr>
@@ -56,17 +56,18 @@
       <td>Twist</td>
       <td id="twistSlider"></td>
   </tr>
-</table>
+</tbody></table>
 </div>
 </div>
 <script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    "use strict";
+//Sandcastle_Begin
 require([
     'Cesium', 'dijit/form/DropDownButton', 'dijit/DropDownMenu', 'dijit/MenuItem', 'dijit/form/HorizontalSlider', 'dijit/TitlePane'
 ], function(
     Cesium,  DropDownButton, DropDownMenu, MenuItem, HorizontalSlider, TitlePane)
 {
-    "use strict";
-  
     var longitude = Cesium.Math.toRadians(-90.0);
     var latitude = Cesium.Math.toRadians(30.0);
     var altitude = 3000000.0;
@@ -267,9 +268,15 @@ require([
 
     var sensors = new Cesium.SensorVolumeCollection();
     createUserInterface(viewer, sensors);
-
-    Sandcastle.finishedLoading();
 });
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
 </script>
 </body>
 </html>

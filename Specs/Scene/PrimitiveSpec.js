@@ -128,7 +128,6 @@ defineSuite([
         expect(primitive.vertexCacheOptimize).toEqual(false);
         expect(primitive.interleave).toEqual(false);
         expect(primitive.releaseGeometryInstances).toEqual(true);
-        expect(primitive.allow3DOnly).toEqual(false);
         expect(primitive.allowPicking).toEqual(true);
         expect(primitive.asynchronous).toEqual(true);
         expect(primitive.debugShowBoundingVolume).toEqual(false);
@@ -168,7 +167,6 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : [],
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true,
             asynchronous : false
         });
 
@@ -183,7 +181,6 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true,
             asynchronous : false
         });
 
@@ -203,7 +200,6 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true,
             asynchronous : false
         });
 
@@ -220,15 +216,15 @@ defineSuite([
         primitive = primitive && primitive.destroy();
     });
 
-    it('does not render when allow3DOnly is true and the scene mode is SCENE2D', function() {
+    it('does not render when scene3DOnly is true and the scene mode is SCENE2D', function() {
         var primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true,
             asynchronous : false
         });
 
         frameState.mode = SceneMode.SCENE2D;
+        frameState.scene3DOnly = true;
 
         var commands = [];
         primitive.update(context, frameState, commands);
@@ -238,15 +234,15 @@ defineSuite([
         primitive = primitive && primitive.destroy();
     });
 
-    it('does not render when allow3DOnly is true and the scene mode is COLUMBUS_VIEW', function() {
+    it('does not render when scene3DOnly is true and the scene mode is COLUMBUS_VIEW', function() {
         var primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true,
             asynchronous : false
         });
 
         frameState.mode = SceneMode.COLUMBUS_VIEW;
+        frameState.scene3DOnly = true;
 
         var commands = [];
         primitive.update(context, frameState, commands);
@@ -272,7 +268,6 @@ defineSuite([
                 closed : true,
                 translucent : true
             }),
-            allow3DOnly : true,
             asynchronous : false
         });
 
@@ -283,14 +278,14 @@ defineSuite([
         primitive = primitive && primitive.destroy();
     });
 
-    it('renders in Columbus view when allow3DOnly is false', function() {
+    it('renders in Columbus view when scene3DOnly is false', function() {
         var primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : false,
             asynchronous : false
         });
 
+        frameState.scene3DOnly = false;
         frameState.mode = SceneMode.COLUMBUS_VIEW;
         frameState.morphTime = SceneMode.getMorphTime(frameState.mode);
         frameState.camera.update(frameState.mode);
@@ -317,14 +312,14 @@ defineSuite([
         primitive = primitive && primitive.destroy();
     });
 
-    it('renders in 2D when allow3DOnly is false', function() {
+    it('renders in 2D when scene3DOnly is false', function() {
         var primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : false,
             asynchronous : false
         });
 
+        frameState.scene3DOnly = false;
         frameState.mode = SceneMode.SCENE2D;
         frameState.morphTime = SceneMode.getMorphTime(frameState.mode);
 
@@ -382,7 +377,6 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true,
             asynchronous : false
         });
 
@@ -414,10 +408,10 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true,
             asynchronous : false
         });
 
+        frameState.scene3DOnly = true;
         frameState.camera.viewRectangle(rectangle1);
         us.update(context, frameState);
 
@@ -451,7 +445,6 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true,
             asynchronous : false
         });
         primitive.update(context, frameState, []);
@@ -472,7 +465,6 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : rectangleInstance1,
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true,
             asynchronous : false
         });
 
@@ -505,7 +497,6 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : rectangleInstance1,
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true,
             asynchronous : false
         });
 
@@ -535,7 +526,6 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true,
             asynchronous : false
         });
 
@@ -560,7 +550,6 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : [rectangleInstance1],
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true,
             allowPicking : false,
             asynchronous : false
         });
@@ -614,7 +603,6 @@ defineSuite([
     it('shader validation', function() {
         var primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
-            allow3DOnly : true,
             appearance : new MaterialAppearance({
                 materialSupport : MaterialAppearance.MaterialSupport.ALL
             }),
@@ -630,7 +618,6 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : rectangleInstance1,
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true,
             asynchronous : false
         });
 
@@ -648,7 +635,6 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : rectangleInstance1,
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true,
             asynchronous : false
         });
 
@@ -665,7 +651,6 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : rectangleInstance1,
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true,
             asynchronous : false
         });
 
@@ -680,7 +665,6 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : rectangleInstance1,
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true,
             asynchronous : false
         });
 
@@ -726,8 +710,7 @@ defineSuite([
     it('destroy before asynchonous pipeline is complete', function() {
         var primitive = new Primitive({
             geometryInstances : rectangleInstance1,
-            appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true
+            appearance : new PerInstanceColorAppearance()
         });
 
         primitive.update(context, frameState, []);

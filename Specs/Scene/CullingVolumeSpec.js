@@ -22,7 +22,7 @@ defineSuite([
         var frustum = new PerspectiveFrustum();
         frustum.near = 1.0;
         frustum.far = 2.0;
-        frustum.fovy = (Math.PI) / 3;
+        frustum.fov = (Math.PI) / 3;
         frustum.aspectRatio = 1.0;
         cullingVolume = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), Cartesian3.UNIT_Y);
     });

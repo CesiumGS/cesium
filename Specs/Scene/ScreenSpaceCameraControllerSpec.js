@@ -478,9 +478,9 @@ defineSuite([
         updateController(frameState);
         expect(camera.position).toEqual(position);
         expect(camera.direction).not.toEqual(Cartesian3.normalize(Cartesian3.negate(camera.position, new Cartesian3()), new Cartesian3()));
-        expect(Cartesian3.cross(camera.direction, camera.up, new Cartesian3())).toEqualEpsilon(camera.right, CesiumMath.EPSILON15);
-        expect(Cartesian3.cross(camera.up, camera.right, new Cartesian3())).toEqualEpsilon(camera.direction, CesiumMath.EPSILON15);
-        expect(Cartesian3.cross(camera.right, camera.direction, new Cartesian3())).toEqualEpsilon(camera.up, CesiumMath.EPSILON15);
+        expect(Cartesian3.cross(camera.direction, camera.up, new Cartesian3())).toEqualEpsilon(camera.right, CesiumMath.EPSILON12);
+        expect(Cartesian3.cross(camera.up, camera.right, new Cartesian3())).toEqualEpsilon(camera.direction, CesiumMath.EPSILON12);
+        expect(Cartesian3.cross(camera.right, camera.direction, new Cartesian3())).toEqualEpsilon(camera.up, CesiumMath.EPSILON12);
     });
 
     it('zoom in Columbus view', function() {
@@ -636,9 +636,9 @@ defineSuite([
         updateController(frameState);
 
         expect(camera.position).not.toEqual(position);
-        expect(camera.direction).toEqualEpsilon(Cartesian3.normalize(Cartesian3.negate(camera.position, new Cartesian3()), new Cartesian3()), CesiumMath.EPSILON15);
-        expect(Cartesian3.cross(camera.direction, camera.up, new Cartesian3())).toEqualEpsilon(camera.right, CesiumMath.EPSILON15);
-        expect(Cartesian3.cross(camera.right, camera.direction, new Cartesian3())).toEqualEpsilon(camera.up, CesiumMath.EPSILON15);
+        expect(camera.direction).toEqualEpsilon(Cartesian3.normalize(Cartesian3.negate(camera.position, new Cartesian3()), new Cartesian3()), CesiumMath.EPSILON12);
+        expect(Cartesian3.cross(camera.direction, camera.up, new Cartesian3())).toEqualEpsilon(camera.right, CesiumMath.EPSILON12);
+        expect(Cartesian3.cross(camera.right, camera.direction, new Cartesian3())).toEqualEpsilon(camera.up, CesiumMath.EPSILON12);
     });
 
     it('does not pan if mouse does not intersect the ellipsoid', function() {
@@ -829,9 +829,9 @@ defineSuite([
         updateController(frameState);
         expect(camera.position).toEqual(position);
         expect(camera.direction).not.toEqual(Cartesian3.normalize(Cartesian3.negate(camera.position, new Cartesian3()), new Cartesian3()));
-        expect(Cartesian3.cross(camera.direction, camera.up, new Cartesian3())).toEqualEpsilon(camera.right, CesiumMath.EPSILON15);
-        expect(Cartesian3.cross(camera.up, camera.right, new Cartesian3())).toEqualEpsilon(camera.direction, CesiumMath.EPSILON15);
-        expect(Cartesian3.cross(camera.right, camera.direction, new Cartesian3())).toEqualEpsilon(camera.up, CesiumMath.EPSILON15);
+        expect(Cartesian3.cross(camera.direction, camera.up, new Cartesian3())).toEqualEpsilon(camera.right, CesiumMath.EPSILON12);
+        expect(Cartesian3.cross(camera.up, camera.right, new Cartesian3())).toEqualEpsilon(camera.direction, CesiumMath.EPSILON12);
+        expect(Cartesian3.cross(camera.right, camera.direction, new Cartesian3())).toEqualEpsilon(camera.up, CesiumMath.EPSILON12);
     });
 
     it('pans with constrained axis other than z-axis', function() {
@@ -890,9 +890,9 @@ defineSuite([
         updateController(frameState);
 
         expect(Cartesian3.dot(camera.position, axis)).toBeLessThan(CesiumMath.EPSILON2);
-        expect(camera.direction).toEqualEpsilon(Cartesian3.negate(Cartesian3.normalize(camera.position, new Cartesian3()), new Cartesian3()), CesiumMath.EPSILON14);
-        expect(camera.right).toEqualEpsilon(axis, CesiumMath.EPSILON14);
-        expect(camera.up).toEqualEpsilon(Cartesian3.cross(camera.right, camera.direction, new Cartesian3()), CesiumMath.EPSILON14);
+        expect(camera.direction).toEqualEpsilon(Cartesian3.negate(Cartesian3.normalize(camera.position, new Cartesian3()), new Cartesian3()), CesiumMath.EPSILON12);
+        expect(camera.right).toEqualEpsilon(axis, CesiumMath.EPSILON12);
+        expect(camera.up).toEqualEpsilon(Cartesian3.cross(camera.right, camera.direction, new Cartesian3()), CesiumMath.EPSILON12);
     });
 
     it('rotates with constrained axis and is tilted', function() {
