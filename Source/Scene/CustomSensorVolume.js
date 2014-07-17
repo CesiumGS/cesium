@@ -167,10 +167,10 @@ define([
          *
          * @example
          * // 1. Change the color of the default material to yellow
-         * sensor.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
+         * sensor.lateralSurfaceMaterial.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
-         * sensor.material = Cesium.Material.fromType(Material.StripeType);
+         * sensor.lateralSurfaceMaterial = Cesium.Material.fromType(Material.StripeType);
          */
         this.lateralSurfaceMaterial = defined(options.lateralSurfaceMaterial) ? options.lateralSurfaceMaterial : Material.fromType(Material.ColorType);
         this._lateralSurfaceMaterial = undefined;
