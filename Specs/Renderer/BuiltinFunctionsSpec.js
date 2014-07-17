@@ -223,4 +223,55 @@ defineSuite([
             '}';
         verifyDraw(fs);
     });
+
+    it('has czm_octDecode', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_octDecode(vec2(0.0, 0.0)) == vec3(0.0, 0.0, 1.0)); ' +
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('has signNotZero : float', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_signNotZero(0.0) == 1.0, ' +
+            '                      czm_signNotZero(5.0) == 1.0, ' +
+            '                      czm_signNotZero(-5.0) == -1.0, 1.0); ' +
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('has signNotZero : vec2', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_signNotZero(vec2(0.0, 0.0)) == vec2(1.0, 1.0), ' +
+            '                      czm_signNotZero(vec2(1.0, 1.0)) == vec2(1.0, 1.0), ' +
+            '                      czm_signNotZero(vec2(-1.0, -1.0)) == vec2(-1.0, -1.0), ' +
+            '                      czm_signNotZero(vec2(-1.0, 0.0)) == vec2(-1.0, 1.0)); ' +
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('has signNotZero : vec3', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_signNotZero(vec3(0.0, 0.0, 0.0)) == vec3(1.0, 1.0, 1.0), ' +
+            '                      czm_signNotZero(vec3(1.0, 1.0, 1.0)) == vec3(1.0, 1.0, 1.0), ' +
+            '                      czm_signNotZero(vec3(-1.0, -1.0, -1.0)) == vec3(-1.0, -1.0, -1.0), ' +
+            '                      czm_signNotZero(vec3(-1.0, 0.0, 1.0)) == vec3(-1.0, 1.0, 1.0)); ' +
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('has signNotZero : vec4', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_signNotZero(vec4(0.0, 0.0, 0.0, 0.0)) == vec4(1.0), ' +
+            '                      czm_signNotZero(vec4(1.0, 1.0, 1.0, 1.0)) == vec4(1.0), ' +
+            '                      czm_signNotZero(vec4(-1.0, -1.0, -1.0, -1.0)) == vec4(-1.0), ' +
+            '                      czm_signNotZero(vec4(-1.0, 0.0, 1.0, -10.0)) == vec4(-1.0, 1.0, 1.0, -1.0)); ' +
+            '}';
+        verifyDraw(fs);
+    });
 }, 'WebGL');

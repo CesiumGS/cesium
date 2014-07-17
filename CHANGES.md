@@ -8,6 +8,13 @@ Change Log
   * Removed the following from the Cesium API: `Transforms.earthOrientationParameters`, `EarthOrientationParameters`, `EarthOrientationParametersSample`, `Transforms.iau2006XysData`, `Iau2006XysData`, `Iau2006XysSample`, `IauOrientationAxes`, `TimeConstants`, `Scene.frameState`, `FrameState`, `EncodedCartesian3`, `EllipsoidalOccluder`, and `FAR`.  These are still available but are not part of the official API and may change in future versions.
   * Removed `DynamicObject.vertexPositions`.  Use `DynamicWall.positions`, `DynamicPolygon.positions`, and `DynamicPolyline.positions` instead.
   * Removed `Primitive.allow3DOnly`, set the `Scene` level option, `scene3DOnly`, instead.
+  * Refactored the following methods into a properties:
+    * `TerrainProvider.hasWaterMask`
+    * `CesiumTerrainProvider.hasWaterMask`
+    * `ArcGisImageServerTerrainProvider.hasWaterMask`
+    * `EllipsoidTerrainProvider.hasWaterMask`
+    * `VRTheWorldTerrainProvider.hasWaterMask`
+  * Renamed preprocessor define, `ENABLE_LIGHTING` used by `Globe` shaders to `ENABLE_DAYNIGHT_SHADING`
   * The `DynamicScene` layer has been renamed to `DataSources` additionally, the following objects have all been renamed.
     * `DynamicBillboard` -> `BillboardGraphics`
     * `DynamicBillboardVisualizer` -> `BillboardVisualizer`
@@ -72,6 +79,10 @@ Change Log
   * Replaced `PerspectiveFrustum.fovy` with `PerspectiveFrustum.fov` which will change the field of view angle in either the x or y direction depending on the aspect ratio.
 * Added northUpEast transform to help support display of glTF models because Y is their up axis.
 * Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
+* Added `czm_octDecode` and `czm_signNotZero` builtin functions.
+* Added `CesiumTerrainProvider.requestVertexNormals` to request per vertex normals from the provider, if they are available.
+* Added new property to all terrain providers: `TerrainProvider.hasVertexNormals`, `CesiumTerrainProvider.hasVertexNormals`, `ArcGisImageServerTerrainProvider.hasVertexNormals`, `EllipsoidTerrainProvider.hasVertexNormals`, `VRTheWorldTerrainProvider.hasVertexNormals`.  This property indicates whether or not vertex normals will be included in the terrain tile responses.
+* Added support for rendering the globe with oct-encoded per vertex normals .
 * Added `Primitive.ready`.
 * Prevent primitives from flashing off and on when modifying static DataSources.
 * Added `scene3DOnly` options to `Viewer`, `CesiumWidget`, and `Scene` constructors. This setting optimizes memory usage and performance for 3D mode at the cost of losing the ability to use 2D or Columbus View.
