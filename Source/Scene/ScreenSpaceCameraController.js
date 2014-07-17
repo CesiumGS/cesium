@@ -1197,8 +1197,8 @@ define([
         var oldTransform = Matrix4.clone(camera.transform, tilt3DOldTransform);
         camera.setTransform(transform);
 
-        var tangent = Cartesian3.cross(Matrix4.getColumn(verticalTransform, 2, tilt3DNormal), Cartesian3.normalize(camera.position, tilt3DCartesian3), tilt3DCartesian3);
-        var dot = Cartesian3.dot(camera.right, tangent);
+        var tangent = Cartesian3.cross(verticalCenter, camera.positionWC, tilt3DCartesian3);
+        var dot = Cartesian3.dot(camera.rightWC, tangent);
 
         rotate3D(controller, startPosition, movement, frameState, constrainedAxis, false, true);
 
