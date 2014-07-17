@@ -139,8 +139,8 @@ define([
     var cachedPosition = new Cartesian3();
     var cachedOrientation = new Quaternion();
     function updateObject(visualizer, time, entity) {
-        var coneGraphics = entity._cone;
-        if (!defined(coneGraphics)) {
+        var dynamicCone = entity._cone;
+        if (!defined(dynamicCone)) {
             return;
         }
 
@@ -176,7 +176,7 @@ define([
         cone.show = true;
 
         var minimumClockAngle;
-        var property = coneGraphics._minimumClockAngle;
+        var property = dynamicCone._minimumClockAngle;
         if (defined(property)) {
             minimumClockAngle = property.getValue(time);
         }
@@ -185,7 +185,7 @@ define([
         }
 
         var maximumClockAngle;
-        property = coneGraphics._maximumClockAngle;
+        property = dynamicCone._maximumClockAngle;
         if (defined(property)) {
             maximumClockAngle = property.getValue(time);
         }
@@ -194,7 +194,7 @@ define([
         }
 
         var innerHalfAngle;
-        property = coneGraphics._innerHalfAngle;
+        property = dynamicCone._innerHalfAngle;
         if (defined(property)) {
             innerHalfAngle = property.getValue(time);
         }
@@ -203,7 +203,7 @@ define([
         }
 
         var outerHalfAngle;
-        property = coneGraphics._outerHalfAngle;
+        property = dynamicCone._outerHalfAngle;
         if (defined(property)) {
             outerHalfAngle = property.getValue(time);
         }
@@ -223,7 +223,7 @@ define([
             cone.minimumClockAngle = minimumClockAngle;
         }
 
-        property = coneGraphics._radius;
+        property = dynamicCone._radius;
         if (defined(property)) {
             var radius = property.getValue(time);
             if (defined(radius)) {
@@ -245,12 +245,12 @@ define([
 
         cone.lateralSurfaceMaterial = MaterialProperty.getValue(time, coneGraphics._lateralSurfaceMaterial, cone.lateralSurfaceMaterial);
 
-        property = coneGraphics._intersectionColor;
+        property = dynamicCone._intersectionColor;
         if (defined(property)) {
             property.getValue(time, cone.intersectionColor);
         }
 
-        property = coneGraphics._intersectionWidth;
+        property = dynamicCone._intersectionWidth;
         if (defined(property)) {
             var intersectionWidth = property.getValue(time);
             if (defined(intersectionWidth)) {
