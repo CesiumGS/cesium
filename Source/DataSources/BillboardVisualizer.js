@@ -138,12 +138,16 @@ define([
             return;
         }
 
-        position = Property.getValueOrUndefined(entity._position, time, position);
-        var textureValue = Property.getValueOrUndefined(billboardGraphics._image, time);
-
+        var textureValue;
         var billboard;
         var billboardVisualizerIndex = entity._billboardVisualizerIndex;
-        var show = defined(position) && defined(textureValue) && entity.isAvailable(time) && Property.getValueOrDefault(billboardGraphics._show, time, true);
+        var show = entity.isAvailable(time) && Property.getValueOrDefault(billboardGraphics._show, time, true);
+
+        if (show) {
+            position = Property.getValueOrUndefined(entity._position, time, position);
+            textureValue = Property.getValueOrUndefined(billboardGraphics._image, time);
+            show = defined(position) && defined(textureValue);
+        }
 
         if (!show) {
             //don't bother creating or updating anything else

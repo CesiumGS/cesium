@@ -115,12 +115,16 @@ define([
             return;
         }
 
-        position = Property.getValueOrUndefined(entity._position, time, position);
-        var text = Property.getValueOrUndefined(labelGraphics._text, time);
-
+        var text;
         var label;
         var labelVisualizerIndex = entity._labelVisualizerIndex;
-        var show = defined(position) && defined(text) && entity.isAvailable(time) && Property.getValueOrDefault(labelGraphics._show, time, true);
+        var show = entity.isAvailable(time) && Property.getValueOrDefault(labelGraphics._show, time, true);
+
+        if (show) {
+            position = Property.getValueOrUndefined(entity._position, time, position);
+            text = Property.getValueOrUndefined(labelGraphics._text, time);
+            show = defined(position) && defined(text);
+        }
 
         if (!show) {
             //don't bother creating or updating anything else

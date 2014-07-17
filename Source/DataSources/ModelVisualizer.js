@@ -112,12 +112,16 @@ define([
             return;
         }
 
-        position = Property.getValueOrUndefined(entity._position, time, position);
-        var uri = Property.getValueOrUndefined(modelGraphics._uri, time);
-
+        var uri;
         var modelHash = this._modelHash;
         var modelData = modelHash[entity.id];
-        var show = defined(position) && defined(uri) && entity.isAvailable(time) && Property.getValueOrDefault(modelGraphics._show, time, true);
+        var show = entity.isAvailable(time) && Property.getValueOrDefault(modelGraphics._show, time, true);
+
+        if (show) {
+            position = Property.getValueOrUndefined(entity._position, time, position);
+            uri = Property.getValueOrUndefined(modelGraphics._uri, time);
+            show = defined(position) && defined(uri);
+        }
 
         if (!show) {
             if (defined(modelData)) {

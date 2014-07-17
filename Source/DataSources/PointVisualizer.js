@@ -112,12 +112,9 @@ define([
             return;
         }
 
-        position = Property.getValueOrUndefined(entity._position, time, position);
-
         var billboard;
         var pointVisualizerIndex = entity._pointVisualizerIndex;
-        var show = entity.isAvailable(time) && defined(position) && Property.getValueOrDefault(pointGraphics._show, time, true);
-
+        var show = entity.isAvailable(time) && Property.getValueOrDefault(pointGraphics._show, time, true) && defined(Property.getValueOrUndefined(entity._position, time, position));
         if (!show) {
             //don't bother creating or updating anything else
             if (defined(pointVisualizerIndex)) {
