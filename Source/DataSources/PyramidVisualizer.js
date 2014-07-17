@@ -97,12 +97,12 @@ define([
     var position;
     var orientation;
     function updateObject(visualizer, time, entity) {
-        var dynamicPyramid = entity._pyramid;
-        if (!defined(dynamicPyramid)) {
+        var pyramidGraphics = entity._pyramid;
+        if (!defined(pyramidGraphics)) {
             return;
         }
 
-        var directionsProperty = dynamicPyramid._directions;
+        var directionsProperty = pyramidGraphics._directions;
         if (!defined(directionsProperty)) {
             return;
         }
@@ -174,7 +174,7 @@ define([
             }
         }
 
-        property = dynamicPyramid._intersectionWidth;
+        property = pyramidGraphics._intersectionWidth;
         if (defined(property)) {
             var intersectionWidth = property.getValue(time);
             if (defined(intersectionWidth)) {
