@@ -51,9 +51,7 @@ defineSuite([
         this.canvas = canvas;
         this.camera = camera;
         this.globe = undefined;
-        this.mapProjection = {
-            ellipsoid : ellipsoid
-        };
+        this.mapProjection = new GeographicProjection(ellipsoid);
     };
 
     beforeEach(function() {

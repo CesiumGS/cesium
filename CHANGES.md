@@ -97,8 +97,6 @@ Change Log
 Beta Releases
 -------------
 
-
-
 ### b30 - 2014-07-01
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))
