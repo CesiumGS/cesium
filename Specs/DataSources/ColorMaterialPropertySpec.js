@@ -18,18 +18,18 @@ defineSuite([
 
     it('constructor provides the expected defaults', function() {
         var property = new ColorMaterialProperty();
-        expect(property.color).toEqual(new ConstantProperty(Color.WHITE));
+        expect(property.color).toBeUndefined();
         expect(property.getType()).toEqual('Color');
         expect(property.isConstant).toBe(true);
+
+        var result = property.getValue();
+        expect(result.color).toEqual(Color.WHITE);
 
         var colorProperty = new ConstantProperty(Color.BLUE);
         property = new ColorMaterialProperty(colorProperty);
         expect(property.color).toBe(colorProperty);
         expect(property.getType()).toEqual('Color');
         expect(property.isConstant).toBe(true);
-
-        property = ColorMaterialProperty.fromColor(Color.BLUE);
-        expect(property.color).toEqual(colorProperty);
     });
 
     it('works with constant values', function() {
@@ -38,15 +38,6 @@ defineSuite([
 
         var result = property.getValue(JulianDate.now());
         expect(result.color).toEqual(Color.RED);
-    });
-
-    it('works with undefined values', function() {
-        var property = new ColorMaterialProperty();
-        property.color = new ConstantProperty();
-
-        var result = property.getValue();
-        expect(result.hasOwnProperty('color')).toEqual(true);
-        expect(result.color).toBeUndefined();
     });
 
     it('works with dynamic values', function() {

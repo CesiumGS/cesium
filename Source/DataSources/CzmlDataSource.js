@@ -13,6 +13,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Event',
+        '../Core/ExtrapolationType',
         '../Core/getFilenameFromUri',
         '../Core/HermitePolynomialApproximation',
         '../Core/isArray',
@@ -83,6 +84,7 @@ define([
         DeveloperError,
         Ellipsoid,
         Event,
+        ExtrapolationType,
         getFilenameFromUri,
         HermitePolynomialApproximation,
         isArray,
@@ -380,12 +382,32 @@ define([
     };
 
     function updateInterpolationSettings(packetData, property) {
-        var interpolator = interpolators[packetData.interpolationAlgorithm];
-        if (defined(interpolator) || defined(packetData.interpolationDegree)) {
+        var interpolationAlgorithm = packetData.interpolationAlgorithm;
+        if (defined(interpolationAlgorithm) || defined(packetData.interpolationDegree)) {
             property.setInterpolationOptions({
-                interpolationAlgorithm : interpolator,
+                interpolationAlgorithm : interpolators[interpolationAlgorithm],
                 interpolationDegree : packetData.interpolationDegree
             });
+        }
+
+        var forwardExtrapolationType = packetData.forwardExtrapolationType;
+        if (defined(forwardExtrapolationType)) {
+            property.forwardExtrapolationType = ExtrapolationType[forwardExtrapolationType];
+        }
+
+        var forwardExtrapolationDuration = packetData.forwardExtrapolationDuration;
+        if (defined(forwardExtrapolationDuration)) {
+            property.forwardExtrapolationDuration = forwardExtrapolationDuration;
+        }
+
+        var backwardExtrapolationType = packetData.backwardExtrapolationType;
+        if (defined(backwardExtrapolationType)) {
+            property.backwardExtrapolationType = ExtrapolationType[backwardExtrapolationType];
+        }
+
+        var backwardExtrapolationDuration = packetData.backwardExtrapolationDuration;
+        if (defined(backwardExtrapolationDuration)) {
+            property.backwardExtrapolationDuration = backwardExtrapolationDuration;
         }
     }
 

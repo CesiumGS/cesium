@@ -2,6 +2,8 @@
 defineSuite([
         'Scene/GlobeSurfaceTileProvider',
         'Core/Cartesian3',
+        'Core/CesiumTerrainProvider',
+        'Core/Credit',
         'Core/defined',
         'Core/Ellipsoid',
         'Core/EllipsoidTerrainProvider',
@@ -27,6 +29,8 @@ defineSuite([
     ], function(
         GlobeSurfaceTileProvider,
         Cartesian3,
+        CesiumTerrainProvider,
+        Credit,
         defined,
         Ellipsoid,
         EllipsoidTerrainProvider,
@@ -573,6 +577,31 @@ defineSuite([
             }
 
             expect(tileCount).toBeGreaterThanOrEqualTo(1);
+        });
+    });
+
+    it('adds terrain and imagery credits to the CreditDisplay', function() {
+        var layerCollection = globe.imageryLayers;
+        layerCollection.removeAll();
+
+        var imageryCredit = new Credit('imagery credit');
+        layerCollection.addImageryProvider(new SingleTileImageryProvider({
+            url : 'Data/Images/Red16x16.png',
+            credit : imageryCredit
+        }));
+
+        var terrainCredit = new Credit('terrain credit');
+        globe.terrainProvider = new CesiumTerrainProvider({
+            url : 'http://cesiumjs.org/stk-terrain/tilesets/world/tiles',
+            credit : terrainCredit
+        });
+
+        updateUntilDone(globe);
+
+        runs(function() {
+            var creditDisplay = frameState.creditDisplay;
+            expect(creditDisplay._currentFrameCredits.textCredits).toContain(imageryCredit);
+            expect(creditDisplay._currentFrameCredits.textCredits).toContain(terrainCredit);
         });
     });
 

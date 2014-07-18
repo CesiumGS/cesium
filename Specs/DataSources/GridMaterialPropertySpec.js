@@ -22,11 +22,11 @@ defineSuite([
 
     it('constructor provides the expected defaults', function() {
         var property = new GridMaterialProperty();
-        expect(property.color).toBeDefined();
-        expect(property.cellAlpha).toBeDefined();
-        expect(property.lineCount).toBeDefined();
-        expect(property.lineThickness).toBeDefined();
-        expect(property.lineOffset).toBeDefined();
+        expect(property.color).toBeUndefined();
+        expect(property.cellAlpha).toBeUndefined();
+        expect(property.lineCount).toBeUndefined();
+        expect(property.lineThickness).toBeUndefined();
+        expect(property.lineOffset).toBeUndefined();
 
         expect(property.getType()).toEqual('Grid');
 
@@ -52,27 +52,6 @@ defineSuite([
         expect(result.lineCount).toEqual(new Cartesian2(3.4, 5.0));
         expect(result.lineThickness).toEqual(new Cartesian2(2, 3));
         expect(result.lineOffset).toEqual(new Cartesian2(0.7, 0.8));
-    });
-
-    it('works with undefined values', function() {
-        var property = new GridMaterialProperty();
-        property.color.setValue(undefined);
-        property.cellAlpha.setValue(undefined);
-        property.lineCount.setValue(undefined);
-        property.lineThickness.setValue(undefined);
-        property.lineOffset.setValue(undefined);
-
-        var result = property.getValue();
-        expect(result.hasOwnProperty('color')).toEqual(true);
-        expect(result.hasOwnProperty('cellAlpha')).toEqual(true);
-        expect(result.hasOwnProperty('lineCount')).toEqual(true);
-        expect(result.hasOwnProperty('lineThickness')).toEqual(true);
-        expect(result.hasOwnProperty('lineOffset')).toEqual(true);
-        expect(result.color).toBeUndefined();
-        expect(result.cellAlpha).toBeUndefined();
-        expect(result.lineCount).toBeUndefined();
-        expect(result.lineThickness).toBeUndefined();
-        expect(result.lineOffset).toBeUndefined();
     });
 
     it('works with dynamic values', function() {
