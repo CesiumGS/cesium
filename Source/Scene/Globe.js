@@ -430,7 +430,6 @@ define([
             return undefined;
         }
 
-        //while(tile.state === QuadtreeTileLoadState.DONE) {
         while (tile.renderable) {
             var children = tile.children;
             length = children.length;

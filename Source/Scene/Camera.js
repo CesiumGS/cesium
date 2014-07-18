@@ -215,15 +215,32 @@ define([
         Cartesian3.multiplyByScalar(this.position, mag, this.position);
     };
 
+    /**
+     * @private
+     */
     Camera.TRANSFORM_2D = new Matrix4(
         0.0, 0.0, 1.0, 0.0,
         1.0, 0.0, 0.0, 0.0,
         0.0, 1.0, 0.0, 0.0,
         0.0, 0.0, 0.0, 1.0);
 
+    /**
+     * @private
+     */
     Camera.TRANSFORM_2D_INVERSE = Matrix4.inverseTransformation(Camera.TRANSFORM_2D, new Matrix4());
 
+    /**
+     * The default extent the camera will view on creation.
+     * @type Rectangle
+     */
     Camera.DEFAULT_VIEW_RECTANGLE = Rectangle.fromDegrees(-95.0, -20.0, -70.0, 90.0);
+
+    /**
+     * A scalar to multiply to the camera position and add it back after setting the camera to view the rectangle.
+     * A value of zero means the camera will view the entire {@link Camera#DEFAULT_VIEW_RECTANGLE}, a value greater than zero
+     * will move it further away from the extent, and a value less than zero will move it close to the extent.
+     * @type Number
+     */
     Camera.DEFAULT_VIEW_FACTOR = 0.5;
 
     function updateViewMatrix(camera) {
