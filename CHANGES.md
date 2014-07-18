@@ -75,6 +75,7 @@ Change Log
     * `Rectangle.getCenter` -> `Rectangle.center`
     * `CullingVolume.getVisibility` -> `CullingVolume.computeVisibility`
   * `SimplePolylineGeometry` and `PolylineGeometry` positions curve to follow the ellipsoid surface by default. To disable this behavior, set the option `followSurface=false`.
+  * Removed `ScreenSpaceCameraController.ellipsoid`. The behavior that depended on the ellipsoid is now determined based on the scene state.
   * Sandcastle examples now automatically wrap the example code in RequireJS boilerplate.  To upgrade any custom examples, copy the code into an existing example (such as Hello World) and save a new file.
   * Replaced `PerspectiveFrustum.fovy` with `PerspectiveFrustum.fov` which will change the field of view angle in either the x or y direction depending on the aspect ratio.
 * Added northUpEast transform to help support display of glTF models because Y is their up axis.
@@ -86,6 +87,10 @@ Change Log
 * Added `Primitive.ready`.
 * Prevent primitives from flashing off and on when modifying static DataSources.
 * Added `scene3DOnly` options to `Viewer`, `CesiumWidget`, and `Scene` constructors. This setting optimizes memory usage and performance for 3D mode at the cost of losing the ability to use 2D or Columbus View.
+* Added the following methods to `IntersectionTests`: `rayTriangle`, `lineSegmentTriangle`, `raySphere`, and `lineSegmentSphere`.
+* Added `Globe.getHeight` and `Globe.pick` for finding the terrain height at a given Cartographic coordinate and picking the terrain with a ray.
+* Modified the default camera tilt mouse behavior to tilt about the point clicked.
+* Added camera collision detection with terrain to the default mouse interaction.
 * Matrix types now have `add` and `subtract` functions.
 * `Matrix3` type now has a `fromCrossProduct` function.
 

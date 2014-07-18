@@ -1143,23 +1143,6 @@ define([
         this.look(this.direction, -amount);
     };
 
-    var appendTransformMatrix = new Matrix4();
-
-    function appendTransform(camera, transform) {
-        var oldTransform;
-        if (defined(transform)) {
-            oldTransform = Matrix4.clone(camera.transform, appendTransformMatrix);
-            camera.setTransform(transform);
-        }
-        return oldTransform;
-    }
-
-    function revertTransform(camera, transform) {
-        if (defined(transform)) {
-            camera.setTransform(transform);
-        }
-    }
-
     var rotateScratchQuaternion = new Quaternion();
     var rotateScratchMatrix = new Matrix3();
     /**
@@ -1168,20 +1151,13 @@ define([
      *
      * @param {Cartesian3} axis The axis to rotate around given in world coordinates.
      * @param {Number} [angle] The angle, in radians, to rotate by. Defaults to <code>defaultRotateAmount</code>.
-     * @param {Matrix4} [transform] A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
      *
      * @see Camera#rotateUp
      * @see Camera#rotateDown
      * @see Camera#rotateLeft
      * @see Camera#rotateRight
-     *
-     * @example
-     * // Rotate about a point on the earth.
-     * var center = ellipsoid.cartographicToCartesian(cartographic);
-     * var transform = Cesium.Matrix4.fromTranslation(center);
-     * camera.rotate(axis, angle, transform);
     */
-    Camera.prototype.rotate = function(axis, angle, transform) {
+    Camera.prototype.rotate = function(axis, angle) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(axis)) {
             throw new DeveloperError('axis is required.');
@@ -1191,50 +1167,44 @@ define([
         var turnAngle = defaultValue(angle, this.defaultRotateAmount);
         var quaternion = Quaternion.fromAxisAngle(axis, -turnAngle, rotateScratchQuaternion);
         var rotation = Matrix3.fromQuaternion(quaternion, rotateScratchMatrix);
-        var oldTransform = appendTransform(this, transform);
         Matrix3.multiplyByVector(rotation, this.position, this.position);
         Matrix3.multiplyByVector(rotation, this.direction, this.direction);
         Matrix3.multiplyByVector(rotation, this.up, this.up);
         Cartesian3.cross(this.direction, this.up, this.right);
         Cartesian3.cross(this.right, this.direction, this.up);
-        revertTransform(this, oldTransform);
     };
 
     /**
      * Rotates the camera around the center of the camera's reference frame by angle downwards.
      *
      * @param {Number} [angle] The angle, in radians, to rotate by. Defaults to <code>defaultRotateAmount</code>.
-     * @param {Matrix4} [transform] A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
      *
      * @see Camera#rotateUp
      * @see Camera#rotate
      */
-    Camera.prototype.rotateDown = function(angle, transform) {
+    Camera.prototype.rotateDown = function(angle) {
         angle = defaultValue(angle, this.defaultRotateAmount);
-        rotateVertical(this, angle, transform);
+        rotateVertical(this, angle);
     };
 
     /**
      * Rotates the camera around the center of the camera's reference frame by angle upwards.
      *
      * @param {Number} [angle] The angle, in radians, to rotate by. Defaults to <code>defaultRotateAmount</code>.
-     * @param {Matrix4} [transform] A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
      *
      * @see Camera#rotateDown
      * @see Camera#rotate
      */
-    Camera.prototype.rotateUp = function(angle, transform) {
+    Camera.prototype.rotateUp = function(angle) {
         angle = defaultValue(angle, this.defaultRotateAmount);
-        rotateVertical(this, -angle, transform);
+        rotateVertical(this, -angle);
     };
 
     var rotateVertScratchP = new Cartesian3();
     var rotateVertScratchA = new Cartesian3();
     var rotateVertScratchTan = new Cartesian3();
     var rotateVertScratchNegate = new Cartesian3();
-    function rotateVertical(camera, angle, transform) {
-        var oldTransform = appendTransform(camera, transform);
-
+    function rotateVertical(camera, angle) {
         var position = camera.position;
         var p = Cartesian3.normalize(position, rotateVertScratchP);
         if (defined(camera.constrainedAxis)) {
@@ -1263,43 +1233,39 @@ define([
         } else {
             camera.rotate(camera.right, angle);
         }
-
-        revertTransform(camera, oldTransform);
     }
 
     /**
      * Rotates the camera around the center of the camera's reference frame by angle to the right.
      *
      * @param {Number} [angle] The angle, in radians, to rotate by. Defaults to <code>defaultRotateAmount</code>.
-     * @param {Matrix4} [transform] A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
      *
      * @see Camera#rotateLeft
      * @see Camera#rotate
      */
-    Camera.prototype.rotateRight = function(angle, transform) {
+    Camera.prototype.rotateRight = function(angle) {
         angle = defaultValue(angle, this.defaultRotateAmount);
-        rotateHorizontal(this, -angle, transform);
+        rotateHorizontal(this, -angle);
     };
 
     /**
      * Rotates the camera around the center of the camera's reference frame by angle to the left.
      *
      * @param {Number} [angle] The angle, in radians, to rotate by. Defaults to <code>defaultRotateAmount</code>.
-     * @param {Matrix4} [transform] A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
      *
      * @see Camera#rotateRight
      * @see Camera#rotate
      */
-    Camera.prototype.rotateLeft = function(angle, transform) {
+    Camera.prototype.rotateLeft = function(angle) {
         angle = defaultValue(angle, this.defaultRotateAmount);
-        rotateHorizontal(this, angle, transform);
+        rotateHorizontal(this, angle);
     };
 
-    function rotateHorizontal(camera, angle, transform) {
+    function rotateHorizontal(camera, angle) {
         if (defined(camera.constrainedAxis)) {
-            camera.rotate(camera.constrainedAxis, angle, transform);
+            camera.rotate(camera.constrainedAxis, angle);
         } else {
-            camera.rotate(camera.up, angle, transform);
+            camera.rotate(camera.up, angle);
         }
     }
 
@@ -1743,7 +1709,8 @@ define([
             return undefined;
         }
 
-        return Ray.getPoint(ray, intersection.start, result);
+        var t = (Cartesian3.magnitude(ray.origin) < ellipsoid.maximumRadius) ? intersection.stop : intersection.start;
+        return Ray.getPoint(ray, t, result);
     }
 
     var pickEllipsoid2DRay = new Ray();

@@ -11,6 +11,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Ellipsoid',
         '../Core/EllipsoidTerrainProvider',
@@ -19,11 +20,13 @@ define([
         '../Core/Geometry',
         '../Core/GeometryAttribute',
         '../Core/Intersect',
+        '../Core/IntersectionTests',
         '../Core/loadImage',
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/Occluder',
         '../Core/PrimitiveType',
+        '../Core/Ray',
         '../Core/Rectangle',
         '../Core/TerrainProvider',
         '../Core/Transforms',
@@ -58,6 +61,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        DeveloperError,
         destroyObject,
         Ellipsoid,
         EllipsoidTerrainProvider,
@@ -66,11 +70,13 @@ define([
         Geometry,
         GeometryAttribute,
         Intersect,
+        IntersectionTests,
         loadImage,
         CesiumMath,
         Matrix4,
         Occluder,
         PrimitiveType,
+        Ray,
         Rectangle,
         TerrainProvider,
         Transforms,
@@ -299,6 +305,165 @@ define([
             }
         }
     });
+
+    function createComparePickTileFunction(rayOrigin) {
+        return function(a, b) {
+            var aDist = BoundingSphere.distanceSquaredTo(a.pickBoundingSphere, rayOrigin);
+            var bDist = BoundingSphere.distanceSquaredTo(b.pickBoundingSphere, rayOrigin);
+
+            return aDist - bDist;
+        };
+    }
+
+    var scratchArray = [];
+    var scratchSphereIntersectionResult = {
+        start : 0.0,
+        stop : 0.0
+    };
+
+    /**
+     * Find an intersection between a ray and the globe surface that was rendered. The ray must be given in world coordinates.
+     *
+     * @param {Ray} ray The ray to test for intersection.
+     * @param {Scene} scene The scene.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
+     *
+     * @example
+     * // find intersection of ray through a pixel and the globe
+     * var ray = scene.camera.getPickRay(windowCoordinates);
+     * var intersection = globe.pick(ray, scene);
+     */
+    Globe.prototype.pick = function(ray, scene, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(ray)) {
+            throw new DeveloperError('ray is required');
+        }
+        if (!defined(scene)) {
+            throw new DeveloperError('scene is required');
+        }
+        //>>includeEnd('debug');
+
+        var mode = scene.mode;
+        var projection = scene.mapProjection;
+
+        var sphereIntersections = scratchArray;
+        sphereIntersections.length = 0;
+
+        var tilesToRender = this._surface._tilesToRender;
+        var length = tilesToRender.length;
+
+        var tile;
+        var i;
+
+        for (i = 0; i < length; ++i) {
+            tile = tilesToRender[i];
+            var tileData = tile.data;
+
+            if (!defined(tileData)) {
+                continue;
+            }
+
+            var boundingVolume = tileData.pickBoundingSphere;
+            if (mode !== SceneMode.SCENE3D) {
+                BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, projection, tileData.minimumHeight, tileData.maximumHeight, boundingVolume);
+                Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
+            } else {
+                BoundingSphere.clone(tileData.boundingSphere3D, boundingVolume);
+            }
+
+            var boundingSphereIntersection = IntersectionTests.raySphere(ray, boundingVolume, scratchSphereIntersectionResult);
+            if (defined(boundingSphereIntersection)) {
+                sphereIntersections.push(tileData);
+            }
+        }
+
+        sphereIntersections.sort(createComparePickTileFunction(ray.origin));
+
+        var intersection;
+        length = sphereIntersections.length;
+        for (i = 0; i < length; ++i) {
+            intersection = sphereIntersections[i].pick(ray, scene, true, result);
+            if (defined(intersection)) {
+                break;
+            }
+        }
+
+        return intersection;
+    };
+
+    var scratchGetHeightCartesian = new Cartesian3();
+    var scratchGetHeightIntersection = new Cartesian3();
+    var scratchGetHeightCartographic = new Cartographic();
+    var scratchGetHeightRay = new Ray();
+
+    /**
+     * Get the height of the surface at a given cartographic.
+     *
+     * @param {Cartographic} cartographic The cartographic for which to find the height.
+     * @returns {Number|undefined} The height of the cartographic or undefined if it could not be found.
+     */
+    Globe.prototype.getHeight = function(cartographic) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(cartographic)) {
+            throw new DeveloperError('cartographic is required');
+        }
+        //>>includeEnd('debug');
+
+        var levelZeroTiles = this._surface._levelZeroTiles;
+        if (!defined(levelZeroTiles)) {
+            return;
+        }
+
+        var tile;
+        var i;
+
+        var length = levelZeroTiles.length;
+        for (i = 0; i < length; ++i) {
+            tile = levelZeroTiles[i];
+            if (Rectangle.contains(tile.rectangle, cartographic)) {
+                break;
+            }
+        }
+
+        if (!defined(tile) || !Rectangle.contains(tile.rectangle, cartographic)) {
+            return undefined;
+        }
+
+        //while(tile.state === QuadtreeTileLoadState.DONE) {
+        while (tile.renderable) {
+            var children = tile.children;
+            length = children.length;
+
+            for (i = 0; i < length; ++i) {
+                tile = children[i];
+                if (Rectangle.contains(tile.rectangle, cartographic)) {
+                    break;
+                }
+            }
+        }
+
+        while (defined(tile) && (!defined(tile.data) || !defined(tile.data.pickTerrain))) {
+            tile = tile.parent;
+        }
+
+        if (!defined(tile)) {
+            return undefined;
+        }
+
+        var ellipsoid = this._surface._tileProvider.tilingScheme.ellipsoid;
+        var cartesian = ellipsoid.cartographicToCartesian(cartographic, scratchGetHeightCartesian);
+
+        var ray = scratchGetHeightRay;
+        Cartesian3.normalize(cartesian, ray.direction);
+
+        var intersection = tile.data.pick(ray, undefined, false, scratchGetHeightIntersection);
+        if (!defined(intersection)) {
+            return undefined;
+        }
+
+        return ellipsoid.cartesianToCartographic(intersection, scratchGetHeightCartographic).height;
+    };
 
     var depthQuadScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(12) : [];
     var scratchCartesian1 = new Cartesian3();

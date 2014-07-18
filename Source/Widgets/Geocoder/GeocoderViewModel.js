@@ -5,7 +5,6 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
-        '../../Core/Ellipsoid',
         '../../Core/jsonp',
         '../../Core/Matrix4',
         '../../Core/Rectangle',
@@ -19,7 +18,6 @@ define([
         defined,
         defineProperties,
         DeveloperError,
-        Ellipsoid,
         jsonp,
         Matrix4,
         Rectangle,
@@ -44,7 +42,6 @@ define([
      *        written to the console reminding you that you must create and supply a Bing Maps
      *        key as soon as possible.  Please do not deploy an application that uses
      *        this widget without creating a separate key for your application.
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The Scene's primary ellipsoid.
      * @param {Number} [options.flightDuration=1.5] The duration of the camera flight to an entered location, in seconds.
      */
     var GeocoderViewModel = function(options) {
@@ -61,7 +58,6 @@ define([
 
         this._key = BingMapsApi.getKey(options.key);
         this._scene = options.scene;
-        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         this._flightDuration = defaultValue(options.flightDuration, 1.5);
         this._searchText = '';
         this._isSearchInProgress = false;
@@ -176,18 +172,6 @@ define([
         },
 
         /**
-         * Gets the ellipsoid to be viewed.
-         * @memberof GeocoderViewModel.prototype
-         *
-         * @type {Ellipsoid}
-         */
-        ellipsoid : {
-            get : function() {
-                return this._ellipsoid;
-            }
-        },
-
-        /**
          * Gets the Command that is executed when the button is clicked.
          * @memberof GeocoderViewModel.prototype
          *
@@ -256,10 +240,6 @@ define([
             viewModel._scene.camera.flyTo({
                 destination : position,
                 duration : viewModel._flightDuration,
-                complete : function() {
-                    var screenSpaceCameraController = viewModel._scene.screenSpaceCameraController;
-                    screenSpaceCameraController.ellipsoid = viewModel._ellipsoid;
-                },
                 endTransform : Matrix4.IDENTITY,
                 convert : false
             });

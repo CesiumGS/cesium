@@ -35,10 +35,6 @@ function reset() {
     scene.primitives.removeAll();
     scene.tweens.removeAll();
 
-    var controller = scene.screenSpaceCameraController;
-    controller.ellipsoid = scene.globe.ellipsoid;
-    controller.enableTilt = true;
-
     scene.camera.setTransform(Cesium.Matrix4.IDENTITY);
 
     clock.multiplier = 1.0;
@@ -134,10 +130,6 @@ function setReferenceFrame() {
     var camera = scene.camera;
     Cesium.Matrix4.clone(transform, camera.transform);
     camera.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
-
-    var controller = scene.screenSpaceCameraController;
-    controller.ellipsoid = Cesium.Ellipsoid.UNIT_SPHERE;
-    controller.enableTilt = false;
 
     // Zoom in
     camera.lookAt(
