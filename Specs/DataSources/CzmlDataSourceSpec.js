@@ -637,38 +637,17 @@ defineSuite([
                 maximumClockAngle : 1.3,
                 radius : 2.0,
                 show : true,
+                intersectionColor : {
+                    rgbaf : [0.5, 0.5, 0.5, 0.5]
+                },
                 showIntersection : false,
                 intersectionWidth : 6.0,
-                capMaterial : {
+                lateralSurfaceMaterial : {
                     solidColor : {
                         color : {
                             rgbaf : [0.1, 0.1, 0.1, 0.1]
                         }
                     }
-                },
-                innerMaterial : {
-                    solidColor : {
-                        color : {
-                            rgbaf : [0.2, 0.2, 0.2, 0.2]
-                        }
-                    }
-                },
-                outerMaterial : {
-                    solidColor : {
-                        color : {
-                            rgbaf : [0.3, 0.3, 0.3, 0.3]
-                        }
-                    }
-                },
-                silhouetteMaterial : {
-                    solidColor : {
-                        color : {
-                            rgbaf : [0.4, 0.4, 0.4, 0.4]
-                        }
-                    }
-                },
-                intersectionColor : {
-                    rgbaf : [0.5, 0.5, 0.5, 0.5]
                 }
             }
         };
@@ -685,12 +664,7 @@ defineSuite([
         expect(entity.cone.radius.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.radius);
         expect(entity.cone.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.show);
         expect(entity.cone.showIntersection.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.showIntersection);
-        expect(entity.cone.capMaterial.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(entity.cone.innerMaterial.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(entity.cone.outerMaterial.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.3, 0.3, 0.3, 0.3));
-        expect(entity.cone.silhouetteMaterial.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.4, 0.4, 0.4, 0.4));
-        expect(entity.cone.intersectionColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.5, 0.5, 0.5, 0.5));
-        expect(entity.cone.intersectionWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.intersectionWidth);
+        expect(entity.cone.lateralSurfaceMaterial.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
     });
 
     it('CZML adds data for constrained cone.', function() {
@@ -703,38 +677,17 @@ defineSuite([
                 maximumClockAngle : 1.3,
                 radius : 2.0,
                 show : true,
+                intersectionColor : {
+                    rgbaf : [0.5, 0.5, 0.5, 0.5]
+                },
                 showIntersection : false,
-                intersectionWidth : 4.0,
-                capMaterial : {
+                intersectionWidth : 6.0,
+                lateralSurfaceMaterial : {
                     solidColor : {
                         color : {
                             rgbaf : [0.1, 0.1, 0.1, 0.1]
                         }
                     }
-                },
-                innerMaterial : {
-                    solidColor : {
-                        color : {
-                            rgbaf : [0.2, 0.2, 0.2, 0.2]
-                        }
-                    }
-                },
-                outerMaterial : {
-                    solidColor : {
-                        color : {
-                            rgbaf : [0.3, 0.3, 0.3, 0.3]
-                        }
-                    }
-                },
-                silhouetteMaterial : {
-                    solidColor : {
-                        color : {
-                            rgbaf : [0.4, 0.4, 0.4, 0.4]
-                        }
-                    }
-                },
-                intersectionColor : {
-                    rgbaf : [0.5, 0.5, 0.5, 0.5]
                 }
             }
         };
@@ -756,10 +709,7 @@ defineSuite([
         expect(entity.cone.radius.getValue(validTime)).toEqual(conePacket.cone.radius);
         expect(entity.cone.show.getValue(validTime)).toEqual(conePacket.cone.show);
         expect(entity.cone.showIntersection.getValue(validTime)).toEqual(conePacket.cone.showIntersection);
-        expect(entity.cone.capMaterial.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(entity.cone.innerMaterial.getValue(validTime).color).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(entity.cone.outerMaterial.getValue(validTime).color).toEqual(new Color(0.3, 0.3, 0.3, 0.3));
-        expect(entity.cone.silhouetteMaterial.getValue(validTime).color).toEqual(new Color(0.4, 0.4, 0.4, 0.4));
+        expect(entity.cone.lateralSurfaceMaterial.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(entity.cone.intersectionColor.getValue(validTime)).toEqual(new Color(0.5, 0.5, 0.5, 0.5));
         expect(entity.cone.intersectionWidth.getValue(validTime)).toEqual(conePacket.cone.intersectionWidth);
 
@@ -770,10 +720,7 @@ defineSuite([
         expect(entity.cone.radius.getValue(invalidTime)).toBeUndefined();
         expect(entity.cone.show.getValue(invalidTime)).toBeUndefined();
         expect(entity.cone.showIntersection.getValue(invalidTime)).toBeUndefined();
-        expect(entity.cone.capMaterial.getValue(invalidTime)).toBeUndefined();
-        expect(entity.cone.innerMaterial.getValue(invalidTime)).toBeUndefined();
-        expect(entity.cone.outerMaterial.getValue(invalidTime)).toBeUndefined();
-        expect(entity.cone.silhouetteMaterial.getValue(invalidTime)).toBeUndefined();
+        expect(entity.cone.lateralSurfaceMaterial.getValue(invalidTime)).toBeUndefined();
         expect(entity.cone.intersectionColor.getValue(invalidTime)).toBeUndefined();
         expect(entity.cone.intersectionWidth.getValue(invalidTime)).toBeUndefined();
     });
@@ -1679,17 +1626,17 @@ defineSuite([
                 },
                 radius : 2.0,
                 show : true,
+                intersectionColor : {
+                    rgbaf : [0.5, 0.5, 0.5, 0.5]
+                },
                 showIntersection : false,
                 intersectionWidth : 7.0,
-                material : {
+                lateralSurfaceMaterial : {
                     solidColor : {
                         color : {
                             rgbaf : [0.1, 0.1, 0.1, 0.1]
                         }
                     }
-                },
-                intersectionColor : {
-                    rgbaf : [0.5, 0.5, 0.5, 0.5]
                 }
             }
         };
@@ -1703,7 +1650,7 @@ defineSuite([
         expect(entity.pyramid.radius.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pyramidPacket.pyramid.radius);
         expect(entity.pyramid.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pyramidPacket.pyramid.show);
         expect(entity.pyramid.showIntersection.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pyramidPacket.pyramid.showIntersection);
-        expect(entity.pyramid.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(entity.pyramid.lateralSurfaceMaterial.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(entity.pyramid.intersectionColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.5, 0.5, 0.5, 0.5));
         expect(entity.pyramid.intersectionWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(7.0);
     });
@@ -1740,17 +1687,17 @@ defineSuite([
                 },
                 radius : 2.0,
                 show : true,
+                intersectionColor : {
+                    rgbaf : [0.5, 0.5, 0.5, 0.5]
+                },
                 showIntersection : false,
                 intersectionWidth : 8.0,
-                material : {
+                lateralSurfaceMaterial : {
                     solidColor : {
                         color : {
                             rgbaf : [0.1, 0.1, 0.1, 0.1]
                         }
                     }
-                },
-                intersectionColor : {
-                    rgbaf : [0.5, 0.5, 0.5, 0.5]
                 }
             }
         };
@@ -1769,7 +1716,7 @@ defineSuite([
         expect(entity.pyramid.radius.getValue(validTime)).toEqual(pyramidPacket.pyramid.radius);
         expect(entity.pyramid.show.getValue(validTime)).toEqual(pyramidPacket.pyramid.show);
         expect(entity.pyramid.showIntersection.getValue(validTime)).toEqual(pyramidPacket.pyramid.showIntersection);
-        expect(entity.pyramid.material.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(entity.pyramid.lateralSurfaceMaterial.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(entity.pyramid.intersectionColor.getValue(validTime)).toEqual(new Color(0.5, 0.5, 0.5, 0.5));
         expect(entity.pyramid.intersectionWidth.getValue(validTime)).toEqual(8.0);
 
@@ -1777,7 +1724,7 @@ defineSuite([
         expect(entity.pyramid.radius.getValue(invalidTime)).toBeUndefined();
         expect(entity.pyramid.show.getValue(invalidTime)).toBeUndefined();
         expect(entity.pyramid.showIntersection.getValue(invalidTime)).toBeUndefined();
-        expect(entity.pyramid.material.getValue(invalidTime)).toBeUndefined();
+        expect(entity.pyramid.lateralSurfaceMaterial.getValue(invalidTime)).toBeUndefined();
         expect(entity.pyramid.intersectionColor.getValue(invalidTime)).toBeUndefined();
         expect(entity.pyramid.intersectionWidth.getValue(invalidTime)).toBeUndefined();
     });

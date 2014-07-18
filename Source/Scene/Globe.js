@@ -264,6 +264,7 @@ define([
         this._zoomedOutOceanSpecularIntensity = 0.5;
         this._showingPrettyOcean = false;
         this._hasWaterMask = false;
+        this._hasVertexNormals = false;
         this._lightingFadeDistance = new Cartesian2(this.lightingFadeOutDistance, this.lightingFadeInDistance);
 
         var that = this;
@@ -821,7 +822,7 @@ define([
         }
 
         if (this._surface.tileProvider.ready &&
-            this._surface.tileProvider.terrainProvider.hasWaterMask() &&
+            this._surface.tileProvider.terrainProvider.hasWaterMask &&
             this.oceanNormalMapUrl !== this._lastOceanNormalMapUrl) {
 
             this._lastOceanNormalMapUrl = this.oceanNormalMapUrl;
@@ -836,14 +837,17 @@ define([
         }
 
         // Initial compile or re-compile if uber-shader parameters changed
-        var hasWaterMask = this._surface.tileProvider.ready && this._surface.tileProvider.terrainProvider.hasWaterMask();
+        var hasWaterMask = this._surface.tileProvider.ready && this._surface.tileProvider.terrainProvider.hasWaterMask;
+        var hasVertexNormals = this._surface.tileProvider.ready && this._surface.tileProvider.terrainProvider.hasVertexNormals;
         var hasWaterMaskChanged = this._hasWaterMask !== hasWaterMask;
+        var hasVertexNormalsChanged = this._hasVertexNormals !== hasVertexNormalsChanged;
         var hasEnableLightingChanged = this._enableLighting !== this.enableLighting;
 
         if (!defined(this._northPoleCommand.shaderProgram) ||
             !defined(this._southPoleCommand.shaderProgram) ||
             modeChanged ||
             hasWaterMaskChanged ||
+            hasVertexNormalsChanged ||
             hasEnableLightingChanged ||
             (defined(this._oceanNormalMap)) !== this._showingPrettyOcean) {
 
@@ -883,7 +887,8 @@ define([
             this._surfaceShaderSet.baseVertexShaderString = createShaderSource({
                 defines : [
                     (hasWaterMask ? 'SHOW_REFLECTIVE_OCEAN' : ''),
-                    (this.enableLighting ? 'ENABLE_LIGHTING' : '')
+                    (this.enableLighting && !hasVertexNormals ? 'ENABLE_DAYNIGHT_SHADING' : ''),
+                    (this.enableLighting && hasVertexNormals ? 'ENABLE_VERTEX_LIGHTING' : '')
                 ],
                 sources : [GlobeVS, getPositionMode, get2DYPositionFraction]
             });
@@ -894,7 +899,8 @@ define([
                 defines : [
                     (hasWaterMask ? 'SHOW_REFLECTIVE_OCEAN' : ''),
                     (showPrettyOcean ? 'SHOW_OCEAN_WAVES' : ''),
-                    (this.enableLighting ? 'ENABLE_LIGHTING' : '')
+                    (this.enableLighting && !hasVertexNormals ? 'ENABLE_DAYNIGHT_SHADING' : ''),
+                    (this.enableLighting && hasVertexNormals ? 'ENABLE_VERTEX_LIGHTING' : '')
                 ],
                 sources : [GlobeFS]
             });
@@ -908,6 +914,7 @@ define([
 
             this._showingPrettyOcean = defined(this._oceanNormalMap);
             this._hasWaterMask = hasWaterMask;
+            this._hasVertexNormals = hasVertexNormals;
             this._enableLighting = this.enableLighting;
         }
 

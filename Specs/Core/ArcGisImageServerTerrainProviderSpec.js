@@ -103,7 +103,7 @@ defineSuite([
         var provider = new ArcGisImageServerTerrainProvider({
             url : 'made/up/url'
         });
-        expect(provider.hasWaterMask()).toBe(false);
+        expect(provider.hasWaterMask).toBe(false);
     });
 
     it('is ready immediately', function() {

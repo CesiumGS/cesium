@@ -496,7 +496,7 @@ define([
 
                     // If the terrain provider has a water mask, "upsample" that as well
                     // by computing texture translation and scale.
-                    if (terrainProvider.hasWaterMask()) {
+                    if (terrainProvider.hasWaterMask) {
                         upsampleWaterMask(tile, context);
                     }
 

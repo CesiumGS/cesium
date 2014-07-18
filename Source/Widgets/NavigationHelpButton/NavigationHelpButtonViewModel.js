@@ -1,8 +1,8 @@
 /*global define*/
 define([
-        'Core/defined',
-        'Core/defineProperties',
-        'ThirdParty/knockout',
+        '../../Core/defined',
+        '../../Core/defineProperties',
+        '../../ThirdParty/knockout',
         '../createCommand'
     ], function(
         defined,
