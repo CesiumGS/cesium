@@ -1127,6 +1127,7 @@ define([
     var tilt3DOldTransform = new Matrix4();
     var tilt3DQuaternion = new Quaternion();
     var tilt3DMatrix = new Matrix3();
+    var tilt3DCart = new Cartographic();
 
     function tilt3D(controller, startPosition, movement, frameState) {
         if (!Matrix4.equals(controller._scene.camera.transform, Matrix4.IDENTITY)) {
@@ -1137,6 +1138,75 @@ define([
             movement = movement.angleAndHeight;
         }
 
+        if (!Cartesian2.equals(startPosition, controller._tiltCenterMousePosition)) {
+            controller._tiltOnEllipsoid = false;
+        }
+
+        var camera = controller._scene.camera;
+        var ellipsoid = controller._ellipsoid;
+        var cartographic = ellipsoid.cartesianToCartographic(camera.position, tilt3DCart);
+
+        if (controller._tiltOnEllipsoid || cartographic.height > controller.minimumCollisionTerrainHeight) {
+            controller._tiltOnEllipsoid = true;
+            tilt3DOnEllipsoid(controller, startPosition, movement, frameState);
+        } else {
+            tilt3DOnTerrain(controller, startPosition, movement, frameState);
+        }
+    }
+
+    function tilt3DOnEllipsoid(controller, startPosition, movement, frameState) {
+        var camera = controller._scene.camera;
+        var ellipsoid = controller._ellipsoid;
+        var minHeight = controller.minimumZoomDistance * 0.25;
+        var height = ellipsoid.cartesianToCartographic(camera.positionWC).height;
+        if (height - minHeight - 1.0 < CesiumMath.EPSILON3 &&
+                movement.endPosition.y - movement.startPosition.y < 0) {
+            return;
+        }
+
+        var windowPosition = tilt3DWindowPos;
+        windowPosition.x = controller._scene.canvas.clientWidth / 2;
+        windowPosition.y = controller._scene.canvas.clientHeight / 2;
+        var ray = camera.getPickRay(windowPosition, tilt3DRay);
+
+        var center;
+        var intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
+        if (defined(intersection)) {
+            center = Ray.getPoint(ray, intersection.start, tilt3DCenter);
+        } else {
+            var grazingAltitudeLocation = IntersectionTests.grazingAltitudeLocation(ray, ellipsoid);
+            if (!defined(grazingAltitudeLocation)) {
+                return;
+            }
+            var grazingAltitudeCart = ellipsoid.cartesianToCartographic(grazingAltitudeLocation, tilt3DCart);
+            grazingAltitudeCart.height = 0.0;
+            center = ellipsoid.cartographicToCartesian(grazingAltitudeCart, tilt3DCenter);
+        }
+
+        var transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid, tilt3DTransform);
+
+        var oldGlobe = controller._globe;
+        var oldEllipsoid = controller._ellipsoid;
+        controller._globe = undefined;
+        controller._ellipsoid = Ellipsoid.UNIT_SPHERE;
+        controller._rotateFactor = 1.0;
+        controller._rotateRateRangeAdjustment = 1.0;
+
+        var oldTransform = Matrix4.clone(camera.transform, tilt3DOldTransform);
+        camera.setTransform(transform);
+
+        rotate3D(controller, startPosition, movement, frameState, Cartesian3.UNIT_Z);
+
+        camera.setTransform(oldTransform);
+        controller._globe = oldGlobe;
+        controller._ellipsoid = oldEllipsoid;
+
+        var radius = oldEllipsoid.maximumRadius;
+        controller._rotateFactor = 1.0 / radius;
+        controller._rotateRateRangeAdjustment = radius;
+    }
+
+    function tilt3DOnTerrain(controller, startPosition, movement, frameState) {
         var camera = controller._scene.camera;
         var ellipsoid = controller._ellipsoid;
 
