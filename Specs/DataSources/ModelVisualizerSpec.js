@@ -7,6 +7,7 @@ defineSuite([
         'DataSources/ConstantProperty',
         'DataSources/EntityCollection',
         'DataSources/ModelGraphics',
+        'Scene/Globe',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
@@ -17,6 +18,7 @@ defineSuite([
         ConstantProperty,
         EntityCollection,
         ModelGraphics,
+        Globe,
         createScene,
         destroyScene) {
     "use strict";
@@ -29,6 +31,7 @@ defineSuite([
 
     beforeAll(function() {
         scene = createScene();
+        scene.globe = new Globe();
     });
 
     afterAll(function() {

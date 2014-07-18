@@ -95,6 +95,7 @@ Change Log
 * Matrix types now have `add` and `subtract` functions.
 * `Matrix3` type now has a `fromCrossProduct` function.
 * Added `forwardExtrapolationType`, `forwardExtrapolationDuration`, `backwardExtrapolationType`, and `backwardExtrapolationDuration` to `SampledProperty` and `SampledPositionProperty` which allows the user to specify how a property calculates its value when outside the range of its sample data.
+* DataSource & CZML models now default to North-Up-East orientation if none is provided. 
 
 Beta Releases
 -------------
