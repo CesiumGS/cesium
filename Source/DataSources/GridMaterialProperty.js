@@ -19,6 +19,12 @@ define([
         Property) {
     "use strict";
 
+    var defaultColor = Color.WHITE;
+    var defaultCellAlpha = 0.1;
+    var defaultLineCount = new Cartesian2(8, 8);
+    var defaultLineOffset = new Cartesian2(0, 0);
+    var defaultLineThickness = new Cartesian2(1, 1);
+
     /**
      * A {@link MaterialProperty} that maps to grid {@link Material} uniforms.
      * @alias GridMaterialProperty
@@ -37,11 +43,11 @@ define([
         this._lineOffset = undefined;
         this._lineOffsetSubscription = undefined;
 
-        this.color = new ConstantProperty(Color.WHITE);
-        this.cellAlpha = new ConstantProperty(0.1);
-        this.lineCount = new ConstantProperty(new Cartesian2(8, 8));
-        this.lineThickness = new ConstantProperty(new Cartesian2(1.0, 1.0));
-        this.lineOffset = new ConstantProperty(new Cartesian2(0.0, 0.0));
+        this.color = undefined;
+        this.cellAlpha = undefined;
+        this.lineCount = undefined;
+        this.lineThickness = undefined;
+        this.lineOffset = undefined;
     };
 
     defineProperties(GridMaterialProperty.prototype, {
@@ -80,35 +86,30 @@ define([
          * Gets or sets the {@link Color} property which determines the grid's color.
          * @memberof GridMaterialProperty.prototype
          * @type {Property}
-         * @default new ConstantProperty(Color.WHITE)
          */
         color : createPropertyDescriptor('color'),
         /**
          * Gets or sets the numeric property which determines the grid cells alpha value, when combined with the color alpha.
          * @memberof GridMaterialProperty.prototype
          * @type {Property}
-         * @default new ConstantProperty(0.1)
          */
         cellAlpha : createPropertyDescriptor('cellAlpha'),
         /**
          * Gets or sets the {@link Cartesian2} property which determines the number of rows and columns in the grid.
          * @memberof GridMaterialProperty.prototype
          * @type {Property}
-         * @default new ConstantProperty(new Cartesian2(8, 8))
          */
         lineCount : createPropertyDescriptor('lineCount'),
         /**
          * Gets or sets the {@link Cartesian2} property which determines the thickness of rows and columns in the grid.
          * @memberof GridMaterialProperty.prototype
          * @type {Property}
-         * @default new ConstantProperty(new Cartesian2(1.0, 1.0))
          */
         lineThickness : createPropertyDescriptor('lineThickness'),
         /**
          * Gets or sets the {@link Cartesian2} property which determines the offset of rows and columns in the grid.
          * @memberof GridMaterialProperty.prototype
          * @type {Property}
-         * @default new ConstantProperty(new Cartesian2(0.0, 0.0))
          */
         lineOffset : createPropertyDescriptor('lineOffset')
     });
@@ -134,11 +135,11 @@ define([
         if (!defined(result)) {
             result = {};
         }
-        result.color = defined(this._color) ? this._color.getValue(time, result.color) : undefined;
-        result.cellAlpha = defined(this._cellAlpha) ? this._cellAlpha.getValue(time) : undefined;
-        result.lineCount = defined(this._lineCount) ? this._lineCount.getValue(time, result.lineCount) : undefined;
-        result.lineThickness = defined(this._lineThickness) ? this._lineThickness.getValue(time, result.lineThickness) : undefined;
-        result.lineOffset = defined(this._lineOffset) ? this._lineOffset.getValue(time, result.lineOffset) : undefined;
+        result.color = Property.getValueOrClonedDefault(this._color, time, defaultColor, result.color);
+        result.cellAlpha = Property.getValueOrDefault(this._cellAlpha, time, defaultCellAlpha);
+        result.lineCount = Property.getValueOrClonedDefault(this._lineCount, time, defaultLineCount, result.lineCount);
+        result.lineThickness = Property.getValueOrClonedDefault(this._lineThickness, time, defaultLineThickness, result.lineThickness);
+        result.lineOffset = Property.getValueOrClonedDefault(this._lineOffset, time, defaultLineOffset, result.lineOffset);
         return result;
     };
 

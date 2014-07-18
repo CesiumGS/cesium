@@ -22,8 +22,12 @@ defineSuite([
         var property = new PolylineGlowMaterialProperty();
         expect(property.getType()).toEqual('PolylineGlow');
         expect(property.isConstant).toBe(true);
-        expect(property.color).toEqual(new ConstantProperty(Color.WHITE));
-        expect(property.glowPower).toEqual(new ConstantProperty(0.25));
+        expect(property.color).toBeUndefined();
+        expect(property.glowPower).toBeUndefined();
+
+        var result = property.getValue();
+        expect(result.color).toEqual(Color.WHITE);
+        expect(result.glowPower).toEqual(0.25);
     });
 
     it('works with constant values', function() {
@@ -34,18 +38,6 @@ defineSuite([
         var result = property.getValue(JulianDate.now());
         expect(result.color).toEqual(Color.RED);
         expect(result.glowPower).toEqual(0.75);
-    });
-
-    it('works with undefined values', function() {
-        var property = new PolylineGlowMaterialProperty();
-        property.color = new ConstantProperty();
-        property.glowPower = new ConstantProperty();
-
-        var result = property.getValue();
-        expect(result.hasOwnProperty('color')).toEqual(true);
-        expect(result.hasOwnProperty('glowPower')).toEqual(true);
-        expect(result.color).toBeUndefined();
-        expect(result.glowPower).toBeUndefined();
     });
 
     it('works with dynamic values', function() {

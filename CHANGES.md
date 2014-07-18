@@ -8,6 +8,7 @@ Change Log
   * Removed the following from the Cesium API: `Transforms.earthOrientationParameters`, `EarthOrientationParameters`, `EarthOrientationParametersSample`, `Transforms.iau2006XysData`, `Iau2006XysData`, `Iau2006XysSample`, `IauOrientationAxes`, `TimeConstants`, `Scene.frameState`, `FrameState`, `EncodedCartesian3`, `EllipsoidalOccluder`, and `FAR`.  These are still available but are not part of the official API and may change in future versions.
   * Removed `DynamicObject.vertexPositions`.  Use `DynamicWall.positions`, `DynamicPolygon.positions`, and `DynamicPolyline.positions` instead.
   * Removed `Primitive.allow3DOnly`, set the `Scene` level option, `scene3DOnly`, instead.
+  * `SampledProperty` and `SampledPositionProperty` no longer extrapolate outside of their sample data time range by default.
   * Refactored the following methods into a properties:
     * `TerrainProvider.hasWaterMask`
     * `CesiumTerrainProvider.hasWaterMask`
@@ -93,6 +94,7 @@ Change Log
 * Added camera collision detection with terrain to the default mouse interaction.
 * Matrix types now have `add` and `subtract` functions.
 * `Matrix3` type now has a `fromCrossProduct` function.
+* Added `forwardExtrapolationType`, `forwardExtrapolationDuration`, `backwardExtrapolationType`, and `backwardExtrapolationDuration` to `SampledProperty` and `SampledPositionProperty` which allows the user to specify how a property calculates its value when outside the range of its sample data.
 
 Beta Releases
 -------------

@@ -22,13 +22,20 @@ defineSuite([
 
     it('constructor provides the expected defaults', function() {
         var property = new StripeMaterialProperty();
-        expect(property.orientation).toEqual(new ConstantProperty(StripeOrientation.HORIZONTAL));
-        expect(property.evenColor).toEqual(new ConstantProperty(Color.WHITE));
-        expect(property.oddColor).toEqual(new ConstantProperty(Color.BLACK));
-        expect(property.offset).toEqual(new ConstantProperty(0));
-        expect(property.repeat).toEqual(new ConstantProperty(1));
         expect(property.getType()).toEqual('Stripe');
         expect(property.isConstant).toBe(true);
+        expect(property.orientation).toBeUndefined();
+        expect(property.evenColor).toBeUndefined();
+        expect(property.oddColor).toBeUndefined();
+        expect(property.offset).toBeUndefined();
+        expect(property.repeat).toBeUndefined();
+
+        var result = property.getValue();
+        expect(result.horizontal).toEqual(true);
+        expect(result.evenColor).toEqual(Color.WHITE);
+        expect(result.oddColor).toEqual(Color.BLACK);
+        expect(result.offset).toEqual(0);
+        expect(result.repeat).toEqual(1);
     });
 
     it('works with constant values', function() {
@@ -45,27 +52,6 @@ defineSuite([
         expect(result.oddColor).toEqual(Color.BLUE);
         expect(result.offset).toEqual(10);
         expect(result.repeat).toEqual(20);
-    });
-
-    it('works with undefined values', function() {
-        var property = new StripeMaterialProperty();
-        property.orientation = new ConstantProperty();
-        property.evenColor = new ConstantProperty();
-        property.oddColor = new ConstantProperty();
-        property.offset = new ConstantProperty();
-        property.repeat = new ConstantProperty();
-
-        var result = property.getValue();
-        expect(result.hasOwnProperty('horizontal')).toEqual(true);
-        expect(result.horizontal).toBeUndefined();
-        expect(result.hasOwnProperty('evenColor')).toEqual(true);
-        expect(result.evenColor).toBeUndefined();
-        expect(result.hasOwnProperty('oddColor')).toEqual(true);
-        expect(result.oddColor).toBeUndefined();
-        expect(result.hasOwnProperty('offset')).toEqual(true);
-        expect(result.offset).toBeUndefined();
-        expect(result.hasOwnProperty('repeat')).toEqual(true);
-        expect(result.repeat).toBeUndefined();
     });
 
     it('works with dynamic values', function() {

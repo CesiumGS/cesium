@@ -17,6 +17,10 @@ define([
         Property) {
     "use strict";
 
+    var defaultColor = Color.WHITE;
+    var defaultOutlineColor = Color.BLACK;
+    var defaultOutlineWidth = 0.0;
+
     /**
      * A {@link MaterialProperty} that maps to polyline outline {@link Material} uniforms.
      * @alias PolylineOutlineMaterialProperty
@@ -30,9 +34,6 @@ define([
         this._outlineColorSubscription = undefined;
         this._outlineWidth = undefined;
         this._outlineWidthSubscription = undefined;
-        this.color = new ConstantProperty(Color.WHITE);
-        this.outlineColor = new ConstantProperty(Color.BLACK);
-        this.outlineWidth = new ConstantProperty(0.0);
     };
 
     defineProperties(PolylineOutlineMaterialProperty.prototype, {
@@ -107,9 +108,9 @@ define([
         if (!defined(result)) {
             result = {};
         }
-        result.color = defined(this._color) ? this._color.getValue(time, result.color) : undefined;
-        result.outlineColor = defined(this._outlineColor) ? this._outlineColor.getValue(time, result.outlineColor) : undefined;
-        result.outlineWidth = defined(this._outlineWidth) ? this._outlineWidth.getValue(time) : undefined;
+        result.color = Property.getValueOrClonedDefault(this._color, time, defaultColor, result.color);
+        result.outlineColor = Property.getValueOrClonedDefault(this._outlineColor, time, defaultOutlineColor, result.outlineColor);
+        result.outlineWidth = Property.getValueOrDefault(this._outlineWidth, time, defaultOutlineWidth);
         return result;
     };
 

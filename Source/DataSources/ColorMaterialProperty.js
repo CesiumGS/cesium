@@ -33,7 +33,7 @@ define([
         this._definitionChanged = new Event();
         this._color = undefined;
         this._colorSubscription = undefined;
-        this.color = defaultValue(colorProperty, new ConstantProperty(Color.WHITE));
+        this.color = colorProperty;
     };
 
     /**
@@ -108,7 +108,7 @@ define([
         if (!defined(result)) {
             result = {};
         }
-        result.color = defined(this._color) ? this._color.getValue(time, result.color) : undefined;
+        result.color = Property.getValueOrClonedDefault(this._color, time, Color.WHITE, result.color);
         return result;
     };
 

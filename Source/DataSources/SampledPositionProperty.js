@@ -127,6 +127,66 @@ define([
             get : function() {
                 return this._numberOfDerivatives;
             }
+        },
+        /**
+         * Gets or sets the type of extrapolation to perform when a value
+         * is requested at a time after any available samples.
+         * @memberof SampledPositionProperty.prototype
+         * @type {ExtrapolationType}
+         * @default ExtrapolationType.NONE
+         */
+        forwardExtrapolationType : {
+            get : function() {
+                return this._property.forwardExtrapolationType;
+            },
+            set : function(value) {
+                this._property.forwardExtrapolationType = value;
+            }
+        },
+        /**
+         * Gets or sets the amount of time to extrapolate forward before
+         * the property becomes undefined.  A value of 0 will extrapolate forever.
+         * @memberof SampledPositionProperty.prototype
+         * @type {Number}
+         * @default 0
+         */
+        forwardExtrapolationDuration : {
+            get : function() {
+                return this._property.forwardExtrapolationDuration;
+            },
+            set : function(value) {
+                this._property.forwardExtrapolationDuration = value;
+            }
+        },
+        /**
+         * Gets or sets the type of extrapolation to perform when a value
+         * is requested at a time before any available samples.
+         * @memberof SampledPositionProperty.prototype
+         * @type {ExtrapolationType}
+         * @default ExtrapolationType.NONE
+         */
+        backwardExtrapolationType : {
+            get : function() {
+                return this._property.backwardExtrapolationType;
+            },
+            set : function(value) {
+                this._property.backwardExtrapolationType = value;
+            }
+        },
+        /**
+         * Gets or sets the amount of time to extrapolate backward
+         * before the property becomes undefined.  A value of 0 will extrapolate forever.
+         * @memberof SampledPositionProperty.prototype
+         * @type {Number}
+         * @default 0
+         */
+        backwardExtrapolationDuration : {
+            get : function() {
+                return this._property.backwardExtrapolationDuration;
+            },
+            set : function(value) {
+                this._property.backwardExtrapolationDuration = value;
+            }
         }
     });
 

@@ -3,6 +3,7 @@ defineSuite([
         'DataSources/SampledProperty',
         'Core/Cartesian3',
         'Core/defined',
+        'Core/ExtrapolationType',
         'Core/HermitePolynomialApproximation',
         'Core/JulianDate',
         'Core/LagrangePolynomialApproximation',
@@ -13,6 +14,7 @@ defineSuite([
         SampledProperty,
         Cartesian3,
         defined,
+        ExtrapolationType,
         HermitePolynomialApproximation,
         JulianDate,
         LagrangePolynomialApproximation,
@@ -29,6 +31,10 @@ defineSuite([
         expect(property.isConstant).toEqual(true);
         expect(property.type).toBe(Cartesian3);
         expect(property.derivativeTypes).toBeUndefined();
+        expect(property.forwardExtrapolationType).toEqual(ExtrapolationType.NONE);
+        expect(property.forwardExtrapolationDuration).toEqual(0);
+        expect(property.backwardExtrapolationType).toEqual(ExtrapolationType.NONE);
+        expect(property.backwardExtrapolationDuration).toEqual(0);
 
         var derivatives = [Cartesian3, Cartesian3];
         property = new SampledProperty(Quaternion, derivatives);
@@ -37,6 +43,10 @@ defineSuite([
         expect(property.isConstant).toEqual(true);
         expect(property.type).toBe(Quaternion);
         expect(property.derivativeTypes).toBe(derivatives);
+        expect(property.forwardExtrapolationType).toEqual(ExtrapolationType.NONE);
+        expect(property.forwardExtrapolationDuration).toEqual(0);
+        expect(property.backwardExtrapolationType).toEqual(ExtrapolationType.NONE);
+        expect(property.backwardExtrapolationDuration).toEqual(0);
     });
 
     it('isConstant works', function() {
@@ -182,10 +192,11 @@ defineSuite([
         };
 
         var property = new SampledProperty(Number);
+        property.forwardExtrapolationType = ExtrapolationType.EXTRAPOLATE;
+        property.addSamplesPackedArray(data, epoch);
+
         var listener = jasmine.createSpy('listener');
         property.definitionChanged.addEventListener(listener);
-
-        property.addSamplesPackedArray(data, epoch);
 
         expect(property.getValue(epoch)).toEqual(7);
         expect(property.getValue(new JulianDate(0, 1))).toEqual(8);
@@ -437,6 +448,7 @@ defineSuite([
         var results = [0, -3.39969163485071, 0.912945250727628, -6.17439797860995, 0.745113160479349, -1.63963048028446, -0.304810621102217, 4.83619040459681, -0.993888653923375, 169.448966391543];
 
         var property = new SampledProperty(Number, [Number, Number]);
+        property.forwardExtrapolationType = ExtrapolationType.EXTRAPOLATE;
         property.setInterpolationOptions({
             interpolationAlgorithm : HermitePolynomialApproximation,
             interpolationDegree : 1
@@ -632,5 +644,110 @@ defineSuite([
             var result = property.getValue(JulianDate.addSeconds(epoch, i, new JulianDate()));
             expect(result).toEqualEpsilon(order0Results[resultIndex++], CesiumMath.EPSILON7);
         }
+    });
+
+    it('obeys extrapolation options', function() {
+        var property = new SampledProperty(Number);
+
+        var time0 = new JulianDate(0, 0.99);
+        var time1 = new JulianDate(0, 1);
+        var time2 = new JulianDate(0, 2);
+        var time3 = new JulianDate(0, 3);
+        var time4 = new JulianDate(0, 4);
+        var time5 = new JulianDate(0, 4.01);
+
+        property.addSample(time2, 1);
+        property.addSample(time3, 2);
+
+        //Default is no extrapolation
+        expect(property.getValue(time0)).toBeUndefined();
+        expect(property.getValue(time1)).toBeUndefined();
+        expect(property.getValue(time2)).toBe(1);
+        expect(property.getValue(time3)).toBe(2);
+        expect(property.getValue(time4)).toBeUndefined();
+        expect(property.getValue(time5)).toBeUndefined();
+
+        //No backward, hold forward for up to 1 second
+        property.forwardExtrapolationType = ExtrapolationType.HOLD;
+        property.forwardExtrapolationDuration = 1.0;
+        property.backwardExtrapolationType = ExtrapolationType.NONE;
+        property.backwardExtrapolationDuration = 1.0;
+
+        expect(property.getValue(time1)).toBeUndefined();
+        expect(property.getValue(time2)).toBe(1);
+        expect(property.getValue(time3)).toBe(2);
+        expect(property.getValue(time4)).toBe(2);
+        expect(property.getValue(time5)).toBeUndefined();
+
+        //No backward, extrapolate forward for up to 1 second
+        property.forwardExtrapolationType = ExtrapolationType.EXTRAPOLATE;
+        property.forwardExtrapolationDuration = 1.0;
+        property.backwardExtrapolationType = ExtrapolationType.NONE;
+        property.backwardExtrapolationDuration = 1.0;
+
+        expect(property.getValue(time1)).toBeUndefined();
+        expect(property.getValue(time2)).toBe(1);
+        expect(property.getValue(time3)).toBe(2);
+        expect(property.getValue(time4)).toBe(3);
+        expect(property.getValue(time5)).toBeUndefined();
+
+        //No forward, hold backward for up to 1 second
+        property.forwardExtrapolationType = ExtrapolationType.NONE;
+        property.forwardExtrapolationDuration = 1.0;
+        property.backwardExtrapolationType = ExtrapolationType.HOLD;
+        property.backwardExtrapolationDuration = 1.0;
+
+        expect(property.getValue(time0)).toBeUndefined();
+        expect(property.getValue(time1)).toBe(1);
+        expect(property.getValue(time2)).toBe(1);
+        expect(property.getValue(time3)).toBe(2);
+        expect(property.getValue(time4)).toBeUndefined();
+
+        //No forward, extrapolate backward for up to 1 second
+        property.forwardExtrapolationType = ExtrapolationType.NONE;
+        property.forwardExtrapolationDuration = 1.0;
+        property.backwardExtrapolationType = ExtrapolationType.EXTRAPOLATE;
+        property.backwardExtrapolationDuration = 1.0;
+
+        expect(property.getValue(time0)).toBeUndefined();
+        expect(property.getValue(time1)).toBe(0);
+        expect(property.getValue(time2)).toBe(1);
+        expect(property.getValue(time3)).toBe(2);
+        expect(property.getValue(time4)).toBeUndefined();
+    });
+
+    it('raises definitionChanged when extrapolation options change', function() {
+        var property = new SampledProperty(Number);
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+
+        property.forwardExtrapolationType = ExtrapolationType.EXTRAPOLATE;
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
+
+        property.forwardExtrapolationDuration = 1.0;
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
+
+        property.backwardExtrapolationType = ExtrapolationType.HOLD;
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
+
+        property.backwardExtrapolationDuration = 1.0;
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
+
+        //No events when reassigning to the same value.
+        property.forwardExtrapolationType = ExtrapolationType.EXTRAPOLATE;
+        expect(listener).not.toHaveBeenCalled();
+
+        property.forwardExtrapolationDuration = 1.0;
+        expect(listener).not.toHaveBeenCalled();
+
+        property.backwardExtrapolationType = ExtrapolationType.HOLD;
+        expect(listener).not.toHaveBeenCalled();
+
+        property.backwardExtrapolationDuration = 1.0;
+        expect(listener).not.toHaveBeenCalled();
     });
 });
