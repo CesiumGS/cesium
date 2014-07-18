@@ -245,8 +245,11 @@ define([
             });
         }
 
+        var i;
+        var len;
+
         var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
-        for (var i = 0, len = tilesToRenderByTextureCount.length; i < len; ++i) {
+        for (i = 0, len = tilesToRenderByTextureCount.length; i < len; ++i) {
             var tiles = tilesToRenderByTextureCount[i];
             if (defined(tiles)) {
                 tiles.length = 0;
@@ -254,6 +257,21 @@ define([
         }
 
         this._usedDrawCommands = 0;
+
+        // Add credits for terrain and imagery providers.
+        var creditDisplay = frameState.creditDisplay;
+
+        if (this._terrainProvider.ready && defined(this._terrainProvider.credit)) {
+            creditDisplay.addCredit(this._terrainProvider.credit);
+        }
+
+        var imageryLayers = this._imageryLayers;
+        for (i = 0, len = imageryLayers.length; i < len; ++i) {
+            var imageryProvider = imageryLayers.get(i).imageryProvider;
+            if (imageryProvider.ready && defined(imageryProvider.credit)) {
+                creditDisplay.addCredit(imageryProvider.credit);
+            }
+        }
     };
 
     /**

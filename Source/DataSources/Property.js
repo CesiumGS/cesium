@@ -107,5 +107,43 @@ define([
         return !defined(property) || property.isConstant;
     };
 
+    /**
+     * @private
+     */
+    Property.getValueOrUndefined = function(property, time, result) {
+        if (defined(property)) {
+            return property.getValue(time, result);
+        }
+        return undefined;
+    };
+
+    /**
+     * @private
+     */
+    Property.getValueOrDefault = function(property, time, defaultValue, result) {
+        var value;
+        if (defined(property)) {
+            value = property.getValue(time, result);
+        }
+        if (!defined(value)) {
+            value = defaultValue;
+        }
+        return value;
+    };
+
+    /**
+     * @private
+     */
+    Property.getValueOrClonedDefault = function(property, time, defaultValue, result) {
+        var value;
+        if (defined(property)) {
+            value = property.getValue(time, result);
+        }
+        if (!defined(value)) {
+            value = defaultValue.clone(value);
+        }
+        return value;
+    };
+
     return Property;
 });

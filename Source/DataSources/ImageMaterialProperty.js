@@ -17,6 +17,8 @@ define([
         Property) {
     "use strict";
 
+    var defaultRepeat = new Cartesian2(1, 1);
+
     /**
      * A {@link MaterialProperty} that maps to image {@link Material} uniforms.
      * @alias ImageMaterialProperty
@@ -28,7 +30,6 @@ define([
         this._imageSubscription = undefined;
         this._repeat = undefined;
         this._repeatSubscription = undefined;
-        this.repeat = new ConstantProperty(new Cartesian2(1, 1));
     };
 
     defineProperties(ImageMaterialProperty.prototype, {
@@ -96,8 +97,8 @@ define([
             result = {};
         }
 
-        result.image = defined(this._image) ? this._image.getValue(time) : undefined;
-        result.repeat = defined(this._repeat) ? this._repeat.getValue(time, result.repeat) : undefined;
+        result.image = Property.getValueOrUndefined(this._image, time);
+        result.repeat = Property.getValueOrClonedDefault(this._repeat, time, defaultRepeat, result.repeat);
         return result;
     };
 

@@ -144,8 +144,6 @@ define([
                 // Stationary or slow-moving, low-altitude objects use East-North-Up.
                 Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, camera.transform);
             }
-
-            that._screenSpaceCameraController.ellipsoid = Ellipsoid.UNIT_SPHERE;
         }
 
         if (updateLookAt) {
@@ -234,8 +232,6 @@ define([
             throw new DeveloperError('entity.position is required.');
         }
         //>>includeEnd('debug');
-
-        this._screenSpaceCameraController = scene.screenSpaceCameraController;
 
         var positionProperty = entity.position;
         var objectChanged = entity !== this._lastEntity;

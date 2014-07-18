@@ -126,11 +126,11 @@ defineSuite([
         cone.showIntersection = new ConstantProperty(true);
         cone.radius = new ConstantProperty(123.5);
         cone.show = new ConstantProperty(true);
+        cone.lateralSurfaceMaterial = new ColorMaterialProperty.fromColor(Color.WHITE);
 
-        cone.outerMaterial = new ColorMaterialProperty();
         visualizer.update(time);
-
         expect(scene.primitives.length).toEqual(1);
+
         var c = scene.primitives.get(0);
         expect(c.minimumClockAngle).toEqual(testObject.cone.minimumClockAngle.getValue(time));
         expect(c.maximumClockAngle).toEqual(testObject.cone.maximumClockAngle.getValue(time));
@@ -140,9 +140,9 @@ defineSuite([
         expect(c.intersectionWidth).toEqual(testObject.cone.intersectionWidth.getValue(time));
         expect(c.showIntersection).toEqual(testObject.cone.showIntersection.getValue(time));
         expect(c.radius).toEqual(testObject.cone.radius.getValue(time));
-        expect(c.show).toEqual(testObject.cone.show.getValue(time));
-        expect(c.material.uniforms).toEqual(testObject.cone.outerMaterial.getValue(time));
         expect(c.modelMatrix).toEqual(Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(testObject.orientation.getValue(time)), testObject.position.getValue(time)));
+        expect(c.show).toEqual(testObject.cone.show.getValue(time));
+        expect(c.lateralSurfaceMaterial.uniforms).toEqual(testObject.cone.lateralSurfaceMaterial.getValue(time));
 
         cone.show.value = false;
         visualizer.update(time);
@@ -200,7 +200,7 @@ defineSuite([
         expect(c.show).toEqual(true);
     });
 
-    it('clear hides cones.', function() {
+    it('clear removed primitives.', function() {
         var entityCollection = new EntityCollection();
         visualizer = new ConeVisualizer(scene, entityCollection);
 
@@ -218,8 +218,7 @@ defineSuite([
         expect(scene.primitives.get(0).show).toEqual(true);
         entityCollection.removeAll();
         visualizer.update(time);
-        expect(scene.primitives.length).toEqual(1);
-        expect(scene.primitives.get(0).show).toEqual(false);
+        expect(scene.primitives.length).toEqual(0);
     });
 
     it('Visualizer sets entity property.', function() {

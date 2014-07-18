@@ -1,10 +1,12 @@
 /*global define*/
 define([
+        '../Core/Color',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Scene/Material'
     ], function(
+        Color,
         defined,
         defineProperties,
         DeveloperError,
@@ -22,6 +24,9 @@ define([
      * @see CompositeMaterialProperty
      * @see GridMaterialProperty
      * @see ImageMaterialProperty
+     * @see PolylineGlowMaterialProperty
+     * @see PolylineOutlineMaterialProperty
+     * @see StripeMaterialProperty
      */
     var MaterialProperty = function() {
         DeveloperError.throwInstantiationError();
@@ -85,15 +90,24 @@ define([
      * @private
      */
     MaterialProperty.getValue = function(time, materialProperty, material) {
+        var type;
+
         if (defined(materialProperty)) {
-            var type = materialProperty.getType(time);
+            type = materialProperty.getType(time);
             if (defined(type)) {
                 if (!defined(material) || (material.type !== type)) {
                     material = Material.fromType(type);
                 }
                 materialProperty.getValue(time, material.uniforms);
+                return material;
             }
         }
+
+        if (!defined(material) || (material.type !== Material.ColorType)) {
+            material = Material.fromType(Material.ColorType);
+        }
+        Color.clone(Color.WHITE, material.uniforms.color);
+
         return material;
     };
 

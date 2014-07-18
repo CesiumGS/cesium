@@ -30,14 +30,8 @@ define([
         this._innerHalfAngleSubscription = undefined;
         this._outerHalfAngle = undefined;
         this._outerHalfAngleSubscription = undefined;
-        this._capMaterial = undefined;
-        this._capMaterialSubscription = undefined;
-        this._innerMaterial = undefined;
-        this._innerMaterialSubscription = undefined;
-        this._outerMaterial = undefined;
-        this._outerMaterialSubscription = undefined;
-        this._silhouetteMaterial = undefined;
-        this._silhouetteMaterialSubscription = undefined;
+        this._lateralSurfaceMaterial = undefined;
+        this._lateralSurfaceMaterialSubscription = undefined;
         this._intersectionColor = undefined;
         this._intersectionColorSubscription = undefined;
         this._intersectionWidth = undefined;
@@ -94,32 +88,11 @@ define([
         outerHalfAngle : createPropertyDescriptor('outerHalfAngle'),
 
         /**
-         * Gets or sets the {@link MaterialProperty} specifying the the cone's cap material.
+         * Gets or sets the {@link MaterialProperty} specifying the the cone's appearance.
          * @memberof ConeGraphics.prototype
          * @type {MaterialProperty}
          */
-        capMaterial : createPropertyDescriptor('capMaterial'),
-
-        /**
-         * Gets or sets the {@link MaterialProperty} specifying the the cone's inner material.
-         * @memberof ConeGraphics.prototype
-         * @type {MaterialProperty}
-         */
-        innerMaterial : createPropertyDescriptor('innerMaterial'),
-
-        /**
-         * Gets or sets the {@link MaterialProperty} specifying the the cone's outer material.
-         * @memberof ConeGraphics.prototype
-         * @type {MaterialProperty}
-         */
-        outerMaterial : createPropertyDescriptor('outerMaterial'),
-
-        /**
-         * Gets or sets the {@link MaterialProperty} specifying the the cone's silhouette material.
-         * @memberof ConeGraphics.prototype
-         * @type {MaterialProperty}
-         */
-        silhouetteMaterial : createPropertyDescriptor('silhouetteMaterial'),
+        lateralSurfaceMaterial : createPropertyDescriptor('lateralSurfaceMaterial'),
 
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the color of the line formed by the intersection of the cone and other central bodies.
@@ -176,10 +149,7 @@ define([
         result.showIntersection = this.showIntersection;
         result.intersectionColor = this.intersectionColor;
         result.intersectionWidth = this.intersectionWidth;
-        result.capMaterial = this.capMaterial;
-        result.innerMaterial = this.innerMaterial;
-        result.outerMaterial = this.outerMaterial;
-        result.silhouetteMaterial = this.silhouetteMaterial;
+        result.lateralSurfaceMaterial = this.lateralSurfaceMaterial;
         return result;
     };
 
@@ -205,10 +175,7 @@ define([
         this.showIntersection = defaultValue(this.showIntersection, source.showIntersection);
         this.intersectionColor = defaultValue(this.intersectionColor, source.intersectionColor);
         this.intersectionWidth = defaultValue(this.intersectionWidth, source.intersectionWidth);
-        this.capMaterial = defaultValue(this.capMaterial, source.capMaterial);
-        this.innerMaterial = defaultValue(this.innerMaterial, source.innerMaterial);
-        this.outerMaterial = defaultValue(this.outerMaterial, source.outerMaterial);
-        this.silhouetteMaterial = defaultValue(this.silhouetteMaterial, source.silhouetteMaterial);
+        this.lateralSurfaceMaterial = defaultValue(this.lateralSurfaceMaterial, source.lateralSurfaceMaterial);
     };
 
     return ConeGraphics;
