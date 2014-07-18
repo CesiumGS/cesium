@@ -45,6 +45,9 @@ define([
         TimeIntervalCollectionPositionProperty) {
     "use strict";
 
+    var defaultResolution = 60.0;
+    var defaultWidth = 1.0;
+
     var scratchTimeInterval = new TimeInterval();
     var subSampleCompositePropertyScratch = new TimeInterval();
     var subSampleIntervalPropertyScratch = new TimeInterval();
@@ -367,12 +370,12 @@ define([
             polyline = this._polylineCollection.get(pathVisualizerIndex);
         }
 
-        var resolution = Property.getValueOrDefault(pathGraphics._resolution, time, 60.0);
+        var resolution = Property.getValueOrDefault(pathGraphics._resolution, time, defaultResolution);
 
         polyline.show = true;
         polyline.positions = subSample(positionProperty, sampleStart, sampleStop, time, this._referenceFrame, resolution, polyline.positions);
         polyline.material = MaterialProperty.getValue(time, pathGraphics._material, polyline.material);
-        polyline.width = Property.getValueOrDefault(pathGraphics._width, time, 1);
+        polyline.width = Property.getValueOrDefault(pathGraphics._width, time, defaultWidth);
     };
 
     PolylineUpdater.prototype.removeObject = function(entity) {

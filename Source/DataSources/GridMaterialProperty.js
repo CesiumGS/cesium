@@ -19,9 +19,11 @@ define([
         Property) {
     "use strict";
 
-    var defaultCount = new Cartesian2(8, 8);
-    var defaultOffset = new Cartesian2(0, 0);
-    var defaultThickness = new Cartesian2(1, 1);
+    var defaultColor = Color.WHITE;
+    var defaultCellAlpha = 0.1;
+    var defaultLineCount = new Cartesian2(8, 8);
+    var defaultLineOffset = new Cartesian2(0, 0);
+    var defaultLineThickness = new Cartesian2(1, 1);
 
     /**
      * A {@link MaterialProperty} that maps to grid {@link Material} uniforms.
@@ -133,11 +135,11 @@ define([
         if (!defined(result)) {
             result = {};
         }
-        result.color = Property.getValueOrClonedDefault(this._color, time, Color.WHITE, result.color);
-        result.cellAlpha = Property.getValueOrDefault(this._cellAlpha, time, 0.1);
-        result.lineCount = Property.getValueOrClonedDefault(this._lineCount, time, defaultCount, result.lineCount);
-        result.lineThickness = Property.getValueOrClonedDefault(this._lineThickness, time, defaultThickness, result.lineThickness);
-        result.lineOffset = Property.getValueOrClonedDefault(this._lineOffset, time, defaultOffset, result.lineOffset);
+        result.color = Property.getValueOrClonedDefault(this._color, time, defaultColor, result.color);
+        result.cellAlpha = Property.getValueOrDefault(this._cellAlpha, time, defaultCellAlpha);
+        result.lineCount = Property.getValueOrClonedDefault(this._lineCount, time, defaultLineCount, result.lineCount);
+        result.lineThickness = Property.getValueOrClonedDefault(this._lineThickness, time, defaultLineThickness, result.lineThickness);
+        result.lineOffset = Property.getValueOrClonedDefault(this._lineOffset, time, defaultLineOffset, result.lineOffset);
         return result;
     };
 

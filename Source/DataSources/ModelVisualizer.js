@@ -23,6 +23,9 @@ define([
         Property) {
     "use strict";
 
+    var defaultScale = 1.0;
+    var defaultMinimumPixelSize = 0.0;
+    var defaultOrientation = Quaternion.IDENTITY;
     var matrix3Scratch = new Matrix3();
 
     /**
@@ -157,10 +160,10 @@ define([
         }
 
         model.show = true;
-        model.scale = Property.getValueOrDefault(modelGraphics._scale, time, 1.0);
-        model.minimumPixelSize = Property.getValueOrDefault(modelGraphics._minimumPixelSize, time, 0.0);
+        model.scale = Property.getValueOrDefault(modelGraphics._scale, time, defaultScale);
+        model.minimumPixelSize = Property.getValueOrDefault(modelGraphics._minimumPixelSize, time, defaultMinimumPixelSize);
 
-        orientation = Property.getValueOrDefault(entity._orientation, time, Quaternion.IDENTITY, orientation);
+        orientation = Property.getValueOrDefault(entity._orientation, time, defaultOrientation, orientation);
         if ((!Cartesian3.equals(position, modelData.position) || !Quaternion.equals(orientation, modelData.orientation))) {
             Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, model.modelMatrix);
             modelData.position = Cartesian3.clone(position, modelData.position);

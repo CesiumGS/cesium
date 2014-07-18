@@ -391,7 +391,7 @@ define([
             if (index === 0) {
                 var startTime = times[index];
                 timeout = this._backwardExtrapolationDuration;
-                if (this._backwardExtrapolationType === ExtrapolationType.NONE || (timeout !== 0 && JulianDate.secondsDifference(startTime, time, result) > timeout)) {
+                if (this._backwardExtrapolationType === ExtrapolationType.NONE || (timeout !== 0 && JulianDate.secondsDifference(startTime, time) > timeout)) {
                     return undefined;
                 }
                 if (this._backwardExtrapolationType === ExtrapolationType.HOLD) {
@@ -403,7 +403,7 @@ define([
                 index = times.length - 1;
                 var endTime = times[index];
                 timeout = this._forwardExtrapolationDuration;
-                if (this._forwardExtrapolationType === ExtrapolationType.NONE || (timeout !== 0 && JulianDate.secondsDifference(time, endTime, result) > timeout)) {
+                if (this._forwardExtrapolationType === ExtrapolationType.NONE || (timeout !== 0 && JulianDate.secondsDifference(time, endTime) > timeout)) {
                     return undefined;
                 }
                 if (this._forwardExtrapolationType === ExtrapolationType.HOLD) {

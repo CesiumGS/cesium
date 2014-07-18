@@ -382,17 +382,17 @@ define([
     };
 
     function updateInterpolationSettings(packetData, property) {
-        var interpolator = interpolators[packetData.interpolationAlgorithm];
-        if (defined(interpolator) || defined(packetData.interpolationDegree)) {
+        var interpolationAlgorithm = packetData.interpolationAlgorithm;
+        if (defined(interpolationAlgorithm) || defined(packetData.interpolationDegree)) {
             property.setInterpolationOptions({
-                interpolationAlgorithm : interpolator,
+                interpolationAlgorithm : interpolators[interpolationAlgorithm],
                 interpolationDegree : packetData.interpolationDegree
             });
         }
 
-        var forwardExtrapolationType = ExtrapolationType[packetData.forwardExtrapolationType];
+        var forwardExtrapolationType = packetData.forwardExtrapolationType;
         if (defined(forwardExtrapolationType)) {
-            property.forwardExtrapolationType = forwardExtrapolationType;
+            property.forwardExtrapolationType = ExtrapolationType[forwardExtrapolationType];
         }
 
         var forwardExtrapolationDuration = packetData.forwardExtrapolationDuration;
@@ -400,9 +400,9 @@ define([
             property.forwardExtrapolationDuration = forwardExtrapolationDuration;
         }
 
-        var backwardExtrapolationType = ExtrapolationType[packetData.backwardExtrapolationType];
+        var backwardExtrapolationType = packetData.backwardExtrapolationType;
         if (defined(backwardExtrapolationType)) {
-            property.backwardExtrapolationType = backwardExtrapolationType;
+            property.backwardExtrapolationType = ExtrapolationType[backwardExtrapolationType];
         }
 
         var backwardExtrapolationDuration = packetData.backwardExtrapolationDuration;

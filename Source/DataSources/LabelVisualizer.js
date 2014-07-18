@@ -27,6 +27,17 @@ define([
         Property) {
     "use strict";
 
+    var defaultScale = 1.0;
+    var defaultFont = '30px sans-serif';
+    var defaultStyle = LabelStyle.FILL;
+    var defaultFillColor = Color.WHITE;
+    var defaultOutlineColor = Color.BLACK;
+    var defaultOutlineWidth = 1;
+    var defaultPixelOffset = Cartesian2.ZERO;
+    var defaultEyeOffset = Cartesian3.ZERO;
+    var defaultHorizontalOrigin = HorizontalOrigin.CENTER;
+    var defaultVerticalOrigin = VerticalOrigin.CENTER;
+
     /**
      * A {@link Visualizer} which maps the {@link LabelGraphics} instance
      * in {@link Entity#label} to a {@link Label}.
@@ -156,16 +167,16 @@ define([
         label.show = true;
         label.position = position;
         label.text = text;
-        label.scale = Property.getValueOrDefault(labelGraphics._scale, time, 1.0);
-        label.font = Property.getValueOrDefault(labelGraphics._font, time, '30px sans-serif');
-        label.style = Property.getValueOrDefault(labelGraphics._style, time, LabelStyle.FILL);
-        label.fillColor = Property.getValueOrDefault(labelGraphics._fillColor, time, Color.WHITE, fillColor);
-        label.outlineColor = Property.getValueOrDefault(labelGraphics._outlineColor, time, Color.BLACK, outlineColor);
-        label.outlineWidth = Property.getValueOrDefault(labelGraphics._outlineWidth, time, 1);
-        label.pixelOffset = Property.getValueOrDefault(labelGraphics._pixelOffset, time, Cartesian2.ZERO, pixelOffset);
-        label.eyeOffset = Property.getValueOrDefault(labelGraphics._eyeOffset, time, Cartesian3.ZERO, eyeOffset);
-        label.horizontalOrigin = Property.getValueOrDefault(labelGraphics._horizontalOrigin, time, HorizontalOrigin.CENTER);
-        label.verticalOrigin = Property.getValueOrDefault(labelGraphics._verticalOrigin, time, VerticalOrigin.CENTER);
+        label.scale = Property.getValueOrDefault(labelGraphics._scale, time, defaultScale);
+        label.font = Property.getValueOrDefault(labelGraphics._font, time, defaultFont);
+        label.style = Property.getValueOrDefault(labelGraphics._style, time, defaultStyle);
+        label.fillColor = Property.getValueOrDefault(labelGraphics._fillColor, time, defaultFillColor, fillColor);
+        label.outlineColor = Property.getValueOrDefault(labelGraphics._outlineColor, time, defaultOutlineColor, outlineColor);
+        label.outlineWidth = Property.getValueOrDefault(labelGraphics._outlineWidth, time, defaultOutlineWidth);
+        label.pixelOffset = Property.getValueOrDefault(labelGraphics._pixelOffset, time, defaultPixelOffset, pixelOffset);
+        label.eyeOffset = Property.getValueOrDefault(labelGraphics._eyeOffset, time, defaultEyeOffset, eyeOffset);
+        label.horizontalOrigin = Property.getValueOrDefault(labelGraphics._horizontalOrigin, time, defaultHorizontalOrigin);
+        label.verticalOrigin = Property.getValueOrDefault(labelGraphics._verticalOrigin, time, defaultVerticalOrigin);
         label.translucencyByDistance = Property.getValueOrUndefined(labelGraphics._translucencyByDistance, time, translucencyByDistance);
         label.pixelOffsetScaleByDistance = Property.getValueOrUndefined(labelGraphics._pixelOffsetScaleByDistance, time, pixelOffsetScaleByDistance);
     }

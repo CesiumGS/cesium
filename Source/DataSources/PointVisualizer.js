@@ -23,6 +23,11 @@ define([
         Property) {
     "use strict";
 
+    var defaultColor = Color.WHITE;
+    var defaultOutlineColor = Color.BLACK;
+    var defaultOutlineWidth = 0.0;
+    var defaultPixelSize = 1.0;
+
     /**
      * A {@link Visualizer} which maps {@link Entity#point} to a {@link Billboard}.
      * @alias PointVisualizer
@@ -114,7 +119,11 @@ define([
 
         var billboard;
         var pointVisualizerIndex = entity._pointVisualizerIndex;
-        var show = entity.isAvailable(time) && Property.getValueOrDefault(pointGraphics._show, time, true) && defined(Property.getValueOrUndefined(entity._position, time, position));
+        var show = entity.isAvailable(time) && Property.getValueOrDefault(pointGraphics._show, time, true);
+        if (show) {
+            position = Property.getValueOrUndefined(entity._position, time, position);
+            show = defined(position);
+        }
         if (!show) {
             //don't bother creating or updating anything else
             if (defined(pointVisualizerIndex)) {
@@ -154,10 +163,10 @@ define([
         billboard.position = position;
         billboard.scaleByDistance = Property.getValueOrUndefined(pointGraphics._scaleByDistance, time, scaleByDistance);
 
-        var newColor = Property.getValueOrDefault(pointGraphics._color, time, Color.WHITE, color);
-        var newOutlineColor = Property.getValueOrDefault(pointGraphics._outlineColor, time, Color.BLACK, outlineColor);
-        var newOutlineWidth = Property.getValueOrDefault(pointGraphics._outlineWidth, time, 0);
-        var newPixelSize = Property.getValueOrDefault(pointGraphics._pixelSize, time, 1);
+        var newColor = Property.getValueOrDefault(pointGraphics._color, time, defaultColor, color);
+        var newOutlineColor = Property.getValueOrDefault(pointGraphics._outlineColor, time, defaultOutlineColor, outlineColor);
+        var newOutlineWidth = Property.getValueOrDefault(pointGraphics._outlineWidth, time, defaultOutlineWidth);
+        var newPixelSize = Property.getValueOrDefault(pointGraphics._pixelSize, time, defaultPixelSize);
 
         needRedraw = needRedraw || //
                      newOutlineWidth !== billboard._visualizerOutlineWidth || //

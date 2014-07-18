@@ -138,7 +138,7 @@ define([
         if (!defined(result)) {
             result = {};
         }
-        result.horizontal = Property.getValueOrDefault(this._orientation, time, StripeOrientation.HORIZONTAL) === StripeOrientation.HORIZONTAL;
+        result.horizontal = Property.getValueOrDefault(this._orientation, time, defaultOrientation) === StripeOrientation.HORIZONTAL;
         result.evenColor = Property.getValueOrClonedDefault(this._evenColor, time, defaultEvenColor, result.evenColor);
         result.oddColor = Property.getValueOrClonedDefault(this._oddColor, time, defaultOddColor, result.oddColor);
         result.offset = Property.getValueOrDefault(this._offset, time, defaultOffset);

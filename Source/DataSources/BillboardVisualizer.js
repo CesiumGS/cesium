@@ -29,6 +29,15 @@ define([
         Property) {
     "use strict";
 
+    var defaultColor = Color.WHITE;
+    var defaultEyeOffset = Cartesian3.ZERO;
+    var defaultPixelOffset = Cartesian2.ZERO;
+    var defaultScale = 1.0;
+    var defaultRotation = 0.0;
+    var defaultAlignedAxis = Cartesian3.ZERO;
+    var defaultHorizontalOrigin = HorizontalOrigin.CENTER;
+    var defaultVerticalOrigin = VerticalOrigin.CENTER;
+
     function textureReady(entity, billboardCollection, textureValue) {
         return function(imageIndex) {
             //By the time the texture was loaded, the billboard might already be
@@ -193,14 +202,14 @@ define([
         }
 
         billboard.position = position;
-        billboard.color = Property.getValueOrDefault(billboardGraphics._color, time, Color.WHITE, color);
-        billboard.eyeOffset = Property.getValueOrDefault(billboardGraphics._eyeOffset, time, Cartesian3.ZERO, eyeOffset);
-        billboard.pixelOffset = Property.getValueOrDefault(billboardGraphics._pixelOffset, time, Cartesian2.ZERO, pixelOffset);
-        billboard.scale = Property.getValueOrDefault(billboardGraphics._scale, time, 1.0);
-        billboard.rotation = Property.getValueOrDefault(billboardGraphics._rotation, time, 0);
-        billboard.alignedAxis = Property.getValueOrDefault(billboardGraphics._alignedAxis, time, Cartesian3.ZERO);
-        billboard.horizontalOrigin = Property.getValueOrDefault(billboardGraphics._horizontalOrigin, time, HorizontalOrigin.CENTER);
-        billboard.verticalOrigin = Property.getValueOrDefault(billboardGraphics._verticalOrigin, time, VerticalOrigin.CENTER);
+        billboard.color = Property.getValueOrDefault(billboardGraphics._color, time, defaultColor, color);
+        billboard.eyeOffset = Property.getValueOrDefault(billboardGraphics._eyeOffset, time, defaultEyeOffset, eyeOffset);
+        billboard.pixelOffset = Property.getValueOrDefault(billboardGraphics._pixelOffset, time, defaultPixelOffset, pixelOffset);
+        billboard.scale = Property.getValueOrDefault(billboardGraphics._scale, time, defaultScale);
+        billboard.rotation = Property.getValueOrDefault(billboardGraphics._rotation, time, defaultRotation);
+        billboard.alignedAxis = Property.getValueOrDefault(billboardGraphics._alignedAxis, time, defaultAlignedAxis);
+        billboard.horizontalOrigin = Property.getValueOrDefault(billboardGraphics._horizontalOrigin, time, defaultHorizontalOrigin);
+        billboard.verticalOrigin = Property.getValueOrDefault(billboardGraphics._verticalOrigin, time, defaultVerticalOrigin);
         billboard.width = Property.getValueOrUndefined(billboardGraphics._width, time);
         billboard.height = Property.getValueOrUndefined(billboardGraphics._height, time);
         billboard.scaleByDistance = Property.getValueOrUndefined(billboardGraphics._scaleByDistance, time, scaleByDistance);
