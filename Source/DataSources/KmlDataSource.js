@@ -231,7 +231,7 @@ define(['../Core/createGuid',
             entity.parent = parent;
         }
 
-        var styleObject = processInlineStyles(dataSource, placemark, styleCollection, sourceUri, uriResolver);
+        var styleEntity = processInlineStyles(dataSource, placemark, styleCollection, sourceUri, uriResolver);
 
         var name = getStringValue(placemark, 'name');
         if (defined(name)) {
@@ -261,12 +261,12 @@ define(['../Core/createGuid',
                 entity.description = new ConstantProperty(node.textContent);
             } else if (featureTypes.hasOwnProperty(nodeName)) {
                 foundGeometry = true;
-                mergeStyles(nodeName, styleObject, entity);
+                mergeStyles(nodeName, styleEntity, entity);
                 featureTypes[nodeName](dataSource, entity, placemark, node, entityCollection);
             }
         }
         if (!foundGeometry) {
-            mergeStyles(undefined, styleObject, entity);
+            mergeStyles(undefined, styleEntity, entity);
         }
 
         var billboard = entity.billboard;
@@ -294,7 +294,7 @@ define(['../Core/createGuid',
             entity.parent = parent;
         }
 
-        var styleObject = processInlineStyles(dataSource, groundOverlay, styleCollection, sourceUri, uriResolver);
+        var styleEntity = processInlineStyles(dataSource, groundOverlay, styleCollection, sourceUri, uriResolver);
 
         entity.name = getStringValue(groundOverlay, 'name');
         var nodes = groundOverlay.childNodes;
@@ -363,7 +363,7 @@ define(['../Core/createGuid',
             }
         }
 
-        mergeStyles('GroundOverlay', styleObject, entity);
+        mergeStyles('GroundOverlay', styleEntity, entity);
     }
 
     function processPoint(dataSource, entity, kml, node) {
@@ -384,7 +384,10 @@ define(['../Core/createGuid',
         var el = node.getElementsByTagName('coordinates');
         var coordinates = readCoordinates(el[0]);
 
-        entity.vertexPositions = new ConstantProperty(coordinates);
+        if (!defined(entity.polyline)) {
+            entity.polyline = new PolylineGraphics();
+        }
+        entity.polyline.positions = new ConstantProperty(coordinates);
     }
 
     function processLinearRing(dataSource, entity, kml, node) {
@@ -401,33 +404,36 @@ define(['../Core/createGuid',
         coordinates = PolygonPipeline.removeDuplicates(coordinates);
 
         if (coordinates.length > 3) {
-            return new ConstantProperty(coordinates);
+            if (defined(entity.polyline)) {
+                entity.polyline.positions = new ConstantProperty(coordinates);
+            }
+            if (defined(entity.polygon)) {
+                entity.polygon.positions = new ConstantProperty(coordinates);
+            }
         }
     }
 
     function processPolygon(dataSource, entity, kml, node) {
         //TODO innerBoundaryIS, tessellate, altitudeMode
+
+        if (!defined(entity.polygon)) {
+            entity.polygon = new PolygonGraphics();
+        }
+
+        var altitudeMode = getStringValue(node, 'altitudeMode');
+        var perPositionHeight = defined(altitudeMode) && (altitudeMode !== 'clampToGround') && (altitudeMode !== 'clampToSeaFloor');
+        entity.polygon.perPositionHeight = new ConstantProperty(perPositionHeight);
+
+        var extrude = getBooleanValue(node, 'extrude');
+        if (defined(extrude) && extrude) {
+            entity.polygon.extrudedHeight = new ConstantProperty(0);
+        }
+
         var el = node.getElementsByTagName('outerBoundaryIs');
         var positions;
         for (var j = 0; j < el.length; j++) {
-            positions = processLinearRing(dataSource, entity, kml, el[j]);
+            processLinearRing(dataSource, entity, kml, el[j]);
             break;
-        }
-
-        if (defined(positions)) {
-            if (!defined(entity.polygon)) {
-                entity.polygon = new PolygonGraphics();
-            }
-            entity.polygon.positions = positions;
-
-            var altitudeMode = getStringValue(node, 'altitudeMode');
-            var perPositionHeight = defined(altitudeMode) && (altitudeMode !== 'clampToGround') && (altitudeMode !== 'clampToSeaFloor');
-            entity.polygon.perPositionHeight = new ConstantProperty(perPositionHeight);
-
-            var extrude = getBooleanValue(node, 'extrude');
-            if (defined(extrude) && extrude) {
-                entity.polygon.extrudedHeight = new ConstantProperty(0);
-            }
         }
     }
 
@@ -457,13 +463,13 @@ define(['../Core/createGuid',
 
             if (featureTypes.hasOwnProperty(childNodeName)) {
                 var childNodeId = createId(childNode);
-                var childObject = entityCollection.getOrCreateEntity(childNodeId);
-                childObject.parent = entity;
+                var childEntity = entityCollection.getOrCreateEntity(childNodeId);
+                childEntity.parent = entity;
 
-                mergeStyles(childNodeName, entity, childObject);
+                mergeStyles(childNodeName, entity, childEntity);
 
                 var geometryHandler = featureTypes[childNodeName];
-                geometryHandler(dataSource, childObject, kml, childNode, entityCollection);
+                geometryHandler(dataSource, childEntity, kml, childNode, entityCollection);
             }
         }
     }
@@ -476,13 +482,13 @@ define(['../Core/createGuid',
 
             if (featureTypes.hasOwnProperty(childNodeName)) {
                 var childNodeId = createId(childNode);
-                var childObject = entityCollection.getOrCreateEntity(childNodeId);
-                childObject.parent = entity;
+                var childEntity = entityCollection.getOrCreateEntity(childNodeId);
+                childEntity.parent = entity;
 
-                mergeStyles(childNodeName, entity, childObject);
+                mergeStyles(childNodeName, entity, childEntity);
 
                 var geometryHandler = featureTypes[childNodeName];
-                geometryHandler(dataSource, childObject, kml, childNode, entityCollection);
+                geometryHandler(dataSource, childEntity, kml, childNode, entityCollection);
             }
         }
     }
@@ -497,42 +503,33 @@ define(['../Core/createGuid',
         var endDate = defined(endNode) ? JulianDate.fromIso8601(endNode.textContent) : undefined;
 
         if (defined(beginDate) && defined(endDate)) {
+            if (JulianDate.lessThan(endDate, beginDate)) {
+                var tmp = beginDate;
+                beginDate = endDate;
+                endDate = tmp;
+            }
             result = new TimeIntervalCollection();
             result.addInterval(new TimeInterval({
                 start : beginDate,
-                stop : endDate,
-                isStartTimeIncluded : true,
-                iSStopTimeIncluded : true,
-                data : true
+                stop : endDate
             }));
-        }
-
-        if (defined(beginDate)) {
+        } else if (defined(beginDate)) {
             result = new TimeIntervalCollection();
             result.addInterval(new TimeInterval({
                 start : beginDate,
-                stop : Iso8601.MAXIMUM_VALUE,
-                isStartTimeIncluded : true,
-                iSStopTimeIncluded : false,
-                data : true
+                stop : Iso8601.MAXIMUM_VALUE
             }));
-        }
-
-        if (defined(endDate)) {
+        } else if (defined(endDate)) {
             result = new TimeIntervalCollection();
             result.addInterval(new TimeInterval({
                 start : Iso8601.MINIMUM_VALUE,
-                stop : endDate,
-                isStartTimeIncluded : false,
-                iSStopTimeIncluded : true,
-                data : true
+                stop : endDate
             }));
         }
 
         return result;
     }
 
-    //Object that holds all supported Geometry
     var featureTypes = {
         Point : processPoint,
         LineString : processLineString,
@@ -630,49 +627,49 @@ define(['../Core/createGuid',
         }
     }
 
-    function mergeStyles(geometryType, styleObject, targetObject) {
-        targetObject.merge(styleObject);
+    function mergeStyles(geometryType, styleEntity, targetEntity) {
+        targetEntity.merge(styleEntity);
 
         //If a shared style has multiple styles, for example PolyStyle and
-        //and LineStyle, an object can end up with styles it shouldn't have.
+        //and LineStyle, an Entity can end up with styles it shouldn't have.
         //After we merge, remove any such styles.
         switch (geometryType) {
         case 'Point':
-            targetObject.path = undefined;
-            targetObject.polygon = undefined;
-            targetObject.polyline = undefined;
+            targetEntity.path = undefined;
+            targetEntity.polygon = undefined;
+            targetEntity.polyline = undefined;
             break;
         case 'LineString':
         case 'LinearRing':
-            targetObject.billboard = undefined;
-            targetObject.label = undefined;
-            targetObject.path = undefined;
-            targetObject.point = undefined;
-            targetObject.polygon = undefined;
+            targetEntity.billboard = undefined;
+            targetEntity.label = undefined;
+            targetEntity.path = undefined;
+            targetEntity.point = undefined;
+            targetEntity.polygon = undefined;
             break;
         case 'Polygon':
-            targetObject.billboard = undefined;
-            targetObject.label = undefined;
-            targetObject.path = undefined;
-            targetObject.point = undefined;
-            if (defined(targetObject.polyline)) {
-                if (!defined(targetObject.polygon)) {
-                    targetObject.polygon = new PolygonGraphics();
+            targetEntity.billboard = undefined;
+            targetEntity.label = undefined;
+            targetEntity.path = undefined;
+            targetEntity.point = undefined;
+            if (defined(targetEntity.polyline)) {
+                if (!defined(targetEntity.polygon)) {
+                    targetEntity.polygon = new PolygonGraphics();
                 }
-                targetObject.polygon.outline = defined(targetObject.polyline.show) ? targetObject.polyline.show : new ConstantProperty(true);
-                if (defined(targetObject.polyline.material)) {
-                    targetObject.polygon.outlineColor = targetObject.polyline.material.color;
+                targetEntity.polygon.outline = defined(targetEntity.polyline.show) ? targetEntity.polyline.show : new ConstantProperty(true);
+                if (defined(targetEntity.polyline.material)) {
+                    targetEntity.polygon.outlineColor = targetEntity.polyline.material.color;
                 }
             }
-            targetObject.polyline = undefined;
+            targetEntity.polyline = undefined;
             break;
         case 'gx:Track':
-            targetObject.polygon = undefined;
-            targetObject.polyline = undefined;
+            targetEntity.polygon = undefined;
+            targetEntity.polyline = undefined;
             break;
         case 'gx:MultiTrack':
-            targetObject.polygon = undefined;
-            targetObject.polyline = undefined;
+            targetEntity.polygon = undefined;
+            targetEntity.polyline = undefined;
             break;
         case 'MultiGeometry':
             break;
@@ -694,9 +691,9 @@ define(['../Core/createGuid',
         var externalStyles = placeMark.getElementsByTagName('styleUrl');
         if (externalStyles.length > 0) {
             //Google earth seems to always use the first external style only.
-            var styleObject = styleCollection.getById(externalStyles.item(0).textContent);
-            if (typeof styleObject !== 'undefined') {
-                result.merge(styleObject);
+            var styleEntity = styleCollection.getById(externalStyles.item(0).textContent);
+            if (typeof styleEntity !== 'undefined') {
+                result.merge(styleEntity);
             }
         }
         return result;
@@ -716,22 +713,22 @@ define(['../Core/createGuid',
     function processStyles(dataSource, kml, styleCollection, sourceUri, isExternal, uriResolver) {
         var i;
         var id;
-        var styleObject;
+        var styleEntity;
 
         var styleNodes = kml.getElementsByTagName('Style');
         var styleNodesLength = styleNodes.length;
         for (i = styleNodesLength - 1; i >= 0; i--) {
             var node = styleNodes.item(i);
             var attributes = node.attributes;
-            id = defined(attributes.id) ? attributes.id.textContent : undefined;
+            id = defined(attributes.id) ? attributes.id.value : undefined;
             if (defined(id)) {
                 id = '#' + id;
                 if (isExternal && defined(sourceUri)) {
                     id = sourceUri + id;
                 }
                 if (!defined(styleCollection.getById(id))) {
-                    styleObject = styleCollection.getOrCreateEntity(id);
-                    processStyle(dataSource, node, styleObject, sourceUri, uriResolver);
+                    styleEntity = styleCollection.getOrCreateEntity(id);
+                    processStyle(dataSource, node, styleEntity, sourceUri, uriResolver);
                 }
             }
         }
@@ -740,7 +737,7 @@ define(['../Core/createGuid',
         var styleMapsLength = styleMaps.length;
         for (i = 0; i < styleMapsLength; i++) {
             var styleMap = styleMaps.item(i);
-            id = defined(styleMap.attributes.id) ? styleMap.attributes.id.textContent : undefined;
+            id = defined(styleMap.attributes.id) ? styleMap.attributes.id.value : undefined;
             if (defined(id)) {
                 var pairs = styleMap.childNodes;
                 for (var p = 0; p < pairs.length; p++) {
@@ -756,10 +753,10 @@ define(['../Core/createGuid',
                             id = sourceUri + id;
                         }
                         if (!defined(styleCollection.getById(id))) {
-                            styleObject = styleCollection.getOrCreateEntity(id);
+                            styleEntity = styleCollection.getOrCreateEntity(id);
                             var base = styleCollection.getOrCreateEntity(styleUrl.textContent);
                             if (defined(base)) {
-                                styleObject.merge(base);
+                                styleEntity.merge(base);
                             }
                         }
                         break;
@@ -948,7 +945,7 @@ define(['../Core/createGuid',
         },
         /**
          * Gets the clock settings defined by the loaded CZML.  If no clock is explicitly
-         * defined in the CZML, the combined availability of all objects is returned.  If
+         * defined in the CZML, the combined availability of all entities is returned.  If
          * only static data exists, this value is undefined.
          * @memberof KmlDataSource.prototype
          * @type {DataSourceClock}
