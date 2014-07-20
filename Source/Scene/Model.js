@@ -537,7 +537,7 @@ define([
             var docUri = new Uri(document.location.href);
             var modelUri = new Uri(model._basePath);
             model._baseUri = modelUri.resolve(docUri);
-        });
+        }, getFailedLoadFunction(model, 'gltf', url));
 
         return model;
     };
