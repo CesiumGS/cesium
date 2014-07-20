@@ -14,10 +14,7 @@ defineSuite([
 
     it('merge assigns unassigned properties', function() {
         var source = new ConeGraphics();
-        source.capMaterial = new ColorMaterialProperty();
-        source.innerMaterial = new ColorMaterialProperty();
-        source.silhouetteMaterial = new ColorMaterialProperty();
-        source.outerMaterial = new ColorMaterialProperty();
+        source.lateralSurfaceMaterial = new ColorMaterialProperty();
         source.innerHalfAngle = new ConstantProperty(1);
         source.maximumClockAngle = new ConstantProperty(1);
         source.minimumClockAngle = new ConstantProperty(1);
@@ -32,10 +29,7 @@ defineSuite([
         var target = new ConeGraphics();
         target.merge(source);
 
-        expect(target.capMaterial).toBe(source.capMaterial);
-        expect(target.innerMaterial).toBe(source.innerMaterial);
-        expect(target.silhouetteMaterial).toBe(source.silhouetteMaterial);
-        expect(target.outerMaterial).toBe(source.outerMaterial);
+        expect(target.lateralSurfaceMaterial).toBe(source.lateralSurfaceMaterial);
         expect(target.innerHalfAngle).toBe(source.innerHalfAngle);
         expect(target.maximumClockAngle).toBe(source.maximumClockAngle);
         expect(target.minimumClockAngle).toBe(source.minimumClockAngle);
@@ -49,10 +43,7 @@ defineSuite([
 
     it('merge does not assign assigned properties', function() {
         var source = new ConeGraphics();
-        source.capMaterial = new ColorMaterialProperty();
-        source.innerMaterial = new ColorMaterialProperty();
-        source.silhouetteMaterial = new ColorMaterialProperty();
-        source.outerMaterial = new ColorMaterialProperty();
+        source.lateralSurfaceMaterial = new ColorMaterialProperty();
         source.innerHalfAngle = new ConstantProperty(1);
         source.maximumClockAngle = new ConstantProperty(1);
         source.minimumClockAngle = new ConstantProperty(1);
@@ -63,10 +54,7 @@ defineSuite([
         source.showIntersection = new ConstantProperty(true);
         source.intersectionWidth = new ConstantProperty(1);
 
-        var capMaterial = new ColorMaterialProperty();
-        var innerMaterial = new ColorMaterialProperty();
-        var silhouetteMaterial = new ColorMaterialProperty();
-        var outerMaterial = new ColorMaterialProperty();
+        var lateralSurfaceMaterial = new ColorMaterialProperty();
         var innerHalfAngle = new ConstantProperty(1);
         var maximumClockAngle = new ConstantProperty(1);
         var minimumClockAngle = new ConstantProperty(1);
@@ -78,26 +66,20 @@ defineSuite([
         var intersectionWidth = new ConstantProperty(1);
 
         var target = new ConeGraphics();
-        source.capMaterial = capMaterial;
-        source.innerMaterial = innerMaterial;
-        source.silhouetteMaterial = silhouetteMaterial;
-        source.outerMaterial = outerMaterial;
-        source.innerHalfAngle = innerHalfAngle;
-        source.maximumClockAngle = maximumClockAngle;
-        source.minimumClockAngle = minimumClockAngle;
-        source.outerHalfAngle = outerHalfAngle;
-        source.intersectionColor = intersectionColor;
-        source.radius = radius;
-        source.show = show;
-        source.showIntersection = showIntersection;
-        source.intersectionWidth = intersectionWidth;
+        target.lateralSurfaceMaterial = lateralSurfaceMaterial;
+        target.innerHalfAngle = innerHalfAngle;
+        target.maximumClockAngle = maximumClockAngle;
+        target.minimumClockAngle = minimumClockAngle;
+        target.outerHalfAngle = outerHalfAngle;
+        target.intersectionColor = intersectionColor;
+        target.radius = radius;
+        target.show = show;
+        target.showIntersection = showIntersection;
+        target.intersectionWidth = intersectionWidth;
 
         target.merge(source);
 
-        expect(target.capMaterial).toBe(capMaterial);
-        expect(target.innerMaterial).toBe(innerMaterial);
-        expect(target.silhouetteMaterial).toBe(silhouetteMaterial);
-        expect(target.outerMaterial).toBe(outerMaterial);
+        expect(target.lateralSurfaceMaterial).toBe(lateralSurfaceMaterial);
         expect(target.innerHalfAngle).toBe(innerHalfAngle);
         expect(target.maximumClockAngle).toBe(maximumClockAngle);
         expect(target.minimumClockAngle).toBe(minimumClockAngle);
@@ -111,10 +93,7 @@ defineSuite([
 
     it('clone works', function() {
         var source = new ConeGraphics();
-        source.capMaterial = new ColorMaterialProperty();
-        source.innerMaterial = new ColorMaterialProperty();
-        source.silhouetteMaterial = new ColorMaterialProperty();
-        source.outerMaterial = new ColorMaterialProperty();
+        source.lateralSurfaceMaterial = new ColorMaterialProperty();
         source.innerHalfAngle = new ConstantProperty(1);
         source.maximumClockAngle = new ConstantProperty(1);
         source.minimumClockAngle = new ConstantProperty(1);
@@ -126,10 +105,7 @@ defineSuite([
         source.intersectionWidth = new ConstantProperty(1);
 
         var result = source.clone();
-        expect(result.capMaterial).toBe(source.capMaterial);
-        expect(result.innerMaterial).toBe(source.innerMaterial);
-        expect(result.silhouetteMaterial).toBe(source.silhouetteMaterial);
-        expect(result.outerMaterial).toBe(source.outerMaterial);
+        expect(result.lateralSurfaceMaterial).toBe(source.lateralSurfaceMaterial);
         expect(result.innerHalfAngle).toBe(source.innerHalfAngle);
         expect(result.maximumClockAngle).toBe(source.maximumClockAngle);
         expect(result.minimumClockAngle).toBe(source.minimumClockAngle);

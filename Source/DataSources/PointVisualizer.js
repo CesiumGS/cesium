@@ -1,23 +1,32 @@
 /*global define*/
 define([
+        '../Core/Cartesian3',
         '../Core/Color',
-        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/NearFarScalar',
         '../Scene/BillboardCollection',
         '../Scene/TextureAtlas',
-        '../Scene/TextureAtlasBuilder'
+        '../Scene/TextureAtlasBuilder',
+        './Property'
     ], function(
+        Cartesian3,
         Color,
-        defaultValue,
         defined,
         destroyObject,
         DeveloperError,
+        NearFarScalar,
         BillboardCollection,
         TextureAtlas,
-        TextureAtlasBuilder) {
+        TextureAtlasBuilder,
+        Property) {
     "use strict";
+
+    var defaultColor = Color.WHITE;
+    var defaultOutlineColor = Color.BLACK;
+    var defaultOutlineWidth = 0.0;
+    var defaultPixelSize = 1.0;
 
     /**
      * A {@link Visualizer} which maps {@link Entity#point} to a {@link Billboard}.
@@ -98,26 +107,23 @@ define([
         return destroyObject(this);
     };
 
-    var color;
-    var position;
-    var outlineColor;
-    var scaleByDistance;
+    var color = new Color();
+    var position = new Cartesian3();
+    var outlineColor = new Color();
+    var scaleByDistance = new NearFarScalar();
     function updateObject(pointVisualizer, time, entity) {
         var pointGraphics = entity._point;
         if (!defined(pointGraphics)) {
             return;
         }
 
-        var positionProperty = entity._position;
-        if (!defined(positionProperty)) {
-            return;
-        }
-
         var billboard;
-        var showProperty = pointGraphics._show;
         var pointVisualizerIndex = entity._pointVisualizerIndex;
-        var show = entity.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
-
+        var show = entity.isAvailable(time) && Property.getValueOrDefault(pointGraphics._show, time, true);
+        if (show) {
+            position = Property.getValueOrUndefined(entity._position, time, position);
+            show = defined(position);
+        }
         if (!show) {
             //don't bother creating or updating anything else
             if (defined(pointVisualizerIndex)) {
@@ -154,69 +160,36 @@ define([
         }
 
         billboard.show = true;
+        billboard.position = position;
+        billboard.scaleByDistance = Property.getValueOrUndefined(pointGraphics._scaleByDistance, time, scaleByDistance);
 
-        position = positionProperty.getValue(time, position);
-        if (defined(position)) {
-            billboard.position = position;
-        }
+        var newColor = Property.getValueOrDefault(pointGraphics._color, time, defaultColor, color);
+        var newOutlineColor = Property.getValueOrDefault(pointGraphics._outlineColor, time, defaultOutlineColor, outlineColor);
+        var newOutlineWidth = Property.getValueOrDefault(pointGraphics._outlineWidth, time, defaultOutlineWidth);
+        var newPixelSize = Property.getValueOrDefault(pointGraphics._pixelSize, time, defaultPixelSize);
 
-        var property = pointGraphics._color;
-        if (defined(property)) {
-            color = property.getValue(time, color);
-            if (!Color.equals(billboard._visualizerColor, color)) {
-                Color.clone(color, billboard._visualizerColor);
-                needRedraw = true;
-            }
-        }
-
-        property = pointGraphics._outlineColor;
-        if (defined(property)) {
-            outlineColor = property.getValue(time, outlineColor);
-            if (!Color.equals(billboard._visualizerOutlineColor, outlineColor)) {
-                Color.clone(outlineColor, billboard._visualizerOutlineColor);
-                needRedraw = true;
-            }
-        }
-
-        property = pointGraphics._outlineWidth;
-        if (defined(property)) {
-            var outlineWidth = property.getValue(time);
-            if (billboard._visualizerOutlineWidth !== outlineWidth) {
-                billboard._visualizerOutlineWidth = outlineWidth;
-                needRedraw = true;
-            }
-        }
-
-        property = pointGraphics._pixelSize;
-        if (defined(property)) {
-            var pixelSize = property.getValue(time);
-            if (billboard._visualizerPixelSize !== pixelSize) {
-                billboard._visualizerPixelSize = pixelSize;
-                needRedraw = true;
-            }
-        }
-
-        property = pointGraphics._scaleByDistance;
-        if (defined(property)) {
-            scaleByDistance = property.getValue(time, scaleByDistance);
-            if (defined(scaleByDistance)) {
-                billboard.scaleByDistance = scaleByDistance;
-            }
-        }
+        needRedraw = needRedraw || //
+                     newOutlineWidth !== billboard._visualizerOutlineWidth || //
+                     newPixelSize !== billboard._visualizerPixelSize || //
+                     !Color.equals(newColor, billboard._visualizerColor) || //
+                     !Color.equals(newOutlineColor, billboard._visualizerOutlineColor);
 
         if (needRedraw) {
-            var centerColor = defaultValue(billboard._visualizerColor, Color.WHITE);
-            var centerAlpha = centerColor.alpha;
-            var cssColor = centerColor.toCssColorString();
-            var cssOutlineColor = defaultValue(billboard._visualizerOutlineColor, Color.BLACK).toCssColorString();
-            var cssPixelSize = defaultValue(billboard._visualizerPixelSize, 3);
-            var cssOutlineWidth = defaultValue(billboard._visualizerOutlineWidth, 2);
-            var textureId = JSON.stringify([cssColor, cssPixelSize, cssOutlineColor, cssOutlineWidth]);
+            billboard._visualizerColor = Color.clone(newColor, billboard._visualizerColor);
+            billboard._visualizerOutlineColor = Color.clone(newOutlineColor, billboard._visualizerOutlineColor);
+            billboard._visualizerPixelSize = newPixelSize;
+            billboard._visualizerOutlineWidth = newOutlineWidth;
+
+            var centerAlpha = newColor.alpha;
+            var cssColor = newColor.toCssColorString();
+            var cssOutlineColor = newOutlineColor.toCssColorString();
+            var cssOutlineWidth = newOutlineWidth;
+            var textureId = JSON.stringify([cssColor, newPixelSize, cssOutlineColor, cssOutlineWidth]);
 
             pointVisualizer._textureAtlasBuilder.addTextureFromFunction(textureId, function(id, loadedCallback) {
                 var canvas = document.createElement('canvas');
 
-                var length = cssPixelSize + (2 * cssOutlineWidth);
+                var length = newPixelSize + (2 * cssOutlineWidth);
                 canvas.height = canvas.width = length;
 
                 var context2D = canvas.getContext('2d');
@@ -233,7 +206,7 @@ define([
                         context2D.save();
                         context2D.globalCompositeOperation = 'destination-out';
                         context2D.beginPath();
-                        context2D.arc(length / 2, length / 2, cssPixelSize / 2, 0, 2 * Math.PI, true);
+                        context2D.arc(length / 2, length / 2, newPixelSize / 2, 0, 2 * Math.PI, true);
                         context2D.closePath();
                         context2D.fillStyle = 'black';
                         context2D.fill();
@@ -242,7 +215,7 @@ define([
                 }
 
                 context2D.beginPath();
-                context2D.arc(length / 2, length / 2, cssPixelSize / 2, 0, 2 * Math.PI, true);
+                context2D.arc(length / 2, length / 2, newPixelSize / 2, 0, 2 * Math.PI, true);
                 context2D.closePath();
                 context2D.fillStyle = cssColor;
                 context2D.fill();

@@ -438,7 +438,7 @@ define([
 
         var camera = new Camera(this);
         this._camera = camera;
-        this._screenSpaceCameraController = new ScreenSpaceCameraController(canvas, camera);
+        this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
 
         // initial guess at frustums.
         var near = camera.frustum.near;
@@ -1311,9 +1311,8 @@ define([
         }
 
         this._tweens.update();
-        var mode = this._mode;
-        this._camera.update(mode);
-        this._screenSpaceCameraController.update(mode);
+        this._camera.update(this._mode);
+        this._screenSpaceCameraController.update(this._frameState);
     };
 
     function render(scene, time) {

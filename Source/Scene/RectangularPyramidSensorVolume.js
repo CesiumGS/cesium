@@ -28,8 +28,6 @@ define([
      *
      * @alias RectangularPyramidSensorVolume
      * @constructor
-     *
-     * @see SensorVolumeCollection#addRectangularPyramid
      */
     var RectangularPyramidSensorVolume = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -131,12 +129,12 @@ define([
          *
          * @example
          * // 1. Change the color of the default material to yellow
-         * sensor.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
+         * sensor.lateralSurfaceMaterial.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
-         * sensor.material = Cesium.Material.fromType(Cesium.Material.StripeType);
+         * sensor.lateralSurfaceMaterial = Cesium.Material.fromType(Cesium.Material.StripeType);
          */
-        this.material = defined(options.material) ? options.material : Material.fromType(Material.ColorType);
+        this.lateralSurfaceMaterial = defined(options.lateralSurfaceMaterial) ? options.lateralSurfaceMaterial : Material.fromType(Material.ColorType);
 
         /**
          * The color of the polyline where the sensor outline intersects the globe.  The default is {@link Color.WHITE}.
@@ -199,7 +197,7 @@ define([
         s.showThroughEllipsoid = this.showThroughEllipsoid;
         s.modelMatrix = this.modelMatrix;
         s.radius = this.radius;
-        s.material = this.material;
+        s.lateralSurfaceMaterial = this.lateralSurfaceMaterial;
         s.intersectionColor = this.intersectionColor;
         s.intersectionWidth = this.intersectionWidth;
         s.id = this.id;
@@ -215,7 +213,7 @@ define([
             var theta = Math.atan(tanX / tanY);
             var cone = Math.atan(Math.sqrt(tanX * tanX + tanY * tanY));
 
-            s.setDirections([{
+            s.directions = [{
                 clock : theta,
                 cone : cone
             }, {
@@ -227,7 +225,7 @@ define([
             }, {
                 clock : -theta,
                 cone : cone
-            }]);
+            }];
         }
 
         s.update(context, frameState, commandList);

@@ -3,6 +3,7 @@ defineSuite([
         'DataSources/SampledPositionProperty',
         'Core/Cartesian3',
         'Core/defined',
+        'Core/ExtrapolationType',
         'Core/JulianDate',
         'Core/LagrangePolynomialApproximation',
         'Core/LinearApproximation',
@@ -12,6 +13,7 @@ defineSuite([
         SampledPositionProperty,
         Cartesian3,
         defined,
+        ExtrapolationType,
         JulianDate,
         LagrangePolynomialApproximation,
         LinearApproximation,
@@ -26,6 +28,10 @@ defineSuite([
         expect(property.interpolationDegree).toEqual(1);
         expect(property.interpolationAlgorithm).toEqual(LinearApproximation);
         expect(property.numberOfDerivatives).toEqual(0);
+        expect(property.forwardExtrapolationType).toEqual(ExtrapolationType.NONE);
+        expect(property.forwardExtrapolationDuration).toEqual(0);
+        expect(property.backwardExtrapolationType).toEqual(ExtrapolationType.NONE);
+        expect(property.backwardExtrapolationDuration).toEqual(0);
     });
 
     it('constructor sets expected values', function() {
@@ -34,6 +40,10 @@ defineSuite([
         expect(property.interpolationDegree).toEqual(1);
         expect(property.interpolationAlgorithm).toEqual(LinearApproximation);
         expect(property.numberOfDerivatives).toEqual(1);
+        expect(property.forwardExtrapolationType).toEqual(ExtrapolationType.NONE);
+        expect(property.forwardExtrapolationDuration).toEqual(0);
+        expect(property.backwardExtrapolationType).toEqual(ExtrapolationType.NONE);
+        expect(property.backwardExtrapolationDuration).toEqual(0);
     });
 
     it('getValue works without a result parameter', function() {
@@ -240,6 +250,7 @@ defineSuite([
         };
 
         var property = new SampledPositionProperty();
+        property.forwardExtrapolationType = ExtrapolationType.EXTRAPOLATE;
         property.addSamplesPackedArray(data, epoch);
         property.setInterpolationOptions({
             interpolationDegree : 2,
@@ -329,5 +340,40 @@ defineSuite([
 
         right.addSample(time, value);
         expect(left.equals(right)).toEqual(true);
+    });
+
+    it('raises definitionChanged when extrapolation options change', function() {
+        var property = new SampledPositionProperty();
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+
+        property.forwardExtrapolationType = ExtrapolationType.EXTRAPOLATE;
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
+
+        property.forwardExtrapolationDuration = 1.0;
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
+
+        property.backwardExtrapolationType = ExtrapolationType.HOLD;
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
+
+        property.backwardExtrapolationDuration = 1.0;
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
+
+        //No events when reassigning to the same value.
+        property.forwardExtrapolationType = ExtrapolationType.EXTRAPOLATE;
+        expect(listener).not.toHaveBeenCalled();
+
+        property.forwardExtrapolationDuration = 1.0;
+        expect(listener).not.toHaveBeenCalled();
+
+        property.backwardExtrapolationType = ExtrapolationType.HOLD;
+        expect(listener).not.toHaveBeenCalled();
+
+        property.backwardExtrapolationDuration = 1.0;
+        expect(listener).not.toHaveBeenCalled();
     });
 });

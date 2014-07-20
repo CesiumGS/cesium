@@ -6,6 +6,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/ExtrapolationType',
         '../Core/JulianDate',
         '../Core/LinearApproximation'
     ], function(
@@ -15,6 +16,7 @@ define([
         defineProperties,
         DeveloperError,
         Event,
+        ExtrapolationType,
         JulianDate,
         LinearApproximation) {
     "use strict";
@@ -213,6 +215,10 @@ define([
         this._derivativeTypes = derivativeTypes;
         this._innerDerivativeTypes = innerDerivativeTypes;
         this._inputOrder = inputOrder;
+        this._forwardExtrapolationType = ExtrapolationType.NONE;
+        this._forwardExtrapolationDuration = 0;
+        this._backwardExtrapolationType = ExtrapolationType.NONE;
+        this._backwardExtrapolationDuration = 0;
     };
 
     defineProperties(SampledProperty.prototype, {
@@ -284,6 +290,78 @@ define([
             get : function() {
                 return this._interpolationAlgorithm;
             }
+        },
+        /**
+         * Gets or sets the type of extrapolation to perform when a value
+         * is requested at a time after any available samples.
+         * @memberof SampledProperty.prototype
+         * @type {ExtrapolationType}
+         * @default ExtrapolationType.NONE
+         */
+        forwardExtrapolationType : {
+            get : function() {
+                return this._forwardExtrapolationType;
+            },
+            set : function(value) {
+                if (this._forwardExtrapolationType !== value) {
+                    this._forwardExtrapolationType = value;
+                    this._definitionChanged.raiseEvent(this);
+                }
+            }
+        },
+        /**
+         * Gets or sets the amount of time to extrapolate forward before
+         * the property becomes undefined.  A value of 0 will extrapolate forever.
+         * @memberof SampledProperty.prototype
+         * @type {Number}
+         * @default 0
+         */
+        forwardExtrapolationDuration : {
+            get : function() {
+                return this._forwardExtrapolationDuration;
+            },
+            set : function(value) {
+                if (this._forwardExtrapolationDuration !== value) {
+                    this._forwardExtrapolationDuration = value;
+                    this._definitionChanged.raiseEvent(this);
+                }
+            }
+        },
+        /**
+         * Gets or sets the type of extrapolation to perform when a value
+         * is requested at a time before any available samples.
+         * @memberof SampledProperty.prototype
+         * @type {ExtrapolationType}
+         * @default ExtrapolationType.NONE
+         */
+        backwardExtrapolationType : {
+            get : function() {
+                return this._backwardExtrapolationType;
+            },
+            set : function(value) {
+                if (this._backwardExtrapolationType !== value) {
+                    this._backwardExtrapolationType = value;
+                    this._definitionChanged.raiseEvent(this);
+                }
+            }
+        },
+        /**
+         * Gets or sets the amount of time to extrapolate backward
+         * before the property becomes undefined.  A value of 0 will extrapolate forever.
+         * @memberof SampledProperty.prototype
+         * @type {Number}
+         * @default 0
+         */
+        backwardExtrapolationDuration : {
+            get : function() {
+                return this._backwardExtrapolationDuration;
+            },
+            set : function(value) {
+                if (this._backwardExtrapolationDuration !== value) {
+                    this._backwardExtrapolationDuration = value;
+                    this._definitionChanged.raiseEvent(this);
+                }
+            }
         }
     });
 
@@ -301,11 +379,39 @@ define([
         }
         //>>includeEnd('debug');
 
+        var timeout;
         var innerType = this._innerType;
         var times = this._times;
         var values = this._values;
         var index = binarySearch(times, time, JulianDate.compare);
+
         if (index < 0) {
+            index = ~index;
+
+            if (index === 0) {
+                var startTime = times[index];
+                timeout = this._backwardExtrapolationDuration;
+                if (this._backwardExtrapolationType === ExtrapolationType.NONE || (timeout !== 0 && JulianDate.secondsDifference(startTime, time) > timeout)) {
+                    return undefined;
+                }
+                if (this._backwardExtrapolationType === ExtrapolationType.HOLD) {
+                    return innerType.unpack(this._values, 0, result);
+                }
+            }
+
+            if (index >= times.length) {
+                index = times.length - 1;
+                var endTime = times[index];
+                timeout = this._forwardExtrapolationDuration;
+                if (this._forwardExtrapolationType === ExtrapolationType.NONE || (timeout !== 0 && JulianDate.secondsDifference(time, endTime) > timeout)) {
+                    return undefined;
+                }
+                if (this._forwardExtrapolationType === ExtrapolationType.HOLD) {
+                    index = times.length - 1;
+                    return innerType.unpack(this._values, index * innerType.packedLength, result);
+                }
+            }
+
             var xTable = this._xTable;
             var yTable = this._yTable;
             var interpolationAlgorithm = this._interpolationAlgorithm;
@@ -325,11 +431,6 @@ define([
             var degree = this._numberOfPoints - 1;
             if (degree < 1) {
                 return undefined;
-            }
-            index = ~index;
-
-            if (index >= times.length) {
-                index = times.length - 1;
             }
 
             var firstIndex = 0;

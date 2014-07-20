@@ -5,6 +5,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Color',
         'Core/Ellipsoid',
+        'Core/Math',
         'Core/PrimitiveType'
     ], function(
         SimplePolylineGeometry,
@@ -12,6 +13,7 @@ defineSuite([
         Cartesian3,
         Color,
         Ellipsoid,
+        CesiumMath,
         PrimitiveType) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -47,7 +49,7 @@ defineSuite([
             ellipsoid: Ellipsoid.UNIT_SPHERE
         }));
 
-        expect(line.attributes.position.values).toEqual([1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]);
+        expect(line.attributes.position.values).toEqualEpsilon([1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0], CesiumMath.EPSILON10);
         expect(line.indices).toEqual([0, 1, 1, 2]);
         expect(line.primitiveType).toEqual(PrimitiveType.LINES);
         expect(line.boundingSphere).toEqual(BoundingSphere.fromPoints(positions));

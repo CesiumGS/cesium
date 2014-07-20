@@ -4,9 +4,11 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/IntersectionTests',
         '../Core/PixelFormat',
         '../Core/Rectangle',
         '../Renderer/PixelDatatype',
@@ -15,6 +17,7 @@ define([
         '../Renderer/TextureWrap',
         './ImageryState',
         './QuadtreeTileLoadState',
+        './SceneMode',
         './TerrainState',
         './TileTerrain'
     ], function(
@@ -22,9 +25,11 @@ define([
         Cartesian3,
         Cartesian4,
         Cartographic,
+        defaultValue,
         defined,
         defineProperties,
         DeveloperError,
+        IntersectionTests,
         PixelFormat,
         Rectangle,
         PixelDatatype,
@@ -33,6 +38,7 @@ define([
         TextureWrap,
         ImageryState,
         QuadtreeTileLoadState,
+        SceneMode,
         TerrainState,
         TileTerrain) {
     "use strict";
@@ -124,6 +130,9 @@ define([
 
         this.loadedTerrain = undefined;
         this.upsampledTerrain = undefined;
+
+        this.pickBoundingSphere = new BoundingSphere();
+        this.pickTerrain = undefined;
     };
 
     defineProperties(GlobeSurfaceTile.prototype, {
@@ -161,6 +170,60 @@ define([
         }
     });
 
+    function getPosition(tile, scene, vertices, index, result) {
+        Cartesian3.unpack(vertices, index * 6, result);
+        Cartesian3.add(tile.center, result, result);
+
+        if (defined(scene) && scene.mode !== SceneMode.SCENE3D) {
+            var projection = scene.mapProjection;
+            var ellipsoid = projection.ellipsoid;
+            var positionCart = ellipsoid.cartesianToCartographic(result);
+            projection.project(positionCart, result);
+            Cartesian3.fromElements(result.z, result.x, result.y, result);
+        }
+
+        return result;
+    }
+
+    var scratchV0 = new Cartesian3();
+    var scratchV1 = new Cartesian3();
+    var scratchV2 = new Cartesian3();
+    var scratchCartesian = new Cartesian3();
+    var scratchResult = new Cartesian3();
+
+    GlobeSurfaceTile.prototype.pick = function(ray, scene, cullBackFaces, result) {
+        var terrain = this.pickTerrain;
+        if (!defined(terrain)) {
+            return undefined;
+        }
+
+        var mesh = terrain.mesh;
+        if (!defined(mesh)) {
+            return undefined;
+        }
+
+        var vertices = mesh.vertices;
+        var indices = mesh.indices;
+
+        var length = indices.length;
+        for (var i = 0; i < length; i += 3) {
+            var i0 = indices[i];
+            var i1 = indices[i + 1];
+            var i2 = indices[i + 2];
+
+            var v0 = getPosition(this, scene, vertices, i0, scratchV0);
+            var v1 = getPosition(this, scene, vertices, i1, scratchV1);
+            var v2 = getPosition(this, scene, vertices, i2, scratchV2);
+
+            var intersection = IntersectionTests.rayTriangle(ray, v0, v1, v2, cullBackFaces, scratchResult);
+            if (defined(intersection)) {
+                return Cartesian3.clone(intersection, result);
+            }
+        }
+
+        return undefined;
+    };
+
     GlobeSurfaceTile.prototype.freeResources = function() {
         if (defined(this.waterMaskTexture)) {
             --this.waterMaskTexture.referenceCount;
@@ -180,6 +243,11 @@ define([
         if (defined(this.upsampledTerrain)) {
             this.upsampledTerrain.freeResources();
             this.upsampledTerrain = undefined;
+        }
+
+        if (defined(this.pickTerrain)) {
+            this.pickTerrain.freeResources();
+            this.pickTerrain = undefined;
         }
 
         var i, len;
@@ -404,6 +472,7 @@ define([
                 loaded.publishToTile(tile);
 
                 // No further loading or upsampling is necessary.
+                surfaceTile.pickTerrain = defaultValue(surfaceTile.loadedTerrain, surfaceTile.upsampledTerrain);
                 surfaceTile.loadedTerrain = undefined;
                 surfaceTile.upsampledTerrain = undefined;
             } else if (loaded.state === TerrainState.FAILED) {
@@ -427,7 +496,7 @@ define([
 
                     // If the terrain provider has a water mask, "upsample" that as well
                     // by computing texture translation and scale.
-                    if (terrainProvider.hasWaterMask()) {
+                    if (terrainProvider.hasWaterMask) {
                         upsampleWaterMask(tile, context);
                     }
 
@@ -439,6 +508,7 @@ define([
                 upsampled.publishToTile(tile);
 
                 // No further upsampling is necessary.  We need to continue loading, though.
+                surfaceTile.pickTerrain = surfaceTile.upsampledTerrain;
                 surfaceTile.upsampledTerrain = undefined;
             } else if (upsampled.state === TerrainState.FAILED) {
                 // Upsampling failed for some reason.  This is pretty much a catastrophic failure,

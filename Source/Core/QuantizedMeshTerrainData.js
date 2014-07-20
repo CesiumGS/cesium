@@ -39,6 +39,7 @@ define([
      * @param {Uint16Array} options.quantizedVertices The buffer containing the quantized mesh.
      * @param {Uint16Array} options.indices The indices specifying how the quantized vertices are linked
      *                      together into triangles.  Each three indices specifies one triangle.
+     * @param {Uint8Array} options.encodedNormals The buffer containing per vertex normals, encoded using 'oct' encoding
      * @param {Number} options.minimumHeight The minimum terrain height within the tile, in meters above the ellipsoid.
      * @param {Number} options.maximumHeight The maximum terrain height within the tile, in meters above the ellipsoid.
      * @param {BoundingSphere} options.boundingSphere A sphere bounding all of the vertices in the mesh.
@@ -145,6 +146,7 @@ define([
         //>>includeEnd('debug');
 
         this._quantizedVertices = options.quantizedVertices;
+        this._encodedNormals = options.encodedNormals;
         this._indices = options.indices;
         this._minimumHeight = options.minimumHeight;
         this._maximumHeight = options.maximumHeight;
@@ -251,6 +253,7 @@ define([
             minimumHeight : this._minimumHeight,
             maximumHeight : this._maximumHeight,
             quantizedVertices : this._quantizedVertices,
+            octEncodedNormals : this._encodedNormals,
             indices : this._indices,
             westIndices : this._westIndices,
             southIndices : this._southIndices,
@@ -338,6 +341,7 @@ define([
         var upsamplePromise = upsampleTaskProcessor.scheduleTask({
             vertices : this._quantizedVertices,
             indices : this._indices,
+            encodedNormals : this._encodedNormals,
             minimumHeight : this._minimumHeight,
             maximumHeight : this._maximumHeight,
             isEastChild : isEastChild,
@@ -361,9 +365,14 @@ define([
         var northSkirtHeight = isNorthChild ? this._northSkirtHeight : (shortestSkirt * 0.5);
 
         return when(upsamplePromise, function(result) {
+            var encodedNormals;
+            if (defined(result.encodedNormals)) {
+                encodedNormals = new Uint8Array(result.encodedNormals);
+            }
             return new QuantizedMeshTerrainData({
                 quantizedVertices : new Uint16Array(result.vertices),
                 indices : new Uint16Array(result.indices),
+                encodedNormals : encodedNormals,
                 minimumHeight : result.minimumHeight,
                 maximumHeight : result.maximumHeight,
                 boundingSphere : BoundingSphere.clone(result.boundingSphere),

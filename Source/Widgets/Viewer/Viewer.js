@@ -288,15 +288,14 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             toolbar.appendChild(geocoderContainer);
             geocoder = new Geocoder({
                 container : geocoderContainer,
-                scene : cesiumWidget.scene,
-                ellipsoid : cesiumWidget.scene.globe.ellipsoid
+                scene : cesiumWidget.scene
             });
         }
 
         // HomeButton
         var homeButton;
         if (!defined(options.homeButton) || options.homeButton !== false) {
-            homeButton = new HomeButton(toolbar, cesiumWidget.scene, cesiumWidget.scene.globe.ellipsoid);
+            homeButton = new HomeButton(toolbar, cesiumWidget.scene);
             if (defined(geocoder)) {
                 eventHelper.add(homeButton.viewModel.command.afterExecute, function() {
                     var viewModel = geocoder.viewModel;

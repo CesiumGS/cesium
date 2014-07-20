@@ -43,13 +43,15 @@ uniform float u_zoomedOutOceanSpecularIntensity;
 uniform sampler2D u_oceanNormalMap;
 #endif
 
-#ifdef ENABLE_LIGHTING
+#ifdef ENABLE_DAYNIGHT_SHADING
 uniform vec2 u_lightingFadeDistance;
 #endif
 
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 varying vec2 v_textureCoordinates;
+varying vec3 v_normalMC;
+varying vec3 v_normalEC;
 
 vec4 sampleAndBlend(
     vec4 previousColor,
@@ -129,9 +131,12 @@ void main()
     }
 #endif
 
-#if defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_LIGHTING)
+#if defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_DAYNIGHT_SHADING)
     vec3 normalMC = normalize(czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));   // normalized surface normal in model coordinates
     vec3 normalEC = normalize(czm_normal3D * normalMC);                                         // normalized surface normal in eye coordiantes
+#elif defined(ENABLE_VERTEX_LIGHTING)
+    vec3 normalMC = normalize(v_normalMC);														// normalized surface normal in model coordinates
+    vec3 normalEC = normalize(v_normalEC);                                                      // normalized surface normal in eye coordiantes
 #endif
 
 #ifdef SHOW_REFLECTIVE_OCEAN
@@ -154,7 +159,10 @@ void main()
     }
 #endif
 
-#ifdef ENABLE_LIGHTING
+#ifdef ENABLE_VERTEX_LIGHTING
+    float diffuseIntensity = czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * 0.8 + 0.2;
+    gl_FragColor = vec4(color.rgb * diffuseIntensity, color.a);
+#elif defined(ENABLE_DAYNIGHT_SHADING)
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);
     float cameraDist = length(czm_view[3]);
     float fadeOutDist = u_lightingFadeDistance.x;
