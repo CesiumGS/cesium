@@ -990,6 +990,11 @@ defineSuite([
         expect(date.equalsEpsilon(datePlusOne, CesiumMath.EPSILON1)).toEqual(true);
     });
 
+    it('formats as ISO8601 with toString', function() {
+        var date = JulianDate.now();
+        expect(date.toString()).toEqual(JulianDate.toIso8601(date));
+    });
+
     it('computeTaiMinusUtc works before all leap seconds', function() {
         var date = new Date('July 11, 1970 12:00:00 UTC');
         var jd = JulianDate.fromDate(date);
