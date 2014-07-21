@@ -8,6 +8,8 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/Event',
+        '../Core/loadImage',
         '../Core/PixelFormat'
     ], function(
         BoundingRectangle,
@@ -18,8 +20,16 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        Event,
+        loadImage,
         PixelFormat) {
     "use strict";
+
+    function SourceHolder() {
+        this.imageLoaded = new Event();
+        this.index = -1;
+        this.loaded = false;
+    }
 
     // The atlas is made up of regions of space called nodes that contain images or child nodes.
     function TextureAtlasNode(bottomLeft, topRight, childNode1, childNode2, imageIndex) {
@@ -77,6 +87,7 @@ define([
         this._borderWidthInPixels = borderWidthInPixels;
         this._textureCoordinates = [];
         this._guid = createGuid();
+        this._idHash = {};
 
         // Create initial texture and root.
         this._texture = this._context.createTexture2D({
@@ -284,12 +295,6 @@ define([
 
     // Adds image of given index to the texture atlas. Called from addImage and addImages.
     function addImage(textureAtlas, image, index) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(image)) {
-            throw new DeveloperError('image is required.');
-        }
-        //>>includeEnd('debug');
-
         var node = findNode(textureAtlas, textureAtlas._root, image);
         // Found a node that can hold the image.
         if (defined(node)) {
@@ -311,105 +316,199 @@ define([
             resizeAtlas(textureAtlas, image);
             addImage(textureAtlas, image, index);
         }
+
+        textureAtlas._guid = createGuid();
     }
 
     /**
-     * Adds an image to the texture atlas.
-     * Calling addImages is more space-efficient than calling addImage multiple times.
-     * Texture coordinates are subject to change if the texture atlas resizes, so it is
-     * important to check {@link TextureAtlas#getGUID} before using old values.
+     * Adds the image to the atlas.
+     * The supplied callback is triggered with the index of the texture.
+     * If the image is already in the atlas, the atlas is unchanged and the callback
+     * is triggered with the existing index.
      *
      * @param {Image} image An image to be added to the texture atlas.
-     * @returns {Number} The index of the newly added image.
-     *
-     * @see TextureAtlas#addImages
+     * @param {Function} textureAvailableCallback A function taking the image index as it's only parameter.
      */
-    TextureAtlas.prototype.addImage = function(image) {
-        var index = this.numberOfImages;
-        addImage(this, image, index);
-
-        this._guid = createGuid();
-
-        return index;
-    };
-
-    /**
-     * Adds an array of images to the texture atlas.
-     * Calling addImages is more space-efficient than calling addImage multiple times.
-     * Texture coordinates are subject to change if the texture atlas resizes, so it is
-     * important to check {@link TextureAtlas#getGUID} before using old values.
-     *
-     * @param {Image[]} images An array of {@link Image} to be added to the texture atlas.
-     * @returns {Number} The first index of the newly added images.
-     *
-     * @see TextureAtlas#addImage
-     */
-    TextureAtlas.prototype.addImages = function(images) {
+    TextureAtlas.prototype.addImage = function(image, textureAvailableCallback) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(images) || (images.length < 1)) {
-            throw new DeveloperError('images is required and must have length greater than zero.');
+        if (!defined(image)) {
+            throw new DeveloperError('image is required.');
+        }
+        if (!defined(textureAvailableCallback)) {
+            throw new DeveloperError('textureAvailableCallback is required.');
         }
         //>>includeEnd('debug');
 
-        // Store images in containers that have an index.
-        var i;
-        var annotatedImages = [];
-        var numberOfImages = images.length;
-        var oldNumberOfImages = this.numberOfImages;
-        for (i = 0; i < numberOfImages; ++i) {
-            annotatedImages.push({
-                image : images[i],
-                index : i + oldNumberOfImages
-            });
+        var id = image.src;
+        var sourceHolder = this._idHash[id];
+        if (defined(sourceHolder)) {
+            //we're already aware of this source
+            if (sourceHolder.loaded) {
+                //and it's already loaded, tell the callback what index to use
+                textureAvailableCallback(sourceHolder.index);
+            } else {
+                //add the callback to be notified once it loads
+                sourceHolder.imageLoaded.addEventListener(textureAvailableCallback);
+            }
+            return;
         }
 
-        // Sort images by maximum to minimum side length.
-        annotatedImages.sort(function(left, right) {
-            return Math.max(right.image.height, right.image.width) -
-                   Math.max(left.image.height, left.image.width);
-        });
+        //not in atlas, create the source, which may be async
+        this._idHash[id] = sourceHolder = new SourceHolder();
+        sourceHolder.imageLoaded.addEventListener(textureAvailableCallback);
 
-        // Add images to the texture atlas.
-        for (i = 0; i < numberOfImages; ++i) {
-            var annotatedImage = annotatedImages[i];
-            addImage(this, annotatedImage.image, annotatedImage.index);
+        var that = this;
+        var callback = function(loadedImage) {
+            if (!that.textureAtlas.isDestroyed()) {
+                var index = sourceHolder.index = that.numberOfImages;
+                addImage(this, loadedImage, index);
+
+                sourceHolder.loaded = true;
+                sourceHolder.imageLoaded.raiseEvent(index);
+                sourceHolder.imageLoaded = undefined;
+            }
+        };
+
+        if (!image.complete) {
+            var onload = image.onload;
+            image.onload = function(e) {
+                onload(e);
+                callback(image);
+            };
+        } else {
+            callback(image);
         }
-
-        this._guid = createGuid();
-
-        // Return index of the first added image.
-        return oldNumberOfImages;
     };
 
     /**
      * Add a set of sub-regions to one atlas image as additional image indices.
      *
-     * @param {Image} image An image to be added to the texture atlas.
+     * @param {String} id The id of the image to add to the atlas.
      * @param {BoundingRectangle[]} subRegions An array of {@link BoundingRectangle} sub-regions measured in pixels from the bottom-left.
-     * @returns {Number} The index of the first newly-added region.
+     * @param {Function} textureAvailableCallback A function taking the index of the first newly-added region as it's only parameter.
      */
-    TextureAtlas.prototype.addSubRegions = function(image, subRegions) {
-        var index = this.addImage(image);
+    TextureAtlas.prototype.addSubRegions = function(id, subRegions, textureAvailableCallback) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(id)) {
+            throw new DeveloperError('id is required.');
+        }
+        if (!defined(subRegions)) {
+            throw new DeveloperError('subRegions is required.');
+        }
+        if (!defined(textureAvailableCallback)) {
+            throw new DeveloperError('textureAvailableCallback is required.');
+        }
+        //>>includeEnd('debug');
 
-        var atlasWidth = this._texture.width;
-        var atlasHeight = this._texture.height;
-        var numImages = this.numberOfImages;
-        var numSubRegions = subRegions.length;
+        var that = this;
+        var createSubRegionsCallback = function(index) {
+            var atlasWidth = that._texture.width;
+            var atlasHeight = that._texture.height;
+            var numImages = that.numberOfImages;
+            var numSubRegions = subRegions.length;
 
-        var baseRegion = this._textureCoordinates[index];
-        for (var i = 0; i < numSubRegions; ++i) {
-            var thisRegion = subRegions[i];
-            this._textureCoordinates.push(new BoundingRectangle(
-                baseRegion.x + (thisRegion.x / atlasWidth),
-                baseRegion.y + (thisRegion.y / atlasHeight),
-                thisRegion.width / atlasWidth,
-                thisRegion.height / atlasHeight
-            ));
+            var baseRegion = that._textureCoordinates[index];
+            for (var i = 0; i < numSubRegions; ++i) {
+                var thisRegion = subRegions[i];
+                that._textureCoordinates.push(new BoundingRectangle(
+                    baseRegion.x + (thisRegion.x / atlasWidth),
+                    baseRegion.y + (thisRegion.y / atlasHeight),
+                    thisRegion.width / atlasWidth,
+                    thisRegion.height / atlasHeight
+                ));
+            }
+
+            textureAvailableCallback(numImages);
+        };
+
+        this.addTextureFromFunction(id, function(id, callback) {
+            loadImage(id).then(callback);
+        }, createSubRegionsCallback);
+    };
+
+    /**
+     * Retrieves the image from the specified url and adds it to the atlas.
+     * The supplied callback is triggered with the index of the texture.
+     * If the url is already in the atlas, the atlas is unchanged and the callback
+     * is triggered immediately with the existing index.
+     *
+     * @param {String} url The url of the image to add to the atlas.
+     * @param {Function} textureAvailableCallback A function taking the image index as it's only parameter.
+     */
+    TextureAtlas.prototype.addTextureFromUrl = function(url, textureAvailableCallback) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(url)) {
+            throw new DeveloperError('url is required.');
+        }
+        if (!defined(textureAvailableCallback)) {
+            throw new DeveloperError('textureAvailableCallback is required.');
+        }
+        //>>includeEnd('debug');
+
+        this.addTextureFromFunction(url, function(id, callback) {
+            loadImage(id).then(callback);
+        }, textureAvailableCallback);
+    };
+
+    /**
+     * <p>
+     * Checks the atlas for a texture with the supplied id, if the id does not
+     * exist, the supplied callback is triggered to create it.  In either case,
+     * once the image is in the atlas, the second supplied callback is triggered
+     * with its index.
+     * </p>
+     *
+     * <p>
+     * This function is useful for dynamically generated textures that are shared
+     * across many billboards.  Only the first billboard will actually create the texture
+     * while subsequent billboards will re-use the existing one.
+     * </p>
+     *
+     * @param {String} id The id of the image to add to the atlas.
+     * @param {Function} getImageCallback A function which takes two parameters; first the id of the image to
+     * retrieve and second, a function to call when the image is ready.  The function takes the image as its
+     * only parameter.
+     * @param {Function} textureAvailableCallback A function taking the image index as it's only parameter.
+     */
+    TextureAtlas.prototype.addTextureFromFunction = function(id, getImageCallback, textureAvailableCallback) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(id)) {
+            throw new DeveloperError('id is required.');
+        }
+        if (!defined(getImageCallback)) {
+            throw new DeveloperError('getImageCallback is required.');
+        }
+        if (!defined(textureAvailableCallback)) {
+            throw new DeveloperError('textureAvailableCallback is required.');
+        }
+        //>>includeEnd('debug');
+
+        var sourceHolder = this._idHash[id];
+        if (defined(sourceHolder)) {
+            //we're already aware of this source
+            if (sourceHolder.loaded) {
+                //and it's already loaded, tell the callback what index to use
+                textureAvailableCallback(sourceHolder.index);
+            } else {
+                //add the callback to be notified once it loads
+                sourceHolder.imageLoaded.addEventListener(textureAvailableCallback);
+            }
+            return;
         }
 
-        this._guid = createGuid();
+        //not in atlas, create the source, which may be async
+        this._idHash[id] = sourceHolder = new SourceHolder();
+        sourceHolder.imageLoaded.addEventListener(textureAvailableCallback);
 
-        return numImages;
+        var that = this;
+        getImageCallback(id, function(newImage) {
+            if (!that.textureAtlas.isDestroyed()) {
+                var index = sourceHolder.index = that.textureAtlas.addImage(newImage);
+                sourceHolder.loaded = true;
+                sourceHolder.imageLoaded.raiseEvent(index, id);
+                sourceHolder.imageLoaded = undefined;
+            }
+        });
     };
 
     /**
