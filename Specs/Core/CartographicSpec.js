@@ -131,12 +131,6 @@ defineSuite([
         expect(Cartographic.clone(undefined)).toBeUndefined();
     });
 
-    it('toString throws without cartographic parameter', function() {
-        expect(function() {
-            Cartographic.toString(undefined);
-        }).toThrowDeveloperError();
-    });
-
     it('equalsEpsilon throws without numeric epsilon', function() {
         expect(function() {
             Cartographic.equalsEpsilon(new Cartographic(), new Cartographic(), {});
