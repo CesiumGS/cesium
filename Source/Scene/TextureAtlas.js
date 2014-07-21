@@ -46,7 +46,6 @@ define([
      * A TextureAtlas stores multiple images in one square texture and keeps
      * track of the texture coordinates for each image. TextureAtlas is dynamic,
      * meaning new images can be added at any point in time.
-     * Calling addImages is more space-efficient than calling addImage multiple times.
      * Texture coordinates are subject to change if the texture atlas resizes, so it is
      * important to check {@link TextureAtlas#getGUID} before using old values.
      *
@@ -58,8 +57,6 @@ define([
      * @param {PixelFormat} [options.pixelFormat=PixelFormat.RGBA] The pixel format of the texture.
      * @param {Number} [options.borderWidthInPixels=1] The amount of spacing between adjacent images in pixels.
      * @param {Cartesian2} [options.initialSize=new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.
-     * @param {Image[]} [options.images] Optional array of {@link Image} to be added to the atlas. Same as calling <code>addImages(images)</code>.
-     * @param {Image} [options.image] Optional single image to be added to the atlas. Same as calling <code>addImage(image)</code>.
      *
      * @exception {DeveloperError} borderWidthInPixels must be greater than or equal to zero.
      * @exception {DeveloperError} initialSize must be greater than zero.
@@ -70,8 +67,8 @@ define([
         var initialSize = defaultValue(options.initialSize, defaultInitialSize);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.scene)) {
-            throw new DeveloperError('scene is required.');
+        if (!defined(options.context)) {
+            throw new DeveloperError('context is required.');
         }
         if (borderWidthInPixels < 0) {
             throw new DeveloperError('borderWidthInPixels must be greater than or equal to zero.');
@@ -81,7 +78,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var context = options.scene.context;
+        var context = options.context;
         this._context = context;
         this._pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
         this._borderWidthInPixels = borderWidthInPixels;
@@ -96,17 +93,6 @@ define([
             pixelFormat : this._pixelFormat
         });
         this._root = new TextureAtlasNode(new Cartesian2(), new Cartesian2(initialSize.x, initialSize.y));
-
-        // Add initial images if there are any.
-        var images = options.images;
-        if (defined(images) && images.length > 0) {
-            this.addImages(images);
-        }
-
-        var image = options.image;
-        if (defined(image)) {
-            this.addImage(image);
-        }
     };
 
     defineProperties(TextureAtlas.prototype, {
@@ -359,9 +345,9 @@ define([
 
         var that = this;
         var callback = function(loadedImage) {
-            if (!that.textureAtlas.isDestroyed()) {
+            if (!that.isDestroyed()) {
                 var index = sourceHolder.index = that.numberOfImages;
-                addImage(this, loadedImage, index);
+                addImage(that, loadedImage, index);
 
                 sourceHolder.loaded = true;
                 sourceHolder.imageLoaded.raiseEvent(index);
@@ -502,8 +488,10 @@ define([
 
         var that = this;
         getImageCallback(id, function(newImage) {
-            if (!that.textureAtlas.isDestroyed()) {
-                var index = sourceHolder.index = that.textureAtlas.addImage(newImage);
+            if (!that.isDestroyed()) {
+                var index = sourceHolder.index = that.numberOfImages;
+                addImage(that, newImage, index);
+
                 sourceHolder.loaded = true;
                 sourceHolder.imageLoaded.raiseEvent(index, id);
                 sourceHolder.imageLoaded = undefined;

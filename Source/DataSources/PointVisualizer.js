@@ -7,8 +7,6 @@ define([
         '../Core/DeveloperError',
         '../Core/NearFarScalar',
         '../Scene/BillboardCollection',
-        '../Scene/TextureAtlas',
-        '../Scene/TextureAtlasBuilder',
         './Property'
     ], function(
         Cartesian3,
@@ -18,8 +16,6 @@ define([
         DeveloperError,
         NearFarScalar,
         BillboardCollection,
-        TextureAtlas,
-        TextureAtlasBuilder,
         Property) {
     "use strict";
 
@@ -48,19 +44,13 @@ define([
 
         entityCollection.collectionChanged.addEventListener(PointVisualizer.prototype._onObjectsRemoved, this);
 
-        var atlas = new TextureAtlas({
-            scene : scene
-        });
         var billboardCollection = new BillboardCollection();
-        billboardCollection.textureAtlas = atlas;
         scene.primitives.add(billboardCollection);
 
         this._scene = scene;
         this._unusedIndexes = [];
         this._entityCollection = entityCollection;
-        this._textureAtlas = atlas;
         this._billboardCollection = billboardCollection;
-        this._textureAtlasBuilder = new TextureAtlasBuilder(atlas);
     };
 
     /**
@@ -186,7 +176,7 @@ define([
             var cssOutlineWidth = newOutlineWidth;
             var textureId = JSON.stringify([cssColor, newPixelSize, cssOutlineColor, cssOutlineWidth]);
 
-            pointVisualizer._textureAtlasBuilder.addTextureFromFunction(textureId, function(id, loadedCallback) {
+            billboard.setGeneratedImage(textureId, function(id, loadedCallback) {
                 var canvas = document.createElement('canvas');
 
                 var length = newPixelSize + (2 * cssOutlineWidth);
@@ -221,8 +211,6 @@ define([
                 context2D.fill();
 
                 loadedCallback(canvas);
-            }, function(imageIndex) {
-                billboard.imageIndex = imageIndex;
             });
         }
     }

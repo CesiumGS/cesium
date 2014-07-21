@@ -86,7 +86,6 @@ define([
         this._verticalOrigin = defaultValue(options.verticalOrigin, VerticalOrigin.CENTER);
         this._horizontalOrigin = defaultValue(options.horizontalOrigin, HorizontalOrigin.CENTER);
         this._scale = defaultValue(options.scale, 1.0);
-        this._imageIndex = defaultValue(options.imageIndex, -1);
         this._color = Color.clone(defaultValue(options.color, Color.WHITE));
         this._rotation = defaultValue(options.rotation, 0.0);
         this._alignedAxis = Cartesian3.clone(defaultValue(options.alignedAxis, Cartesian3.ZERO));
@@ -103,6 +102,17 @@ define([
         this._billboardCollection = billboardCollection;
         this._dirty = false;
         this._index = -1; //Used only by BillboardCollection
+
+        this._imageIndex = -1;
+
+        this._imageUrl = options.imageUrl;
+        this._image = options.image;
+        this._imageId = options.imageId;
+        this._getImageCallback = options.getImageCallback;
+
+        if (defined(billboardCollection._textureAtlas)) {
+            this._loadImage();
+        }
     };
 
     var SHOW_INDEX = Billboard.SHOW_INDEX = 0;
@@ -477,29 +487,6 @@ define([
         },
 
         /**
-         * Gets and sets the image index
-         * @memberof Billboard.prototype
-         * @type {Number}
-         */
-        imageIndex : {
-            get : function() {
-                return this._imageIndex;
-            },
-            set : function(value) {
-                //>>includeStart('debug', pragmas.debug);
-                if (typeof value !== 'number') {
-                    throw new DeveloperError('value is required and must be a number.');
-                }
-                //>>includeEnd('debug');
-
-                if (this._imageIndex !== value) {
-                    this._imageIndex = value;
-                    makeDirty(this, IMAGE_INDEX_INDEX);
-                }
-            }
-        },
-
-        /**
          * Gets and sets the color that is multiplied with the billboard's texture.  This has two common use cases.  First,
          * the same white texture may be used by many different billboards, each with a different color, to create
          * colored billboards.  Second, the color's alpha component can be used to make the billboard translucent as shown below.
@@ -674,6 +661,24 @@ define([
                     this._pickId.object.primitive = value;
                 }
             }
+        },
+
+        /**
+         * Gets and sets the image url.
+         * @memberof Billboard.prototype
+         * @type {String|Image}
+         */
+        image : {
+            get : function() {
+                return this._imageId;
+            },
+            set : function(value) {
+                if (defined(value) && defined(value.src)) {
+                    this._image = value;
+                } else {
+                    this._imageUrl = value;
+                }
+            }
         }
     });
 
@@ -687,6 +692,50 @@ define([
         }
 
         return this._pickId;
+    };
+
+    Billboard.prototype._loadImage = function() {
+        var that = this;
+        var callback = function(index) {
+            that._imageIndex = index;
+            makeDirty(that, IMAGE_INDEX_INDEX);
+        };
+
+        var atlas = this._billboardCollection._textureAtlas;
+        if (defined(this._imageUrl)) {
+            atlas.addTextureFromUrl(this._imageUrl, callback);
+            this._imageId = this._imageUrl;
+        } else if (defined(this._image)) {
+            atlas.addImage(this._image, callback);
+            this._imageId = this._image.src;
+        } else if (defined(this._imageId) && defined(this._getImageCallback)) {
+            atlas.addTextureFromFunction(this._imageId, this._getImageCallback, callback);
+        } else {
+            this._imageId = undefined;
+            callback(-1);
+        }
+
+        this._imageUrl = undefined;
+        this._image = undefined;
+        this._getImageCallback = undefined;
+    };
+
+    Billboard.prototype.setGeneratedImage = function(id, getImageCallback) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(id)) {
+            throw new DeveloperError('id is required.');
+        }
+        if (!defined(getImageCallback)) {
+            throw new DeveloperError('getImageCallback is required.');
+        }
+        //>>includeEnd('debug');
+
+        this._imageId = id;
+        this._getImageCallback = getImageCallback;
+
+        if (defined(this._billboardCollection._textureAtlas)) {
+            this._loadImage();
+        }
     };
 
     Billboard.prototype._setTranslate = function(value) {
