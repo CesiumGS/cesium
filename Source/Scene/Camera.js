@@ -8,6 +8,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/EasingFunction',
         '../Core/Ellipsoid',
         '../Core/IntersectionTests',
         '../Core/Math',
@@ -15,8 +16,8 @@ define([
         '../Core/Matrix4',
         '../Core/Quaternion',
         '../Core/Ray',
+        '../Core/Rectangle',
         '../Core/Transforms',
-        '../ThirdParty/Tween',
         './CameraFlightPath',
         './PerspectiveFrustum',
         './SceneMode'
@@ -29,6 +30,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        EasingFunction,
         Ellipsoid,
         IntersectionTests,
         CesiumMath,
@@ -36,8 +38,8 @@ define([
         Matrix4,
         Quaternion,
         Ray,
+        Rectangle,
         Transforms,
-        Tween,
         CameraFlightPath,
         PerspectiveFrustum,
         SceneMode) {
@@ -62,9 +64,9 @@ define([
      * // with a field of view of 60 degrees, and 1:1 aspect ratio.
      * var camera = new Cesium.Camera(scene);
      * camera.position = new Cesium.Cartesian3();
-     * camera.direction = Cesium.Cartesian3.negate(Cesium.Cartesian3.UNIT_Z, new Cartesian3());
+     * camera.direction = Cesium.Cartesian3.negate(Cesium.Cartesian3.UNIT_Z, new Cesium.Cartesian3());
      * camera.up = Cesium.Cartesian3.clone(Cesium.Cartesian3.UNIT_Y);
-     * camera.frustum.fovy = Cesium.Math.PI_OVER_THREE;
+     * camera.frustum.fov = Cesium.Math.PI_OVER_THREE;
      * camera.frustum.near = 1.0;
      * camera.frustum.far = 2.0;
      *
@@ -93,54 +95,42 @@ define([
         this._actualTransform = Matrix4.clone(Matrix4.IDENTITY);
         this._actualInvTransform = Matrix4.clone(Matrix4.IDENTITY);
 
-        var maxRadii = Ellipsoid.WGS84.maximumRadius;
-        var position = new Cartesian3(0.0, -2.0, 1.0);
-        position = Cartesian3.multiplyByScalar(Cartesian3.normalize(position, position), 2.5 * maxRadii, position);
-
         /**
          * The position of the camera.
          *
          * @type {Cartesian3}
          */
-        this.position = position;
-        this._position = Cartesian3.clone(position);
-        this._positionWC = Cartesian3.clone(position);
-
-        var direction = new Cartesian3();
-        direction = Cartesian3.normalize(Cartesian3.negate(position, direction), direction);
+        this.position = new Cartesian3();
+        this._position = new Cartesian3();
+        this._positionWC = new Cartesian3();
+        this._positionCartographic = new Cartographic();
 
         /**
          * The view direction of the camera.
          *
          * @type {Cartesian3}
          */
-        this.direction = direction;
-        this._direction = Cartesian3.clone(direction);
-        this._directionWC = Cartesian3.clone(direction);
-
-        var right = new Cartesian3();
-        right = Cartesian3.normalize(Cartesian3.cross(direction, Cartesian3.UNIT_Z, right), right);
-        var up = Cartesian3.cross(right, direction, new Cartesian3());
+        this.direction = new Cartesian3();
+        this._direction = new Cartesian3();
+        this._directionWC = new Cartesian3();
 
         /**
          * The up direction of the camera.
          *
          * @type {Cartesian3}
          */
-        this.up = up;
-        this._up = Cartesian3.clone(up);
-        this._upWC = Cartesian3.clone(up);
-
-        right = Cartesian3.cross(direction, up, new Cartesian3());
+        this.up = new Cartesian3();
+        this._up = new Cartesian3();
+        this._upWC = new Cartesian3();
 
         /**
          * The right direction of the camera.
          *
          * @type {Cartesian3}
          */
-        this.right = right;
-        this._right = Cartesian3.clone(right);
-        this._rightWC = Cartesian3.clone(right);
+        this.right = new Cartesian3();
+        this._right = new Cartesian3();
+        this._rightWC = new Cartesian3();
 
         /**
          * The region of space in view.
@@ -153,8 +143,8 @@ define([
          * @see OrthographicFrustum
          */
         this.frustum = new PerspectiveFrustum();
-        this.frustum.fovy = CesiumMath.toRadians(60.0);
         this.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        this.frustum.fov = CesiumMath.toRadians(60.0);
 
         /**
          * The default amount to move the camera when an argument is not
@@ -215,15 +205,43 @@ define([
         this._projection = projection;
         this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
         this._max2Dfrustum = undefined;
+
+        // set default view
+        this.viewRectangle(Camera.DEFAULT_VIEW_RECTANGLE);
+
+        var mag = Cartesian3.magnitude(this.position);
+        mag += mag * Camera.DEFAULT_VIEW_FACTOR;
+        Cartesian3.normalize(this.position, this.position);
+        Cartesian3.multiplyByScalar(this.position, mag, this.position);
     };
 
+    /**
+     * @private
+     */
     Camera.TRANSFORM_2D = new Matrix4(
         0.0, 0.0, 1.0, 0.0,
         1.0, 0.0, 0.0, 0.0,
         0.0, 1.0, 0.0, 0.0,
         0.0, 0.0, 0.0, 1.0);
 
-    Camera.TRANSFORM_2D_INVERSE = Matrix4.inverseTransformation(Camera.TRANSFORM_2D);
+    /**
+     * @private
+     */
+    Camera.TRANSFORM_2D_INVERSE = Matrix4.inverseTransformation(Camera.TRANSFORM_2D, new Matrix4());
+
+    /**
+     * The default extent the camera will view on creation.
+     * @type Rectangle
+     */
+    Camera.DEFAULT_VIEW_RECTANGLE = Rectangle.fromDegrees(-95.0, -20.0, -70.0, 90.0);
+
+    /**
+     * A scalar to multiply to the camera position and add it back after setting the camera to view the rectangle.
+     * A value of zero means the camera will view the entire {@link Camera#DEFAULT_VIEW_RECTANGLE}, a value greater than zero
+     * will move it further away from the extent, and a value less than zero will move it close to the extent.
+     * @type Number
+     */
+    Camera.DEFAULT_VIEW_FACTOR = 0.5;
 
     function updateViewMatrix(camera) {
         var r = camera._right;
@@ -429,6 +447,28 @@ define([
 
         if (positionChanged || transformChanged) {
             camera._positionWC = Matrix4.multiplyByPoint(transform, position, camera._positionWC);
+
+            // Compute the Cartographic position of the camera.
+            var mode = camera._mode;
+            if (mode === SceneMode.SCENE3D || mode === SceneMode.MORPHING) {
+                camera._positionCartographic = camera._projection.ellipsoid.cartesianToCartographic(camera._positionWC, camera._positionCartographic);
+            } else {
+                // The camera position is expressed in the 2D coordinate system where the Y axis is to the East,
+                // the Z axis is to the North, and the X axis is out of the map.  Express them instead in the ENU axes where
+                // X is to the East, Y is to the North, and Z is out of the local horizontal plane.
+                var positionENU = scratchCartesian;
+                positionENU.x = camera._positionWC.y;
+                positionENU.y = camera._positionWC.z;
+                positionENU.z = camera._positionWC.x;
+
+                // In 2D, the camera height is always 12.7 million meters.
+                // The apparent height is equal to half the frustum width.
+                if (mode === SceneMode.SCENE2D) {
+                    positionENU.z = (camera.frustum.right - camera.frustum.left) * 0.5;
+                }
+
+                camera._projection.unproject(positionENU, camera._positionCartographic);
+            }
         }
 
         if (directionChanged || upChanged || rightChanged) {
@@ -559,6 +599,22 @@ define([
             get : function() {
                 updateMembers(this);
                 return this._invViewMatrix;
+            }
+        },
+
+        /**
+         * Gets the {@link Cartographic} position of the camera, with longitude and latitude
+         * expressed in radians and height in meters.  In 2D and Columbus View, it is possible
+         * for the returned longitude and latitude to be outside the range of valid longitudes
+         * and latitudes when the camera is outside the map.
+         * @memberof Camera.prototype
+         *
+         * @type {Cartographic}
+         */
+        positionCartographic : {
+            get : function() {
+                updateMembers(this);
+                return this._positionCartographic;
             }
         },
 
@@ -760,6 +816,9 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (!defined(result)){
+            result = new Cartesian4();
+        }
         updateMembers(this);
         return Matrix4.multiplyByVector(this._actualInvTransform, cartesian, result);
     };
@@ -778,6 +837,9 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (!defined(result)){
+            result = new Cartesian3();
+        }
         updateMembers(this);
         return Matrix4.multiplyByPoint(this._actualInvTransform, cartesian, result);
     };
@@ -796,6 +858,9 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (!defined(result)){
+            result = new Cartesian3();
+        }
         updateMembers(this);
         return Matrix4.multiplyByPointAsVector(this._actualInvTransform, cartesian, result);
     };
@@ -814,6 +879,9 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (!defined(result)){
+            result = new Cartesian4();
+        }
         updateMembers(this);
         return Matrix4.multiplyByVector(this._actualTransform, cartesian, result);
     };
@@ -832,6 +900,9 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (!defined(result)){
+            result = new Cartesian3();
+        }
         updateMembers(this);
         return Matrix4.multiplyByPoint(this._actualTransform, cartesian, result);
     };
@@ -850,6 +921,9 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (!defined(result)){
+            result = new Cartesian3();
+        }
         updateMembers(this);
         return Matrix4.multiplyByPointAsVector(this._actualTransform, cartesian, result);
     };
@@ -1086,23 +1160,6 @@ define([
         this.look(this.direction, -amount);
     };
 
-    var appendTransformMatrix = new Matrix4();
-
-    function appendTransform(camera, transform) {
-        var oldTransform;
-        if (defined(transform)) {
-            oldTransform = Matrix4.clone(camera.transform, appendTransformMatrix);
-            camera.setTransform(transform);
-        }
-        return oldTransform;
-    }
-
-    function revertTransform(camera, transform) {
-        if (defined(transform)) {
-            camera.setTransform(transform);
-        }
-    }
-
     var rotateScratchQuaternion = new Quaternion();
     var rotateScratchMatrix = new Matrix3();
     /**
@@ -1111,20 +1168,13 @@ define([
      *
      * @param {Cartesian3} axis The axis to rotate around given in world coordinates.
      * @param {Number} [angle] The angle, in radians, to rotate by. Defaults to <code>defaultRotateAmount</code>.
-     * @param {Matrix4} [transform] A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
      *
      * @see Camera#rotateUp
      * @see Camera#rotateDown
      * @see Camera#rotateLeft
      * @see Camera#rotateRight
-     *
-     * @example
-     * // Rotate about a point on the earth.
-     * var center = ellipsoid.cartographicToCartesian(cartographic);
-     * var transform = Cesium.Matrix4.fromTranslation(center);
-     * camera.rotate(axis, angle, transform);
     */
-    Camera.prototype.rotate = function(axis, angle, transform) {
+    Camera.prototype.rotate = function(axis, angle) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(axis)) {
             throw new DeveloperError('axis is required.');
@@ -1134,50 +1184,44 @@ define([
         var turnAngle = defaultValue(angle, this.defaultRotateAmount);
         var quaternion = Quaternion.fromAxisAngle(axis, -turnAngle, rotateScratchQuaternion);
         var rotation = Matrix3.fromQuaternion(quaternion, rotateScratchMatrix);
-        var oldTransform = appendTransform(this, transform);
         Matrix3.multiplyByVector(rotation, this.position, this.position);
         Matrix3.multiplyByVector(rotation, this.direction, this.direction);
         Matrix3.multiplyByVector(rotation, this.up, this.up);
         Cartesian3.cross(this.direction, this.up, this.right);
         Cartesian3.cross(this.right, this.direction, this.up);
-        revertTransform(this, oldTransform);
     };
 
     /**
      * Rotates the camera around the center of the camera's reference frame by angle downwards.
      *
      * @param {Number} [angle] The angle, in radians, to rotate by. Defaults to <code>defaultRotateAmount</code>.
-     * @param {Matrix4} [transform] A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
      *
      * @see Camera#rotateUp
      * @see Camera#rotate
      */
-    Camera.prototype.rotateDown = function(angle, transform) {
+    Camera.prototype.rotateDown = function(angle) {
         angle = defaultValue(angle, this.defaultRotateAmount);
-        rotateVertical(this, angle, transform);
+        rotateVertical(this, angle);
     };
 
     /**
      * Rotates the camera around the center of the camera's reference frame by angle upwards.
      *
      * @param {Number} [angle] The angle, in radians, to rotate by. Defaults to <code>defaultRotateAmount</code>.
-     * @param {Matrix4} [transform] A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
      *
      * @see Camera#rotateDown
      * @see Camera#rotate
      */
-    Camera.prototype.rotateUp = function(angle, transform) {
+    Camera.prototype.rotateUp = function(angle) {
         angle = defaultValue(angle, this.defaultRotateAmount);
-        rotateVertical(this, -angle, transform);
+        rotateVertical(this, -angle);
     };
 
     var rotateVertScratchP = new Cartesian3();
     var rotateVertScratchA = new Cartesian3();
     var rotateVertScratchTan = new Cartesian3();
     var rotateVertScratchNegate = new Cartesian3();
-    function rotateVertical(camera, angle, transform) {
-        var oldTransform = appendTransform(camera, transform);
-
+    function rotateVertical(camera, angle) {
         var position = camera.position;
         var p = Cartesian3.normalize(position, rotateVertScratchP);
         if (defined(camera.constrainedAxis)) {
@@ -1189,13 +1233,13 @@ define([
                 var dot = Cartesian3.dot(p, constrainedAxis);
                 var angleToAxis = CesiumMath.acosClamped(dot);
                 if (angle > 0 && angle > angleToAxis) {
-                    angle = angleToAxis;
+                    angle = angleToAxis - CesiumMath.EPSILON4;
                 }
 
                 dot = Cartesian3.dot(p, Cartesian3.negate(constrainedAxis, rotateVertScratchNegate));
                 angleToAxis = CesiumMath.acosClamped(dot);
                 if (angle < 0 && -angle > angleToAxis) {
-                    angle = -angleToAxis;
+                    angle = -angleToAxis + CesiumMath.EPSILON4;
                 }
 
                 var tangent = Cartesian3.cross(constrainedAxis, p, rotateVertScratchTan);
@@ -1206,43 +1250,39 @@ define([
         } else {
             camera.rotate(camera.right, angle);
         }
-
-        revertTransform(camera, oldTransform);
     }
 
     /**
      * Rotates the camera around the center of the camera's reference frame by angle to the right.
      *
      * @param {Number} [angle] The angle, in radians, to rotate by. Defaults to <code>defaultRotateAmount</code>.
-     * @param {Matrix4} [transform] A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
      *
      * @see Camera#rotateLeft
      * @see Camera#rotate
      */
-    Camera.prototype.rotateRight = function(angle, transform) {
+    Camera.prototype.rotateRight = function(angle) {
         angle = defaultValue(angle, this.defaultRotateAmount);
-        rotateHorizontal(this, -angle, transform);
+        rotateHorizontal(this, -angle);
     };
 
     /**
      * Rotates the camera around the center of the camera's reference frame by angle to the left.
      *
      * @param {Number} [angle] The angle, in radians, to rotate by. Defaults to <code>defaultRotateAmount</code>.
-     * @param {Matrix4} [transform] A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
      *
      * @see Camera#rotateRight
      * @see Camera#rotate
      */
-    Camera.prototype.rotateLeft = function(angle, transform) {
+    Camera.prototype.rotateLeft = function(angle) {
         angle = defaultValue(angle, this.defaultRotateAmount);
-        rotateHorizontal(this, angle, transform);
+        rotateHorizontal(this, angle);
     };
 
-    function rotateHorizontal(camera, angle, transform) {
+    function rotateHorizontal(camera, angle) {
         if (defined(camera.constrainedAxis)) {
-            camera.rotate(camera.constrainedAxis, angle, transform);
+            camera.rotate(camera.constrainedAxis, angle);
         } else {
-            camera.rotate(camera.up, angle, transform);
+            camera.rotate(camera.up, angle);
         }
     }
 
@@ -1686,7 +1726,8 @@ define([
             return undefined;
         }
 
-        return Ray.getPoint(ray, intersection.start, result);
+        var t = (Cartesian3.magnitude(ray.origin) < ellipsoid.maximumRadius) ? intersection.stop : intersection.start;
+        return Ray.getPoint(ray, t, result);
     }
 
     var pickEllipsoid2DRay = new Ray();
@@ -1748,6 +1789,8 @@ define([
             result = pickMap2D(this, windowPosition, this._projection, result);
         } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
             result = pickMapColumbusView(this, windowPosition, this._projection, result);
+        } else {
+            return undefined;
         }
 
         return result;
@@ -1828,7 +1871,7 @@ define([
         }
 
         var frustum = this.frustum;
-        if (defined(frustum.aspectRatio) && defined(frustum.fovy) && defined(frustum.near)) {
+        if (defined(frustum.aspectRatio) && defined(frustum.fov) && defined(frustum.near)) {
             return getPickRayPerspective(this, windowPosition, result);
         }
 
@@ -1877,15 +1920,15 @@ define([
             };
 
             return {
-                easingFunction : Tween.Easing.Exponential.Out,
-                startValue : {
+                easingFunction : EasingFunction.EXPONENTIAL_OUT,
+                startObject : {
                     time : 0.0
                 },
-                stopValue : {
+                stopObject : {
                     time : 1.0
                 },
                 duration : duration,
-                onUpdate : update2D
+                update : update2D
             };
         }
 
@@ -1913,15 +1956,15 @@ define([
         };
 
         return {
-            easingFunction : Tween.Easing.Exponential.Out,
-            startValue : {
+            easingFunction : EasingFunction.EXPONENTIAL_OUT,
+            startObject : {
                 time : 0.0
             },
-            stopValue : {
+            stopObject : {
                 time : 1.0
             },
             duration : duration,
-            onUpdate : updateCV
+            update : updateCV
         };
     }
 
@@ -1967,12 +2010,14 @@ define([
     /**
      * Create an animation to move the map into view. This method is only valid for 2D and Columbus modes.
      *
-     * @param {Number} duration The duration, in milliseconds, of the animation.
+     * @param {Number} duration The duration, in seconds, of the animation.
      * @returns {Object} The animation or undefined if the scene mode is 3D or the map is already ion view.
      *
      * @exception {DeveloperException} duration is required.
+     *
+     * @private
      */
-    Camera.prototype.createCorrectPositionAnimation = function(duration) {
+    Camera.prototype.createCorrectPositionTween = function(duration) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(duration)) {
             throw new DeveloperError('duration is required.');
@@ -1995,9 +2040,9 @@ define([
      * @param {Cartesian3} options.destination The final position of the camera in WGS84 (world) coordinates.
      * @param {Cartesian3} [options.direction] The final direction of the camera in WGS84 (world) coordinates. By default, the direction will point towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D.
      * @param {Cartesian3} [options.up] The final up direction in WGS84 (world) coordinates. By default, the up direction will point towards local north in 3D and in the positive y direction in Columbus view or 2D.
-     * @param {Number} [options.duration=3000] The duration of the flight in milliseconds.
-     * @param {Function} [options.onComplete] The function to execute when the flight is complete.
-     * @param {Function} [options.onCancel] The function to execute if the flight is cancelled.
+     * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
+     * @param {Camera~FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
+     * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
      * @param {Boolean} [options.convert=true] When <code>true</code>, the destination is converted to the correct coordinate system for each scene mode. When <code>false</code>, the destination is expected
      *                  to be in the correct coordinate system.
@@ -2006,7 +2051,7 @@ define([
      */
     Camera.prototype.flyTo = function(options) {
         var scene = this._scene;
-        scene.animations.add(CameraFlightPath.createAnimation(scene, options));
+        scene.tweens.add(CameraFlightPath.createTween(scene, options));
     };
 
     /**
@@ -2014,14 +2059,14 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {Rectangle} options.destination The rectangle to view, in WGS84 (world) coordinates, which determines the final position of the camera.
-     * @param {Number} [options.duration=3000] The duration of the flight in milliseconds.
-     * @param {Function} [options.onComplete] The function to execute when the flight is complete.
-     * @param {Function} [options.onCancel] The function to execute if the flight is cancelled.
+     * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
+     * @param {Camera~FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
+     * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
      * @param {Matrix4} [endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
      */
     Camera.prototype.flyToRectangle = function(options) {
         var scene = this._scene;
-        scene.animations.add(CameraFlightPath.createAnimationRectangle(scene, options));
+        scene.tweens.add(CameraFlightPath.createTweenRectangle(scene, options));
     };
 
     /**
@@ -2039,6 +2084,16 @@ define([
         camera.frustum = this.frustum.clone();
         return camera;
     };
+
+    /**
+     * A function that will execute when a flight completes.
+     * @callback Camera~FlightCompleteCallback
+     */
+
+    /**
+     * A function that will execute when a flight is cancelled.
+     * @callback Camera~FlightCancelledCallback
+     */
 
     return Camera;
 });

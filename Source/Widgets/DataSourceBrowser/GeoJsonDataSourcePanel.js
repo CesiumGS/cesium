@@ -4,7 +4,7 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/getFilenameFromUri',
-        '../../DynamicScene/GeoJsonDataSource',
+        '../../DataSources/GeoJsonDataSource',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when'
     ], function(

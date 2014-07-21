@@ -27,7 +27,6 @@ define([
         '../Renderer/ClearCommand',
         '../Renderer/Context',
         '../Renderer/PassState',
-        './AnimationCollection',
         './Camera',
         './CreditDisplay',
         './CullingVolume',
@@ -47,7 +46,8 @@ define([
         './SceneTransforms',
         './SceneTransitioner',
         './ScreenSpaceCameraController',
-        './SunPostProcess'
+        './SunPostProcess',
+        './TweenCollection'
     ], function(
         BoundingRectangle,
         BoundingSphere,
@@ -76,7 +76,6 @@ define([
         ClearCommand,
         Context,
         PassState,
-        AnimationCollection,
         Camera,
         CreditDisplay,
         CullingVolume,
@@ -96,7 +95,8 @@ define([
         SceneTransforms,
         SceneTransitioner,
         ScreenSpaceCameraController,
-        SunPostProcess) {
+        SunPostProcess,
+        TweenCollection) {
     "use strict";
 
     /**
@@ -152,7 +152,7 @@ define([
      * @param {Object} [options.contextOptions] Context and WebGL creation properties.  See details above.
      * @param {Element} [options.creditContainer] The HTML element in which the credits will be displayed.
      * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
-     *
+     * @param {Boolean} [options.scene3DOnly=false] If true, optimizes memory use and performance for 3D mode but disables the ability to use 2D or Columbus View.     *
      * @see CesiumWidget
      * @see {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}
      *
@@ -190,7 +190,10 @@ define([
             creditContainer.style['padding-right'] = '5px';
             canvas.parentNode.appendChild(creditContainer);
         }
+
         this._frameState = new FrameState(new CreditDisplay(creditContainer));
+        this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
+
         this._passState = new PassState(context);
         this._canvas = canvas;
         this._context = context;
@@ -198,7 +201,7 @@ define([
         this._primitives = new PrimitiveCollection();
         this._pickFramebuffer = undefined;
 
-        this._animations = new AnimationCollection();
+        this._tweens = new TweenCollection();
 
         this._shaderFrameCount = 0;
 
@@ -315,13 +318,7 @@ define([
          */
         this.backgroundColor = Color.clone(Color.BLACK);
 
-        /**
-         * The current mode of the scene.
-         *
-         * @type {SceneMode}
-         * @default {@link SceneMode.SCENE3D}
-         */
-        this.mode = SceneMode.SCENE3D;
+        this._mode = SceneMode.SCENE3D;
 
         this._mapProjection = defaultValue(options.mapProjection, new GeographicProjection());
 
@@ -441,7 +438,7 @@ define([
 
         var camera = new Camera(this);
         this._camera = camera;
-        this._screenSpaceCameraController = new ScreenSpaceCameraController(canvas, camera);
+        this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
 
         // initial guess at frustums.
         var near = camera.frustum.near;
@@ -518,7 +515,6 @@ define([
          * @memberof Scene.prototype
          *
          * @type {Globe}
-         * @readonly
          */
         globe : {
             get: function() {
@@ -593,6 +589,8 @@ define([
          *
          * @type {FrameState}
          * @readonly
+         *
+         * @private
          */
         frameState : {
             get: function() {
@@ -601,15 +599,17 @@ define([
         },
 
         /**
-         * Gets the collection of animations taking place in the scene.
+         * Gets the collection of tweens taking place in the scene.
          * @memberof Scene.prototype
          *
-         * @type {AnimationCollection}
+         * @type {TweenCollection}
          * @readonly
+         *
+         * @private
          */
-        animations : {
+        tweens : {
             get : function() {
-                return this._animations;
+                return this._tweens;
             }
         },
 
@@ -718,6 +718,35 @@ define([
             get : function() {
                 return this._debugFrustumStatistics;
             }
+        },
+
+        /**
+         * Gets whether or not the scene is optimized for 3D only viewing.
+         * @memberof Scene.prototype
+         * @type {Boolean}
+         */
+        scene3DOnly : {
+            get : function() {
+                return this._frameState.scene3DOnly;
+            }
+        },
+
+        /**
+         * Gets or sets the current mode of the scene.
+         * @memberof Scene.prototype
+         * @type {SceneMode}
+         * @default {@link SceneMode.SCENE3D}
+         */
+        mode : {
+            get : function() {
+                return this._mode;
+            },
+            set : function(value) {
+                if (this.scene3DOnly && value !== SceneMode.SCENE3D) {
+                    throw new DeveloperError('Only SceneMode.SCENE3D is valid when scene3DOnly is true.');
+                }
+                this._mode = value;
+            }
         }
     });
 
@@ -728,7 +757,7 @@ define([
         // TODO: The occluder is the top-level globe. When we add
         //       support for multiple central bodies, this should be the closest one.
         var globe = scene.globe;
-        if (scene.mode === SceneMode.SCENE3D && defined(globe)) {
+        if (scene._mode === SceneMode.SCENE3D && defined(globe)) {
             var ellipsoid = globe.ellipsoid;
             scratchOccluderBoundingSphere.radius = ellipsoid.minimumRadius;
             scratchOccluder = Occluder.fromBoundingSphere(scratchOccluderBoundingSphere, scene._camera.positionWC, scratchOccluder);
@@ -747,7 +776,7 @@ define([
         var camera = scene._camera;
 
         var frameState = scene._frameState;
-        frameState.mode = scene.mode;
+        frameState.mode = scene._mode;
         frameState.morphTime = scene.morphTime;
         frameState.mapProjection = scene.mapProjection;
         frameState.frameNumber = frameNumber;
@@ -873,12 +902,12 @@ define([
                 var boundingVolume = command.boundingVolume;
                 if (defined(boundingVolume)) {
                     if (command.cull &&
-                            ((cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE) ||
+                            ((cullingVolume.computeVisibility(boundingVolume) === Intersect.OUTSIDE) ||
                              (defined(occluder) && !occluder.isBoundingSphereVisible(boundingVolume)))) {
                         continue;
                     }
 
-                    distances = BoundingSphere.getPlaneDistances(boundingVolume, position, direction, distances);
+                    distances = BoundingSphere.computePlaneDistances(boundingVolume, position, direction, distances);
                     near = Math.min(near, distances.start);
                     far = Math.max(far, distances.stop);
                 } else {
@@ -972,12 +1001,11 @@ define([
         }
     }
 
-    var transformFrom2D = Matrix4.inverseTransformation(//
-                            new Matrix4(0.0, 0.0, 1.0, 0.0, //
-                                        1.0, 0.0, 0.0, 0.0, //
-                                        0.0, 1.0, 0.0, 0.0, //
-                                        0.0, 0.0, 0.0, 1.0));
-
+    var transformFrom2D = new Matrix4(0.0, 0.0, 1.0, 0.0,
+                                        1.0, 0.0, 0.0, 0.0,
+                                        0.0, 1.0, 0.0, 0.0,
+                                        0.0, 0.0, 0.0, 1.0);
+    transformFrom2D = Matrix4.inverseTransformation(transformFrom2D, transformFrom2D);
     function executeCommand(command, scene, context, passState, renderState, shaderProgram, debugFramebuffer) {
         if ((defined(scene.debugCommandFilter)) && !scene.debugCommandFilter(command)) {
             return;
@@ -1007,7 +1035,7 @@ define([
             })));
 
             if (frameState.mode !== SceneMode.SCENE3D) {
-                center = Matrix4.multiplyByPoint(transformFrom2D, center);
+                center = Matrix4.multiplyByPoint(transformFrom2D, center, center);
                 var projection = frameState.mapProjection;
                 var centerCartographic = projection.unproject(center);
                 center = projection.ellipsoid.cartographicToCartesian(centerCartographic);
@@ -1016,7 +1044,7 @@ define([
             scene._debugSphere = new Primitive({
                 geometryInstances : new GeometryInstance({
                     geometry : geometry,
-                    modelMatrix : Matrix4.multiplyByTranslation(Matrix4.IDENTITY, center),
+                    modelMatrix : Matrix4.multiplyByTranslation(Matrix4.IDENTITY, center, new Matrix4()),
                     attributes : {
                         color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
                     }
@@ -1065,7 +1093,7 @@ define([
         return ((defined(command)) &&
                  ((!defined(command.boundingVolume)) ||
                   !command.cull ||
-                  ((cullingVolume.getVisibility(boundingVolume) !== Intersect.OUTSIDE) &&
+                  ((cullingVolume.computeVisibility(boundingVolume) !== Intersect.OUTSIDE) &&
                    (!defined(occluder) || occluder.isBoundingSphereVisible(boundingVolume)))));
     }
 
@@ -1095,7 +1123,7 @@ define([
         var us = context.uniformState;
 
         var frustum;
-        if (defined(camera.frustum.fovy)) {
+        if (defined(camera.frustum.fov)) {
             frustum = camera.frustum.clone(scratchPerspectiveFrustum);
         } else if (defined(camera.frustum.infiniteProjectionMatrix)){
             frustum = camera.frustum.clone(scratchPerspectiveOffCenterFrustum);
@@ -1282,9 +1310,9 @@ define([
             this._context.shaderCache.destroyReleasedShaderPrograms();
         }
 
-        this._animations.update();
-        this._camera.update(this.mode);
-        this._screenSpaceCameraController.update(this.mode);
+        this._tweens.update();
+        this._camera.update(this._mode);
+        this._screenSpaceCameraController.update(this._frameState);
     };
 
     function render(scene, time) {
@@ -1438,7 +1466,7 @@ define([
     }
 
     function getPickCullingVolume(scene, drawingBufferPosition, width, height) {
-        if (scene.mode === SceneMode.SCENE2D) {
+        if (scene._mode === SceneMode.SCENE2D) {
             return getPickOrthographicCullingVolume(scene, drawingBufferPosition, width, height);
         }
 
@@ -1570,36 +1598,36 @@ define([
 
     /**
      * Asynchronously transitions the scene to 2D.
-     * @param {Number} [duration=2000] The amount of time, in milliseconds, for transition animations to complete.
+     * @param {Number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
      */
     Scene.prototype.morphTo2D = function(duration) {
         var globe = this.globe;
         if (defined(globe)) {
-            duration = defaultValue(duration, 2000);
+            duration = defaultValue(duration, 2.0);
             this._transitioner.morphTo2D(duration, globe.ellipsoid);
         }
     };
 
     /**
      * Asynchronously transitions the scene to Columbus View.
-     * @param {Number} [duration=2000] The amount of time, in milliseconds, for transition animations to complete.
+     * @param {Number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
      */
     Scene.prototype.morphToColumbusView = function(duration) {
         var globe = this.globe;
         if (defined(globe)) {
-            duration = defaultValue(duration, 2000);
+            duration = defaultValue(duration, 2.0);
             this._transitioner.morphToColumbusView(duration, globe.ellipsoid);
         }
     };
 
     /**
      * Asynchronously transitions the scene to 3D.
-     * @param {Number} [duration=2000] The amount of time, in milliseconds, for transition animations to complete.
+     * @param {Number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
      */
     Scene.prototype.morphTo3D = function(duration) {
         var globe = this.globe;
         if (defined(globe)) {
-            duration = defaultValue(duration, 2000);
+            duration = defaultValue(duration, 2.0);
             this._transitioner.morphTo3D(duration, globe.ellipsoid);
         }
     };
@@ -1636,7 +1664,7 @@ define([
      * scene = scene && scene.destroy();
      */
     Scene.prototype.destroy = function() {
-        this._animations.removeAll();
+        this._tweens.removeAll();
         this._screenSpaceCameraController = this._screenSpaceCameraController && this._screenSpaceCameraController.destroy();
         this._pickFramebuffer = this._pickFramebuffer && this._pickFramebuffer.destroy();
         this._primitives = this._primitives && this._primitives.destroy();

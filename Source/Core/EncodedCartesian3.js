@@ -19,6 +19,8 @@ define([
      *
      * @alias EncodedCartesian3
      * @constructor
+     *
+     * @private
      */
     var EncodedCartesian3 = function() {
         /**

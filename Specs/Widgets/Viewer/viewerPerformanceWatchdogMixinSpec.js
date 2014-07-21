@@ -1,14 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/Viewer/viewerPerformanceWatchdogMixin',
-         'Widgets/PerformanceWatchdog/PerformanceWatchdog',
-         'Core/defined',
-         'Widgets/Viewer/Viewer'
-     ], function(
-         viewerPerformanceWatchdogMixin,
-         PerformanceWatchdog,
-         defined,
-         Viewer) {
+        'Widgets/Viewer/viewerPerformanceWatchdogMixin',
+        'Core/defined',
+        'Widgets/PerformanceWatchdog/PerformanceWatchdog',
+        'Widgets/Viewer/Viewer'
+    ], function(
+        viewerPerformanceWatchdogMixin,
+        defined,
+        PerformanceWatchdog,
+        Viewer) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

@@ -1,12 +1,111 @@
 Change Log
 ==========
 
+### 1.0 - 2014-08-01
+
+* Breaking changes
+  * All `Matrix2`, `Matrix3`, `Matrix4` and `Quaternion` functions that take a `result` parameter now require the parameter (except for functions starting with `from`).
+  * Removed the following from the Cesium API: `Transforms.earthOrientationParameters`, `EarthOrientationParameters`, `EarthOrientationParametersSample`, `Transforms.iau2006XysData`, `Iau2006XysData`, `Iau2006XysSample`, `IauOrientationAxes`, `TimeConstants`, `Scene.frameState`, `FrameState`, `EncodedCartesian3`, `EllipsoidalOccluder`, and `FAR`.  These are still available but are not part of the official API and may change in future versions.
+  * Removed `DynamicObject.vertexPositions`.  Use `DynamicWall.positions`, `DynamicPolygon.positions`, and `DynamicPolyline.positions` instead.
+  * Removed `Primitive.allow3DOnly`, set the `Scene` level option, `scene3DOnly`, instead.
+  * `SampledProperty` and `SampledPositionProperty` no longer extrapolate outside of their sample data time range by default.
+  * Refactored the following methods into a properties:
+    * `TerrainProvider.hasWaterMask`
+    * `CesiumTerrainProvider.hasWaterMask`
+    * `ArcGisImageServerTerrainProvider.hasWaterMask`
+    * `EllipsoidTerrainProvider.hasWaterMask`
+    * `VRTheWorldTerrainProvider.hasWaterMask`
+  * Renamed preprocessor define, `ENABLE_LIGHTING` used by `Globe` shaders to `ENABLE_DAYNIGHT_SHADING`
+  * The `DynamicScene` layer has been renamed to `DataSources` additionally, the following objects have all been renamed.
+    * `DynamicBillboard` -> `BillboardGraphics`
+    * `DynamicBillboardVisualizer` -> `BillboardVisualizer`
+    * `CompositeDynamicObjectCollection` -> `CompositeEntityCollection`
+    * `DynamicCone` -> `ConeGraphics`
+    * `DynamicConeVisualizerUsingCustomSensor` -> `ConeVisualizer`
+    * `DynamicClock` -> `DataSourceClock`
+    * `DynamicEllipse` -> `EllipseGraphics`
+    * `DynamicEllipsoid` -> `EllipsoidGraphics`
+    * `DynamicObject` -> `Entity`
+    * `DynamicObjectCollection` -> `EntityCollection`
+    * `DynamicObjectView` -> `EntityView`
+    * `DynamicLabel` -> `LabelGraphics`
+    * `DynamicLabelVisualizer` -> `LabelVisualizer`
+    * `DynamicModel` -> `ModelGraphics`
+    * `DynamicModelVisualizer` -> `ModelVisualizer`
+    * `DynamicPath` -> `PathGraphics`
+    * `DynamicPathVisualizer` -> `PathVisualizer`
+    * `DynamicPoint` -> `PointGraphics`
+    * `DynamicPointVisualizer` -> `PointVisualizer`
+    * `DynamicPolygon` -> `PolygonGraphics`
+    * `DynamicPolyline` -> `PolylineGraphics`
+    * `DynamicPyramid` -> `PyramidGraphics`
+    * `DynamicPyramidVisualizer` -> `PyramidVisualizer`
+    * `DynamicRectangle` -> `RectangleGraphics`
+    * `DynamicWall` -> `WallGraphics`
+    * `viewerDynamicObjectMixin` -> `viewerEntityMixin`
+  * Removed `DynamicVector` and `DynamicVectorVisualizer`
+  * `DataSource.dynamicObjects` has been renamed to `DataSource.entities`
+  * `EntityCollection.getObjects()` and `CompositeEntityCollection.getObjects()` have been made properties and renamed `EntityCollection.entities` and `CompositeEntityCollection.entities`. 
+  * `Viewer.trackedObject` and `Viewer.selectedObject` have been renamed to `Viewer.trackedEntity` and `Viewer.selectedEntity` when using the `viewerEntityMixin`.
+  * Renamed functions for naming consistency
+    * `BoundingSphere.getPlaneDistances` -> `BoundingSphere.computePlaneDistances`
+    * `Cartesian[2,3,4].getMaximumComponent` -> `Cartesian[2,3,4].maximumComponent`
+    * `Cartesian[2,3,4].getMinimumComponent` -> `Cartesian[2,3,4].minimumComponent`
+    * `Cartesian[2,3,4].getMaximumByComponent` -> `Cartesian[2,3,4].maximumByComponent`
+    * `Cartesian[2,3,4].getMinimumByComponent` -> `Cartesian[2,3,4].minimumByComponent`
+    * `CubicRealPolynomial.realRoots` -> `CubicRealPolynomial.computeRealRoots`
+    * `CubicRealPolynomial.discriminant` -> `CubicRealPolynomial.computeDiscriminant`
+    * `JulianDate.getTotalDays` -> `JulianDate.totalDyas`
+    * `JulianDate.getSecondsDifference` -> `JulianDate.secondsDifference`
+    * `JulianDate.getDaysDifference` -> `JulianDate.daysDifference`
+    * `JulianDate.getTaiMinusUtc` -> `JulianDate.computeTaiMinusUtc`
+    * `Matrix3.getEigenDecompostion` -> `Matrix3.computeEigenDecomposition`
+    * `Occluder.getVisibility` -> `Occluder.computeVisibility`
+    * `Occluder.getOccludeePoint` -> `Occluder.computerOccludeePoint`
+    * `QuadraticRealPolynomial.discriminant` -> `QuadraticRealPolynomial.computeDiscriminant`
+    * `QuadraticRealPolynomial.realRoots` -> `QuadraticRealPolynomial.computeRealRoots`
+    * `QuarticRealPolynomial.discriminant` -> `QuarticRealPolynomial.computeDiscriminant`
+    * `QuarticRealPolynomial.realRoots` -> `QuarticRealPolynomial.computeRealRoots`
+    * `Quaternion.getAxis` -> `Quaternion.computeAxis`
+    * `Quaternion.getAngle` -> `Quaternion.computeAngle`
+    * `Quaternion.innerQuadrangle` -> `Quaternion.computeInnerQuadrangle`
+    * `Rectangle.getSouthwest` -> `Rectangle.southwest`
+    * `Rectangle.getNorthwest` -> `Rectangle.northwest`
+    * `Rectangle.getSoutheast` -> `Rectangle.southeast`
+    * `Rectangle.getNortheast` -> `Rectangle.northeast`
+    * `Rectangle.getCenter` -> `Rectangle.center`
+    * `CullingVolume.getVisibility` -> `CullingVolume.computeVisibility`
+  * `SimplePolylineGeometry` and `PolylineGeometry` positions curve to follow the ellipsoid surface by default. To disable this behavior, set the option `followSurface=false`.
+  * Removed `ScreenSpaceCameraController.ellipsoid`. The behavior that depended on the ellipsoid is now determined based on the scene state.
+  * Sandcastle examples now automatically wrap the example code in RequireJS boilerplate.  To upgrade any custom examples, copy the code into an existing example (such as Hello World) and save a new file.
+  * Replaced `PerspectiveFrustum.fovy` with `PerspectiveFrustum.fov` which will change the field of view angle in either the x or y direction depending on the aspect ratio.
+* Added northUpEast transform to help support display of glTF models because Y is their up axis.
+* Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
+* Added `czm_octDecode` and `czm_signNotZero` builtin functions.
+* Added `CesiumTerrainProvider.requestVertexNormals` to request per vertex normals from the provider, if they are available.
+* Added new property to all terrain providers: `TerrainProvider.hasVertexNormals`, `CesiumTerrainProvider.hasVertexNormals`, `ArcGisImageServerTerrainProvider.hasVertexNormals`, `EllipsoidTerrainProvider.hasVertexNormals`, `VRTheWorldTerrainProvider.hasVertexNormals`.  This property indicates whether or not vertex normals will be included in the terrain tile responses.
+* Added support for rendering the globe with oct-encoded per vertex normals .
+* Added `Primitive.ready`.
+* Prevent primitives from flashing off and on when modifying static DataSources.
+* Added `scene3DOnly` options to `Viewer`, `CesiumWidget`, and `Scene` constructors. This setting optimizes memory usage and performance for 3D mode at the cost of losing the ability to use 2D or Columbus View.
+* Added the following methods to `IntersectionTests`: `rayTriangle`, `lineSegmentTriangle`, `raySphere`, and `lineSegmentSphere`.
+* Added `Globe.getHeight` and `Globe.pick` for finding the terrain height at a given Cartographic coordinate and picking the terrain with a ray.
+* Modified the default camera tilt mouse behavior to tilt about the point clicked.
+* Added camera collision detection with terrain to the default mouse interaction.
+* Matrix types now have `add` and `subtract` functions.
+* `Matrix3` type now has a `fromCrossProduct` function.
+* Added `forwardExtrapolationType`, `forwardExtrapolationDuration`, `backwardExtrapolationType`, and `backwardExtrapolationDuration` to `SampledProperty` and `SampledPositionProperty` which allows the user to specify how a property calculates its value when outside the range of its sample data.
+
 Beta Releases
 -------------
 
 ### b30 - 2014-07-01
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))
+  * CZML property references now use a `#` symbol to separate identifier from property path. `objectId.position` should now be `objectId#position`.
+  * All `Cartesian2`, `Cartesian3`, `Cartesian4`, `TimeInterval`, and `JulianDate` functions that take a `result` parameter now require the parameter (except for functions starting with `from`).
+  * Modified `Transforms.pointToWindowCoordinates` and `SceneTransforms.wgs84ToWindowCoordinates` to return window coordinates with origin at the top left corner.
+  * `Billboard.pixelOffset` and `Label.pixelOffset` now have their origin at the top left corner.
   * Replaced `CameraFlightPath.createAnimation` with `Camera.flyTo` and replaced `CameraFlightPath.createAnimationRectangle` with `Camera.flyToRectangle`.  Code that looked like:
 
             scene.animations.add(Cesium.CameraFlightPath.createAnimation(scene, {
@@ -19,16 +118,18 @@ Beta Releases
                 destination : Cesium.Cartesian3.fromDegrees(-117.16, 32.71, 15000.0)
             });
 
-  * Renamed `options.endReferenceFrame` to `options.endTransform` in `Camera.flyTo` and `Camera.flyToRectangle`.
-  * Renamed `Simon1994PlanetaryPositions` functions `ComputeSunPositionInEarthInertialFrame` and `ComputeMoonPositionInEarthInertialFrame` to `computeSunPositionInEarthInertialFrame` and `computeMoonPositionInEarthInertialFrame`, respectively.
-  * Replaced `Scene.scene2D.projection` property with read-only `Scene.mapProjection`.  Set this with the `mapProjection` option for the `Viewer`, `CesiumWidget`, or `Scene` constructors.
-  * `Scene` constructor function now takes an `options` parameter instead of individual parameters.
-  * Replaced `color`, `outlineColor`, and `outlineWidth` in `DynamicPath` with a `material` property.
-  * CZML property references now use a `#` symbol to separate identifier from property path. `objectId.position` should now be `objectId#position`. 
-  * `CesiumWidget.showErrorPanel` now takes a `message` parameter in between the previous `title` and `error` parameters.
-  * `Event.removeEventListener` no longer throws `DeveloperError` if the `listener` does not exist; it now returns `false`.
-  * All `Cartesain2`, `Cartesian3` and `Cartesian4` functions that take a `result` parameter now require the parameter (except for functions starting with `from`).
-  * Moved `LeapSecond.leapSeconds` to `JulianDate.leapSeconds`.
+  * In `Camera.flyTo` and `Camera.flyToRectangle`:
+    * `options.duration` is now in seconds, not milliseconds.
+    * Renamed `options.endReferenceFrame` to `options.endTransform`.
+    * Renamed `options.onComplete` to `options.complete`.
+    * Renamed `options.onCancel` to `options.cancel`.
+  * The following are now in seconds, not milliseconds.
+    * `Scene.morphToColumbusView`, `Scene.morphTo2D`, and `Scene.morphTo3D` parameter `duration`.
+    * `HomeButton` constructor parameter `options.duration`, `HomeButtonViewModel` constructor parameter `duration`, and `HomeButtonViewModel.duration`.
+    * `SceneModePicker` constructor parameter `duration`, `SceneModePickerViewModel` constructor parameter `duration`, and `SceneModePickerViewModel.duration`.
+    * `Geocoder` and `GeocoderViewModel` constructor parameter `options.flightDuration` and `GeocoderViewModel.flightDuration`.
+    * `ScreenSpaceCameraController.bounceAnimationTime`.
+    * `FrameRateMonitor` constructor parameter `options.samplingWindow`, `options.quietPeriod`, and `options.warmupPeriod`.
   * Refactored `JulianDate` to be in line with other Core types.
     * Most functions now take result parameters.
     * The default constructor no longer creates a date at the current time, use `JulianDate.now()` instead.
@@ -45,25 +146,87 @@ Beta Releases
     * `date.addHours(hours)` -> `JulianDate.addHours(date, hours)`
     * `date.addDays(days)` -> `JulianDate.addDays(date, days)`
     * `date.lessThan(right)` -> `JulianDate.lessThan(left, right)`
-    * `date.lessThanOrEquals (right)` -> `JulianDate.lessThanOrEquals (left, right)`
-    * `date.greaterThan (right)` -> `JulianDate.greaterThan (left, right)`
-    * `date.greaterThanOrEquals (right)` -> `JulianDate.greaterThanOrEquals (left, right)`
-* `DynamicObject.id` can now include period characters.
+    * `date.lessThanOrEquals(right)` -> `JulianDate.lessThanOrEquals(left, right)`
+    * `date.greaterThan(right)` -> `JulianDate.greaterThan(left, right)`
+    * `date.greaterThanOrEquals(right)` -> `JulianDate.greaterThanOrEquals(left, right)`
+  * Refactored `TimeInterval` to be in line with other Core types.
+    * The constructor no longer requires parameters and now takes a single options parameter. Code that looked like:
+
+            new TimeInterval(startTime, stopTime, true, true, data);
+
+    should now look like:
+
+            new TimeInterval({
+                start : startTime,
+                stop : stopTime,
+                isStartIncluded : true,
+                isStopIncluded : true,
+                data : data
+            });
+
+    * `TimeInterval.fromIso8601` now takes a single options parameter. Code that looked like:
+
+            TimeInterval.fromIso8601(intervalString, true, true, data);
+
+    should now look like:
+
+            TimeInterval.fromIso8601({
+                iso8601 : intervalString,
+                isStartIncluded : true,
+                isStopIncluded : true,
+                data : data
+            });
+
+    * `interval.intersect(otherInterval)` -> `TimeInterval.intersect(interval, otherInterval)`
+    * `interval.contains(date)` -> `TimeInterval.contains(interval, date)`
+  * Removed `TimeIntervalCollection.intersectInterval`.
+  * `TimeIntervalCollection.findInterval` now takes a single options parameter instead of individual parameters.  Code that looked like:
+
+            intervalCollection.findInterval(startTime, stopTime, false, true);
+
+    should now look like:
+
+            intervalCollection.findInterval({
+                start : startTime,
+                stop : stopTime,
+                isStartIncluded : false,
+                isStopIncluded : true
+            });
+
+  * `TimeIntervalCollection.empty` was renamed to `TimeIntervalCollection.isEmpty`
+  * Removed `Scene.animations` and `AnimationCollection` from the public Cesium API.
+  * Replaced `color`, `outlineColor`, and `outlineWidth` in `DynamicPath` with a `material` property.
+  * `ModelAnimationCollection.add` and `ModelAnimationCollection.addAll` renamed `options.startOffset` to `options.delay`.  Also renamed `ModelAnimation.startOffset` to `ModelAnimation.delay`.
+  * Replaced `Scene.scene2D.projection` property with read-only `Scene.mapProjection`.  Set this with the `mapProjection` option for the `Viewer`, `CesiumWidget`, or `Scene` constructors.
+  * Moved Fresnel, Reflection, and Refraction materials to the [Materials Pack Plugin](https://github.com/AnalyticalGraphicsInc/cesium-materials-pack).
+  * Renamed `Simon1994PlanetaryPositions` functions `ComputeSunPositionInEarthInertialFrame` and `ComputeMoonPositionInEarthInertialFrame` to `computeSunPositionInEarthInertialFrame` and `computeMoonPositionInEarthInertialFrame`, respectively.
+  * `Scene` constructor function now takes an `options` parameter instead of individual parameters.
+  * `CesiumWidget.showErrorPanel` now takes a `message` parameter in between the previous `title` and `error` parameters.
+  * Removed `Camera.createCorrectPositionAnimation`.
+  * Moved `LeapSecond.leapSeconds` to `JulianDate.leapSeconds`.
+  * `Event.removeEventListener` no longer throws `DeveloperError` if the `listener` does not exist; it now returns `false`.
+  * Enumeration values of `SceneMode` have better correspondence with mode names to help with debugging.
+  * The build process now requires [Node.js](http://nodejs.org/) to be installed on the system.
+* Cesium now supports Internet Explorer 11.0.9 on desktops.  For the best results, use the new [IE Developer Channel](http://devchannel.modern.ie/) for development.
 * `ReferenceProperty` can now handle sub-properties, for example, `myObject#billboard.scale`.
-* Added `Cesium.VERSION` to the combined `Cesium.js` file.
-* Added `HermitePolynomialApproximation.interpolate` for performing interpolation when derivative information is available.
-* `SampledProperty` and `SampledPositionProperty` can now store derivative information for each sample value. This allows for more accurate interpolation when using `HermitePolynomialApproximation`.  
+* `DynamicObject.id` can now include period characters.
+* Added `PolylineGlowMaterialProperty` which enables data sources to use the PolylineGlow material.
 * Fixed support for embedded resources in glTF models.
-* Added 'PolylineGlowMaterialProperty' which enables data sources to use the PolylineGlow material.
-* Made general improvements to the [reference documentation](http://cesiumjs.org/refdoc.html).
-* Added `FrameRateMonitor` type.  It is used to monitor the frame rate achieved by a `Scene` and to raise a `lowFrameRate` event when it falls below a configurable threshold.
+* Added `HermitePolynomialApproximation.interpolate` for performing interpolation when derivative information is available.
+* `SampledProperty` and `SampledPositionProperty` can now store derivative information for each sample value. This allows for more accurate interpolation when using `HermitePolynomialApproximation`.
+* Added `FrameRateMonitor` to monitor the frame rate achieved by a `Scene` and to raise a `lowFrameRate` event when it falls below a configurable threshold.
+* Added `PerformanceWatchdog` widget and `viewerPerformanceWatchdogMixin`.
 * `Viewer` and `CesiumWidget` now provide more user-friendly error messages when an initialization or rendering error occurs.
 * `Viewer` and `CesiumWidget` now take a new optional parameter, `creditContainer`.
-* Added `PerformanceWatchdog` widget and `viewerPerformanceWatchdogMixin`.
-* Fixed a problem that could rarely lead to the camera's `tilt` property being `NaN`.
-* Updated third-party [Tween.js](https://github.com/sole/tween.js/) from r7 to r13.
 * `Viewer` can now optionally be constructed with a `DataSourceCollection`.  Previously, it always created one itself internally.
+* Fixed a problem that could rarely lead to the camera's `tilt` property being `NaN`.
 * `GeoJsonDataSource` no longer uses the `name` or `title` property of the feature as the dynamic object's name if the value of the property is null.
+* Added `TimeIntervalCollection.isStartIncluded` and `TimeIntervalCollection.isStopIncluded`.
+* Added `Cesium.VERSION` to the combined `Cesium.js` file.
+* Made general improvements to the [reference documentation](http://cesiumjs.org/refdoc.html).
+* Updated third-party [Tween.js](https://github.com/sole/tween.js/) from r7 to r13.
+* Updated third-party JSDoc 3.3.0-alpha5 to 3.3.0-alpha9.
+* The development web server has been rewritten in Node.js, and is now included as part of each release.
 
 ### b29 - 2014-06-02
 

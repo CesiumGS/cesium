@@ -1141,6 +1141,11 @@ defineSuite([
     });
 
     it('fails to generate mipmaps (width)', function() {
+        if (FeatureDetection.isInternetExplorer()) {
+            // Workaround IE 11.0.9, which does not support non-power-of-two cube map faces
+            return;
+        }
+
         cubeMap = context.createCubeMap({
             width : 3,
             height : 3

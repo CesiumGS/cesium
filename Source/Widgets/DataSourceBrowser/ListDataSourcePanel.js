@@ -4,8 +4,8 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/loadText',
-        '../../DynamicScene/CzmlDataSource',
-        '../../DynamicScene/GeoJsonDataSource',
+        '../../DataSources/CzmlDataSource',
+        '../../DataSources/GeoJsonDataSource',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when',
         './ListDataSourceItemViewModel'

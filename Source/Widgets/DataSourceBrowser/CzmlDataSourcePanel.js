@@ -4,7 +4,7 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/getFilenameFromUri',
-        '../../DynamicScene/CzmlDataSource',
+        '../../DataSources/CzmlDataSource',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when'
     ], function(

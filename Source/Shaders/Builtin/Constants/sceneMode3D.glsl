@@ -8,4 +8,4 @@
  * @see czm_sceneModeColumbusView
  * @see czm_sceneModeMorphing
  */
-const float czm_sceneMode3D = 2.0;
+const float czm_sceneMode3D = 3.0;

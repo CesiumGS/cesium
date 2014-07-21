@@ -2,6 +2,7 @@
 define([
         '../Core/Cartesian2',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/KeyboardEventModifier',
@@ -12,6 +13,7 @@ define([
     ], function(
         Cartesian2,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
         KeyboardEventModifier,
@@ -42,11 +44,13 @@ define([
 
         var update = aggregator._update;
         var isDown = aggregator._isDown;
+        var eventStartPosition = aggregator._eventStartPosition;
         var pressTime = aggregator._pressTime;
         var releaseTime = aggregator._releaseTime;
 
         update[key] = true;
         isDown[key] = false;
+        eventStartPosition[key] = new Cartesian2();
 
         var movement = aggregator._movement[key];
         if (!defined(movement)) {
@@ -63,10 +67,11 @@ define([
         };
         movement.prevAngle = 0.0;
 
-        aggregator._eventHandler.setInputAction(function() {
+        aggregator._eventHandler.setInputAction(function(event) {
             aggregator._buttonsDown++;
             isDown[key] = true;
             pressTime[key] = new Date();
+            Cartesian2.clone(event.position, eventStartPosition[key]);
         }, ScreenSpaceEventType.PINCH_START, modifier);
 
         aggregator._eventHandler.setInputAction(function() {
@@ -134,10 +139,12 @@ define([
         var key = getKey(type, modifier);
 
         var isDown = aggregator._isDown;
+        var eventStartPosition = aggregator._eventStartPosition;
         var pressTime = aggregator._pressTime;
         var releaseTime = aggregator._releaseTime;
 
         isDown[key] = false;
+        eventStartPosition[key] = new Cartesian2();
 
         var lastMovement = aggregator._lastMovement[key];
         if (!defined(lastMovement)) {
@@ -161,11 +168,12 @@ define([
             up = ScreenSpaceEventType.MIDDLE_UP;
         }
 
-        aggregator._eventHandler.setInputAction(function() {
+        aggregator._eventHandler.setInputAction(function(event) {
             aggregator._buttonsDown++;
             lastMovement.valid = false;
             isDown[key] = true;
             pressTime[key] = new Date();
+            Cartesian2.clone(event.position, eventStartPosition[key]);
         }, down, modifier);
 
         aggregator._eventHandler.setInputAction(function() {
@@ -230,6 +238,8 @@ define([
                     }
                 }
             }
+
+            Cartesian2.clone(mouseMovement.endPosition, aggregator._currentMousePosition);
         }, ScreenSpaceEventType.MOUSE_MOVE, modifier);
     }
 
@@ -258,10 +268,13 @@ define([
         this._movement = {};
         this._lastMovement = {};
         this._isDown = {};
+        this._eventStartPosition = {};
         this._pressTime = {};
         this._releaseTime = {};
 
         this._buttonsDown = 0;
+
+        this._currentMousePosition = new Cartesian2();
 
         listenToWheel(this, undefined);
         listenToPinch(this, undefined, canvas);
@@ -284,6 +297,34 @@ define([
             }
         }
     };
+
+    defineProperties(CameraEventAggregator.prototype, {
+        /**
+         * Gets the current mouse position.
+         * @memberof CameraEventAggregator.prototype
+         * @type {Cartesian2}
+         */
+        currentMousePosition : {
+            get : function() {
+                return this._currentMousePosition;
+            }
+        },
+
+        /**
+         * Gets whether any mouse button is down, a touch has started, or the wheel has been moved.
+         * @memberof CameraEventAggregator.prototype
+         * @type {Boolean}
+         */
+        anyButtonDown : {
+            get : function() {
+                var wheelMoved = !this._update[getKey(CameraEventType.WHEEL)] ||
+                                 !this._update[getKey(CameraEventType.WHEEL, KeyboardEventModifier.SHIFT)] ||
+                                 !this._update[getKey(CameraEventType.WHEEL, KeyboardEventModifier.CTRL)] ||
+                                 !this._update[getKey(CameraEventType.WHEEL, KeyboardEventModifier.ALT)];
+                return this._buttonsDown > 0 || wheelMoved;
+            }
+        }
+    });
 
     /**
      * Gets if a mouse button down or touch has started and has been moved.
@@ -364,16 +405,25 @@ define([
     };
 
     /**
-     * Gets whether any mouse button is down, a touch has started, or the wheel has been moved.
+     * Gets the mouse position that started the aggregation.
      *
-     * @returns {Boolean} Whether any mouse button is down, a touch has started, or the wheel has been moved.
+     * @param {CameraEventType} type The camera event type.
+     * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
+     * @returns {Cartesian2} The mouse position.
      */
-    CameraEventAggregator.prototype.anyButtonDown = function() {
-        var wheelMoved = !this._update[getKey(CameraEventType.WHEEL)] ||
-                        !this._update[getKey(CameraEventType.WHEEL, KeyboardEventModifier.SHIFT)] ||
-                        !this._update[getKey(CameraEventType.WHEEL, KeyboardEventModifier.CTRL)] ||
-                        !this._update[getKey(CameraEventType.WHEEL, KeyboardEventModifier.ALT)];
-        return this._buttonsDown > 0 || wheelMoved;
+    CameraEventAggregator.prototype.getStartMousePosition = function(type, modifier) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(type)) {
+            throw new DeveloperError('type is required.');
+        }
+        //>>includeEnd('debug');
+
+        if (type === CameraEventType.WHEEL) {
+            return this._currentMousePosition;
+        }
+
+        var key = getKey(type, modifier);
+        return this._eventStartPosition[key];
     };
 
     /**

@@ -16,7 +16,7 @@
     });
     </script>
 </head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
 </style>
@@ -24,41 +24,46 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+function startup(Cesium) {
     "use strict";
-    
-    var viewer = new Cesium.Viewer('cesiumContainer');
-    var primitives = viewer.scene.primitives;
-    
-    // Create box and position with a model matrix
-    var dimensions = new Cesium.Cartesian3(400000.0, 300000.0, 500000.0);
-    var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-105.0, 45.0);
-    var boxModelMatrix = Cesium.Matrix4.multiplyByTranslation(
-        Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
-        new Cesium.Cartesian3(0.0, 0.0, dimensions.z * 0.5));
-    
-    var boxGeometry = Cesium.BoxGeometry.fromDimensions({
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        dimensions : dimensions
-    });
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer');
+var primitives = viewer.scene.primitives;
 
-    var boxGeometryInstance = new Cesium.GeometryInstance({
-        geometry : boxGeometry,
-        modelMatrix : boxModelMatrix,
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
-        }
-    });
+// Create box and position with a model matrix
+var dimensions = new Cesium.Cartesian3(400000.0, 300000.0, 500000.0);
+var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-105.0, 45.0);
+var boxModelMatrix = Cesium.Matrix4.multiplyByTranslation(
+    Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
+    new Cesium.Cartesian3(0.0, 0.0, dimensions.z * 0.5), new Cesium.Matrix4());
 
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : boxGeometryInstance,
-        appearance : new Cesium.PerInstanceColorAppearance({
-            closed: true
-        })
-    }));
-
-    Sandcastle.finishedLoading();
+var boxGeometry = Cesium.BoxGeometry.fromDimensions({
+    vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+    dimensions : dimensions
 });
+
+var boxGeometryInstance = new Cesium.GeometryInstance({
+    geometry : boxGeometry,
+    modelMatrix : boxModelMatrix,
+    attributes : {
+        color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
+    }
+});
+
+primitives.add(new Cesium.Primitive({
+    geometryInstances : boxGeometryInstance,
+    appearance : new Cesium.PerInstanceColorAppearance({
+        closed: true
+    })
+}));
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
 </script>
 </body>
 </html>

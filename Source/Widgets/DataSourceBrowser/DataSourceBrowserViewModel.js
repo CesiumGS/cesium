@@ -52,7 +52,7 @@ define([
         this._eventHelper.add(dataSourceCollection.dataSourceAdded, this._onDataSourceAdded, this);
         this._eventHelper.add(dataSourceCollection.dataSourceRemoved, this._onDataSourceRemoved, this);
 
-        this._dynamicObjectCollectionChangedListeners = {};
+        this._entityCollectionChangedListeners = {};
         this._dataSourceViewModelHash = {};
 
         this._dataSourcePanelViewModel = new DataSourcePanelViewModel(this, dataSourcePanels);
@@ -113,8 +113,8 @@ define([
             },
             set : function(value) {
                 selectedViewModel(value);
-                if (defined(value) && defined(value.dynamicObject)) {
-                    this._onObjectSelected.raiseEvent(value.dynamicObject);
+                if (defined(value) && defined(value.entity)) {
+                    this._onObjectSelected.raiseEvent(value.entity);
                 }
             }
         });
@@ -345,31 +345,31 @@ define([
 
     function insertIntoTree(browserViewModel, rootViewModel, object, dataSourceViewModelHash, dataSource) {
         var id = object.id;
-        var dynamicObjectViewModel = dataSourceViewModelHash[id];
-        if (defined(dynamicObjectViewModel)) {
+        var entityViewModel = dataSourceViewModelHash[id];
+        if (defined(entityViewModel)) {
             // already exists
-            return dynamicObjectViewModel;
+            return entityViewModel;
         }
 
         var name = defaultValue(object.name, id);
-        dynamicObjectViewModel = new DataSourceItemViewModel(name, browserViewModel, dataSource, object);
-        dataSourceViewModelHash[id] = dynamicObjectViewModel;
+        entityViewModel = new DataSourceItemViewModel(name, browserViewModel, dataSource, object);
+        dataSourceViewModelHash[id] = entityViewModel;
 
         var parent = object.parent;
         if (defined(parent)) {
             var parentViewModel = insertIntoTree(browserViewModel, rootViewModel, parent, dataSourceViewModelHash, dataSource);
-            parentViewModel.children.push(dynamicObjectViewModel);
+            parentViewModel.children.push(entityViewModel);
         } else {
-            rootViewModel.children.push(dynamicObjectViewModel);
+            rootViewModel.children.push(entityViewModel);
         }
 
-        return dynamicObjectViewModel;
+        return entityViewModel;
     }
 
     function removeFromTree(rootViewModel, object, dataSourceViewModelHash) {
         var id = object.id;
-        var dynamicObjectViewModel = dataSourceViewModelHash[id];
-        if (!defined(dynamicObjectViewModel)) {
+        var entityViewModel = dataSourceViewModelHash[id];
+        if (!defined(entityViewModel)) {
             // doesn't exist
             return;
         }
@@ -378,22 +378,22 @@ define([
         if (defined(parent)) {
             var parentViewModel = dataSourceViewModelHash[parent.id];
             if (defined(parentViewModel)) {
-                parentViewModel.children.remove(dynamicObjectViewModel);
+                parentViewModel.children.remove(entityViewModel);
             }
         } else {
-            rootViewModel.children.remove(dynamicObjectViewModel);
+            rootViewModel.children.remove(entityViewModel);
         }
         dataSourceViewModelHash[id] = undefined;
     }
 
     DataSourceBrowserViewModel.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {
         var dataSourceViewModel = new DataSourceViewModel(this, dataSource);
-        var dynamicObjectCollection = dataSource.dynamicObjects;
-        var dynamicObjectCollectionId = dynamicObjectCollection.id;
+        var entityCollection = dataSource.entities;
+        var entityCollectionId = entityCollection.id;
 
-        var dataSourceViewModelHash = this._dataSourceViewModelHash[dynamicObjectCollectionId];
+        var dataSourceViewModelHash = this._dataSourceViewModelHash[entityCollectionId];
         if (!defined(dataSourceViewModelHash)) {
-            dataSourceViewModelHash = this._dataSourceViewModelHash[dynamicObjectCollectionId] = {};
+            dataSourceViewModelHash = this._dataSourceViewModelHash[entityCollectionId] = {};
         }
 
         var that = this;
@@ -410,10 +410,10 @@ define([
         }
 
         // add existing
-        onCollectionChanged(dynamicObjectCollection, dynamicObjectCollection.getObjects(), []);
+        onCollectionChanged(entityCollection, entityCollection.entities, []);
 
-        var removalFunc = dynamicObjectCollection.collectionChanged.addEventListener(onCollectionChanged, this);
-        this._dynamicObjectCollectionChangedListeners[dynamicObjectCollectionId] = removalFunc;
+        var removalFunc = entityCollection.collectionChanged.addEventListener(onCollectionChanged, this);
+        this._entityCollectionChangedListeners[entityCollectionId] = removalFunc;
 
         this._dataSourceViewModels.push(dataSourceViewModel);
         this._dataSourcesLength = this.dataSources.length;
@@ -425,10 +425,10 @@ define([
             var dataSourceViewModel = dataSourceViewModels[i];
             if (dataSourceViewModel.dataSource === dataSource) {
                 // unsubscribe from collectionChanged
-                var dynamicObjectCollection = dataSource.dynamicObjects;
-                var dynamicObjectCollectionId = dynamicObjectCollection.id;
-                this._dynamicObjectCollectionChangedListeners[dynamicObjectCollectionId]();
-                this._dynamicObjectCollectionChangedListeners[dynamicObjectCollectionId] = undefined;
+                var entityCollection = dataSource.entities;
+                var entityCollectionId = entityCollection.id;
+                this._entityCollectionChangedListeners[entityCollectionId]();
+                this._entityCollectionChangedListeners[entityCollectionId] = undefined;
 
                 dataSourceViewModels.splice(i, 1);
                 dataSourceViewModel.destroy();

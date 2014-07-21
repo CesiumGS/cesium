@@ -13,6 +13,8 @@ define([
      *
      * @alias FrameState
      * @constructor
+     *
+     * @private
      */
     var FrameState = function(creditDisplay) {
         /**
@@ -106,7 +108,7 @@ define([
          * directly in <code>update</code> functions.
          * </p>
          *
-         * @type {Function[]}
+         * @type {FrameState~AfterRenderCallback[]}
          *
          * @example
          * frameState.afterRender.push(function() {
@@ -114,7 +116,19 @@ define([
          * });
          */
         this.afterRender = [];
+
+        /**
+         * Gets whether or not to optimized for 3D only.
+         * @type {Boolean}
+         * @default false
+         */
+        this.scene3DOnly = false;
     };
+
+    /**
+     * A function that will be called at the end of the frame.
+     * @callback FrameState~AfterRenderCallback
+     */
 
     return FrameState;
 });

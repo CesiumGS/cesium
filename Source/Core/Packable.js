@@ -10,7 +10,8 @@ define([
      * elements in an array.  These methods and properties are expected to be
      * defined on a constructor function.
      *
-     * @exports Packable
+     * @namespace
+     * @alias Packable
      *
      * @see PackableForInterpolation
      */

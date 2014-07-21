@@ -39,7 +39,7 @@ define([
      *
      * @param {Element|String} container The DOM element or ID that will contain the widget.
      * @param {Scene} scene The Scene instance to use.
-     * @param {Number} [duration] The time, in milliseconds, it takes for the scene to transition.
+     * @param {Number} [duration=2.0] The time, in seconds, it takes for the scene to transition.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
@@ -62,7 +62,7 @@ define([
 
         container = getElement(container);
 
-        var viewModel = new SceneModePickerViewModel(scene);
+        var viewModel = new SceneModePickerViewModel(scene, duration);
 
         viewModel._globePath = globePath;
         viewModel._flatMapPath = flatMapPath;

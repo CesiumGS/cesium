@@ -25,7 +25,7 @@ define([
      *
      * @example
      * var node = model.getNode('LOD3sp');
-     * node.matrix = Matrix4.fromScale(new Cartesian3(5.0, 1.0, 1.0), node.matrix);
+     * node.matrix = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
      */
     var ModelNode = function(model, node, runtimeNode, id) {
         this._model = model;

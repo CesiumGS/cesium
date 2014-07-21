@@ -15,7 +15,7 @@ define([
         knockout) {
     "use strict";
 
-    var DataSourceItemViewModel = function(name, rootViewModel, dataSource, dynamicObject) {
+    var DataSourceItemViewModel = function(name, rootViewModel, dataSource, entity) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(rootViewModel)) {
             throw new DeveloperError('rootViewModel is required.');
@@ -27,13 +27,13 @@ define([
 
         this._dataSource = dataSource;
         this._rootViewModel = rootViewModel;
-        this._dynamicObject = dynamicObject;
+        this._entity = entity;
 
         this.id = 'cesium-dataSourceBrowser-node-' + createGuid();
         this.name = name;
         this.children = [];
         this.expanded = false;
-        this._uiShow = dynamicObject.uiShow;
+        this._uiShow = entity.uiShow;
 
         knockout.track(this, ['name', 'children', 'expanded', '_uiShow']);
 
@@ -65,7 +65,7 @@ define([
                 return this._uiShow;
             },
             set : function(newValue) {
-                this.dynamicObject.uiShow = newValue;
+                this.entity.uiShow = newValue;
                 this._uiShow = newValue;
                 var len = this.children.length;
                 for (var i = 0; i < len; ++i) {
@@ -117,13 +117,13 @@ define([
         },
 
         /**
-         * Gets the {@link DynamicObject} for this item.
+         * Gets the {@link Entity} for this item.
          * @memberof DataSourceItemViewModel.prototype
-         * @type {DynamicObject}
+         * @type {Entity}
          */
-        dynamicObject : {
+        entity : {
             get : function() {
-                return this._dynamicObject;
+                return this._entity;
             }
         }
     });
@@ -131,7 +131,7 @@ define([
     //TODO What happens when we double click on an item not being displayed?
     //Or not available at the current time?
     DataSourceItemViewModel.prototype.doubleClick = function() {
-        this._rootViewModel.onObjectDoubleClick.raiseEvent(this._dynamicObject);
+        this._rootViewModel.onObjectDoubleClick.raiseEvent(this._entity);
     };
 
     DataSourceItemViewModel.prototype.select = function() {

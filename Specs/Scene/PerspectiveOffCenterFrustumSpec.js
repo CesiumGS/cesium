@@ -110,7 +110,7 @@ defineSuite([
         var left = frustum.left;
         var near = frustum.near;
         var far = frustum.far;
-        var expected = Matrix4.computePerspectiveOffCenter(left, right, bottom, top, near, far);
+        var expected = Matrix4.computePerspectiveOffCenter(left, right, bottom, top, near, far, new Matrix4());
 
         expect(projectionMatrix).toEqualEpsilon(expected, CesiumMath.EPSILON6);
     });
@@ -122,7 +122,7 @@ defineSuite([
         var left = frustum.left;
         var near = frustum.near;
 
-        var expected = Matrix4.computeInfinitePerspectiveOffCenter(left, right, bottom, top, near);
+        var expected = Matrix4.computeInfinitePerspectiveOffCenter(left, right, bottom, top, near, new Matrix4());
         expect(expected).toEqual(frustum.infiniteProjectionMatrix);
     });
 

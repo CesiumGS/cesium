@@ -1,11 +1,15 @@
 /*global define*/
-define(function() {
+define([
+        './freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
      * Winding order defines the order of vertices for a triangle to be considered front-facing.
      *
-     * @exports WindingOrder
+     * @namespace
+     * @alias WindingOrder
      */
     var WindingOrder = {
         /**
@@ -15,6 +19,7 @@ define(function() {
          * @constant
          */
         CLOCKWISE : 0x0900, // WebGL: CW
+
         /**
          * 0x0901. Vertices are in counter-clockwise order.
          *
@@ -27,10 +32,10 @@ define(function() {
          * @private
          */
         validate : function(windingOrder) {
-            return ((windingOrder === WindingOrder.CLOCKWISE) ||
-                    (windingOrder === WindingOrder.COUNTER_CLOCKWISE));
+            return windingOrder === WindingOrder.CLOCKWISE ||
+                   windingOrder === WindingOrder.COUNTER_CLOCKWISE;
         }
     };
 
-    return WindingOrder;
+    return freezeObject(WindingOrder);
 });

@@ -6,9 +6,9 @@ defineSuite([
         'Core/EllipsoidTerrainProvider',
         'Core/JulianDate',
         'Core/WebMercatorProjection',
-        'DynamicScene/DataSourceCollection',
-        'DynamicScene/DataSourceDisplay',
-        'DynamicScene/DynamicClock',
+        'DataSources/DataSourceClock',
+        'DataSources/DataSourceCollection',
+        'DataSources/DataSourceDisplay',
         'Scene/SceneMode',
         'Specs/EventHelper',
         'Specs/MockDataSource',
@@ -28,9 +28,9 @@ defineSuite([
         EllipsoidTerrainProvider,
         JulianDate,
         WebMercatorProjection,
+        DataSourceClock,
         DataSourceCollection,
         DataSourceDisplay,
-        DynamicClock,
         SceneMode,
         EventHelper,
         MockDataSource,
@@ -381,6 +381,22 @@ defineSuite([
         expect(viewer.dataSources).toBe(collection);
     });
 
+    it('default DataSourceCollection is destroyed when Viewer is destroyed', function() {
+        viewer = new Viewer(container);
+        var dataSources = viewer.dataSources;
+        viewer.destroy();
+        expect(dataSources.isDestroyed()).toBe(true);
+    });
+
+    it('specified DataSourceCollection is not destroyed when Viewer is destroyed', function() {
+        var collection = new DataSourceCollection();
+        viewer = new Viewer(container, {
+            dataSources : collection
+        });
+        viewer.destroy();
+        expect(collection.isDestroyed()).toBe(false);
+    });
+
     it('throws if targetFrameRate less than 0', function() {
         viewer = new Viewer(container);
         expect(function() {
@@ -453,7 +469,7 @@ defineSuite([
 
     it('sets the clock and timeline based on the first data source', function() {
         var dataSource = new MockDataSource();
-        dataSource.clock = new DynamicClock();
+        dataSource.clock = new DataSourceClock();
         dataSource.clock.startTime = JulianDate.fromIso8601('2013-08-01T18:00Z');
         dataSource.clock.stopTime = JulianDate.fromIso8601('2013-08-21T02:00Z');
         dataSource.clock.currentTime = JulianDate.fromIso8601('2013-08-02T00:00Z');
@@ -474,7 +490,7 @@ defineSuite([
 
     it('sets the clock for multiple data sources', function() {
         var dataSource1 = new MockDataSource();
-        dataSource1.clock = new DynamicClock();
+        dataSource1.clock = new DataSourceClock();
         dataSource1.clock.startTime = JulianDate.fromIso8601('2013-08-01T18:00Z');
         dataSource1.clock.stopTime = JulianDate.fromIso8601('2013-08-21T02:00Z');
         dataSource1.clock.currentTime = JulianDate.fromIso8601('2013-08-02T00:00Z');
@@ -486,7 +502,7 @@ defineSuite([
         expect(viewer.clock.startTime).toEqual(dataSource1.clock.startTime);
 
         var dataSource2 = new MockDataSource();
-        dataSource2.clock = new DynamicClock();
+        dataSource2.clock = new DataSourceClock();
         dataSource2.clock.startTime = JulianDate.fromIso8601('2014-08-01T18:00Z');
         dataSource2.clock.stopTime = JulianDate.fromIso8601('2014-08-21T02:00Z');
         dataSource2.clock.currentTime = JulianDate.fromIso8601('2014-08-02T00:00Z');
@@ -496,7 +512,7 @@ defineSuite([
         expect(viewer.clock.startTime).toEqual(dataSource2.clock.startTime);
 
         var dataSource3 = new MockDataSource();
-        dataSource3.clock = new DynamicClock();
+        dataSource3.clock = new DataSourceClock();
         dataSource3.clock.startTime = JulianDate.fromIso8601('2015-08-01T18:00Z');
         dataSource3.clock.stopTime = JulianDate.fromIso8601('2015-08-21T02:00Z');
         dataSource3.clock.currentTime = JulianDate.fromIso8601('2015-08-02T00:00Z');
@@ -518,7 +534,7 @@ defineSuite([
 
     it('updates the clock when the data source changes', function() {
         var dataSource = new MockDataSource();
-        dataSource.clock = new DynamicClock();
+        dataSource.clock = new DataSourceClock();
         dataSource.clock.startTime = JulianDate.fromIso8601('2013-08-01T18:00Z');
         dataSource.clock.stopTime = JulianDate.fromIso8601('2013-08-21T02:00Z');
         dataSource.clock.currentTime = JulianDate.fromIso8601('2013-08-02T00:00Z');
@@ -548,7 +564,7 @@ defineSuite([
 
     it('can manually control the clock tracking', function() {
         var dataSource1 = new MockDataSource();
-        dataSource1.clock = new DynamicClock();
+        dataSource1.clock = new DataSourceClock();
         dataSource1.clock.startTime = JulianDate.fromIso8601('2013-08-01T18:00Z');
         dataSource1.clock.stopTime = JulianDate.fromIso8601('2013-08-21T02:00Z');
         dataSource1.clock.currentTime = JulianDate.fromIso8601('2013-08-02T00:00Z');
@@ -568,7 +584,7 @@ defineSuite([
         expect(viewer.clock.startTime).toEqual(dataSource1.clock.startTime);
 
         var dataSource2 = new MockDataSource();
-        dataSource2.clock = new DynamicClock();
+        dataSource2.clock = new DataSourceClock();
         dataSource2.clock.startTime = JulianDate.fromIso8601('2014-08-01T18:00Z');
         dataSource2.clock.stopTime = JulianDate.fromIso8601('2014-08-21T02:00Z');
         dataSource2.clock.currentTime = JulianDate.fromIso8601('2014-08-02T00:00Z');

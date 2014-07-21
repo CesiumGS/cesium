@@ -3,12 +3,14 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
-        './FeatureDetection'
+        './FeatureDetection',
+        './freezeObject'
     ], function(
         defaultValue,
         defined,
         DeveloperError,
-        FeatureDetection) {
+        FeatureDetection,
+        freezeObject) {
     "use strict";
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
@@ -21,6 +23,7 @@ define([
      * WebGL component datatypes.  Components are intrinsics,
      * which form attributes, which form vertices.
      *
+     * @namespace
      * @alias ComponentDatatype
      */
     var ComponentDatatype = {
@@ -256,5 +259,5 @@ define([
         }
     };
 
-    return ComponentDatatype;
+    return freezeObject(ComponentDatatype);
 });

@@ -17,7 +17,9 @@ define([
      * This is a collection of the orientation information available for central bodies.
      * The data comes from the Report of the IAU/IAG Working Group on Cartographic
      * Coordinates and Rotational Elements: 2000.
-     * @exports Iau2000Orientation
+     *
+     * @namespace
+     * @alias Iau2000Orientation
      *
      * @private
      */
@@ -39,6 +41,7 @@ define([
     var c11 = 0.0036096;
     var c12 = 0.1643573;
     var c13 = 12.9590088;
+    var dateTT = new JulianDate();
 
     /**
      * Compute the orientation parameters for the Moon.
@@ -52,8 +55,8 @@ define([
             date = JulianDate.now();
         }
 
-        var dateTT = JulianDate.addSeconds(date, TdtMinusTai);
-        var d = JulianDate.getTotalDays(dateTT) - J2000d;
+        dateTT = JulianDate.addSeconds(date, TdtMinusTai, dateTT);
+        var d = JulianDate.totalDays(dateTT) - J2000d;
         var T = d / TimeConstants.DAYS_PER_JULIAN_CENTURY;
 
         var E1 = (125.045 + c1 * d) * CesiumMath.RADIANS_PER_DEGREE;
