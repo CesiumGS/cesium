@@ -975,6 +975,15 @@ define([
     };
 
     /**
+     * Creates a string representing this date in ISO8601 format.
+     *
+     * @returns {String} A string representing this date in ISO8601 format.
+     */
+    JulianDate.prototype.toString = function() {
+        return JulianDate.toIso8601(this);
+    };
+
+    /**
      * Gets or sets the list of leap seconds used throughout Cesium.
      * @memberof JulianDate
      * @type {LeapSecond[]}
