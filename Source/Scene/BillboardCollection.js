@@ -150,6 +150,7 @@ define([
 
         this._textureAtlas = undefined;
         this._textureAtlasGUID = undefined;
+        this._destroyTextureAtlas = true;
         this._sp = undefined;
         this._rs = undefined;
         this._vaf = undefined;
@@ -304,10 +305,42 @@ define([
             },
             set : function(value) {
                 if (this._textureAtlas !== value) {
-                    this._textureAtlas = this._textureAtlas && this._textureAtlas.destroy();
+                    this._textureAtlas = this._destroyTextureAtlas && this._textureAtlas && this._textureAtlas.destroy();
                     this._textureAtlas = value;
                     this._createVertexArray = true; // New per-billboard texture coordinates
                 }
+            }
+        },
+
+        /**
+         * Gets and sets the destroyTextureAtlas, which determines if the texture atlas is
+         * destroyed when the collection is destroyed.
+         *
+         * If the texture atlas is used by more than one collection, set this to <code>false</code>,
+         * and explicitly destroy the atlas to avoid attempting to destroy it multiple times.
+         *
+         * @memberof BillboardCollection.prototype
+         * @type {Boolean}
+         *
+         * @example
+         * // Set destroyTextureAtlas
+         * // Destroy a billboard collection but not its texture atlas.
+         *
+         * var atlas = new TextureAtlas({
+         *   scene : scene,
+         *   images : images
+         * });
+         * billboards.textureAtlas = atlas;
+         * billboards.destroyTextureAtlas = false;
+         * billboards = billboards.destroy();
+         * console.log(atlas.isDestroyed()); // False
+         */
+        destroyTextureAtlas : {
+            get : function() {
+                return this._destroyTextureAtlas;
+            },
+            set : function(value) {
+                this._destroyTextureAtlas = value;
             }
         }
     });
@@ -1342,7 +1375,7 @@ define([
      * billboards = billboards && billboards.destroy();
      */
     BillboardCollection.prototype.destroy = function() {
-        this._textureAtlas = this._textureAtlas && this._textureAtlas.destroy();
+        this._textureAtlas = this._destroyTextureAtlas && this._textureAtlas && this._textureAtlas.destroy();
         this._sp = this._sp && this._sp.destroy();
         this._spPick = this._spPick && this._spPick.destroy();
         this._vaf = this._vaf && this._vaf.destroy();
