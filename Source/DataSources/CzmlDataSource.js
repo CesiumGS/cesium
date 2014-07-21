@@ -331,10 +331,6 @@ define([
         case HorizontalOrigin:
             return HorizontalOrigin[defaultValue(czmlInterval.horizontalOrigin, czmlInterval)];
         case Image:
-            // Backwards compatibility: new files use 'uri', old files use 'image'
-            if (defined(czmlInterval.image)) {
-                return unwrapImageInterval(czmlInterval, sourceUri);
-            }
             return unwrapUriInterval(czmlInterval, sourceUri);
         case JulianDate:
             return JulianDate.fromIso8601(defaultValue(czmlInterval.date, czmlInterval));
@@ -347,23 +343,7 @@ define([
         case Array:
             return czmlInterval.array;
         case Quaternion:
-            //TODO: Currently Quaternion convention in CZML is the opposite of what Cesium expects.
-            //To avoid unecessary CZML churn, we conjugate manually for now.  During the next big CZML
-            //update, we should remove this code and change the convention.
-            var unitQuaternion = czmlInterval.unitQuaternion;
-            if (defined(unitQuaternion)) {
-                if (unitQuaternion.length === 4) {
-                    return [-unitQuaternion[0], -unitQuaternion[1], -unitQuaternion[2], unitQuaternion[3]];
-                }
-
-                unitQuaternion = unitQuaternion.slice(0);
-                for (var i = 0; i < unitQuaternion.length; i += 5) {
-                    unitQuaternion[i + 1] = -unitQuaternion[i + 1];
-                    unitQuaternion[i + 2] = -unitQuaternion[i + 2];
-                    unitQuaternion[i + 3] = -unitQuaternion[i + 3];
-                }
-            }
-            return unitQuaternion;
+            return czmlInterval.unitQuaternion;
         case Rectangle:
             return unwrapRectangleInterval(czmlInterval);
         case Uri:
@@ -977,22 +957,6 @@ define([
         iso8601 : undefined
     };
 
-    // TODO: pixelOffset origin in CZML is bottom-left, Cesium is now top-left.
-    // Remove this when CZML 1.0 changes this
-    function flipPixelOffsetOrigin(pixelOffsetData) {
-        var cartesian2 = pixelOffsetData.cartesian2;
-        if (cartesian2.length === 2) {
-            cartesian2 = [cartesian2[0], -cartesian2[1]];
-        } else {
-            cartesian2 = cartesian2.slice(0);
-            for (var i = 0; i < cartesian2.length; i += 3) {
-                cartesian2[i + 2] = -cartesian2[i + 2];
-            }
-        }
-
-        pixelOffsetData.cartesian2 = cartesian2;
-    }
-
     function processBillboard(entity, packet, entityCollection, sourceUri) {
         var billboardData = packet.billboard;
         if (!defined(billboardData)) {
@@ -1015,13 +979,6 @@ define([
         processPacketData(Cartesian3, billboard, 'eyeOffset', billboardData.eyeOffset, interval, sourceUri, entityCollection);
         processPacketData(HorizontalOrigin, billboard, 'horizontalOrigin', billboardData.horizontalOrigin, interval, sourceUri, entityCollection);
         processPacketData(Image, billboard, 'image', billboardData.image, interval, sourceUri, entityCollection);
-
-        // TODO: pixelOffset origin in CZML is bottom-left, Cesium is now top-left.
-        // Until CZML 1.0 flips this, flip the value here
-        if (defined(billboardData.pixelOffset)) {
-            flipPixelOffsetOrigin(billboardData.pixelOffset);
-        }
-
         processPacketData(Cartesian2, billboard, 'pixelOffset', billboardData.pixelOffset, interval, sourceUri, entityCollection);
         processPacketData(Number, billboard, 'scale', billboardData.scale, interval, sourceUri, entityCollection);
         processPacketData(Number, billboard, 'rotation', billboardData.rotation, interval, sourceUri, entityCollection);
@@ -1179,13 +1136,6 @@ define([
         processPacketData(Cartesian3, label, 'eyeOffset', labelData.eyeOffset, interval, sourceUri, entityCollection);
         processPacketData(HorizontalOrigin, label, 'horizontalOrigin', labelData.horizontalOrigin, interval, sourceUri, entityCollection);
         processPacketData(String, label, 'text', labelData.text, interval, sourceUri, entityCollection);
-
-        // TODO: pixelOffset origin in CZML is bottom-left, Cesium is now top-left.
-        // Until CZML 1.0 flips this, flip the value here
-        if (defined(labelData.pixelOffset)) {
-            flipPixelOffsetOrigin(labelData.pixelOffset);
-        }
-
         processPacketData(Cartesian2, label, 'pixelOffset', labelData.pixelOffset, interval, sourceUri, entityCollection);
         processPacketData(Number, label, 'scale', labelData.scale, interval, sourceUri, entityCollection);
         processPacketData(Boolean, label, 'show', labelData.show, interval, sourceUri, entityCollection);
