@@ -451,11 +451,7 @@ defineSuite([
         expect(entity.billboard.verticalOrigin.getValue(Iso8601.MINIMUM_VALUE)).toEqual(VerticalOrigin.CENTER);
         expect(entity.billboard.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(1.0, 1.0, 1.0, 1.0));
         expect(entity.billboard.eyeOffset.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(3.0, 4.0, 5.0));
-
-        // TODO: pixelOffset origin in CZML is bottom-left, Cesium is now top-left.
-        // When CZML 1.0 flips this, flip the value here to match the packet
-        expect(entity.billboard.pixelOffset.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian2(1.0, -2.0));
-
+        expect(entity.billboard.pixelOffset.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian2(1.0, 2.0));
         expect(entity.billboard.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
     });
 
@@ -477,25 +473,6 @@ defineSuite([
         dataSource.load(packet, source);
         var entity = dataSource.entities.entities[0];
         var imageProperty = entity.billboard.image;
-        expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual(source + 'image.png');
-        expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toEqual(source + 'image2.png');
-
-        packet = {
-            billboard : {
-                image : [{
-                    interval : '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
-                    image : 'image.png'
-                }, {
-                    interval : '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
-                    image : 'image2.png'
-                }]
-            }
-        };
-
-        dataSource = new CzmlDataSource();
-        dataSource.load(packet, source);
-        entity = dataSource.entities.entities[0];
-        imageProperty = entity.billboard.image;
         expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual(source + 'image.png');
         expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toEqual(source + 'image2.png');
     });
@@ -537,10 +514,7 @@ defineSuite([
         expect(entity.billboard.verticalOrigin.getValue(validTime)).toEqual(VerticalOrigin.CENTER);
         expect(entity.billboard.color.getValue(validTime)).toEqual(new Color(1.0, 1.0, 1.0, 1.0));
         expect(entity.billboard.eyeOffset.getValue(validTime)).toEqual(new Cartesian3(3.0, 4.0, 5.0));
-
-        // TODO: pixelOffset origin in CZML is bottom-left, Cesium is now top-left.
-        // When CZML 1.0 flips this, flip the value here to match the packet
-        expect(entity.billboard.pixelOffset.getValue(validTime)).toEqual(new Cartesian2(1.0, -2.0));
+        expect(entity.billboard.pixelOffset.getValue(validTime)).toEqual(new Cartesian2(1.0, 2.0));
 
         expect(entity.billboard.show.getValue(validTime)).toEqual(true);
 
@@ -572,12 +546,10 @@ defineSuite([
         var entity = dataSource.entities.entities[0];
 
         expect(entity.billboard).toBeDefined();
-        // TODO: pixelOffset origin in CZML is bottom-left, Cesium is now top-left.
-        // When CZML 1.0 flips this, flip the value here to match the packet
         var date1 = epoch;
         var date2 = JulianDate.addSeconds(epoch, 1.0, new JulianDate());
-        expect(entity.billboard.pixelOffset.getValue(date1)).toEqual(new Cartesian2(1.0, -2.0));
-        expect(entity.billboard.pixelOffset.getValue(date2)).toEqual(new Cartesian2(3.0, -4.0));
+        expect(entity.billboard.pixelOffset.getValue(date1)).toEqual(new Cartesian2(1.0, 2.0));
+        expect(entity.billboard.pixelOffset.getValue(date2)).toEqual(new Cartesian2(3.0, 4.0));
     });
 
     it('CZML adds clock data.', function() {
@@ -1063,11 +1035,7 @@ defineSuite([
         expect(entity.label.horizontalOrigin.getValue(Iso8601.MINIMUM_VALUE)).toEqual(HorizontalOrigin.LEFT);
         expect(entity.label.verticalOrigin.getValue(Iso8601.MINIMUM_VALUE)).toEqual(VerticalOrigin.CENTER);
         expect(entity.label.eyeOffset.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
-
-        // TODO: pixelOffset origin in CZML is bottom-left, Cesium is now top-left.
-        // When CZML 1.0 flips this, flip the value here to match the packet
-        expect(entity.label.pixelOffset.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian2(4.0, -5.0));
-
+        expect(entity.label.pixelOffset.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian2(4.0, 5.0));
         expect(entity.label.scale.getValue(Iso8601.MINIMUM_VALUE)).toEqual(labelPacket.label.scale);
         expect(entity.label.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(labelPacket.label.show);
     });
@@ -1118,14 +1086,9 @@ defineSuite([
         expect(entity.label.horizontalOrigin.getValue(validTime)).toEqual(HorizontalOrigin.LEFT);
         expect(entity.label.verticalOrigin.getValue(validTime)).toEqual(VerticalOrigin.CENTER);
         expect(entity.label.eyeOffset.getValue(validTime)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
-
-        // TODO: pixelOffset origin in CZML is bottom-left, Cesium is now top-left.
-        // When CZML 1.0 flips this, flip the value here to match the packet
-        expect(entity.label.pixelOffset.getValue(validTime)).toEqual(new Cartesian2(4.0, -5.0));
-
+        expect(entity.label.pixelOffset.getValue(validTime)).toEqual(new Cartesian2(4.0, 5.0));
         expect(entity.label.scale.getValue(validTime)).toEqual(labelPacket.label.scale);
         expect(entity.label.show.getValue(validTime)).toEqual(labelPacket.label.show);
-
         expect(entity.label.text.getValue(invalidTime)).toBeUndefined();
         expect(entity.label.font.getValue(invalidTime)).toBeUndefined();
         expect(entity.label.style.getValue(invalidTime)).toBeUndefined();
@@ -1157,12 +1120,10 @@ defineSuite([
         var entity = dataSource.entities.entities[0];
 
         expect(entity.label).toBeDefined();
-        // TODO: pixelOffset origin in CZML is bottom-left, Cesium is now top-left.
-        // When CZML 1.0 flips this, flip the value here to match the packet
         var date1 = epoch;
         var date2 = JulianDate.addSeconds(epoch, 1.0, new JulianDate());
-        expect(entity.label.pixelOffset.getValue(date1)).toEqual(new Cartesian2(1.0, -2.0));
-        expect(entity.label.pixelOffset.getValue(date2)).toEqual(new Cartesian2(3.0, -4.0));
+        expect(entity.label.pixelOffset.getValue(date1)).toEqual(new Cartesian2(1.0, 2.0));
+        expect(entity.label.pixelOffset.getValue(date2)).toEqual(new Cartesian2(3.0, 4.0));
     });
 
     it('CZML Position works.', function() {
