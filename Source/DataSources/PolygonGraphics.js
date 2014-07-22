@@ -71,7 +71,7 @@ define([
 
         /**
          * Gets or sets the vertex positions.
-         * @memberof DynamicPolygon.prototype
+         * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
         positions : createPropertyDescriptor('positions'),

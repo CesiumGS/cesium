@@ -1,6 +1,10 @@
 
 [
   {
+    "id":"document",
+    "version":"1.0"
+  },
+  {
     "id":"Vehicle",
     "availability":"2012-08-04T16:00:00Z/2012-08-04T17:04:54.9962195740191Z",
     "billboard":{
@@ -58,15 +62,16 @@
       "verticalOrigin":"CENTER"
     },
     "path":{
-      "color":[
-        {
-          "interval":"2012-08-04T16:00:00Z/2012-08-04T18:00:00Z",
-          "rgba":[
-            255,255,0,255
-          ]
-        }
-      ],
-      "outlineWidth":0.0,
+      "material":{
+          "solidColor":{
+            "color":{
+                "interval":"2012-08-04T16:00:00Z/2012-08-04T18:00:00Z",
+                "rgba":[
+                  255,255,0,255
+                ]
+              }
+            }
+      },
       "width":[
         {
           "interval":"2012-08-04T16:00:00Z/2012-08-04T18:00:00Z",
