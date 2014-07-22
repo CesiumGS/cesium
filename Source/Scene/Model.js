@@ -537,7 +537,7 @@ define([
             var docUri = new Uri(document.location.href);
             var modelUri = new Uri(model._basePath);
             model._baseUri = modelUri.resolve(docUri);
-        });
+        }).otherwise(getFailedLoadFunction(model, 'gltf', url));
 
         return model;
     };
@@ -706,7 +706,7 @@ define([
                 // Backwards compatibility for now for 'path' in glTF 0.6.
                 var uri = new Uri(defined(buffer.uri) ? buffer.uri : buffer.path);
                 var bufferPath = uri.resolve(model._baseUri).toString();
-                loadArrayBuffer(bufferPath).then(bufferLoad(model, name), getFailedLoadFunction(model, 'buffer', bufferPath));
+                loadArrayBuffer(bufferPath).then(bufferLoad(model, name)).otherwise(getFailedLoadFunction(model, 'buffer', bufferPath));
             }
         }
     }
@@ -737,7 +737,7 @@ define([
                 // Backwards compatibility for now for 'path' in glTF 0.6.
                 var uri = new Uri(defined(shader.uri) ? shader.uri : shader.path);
                 var shaderPath = uri.resolve(model._baseUri).toString();
-                loadText(shaderPath).then(shaderLoad(model, name), getFailedLoadFunction(model, 'shader', shaderPath));
+                loadText(shaderPath).then(shaderLoad(model, name)).otherwise(getFailedLoadFunction(model, 'shader', shaderPath));
             }
         }
     }
@@ -772,7 +772,7 @@ define([
                 // Backwards compatibility for now for 'path' in glTF 0.6.
                 var uri = new Uri(defined(images[texture.source].uri) ? images[texture.source].uri : images[texture.source].path);
                 var imagePath = uri.resolve(model._baseUri).toString();
-                loadImage(imagePath).then(imageLoad(model, name), getFailedLoadFunction(model, 'image', imagePath));
+                loadImage(imagePath).then(imageLoad(model, name)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
             }
         }
     }

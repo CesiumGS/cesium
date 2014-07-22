@@ -168,22 +168,6 @@ define([
     };
 
     /**
-     * Creates a string representing the provided cartographic in the format '(longitude, latitude, height)'.
-     *
-     * @param {Cartographic} cartographic The cartographic to stringify.
-     * @returns {String} A string representing the provided cartographic in the format '(longitude, latitude, height)'.
-     */
-    Cartographic.toString = function(cartographic) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartographic)) {
-            throw new DeveloperError('cartographic is required');
-        }
-        //>>includeEnd('debug');
-
-        return '(' + cartographic.longitude + ', ' + cartographic.latitude + ', ' + cartographic.height + ')';
-    };
-
-    /**
      * An immutable Cartographic instance initialized to (0.0, 0.0, 0.0).
      *
      * @type {Cartographic}
@@ -231,7 +215,7 @@ define([
      * @returns {String} A string representing the provided cartographic in the format '(longitude, latitude, height)'.
      */
     Cartographic.prototype.toString = function() {
-        return Cartographic.toString(this);
+        return '(' + this.longitude + ', ' + this.latitude + ', ' + this.height + ')';
     };
 
     return Cartographic;
