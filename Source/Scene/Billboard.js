@@ -105,14 +105,29 @@ define([
 
         this._imageIndex = -1;
 
-        this._imageUrl = options.imageUrl;
-        this._image = options.image;
-        this._imageId = options.imageId;
-        this._getImageCallback = options.getImageCallback;
-        this._imageSubRegion = options.imageSubRegion;
+        this._imageUrl = undefined;
+        this._image = undefined;
+        this._imageId = undefined;
+        this._getImageCallback = undefined;
+        this._imageSubRegion = undefined;
 
-        if ((defined(this._imageId) && !defined(this._getImageCallback)) || (!defined(this._imageId) && defined(this._getImageCallback))) {
-            throw new DeveloperError('Both imageId and getImageCallback must be defined.');
+        if (defined(options.imageUrl)) {
+            this._imageUrl = options.imageUrl;
+            this._imageId = options.imageUrl;
+        } else if (defined(options.image)) {
+            this._image = options.image;
+            this._imageId = options.image.src;
+        } else if (defined(options.imageId)) {
+            if (!defined(options.getImageCallback)) {
+                throw new DeveloperError('Both imageId and getImageCallback must be defined.');
+            }
+
+            this._imageId = options.imageId;
+            this._getImageCallback = options.getImageCallback;
+        }
+
+        if (defined(this._imageId)) {
+            this._imageSubRegion = options.imageSubRegion;
         }
 
         if (defined(billboardCollection._textureAtlas)) {
@@ -680,8 +695,10 @@ define([
             set : function(value) {
                 if (defined(value) && defined(value.src)) {
                     this._image = value;
+                    this._imageId = value.src;
                 } else {
                     this._imageUrl = value;
+                    this._imageId = value;
                 }
 
                 if (defined(this._billboardCollection._textureAtlas)) {
@@ -724,10 +741,8 @@ define([
 
         if (defined(this._imageUrl)) {
             atlas.addTextureFromUrl(this._imageUrl, callback);
-            this._imageId = this._imageUrl;
         } else if (defined(this._image)) {
             atlas.addImage(this._image, callback);
-            this._imageId = this._image.src;
         } else if (defined(this._imageId) && defined(this._getImageCallback)) {
             atlas.addTextureFromFunction(this._imageId, this._getImageCallback, callback);
         } else {

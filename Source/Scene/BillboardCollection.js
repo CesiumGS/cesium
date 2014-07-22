@@ -1078,6 +1078,8 @@ define([
         removeBillboards(this);
         updateMode(this, frameState);
 
+        billboards = this._billboards;
+        billboardsLength = billboards.length;
         var billboardsToUpdate = this._billboardsToUpdate;
         var billboardsToUpdateLength = this._billboardsToUpdateIndex;
 

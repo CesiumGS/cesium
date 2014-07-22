@@ -87,13 +87,9 @@ defineSuite([
         billboards = billboards && billboards.destroy();
     });
 
-    function createTextureAtlas(context, images) {
-        var mockScene = {
-            context : context
-        };
+    function createTextureAtlas(context) {
         var atlas = new TextureAtlas({
-            scene : mockScene,
-            images : images,
+            context : context,
             borderWidthInPixels : 1,
             initialSize : new Cartesian2(3, 3)
         });
@@ -131,7 +127,7 @@ defineSuite([
         expect(b.horizontalOrigin).toEqual(HorizontalOrigin.CENTER);
         expect(b.verticalOrigin).toEqual(VerticalOrigin.CENTER);
         expect(b.scale).toEqual(1.0);
-        expect(b.imageIndex).toEqual(-1);
+        expect(b.image).not.toBeDefined();
         expect(b.color.red).toEqual(1.0);
         expect(b.color.green).toEqual(1.0);
         expect(b.color.blue).toEqual(1.0);
@@ -155,7 +151,7 @@ defineSuite([
             horizontalOrigin : HorizontalOrigin.LEFT,
             verticalOrigin : VerticalOrigin.BOTTOM,
             scale : 2.0,
-            imageIndex : 1,
+            image : greenImage,
             color : {
                 red : 1.0,
                 green : 2.0,
@@ -179,7 +175,7 @@ defineSuite([
         expect(b.horizontalOrigin).toEqual(HorizontalOrigin.LEFT);
         expect(b.verticalOrigin).toEqual(VerticalOrigin.BOTTOM);
         expect(b.scale).toEqual(2.0);
-        expect(b.imageIndex).toEqual(1);
+        expect(b.image).toEqual(greenImage.src);
         expect(b.color.red).toEqual(1.0);
         expect(b.color.green).toEqual(2.0);
         expect(b.color.blue).toEqual(3.0);
@@ -203,7 +199,7 @@ defineSuite([
         b.horizontalOrigin = HorizontalOrigin.LEFT;
         b.verticalOrigin = VerticalOrigin.BOTTOM;
         b.scale = 2.0;
-        b.imageIndex = 1;
+        b.image = greenImage;
         b.color = new Color(1.0, 2.0, 3.0, 4.0);
         b.rotation = 1.0;
         b.alignedAxis = new Cartesian3(1.0, 2.0, 3.0);
@@ -220,7 +216,7 @@ defineSuite([
         expect(b.horizontalOrigin).toEqual(HorizontalOrigin.LEFT);
         expect(b.verticalOrigin).toEqual(VerticalOrigin.BOTTOM);
         expect(b.scale).toEqual(2.0);
-        expect(b.imageIndex).toEqual(1);
+        expect(b.image).toEqual(greenImage.src);
         expect(b.color.red).toEqual(1.0);
         expect(b.color.green).toEqual(2.0);
         expect(b.color.blue).toEqual(3.0);
@@ -259,11 +255,11 @@ defineSuite([
     });
 
     it('render billboard with scaleByDistance', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [greenImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         billboards.add({
             position : Cartesian3.ZERO,
             scaleByDistance: new NearFarScalar(1.0, 1.0, 3.0, 0.0),
-            imageIndex : 0
+            image : greenImage
         });
 
         ClearCommand.ALL.execute(context);
@@ -295,11 +291,11 @@ defineSuite([
     });
 
     it('render billboard with translucencyByDistance', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [greenImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         billboards.add({
             position : Cartesian3.ZERO,
             translucencyByDistance: new NearFarScalar(1.0, 1.0, 3.0, 0.0),
-            imageIndex : 0
+            image : greenImage
         });
 
         ClearCommand.ALL.execute(context);
@@ -331,12 +327,12 @@ defineSuite([
     });
 
     it('render billboard with pixelOffsetScaleByDistance', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [greenImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         billboards.add({
             position : Cartesian3.ZERO,
             pixelOffset : new Cartesian2(1.0, 0.0),
             pixelOffsetScaleByDistance: new NearFarScalar(1.0, 0.0, 3.0, 10.0),
-            imageIndex : 0
+            image : greenImage
         });
 
         ClearCommand.ALL.execute(context);
@@ -438,25 +434,6 @@ defineSuite([
         var translucency = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
         expect(function() {
             b.translucencyByDistance = translucency;
-        }).toThrowDeveloperError();
-    });
-
-    it('throws with non number Index', function() {
-        var b = billboards.add();
-        expect(function() {
-            b.imageIndex = undefined;
-        }).toThrowDeveloperError();
-    });
-
-    it('throws with invalid index', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [whiteImage]);
-        billboards.add({
-            position : Cartesian3.ZERO,
-            imageIndex : 1
-        });
-
-        expect(function() {
-            billboards.update(context, frameState, []);
         }).toThrowDeveloperError();
     });
 
@@ -594,7 +571,7 @@ defineSuite([
     it('sets and gets a texture atlas', function() {
         expect(billboards.textureAtlas).not.toBeDefined();
 
-        var atlas = createTextureAtlas(context, [greenImage]);
+        var atlas = createTextureAtlas(context);
         billboards.textureAtlas = atlas;
         expect(billboards.textureAtlas).toEqual(atlas);
     });
@@ -603,7 +580,7 @@ defineSuite([
         var b = new BillboardCollection();
         expect(b.destroyTextureAtlas).toEqual(true);
 
-        var atlas = createTextureAtlas(context, [greenImage]);
+        var atlas = createTextureAtlas(context);
         b.textureAtlas = atlas;
         b = b.destroy();
 
@@ -614,7 +591,7 @@ defineSuite([
         var b = new BillboardCollection();
         b.destroyTextureAtlas = false;
 
-        var atlas = createTextureAtlas(context, [greenImage]);
+        var atlas = createTextureAtlas(context);
         b.rextureAtlas = atlas;
         b = b.destroy();
 
@@ -626,14 +603,14 @@ defineSuite([
     });
 
     it('modifies and removes a billboard, then renders', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [greenImage, blueImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         var b = billboards.add({
             position : Cartesian3.ZERO,
-            imageIndex : 0
+            image : greenImage
         });
         billboards.add({
             position : new Cartesian3(1.0, 0.0, 0.0),
-            imageIndex : 1
+            image : blueImage
         });
 
         ClearCommand.ALL.execute(context);
@@ -653,10 +630,10 @@ defineSuite([
     });
 
     it('renders a green billboard', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [greenImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         billboards.add({
             position : Cartesian3.ZERO,
-            imageIndex : 0
+            image : greenImage
         });
 
         ClearCommand.ALL.execute(context);
@@ -667,10 +644,10 @@ defineSuite([
     });
 
     it('adds and renders a billboard', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [greenImage, blueImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         billboards.add({
             position : Cartesian3.ZERO,
-            imageIndex : 0
+            image : greenImage
         });
 
         ClearCommand.ALL.execute(context);
@@ -681,7 +658,7 @@ defineSuite([
 
         billboards.add({
             position : new Cartesian3(-0.5, 0.0, 0.0), // Closer to viewer
-            imageIndex : 1
+            image : blueImage
         });
 
         render(context, frameState, billboards);
@@ -689,14 +666,14 @@ defineSuite([
     });
 
     it('removes and renders a billboard', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [greenImage, blueImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         billboards.add({
             position : Cartesian3.ZERO,
-            imageIndex : 0
+            image : greenImage
         });
         var blueBillboard = billboards.add({
             position : new Cartesian3(-0.5, 0.0, 0.0), // Closer to viewer
-            imageIndex : 1
+            image : blueImage
         });
 
         ClearCommand.ALL.execute(context);
@@ -714,10 +691,10 @@ defineSuite([
     });
 
     it('removes all billboards and renders', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [greenImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         billboards.add({
             position : Cartesian3.ZERO,
-            imageIndex : 0
+            image : greenImage
         });
 
         ClearCommand.ALL.execute(context);
@@ -734,10 +711,10 @@ defineSuite([
     });
 
     it('removes all billboards, adds a billboard, and renders', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [greenImage, blueImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         billboards.add({
             position : Cartesian3.ZERO,
-            imageIndex : 0
+            image : greenImage
         });
 
         ClearCommand.ALL.execute(context);
@@ -752,7 +729,7 @@ defineSuite([
         billboards.removeAll();
         billboards.add({
             position : Cartesian3.ZERO,
-            imageIndex : 1
+            image : blueImage
         });
 
         render(context, frameState, billboards);
@@ -760,10 +737,10 @@ defineSuite([
     });
 
     it('renders with a different texture atlas', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [greenImage]);
-        billboards.add({
+        billboards.textureAtlas = createTextureAtlas(context);
+        var b = billboards.add({
             position : Cartesian3.ZERO,
-            imageIndex : 0
+            image : greenImage
         });
 
         ClearCommand.ALL.execute(context);
@@ -775,21 +752,22 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        billboards.textureAtlas = createTextureAtlas(context, [blueImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
+        b.image = blueImage;
         render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 0, 255, 255]);
     });
 
     it('renders using billboard show property', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [greenImage, blueImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         var greenBillboard = billboards.add({
             position : Cartesian3.ZERO,
-            imageIndex : 0
+            image : greenImage
         });
         var blueBillboard = billboards.add({
             show : false,
             position : Cartesian3.ZERO,
-            imageIndex : 1
+            image : blueImage
         });
 
         ClearCommand.ALL.execute(context);
@@ -809,10 +787,10 @@ defineSuite([
     });
 
     it('renders using billboard position property', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [greenImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         var b = billboards.add({
             position : Cartesian3.ZERO,
-            imageIndex : 0
+            image : greenImage
         });
 
         ClearCommand.ALL.execute(context);
@@ -834,10 +812,10 @@ defineSuite([
     });
 
     it('renders using billboard scale property', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [greenImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         var b = billboards.add({
             position : Cartesian3.ZERO,
-            imageIndex : 0
+            image : greenImage
         });
 
         ClearCommand.ALL.execute(context);
@@ -859,10 +837,10 @@ defineSuite([
     });
 
     it('renders using billboard imageIndex property', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [greenImage, blueImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         var b = billboards.add({
             position : Cartesian3.ZERO,
-            imageIndex : 0
+            image : greenImage
         });
 
         ClearCommand.ALL.execute(context);
@@ -874,16 +852,16 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        b.imageIndex = 1;
+        b.image = blueImage;
         render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 0, 255, 255]);
     });
 
     it('renders using billboard color property', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [whiteImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         var b = billboards.add({
             position : Cartesian3.ZERO,
-            imageIndex : 0
+            image : whiteImage
         });
 
         ClearCommand.ALL.execute(context);
@@ -909,10 +887,10 @@ defineSuite([
     });
 
     it('renders using billboard rotation property', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [greenImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         var b = billboards.add({
             position : Cartesian3.ZERO,
-            imageIndex : 0
+            image : greenImage
         });
 
         ClearCommand.ALL.execute(context);
@@ -930,10 +908,10 @@ defineSuite([
     });
 
     it('renders using billboard aligned axis property', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [greenImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         var b = billboards.add({
             position : Cartesian3.ZERO,
-            imageIndex : 0
+            image : greenImage
         });
 
         ClearCommand.ALL.execute(context);
@@ -951,10 +929,10 @@ defineSuite([
     });
 
     it('renders using billboard custum width property', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [greenImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         var b = billboards.add({
             position : Cartesian3.ZERO,
-            imageIndex : 0
+            image : greenImage
         });
 
         ClearCommand.ALL.execute(context);
@@ -972,10 +950,10 @@ defineSuite([
     });
 
     it('renders using billboard custum height property', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [greenImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         var b = billboards.add({
             position : Cartesian3.ZERO,
-            imageIndex : 0
+            image : greenImage
         });
 
         ClearCommand.ALL.execute(context);
@@ -993,10 +971,10 @@ defineSuite([
     });
 
     it('renders bounding volume with debugShowBoundingVolume', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [greenImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         billboards.add({
             position : Cartesian3.ZERO,
-            imageIndex : 0,
+            image : greenImage,
             scale : 0.5 // bring bounding volume in view
         });
         billboards.debugShowBoundingVolume = true;
@@ -1009,11 +987,11 @@ defineSuite([
     });
 
     it('updates 10% of billboards', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [whiteImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         for ( var i = 0; i < 10; ++i) {
             billboards.add({
                 position : Cartesian3.ZERO,
-                imageIndex : 0,
+                image : whiteImage,
                 show : (i === 3)
             });
         }
@@ -1041,11 +1019,11 @@ defineSuite([
     });
 
     it('renders more than 16K billboards', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [whiteImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         for ( var i = 0; i < 16 * 1024; ++i) {
             billboards.add({
                 position : Cartesian3.ZERO,
-                imageIndex : 0,
+                image : whiteImage,
                 color : {
                     alpha : 0.0
                 }
@@ -1054,7 +1032,7 @@ defineSuite([
 
         billboards.add({
             position : Cartesian3.ZERO,
-            imageIndex : 0
+            image : whiteImage
         });
 
         ClearCommand.ALL.execute(context);
@@ -1065,10 +1043,10 @@ defineSuite([
     });
 
     it('is picked', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [whiteImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         var b = billboards.add({
             position : Cartesian3.ZERO,
-            imageIndex : 0,
+            image : whiteImage,
             id : 'id'
         });
 
@@ -1078,10 +1056,10 @@ defineSuite([
     });
 
     it('can change pick id', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [whiteImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         var b = billboards.add({
             position : Cartesian3.ZERO,
-            imageIndex : 0,
+            image : whiteImage,
             id : 'id'
         });
 
@@ -1097,11 +1075,11 @@ defineSuite([
     });
 
     it('is not picked', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [whiteImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         billboards.add({
             show : false,
             position : Cartesian3.ZERO,
-            imageIndex : 0
+            image : whiteImage
         });
 
         var pickedObject = pick(context, frameState, billboards, 0, 0);
@@ -1109,10 +1087,10 @@ defineSuite([
     });
 
     it('pick a billboard using translucencyByDistance', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [whiteImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         var b = billboards.add({
             position : Cartesian3.ZERO,
-            imageIndex : 0
+            image : whiteImage
         });
 
         var translucency = new NearFarScalar(1.0, 1.0, 3.0e9, 0.9);
@@ -1127,11 +1105,11 @@ defineSuite([
     });
 
     it('pick a billboard using pixelOffsetScaleByDistance', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [whiteImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         var b = billboards.add({
             position : Cartesian3.ZERO,
             pixelOffset : new Cartesian2(0.0, 1.0),
-            imageIndex : 0
+            image : whiteImage
         });
 
         var pixelOffsetScale = new NearFarScalar(1.0, 0.0, 3.0e9, 0.0);
@@ -1146,7 +1124,7 @@ defineSuite([
     });
 
     it('computes screen space position (1)', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [whiteImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         var b = billboards.add({
             position : Cartesian3.ZERO
         });
@@ -1155,7 +1133,7 @@ defineSuite([
     });
 
     it('computes screen space position (2)', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [whiteImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         var b = billboards.add({
             position : Cartesian3.ZERO,
             pixelOffset : new Cartesian2(1.0, 2.0)
@@ -1165,7 +1143,7 @@ defineSuite([
     });
 
     it('computes screen space position (3)', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [whiteImage]);
+        billboards.textureAtlas = createTextureAtlas(context);
         var b = billboards.add({
             position : Cartesian3.ZERO,
             eyeOffset : new Cartesian3(5.0, -5.0, 0.0)
@@ -1238,18 +1216,18 @@ defineSuite([
     });
 
     it('computes bounding sphere in 3D', function() {
-        var atlas = createTextureAtlas(context, [greenImage]);
+        var atlas = createTextureAtlas(context);
         billboards.textureAtlas = atlas;
 
         var projection = frameState.mapProjection;
         var ellipsoid = projection.ellipsoid;
 
         var one = billboards.add({
-            imageIndex : 0,
+            image : greenImage,
             position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0))
         });
         var two = billboards.add({
-            imageIndex : 0,
+            image : greenImage,
             position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
         });
 
@@ -1264,18 +1242,18 @@ defineSuite([
     });
 
     it('computes bounding sphere in Columbus view', function() {
-        var atlas = createTextureAtlas(context, [greenImage]);
+        var atlas = createTextureAtlas(context);
         billboards.textureAtlas = atlas;
 
         var projection = frameState.mapProjection;
         var ellipsoid = projection.ellipsoid;
 
         var one = billboards.add({
-            imageIndex : 0,
+            image : greenImage,
             position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0))
         });
         var two = billboards.add({
-            imageIndex : 0,
+            image : greenImage,
             position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
         });
 
@@ -1297,18 +1275,18 @@ defineSuite([
     });
 
     it('computes bounding sphere in 2D', function() {
-        var atlas = createTextureAtlas(context, [greenImage]);
+        var atlas = createTextureAtlas(context);
         billboards.textureAtlas = atlas;
 
         var projection = frameState.mapProjection;
         var ellipsoid = projection.ellipsoid;
 
         var one = billboards.add({
-            imageIndex : 0,
+            image : greenImage,
             position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0))
         });
         var two = billboards.add({
-            imageIndex : 0,
+            image : greenImage,
             position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
         });
 
@@ -1345,19 +1323,19 @@ defineSuite([
     });
 
     it('computes bounding sphere with pixel offset', function() {
-        var atlas = createTextureAtlas(context, [greenImage]);
+        var atlas = createTextureAtlas(context);
         billboards.textureAtlas = atlas;
 
         var projection = frameState.mapProjection;
         var ellipsoid = projection.ellipsoid;
 
         var one = billboards.add({
-            imageIndex : 0,
+            image : greenImage,
             position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
             pixelOffset : new Cartesian2(0.0, 200.0)
         });
         var two = billboards.add({
-            imageIndex : 0,
+            image : greenImage,
             position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0)),
             pixelOffset : new Cartesian2(0.0, 200.0)
         });
