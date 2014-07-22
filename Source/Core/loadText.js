@@ -27,7 +27,7 @@ define([
      *   'X-Custom-Header' : 'some value'
      * }).then(function(text) {
      *     // Do something with the text
-     * }, function(error) {
+     * }.othewise(function(error) {
      *     // an error occurred
      * });
      */
