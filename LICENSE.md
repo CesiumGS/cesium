@@ -382,6 +382,6 @@ http://raphaeljs.com/icons/
 
 http://raphaeljs.com/license.html
 
-### Mouse vector icons made by Freepik from Flaticon.com
+### Mouse and gesture vector icons made by Freepik from Flaticon.com
 
 http://www.flaticon.com/authors/freepik

@@ -134,8 +134,8 @@ define([
 
         projection = defaultValue(projection, defaultProjection);
 
-        var lowerLeft = projection.project(Rectangle.getSouthwest(rectangle, fromRectangleLowerLeft));
-        var upperRight = projection.project(Rectangle.getNortheast(rectangle, fromRectangleUpperRight));
+        var lowerLeft = projection.project(Rectangle.southwest(rectangle, fromRectangleLowerLeft));
+        var upperRight = projection.project(Rectangle.northeast(rectangle, fromRectangleUpperRight));
 
         Cartesian2.subtract(upperRight, lowerLeft, upperRight);
 

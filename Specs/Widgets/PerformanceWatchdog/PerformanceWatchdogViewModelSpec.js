@@ -1,18 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/PerformanceWatchdog/PerformanceWatchdogViewModel',
-         'Core/defined',
-         'Core/getTimestamp',
-         'Scene/FrameRateMonitor',
-         'Specs/createScene',
-         'Specs/destroyScene'
-     ], function(
-             PerformanceWatchdogViewModel,
-             defined,
-             getTimestamp,
-             FrameRateMonitor,
-             createScene,
-             destroyScene) {
+        'Widgets/PerformanceWatchdog/PerformanceWatchdogViewModel',
+        'Core/defined',
+        'Core/getTimestamp',
+        'Scene/FrameRateMonitor',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        PerformanceWatchdogViewModel,
+        defined,
+        getTimestamp,
+        FrameRateMonitor,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

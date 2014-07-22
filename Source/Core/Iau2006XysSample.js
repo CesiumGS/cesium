@@ -11,6 +11,8 @@ define(function() {
      * @param {Number} x The X value.
      * @param {Number} y The Y value.
      * @param {Number} s The S value.
+     *
+     * @private
      */
     var Iau2006XysSample = function Iau2006XysSample(x, y, s) {
         /**

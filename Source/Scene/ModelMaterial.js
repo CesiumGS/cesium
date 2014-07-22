@@ -76,7 +76,7 @@ define([
      * @exception {DeveloperError} name must match a parameter name in the material's technique that is targetable and not optimized out.
      *
      * @example
-     * material.setValue('diffuse', new Cartesian4(1.0, 0.0, 0.0, 1.0));  // vec4
+     * material.setValue('diffuse', new Cesium.Cartesian4(1.0, 0.0, 0.0, 1.0));  // vec4
      * material.setValue('shininess', 256.0);                             // scalar
      */
     ModelMaterial.prototype.setValue = function(name, value) {

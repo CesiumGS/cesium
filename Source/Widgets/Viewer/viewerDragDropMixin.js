@@ -6,9 +6,9 @@ define([
         '../../Core/DeveloperError',
         '../../Core/Event',
         '../../Core/wrapFunction',
-        '../../DynamicScene/CzmlDataSource',
-        '../../DynamicScene/GeoJsonDataSource',
-        '../../DynamicScene/KmlDataSource',
+        '../../DataSources/CzmlDataSource',
+        '../../DataSources/GeoJsonDataSource',
+        '../../DataSources/KmlDataSource',
         '../getElement'
     ], function(
         defaultValue,
