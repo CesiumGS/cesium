@@ -331,7 +331,7 @@ define([
             //we're already aware of this source
             if (sourceHolder.loaded) {
                 //and it's already loaded, tell the callback what index to use
-                textureAvailableCallback(sourceHolder.index);
+                textureAvailableCallback(sourceHolder.index, id);
             } else {
                 //add the callback to be notified once it loads
                 sourceHolder.imageLoaded.addEventListener(textureAvailableCallback);
@@ -350,7 +350,7 @@ define([
                 addImage(that, loadedImage, index);
 
                 sourceHolder.loaded = true;
-                sourceHolder.imageLoaded.raiseEvent(index);
+                sourceHolder.imageLoaded.raiseEvent(index, id);
                 sourceHolder.imageLoaded = undefined;
             }
         };
@@ -474,7 +474,7 @@ define([
             //we're already aware of this source
             if (sourceHolder.loaded) {
                 //and it's already loaded, tell the callback what index to use
-                textureAvailableCallback(sourceHolder.index);
+                textureAvailableCallback(sourceHolder.index, id);
             } else {
                 //add the callback to be notified once it loads
                 sourceHolder.imageLoaded.addEventListener(textureAvailableCallback);

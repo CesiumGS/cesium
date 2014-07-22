@@ -134,13 +134,17 @@ define([
             var glyphTextureInfo = glyphTextureCache[id];
             if (!defined(glyphTextureInfo)) {
                 var canvas = createGlyphCanvas(character, font, fillColor, outlineColor, outlineWidth, style, verticalOrigin);
-                var index = -1;
-                if (canvas.width > 0 && canvas.height > 0) {
-                    index = textureAtlas.addImage(canvas);
-                }
 
-                glyphTextureInfo = new GlyphTextureInfo(labelCollection, index, canvas.dimensions);
+                glyphTextureInfo = new GlyphTextureInfo(labelCollection, -1, canvas.dimensions);
                 glyphTextureCache[id] = glyphTextureInfo;
+
+                if (canvas.width > 0 && canvas.height > 0) {
+                    textureAtlas.addTextureFromFunction(id, function(id, loadedCallback) {
+                        loadedCallback(canvas);
+                    }, function(index, id) {
+                        glyphTextureInfo.index = index;
+                    });
+                }
             }
 
             glyph = glyphs[textIndex];
@@ -190,7 +194,7 @@ define([
                 billboard.scale = label._scale;
                 billboard.pickPrimitive = label;
                 billboard.id = label._id;
-                billboard.imageIndex = glyphTextureInfo.index;
+                billboard.image = id;
                 billboard.translucencyByDistance = label._translucencyByDistance;
                 billboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
             }
@@ -553,9 +557,7 @@ define([
 
         if (!defined(this._textureAtlas)) {
             this._textureAtlas = new TextureAtlas({
-                scene : {
-                    context : context
-                }
+                context : context
             });
             billboardCollection.textureAtlas = this._textureAtlas;
         }

@@ -678,6 +678,10 @@ define([
                 } else {
                     this._imageUrl = value;
                 }
+
+                if (defined(this._billboardCollection._textureAtlas)) {
+                    this._loadImage();
+                }
             }
         }
     });
