@@ -109,6 +109,11 @@ define([
         this._image = options.image;
         this._imageId = options.imageId;
         this._getImageCallback = options.getImageCallback;
+        this._imageSubRegion = options.imageSubRegion;
+
+        if ((defined(this._imageId) && !defined(this._getImageCallback)) || (!defined(this._imageId) && defined(this._getImageCallback))) {
+            throw new DeveloperError('Both imageId and getImageCallback must be defined.');
+        }
 
         if (defined(billboardCollection._textureAtlas)) {
             this._loadImage();
@@ -699,13 +704,24 @@ define([
     };
 
     Billboard.prototype._loadImage = function() {
+        var atlas = this._billboardCollection._textureAtlas;
+
         var that = this;
         var callback = function(index) {
             that._imageIndex = index;
             makeDirty(that, IMAGE_INDEX_INDEX);
         };
 
-        var atlas = this._billboardCollection._textureAtlas;
+        if (defined(this._imageSubRegion)) {
+            var setIndexCallback = callback;
+            callback = function(index, id) {
+                if (id !== -1) {
+                    atlas.addSubRegion(id, that._imageSubRegion, setIndexCallback);
+                }
+                that._imageSubRegion = undefined;
+            };
+        }
+
         if (defined(this._imageUrl)) {
             atlas.addTextureFromUrl(this._imageUrl, callback);
             this._imageId = this._imageUrl;
@@ -736,6 +752,24 @@ define([
 
         this._imageId = id;
         this._getImageCallback = getImageCallback;
+
+        if (defined(this._billboardCollection._textureAtlas)) {
+            this._loadImage();
+        }
+    };
+
+    Billboard.prototype.setImageSubRegion = function(id, subRegion) {
+      //>>includeStart('debug', pragmas.debug);
+        if (!defined(id)) {
+            throw new DeveloperError('id is required.');
+        }
+        if (!defined(subRegion)) {
+            throw new DeveloperError('subRegion is required.');
+        }
+        //>>includeEnd('debug');
+
+        this._imageId = id;
+        this._imageSubRegion = subRegion;
 
         if (defined(this._billboardCollection._textureAtlas)) {
             this._loadImage();

@@ -10,7 +10,8 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/loadImage',
-        '../Core/PixelFormat'
+        '../Core/PixelFormat',
+        '../Core/RuntimeError'
     ], function(
         BoundingRectangle,
         Cartesian2,
@@ -22,7 +23,8 @@ define([
         DeveloperError,
         Event,
         loadImage,
-        PixelFormat) {
+        PixelFormat,
+        RuntimeError) {
     "use strict";
 
     function SourceHolder() {
@@ -367,49 +369,55 @@ define([
     };
 
     /**
-     * Add a set of sub-regions to one atlas image as additional image indices.
+     * Add a sub-region to one atlas image as additional image indices.
      *
      * @param {String} id The id of the image to add to the atlas.
-     * @param {BoundingRectangle[]} subRegions An array of {@link BoundingRectangle} sub-regions measured in pixels from the bottom-left.
+     * @param {BoundingRectangle} subRegion An {@link BoundingRectangle} sub-region measured in pixels from the bottom-left.
      * @param {Function} textureAvailableCallback A function taking the index of the first newly-added region as it's only parameter.
      */
-    TextureAtlas.prototype.addSubRegions = function(id, subRegions, textureAvailableCallback) {
+    TextureAtlas.prototype.addSubRegion = function(id, subRegion, textureAvailableCallback) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(id)) {
             throw new DeveloperError('id is required.');
         }
-        if (!defined(subRegions)) {
-            throw new DeveloperError('subRegions is required.');
+        if (!defined(subRegion)) {
+            throw new DeveloperError('subRegion is required.');
         }
         if (!defined(textureAvailableCallback)) {
             throw new DeveloperError('textureAvailableCallback is required.');
         }
         //>>includeEnd('debug');
 
+        var sourceHolder = this._idHash[id];
+        if (!defined(sourceHolder)) {
+            throw new RuntimeError('image with id must be in the atlas.');
+        }
+
         var that = this;
         var createSubRegionsCallback = function(index) {
             var atlasWidth = that._texture.width;
             var atlasHeight = that._texture.height;
             var numImages = that.numberOfImages;
-            var numSubRegions = subRegions.length;
 
             var baseRegion = that._textureCoordinates[index];
-            for (var i = 0; i < numSubRegions; ++i) {
-                var thisRegion = subRegions[i];
-                that._textureCoordinates.push(new BoundingRectangle(
-                    baseRegion.x + (thisRegion.x / atlasWidth),
-                    baseRegion.y + (thisRegion.y / atlasHeight),
-                    thisRegion.width / atlasWidth,
-                    thisRegion.height / atlasHeight
-                ));
-            }
+            that._textureCoordinates.push(new BoundingRectangle(
+                baseRegion.x + (subRegion.x / atlasWidth),
+                baseRegion.y + (subRegion.y / atlasHeight),
+                subRegion.width / atlasWidth,
+                subRegion.height / atlasHeight
+            ));
 
             textureAvailableCallback(numImages);
         };
 
-        this.addTextureFromFunction(id, function(id, callback) {
-            loadImage(id).then(callback);
-        }, createSubRegionsCallback);
+        //we're already aware of this source
+        if (sourceHolder.loaded) {
+            //and it's already loaded, tell the callback what index to use
+            createSubRegionsCallback(sourceHolder.index, id);
+        } else {
+            //add the callback to be notified once it loads
+            sourceHolder.imageLoaded.addEventListener(createSubRegionsCallback);
+        }
     };
 
     /**
