@@ -987,39 +987,51 @@ define([
         processPacketData(VerticalOrigin, billboard, 'verticalOrigin', billboardData.verticalOrigin, interval, sourceUri, entityCollection);
     }
 
-    function processClock(entity, packet, entityCollection, sourceUri) {
+
+    function processDocument(packet, dataSource) {
         var clockPacket = packet.clock;
-        if (!defined(clockPacket) || entity.id !== 'document') {
-            return;
+
+        var version = packet.version;
+        if (defined(version)) {
+            if (version !== '1.0') {
+                throw new RuntimeError(version + ' is not a support CZML version.  Only CZML version 1.0 is currently supported.');
+            }
+        } else if (!defined(dataSource.version)) {
+            throw new RuntimeError('CZML version information missing.');
         }
 
-        var clock = entity.clock;
-        if (!defined(clock)) {
-            clock = new DataSourceClock();
-            clock.startTime = Iso8601.MAXIMUM_INTERVAL.start;
-            clock.stopTime = Iso8601.MAXIMUM_INTERVAL.stop;
-            clock.clockRange = ClockRange.LOOP_STOP;
-            clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-            clock.multiplier = 1.0;
-            entity.clock = clock;
+        if (defined(packet.name)) {
+            dataSource._name = name;
         }
-        if (defined(clockPacket.interval)) {
-            iso8601Scratch.iso8601 = clockPacket.interval;
-            var interval = TimeInterval.fromIso8601(iso8601Scratch);
-            clock.startTime = interval.start;
-            clock.stopTime = interval.stop;
-        }
-        if (defined(clockPacket.currentTime)) {
-            clock.currentTime = JulianDate.fromIso8601(clockPacket.currentTime);
-        }
-        if (defined(clockPacket.range)) {
-            clock.clockRange = ClockRange[clockPacket.range];
-        }
-        if (defined(clockPacket.step)) {
-            clock.clockStep = ClockStep[clockPacket.step];
-        }
-        if (defined(clockPacket.multiplier)) {
-            clock.multiplier = clockPacket.multiplier;
+
+        if (defined(clockPacket)) {
+            var clock;
+            if (!defined(clock)) {
+                clock = new DataSourceClock();
+                clock.startTime = Iso8601.MAXIMUM_INTERVAL.start;
+                clock.stopTime = Iso8601.MAXIMUM_INTERVAL.stop;
+                clock.clockRange = ClockRange.LOOP_STOP;
+                clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+                clock.multiplier = 1.0;
+            }
+            if (defined(clockPacket.interval)) {
+                iso8601Scratch.iso8601 = clockPacket.interval;
+                var interval = TimeInterval.fromIso8601(iso8601Scratch);
+                clock.startTime = interval.start;
+                clock.stopTime = interval.stop;
+            }
+            if (defined(clockPacket.currentTime)) {
+                clock.currentTime = JulianDate.fromIso8601(clockPacket.currentTime);
+            }
+            if (defined(clockPacket.range)) {
+                clock.clockRange = ClockRange[clockPacket.range];
+            }
+            if (defined(clockPacket.step)) {
+                clock.clockStep = ClockStep[clockPacket.step];
+            }
+            if (defined(clockPacket.multiplier)) {
+                clock.multiplier = clockPacket.multiplier;
+            }
         }
     }
 
@@ -1415,13 +1427,10 @@ define([
 
         if (packet['delete'] === true) {
             entityCollection.removeById(objectId);
+        } else if (objectId === 'document') {
+            processDocument(packet, dataSource);
         } else {
-            var entity;
-            if (objectId === 'document') {
-                entity = dataSource._document;
-            } else {
-                entity = entityCollection.getOrCreateEntity(objectId);
-            }
+            var entity = entityCollection.getOrCreateEntity(objectId);
 
             var parentId = packet.parent;
             if (defined(parentId)) {
@@ -1442,52 +1451,52 @@ define([
 
         CzmlDataSource._processCzml(czml, entityCollection, sourceUri, undefined, dataSource);
 
-        var documentObject = dataSource._document;
-
+//        var documentObject = dataSource._document;
+//
         var raiseChangedEvent = false;
-        var czmlClock;
-        if (defined(documentObject.clock)) {
-            czmlClock = documentObject.clock;
-        } else {
-            var availability = entityCollection.computeAvailability();
-            if (!availability.start.equals(Iso8601.MINIMUM_VALUE)) {
-                var startTime = availability.start;
-                var stopTime = availability.stop;
-                var totalSeconds = JulianDate.secondsDifference(stopTime, startTime);
-                var multiplier = Math.round(totalSeconds / 120.0);
-
-                czmlClock = new DataSourceClock();
-                czmlClock.startTime = startTime;
-                czmlClock.stopTime = stopTime;
-                czmlClock.clockRange = ClockRange.LOOP_STOP;
-                czmlClock.multiplier = multiplier;
-                czmlClock.currentTime = startTime;
-                czmlClock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-            }
-        }
-
-        if (defined(czmlClock)) {
-            if (!defined(dataSource._clock)) {
-                dataSource._clock = new DataSourceClock();
-                raiseChangedEvent = true;
-            }
-            if (!czmlClock.equals(dataSource._clock)) {
-                czmlClock.clone(dataSource._clock);
-                raiseChangedEvent = true;
-            }
-        }
-
-        var name;
-        if (defined(documentObject.name)) {
-            name = documentObject.name;
-        } else if (defined(sourceUri)) {
-            name = getFilenameFromUri(sourceUri);
-        }
-
-        if (dataSource._name !== name) {
-            dataSource._name = name;
-            raiseChangedEvent = true;
-        }
+//        var czmlClock;
+//        if (defined(documentObject.clock)) {
+//            czmlClock = documentObject.clock;
+//        } else {
+//            var availability = entityCollection.computeAvailability();
+//            if (!availability.start.equals(Iso8601.MINIMUM_VALUE)) {
+//                var startTime = availability.start;
+//                var stopTime = availability.stop;
+//                var totalSeconds = JulianDate.secondsDifference(stopTime, startTime);
+//                var multiplier = Math.round(totalSeconds / 120.0);
+//
+//                czmlClock = new DataSourceClock();
+//                czmlClock.startTime = startTime;
+//                czmlClock.stopTime = stopTime;
+//                czmlClock.clockRange = ClockRange.LOOP_STOP;
+//                czmlClock.multiplier = multiplier;
+//                czmlClock.currentTime = startTime;
+//                czmlClock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+//            }
+//        }
+//
+//        if (defined(czmlClock)) {
+//            if (!defined(dataSource._clock)) {
+//                dataSource._clock = new DataSourceClock();
+//                raiseChangedEvent = true;
+//            }
+//            if (!czmlClock.equals(dataSource._clock)) {
+//                czmlClock.clone(dataSource._clock);
+//                raiseChangedEvent = true;
+//            }
+//        }
+//
+//        var name;
+//        if (defined(documentObject.name)) {
+//            name = documentObject.name;
+//        } else if (defined(sourceUri)) {
+//            name = getFilenameFromUri(sourceUri);
+//        }
+//
+//        if (dataSource._name !== name) {
+//            dataSource._name = name;
+//            raiseChangedEvent = true;
+//        }
 
         entityCollection.resumeEvents();
         if (raiseChangedEvent) {
@@ -1517,7 +1526,6 @@ define([
         this._loading = new Event();
         this._clock = undefined;
         this._entityCollection = new EntityCollection();
-        this._document = new Entity();
     };
 
     defineProperties(CzmlDataSource.prototype, {
@@ -1600,7 +1608,7 @@ define([
      * @memberof CzmlDataSource
      * @type Array
      */
-    CzmlDataSource.updaters = [processClock,//
+    CzmlDataSource.updaters = [
     processBillboard, //
     processEllipse, //
     processEllipsoid, //
@@ -1650,7 +1658,9 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._document = new Entity('document');
+        this._name = undefined;
+        this._version = undefined;
+        this._clock = undefined;
         this._entityCollection.removeAll();
         loadCzml(this, czml, sourceUri);
     };
