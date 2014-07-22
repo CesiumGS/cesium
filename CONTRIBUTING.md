@@ -7,7 +7,7 @@ We use the [Apache 2.0 License](LICENSE.md).  Before we can merge a pull request
 * [individuals](http://www.agi.com/licenses/individual-cla-agi-v1.0.txt) and 
 * [corporations](http://www.agi.com/licenses/corporate-cla-agi-v1.0.txt).
 
-Please email a completed CLA and related questions to [cla@agi.com](mailto:cla@agi.com).
+Please email a completed CLA with all fields filled in to [cla@agi.com](mailto:cla@agi.com).  Related questions are also welcome.
 
 ## Development Best Practices
 
