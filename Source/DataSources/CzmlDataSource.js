@@ -1015,10 +1015,10 @@ define([
                 };
             } else {
                 newClock.interval = defaultValue(clockPacket.interval, newClock.interval);
-                newClock.currentTime = defaultValue(clockPacket.interval, newClock.currentTime);
-                newClock.range = defaultValue(clockPacket.interval, newClock.range);
-                newClock.step = defaultValue(clockPacket.interval, newClock.step);
-                newClock.multiplier = defaultValue(clockPacket.interval, newClock.multiplier);
+                newClock.currentTime = defaultValue(clockPacket.currentTime, newClock.currentTime);
+                newClock.range = defaultValue(clockPacket.range, newClock.range);
+                newClock.step = defaultValue(clockPacket.step, newClock.step);
+                newClock.multiplier = defaultValue(clockPacket.multiplier, newClock.multiplier);
             }
         }
     }
@@ -1414,7 +1414,7 @@ define([
         currentId = objectId;
 
         if (!defined(dataSource._version) && objectId !== 'document') {
-            throw new RuntimeError('');
+            throw new RuntimeError('The first CZML packet is required to be the document object.');
         }
 
         if (packet['delete'] === true) {

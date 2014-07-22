@@ -82,16 +82,48 @@ defineSuite([
     };
 
     var clockCzml = {
-        id : 'document',
-        version : '1.0',
-        clock : {
-            interval : '2012-03-15T10:00:00Z/2012-03-16T10:00:00Z',
-            currentTime : '2012-03-15T10:00:00Z',
-            multiplier : 60.0,
-            range : 'LOOP_STOP',
-            step : 'SYSTEM_CLOCK_MULTIPLIER'
-        }
-    };
+            id : 'document',
+            version : '1.0',
+            clock : {
+                interval : '2012-03-15T10:00:00Z/2012-03-16T10:00:00Z',
+                currentTime : '2012-03-15T10:00:00Z',
+                multiplier : 60.0,
+                range : 'LOOP_STOP',
+                step : 'SYSTEM_CLOCK_MULTIPLIER'
+            }
+        };
+
+    var clockCzml2 = {
+            id : 'document',
+            version : '1.0',
+            clock : {
+                interval : '2013-03-15T10:00:00Z/2013-03-16T10:00:00Z',
+                currentTime : '2013-03-15T10:00:00Z',
+                multiplier : 30.0,
+                range : 'UNBOUNDED',
+                step : 'TICK_DEPENDENT'
+            }
+        };
+
+    var parsedClock = {
+            interval : TimeInterval.fromIso8601({
+                iso8601 : clockCzml.clock.interval
+            }),
+            currentTime : JulianDate.fromIso8601(clockCzml.clock.currentTime),
+            multiplier : clockCzml.clock.multiplier,
+            range : ClockRange[clockCzml.clock.range],
+            step : ClockStep[clockCzml.clock.step]
+        };
+
+    var parsedClock2 = {
+            interval : TimeInterval.fromIso8601({
+                iso8601 : clockCzml2.clock.interval
+            }),
+            currentTime : JulianDate.fromIso8601(clockCzml2.clock.currentTime),
+            multiplier : clockCzml2.clock.multiplier,
+            range : ClockRange[clockCzml2.clock.range],
+            step : ClockStep[clockCzml2.clock.step]
+        };
 
     var nameCzml = {
         id : 'document',
@@ -112,16 +144,6 @@ defineSuite([
             vehicle = result;
         });
     });
-
-    var parsedClock = {
-        interval : TimeInterval.fromIso8601({
-            iso8601 : clockCzml.clock.interval
-        }),
-        currentTime : JulianDate.fromIso8601(clockCzml.clock.currentTime),
-        multiplier : clockCzml.clock.multiplier,
-        range : ClockRange[clockCzml.clock.range],
-        step : ClockStep[clockCzml.clock.step]
-    };
 
     it('default constructor has expected values', function() {
         var dataSource = new CzmlDataSource();
@@ -154,6 +176,7 @@ defineSuite([
     it('clock returns CZML defined clock', function() {
         var dataSource = new CzmlDataSource();
         dataSource.load(clockCzml);
+
         var clock = dataSource.clock;
         expect(clock).toBeDefined();
         expect(clock.startTime).toEqual(parsedClock.interval.start);
@@ -162,6 +185,15 @@ defineSuite([
         expect(clock.clockRange).toEqual(parsedClock.range);
         expect(clock.clockStep).toEqual(parsedClock.step);
         expect(clock.multiplier).toEqual(parsedClock.multiplier);
+
+        dataSource.process(clockCzml2);
+        expect(clock).toBeDefined();
+        expect(clock.startTime).toEqual(parsedClock2.interval.start);
+        expect(clock.stopTime).toEqual(parsedClock2.interval.stop);
+        expect(clock.currentTime).toEqual(parsedClock2.currentTime);
+        expect(clock.clockRange).toEqual(parsedClock2.range);
+        expect(clock.clockStep).toEqual(parsedClock2.step);
+        expect(clock.multiplier).toEqual(parsedClock2.multiplier);
     });
 
     it('clock returns data interval if no clock defined', function() {
@@ -2216,5 +2248,39 @@ defineSuite([
         expect(position.forwardExtrapolationDuration).toEqual(2.0);
         expect(position.backwardExtrapolationType).toEqual(ExtrapolationType.NONE);
         expect(position.backwardExtrapolationDuration).toEqual(1.0);
+    });
+
+    it('throws if first document packet lacks version information', function() {
+        var packet = {
+            id : 'document'
+        };
+
+        var dataSource = new CzmlDataSource();
+        expect(function() {
+            dataSource.load(packet);
+        }).toThrowRuntimeError();
+    });
+
+    it('throws if first packet is not document', function() {
+        var packet = {
+            id : 'someId'
+        };
+
+        var dataSource = new CzmlDataSource();
+        expect(function() {
+            dataSource.load(packet);
+        }).toThrowRuntimeError();
+    });
+
+    it('throws if document packet contains bad version', function() {
+        var packet = {
+            id : 'document',
+            version : 12
+        };
+
+        var dataSource = new CzmlDataSource();
+        expect(function() {
+            dataSource.load(packet);
+        }).toThrowRuntimeError();
     });
 });
