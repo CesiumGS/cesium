@@ -987,50 +987,38 @@ define([
         processPacketData(VerticalOrigin, billboard, 'verticalOrigin', billboardData.verticalOrigin, interval, sourceUri, entityCollection);
     }
 
-
     function processDocument(packet, dataSource) {
-        var clockPacket = packet.clock;
-
         var version = packet.version;
         if (defined(version)) {
             if (version !== '1.0') {
                 throw new RuntimeError(version + ' is not a support CZML version.  Only CZML version 1.0 is currently supported.');
             }
-        } else if (!defined(dataSource.version)) {
+            dataSource._version = version;
+        } else if (!defined(dataSource._version)) {
             throw new RuntimeError('CZML version information missing.');
         }
 
         if (defined(packet.name)) {
-            dataSource._name = name;
+            dataSource._loadedName = packet.name;
         }
 
+        var clockPacket = packet.clock;
         if (defined(clockPacket)) {
-            var clock;
-            if (!defined(clock)) {
-                clock = new DataSourceClock();
-                clock.startTime = Iso8601.MAXIMUM_INTERVAL.start;
-                clock.stopTime = Iso8601.MAXIMUM_INTERVAL.stop;
-                clock.clockRange = ClockRange.LOOP_STOP;
-                clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-                clock.multiplier = 1.0;
-            }
-            if (defined(clockPacket.interval)) {
-                iso8601Scratch.iso8601 = clockPacket.interval;
-                var interval = TimeInterval.fromIso8601(iso8601Scratch);
-                clock.startTime = interval.start;
-                clock.stopTime = interval.stop;
-            }
-            if (defined(clockPacket.currentTime)) {
-                clock.currentTime = JulianDate.fromIso8601(clockPacket.currentTime);
-            }
-            if (defined(clockPacket.range)) {
-                clock.clockRange = ClockRange[clockPacket.range];
-            }
-            if (defined(clockPacket.step)) {
-                clock.clockStep = ClockStep[clockPacket.step];
-            }
-            if (defined(clockPacket.multiplier)) {
-                clock.multiplier = clockPacket.multiplier;
+            var newClock = dataSource._loadedClockPacket;
+            if (!defined(newClock)) {
+                dataSource._loadedClockPacket = {
+                    interval : clockPacket.interval,
+                    currentTime : clockPacket.currentTime,
+                    range : clockPacket.range,
+                    step : clockPacket.step,
+                    multiplier : clockPacket.multiplier
+                };
+            } else {
+                newClock.interval = defaultValue(clockPacket.interval, newClock.interval);
+                newClock.currentTime = defaultValue(clockPacket.interval, newClock.currentTime);
+                newClock.range = defaultValue(clockPacket.interval, newClock.range);
+                newClock.step = defaultValue(clockPacket.interval, newClock.step);
+                newClock.multiplier = defaultValue(clockPacket.interval, newClock.multiplier);
             }
         }
     }
@@ -1425,6 +1413,10 @@ define([
 
         currentId = objectId;
 
+        if (!defined(dataSource._version) && objectId !== 'document') {
+            throw new RuntimeError('');
+        }
+
         if (packet['delete'] === true) {
             entityCollection.removeById(objectId);
         } else if (objectId === 'document') {
@@ -1445,58 +1437,84 @@ define([
         currentId = undefined;
     }
 
+    function updateClock(dataSource) {
+        var clock;
+        var clockPacket = dataSource._loadedClockPacket;
+        if (!defined(clockPacket)) {
+            if (!defined(dataSource._clock)) {
+                var availability = dataSource._entityCollection.computeAvailability();
+                if (!availability.start.equals(Iso8601.MINIMUM_VALUE)) {
+                    var startTime = availability.start;
+                    var stopTime = availability.stop;
+                    var totalSeconds = JulianDate.secondsDifference(stopTime, startTime);
+                    var multiplier = Math.round(totalSeconds / 120.0);
+
+                    clock = new DataSourceClock();
+                    clock.startTime = startTime;
+                    clock.stopTime = stopTime;
+                    clock.clockRange = ClockRange.LOOP_STOP;
+                    clock.multiplier = multiplier;
+                    clock.currentTime = startTime;
+                    clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+                    dataSource._clock = clock;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        if (defined(dataSource._clock)) {
+            clock = dataSource._clock.clone();
+        } else {
+            clock = new DataSourceClock();
+            clock.startTime = Iso8601.MAXIMUM_INTERVAL.start;
+            clock.stopTime = Iso8601.MAXIMUM_INTERVAL.stop;
+            clock.clockRange = ClockRange.LOOP_STOP;
+            clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+            clock.multiplier = 1.0;
+        }
+        if (defined(clockPacket.interval)) {
+            iso8601Scratch.iso8601 = clockPacket.interval;
+            var interval = TimeInterval.fromIso8601(iso8601Scratch);
+            clock.startTime = interval.start;
+            clock.stopTime = interval.stop;
+        }
+        if (defined(clockPacket.currentTime)) {
+            clock.currentTime = JulianDate.fromIso8601(clockPacket.currentTime);
+        }
+        if (defined(clockPacket.range)) {
+            clock.clockRange = ClockRange[clockPacket.range];
+        }
+        if (defined(clockPacket.step)) {
+            clock.clockStep = ClockStep[clockPacket.step];
+        }
+        if (defined(clockPacket.multiplier)) {
+            clock.multiplier = clockPacket.multiplier;
+        }
+
+        if (!clock.equals(dataSource._clock)) {
+            dataSource._clock = clock.clone(dataSource._clock);
+            return true;
+        }
+
+        return false;
+    }
+
     function loadCzml(dataSource, czml, sourceUri) {
         var entityCollection = dataSource._entityCollection;
         entityCollection.suspendEvents();
 
         CzmlDataSource._processCzml(czml, entityCollection, sourceUri, undefined, dataSource);
 
-//        var documentObject = dataSource._document;
-//
-        var raiseChangedEvent = false;
-//        var czmlClock;
-//        if (defined(documentObject.clock)) {
-//            czmlClock = documentObject.clock;
-//        } else {
-//            var availability = entityCollection.computeAvailability();
-//            if (!availability.start.equals(Iso8601.MINIMUM_VALUE)) {
-//                var startTime = availability.start;
-//                var stopTime = availability.stop;
-//                var totalSeconds = JulianDate.secondsDifference(stopTime, startTime);
-//                var multiplier = Math.round(totalSeconds / 120.0);
-//
-//                czmlClock = new DataSourceClock();
-//                czmlClock.startTime = startTime;
-//                czmlClock.stopTime = stopTime;
-//                czmlClock.clockRange = ClockRange.LOOP_STOP;
-//                czmlClock.multiplier = multiplier;
-//                czmlClock.currentTime = startTime;
-//                czmlClock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-//            }
-//        }
-//
-//        if (defined(czmlClock)) {
-//            if (!defined(dataSource._clock)) {
-//                dataSource._clock = new DataSourceClock();
-//                raiseChangedEvent = true;
-//            }
-//            if (!czmlClock.equals(dataSource._clock)) {
-//                czmlClock.clone(dataSource._clock);
-//                raiseChangedEvent = true;
-//            }
-//        }
-//
-//        var name;
-//        if (defined(documentObject.name)) {
-//            name = documentObject.name;
-//        } else if (defined(sourceUri)) {
-//            name = getFilenameFromUri(sourceUri);
-//        }
-//
-//        if (dataSource._name !== name) {
-//            dataSource._name = name;
-//            raiseChangedEvent = true;
-//        }
+        var raiseChangedEvent = updateClock(dataSource);
+
+        if (defined(dataSource._loadedName) && dataSource._name !== dataSource._loadedName) {
+            dataSource._name = dataSource._loadedName;
+            raiseChangedEvent = true;
+        } else if (defined(sourceUri)) {
+            dataSource._name = getFilenameFromUri(sourceUri);
+            raiseChangedEvent = true;
+        }
 
         entityCollection.resumeEvents();
         if (raiseChangedEvent) {
@@ -1520,11 +1538,14 @@ define([
      */
     var CzmlDataSource = function(name) {
         this._name = name;
+        this._loadedName = undefined;
         this._changed = new Event();
         this._error = new Event();
         this._isLoading = false;
         this._loading = new Event();
         this._clock = undefined;
+        this._loadedClockPacket = undefined;
+        this._version = undefined;
         this._entityCollection = new EntityCollection();
     };
 
@@ -1658,9 +1679,9 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._name = undefined;
         this._version = undefined;
-        this._clock = undefined;
+        this._loadedName = undefined;
+        this._loadedClockPacket = undefined;
         this._entityCollection.removeAll();
         loadCzml(this, czml, sourceUri);
     };
