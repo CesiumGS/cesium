@@ -990,23 +990,32 @@ define([
     function processDocument(packet, dataSource) {
         var version = packet.version;
         if (defined(version)) {
-            if (version !== '1.0') {
-                throw new RuntimeError(version + ' is not a support CZML version.  Only CZML version 1.0 is currently supported.');
+            if (typeof version === 'string') {
+                var tokens = version.split('.');
+                if (tokens.length === 2) {
+                    if (tokens[0] !== '1') {
+                        throw new RuntimeError('Cesium only supports CZML version 1.');
+                    }
+                    dataSource._version = version;
+                }
             }
-            dataSource._version = version;
-        } else if (!defined(dataSource._version)) {
-            throw new RuntimeError('CZML version information missing.');
         }
 
+        if (!defined(dataSource._version)) {
+            throw new RuntimeError('CZML version information invalid.  It is expected to be a property on the document object in the <Major>.<Minor> version format.');
+        }
+
+        var documentPacket = dataSource._documentPacket;
+
         if (defined(packet.name)) {
-            dataSource._loadedName = packet.name;
+            documentPacket.name = packet.name;
         }
 
         var clockPacket = packet.clock;
         if (defined(clockPacket)) {
-            var newClock = dataSource._loadedClockPacket;
-            if (!defined(newClock)) {
-                dataSource._loadedClockPacket = {
+            var clock = documentPacket.clock;
+            if (!defined(clock)) {
+                documentPacket.clock = {
                     interval : clockPacket.interval,
                     currentTime : clockPacket.currentTime,
                     range : clockPacket.range,
@@ -1014,11 +1023,11 @@ define([
                     multiplier : clockPacket.multiplier
                 };
             } else {
-                newClock.interval = defaultValue(clockPacket.interval, newClock.interval);
-                newClock.currentTime = defaultValue(clockPacket.currentTime, newClock.currentTime);
-                newClock.range = defaultValue(clockPacket.range, newClock.range);
-                newClock.step = defaultValue(clockPacket.step, newClock.step);
-                newClock.multiplier = defaultValue(clockPacket.multiplier, newClock.multiplier);
+                clock.interval = defaultValue(clockPacket.interval, clock.interval);
+                clock.currentTime = defaultValue(clockPacket.currentTime, clock.currentTime);
+                clock.range = defaultValue(clockPacket.range, clock.range);
+                clock.step = defaultValue(clockPacket.step, clock.step);
+                clock.multiplier = defaultValue(clockPacket.multiplier, clock.multiplier);
             }
         }
     }
@@ -1439,7 +1448,7 @@ define([
 
     function updateClock(dataSource) {
         var clock;
-        var clockPacket = dataSource._loadedClockPacket;
+        var clockPacket = dataSource._documentPacket.clock;
         if (!defined(clockPacket)) {
             if (!defined(dataSource._clock)) {
                 var availability = dataSource._entityCollection.computeAvailability();
@@ -1450,11 +1459,11 @@ define([
                     var multiplier = Math.round(totalSeconds / 120.0);
 
                     clock = new DataSourceClock();
-                    clock.startTime = startTime;
-                    clock.stopTime = stopTime;
+                    clock.startTime = JulianDate.clone(startTime);
+                    clock.stopTime = JulianDate.clone(stopTime);
                     clock.clockRange = ClockRange.LOOP_STOP;
                     clock.multiplier = multiplier;
-                    clock.currentTime = startTime;
+                    clock.currentTime = JulianDate.clone(startTime);
                     clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
                     dataSource._clock = clock;
                     return true;
@@ -1467,8 +1476,9 @@ define([
             clock = dataSource._clock.clone();
         } else {
             clock = new DataSourceClock();
-            clock.startTime = Iso8601.MAXIMUM_INTERVAL.start;
-            clock.stopTime = Iso8601.MAXIMUM_INTERVAL.stop;
+            clock.startTime = Iso8601.MINIMUM_VALUE.clone();
+            clock.stopTime = Iso8601.MAXIMUM_VALUE.clone();
+            clock.currentTime = Iso8601.MINIMUM_VALUE.clone();
             clock.clockRange = ClockRange.LOOP_STOP;
             clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
             clock.multiplier = 1.0;
@@ -1483,10 +1493,10 @@ define([
             clock.currentTime = JulianDate.fromIso8601(clockPacket.currentTime);
         }
         if (defined(clockPacket.range)) {
-            clock.clockRange = ClockRange[clockPacket.range];
+            clock.clockRange = defaultValue(ClockRange[clockPacket.range], ClockRange.LOOP_STOP);
         }
         if (defined(clockPacket.step)) {
-            clock.clockStep = ClockStep[clockPacket.step];
+            clock.clockStep = defaultValue(ClockStep[clockPacket.step], ClockStep.SYSTEM_CLOCK_MULTIPLIER);
         }
         if (defined(clockPacket.multiplier)) {
             clock.multiplier = clockPacket.multiplier;
@@ -1508,8 +1518,9 @@ define([
 
         var raiseChangedEvent = updateClock(dataSource);
 
-        if (defined(dataSource._loadedName) && dataSource._name !== dataSource._loadedName) {
-            dataSource._name = dataSource._loadedName;
+        var documentPacket = dataSource._documentPacket;
+        if (defined(documentPacket.name) && dataSource._name !== documentPacket.name) {
+            dataSource._name = documentPacket.name;
             raiseChangedEvent = true;
         } else if (defined(sourceUri)) {
             dataSource._name = getFilenameFromUri(sourceUri);
@@ -1529,6 +1540,11 @@ define([
         }
     }
 
+    var DocumentPacket = function() {
+        this.name = undefined;
+        this.clock = undefined;
+    };
+
     /**
      * A {@link DataSource} which processes CZML.
      * @alias CzmlDataSource
@@ -1538,13 +1554,12 @@ define([
      */
     var CzmlDataSource = function(name) {
         this._name = name;
-        this._loadedName = undefined;
         this._changed = new Event();
         this._error = new Event();
         this._isLoading = false;
         this._loading = new Event();
         this._clock = undefined;
-        this._loadedClockPacket = undefined;
+        this._documentPacket = new DocumentPacket();
         this._version = undefined;
         this._entityCollection = new EntityCollection();
     };
@@ -1680,8 +1695,7 @@ define([
         //>>includeEnd('debug');
 
         this._version = undefined;
-        this._loadedName = undefined;
-        this._loadedClockPacket = undefined;
+        this._documentPacket = new DocumentPacket();
         this._entityCollection.removeAll();
         loadCzml(this, czml, sourceUri);
     };
