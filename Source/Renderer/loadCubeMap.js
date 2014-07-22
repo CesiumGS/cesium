@@ -40,7 +40,7 @@ define([
      *     negativeZ : 'skybox_nz.png'
      * }).then(function(cubeMap) {
      *     // use the cubemap
-     * }, function(error) {
+     * }).otherwise(function(error) {
      *     // an error occurred
      * });
      *
