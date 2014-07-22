@@ -135,16 +135,6 @@ define([
     };
 
     /**
-     * Returns a string representing the provided instance in the format (clock, cone, magnitude).
-     *
-     * @param {Spherical} spherical The object to be converted.
-     * @returns A string representing the provided instance.
-     */
-    Spherical.toString = function(spherical) {
-        return '(' + spherical.clock + ', ' + spherical.cone + ', ' + spherical.magnitude + ')';
-    };
-
-    /**
      * Returns true if this spherical is equal to the provided spherical, false otherwise.
      *
      * @param {Spherical} other The Spherical to be compared.
@@ -181,7 +171,7 @@ define([
     * @returns A string representing this instance.
     */
     Spherical.prototype.toString = function() {
-        return Spherical.toString(this);
+        return '(' + this.clock + ', ' + this.cone + ', ' + this.magnitude + ')';
     };
 
     return Spherical;
