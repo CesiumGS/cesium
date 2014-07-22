@@ -38,20 +38,20 @@ function reset() {
 function addBillboard() {
     Sandcastle.declare(addBillboard);
     reset();
-    
+
     var billboards = new Cesium.BillboardCollection();
     billboards.add({
         imageUrl : '../images/Cesium_Logo_overlay.png',
         position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883)
     });
-    
+
     scene.primitives.add(billboards);
 }
 
 function setBillboardProperties() {
     Sandcastle.declare(setBillboardProperties);
     reset();
-    
+
     var billboards = new Cesium.BillboardCollection();
     billboards.add({
         imageUrl : '../images/Cesium_Logo_overlay.png', // default: undefined
@@ -69,37 +69,37 @@ function setBillboardProperties() {
         width : 100, // default: undefined
         height : 25 // default: undefined
     });
-    
+
     scene.primitives.add(billboards);
 }
 
 function changeBillboardProperties() {
     Sandcastle.declare(changeBillboardProperties);
     reset();
-    
+
     var billboards = new Cesium.BillboardCollection();
-    
+
     // add() returns a Billboard object containing functions to change
     // the billboard's position and appearance.
     var b = billboards.add({
         imageUrl : '../images/Cesium_Logo_overlay.png',
         position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883)
     });
-    
+
     b.position = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883, 300000.0);
     b.scale = 3.0;
     b.color = new Cesium.Color(1.0, 1.0, 1.0, 0.25);
-    
+
     scene.primitives.add(billboards);
 }
 
 function addMultipleBillboards() {
     Sandcastle.declare(addMultipleBillboards);
     reset();
-    
+
     var logoUrl = '../images/Cesium_Logo_overlay.png';
     var facilityUrl = '../images/facility.gif';
-    
+
     var billboards = new Cesium.BillboardCollection();
     billboards.add({
         imageUrl : logoUrl,
@@ -113,35 +113,35 @@ function addMultipleBillboards() {
         imageUrl : facilityUrl,
         position : Cesium.Cartesian3.fromDegrees(-80.12, 25.46)
     });
-    
+
     scene.primitives.add(billboards);
 }
 
 function scaleByDistance() {
     Sandcastle.declare(scaleByDistance);
     reset();
-    
+
     var billboards = new Cesium.BillboardCollection();
     billboards.add({
         imageUrl : '../images/facility.gif',
         position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
         scaleByDistance : new Cesium.NearFarScalar(1.5e2, 2.0, 1.5e7, 0.5)
     });
-    
+
     scene.primitives.add(billboards);
 }
-    
+
 function fadeByDistance() {
     Sandcastle.declare(fadeByDistance);
     reset();
-    
+
     var billboards = new Cesium.BillboardCollection();
     billboards.add({
         imageUrl : '../images/Cesium_Logo_overlay.png',
         position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
         translucencyByDistance : new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e7, 0.2)
     });
-    
+
     scene.primitives.add(billboards);
 }
 
@@ -153,56 +153,56 @@ function offsetByDistance() {
          Cesium.loadImage('../images/facility.gif')
         ],
         function(images) {
-	        var billboards = new Cesium.BillboardCollection();
-	
-	        // As viewer zooms closer to facility billboard,
-	        // increase pixelOffset on CesiumLogo billboard to this height
-	        var facilityHeight = images[1].height;
-	
-	        // colocated billboards, separate as viewer gets closer
-	        billboards.add({
-	            image : images[1],
-	            position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-	            horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
-	            verticalOrigin : Cesium.VerticalOrigin.BOTTOM
-	        });
-	        billboards.add({
-	            image : images[0],
-	            position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-	            horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
-	            verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
-	            pixelOffset : new Cesium.Cartesian2(0.0, -facilityHeight),
-	            pixelOffsetScaleByDistance : new Cesium.NearFarScalar(1.0e3, 1.0, 1.5e6, 0.0),
-	            translucencyByDistance : new Cesium.NearFarScalar(1.0e3, 1.0, 1.5e6, 0.1)
-	        });
-	        scene.primitives.add(billboards);
+            var billboards = new Cesium.BillboardCollection();
+
+            // As viewer zooms closer to facility billboard,
+            // increase pixelOffset on CesiumLogo billboard to this height
+            var facilityHeight = images[1].height;
+
+            // colocated billboards, separate as viewer gets closer
+            billboards.add({
+                image : images[1],
+                position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+                horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
+                verticalOrigin : Cesium.VerticalOrigin.BOTTOM
+            });
+            billboards.add({
+                image : images[0],
+                position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+                horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
+                verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
+                pixelOffset : new Cesium.Cartesian2(0.0, -facilityHeight),
+                pixelOffsetScaleByDistance : new Cesium.NearFarScalar(1.0e3, 1.0, 1.5e6, 0.0),
+                translucencyByDistance : new Cesium.NearFarScalar(1.0e3, 1.0, 1.5e6, 0.1)
+            });
+            scene.primitives.add(billboards);
     });
 }
 
 function addPointBillboards() {
     Sandcastle.declare(addPointBillboards);
     reset();
-    
+
     function drawImage(id, loadedCallback) {
-	    // A white circle is drawn into a 2D canvas.  The canvas is used as
-	    // a texture for billboards, each of which applies a different color
-	    // and scale to change the point's appearance.
-	    //
-	    // The 2D canvas can draw much more than circles.  See:
-	    // https://developer.mozilla.org/en/Canvas_tutorial
-	    var canvas = document.createElement('canvas');
-	    canvas.width = 16;
-	    canvas.height = 16;
-	    var context2D = canvas.getContext('2d');
-	    context2D.beginPath();
-	    context2D.arc(8, 8, 8, 0, Cesium.Math.TWO_PI, true);
-	    context2D.closePath();
-	    context2D.fillStyle = 'rgb(255, 255, 255)';
-	    context2D.fill();
-	    
-	    loadedCallback(canvas);
+        // A white circle is drawn into a 2D canvas.  The canvas is used as
+        // a texture for billboards, each of which applies a different color
+        // and scale to change the point's appearance.
+        //
+        // The 2D canvas can draw much more than circles.  See:
+        // https://developer.mozilla.org/en/Canvas_tutorial
+        var canvas = document.createElement('canvas');
+        canvas.width = 16;
+        canvas.height = 16;
+        var context2D = canvas.getContext('2d');
+        context2D.beginPath();
+        context2D.arc(8, 8, 8, 0, Cesium.Math.TWO_PI, true);
+        context2D.closePath();
+        context2D.fillStyle = 'rgb(255, 255, 255)';
+        context2D.fill();
+
+        loadedCallback(canvas);
     }
-    
+
     var billboards = new Cesium.BillboardCollection();
     billboards.add({
         imageId : 'custom canvas point',
@@ -224,16 +224,16 @@ function addPointBillboards() {
         color : Cesium.Color.LIME,
         scale : 2
     });
-    
+
     scene.primitives.add(billboards);
 }
 
 function addMarkerBillboards() {
     Sandcastle.declare(addMarkerBillboards);
     reset();
-    
+
     var billboards = new Cesium.BillboardCollection();
-    
+
     // Add several billboards based on the above image in the atlas.
     billboards.add({
         imageUrl : '../images/whiteShapes.png',
@@ -265,20 +265,20 @@ function addMarkerBillboards() {
         position : Cesium.Cartesian3.fromDegrees(-79.0, 35.0),
         color : Cesium.Color.YELLOW
     });
-    
+
     scene.primitives.add(billboards);
 }
 
 function inReferenceFrame() {
     Sandcastle.declare(inReferenceFrame);
     reset();
-    
+
     var billboards = new Cesium.BillboardCollection();
     var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
     billboards.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-    
+
     var facilityUrl = '../images/facility.gif';
-    
+
     // center
     billboards.add({
         imageUrl : facilityUrl,
@@ -299,7 +299,7 @@ function inReferenceFrame() {
         imageUrl : facilityUrl,
         position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0)
     });
-    
+
     scene.primitives.add(billboards);
 }
 
@@ -307,7 +307,7 @@ function createUI() {
     function selectMenuOption(menu, options) {
         options[menu.selectedIndex].onselect();
     }
-    
+
     var options = [{
         text : 'Add billboard',
         onselect : function() {
