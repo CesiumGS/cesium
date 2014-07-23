@@ -14,6 +14,7 @@ define([
         '../ThirdParty/when',
         './ColorMaterialProperty',
         './ConstantProperty',
+        './ConstantPositionProperty',
         './Entity',
         './EntityCollection',
         './PointGraphics',
@@ -34,6 +35,7 @@ define([
         when,
         ColorMaterialProperty,
         ConstantProperty,
+        ConstantPositionProperty,
         Entity,
         EntityCollection,
         PointGraphics,
@@ -42,7 +44,7 @@ define([
     "use strict";
 
     function describe(properties, nameProperty) {
-        var html = '<table class="cesium-geoJsonDataSourceTable">';
+        var html = '<table class="cesium-infoBox-defaultTable">';
         for ( var key in properties) {
             if (properties.hasOwnProperty(key)) {
                 if (key === nameProperty) {
@@ -80,10 +82,11 @@ define([
         }
 
         var entity = entityCollection.getOrCreateEntity(id);
-        entity.geoJson = geoJson;
-
         var properties = geoJson.properties;
         if (defined(properties)) {
+            entity.addProperty('properties');
+            entity.properties = properties;
+
             //Try and find a good name for the object from its meta-data
             //TODO: Make both name and description creation user-configurable.
             var key;
@@ -170,7 +173,7 @@ define([
     function processPoint(dataSource, geoJson, geometry, crsFunction, sourceUri) {
         var entity = createObject(geoJson, dataSource._entityCollection);
         entity.merge(dataSource.defaultPoint);
-        entity.position = new ConstantProperty(crsFunction(geometry.coordinates));
+        entity.position = new ConstantPositionProperty(crsFunction(geometry.coordinates));
     }
 
     function processMultiPoint(dataSource, geoJson, geometry, crsFunction, sourceUri) {
@@ -178,7 +181,7 @@ define([
         for (var i = 0; i < coordinates.length; i++) {
             var entity = createObject(geoJson, dataSource._entityCollection);
             entity.merge(dataSource.defaultPoint);
-            entity.position = new ConstantProperty(crsFunction(coordinates[i]));
+            entity.position = new ConstantPositionProperty(crsFunction(coordinates[i]));
         }
     }
 
@@ -334,6 +337,14 @@ define([
          * @type {Entity}
          */
         this.defaultPolygon = defaultPolygon;
+    };
+
+    GeoJsonDataSource.fromUrl = function(url, name) {
+        var dataSource = new GeoJsonDataSource();
+        dataSource.loadUrl(url).otherwise(function() {
+            throw new RuntimeError('');
+        });
+        return dataSource;
     };
 
     defineProperties(GeoJsonDataSource.prototype, {

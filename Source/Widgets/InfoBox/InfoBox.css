@@ -119,3 +119,22 @@ button.cesium-infoBox-close:active {
 .cesium-infoBox-description {
     font-size: 13px;
 }
+
+.cesium-infoBox-defaultTable {
+    width: 100%;
+    height: 100%;
+    border: 1px solid rgba(84, 84, 84, 0.8);
+}
+
+.cesium-infoBox-defaultTable tr:nth-child(odd) {
+}
+
+.cesium-infoBox-defaultTable tr:nth-child(even) {
+    background-color: rgba(84, 84, 84, 0.8);
+}
+
+.cesium-infoBox-defaultTable td {
+    padding: 3px;
+    vertical-align: middle;
+    text-align: right;
+}
