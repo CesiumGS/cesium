@@ -451,10 +451,11 @@
                         }
                     },
                     "states": {
-                        "enable": {
-                            "2884" : true,
-                            "2929" : true
-                        }
+                        "depthMask": true,
+                        "enable": [
+                            2884,
+                            2929
+                        ]                    
                     }
                 }
             }

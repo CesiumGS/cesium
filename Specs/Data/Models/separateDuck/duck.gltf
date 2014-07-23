@@ -63,10 +63,10 @@
     },
     "animations": {},
     "asset": {
-        "generator": "collada2gltf@refs/heads/unify-up-format-changes",
+        "generator": "collada2gltf@b4ea90169e759529c34baaabbfb15b475053c177",
         "premultipliedAlpha": true,
         "profile": "WebGL 1.0.2",
-        "version": 0.7
+        "version": 0.8
     },
     "bufferViews": {
         "bufferView_29": {
@@ -120,7 +120,7 @@
     "materials": {
         "blinn3-fx": {
             "instanceTechnique": {
-                "technique": "technique0",
+                "technique": "technique1",
                 "values": {
                     "ambient": [
                         0,
@@ -219,9 +219,9 @@
             "matrix": [
                 -0.954692,
                 0.218143,
-                -0.202429,
+                -0.202428,
                 0,
-                0.014672,
+                0.0146721,
                 0.713885,
                 0.700109,
                 0,
@@ -278,7 +278,7 @@
     },
     "skins": {},
     "techniques": {
-        "technique0": {
+        "technique1": {
             "parameters": {
                 "ambient": {
                     "type": 35666
@@ -381,10 +381,11 @@
                         }
                     },
                     "states": {
-                        "enable": {
-                            "2884" : true,
-                            "2929" : true
-                        }
+                        "depthMask": true,
+                        "enable": [
+                            2884,
+                            2929
+                        ]
                     }
                 }
             }
