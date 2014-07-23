@@ -34,7 +34,7 @@ define([
      * // load a single image asynchronously
      * Cesium.loadImage('some/image/url.png').then(function(image) {
      *     // use the loaded image
-     * }, function(error) {
+     * }.otherwise(function(error) {
      *     // an error occurred
      * });
      *

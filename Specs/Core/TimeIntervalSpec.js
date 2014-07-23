@@ -102,6 +102,37 @@ defineSuite([
         expect(interval.data).toEqual(data);
     });
 
+    it('toIso8601 works', function() {
+        var isoDate1 = '0950-01-02T03:04:05Z';
+        var isoDate2 = '0950-01-03T03:04:05Z';
+        var interval = new TimeInterval({
+            start : JulianDate.fromIso8601(isoDate1),
+            stop : JulianDate.fromIso8601(isoDate2)
+        });
+        expect(TimeInterval.toIso8601(interval)).toEqual('0950-01-02T03:04:05Z/0950-01-03T03:04:05Z');
+    });
+
+    it('can round-trip with ISO8601', function() {
+        var interval = new TimeInterval({
+            start : JulianDate.now(),
+            stop : JulianDate.now()
+        });
+        expect(TimeInterval.fromIso8601({
+            iso8601 : TimeInterval.toIso8601(interval)
+        })).toEqual(interval);
+    });
+
+    it('toIso8601 works with specified precision', function() {
+        var isoDate1 = '0950-01-02T03:04:05.012345Z';
+        var isoDate2 = '0950-01-03T03:04:05.012345Z';
+        var interval = new TimeInterval({
+            start : JulianDate.fromIso8601(isoDate1),
+            stop : JulianDate.fromIso8601(isoDate2)
+        });
+        expect(TimeInterval.toIso8601(interval, 0)).toEqual('0950-01-02T03:04:05Z/0950-01-03T03:04:05Z');
+        expect(TimeInterval.toIso8601(interval, 7)).toEqual('0950-01-02T03:04:05.0123450Z/0950-01-03T03:04:05.0123450Z');
+    });
+
     it('isEmpty is false for a non-empty interval', function() {
         var interval = new TimeInterval({
             start : new JulianDate(1),
@@ -299,6 +330,14 @@ defineSuite([
         expect(TimeInterval.clone(undefined)).toBeUndefined();
     });
 
+    it('formats as ISO8601 with toString', function() {
+        var interval = new TimeInterval({
+            start : new JulianDate(1),
+            stop : new JulianDate(2.5)
+        });
+        expect(interval.toString()).toEqual(TimeInterval.toIso8601(interval));
+    });
+
     it('intersect properly intersects with an exhaustive set of cases', function() {
         var testParameters = [
                new TimeInterval({start:new JulianDate(1), stop:new JulianDate(2.5), isStartIncluded: true, isStopIncluded: true}),
@@ -335,7 +374,7 @@ defineSuite([
                 new TimeInterval({start:new JulianDate(3), stop: new JulianDate(3), isStartIncluded:true, isStopIncluded: true}),
                 new TimeInterval({start:new JulianDate(0), stop: new JulianDate(0), isStartIncluded: false, isStopIncluded: false})];
 
-        for ( var i = 0; i < testParameters.length - 2; i = i + 3) {
+        for (var i = 0; i < testParameters.length - 2; i = i + 3) {
             var first = testParameters[i];
             var second = testParameters[i + 1];
             var expectedResult = testParameters[i + 2];

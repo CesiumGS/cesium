@@ -201,7 +201,7 @@ define([
          *
          * @example
          * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
-         * m.modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
+         * m.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = Matrix4.clone(this.modelMatrix);
@@ -399,7 +399,7 @@ define([
          *
          * @example
          * // Center in WGS84 coordinates
-         * var center = Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center);
+         * var center = Cesium.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cesium.Cartesian3());
          */
         boundingSphere : {
             get : function() {
@@ -489,14 +489,14 @@ define([
      *
      * @example
      * // Example 1. Create a model from a glTF asset
-     * var model = scene.primitives.add(Model.fromGltf({
+     * var model = scene.primitives.add(Cesium.Model.fromGltf({
      *   url : './duck/duck.json'
      * }));
      *
      * @example
      * // Example 2. Create model and provide all properties and events
      * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
-     * var modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
+     * var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
      *
      * var model = scene.primitives.add(Model.fromGltf({
      *   url : './duck/duck.json',
@@ -537,7 +537,7 @@ define([
             var docUri = new Uri(document.location.href);
             var modelUri = new Uri(model._basePath);
             model._baseUri = modelUri.resolve(docUri);
-        });
+        }).otherwise(getFailedLoadFunction(model, 'gltf', url));
 
         return model;
     };
@@ -568,7 +568,7 @@ define([
      * @example
      * // Apply non-uniform scale to node LOD3sp
      * var node = model.getNode('LOD3sp');
-     * node.matrix = Matrix4.fromScale(new Cartesian3(5.0, 1.0, 1.0), node.matrix);
+     * node.matrix =Cesium. Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
      */
     Model.prototype.getNode = function(name) {
         var node = getRuntime(this, 'nodesByName', name);
@@ -657,8 +657,8 @@ define([
                                 if (defined(min) && defined(max)) {
                                     Matrix4.multiplyByPoint(transformToRoot, aMin, aMin);
                                     Matrix4.multiplyByPoint(transformToRoot, aMax, aMax);
-                                    Cartesian3.getMinimumByComponent(min, aMin, min);
-                                    Cartesian3.getMaximumByComponent(max, aMax, max);
+                                    Cartesian3.minimumByComponent(min, aMin, min);
+                                    Cartesian3.maximumByComponent(max, aMax, max);
                                 }
                             }
                         }
@@ -706,7 +706,7 @@ define([
                 // Backwards compatibility for now for 'path' in glTF 0.6.
                 var uri = new Uri(defined(buffer.uri) ? buffer.uri : buffer.path);
                 var bufferPath = uri.resolve(model._baseUri).toString();
-                loadArrayBuffer(bufferPath).then(bufferLoad(model, name), getFailedLoadFunction(model, 'buffer', bufferPath));
+                loadArrayBuffer(bufferPath).then(bufferLoad(model, name)).otherwise(getFailedLoadFunction(model, 'buffer', bufferPath));
             }
         }
     }
@@ -737,7 +737,7 @@ define([
                 // Backwards compatibility for now for 'path' in glTF 0.6.
                 var uri = new Uri(defined(shader.uri) ? shader.uri : shader.path);
                 var shaderPath = uri.resolve(model._baseUri).toString();
-                loadText(shaderPath).then(shaderLoad(model, name), getFailedLoadFunction(model, 'shader', shaderPath));
+                loadText(shaderPath).then(shaderLoad(model, name)).otherwise(getFailedLoadFunction(model, 'shader', shaderPath));
             }
         }
     }
@@ -772,7 +772,7 @@ define([
                 // Backwards compatibility for now for 'path' in glTF 0.6.
                 var uri = new Uri(defined(images[texture.source].uri) ? images[texture.source].uri : images[texture.source].path);
                 var imagePath = uri.resolve(model._baseUri).toString();
-                loadImage(imagePath).then(imageLoad(model, name), getFailedLoadFunction(model, 'image', imagePath));
+                loadImage(imagePath).then(imageLoad(model, name)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
             }
         }
     }
@@ -2002,6 +2002,9 @@ define([
 
             for (var m = 0; m < inverseBindMatricesLength; ++m) {
                 // [joint-matrix] = [node-to-root^-1][joint-to-root][inverse-bind][bind-shape]
+                if (!defined(computedJointMatrices[m])) {
+                    computedJointMatrices[m] = new Matrix4();
+                }
                 computedJointMatrices[m] = Matrix4.multiplyTransformation(scratchObjectSpace, joints[m].transformToRoot, computedJointMatrices[m]);
                 computedJointMatrices[m] = Matrix4.multiplyTransformation(computedJointMatrices[m], inverseBindMatrices[m], computedJointMatrices[m]);
                 if (defined(bindShapeMatrix)) {
@@ -2175,7 +2178,7 @@ define([
         }
 
         // We don't check show at the top of the function since we
-        // want to be able to progressively load models when they are shown,
+        // want to be able to progressively load models when they are not shown,
         // and then have them visibile immediately when show is set to true.
         if (show) {
 // PERFORMANCE_IDEA: This is terriable

@@ -1,11 +1,15 @@
 /*global define*/
-define(function() {
+define([
+        '../Core/freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
      * Determines if and how a glTF animation is looped.
      *
-     * @exports ModelAnimationLoop
+     * @namespace
+     * @alias ModelAnimationLoop
      *
      * @see ModelAnimationCollection#add
      */
@@ -35,5 +39,5 @@ define(function() {
         MIRRORED_REPEAT : 2
     };
 
-    return ModelAnimationLoop;
+    return freezeObject(ModelAnimationLoop);
 });

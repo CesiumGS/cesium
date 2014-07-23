@@ -199,10 +199,12 @@ defineSuite([
     });
 
     it('debugShowBoundingVolume draws a bounding sphere', function() {
+        var radius = Cartesian3.magnitude(scene.camera.position) - 10.0;
+
         var c = new DrawCommand({
             pass : Pass.OPAQUE,
             debugShowBoundingVolume : true,
-            boundingVolume : new BoundingSphere(Cartesian3.ZERO, 7000000.0)
+            boundingVolume : new BoundingSphere(Cartesian3.ZERO, radius)
         });
         c.execute = function() {};
 

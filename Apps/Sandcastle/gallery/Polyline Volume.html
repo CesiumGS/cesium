@@ -16,7 +16,7 @@
     });
     </script>
 </head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
 </style>
@@ -24,104 +24,109 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+function startup(Cesium) {
     "use strict";
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer');
+var scene = viewer.scene;
+var primitives = scene.primitives;
 
-    var viewer = new Cesium.Viewer('cesiumContainer');
-    var scene = viewer.scene;
-    var primitives = scene.primitives;
-
-    function starPositions(arms, rOuter, rInner) {
-        var angle = Math.PI / arms;
-        var pos = [];
-        for ( var i = 0; i < 2 * arms; i++) {
-            var r = (i % 2) === 0 ? rOuter : rInner;
-            var p = new Cesium.Cartesian2(Math.cos(i * angle) * r, Math.sin(i * angle) * r);
-            pos.push(p);
-        }
-        return pos;
+function starPositions(arms, rOuter, rInner) {
+    var angle = Math.PI / arms;
+    var pos = [];
+    for (var i = 0; i < 2 * arms; i++) {
+        var r = (i % 2) === 0 ? rOuter : rInner;
+        var p = new Cesium.Cartesian2(Math.cos(i * angle) * r, Math.sin(i * angle) * r);
+        pos.push(p);
     }
+    return pos;
+}
 
-    function boxPositions() {
-        return [
-            new Cesium.Cartesian2(-50000, -50000),
-            new Cesium.Cartesian2(50000, -50000),
-            new Cesium.Cartesian2(50000, 50000),
-            new Cesium.Cartesian2(-50000, 50000)
-        ];
+function boxPositions() {
+    return [
+        new Cesium.Cartesian2(-50000, -50000),
+        new Cesium.Cartesian2(50000, -50000),
+        new Cesium.Cartesian2(50000, 50000),
+        new Cesium.Cartesian2(-50000, 50000)
+    ];
+}
+
+function computeCircle(radius) {
+    var positions = [];
+    for (var i = 0; i < 360; i++) {
+        var radians = Cesium.Math.toRadians(i);
+        positions.push(new Cesium.Cartesian2(radius * Math.cos(radians), radius * Math.sin(radians)));
     }
+    return positions;
+}
 
-    function computeCircle(radius) {
-        var positions = [];
-        for (var i = 0; i < 360; i++) {
-            var radians = Cesium.Math.toRadians(i);
-            positions.push(new Cesium.Cartesian2(radius * Math.cos(radians), radius * Math.sin(radians)));
-        }
-        return positions;
+// Red tube
+var redTube = new Cesium.GeometryInstance({
+    geometry : new Cesium.PolylineVolumeGeometry({
+        polylinePositions : Cesium.Cartesian3.fromDegreesArray([
+            -85.0, 32.0,
+            -85.0, 36.0,
+            -89.0, 36.0
+        ]),
+        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+        shapePositions : computeCircle(60000.0),
+        cornerType : Cesium.CornerType.ROUNDED
+    }),
+    attributes : {
+        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
     }
-
-    // Red tube
-    var redTube = new Cesium.GeometryInstance({
-        geometry : new Cesium.PolylineVolumeGeometry({
-            polylinePositions : Cesium.Cartesian3.fromDegreesArray([
-                -85.0, 32.0,
-                -85.0, 36.0,
-                -89.0, 36.0
-            ]),
-            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-            shapePositions : computeCircle(60000.0),
-            cornerType : Cesium.CornerType.ROUNDED
-        }),
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
-        }
-    });
-
-    // Green extruded square
-    var greenBox = new Cesium.GeometryInstance({
-        geometry : new Cesium.PolylineVolumeGeometry({
-            polylinePositions : Cesium.Cartesian3.fromDegreesArrayHeights([
-                -90.0, 32.0, 0.0,
-                -90.0, 36.0, 100000.0,
-                -94.0, 36.0, 0.0
-            ]),
-            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-            shapePositions : boxPositions(),
-            cornerType : Cesium.CornerType.BEVELED
-        }),
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.GREEN)
-        }
-    });
-
-    // Blue extruded star
-    var blueStar = new Cesium.GeometryInstance({
-        geometry : new Cesium.PolylineVolumeGeometry({
-            polylinePositions : Cesium.Cartesian3.fromDegreesArrayHeights([
-                -95.0, 32.0, 0.0,
-                -95.0, 36.0, 100000.0,
-                -99.0, 36.0, 200000.0
-            ]),
-            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-            shapePositions : starPositions(7, 70000, 50000),
-            cornerType : Cesium.CornerType.ROUNDED
-        }),
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
-        }
-    });
-
-    // Add instances to primitives
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : [redTube, greenBox, blueStar],
-        appearance : new Cesium.PerInstanceColorAppearance({
-                translucent : false,
-                closed : true
-            })
-        }));
-
-    Sandcastle.finishedLoading();
 });
+
+// Green extruded square
+var greenBox = new Cesium.GeometryInstance({
+    geometry : new Cesium.PolylineVolumeGeometry({
+        polylinePositions : Cesium.Cartesian3.fromDegreesArrayHeights([
+            -90.0, 32.0, 0.0,
+            -90.0, 36.0, 100000.0,
+            -94.0, 36.0, 0.0
+        ]),
+        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+        shapePositions : boxPositions(),
+        cornerType : Cesium.CornerType.BEVELED
+    }),
+    attributes : {
+        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.GREEN)
+    }
+});
+
+// Blue extruded star
+var blueStar = new Cesium.GeometryInstance({
+    geometry : new Cesium.PolylineVolumeGeometry({
+        polylinePositions : Cesium.Cartesian3.fromDegreesArrayHeights([
+            -95.0, 32.0, 0.0,
+            -95.0, 36.0, 100000.0,
+            -99.0, 36.0, 200000.0
+        ]),
+        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+        shapePositions : starPositions(7, 70000, 50000),
+        cornerType : Cesium.CornerType.ROUNDED
+    }),
+    attributes : {
+        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
+    }
+});
+
+// Add instances to primitives
+primitives.add(new Cesium.Primitive({
+    geometryInstances : [redTube, greenBox, blueStar],
+    appearance : new Cesium.PerInstanceColorAppearance({
+            translucent : false,
+            closed : true
+        })
+    }));
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
 </script>
 </body>
 </html>

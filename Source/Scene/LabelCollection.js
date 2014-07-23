@@ -419,7 +419,7 @@ define([
      * // Example 2:  Specify only the label's cartographic position,
      * // text, and font.
      * var l = labels.add({
-     *   position : Cartesian3.fromRadians(longitude, latitude, height),
+     *   position : Cesium.Cartesian3.fromRadians(longitude, latitude, height),
      *   text : 'Hello World',
      *   font : '24px Helvetica',
      * });
