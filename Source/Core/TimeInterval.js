@@ -76,13 +76,13 @@ define([
          * Gets or sets the start time of this interval.
          * @type {JulianDate}
          */
-        this.start = defined(options.start) ? options.start : new JulianDate();
+        this.start = defined(options.start) ? JulianDate.clone(options.start) : new JulianDate();
 
         /**
          * Gets or sets the stop time of this interval.
          * @type {JulianDate}
          */
-        this.stop = defined(options.stop) ? options.stop : new JulianDate();
+        this.stop = defined(options.stop) ? JulianDate.clone(options.stop) : new JulianDate();
 
         /**
          * Gets or sets the data associated with this interval.

@@ -226,7 +226,7 @@ define([
      *
      * @example
      * function createVisualizers(scene, dataSource) {
-     *     return [new DynamicBillboardVisualizer(scene, dataSource.entities)];
+     *     return [new BillboardVisualizer(scene, dataSource.entities)];
      * }
      */
 
