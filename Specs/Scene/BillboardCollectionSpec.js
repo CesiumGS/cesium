@@ -836,7 +836,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
     });
 
-    it('renders using billboard imageIndex property', function() {
+    it('renders using billboard image property', function() {
         billboards.textureAtlas = createTextureAtlas(context);
         var b = billboards.add({
             position : Cartesian3.ZERO,

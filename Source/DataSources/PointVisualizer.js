@@ -119,7 +119,6 @@ define([
             if (defined(pointVisualizerIndex)) {
                 billboard = pointVisualizer._billboardCollection.get(pointVisualizerIndex);
                 billboard.show = false;
-                billboard.imageIndex = -1;
                 entity._pointVisualizerIndex = undefined;
                 pointVisualizer._unusedIndexes.push(pointVisualizerIndex);
             }
@@ -224,7 +223,6 @@ define([
             if (defined(pointVisualizerIndex)) {
                 var billboard = thisBillboardCollection.get(pointVisualizerIndex);
                 billboard.show = false;
-                billboard.imageIndex = -1;
                 entity._pointVisualizerIndex = undefined;
                 thisUnusedIndexes.push(pointVisualizerIndex);
             }
