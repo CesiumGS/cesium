@@ -129,18 +129,14 @@ define([
      * @example
      * // Create a billboard collection with two billboards
      * var billboards = new Cesium.BillboardCollection();
-     * var atlas = new Cesium.TextureAtlas({
-     *   scene : scene,
-     *   images : images
-     * });
      * billboards.textureAtlas = atlas;
      * billboards.add({
      *   position : { x : 1.0, y : 2.0, z : 3.0 },
-     *   imageIndex : 0
+     *   imageUrl : 'url/to/image'
      * });
      * billboards.add({
      *   position : { x : 4.0, y : 5.0, z : 6.0 },
-     *   imageIndex : 1
+     *   imageUrl : 'url/to/another/image'
      * });
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
@@ -209,10 +205,10 @@ define([
          * @example
          * var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
          * billboards.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-         * billboards.add({ imageIndex: 0, position : new Cesium.Cartesian3(0.0, 0.0, 0.0) }); // center
-         * billboards.add({ imageIndex: 0, position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0) }); // east
-         * billboards.add({ imageIndex: 0, position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0) }); // north
-         * billboards.add({ imageIndex: 0, position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0) }); // up
+         * billboards.add({ imageUrl : 'url/to/image', position : new Cesium.Cartesian3(0.0, 0.0, 0.0) }); // center
+         * billboards.add({ imageUrl : 'url/to/image', position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0) }); // east
+         * billboards.add({ imageUrl : 'url/to/image', position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0) }); // north
+         * billboards.add({ imageUrl : 'url/to/image', position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0) }); // up
          * ]);
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
@@ -351,7 +347,7 @@ define([
      *   horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
      *   verticalOrigin : Cesium.VerticalOrigin.CENTER,
      *   scale : 1.0,
-     *   imageIndex : 0,
+     *   imageUrl : 'url/to/image',
      *   color : Cesium.Color.WHITE,
      *   id : undefined
      * });

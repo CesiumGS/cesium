@@ -81,7 +81,7 @@ define([
         var billboard = glyph.billboard;
         if (defined(billboard)) {
             billboard.show = false;
-            billboard.imageIndex = -1;
+            billboard.image = undefined;
             labelCollection._spareBillboards.push(billboard);
             glyph.billboard = undefined;
         }
