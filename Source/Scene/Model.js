@@ -1418,7 +1418,6 @@ define([
                     var sampleCoverage = defaultValue(statesFunctions.sampleCoverage, [0.0, 0.0]);
                     var scissor = defaultValue(statesFunctions.scissor, [0.0, 0.0, 0.0, 0.0]);
 
-// TODO: Add unit test that spys on createRenderState()
                     rendererRenderStates[name] = context.createRenderState({
                         frontFace : defined(statesFunctions.frontFace) ? statesFunctions.frontFace[0] : WebGLRenderingContext.CCW,
                         cull : {
