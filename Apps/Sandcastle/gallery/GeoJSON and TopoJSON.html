@@ -37,7 +37,7 @@ function coastlineTopoJSON() {
     viewer.dataSources.removeAll();
 
     var dataSource = new Cesium.GeoJsonDataSource();
-    dataSource.loadUrl(gallery + 'ne_110m_land_topo.json').then(function() {
+    dataSource.loadUrl(gallery + 'ne_110m_land_topo.geojson').then(function() {
         viewer.dataSources.add(dataSource);
     });
 }
@@ -48,7 +48,7 @@ function statesGeoJSON() {
     var dataSource = new Cesium.GeoJsonDataSource();
     dataSource.defaultPolygon.polygon.material.color = new Cesium.ConstantProperty(new Cesium.Color(0.0, 1.0, 0.0, 0.2));
     dataSource.defaultPolygon.polygon.outlineColor = new Cesium.ConstantProperty(Cesium.Color.WHITE);
-    dataSource.loadUrl(gallery + 'ne_10m_us_states.json').then(function() {
+    dataSource.loadUrl(gallery + 'ne_10m_us_states.geojson').then(function() {
         viewer.dataSources.add(dataSource);
     });
 }
@@ -59,7 +59,7 @@ function lakesGeoJSON() {
     var dataSource = new Cesium.GeoJsonDataSource();
     dataSource.defaultPolygon.polygon.material.color = new Cesium.ConstantProperty(new Cesium.Color(0.0, 0.0, 0.5, 0.5));
     dataSource.defaultPolygon.polygon.outlineColor = new Cesium.ConstantProperty(Cesium.Color.NAVY);
-    dataSource.loadUrl(gallery + 'ne_110m_lakes.json').then(function() {
+    dataSource.loadUrl(gallery + 'ne_110m_lakes.geojson').then(function() {
         viewer.dataSources.add(dataSource);
     });
 }
