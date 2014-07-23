@@ -62,6 +62,8 @@ define([
      *
      * @exception {DeveloperError} borderWidthInPixels must be greater than or equal to zero.
      * @exception {DeveloperError} initialSize must be greater than zero.
+     *
+     * @private
      */
     var TextureAtlas = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

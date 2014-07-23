@@ -79,6 +79,35 @@ Change Log
   * Removed `ScreenSpaceCameraController.ellipsoid`. The behavior that depended on the ellipsoid is now determined based on the scene state.
   * Sandcastle examples now automatically wrap the example code in RequireJS boilerplate.  To upgrade any custom examples, copy the code into an existing example (such as Hello World) and save a new file.
   * Replaced `PerspectiveFrustum.fovy` with `PerspectiveFrustum.fov` which will change the field of view angle in either the x or y direction depending on the aspect ratio.
+  * Removed `Billboard.imageIndex`. Instead use `Billboard.imageUrl` or `Billboard.image`. Code that looked like:
+      Cesium.when.all([
+                      Cesium.loadImage('../images/Cesium_Logo_overlay.png'),
+                      Cesium.loadImage('../images/facility.gif')
+                     ],
+                     function(images) {
+ 
+         var billboards = new Cesium.BillboardCollection();
+         var textureAtlas = new Cesium.TextureAtlas({
+             scene : scene,
+             images : images
+         });
+         billboards.textureAtlas = textureAtlas;
+         billboards.add({
+             imageIndex : 0,
+             position : //...
+         });
+         //..
+         scene.primitives.add(billboards);
+     });
+     
+   should now look like:
+     var billboards = new Cesium.BillboardCollection();
+     billboards.add({
+         imageUrl : '../images/Cesium_Logo_overlay.png',
+         position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883)
+     });
+     scene.primitives.add(billboards);
+   
 * Added northUpEast transform to help support display of glTF models because Y is their up axis.
 * Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
 * Added `czm_octDecode` and `czm_signNotZero` builtin functions.

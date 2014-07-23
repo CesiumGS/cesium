@@ -277,27 +277,7 @@ define([
          * Gets and sets the textureAtlas.
          * @memberof BillboardCollection.prototype
          * @type {TextureAtlas}
-         *
-         * @example
-         * // Set the texture atlas
-         * // Assigns a texture atlas with two images to a billboard collection.
-         * // Two billboards, each referring to one of the images, are then
-         * // added to the collection.
-         * var billboards = new Cesium.BillboardCollection();
-         * var images = [image0, image1];
-         * var atlas = new TextureAtlas({
-         *   scene : scene,
-         *   images : images
-         * });
-         * billboards.textureAtlas = atlas;
-         * billboards.add({
-         *   // ...
-         *   imageIndex : 0
-         * });
-         * billboards.add({
-         *   // ...
-         *   imageIndex : 1
-         * });
+         * @private
          */
         textureAtlas : {
             get : function() {
