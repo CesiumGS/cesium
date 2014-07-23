@@ -233,11 +233,18 @@ define([
          */
         this.minimumPickingTerrainHeight = 150000.0;
         /**
-         * The minimum height the camera must be before tesing for collision with terrain.
+         * The minimum height the camera must be before testing for collision with terrain.
          * @type {Number}
          * @default 10000.0
          */
         this.minimumCollisionTerrainHeight = 10000.0;
+        /**
+         * The minimum height the camera must be before switching from rotating a track ball to
+         * free look when clicks originate on the sky on in space.
+         * @type {Number}
+         * @default 7500000.0
+         */
+        this.minimumTrackBallHeight = 7500000.0;
 
         this._scene = scene;
         this._globe = undefined;
@@ -929,12 +936,18 @@ define([
 
                 Cartesian2.clone(startPosition, controller._rotateMousePosition);
                 Cartesian3.clone(mousePos, controller._rotateStartPosition);
+            } else {
+                look3D(controller, startPosition, movement, frameState, true);
             }
         } else if (defined(camera.pickEllipsoid(movement.startPosition, controller._ellipsoid, spin3DPick))) {
             pan3D(controller, startPosition, movement, frameState, controller._ellipsoid);
 
             Cartesian2.clone(startPosition, controller._rotateMousePosition);
             Cartesian3.clone(spin3DPick, controller._rotateStartPosition);
+        } else if (height > controller.minimumTrackBallHeight) {
+            rotate3D(controller, startPosition, movement, frameState);
+        } else {
+            look3D(controller, startPosition, movement, frameState, true);
         }
     }
 
@@ -1346,7 +1359,7 @@ define([
     var look3DEndPos = new Cartesian2();
     var look3DStartRay = new Ray();
     var look3DEndRay = new Ray();
-    function look3D(controller, startPosition, movement, frameState) {
+    function look3D(controller, startPosition, movement, frameState, useLocalUp) {
         var camera = controller._scene.camera;
 
         var startPos = look3DStartPos;
