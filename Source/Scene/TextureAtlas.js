@@ -406,6 +406,7 @@ define([
                 subRegion.width / atlasWidth,
                 subRegion.height / atlasHeight
             ));
+            that._guid = createGuid();
 
             textureAvailableCallback(numImages);
         };

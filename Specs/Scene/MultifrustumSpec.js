@@ -96,8 +96,7 @@ defineSuite([
 
     function createBillboards() {
         atlas = new TextureAtlas({
-            scene : scene,
-            images : [greenImage, blueImage, whiteImage],
+            context : context,
             borderWidthInPixels : 1,
             initialSize : new Cartesian2(3, 3)
         });
@@ -113,7 +112,7 @@ defineSuite([
         billboards.destroyTextureAtlas = false;
         billboard0 = billboards.add({
             position : new Cartesian3(0.0, 0.0, -50.0),
-            imageIndex : 0
+            image : greenImage
         });
         primitives.add(billboards);
 
@@ -122,7 +121,7 @@ defineSuite([
         billboards.destroyTextureAtlas = false;
         billboard1 = billboards.add({
             position : new Cartesian3(0.0, 0.0, -50000.0),
-            imageIndex : 1
+            image : blueImage
         });
         primitives.add(billboards);
 
@@ -131,7 +130,7 @@ defineSuite([
         billboards.destroyTextureAtlas = false;
         billboard2 = billboards.add({
             position : new Cartesian3(0.0, 0.0, -50000000.0),
-            imageIndex : 2
+            image : whiteImage
         });
         primitives.add(billboards);
 
