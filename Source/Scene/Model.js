@@ -1370,14 +1370,20 @@ define([
 
     function getBooleanStates(states) {
         // GLTF_SPEC: SAMPLE_ALPHA_TO_COVERAGE not used by Cesium
-        var statesEnable = states.enable;
         var booleanStates = {};
-        booleanStates[WebGLRenderingContext.BLEND] = defaultValue(statesEnable[WebGLRenderingContext.BLEND], false);
-        booleanStates[WebGLRenderingContext.CULL_FACE] = defaultValue(statesEnable[WebGLRenderingContext.CULL_FACE], false);
-        booleanStates[WebGLRenderingContext.DEPTH_TEST] = defaultValue(statesEnable[WebGLRenderingContext.DEPTH_TEST], false);
-        booleanStates[WebGLRenderingContext.POLYGON_OFFSET_FILL] = defaultValue(statesEnable[WebGLRenderingContext.POLYGON_OFFSET_FILL], false);
-        booleanStates[WebGLRenderingContext.SAMPLE_COVERAGE] = defaultValue(statesEnable[WebGLRenderingContext.SAMPLE_COVERAGE], false);
-        booleanStates[WebGLRenderingContext.SCISSOR_TEST] = defaultValue(statesEnable[WebGLRenderingContext.SCISSOR_TEST], false);
+        booleanStates[WebGLRenderingContext.BLEND] = false;
+        booleanStates[WebGLRenderingContext.CULL_FACE] = false;
+        booleanStates[WebGLRenderingContext.DEPTH_TEST] = false;
+        booleanStates[WebGLRenderingContext.POLYGON_OFFSET_FILL] = false;
+        booleanStates[WebGLRenderingContext.SAMPLE_COVERAGE] = false;
+        booleanStates[WebGLRenderingContext.SCISSOR_TEST] = false;
+
+        var enable = states.enable;
+        var length = enable.length;
+        var i;
+        for (i = 0; i < length; ++i) {
+            booleanStates[enable[i]] = true;
+        }
 
         return booleanStates;
     }
@@ -1451,8 +1457,6 @@ define([
                         depthMask : defined(statesFunctions.depthMask) ? statesFunctions.depthMask[0] : true,
                         blending : {
                             enabled : booleanStates[WebGLRenderingContext.BLEND],
-// TODO: workaround this not being written by the converter yet.
-/*
                             color : {
                                 red : blendColor[0],
                                 green : blendColor[1],
@@ -1465,13 +1469,6 @@ define([
                             functionSourceAlpha : blendFuncSeparate[1],
                             functionDestinationRgb : blendFuncSeparate[2],
                             functionDestinationAlpha : blendFuncSeparate[3]
-*/
-                            equationRgb : WebGLRenderingContext.ADD,
-                            equationAlpha : WebGLRenderingContext.ADD,
-                            functionSourceRgb : WebGLRenderingContext.SRC_ALPHA,
-                            functionSourceAlpha : WebGLRenderingContext.SRC_ALPHA,
-                            functionDestinationRgb : WebGLRenderingContext.ONE_MINUS_SRC_ALPHA,
-                            functionDestinationAlpha : WebGLRenderingContext.ONE_MINUS_SRC_ALPHA
                         },
                         sampleCoverage : {
                             enabled : booleanStates[WebGLRenderingContext.SAMPLE_COVERAGE],
