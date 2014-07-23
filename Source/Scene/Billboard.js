@@ -117,11 +117,7 @@ define([
         } else if (defined(options.image)) {
             this._image = options.image;
             this._imageId = options.image.src;
-        } else if (defined(options.imageId)) {
-            if (!defined(options.getImageCallback)) {
-                throw new DeveloperError('Both imageId and getImageCallback must be defined.');
-            }
-
+        } else if (defined(options.imageId) && defined(options.getImageCallback)) {
             this._imageId = options.imageId;
             this._getImageCallback = options.getImageCallback;
         }
@@ -684,7 +680,7 @@ define([
         },
 
         /**
-         * Gets and sets the image url.
+         * Gets and sets the image or image url.
          * @memberof Billboard.prototype
          * @type {String|Image}
          */
@@ -755,6 +751,23 @@ define([
         this._getImageCallback = undefined;
     };
 
+    /**
+     * <p>
+     * Checks the atlas for a texture with the supplied id, if the id does not
+     * exist, the supplied callback is triggered to create it.
+     * </p>
+     *
+     * <p>
+     * This function is useful for dynamically generated textures that are shared
+     * across many billboards.  Only the first billboard will actually create the texture
+     * while subsequent billboards will re-use the existing one.
+     * </p>
+     *
+     * @param {String} id The id of the image.
+     * @param {Function} getImageCallback A function which takes two parameters; first the id of the image to
+     * retrieve and second, a function to call when the image is ready.  The function takes the image as its
+     * only parameter.
+     */
     Billboard.prototype.setGeneratedImage = function(id, getImageCallback) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(id)) {
@@ -773,8 +786,16 @@ define([
         }
     };
 
+    /**
+     * Uses a sub-region of the image with the given id as the image for this billboard.
+     *
+     * @param {String} id The id of the image to use.
+     * @param {BoundingRectangle} subRegion The sub-region of the image.
+     *
+     * @exception {RuntimeError} image with id must be in the atlas
+     */
     Billboard.prototype.setImageSubRegion = function(id, subRegion) {
-      //>>includeStart('debug', pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(id)) {
             throw new DeveloperError('id is required.');
         }

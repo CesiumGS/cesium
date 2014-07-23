@@ -374,6 +374,8 @@ define([
      * @param {String} id The id of the image to add to the atlas.
      * @param {BoundingRectangle} subRegion An {@link BoundingRectangle} sub-region measured in pixels from the bottom-left.
      * @param {Function} textureAvailableCallback A function taking the index of the first newly-added region as it's only parameter.
+     *
+     * @exception {RuntimeError} image with id must be in the atlas.
      */
     TextureAtlas.prototype.addSubRegion = function(id, subRegion, textureAvailableCallback) {
         //>>includeStart('debug', pragmas.debug);

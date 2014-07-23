@@ -87,6 +87,18 @@ define([
         }
     }
 
+    function createGetImageCallback(canvas) {
+        return function(id, loadedCallback) {
+            loadedCallback(canvas);
+        };
+    }
+
+    function createTextureAvailableCallback(glyphTextureInfo) {
+        return function(index, id) {
+            glyphTextureInfo.index = index;
+        };
+    }
+
     function rebindAllGlyphs(labelCollection, label) {
         var text = label._text;
         var textLength = text.length;
@@ -139,11 +151,7 @@ define([
                 glyphTextureCache[id] = glyphTextureInfo;
 
                 if (canvas.width > 0 && canvas.height > 0) {
-                    textureAtlas.addTextureFromFunction(id, function(id, loadedCallback) {
-                        loadedCallback(canvas);
-                    }, function(index, id) {
-                        glyphTextureInfo.index = index;
-                    });
+                    textureAtlas.addTextureFromFunction(id, createGetImageCallback(canvas), createTextureAvailableCallback(glyphTextureInfo));
                 }
             }
 
