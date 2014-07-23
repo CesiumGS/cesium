@@ -701,8 +701,7 @@ define([
             if (buffers.hasOwnProperty(name)) {
                 ++model._loadResources.pendingBufferLoads;
                 var buffer = buffers[name];
-                // Backwards compatibility for now for 'path' in glTF 0.6.
-                var uri = new Uri(defined(buffer.uri) ? buffer.uri : buffer.path);
+                var uri = new Uri(buffer.uri);
                 var bufferPath = uri.resolve(model._baseUri).toString();
                 loadArrayBuffer(bufferPath).then(bufferLoad(model, name)).otherwise(getFailedLoadFunction(model, 'buffer', bufferPath));
             }
@@ -732,8 +731,7 @@ define([
             if (shaders.hasOwnProperty(name)) {
                 ++model._loadResources.pendingShaderLoads;
                 var shader = shaders[name];
-                // Backwards compatibility for now for 'path' in glTF 0.6.
-                var uri = new Uri(defined(shader.uri) ? shader.uri : shader.path);
+                var uri = new Uri(shader.uri);
                 var shaderPath = uri.resolve(model._baseUri).toString();
                 loadText(shaderPath).then(shaderLoad(model, name)).otherwise(getFailedLoadFunction(model, 'shader', shaderPath));
             }
@@ -767,8 +765,7 @@ define([
             if (textures.hasOwnProperty(name)) {
                 ++model._loadResources.pendingTextureLoads;
                 var texture = textures[name];
-                // Backwards compatibility for now for 'path' in glTF 0.6.
-                var uri = new Uri(defined(images[texture.source].uri) ? images[texture.source].uri : images[texture.source].path);
+                var uri = new Uri(images[texture.source].uri);
                 var imagePath = uri.resolve(model._baseUri).toString();
                 loadImage(imagePath).then(imageLoad(model, name)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
             }
