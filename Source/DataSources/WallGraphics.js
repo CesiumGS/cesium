@@ -67,7 +67,7 @@ define([
 
         /**
          * Gets or sets the vertex positions.
-         * @memberof DynamicWall.prototype
+         * @memberof WallGraphics.prototype
          * @type {Property}
          */
         positions : createPropertyDescriptor('positions'),
