@@ -106,8 +106,8 @@ define([
             var nameProperty;
             for (key in properties) {
                 if (properties.hasOwnProperty(key) && properties[key]) {
-                    var upperKey = key.toLowerCase();
-                    if (upperKey === 'name' || upperKey === 'title') {
+                    var lowerKey = key.toLowerCase();
+                    if (lowerKey === 'name' || lowerKey === 'title') {
                         nameProperty = key;
                         entity.name = properties[key];
                         break;
@@ -279,8 +279,6 @@ define([
      *
      * @param {String} [name] The name of this data source.  If undefined, a name will be taken from
      *                        the name of the GeoJSON file.
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=GeoJSON%20and%20TopoJSON.html|Cesium Sandcastle GeoJSON and TopoJSON Demo}
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=GeoJSON%20and%20TopoJSON.html|Cesium Sandcastle GeoJSON and TopoJSON Demo}
      *
