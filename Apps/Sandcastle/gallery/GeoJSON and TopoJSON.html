@@ -32,25 +32,29 @@ var usStates = '../../SampleData/ne_10m_us_states.json';
 var viewer = new Cesium.Viewer('cesiumContainer');
 Cesium.viewerEntityMixin(viewer);
 
+//Load a GeoJSON or TopoJSON file with default settings.
+function basicLoading(){
+    var dataSource = new Cesium.GeoJsonDataSource();
+    viewer.dataSources.add(dataSource);
+    dataSource.loadUrl(usStates);
+}
+
+//Add button to run the basic loading example.
 Sandcastle.addToolbarButton('Basic loading', function() {
-     resetDemo();
-    
-     //Load a GeoJSON or TopoJSON file with the default graphics settings
-    viewer.dataSources.add(Cesium.GeoJsonDataSource.fromUrl(usStates));
+    resetDemo();
+    basicLoading();
 });
 
+//Apply custom graphics to a GeoJSON or TopoJSON file based
+//on the metadata contained in the file.
 Sandcastle.addToolbarButton('Custom Graphics', function() {
-     resetDemo();
-
+    resetDemo();
     //Seed the random number generator for repeatable results.
     Cesium.Math.setRandomNumberSeed(0);
 
     //Create a new GeoJSON data source and add it to the list.
     var dataSource = new Cesium.GeoJsonDataSource();
     viewer.dataSources.add(dataSource);
-    
-    //Set all default polygons to have a black outline.
-    dataSource.polygonGraphics.outlineColor = new Cesium.ConstantProperty(Cesium.Color.BLACK);
     
     //Load the document and then set custom graphics
     dataSource.loadUrl(usStates).then(function() {
@@ -83,16 +87,18 @@ Sandcastle.addToolbarButton('Custom Graphics', function() {
     });
 });
 
-//Clear data sources when a toolbar button is pressed.
-function resetDemo(){
-    viewer.dataSources.removeAll();
+//Reset the scene when switching demos.
+function resetDemo() {
+  viewer.dataSources.removeAll();
+  
+  //Set the camera to a US centered tilted view.
+  var camera = viewer.scene.camera;
+  camera.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
+  camera.transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-97.5, 38));
+  camera.lookAt(new Cesium.Cartesian3(0.0, -5000000.0, 4000000.0), Cesium.Cartesian3.ZERO, Cesium.Cartesian3.UNIT_Z);
 }
-
-//Move camera to a US centered tilted view.
-var camera = viewer.scene.camera;
-camera.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
-camera.transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-97.5, 38));
-camera.lookAt(new Cesium.Cartesian3(0.0, -5000000.0, 4000000.0), Cesium.Cartesian3.ZERO, Cesium.Cartesian3.UNIT_Z);
+resetDemo();
+basicLoading();
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
