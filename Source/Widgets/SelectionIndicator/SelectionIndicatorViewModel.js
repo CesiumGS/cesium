@@ -20,6 +20,7 @@ define([
     "use strict";
 
     var screenSpacePos = new Cartesian2();
+    var offScreen = '-1000px';
 
     /**
      * The view model for {@link SelectionIndicator}.
@@ -46,8 +47,8 @@ define([
         //>>includeEnd('debug')
 
         this._scene = scene;
-        this._screenPositionX = '-1000px';
-        this._screenPositionY = '0';
+        this._screenPositionX = offScreen;
+        this._screenPositionY = offScreen;
         this._tweens = scene.tweens;
         this._container = defaultValue(container, document.body);
         this._selectionIndicatorElement = selectionIndicatorElement;
@@ -109,17 +110,22 @@ define([
     SelectionIndicatorViewModel.prototype.update = function() {
         if (this.showSelection && defined(this.position)) {
             var screenPosition = this.computeScreenSpacePosition(this.position, screenSpacePos);
-            var container = this._container;
-            var containerWidth = container.parentNode.clientWidth;
-            var containerHeight = container.parentNode.clientHeight;
-            var indicatorSize = this._selectionIndicatorElement.clientWidth;
-            var halfSize = indicatorSize * 0.5;
+            if (!defined(screenPosition)) {
+                this._screenPositionX = offScreen;
+                this._screenPositionY = offScreen;
+            } else {
+                var container = this._container;
+                var containerWidth = container.parentNode.clientWidth;
+                var containerHeight = container.parentNode.clientHeight;
+                var indicatorSize = this._selectionIndicatorElement.clientWidth;
+                var halfSize = indicatorSize * 0.5;
 
-            screenPosition.x = Math.min(Math.max(screenPosition.x, 0), containerWidth) - halfSize;
-            screenPosition.y = Math.min(Math.max(screenPosition.y, 0), containerHeight) - halfSize;
+                screenPosition.x = Math.min(Math.max(screenPosition.x, -indicatorSize), containerWidth + indicatorSize) - halfSize;
+                screenPosition.y = Math.min(Math.max(screenPosition.y, -indicatorSize), containerHeight + indicatorSize) - halfSize;
 
-            this._screenPositionX = Math.floor(screenPosition.x + 0.25) + 'px';
-            this._screenPositionY = Math.floor(screenPosition.y + 0.25) + 'px';
+                this._screenPositionX = Math.floor(screenPosition.x + 0.25) + 'px';
+                this._screenPositionY = Math.floor(screenPosition.y + 0.25) + 'px';
+            }
         }
     };
 
