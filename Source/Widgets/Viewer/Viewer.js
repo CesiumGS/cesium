@@ -119,6 +119,8 @@ define([
      * @see viewerDragDropMixin
      * @see viewerEntityMixin
      *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Hello%20World.html|Cesium Sandcastle Hello World Demo}
+     *
      * @example
      * //Initialize the viewer widget with several custom options and mixins.
      * var viewer = new Cesium.Viewer('cesiumContainer', {

@@ -75,7 +75,7 @@ defineSuite([
         document.body.removeChild(container);
     });
 
-    it('Hides the indicator when position is unknown', function() {
+    it('hides the indicator when position is unknown', function() {
         var viewModel = new SelectionIndicatorViewModel(scene, selectionIndicatorElement, container);
         expect(viewModel.isVisible).toBe(false);
         viewModel.showSelection = true;
@@ -84,5 +84,20 @@ defineSuite([
         expect(viewModel.isVisible).toBe(true);
         viewModel.showSelection = false;
         expect(viewModel.isVisible).toBe(false);
+    });
+
+    it('can move the indicator off screen', function() {
+        document.body.appendChild(container);
+        var viewModel = new SelectionIndicatorViewModel(scene, selectionIndicatorElement, container);
+        viewModel.showSelection = true;
+        viewModel.position = new Cartesian3(1.0, 2.0, 3.0);
+        viewModel.computeScreenSpacePosition = function(position, result) {
+            return undefined;
+        };
+        viewModel.update();
+        expect(viewModel._screenPositionX).toBe('-1000px');
+        expect(viewModel._screenPositionY).toBe('-1000px');
+
+        document.body.removeChild(container);
     });
 }, 'WebGL');

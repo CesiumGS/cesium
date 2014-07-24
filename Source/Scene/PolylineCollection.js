@@ -109,6 +109,7 @@ define([
      * @see PolylineCollection#remove
      * @see Polyline
      * @see LabelCollection
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polylines.html|Cesium Sandcastle Polyline Demo}
      *
      * @example
      * // Create a polyline collection with two polylines
@@ -130,8 +131,6 @@ define([
      *     -78.12, 23.46]),
      *   width : 4
      * });
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polylines.html|Cesium Sandcastle Polyline Demo}
      */
     var PolylineCollection = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
