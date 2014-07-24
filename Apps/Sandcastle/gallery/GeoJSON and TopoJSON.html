@@ -27,75 +27,72 @@
 function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
-var usStatesJson = '../../SampleData/ne_10m_us_states.json';
+var usStates = '../../SampleData/ne_10m_us_states.json';
 
 var viewer = new Cesium.Viewer('cesiumContainer');
 Cesium.viewerEntityMixin(viewer);
 
 Sandcastle.addToolbarButton('Basic loading', function() {
-    //Remove any existng data sources
-    viewer.dataSources.removeAll();
+     resetDemo();
     
-    //Load a GeoJSON file with default graphics
-    viewer.dataSources.add(Cesium.GeoJsonDataSource.fromUrl(usStatesJson));
+     //Load a GeoJSON or TopoJSON file with the default graphics settings
+    viewer.dataSources.add(Cesium.GeoJsonDataSource.fromUrl(usStates));
 });
 
 Sandcastle.addToolbarButton('Custom Graphics', function() {
-    //Remove any existng data sources
-    viewer.dataSources.removeAll();
+     resetDemo();
 
     //Seed the random number generator for repeatable results.
     Cesium.Math.setRandomNumberSeed(0);
 
-    //Create a new GeoJSON data source
-    var usStates = new Cesium.GeoJsonDataSource();
+    //Create a new GeoJSON data source and add it to the list.
+    var dataSource = new Cesium.GeoJsonDataSource();
+    viewer.dataSources.add(dataSource);
     
     //Set all default polygons to have a black outline.
-    usStates.defaultPolygon.polygon.outlineColor = new Cesium.ConstantProperty(Cesium.Color.BLACK);
+    dataSource.polygonGraphics.outlineColor = new Cesium.ConstantProperty(Cesium.Color.BLACK);
     
     //Load the document and then set custom graphics
-    usStates.loadUrl(usStatesJson).then(function() {
-        //Get the list of loaded entities
-        var entities = usStates.entities.entities;
+    dataSource.loadUrl(usStates).then(function() {
+        //Get the array of entities
+        var entities = dataSource.entities.entities;
         
-        var colors = {};
+        var colorHash = {};
         for (var i = 0; i < entities.length; i++) {
+            //For each entity, create a random color based on the state name.
+            //Some states have multiple entities, so we store the color in a
+            //hash so that we use the same color for the entire state.
             var entity = entities[i];
-            var name = entity.properties.name;
-
-            //For each entity, create a random color
-            //for the polygon based on the state name.
-            var color = colors[name];
+            var name = entity.name;
+            var color = colorHash[name];
             if (!color) {
                 color = Cesium.Color.fromRandom({
                     alpha : 1.0
                 });
-                colors[name] = color;
+                colorHash[name] = color;
             }
+            
+            //Set the polygon material to our random color.
             entity.polygon.material = Cesium.ColorMaterialProperty.fromColor(color);
 
-            //Extrude the polygon based on the state's population.
+            //Extrude the polygon based on the state's population.  Each entity
+            //stores the properties for the GeoJSON feature it was created from
+            //Since the population is a huge number, we divide by 50.
             entity.polygon.extrudedHeight = new Cesium.ConstantProperty(entity.properties.Population / 50.0);
         }
     });
-    viewer.dataSources.add(usStates);
 });
 
-//Show the defualt graphics example by default.
-viewer.dataSources.add(Cesium.GeoJsonDataSource.fromUrl(usStatesJson));
+//Clear data sources when a toolbar button is pressed.
+function resetDemo(){
+    viewer.dataSources.removeAll();
+}
 
-//US centered tilted view.
-var center = Cesium.Cartesian3.fromDegrees(-97.5, 38);
-var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-
+//Move camera to a US centered tilted view.
 var camera = viewer.scene.camera;
-Cesium.Matrix4.clone(transform, camera.transform);
 camera.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
-
-camera.lookAt(
-    new Cesium.Cartesian3(0.0, -5000000.0, 4000000.0),
-    Cesium.Cartesian3.ZERO,
-    Cesium.Cartesian3.UNIT_Z);
+camera.transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-97.5, 38));
+camera.lookAt(new Cesium.Cartesian3(0.0, -5000000.0, 4000000.0), Cesium.Cartesian3.ZERO, Cesium.Cartesian3.UNIT_Z);
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
