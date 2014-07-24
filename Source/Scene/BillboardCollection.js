@@ -124,6 +124,8 @@ define([
      * @see TextureAtlas
      * @see LabelCollection
      *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
+     *
      * @example
      * // Create a billboard collection with two billboards
      * var billboards = new Cesium.BillboardCollection();
@@ -140,8 +142,6 @@ define([
      *   position : { x : 4.0, y : 5.0, z : 6.0 },
      *   imageIndex : 1
      * });
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
      */
     var BillboardCollection = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
