@@ -268,6 +268,7 @@ define([
         this._rotateMousePosition = new Cartesian2();
         this._rotateStartPosition = new Cartesian3();
         this._tiltCVOffMap = false;
+        this._looking = false;
 
         var projection = scene.mapProjection;
         this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
@@ -915,12 +916,18 @@ define([
         var ellipsoid;
 
         if (Cartesian2.equals(startPosition, controller._rotateMousePosition)) {
-            magnitude = Cartesian3.magnitude(controller._rotateStartPosition);
-            radii = scratchRadii;
-            radii.x = radii.y = radii.z = magnitude;
-            ellipsoid = Ellipsoid.fromCartesian3(radii, scratchEllipsoid);
-            pan3D(controller, startPosition, movement, frameState, ellipsoid);
+            if (controller._looking) {
+                look3D(controller, startPosition, movement, frameState, true);
+            } else {
+                magnitude = Cartesian3.magnitude(controller._rotateStartPosition);
+                radii = scratchRadii;
+                radii.x = radii.y = radii.z = magnitude;
+                ellipsoid = Ellipsoid.fromCartesian3(radii, scratchEllipsoid);
+                pan3D(controller, startPosition, movement, frameState, ellipsoid);
+            }
             return;
+        } else {
+            controller._looking = false;
         }
 
         var height = controller._ellipsoid.cartesianToCartographic(camera.positionWC, scratchCartographic).height;
@@ -937,7 +944,10 @@ define([
                 Cartesian2.clone(startPosition, controller._rotateMousePosition);
                 Cartesian3.clone(mousePos, controller._rotateStartPosition);
             } else {
+                controller._looking = true;
                 look3D(controller, startPosition, movement, frameState, true);
+
+                Cartesian2.clone(startPosition, controller._rotateMousePosition);
             }
         } else if (defined(camera.pickEllipsoid(movement.startPosition, controller._ellipsoid, spin3DPick))) {
             pan3D(controller, startPosition, movement, frameState, controller._ellipsoid);
@@ -947,7 +957,10 @@ define([
         } else if (height > controller.minimumTrackBallHeight) {
             rotate3D(controller, startPosition, movement, frameState);
         } else {
+            controller._looking = true;
             look3D(controller, startPosition, movement, frameState, true);
+
+            Cartesian2.clone(startPosition, controller._rotateMousePosition);
         }
     }
 
@@ -1359,6 +1372,8 @@ define([
     var look3DEndPos = new Cartesian2();
     var look3DStartRay = new Ray();
     var look3DEndRay = new Ray();
+    var look3DUp = new Cartesian3();
+
     function look3D(controller, startPosition, movement, frameState, useLocalUp) {
         var camera = controller._scene.camera;
 
@@ -1377,8 +1392,12 @@ define([
             angle = Math.acos(dot);
         }
         angle = (movement.startPosition.x > movement.endPosition.x) ? -angle : angle;
+
         var rotationAxis = controller._horizontalRotationAxis;
-        if (defined(rotationAxis)) {
+        if (useLocalUp) {
+            var up = controller._ellipsoid.geodeticSurfaceNormal(camera.position, look3DUp);
+            camera.look(up, -angle);
+        } else if (defined(rotationAxis)) {
             camera.look(rotationAxis, angle);
         } else {
             camera.lookLeft(angle);
