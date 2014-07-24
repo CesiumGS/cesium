@@ -68,7 +68,7 @@ defineSuite([
         context.uniformState.update(context, frameState);
 
         mockScene = {
-            canvas: context._canvas,
+            canvas : context._canvas,
             context : context,
             camera : frameState.camera,
             frameState : frameState

@@ -749,6 +749,10 @@ define([
 
         this._imageIndexPromise = imageIndexPromise;
 
+        if (!defined(imageIndexPromise)) {
+            return;
+        }
+
         var that = this;
         imageIndexPromise.then(function(index) {
             if (imageIndexPromise.cancelled) {
