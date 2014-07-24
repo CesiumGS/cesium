@@ -269,6 +269,7 @@ define([
         this._rotateStartPosition = new Cartesian3();
         this._tiltCVOffMap = false;
         this._looking = false;
+        this._rotating = false;
 
         var projection = scene.mapProjection;
         this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
@@ -918,6 +919,8 @@ define([
         if (Cartesian2.equals(startPosition, controller._rotateMousePosition)) {
             if (controller._looking) {
                 look3D(controller, startPosition, movement, frameState, true);
+            } else if (controller._rotating) {
+                rotate3D(controller, startPosition, movement, frameState);
             } else {
                 magnitude = Cartesian3.magnitude(controller._rotateStartPosition);
                 radii = scratchRadii;
@@ -928,6 +931,7 @@ define([
             return;
         } else {
             controller._looking = false;
+            controller._rotating = false;
         }
 
         var height = controller._ellipsoid.cartesianToCartographic(camera.positionWC, scratchCartographic).height;
@@ -941,27 +945,23 @@ define([
                 ellipsoid = Ellipsoid.fromCartesian3(radii, scratchEllipsoid);
                 pan3D(controller, startPosition, movement, frameState, ellipsoid);
 
-                Cartesian2.clone(startPosition, controller._rotateMousePosition);
                 Cartesian3.clone(mousePos, controller._rotateStartPosition);
             } else {
                 controller._looking = true;
                 look3D(controller, startPosition, movement, frameState, true);
-
-                Cartesian2.clone(startPosition, controller._rotateMousePosition);
             }
         } else if (defined(camera.pickEllipsoid(movement.startPosition, controller._ellipsoid, spin3DPick))) {
             pan3D(controller, startPosition, movement, frameState, controller._ellipsoid);
-
-            Cartesian2.clone(startPosition, controller._rotateMousePosition);
             Cartesian3.clone(spin3DPick, controller._rotateStartPosition);
         } else if (height > controller.minimumTrackBallHeight) {
+            controller._rotating = true;
             rotate3D(controller, startPosition, movement, frameState);
         } else {
             controller._looking = true;
             look3D(controller, startPosition, movement, frameState, true);
-
-            Cartesian2.clone(startPosition, controller._rotateMousePosition);
         }
+
+        Cartesian2.clone(startPosition, controller._rotateMousePosition);
     }
 
     function rotate3D(controller, startPosition, movement, frameState, constrainedAxis, rotateOnlyVertical, rotateOnlyHorizontal) {
