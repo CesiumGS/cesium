@@ -41,6 +41,8 @@ define([
      * @see BoxGeometry.fromDimensions
      * @see BoxGeometry.createGeometry
      *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Box.html|Cesium Sandcastle Box Demo}
+     *
      * @example
      * var box = new Cesium.BoxGeometry({
      *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
