@@ -15,11 +15,9 @@ define([
      *
      * @alias Spline
      * @constructor
-     *
-     * @see BSpline
-     * @see BezierSpline
-     * @see HermiteSpline
+
      * @see CatmullRomSpline
+     * @see HermiteSpline
      * @see LinearSpline
      * @see QuaternionSpline
      */

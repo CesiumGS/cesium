@@ -229,7 +229,7 @@ define([
 
     /**
      * Requests the geometry for a given tile.  This function should not be called before
-     * {@link ArcGisImageServerTerrainProvider#ready} returns true.  The result includes terrain
+     * {@link VRTheWorldTerrainProvider#ready} returns true.  The result includes terrain
      * data and indicates that all child tiles are available.
      *
      * @param {Number} x The X coordinate of the tile for which to request geometry.
