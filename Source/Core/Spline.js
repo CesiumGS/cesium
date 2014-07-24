@@ -15,7 +15,7 @@ define([
      *
      * @alias Spline
      * @constructor
-
+     *
      * @see CatmullRomSpline
      * @see HermiteSpline
      * @see LinearSpline
