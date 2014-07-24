@@ -10,8 +10,6 @@ defineSuite([
         'Core/Math',
         'Core/NearFarScalar',
         'Renderer/ClearCommand',
-        'Renderer/TextureMagnificationFilter',
-        'Renderer/TextureMinificationFilter',
         'Scene/HorizontalOrigin',
         'Scene/OrthographicFrustum',
         'Scene/SceneMode',
@@ -20,9 +18,7 @@ defineSuite([
         'Specs/createCamera',
         'Specs/createContext',
         'Specs/createFrameState',
-        'Specs/createScene',
         'Specs/destroyContext',
-        'Specs/destroyScene',
         'Specs/pick',
         'Specs/render'
     ], function(
@@ -36,8 +32,6 @@ defineSuite([
         CesiumMath,
         NearFarScalar,
         ClearCommand,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
         HorizontalOrigin,
         OrthographicFrustum,
         SceneMode,
@@ -46,9 +40,7 @@ defineSuite([
         createCamera,
         createContext,
         createFrameState,
-        createScene,
         destroyContext,
-        destroyScene,
         pick,
         render) {
     "use strict";
