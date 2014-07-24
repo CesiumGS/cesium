@@ -114,6 +114,7 @@ define([
                     }
                 }
             }
+
             if (!defined(nameProperty)) {
                 for (key in properties) {
                     if (properties.hasOwnProperty(key) && properties[key]) {
@@ -126,12 +127,7 @@ define([
                 }
             }
 
-            var description = describe(properties, nameProperty);
-            entity.description = {
-                getValue : function() {
-                    return description;
-                }
-            };
+            entity.description = new ConstantProperty(describe(properties, nameProperty));
         }
         return entity;
     }
