@@ -169,6 +169,8 @@ define([
      *
      * @see Model.fromGltf
      * @see Model#readyToRender
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
      */
     var Model = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

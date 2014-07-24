@@ -589,6 +589,8 @@ define([
      *
      * @see EllipseGeometry.createGeometry
      *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Ellipse.html|Cesium Sandcastle Ellipse Demo}
+     *
      * @example
      * // Create an ellipse.
      * var ellipse = new Cesium.EllipseGeometry({
