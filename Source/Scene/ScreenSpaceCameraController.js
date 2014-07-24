@@ -263,9 +263,9 @@ define([
 
         this._horizontalRotationAxis = undefined;
 
-        this._tiltCenterMousePosition = new Cartesian2();
+        this._tiltCenterMousePosition = new Cartesian2(-1.0, -1.0);
         this._tiltCenter = new Cartesian3();
-        this._rotateMousePosition = new Cartesian2();
+        this._rotateMousePosition = new Cartesian2(-1.0, -1.0);
         this._rotateStartPosition = new Cartesian3();
         this._tiltCVOffMap = false;
         this._looking = false;
