@@ -690,13 +690,14 @@ define([
                 return this._imageId;
             },
             set : function(value) {
-                //>>includeStart('debug', pragmas.debug);
-                if (!defined(value)) {
-                    throw new DeveloperError('value is required.');
-                }
-                //>>includeEnd('debug');
+                this._imageSubRegion = undefined;
 
-                if (typeof value === 'string') {
+                if (!defined(value)) {
+                    this._imageIndex = -1;
+                    this._image = undefined;
+                    this._imageIndexPromise = undefined;
+                    makeDirty(this, IMAGE_INDEX_INDEX);
+                } else if (typeof value === 'string') {
                     this.setImage(value, value);
                 } else if (defined(value.src)) {
                     this.setImage(value.src, value);
