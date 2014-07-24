@@ -66,7 +66,7 @@ defineSuite([
         options = defaultValue(options, {});
 
         var ellipsoid = Ellipsoid.WGS84;
-        var modelMatrix = Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicToCartesian(new Cartographic(0.0, 0.0, 100.0)));
+        var modelMatrix = Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(new Cartographic(0.0, 0.0, 100.0)));
 
         var model = primitives.add(Model.fromGltf({
             url : url,
@@ -124,7 +124,7 @@ defineSuite([
 
     it('sets model properties', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var modelMatrix = Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicToCartesian(new Cartographic(0.0, 0.0, 100.0)));
+        var modelMatrix = Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(new Cartographic(0.0, 0.0, 100.0)));
 
        expect(duckModel.gltf).toBeDefined();
        expect(duckModel.basePath).toEqual('./Data/Models/duck/');
@@ -357,7 +357,7 @@ defineSuite([
 
     it('boundingSphere returns the bounding sphere', function() {
         var boundingSphere = duckModel.boundingSphere;
-        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(13.440, 86.949, -3.701), CesiumMath.EPSILON3);
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(13.440, -3.701, 86.949), CesiumMath.EPSILON3);
         expect(boundingSphere.radius).toEqualEpsilon(126.880, CesiumMath.EPSILON3);
     });
 

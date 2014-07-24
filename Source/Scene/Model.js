@@ -679,7 +679,14 @@ define([
             }
         }
 
-        return BoundingSphere.fromCornerPoints(min, max);
+        //Apply rotation from glTF (Y up) to Cesium (Z up).
+        var boundingSphere = BoundingSphere.fromCornerPoints(min, max);
+        var center = boundingSphere.center;
+        var tmp = center.y;
+        center.y = center.z;
+        center.z = -tmp;
+
+        return boundingSphere;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -2094,6 +2101,9 @@ define([
         return scale;
     }
 
+    var yUpTozUp = Matrix3.fromRotationX(-CesiumMath.PI_OVER_TWO);
+    var matrix3Scratch = new Matrix3();
+
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -2152,7 +2162,14 @@ define([
                 this._minimumPixelSize = this.minimumPixelSize;
 
                 var scale = getScale(this, context, frameState);
-                Matrix4.multiplyByUniformScale(this.modelMatrix, scale, this._computedModelMatrix);
+                var computedModelMatrix = this._computedModelMatrix;
+                Matrix4.multiplyByUniformScale(this.modelMatrix, scale, computedModelMatrix);
+
+                //Apply rotation from glTF (Y up) to Cesium (Z up).
+                var translation = Matrix4.getTranslation(computedModelMatrix, scratchPosition);
+                var rotation = Matrix4.getRotation(computedModelMatrix, matrix3Scratch);
+                Matrix3.multiply(rotation, yUpTozUp, rotation);
+                Matrix4.fromRotationTranslation(rotation, translation, computedModelMatrix);
             }
 
             // Update modelMatrix throughout the graph as needed
