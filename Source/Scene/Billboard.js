@@ -701,10 +701,10 @@ define([
             },
             set : function(value) {
                 this._imageSubRegion = undefined;
+                this._imageIndex = -1;
+                this._image = undefined;
 
                 if (!defined(value)) {
-                    this._imageIndex = -1;
-                    this._image = undefined;
                     this._imageIndexPromise = undefined;
                     makeDirty(this, IMAGE_INDEX_INDEX);
                 } else if (typeof value === 'string') {
@@ -714,6 +714,23 @@ define([
                 } else {
                     this.setImage(createGuid(), value);
                 }
+            }
+        },
+
+        /**
+         * When <code>true</code>, this billboard is ready to render, i.e., the image
+         * has been downloaded and the WebGL resources are created.
+         *
+         * @memberof Billboard.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default false
+         */
+        ready : {
+            get : function() {
+                return this._imageIndex !== -1;
             }
         }
     });
@@ -760,6 +777,7 @@ define([
                 return;
             }
             that._imageIndex = index;
+            that._ready = true;
             makeDirty(that, IMAGE_INDEX_INDEX);
             that._image = undefined;
             that._imageSubRegion = undefined;
