@@ -28,6 +28,11 @@
             button.textContent = text;
             document.getElementById(toolbarID || 'toolbar').appendChild(button);
         },
+        addDefaultToolbarButton : function(text, onclick, toolbarID) {
+            window.Sandcastle.addToolbarButton(text, onclick, toolbarID);
+            window.Sandcastle.highlight(onclick);
+            onclick();
+        },
         addToolbarMenu : function(options, onchange, toolbarID) {
             var menu = document.createElement('select');
             menu.className = 'sandcastle-button';

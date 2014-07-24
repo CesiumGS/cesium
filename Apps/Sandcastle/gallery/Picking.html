@@ -103,7 +103,9 @@ function cleanup() {
     handler = handler && handler.destroy();
 }
 
-function pickCartographicPosition() {
+Sandcastle.addDefaultToolbarButton('Show Cartographic Position on Mouse Over', function() {
+    cleanup();
+
     var ellipsoid = scene.globe.ellipsoid;
     var labels = new Cesium.LabelCollection();
     label = labels.add();
@@ -122,12 +124,6 @@ function pickCartographicPosition() {
             label.text = '';
         }
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-}
-pickCartographicPosition();
-
-Sandcastle.addToolbarButton('Show Cartographic Position on Mouse Over', function() {
-    cleanup();
-    pickCartographicPosition();
 });
 
 Sandcastle.addToolbarButton('Pick Billboard', function() {
