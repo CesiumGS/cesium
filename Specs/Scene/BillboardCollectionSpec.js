@@ -81,25 +81,25 @@ defineSuite([
 
     beforeEach(function() {
         billboards = new BillboardCollection();
+
+        if (!greenImage) {
+            greenImage = new Image();
+            greenImage.src = './Data/Images/Green.png';
+
+            blueImage = new Image();
+            blueImage.src = './Data/Images/Blue.png';
+
+            whiteImage = new Image();
+            whiteImage.src = './Data/Images/White.png';
+
+            waitsFor(function() {
+                return greenImage.complete && blueImage.complete && whiteImage.complete;
+            }, 'Load .png file(s) for billboard collection test.', 3000);
+        }
     });
 
     afterEach(function() {
         billboards = billboards && billboards.destroy();
-    });
-
-    it('initialize suite', function() {
-        greenImage = new Image();
-        greenImage.src = './Data/Images/Green.png';
-
-        blueImage = new Image();
-        blueImage.src = './Data/Images/Blue.png';
-
-        whiteImage = new Image();
-        whiteImage.src = './Data/Images/White.png';
-
-        waitsFor(function() {
-            return greenImage.complete && blueImage.complete && whiteImage.complete;
-        }, 'Load .png file(s) for billboard collection test.', 3000);
     });
 
     it('default constructs a billboard', function() {

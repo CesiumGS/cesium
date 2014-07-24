@@ -168,7 +168,7 @@ function addPointBillboards() {
     Sandcastle.declare(addPointBillboards);
     reset();
 
-    function drawImage(id, loadedCallback) {
+    function drawImage(id) {
         // A white circle is drawn into a 2D canvas.  The canvas is used as
         // a texture for billboards, each of which applies a different color
         // and scale to change the point's appearance.
@@ -185,7 +185,7 @@ function addPointBillboards() {
         context2D.fillStyle = 'rgb(255, 255, 255)';
         context2D.fill();
 
-        loadedCallback(canvas);
+        return canvas;
     }
 
     var billboards = scene.primitives.add(new Cesium.BillboardCollection());

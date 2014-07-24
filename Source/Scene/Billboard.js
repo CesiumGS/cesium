@@ -82,7 +82,7 @@ define([
         this._show = defaultValue(options.show, true);
         this._position = Cartesian3.clone(defaultValue(options.position, Cartesian3.ZERO));
         this._actualPosition = Cartesian3.clone(this._position); // For columbus view and 2D
-        this._pixelOffset = Cartesian2.clone(defaultValue(options.pixelOffset, Cartesian2.ZERO), new Cartesian2());
+        this._pixelOffset = Cartesian2.clone(defaultValue(options.pixelOffset, Cartesian2.ZERO));
         this._translate = new Cartesian2(0.0, 0.0); // used by labels for glyph vertex translation
         this._eyeOffset = Cartesian3.clone(defaultValue(options.eyeOffset, Cartesian3.ZERO));
         this._verticalOrigin = defaultValue(options.verticalOrigin, VerticalOrigin.CENTER);
@@ -106,14 +106,24 @@ define([
         this._index = -1; //Used only by BillboardCollection
 
         this._imageIndex = -1;
-
-        this._image = options.image;
-        this._imageId = options.imageId;
-        this._imageSubRegion = options.imageSubRegion;
         this._imageIndexPromise = undefined;
 
-        if (defined(billboardCollection._textureAtlas)) {
-            this._loadImage();
+        var image = options.image;
+        var imageId = options.imageId;
+        if (defined(image)) {
+            if (!defined(imageId)) {
+                if (typeof image === 'string') {
+                    imageId = image;
+                } else if (defined(image.src)) {
+                    imageId = image.src;
+                } else {
+                    imageId = createGuid();
+                }
+            }
+            this.setImage(imageId, image);
+        }
+        if (defined(options.imageSubRegion)) {
+            this.setImageSubRegion(imageId, options.imageSubRegion);
         }
     };
 
@@ -730,11 +740,13 @@ define([
         }
 
         var imageIndexPromise;
-        if (defined(this._imageSubRegion)) {
-            imageIndexPromise = atlas.addSubRegion(this._imageId, this._imageSubRegion);
-        } else {
+        if (defined(this._image)) {
             imageIndexPromise = atlas.addImage(this._imageId, this._image);
         }
+        if (defined(this._imageSubRegion)) {
+            imageIndexPromise = atlas.addSubRegion(this._imageId, this._imageSubRegion);
+        }
+
         this._imageIndexPromise = imageIndexPromise;
 
         var that = this;

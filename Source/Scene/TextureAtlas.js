@@ -386,7 +386,7 @@ define([
         }
 
         var that = this;
-        when(indexPromise, function(index) {
+        return when(indexPromise, function(index) {
             if (index === -1) {
                 // the atlas is destroyed
                 return -1;
