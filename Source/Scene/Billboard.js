@@ -107,6 +107,9 @@ define([
 
         this._imageIndex = -1;
         this._imageIndexPromise = undefined;
+        this._imageId = undefined;
+        this._image = undefined;
+        this._imageSubRegion = undefined;
 
         var image = options.image;
         var imageId = options.imageId;
@@ -700,11 +703,15 @@ define([
                 return this._imageId;
             },
             set : function(value) {
-                this._imageSubRegion = undefined;
                 this._imageIndex = -1;
+                this._imageId = undefined;
                 this._image = undefined;
+                this._imageSubRegion = undefined;
 
                 if (!defined(value)) {
+                    if (defined(this._imageIndexPromise)) {
+                        this._imageIndexPromise.cancelled = true;
+                    }
                     this._imageIndexPromise = undefined;
                     makeDirty(this, IMAGE_INDEX_INDEX);
                 } else if (typeof value === 'string') {

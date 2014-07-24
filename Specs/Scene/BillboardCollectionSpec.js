@@ -1439,4 +1439,36 @@ defineSuite([
         }
     });
 
+    it('can set image to undefined while an image is loading', function() {
+        render(context, frameState, billboards);
+
+        var one = billboards.add({
+            image : './Data/Images/Green.png'
+        });
+
+        expect(one.ready).toEqual(false);
+        expect(one.image).toEqual('./Data/Images/Green.png');
+
+        // switch to undefined while green is in-flight
+
+        one.image = undefined;
+
+        expect(one.ready).toEqual(false);
+        expect(one.image).toBeUndefined();
+
+        for (var i = 0; i < 10; ++i) {
+            /*jshint loopfunc: true */
+            // render and yield control several times to make sure the
+            // green image never loads
+
+            runs(function() {
+                ClearCommand.ALL.execute(context);
+                expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+                render(context, frameState, billboards);
+                expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+            });
+        }
+    });
+
 }, 'WebGL');
