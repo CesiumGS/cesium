@@ -31,24 +31,8 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
 var clock = viewer.clock;
 
-function reset() {
-    scene.primitives.removeAll();
-    scene.tweens.removeAll();
-
-    scene.camera.setTransform(Cesium.Matrix4.IDENTITY);
-
-    clock.multiplier = 1.0;
-    scene.preRender.removeEventListener(icrf);
-    scene.globe.enableLighting = false;
-}
-
-scene.morphComplete.addEventListener(function() {
-    reset();
-});
-
 function flyToSanDiego() {
     Sandcastle.declare(flyToSanDiego);
-    reset();
     scene.camera.flyTo({
         destination : Cesium.Cartesian3.fromDegrees(-117.16, 32.71, 15000.0)
     });
@@ -56,7 +40,6 @@ function flyToSanDiego() {
 
 function flyToLocation() {
     Sandcastle.declare(flyToLocation);
-    reset();
 
     // Create callback for browser's geolocation
     function fly(position) {
@@ -71,7 +54,6 @@ function flyToLocation() {
 
 function viewRectangle() {
     Sandcastle.declare(viewRectangle);
-    reset();
 
     var west = -77.0;
     var south = 38.0;
@@ -95,7 +77,6 @@ function viewRectangle() {
 
 function flyToRectangle() {
     Sandcastle.declare(flyToRectangle);
-    reset();
 
     var west = -90.0;
     var south = 38.0;
@@ -121,7 +102,6 @@ function flyToRectangle() {
 
 function setReferenceFrame() {
     Sandcastle.declare(setReferenceFrame);
-    reset();
 
     var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
     var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
@@ -157,7 +137,6 @@ function icrf(scene, time) {
 
 function viewInICRF() {
     Sandcastle.declare(viewInICRF);
-    reset();
 
     var vm = viewer.homeButton.viewModel;
     vm.duration = 0.0;
@@ -169,60 +148,60 @@ function viewInICRF() {
     scene.globe.enableLighting = true;
 }
 
-function createUI() {
-    function selectMenuOption(menu, options) {
-        if (menu.selectedIndex > 0) {
-            options[menu.selectedIndex].onselect();
-        }
-        menu.selectedIndex = 0;
+Sandcastle.addToolbarMenu([{
+    text : 'Camera Options'
+}, {
+    text : 'Fly to San Diego',
+    onselect : function() {
+        flyToSanDiego();
+        Sandcastle.highlight(flyToSanDiego);
     }
-    
-    var options = [{
-        text : 'Camera Options'
-    }, {
-        text : 'Fly to San Diego',
-        onselect : function() {
-            flyToSanDiego();
-            Sandcastle.highlight(flyToSanDiego);
-        }
-    }, {
-        text : 'Fly to My Location',
-        onselect : function() {
-            flyToLocation();
-            Sandcastle.highlight(flyToLocation);
-        }
-    }, {
-        text : 'Fly to Rectangle',
-        onselect : function() {
-            flyToRectangle();
-            Sandcastle.highlight(flyToRectangle);
-        }
-    }, {
-        text : 'View a Rectangle',
-        onselect : function() {
-            viewRectangle();
-            Sandcastle.highlight(viewRectangle);
-        }
-    }, {
-        text : 'Set camera reference frame',
-        onselect : function() {
-            setReferenceFrame();
-            Sandcastle.highlight(setReferenceFrame);
-        }
-    }, {
-        text : 'View in ICRF',
-        onselect : function() {
-            viewInICRF();
-            Sandcastle.highlight(viewInICRF);
-        }
-    }];
+}, {
+    text : 'Fly to My Location',
+    onselect : function() {
+        flyToLocation();
+        Sandcastle.highlight(flyToLocation);
+    }
+}, {
+    text : 'Fly to Rectangle',
+    onselect : function() {
+        flyToRectangle();
+        Sandcastle.highlight(flyToRectangle);
+    }
+}, {
+    text : 'View a Rectangle',
+    onselect : function() {
+        viewRectangle();
+        Sandcastle.highlight(viewRectangle);
+    }
+}, {
+    text : 'Set camera reference frame',
+    onselect : function() {
+        setReferenceFrame();
+        Sandcastle.highlight(setReferenceFrame);
+    }
+}, {
+    text : 'View in ICRF',
+    onselect : function() {
+        viewInICRF();
+        Sandcastle.highlight(viewInICRF);
+    }
+}]);
 
-    Sandcastle.addToolbarMenu(options, function() {
-        selectMenuOption(this, options);
-    });
+Sandcastle.reset = function() {
+    scene.primitives.removeAll();
+    scene.tweens.removeAll();
+
+    scene.camera.setTransform(Cesium.Matrix4.IDENTITY);
+
+    clock.multiplier = 1.0;
+    scene.preRender.removeEventListener(icrf);
+    scene.globe.enableLighting = false;
 }
 
-createUI();
+scene.morphComplete.addEventListener(function() {
+    Sandcastle.reset();
+});
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

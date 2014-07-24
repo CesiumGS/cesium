@@ -22,6 +22,7 @@
             var button = document.createElement('button');
             button.className = 'sandcastle-button';
             button.onclick = function() {
+                window.Sandcastle.reset();
                 window.Sandcastle.highlight(onclick);
                 onclick();
             };
@@ -33,10 +34,15 @@
             window.Sandcastle.highlight(onclick);
             onclick();
         },
-        addToolbarMenu : function(options, onchange, toolbarID) {
+        addToolbarMenu : function(options, toolbarID) {
             var menu = document.createElement('select');
             menu.className = 'sandcastle-button';
-            menu.onchange = onchange;
+            menu.onchange = function() {
+                window.Sandcastle.reset();
+                if (menu.selectedIndex > 0) {
+                    options[menu.selectedIndex].onselect();
+                }
+            };
             document.getElementById(toolbarID || 'toolbar').appendChild(menu);
 
             for (var i = 0, len = options.length; i < len; ++i) {
@@ -45,6 +51,8 @@
                 option.value = options[i].value;
                 menu.appendChild(option);
             }
+        },
+        reset : function() {
         }
     };
 

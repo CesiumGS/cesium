@@ -98,14 +98,7 @@ function addOverlappingPolygons(scene) {
     greenPolygon.picked = false;
 }
 
-function cleanup() {
-    scene.primitives.removeAll();
-    handler = handler && handler.destroy();
-}
-
 Sandcastle.addDefaultToolbarButton('Show Cartographic Position on Mouse Over', function() {
-    cleanup();
-
     var ellipsoid = scene.globe.ellipsoid;
     var labels = new Cesium.LabelCollection();
     label = labels.add();
@@ -127,8 +120,6 @@ Sandcastle.addDefaultToolbarButton('Show Cartographic Position on Mouse Over', f
 });
 
 Sandcastle.addToolbarButton('Pick Billboard', function() {
-    cleanup();
-
     addBillboard(scene);
 
     // If the mouse is over the billboard, change its scale and color
@@ -152,8 +143,6 @@ Sandcastle.addToolbarButton('Pick Billboard', function() {
 
 var originalColor = {};
 Sandcastle.addToolbarButton('Drill-Down Picking', function() {
-    cleanup();
-
     var primitives = scene.primitives;
     addOverlappingPolygons(scene);
 
@@ -199,6 +188,11 @@ Sandcastle.addToolbarButton('Drill-Down Picking', function() {
         }
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 });
+
+Sandcastle.reset = function() {
+    scene.primitives.removeAll();
+    handler = handler && handler.destroy();
+};
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
