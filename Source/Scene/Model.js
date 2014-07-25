@@ -80,6 +80,8 @@ define([
     "use strict";
     /*global WebGLRenderingContext*/
 
+    var yUpToZUp = Matrix4.fromRotationTranslation(Matrix3.fromRotationX(-CesiumMath.PI_OVER_TWO), Cartesian3.ZERO);
+
     var ModelState = {
         NEEDS_LOAD : 0,
         LOADING : 1,
@@ -677,13 +679,8 @@ define([
             }
         }
 
-        //Apply rotation from glTF (Y up) to Cesium (Z up).
         var boundingSphere = BoundingSphere.fromCornerPoints(min, max);
-        var center = boundingSphere.center;
-        var tmp = center.y;
-        center.y = center.z;
-        center.z = -tmp;
-
+        Matrix4.multiplyByPointAsVector(yUpToZUp, boundingSphere.center, boundingSphere.center);
         return boundingSphere;
     }
 
@@ -2192,9 +2189,6 @@ define([
         return scale;
     }
 
-    var yUpTozUp = Matrix3.fromRotationX(-CesiumMath.PI_OVER_TWO);
-    var matrix3Scratch = new Matrix3();
-
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -2255,12 +2249,7 @@ define([
                 var scale = getScale(this, context, frameState);
                 var computedModelMatrix = this._computedModelMatrix;
                 Matrix4.multiplyByUniformScale(this.modelMatrix, scale, computedModelMatrix);
-
-                //Apply rotation from glTF (Y up) to Cesium (Z up).
-                var translation = Matrix4.getTranslation(computedModelMatrix, scratchPosition);
-                var rotation = Matrix4.getRotation(computedModelMatrix, matrix3Scratch);
-                Matrix3.multiply(rotation, yUpTozUp, rotation);
-                Matrix4.fromRotationTranslation(rotation, translation, computedModelMatrix);
+                Matrix4.multiplyTransformation(computedModelMatrix, yUpToZUp, computedModelMatrix);
             }
 
             // Update modelMatrix throughout the graph as needed
