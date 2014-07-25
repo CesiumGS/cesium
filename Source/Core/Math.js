@@ -222,6 +222,8 @@ define([
      * Converts a scalar value in the range [-1.0, 1.0] to a 8-bit 2's complement number.
      * @param {Number} value The scalar value in the range [-1.0, 1.0]
      * @returns {Number} The 8-bit 2's complement number, where 0 maps to -1.0 and 255 maps to 1.0.
+     *
+     * @see CesiumMath.fromSNorm
      */
     CesiumMath.toSNorm = function(value) {
         return Math.round((CesiumMath.clamp(value, -1.0, 1.0) * 0.5 + 0.5) * 255.0);
@@ -231,6 +233,8 @@ define([
      * Converts a SNORM value in the range [0, 255] to a scalar in the range [-1.0, 1.0].
      * @param {Number} value SNORM value in the range [0, 255]
      * @returns {Number} Scalar in the range [-1.0, 1.0].
+     *
+     * @see CesiumMath.toSNorm
      */
     CesiumMath.fromSNorm = function(value) {
         return CesiumMath.clamp(value, 0.0, 255.0) / 255.0 * 2.0 - 1.0;
