@@ -31,13 +31,8 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
 var primitives = scene.primitives;
 
-function reset() {
-    primitives.removeAll();
-}
-
 function addBillboard() {
     Sandcastle.declare(addBillboard);
-    reset();
 
     var billboards = scene.primitives.add(new Cesium.BillboardCollection());
     billboards.add({
@@ -48,7 +43,6 @@ function addBillboard() {
 
 function setBillboardProperties() {
     Sandcastle.declare(setBillboardProperties);
-    reset();
 
     var billboards = scene.primitives.add(new Cesium.BillboardCollection());
     billboards.add({
@@ -70,7 +64,6 @@ function setBillboardProperties() {
 
 function changeBillboardProperties() {
     Sandcastle.declare(changeBillboardProperties);
-    reset();
 
     var billboards = scene.primitives.add(new Cesium.BillboardCollection());
 
@@ -87,7 +80,6 @@ function changeBillboardProperties() {
 
 function addMultipleBillboards() {
     Sandcastle.declare(addMultipleBillboards);
-    reset();
 
     var logoUrl = '../images/Cesium_Logo_overlay.png';
     var facilityUrl = '../images/facility.gif';
@@ -109,7 +101,6 @@ function addMultipleBillboards() {
 
 function scaleByDistance() {
     Sandcastle.declare(scaleByDistance);
-    reset();
 
     var billboards = scene.primitives.add(new Cesium.BillboardCollection());
     billboards.add({
@@ -121,7 +112,6 @@ function scaleByDistance() {
 
 function fadeByDistance() {
     Sandcastle.declare(fadeByDistance);
-    reset();
 
     var billboards = scene.primitives.add(new Cesium.BillboardCollection());
     billboards.add({
@@ -133,7 +123,6 @@ function fadeByDistance() {
 
 function offsetByDistance() {
     Sandcastle.declare(offsetByDistance);
-    reset();
     Cesium.when.all([
          Cesium.loadImage('../images/Cesium_Logo_overlay.png'),
          Cesium.loadImage('../images/facility.gif')
@@ -166,7 +155,6 @@ function offsetByDistance() {
 
 function addPointBillboards() {
     Sandcastle.declare(addPointBillboards);
-    reset();
 
     // A white circle is drawn into a 2D canvas.  The canvas is used as
     // a texture for billboards, each of which applies a different color
@@ -209,7 +197,6 @@ function addPointBillboards() {
 
 function addMarkerBillboards() {
     Sandcastle.declare(addMarkerBillboards);
-    reset();
 
     var billboards = scene.primitives.add(new Cesium.BillboardCollection());
 
@@ -248,7 +235,6 @@ function addMarkerBillboards() {
 
 function inReferenceFrame() {
     Sandcastle.declare(inReferenceFrame);
-    reset();
 
     var billboards = scene.primitives.add(new Cesium.BillboardCollection());
     var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
@@ -278,83 +264,77 @@ function inReferenceFrame() {
     });
 }
 
-function createUI() {
-    function selectMenuOption(menu, options) {
-        options[menu.selectedIndex].onselect();
+Sandcastle.addToolbarMenu([{
+    text : 'Add billboard',
+    onselect : function() {
+        addBillboard();
+        Sandcastle.highlight(addBillboard);
     }
+}, {
+    text : 'Set billboard properties at creation',
+    onselect : function() {
+        setBillboardProperties();
+        Sandcastle.highlight(setBillboardProperties);
+    }
+}, {
+    text : 'Change billboard properties',
+    onselect : function() {
+        changeBillboardProperties();
+        Sandcastle.highlight(changeBillboardProperties);
+    }
+}, {
+    text : 'Add multiple billboards',
+    onselect : function() {
+        addMultipleBillboards();
+        Sandcastle.highlight(addMultipleBillboards);
+    }
+}, {
+    text : 'Scale by viewer distance',
+    onselect : function() {
+        scaleByDistance();
+        Sandcastle.highlight(scaleByDistance);
+    }
+}, {
+    text : 'Fade by viewer distance',
+    onselect : function() {
+        fadeByDistance();
+        Sandcastle.highlight(fadeByDistance);
+    }
+}, {
+    text : 'Offset by viewer distance',
+    onselect : function() {
+        offsetByDistance();
+        Sandcastle.highlight(offsetByDistance);
+    }
+}, {
+    text : 'Add point billboards',
+    onselect : function() {
+        addPointBillboards();
+        Sandcastle.highlight(addPointBillboards);
+    }
+}, {
+    text : 'Add marker billboards',
+    onselect : function() {
+        addMarkerBillboards();
+        Sandcastle.highlight(addMarkerBillboards);
+    }
+}, {
+    text : 'Add billboards in reference frame',
+    onselect : function() {
+        inReferenceFrame();
+        Sandcastle.highlight(inReferenceFrame);
+    }
+}]);
 
-    var options = [{
-        text : 'Add billboard',
-        onselect : function() {
-            addBillboard();
-            Sandcastle.highlight(addBillboard);
-        }
-    }, {
-        text : 'Set billboard properties at creation',
-        onselect : function() {
-            setBillboardProperties();
-            Sandcastle.highlight(setBillboardProperties);
-        }
-    }, {
-        text : 'Change billboard properties',
-        onselect : function() {
-            changeBillboardProperties();
-            Sandcastle.highlight(changeBillboardProperties);
-        }
-    }, {
-        text : 'Add multiple billboards',
-        onselect : function() {
-            addMultipleBillboards();
-            Sandcastle.highlight(addMultipleBillboards);
-        }
-    }, {
-        text : 'Scale by viewer distance',
-        onselect : function() {
-            scaleByDistance();
-            Sandcastle.highlight(scaleByDistance);
-        }
-    }, {
-        text : 'Fade by viewer distance',
-        onselect : function() {
-            fadeByDistance();
-            Sandcastle.highlight(fadeByDistance);
-        }
-    }, {
-        text : 'Offset by viewer distance',
-        onselect : function() {
-            offsetByDistance();
-            Sandcastle.highlight(offsetByDistance);
-        }
-    }, {
-        text : 'Add point billboards',
-        onselect : function() {
-            addPointBillboards();
-            Sandcastle.highlight(addPointBillboards);
-        }
-    }, {
-        text : 'Add marker billboards',
-        onselect : function() {
-            addMarkerBillboards();
-            Sandcastle.highlight(addMarkerBillboards);
-        }
-    }, {
-        text : 'Add billboards in reference frame',
-        onselect : function() {
-            inReferenceFrame();
-            Sandcastle.highlight(inReferenceFrame);
-        }
-    }];
 
-    Sandcastle.addToolbarMenu(options, function() {
-        selectMenuOption(this, options);
-    });
-}
+Sandcastle.reset = function () {
+    primitives.removeAll();
+};
 
-createUI();
 addBillboard();
 Sandcastle.highlight(addBillboard);
 //Sandcastle_End
-    Sandcastle.finishedLoading();
+Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
     startup(Cesium);
