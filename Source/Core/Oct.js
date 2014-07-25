@@ -12,7 +12,7 @@ define([
     "use strict";
 
     /**
-     * Oct encoding and decoding fuctions.
+     * Oct encoding and decoding functions.
      *
      * Oct encoding is a compact representation of unit length vectors.  The encoding and decoding functions are low cost, and represent the normalized vector within 1 degree of error.
      * The 'oct' encoding is described in "A Survey of Efficient Representations of Independent Unit Vectors",
