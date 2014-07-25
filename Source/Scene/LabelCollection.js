@@ -81,10 +81,16 @@ define([
         var billboard = glyph.billboard;
         if (defined(billboard)) {
             billboard.show = false;
-            billboard.imageIndex = -1;
+            billboard.image = undefined;
             labelCollection._spareBillboards.push(billboard);
             glyph.billboard = undefined;
         }
+    }
+
+    function addGlyphToTextureAtlas(textureAtlas, id, canvas, glyphTextureInfo) {
+        textureAtlas.addImage(id, canvas).then(function(index, id) {
+            glyphTextureInfo.index = index;
+        });
     }
 
     function rebindAllGlyphs(labelCollection, label) {
@@ -93,7 +99,9 @@ define([
         var glyphs = label._glyphs;
         var glyphsLength = glyphs.length;
 
-        var glyph, glyphIndex, textIndex;
+        var glyph;
+        var glyphIndex;
+        var textIndex;
 
         // if we have more glyphs than needed, unbind the extras.
         if (textLength < glyphsLength) {
@@ -106,7 +114,6 @@ define([
         glyphs.length = textLength;
 
         var glyphTextureCache = labelCollection._glyphTextureCache;
-        var textureAtlas = labelCollection._textureAtlas;
 
         // walk the text looking for new characters (creating new glyphs for each)
         // or changed characters (rebinding existing glyphs)
@@ -134,13 +141,13 @@ define([
             var glyphTextureInfo = glyphTextureCache[id];
             if (!defined(glyphTextureInfo)) {
                 var canvas = createGlyphCanvas(character, font, fillColor, outlineColor, outlineWidth, style, verticalOrigin);
-                var index = -1;
-                if (canvas.width > 0 && canvas.height > 0) {
-                    index = textureAtlas.addImage(canvas);
-                }
 
-                glyphTextureInfo = new GlyphTextureInfo(labelCollection, index, canvas.dimensions);
+                glyphTextureInfo = new GlyphTextureInfo(labelCollection, -1, canvas.dimensions);
                 glyphTextureCache[id] = glyphTextureInfo;
+
+                if (canvas.width > 0 && canvas.height > 0) {
+                    addGlyphToTextureAtlas(labelCollection._textureAtlas, id, canvas, glyphTextureInfo);
+                }
             }
 
             glyph = glyphs[textIndex];
@@ -190,7 +197,7 @@ define([
                 billboard.scale = label._scale;
                 billboard.pickPrimitive = label;
                 billboard.id = label._id;
-                billboard.imageIndex = glyphTextureInfo.index;
+                billboard.image = id;
                 billboard.translucencyByDistance = label._translucencyByDistance;
                 billboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
             }
@@ -356,7 +363,7 @@ define([
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
-         * Draws the bounding sphere for each {@link DrawCommand} in the primitive.
+         * Draws the bounding sphere for each draw command in the primitive.
          * </p>
          *
          * @type {Boolean}
@@ -553,9 +560,7 @@ define([
 
         if (!defined(this._textureAtlas)) {
             this._textureAtlas = new TextureAtlas({
-                scene : {
-                    context : context
-                }
+                context : context
             });
             billboardCollection.textureAtlas = this._textureAtlas;
         }
