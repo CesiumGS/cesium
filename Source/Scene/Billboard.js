@@ -123,10 +123,18 @@ define([
                     imageId = createGuid();
                 }
             }
-            this.setImage(imageId, image);
+
+            this._imageId = imageId;
+            this._image = image;
         }
+
         if (defined(options.imageSubRegion)) {
-            this.setImageSubRegion(imageId, options.imageSubRegion);
+            this._imageId = imageId;
+            this._imageSubRegion = options.imageSubRegion;
+        }
+
+        if (defined(this._billboardCollection._textureAtlas)) {
+            this._loadImage();
         }
     };
 
