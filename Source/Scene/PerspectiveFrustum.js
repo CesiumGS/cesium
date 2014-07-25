@@ -139,6 +139,7 @@ define([
 
         /**
          * Gets the angle of the vertical field of view, in radians.
+         * @memberof PerspectiveFrustum.prototype
          * @type {Number}
          * @default undefined
          */
