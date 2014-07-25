@@ -81,22 +81,13 @@ primitives.add(new Cesium.Primitive({
     appearance : new Cesium.PerInstanceColorAppearance()
 }));
 
-var image = new Image();
-image.onload = function() {
-    var billboards = new Cesium.BillboardCollection();
-    var textureAtlas = new Cesium.TextureAtlas({
-        scene : scene,
-        image : image
-    });
-    billboards.textureAtlas = textureAtlas;
-
-    billboards.add({
-        position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883, 150000),
-        imageIndex : 0
-    });
-    scene.primitives.add(billboards);
-};
-image.src = '../images/Cesium_Logo_overlay.png';
+var billboards = new Cesium.BillboardCollection();
+billboards.add({
+    position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883, 150000),
+    image : '../images/Cesium_Logo_overlay.png'
+});
+scene.primitives.add(billboards);
+    
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

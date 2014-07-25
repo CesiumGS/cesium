@@ -105,14 +105,6 @@ function createTerrainMenu(terrainProviders) {
 
         if (typeof billboards === 'undefined') {
             billboards = new Cesium.BillboardCollection();
-
-            Cesium.when(Cesium.loadImage('../images/facility.gif'), function(image) {
-                var textureAtlas = new Cesium.TextureAtlas({
-                    scene : scene,
-                    images : [image]
-                });
-                billboards.textureAtlas = textureAtlas;
-            });
         } else {
             billboards.removeAll();
         }
@@ -129,7 +121,7 @@ function createTerrainMenu(terrainProviders) {
                 position : ellipsoid.cartographicToCartesian(position),
                 verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
                 scale : 0.7,
-                imageIndex : 0
+                image : '../images/facility.gif'
             });
 
             labels.add({

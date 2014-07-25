@@ -130,7 +130,7 @@ define([
         },
 
         /**
-         * Gets and sets the positions of the polyline.
+         * Gets or sets the positions of the polyline.
          * @memberof Polyline.prototype
          * @type {Cartesian3[]}
          * @example
@@ -170,7 +170,7 @@ define([
         },
 
         /**
-         * Gets and sets the surface appearance of the polyline.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
+         * Gets or sets the surface appearance of the polyline.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
          * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}.
          * @memberof Polyline.prototype
          * @type {Material}
@@ -194,7 +194,7 @@ define([
         },
 
         /**
-         * Gets and sets the width of the polyline.
+         * Gets or sets the width of the polyline.
          * @memberof Polyline.prototype
          * @type {Number}
          */
@@ -218,7 +218,7 @@ define([
         },
 
         /**
-         * Gets and sets whether a line segment will be added between the first and last polyline positions.
+         * Gets or sets whether a line segment will be added between the first and last polyline positions.
          * @memberof Polyline.prototype
          * @type {Boolean}
          */

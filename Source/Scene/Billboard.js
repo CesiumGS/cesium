@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Color',
+        '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -19,6 +20,7 @@ define([
         Cartesian3,
         Cartesian4,
         Color,
+        createGuid,
         defaultValue,
         defined,
         defineProperties,
@@ -80,13 +82,12 @@ define([
         this._show = defaultValue(options.show, true);
         this._position = Cartesian3.clone(defaultValue(options.position, Cartesian3.ZERO));
         this._actualPosition = Cartesian3.clone(this._position); // For columbus view and 2D
-        this._pixelOffset = Cartesian2.clone(defaultValue(options.pixelOffset, Cartesian2.ZERO), new Cartesian2());
+        this._pixelOffset = Cartesian2.clone(defaultValue(options.pixelOffset, Cartesian2.ZERO));
         this._translate = new Cartesian2(0.0, 0.0); // used by labels for glyph vertex translation
         this._eyeOffset = Cartesian3.clone(defaultValue(options.eyeOffset, Cartesian3.ZERO));
         this._verticalOrigin = defaultValue(options.verticalOrigin, VerticalOrigin.CENTER);
         this._horizontalOrigin = defaultValue(options.horizontalOrigin, HorizontalOrigin.CENTER);
         this._scale = defaultValue(options.scale, 1.0);
-        this._imageIndex = defaultValue(options.imageIndex, -1);
         this._color = Color.clone(defaultValue(options.color, Color.WHITE));
         this._rotation = defaultValue(options.rotation, 0.0);
         this._alignedAxis = Cartesian3.clone(defaultValue(options.alignedAxis, Cartesian3.ZERO));
@@ -103,6 +104,38 @@ define([
         this._billboardCollection = billboardCollection;
         this._dirty = false;
         this._index = -1; //Used only by BillboardCollection
+
+        this._imageIndex = -1;
+        this._imageIndexPromise = undefined;
+        this._imageId = undefined;
+        this._image = undefined;
+        this._imageSubRegion = undefined;
+
+        var image = options.image;
+        var imageId = options.imageId;
+        if (defined(image)) {
+            if (!defined(imageId)) {
+                if (typeof image === 'string') {
+                    imageId = image;
+                } else if (defined(image.src)) {
+                    imageId = image.src;
+                } else {
+                    imageId = createGuid();
+                }
+            }
+
+            this._imageId = imageId;
+            this._image = image;
+        }
+
+        if (defined(options.imageSubRegion)) {
+            this._imageId = imageId;
+            this._imageSubRegion = options.imageSubRegion;
+        }
+
+        if (defined(this._billboardCollection._textureAtlas)) {
+            this._loadImage();
+        }
     };
 
     var SHOW_INDEX = Billboard.SHOW_INDEX = 0;
@@ -155,7 +188,7 @@ define([
         },
 
         /**
-        * Gets and sets the Cartesian position of this billboard.
+        * Gets or sets the Cartesian position of this billboard.
         * @memberof Billboard.prototype
         * @type {Cartesian3}
         */
@@ -181,7 +214,7 @@ define([
         },
 
         /**
-         * Gets and sets the pixel offset in screen space from the origin of this billboard.  This is commonly used
+         * Gets or sets the pixel offset in screen space from the origin of this billboard.  This is commonly used
          * to align multiple billboards and labels at the same position, e.g., an image and text.  The
          * screen space origin is the top, left corner of the canvas; <code>x</code> increases from
          * left to right, and <code>y</code> increases from top to bottom.
@@ -216,7 +249,7 @@ define([
         },
 
         /**
-         * Gets and sets near and far scaling properties of a Billboard based on the billboard's distance from the camera.
+         * Gets or sets near and far scaling properties of a Billboard based on the billboard's distance from the camera.
          * A billboard's scale will interpolate between the {@link NearFarScalar#nearValue} and
          * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
          * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
@@ -257,7 +290,7 @@ define([
         },
 
         /**
-         * Gets and sets near and far translucency properties of a Billboard based on the billboard's distance from the camera.
+         * Gets or sets near and far translucency properties of a Billboard based on the billboard's distance from the camera.
          * A billboard's translucency will interpolate between the {@link NearFarScalar#nearValue} and
          * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
          * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
@@ -298,7 +331,7 @@ define([
         },
 
         /**
-         * Gets and sets near and far pixel offset scaling properties of a Billboard based on the billboard's distance from the camera.
+         * Gets or sets near and far pixel offset scaling properties of a Billboard based on the billboard's distance from the camera.
          * A billboard's pixel offset will be scaled between the {@link NearFarScalar#nearValue} and
          * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
          * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
@@ -340,7 +373,7 @@ define([
         },
 
         /**
-         * Gets and sets the 3D Cartesian offset applied to this billboard in eye coordinates.  Eye coordinates is a left-handed
+         * Gets or sets the 3D Cartesian offset applied to this billboard in eye coordinates.  Eye coordinates is a left-handed
          * coordinate system, where <code>x</code> points towards the viewer's right, <code>y</code> points up, and
          * <code>z</code> points into the screen.  Eye coordinates use the same scale as world and model coordinates,
          * which is typically meters.
@@ -381,7 +414,7 @@ define([
         },
 
         /**
-         * Gets and sets the horizontal origin of this billboard, which determines if the billboard is
+         * Gets or sets the horizontal origin of this billboard, which determines if the billboard is
          * to the left, center, or right of its position.
          * <br /><br />
          * <div align='center'>
@@ -413,7 +446,7 @@ define([
         },
 
         /**
-         * Gets and sets the vertical origin of this billboard, which determines if the billboard is
+         * Gets or sets the vertical origin of this billboard, which determines if the billboard is
          * to the above, below, or at the center of its position.
          * <br /><br />
          * <div align='center'>
@@ -445,7 +478,7 @@ define([
         },
 
         /**
-         * Gets and sets the uniform scale that is multiplied with the billboard's image size in pixels.
+         * Gets or sets the uniform scale that is multiplied with the billboard's image size in pixels.
          * A scale of <code>1.0</code> does not change the size of the billboard; a scale greater than
          * <code>1.0</code> enlarges the billboard; a positive scale less than <code>1.0</code> shrinks
          * the billboard.
@@ -477,30 +510,7 @@ define([
         },
 
         /**
-         * Gets and sets the image index
-         * @memberof Billboard.prototype
-         * @type {Number}
-         */
-        imageIndex : {
-            get : function() {
-                return this._imageIndex;
-            },
-            set : function(value) {
-                //>>includeStart('debug', pragmas.debug);
-                if (typeof value !== 'number') {
-                    throw new DeveloperError('value is required and must be a number.');
-                }
-                //>>includeEnd('debug');
-
-                if (this._imageIndex !== value) {
-                    this._imageIndex = value;
-                    makeDirty(this, IMAGE_INDEX_INDEX);
-                }
-            }
-        },
-
-        /**
-         * Gets and sets the color that is multiplied with the billboard's texture.  This has two common use cases.  First,
+         * Gets or sets the color that is multiplied with the billboard's texture.  This has two common use cases.  First,
          * the same white texture may be used by many different billboards, each with a different color, to create
          * colored billboards.  Second, the color's alpha component can be used to make the billboard translucent as shown below.
          * An alpha of <code>0.0</code> makes the billboard transparent, and <code>1.0</code> makes the billboard opaque.
@@ -546,7 +556,7 @@ define([
         },
 
         /**
-         * Gets and sets the rotation angle in radians.
+         * Gets or sets the rotation angle in radians.
          * @memberof Billboard.prototype
          * @type {Number}
          */
@@ -569,7 +579,7 @@ define([
         },
 
         /**
-         * Gets and sets the aligned axis in world space. The aligned axis is the unit vector that the billboard up vector points towards.
+         * Gets or sets the aligned axis in world space. The aligned axis is the unit vector that the billboard up vector points towards.
          * The default is the zero vector, which means the billboard is aligned to the screen up vector.
          * @memberof Billboard.prototype
          * @type {Cartesian3}
@@ -609,7 +619,7 @@ define([
         },
 
         /**
-         * Gets and sets a width for the billboard. If undefined, the image width will be used.
+         * Gets or sets a width for the billboard. If undefined, the image width will be used.
          * @memberof Billboard.prototype
          * @type {Number}
          */
@@ -626,7 +636,7 @@ define([
         },
 
         /**
-         * Gets and sets a height for the billboard. If undefined, the image height will be used.
+         * Gets or sets a height for the billboard. If undefined, the image height will be used.
          * @memberof Billboard.prototype
          * @type {Number}
          */
@@ -674,6 +684,69 @@ define([
                     this._pickId.object.primitive = value;
                 }
             }
+        },
+
+        /**
+         * <p>
+         * Gets or sets the image to be used for this billboard.  If a texture has already been created for the
+         * given image, the existing texture is used.
+         * </p>
+         * <p>
+         * This property can be set to a loaded Image, a URL which will be loaded as an Image automatically,
+         * or another billboard's image property (from the same billboard collection).
+         * </p>
+         *
+         * @memberof Billboard.prototype
+         * @type {String}
+         * @example
+         * // load an image from a URL
+         * b.image = 'some/image/url.png';
+         *
+         * // assuming b1 and b2 are billboards in the same billboard collection,
+         * // use the same image for both billboards.
+         * b2.image = b1.image;
+         */
+        image : {
+            get : function() {
+                return this._imageId;
+            },
+            set : function(value) {
+                this._imageIndex = -1;
+                this._imageSubRegion = undefined;
+
+                if (!defined(value)) {
+                    this._imageId = undefined;
+                    this._image = undefined;
+                    if (defined(this._imageIndexPromise)) {
+                        this._imageIndexPromise.cancelled = true;
+                    }
+                    this._imageIndexPromise = undefined;
+                    makeDirty(this, IMAGE_INDEX_INDEX);
+                } else if (typeof value === 'string') {
+                    this.setImage(value, value);
+                } else if (defined(value.src)) {
+                    this.setImage(value.src, value);
+                } else {
+                    this.setImage(createGuid(), value);
+                }
+            }
+        },
+
+        /**
+         * When <code>true</code>, this billboard is ready to render, i.e., the image
+         * has been downloaded and the WebGL resources are created.
+         *
+         * @memberof Billboard.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default false
+         */
+        ready : {
+            get : function() {
+                return this._imageIndex !== -1;
+            }
         }
     });
 
@@ -687,6 +760,126 @@ define([
         }
 
         return this._pickId;
+    };
+
+    Billboard.prototype._loadImage = function() {
+        var atlas = this._billboardCollection._textureAtlas;
+
+        if (defined(this._imageIndexPromise)) {
+            // if an async load is in progress, mark it as cancelled
+            // so that the index will be ignored when it loads
+            this._imageIndexPromise.cancelled = true;
+        }
+
+        var imageIndexPromise;
+        if (defined(this._image)) {
+            imageIndexPromise = atlas.addImage(this._imageId, this._image);
+        }
+        if (defined(this._imageSubRegion)) {
+            imageIndexPromise = atlas.addSubRegion(this._imageId, this._imageSubRegion);
+        }
+
+        this._imageIndexPromise = imageIndexPromise;
+
+        if (!defined(imageIndexPromise)) {
+            return;
+        }
+
+        var that = this;
+        imageIndexPromise.then(function(index) {
+            if (imageIndexPromise.cancelled) {
+                // another load occurred before this one finished, ignore the index
+                return;
+            }
+            that._imageIndex = index;
+            that._ready = true;
+            makeDirty(that, IMAGE_INDEX_INDEX);
+            that._image = undefined;
+            that._imageSubRegion = undefined;
+            that._imageIndexPromise = undefined;
+        }).otherwise(function(error) {
+            /*global console*/
+            console.error('Error loading image for billboard: ' + error);
+            that._imageIndexPromise = undefined;
+        });
+    };
+
+    /**
+     * <p>
+     * Sets the image to be used for this billboard.  If a texture has already been created for the
+     * given id, the existing texture is used.
+     * </p>
+     * <p>
+     * This function is useful for dynamically creating textures that are shared across many billboards.
+     * Only the first billboard will actually call the function and create the texture, while subsequent
+     * billboards created with the same id will simply re-use the existing texture.
+     * </p>
+     * <p>
+     * To load an image from a URL, setting the {@link Billboard#image} property is more convenient.
+     * </p>
+     *
+     * @param {String} id The id of the image.  This can be any string that uniquely identifies the image.
+     * @param {Image|Canvas|String|Billboard~CreateImageCallback} image The image to load.  This parameter
+     *        can either be a loaded Image or Canvas, a URL which will be loaded as an Image automatically,
+     *        or a function which will be called to create the image if it hasn't been loaded already.
+     * @example
+     * // create a billboard image dynamically
+     * function drawImage(id) {
+     *   // create and draw an image using a canvas
+     *   var canvas = document.createElement('canvas');
+     *   var context2D = canvas.getContext('2d');
+     *   // ... draw image
+     *   return canvas;
+     * }
+     * // drawImage will be called to create the texture
+     * b.setImage('myImage', drawImage);
+     *
+     * // subsequent billboards created in the same collection using the same id will use the existing
+     * // texture, without the need to create the canvas or draw the image
+     * b2.setImage('myImage', drawImage);
+     */
+    Billboard.prototype.setImage = function(id, image) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(id)) {
+            throw new DeveloperError('id is required.');
+        }
+        if (!defined(image)) {
+            throw new DeveloperError('image is required.');
+        }
+        //>>includeEnd('debug');
+
+        this._imageId = id;
+        this._image = image;
+
+        if (defined(this._billboardCollection._textureAtlas)) {
+            this._loadImage();
+        }
+    };
+
+    /**
+     * Uses a sub-region of the image with the given id as the image for this billboard.
+     *
+     * @param {String} id The id of the image to use.
+     * @param {BoundingRectangle} subRegion The sub-region of the image.
+     *
+     * @exception {RuntimeError} image with id must be in the atlas
+     */
+    Billboard.prototype.setImageSubRegion = function(id, subRegion) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(id)) {
+            throw new DeveloperError('id is required.');
+        }
+        if (!defined(subRegion)) {
+            throw new DeveloperError('subRegion is required.');
+        }
+        //>>includeEnd('debug');
+
+        this._imageId = id;
+        this._imageSubRegion = subRegion;
+
+        if (defined(this._billboardCollection._textureAtlas)) {
+            this._loadImage();
+        }
     };
 
     Billboard.prototype._setTranslate = function(value) {
@@ -827,6 +1020,13 @@ define([
         this._pickId = this._pickId && this._pickId.destroy();
         this._billboardCollection = undefined;
     };
+
+    /**
+     * A function that creates an image.
+     * @callback Billboard~CreateImageCallback
+     * @param {String} id The identifier of the image to load.
+     * @returns {Image|Canvas|Promise} The image, or a promise that will resolve to an image.
+     */
 
     return Billboard;
 });
