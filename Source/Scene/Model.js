@@ -680,8 +680,7 @@ define([
         }
 
         var boundingSphere = BoundingSphere.fromCornerPoints(min, max);
-        Matrix4.multiplyByPointAsVector(yUpToZUp, boundingSphere.center, boundingSphere.center);
-        return boundingSphere;
+        return BoundingSphere.transformWithoutScale(boundingSphere, yUpToZUp, boundingSphere);
     }
 
     ///////////////////////////////////////////////////////////////////////////
