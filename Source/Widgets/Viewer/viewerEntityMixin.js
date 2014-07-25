@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../../Core/BoundingSphere',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/DeveloperError',
@@ -13,7 +12,6 @@ define([
         '../../ThirdParty/knockout',
         '../subscribeAndEvaluate'
     ], function(
-        BoundingSphere,
         defaultValue,
         defined,
         DeveloperError,

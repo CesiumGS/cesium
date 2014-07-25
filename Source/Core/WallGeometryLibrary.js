@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        './Cartesian3',
         './Cartographic',
         './defined',
         './DeveloperError',
@@ -10,7 +9,6 @@ define([
         './PolylinePipeline',
         './WindingOrder'
     ], function(
-        Cartesian3,
         Cartographic,
         defined,
         DeveloperError,

@@ -1,7 +1,6 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
-        '../Core/Color',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -11,7 +10,6 @@ define([
         '../Core/ReferenceFrame',
         '../Core/TimeInterval',
         '../Core/Transforms',
-        '../Scene/Material',
         '../Scene/PolylineCollection',
         '../Scene/SceneMode',
         './CompositePositionProperty',
@@ -23,7 +21,6 @@ define([
         './TimeIntervalCollectionPositionProperty'
     ], function(
         Cartesian3,
-        Color,
         defined,
         destroyObject,
         DeveloperError,
@@ -33,7 +30,6 @@ define([
         ReferenceFrame,
         TimeInterval,
         Transforms,
-        Material,
         PolylineCollection,
         SceneMode,
         CompositePositionProperty,
