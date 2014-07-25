@@ -12,7 +12,11 @@ define([
     "use strict";
 
     /**
-     * Oct encoding functions.
+     * Oct encoding and decoding fuctions.
+     *
+     * Oct encoding is a compact representation of unit length vectors.  The encoding and decoding functions are low cost, and represent the normalized vector within 1 degree of error.
+     * The 'oct' encoding is described in "A Survey of Efficient Representations of Independent Unit Vectors",
+     * Cigolle et al 2014: {@link http://jcgt.org/published/0003/02/01/}
      *
      * @namespace
      * @alias Oct
@@ -21,8 +25,6 @@ define([
 
     /**
      * Encodes a normalized vector into 2 SNORM values in the range of [0-255] following the 'oct' encoding.
-     * The 'oct' encoding is described in "A Survey of Efficient Representations of Independent Unit Vectors",
-     * Cigolle et al 2014: {@link http://jcgt.org/published/0003/02/01/}
      *
      * @param {Cartesian3} vector The normalized vector to be compressed into 2 byte 'oct' encoding.
      * @param {Cartesian2} result The 2 byte oct-encoded unit length vector.
@@ -59,8 +61,6 @@ define([
 
     /**
      * Decodes a unit-length vector in 'oct' encoding to a normalized 3-component vector.
-     * The 'oct' encoding is described in "A Survey of Efficient Representations of Independent Unit Vectors",
-     * Cigolle et al 2014: {@link http://jcgt.org/published/0003/02/01/}
      *
      * @param {Number} x The x component of the oct-encoded unit length vector.
      * @param {Number} y The y component of the oct-encoded unit length vector.
