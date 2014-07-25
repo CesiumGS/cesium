@@ -63,7 +63,7 @@ defineSuite([
     function addZoomTo(model) {
         model.zoomTo = function() {
             var center = Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cartesian3());
-            var transform = Transforms.eastNorthUpToFixedFrame(center);
+            var transform = Transforms.northEastDownToFixedFrame(center);
 
             // View in east-north-up frame
             var camera = scene.camera;
@@ -73,7 +73,7 @@ defineSuite([
             // Zoom in
             var r = Math.max(model.boundingSphere.radius, camera.frustum.near);
             camera.lookAt(
-                new Cartesian3(0.0, -r, r),
+                new Cartesian3(r, r, r),
                 Cartesian3.ZERO,
                 Cartesian3.UNIT_Z);
         };
