@@ -59,6 +59,9 @@ define([
      *
      * @constructor
      *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera.html|Cesium Sandcastle Camera Demo}
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera%20Tutorial.html">Sandcastle Example</a> from the <a href="http://cesiumjs.org/2013/02/13/Cesium-Camera-Tutorial/|Camera Tutorial}
+     *
      * @example
      * // Create a camera looking down the negative z-axis, positioned at the origin,
      * // with a field of view of 60 degrees, and 1:1 aspect ratio.
@@ -69,9 +72,6 @@ define([
      * camera.frustum.fov = Cesium.Math.PI_OVER_THREE;
      * camera.frustum.near = 1.0;
      * camera.frustum.far = 2.0;
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera.html|Cesium Sandcastle Camera Demo}
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera.html">Sandcastle Example</a> from the <a href="http://cesiumjs.org/2013/02/13/Cesium-Camera-Tutorial/|Camera Tutorial}
      */
     var Camera = function(scene) {
         //>>includeStart('debug', pragmas.debug);
@@ -215,15 +215,32 @@ define([
         Cartesian3.multiplyByScalar(this.position, mag, this.position);
     };
 
+    /**
+     * @private
+     */
     Camera.TRANSFORM_2D = new Matrix4(
         0.0, 0.0, 1.0, 0.0,
         1.0, 0.0, 0.0, 0.0,
         0.0, 1.0, 0.0, 0.0,
         0.0, 0.0, 0.0, 1.0);
 
+    /**
+     * @private
+     */
     Camera.TRANSFORM_2D_INVERSE = Matrix4.inverseTransformation(Camera.TRANSFORM_2D, new Matrix4());
 
+    /**
+     * The default extent the camera will view on creation.
+     * @type Rectangle
+     */
     Camera.DEFAULT_VIEW_RECTANGLE = Rectangle.fromDegrees(-95.0, -20.0, -70.0, 90.0);
+
+    /**
+     * A scalar to multiply to the camera position and add it back after setting the camera to view the rectangle.
+     * A value of zero means the camera will view the entire {@link Camera#DEFAULT_VIEW_RECTANGLE}, a value greater than zero
+     * will move it further away from the extent, and a value less than zero will move it close to the extent.
+     * @type Number
+     */
     Camera.DEFAULT_VIEW_FACTOR = 0.5;
 
     function updateViewMatrix(camera) {

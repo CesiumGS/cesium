@@ -284,6 +284,8 @@ define([
      *
      * @see RectangleOutlineGeometry#createGeometry
      *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Rectangle%20Outline.html|Cesium Sandcastle Rectangle Outline Demo}
+     *
      * @example
      * var rectangle = new Cesium.RectangleOutlineGeometry({
      *   ellipsoid : Cesium.Ellipsoid.WGS84,

@@ -5,6 +5,7 @@ defineSuite([
         'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/Event',
+        'Core/JulianDate',
         'DataSources/EntityCollection',
         'ThirdParty/when'
     ], function(
@@ -13,10 +14,13 @@ defineSuite([
         Cartographic,
         Ellipsoid,
         Event,
+        JulianDate,
         EntityCollection,
         when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+
+    var time = new JulianDate();
 
     function coordinatesToCartesian(coordinates) {
         return Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(coordinates[0], coordinates[1]));
@@ -220,7 +224,7 @@ defineSuite([
         });
         runs(function() {
             var pointObject = entityCollection.entities[0];
-            expect(pointObject.geoJson).toBe(featureNullGeometry);
+            expect(pointObject.properties).toBe(featureNullGeometry.properties);
             expect(pointObject.position).toBeUndefined();
         });
     });
@@ -235,8 +239,8 @@ defineSuite([
         });
         runs(function() {
             var pointObject = entityCollection.entities[0];
-            expect(pointObject.geoJson).toBe(feature);
-            expect(pointObject.position.getValue()).toEqual(coordinatesToCartesian(feature.geometry.coordinates));
+            expect(pointObject.properties).toBe(feature.properties);
+            expect(pointObject.position.getValue(time)).toEqual(coordinatesToCartesian(feature.geometry.coordinates));
             expect(pointObject.point).toBeDefined();
         });
     });
@@ -252,8 +256,8 @@ defineSuite([
         runs(function() {
             var pointObject = entityCollection.entities[0];
             expect(pointObject.name).toBeUndefined();
-            expect(pointObject.geoJson).toBe(featureWithNullName);
-            expect(pointObject.position.getValue()).toEqual(coordinatesToCartesian(featureWithNullName.geometry.coordinates));
+            expect(pointObject.properties).toBe(featureWithNullName.properties);
+            expect(pointObject.position.getValue(time)).toEqual(coordinatesToCartesian(featureWithNullName.geometry.coordinates));
             expect(pointObject.point).toBeDefined();
         });
     });
@@ -284,8 +288,8 @@ defineSuite([
         });
         runs(function() {
             var pointObject = entityCollection.entities[0];
-            expect(pointObject.geoJson).toBe(point);
-            expect(pointObject.position.getValue()).toEqual(coordinatesToCartesian(point.coordinates));
+            expect(pointObject.properties).toBe(point.properties);
+            expect(pointObject.position.getValue(time)).toEqual(coordinatesToCartesian(point.coordinates));
             expect(pointObject.point).toBeDefined();
         });
     });
@@ -303,8 +307,8 @@ defineSuite([
             var expectedPositions = coordinatesArrayToCartesian(multiPoint.coordinates);
             for ( var i = 0; i < multiPoint.coordinates.length; i++) {
                 var object = objects[i];
-                expect(object.geoJson).toBe(multiPoint);
-                expect(object.position.getValue()).toEqual(expectedPositions[i]);
+                expect(object.properties).toBe(multiPoint.properties);
+                expect(object.position.getValue(time)).toEqual(expectedPositions[i]);
                 expect(object.point).toBeDefined();
             }
         });
@@ -320,8 +324,8 @@ defineSuite([
         });
         runs(function() {
             var object = entityCollection.entities[0];
-            expect(object.geoJson).toBe(lineString);
-            expect(object.polyline.positions.getValue()).toEqual(coordinatesArrayToCartesian(lineString.coordinates));
+            expect(object.properties).toBe(lineString.properties);
+            expect(object.polyline.positions.getValue(time)).toEqual(coordinatesArrayToCartesian(lineString.coordinates));
         });
     });
 
@@ -338,8 +342,8 @@ defineSuite([
             var lines = multiLineToCartesian(multiLineString);
             for ( var i = 0; i < multiLineString.coordinates.length; i++) {
                 var object = objects[i];
-                expect(object.geoJson).toBe(multiLineString);
-                expect(object.polyline.positions.getValue()).toEqual(lines[i]);
+                expect(object.properties).toBe(multiLineString.properties);
+                expect(object.polyline.positions.getValue(time)).toEqual(lines[i]);
             }
         });
     });
@@ -354,8 +358,8 @@ defineSuite([
         });
         runs(function() {
             var object = entityCollection.entities[0];
-            expect(object.geoJson).toBe(polygon);
-            expect(object.polygon.positions.getValue()).toEqual(polygonCoordinatesToCartesian(polygon.coordinates));
+            expect(object.properties).toBe(polygon.properties);
+            expect(object.polygon.positions.getValue(time)).toEqual(polygonCoordinatesToCartesian(polygon.coordinates));
         });
     });
 
@@ -369,8 +373,8 @@ defineSuite([
         });
         runs(function() {
             var object = entityCollection.entities[0];
-            expect(object.geoJson).toBe(polygonWithHoles);
-            expect(object.polygon.positions.getValue()).toEqual(polygonCoordinatesToCartesian(polygonWithHoles.coordinates));
+            expect(object.properties).toBe(polygonWithHoles.properties);
+            expect(object.polygon.positions.getValue(time)).toEqual(polygonCoordinatesToCartesian(polygonWithHoles.coordinates));
         });
     });
 
@@ -387,8 +391,8 @@ defineSuite([
             var positions = multiPolygonCoordinatesToCartesian(multiPolygon.coordinates);
             for ( var i = 0; i < multiPolygon.coordinates.length; i++) {
                 var object = objects[i];
-                expect(object.geoJson).toBe(multiPolygon);
-                expect(object.polygon.positions.getValue()).toEqual(positions[i]);
+                expect(object.properties).toBe(multiPolygon.properties);
+                expect(object.polygon.positions.getValue(time)).toEqual(positions[i]);
             }
         });
     });
@@ -405,11 +409,11 @@ defineSuite([
             var objects = entityCollection.entities;
 
             var polygon = objects[0];
-            expect(polygon.geoJson.properties).toBe(topoJson.objects.polygon.properties);
+            expect(polygon.properties).toBe(topoJson.objects.polygon.properties);
             expect(polygon.polygon.positions).toBeDefined();
 
             var lineString = objects[1];
-            expect(lineString.geoJson.properties).toBe(topoJson.objects.lineString.properties);
+            expect(lineString.properties).toBe(topoJson.objects.lineString.properties);
             expect(lineString.polyline).toBeDefined();
         });
     });
@@ -439,13 +443,13 @@ defineSuite([
         });
         runs(function() {
             var object = entityCollection.entities[0];
-            expect(object.geoJson).toBe(geometryCollection);
-            expect(object.position.getValue()).toEqual(coordinatesToCartesian(geometryCollection.geometries[0].coordinates));
+            expect(object.properties).toBe(geometryCollection.properties);
+            expect(object.position.getValue(time)).toEqual(coordinatesToCartesian(geometryCollection.geometries[0].coordinates));
             expect(object.point).toBeDefined();
 
             object = entityCollection.entities[1];
-            expect(object.geoJson).toBe(geometryCollection);
-            expect(object.polyline.positions.getValue()).toEqual(coordinatesArrayToCartesian(geometryCollection.geometries[1].coordinates));
+            expect(object.properties).toBe(geometryCollection.properties);
+            expect(object.polyline.positions.getValue(time)).toEqual(coordinatesArrayToCartesian(geometryCollection.geometries[1].coordinates));
         });
     });
 
@@ -459,7 +463,7 @@ defineSuite([
         });
         runs(function() {
             var pointObject = entityCollection.entities[0];
-            expect(pointObject.position.getValue()).toEqual(coordinatesToCartesian(point.coordinates));
+            expect(pointObject.position.getValue(time)).toEqual(coordinatesToCartesian(point.coordinates));
         });
     });
 
@@ -484,7 +488,7 @@ defineSuite([
         });
         runs(function() {
             var pointObject = entityCollection.entities[0];
-            expect(pointObject.position.getValue()).toEqual(projectedPosition);
+            expect(pointObject.position.getValue(time)).toEqual(projectedPosition);
         });
     });
 
@@ -498,7 +502,7 @@ defineSuite([
         });
         runs(function() {
             var pointObject = entityCollection.entities[0];
-            expect(pointObject.position.getValue()).toEqual(coordinatesToCartesian(point.coordinates));
+            expect(pointObject.position.getValue(time)).toEqual(coordinatesToCartesian(point.coordinates));
         });
     });
 

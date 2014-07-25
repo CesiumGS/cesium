@@ -317,6 +317,8 @@ define([
      *
      * @see CorridorOutlineGeometry.createGeometry
      *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Corridor%20Outline.html|Cesium Sandcastle Corridor Outline Demo}
+     *
      * @example
      * var corridor = new Cesium.CorridorOutlineGeometry({
      *   positions : Cesium.Cartesian3.fromDegreesArray([-72.0, 40.0, -70.0, 35.0]),

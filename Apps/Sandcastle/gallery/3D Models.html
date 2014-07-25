@@ -33,7 +33,7 @@ var scene = viewer.scene;
 function createModel(url, height) {
     height = Cesium.defaultValue(height, 0.0);
 
-    var modelMatrix = Cesium.Transforms.northUpEastToFixedFrame(Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height));
+    var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height));
     
     scene.primitives.removeAll(); // Remove previous model
     var model = scene.primitives.add(Cesium.Model.fromGltf({
@@ -56,8 +56,8 @@ function createModel(url, height) {
         camera.transform = transform;
         camera.constrainedAxis = Cesium.Cartesian3.UNIT_Y;
         var controller = scene.screenSpaceCameraController;
-        var r = 1.25 * Math.max(model.boundingSphere.radius, camera.frustum.near);
-        controller.minimumZoomDistance = r * 0.25;
+        var r = 2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
+        controller.minimumZoomDistance = r * 0.5;
         camera.lookAt(new Cesium.Cartesian3(r, r, r), Cesium.Cartesian3.ZERO, Cesium.Cartesian3.UNIT_Y);
     });
 }

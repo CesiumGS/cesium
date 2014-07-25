@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="A simple CZML example showing four satellites in orbit around the Earth, and some ground objects.">
-    <meta name="cesium-sandcastle-labels" content="Showcases">
+    <meta name="cesium-sandcastle-labels" content="Showcases, DataSources">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
@@ -68,8 +68,11 @@ Sandcastle.addToolbarButton('Vehicle', function() {
 });
 
 var builtInCzml = [{
+    "id" : "document",
+    "version" : "1.0"
+}, {
     "id" : "Vehicle",
-    "availability" : "2012-08-04T16:00:00Z/2012-08-04T17:04:54.9962195740191Z",
+    "availability" : "2012-08-04T16:00:00Z/2012-08-04T17:04:54Z",
     "billboard" : {
         "eyeOffset" : {
             "cartesian" : [0.0, 0.0, 0.0]
@@ -79,7 +82,7 @@ var builtInCzml = [{
         "pixelOffset" : {
             "cartesian2" : [0.0, 0.0]
         },
-        "scale" : 0.8333333333333334,
+        "scale" : 0.8,
         "show" : [{
             "interval" : "2012-08-04T16:00:00Z/2012-08-04T18:00:00Z",
             "boolean" : true
@@ -109,8 +112,8 @@ var builtInCzml = [{
         "verticalOrigin" : "CENTER"
     },
     "path" : {
-        "material":{
-            "solidColor":{
+        "material" : {
+            "solidColor" : {
                 "color" : [{
                     "interval" : "2012-08-04T16:00:00Z/2012-08-04T18:00:00Z",
                     "rgba" : [255, 255, 0, 255]
@@ -132,7 +135,7 @@ var builtInCzml = [{
         "epoch" : "2012-08-04T16:00:00Z",
         // Trimmed to just 2 points
         "cartesian" : [0.0, -2379754.6637012, -4665332.88013588, 3628133.68924173,
-                       3894.996219574019, -2291336.52323822, -4682359.21232197, 3662718.52171165]
+                       3894.0, -2291336.52323822, -4682359.21232197, 3662718.52171165]
     }
 }];
 

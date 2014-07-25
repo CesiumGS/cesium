@@ -331,10 +331,6 @@ define([
         case HorizontalOrigin:
             return HorizontalOrigin[defaultValue(czmlInterval.horizontalOrigin, czmlInterval)];
         case Image:
-            // Backwards compatibility: new files use 'uri', old files use 'image'
-            if (defined(czmlInterval.image)) {
-                return unwrapImageInterval(czmlInterval, sourceUri);
-            }
             return unwrapUriInterval(czmlInterval, sourceUri);
         case JulianDate:
             return JulianDate.fromIso8601(defaultValue(czmlInterval.date, czmlInterval));
@@ -347,23 +343,7 @@ define([
         case Array:
             return czmlInterval.array;
         case Quaternion:
-            //TODO: Currently Quaternion convention in CZML is the opposite of what Cesium expects.
-            //To avoid unecessary CZML churn, we conjugate manually for now.  During the next big CZML
-            //update, we should remove this code and change the convention.
-            var unitQuaternion = czmlInterval.unitQuaternion;
-            if (defined(unitQuaternion)) {
-                if (unitQuaternion.length === 4) {
-                    return [-unitQuaternion[0], -unitQuaternion[1], -unitQuaternion[2], unitQuaternion[3]];
-                }
-
-                unitQuaternion = unitQuaternion.slice(0);
-                for (var i = 0; i < unitQuaternion.length; i += 5) {
-                    unitQuaternion[i + 1] = -unitQuaternion[i + 1];
-                    unitQuaternion[i + 2] = -unitQuaternion[i + 2];
-                    unitQuaternion[i + 3] = -unitQuaternion[i + 3];
-                }
-            }
-            return unitQuaternion;
+            return czmlInterval.unitQuaternion;
         case Rectangle:
             return unwrapRectangleInterval(czmlInterval);
         case Uri:
@@ -977,22 +957,6 @@ define([
         iso8601 : undefined
     };
 
-    // TODO: pixelOffset origin in CZML is bottom-left, Cesium is now top-left.
-    // Remove this when CZML 1.0 changes this
-    function flipPixelOffsetOrigin(pixelOffsetData) {
-        var cartesian2 = pixelOffsetData.cartesian2;
-        if (cartesian2.length === 2) {
-            cartesian2 = [cartesian2[0], -cartesian2[1]];
-        } else {
-            cartesian2 = cartesian2.slice(0);
-            for (var i = 0; i < cartesian2.length; i += 3) {
-                cartesian2[i + 2] = -cartesian2[i + 2];
-            }
-        }
-
-        pixelOffsetData.cartesian2 = cartesian2;
-    }
-
     function processBillboard(entity, packet, entityCollection, sourceUri) {
         var billboardData = packet.billboard;
         if (!defined(billboardData)) {
@@ -1015,13 +979,6 @@ define([
         processPacketData(Cartesian3, billboard, 'eyeOffset', billboardData.eyeOffset, interval, sourceUri, entityCollection);
         processPacketData(HorizontalOrigin, billboard, 'horizontalOrigin', billboardData.horizontalOrigin, interval, sourceUri, entityCollection);
         processPacketData(Image, billboard, 'image', billboardData.image, interval, sourceUri, entityCollection);
-
-        // TODO: pixelOffset origin in CZML is bottom-left, Cesium is now top-left.
-        // Until CZML 1.0 flips this, flip the value here
-        if (defined(billboardData.pixelOffset)) {
-            flipPixelOffsetOrigin(billboardData.pixelOffset);
-        }
-
         processPacketData(Cartesian2, billboard, 'pixelOffset', billboardData.pixelOffset, interval, sourceUri, entityCollection);
         processPacketData(Number, billboard, 'scale', billboardData.scale, interval, sourceUri, entityCollection);
         processPacketData(Number, billboard, 'rotation', billboardData.rotation, interval, sourceUri, entityCollection);
@@ -1030,39 +987,48 @@ define([
         processPacketData(VerticalOrigin, billboard, 'verticalOrigin', billboardData.verticalOrigin, interval, sourceUri, entityCollection);
     }
 
-    function processClock(entity, packet, entityCollection, sourceUri) {
-        var clockPacket = packet.clock;
-        if (!defined(clockPacket) || entity.id !== 'document') {
-            return;
+    function processDocument(packet, dataSource) {
+        var version = packet.version;
+        if (defined(version)) {
+            if (typeof version === 'string') {
+                var tokens = version.split('.');
+                if (tokens.length === 2) {
+                    if (tokens[0] !== '1') {
+                        throw new RuntimeError('Cesium only supports CZML version 1.');
+                    }
+                    dataSource._version = version;
+                }
+            }
         }
 
-        var clock = entity.clock;
-        if (!defined(clock)) {
-            clock = new DataSourceClock();
-            clock.startTime = Iso8601.MAXIMUM_INTERVAL.start;
-            clock.stopTime = Iso8601.MAXIMUM_INTERVAL.stop;
-            clock.clockRange = ClockRange.LOOP_STOP;
-            clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-            clock.multiplier = 1.0;
-            entity.clock = clock;
+        if (!defined(dataSource._version)) {
+            throw new RuntimeError('CZML version information invalid.  It is expected to be a property on the document object in the <Major>.<Minor> version format.');
         }
-        if (defined(clockPacket.interval)) {
-            iso8601Scratch.iso8601 = clockPacket.interval;
-            var interval = TimeInterval.fromIso8601(iso8601Scratch);
-            clock.startTime = interval.start;
-            clock.stopTime = interval.stop;
+
+        var documentPacket = dataSource._documentPacket;
+
+        if (defined(packet.name)) {
+            documentPacket.name = packet.name;
         }
-        if (defined(clockPacket.currentTime)) {
-            clock.currentTime = JulianDate.fromIso8601(clockPacket.currentTime);
-        }
-        if (defined(clockPacket.range)) {
-            clock.clockRange = ClockRange[clockPacket.range];
-        }
-        if (defined(clockPacket.step)) {
-            clock.clockStep = ClockStep[clockPacket.step];
-        }
-        if (defined(clockPacket.multiplier)) {
-            clock.multiplier = clockPacket.multiplier;
+
+        var clockPacket = packet.clock;
+        if (defined(clockPacket)) {
+            var clock = documentPacket.clock;
+            if (!defined(clock)) {
+                documentPacket.clock = {
+                    interval : clockPacket.interval,
+                    currentTime : clockPacket.currentTime,
+                    range : clockPacket.range,
+                    step : clockPacket.step,
+                    multiplier : clockPacket.multiplier
+                };
+            } else {
+                clock.interval = defaultValue(clockPacket.interval, clock.interval);
+                clock.currentTime = defaultValue(clockPacket.currentTime, clock.currentTime);
+                clock.range = defaultValue(clockPacket.range, clock.range);
+                clock.step = defaultValue(clockPacket.step, clock.step);
+                clock.multiplier = defaultValue(clockPacket.multiplier, clock.multiplier);
+            }
         }
     }
 
@@ -1179,13 +1145,6 @@ define([
         processPacketData(Cartesian3, label, 'eyeOffset', labelData.eyeOffset, interval, sourceUri, entityCollection);
         processPacketData(HorizontalOrigin, label, 'horizontalOrigin', labelData.horizontalOrigin, interval, sourceUri, entityCollection);
         processPacketData(String, label, 'text', labelData.text, interval, sourceUri, entityCollection);
-
-        // TODO: pixelOffset origin in CZML is bottom-left, Cesium is now top-left.
-        // Until CZML 1.0 flips this, flip the value here
-        if (defined(labelData.pixelOffset)) {
-            flipPixelOffsetOrigin(labelData.pixelOffset);
-        }
-
         processPacketData(Cartesian2, label, 'pixelOffset', labelData.pixelOffset, interval, sourceUri, entityCollection);
         processPacketData(Number, label, 'scale', labelData.scale, interval, sourceUri, entityCollection);
         processPacketData(Boolean, label, 'show', labelData.show, interval, sourceUri, entityCollection);
@@ -1463,15 +1422,16 @@ define([
 
         currentId = objectId;
 
+        if (!defined(dataSource._version) && objectId !== 'document') {
+            throw new RuntimeError('The first CZML packet is required to be the document object.');
+        }
+
         if (packet['delete'] === true) {
             entityCollection.removeById(objectId);
+        } else if (objectId === 'document') {
+            processDocument(packet, dataSource);
         } else {
-            var entity;
-            if (objectId === 'document') {
-                entity = dataSource._document;
-            } else {
-                entity = entityCollection.getOrCreateEntity(objectId);
-            }
+            var entity = entityCollection.getOrCreateEntity(objectId);
 
             var parentId = packet.parent;
             if (defined(parentId)) {
@@ -1486,56 +1446,84 @@ define([
         currentId = undefined;
     }
 
+    function updateClock(dataSource) {
+        var clock;
+        var clockPacket = dataSource._documentPacket.clock;
+        if (!defined(clockPacket)) {
+            if (!defined(dataSource._clock)) {
+                var availability = dataSource._entityCollection.computeAvailability();
+                if (!availability.start.equals(Iso8601.MINIMUM_VALUE)) {
+                    var startTime = availability.start;
+                    var stopTime = availability.stop;
+                    var totalSeconds = JulianDate.secondsDifference(stopTime, startTime);
+                    var multiplier = Math.round(totalSeconds / 120.0);
+
+                    clock = new DataSourceClock();
+                    clock.startTime = JulianDate.clone(startTime);
+                    clock.stopTime = JulianDate.clone(stopTime);
+                    clock.clockRange = ClockRange.LOOP_STOP;
+                    clock.multiplier = multiplier;
+                    clock.currentTime = JulianDate.clone(startTime);
+                    clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+                    dataSource._clock = clock;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        if (defined(dataSource._clock)) {
+            clock = dataSource._clock.clone();
+        } else {
+            clock = new DataSourceClock();
+            clock.startTime = Iso8601.MINIMUM_VALUE.clone();
+            clock.stopTime = Iso8601.MAXIMUM_VALUE.clone();
+            clock.currentTime = Iso8601.MINIMUM_VALUE.clone();
+            clock.clockRange = ClockRange.LOOP_STOP;
+            clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+            clock.multiplier = 1.0;
+        }
+        if (defined(clockPacket.interval)) {
+            iso8601Scratch.iso8601 = clockPacket.interval;
+            var interval = TimeInterval.fromIso8601(iso8601Scratch);
+            clock.startTime = interval.start;
+            clock.stopTime = interval.stop;
+        }
+        if (defined(clockPacket.currentTime)) {
+            clock.currentTime = JulianDate.fromIso8601(clockPacket.currentTime);
+        }
+        if (defined(clockPacket.range)) {
+            clock.clockRange = defaultValue(ClockRange[clockPacket.range], ClockRange.LOOP_STOP);
+        }
+        if (defined(clockPacket.step)) {
+            clock.clockStep = defaultValue(ClockStep[clockPacket.step], ClockStep.SYSTEM_CLOCK_MULTIPLIER);
+        }
+        if (defined(clockPacket.multiplier)) {
+            clock.multiplier = clockPacket.multiplier;
+        }
+
+        if (!clock.equals(dataSource._clock)) {
+            dataSource._clock = clock.clone(dataSource._clock);
+            return true;
+        }
+
+        return false;
+    }
+
     function loadCzml(dataSource, czml, sourceUri) {
         var entityCollection = dataSource._entityCollection;
         entityCollection.suspendEvents();
 
         CzmlDataSource._processCzml(czml, entityCollection, sourceUri, undefined, dataSource);
 
-        var documentObject = dataSource._document;
+        var raiseChangedEvent = updateClock(dataSource);
 
-        var raiseChangedEvent = false;
-        var czmlClock;
-        if (defined(documentObject.clock)) {
-            czmlClock = documentObject.clock;
-        } else {
-            var availability = entityCollection.computeAvailability();
-            if (!availability.start.equals(Iso8601.MINIMUM_VALUE)) {
-                var startTime = availability.start;
-                var stopTime = availability.stop;
-                var totalSeconds = JulianDate.secondsDifference(stopTime, startTime);
-                var multiplier = Math.round(totalSeconds / 120.0);
-
-                czmlClock = new DataSourceClock();
-                czmlClock.startTime = startTime;
-                czmlClock.stopTime = stopTime;
-                czmlClock.clockRange = ClockRange.LOOP_STOP;
-                czmlClock.multiplier = multiplier;
-                czmlClock.currentTime = startTime;
-                czmlClock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-            }
-        }
-
-        if (defined(czmlClock)) {
-            if (!defined(dataSource._clock)) {
-                dataSource._clock = new DataSourceClock();
-                raiseChangedEvent = true;
-            }
-            if (!czmlClock.equals(dataSource._clock)) {
-                czmlClock.clone(dataSource._clock);
-                raiseChangedEvent = true;
-            }
-        }
-
-        var name;
-        if (defined(documentObject.name)) {
-            name = documentObject.name;
+        var documentPacket = dataSource._documentPacket;
+        if (defined(documentPacket.name) && dataSource._name !== documentPacket.name) {
+            dataSource._name = documentPacket.name;
+            raiseChangedEvent = true;
         } else if (defined(sourceUri)) {
-            name = getFilenameFromUri(sourceUri);
-        }
-
-        if (dataSource._name !== name) {
-            dataSource._name = name;
+            dataSource._name = getFilenameFromUri(sourceUri);
             raiseChangedEvent = true;
         }
 
@@ -1552,12 +1540,19 @@ define([
         }
     }
 
+    var DocumentPacket = function() {
+        this.name = undefined;
+        this.clock = undefined;
+    };
+
     /**
      * A {@link DataSource} which processes CZML.
      * @alias CzmlDataSource
      * @constructor
      *
      * @param {String} [name] An optional name for the data source.  This value will be overwritten if a loaded document contains a name.
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=CZML.html|Cesium Sandcastle CZML Demo}
      */
     var CzmlDataSource = function(name) {
         this._name = name;
@@ -1566,8 +1561,9 @@ define([
         this._isLoading = false;
         this._loading = new Event();
         this._clock = undefined;
+        this._documentPacket = new DocumentPacket();
+        this._version = undefined;
         this._entityCollection = new EntityCollection();
-        this._document = new Entity();
     };
 
     defineProperties(CzmlDataSource.prototype, {
@@ -1650,7 +1646,7 @@ define([
      * @memberof CzmlDataSource
      * @type Array
      */
-    CzmlDataSource.updaters = [processClock,//
+    CzmlDataSource.updaters = [
     processBillboard, //
     processEllipse, //
     processEllipsoid, //
@@ -1700,7 +1696,8 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._document = new Entity('document');
+        this._version = undefined;
+        this._documentPacket = new DocumentPacket();
         this._entityCollection.removeAll();
         loadCzml(this, czml, sourceUri);
     };

@@ -72,7 +72,7 @@ define([
     }
 
     /**
-     * A {@link Visualizer} which maps {@link Entity#cone} to a {@link CustomSensor}.
+     * A {@link Visualizer} which maps {@link Entity#cone} to a {@link CustomSensorVolume}.
      * @alias ConeVisualizer
      * @constructor
      *

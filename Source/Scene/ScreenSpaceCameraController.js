@@ -518,13 +518,15 @@ define([
 
         var camera = controller._scene.camera;
 
-        if (!Matrix4.equals(Matrix4.IDENTITY, camera.transform)) {
-            reactToInput(controller, frameState, controller.enableRotate, controller.translateEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaSpinMovement');
-            reactToInput(controller, frameState, controller.enableZoom, controller.zoomEventTypes, zoom3D, controller.inertiaZoom, '_lastInertiaZoomMovement');
-        } else {
-            reactToInput(controller, frameState, controller.enableTranslate, controller.translateEventTypes, translate2D, controller.inertiaTranslate, '_lastInertiaTranslateMovement');
-            reactToInput(controller, frameState, controller.enableZoom, controller.zoomEventTypes, zoom2D, controller.inertiaZoom, '_lastInertiaZoomMovement');
-            reactToInput(controller, frameState, controller.enableRotate, controller.tiltEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaTiltMovement');
+        if (!tweens.contains(controller._tween)) {
+            if (!Matrix4.equals(Matrix4.IDENTITY, camera.transform)) {
+                reactToInput(controller, frameState, controller.enableRotate, controller.translateEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaSpinMovement');
+                reactToInput(controller, frameState, controller.enableZoom, controller.zoomEventTypes, zoom2D, controller.inertiaZoom, '_lastInertiaZoomMovement');
+            } else {
+                reactToInput(controller, frameState, controller.enableTranslate, controller.translateEventTypes, translate2D, controller.inertiaTranslate, '_lastInertiaTranslateMovement');
+                reactToInput(controller, frameState, controller.enableZoom, controller.zoomEventTypes, zoom2D, controller.inertiaZoom, '_lastInertiaZoomMovement');
+                reactToInput(controller, frameState, controller.enableRotate, controller.tiltEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaTiltMovement');
+            }
         }
 
         if (!controller._aggregator.anyButtonDown &&
