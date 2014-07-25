@@ -72,6 +72,7 @@ define([
          * indicates which areas of the globe are water rather than land, so they can be rendered
          * as a reflective surface with animated waves.  This function should not be
          * called before {@link TerrainProvider#ready} returns true.
+         * @memberof TerrainProvider.prototype
          * @type {Boolean}
          */
         hasWaterMask : {

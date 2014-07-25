@@ -63,6 +63,13 @@ if (window.frameElement) {
 } else {
     document.getElementById('bkgd').className = 'show-bkgd';
 }
+
+// Set targets on external links.  Sandcastle and GitHub shouldn't be embedded in any iframe.
+Array.prototype.forEach.call(document.getElementsByTagName('a'), function(a) {
+    if (/^https?:/i.test(a.getAttribute('href'))) {
+        a.target='_blank';
+    }
+});
 </script>
 
 <script src="javascript/prism.js"></script>

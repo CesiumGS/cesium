@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="A simple CZML example showing four satellites in orbit around the Earth, and some ground objects.">
-    <meta name="cesium-sandcastle-labels" content="Showcases">
+    <meta name="cesium-sandcastle-labels" content="Showcases, Tutorials, DataSources">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
@@ -27,48 +27,80 @@
 function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
-var gallery = '../../SampleData/';
+var usStates = '../../SampleData/ne_10m_us_states.json';
 
-var viewer = new Cesium.Viewer('cesiumContainer', {
-    infoBox: false
+var viewer = new Cesium.Viewer('cesiumContainer');
+Cesium.viewerEntityMixin(viewer);
+
+//Load a GeoJSON or TopoJSON file with default settings.
+function basicLoading(){
+    var dataSource = new Cesium.GeoJsonDataSource();
+    viewer.dataSources.add(dataSource);
+    dataSource.loadUrl(usStates);
+}
+
+//Add button to run the basic loading example.
+Sandcastle.addToolbarButton('Basic loading', function() {
+    resetDemo();
+    basicLoading();
 });
 
-function coastlineTopoJSON() {
-    viewer.dataSources.removeAll();
+//Apply custom graphics to a GeoJSON or TopoJSON file based
+//on the metadata contained in the file.
+Sandcastle.addToolbarButton('Custom Graphics', function() {
+    resetDemo();
+    //Seed the random number generator for repeatable results.
+    Cesium.Math.setRandomNumberSeed(0);
 
+    //Create a new GeoJSON data source and add it to the list.
     var dataSource = new Cesium.GeoJsonDataSource();
-    dataSource.loadUrl(gallery + 'ne_110m_land_topo.json').then(function() {
-        viewer.dataSources.add(dataSource);
+    viewer.dataSources.add(dataSource);
+    
+    //Load the document and then set custom graphics
+    dataSource.loadUrl(usStates).then(function() {
+        //Get the array of entities
+        var entities = dataSource.entities.entities;
+        
+        var colorHash = {};
+        for (var i = 0; i < entities.length; i++) {
+            //For each entity, create a random color based on the state name.
+            //Some states have multiple entities, so we store the color in a
+            //hash so that we use the same color for the entire state.
+            var entity = entities[i];
+            var name = entity.name;
+            var color = colorHash[name];
+            if (!color) {
+                color = Cesium.Color.fromRandom({
+                    alpha : 1.0
+                });
+                colorHash[name] = color;
+            }
+            
+            //Set the polygon material to our random color.
+            entity.polygon.material = Cesium.ColorMaterialProperty.fromColor(color);
+
+            //Extrude the polygon based on the state's population.  Each entity
+            //stores the properties for the GeoJSON feature it was created from
+            //Since the population is a huge number, we divide by 50.
+            entity.polygon.extrudedHeight = new Cesium.ConstantProperty(entity.properties.Population / 50.0);
+        }
     });
+});
+
+//Reset the scene when switching demos.
+function resetDemo() {
+  viewer.dataSources.removeAll();
+  
+  //Set the camera to a US centered tilted view.
+  var camera = viewer.scene.camera;
+  camera.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
+  camera.transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-97.5, 38));
+  camera.lookAt(new Cesium.Cartesian3(0.0, -5000000.0, 4000000.0), Cesium.Cartesian3.ZERO, Cesium.Cartesian3.UNIT_Z);
 }
-
-function statesGeoJSON() {
-    viewer.dataSources.removeAll();
-
-    var dataSource = new Cesium.GeoJsonDataSource();
-    dataSource.defaultPolygon.polygon.material.color = new Cesium.ConstantProperty(new Cesium.Color(0.0, 1.0, 0.0, 0.2));
-    dataSource.defaultPolygon.polygon.outlineColor = new Cesium.ConstantProperty(Cesium.Color.WHITE);
-    dataSource.loadUrl(gallery + 'ne_10m_us_states.json').then(function() {
-        viewer.dataSources.add(dataSource);
-    });
-}
-
-function lakesGeoJSON() {
-    viewer.dataSources.removeAll();
-
-    var dataSource = new Cesium.GeoJsonDataSource();
-    dataSource.defaultPolygon.polygon.material.color = new Cesium.ConstantProperty(new Cesium.Color(0.0, 0.0, 0.5, 0.5));
-    dataSource.defaultPolygon.polygon.outlineColor = new Cesium.ConstantProperty(Cesium.Color.NAVY);
-    dataSource.loadUrl(gallery + 'ne_110m_lakes.json').then(function() {
-        viewer.dataSources.add(dataSource);
-    });
-}
-
-coastlineTopoJSON();
-statesGeoJSON();
-lakesGeoJSON();
+resetDemo();
+basicLoading();
 //Sandcastle_End
-    Sandcastle.finishedLoading();
+Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
     startup(Cesium);

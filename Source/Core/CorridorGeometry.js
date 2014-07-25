@@ -638,6 +638,8 @@ define([
      *
      * @see CorridorGeometry.createGeometry
      *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Corridor.html|Cesium Sandcastle Corridor Demo}
+     *
      * @example
      * var corridor = new Cesium.CorridorGeometry({
      *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,

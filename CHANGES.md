@@ -7,7 +7,9 @@ Change Log
   * All `Matrix2`, `Matrix3`, `Matrix4` and `Quaternion` functions that take a `result` parameter now require the parameter (except for functions starting with `from`).
   * Removed the following from the Cesium API: `Transforms.earthOrientationParameters`, `EarthOrientationParameters`, `EarthOrientationParametersSample`, `Transforms.iau2006XysData`, `Iau2006XysData`, `Iau2006XysSample`, `IauOrientationAxes`, `TimeConstants`, `Scene.frameState`, `FrameState`, `EncodedCartesian3`, `EllipsoidalOccluder`, `TextureAtlas`, and `FAR`.  These are still available but are not part of the official API and may change in future versions.
   * Removed `DynamicObject.vertexPositions`.  Use `DynamicWall.positions`, `DynamicPolygon.positions`, and `DynamicPolyline.positions` instead.
+  * Removed `defaultPoint`, `defaultLine`, and `defaultPolygon` from `GeoJsonDataSource`.
   * Removed `Primitive.allow3DOnly`, set the `Scene` level option, `scene3DOnly`, instead.
+  * We now apply an implicit rotation to `Model` primitives so that the orientation convention matches the rest of Cesium (Z is up) instead of glTF convention (Y is up).
   * `SampledProperty` and `SampledPositionProperty` no longer extrapolate outside of their sample data time range by default.
   * Refactored the following methods into a properties:
     * `TerrainProvider.hasWaterMask`
@@ -101,6 +103,7 @@ Change Log
                 position : //...
             });
 
+  * Updated the [Model Converter](http://cesiumjs.org/convertmodel.html) and `Model` to support [glTF 0.8](https://github.com/KhronosGroup/glTF/blob/schema-8/specification/README.md).  See the [forum post](https://groups.google.com/forum/#!topic/cesium-dev/KNl2K3Cazno) for full details.
 * Added northUpEast transform to help support display of glTF models because Y is their up axis.
 * Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
 * Added `czm_octDecode` and `czm_signNotZero` builtin functions.
