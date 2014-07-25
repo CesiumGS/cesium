@@ -47,8 +47,9 @@
             menu.className = 'sandcastle-button';
             menu.onchange = function() {
                 window.Sandcastle.reset();
-                if (menu.selectedIndex > 0) {
-                    options[menu.selectedIndex].onselect();
+                var item = options[menu.selectedIndex];
+                if (item && typeof item.onselect === 'function') {
+                    item.onselect();
                 }
             };
             document.getElementById(toolbarID || 'toolbar').appendChild(menu);
