@@ -31,6 +31,8 @@ define([
      *
      * @see CircleOutlineGeometry.createGeometry
      *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Circle%20Outline.html|Cesium Sandcastle Circle Outline Demo}
+     *
      * @example
      * // Create a circle.
      * var circle = new Cesium.CircleOutlineGeometry({

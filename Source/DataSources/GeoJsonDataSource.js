@@ -269,6 +269,8 @@ define([
      * @see DataSourceDisplay
      * @see {@link http://www.geojson.org/|GeoJSON specification}
      *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=GeoJSON%20and%20TopoJSON.html|Cesium Sandcastle GeoJSON and TopoJSON Demo}
+     *
      * @example
      * //Use a billboard instead of a point.
      * var dataSource = new Cesium.GeoJsonDataSource();
