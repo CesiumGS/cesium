@@ -51,6 +51,26 @@ defineSuite([
         expect(CesiumMath.toSNorm(0.0)).toEqual(128);
     });
 
+    it('fromSNorm 0', function() {
+        expect(CesiumMath.fromSNorm(0)).toEqual(-1.0);
+    });
+
+    it('fromSNorm 255', function() {
+        expect(CesiumMath.fromSNorm(255)).toEqual(1.0);
+    });
+
+    it('fromSNorm -0.0001', function() {
+        expect(CesiumMath.fromSNorm(-0.0001)).toEqual(-1.0);
+    });
+
+    it('fromSNorm 255.00001', function() {
+        expect(CesiumMath.fromSNorm(255.00001)).toEqual(1.0);
+    });
+
+    it('fromSNorm 128', function() {
+        expect(CesiumMath.fromSNorm(255.0 / 2)).toEqual(0.0);
+    });
+
     //////////////////////////////////////////////////////////////////////
 
     it('cosh', function() {

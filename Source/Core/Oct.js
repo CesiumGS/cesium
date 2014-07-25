@@ -20,7 +20,7 @@ define([
     var Oct = {};
 
     /**
-     * Encodes a normalized vector into 2 bytes following the 'oct' encoding.
+     * Encodes a normalized vector into 2 SNORM values in the range of [0-255] following the 'oct' encoding.
      * The 'oct' encoding is described in "A Survey of Efficient Representations of Independent Unit Vectors",
      * Cigolle et al 2014: http://jcgt.org/published/0003/02/01/
      *
@@ -77,13 +77,13 @@ define([
         }
         //>>includeEnd('debug');
 
-        result.x = x / 255.0 * 2.0 - 1.0;
-        result.y = y / 255.0 * 2.0 - 1.0;
+        result.x = CesiumMath.fromSNorm(x);
+        result.y = CesiumMath.fromSNorm(y);
         result.z = 1.0 - (Math.abs(result.x) + Math.abs(result.y));
 
         if (result.z < 0.0)
         {
-            var oldVX = x / 255.0 * 2.0 - 1.0;
+            var oldVX = CesiumMath.fromSNorm(x);
             result.x = (1.0 - Math.abs(result.y)) * CesiumMath.signNotZero(oldVX);
             result.y = (1.0 - Math.abs(oldVX)) * CesiumMath.signNotZero(result.y);
         }
