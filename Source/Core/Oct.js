@@ -83,7 +83,7 @@ define([
 
         if (result.z < 0.0)
         {
-            var oldVX = CesiumMath.fromSNorm(x);
+            var oldVX = result.x;
             result.x = (1.0 - Math.abs(result.y)) * CesiumMath.signNotZero(oldVX);
             result.y = (1.0 - Math.abs(oldVX)) * CesiumMath.signNotZero(result.y);
         }
