@@ -143,55 +143,44 @@ function fadeByDistance() {
     scene.primitives.add(labels);
 }
 
-function createUI() {
-    function selectMenuOption(menu, options) {
-        options[menu.selectedIndex].onselect();
+Sandcastle.addToolbarMenu([{
+    text : 'Add label',
+    onselect : function() {
+        addLabel();
+        Sandcastle.highlight(addLabel);
     }
-    
-    var options = [{
-        text : 'Add label',
-        onselect : function() {
-            addLabel();
-            Sandcastle.highlight(addLabel);
-        }
-    }, {
-        text : 'Set font',
-        onselect : function() {
-            setFont();
-            Sandcastle.highlight(setFont);
-        }
-    }, {
-        text : 'Set properties',
-        onselect : function() {
-            setProperties();
-            Sandcastle.highlight(setProperties);
-        }
-    }, {
-        text : 'Add labels in reference frame',
-        onselect : function() {
-            inReferenceFrame();
-            Sandcastle.highlight(inReferenceFrame);
-        }
-    }, {
-        text : 'Offset label by distance',
-        onselect : function() {
-            offsetByDistance();
-            Sandcastle.highlight(offsetByDistance);
-        }
-    }, {
-        text : 'Fade label by distance',
-        onselect : function() {
-            fadeByDistance();
-            Sandcastle.highlight(fadeByDistance);
-        }
-    }];
+}, {
+    text : 'Set font',
+    onselect : function() {
+        setFont();
+        Sandcastle.highlight(setFont);
+    }
+}, {
+    text : 'Set properties',
+    onselect : function() {
+        setProperties();
+        Sandcastle.highlight(setProperties);
+    }
+}, {
+    text : 'Add labels in reference frame',
+    onselect : function() {
+        inReferenceFrame();
+        Sandcastle.highlight(inReferenceFrame);
+    }
+}, {
+    text : 'Offset label by distance',
+    onselect : function() {
+        offsetByDistance();
+        Sandcastle.highlight(offsetByDistance);
+    }
+}, {
+    text : 'Fade label by distance',
+    onselect : function() {
+        fadeByDistance();
+        Sandcastle.highlight(fadeByDistance);
+    }
+}]);
 
-    Sandcastle.addToolbarMenu(options, function() {
-        selectMenuOption(this, options);
-    });
-}
-
-createUI();
 addLabel(scene);
 Sandcastle.highlight(addLabel);
 //Sandcastle_End

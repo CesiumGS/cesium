@@ -3,20 +3,16 @@ defineSuite([
         'Scene/TileReplacementQueue',
         'Core/defined',
         'Core/GeographicTilingScheme',
-        'Scene/ImageryState',
         'Scene/QuadtreeTile',
-        'Scene/QuadtreeTileLoadState',
-        'Scene/TerrainState'
+        'Scene/QuadtreeTileLoadState'
     ], function(
         TileReplacementQueue,
         defined,
         GeographicTilingScheme,
-        ImageryState,
         QuadtreeTile,
-        QuadtreeTileLoadState,
-        TerrainState) {
+        QuadtreeTileLoadState) {
     "use strict";
-    /*global document,describe,it,expect,beforeEach*/
+    /*global describe,it,expect,beforeEach*/
 
     function Tile(num, loadedState, upsampledState) {
         this._num = num;
@@ -41,7 +37,11 @@ defineSuite([
     };
 
     var queue;
-    var one, two, three, four, notEligibleForUnloading, upsampleTransitioning;
+    var one;
+    var two;
+    var three;
+    var four;
+    var notEligibleForUnloading;
     beforeEach(function() {
         var tilingScheme = new GeographicTilingScheme();
         queue = new TileReplacementQueue();
