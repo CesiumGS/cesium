@@ -482,7 +482,7 @@ define([
         },
 
         /**
-         * Gets the command to toggle the visibility of the performance display
+         * Gets the command to toggle the visibility of the performance display.
          * @memberof CesiumInspectorViewModel.prototype
          *
          * @type {Command}
