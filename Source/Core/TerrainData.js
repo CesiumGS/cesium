@@ -8,7 +8,7 @@ define([
     "use strict";
 
     /**
-     * Terrain data for a single {@link Tile}.  This type describes an
+     * Terrain data for a single tile.  This type describes an
      * interface and is not intended to be instantiated directly.
      *
      * @alias TerrainData
