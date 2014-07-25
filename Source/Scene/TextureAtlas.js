@@ -8,7 +8,10 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/PixelFormat'
+        '../Core/loadImage',
+        '../Core/PixelFormat',
+        '../Core/RuntimeError',
+        '../ThirdParty/when'
     ], function(
         BoundingRectangle,
         Cartesian2,
@@ -18,7 +21,10 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
-        PixelFormat) {
+        loadImage,
+        PixelFormat,
+        RuntimeError,
+        when) {
     "use strict";
 
     // The atlas is made up of regions of space called nodes that contain images or child nodes.
@@ -36,7 +42,6 @@ define([
      * A TextureAtlas stores multiple images in one square texture and keeps
      * track of the texture coordinates for each image. TextureAtlas is dynamic,
      * meaning new images can be added at any point in time.
-     * Calling addImages is more space-efficient than calling addImage multiple times.
      * Texture coordinates are subject to change if the texture atlas resizes, so it is
      * important to check {@link TextureAtlas#getGUID} before using old values.
      *
@@ -44,15 +49,15 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {Scene} options.scene The scene in which the texture gets created.
+     * @param {Scene} options.context The context in which the texture gets created.
      * @param {PixelFormat} [options.pixelFormat=PixelFormat.RGBA] The pixel format of the texture.
      * @param {Number} [options.borderWidthInPixels=1] The amount of spacing between adjacent images in pixels.
      * @param {Cartesian2} [options.initialSize=new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.
-     * @param {Image[]} [options.images] Optional array of {@link Image} to be added to the atlas. Same as calling <code>addImages(images)</code>.
-     * @param {Image} [options.image] Optional single image to be added to the atlas. Same as calling <code>addImage(image)</code>.
      *
      * @exception {DeveloperError} borderWidthInPixels must be greater than or equal to zero.
      * @exception {DeveloperError} initialSize must be greater than zero.
+     *
+     * @private
      */
     var TextureAtlas = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -60,8 +65,8 @@ define([
         var initialSize = defaultValue(options.initialSize, defaultInitialSize);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.scene)) {
-            throw new DeveloperError('scene is required.');
+        if (!defined(options.context)) {
+            throw new DeveloperError('context is required.');
         }
         if (borderWidthInPixels < 0) {
             throw new DeveloperError('borderWidthInPixels must be greater than or equal to zero.');
@@ -71,12 +76,12 @@ define([
         }
         //>>includeEnd('debug');
 
-        var context = options.scene.context;
-        this._context = context;
+        this._context = options.context;
         this._pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
         this._borderWidthInPixels = borderWidthInPixels;
         this._textureCoordinates = [];
         this._guid = createGuid();
+        this._idHash = {};
 
         // Create initial texture and root.
         this._texture = this._context.createTexture2D({
@@ -85,17 +90,6 @@ define([
             pixelFormat : this._pixelFormat
         });
         this._root = new TextureAtlasNode(new Cartesian2(), new Cartesian2(initialSize.x, initialSize.y));
-
-        // Add initial images if there are any.
-        var images = options.images;
-        if (defined(images) && images.length > 0) {
-            this.addImages(images);
-        }
-
-        var image = options.image;
-        if (defined(image)) {
-            this.addImage(image);
-        }
     };
 
     defineProperties(TextureAtlas.prototype, {
@@ -128,7 +122,7 @@ define([
          * @memberof TextureAtlas.prototype
          * @type {Texture}
          */
-        texture: {
+        texture : {
             get : function() {
                 return this._texture;
             }
@@ -183,7 +177,7 @@ define([
             textureAtlas._root = nodeMain;
 
             // Resize texture coordinates.
-            for ( var i = 0; i < textureAtlas._textureCoordinates.length; i++) {
+            for (var i = 0; i < textureAtlas._textureCoordinates.length; i++) {
                 var texCoord = textureAtlas._textureCoordinates[i];
                 if (defined(texCoord)) {
                     texCoord.x *= widthRatio;
@@ -209,9 +203,8 @@ define([
             framebuffer._unBind();
             framebuffer.destroy();
             textureAtlas._texture = newTexture;
-        }
-        // First image exceeds initialSize
-        else {
+        } else {
+            // First image exceeds initialSize
             var initialWidth = scalingFactor * (image.width + textureAtlas._borderWidthInPixels);
             var initialHeight = scalingFactor * (image.height + textureAtlas._borderWidthInPixels);
             textureAtlas._texture = textureAtlas._texture && textureAtlas._texture.destroy();
@@ -284,15 +277,9 @@ define([
 
     // Adds image of given index to the texture atlas. Called from addImage and addImages.
     function addImage(textureAtlas, image, index) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(image)) {
-            throw new DeveloperError('image is required.');
-        }
-        //>>includeEnd('debug');
-
         var node = findNode(textureAtlas, textureAtlas._root, image);
-        // Found a node that can hold the image.
         if (defined(node)) {
+            // Found a node that can hold the image.
             node.imageIndex = index;
 
             // Add texture coordinate and write to texture
@@ -300,116 +287,124 @@ define([
             var atlasHeight = textureAtlas._texture.height;
             var nodeWidth = node.topRight.x - node.bottomLeft.x;
             var nodeHeight = node.topRight.y - node.bottomLeft.y;
-            textureAtlas._textureCoordinates[index] = new BoundingRectangle(
-                node.bottomLeft.x / atlasWidth, node.bottomLeft.y / atlasHeight,
-                nodeWidth / atlasWidth, nodeHeight / atlasHeight
-            );
+            var x = node.bottomLeft.x / atlasWidth;
+            var y = node.bottomLeft.y / atlasHeight;
+            var w = nodeWidth / atlasWidth;
+            var h = nodeHeight / atlasHeight;
+            textureAtlas._textureCoordinates[index] = new BoundingRectangle(x, y, w, h);
             textureAtlas._texture.copyFrom(image, node.bottomLeft.x, node.bottomLeft.y);
-        }
-        // No node found, must resize the texture atlas.
-        else {
+        } else {
+            // No node found, must resize the texture atlas.
             resizeAtlas(textureAtlas, image);
             addImage(textureAtlas, image, index);
         }
+
+        textureAtlas._guid = createGuid();
     }
 
     /**
-     * Adds an image to the texture atlas.
-     * Calling addImages is more space-efficient than calling addImage multiple times.
-     * Texture coordinates are subject to change if the texture atlas resizes, so it is
-     * important to check {@link TextureAtlas#getGUID} before using old values.
+     * Adds an image to the atlas.  If the image is already in the atlas, the atlas is unchanged and
+     * the existing index is used.
      *
-     * @param {Image} image An image to be added to the texture atlas.
-     * @returns {Number} The index of the newly added image.
-     *
-     * @see TextureAtlas#addImages
+     * @param {String} id An identifier to detect whether the image already exists in the atlas.
+     * @param {Image|Canvas|String|Promise|TextureAtlas~CreateImageCallback} image An image or canvas to add to the texture atlas,
+     *        or a URL to an Image, or a Promise for an image, or a function that creates an image.
+     * @returns {Promise} A Promise for the image index.
      */
-    TextureAtlas.prototype.addImage = function(image) {
-        var index = this.numberOfImages;
-        addImage(this, image, index);
-
-        this._guid = createGuid();
-
-        return index;
-    };
-
-    /**
-     * Adds an array of images to the texture atlas.
-     * Calling addImages is more space-efficient than calling addImage multiple times.
-     * Texture coordinates are subject to change if the texture atlas resizes, so it is
-     * important to check {@link TextureAtlas#getGUID} before using old values.
-     *
-     * @param {Image[]} images An array of {@link Image} to be added to the texture atlas.
-     * @returns {Number} The first index of the newly added images.
-     *
-     * @see TextureAtlas#addImage
-     */
-    TextureAtlas.prototype.addImages = function(images) {
+    TextureAtlas.prototype.addImage = function(id, image) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(images) || (images.length < 1)) {
-            throw new DeveloperError('images is required and must have length greater than zero.');
+        if (!defined(id)) {
+            throw new DeveloperError('id is required.');
+        }
+        if (!defined(image)) {
+            throw new DeveloperError('image is required.');
         }
         //>>includeEnd('debug');
 
-        // Store images in containers that have an index.
-        var i;
-        var annotatedImages = [];
-        var numberOfImages = images.length;
-        var oldNumberOfImages = this.numberOfImages;
-        for (i = 0; i < numberOfImages; ++i) {
-            annotatedImages.push({
-                image : images[i],
-                index : i + oldNumberOfImages
-            });
+        var indexPromise = this._idHash[id];
+        if (defined(indexPromise)) {
+            // we're already aware of this source
+            return indexPromise;
         }
 
-        // Sort images by maximum to minimum side length.
-        annotatedImages.sort(function(left, right) {
-            return Math.max(right.image.height, right.image.width) -
-                   Math.max(left.image.height, left.image.width);
+        // not in atlas, create the promise for the index
+
+        if (typeof image === 'function') {
+            // if image is a function, call it
+            image = image(id);
+            //>>includeStart('debug', pragmas.debug);
+            if (!defined(image)) {
+                throw new DeveloperError('image is required.');
+            }
+            //>>includeEnd('debug');
+        } else if (typeof image === 'string') {
+            // if image is a string, load it as an image
+            image = loadImage(image);
+        }
+
+        var that = this;
+
+        indexPromise = when(image, function(image) {
+            if (that.isDestroyed()) {
+                return -1;
+            }
+
+            var index = that.numberOfImages;
+
+            addImage(that, image, index);
+
+            return index;
         });
 
-        // Add images to the texture atlas.
-        for (i = 0; i < numberOfImages; ++i) {
-            var annotatedImage = annotatedImages[i];
-            addImage(this, annotatedImage.image, annotatedImage.index);
-        }
+        // store the promise
+        this._idHash[id] = indexPromise;
 
-        this._guid = createGuid();
-
-        // Return index of the first added image.
-        return oldNumberOfImages;
+        return indexPromise;
     };
 
     /**
-     * Add a set of sub-regions to one atlas image as additional image indices.
+     * Add a sub-region of an existing atlas image as additional image indices.
      *
-     * @param {Image} image An image to be added to the texture atlas.
-     * @param {BoundingRectangle[]} subRegions An array of {@link BoundingRectangle} sub-regions measured in pixels from the bottom-left.
-     * @returns {Number} The index of the first newly-added region.
+     * @param {String} id The identifier of the existing image.
+     * @param {BoundingRectangle} subRegion An {@link BoundingRectangle} sub-region measured in pixels from the bottom-left.
+     *
+     * @returns {Promise} A Promise for the image index.
      */
-    TextureAtlas.prototype.addSubRegions = function(image, subRegions) {
-        var index = this.addImage(image);
+    TextureAtlas.prototype.addSubRegion = function(id, subRegion) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(id)) {
+            throw new DeveloperError('id is required.');
+        }
+        if (!defined(subRegion)) {
+            throw new DeveloperError('subRegion is required.');
+        }
+        //>>includeEnd('debug');
 
-        var atlasWidth = this._texture.width;
-        var atlasHeight = this._texture.height;
-        var numImages = this.numberOfImages;
-        var numSubRegions = subRegions.length;
-
-        var baseRegion = this._textureCoordinates[index];
-        for (var i = 0; i < numSubRegions; ++i) {
-            var thisRegion = subRegions[i];
-            this._textureCoordinates.push(new BoundingRectangle(
-                baseRegion.x + (thisRegion.x / atlasWidth),
-                baseRegion.y + (thisRegion.y / atlasHeight),
-                thisRegion.width / atlasWidth,
-                thisRegion.height / atlasHeight
-            ));
+        var indexPromise = this._idHash[id];
+        if (!defined(indexPromise)) {
+            throw new RuntimeError('image with id "' + id + '" not found in the atlas.');
         }
 
-        this._guid = createGuid();
+        var that = this;
+        return when(indexPromise, function(index) {
+            if (index === -1) {
+                // the atlas is destroyed
+                return -1;
+            }
+            var atlasWidth = that._texture.width;
+            var atlasHeight = that._texture.height;
+            var numImages = that.numberOfImages;
 
-        return numImages;
+            var baseRegion = that._textureCoordinates[index];
+            var x = baseRegion.x + (subRegion.x / atlasWidth);
+            var y = baseRegion.y + (subRegion.y / atlasHeight);
+            var w = subRegion.width / atlasWidth;
+            var h = subRegion.height / atlasHeight;
+            that._textureCoordinates.push(new BoundingRectangle(x, y, w, h));
+            that._guid = createGuid();
+
+            return numImages;
+        });
     };
 
     /**
@@ -447,6 +442,13 @@ define([
         this._texture = this._texture && this._texture.destroy();
         return destroyObject(this);
     };
+
+    /**
+     * A function that creates an image.
+     * @callback TextureAtlas~CreateImageCallback
+     * @param {String} id The identifier of the image to load.
+     * @returns {Image|Promise} The image, or a promise that will resolve to an image.
+     */
 
     return TextureAtlas;
 });

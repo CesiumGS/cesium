@@ -209,7 +209,7 @@ define([
 
     defineProperties(Polygon.prototype, {
         /**
-         * Gets and sets positions that define the boundary of the polygon.
+         * Gets or sets positions that define the boundary of the polygon.
          * @memberof Polygon.prototype
          * @type {Cartesian3[]}
          * @example

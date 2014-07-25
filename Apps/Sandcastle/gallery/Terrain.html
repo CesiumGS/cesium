@@ -140,14 +140,6 @@ function sampleTerrainSuccess() {
 
     if (typeof billboards === 'undefined') {
         billboards = new Cesium.BillboardCollection();
-
-        Cesium.when(Cesium.loadImage('../images/facility.gif'), function(image) {
-            var textureAtlas = new Cesium.TextureAtlas({
-                scene : scene,
-                images : [image]
-            });
-            billboards.textureAtlas = textureAtlas;
-        });
     } else {
         billboards.removeAll();
     }
@@ -158,13 +150,13 @@ function sampleTerrainSuccess() {
         labels.removeAll();
     }
 
-    for (var i = 0; i < terrainSamplePositions.length; ++i) {
+    for( var i = 0; i < terrainSamplePositions.length; ++i ){
         var position = terrainSamplePositions[i];
         billboards.add({
             position : ellipsoid.cartographicToCartesian(position),
             verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
             scale : 0.7,
-            imageIndex : 0
+            image : '../images/facility.gif'
         });
 
         labels.add({
@@ -172,8 +164,8 @@ function sampleTerrainSuccess() {
             text : position.height.toFixed(1),
             horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
             scale : 0.3,
-            pixelOffset : new Cesium.Cartesian2(0, -14),
-            fillColor : new Cesium.Color(1, 0, 0),
+            pixelOffset : new Cesium.Cartesian2(0,-14),
+            fillColor : new Cesium.Color(1,0,0),
             outlineColor : Cesium.Color.WHITE
         });
 
