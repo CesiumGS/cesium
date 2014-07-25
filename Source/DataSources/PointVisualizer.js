@@ -175,7 +175,7 @@ define([
             var cssOutlineWidth = newOutlineWidth;
             var textureId = JSON.stringify([cssColor, newPixelSize, cssOutlineColor, cssOutlineWidth]);
 
-            billboard.setGeneratedImage(textureId, function(id, loadedCallback) {
+            billboard.setImage(textureId, function(id) {
                 var canvas = document.createElement('canvas');
 
                 var length = newPixelSize + (2 * cssOutlineWidth);
@@ -209,7 +209,7 @@ define([
                 context2D.fillStyle = cssColor;
                 context2D.fill();
 
-                loadedCallback(canvas);
+                return canvas;
             });
         }
     }

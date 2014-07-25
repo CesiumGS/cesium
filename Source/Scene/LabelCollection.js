@@ -87,16 +87,10 @@ define([
         }
     }
 
-    function createGetImageCallback(canvas) {
-        return function(id, loadedCallback) {
-            loadedCallback(canvas);
-        };
-    }
-
-    function createTextureAvailableCallback(glyphTextureInfo) {
-        return function(index, id) {
+    function addGlyphToTextureAtlas(textureAtlas, id, canvas, glyphTextureInfo) {
+        textureAtlas.addImage(id, canvas).then(function(index, id) {
             glyphTextureInfo.index = index;
-        };
+        });
     }
 
     function rebindAllGlyphs(labelCollection, label) {
@@ -105,7 +99,9 @@ define([
         var glyphs = label._glyphs;
         var glyphsLength = glyphs.length;
 
-        var glyph, glyphIndex, textIndex;
+        var glyph;
+        var glyphIndex;
+        var textIndex;
 
         // if we have more glyphs than needed, unbind the extras.
         if (textLength < glyphsLength) {
@@ -118,7 +114,6 @@ define([
         glyphs.length = textLength;
 
         var glyphTextureCache = labelCollection._glyphTextureCache;
-        var textureAtlas = labelCollection._textureAtlas;
 
         // walk the text looking for new characters (creating new glyphs for each)
         // or changed characters (rebinding existing glyphs)
@@ -151,7 +146,7 @@ define([
                 glyphTextureCache[id] = glyphTextureInfo;
 
                 if (canvas.width > 0 && canvas.height > 0) {
-                    textureAtlas.addTextureFromFunction(id, createGetImageCallback(canvas), createTextureAvailableCallback(glyphTextureInfo));
+                    addGlyphToTextureAtlas(labelCollection._textureAtlas, id, canvas, glyphTextureInfo);
                 }
             }
 

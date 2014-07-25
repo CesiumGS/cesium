@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Color',
+        '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -19,6 +20,7 @@ define([
         Cartesian3,
         Cartesian4,
         Color,
+        createGuid,
         defaultValue,
         defined,
         defineProperties,
@@ -80,7 +82,7 @@ define([
         this._show = defaultValue(options.show, true);
         this._position = Cartesian3.clone(defaultValue(options.position, Cartesian3.ZERO));
         this._actualPosition = Cartesian3.clone(this._position); // For columbus view and 2D
-        this._pixelOffset = Cartesian2.clone(defaultValue(options.pixelOffset, Cartesian2.ZERO), new Cartesian2());
+        this._pixelOffset = Cartesian2.clone(defaultValue(options.pixelOffset, Cartesian2.ZERO));
         this._translate = new Cartesian2(0.0, 0.0); // used by labels for glyph vertex translation
         this._eyeOffset = Cartesian3.clone(defaultValue(options.eyeOffset, Cartesian3.ZERO));
         this._verticalOrigin = defaultValue(options.verticalOrigin, VerticalOrigin.CENTER);
@@ -104,29 +106,34 @@ define([
         this._index = -1; //Used only by BillboardCollection
 
         this._imageIndex = -1;
-
-        this._imageUrl = undefined;
-        this._image = undefined;
+        this._imageIndexPromise = undefined;
         this._imageId = undefined;
-        this._getImageCallback = undefined;
+        this._image = undefined;
         this._imageSubRegion = undefined;
 
-        if (defined(options.imageUrl)) {
-            this._imageUrl = options.imageUrl;
-            this._imageId = options.imageUrl;
-        } else if (defined(options.image)) {
-            this._image = options.image;
-            this._imageId = options.image.src;
-        } else if (defined(options.imageId) && defined(options.getImageCallback)) {
-            this._imageId = options.imageId;
-            this._getImageCallback = options.getImageCallback;
+        var image = options.image;
+        var imageId = options.imageId;
+        if (defined(image)) {
+            if (!defined(imageId)) {
+                if (typeof image === 'string') {
+                    imageId = image;
+                } else if (defined(image.src)) {
+                    imageId = image.src;
+                } else {
+                    imageId = createGuid();
+                }
+            }
+
+            this._imageId = imageId;
+            this._image = image;
         }
 
-        if (defined(this._imageId)) {
+        if (defined(options.imageSubRegion)) {
+            this._imageId = imageId;
             this._imageSubRegion = options.imageSubRegion;
         }
 
-        if (defined(billboardCollection._textureAtlas)) {
+        if (defined(this._billboardCollection._textureAtlas)) {
             this._loadImage();
         }
     };
@@ -680,26 +687,65 @@ define([
         },
 
         /**
-         * Gets and sets the image or image url.
+         * <p>
+         * Gets and sets the image to be used for this billboard.  If a texture has already been created for the
+         * given image, the existing texture is used.
+         * </p>
+         * <p>
+         * This property can be set to a loaded Image, a URL which will be loaded as an Image automatically,
+         * or another billboard's image property (from the same billboard collection).
+         * </p>
+         *
          * @memberof Billboard.prototype
-         * @type {String|Image}
+         * @type {String}
+         * @example
+         * // load an image from a URL
+         * b.image = 'some/image/url.png';
+         *
+         * // assuming b1 and b2 are billboards in the same billboard collection,
+         * // use the same image for both billboards.
+         * b2.image = b1.image;
          */
         image : {
             get : function() {
                 return this._imageId;
             },
             set : function(value) {
-                if (defined(value) && defined(value.src)) {
-                    this._image = value;
-                    this._imageId = value.src;
-                } else {
-                    this._imageUrl = value;
-                    this._imageId = value;
-                }
+                this._imageIndex = -1;
+                this._imageId = undefined;
+                this._image = undefined;
+                this._imageSubRegion = undefined;
 
-                if (defined(this._billboardCollection._textureAtlas)) {
-                    this._loadImage();
+                if (!defined(value)) {
+                    if (defined(this._imageIndexPromise)) {
+                        this._imageIndexPromise.cancelled = true;
+                    }
+                    this._imageIndexPromise = undefined;
+                    makeDirty(this, IMAGE_INDEX_INDEX);
+                } else if (typeof value === 'string') {
+                    this.setImage(value, value);
+                } else if (defined(value.src)) {
+                    this.setImage(value.src, value);
+                } else {
+                    this.setImage(createGuid(), value);
                 }
+            }
+        },
+
+        /**
+         * When <code>true</code>, this billboard is ready to render, i.e., the image
+         * has been downloaded and the WebGL resources are created.
+         *
+         * @memberof Billboard.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default false
+         */
+        ready : {
+            get : function() {
+                return this._imageIndex !== -1;
             }
         }
     });
@@ -719,67 +765,91 @@ define([
     Billboard.prototype._loadImage = function() {
         var atlas = this._billboardCollection._textureAtlas;
 
-        var that = this;
-        var callback = function(index) {
-            that._imageIndex = index;
-            makeDirty(that, IMAGE_INDEX_INDEX);
-        };
+        if (defined(this._imageIndexPromise)) {
+            // if an async load is in progress, mark it as cancelled
+            // so that the index will be ignored when it loads
+            this._imageIndexPromise.cancelled = true;
+        }
 
+        var imageIndexPromise;
+        if (defined(this._image)) {
+            imageIndexPromise = atlas.addImage(this._imageId, this._image);
+        }
         if (defined(this._imageSubRegion)) {
-            var setIndexCallback = callback;
-            callback = function(index, id) {
-                if (id !== -1) {
-                    atlas.addSubRegion(id, that._imageSubRegion, setIndexCallback);
-                }
-                that._imageSubRegion = undefined;
-            };
+            imageIndexPromise = atlas.addSubRegion(this._imageId, this._imageSubRegion);
         }
 
-        if (defined(this._imageUrl)) {
-            atlas.addTextureFromUrl(this._imageUrl, callback);
-        } else if (defined(this._image)) {
-            atlas.addImage(this._image, callback);
-        } else if (defined(this._imageId) && defined(this._getImageCallback)) {
-            atlas.addTextureFromFunction(this._imageId, this._getImageCallback, callback);
-        } else {
-            this._imageId = undefined;
-            callback(-1);
+        this._imageIndexPromise = imageIndexPromise;
+
+        if (!defined(imageIndexPromise)) {
+            return;
         }
 
-        this._imageUrl = undefined;
-        this._image = undefined;
-        this._getImageCallback = undefined;
+        var that = this;
+        imageIndexPromise.then(function(index) {
+            if (imageIndexPromise.cancelled) {
+                // another load occurred before this one finished, ignore the index
+                return;
+            }
+            that._imageIndex = index;
+            that._ready = true;
+            makeDirty(that, IMAGE_INDEX_INDEX);
+            that._image = undefined;
+            that._imageSubRegion = undefined;
+            that._imageIndexPromise = undefined;
+        }).otherwise(function(error) {
+            /*global console*/
+            console.error('Error loading image for billboard: ' + error);
+            that._imageIndexPromise = undefined;
+        });
     };
 
     /**
      * <p>
-     * Checks the atlas for a texture with the supplied id, if the id does not
-     * exist, the supplied callback is triggered to create it.
+     * Sets the image to be used for this billboard.  If a texture has already been created for the
+     * given id, the existing texture is used.
      * </p>
-     *
      * <p>
-     * This function is useful for dynamically generated textures that are shared
-     * across many billboards.  Only the first billboard will actually create the texture
-     * while subsequent billboards will re-use the existing one.
+     * This function is useful for dynamically creating textures that are shared across many billboards.
+     * Only the first billboard will actually call the function and create the texture, while subsequent
+     * billboards created with the same id will simply re-use the existing texture.
+     * </p>
+     * <p>
+     * To load an image from a URL, setting the {@link Billboard#image} property is more convenient.
      * </p>
      *
-     * @param {String} id The id of the image.
-     * @param {Function} getImageCallback A function which takes two parameters; first the id of the image to
-     * retrieve and second, a function to call when the image is ready.  The function takes the image as its
-     * only parameter.
+     * @param {String} id The id of the image.  This can be any string that uniquely identifies the image.
+     * @param {Image|Canvas|String|Billboard~CreateImageCallback} image The image to load.  This parameter
+     *        can either be a loaded Image or Canvas, a URL which will be loaded as an Image automatically,
+     *        or a function which will be called to create the image if it hasn't been loaded already.
+     * @example
+     * // create a billboard image dynamically
+     * function drawImage(id) {
+     *   // create and draw an image using a canvas
+     *   var canvas = document.createElement('canvas');
+     *   var context2D = canvas.getContext('2d');
+     *   // ... draw image
+     *   return canvas;
+     * }
+     * // drawImage will be called to create the texture
+     * b.setImage('myImage', drawImage);
+     *
+     * // subsequent billboards created in the same collection using the same id will use the existing
+     * // texture, without the need to create the canvas or draw the image
+     * b2.setImage('myImage', drawImage);
      */
-    Billboard.prototype.setGeneratedImage = function(id, getImageCallback) {
+    Billboard.prototype.setImage = function(id, image) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(id)) {
             throw new DeveloperError('id is required.');
         }
-        if (!defined(getImageCallback)) {
-            throw new DeveloperError('getImageCallback is required.');
+        if (!defined(image)) {
+            throw new DeveloperError('image is required.');
         }
         //>>includeEnd('debug');
 
         this._imageId = id;
-        this._getImageCallback = getImageCallback;
+        this._image = image;
 
         if (defined(this._billboardCollection._textureAtlas)) {
             this._loadImage();
@@ -950,6 +1020,13 @@ define([
         this._pickId = this._pickId && this._pickId.destroy();
         this._billboardCollection = undefined;
     };
+
+    /**
+     * A function that creates an image.
+     * @callback Billboard~CreateImageCallback
+     * @param {String} id The identifier of the image to load.
+     * @returns {Image|Canvas|Promise} The image, or a promise that will resolve to an image.
+     */
 
     return Billboard;
 });

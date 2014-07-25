@@ -5,7 +5,7 @@ Change Log
 
 * Breaking changes
   * All `Matrix2`, `Matrix3`, `Matrix4` and `Quaternion` functions that take a `result` parameter now require the parameter (except for functions starting with `from`).
-  * Removed the following from the Cesium API: `Transforms.earthOrientationParameters`, `EarthOrientationParameters`, `EarthOrientationParametersSample`, `Transforms.iau2006XysData`, `Iau2006XysData`, `Iau2006XysSample`, `IauOrientationAxes`, `TimeConstants`, `Scene.frameState`, `FrameState`, `EncodedCartesian3`, `EllipsoidalOccluder`, and `FAR`.  These are still available but are not part of the official API and may change in future versions.
+  * Removed the following from the Cesium API: `Transforms.earthOrientationParameters`, `EarthOrientationParameters`, `EarthOrientationParametersSample`, `Transforms.iau2006XysData`, `Iau2006XysData`, `Iau2006XysSample`, `IauOrientationAxes`, `TimeConstants`, `Scene.frameState`, `FrameState`, `EncodedCartesian3`, `EllipsoidalOccluder`, `TextureAtlas`, and `FAR`.  These are still available but are not part of the official API and may change in future versions.
   * Removed `DynamicObject.vertexPositions`.  Use `DynamicWall.positions`, `DynamicPolygon.positions`, and `DynamicPolyline.positions` instead.
   * Removed `Primitive.allow3DOnly`, set the `Scene` level option, `scene3DOnly`, instead.
   * `SampledProperty` and `SampledPositionProperty` no longer extrapolate outside of their sample data time range by default.
@@ -16,7 +16,7 @@ Change Log
     * `EllipsoidTerrainProvider.hasWaterMask`
     * `VRTheWorldTerrainProvider.hasWaterMask`
   * Renamed preprocessor define, `ENABLE_LIGHTING` used by `Globe` shaders to `ENABLE_DAYNIGHT_SHADING`
-  * The `DynamicScene` layer has been renamed to `DataSources` additionally, the following objects have all been renamed.
+  * The `DynamicScene` layer has been renamed to `DataSources` additionally, the following objects have all been renamed:
     * `DynamicBillboard` -> `BillboardGraphics`
     * `DynamicBillboardVisualizer` -> `BillboardVisualizer`
     * `CompositeDynamicObjectCollection` -> `CompositeEntityCollection`
@@ -43,11 +43,11 @@ Change Log
     * `DynamicRectangle` -> `RectangleGraphics`
     * `DynamicWall` -> `WallGraphics`
     * `viewerDynamicObjectMixin` -> `viewerEntityMixin`
-  * Removed `DynamicVector` and `DynamicVectorVisualizer`
-  * `DataSource.dynamicObjects` has been renamed to `DataSource.entities`
-  * `EntityCollection.getObjects()` and `CompositeEntityCollection.getObjects()` have been made properties and renamed `EntityCollection.entities` and `CompositeEntityCollection.entities`. 
+  * Removed `DynamicVector` and `DynamicVectorVisualizer`.
+  * `DataSource.dynamicObjects` has been renamed to `DataSource.entities`.
+  * `EntityCollection.getObjects()` and `CompositeEntityCollection.getObjects()` have been made properties and renamed `EntityCollection.entities` and `CompositeEntityCollection.entities`.
   * `Viewer.trackedObject` and `Viewer.selectedObject` have been renamed to `Viewer.trackedEntity` and `Viewer.selectedEntity` when using the `viewerEntityMixin`.
-  * Renamed functions for naming consistency
+  * Renamed functions for naming consistency:
     * `BoundingSphere.getPlaneDistances` -> `BoundingSphere.computePlaneDistances`
     * `Cartesian[2,3,4].getMaximumComponent` -> `Cartesian[2,3,4].maximumComponent`
     * `Cartesian[2,3,4].getMinimumComponent` -> `Cartesian[2,3,4].minimumComponent`
@@ -79,35 +79,28 @@ Change Log
   * Removed `ScreenSpaceCameraController.ellipsoid`. The behavior that depended on the ellipsoid is now determined based on the scene state.
   * Sandcastle examples now automatically wrap the example code in RequireJS boilerplate.  To upgrade any custom examples, copy the code into an existing example (such as Hello World) and save a new file.
   * Replaced `PerspectiveFrustum.fovy` with `PerspectiveFrustum.fov` which will change the field of view angle in either the x or y direction depending on the aspect ratio.
-  * Removed `Billboard.imageIndex`. Instead use `Billboard.imageUrl` or `Billboard.image`. Code that looked like:
-      Cesium.when.all([
-                      Cesium.loadImage('../images/Cesium_Logo_overlay.png'),
-                      Cesium.loadImage('../images/facility.gif')
-                     ],
-                     function(images) {
- 
-         var billboards = new Cesium.BillboardCollection();
-         var textureAtlas = new Cesium.TextureAtlas({
-             scene : scene,
-             images : images
-         });
-         billboards.textureAtlas = textureAtlas;
-         billboards.add({
-             imageIndex : 0,
-             position : //...
-         });
-         //..
-         scene.primitives.add(billboards);
-     });
-     
-   should now look like:
-     var billboards = new Cesium.BillboardCollection();
-     billboards.add({
-         imageUrl : '../images/Cesium_Logo_overlay.png',
-         position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883)
-     });
-     scene.primitives.add(billboards);
-   
+  * Removed `Billboard.imageIndex` and `BillboardCollection.textureAtlas`. Instead, use `Billboard.image`. 
+    * Code that looked like:
+
+            var billboards = new Cesium.BillboardCollection();
+            var textureAtlas = new Cesium.TextureAtlas({
+                scene : scene,
+                images : images // array of loaded images
+            });
+            billboards.textureAtlas = textureAtlas;
+            billboards.add({
+                imageIndex : 0,
+                position : //...
+            });
+
+    * should now look like:
+
+            var billboards = new Cesium.BillboardCollection();
+            billboards.add({
+                image : '../images/Cesium_Logo_overlay.png',
+                position : //...
+            });
+
 * Added northUpEast transform to help support display of glTF models because Y is their up axis.
 * Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
 * Added `czm_octDecode` and `czm_signNotZero` builtin functions.

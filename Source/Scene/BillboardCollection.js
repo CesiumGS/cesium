@@ -103,8 +103,8 @@ define([
      * </div>
      * <br /><br />
      * Billboards are added and removed from the collection using {@link BillboardCollection#add}
-     * and {@link BillboardCollection#remove}.  All billboards in a collection reference images
-     * from the same texture atlas, which is assigned using {@link BillboardCollection#textureAtlas}.
+     * and {@link BillboardCollection#remove}.  Billboards in a collection automatically share textures
+     * for images with the same identifier.
      *
      * @alias BillboardCollection
      * @constructor
@@ -121,22 +121,19 @@ define([
      *
      * @see BillboardCollection#add
      * @see BillboardCollection#remove
-     * @see BillboardCollection#textureAtlas
      * @see Billboard
-     * @see TextureAtlas
      * @see LabelCollection
      *
      * @example
      * // Create a billboard collection with two billboards
      * var billboards = new Cesium.BillboardCollection();
-     * billboards.textureAtlas = atlas;
      * billboards.add({
      *   position : { x : 1.0, y : 2.0, z : 3.0 },
-     *   imageUrl : 'url/to/image'
+     *   image : 'url/to/image'
      * });
      * billboards.add({
      *   position : { x : 4.0, y : 5.0, z : 6.0 },
-     *   imageUrl : 'url/to/another/image'
+     *   image : 'url/to/another/image'
      * });
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
@@ -205,11 +202,22 @@ define([
          * @example
          * var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
          * billboards.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-         * billboards.add({ imageUrl : 'url/to/image', position : new Cesium.Cartesian3(0.0, 0.0, 0.0) }); // center
-         * billboards.add({ imageUrl : 'url/to/image', position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0) }); // east
-         * billboards.add({ imageUrl : 'url/to/image', position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0) }); // north
-         * billboards.add({ imageUrl : 'url/to/image', position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0) }); // up
-         * ]);
+         * billboards.add({
+         *   image : 'url/to/image',
+         *   position : new Cesium.Cartesian3(0.0, 0.0, 0.0) // center
+         * });
+         * billboards.add({
+         *   image : 'url/to/image',
+         *   position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0) // east
+         * });
+         * billboards.add({
+         *   image : 'url/to/image',
+         *   position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0) // north
+         * });
+         * billboards.add({
+         *   image : 'url/to/image',
+         *   position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0) // up
+         * });
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
@@ -289,7 +297,7 @@ define([
         },
 
         /**
-         * Gets and sets the destroyTextureAtlas, which determines if the texture atlas is
+         * Gets and sets a value which determines if the texture atlas is
          * destroyed when the collection is destroyed.
          *
          * If the texture atlas is used by more than one collection, set this to <code>false</code>,
@@ -297,6 +305,7 @@ define([
          *
          * @memberof BillboardCollection.prototype
          * @type {Boolean}
+         * @private
          *
          * @example
          * // Set destroyTextureAtlas
@@ -347,7 +356,7 @@ define([
      *   horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
      *   verticalOrigin : Cesium.VerticalOrigin.CENTER,
      *   scale : 1.0,
-     *   imageUrl : 'url/to/image',
+     *   image : 'url/to/image',
      *   color : Cesium.Color.WHITE,
      *   id : undefined
      * });
