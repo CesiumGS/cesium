@@ -34,7 +34,7 @@ define([
         convertPackedArrayForInterpolation : DeveloperError.throwInstantiationError,
 
         /**
-         * Retrieves an instance from a packed array converted with {@link convertPackedArrayForInterpolation}.
+         * Retrieves an instance from a packed array converted with {@link PackableForInterpolation.convertPackedArrayForInterpolation}.
          * @function
          *
          * @param {Number[]} array The original packed array.
