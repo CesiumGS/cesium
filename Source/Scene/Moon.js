@@ -42,6 +42,8 @@ define([
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.MOON] The moon ellipsoid.
      * @param {Boolean} [options.onlySunLighting=true] Use the sun as the only light source.
      *
+     * @see Scene#moon
+     *
      * @example
      * scene.moon = new Cesium.Moon();
      */

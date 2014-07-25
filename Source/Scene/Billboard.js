@@ -423,7 +423,7 @@ define([
          * @type {VerticalOrigin}
          * @example
          * // Use a bottom, left origin
-         * b.hHorizontalOrigin = Cesium.HorizontalOrigin.LEFT;
+         * b.horizontalOrigin = Cesium.HorizontalOrigin.LEFT;
          * b.verticalOrigin = Cesium.VerticalOrigin.BOTTOM;
          */
         verticalOrigin : {

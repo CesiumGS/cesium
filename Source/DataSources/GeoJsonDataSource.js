@@ -14,6 +14,7 @@ define([
         '../ThirdParty/when',
         './ColorMaterialProperty',
         './ConstantProperty',
+        './ConstantPositionProperty',
         './Entity',
         './EntityCollection',
         './PointGraphics',
@@ -34,6 +35,7 @@ define([
         when,
         ColorMaterialProperty,
         ConstantProperty,
+        ConstantPositionProperty,
         Entity,
         EntityCollection,
         PointGraphics,
@@ -41,8 +43,23 @@ define([
         PolylineGraphics) {
     "use strict";
 
+    var pointGraphics = new PointGraphics();
+    pointGraphics.color = new ConstantProperty(Color.YELLOW);
+    pointGraphics.pixelSize = new ConstantProperty(10);
+    pointGraphics.outlineColor = new ConstantProperty(Color.BLACK);
+    pointGraphics.outlineWidth = new ConstantProperty(1);
+
+    var polylineGraphics = new PolylineGraphics();
+    polylineGraphics.material = ColorMaterialProperty.fromColor(Color.YELLOW);
+    polylineGraphics.width = new ConstantProperty(2);
+
+    var polygonGraphics = new PolygonGraphics();
+    polygonGraphics.material = ColorMaterialProperty.fromColor(new Color(1.0, 1.0, 0.0, 0.3));
+    polygonGraphics.outline = new ConstantProperty(true);
+    polygonGraphics.outlineColor = new ConstantProperty(Color.BLACK);
+
     function describe(properties, nameProperty) {
-        var html = '<table class="cesium-geoJsonDataSourceTable">';
+        var html = '<table class="cesium-infoBox-defaultTable">';
         for ( var key in properties) {
             if (properties.hasOwnProperty(key)) {
                 if (key === nameProperty) {
@@ -80,24 +97,24 @@ define([
         }
 
         var entity = entityCollection.getOrCreateEntity(id);
-        entity.geoJson = geoJson;
-
         var properties = geoJson.properties;
         if (defined(properties)) {
-            //Try and find a good name for the object from its meta-data
-            //TODO: Make both name and description creation user-configurable.
+            entity.addProperty('properties');
+            entity.properties = properties;
+
             var key;
             var nameProperty;
             for (key in properties) {
                 if (properties.hasOwnProperty(key) && properties[key]) {
-                    var upperKey = key.toUpperCase();
-                    if (upperKey === 'NAME' || upperKey === 'TITLE') {
+                    var lowerKey = key.toLowerCase();
+                    if (lowerKey === 'name' || lowerKey === 'title') {
                         nameProperty = key;
                         entity.name = properties[key];
                         break;
                     }
                 }
             }
+
             if (!defined(nameProperty)) {
                 for (key in properties) {
                     if (properties.hasOwnProperty(key) && properties[key]) {
@@ -110,12 +127,7 @@ define([
                 }
             }
 
-            var description = describe(properties, nameProperty);
-            entity.description = {
-                getValue : function() {
-                    return description;
-                }
-            };
+            entity.description = new ConstantProperty(describe(properties, nameProperty));
         }
         return entity;
     }
@@ -169,22 +181,22 @@ define([
 
     function processPoint(dataSource, geoJson, geometry, crsFunction, sourceUri) {
         var entity = createObject(geoJson, dataSource._entityCollection);
-        entity.merge(dataSource.defaultPoint);
-        entity.position = new ConstantProperty(crsFunction(geometry.coordinates));
+        entity.point = pointGraphics.clone();
+        entity.position = new ConstantPositionProperty(crsFunction(geometry.coordinates));
     }
 
     function processMultiPoint(dataSource, geoJson, geometry, crsFunction, sourceUri) {
         var coordinates = geometry.coordinates;
         for (var i = 0; i < coordinates.length; i++) {
             var entity = createObject(geoJson, dataSource._entityCollection);
-            entity.merge(dataSource.defaultPoint);
-            entity.position = new ConstantProperty(crsFunction(coordinates[i]));
+            entity.point = pointGraphics.clone();
+            entity.position = new ConstantPositionProperty(crsFunction(coordinates[i]));
         }
     }
 
     function processLineString(dataSource, geoJson, geometry, crsFunction, sourceUri) {
         var entity = createObject(geoJson, dataSource._entityCollection);
-        entity.merge(dataSource.defaultLine);
+        entity.polyline = polylineGraphics.clone();
         entity.polyline.positions = new ConstantProperty(coordinatesArrayToCartesianArray(geometry.coordinates, crsFunction));
     }
 
@@ -192,15 +204,14 @@ define([
         var lineStrings = geometry.coordinates;
         for (var i = 0; i < lineStrings.length; i++) {
             var entity = createObject(geoJson, dataSource._entityCollection);
-            entity.merge(dataSource.defaultLine);
+            entity.polyline = polylineGraphics.clone();
             entity.polyline.positions = new ConstantProperty(coordinatesArrayToCartesianArray(lineStrings[i], crsFunction));
         }
     }
 
     function processPolygon(dataSource, geoJson, geometry, crsFunction, sourceUri) {
-        //TODO Holes
         var entity = createObject(geoJson, dataSource._entityCollection);
-        entity.merge(dataSource.defaultPolygon);
+        entity.polygon = polygonGraphics.clone();
         entity.polygon.positions = new ConstantProperty(coordinatesArrayToCartesianArray(geometry.coordinates[0], crsFunction));
     }
 
@@ -215,12 +226,11 @@ define([
     }
 
     function processMultiPolygon(dataSource, geoJson, geometry, crsFunction, sourceUri) {
-        //TODO holes
         var polygons = geometry.coordinates;
         for (var i = 0; i < polygons.length; i++) {
             var polygon = polygons[i];
             var entity = createObject(geoJson, dataSource._entityCollection);
-            entity.merge(dataSource.defaultPolygon);
+            entity.polygon = polygonGraphics.clone();
             entity.polygon.positions = new ConstantProperty(coordinatesArrayToCartesianArray(polygon[0], crsFunction));
         }
     }
@@ -251,91 +261,40 @@ define([
 
     function setLoading(dataSource, isLoading) {
         if (dataSource._isLoading !== isLoading) {
+            if (isLoading) {
+                dataSource._entityCollection.suspendEvents();
+            } else {
+                dataSource._entityCollection.resumeEvents();
+            }
             dataSource._isLoading = isLoading;
             dataSource._loading.raiseEvent(dataSource, isLoading);
         }
     }
 
     /**
-     * A {@link DataSource} which processes both GeoJSON and TopoJSON data.  Since GeoJSON has no standard for styling
-     * content, we provide default graphics via the defaultPoint, defaultLine, and defaultPolygon properties. Any
-     * changes to these objects will affect the resulting {@link Entity} collection.
+     * A {@link DataSource} which processes both
+     * {@link http://www.geojson.org/|GeoJSON} and {@link https://github.com/mbostock/topojson|TopoJSON} data.
      * @alias GeoJsonDataSource
      * @constructor
      *
      * @param {String} [name] The name of this data source.  If undefined, a name will be taken from
      *                        the name of the GeoJSON file.
      *
-     * @see DataSourceDisplay
-     * @see {@link http://www.geojson.org/|GeoJSON specification}
-     *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=GeoJSON%20and%20TopoJSON.html|Cesium Sandcastle GeoJSON and TopoJSON Demo}
      *
      * @example
-     * //Use a billboard instead of a point.
+     * var viewer = new Cesium.Viewer('cesiumContainer');
      * var dataSource = new Cesium.GeoJsonDataSource();
-     * var defaultPoint = dataSource.defaulPoint;
-     * defaultPoint.point = undefined;
-     * var billboard = new Cesium.BillboardGraphics();
-     * billboard.image = new Cesium.ConstantProperty('image.png');
-     * defaultPoint.billboard = billboard;
+     * viewer.dataSources.add(dataSource);
      * dataSource.loadUrl('sample.geojson');
      */
     var GeoJsonDataSource = function(name) {
         this._name = name;
-
-        //default point
-        var defaultPoint = new Entity('GeoJsonDataSource.defaultPoint');
-        var point = new PointGraphics();
-        point.color = new ConstantProperty(Color.YELLOW);
-        point.pixelSize = new ConstantProperty(10);
-        point.outlineColor = new ConstantProperty(Color.BLACK);
-        point.outlineWidth = new ConstantProperty(1);
-        defaultPoint.point = point;
-
-        //default line
-        var defaultLine = new Entity('GeoJsonDataSource.defaultLine');
-        var polyline = new PolylineGraphics();
-        var material = new ColorMaterialProperty();
-        material.color = new ConstantProperty(Color.YELLOW);
-        polyline.material = material;
-        polyline.width = new ConstantProperty(2);
-        defaultLine.polyline = polyline;
-
-        //default polygon
-        var defaultPolygon = new Entity('GeoJsonDataSource.defaultPolygon');
-        var polygon = new PolygonGraphics();
-        defaultPolygon.polygon = polygon;
-
-        material = new ColorMaterialProperty();
-        material.color = new ConstantProperty(new Color(1.0, 1.0, 0.0, 0.2));
-        polygon.material = material;
-        polygon.outline = new ConstantProperty(true);
-        polygon.outlineColor = new ConstantProperty(new Color(1.0, 1.0, 0.0));
-
         this._changed = new Event();
         this._error = new Event();
         this._isLoading = false;
         this._loading = new Event();
         this._entityCollection = new EntityCollection();
-
-        /**
-         * Gets or sets the default graphics to be applied to GeoJSON Point and MultiPoint geometries.
-         * @type {Entity}
-         */
-        this.defaultPoint = defaultPoint;
-
-        /**
-         * Gets or sets the default graphics to be applied to GeoJSON LineString and MultiLineString geometries.
-         * @type {Entity}
-         */
-        this.defaultLine = defaultLine;
-
-        /**
-         * Gets or sets the default graphics to be applied to GeoJSON Polygon and MultiPolygon geometries.
-         * @type {Entity}
-         */
-        this.defaultPolygon = defaultPolygon;
     };
 
     defineProperties(GeoJsonDataSource.prototype, {
@@ -350,7 +309,7 @@ define([
             }
         },
         /**
-         * GeoJSON only defines static data, therefore this property is always undefined.
+         * This DataSource only defines static data, therefore this property is always undefined.
          * @memberof GeoJsonDataSource.prototype
          * @type {DataSourceClock}
          */
@@ -510,15 +469,14 @@ define([
             }
         }
 
-        this._entityCollection.removeAll();
-
         setLoading(this, true);
 
         var dataSource = this;
         return when(crsFunction, function(crsFunction) {
+            dataSource._entityCollection.removeAll();
             typeHandler(dataSource, geoJson, geoJson, crsFunction, sourceUri);
-            dataSource._changed.raiseEvent(dataSource);
             setLoading(dataSource, false);
+            dataSource._changed.raiseEvent(dataSource);
         }).otherwise(function(error) {
             setLoading(dataSource, false);
             dataSource._error.raiseEvent(dataSource, error);
