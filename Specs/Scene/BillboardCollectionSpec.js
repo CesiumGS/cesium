@@ -54,6 +54,7 @@ defineSuite([
     var greenImage;
     var blueImage;
     var whiteImage;
+    var largeBlueImage;
 
     beforeAll(function() {
         context = createContext();
@@ -86,8 +87,11 @@ defineSuite([
             whiteImage = new Image();
             whiteImage.src = './Data/Images/White.png';
 
+            largeBlueImage = new Image();
+            largeBlueImage.src = './Data/Images/Blue10x10.png';
+
             waitsFor(function() {
-                return greenImage.complete && blueImage.complete && whiteImage.complete;
+                return greenImage.complete && blueImage.complete && whiteImage.complete && largeBlueImage.complete;
             }, 'Load .png file(s) for billboard collection test.', 3000);
         }
     });
@@ -821,6 +825,47 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 255, 255]);
     });
 
+    it('renders using billboard setImage function', function() {
+        var b = billboards.add({
+            position : Cartesian3.ZERO,
+            image : greenImage
+        });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        render(context, frameState, billboards);
+        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        b.setImage(blueImage.src, blueImage);
+        render(context, frameState, billboards);
+        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
+    });
+
+    it('renders using billboard setImageSubRegion function', function() {
+        var b = billboards.add({
+            position : Cartesian3.ZERO,
+            image : greenImage
+        });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        render(context, frameState, billboards);
+        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        billboards.textureAtlas.addImage(largeBlueImage.src, largeBlueImage);
+        b.setImageSubRegion(largeBlueImage.src, new BoundingRectangle(5.0, 5.0, 1.0, 1.0));
+        render(context, frameState, billboards);
+        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
+    });
+
     it('renders using billboard color property', function() {
         var b = billboards.add({
             position : Cartesian3.ZERO,
@@ -1160,6 +1205,34 @@ defineSuite([
     it('throws when accessing without an index', function() {
         expect(function() {
             billboards.get();
+        }).toThrowDeveloperError();
+    });
+
+    it('setImage throws without an id', function() {
+        var b = billboards.add();
+        expect(function() {
+            b.setImage(undefined, {});
+        }).toThrowDeveloperError();
+    });
+
+    it('setImage throws without an inmage', function() {
+        var b = billboards.add();
+        expect(function() {
+            b.setImage('', undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('setImageSubRegion throws without an id', function() {
+        var b = billboards.add();
+        expect(function() {
+            b.setImage(undefined, {});
+        }).toThrowDeveloperError();
+    });
+
+    it('setImageSubRegion throws without a sub-region', function() {
+        var b = billboards.add();
+        expect(function() {
+            b.setImage('', undefined);
         }).toThrowDeveloperError();
     });
 
