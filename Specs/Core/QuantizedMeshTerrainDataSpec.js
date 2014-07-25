@@ -210,7 +210,7 @@ defineSuite([
 
                      expect(encodedNormals.length).toBe(8);
 
-                     // All 4 normals should remain oct-encoded representations of vec3(0.0, 0.0, 1.0)
+                     // All 4 normals should remain oct-encoded representations of vec3(0.0, 0.0, -1.0)
                      for (var n = 0; n < encodedNormals.length; ++n) {
                          expect(encodedNormals[i]).toBe(255);
                      }

@@ -18,6 +18,39 @@ defineSuite([
         expect(CesiumMath.sign(0)).toEqual(0);
     });
 
+    it('signNotZero of -2', function() {
+        expect(CesiumMath.signNotZero(-2)).toEqual(-1);
+    });
+
+    it('signNotZero of 2', function() {
+        expect(CesiumMath.signNotZero(2)).toEqual(1);
+    });
+
+    it('signNotZero of 0', function() {
+        expect(CesiumMath.signNotZero(0)).toEqual(1);
+    });
+
+    //////////////////////////////////////////////////////////////////////
+    it('toSNorm -1.0', function() {
+        expect(CesiumMath.toSNorm(-1.0)).toEqual(0);
+    });
+
+    it('toSNorm 1.0', function() {
+        expect(CesiumMath.toSNorm(1.0)).toEqual(255);
+    });
+
+    it('toSNorm -1.0001', function() {
+        expect(CesiumMath.toSNorm(-1.0001)).toEqual(0);
+    });
+
+    it('toSNorm 1.0001', function() {
+        expect(CesiumMath.toSNorm(1.0001)).toEqual(255);
+    });
+
+    it('toSNorm 0.0', function() {
+        expect(CesiumMath.toSNorm(0.0)).toEqual(128);
+    });
+
     //////////////////////////////////////////////////////////////////////
 
     it('cosh', function() {
