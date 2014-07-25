@@ -188,7 +188,7 @@ define([
         },
 
         /**
-        * Gets and sets the Cartesian position of this billboard.
+        * Gets or sets the Cartesian position of this billboard.
         * @memberof Billboard.prototype
         * @type {Cartesian3}
         */
@@ -214,7 +214,7 @@ define([
         },
 
         /**
-         * Gets and sets the pixel offset in screen space from the origin of this billboard.  This is commonly used
+         * Gets or sets the pixel offset in screen space from the origin of this billboard.  This is commonly used
          * to align multiple billboards and labels at the same position, e.g., an image and text.  The
          * screen space origin is the top, left corner of the canvas; <code>x</code> increases from
          * left to right, and <code>y</code> increases from top to bottom.
@@ -249,7 +249,7 @@ define([
         },
 
         /**
-         * Gets and sets near and far scaling properties of a Billboard based on the billboard's distance from the camera.
+         * Gets or sets near and far scaling properties of a Billboard based on the billboard's distance from the camera.
          * A billboard's scale will interpolate between the {@link NearFarScalar#nearValue} and
          * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
          * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
@@ -290,7 +290,7 @@ define([
         },
 
         /**
-         * Gets and sets near and far translucency properties of a Billboard based on the billboard's distance from the camera.
+         * Gets or sets near and far translucency properties of a Billboard based on the billboard's distance from the camera.
          * A billboard's translucency will interpolate between the {@link NearFarScalar#nearValue} and
          * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
          * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
@@ -331,7 +331,7 @@ define([
         },
 
         /**
-         * Gets and sets near and far pixel offset scaling properties of a Billboard based on the billboard's distance from the camera.
+         * Gets or sets near and far pixel offset scaling properties of a Billboard based on the billboard's distance from the camera.
          * A billboard's pixel offset will be scaled between the {@link NearFarScalar#nearValue} and
          * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
          * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
@@ -373,7 +373,7 @@ define([
         },
 
         /**
-         * Gets and sets the 3D Cartesian offset applied to this billboard in eye coordinates.  Eye coordinates is a left-handed
+         * Gets or sets the 3D Cartesian offset applied to this billboard in eye coordinates.  Eye coordinates is a left-handed
          * coordinate system, where <code>x</code> points towards the viewer's right, <code>y</code> points up, and
          * <code>z</code> points into the screen.  Eye coordinates use the same scale as world and model coordinates,
          * which is typically meters.
@@ -414,7 +414,7 @@ define([
         },
 
         /**
-         * Gets and sets the horizontal origin of this billboard, which determines if the billboard is
+         * Gets or sets the horizontal origin of this billboard, which determines if the billboard is
          * to the left, center, or right of its position.
          * <br /><br />
          * <div align='center'>
@@ -446,7 +446,7 @@ define([
         },
 
         /**
-         * Gets and sets the vertical origin of this billboard, which determines if the billboard is
+         * Gets or sets the vertical origin of this billboard, which determines if the billboard is
          * to the above, below, or at the center of its position.
          * <br /><br />
          * <div align='center'>
@@ -478,7 +478,7 @@ define([
         },
 
         /**
-         * Gets and sets the uniform scale that is multiplied with the billboard's image size in pixels.
+         * Gets or sets the uniform scale that is multiplied with the billboard's image size in pixels.
          * A scale of <code>1.0</code> does not change the size of the billboard; a scale greater than
          * <code>1.0</code> enlarges the billboard; a positive scale less than <code>1.0</code> shrinks
          * the billboard.
@@ -510,7 +510,7 @@ define([
         },
 
         /**
-         * Gets and sets the color that is multiplied with the billboard's texture.  This has two common use cases.  First,
+         * Gets or sets the color that is multiplied with the billboard's texture.  This has two common use cases.  First,
          * the same white texture may be used by many different billboards, each with a different color, to create
          * colored billboards.  Second, the color's alpha component can be used to make the billboard translucent as shown below.
          * An alpha of <code>0.0</code> makes the billboard transparent, and <code>1.0</code> makes the billboard opaque.
@@ -556,7 +556,7 @@ define([
         },
 
         /**
-         * Gets and sets the rotation angle in radians.
+         * Gets or sets the rotation angle in radians.
          * @memberof Billboard.prototype
          * @type {Number}
          */
@@ -579,7 +579,7 @@ define([
         },
 
         /**
-         * Gets and sets the aligned axis in world space. The aligned axis is the unit vector that the billboard up vector points towards.
+         * Gets or sets the aligned axis in world space. The aligned axis is the unit vector that the billboard up vector points towards.
          * The default is the zero vector, which means the billboard is aligned to the screen up vector.
          * @memberof Billboard.prototype
          * @type {Cartesian3}
@@ -619,7 +619,7 @@ define([
         },
 
         /**
-         * Gets and sets a width for the billboard. If undefined, the image width will be used.
+         * Gets or sets a width for the billboard. If undefined, the image width will be used.
          * @memberof Billboard.prototype
          * @type {Number}
          */
@@ -636,7 +636,7 @@ define([
         },
 
         /**
-         * Gets and sets a height for the billboard. If undefined, the image height will be used.
+         * Gets or sets a height for the billboard. If undefined, the image height will be used.
          * @memberof Billboard.prototype
          * @type {Number}
          */
@@ -688,7 +688,7 @@ define([
 
         /**
          * <p>
-         * Gets and sets the image to be used for this billboard.  If a texture has already been created for the
+         * Gets or sets the image to be used for this billboard.  If a texture has already been created for the
          * given image, the existing texture is used.
          * </p>
          * <p>

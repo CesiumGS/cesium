@@ -278,7 +278,7 @@ define([
         },
 
         /**
-         * Gets and sets the textureAtlas.
+         * Gets or sets the textureAtlas.
          * @memberof BillboardCollection.prototype
          * @type {TextureAtlas}
          * @private
@@ -297,7 +297,7 @@ define([
         },
 
         /**
-         * Gets and sets a value which determines if the texture atlas is
+         * Gets or sets a value which determines if the texture atlas is
          * destroyed when the collection is destroyed.
          *
          * If the texture atlas is used by more than one collection, set this to <code>false</code>,
