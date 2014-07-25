@@ -2,6 +2,7 @@
 defineSuite([
         'DataSources/ModelVisualizer',
         'Core/Cartesian3',
+        'Core/Transforms',
         'Core/JulianDate',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
@@ -13,6 +14,7 @@ defineSuite([
     ], function(
         ModelVisualizer,
         Cartesian3,
+        Transforms,
         JulianDate,
         ConstantPositionProperty,
         ConstantProperty,
@@ -99,7 +101,7 @@ defineSuite([
         model.uri = new ConstantProperty(duckUrl);
 
         var testObject = entityCollection.getOrCreateEntity('test');
-        testObject.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.position = new ConstantPositionProperty(Cartesian3.fromDegrees(1, 2, 3));
         testObject.model = model;
 
         visualizer.update(time);
@@ -111,6 +113,7 @@ defineSuite([
         expect(primitive.show).toEqual(true);
         expect(primitive.scale).toEqual(2);
         expect(primitive.minimumPixelSize).toEqual(24.0);
+        expect(primitive.modelMatrix).toEqual(Transforms.northEastDownToFixedFrame(Cartesian3.fromDegrees(1, 2, 3), scene.globe.ellipsoid));
     });
 
     it('removing removes primitives.', function() {
