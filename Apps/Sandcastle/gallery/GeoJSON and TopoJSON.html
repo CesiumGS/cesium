@@ -27,28 +27,20 @@
 function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
-var usStates = '../../SampleData/ne_10m_us_states.json';
-
+//Create the viewer
 var viewer = new Cesium.Viewer('cesiumContainer');
 Cesium.viewerEntityMixin(viewer);
 
-//Load a GeoJSON or TopoJSON file with default settings.
-function basicLoading(){
+//Example 1: Load a GeoJSON or TopoJSON file with default settings.
+Sandcastle.addDefaultToolbarButton('Basic loading', function() {
     var dataSource = new Cesium.GeoJsonDataSource();
     viewer.dataSources.add(dataSource);
-    dataSource.loadUrl(usStates);
-}
-
-//Add button to run the basic loading example.
-Sandcastle.addToolbarButton('Basic loading', function() {
-    resetDemo();
-    basicLoading();
+    dataSource.loadUrl('../../SampleData/ne_10m_us_states.json');
 });
 
-//Apply custom graphics to a GeoJSON or TopoJSON file based
-//on the metadata contained in the file.
+//Example 2: Apply custom graphics to a GeoJSON or TopoJSON file 
+//based on the metadata contained in the file.
 Sandcastle.addToolbarButton('Custom Graphics', function() {
-    resetDemo();
     //Seed the random number generator for repeatable results.
     Cesium.Math.setRandomNumberSeed(0);
 
@@ -56,8 +48,8 @@ Sandcastle.addToolbarButton('Custom Graphics', function() {
     var dataSource = new Cesium.GeoJsonDataSource();
     viewer.dataSources.add(dataSource);
     
-    //Load the document and then set custom graphics
-    dataSource.loadUrl(usStates).then(function() {
+    //Load the document into the data source and then set custom graphics
+    dataSource.loadUrl('../../SampleData/ne_10m_us_states.json').then(function() {
         //Get the array of entities
         var entities = dataSource.entities.entities;
         
@@ -88,7 +80,7 @@ Sandcastle.addToolbarButton('Custom Graphics', function() {
 });
 
 //Reset the scene when switching demos.
-function resetDemo() {
+Sandcastle.reset = function() {
   viewer.dataSources.removeAll();
   
   //Set the camera to a US centered tilted view.
@@ -96,9 +88,7 @@ function resetDemo() {
   camera.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
   camera.transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-97.5, 38));
   camera.lookAt(new Cesium.Cartesian3(0.0, -5000000.0, 4000000.0), Cesium.Cartesian3.ZERO, Cesium.Cartesian3.UNIT_Z);
-}
-resetDemo();
-basicLoading();
+};
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }

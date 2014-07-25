@@ -1,6 +1,7 @@
 (function() {
     "use strict";
 
+    var defaultAction;
     var bucket = window.location.href;
     var pos = bucket.lastIndexOf('/');
     if (pos > 0 && pos < (bucket.length - 1)) {
@@ -15,6 +16,14 @@
         },
         registered : [],
         finishedLoading : function() {
+            window.Sandcastle.reset();
+
+            if(defaultAction) {
+                window.Sandcastle.highlight(defaultAction);
+                defaultAction();
+                defaultAction = undefined;
+            }
+
             document.body.className = document.body.className.replace(/(?:\s|^)sandcastle-loading(?:\s|$)/, ' ');
         },
         addToolbarButton : function(text, onclick, toolbarID) {
@@ -31,8 +40,7 @@
         },
         addDefaultToolbarButton : function(text, onclick, toolbarID) {
             window.Sandcastle.addToolbarButton(text, onclick, toolbarID);
-            window.Sandcastle.highlight(onclick);
-            onclick();
+            defaultAction = onclick;
         },
         addToolbarMenu : function(options, toolbarID) {
             var menu = document.createElement('select');
