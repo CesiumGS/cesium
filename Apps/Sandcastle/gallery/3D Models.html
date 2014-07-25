@@ -56,8 +56,8 @@ function createModel(url, height) {
         camera.transform = transform;
         camera.constrainedAxis = Cesium.Cartesian3.UNIT_Y;
         var controller = scene.screenSpaceCameraController;
-        var r = 1.25 * Math.max(model.boundingSphere.radius, camera.frustum.near);
-        controller.minimumZoomDistance = r * 0.25;
+        var r = 2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
+        controller.minimumZoomDistance = r * 0.5;
         camera.lookAt(new Cesium.Cartesian3(r, r, r), Cesium.Cartesian3.ZERO, Cesium.Cartesian3.UNIT_Y);
     });
 }

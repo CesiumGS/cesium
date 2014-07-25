@@ -238,7 +238,7 @@ defineSuite([
         expect(duckModel.getNode('name-of-node-that-does-not-exist')).not.toBeDefined();
     });
 
-    it('getNode returns returns a node', function() {
+    it('getNode returns a node', function() {
         var node = duckModel.getNode('LOD3sp');
         expect(node).toBeDefined();
         expect(node.name).toEqual('LOD3sp');
@@ -357,7 +357,7 @@ defineSuite([
 
     it('boundingSphere returns the bounding sphere', function() {
         var boundingSphere = duckModel.boundingSphere;
-        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(13.440, -3.701, 86.949), CesiumMath.EPSILON3);
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(13.440, -3.701, -86.949), CesiumMath.EPSILON3);
         expect(boundingSphere.radius).toEqualEpsilon(126.880, CesiumMath.EPSILON3);
     });
 
