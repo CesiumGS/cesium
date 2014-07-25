@@ -712,11 +712,11 @@ define([
             },
             set : function(value) {
                 this._imageIndex = -1;
-                this._imageId = undefined;
-                this._image = undefined;
                 this._imageSubRegion = undefined;
 
                 if (!defined(value)) {
+                    this._imageId = undefined;
+                    this._image = undefined;
                     if (defined(this._imageIndexPromise)) {
                         this._imageIndexPromise.cancelled = true;
                     }
