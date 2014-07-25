@@ -1,7 +1,6 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
-        '../Core/Cartographic',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
@@ -18,7 +17,6 @@ define([
         './SceneMode'
     ], function(
         Cartesian3,
-        Cartographic,
         defaultValue,
         defined,
         destroyObject,

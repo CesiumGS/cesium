@@ -2,7 +2,6 @@
 defineSuite([
         'DataSources/SampledPositionProperty',
         'Core/Cartesian3',
-        'Core/defined',
         'Core/ExtrapolationType',
         'Core/JulianDate',
         'Core/LagrangePolynomialApproximation',
@@ -12,7 +11,6 @@ defineSuite([
     ], function(
         SampledPositionProperty,
         Cartesian3,
-        defined,
         ExtrapolationType,
         JulianDate,
         LagrangePolynomialApproximation,

@@ -8,7 +8,6 @@ define([
         '../../Core/jsonp',
         '../../Core/Matrix4',
         '../../Core/Rectangle',
-        '../../Scene/SceneMode',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when',
         '../createCommand'
@@ -21,7 +20,6 @@ define([
         jsonp,
         Matrix4,
         Rectangle,
-        SceneMode,
         knockout,
         when,
         createCommand) {

@@ -143,7 +143,6 @@ define([
     var scratchNormal = new Cartesian3();
     var scratchTangent = new Cartesian3();
     var scratchBinormal = new Cartesian3();
-    var scratchBoundingSphere = new BoundingSphere();
     var p1Scratch = new Cartesian3();
     var p2Scratch = new Cartesian3();
 
