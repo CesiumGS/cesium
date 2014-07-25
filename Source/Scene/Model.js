@@ -80,6 +80,8 @@ define([
     "use strict";
     /*global WebGLRenderingContext*/
 
+    var yUpToZUp = Matrix4.fromRotationTranslation(Matrix3.fromRotationX(-CesiumMath.PI_OVER_TWO), Cartesian3.ZERO);
+
     var ModelState = {
         NEEDS_LOAD : 0,
         LOADING : 1,
@@ -677,7 +679,8 @@ define([
             }
         }
 
-        return BoundingSphere.fromCornerPoints(min, max);
+        var boundingSphere = BoundingSphere.fromCornerPoints(min, max);
+        return BoundingSphere.transformWithoutScale(boundingSphere, yUpToZUp, boundingSphere);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -2243,7 +2246,9 @@ define([
                 this._minimumPixelSize = this.minimumPixelSize;
 
                 var scale = getScale(this, context, frameState);
-                Matrix4.multiplyByUniformScale(this.modelMatrix, scale, this._computedModelMatrix);
+                var computedModelMatrix = this._computedModelMatrix;
+                Matrix4.multiplyByUniformScale(this.modelMatrix, scale, computedModelMatrix);
+                Matrix4.multiplyTransformation(computedModelMatrix, yUpToZUp, computedModelMatrix);
             }
 
             // Update modelMatrix throughout the graph as needed

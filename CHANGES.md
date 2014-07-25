@@ -9,6 +9,7 @@ Change Log
   * Removed `DynamicObject.vertexPositions`.  Use `DynamicWall.positions`, `DynamicPolygon.positions`, and `DynamicPolyline.positions` instead.
   * Removed `defaultPoint`, `defaultLine`, and `defaultPolygon` from `GeoJsonDataSource`.
   * Removed `Primitive.allow3DOnly`, set the `Scene` level option, `scene3DOnly`, instead.
+  * We now apply an implicit rotation to `Model` primitives so that the orientation convention matches the rest of Cesium (Z is up) instead of glTF convention (Y is up).
   * `SampledProperty` and `SampledPositionProperty` no longer extrapolate outside of their sample data time range by default.
   * Refactored the following methods into a properties:
     * `TerrainProvider.hasWaterMask`
