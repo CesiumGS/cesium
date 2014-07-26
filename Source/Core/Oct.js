@@ -20,6 +20,8 @@ define([
      *
      * @namespace
      * @alias Oct
+     *
+     * @private
      */
     var Oct = {};
 
@@ -73,6 +75,7 @@ define([
      *
      * @exception {DeveloperError} result must be defined.
      * @exception {DeveloperError} x and y must be a signed normalized integer between 0 and 255.
+     *
      */
     Oct.decode = function(x, y, result) {
         //>>includeStart('debug', pragmas.debug);
