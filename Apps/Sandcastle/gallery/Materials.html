@@ -296,14 +296,7 @@ function createButtons(scene) {
         rectangle.show = false;
     }
 
-    function selectMenuOption(menu, options) {
-        if (menu.selectedIndex > 0) {
-            options[menu.selectedIndex].onselect();
-        }
-        menu.selectedIndex = 0;
-    }
-
-    var commonMaterialOptions = [{
+    Sandcastle.addToolbarMenu([{
         text : 'Common materials'
     }, {
         text : 'Color',
@@ -319,13 +312,9 @@ function createButtons(scene) {
             applyImageMaterial(rectangle, scene);
             Sandcastle.highlight(applyImageMaterial);
         }
-    }];
+    }]);
 
-    Sandcastle.addToolbarMenu(commonMaterialOptions, function() {
-        selectMenuOption(this, commonMaterialOptions);
-    });
-
-    var proceduralTextureOptions = [{
+    Sandcastle.addToolbarMenu([{
         text : 'Procedural textures'
     }, {
         text : 'Checkerboard',
@@ -355,13 +344,9 @@ function createButtons(scene) {
             applyStripeMaterial(rectangle, scene);
             Sandcastle.highlight(applyStripeMaterial);
         }
-    }];
+    }]);
 
-    Sandcastle.addToolbarMenu(proceduralTextureOptions, function() {
-        selectMenuOption(this, proceduralTextureOptions);
-    });
-
-    var baseMaterialOptions = [{
+    Sandcastle.addToolbarMenu([{
         text : 'Base materials'
     }, {
         text : 'Alpha Map',
@@ -405,13 +390,9 @@ function createButtons(scene) {
             applySpecularMapMaterial(rectangle, scene);
             Sandcastle.highlight(applySpecularMapMaterial);
         }
-    }];
+    }]);
 
-    Sandcastle.addToolbarMenu(baseMaterialOptions, function() {
-        selectMenuOption(this, baseMaterialOptions);
-    });
-
-    var miscMaterialOptions = [{
+    Sandcastle.addToolbarMenu([{
         text : 'Misc materials'
     }, {
         text : 'Rim Lighting',
@@ -427,13 +408,9 @@ function createButtons(scene) {
             applyWaterMaterial(worldRectangle, scene);
             Sandcastle.highlight(applyWaterMaterial);
         }
-    }];
+    }]);
 
-    Sandcastle.addToolbarMenu(miscMaterialOptions, function() {
-        selectMenuOption(this, miscMaterialOptions);
-    });
-
-    var compositeMaterialOptions = [{
+    Sandcastle.addToolbarMenu([{
         text : 'Example composite materials'
     }, {
         text : 'Composite Example',
@@ -442,13 +419,9 @@ function createButtons(scene) {
             applyCompositeMaterial(worldRectangle, scene);
             Sandcastle.highlight(applyCompositeMaterial);
         }
-    }];
+    }]);
 
-    Sandcastle.addToolbarMenu(compositeMaterialOptions, function() {
-        selectMenuOption(this, compositeMaterialOptions);
-    });
-
-    var polylineMaterialOptions = [{
+    Sandcastle.addToolbarMenu([{
         text : 'Polyline materials'
     }, {
         text : 'Polyline Arrow',
@@ -471,11 +444,7 @@ function createButtons(scene) {
             applyPolylineOutlineMaterial(polyline, scene);
             Sandcastle.highlight(applyPolylineOutlineMaterial);
         }
-    }];
-
-    Sandcastle.addToolbarMenu(polylineMaterialOptions, function() {
-        selectMenuOption(this, polylineMaterialOptions);
-    });
+    }]);
     
     document.getElementById('toolbar').style.width = '10%';
 }

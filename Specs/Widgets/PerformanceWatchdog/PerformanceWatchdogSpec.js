@@ -1,16 +1,12 @@
 /*global defineSuite*/
 defineSuite([
         'Widgets/PerformanceWatchdog/PerformanceWatchdog',
-        'Core/Ellipsoid',
         'Specs/createScene',
-        'Specs/destroyScene',
-        'Specs/EventHelper'
+        'Specs/destroyScene'
     ], function(
         PerformanceWatchdog,
-        Ellipsoid,
         createScene,
-        destroyScene,
-        EventHelper) {
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

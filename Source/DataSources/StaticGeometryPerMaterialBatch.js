@@ -4,14 +4,12 @@ define([
         '../Core/defined',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/Primitive',
-        '../Scene/PrimitiveState',
         './MaterialProperty'
     ], function(
         AssociativeArray,
         defined,
         ShowGeometryInstanceAttribute,
         Primitive,
-        PrimitiveState,
         MaterialProperty) {
     "use strict";
 

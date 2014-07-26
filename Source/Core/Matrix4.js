@@ -1,7 +1,6 @@
 /*global define*/
 define([
         './Cartesian3',
-        './Cartesian4',
         './defaultValue',
         './defined',
         './DeveloperError',
@@ -11,7 +10,6 @@ define([
         './RuntimeError'
     ], function(
         Cartesian3,
-        Cartesian4,
         defaultValue,
         defined,
         DeveloperError,
@@ -328,8 +326,6 @@ define([
         result[15] = 1.0;
         return result;
     };
-
-    var scratchTrsRotation = new Matrix3();
 
     /**
      * Computes a Matrix4 instance from a translation, rotation, and scale (TRS)
