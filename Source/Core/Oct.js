@@ -29,6 +29,10 @@ define([
      * @param {Cartesian3} vector The normalized vector to be compressed into 2 byte 'oct' encoding.
      * @param {Cartesian2} result The 2 byte oct-encoded unit length vector.
      * @returns {Cartesian2} The 2 byte oct-encoded unit length vector.
+     *
+     * @exception {DeveloperError} vector must be defined.
+     * @exception {DeveloperError} result must be defined.
+     * @exception {DeveloperError} vector must be normalized.
      */
     Oct.encode = function(vector, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -66,6 +70,9 @@ define([
      * @param {Number} y The y component of the oct-encoded unit length vector.
      * @param {Cartesian3} result The decoded and normalized vector
      * @returns {Cartesian3} The decoded and normalized vector.
+     *
+     * @exception {DeveloperError} result must be defined.
+     * @exception {DeveloperError} x and y must be a signed normalized integer between 0 and 255.
      */
     Oct.decode = function(x, y, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -73,7 +80,7 @@ define([
             throw new DeveloperError('result is required.');
         }
         if (x < 0 || x > 255 || y < 0 || y > 255) {
-            throw new DeveloperError('expecting x and y to be a signed normalized integer between 0 and 255');
+            throw new DeveloperError('x and y must be a signed normalized integer between 0 and 255');
         }
         //>>includeEnd('debug');
 

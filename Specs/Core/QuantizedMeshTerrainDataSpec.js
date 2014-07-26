@@ -216,7 +216,6 @@ defineSuite([
                      }
                  }
              });
-
          });
 
          it('works for a quad with an extra vertex in the northwest child', function() {
