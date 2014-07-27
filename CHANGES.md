@@ -107,7 +107,6 @@ Change Log
 * Added northUpEast transform to help support display of glTF models because Y is their up axis.
 * Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
 * Added `czm_octDecode` and `czm_signNotZero` builtin functions.
-* Added `Oct` namespace that defines static functions for encoding and decoding normalized unit vectors to and from oct-encoding.
 * Added `CesiumMath.signNotZero`, `CesiumMath.toSNorm` and `CesiumMath.fromSNorm` functions in support of oct-encoding.
 * Added `CesiumTerrainProvider.requestVertexNormals` to request per vertex normals from the provider, if they are available.
 * Added new property to all terrain providers: `TerrainProvider.hasVertexNormals`, `CesiumTerrainProvider.hasVertexNormals`, `ArcGisImageServerTerrainProvider.hasVertexNormals`, `EllipsoidTerrainProvider.hasVertexNormals`, `VRTheWorldTerrainProvider.hasVertexNormals`.  This property indicates whether or not vertex normals will be included in the terrain tile responses.

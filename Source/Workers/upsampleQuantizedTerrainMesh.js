@@ -383,7 +383,7 @@ define([
     var cartesianScratch1 = [new Cartesian3(), new Cartesian3()];
     var cartesianScratch2 = [new Cartesian3(), new Cartesian3()];
     function lerpOctEncodedNormal(vertex, result) {
-        depth += 1;
+        ++depth;
 
         var first = cartesianScratch1[depth];
         var second = cartesianScratch2[depth];
@@ -395,7 +395,7 @@ define([
 
         Oct.encode(cartesian3Scratch, result);
 
-        depth -= 1;
+        --depth;
 
         return result;
     }
