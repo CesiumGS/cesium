@@ -4,7 +4,6 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
-        'Core/defined',
         'Core/JulianDate',
         'Core/NearFarScalar',
         'DataSources/BillboardGraphics',
@@ -20,7 +19,6 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Color,
-        defined,
         JulianDate,
         NearFarScalar,
         BillboardGraphics,
@@ -173,47 +171,6 @@ defineSuite([
                     expect(bb.pixelOffsetScaleByDistance).toEqual(testObject.billboard.pixelOffsetScaleByDistance.getValue(time));
                 }
                 return bb.show; //true once the image is loaded.
-            });
-        });
-
-        runs(function() {
-            testObject.position = new ConstantProperty(new Cartesian3(5678, 1234, 1293434));
-            billboard.show = new ConstantProperty(true);
-            billboard.color = new ConstantProperty(new Color(0.15, 0.25, 0.35, 0.45));
-            billboard.image = new ConstantProperty('Data/Images/Green.png');
-            billboard.eyeOffset = new ConstantProperty(new Cartesian3(2.0, 3.0, 1.0));
-            billboard.scale = new ConstantProperty(2.5);
-            billboard.rotation = new ConstantProperty(2.9);
-            billboard.alignedAxis = new ConstantProperty(Cartesian3.UNIT_Y);
-            billboard.horizontalOrigin = new ConstantProperty(HorizontalOrigin.LEFT);
-            billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
-            billboard.pixelOffset = new ConstantProperty(new Cartesian2(2, 3));
-            billboard.width = new ConstantProperty(17);
-            billboard.height = new ConstantProperty(12);
-            billboard.scaleByDistance = new ConstantProperty(new NearFarScalar());
-            billboard.translucencyByDistance = new ConstantProperty(new NearFarScalar());
-            billboard.pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar(1.0, 0.0, 3.0e9, 0.0));
-
-            waitsFor(function() {
-                visualizer.update(time);
-                var imageReady = defined(bb) && bb.imageIndex === 1; //true once the green image is loaded
-                if (imageReady) {
-                    expect(bb.position).toEqual(testObject.position.getValue(time));
-                    expect(bb.color).toEqual(testObject.billboard.color.getValue(time));
-                    expect(bb.eyeOffset).toEqual(testObject.billboard.eyeOffset.getValue(time));
-                    expect(bb.scale).toEqual(testObject.billboard.scale.getValue(time));
-                    expect(bb.rotation).toEqual(testObject.billboard.rotation.getValue(time));
-                    expect(bb.alignedAxis).toEqual(testObject.billboard.alignedAxis.getValue(time));
-                    expect(bb.horizontalOrigin).toEqual(testObject.billboard.horizontalOrigin.getValue(time));
-                    expect(bb.verticalOrigin).toEqual(testObject.billboard.verticalOrigin.getValue(time));
-                    expect(bb.pixelOffset).toEqual(testObject.billboard.pixelOffset.getValue(time));
-                    expect(bb.width).toEqual(testObject.billboard.width.getValue(time));
-                    expect(bb.height).toEqual(testObject.billboard.height.getValue(time));
-                    expect(bb.scaleByDistance).toEqual(testObject.billboard.scaleByDistance.getValue(time));
-                    expect(bb.translucencyByDistance).toEqual(testObject.billboard.translucencyByDistance.getValue(time));
-                    expect(bb.pixelOffsetScaleByDistance).toEqual(testObject.billboard.pixelOffsetScaleByDistance.getValue(time));
-                }
-                return imageReady;
             });
         });
 

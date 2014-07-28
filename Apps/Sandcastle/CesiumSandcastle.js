@@ -19,7 +19,6 @@ require({
         'dijit/registry',
         'dijit/TooltipDialog',
         'dojo/_base/fx',
-        'dojo/_base/window',
         'dojo/_base/xhr',
         'dojo/dom',
         'dojo/dom-class',
@@ -51,7 +50,6 @@ require({
         registry,
         TooltipDialog,
         fx,
-        win,
         xhr,
         dom,
         domClass,
@@ -175,14 +173,6 @@ require({
 
     function clearRun() {
         domClass.remove(registry.byId('buttonRun').domNode, 'highlightToolbarButton');
-    }
-
-    function highlightSaveAs() {
-        domClass.add(registry.byId('buttonSaveAs').domNode, 'highlightToolbarButton');
-    }
-
-    function clearSaveAs() {
-        domClass.remove(registry.byId('buttonSaveAs').domNode, 'highlightToolbarButton');
     }
 
     function openDocTab(title, link) {

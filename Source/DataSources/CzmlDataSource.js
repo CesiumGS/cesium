@@ -43,11 +43,9 @@ define([
         './ConeGraphics',
         './ConstantPositionProperty',
         './ConstantProperty',
-        './createPropertyDescriptor',
         './DataSourceClock',
         './EllipseGraphics',
         './EllipsoidGraphics',
-        './Entity',
         './EntityCollection',
         './GridMaterialProperty',
         './ImageMaterialProperty',
@@ -114,11 +112,9 @@ define([
         ConeGraphics,
         ConstantPositionProperty,
         ConstantProperty,
-        createPropertyDescriptor,
         DataSourceClock,
         EllipseGraphics,
         EllipsoidGraphics,
-        Entity,
         EntityCollection,
         GridMaterialProperty,
         ImageMaterialProperty,
@@ -1551,6 +1547,8 @@ define([
      * @constructor
      *
      * @param {String} [name] An optional name for the data source.  This value will be overwritten if a loaded document contains a name.
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=CZML.html|Cesium Sandcastle CZML Demo}
      */
     var CzmlDataSource = function(name) {
         this._name = name;

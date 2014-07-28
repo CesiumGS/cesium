@@ -364,9 +364,6 @@ define([
          * scene.debugCommandFilter = function(command) {
          *     return command.owner === billboards;
          * };
-         *
-         * @see DrawCommand
-         * @see ClearCommand
          */
         this.debugCommandFilter = undefined;
 

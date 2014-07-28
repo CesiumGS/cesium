@@ -28,6 +28,8 @@ define([
      *
      * @exception {DeveloperError} container is required.
      * @exception {DeveloperError} scene is required.
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cesium%20Inspector.html|Cesium Sandcastle Cesium Inspector Demo}
      */
     var CesiumInspector = function(container, scene) {
         if (!defined(container)) {

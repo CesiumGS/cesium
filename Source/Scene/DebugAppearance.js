@@ -241,9 +241,9 @@ define([
     DebugAppearance.prototype.isTranslucent = Appearance.prototype.isTranslucent;
 
     /**
-     * Creates a render state.  This is not the final {@link RenderState} instance; instead,
-     * it can contain a subset of render state properties identical to <code>renderState</code>
-     * passed to {@link Context#createRenderState}.
+     * Creates a render state.  This is not the final render state instance; instead,
+     * it can contain a subset of render state properties identical to the render state
+     * created in the context.
      *
      * @function
      *

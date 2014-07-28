@@ -68,7 +68,6 @@ define([
         SceneTransforms.computeActualWgs84Position(scene.frameState, position, actualPosition);
 
         if (!defined(actualPosition)) {
-            result = undefined;
             return undefined;
         }
 
@@ -76,6 +75,10 @@ define([
         var camera = scene.camera;
         viewProjectionScratch = Matrix4.multiply(camera.frustum.projectionMatrix, camera.viewMatrix, viewProjectionScratch);
         Matrix4.multiplyByVector(viewProjectionScratch, actualPosition, positionCC);
+
+        if (positionCC.z < 0) {
+            return undefined;
+        }
 
         result = SceneTransforms.clipToGLWindowCoordinates(scene, positionCC, result);
         result.y = scene.canvas.clientHeight - result.y;

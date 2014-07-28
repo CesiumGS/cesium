@@ -1,7 +1,6 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
-        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
@@ -14,7 +13,6 @@ define([
         './MaterialProperty'
     ], function(
         Cartesian3,
-        Color,
         defaultValue,
         defined,
         destroyObject,

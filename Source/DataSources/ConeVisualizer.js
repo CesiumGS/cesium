@@ -1,7 +1,6 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
-        '../Core/Color',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -15,7 +14,6 @@ define([
         './MaterialProperty'
     ], function(
         Cartesian3,
-        Color,
         defined,
         destroyObject,
         DeveloperError,
@@ -72,7 +70,7 @@ define([
     }
 
     /**
-     * A {@link Visualizer} which maps {@link Entity#cone} to a {@link CustomSensor}.
+     * A {@link Visualizer} which maps {@link Entity#cone} to a {@link CustomSensorVolume}.
      * @alias ConeVisualizer
      * @constructor
      *

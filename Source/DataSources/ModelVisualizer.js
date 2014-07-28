@@ -1,31 +1,30 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
-        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Quaternion',
+        '../Core/Transforms',
         '../Scene/Model',
         './Property'
     ], function(
         Cartesian3,
-        defaultValue,
         defined,
         destroyObject,
         DeveloperError,
         Matrix3,
         Matrix4,
         Quaternion,
+        Transforms,
         Model,
         Property) {
     "use strict";
 
     var defaultScale = 1.0;
     var defaultMinimumPixelSize = 0.0;
-    var defaultOrientation = Quaternion.IDENTITY;
     var matrix3Scratch = new Matrix3();
 
     /**
@@ -163,9 +162,13 @@ define([
         model.scale = Property.getValueOrDefault(modelGraphics._scale, time, defaultScale);
         model.minimumPixelSize = Property.getValueOrDefault(modelGraphics._minimumPixelSize, time, defaultMinimumPixelSize);
 
-        orientation = Property.getValueOrDefault(entity._orientation, time, defaultOrientation, orientation);
-        if ((!Cartesian3.equals(position, modelData.position) || !Quaternion.equals(orientation, modelData.orientation))) {
-            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, model.modelMatrix);
+        orientation = Property.getValueOrUndefined(entity._orientation, time, orientation);
+        if (!Cartesian3.equals(position, modelData.position) || !Quaternion.equals(orientation, modelData.orientation)) {
+            if (!defined(orientation)) {
+                Transforms.northEastDownToFixedFrame(position, this._scene.globe.ellipsoid, model.modelMatrix);
+            } else {
+                Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, model.modelMatrix);
+            }
             modelData.position = Cartesian3.clone(position, modelData.position);
             modelData.orientation = Quaternion.clone(orientation, modelData.orientation);
         }

@@ -59,6 +59,9 @@ define([
      *
      * @constructor
      *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera.html|Cesium Sandcastle Camera Demo}
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera%20Tutorial.html">Sandcastle Example</a> from the <a href="http://cesiumjs.org/2013/02/13/Cesium-Camera-Tutorial/|Camera Tutorial}
+     *
      * @example
      * // Create a camera looking down the negative z-axis, positioned at the origin,
      * // with a field of view of 60 degrees, and 1:1 aspect ratio.
@@ -69,9 +72,6 @@ define([
      * camera.frustum.fov = Cesium.Math.PI_OVER_THREE;
      * camera.frustum.near = 1.0;
      * camera.frustum.far = 2.0;
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera.html|Cesium Sandcastle Camera Demo}
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera.html">Sandcastle Example</a> from the <a href="http://cesiumjs.org/2013/02/13/Cesium-Camera-Tutorial/|Camera Tutorial}
      */
     var Camera = function(scene) {
         //>>includeStart('debug', pragmas.debug);

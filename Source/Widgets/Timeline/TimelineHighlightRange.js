@@ -7,6 +7,9 @@ define([
         JulianDate) {
     "use strict";
 
+    /**
+     * @private
+     */
     function TimelineHighlightRange(color, heightInPx, base) {
         this._color = color;
         this._height = heightInPx;
