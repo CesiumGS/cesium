@@ -38,6 +38,14 @@ define([
     var defaultHorizontalOrigin = HorizontalOrigin.CENTER;
     var defaultVerticalOrigin = VerticalOrigin.CENTER;
 
+    var position = new Cartesian3();
+    var fillColor = new Color();
+    var outlineColor = new Color();
+    var eyeOffset = new Cartesian3();
+    var pixelOffset = new Cartesian2();
+    var translucencyByDistance = new NearFarScalar();
+    var pixelOffsetScaleByDistance = new NearFarScalar();
+
     /**
      * A {@link Visualizer} which maps the {@link LabelGraphics} instance
      * in {@link Entity#label} to a {@link Label}.
@@ -82,8 +90,67 @@ define([
         //>>includeEnd('debug');
 
         var entities = this._entityCollection.entities;
+        var unusedIndexes = this._unusedIndexes;
+        var labelCollection = this._labelCollection;
         for (var i = 0, len = entities.length; i < len; i++) {
-            updateObject(this, time, entities[i]);
+            var entity = entities[i];
+            var labelGraphics = entity._label;
+            if (!defined(labelGraphics)) {
+                continue;
+            }
+
+            var text;
+            var label;
+            var labelVisualizerIndex = entity._labelVisualizerIndex;
+            var show = entity.isAvailable(time) && Property.getValueOrDefault(labelGraphics._show, time, true);
+
+            if (show) {
+                position = Property.getValueOrUndefined(entity._position, time, position);
+                text = Property.getValueOrUndefined(labelGraphics._text, time);
+                show = defined(position) && defined(text);
+            }
+
+            if (!show) {
+                //don't bother creating or updating anything else
+                if (defined(labelVisualizerIndex)) {
+                    label = labelCollection.get(labelVisualizerIndex);
+                    label.show = false;
+                    unusedIndexes.push(labelVisualizerIndex);
+                    entity._labelVisualizerIndex = undefined;
+                }
+                continue;
+            }
+
+            if (!defined(labelVisualizerIndex)) {
+                var length = unusedIndexes.length;
+                if (length > 0) {
+                    labelVisualizerIndex = unusedIndexes.pop();
+                    label = labelCollection.get(labelVisualizerIndex);
+                } else {
+                    labelVisualizerIndex = labelCollection.length;
+                    label = labelCollection.add();
+                }
+                entity._labelVisualizerIndex = labelVisualizerIndex;
+                label.id = entity;
+            } else {
+                label = labelCollection.get(labelVisualizerIndex);
+            }
+
+            label.show = true;
+            label.position = position;
+            label.text = text;
+            label.scale = Property.getValueOrDefault(labelGraphics._scale, time, defaultScale);
+            label.font = Property.getValueOrDefault(labelGraphics._font, time, defaultFont);
+            label.style = Property.getValueOrDefault(labelGraphics._style, time, defaultStyle);
+            label.fillColor = Property.getValueOrDefault(labelGraphics._fillColor, time, defaultFillColor, fillColor);
+            label.outlineColor = Property.getValueOrDefault(labelGraphics._outlineColor, time, defaultOutlineColor, outlineColor);
+            label.outlineWidth = Property.getValueOrDefault(labelGraphics._outlineWidth, time, defaultOutlineWidth);
+            label.pixelOffset = Property.getValueOrDefault(labelGraphics._pixelOffset, time, defaultPixelOffset, pixelOffset);
+            label.eyeOffset = Property.getValueOrDefault(labelGraphics._eyeOffset, time, defaultEyeOffset, eyeOffset);
+            label.horizontalOrigin = Property.getValueOrDefault(labelGraphics._horizontalOrigin, time, defaultHorizontalOrigin);
+            label.verticalOrigin = Property.getValueOrDefault(labelGraphics._verticalOrigin, time, defaultVerticalOrigin);
+            label.translucencyByDistance = Property.getValueOrUndefined(labelGraphics._translucencyByDistance, time, translucencyByDistance);
+            label.pixelOffsetScaleByDistance = Property.getValueOrUndefined(labelGraphics._pixelOffsetScaleByDistance, time, pixelOffsetScaleByDistance);
         }
         return true;
     };
@@ -112,74 +179,6 @@ define([
         this._scene.primitives.remove(this._labelCollection);
         return destroyObject(this);
     };
-
-    var position = new Cartesian3();
-    var fillColor = new Color();
-    var outlineColor = new Color();
-    var eyeOffset = new Cartesian3();
-    var pixelOffset = new Cartesian2();
-    var translucencyByDistance = new NearFarScalar();
-    var pixelOffsetScaleByDistance = new NearFarScalar();
-    function updateObject(labelVisualizer, time, entity) {
-        var labelGraphics = entity._label;
-        if (!defined(labelGraphics)) {
-            return;
-        }
-
-        var text;
-        var label;
-        var labelVisualizerIndex = entity._labelVisualizerIndex;
-        var show = entity.isAvailable(time) && Property.getValueOrDefault(labelGraphics._show, time, true);
-
-        if (show) {
-            position = Property.getValueOrUndefined(entity._position, time, position);
-            text = Property.getValueOrUndefined(labelGraphics._text, time);
-            show = defined(position) && defined(text);
-        }
-
-        if (!show) {
-            //don't bother creating or updating anything else
-            if (defined(labelVisualizerIndex)) {
-                label = labelVisualizer._labelCollection.get(labelVisualizerIndex);
-                label.show = false;
-                labelVisualizer._unusedIndexes.push(labelVisualizerIndex);
-                entity._labelVisualizerIndex = undefined;
-            }
-            return;
-        }
-
-        if (!defined(labelVisualizerIndex)) {
-            var unusedIndexes = labelVisualizer._unusedIndexes;
-            var length = unusedIndexes.length;
-            if (length > 0) {
-                labelVisualizerIndex = unusedIndexes.pop();
-                label = labelVisualizer._labelCollection.get(labelVisualizerIndex);
-            } else {
-                labelVisualizerIndex = labelVisualizer._labelCollection.length;
-                label = labelVisualizer._labelCollection.add();
-            }
-            entity._labelVisualizerIndex = labelVisualizerIndex;
-            label.id = entity;
-        } else {
-            label = labelVisualizer._labelCollection.get(labelVisualizerIndex);
-        }
-
-        label.show = true;
-        label.position = position;
-        label.text = text;
-        label.scale = Property.getValueOrDefault(labelGraphics._scale, time, defaultScale);
-        label.font = Property.getValueOrDefault(labelGraphics._font, time, defaultFont);
-        label.style = Property.getValueOrDefault(labelGraphics._style, time, defaultStyle);
-        label.fillColor = Property.getValueOrDefault(labelGraphics._fillColor, time, defaultFillColor, fillColor);
-        label.outlineColor = Property.getValueOrDefault(labelGraphics._outlineColor, time, defaultOutlineColor, outlineColor);
-        label.outlineWidth = Property.getValueOrDefault(labelGraphics._outlineWidth, time, defaultOutlineWidth);
-        label.pixelOffset = Property.getValueOrDefault(labelGraphics._pixelOffset, time, defaultPixelOffset, pixelOffset);
-        label.eyeOffset = Property.getValueOrDefault(labelGraphics._eyeOffset, time, defaultEyeOffset, eyeOffset);
-        label.horizontalOrigin = Property.getValueOrDefault(labelGraphics._horizontalOrigin, time, defaultHorizontalOrigin);
-        label.verticalOrigin = Property.getValueOrDefault(labelGraphics._verticalOrigin, time, defaultVerticalOrigin);
-        label.translucencyByDistance = Property.getValueOrUndefined(labelGraphics._translucencyByDistance, time, translucencyByDistance);
-        label.pixelOffsetScaleByDistance = Property.getValueOrUndefined(labelGraphics._pixelOffsetScaleByDistance, time, pixelOffsetScaleByDistance);
-    }
 
     LabelVisualizer.prototype._onObjectsRemoved = function(entityCollection, added, entities) {
         var thisLabelCollection = this._labelCollection;
