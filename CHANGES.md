@@ -4,7 +4,7 @@ Change Log
 ### 1.0 - 2014-08-01
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))
-  * All `Matrix2`, `Matrix3`, `Matrix4` and `Quaternion` functions that take a `result` parameter now require the parameter (except for functions starting with `from`).
+  * All `Matrix2`, `Matrix3`, `Matrix4` and `Quaternion` functions that take a `result` parameter now require the parameter, except functions starting with `from`.
   * Removed `Billboard.imageIndex` and `BillboardCollection.textureAtlas`. Instead, use `Billboard.image`. 
     * Code that looked like:
 
@@ -28,8 +28,8 @@ Change Log
             });
 
   * Updated the [Model Converter](http://cesiumjs.org/convertmodel.html) and `Model` to support [glTF 0.8](https://github.com/KhronosGroup/glTF/blob/schema-8/specification/README.md).  See the [forum post](https://groups.google.com/forum/#!topic/cesium-dev/KNl2K3Cazno) for full details.
-  * `Model` primitives are now rotated to be Z up to match the reset of Cesium; glTF stores models as Y up.
-  * `SimplePolylineGeometry` and `PolylineGeometry` positions curve to follow the ellipsoid surface by default. To disable this behavior, set the option `followSurface=false`.
+  * `Model` primitives are now rotated to be `Z`-up to match the reset of Cesium; glTF stores models with `Y` up.
+  * `SimplePolylineGeometry` and `PolylineGeometry` now curve to follow the ellipsoid surface by default. To disable this behavior, set the option `followSurface` to `false`.
   * Renamed `DynamicScene` layer to `DataSources`.  The following types were also renamed:
     * `DynamicBillboard` -> `BillboardGraphics`
     * `DynamicBillboardVisualizer` -> `BillboardVisualizer`
@@ -61,7 +61,7 @@ Change Log
   * Renamed `DataSource.dynamicObjects` to `DataSource.entities`.
   * `EntityCollection.getObjects()` and `CompositeEntityCollection.getObjects()` are now properties named `EntityCollection.entities` and `CompositeEntityCollection.entities`.
   * Renamed `Viewer.trackedObject` and `Viewer.selectedObject` to `Viewer.trackedEntity` and `Viewer.selectedEntity` when using the `viewerEntityMixin`.
-  * Renamed functions for naming consistency:
+  * Renamed functions for consistency:
     * `BoundingSphere.getPlaneDistances` -> `BoundingSphere.computePlaneDistances`
     * `Cartesian[2,3,4].getMaximumComponent` -> `Cartesian[2,3,4].maximumComponent`
     * `Cartesian[2,3,4].getMinimumComponent` -> `Cartesian[2,3,4].minimumComponent`
@@ -89,7 +89,7 @@ Change Log
     * `Rectangle.getNortheast` -> `Rectangle.northeast`
     * `Rectangle.getCenter` -> `Rectangle.center`
     * `CullingVolume.getVisibility` -> `CullingVolume.computeVisibility`
-  * Replaced `PerspectiveFrustum.fovy` with `PerspectiveFrustum.fov` which will change the field of view angle in either the x or y direction depending on the aspect ratio.
+  * Replaced `PerspectiveFrustum.fovy` with `PerspectiveFrustum.fov` which will change the field of view angle in either the `X` or `Y` direction depending on the aspect ratio.
   * Removed the following from the Cesium API: `Transforms.earthOrientationParameters`, `EarthOrientationParameters`, `EarthOrientationParametersSample`, `Transforms.iau2006XysData`, `Iau2006XysData`, `Iau2006XysSample`, `IauOrientationAxes`, `TimeConstants`, `Scene.frameState`, `FrameState`, `EncodedCartesian3`, `EllipsoidalOccluder`, `TextureAtlas`, and `FAR`.  These are still available but are not part of the official API and may change in future versions.
   * Removed `DynamicObject.vertexPositions`.  Use `DynamicWall.positions`, `DynamicPolygon.positions`, and `DynamicPolyline.positions` instead.
   * Removed `defaultPoint`, `defaultLine`, and `defaultPolygon` from `GeoJsonDataSource`.
@@ -106,7 +106,7 @@ Change Log
 * Added camera collision detection with terrain to the default mouse interaction.
 * Modified the default camera tilt mouse behavior to tilt about the point clicked taking into account terrain.
 * Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
-* Added support for rendering the globe with oct-encoded per vertex normals.  Added `CesiumTerrainProvider.requestVertexNormals` to request per vertex normals from the provider, if they are available.  Added `hasVertexNormals` property to all terrain providers to indicate whether or not vertex normals will be included in the terrain tile responses.
+* Added support for rendering terrain lighting with oct-encoded per-vertex normals.  Added `CesiumTerrainProvider.requestVertexNormals` to request per vertex normals.  Added `hasVertexNormals` property to all terrain providers to indicate whether or not vertex normals will be included in the terrain tile responses.
 * Added `Globe.getHeight` and `Globe.pick` for finding the terrain height at a given Cartographic coordinate and picking the terrain with a ray.
 * Added `scene3DOnly` options to `Viewer`, `CesiumWidget`, and `Scene` constructors. This setting optimizes memory usage and performance for 3D mode at the cost of losing the ability to use 2D or Columbus View.
 * Added `forwardExtrapolationType`, `forwardExtrapolationDuration`, `backwardExtrapolationType`, and `backwardExtrapolationDuration` to `SampledProperty` and `SampledPositionProperty` which allows the user to specify how a property calculates its value when outside the range of its sample data.
