@@ -8,8 +8,7 @@ define([
         './Ellipsoid',
         './GeographicProjection',
         './Math',
-        './Rectangle',
-        './TilingScheme'
+        './Rectangle'
     ], function(
         Cartesian2,
         defaultValue,
@@ -19,8 +18,7 @@ define([
         Ellipsoid,
         GeographicProjection,
         CesiumMath,
-        Rectangle,
-        TilingScheme) {
+        Rectangle) {
     "use strict";
 
     /**

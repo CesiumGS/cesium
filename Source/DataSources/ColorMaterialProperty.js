@@ -1,7 +1,6 @@
 /*global define*/
 define([
         '../Core/Color',
-        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
@@ -11,7 +10,6 @@ define([
         './Property'
     ], function(
         Color,
-        defaultValue,
         defined,
         defineProperties,
         DeveloperError,

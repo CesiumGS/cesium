@@ -3,13 +3,11 @@ defineSuite([
         'Core/EarthOrientationParameters',
         'Core/defined',
         'Core/JulianDate',
-        'Core/LeapSecond',
         'Core/TimeStandard'
     ], function(
         EarthOrientationParameters,
         defined,
         JulianDate,
-        LeapSecond,
         TimeStandard) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/

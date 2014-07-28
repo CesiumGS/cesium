@@ -1,7 +1,6 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
-        '../Core/Color',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -15,7 +14,6 @@ define([
         './MaterialProperty'
     ], function(
         Cartesian3,
-        Color,
         defined,
         destroyObject,
         DeveloperError,

@@ -1,7 +1,6 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
-        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -13,7 +12,6 @@ define([
         './Property'
     ], function(
         Cartesian3,
-        defaultValue,
         defined,
         destroyObject,
         DeveloperError,

@@ -1,7 +1,6 @@
 /*global define*/
 define([
         './BoundingSphere',
-        './Cartesian3',
         './ComponentDatatype',
         './defaultValue',
         './defined',
@@ -22,7 +21,6 @@ define([
         './WindingOrder'
     ], function(
         BoundingSphere,
-        Cartesian3,
         ComponentDatatype,
         defaultValue,
         defined,
@@ -102,10 +100,6 @@ define([
             })
         });
     }
-
-    var scratchPosition = new Cartesian3();
-    var scratchNormal = new Cartesian3();
-    var scratchBoundingSphere = new BoundingSphere();
 
     function createGeometryFromPositionsExtruded(ellipsoid, positions, granularity, perPositionHeight) {
         var cleanedPositions = PolygonPipeline.removeDuplicates(positions);

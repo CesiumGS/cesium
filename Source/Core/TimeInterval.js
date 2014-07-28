@@ -5,16 +5,14 @@ define([
         './defineProperties',
         './DeveloperError',
         './freezeObject',
-        './JulianDate',
-        './TimeStandard'
+        './JulianDate'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         freezeObject,
-        JulianDate,
-        TimeStandard) {
+        JulianDate) {
     "use strict";
 
     /**

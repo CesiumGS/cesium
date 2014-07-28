@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../../Core/clone',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -28,7 +27,6 @@ define([
         '../subscribeAndEvaluate',
         '../Timeline/Timeline'
     ], function(
-        clone,
         defaultValue,
         defined,
         defineProperties,

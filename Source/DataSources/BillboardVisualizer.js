@@ -9,8 +9,6 @@ define([
         '../Core/NearFarScalar',
         '../Scene/BillboardCollection',
         '../Scene/HorizontalOrigin',
-        '../Scene/TextureAtlas',
-        '../Scene/TextureAtlasBuilder',
         '../Scene/VerticalOrigin',
         './Property'
     ], function(
@@ -23,8 +21,6 @@ define([
         NearFarScalar,
         BillboardCollection,
         HorizontalOrigin,
-        TextureAtlas,
-        TextureAtlasBuilder,
         VerticalOrigin,
         Property) {
     "use strict";
@@ -37,22 +33,6 @@ define([
     var defaultAlignedAxis = Cartesian3.ZERO;
     var defaultHorizontalOrigin = HorizontalOrigin.CENTER;
     var defaultVerticalOrigin = VerticalOrigin.CENTER;
-
-    function textureReady(entity, billboardCollection, textureValue) {
-        return function(imageIndex) {
-            //By the time the texture was loaded, the billboard might already be
-            //gone or have been assigned a different texture.  Look it up again
-            //and check.
-            var currentIndex = entity._billboardVisualizerIndex;
-            if (defined(currentIndex)) {
-                var cbBillboard = billboardCollection.get(currentIndex);
-                if (cbBillboard._visualizerUrl === textureValue) {
-                    cbBillboard._visualizerTextureAvailable = true;
-                    cbBillboard.imageIndex = imageIndex;
-                }
-            }
-        };
-    }
 
     /**
      * A {@link Visualizer} which maps {@link Entity#billboard} to a {@link Billboard}.
@@ -73,18 +53,12 @@ define([
         //>>includeEnd('debug');
 
         var billboardCollection = new BillboardCollection();
-        var atlas = new TextureAtlas({
-            scene : scene
-        });
-        billboardCollection.textureAtlas = atlas;
         scene.primitives.add(billboardCollection);
         entityCollection.collectionChanged.addEventListener(BillboardVisualizer.prototype._onObjectsRemoved, this);
 
         this._scene = scene;
         this._unusedIndexes = [];
-        this._textureAtlas = atlas;
         this._billboardCollection = billboardCollection;
-        this._textureAtlasBuilder = new TextureAtlasBuilder(atlas);
         this._entityCollection = entityCollection;
     };
 
@@ -163,9 +137,7 @@ define([
             if (defined(billboardVisualizerIndex)) {
                 billboard = billboardVisualizer._billboardCollection.get(billboardVisualizerIndex);
                 billboard.show = false;
-                billboard.imageIndex = -1;
-                billboard._visualizerUrl = undefined;
-                billboard._visualizerTextureAvailable = false;
+                billboard.image = undefined;
                 entity._billboardVisualizerIndex = undefined;
                 billboardVisualizer._unusedIndexes.push(billboardVisualizerIndex);
             }
@@ -184,23 +156,13 @@ define([
             }
             entity._billboardVisualizerIndex = billboardVisualizerIndex;
             billboard.id = entity;
-            billboard._visualizerUrl = undefined;
-            billboard._visualizerTextureAvailable = false;
+            billboard.image = undefined;
         } else {
             billboard = billboardVisualizer._billboardCollection.get(billboardVisualizerIndex);
         }
 
-        if (textureValue !== billboard._visualizerUrl) {
-            billboard._visualizerUrl = textureValue;
-            billboard._visualizerTextureAvailable = false;
-            billboardVisualizer._textureAtlasBuilder.addTextureFromUrl(textureValue, textureReady(entity, billboardVisualizer._billboardCollection, textureValue));
-        }
-
-        billboard.show = billboard._visualizerTextureAvailable;
-        if (!billboard._visualizerTextureAvailable) {
-            return;
-        }
-
+        billboard.show = show;
+        billboard.image = textureValue;
         billboard.position = position;
         billboard.color = Property.getValueOrDefault(billboardGraphics._color, time, defaultColor, color);
         billboard.eyeOffset = Property.getValueOrDefault(billboardGraphics._eyeOffset, time, defaultEyeOffset, eyeOffset);
@@ -226,9 +188,7 @@ define([
             if (defined(billboardVisualizerIndex)) {
                 var billboard = thisBillboardCollection.get(billboardVisualizerIndex);
                 billboard.show = false;
-                billboard.imageIndex = -1;
-                billboard._visualizerUrl = undefined;
-                billboard._visualizerTextureAvailable = false;
+                billboard.image = undefined;
                 entity._billboardVisualizerIndex = undefined;
                 thisUnusedIndexes.push(billboardVisualizerIndex);
             }

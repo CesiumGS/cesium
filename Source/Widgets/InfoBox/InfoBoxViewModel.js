@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../../Core/Cartesian2',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -10,7 +9,6 @@ define([
         '../../ThirdParty/knockout',
         '../../ThirdParty/when'
     ], function(
-        Cartesian2,
         defaultValue,
         defined,
         defineProperties,
