@@ -902,6 +902,7 @@ define([
     var scratchMousePos = new Cartesian3();
     var scratchRadii = new Cartesian3();
     var scratchEllipsoid = new Ellipsoid();
+    var scratchLookUp = new Cartesian3();
 
     function spin3D(controller, startPosition, movement, frameState) {
         var camera = controller._scene.camera;
@@ -914,9 +915,11 @@ define([
         var radii;
         var ellipsoid;
 
+        var up = controller._ellipsoid.geodeticSurfaceNormal(camera.position, scratchLookUp);
+
         if (Cartesian2.equals(startPosition, controller._rotateMousePosition)) {
             if (controller._looking) {
-                look3D(controller, startPosition, movement, frameState, true);
+                look3D(controller, startPosition, movement, frameState, up);
             } else if (controller._rotating) {
                 rotate3D(controller, startPosition, movement, frameState);
             } else {
@@ -946,7 +949,7 @@ define([
                 Cartesian3.clone(mousePos, controller._rotateStartPosition);
             } else {
                 controller._looking = true;
-                look3D(controller, startPosition, movement, frameState, true);
+                look3D(controller, startPosition, movement, frameState, up);
             }
         } else if (defined(camera.pickEllipsoid(movement.startPosition, controller._ellipsoid, spin3DPick))) {
             pan3D(controller, startPosition, movement, frameState, controller._ellipsoid);
@@ -956,7 +959,7 @@ define([
             rotate3D(controller, startPosition, movement, frameState);
         } else {
             controller._looking = true;
-            look3D(controller, startPosition, movement, frameState, true);
+            look3D(controller, startPosition, movement, frameState, up);
         }
 
         Cartesian2.clone(startPosition, controller._rotateMousePosition);
@@ -1154,6 +1157,7 @@ define([
     var tilt3DQuaternion = new Quaternion();
     var tilt3DMatrix = new Matrix3();
     var tilt3DCart = new Cartographic();
+    var tilt3DLookUp = new Cartesian3();
 
     function tilt3D(controller, startPosition, movement, frameState) {
         if (!Matrix4.equals(controller._scene.camera.transform, Matrix4.IDENTITY)) {
@@ -1166,9 +1170,17 @@ define([
 
         if (!Cartesian2.equals(startPosition, controller._tiltCenterMousePosition)) {
             controller._tiltOnEllipsoid = false;
+            controller._looking = false;
         }
 
         var camera = controller._scene.camera;
+
+        if (controller._looking) {
+            var up = controller._ellipsoid.geodeticSurfaceNormal(camera.position, tilt3DLookUp);
+            look3D(controller, startPosition, movement, frameState, up);
+            return;
+        }
+
         var ellipsoid = controller._ellipsoid;
         var cartographic = ellipsoid.cartesianToCartographic(camera.position, tilt3DCart);
 
@@ -1199,7 +1211,7 @@ define([
         var intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
         if (defined(intersection)) {
             center = Ray.getPoint(ray, intersection.start, tilt3DCenter);
-        } else {
+        } else if (height > controller.minimumTrackBallHeight) {
             var grazingAltitudeLocation = IntersectionTests.grazingAltitudeLocation(ray, ellipsoid);
             if (!defined(grazingAltitudeLocation)) {
                 return;
@@ -1207,6 +1219,12 @@ define([
             var grazingAltitudeCart = ellipsoid.cartesianToCartographic(grazingAltitudeLocation, tilt3DCart);
             grazingAltitudeCart.height = 0.0;
             center = ellipsoid.cartographicToCartesian(grazingAltitudeCart, tilt3DCenter);
+        } else {
+            controller._looking = true;
+            var up = controller._ellipsoid.geodeticSurfaceNormal(camera.position, tilt3DLookUp);
+            look3D(controller, startPosition, movement, frameState, up);
+            Cartesian2.clone(startPosition, controller._tiltCenterMousePosition);
+            return;
         }
 
         var transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid, tilt3DTransform);
@@ -1251,6 +1269,13 @@ define([
             if (!defined(center)) {
                 intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
                 if (!defined(intersection)) {
+                    var cartographic = ellipsoid.cartesianToCartographic(camera.position, tilt3DCart);
+                    if (cartographic.height <= controller.minimumTrackBallHeight) {
+                        controller._looking = true;
+                        var up = controller._ellipsoid.geodeticSurfaceNormal(camera.position, tilt3DLookUp);
+                        look3D(controller, startPosition, movement, frameState, up);
+                        Cartesian2.clone(startPosition, controller._tiltCenterMousePosition);
+                    }
                     return;
                 }
                 center = Ray.getPoint(ray, intersection.start, tilt3DCenter);
@@ -1372,7 +1397,7 @@ define([
     var look3DEndRay = new Ray();
     var look3DUp = new Cartesian3();
 
-    function look3D(controller, startPosition, movement, frameState, useLocalUp) {
+    function look3D(controller, startPosition, movement, frameState, rotationAxis) {
         var camera = controller._scene.camera;
 
         var startPos = look3DStartPos;
@@ -1391,12 +1416,11 @@ define([
         }
         angle = (movement.startPosition.x > movement.endPosition.x) ? -angle : angle;
 
-        var rotationAxis = controller._horizontalRotationAxis;
-        if (useLocalUp) {
-            var up = controller._ellipsoid.geodeticSurfaceNormal(camera.position, look3DUp);
-            camera.look(up, -angle);
-        } else if (defined(rotationAxis)) {
-            camera.look(rotationAxis, angle);
+        var horizontalRotationAxis = controller._horizontalRotationAxis;
+        if (defined(rotationAxis)) {
+            camera.look(rotationAxis, -angle);
+        } else if (defined(horizontalRotationAxis)) {
+            camera.look(horizontalRotationAxis, -angle);
         } else {
             camera.lookLeft(angle);
         }
