@@ -55,6 +55,7 @@ define([
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
      * @see OpenStreetMapImageryProvider
+     * @see WMTSImageryProvider
      * @see SingleTileImageryProvider
      * @see WebMapServiceImageryProvider
      *
