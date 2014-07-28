@@ -143,6 +143,81 @@ defineSuite([
              });
          });
 
+         it('oct-encoded normals works for all four children of a simple quad', function() {
+             var data = new QuantizedMeshTerrainData({
+                 minimumHeight : 0.0,
+                 maximumHeight : 4.0,
+                 quantizedVertices : new Uint16Array([ // order is sw nw se ne
+                                                      // u
+                                                      0, 0, 32767, 32767,
+                                                      // v
+                                                      0, 32767, 0, 32767,
+                                                      // heights
+                                                      32767 / 4.0, 2.0 * 32767 / 4.0, 3.0 * 32767 / 4.0, 32767
+                                                  ]),
+                 encodedNormals : new Uint8Array([
+                                                  // fun property of oct-encoded normals: the octrahedron is projected onto a plane
+                                                  // and unfolded into a unit square.  The 4 corners of this unit square are encoded values
+                                                  // of the same Cartesian normal, vec3(0.0, 0.0, 1.0).
+                                                  // Therefore, all 4 normals below are actually oct-encoded representations of vec3(0.0, 0.0, 1.0)
+                                                  255, 0,     // sw
+                                                  255, 255,   // nw
+                                                  255, 0,   // se
+                                                  255, 255  // ne
+                                                  ]),
+                 indices : new Uint16Array([
+                                                0, 3, 1,
+                                                0, 2, 3
+                                                ]),
+                 boundingSphere : new BoundingSphere(),
+                 horizonOcclusionPoint : new Cartesian3(),
+                 westIndices : [],
+                 southIndices : [],
+                 eastIndices : [],
+                 northIndices : [],
+                 westSkirtHeight : 1.0,
+                 southSkirtHeight : 1.0,
+                 eastSkirtHeight : 1.0,
+                 northSkirtHeight : 1.0,
+                 childTileMask : 15
+             });
+
+             var tilingScheme = new GeographicTilingScheme();
+
+             var swPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
+             var sePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
+             var nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 1, 1);
+             var nePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 1, 1);
+
+             var upsampleResults;
+
+             when.all([swPromise, sePromise, nwPromise, nePromise], function(results) {
+                 upsampleResults = results;
+             });
+
+             waitsFor(function() {
+                 return defined(upsampleResults);
+             });
+
+             runs(function() {
+                 expect(upsampleResults.length).toBe(4);
+
+                 for (var i = 0; i < upsampleResults.length; ++i) {
+                     var upsampled = upsampleResults[i];
+                     expect(upsampled).toBeDefined();
+
+                     var encodedNormals = upsampled._encodedNormals;
+
+                     expect(encodedNormals.length).toBe(8);
+
+                     // All 4 normals should remain oct-encoded representations of vec3(0.0, 0.0, -1.0)
+                     for (var n = 0; n < encodedNormals.length; ++n) {
+                         expect(encodedNormals[i]).toBe(255);
+                     }
+                 }
+             });
+         });
+
          it('works for a quad with an extra vertex in the northwest child', function() {
              var data = new QuantizedMeshTerrainData({
                  minimumHeight : 0.0,
