@@ -353,6 +353,104 @@ defineSuite([
         primitive = primitive && primitive.destroy();
     });
 
+    it('updates model matrix for one instance in 3D', function() {
+        var primitive = new Primitive({
+            geometryInstances : rectangleInstance1,
+            appearance : new PerInstanceColorAppearance(),
+            asynchronous : false
+        });
+
+        var commands = [];
+        primitive.update(context, frameState, commands);
+        expect(commands.length).toEqual(1);
+        expect(commands[0].modelMatrix).toEqual(Matrix4.IDENTITY);
+
+        var modelMatrix = Matrix4.fromUniformScale(10.0);
+        primitive.modelMatrix = modelMatrix;
+
+        commands.length = 0;
+        primitive.update(context, frameState, commands);
+        expect(commands.length).toEqual(1);
+        expect(commands[0].modelMatrix).toEqual(modelMatrix);
+
+        primitive = primitive && primitive.destroy();
+    });
+
+    it('does not update model matrix for more than one instance in 3D', function() {
+        var primitive = new Primitive({
+            geometryInstances : [rectangleInstance1, rectangleInstance2],
+            appearance : new PerInstanceColorAppearance(),
+            asynchronous : false
+        });
+
+        var commands = [];
+        primitive.update(context, frameState, commands);
+        expect(commands.length).toEqual(1);
+        expect(commands[0].modelMatrix).toEqual(Matrix4.IDENTITY);
+
+        var modelMatrix = Matrix4.fromUniformScale(10.0);
+        primitive.modelMatrix = modelMatrix;
+
+        commands.length = 0;
+        primitive.update(context, frameState, commands);
+        expect(commands.length).toEqual(1);
+        expect(commands[0].modelMatrix).toEqual(Matrix4.IDENTITY);
+
+        primitive = primitive && primitive.destroy();
+    });
+
+    it('does not update model matrix in Columbus view', function() {
+        var primitive = new Primitive({
+            geometryInstances : [rectangleInstance1, rectangleInstance2],
+            appearance : new PerInstanceColorAppearance(),
+            asynchronous : false
+        });
+
+        frameState.mode = SceneMode.COLUMBUS_VIEW;
+
+        var commands = [];
+        primitive.update(context, frameState, commands);
+        expect(commands.length).toEqual(1);
+        expect(commands[0].modelMatrix).toEqual(Matrix4.IDENTITY);
+
+        var modelMatrix = Matrix4.fromUniformScale(10.0);
+        primitive.modelMatrix = modelMatrix;
+
+        commands.length = 0;
+        primitive.update(context, frameState, commands);
+        expect(commands.length).toEqual(1);
+        expect(commands[0].modelMatrix).toEqual(Matrix4.IDENTITY);
+
+        frameState = createFrameState(); // reset frame state
+        primitive = primitive && primitive.destroy();
+    });
+
+    it('does not update model matrix in 2D', function() {
+        var primitive = new Primitive({
+            geometryInstances : [rectangleInstance1, rectangleInstance2],
+            appearance : new PerInstanceColorAppearance(),
+            asynchronous : false
+        });
+
+        frameState.mode = SceneMode.SCENE2D;
+
+        var commands = [];
+        primitive.update(context, frameState, commands);
+        expect(commands.length).toEqual(1);
+        expect(commands[0].modelMatrix).toEqual(Matrix4.IDENTITY);
+
+        var modelMatrix = Matrix4.fromUniformScale(10.0);
+        primitive.modelMatrix = modelMatrix;
+
+        commands.length = 0;
+        primitive.update(context, frameState, commands);
+        expect(commands.length).toEqual(1);
+        expect(commands[0].modelMatrix).toEqual(Matrix4.IDENTITY);
+
+        frameState = createFrameState(); // reset frame state
+        primitive = primitive && primitive.destroy();
+    });
+
     it('renders bounding volume with debugShowBoundingVolume', function() {
         var scene = createScene();
         scene.primitives.add(new Primitive({
