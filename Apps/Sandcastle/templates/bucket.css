@@ -63,6 +63,10 @@ option:disabled {
     position: absolute;
 }
 
+.sandcastle-loading #toolbar {
+    display: none;
+}
+
 .top,.bottom {
     display: block;
     position: absolute;
