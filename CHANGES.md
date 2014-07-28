@@ -5,7 +5,7 @@ Change Log
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))
   * All `Matrix2`, `Matrix3`, `Matrix4` and `Quaternion` functions that take a `result` parameter now require the parameter, except functions starting with `from`.
-  * Removed `Billboard.imageIndex` and `BillboardCollection.textureAtlas`. Instead, use `Billboard.image`. 
+  * Removed `Billboard.imageIndex` and `BillboardCollection.textureAtlas`. Instead, use `Billboard.image`.
     * Code that looked like:
 
             var billboards = new Cesium.BillboardCollection();
@@ -34,8 +34,6 @@ Change Log
     * `DynamicBillboard` -> `BillboardGraphics`
     * `DynamicBillboardVisualizer` -> `BillboardVisualizer`
     * `CompositeDynamicObjectCollection` -> `CompositeEntityCollection`
-    * `DynamicCone` -> `ConeGraphics`
-    * `DynamicConeVisualizerUsingCustomSensor` -> `ConeVisualizer`
     * `DynamicClock` -> `DataSourceClock`
     * `DynamicEllipse` -> `EllipseGraphics`
     * `DynamicEllipsoid` -> `EllipsoidGraphics`
@@ -52,8 +50,6 @@ Change Log
     * `DynamicPointVisualizer` -> `PointVisualizer`
     * `DynamicPolygon` -> `PolygonGraphics`
     * `DynamicPolyline` -> `PolylineGraphics`
-    * `DynamicPyramid` -> `PyramidGraphics`
-    * `DynamicPyramidVisualizer` -> `PyramidVisualizer`
     * `DynamicRectangle` -> `RectangleGraphics`
     * `DynamicWall` -> `WallGraphics`
     * `viewerDynamicObjectMixin` -> `viewerEntityMixin`
@@ -103,8 +99,11 @@ Change Log
     * `VRTheWorldTerrainProvider.hasWaterMask`
   * Removed `ScreenSpaceCameraController.ellipsoid`. The behavior that depended on the ellipsoid is now determined based on the scene state.
   * Sandcastle examples now automatically wrap the example code in RequireJS boilerplate.  To upgrade any custom examples, copy the code into an existing example (such as Hello World) and save a new file.
+  * Removed `CustomSensorVolume`, `RectangularPyramidSensorVolume`, `DynamicCone`, `DynamicConeVisualizerUsingCustomSensor`, `DynamicPyramid` and `DynamicPyramidVisualizer`.  This will be moved to a plugin in early August.  [#1887](https://github.com/AnalyticalGraphicsInc/cesium/issues/1887)
+  * If `Primitive.modelMatrix` is changed after creation, it only affects primitives with one instance and only in 3D mode.
 * Added camera collision detection with terrain to the default mouse interaction.
 * Modified the default camera tilt mouse behavior to tilt about the point clicked taking into account terrain.
+* Modified the default camera mouse behavior to look about the camera's position when the sky is clicked.
 * Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
 * Added support for rendering terrain lighting with oct-encoded per-vertex normals.  Added `CesiumTerrainProvider.requestVertexNormals` to request per vertex normals.  Added `hasVertexNormals` property to all terrain providers to indicate whether or not vertex normals will be included in the terrain tile responses.
 * Added `Globe.getHeight` and `Globe.pick` for finding the terrain height at a given Cartographic coordinate and picking the terrain with a ray.
@@ -115,6 +114,7 @@ Change Log
 * Matrix types now have `add` and `subtract` functions.
 * `Matrix3` type now has a `fromCrossProduct` function.
 * Added `CesiumMath.signNotZero`, `CesiumMath.toSNorm` and `CesiumMath.fromSNorm` functions in support of oct-encoding.
+* DataSource & CZML models now default to North-East-Down orientation if none is provided.
 
 Beta Releases
 -------------

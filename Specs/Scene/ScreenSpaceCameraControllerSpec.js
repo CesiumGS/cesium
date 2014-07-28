@@ -665,6 +665,39 @@ defineSuite([
         expect(Cartesian3.cross(camera.right, camera.direction, new Cartesian3())).toEqualEpsilon(camera.up, CesiumMath.EPSILON14);
     });
 
+    it('rotates in 3D', function() {
+        var frameState = setUp3D();
+        var position = Cartesian3.clone(camera.position);
+        var startPosition = new Cartesian2(0, 0);
+        var endPosition = new Cartesian2(canvas.clientWidth / 4, canvas.clientHeight / 4);
+
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
+        updateController(frameState);
+
+        expect(camera.position).not.toEqual(position);
+        expect(camera.direction).toEqualEpsilon(Cartesian3.normalize(Cartesian3.negate(camera.position, new Cartesian3()), new Cartesian3()), CesiumMath.EPSILON15);
+        expect(Cartesian3.cross(camera.direction, camera.up, new Cartesian3())).toEqualEpsilon(camera.right, CesiumMath.EPSILON15);
+        expect(Cartesian3.cross(camera.right, camera.direction, new Cartesian3())).toEqualEpsilon(camera.up, CesiumMath.EPSILON15);
+    });
+
+    it('rotates with constrained axis', function() {
+        var frameState = setUp3D();
+
+        var axis = Cartesian3.clone(Cartesian3.UNIT_Z);
+        camera.constrainedAxis = axis;
+
+        var startPosition = new Cartesian2(0.0, 0.0);
+        var endPosition = new Cartesian2(0.0, canvas.clientHeight);
+
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
+        updateController(frameState);
+
+        expect(camera.position.z).toEqualEpsilon(Cartesian3.magnitude(camera.position), CesiumMath.EPSILON1);
+        expect(camera.direction).toEqualEpsilon(Cartesian3.negate(axis, new Cartesian3()), CesiumMath.EPSILON4);
+        expect(Cartesian3.dot(camera.up, axis)).toBeLessThan(CesiumMath.EPSILON2);
+        expect(camera.right).toEqualEpsilon(Cartesian3.cross(camera.direction, camera.up, new Cartesian3()), CesiumMath.EPSILON4);
+    });
+
     it('zoom in 3D', function() {
         var frameState = setUp3D();
         var position = Cartesian3.clone(camera.position);
