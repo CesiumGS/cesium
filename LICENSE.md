@@ -342,3 +342,7 @@ http://raphaeljs.com/license.html
 ### Mouse and gesture vector icons made by Freepik from Flaticon.com
 
 http://www.flaticon.com/authors/freepik
+
+### population909500.json ###
+
+https://github.com/dataarts/webgl-globe
