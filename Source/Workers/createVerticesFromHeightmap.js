@@ -53,5 +53,5 @@ define([
         };
     }
 
-    return createTaskProcessorWorker(createVerticesFromHeightmap);
+    return createTaskProcessorWorker(createVerticesFromHeightmap, 'createVerticesFromHeightmap');
 });

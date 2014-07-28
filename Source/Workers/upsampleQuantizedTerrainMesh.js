@@ -449,5 +449,5 @@ define([
         }
     }
 
-    return createTaskProcessorWorker(upsampleQuantizedTerrainMesh);
+    return createTaskProcessorWorker(upsampleQuantizedTerrainMesh, 'upsampleQuantizedTerrainMesh');
 });

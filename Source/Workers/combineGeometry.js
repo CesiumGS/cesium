@@ -13,5 +13,5 @@ define([
         return PrimitivePipeline.packCombineGeometryResults(results, transferableObjects);
     }
 
-    return createTaskProcessorWorker(combineGeometry);
+    return createTaskProcessorWorker(combineGeometry, 'combineGeometry');
 });

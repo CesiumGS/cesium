@@ -46,5 +46,5 @@ define([
         return PrimitivePipeline.packCreateGeometryResults(results, transferableObjects);
     }
 
-    return createTaskProcessorWorker(createGeometry);
+    return createTaskProcessorWorker(createGeometry, 'createGeometry');
 });
