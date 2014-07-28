@@ -35,7 +35,6 @@ Change Log
     * `DynamicBillboardVisualizer` -> `BillboardVisualizer`
     * `CompositeDynamicObjectCollection` -> `CompositeEntityCollection`
     * `DynamicCone` -> `ConeGraphics`
-    * `DynamicConeVisualizerUsingCustomSensor` -> `ConeVisualizer`
     * `DynamicClock` -> `DataSourceClock`
     * `DynamicEllipse` -> `EllipseGraphics`
     * `DynamicEllipsoid` -> `EllipsoidGraphics`
@@ -103,7 +102,7 @@ Change Log
     * `VRTheWorldTerrainProvider.hasWaterMask`
   * Removed `ScreenSpaceCameraController.ellipsoid`. The behavior that depended on the ellipsoid is now determined based on the scene state.
   * Sandcastle examples now automatically wrap the example code in RequireJS boilerplate.  To upgrade any custom examples, copy the code into an existing example (such as Hello World) and save a new file.
-  * Removed `CustomSensorVolume`, `RectangularPyramidSensorVolume`, `ConeGraphics`, `ConeVisualizer`, `PyramidGraphics` and `PyramidVisualizer`.
+  * Removed `CustomSensorVolume`, `RectangularPyramidSensorVolume`, `ConeGraphics`, `ConeVisualizer`, `PyramidGraphics` and `PyramidVisualizer`.  This will be moved to a plugin in early August.  [#1887](https://github.com/AnalyticalGraphicsInc/cesium/issues/1887)
   * If `Primitive.modelMatrix` is changed after creation, it only affects primitives with one instance and only in 3D mode.
 * Added camera collision detection with terrain to the default mouse interaction.
 * Modified the default camera tilt mouse behavior to tilt about the point clicked taking into account terrain.
