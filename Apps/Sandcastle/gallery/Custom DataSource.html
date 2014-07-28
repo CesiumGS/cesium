@@ -57,7 +57,7 @@ var WebGLGlobeDataSource = function(name) {
 
 Object.defineProperties(WebGLGlobeDataSource.prototype, {
     //The below properties must be implemented by all DataSource instances
-    
+
     /**
      * Gets a human-readable name for this instance.
      * @memberof WebGLGlobeDataSource.prototype
@@ -129,9 +129,9 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
             return this._loading;
         }
     },
-    
+
     //These properties are specific to this DataSource.
-    
+
     /**
      * Gets the array of series names.
      * @memberof WebGLGlobeDataSource.prototype
@@ -170,12 +170,12 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
      * @memberof WebGLGlobeDataSource.prototype
      * @type {Number}
      */
-     heightScale : {
+    heightScale : {
         get : function() {
             return this._heightScale;
         },
-        set:function(value) {
-            if(value > 0) {
+        set : function(value) {
+            if (value > 0) {
                 throw new Cesium.DeveloperError('value must be greater than 0');
             }
             this._heightScale = value;
@@ -236,14 +236,13 @@ WebGLGlobeDataSource.prototype.load = function(data) {
 
     var heightScale = this.heightScale;
     var entities = this._entityCollection;
-    
+
     //It's a good idea to suspend events when making changes to a 
     //large amount of entities.  This will cause events to be batched up
     //into the minimal amount of function calls and all take place at the
     //end of processing (when resumeEvents is called).
     entities.suspendEvents();
     entities.removeAll();
-   
 
     //WebGL Globe JSON is an array of series, where each series itself is an
     //array of two items, the first containing the series name and the second
@@ -252,17 +251,17 @@ WebGLGlobeDataSource.prototype.load = function(data) {
     //Here's a more visual example.
     //[["series1",[latitude, longitude, height, ... ]
     // ["series2",[latitude, longitude, height, ... ]]
-    
+
     // Loop over each series
     for (var x = 0; x < data.length; x++) {
         var series = data[x];
         var seriesName = series[0];
         var coordinates = series[1];
-        
+
         //Add the name of the series to our list of possible values.
         this._seriesNames.push(seriesName);
 
-        //Make the first series the visiable one by default
+        //Make the first series the visible one by default
         var show = x === 0;
         if (show) {
             this._seriesToDisplay = seriesName;
@@ -289,16 +288,16 @@ WebGLGlobeDataSource.prototype.load = function(data) {
             //The polyline instance itself needs to be on an entity.
             var entity = new Cesium.Entity(seriesName + ' index ' + i.toString());
             entity.polyline = polyline;
-            
+
             //Add a property to the entity that indicates the series name.
             entity.addProperty('seriesName');
             entity.seriesName = seriesName;
-            
+
             //Add the entity to the collection.
             entities.add(entity);
         }
     }
-    
+
     //Once all data is processed, call resumeEvents and raise the changed event.
     entities.resumeEvents();
     this._changed.raiseEvent(this);
@@ -312,12 +311,11 @@ WebGLGlobeDataSource.prototype._setLoading = function(isLoading) {
     }
 };
 
-
 //Now that we've defined our own DataSource, we can use it to load
 //any JSON data formatted for WebGL Globe.
 var dataSource = new WebGLGlobeDataSource();
 dataSource.loadUrl('../../SampleData/population909500.json').then(function() {
-    
+
     //After the initial load, create buttons to let the user switch among series. 
     function createSeriesSetter(seriesName) {
         return function() {
@@ -336,7 +334,12 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 viewer.dataSources.add(dataSource);
 
 //Sandcastle_End
-Sandcastle.finishedLoading();
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
 }
 </script>
 </body>
