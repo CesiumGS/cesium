@@ -110,7 +110,7 @@ define([
     var bootstrapperUrlResult;
     function getBootstrapperUrl() {
         if (!defined(bootstrapperUrlResult)) {
-            bootstrapperUrlResult = getWorkerUrl('Workers/cesiumWorkerBootstrapper.js');
+            bootstrapperUrlResult = getWorkerUrl(TaskProcessor._bootstrapperScript);
         }
         return bootstrapperUrlResult;
     }
@@ -262,6 +262,7 @@ define([
     TaskProcessor._workerModulePrefix = TaskProcessor._defaultWorkerModulePrefix;
     TaskProcessor._loaderConfig = undefined;
     TaskProcessor._canTransferArrayBuffer = undefined;
+    TaskProcessor._bootstrapperScript = 'Workers/cesiumWorkerBootstrapper.js';
 
     return TaskProcessor;
 });
