@@ -672,7 +672,7 @@ define([
         var direction = ray.direction;
         var scalar;
         var normalDotDirection = Cartesian3.dot(normal, direction);
-        if (normalDotDirection > CesiumMath.EPSILON6) {
+        if (Math.abs(normalDotDirection) > CesiumMath.EPSILON6) {
             scalar = -Cartesian3.dot(normal, position) / normalDotDirection;
         }
 
@@ -739,7 +739,7 @@ define([
 
                 var scalar;
                 var normalDotDirection = Cartesian3.dot(normal, direction);
-                if (normalDotDirection > CesiumMath.EPSILON6) {
+                if (Math.abs(normalDotDirection) > CesiumMath.EPSILON6) {
                     scalar = -Cartesian3.dot(normal, position) / normalDotDirection;
                 }
 
