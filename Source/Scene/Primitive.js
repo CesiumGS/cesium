@@ -204,6 +204,10 @@ define([
          * Local reference frames can be used by providing a different transformation matrix, like that returned
          * by {@link Transforms.eastNorthUpToFixedFrame}.
          *
+         * <p>
+         * If the model matrix is changed after creation, it only affects primitives with one instance and only in 3D mode.
+         * </p>
+         *
          * @type Matrix4
          *
          * @default Matrix4.IDENTITY
@@ -249,6 +253,7 @@ define([
         this._geometries = [];
         this._vaAttributes = undefined;
         this._error = undefined;
+        this._numberOfInstances = 0;
 
         this._boundingSphere = undefined;
         this._boundingSphereWC = undefined;
@@ -613,7 +618,7 @@ define([
                     throw this._error;
                 } else if (this._state === PrimitiveState.READY) {
                     instances = (isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
-                    length = instances.length;
+                    this._numberOfInstances = length = instances.length;
 
                     var promises = [];
                     var subTasks = [];
@@ -684,7 +689,7 @@ define([
                 }
             } else {
                 instances = (isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
-                length = instances.length;
+                this._numberOfInstances = length = instances.length;
                 geometries = new Array(length);
                 clonedInstances = new Array(instances.length);
 
@@ -958,9 +963,16 @@ define([
             attributes.length = 0;
         }
 
-        if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
-            Matrix4.clone(this.modelMatrix, this._modelMatrix);
-            this._boundingSphereWC = BoundingSphere.transform(this._boundingSphere, this.modelMatrix, this._boundingSphereWC);
+        var modelMatrix;
+        if (this._numberOfInstances > 1 || frameState.mode !== SceneMode.SCENE3D) {
+            modelMatrix = Matrix4.IDENTITY;
+        } else {
+            modelMatrix = this.modelMatrix;
+        }
+
+        if (!Matrix4.equals(modelMatrix, this._modelMatrix)) {
+            Matrix4.clone(modelMatrix, this._modelMatrix);
+            this._boundingSphereWC = BoundingSphere.transform(this._boundingSphere, modelMatrix, this._boundingSphereWC);
             if (!scene3DOnly && defined(this._boundingSphere)) {
                 this._boundingSphereCV = BoundingSphere.projectTo2D(this._boundingSphereWC, projection, this._boundingSphereCV);
                 this._boundingSphere2D = BoundingSphere.clone(this._boundingSphereCV, this._boundingSphere2D);
@@ -983,7 +995,7 @@ define([
         if (passes.render) {
             length = colorCommands.length;
             for (i = 0; i < length; ++i) {
-                colorCommands[i].modelMatrix = this.modelMatrix;
+                colorCommands[i].modelMatrix = modelMatrix;
                 colorCommands[i].boundingVolume = boundingSphere;
                 colorCommands[i].debugShowBoundingVolume = this.debugShowBoundingVolume;
 
@@ -994,7 +1006,7 @@ define([
         if (passes.pick) {
             length = pickCommands.length;
             for (i = 0; i < length; ++i) {
-                pickCommands[i].modelMatrix = this.modelMatrix;
+                pickCommands[i].modelMatrix = modelMatrix;
                 pickCommands[i].boundingVolume = boundingSphere;
 
                 commandList.push(pickCommands[i]);

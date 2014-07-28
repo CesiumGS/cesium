@@ -103,8 +103,10 @@ Change Log
     * `VRTheWorldTerrainProvider.hasWaterMask`
   * Removed `ScreenSpaceCameraController.ellipsoid`. The behavior that depended on the ellipsoid is now determined based on the scene state.
   * Sandcastle examples now automatically wrap the example code in RequireJS boilerplate.  To upgrade any custom examples, copy the code into an existing example (such as Hello World) and save a new file.
+  * If `Primitive.modelMatrix` is changed after creation, it only affects primitives with one instance and only in 3D mode.
 * Added camera collision detection with terrain to the default mouse interaction.
 * Modified the default camera tilt mouse behavior to tilt about the point clicked taking into account terrain.
+* Modified the default camera mouse behavior to look about the camera's position when the sky is clicked.
 * Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
 * Added support for rendering terrain lighting with oct-encoded per-vertex normals.  Added `CesiumTerrainProvider.requestVertexNormals` to request per vertex normals.  Added `hasVertexNormals` property to all terrain providers to indicate whether or not vertex normals will be included in the terrain tile responses.
 * Added `Globe.getHeight` and `Globe.pick` for finding the terrain height at a given Cartographic coordinate and picking the terrain with a ray.
