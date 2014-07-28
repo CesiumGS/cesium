@@ -5,7 +5,7 @@ Change Log
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))
   * All `Matrix2`, `Matrix3`, `Matrix4` and `Quaternion` functions that take a `result` parameter now require the parameter, except functions starting with `from`.
-  * Removed `Billboard.imageIndex` and `BillboardCollection.textureAtlas`. Instead, use `Billboard.image`. 
+  * Removed `Billboard.imageIndex` and `BillboardCollection.textureAtlas`. Instead, use `Billboard.image`.
     * Code that looked like:
 
             var billboards = new Cesium.BillboardCollection();
@@ -115,6 +115,7 @@ Change Log
 * Matrix types now have `add` and `subtract` functions.
 * `Matrix3` type now has a `fromCrossProduct` function.
 * Added `CesiumMath.signNotZero`, `CesiumMath.toSNorm` and `CesiumMath.fromSNorm` functions in support of oct-encoding.
+* DataSource & CZML models now default to North-East-Down orientation if none is provided.
 
 Beta Releases
 -------------
