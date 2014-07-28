@@ -6,7 +6,6 @@ define([
         '../Core/DeveloperError',
         '../Core/EventHelper',
         './BillboardVisualizer',
-        './ConeVisualizer',
         './EllipseGeometryUpdater',
         './EllipsoidGeometryUpdater',
         './GeometryVisualizer',
@@ -16,7 +15,6 @@ define([
         './PointVisualizer',
         './PolygonGeometryUpdater',
         './PolylineGeometryUpdater',
-        './PyramidVisualizer',
         './RectangleGeometryUpdater',
         './WallGeometryUpdater'
     ], function(
@@ -26,7 +24,6 @@ define([
         DeveloperError,
         EventHelper,
         BillboardVisualizer,
-        ConeVisualizer,
         EllipseGeometryUpdater,
         EllipsoidGeometryUpdater,
         GeometryVisualizer,
@@ -36,7 +33,6 @@ define([
         PointVisualizer,
         PolygonGeometryUpdater,
         PolylineGeometryUpdater,
-        PyramidVisualizer,
         RectangleGeometryUpdater,
         WallGeometryUpdater) {
     "use strict";
@@ -98,11 +94,9 @@ define([
                 new GeometryVisualizer(PolylineGeometryUpdater, scene, entities),
                 new GeometryVisualizer(RectangleGeometryUpdater, scene, entities),
                 new GeometryVisualizer(WallGeometryUpdater, scene, entities),
-                new ConeVisualizer(scene, entities),
                 new LabelVisualizer(scene, entities),
                 new ModelVisualizer(scene, entities),
                 new PointVisualizer(scene, entities),
-                new PyramidVisualizer(scene, entities),
                 new PathVisualizer(scene, entities)];
     };
 
