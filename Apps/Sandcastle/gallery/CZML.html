@@ -39,12 +39,6 @@ Sandcastle.addDefaultToolbarButton('Satellites', function() {
     viewer.dataSources.add(czmlDataSource);
 });
 
-Sandcastle.addToolbarButton('Sensors', function() {
-    var czmlDataSource = new Cesium.CzmlDataSource();
-    czmlDataSource.loadUrl(gallery + 'LotsOfSensors.czml');
-    viewer.dataSources.add(czmlDataSource);
-});
-
 Sandcastle.addToolbarButton('Vehicle', function() {
     var czmlDataSource = new Cesium.CzmlDataSource();
     czmlDataSource.loadUrl(gallery + 'Vehicle.czml');
