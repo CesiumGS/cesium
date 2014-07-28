@@ -85,10 +85,11 @@ Sandcastle.reset = function() {
   
   //Set the camera to a US centered tilted view.
   var camera = viewer.scene.camera;
-  camera.lookAt(Cesium.Cartesian3.fromDegrees(-98, 15.0, 5000000), Cesium.Cartesian3.fromDegrees(-98, 40.0, 0), Cesium.Cartesian3.UNIT_Z);
+  camera.lookAt(Cesium.Cartesian3.fromDegrees(-98, 15.0, 5000000),
+      Cesium.Cartesian3.fromDegrees(-98, 40.0, 0), Cesium.Cartesian3.UNIT_Z);
 };
 //Sandcastle_End
-Sandcastle.finishedLoading();
+    Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
     startup(Cesium);
