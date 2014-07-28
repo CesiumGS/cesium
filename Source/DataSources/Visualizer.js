@@ -15,12 +15,10 @@ define([
      * @constructor
      *
      * @see BillboardVisualizer
-     * @see ConeVisualizer
      * @see LabelVisualizer
      * @see ModelVisualizer
      * @see PathVisualizer
      * @see PointVisualizer
-     * @see PyramidVisualizer
      * @see GeometryVisualizer
      */
     var Visualizer = function() {
