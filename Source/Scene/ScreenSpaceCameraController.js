@@ -1439,6 +1439,8 @@ define([
     var look3DStartRay = new Ray();
     var look3DEndRay = new Ray();
     var look3DUp = new Cartesian3();
+    var look3DNegativeRot = new Cartesian3();
+    var look3DTan = new Cartesian3();
 
     function look3D(controller, startPosition, movement, frameState, rotationAxis) {
         var camera = controller._scene.camera;
@@ -1481,7 +1483,34 @@ define([
             angle = Math.acos(dot);
         }
         angle = (movement.startPosition.y > movement.endPosition.y) ? -angle : angle;
-        camera.lookUp(angle);
+
+        rotationAxis = defaultValue(rotationAxis, horizontalRotationAxis);
+        if (defined(rotationAxis)) {
+            var direction = camera.direction;
+            var negativeRotationAxis = Cartesian3.negate(rotationAxis, look3DNegativeRot);
+            var northParallel = Cartesian3.equalsEpsilon(direction, rotationAxis, CesiumMath.EPSILON2);
+            var southParallel = Cartesian3.equalsEpsilon(direction, negativeRotationAxis, CesiumMath.EPSILON2);
+            if ((!northParallel && !southParallel)) {
+                dot = Cartesian3.dot(direction, rotationAxis);
+                var angleToAxis = CesiumMath.acosClamped(dot);
+                if (angle > 0 && angle > angleToAxis) {
+                    angle = angleToAxis - CesiumMath.EPSILON4;
+                }
+
+                dot = Cartesian3.dot(direction, negativeRotationAxis);
+                angleToAxis = CesiumMath.acosClamped(dot);
+                if (angle < 0 && -angle > angleToAxis) {
+                    angle = -angleToAxis + CesiumMath.EPSILON4;
+                }
+
+                var tangent = Cartesian3.cross(rotationAxis, direction, look3DTan);
+                camera.look(tangent, angle);
+            } else if ((northParallel && angle < 0) || (southParallel && angle > 0)) {
+                camera.look(camera.right, -angle);
+            }
+        } else {
+            camera.lookUp(angle);
+        }
     }
 
     function update3D(controller, frameState) {
