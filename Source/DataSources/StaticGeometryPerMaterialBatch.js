@@ -193,8 +193,8 @@ define([
                 items.splice(i, 1);
                 var updaters = item.updaters.values;
                 var updatersLength = updaters.length;
-                for (var h = 0; h < updatersLength; i++) {
-                    this.add(updaters[h]);
+                for (var h = 0; h < updatersLength; h++) {
+                    this.add(time, updaters[h]);
                 }
                 item.destroy();
             }
