@@ -135,7 +135,7 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
     /**
      * Gets the array of series names.
      * @memberof WebGLGlobeDataSource.prototype
-     * @type {String}
+     * @type {String[]}
      */
     seriesNames : {
         get : function() {
@@ -145,9 +145,9 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
     /**
      * Gets or sets the name of the series to display.  WebGL JSON is designed
      * so that only one series is viewed at a time.  Valid values are defined
-     * in the seriesName property.
+     * in the seriesNames property.
      * @memberof WebGLGlobeDataSource.prototype
-     * @type {String[]}
+     * @type {String}
      */
     seriesToDisplay : {
         get : function() {
@@ -155,6 +155,9 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
         },
         set : function(value) {
             this._seriesToDisplay = value;
+            
+            //Iterate over all polylines and set their show property
+            //to true only if they are part of the current series.
             var collection = this._entityCollection;
             var entities = collection.entities;
             collection.suspendEvents();
@@ -218,9 +221,8 @@ WebGLGlobeDataSource.prototype.loadUrl = function(url) {
 };
 
 /**
- * Asynchronously loads the provided data, replacing any existing data.
+ * Loads the provided data, replacing any existing data.
  * @param {Object} data The object to be processed.
- * @returns {Promise} a promise that will resolve when the data is loaded.
  */
 WebGLGlobeDataSource.prototype.load = function(data) {
     //>>includeStart('debug', pragmas.debug);
