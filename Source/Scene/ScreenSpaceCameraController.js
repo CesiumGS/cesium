@@ -560,6 +560,15 @@ define([
     var translateCVEndMouse = new Cartesian2();
 
     function translateCV(controller, startPosition, movement, frameState) {
+        if (!Cartesian3.equals(startPosition, controller._translateMousePosition)) {
+            controller._looking = false;
+        }
+
+        if (controller._looking) {
+            look3D(controller, startPosition, movement, frameState);
+            return;
+        }
+
         var camera = controller._scene.camera;
         var startMouse = Cartesian3.clone(movement.startPosition, translateCVStartMouse);
         var endMouse = Cartesian3.clone(movement.endPosition, translateCVEndMouse);
@@ -590,6 +599,9 @@ define([
         var endPlanePos = IntersectionTests.rayPlane(endRay, plane, translateCVEndPos);
 
         if (!defined(startPlanePos) || !defined(endPlanePos)) {
+            controller._looking = true;
+            look3D(controller, startPosition, movement, frameState);
+            Cartesian2.clone(startPosition, controller._translateMousePosition);
             return;
         }
 
@@ -626,6 +638,12 @@ define([
 
         if (!Cartesian2.equals(startPosition, controller._tiltCenterMousePosition)) {
             controller._tiltCVOffMap = false;
+            controller._looking = false;
+        }
+
+        if (controller._looking) {
+            look3D(controller, startPosition, movement, frameState);
+            return;
         }
 
         var camera = controller._scene.camera;
@@ -652,7 +670,19 @@ define([
 
         var position = ray.origin;
         var direction = ray.direction;
-        var scalar = -Cartesian3.dot(normal, position) / Cartesian3.dot(normal, direction);
+        var scalar;
+        var normalDotDirection = Cartesian3.dot(normal, direction);
+        if (normalDotDirection > CesiumMath.EPSILON6) {
+            scalar = -Cartesian3.dot(normal, position) / normalDotDirection;
+        }
+
+        if (!defined(scalar) || scalar <= 0.0) {
+            controller._looking = true;
+            look3D(controller, startPosition, movement, frameState);
+            Cartesian2.clone(startPosition, controller._tiltCenterMousePosition);
+            return;
+        }
+
         var center = Cartesian3.multiplyByScalar(direction, scalar, rotateCVCenter);
         Cartesian3.add(position, center, center);
 
@@ -706,7 +736,20 @@ define([
             if (!defined(center)) {
                 var position = ray.origin;
                 var direction = ray.direction;
-                var scalar = -Cartesian3.dot(normal, position) / Cartesian3.dot(normal, direction);
+
+                var scalar;
+                var normalDotDirection = Cartesian3.dot(normal, direction);
+                if (normalDotDirection > CesiumMath.EPSILON6) {
+                    scalar = -Cartesian3.dot(normal, position) / normalDotDirection;
+                }
+
+                if (!defined(scalar) || scalar <= 0.0) {
+                    controller._looking = true;
+                    look3D(controller, startPosition, movement, frameState);
+                    Cartesian2.clone(startPosition, controller._tiltCenterMousePosition);
+                    return;
+                }
+
                 center = Cartesian3.multiplyByScalar(direction, scalar, rotateCVCenter);
                 Cartesian3.add(position, center, center);
             }
