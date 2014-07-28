@@ -993,6 +993,7 @@ define([
 
     /**
      * Gets the name of the color material.
+     * @type {String}
      * @readonly
      */
     Material.ColorType = 'Color';
@@ -1014,6 +1015,7 @@ define([
 
     /**
      * Gets the name of the image material.
+     * @type {String}
      * @readonly
      */
     Material.ImageType = 'Image';
@@ -1034,6 +1036,7 @@ define([
 
     /**
      * Gets the name of the diffuce map material.
+     * @type {String}
      * @readonly
      */
     Material.DiffuseMapType = 'DiffuseMap';
@@ -1054,6 +1057,7 @@ define([
 
     /**
      * Gets the name of the alpha map material.
+     * @type {String}
      * @readonly
      */
     Material.AlphaMapType = 'AlphaMap';
@@ -1074,6 +1078,7 @@ define([
 
     /**
      * Gets the name of the specular map material.
+     * @type {String}
      * @readonly
      */
     Material.SpecularMapType = 'SpecularMap';
@@ -1094,6 +1099,7 @@ define([
 
     /**
      * Gets the name of the emmision map material.
+     * @type {String}
      * @readonly
      */
     Material.EmissionMapType = 'EmissionMap';
@@ -1114,6 +1120,7 @@ define([
 
     /**
      * Gets the name of the bump map material.
+     * @type {String}
      * @readonly
      */
     Material.BumpMapType = 'BumpMap';
@@ -1133,6 +1140,7 @@ define([
 
     /**
      * Gets the name of the normal map material.
+     * @type {String}
      * @readonly
      */
     Material.NormalMapType = 'NormalMap';
@@ -1152,6 +1160,7 @@ define([
 
     /**
      * Gets the name of the grid material.
+     * @type {String}
      * @readonly
      */
     Material.GridType = 'Grid';
@@ -1175,6 +1184,7 @@ define([
 
     /**
      * Gets the name of the stripe material.
+     * @type {String}
      * @readonly
      */
     Material.StripeType = 'Stripe';
@@ -1198,6 +1208,7 @@ define([
 
     /**
      * Gets the name of the checkerboard material.
+     * @type {String}
      * @readonly
      */
     Material.CheckerboardType = 'Checkerboard';
@@ -1219,6 +1230,7 @@ define([
 
     /**
      * Gets the name of the dot material.
+     * @type {String}
      * @readonly
      */
     Material.DotType = 'Dot';
@@ -1240,6 +1252,7 @@ define([
 
     /**
      * Gets the name of the water material.
+     * @type {String}
      * @readonly
      */
     Material.WaterType = 'Water';
@@ -1267,6 +1280,7 @@ define([
 
     /**
      * Gets the name of the rim lighting material.
+     * @type {String}
      * @readonly
      */
     Material.RimLightingType = 'RimLighting';
@@ -1288,6 +1302,7 @@ define([
 
     /**
      * Gets the name of the fade material.
+     * @type {String}
      * @readonly
      */
     Material.FadeType = 'Fade';
@@ -1315,6 +1330,7 @@ define([
 
     /**
      * Gets the name of the polyline arrow material.
+     * @type {String}
      * @readonly
      */
     Material.PolylineArrowType = 'PolylineArrow';
@@ -1331,6 +1347,7 @@ define([
 
     /**
      * Gets the name of the polyline glow material.
+     * @type {String}
      * @readonly
      */
     Material.PolylineGlowType = 'PolylineGlow';
@@ -1348,6 +1365,7 @@ define([
 
     /**
      * Gets the name of the polyline outline material.
+     * @type {String}
      * @readonly
      */
     Material.PolylineOutlineType = 'PolylineOutline';
