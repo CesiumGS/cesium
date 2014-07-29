@@ -244,7 +244,6 @@ define([
             that._ready = true;
         }
 
-
         function metadataFailure(error) {
             // Can't load XML, still allow options and defaults
             that._fileExtension = defaultValue(options.fileExtension, 'png');
