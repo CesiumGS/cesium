@@ -106,11 +106,8 @@ define([
         // throw an exception, because starting at the higher minimum
         // level will cause too many tiles to be downloaded and rendered.
         var swTile = this._tilingScheme.positionToTileXY(Rectangle.southwest(this._rectangle), this._minimumLevel);
-console.log(swTile) ;
         var neTile = this._tilingScheme.positionToTileXY(Rectangle.northeast(this._rectangle), this._minimumLevel);
-console.log(neTile) ;
         var tileCount = (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
-console.log(tileCount) ;
         if (tileCount > 4) {
             throw new DeveloperError('The imagery provider\'s rectangle and minimumLevel indicate that there are ' + tileCount + ' tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.');
         }
@@ -127,13 +124,13 @@ console.log(tileCount) ;
     };
 
     function buildImageUrl(imageryProvider, col, row, level) {
-        var url = imageryProvider._url + 
-                  "service=WMTS&VERSION=1.0.0&request=GetTile" + 
-                  "&TILEMATRIX="+ level + 
-                  "&LAYER="+ imageryProvider._layer + 
+        var url = imageryProvider._url +
+                  "service=WMTS&VERSION=1.0.0&request=GetTile" +
+                  "&TILEMATRIX="+ level +
+                  "&LAYER="+ imageryProvider._layer +
                   "&STYLE="+ imageryProvider._style +
-                  "&TILEROW="+ row + 
-                  '&TILECOL=' + col + 
+                  "&TILEROW="+ row +
+                  '&TILECOL=' + col +
                   '&TILEMATRIXSET=' + imageryProvider._tms +
                   "&FORMAT=" + imageryProvider._format ;
 
