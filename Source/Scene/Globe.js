@@ -392,6 +392,77 @@ define([
         return intersection;
     };
 
+    /**
+     * Find an intersection between a ray and the globe surface that was rendered. The ray must be given in world coordinates.
+     *
+     * @param {Ray} ray The ray to test for intersection.
+     * @param {Scene} scene The scene.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @returns {IntersectedTriangle|undefined} The intersection or <code>undefined</code> if none was found.
+     *
+     * @example
+     * // find intersection of ray through a pixel and the globe
+     * var ray = scene.camera.getPickRay(windowCoordinates);
+     * var intersection = globe.pick(ray, scene);
+     */
+    Globe.prototype.pickTriangle = function(ray, scene, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(ray)) {
+            throw new DeveloperError('ray is required');
+        }
+        if (!defined(scene)) {
+            throw new DeveloperError('scene is required');
+        }
+        //>>includeEnd('debug');
+
+        var mode = scene.mode;
+        var projection = scene.mapProjection;
+
+        var sphereIntersections = scratchArray;
+        sphereIntersections.length = 0;
+
+        var tilesToRender = this._surface._tilesToRender;
+        var length = tilesToRender.length;
+
+        var tile;
+        var i;
+
+        for (i = 0; i < length; ++i) {
+            tile = tilesToRender[i];
+            var tileData = tile.data;
+
+            if (!defined(tileData)) {
+                continue;
+            }
+
+            var boundingVolume = tileData.pickBoundingSphere;
+            if (mode !== SceneMode.SCENE3D) {
+                BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, projection, tileData.minimumHeight, tileData.maximumHeight, boundingVolume);
+                Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
+            } else {
+                BoundingSphere.clone(tileData.boundingSphere3D, boundingVolume);
+            }
+
+            var boundingSphereIntersection = IntersectionTests.raySphere(ray, boundingVolume, scratchSphereIntersectionResult);
+            if (defined(boundingSphereIntersection)) {
+                sphereIntersections.push(tileData);
+            }
+        }
+
+        sphereIntersections.sort(createComparePickTileFunction(ray.origin));
+
+        var intersection;
+        length = sphereIntersections.length;
+        for (i = 0; i < length; ++i) {
+            intersection = sphereIntersections[i].pickTriangle(ray, scene, true, result);
+            if (defined(intersection)) {
+                break;
+            }
+        }
+
+        return intersection;
+    };
+
     var scratchGetHeightCartesian = new Cartesian3();
     var scratchGetHeightIntersection = new Cartesian3();
     var scratchGetHeightCartographic = new Cartographic();
