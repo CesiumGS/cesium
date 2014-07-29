@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/AssociativeArray',
         '../Core/Cartesian3',
         '../Core/defined',
         '../Core/destroyObject',
@@ -11,6 +12,7 @@ define([
         '../Scene/Model',
         './Property'
     ], function(
+        AssociativeArray,
         Cartesian3,
         defined,
         destroyObject,
@@ -48,12 +50,15 @@ define([
         }
         //>>includeEnd('debug');
 
-        entityCollection.collectionChanged.addEventListener(ModelVisualizer.prototype._onObjectsRemoved, this);
+        entityCollection.collectionChanged.addEventListener(ModelVisualizer.prototype._onCollectionChanged, this);
 
         this._scene = scene;
         this._primitives = scene.primitives;
         this._entityCollection = entityCollection;
         this._modelHash = {};
+        this._entities = new AssociativeArray();
+
+        this._onCollectionChanged(entityCollection, entityCollection.entities, [], []);
     };
 
     /**
@@ -71,7 +76,7 @@ define([
         //>>includeEnd('debug');
 
         var context = this._scene.context;
-        var entities = this._entityCollection.entities;
+        var entities = this._entities.values;
         var modelHash = this._modelHash;
         var primitives = this._primitives;
         var scene = this._scene;
@@ -79,9 +84,6 @@ define([
         for (var i = 0, len = entities.length; i < len; i++) {
             var entity = entities[i];
             var modelGraphics = entity._model;
-            if (!defined(modelGraphics)) {
-                continue;
-            }
 
             var uri;
             var modelData = modelHash[entity.id];
@@ -115,7 +117,6 @@ define([
 
                 model.id = entity;
                 primitives.add(model);
-                entity._modelPrimitive = model;
 
                 modelData = {
                     modelPrimitive : model,
@@ -157,17 +158,11 @@ define([
      * Removes and destroys all primitives created by this instance.
      */
     ModelVisualizer.prototype.destroy = function() {
-        var entities = this._entityCollection.entities;
+        var entities = this._entities.values;
+        var modelHash = this._modelHash;
+        var primitives = this._primitives;
         for (var i = entities.length - 1; i > -1; i--) {
-            var entity = entities[i];
-            var model = entity._modelPrimitive;
-            if (defined(model)) {
-                this._primitives.remove(model);
-                if (!model.isDestroyed()) {
-                    model.destroy();
-                }
-                entity._modelPrimitive = undefined;
-            }
+            removeModel(entities[i], modelHash, primitives);
         }
         return destroyObject(this);
     };
@@ -175,19 +170,48 @@ define([
     /**
      * @private
      */
-    ModelVisualizer.prototype._onObjectsRemoved = function(entityCollection, added, removed) {
-        for (var i = removed.length - 1; i > -1; i--) {
-            var entity = removed[i];
-            var model = entity._modelPrimitive;
-            if (defined(model)) {
-                this._primitives.remove(model);
-                if (!model.isDestroyed()) {
-                    model.destroy();
-                }
-                delete this._modelHash[entity.id];
+    ModelVisualizer.prototype._onCollectionChanged = function(entityCollection, added, removed, changed) {
+        var i;
+        var entity;
+        var entities = this._entities;
+        var modelHash = this._modelHash;
+        var primitives = this._primitives;
+
+        for (i = added.length - 1; i > -1; i--) {
+            entity = added[i];
+            if (defined(entity._model) && defined(entity._position)) {
+                entities.set(entity.id, entity);
             }
         }
+
+        for (i = changed.length - 1; i > -1; i--) {
+            entity = changed[i];
+            if (defined(entity._model) && defined(entity._position)) {
+                entities.set(entity.id, entity);
+            } else {
+                removeModel(entity, modelHash, primitives);
+                entities.remove(entity.id);
+            }
+        }
+
+        for (i = removed.length - 1; i > -1; i--) {
+            entity = removed[i];
+            removeModel(entity, modelHash, primitives);
+            entities.remove(entity.id);
+        }
     };
+
+    function removeModel(entity, modelHash, primitives) {
+        var modelData = modelHash[entity.id];
+        if (defined(modelData)) {
+            var model = modelData.modelPrimitive;
+            primitives.remove(model);
+            if (!model.isDestroyed()) {
+                model.destroy();
+            }
+            delete modelHash[entity.id];
+        }
+    }
 
     return ModelVisualizer;
 });

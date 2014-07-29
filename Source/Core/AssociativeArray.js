@@ -61,9 +61,12 @@ define([
         }
         //>>includeEnd('debug');
 
-        this.remove(key);
-        this._hash[key] = value;
-        this._array.push(value);
+        var oldValue = this._hash[key];
+        if (value !== oldValue) {
+            this.remove(key);
+            this._hash[key] = value;
+            this._array.push(value);
+        }
     };
 
     /**

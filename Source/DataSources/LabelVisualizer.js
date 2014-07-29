@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/AssociativeArray',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
@@ -13,6 +14,7 @@ define([
         '../Scene/VerticalOrigin',
         './Property'
     ], function(
+        AssociativeArray,
         Cartesian2,
         Cartesian3,
         Color,
@@ -67,12 +69,15 @@ define([
 
         var labelCollection = new LabelCollection();
         scene.primitives.add(labelCollection);
-        entityCollection.collectionChanged.addEventListener(LabelVisualizer.prototype._onObjectsRemoved, this);
+        entityCollection.collectionChanged.addEventListener(LabelVisualizer.prototype._onCollectionChanged, this);
 
         this._scene = scene;
         this._unusedIndexes = [];
         this._labelCollection = labelCollection;
         this._entityCollection = entityCollection;
+        this._entities = new AssociativeArray();
+
+        this._onCollectionChanged(entityCollection, entityCollection.entities, [], []);
     };
 
     /**
@@ -89,16 +94,12 @@ define([
         }
         //>>includeEnd('debug');
 
-        var entities = this._entityCollection.entities;
+        var entities = this._entities.values;
         var unusedIndexes = this._unusedIndexes;
         var labelCollection = this._labelCollection;
         for (var i = 0, len = entities.length; i < len; i++) {
             var entity = entities[i];
             var labelGraphics = entity._label;
-            if (!defined(labelGraphics)) {
-                continue;
-            }
-
             var text;
             var label;
             var labelVisualizerIndex = entity._labelVisualizerIndex;
@@ -112,12 +113,7 @@ define([
 
             if (!show) {
                 //don't bother creating or updating anything else
-                if (defined(labelVisualizerIndex)) {
-                    label = labelCollection.get(labelVisualizerIndex);
-                    label.show = false;
-                    unusedIndexes.push(labelVisualizerIndex);
-                    entity._labelVisualizerIndex = undefined;
-                }
+                cleanEntity(entity, labelCollection, unusedIndexes);
                 continue;
             }
 
@@ -169,7 +165,7 @@ define([
      */
     LabelVisualizer.prototype.destroy = function() {
         var entityCollection = this._entityCollection;
-        entityCollection.collectionChanged.removeEventListener(LabelVisualizer.prototype._onObjectsRemoved, this);
+        entityCollection.collectionChanged.removeEventListener(LabelVisualizer.prototype._onCollectionChanged, this);
 
         var entities = entityCollection.entities;
         var length = entities.length;
@@ -180,20 +176,46 @@ define([
         return destroyObject(this);
     };
 
-    LabelVisualizer.prototype._onObjectsRemoved = function(entityCollection, added, entities) {
-        var thisLabelCollection = this._labelCollection;
-        var thisUnusedIndexes = this._unusedIndexes;
-        for (var i = entities.length - 1; i > -1; i--) {
-            var entity = entities[i];
-            var labelVisualizerIndex = entity._labelVisualizerIndex;
-            if (defined(labelVisualizerIndex)) {
-                var label = thisLabelCollection.get(labelVisualizerIndex);
-                label.show = false;
-                thisUnusedIndexes.push(labelVisualizerIndex);
-                entity._labelVisualizerIndex = undefined;
+    LabelVisualizer.prototype._onCollectionChanged = function(entityCollection, added, removed, changed) {
+        var i;
+        var entity;
+        var labelCollection = this._labelCollection;
+        var unusedIndexes = this._unusedIndexes;
+        var entities = this._entities;
+
+        for (i = added.length - 1; i > -1; i--) {
+            entity = added[i];
+            if (defined(entity._label) && defined(entity._position)) {
+                entities.set(entity.id, entity);
             }
         }
+
+        for (i = changed.length - 1; i > -1; i--) {
+            entity = changed[i];
+            if (defined(entity._label) && defined(entity._position)) {
+                entities.set(entity.id, entity);
+            } else {
+                cleanEntity(entity, labelCollection, unusedIndexes);
+                entities.remove(entity.id);
+            }
+        }
+
+        for (i = removed.length - 1; i > -1; i--) {
+            entity = removed[i];
+            cleanEntity(entity, labelCollection, unusedIndexes);
+            entities.remove(entity.id);
+        }
     };
+
+    function cleanEntity(entity, collection, unusedIndexes) {
+        var labelVisualizerIndex = entity._labelVisualizerIndex;
+        if (defined(labelVisualizerIndex)) {
+            var label = collection.get(labelVisualizerIndex);
+            label.show = false;
+            unusedIndexes.push(labelVisualizerIndex);
+            entity._labelVisualizerIndex = undefined;
+        }
+    }
 
     return LabelVisualizer;
 });

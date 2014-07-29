@@ -29,10 +29,12 @@ define([
         if (collection._suspendCount === 0) {
             var added = collection._addedEntities;
             var removed = collection._removedEntities;
-            if (added.length !== 0 || removed.length !== 0) {
-                collection._collectionChanged.raiseEvent(collection, added.values, removed.values);
+            var changed = collection._changedEntities;
+            if (changed.length !== 0 || added.length !== 0 || removed.length !== 0) {
+                collection._collectionChanged.raiseEvent(collection, added.values, removed.values, changed.values);
                 added.removeAll();
                 removed.removeAll();
+                changed.removeAll();
             }
         }
     }
@@ -46,6 +48,7 @@ define([
         this._entities = new AssociativeArray();
         this._addedEntities = new AssociativeArray();
         this._removedEntities = new AssociativeArray();
+        this._changedEntities = new AssociativeArray();
         this._suspendCount = 0;
         this._collectionChanged = new Event();
         this._id = createGuid();
@@ -90,6 +93,7 @@ define([
      * @param {EntityCollection} collection The collection that triggered the event.
      * @param {Entity[]} added The array of {@link Entity} instances that have been added to the collection.
      * @param {Entity[]} removed The array of {@link Entity} instances that have been removed from the collection.
+     * @param {Entity[]} changed The array of {@link Entity} instances that have been modified.
      */
     EntityCollection.collectionChangedEventCallback = undefined;
 
@@ -195,6 +199,8 @@ define([
         if (!this._removedEntities.remove(id)) {
             this._addedEntities.set(id, entity);
         }
+        entity.definitionChanged.addEventListener(EntityCollection.prototype._onEntityDefinitionChanged, this);
+
         fireChangedEvent(this);
     };
 
@@ -235,7 +241,10 @@ define([
 
         if (!this._addedEntities.remove(id)) {
             this._removedEntities.set(id, entity);
+            this._changedEntities.remove(id);
         }
+        this._entities.remove(id);
+        entity.definitionChanged.removeEventListener(EntityCollection.prototype._onEntityDefinitionChanged, this);
         fireChangedEvent(this);
 
         return true;
@@ -259,12 +268,14 @@ define([
             var existingItemId = existingItem.id;
             var addedItem = addedEntities.get(existingItemId);
             if (!defined(addedItem)) {
+                existingItem.definitionChanged.removeEventListener(EntityCollection.prototype._onEntityDefinitionChanged, this);
                 removed.set(existingItemId, existingItem);
             }
         }
 
         entities.removeAll();
         addedEntities.removeAll();
+        this._changedEntities.removeAll();
         fireChangedEvent(this);
     };
 
@@ -303,6 +314,14 @@ define([
             this.add(entity);
         }
         return entity;
+    };
+
+    EntityCollection.prototype._onEntityDefinitionChanged = function(entity) {
+        var id = entity.id;
+        if (!defined(this._addedEntities.get(id))) {
+            this._changedEntities.set(id, entity);
+        }
+        fireChangedEvent(this);
     };
 
     return EntityCollection;
