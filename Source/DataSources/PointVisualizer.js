@@ -57,7 +57,7 @@ define([
         this._unusedIndexes = [];
         this._entityCollection = entityCollection;
         this._billboardCollection = billboardCollection;
-        this._entities = new AssociativeArray();
+        this._entitiesToVisualize = new AssociativeArray();
 
         this._onCollectionChanged(entityCollection, entityCollection.entities, [], []);
     };
@@ -76,7 +76,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var entities = this._entities.values;
+        var entities = this._entitiesToVisualize.values;
         var billboardCollection = this._billboardCollection;
         var unusedIndexes = this._unusedIndexes;
         for (var i = 0, len = entities.length; i < len; i++) {
@@ -162,7 +162,7 @@ define([
      * Removes and destroys all primitives created by this instance.
      */
     PointVisualizer.prototype.destroy = function() {
-        var entities = this._entities.values;
+        var entities = this._entitiesToVisualize.values;
         for (var i = entities.length - 1; i > -1; i--) {
             entities[i]._pointVisualizerIndex = undefined;
         }
@@ -176,7 +176,7 @@ define([
         var entity;
         var billboardCollection = this._billboardCollection;
         var unusedIndexes = this._unusedIndexes;
-        var entities = this._entities;
+        var entities = this._entitiesToVisualize;
 
         for (i = added.length - 1; i > -1; i--) {
             entity = added[i];

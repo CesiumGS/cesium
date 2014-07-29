@@ -70,7 +70,7 @@ define([
         this._unusedIndexes = [];
         this._billboardCollection = billboardCollection;
         this._entityCollection = entityCollection;
-        this._entities = new AssociativeArray();
+        this._entitiesToVisualize = new AssociativeArray();
 
         this._onCollectionChanged(entityCollection, entityCollection.entities, [], []);
     };
@@ -89,7 +89,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var entities = this._entities.values;
+        var entities = this._entitiesToVisualize.values;
         var billboardCollection = this._billboardCollection;
         var unusedIndexes = this._unusedIndexes;
         for (var i = 0, len = entities.length; i < len; i++) {
@@ -162,7 +162,7 @@ define([
      */
     BillboardVisualizer.prototype.destroy = function() {
         this._entityCollection.collectionChanged.removeEventListener(BillboardVisualizer.prototype._onCollectionChanged, this);
-        var entities = this._entities.values;
+        var entities = this._entitiesToVisualize.values;
         var length = entities.length;
         for (var i = 0; i < length; i++) {
             entities[i]._billboardVisualizerIndex = undefined;
@@ -176,7 +176,7 @@ define([
         var entity;
         var billboardCollection = this._billboardCollection;
         var unusedIndexes = this._unusedIndexes;
-        var entities = this._entities;
+        var entities = this._entitiesToVisualize;
 
         for (i = added.length - 1; i > -1; i--) {
             entity = added[i];

@@ -414,7 +414,7 @@ define([
         this._scene = scene;
         this._updaters = {};
         this._entityCollection = entityCollection;
-        this._entities = new AssociativeArray();
+        this._entitiesToVisualize = new AssociativeArray();
     };
 
     /**
@@ -438,7 +438,7 @@ define([
             }
         }
 
-        var entities = this._entities.values;
+        var entities = this._entitiesToVisualize.values;
         for (var i = 0, len = entities.length; i < len; i++) {
             var entity = entities[i];
             var positionProperty = entity._position;
@@ -511,7 +511,7 @@ define([
         var i;
         var entity;
         var _pathUpdater;
-        var entities = this._entities;
+        var entities = this._entitiesToVisualize;
 
         for (i = added.length - 1; i > -1; i--) {
             entity = added[i];

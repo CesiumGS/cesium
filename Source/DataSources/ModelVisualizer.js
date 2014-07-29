@@ -56,7 +56,7 @@ define([
         this._primitives = scene.primitives;
         this._entityCollection = entityCollection;
         this._modelHash = {};
-        this._entities = new AssociativeArray();
+        this._entitiesToVisualize = new AssociativeArray();
 
         this._onCollectionChanged(entityCollection, entityCollection.entities, [], []);
     };
@@ -76,7 +76,7 @@ define([
         //>>includeEnd('debug');
 
         var context = this._scene.context;
-        var entities = this._entities.values;
+        var entities = this._entitiesToVisualize.values;
         var modelHash = this._modelHash;
         var primitives = this._primitives;
         var scene = this._scene;
@@ -158,7 +158,7 @@ define([
      * Removes and destroys all primitives created by this instance.
      */
     ModelVisualizer.prototype.destroy = function() {
-        var entities = this._entities.values;
+        var entities = this._entitiesToVisualize.values;
         var modelHash = this._modelHash;
         var primitives = this._primitives;
         for (var i = entities.length - 1; i > -1; i--) {
@@ -173,7 +173,7 @@ define([
     ModelVisualizer.prototype._onCollectionChanged = function(entityCollection, added, removed, changed) {
         var i;
         var entity;
-        var entities = this._entities;
+        var entities = this._entitiesToVisualize;
         var modelHash = this._modelHash;
         var primitives = this._primitives;
 
