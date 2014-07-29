@@ -27,7 +27,7 @@ define([
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
      * @see OpenStreetMapImageryProvider
-     * @see WMTSImageryProvider
+     * @see WebMapTileServiceImageryProvider
      * @see WebMapServiceImageryProvider
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}
