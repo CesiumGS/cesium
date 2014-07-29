@@ -318,7 +318,7 @@ define([
 
     EntityCollection.prototype._onEntityDefinitionChanged = function(entity) {
         var id = entity.id;
-        if (!defined(this._addedEntities.get(id))) {
+        if (!this._addedEntities.contains(id)) {
             this._changedEntities.set(id, entity);
         }
         fireChangedEvent(this);
