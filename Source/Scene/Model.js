@@ -811,7 +811,7 @@ define([
                     computedJointMatrices : [],         // empty when node is not skinned
 
                     // Joint node
-                    jointId : node.joint,               // undefined when node is not a joint
+                    jointName : node.jointName,         // undefined when node is not a joint
 
                     // Graph pointers
                     children : [],                      // empty for leaf nodes
@@ -1117,7 +1117,7 @@ define([
         return attributeLocations;
     }
 
-    function searchForest(forest, jointId) {
+    function searchForest(forest, jointName) {
         var length = forest.length;
         for (var i = 0; i < length; ++i) {
             var stack = [forest[i]]; // Push root node of tree
@@ -1125,7 +1125,7 @@ define([
             while (stack.length > 0) {
                 var n = stack.pop();
 
-                if (n.jointId === jointId) {
+                if (n.jointName === jointName) {
                     return n;
                 }
 
@@ -1159,7 +1159,7 @@ define([
             skinnedNode.bindShapeMatrix = runtimeSkin.bindShapeMatrix;
 
             // 1. Find nodes with the names in instanceSkin.skeletons (the node's skeletons)
-            // 2. These nodes form the root nodes of the forest to search for each joint in skin.joints.  This search uses jointId, not the node's name.
+            // 2. These nodes form the root nodes of the forest to search for each joint in skin.jointNames.  This search uses jointName, not the node's name.
 
             var forest = [];
             var gltfSkeletons = instanceSkin.skeletons;
@@ -1168,11 +1168,11 @@ define([
                 forest.push(runtimeNodes[gltfSkeletons[k]]);
             }
 
-            var gltfJointIds = skins[instanceSkin.skin].joints;
-            var jointIdsLength = gltfJointIds.length;
-            for (var i = 0; i < jointIdsLength; ++i) {
-                var jointId = gltfJointIds[i];
-                skinnedNode.joints.push(searchForest(forest, jointId));
+            var gltfJointNames = skins[instanceSkin.skin].jointNames;
+            var jointNamesLength = gltfJointNames.length;
+            for (var i = 0; i < jointNamesLength; ++i) {
+                var jointName = gltfJointNames[i];
+                skinnedNode.joints.push(searchForest(forest, jointName));
             }
         }
     }
