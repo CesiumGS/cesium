@@ -308,8 +308,8 @@ define([
 
     function createComparePickTileFunction(rayOrigin) {
         return function(a, b) {
-            var aDist = BoundingSphere.distanceSquaredTo(a.pickBoundingSphere, rayOrigin);
-            var bDist = BoundingSphere.distanceSquaredTo(b.pickBoundingSphere, rayOrigin);
+            var aDist = BoundingSphere.distanceSquaredTo(a.data.pickBoundingSphere, rayOrigin);
+            var bDist = BoundingSphere.distanceSquaredTo(b.data.pickBoundingSphere, rayOrigin);
 
             return aDist - bDist;
         };
@@ -374,7 +374,7 @@ define([
 
             var boundingSphereIntersection = IntersectionTests.raySphere(ray, boundingVolume, scratchSphereIntersectionResult);
             if (defined(boundingSphereIntersection)) {
-                sphereIntersections.push(tileData);
+                sphereIntersections.push(tile);
             }
         }
 
@@ -383,7 +383,7 @@ define([
         var intersection;
         length = sphereIntersections.length;
         for (i = 0; i < length; ++i) {
-            intersection = sphereIntersections[i].pick(ray, scene, true, result);
+            intersection = sphereIntersections[i].data.pick(ray, scene, true, result);
             if (defined(intersection)) {
                 break;
             }
@@ -445,7 +445,7 @@ define([
 
             var boundingSphereIntersection = IntersectionTests.raySphere(ray, boundingVolume, scratchSphereIntersectionResult);
             if (defined(boundingSphereIntersection)) {
-                sphereIntersections.push(tileData);
+                sphereIntersections.push(tile);
             }
         }
 
@@ -454,8 +454,9 @@ define([
         var intersection;
         length = sphereIntersections.length;
         for (i = 0; i < length; ++i) {
-            intersection = sphereIntersections[i].pickTriangle(ray, scene, true, result);
+            intersection = sphereIntersections[i].data.pickTriangle(ray, scene, true, result);
             if (defined(intersection)) {
+                intersection.tile = sphereIntersections[i];
                 break;
             }
         }
