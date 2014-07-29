@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/AssociativeArray',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
@@ -12,6 +13,7 @@ define([
         '../Scene/VerticalOrigin',
         './Property'
     ], function(
+        AssociativeArray,
         Cartesian2,
         Cartesian3,
         Color,
@@ -62,12 +64,15 @@ define([
 
         var billboardCollection = new BillboardCollection();
         scene.primitives.add(billboardCollection);
-        entityCollection.collectionChanged.addEventListener(BillboardVisualizer.prototype._onObjectsRemoved, this);
+        entityCollection.collectionChanged.addEventListener(BillboardVisualizer.prototype._onCollectionChanged, this);
 
         this._scene = scene;
         this._unusedIndexes = [];
         this._billboardCollection = billboardCollection;
         this._entityCollection = entityCollection;
+        this._entitiesToVisualize = new AssociativeArray();
+
+        this._onCollectionChanged(entityCollection, entityCollection.entities, [], []);
     };
 
     /**
@@ -84,16 +89,12 @@ define([
         }
         //>>includeEnd('debug');
 
-        var entities = this._entityCollection.entities;
+        var entities = this._entitiesToVisualize.values;
         var billboardCollection = this._billboardCollection;
         var unusedIndexes = this._unusedIndexes;
         for (var i = 0, len = entities.length; i < len; i++) {
             var entity = entities[i];
             var billboardGraphics = entity._billboard;
-            if (!defined(billboardGraphics)) {
-                continue;
-            }
-
             var textureValue;
             var billboard;
             var billboardVisualizerIndex = entity._billboardVisualizerIndex;
@@ -107,13 +108,7 @@ define([
 
             if (!show) {
                 //don't bother creating or updating anything else
-                if (defined(billboardVisualizerIndex)) {
-                    billboard = billboardCollection.get(billboardVisualizerIndex);
-                    billboard.show = false;
-                    billboard.image = undefined;
-                    entity._billboardVisualizerIndex = undefined;
-                    unusedIndexes.push(billboardVisualizerIndex);
-                }
+                cleanEntity(entity, billboardCollection, unusedIndexes);
                 continue;
             }
 
@@ -166,10 +161,8 @@ define([
      * Removes and destroys all primitives created by this instance.
      */
     BillboardVisualizer.prototype.destroy = function() {
-        var entityCollection = this._entityCollection;
-        entityCollection.collectionChanged.removeEventListener(BillboardVisualizer.prototype._onObjectsRemoved, this);
-
-        var entities = entityCollection.entities;
+        this._entityCollection.collectionChanged.removeEventListener(BillboardVisualizer.prototype._onCollectionChanged, this);
+        var entities = this._entitiesToVisualize.values;
         var length = entities.length;
         for (var i = 0; i < length; i++) {
             entities[i]._billboardVisualizerIndex = undefined;
@@ -178,21 +171,47 @@ define([
         return destroyObject(this);
     };
 
-    BillboardVisualizer.prototype._onObjectsRemoved = function(entityCollection, added, entities) {
-        var thisBillboardCollection = this._billboardCollection;
-        var thisUnusedIndexes = this._unusedIndexes;
-        for (var i = entities.length - 1; i > -1; i--) {
-            var entity = entities[i];
-            var billboardVisualizerIndex = entity._billboardVisualizerIndex;
-            if (defined(billboardVisualizerIndex)) {
-                var billboard = thisBillboardCollection.get(billboardVisualizerIndex);
-                billboard.show = false;
-                billboard.image = undefined;
-                entity._billboardVisualizerIndex = undefined;
-                thisUnusedIndexes.push(billboardVisualizerIndex);
+    BillboardVisualizer.prototype._onCollectionChanged = function(entityCollection, added, removed, changed) {
+        var i;
+        var entity;
+        var billboardCollection = this._billboardCollection;
+        var unusedIndexes = this._unusedIndexes;
+        var entities = this._entitiesToVisualize;
+
+        for (i = added.length - 1; i > -1; i--) {
+            entity = added[i];
+            if (defined(entity._billboard) && defined(entity._position)) {
+                entities.set(entity.id, entity);
             }
         }
+
+        for (i = changed.length - 1; i > -1; i--) {
+            entity = changed[i];
+            if (defined(entity._billboard) && defined(entity._position)) {
+                entities.set(entity.id, entity);
+            } else {
+                cleanEntity(entity, billboardCollection, unusedIndexes);
+                entities.remove(entity.id);
+            }
+        }
+
+        for (i = removed.length - 1; i > -1; i--) {
+            entity = removed[i];
+            cleanEntity(entity, billboardCollection, unusedIndexes);
+            entities.remove(entity.id);
+        }
     };
+
+    function cleanEntity(entity, collection, unusedIndexes) {
+        var billboardVisualizerIndex = entity._billboardVisualizerIndex;
+        if (defined(billboardVisualizerIndex)) {
+            var billboard = collection.get(billboardVisualizerIndex);
+            billboard.show = false;
+            billboard.image = undefined;
+            entity._billboardVisualizerIndex = undefined;
+            unusedIndexes.push(billboardVisualizerIndex);
+        }
+    }
 
     return BillboardVisualizer;
 });

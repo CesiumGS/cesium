@@ -2,8 +2,8 @@
 defineSuite([
         'DataSources/ModelVisualizer',
         'Core/Cartesian3',
-        'Core/Transforms',
         'Core/JulianDate',
+        'Core/Transforms',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
         'DataSources/EntityCollection',
@@ -14,8 +14,8 @@ defineSuite([
     ], function(
         ModelVisualizer,
         Cartesian3,
-        Transforms,
         JulianDate,
+        Transforms,
         ConstantPositionProperty,
         ConstantProperty,
         EntityCollection,

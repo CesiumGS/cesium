@@ -20,12 +20,14 @@ defineSuite([
         this.timesCalled = 0;
         this.added = undefined;
         this.removed = undefined;
+        this.changed = undefined;
     };
 
-    CollectionListener.prototype.onCollectionChanged = function(collection, added, removed) {
+    CollectionListener.prototype.onCollectionChanged = function(collection, added, removed, changed) {
         this.timesCalled++;
         this.added = added.slice(0);
         this.removed = removed.slice(0);
+        this.changed = changed.slice(0);
     };
 
     it('constructor has expected defaults', function() {
@@ -64,21 +66,31 @@ defineSuite([
         expect(listener.added.length).toEqual(1);
         expect(listener.added[0]).toBe(entity);
         expect(listener.removed.length).toEqual(0);
+        expect(listener.changed.length).toEqual(0);
+
+        entity.name = 'newName';
+        expect(listener.timesCalled).toEqual(2);
+        expect(listener.added.length).toEqual(0);
+        expect(listener.removed.length).toEqual(0);
+        expect(listener.changed.length).toEqual(1);
+        expect(listener.changed[0]).toBe(entity);
 
         entityCollection.add(entity2);
-        expect(listener.timesCalled).toEqual(2);
+        expect(listener.timesCalled).toEqual(3);
         expect(listener.added.length).toEqual(1);
         expect(listener.added[0]).toBe(entity2);
         expect(listener.removed.length).toEqual(0);
+        expect(listener.changed.length).toEqual(0);
 
         entityCollection.remove(entity2);
-        expect(listener.timesCalled).toEqual(3);
+        expect(listener.timesCalled).toEqual(4);
         expect(listener.added.length).toEqual(0);
         expect(listener.removed.length).toEqual(1);
         expect(listener.removed[0]).toBe(entity2);
+        expect(listener.changed.length).toEqual(0);
 
         entityCollection.remove(entity);
-        expect(listener.timesCalled).toEqual(4);
+        expect(listener.timesCalled).toEqual(5);
         expect(listener.added.length).toEqual(0);
         expect(listener.removed.length).toEqual(1);
         expect(listener.removed[0]).toBe(entity);
@@ -101,6 +113,8 @@ defineSuite([
         entityCollection.add(entity);
         entityCollection.add(entity2);
         entityCollection.add(entity3);
+        entity2.name = 'newName2';
+        entity3.name = 'newName3';
         entityCollection.remove(entity2);
 
         expect(listener.timesCalled).toEqual(0);
@@ -114,15 +128,27 @@ defineSuite([
         expect(listener.added[0]).toBe(entity);
         expect(listener.added[1]).toBe(entity3);
         expect(listener.removed.length).toEqual(0);
+        expect(listener.changed.length).toEqual(0);
+
+        entityCollection.suspendEvents();
+        entity.name = 'newName';
+        entity3.name = 'newewName3';
+        entityCollection.remove(entity3);
+        entityCollection.resumeEvents();
+
+        expect(listener.timesCalled).toEqual(2);
+        expect(listener.added.length).toEqual(0);
+        expect(listener.removed.length).toEqual(1);
+        expect(listener.removed[0]).toBe(entity3);
+        expect(listener.changed.length).toEqual(1);
+        expect(listener.changed[0]).toBe(entity);
 
         entityCollection.suspendEvents();
         entityCollection.remove(entity);
-        entityCollection.remove(entity3);
         entityCollection.add(entity);
-        entityCollection.add(entity3);
         entityCollection.resumeEvents();
 
-        expect(listener.timesCalled).toEqual(1);
+        expect(listener.timesCalled).toEqual(2);
 
         entityCollection.collectionChanged.removeEventListener(listener.onCollectionChanged, listener);
     });
@@ -176,6 +202,7 @@ defineSuite([
         entityCollection.collectionChanged.addEventListener(listener.onCollectionChanged, listener);
 
         entityCollection.suspendEvents();
+        entity2.name = 'newName';
         entityCollection.removeAll();
         entityCollection.resumeEvents();
         expect(listener.timesCalled).toEqual(1);
@@ -183,6 +210,7 @@ defineSuite([
         expect(listener.removed[0]).toBe(entity);
         expect(listener.removed[1]).toBe(entity2);
         expect(listener.added.length).toEqual(0);
+        expect(listener.changed.length).toEqual(0);
 
         entityCollection.suspendEvents();
         entityCollection.add(entity);
@@ -193,6 +221,11 @@ defineSuite([
         expect(listener.timesCalled).toEqual(1);
 
         entityCollection.collectionChanged.removeEventListener(listener.onCollectionChanged, listener);
+    });
+
+    it('removeById returns false if id not in collection.', function() {
+        var entityCollection = new EntityCollection();
+        expect(entityCollection.removeById('notThere')).toBe(false);
     });
 
     it('getById works', function() {

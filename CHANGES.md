@@ -113,9 +113,10 @@ Change Log
 * Added the following methods to `IntersectionTests`: `rayTriangle`, `lineSegmentTriangle`, `raySphere`, and `lineSegmentSphere`.
 * Matrix types now have `add` and `subtract` functions.
 * `Matrix3` type now has a `fromCrossProduct` function.
-* Added `CesiumMath.signNotZero`, `CesiumMath.toSNorm` and `CesiumMath.fromSNorm` functions in support of oct-encoding.
+* Added `CesiumMath.signNotZero`, `CesiumMath.toSNorm` and `CesiumMath.fromSNorm` functions.
 * DataSource & CZML models now default to North-East-Down orientation if none is provided.
 * `TileMapServiceImageryProvider` now works with tilesets created by tools that better conform to the TMS specification.  In particular, a profile of `global-geodetic` or `global-mercator` is now supported (in addition to the previous `geodetic` and `mercator`) and in these profiles it is assumed that the X coordinates of the bounding box correspond to the longitude direction.
+* `EntityCollection` and `CompositeEntityCollection` now include the array of modified entities as the last parameter to their `onCollectionChanged` event.
 
 Beta Releases
 -------------
