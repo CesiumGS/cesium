@@ -23,7 +23,7 @@
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
-</script>
+
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     "use strict";
@@ -135,5 +135,6 @@ if (typeof Cesium !== "undefined") {
 } else if (typeof require === "function") {
     require(["Cesium"], startup);
 }
+</script>
 </body>
 </html>
