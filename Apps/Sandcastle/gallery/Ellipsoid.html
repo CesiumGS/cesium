@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="An ellipsoid.">
+    <meta name="description" content="Draw an ellipsoid on the globe surface.">
     <meta name="cesium-sandcastle-labels" content="Geometries">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -27,22 +27,28 @@
 function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
+// Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
-var scene = viewer.scene;
-var primitives = scene.primitives;
+var primitives = viewer.scene.primitives;
 
-// Create ellipsoid and place with model matrix
+// Draw a blue ellipsoid and position it on the globe surface.
+
 var radii = new Cesium.Cartesian3(200000.0, 200000.0, 300000.0);
+// Ellipsoid geometries are initially centered on the origin.
+// We can use a model matrix to position the ellipsoid on the
+// globe surface.
 var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-100.0, 40.0);
 var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
     Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
     new Cesium.Cartesian3(0.0, 0.0, radii.z), new Cesium.Matrix4()
 );
-
+// Create a ellipsoid geometry.
 var ellipsoidGeometry = new Cesium.EllipsoidGeometry({
     vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
     radii : radii
 });
+// Create a geometry instance using the geometry
+// and model matrix created above.
 var ellipsoidInstance = new Cesium.GeometryInstance({
     geometry : ellipsoidGeometry,
     modelMatrix : modelMatrix,
@@ -50,6 +56,7 @@ var ellipsoidInstance = new Cesium.GeometryInstance({
         color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
     }
 });
+// Add the geometry instance to primitives.
 primitives.add(new Cesium.Primitive({
     geometryInstances : ellipsoidInstance,
     appearance : new Cesium.PerInstanceColorAppearance({
