@@ -1,8 +1,12 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/TileMapServiceImageryProvider',
+        'Core/Cartesian2',
+        'Core/Cartographic',
         'Core/DefaultProxy',
         'Core/defined',
+        'Core/GeographicProjection',
+        'Core/GeographicTilingScheme',
         'Core/jsonp',
         'Core/loadImage',
         'Core/loadWithXhr',
@@ -17,8 +21,12 @@ defineSuite([
         'ThirdParty/when'
     ], function(
         TileMapServiceImageryProvider,
+        Cartesian2,
+        Cartographic,
         DefaultProxy,
         defined,
+        GeographicProjection,
+        GeographicTilingScheme,
         jsonp,
         loadImage,
         loadWithXhr,
@@ -408,7 +416,7 @@ defineSuite([
         });
     });
 
-    it('Handles XML with casing differences', function() {
+    it('handles XML with casing differences', function() {
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             var parser = new DOMParser();
             var xmlString =
@@ -441,4 +449,220 @@ defineSuite([
             expect(provider.minimumLevel).toBe(7);
         });
     });
+
+    it('supports the global-mercator profile with a non-flipped, mercator bounding box', function() {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            var parser = new DOMParser();
+            var xmlString =
+                '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
+                '   <Title/>' +
+                '   <Abstract/>' +
+                '   <SRS>EPSG:900913</SRS>' +
+                '   <BoundingBox minx="-11877789.66764229300000" miny="1707163.75952051670000" maxx="-4696205.45407573510000" maxy="7952627.07365330120000"/>' +
+                '   <Origin x="-20037508.34278924400000" y="-20037508.34278924400000"/>' +
+                '   <TileFormat width="256" height="256" mime-type="image/png" extension="png"/>' +
+                '   <TileSets profile="global-mercator">' +
+                '       <TileSet href="2" units-per-pixel="39135.75848201024200" order="2"/>' +
+                '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
+                '   </TileSets>' +
+                '</TileMap>';
+            var xml = parser.parseFromString(xmlString, "text/xml");
+            deferred.resolve(xml);
+        };
+
+        var provider = new TileMapServiceImageryProvider({
+            url : 'made/up/tms/server'
+        });
+
+        waitsFor(function() {
+            return provider.ready;
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+            expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
+            expect(provider.tilingScheme.projection).toBeInstanceOf(WebMercatorProjection);
+
+            var projection = provider.tilingScheme.projection;
+            var expectedSW = projection.unproject(new Cartesian2(-11877789.66764229300000, 1707163.75952051670000));
+            var expectedNE = projection.unproject(new Cartesian2(-4696205.45407573510000, 7952627.07365330120000));
+
+            expect(provider.rectangle.west).toEqual(expectedSW.longitude);
+            expect(provider.rectangle.south).toEqual(expectedSW.latitude);
+            expect(provider.rectangle.east).toEqual(expectedNE.longitude);
+            expect(provider.rectangle.north).toEqual(expectedNE.latitude);
+        });
+    });
+
+    it('supports the global-geodetic profile with a non-flipped, geographic bounding box', function() {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            var parser = new DOMParser();
+            var xmlString =
+                '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
+                '   <Title/>' +
+                '   <Abstract/>' +
+                '   <SRS>EPSG:4326</SRS>' +
+                '   <BoundingBox minx="-123.0" miny="-10.0" maxx="-110.0" maxy="11.0"/>' +
+                '   <Origin x="-180.0" y="-90.0"/>' +
+                '   <TileFormat width="256" height="256" mime-type="image/png" extension="png"/>' +
+                '   <TileSets profile="global-geodetic">' +
+                '       <TileSet href="2" units-per-pixel="39135.75848201024200" order="2"/>' +
+                '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
+                '   </TileSets>' +
+                '</TileMap>';
+            var xml = parser.parseFromString(xmlString, "text/xml");
+            deferred.resolve(xml);
+        };
+
+        var provider = new TileMapServiceImageryProvider({
+            url : 'made/up/tms/server'
+        });
+
+        waitsFor(function() {
+            return provider.ready;
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+            expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
+            expect(provider.tilingScheme.projection).toBeInstanceOf(GeographicProjection);
+
+            var projection = provider.tilingScheme.projection;
+            var expectedSW = Cartographic.fromDegrees(-123.0, -10.0);
+            var expectedNE = Cartographic.fromDegrees(-110.0, 11.0);
+
+            expect(provider.rectangle.west).toEqual(expectedSW.longitude);
+            expect(provider.rectangle.south).toEqual(expectedSW.latitude);
+            expect(provider.rectangle.east).toEqual(expectedNE.longitude);
+            expect(provider.rectangle.north).toEqual(expectedNE.latitude);
+        });
+    });
+
+    it('supports the old mercator profile with a flipped, geographic bounding box', function() {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            var parser = new DOMParser();
+            var xmlString =
+                '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
+                '   <Title/>' +
+                '   <Abstract/>' +
+                '   <SRS>EPSG:900913</SRS>' +
+                '   <BoundingBox minx="-10.0" miny="-123.0" maxx="11.0" maxy="-110.0"/>' +
+                '   <Origin x="-90.0" y="-180.0"/>' +
+                '   <TileFormat width="256" height="256" mime-type="image/png" extension="png"/>' +
+                '   <TileSets profile="mercator">' +
+                '       <TileSet href="2" units-per-pixel="39135.75848201024200" order="2"/>' +
+                '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
+                '   </TileSets>' +
+                '</TileMap>';
+            var xml = parser.parseFromString(xmlString, "text/xml");
+            deferred.resolve(xml);
+        };
+
+        var provider = new TileMapServiceImageryProvider({
+            url : 'made/up/tms/server'
+        });
+
+        waitsFor(function() {
+            return provider.ready;
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+            expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
+            expect(provider.tilingScheme.projection).toBeInstanceOf(WebMercatorProjection);
+
+            var projection = provider.tilingScheme.projection;
+            var expectedSW = Cartographic.fromDegrees(-123.0, -10.0);
+            var expectedNE = Cartographic.fromDegrees(-110.0, 11.0);
+
+            expect(provider.rectangle.west).toEqual(expectedSW.longitude);
+            expect(provider.rectangle.south).toEqual(expectedSW.latitude);
+            expect(provider.rectangle.east).toEqual(expectedNE.longitude);
+            expect(provider.rectangle.north).toEqual(expectedNE.latitude);
+        });
+    });
+
+    it('supports the old geodetic profile with a flipped, geographic bounding box', function() {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            var parser = new DOMParser();
+            var xmlString =
+                '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
+                '   <Title/>' +
+                '   <Abstract/>' +
+                '   <SRS>EPSG:4326</SRS>' +
+                '   <BoundingBox minx="-10.0" miny="-123.0" maxx="11.0" maxy="-110.0"/>' +
+                '   <Origin x="-90.0" y="-180.0"/>' +
+                '   <TileFormat width="256" height="256" mime-type="image/png" extension="png"/>' +
+                '   <TileSets profile="geodetic">' +
+                '       <TileSet href="2" units-per-pixel="39135.75848201024200" order="2"/>' +
+                '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
+                '   </TileSets>' +
+                '</TileMap>';
+            var xml = parser.parseFromString(xmlString, "text/xml");
+            deferred.resolve(xml);
+        };
+
+        var provider = new TileMapServiceImageryProvider({
+            url : 'made/up/tms/server'
+        });
+
+        waitsFor(function() {
+            return provider.ready;
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+            expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
+            expect(provider.tilingScheme.projection).toBeInstanceOf(GeographicProjection);
+
+            var projection = provider.tilingScheme.projection;
+            var expectedSW = Cartographic.fromDegrees(-123.0, -10.0);
+            var expectedNE = Cartographic.fromDegrees(-110.0, 11.0);
+
+            expect(provider.rectangle.west).toEqual(expectedSW.longitude);
+            expect(provider.rectangle.south).toEqual(expectedSW.latitude);
+            expect(provider.rectangle.east).toEqual(expectedNE.longitude);
+            expect(provider.rectangle.north).toEqual(expectedNE.latitude);
+        });
+    });
+
+    it('raises an error if tilemapresource.xml specifies an unsupported profile', function() {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            // We can't resolve the promise immediately, because then the error would be raised
+            // before we could subscribe to it.  This a problem particular to tests.
+            setTimeout(function() {
+                var parser = new DOMParser();
+                var xmlString =
+                    '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
+                    '   <Title/>' +
+                    '   <Abstract/>' +
+                    '   <SRS>EPSG:4326</SRS>' +
+                    '   <BoundingBox minx="-10.0" miny="-123.0" maxx="11.0" maxy="-110.0"/>' +
+                    '   <Origin x="-90.0" y="-180.0"/>' +
+                    '   <TileFormat width="256" height="256" mime-type="image/png" extension="png"/>' +
+                    '   <TileSets profile="foobar">' +
+                    '       <TileSet href="2" units-per-pixel="39135.75848201024200" order="2"/>' +
+                    '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
+                    '   </TileSets>' +
+                    '</TileMap>';
+                var xml = parser.parseFromString(xmlString, "text/xml");
+                deferred.resolve(xml);
+            }, 1);
+        };
+
+        var provider = new TileMapServiceImageryProvider({
+            url : 'made/up/tms/server'
+        });
+
+        var errorRaised = false;
+        provider.errorEvent.addEventListener(function(e) {
+            expect(e.message).toContain('unsupported profile');
+            errorRaised = true;
+        });
+
+        waitsFor(function() {
+            return errorRaised;
+        }, 'error to be raised');
+
+        runs(function() {
+            expect(errorRaised).toBe(true);
+        });
+    });
 });
+
