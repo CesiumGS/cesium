@@ -30,26 +30,26 @@ define([
      * @alias WebMapTileServiceImageryProvider
      * @constructor
      *
-     * @param {Object} [options] Object with the following properties:
-     * @param {String} [options.url] The WMTS server url.
-     * @param {String} [options.format='image/png'] The type mime for images on the server.
-     * @param {String} [options.layer] The layer name for WMTS requests
-     * @param {String} [options.style] The style name for WMTS requests
-     * @param {String} [options.tms] The TileMatrixSetId
+     * @param {Object} options Object with the following properties:
+     * @param {String} options.url The WMTS server url.
+     * @param {String} [options.format='image/jpeg'] The type mime for images on the server.
+     * @param {String} options.layer The layer name for WMTS requests
+     * @param {String} options.style The style name for WMTS requests
+     * @param {String} options.tms The TileMatrixSetId
+     * @param {Number} [options.tileWidth=256] tile width in pixels
+     * @param {Number} [options.tileHeight=256] tile height in pixels
      * @param {TilingScheme} [options.tilingScheme] The tilingScheme corresponding to TMS definition
      * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
      * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
      * @param {Number} [options.maximumLevel=18] The maximum level-of-detail supported by the imagery provider.
-     * @param {Credit|String} [options.credit='MapQuest, Open Street Map and contributors, CC-BY-SA'] A credit for the data source, which is displayed on the canvas.
+     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see SingleTileImageryProvider
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
-     *
-     * @see {@link http://wiki.openstreetmap.org/wiki/Main_Page|OpenStreetMap Wiki}
      *
      * @example
      * // IGN French Geoportal tile provider
@@ -89,13 +89,13 @@ define([
         this._layer = options.layer;
         this._style = options.style;
         this._tms = options.tms;
-        this._format = defaultValue(options.format, 'image/jpg');
+        this._format = defaultValue(options.format, 'image/jpeg');
         this._proxy = options.proxy;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
 
-        this._tilingScheme = defaultValue(options.tilingScheme,new WebMercatorTilingScheme()) ;
-        this._tileWidth = 256;
-        this._tileHeight = 256;
+        this._tilingScheme = defaultValue(options.tilingScheme,new WebMercatorTilingScheme());
+        this._tileWidth = defaultValue(options.tileWidth,256);
+        this._tileHeight = defaultValue(options.tileHeight,256);
 
         this._minimumLevel = defaultValue(options.minimumLevel, 0);
         this._maximumLevel = defaultValue(options.maximumLevel, 18);
@@ -116,7 +116,7 @@ define([
 
         this._ready = true;
 
-        var credit = defaultValue(options.credit, defaultCredit);
+        var credit = options.credit;
         if (typeof credit === 'string') {
             credit = new Credit(credit);
         }
@@ -130,8 +130,8 @@ define([
                   "&LAYER="+ imageryProvider._layer +
                   "&STYLE="+ imageryProvider._style +
                   "&TILEROW="+ row +
-                  '&TILECOL=' + col +
-                  '&TILEMATRIXSET=' + imageryProvider._tms +
+                  "&TILECOL=" + col +
+                  "&TILEMATRIXSET=" + imageryProvider._tms +
                   "&FORMAT=" + imageryProvider._format ;
 
         var proxy = imageryProvider._proxy;
