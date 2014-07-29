@@ -80,9 +80,9 @@ var perVertexPolyline = new Cesium.GeometryInstance({
     })
 });
 
-// Add all polyline instances to primitives.
+// Add yellow polyline instances to primitives.
 primitives.add(new Cesium.Primitive({
-    geometryInstances : [yellowPolyline, perSegmentPolyline, perVertexPolyline],
+    geometryInstances : yellowPolyline,
     appearance : new Cesium.PerInstanceColorAppearance({
         flat : true,
         renderState : {
@@ -93,6 +93,21 @@ primitives.add(new Cesium.Primitive({
         }
     })
 }));
+
+// Add perSegment and perVertex polyline instances to primitives.
+primitives.add(new Cesium.Primitive({
+    geometryInstances : [perSegmentPolyline, perVertexPolyline],
+    appearance : new Cesium.PerInstanceColorAppearance({
+        flat : true,
+        renderState : {
+            depthTest : {
+                enabled : true
+            },
+            lineWidth : Math.min(2.0, scene.maximumAliasedLineWidth)
+        }
+    })
+}));
+
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
