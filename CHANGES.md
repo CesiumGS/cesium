@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.01 - 2014-09-01
+
+* WMST 1.0.0 GetTile operation support via a new Imageryprovider : WMTSImageryProvider.
+
 ### 1.0 - 2014-08-01
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))
