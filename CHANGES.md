@@ -101,6 +101,7 @@ Change Log
   * Sandcastle examples now automatically wrap the example code in RequireJS boilerplate.  To upgrade any custom examples, copy the code into an existing example (such as Hello World) and save a new file.
   * Removed `CustomSensorVolume`, `RectangularPyramidSensorVolume`, `DynamicCone`, `DynamicConeVisualizerUsingCustomSensor`, `DynamicPyramid` and `DynamicPyramidVisualizer`.  This will be moved to a plugin in early August.  [#1887](https://github.com/AnalyticalGraphicsInc/cesium/issues/1887)
   * If `Primitive.modelMatrix` is changed after creation, it only affects primitives with one instance and only in 3D mode.
+  * `ImageryLayer` properties `alpha`, `brightness`, `contrast`, `hue`, `saturation`, and `gamma` may no longer be functions.  If you need to change these values each frame, consider moving your logic to an event handler for `Scene.preRender`.
 * Added camera collision detection with terrain to the default mouse interaction.
 * Modified the default camera tilt mouse behavior to tilt about the point clicked taking into account terrain.
 * Modified the default camera mouse behavior to look about the camera's position when the sky is clicked.
