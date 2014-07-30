@@ -206,54 +206,8 @@ defineSuite([
         var rotation = Matrix2.fromRotation(angle);
         var rotatedSECornerCartographic = projection.unproject(Matrix2.multiplyByVector(rotation, projectedSECorner, new Cartesian2()));
         var rotatedSECorner = Ellipsoid.WGS84.cartographicToCartesian(rotatedSECornerCartographic);
-        var actual = new Cartesian3(positions[length - 21], positions[length - 20], positions[length - 19]);
+        var actual = new Cartesian3(positions[51], positions[52], positions[53]);
         expect(actual).toEqualEpsilon(rotatedSECorner, CesiumMath.EPSILON6);
-    });
-
-    it('computes extruded top open', function() {
-        var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
-        var m = RectangleGeometry.createGeometry(new RectangleGeometry({
-            vertexFormat : VertexFormat.POSITION_ONLY,
-            rectangle : rectangle,
-            granularity : 1.0,
-            extrudedHeight : 2,
-            closeTop : false
-        }));
-        var positions = m.attributes.position.values;
-
-        expect(positions.length).toEqual((((8 + 4) * 2) + 9) * 3);
-        expect(m.indices.length).toEqual((8 + 4 * 4) * 3);
-    });
-
-    it('computes extruded bottom open', function() {
-        var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
-        var m = RectangleGeometry.createGeometry(new RectangleGeometry({
-            vertexFormat : VertexFormat.POSITION_ONLY,
-            rectangle : rectangle,
-            granularity : 1.0,
-            extrudedHeight : 2,
-            closeBottom : false
-        }));
-        var positions = m.attributes.position.values;
-
-        expect(positions.length).toEqual((((8 + 4) * 2) + 9) * 3);
-        expect(m.indices.length).toEqual((8 + 4 * 4) * 3);
-    });
-
-    it('computes extruded top and bottom open', function() {
-        var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
-        var m = RectangleGeometry.createGeometry(new RectangleGeometry({
-            vertexFormat : VertexFormat.POSITION_ONLY,
-            rectangle : rectangle,
-            granularity : 1.0,
-            extrudedHeight : 2,
-            closeTop : false,
-            closeBottom : false
-        }));
-        var positions = m.attributes.position.values;
-
-        expect(positions.length).toEqual((8 + 4) * 2 * 3);
-        expect(m.indices.length).toEqual(4 * 3 * 4);
     });
 
     it('computes non-extruded rectangle if height is small', function() {
