@@ -8,7 +8,6 @@ define([
         './defined',
         './DeveloperError',
         './Ellipsoid',
-        './GeographicProjection',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
