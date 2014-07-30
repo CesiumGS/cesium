@@ -14,7 +14,6 @@ define([
         './GeometryAttributes',
         './IndexDatatype',
         './Math',
-        './Matrix2',
         './PolygonPipeline',
         './PrimitiveType',
         './Rectangle',
@@ -28,13 +27,11 @@ define([
         defined,
         DeveloperError,
         Ellipsoid,
-        GeographicProjection,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
         IndexDatatype,
         CesiumMath,
-        Matrix2,
         PolygonPipeline,
         PrimitiveType,
         Rectangle,
@@ -124,13 +121,11 @@ define([
         }
         var height = options.height;
         var width = options.width;
-        var size = options.size * 3;
 
         geo = PolygonPipeline.scaleToGeodeticHeight(geo, maxHeight, ellipsoid, false);
         var topPositions = geo.attributes.position.values;
         var length = topPositions.length;
-        var newLength = length*2;
-        var positions = new Float64Array(newLength);
+        var positions = new Float64Array(length*2);
         positions.set(topPositions);
         geo = PolygonPipeline.scaleToGeodeticHeight(geo, minHeight, ellipsoid);
         var bottomPositions = geo.attributes.position.values;
@@ -231,7 +226,6 @@ define([
     };
 
     var nwScratch = new Cartographic();
-    var bsScratch = new BoundingSphere();
     /**
      * Computes the geometric representation of an outline of an rectangle, including its vertices, indices, and a bounding sphere.
      *
@@ -242,10 +236,8 @@ define([
      */
     RectangleOutlineGeometry.createGeometry = function(rectangleGeometry) {
         var rectangle = rectangleGeometry._rectangle;
-        var granularity = rectangleGeometry._granularity;
         var ellipsoid = rectangleGeometry._ellipsoid;
         var surfaceHeight = rectangleGeometry._surfaceHeight;
-        var rotation = rectangleGeometry._rotation;
         var extrudedHeight = rectangleGeometry._extrudedHeight;
 
         var options = RectangleGeometryLibrary.computeOptions(rectangleGeometry, rectangle, nwScratch);

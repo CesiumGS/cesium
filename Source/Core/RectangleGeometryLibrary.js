@@ -7,8 +7,6 @@ define([
         './Math',
         './GeographicProjection',
         './Matrix2',
-        './Matrix3',
-        './Quaternion',
         './Rectangle'
     ], function(
         Cartesian3,
@@ -18,10 +16,9 @@ define([
         CesiumMath,
         GeographicProjection,
         Matrix2,
-        Matrix3,
-        Quaternion,
         Rectangle) {
     "use strict";
+
     var cos = Math.cos;
     var sin = Math.sin;
     var sqrt = Math.sqrt;

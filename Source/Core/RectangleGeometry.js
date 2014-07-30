@@ -35,7 +35,6 @@ define([
         defined,
         DeveloperError,
         Ellipsoid,
-        GeographicProjection,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
@@ -52,16 +51,6 @@ define([
         RectangleGeometryLibrary,
         VertexFormat) {
     "use strict";
-
-    function isValidLatLon(latitude, longitude) {
-        if (latitude < -CesiumMath.PI_OVER_TWO || latitude > CesiumMath.PI_OVER_TWO) {
-            return false;
-        }
-        if (longitude > CesiumMath.PI || longitude < -CesiumMath.PI) {
-            return false;
-        }
-        return true;
-    }
 
     var positionScratch = new Cartesian3();
     var normalScratch = new Cartesian3();
@@ -115,12 +104,11 @@ define([
         var binormals = (vertexFormat.binormal) ? new Float32Array(length) : undefined;
 
         var attrIndex = 0;
-        var position = positionScratch;
         var binormal = binormalScratch;
         var tangent = tangentScratch;
         var normal = normalScratch;
-        for ( var i = 0; i < length; i += 3) {
-            var p = Cartesian3.fromArray(positions, i, position);
+        for (var i = 0; i < length; i += 3) {
+            var p = Cartesian3.fromArray(positions, i, positionScratch);
             var attrIndex1 = attrIndex + 1;
             var attrIndex2 = attrIndex + 2;
 
@@ -176,11 +164,10 @@ define([
         var binormalIndex = 0;
         var recomputeNormal = true;
 
-        var position = positionScratch;
         var binormal = binormalScratch;
         var tangent = tangentScratch;
         var normal = normalScratch;
-        for ( var i = 0; i < length; i += 6) {
+        for (var i = 0; i < length; i += 6) {
             var p = Cartesian3.fromArray(positions, i, positionScratch);
 
             if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
@@ -247,7 +234,6 @@ define([
         var size = options.size;
         var height = options.height;
         var width = options.width;
-        var surfaceHeight = options.surfaceHeight;
 
         var positions = (vertexFormat.position) ? new Float64Array(size * 3) : undefined;
         var textureCoordinates = (vertexFormat.st) ? new Float32Array(size * 2) : undefined;
@@ -257,8 +243,8 @@ define([
 
         var position = positionScratch;
         var st = stScratch;
-        for ( var row = 0; row < height; ++row) {
-            for ( var col = 0; col < width; ++col) {
+        for (var row = 0; row < height; ++row) {
+            for (var col = 0; col < width; ++col) {
                 RectangleGeometryLibrary.computePosition(options, row, col, position, st);
 
                 positions[posIndex++] = position.x;
@@ -278,8 +264,8 @@ define([
         var indices = IndexDatatype.createTypedArray(size, indicesSize);
         var index = 0;
         var indicesIndex = 0;
-        for ( var i = 0; i < height - 1; ++i) {
-            for ( var j = 0; j < width - 1; ++j) {
+        for (var i = 0; i < height - 1; ++i) {
+            for (var j = 0; j < width - 1; ++j) {
                 var upperLeft = index;
                 var lowerLeft = upperLeft + width;
                 var lowerRight = lowerLeft + 1;
@@ -334,7 +320,6 @@ define([
 
         var height = options.height;
         var width = options.width;
-        var size = options.size;
         var ellipsoid = options.ellipsoid;
         var i;
 
@@ -602,9 +587,6 @@ define([
 
         var options = RectangleGeometryLibrary.computeOptions(rectangleGeometry, rectangle, nwScratch);
 
-        var lonScalar = 1.0 / (rectangle.east - rectangle.west);
-        var latScalar = 1.0 / (rectangle.north - rectangle.south);
-
         var textureMatrix = textureMatrixScratch;
         var tangentRotationMatrix = tangentRotationMatrixScratch;
         if (defined(stRotation)) {
@@ -620,8 +602,8 @@ define([
             Matrix3.clone(Matrix3.IDENTITY, tangentRotationMatrix);
         }
 
-        options.lonScalar = lonScalar;
-        options.latScalar = latScalar;
+        options.lonScalar = 1.0 / (rectangle.east - rectangle.west);
+        options.latScalar = 1.0 / (rectangle.north - rectangle.south);
         options.vertexFormat = vertexFormat;
         options.textureMatrix = textureMatrix;
         options.tangentRotationMatrix = tangentRotationMatrix;
