@@ -29,6 +29,7 @@
         addToolbarButton : function(text, onclick, toolbarID) {
             window.Sandcastle.declare(onclick);
             var button = document.createElement('button');
+            button.type = 'button';
             button.className = 'cesium-button';
             button.onclick = function() {
                 window.Sandcastle.reset();
