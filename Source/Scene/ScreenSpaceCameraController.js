@@ -1078,6 +1078,8 @@ define([
         var p1 = camera.pickEllipsoid(endMousePosition, ellipsoid, pan3DP1);
 
         if (!defined(p0) || !defined(p1)) {
+            controller._rotating = true;
+            rotate3D(controller, startPosition, movement, frameState);
             return;
         }
 
