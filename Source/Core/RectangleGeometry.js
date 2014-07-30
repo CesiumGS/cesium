@@ -69,6 +69,8 @@ define([
     var binormalScratch = new Cartesian3();
     var rectangleScratch = new Rectangle();
     var stScratch = new Cartesian2();
+    var bottomBoundingSphere = new BoundingSphere();
+    var topBoundingSphere = new BoundingSphere();
 
     function createAttributes(vertexFormat, attributes) {
         var geo = new Geometry({
@@ -407,7 +409,8 @@ define([
 
         var posIndex = 0;
         var stIndex = 0;
-        for (i = 0; i < width; i++) {
+        var area = width * height;
+        for (i = 0; i < area; i+=width) {
             wallPositions = addWallPositions(wallPositions, posIndex, i*3, topPositions, bottomPositions);
             posIndex += 6;
             if (vertexFormat.st) {
@@ -416,31 +419,29 @@ define([
             }
         }
 
-        var w1 = width-1;
-        for (i = 0; i < height; i++) {
-            wallPositions = addWallPositions(wallPositions, posIndex, (i*width + w1)*3, topPositions, bottomPositions);
+        for (i = area-width; i < area; i++) {
+            wallPositions = addWallPositions(wallPositions, posIndex, i*3, topPositions, bottomPositions);
             posIndex += 6;
             if (vertexFormat.st) {
-                wallTextures = addWallTextureCoordinates(wallTextures, stIndex, (i*width + w1)*2, topSt);
+                wallTextures = addWallTextureCoordinates(wallTextures, stIndex, i*2, topSt);
                 stIndex += 4;
             }
         }
 
-        var end = width*height-1;
-        for (i = 0; i < width; i++) {
-            wallPositions = addWallPositions(wallPositions, posIndex, (end-i)*3, topPositions, bottomPositions);
+        for (i = area-1; i > 0; i-=width) {
+            wallPositions = addWallPositions(wallPositions, posIndex, i*3, topPositions, bottomPositions);
             posIndex += 6;
             if (vertexFormat.st) {
-                wallTextures = addWallTextureCoordinates(wallTextures, stIndex, (end-i)*2, topSt);
+                wallTextures = addWallTextureCoordinates(wallTextures, stIndex, i*2, topSt);
                 stIndex += 4;
             }
         }
 
-        for (i = height-1; i >= 0; i--) {
-            wallPositions = addWallPositions(wallPositions, posIndex, i*width*3, topPositions, bottomPositions);
+        for (i = width-1; i >= 0; i--) {
+            wallPositions = addWallPositions(wallPositions, posIndex, i*3, topPositions, bottomPositions);
             posIndex += 6;
             if (vertexFormat.st) {
-                wallTextures = addWallTextureCoordinates(wallTextures, stIndex, i*width*2, topSt);
+                wallTextures = addWallTextureCoordinates(wallTextures, stIndex, i*2, topSt);
                 stIndex += 4;
             }
         }
@@ -624,16 +625,25 @@ define([
         options.vertexFormat = vertexFormat;
         options.textureMatrix = textureMatrix;
         options.tangentRotationMatrix = tangentRotationMatrix;
+        options.size = options.width * options.height;
 
         var geometry;
+        var boundingSphere;
+        rectangle = rectangleGeometry._rectangle;
         if (defined(extrudedHeight)) {
             geometry = constructExtrudedRectangle(options);
+            var topBS = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight, topBoundingSphere);
+            var bottomBS = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, extrudedHeight, bottomBoundingSphere);
+            boundingSphere = BoundingSphere.union(topBS, bottomBS);
         } else {
             geometry = constructRectangle(options);
             geometry = PolygonPipeline.scaleToGeodeticHeight(geometry, surfaceHeight, ellipsoid, false);
+            boundingSphere = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight);
         }
 
-        var boundingSphere = BoundingSphere.fromVertices(geometry.attributes.position.values);
+        if (!vertexFormat.position) {
+            delete geometry.attributes.position;
+        }
 
         return new Geometry({
             attributes : new GeometryAttributes(geometry.attributes),

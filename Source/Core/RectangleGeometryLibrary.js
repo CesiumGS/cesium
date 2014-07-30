@@ -67,7 +67,7 @@ define([
         position.y = kY / gamma;
         position.z = kZ / gamma;
 
-        if (options.vertexFormat.st) {
+        if (defined(options.vertexFormat) && options.vertexFormat.st) {
             st.x = (stLongitude - rectangle.west) * options.lonScalar - 0.5;
             st.y = (stLatitude - rectangle.south) * options.latScalar - 0.5;
 
@@ -83,6 +83,9 @@ define([
     var centerScratch = new Cartographic();
     var centerCartesian = new Cartesian3();
     var proj = new GeographicProjection();
+    /**
+     * @private
+     */
     RectangleGeometryLibrary.computeOptions = function(geometry, rectangle, nwCorner) {
         var granularity = geometry._granularity;
         var ellipsoid = geometry._ellipsoid;
@@ -148,8 +151,6 @@ define([
             rectangle.west = west;
         }
 
-        var size = width * height;
-
          return {
             granYCos : granYCos,
             granYSin : granYSin,
@@ -159,7 +160,6 @@ define([
             width : width,
             height : height,
             surfaceHeight : surfaceHeight,
-            size : size,
             extrudedHeight : extrudedHeight,
             nwCorner: nwCorner,
             rectangle: rectangle
