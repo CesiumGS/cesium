@@ -41,6 +41,24 @@ defineSuite([
         expect(new Cartesian3(positions[length - 3], positions[length - 2], positions[length - 1])).toEqualEpsilon(expectedSECorner, CesiumMath.EPSILON9);
     });
 
+    it('computes positions across IDL', function() {
+        var rectangle = Rectangle.fromDegrees(179.0, -1.0, -179.0, 1.0);
+        var m = RectangleGeometry.createGeometry(new RectangleGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            rectangle : rectangle
+        }));
+        var positions = m.attributes.position.values;
+        var length = positions.length;
+
+        expect(positions.length).toEqual(9 * 3);
+        expect(m.indices.length).toEqual(8 * 3);
+
+        var expectedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(Rectangle.northwest(rectangle));
+        var expectedSECorner = Ellipsoid.WGS84.cartographicToCartesian(Rectangle.southeast(rectangle));
+        expect(new Cartesian3(positions[0], positions[1], positions[2])).toEqualEpsilon(expectedNWCorner, CesiumMath.EPSILON8);
+        expect(new Cartesian3(positions[length - 3], positions[length - 2], positions[length - 1])).toEqualEpsilon(expectedSECorner, CesiumMath.EPSILON8);
+    });
+
     it('computes all attributes', function() {
         var m = RectangleGeometry.createGeometry(new RectangleGeometry({
             vertexFormat : VertexFormat.ALL,
@@ -136,14 +154,6 @@ defineSuite([
                 rectangle : new Rectangle(-CesiumMath.PI_OVER_TWO, 1, CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO),
                 rotation : CesiumMath.PI_OVER_TWO
             }));
-        }).toThrowDeveloperError();
-    });
-
-    it('throws if east is less than west', function() {
-        expect(function() {
-            return new RectangleGeometry({
-                rectangle : new Rectangle(CesiumMath.PI_OVER_TWO, -CesiumMath.PI_OVER_TWO, -CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO)
-            });
         }).toThrowDeveloperError();
     });
 

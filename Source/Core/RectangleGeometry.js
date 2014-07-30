@@ -542,9 +542,6 @@ define([
             throw new DeveloperError('rectangle is required.');
         }
         Rectangle.validate(rectangle);
-        if (rectangle.east < rectangle.west) {
-            throw new DeveloperError('options.rectangle.east must be greater than options.rectangle.west');
-        }
         if (rectangle.north < rectangle.south) {
             throw new DeveloperError('options.rectangle.north must be greater than options.rectangle.south');
         }

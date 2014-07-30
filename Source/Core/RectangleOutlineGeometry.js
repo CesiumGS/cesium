@@ -40,6 +40,7 @@ define([
     var bottomBoundingSphere = new BoundingSphere();
     var topBoundingSphere = new BoundingSphere();
     var positionScratch = new Cartesian3();
+    var rectangleScratch = new Rectangle();
 
     function constructRectangle(options) {
         var size = options.size;
@@ -207,9 +208,6 @@ define([
             throw new DeveloperError('rectangle is required.');
         }
         Rectangle.validate(rectangle);
-        if (rectangle.east < rectangle.west) {
-            throw new DeveloperError('options.rectangle.east must be greater than options.rectangle.west');
-        }
         if (rectangle.north < rectangle.south) {
             throw new DeveloperError('options.rectangle.north must be greater than options.rectangle.south');
         }
@@ -234,7 +232,7 @@ define([
      * @exception {DeveloperError} Rotated rectangle is invalid.
      */
     RectangleOutlineGeometry.createGeometry = function(rectangleGeometry) {
-        var rectangle = rectangleGeometry._rectangle;
+        var rectangle = Rectangle.clone(rectangleGeometry._rectangle, rectangleScratch);
         var ellipsoid = rectangleGeometry._ellipsoid;
         var surfaceHeight = rectangleGeometry._surfaceHeight;
         var extrudedHeight = rectangleGeometry._extrudedHeight;

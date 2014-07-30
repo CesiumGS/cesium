@@ -89,11 +89,30 @@ define([
         var surfaceHeight = geometry._surfaceHeight;
         var rotation = geometry._rotation;
         var extrudedHeight = geometry._extrudedHeight;
+        var east = rectangle.east;
+        var west = rectangle.west;
+        var north = rectangle.north;
+        var south = rectangle.south;
 
-        var width = Math.ceil((rectangle.east - rectangle.west) / granularity) + 1;
-        var height = Math.ceil((rectangle.north - rectangle.south) / granularity) + 1;
-        var granularityX = (rectangle.east - rectangle.west) / (width - 1);
-        var granularityY = (rectangle.north - rectangle.south) / (height - 1);
+        var width;
+        var height;
+        var granularityX;
+        var granularityY;
+        var dx;
+        var dy = north - south;
+        if (west > east) {
+            dx = (CesiumMath.TWO_PI - west + east);
+            width = Math.ceil(dx / granularity) + 1;
+            height = Math.ceil(dy / granularity) + 1;
+            granularityX = dx / (width - 1);
+            granularityY = dy / (height - 1);
+        } else {
+            dx = east - west;
+            width = Math.ceil(dx / granularity) + 1;
+            height = Math.ceil(dy / granularity) + 1;
+            granularityX = dx / (width - 1);
+            granularityY = dy / (height - 1);
+        }
 
         nwCorner = Rectangle.northwest(rectangle, nwCorner);
         var center = Rectangle.center(rectangle, centerScratch);
@@ -103,7 +122,7 @@ define([
         var granYSin = 0.0;
         var granXSin = 0.0;
 
-        if (defined(rotation)) {
+        if (defined(rotation) && west < east) { // rotation doesn't work when center is on/near IDL
             var cosRotation = Math.cos(rotation);
             granYCos *= cosRotation;
             granXCos *= cosRotation;
@@ -126,16 +145,16 @@ define([
             var latitude1 = latitude - granYCos * (height - 1);
             var latitude2 = latitude - granYCos * (height - 1) + (width - 1) * granXSin;
 
-            var north = Math.max(latitude, latitude0, latitude1, latitude2);
-            var south = Math.min(latitude, latitude0, latitude1, latitude2);
+            north = Math.max(latitude, latitude0, latitude1, latitude2);
+            south = Math.min(latitude, latitude0, latitude1, latitude2);
 
             var longitude = nwCorner.longitude;
             var longitude0 = longitude + (width - 1) * granXCos;
             var longitude1 = longitude + (height - 1) * granYSin;
             var longitude2 = longitude + (height - 1) * granYSin + (width - 1) * granXCos;
 
-            var east = Math.max(longitude, longitude0, longitude1, longitude2);
-            var west = Math.min(longitude, longitude0, longitude1, longitude2);
+            east = Math.max(longitude, longitude0, longitude1, longitude2);
+            west = Math.min(longitude, longitude0, longitude1, longitude2);
 
             if (!isValidLatLon(north, west) || !isValidLatLon(north, east) ||
                     !isValidLatLon(south, west) || !isValidLatLon(south, east)) {
