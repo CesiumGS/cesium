@@ -16,11 +16,7 @@ define([
     function getModule(moduleName) {
         var module = moduleCache[moduleName];
         if (!defined(module)) {
-            // in web workers, require is synchronous
-            require(['./' + moduleName], function(f) {
-                module = f;
-                moduleCache[module] = f;
-            });
+            moduleCache[module] = module = require('Workers/' + moduleName);
         }
         return module;
     }
