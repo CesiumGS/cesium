@@ -16,7 +16,7 @@
     fill: #edffff;   /* For SVG buttons */
     border-radius: 4px;
     padding: 5px 12px;
-    margin: 3px;
+    margin: 2px 3px;
     cursor: pointer;
     overflow: hidden;
     -moz-user-select: none;
