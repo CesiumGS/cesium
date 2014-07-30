@@ -131,7 +131,7 @@ define([
 
         var xhr = new XMLHttpRequest();
 
-        if (defined(overrideMimeType)) {
+        if (defined(overrideMimeType) && defined(xhr.overrideMimeType)) {
             xhr.overrideMimeType(overrideMimeType);
         }
 
