@@ -2080,7 +2080,7 @@
         }
     },
     "asset": {
-        "generator": "collada2gltf@b4ea90169e759529c34baaabbfb15b475053c177",
+        "generator": "collada2gltf@432d6a159fc880112aa23774881eda665709f222",
         "premultipliedAlpha": true,
         "profile": "WebGL 1.0.2",
         "version": 0.8
@@ -2209,7 +2209,7 @@
                 "locator103Node",
                 "locator106Node"
             ],
-            "joint": "locator047Node",
+            "jointName": "locator047Node",
             "name": "Skeleton_torso_joint_1",
             "rotation": [
                 -0.562643,
@@ -2232,7 +2232,7 @@
             "children": [
                 "locator055Node"
             ],
-            "joint": "locator051Node",
+            "jointName": "locator051Node",
             "name": "Skeleton_torso_joint_2",
             "rotation": [
                 0.998774,
@@ -2257,7 +2257,7 @@
                 "locator071Node",
                 "locator074Node"
             ],
-            "joint": "locator055Node",
+            "jointName": "locator055Node",
             "name": "torso_joint_3",
             "rotation": [
                 0.998174,
@@ -2280,7 +2280,7 @@
             "children": [
                 "locator063Node"
             ],
-            "joint": "locator059Node",
+            "jointName": "locator059Node",
             "name": "Skeleton_neck_joint_1",
             "rotation": [
                 -0.93147,
@@ -2303,7 +2303,7 @@
             "children": [
                 "locator067Node"
             ],
-            "joint": "locator063Node",
+            "jointName": "locator063Node",
             "name": "Skeleton_neck_joint_2",
             "rotation": [
                 -0.0936272,
@@ -2346,7 +2346,7 @@
             "children": [
                 "locator079Node"
             ],
-            "joint": "locator071Node",
+            "jointName": "locator071Node",
             "name": "Skeleton_arm_joint_L__4_",
             "rotation": [
                 0.722701,
@@ -2369,7 +2369,7 @@
             "children": [
                 "locator082Node"
             ],
-            "joint": "locator074Node",
+            "jointName": "locator074Node",
             "name": "Skeleton_arm_joint_R",
             "rotation": [
                 0.850151,
@@ -2392,7 +2392,7 @@
             "children": [
                 "locator087Node"
             ],
-            "joint": "locator079Node",
+            "jointName": "locator079Node",
             "name": "Skeleton_arm_joint_L__3_",
             "rotation": [
                 0.402193,
@@ -2415,7 +2415,7 @@
             "children": [
                 "locator090Node"
             ],
-            "joint": "locator082Node",
+            "jointName": "locator082Node",
             "name": "Skeleton_arm_joint_R__2_",
             "rotation": [
                 -0.438478,
@@ -2438,7 +2438,7 @@
             "children": [
                 "locator095Node"
             ],
-            "joint": "locator087Node",
+            "jointName": "locator087Node",
             "name": "Skeleton_arm_joint_L__2_",
             "rotation": [
                 -0.49696,
@@ -2461,7 +2461,7 @@
             "children": [
                 "locator098Node"
             ],
-            "joint": "locator090Node",
+            "jointName": "locator090Node",
             "name": "Skeleton_arm_joint_R__3_",
             "rotation": [
                 0.611968,
@@ -2524,7 +2524,7 @@
             "children": [
                 "locator111Node"
             ],
-            "joint": "locator103Node",
+            "jointName": "locator103Node",
             "name": "leg_joint_L_1",
             "rotation": [
                 0.0875927,
@@ -2547,7 +2547,7 @@
             "children": [
                 "locator114Node"
             ],
-            "joint": "locator106Node",
+            "jointName": "locator106Node",
             "name": "leg_joint_R_1",
             "rotation": [
                 0.0916766,
@@ -2570,7 +2570,7 @@
             "children": [
                 "locator119Node"
             ],
-            "joint": "locator111Node",
+            "jointName": "locator111Node",
             "name": "leg_joint_L_2",
             "rotation": [
                 -0.954699,
@@ -2593,7 +2593,7 @@
             "children": [
                 "locator122Node"
             ],
-            "joint": "locator114Node",
+            "jointName": "locator114Node",
             "name": "leg_joint_R_2",
             "rotation": [
                 -0.965863,
@@ -2617,7 +2617,7 @@
                 "locator127Node",
                 "locator135Node"
             ],
-            "joint": "locator119Node",
+            "jointName": "locator119Node",
             "name": "leg_joint_L_3",
             "rotation": [
                 -0.999778,
@@ -2641,7 +2641,7 @@
                 "locator130Node",
                 "locator138Node"
             ],
-            "joint": "locator122Node",
+            "jointName": "locator122Node",
             "name": "leg_joint_R_3",
             "rotation": [
                 -0.998916,
@@ -2704,7 +2704,7 @@
             "children": [
                 "locator143Node"
             ],
-            "joint": "locator135Node",
+            "jointName": "locator135Node",
             "name": "leg_joint_L_5",
             "rotation": [
                 0.0114404,
@@ -2727,7 +2727,7 @@
             "children": [
                 "locator146Node"
             ],
-            "joint": "locator138Node",
+            "jointName": "locator138Node",
             "name": "leg_joint_R_5",
             "rotation": [
                 -0.0296875,
@@ -2848,7 +2848,7 @@
                 1
             ],
             "inverseBindMatrices": "IBM_Controller-mesh019",
-            "joints": [
+            "jointNames": [
                 "locator047Node",
                 "locator051Node",
                 "locator055Node",

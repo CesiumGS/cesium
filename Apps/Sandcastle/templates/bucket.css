@@ -37,15 +37,19 @@ body {
     display: none;
 }
 
-.sandcastle-loading #loadingOverlay {
-    display: block;
-}
-
 #loadingOverlay h1 {
     text-align: center;
     position: relative;
     top: 50%;
     margin-top: -0.5em;
+}
+
+.sandcastle-loading #loadingOverlay {
+    display: block;
+}
+
+.sandcastle-loading #toolbar {
+    display: none;
 }
 
 #toolbar {

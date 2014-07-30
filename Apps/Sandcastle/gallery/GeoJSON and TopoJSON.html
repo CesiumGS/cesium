@@ -35,7 +35,7 @@ Cesium.viewerEntityMixin(viewer);
 Sandcastle.addDefaultToolbarButton('Basic loading', function() {
     var dataSource = new Cesium.GeoJsonDataSource();
     viewer.dataSources.add(dataSource);
-    dataSource.loadUrl('../../SampleData/ne_10m_us_states.json');
+    dataSource.loadUrl('../../SampleData/ne_10m_us_states.topojson');
 });
 
 //Example 2: Apply custom graphics to a GeoJSON or TopoJSON file 
@@ -49,7 +49,7 @@ Sandcastle.addToolbarButton('Custom Graphics', function() {
     viewer.dataSources.add(dataSource);
     
     //Load the document into the data source and then set custom graphics
-    dataSource.loadUrl('../../SampleData/ne_10m_us_states.json').then(function() {
+    dataSource.loadUrl('../../SampleData/ne_10m_us_states.topojson').then(function() {
         //Get the array of entities
         var entities = dataSource.entities.entities;
         

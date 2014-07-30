@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/AssociativeArray',
         '../Core/Cartesian3',
         '../Core/defined',
         '../Core/destroyObject',
@@ -11,6 +12,7 @@ define([
         '../Scene/Model',
         './Property'
     ], function(
+        AssociativeArray,
         Cartesian3,
         defined,
         destroyObject,
@@ -26,6 +28,9 @@ define([
     var defaultScale = 1.0;
     var defaultMinimumPixelSize = 0.0;
     var matrix3Scratch = new Matrix3();
+
+    var position = new Cartesian3();
+    var orientation = new Quaternion();
 
     /**
      * A {@link Visualizer} which maps {@link Entity#model} to a {@link Model}.
@@ -45,12 +50,15 @@ define([
         }
         //>>includeEnd('debug');
 
-        entityCollection.collectionChanged.addEventListener(ModelVisualizer.prototype._onObjectsRemoved, this);
+        entityCollection.collectionChanged.addEventListener(ModelVisualizer.prototype._onCollectionChanged, this);
 
         this._scene = scene;
         this._primitives = scene.primitives;
         this._entityCollection = entityCollection;
         this._modelHash = {};
+        this._entitiesToVisualize = new AssociativeArray();
+
+        this._onCollectionChanged(entityCollection, entityCollection.entities, [], []);
     };
 
     /**
@@ -67,9 +75,72 @@ define([
         }
         //>>includeEnd('debug');
 
-        var entities = this._entityCollection.entities;
+        var context = this._scene.context;
+        var entities = this._entitiesToVisualize.values;
+        var modelHash = this._modelHash;
+        var primitives = this._primitives;
+        var scene = this._scene;
+
         for (var i = 0, len = entities.length; i < len; i++) {
-            this._updateObject(time, entities[i]);
+            var entity = entities[i];
+            var modelGraphics = entity._model;
+
+            var uri;
+            var modelData = modelHash[entity.id];
+            var show = entity.isAvailable(time) && Property.getValueOrDefault(modelGraphics._show, time, true);
+
+            if (show) {
+                position = Property.getValueOrUndefined(entity._position, time, position);
+                uri = Property.getValueOrUndefined(modelGraphics._uri, time);
+                show = defined(position) && defined(uri);
+            }
+
+            if (!show) {
+                if (defined(modelData)) {
+                    modelData.modelPrimitive.show = false;
+                }
+                continue;
+            }
+
+            var model = defined(modelData) ? modelData.modelPrimitive : undefined;
+            if (!defined(model) || uri !== modelData.uri) {
+                if (defined(model)) {
+                    primitives.remove(model);
+                    if (!model.isDestroyed()) {
+                        model.destroy();
+                    }
+                    delete modelHash[entity.id];
+                }
+                model = Model.fromGltf({
+                    url : uri
+                });
+
+                model.id = entity;
+                primitives.add(model);
+
+                modelData = {
+                    modelPrimitive : model,
+                    uri : uri,
+                    position : undefined,
+                    orientation : undefined
+                };
+                modelHash[entity.id] = modelData;
+            }
+
+            model.show = true;
+            model.scale = Property.getValueOrDefault(modelGraphics._scale, time, defaultScale);
+            model.minimumPixelSize = Property.getValueOrDefault(modelGraphics._minimumPixelSize, time, defaultMinimumPixelSize);
+
+            orientation = Property.getValueOrUndefined(entity._orientation, time, orientation);
+            if (!Cartesian3.equals(position, modelData.position) || !Quaternion.equals(orientation, modelData.orientation)) {
+                if (!defined(orientation)) {
+                    Transforms.northEastDownToFixedFrame(position, scene.globe.ellipsoid, model.modelMatrix);
+                } else {
+                    Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, model.modelMatrix);
+                }
+                modelData.position = Cartesian3.clone(position, modelData.position);
+                modelData.orientation = Quaternion.clone(orientation, modelData.orientation);
+            }
         }
         return true;
     };
@@ -87,109 +158,60 @@ define([
      * Removes and destroys all primitives created by this instance.
      */
     ModelVisualizer.prototype.destroy = function() {
-        var entities = this._entityCollection.entities;
+        var entities = this._entitiesToVisualize.values;
+        var modelHash = this._modelHash;
+        var primitives = this._primitives;
         for (var i = entities.length - 1; i > -1; i--) {
-            var entity = entities[i];
-            var model = entity._modelPrimitive;
-            if (defined(model)) {
-                this._primitives.remove(model);
-                if (!model.isDestroyed()) {
-                    model.destroy();
-                }
-                entity._modelPrimitive = undefined;
-            }
+            removeModel(entities[i], modelHash, primitives);
         }
         return destroyObject(this);
     };
 
-    var position = new Cartesian3();
-    var orientation = new Quaternion();
     /**
      * @private
      */
-    ModelVisualizer.prototype._updateObject = function(time, entity) {
-        var context = this._scene.context;
-        var modelGraphics = entity._model;
-        if (!defined(modelGraphics)) {
-            return;
-        }
-
-        var uri;
+    ModelVisualizer.prototype._onCollectionChanged = function(entityCollection, added, removed, changed) {
+        var i;
+        var entity;
+        var entities = this._entitiesToVisualize;
         var modelHash = this._modelHash;
-        var modelData = modelHash[entity.id];
-        var show = entity.isAvailable(time) && Property.getValueOrDefault(modelGraphics._show, time, true);
+        var primitives = this._primitives;
 
-        if (show) {
-            position = Property.getValueOrUndefined(entity._position, time, position);
-            uri = Property.getValueOrUndefined(modelGraphics._uri, time);
-            show = defined(position) && defined(uri);
-        }
-
-        if (!show) {
-            if (defined(modelData)) {
-                modelData.modelPrimitive.show = false;
+        for (i = added.length - 1; i > -1; i--) {
+            entity = added[i];
+            if (defined(entity._model) && defined(entity._position)) {
+                entities.set(entity.id, entity);
             }
-            return;
         }
 
-        var model = defined(modelData) ? modelData.modelPrimitive : undefined;
-        if (!defined(model) || uri !== modelData.uri) {
-            if (defined(model)) {
-                this._primitives.remove(model);
-                if (!model.isDestroyed()) {
-                    model.destroy();
-                }
-                delete modelHash[entity.id];
-            }
-            model = Model.fromGltf({
-                url : uri
-            });
-
-            model.id = entity;
-            this._primitives.add(model);
-            entity._modelPrimitive = model;
-
-            modelData = {
-                modelPrimitive : model,
-                uri : uri,
-                position : undefined,
-                orientation : undefined
-            };
-            modelHash[entity.id] = modelData;
-        }
-
-        model.show = true;
-        model.scale = Property.getValueOrDefault(modelGraphics._scale, time, defaultScale);
-        model.minimumPixelSize = Property.getValueOrDefault(modelGraphics._minimumPixelSize, time, defaultMinimumPixelSize);
-
-        orientation = Property.getValueOrUndefined(entity._orientation, time, orientation);
-        if (!Cartesian3.equals(position, modelData.position) || !Quaternion.equals(orientation, modelData.orientation)) {
-            if (!defined(orientation)) {
-                Transforms.northEastDownToFixedFrame(position, this._scene.globe.ellipsoid, model.modelMatrix);
+        for (i = changed.length - 1; i > -1; i--) {
+            entity = changed[i];
+            if (defined(entity._model) && defined(entity._position)) {
+                entities.set(entity.id, entity);
             } else {
-                Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, model.modelMatrix);
+                removeModel(entity, modelHash, primitives);
+                entities.remove(entity.id);
             }
-            modelData.position = Cartesian3.clone(position, modelData.position);
-            modelData.orientation = Quaternion.clone(orientation, modelData.orientation);
+        }
+
+        for (i = removed.length - 1; i > -1; i--) {
+            entity = removed[i];
+            removeModel(entity, modelHash, primitives);
+            entities.remove(entity.id);
         }
     };
 
-    /**
-     * @private
-     */
-    ModelVisualizer.prototype._onObjectsRemoved = function(entityCollection, added, removed) {
-        for (var i = removed.length - 1; i > -1; i--) {
-            var entity = removed[i];
-            var model = entity._modelPrimitive;
-            if (defined(model)) {
-                this._primitives.remove(model);
-                if (!model.isDestroyed()) {
-                    model.destroy();
-                }
-                delete this._modelHash[entity.id];
+    function removeModel(entity, modelHash, primitives) {
+        var modelData = modelHash[entity.id];
+        if (defined(modelData)) {
+            var model = modelData.modelPrimitive;
+            primitives.remove(model);
+            if (!model.isDestroyed()) {
+                model.destroy();
             }
+            delete modelHash[entity.id];
         }
-    };
+    }
 
     return ModelVisualizer;
 });

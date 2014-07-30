@@ -54,6 +54,10 @@
             };
             document.getElementById(toolbarID || 'toolbar').appendChild(menu);
 
+            if (!defaultAction && typeof options[0].onselect === 'function') {
+                defaultAction = options[0].onselect;
+            }
+
             for (var i = 0, len = options.length; i < len; ++i) {
                 var option = document.createElement('option');
                 option.textContent = options[i].text;
