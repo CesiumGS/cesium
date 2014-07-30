@@ -36,5 +36,5 @@ define([
         return html_sanitize(html);
     };
 
-    return createTaskProcessorWorker(sanitizeHtml, 'sanitizeHtml');
+    return createTaskProcessorWorker(sanitizeHtml);
 });

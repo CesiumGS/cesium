@@ -170,5 +170,5 @@ define([
         return indexBufferIndex;
     }
 
-    return createTaskProcessorWorker(createVerticesFromQuantizedTerrainMesh, 'createVerticesFromQuantizedTerrainMesh');
+    return createTaskProcessorWorker(createVerticesFromQuantizedTerrainMesh);
 });
