@@ -637,18 +637,6 @@ defineSuite([
         expect(Cartesian3.cross(camera.right, camera.direction, new Cartesian3())).toEqualEpsilon(camera.up, CesiumMath.EPSILON12);
     });
 
-    it('does not pan if mouse does not intersect the ellipsoid', function() {
-        var frameState = setUp3D();
-        var position = Cartesian3.clone(camera.position);
-        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
-        var endPosition = new Cartesian2(0, canvas.clientHeight / 2);
-
-        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
-        updateController(frameState);
-
-        expect(camera.position).toEqual(position);
-    });
-
     it('pans in 3D with constrained axis', function() {
         var frameState = setUp3D();
         var position = Cartesian3.clone(camera.position);
