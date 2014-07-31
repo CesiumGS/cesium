@@ -102,6 +102,7 @@ Change Log
   * Removed `CustomSensorVolume`, `RectangularPyramidSensorVolume`, `DynamicCone`, `DynamicConeVisualizerUsingCustomSensor`, `DynamicPyramid` and `DynamicPyramidVisualizer`.  This will be moved to a plugin in early August.  [#1887](https://github.com/AnalyticalGraphicsInc/cesium/issues/1887)
   * If `Primitive.modelMatrix` is changed after creation, it only affects primitives with one instance and only in 3D mode.
   * `ImageryLayer` properties `alpha`, `brightness`, `contrast`, `hue`, `saturation`, and `gamma` may no longer be functions.  If you need to change these values each frame, consider moving your logic to an event handler for `Scene.preRender`.
+  * Removed `closeTop` and `closeBottom` options from `RectangleGeometry`
 * Added camera collision detection with terrain to the default mouse interaction.
 * Modified the default camera tilt mouse behavior to tilt about the point clicked taking into account terrain.
 * Modified the default camera mouse behavior to look about the camera's position when the sky is clicked.
@@ -118,6 +119,7 @@ Change Log
 * DataSource & CZML models now default to North-East-Down orientation if none is provided.
 * `TileMapServiceImageryProvider` now works with tilesets created by tools that better conform to the TMS specification.  In particular, a profile of `global-geodetic` or `global-mercator` is now supported (in addition to the previous `geodetic` and `mercator`) and in these profiles it is assumed that the X coordinates of the bounding box correspond to the longitude direction.
 * `EntityCollection` and `CompositeEntityCollection` now include the array of modified entities as the last parameter to their `onCollectionChanged` event.
+* `RectangleGeometry`, `RectanglePrimitive` and `RectangleOutlineGeoemtry` can cross the international date line.
 
 Beta Releases
 -------------
