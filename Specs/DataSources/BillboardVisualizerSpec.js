@@ -77,6 +77,14 @@ defineSuite([
         visualizer = undefined;
     });
 
+    it('removes the listener from the entity collection when destroyed', function() {
+        var entityCollection = new EntityCollection();
+        var visualizer = new BillboardVisualizer(scene, entityCollection);
+        expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
+        visualizer = visualizer.destroy();
+        expect(entityCollection.collectionChanged.numberOfListeners).toEqual(0);
+    });
+
     it('object with no billboard does not create a billboard.', function() {
         var entityCollection = new EntityCollection();
         visualizer = new BillboardVisualizer(scene, entityCollection);

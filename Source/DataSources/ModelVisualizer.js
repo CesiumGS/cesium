@@ -158,6 +158,7 @@ define([
      * Removes and destroys all primitives created by this instance.
      */
     ModelVisualizer.prototype.destroy = function() {
+        this._entityCollection.collectionChanged.removeEventListener(ModelVisualizer.prototype._onCollectionChanged, this);
         var entities = this._entitiesToVisualize.values;
         var modelHash = this._modelHash;
         var primitives = this._primitives;
