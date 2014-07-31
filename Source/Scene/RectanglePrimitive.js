@@ -30,7 +30,7 @@ define([
     "use strict";
 
     /**
-     * A renderable rectangular rectangle.
+     * A renderable rectangle.
      *
      * @alias RectanglePrimitive
      * @constructor
