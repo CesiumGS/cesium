@@ -434,15 +434,26 @@ define([
         if (!defined(rectangle)) {
             throw new DeveloperError('rectangle is required');
         }
+        var east = rectangle.east;
+        var west = rectangle.west;
         //>>includeEnd('debug');
-
-        if (!defined(result)) {
-            return new Cartographic((rectangle.west + rectangle.east) * 0.5, (rectangle.south + rectangle.north) * 0.5);
+        if (east > west) {
+            if (!defined(result)) {
+                return new Cartographic((west + east) * 0.5, (rectangle.south + rectangle.north) * 0.5);
+            }
+            result.longitude = (west + east) * 0.5;
+            result.latitude = (rectangle.south + rectangle.north) * 0.5;
+            result.height = 0.0;
+            return result;
+        } else {
+            if (!defined(result)) {
+                return new Cartographic(CesiumMath.negativePiToPi((west + east) * 0.5 + CesiumMath.PI), (rectangle.south + rectangle.north) * 0.5);
+            }
+            result.longitude = CesiumMath.negativePiToPi((west + east) * 0.5 + CesiumMath.PI);
+            result.latitude = (rectangle.south + rectangle.north) * 0.5;
+            result.height = 0.0;
+            return result;
         }
-        result.longitude = (rectangle.west + rectangle.east) * 0.5;
-        result.latitude = (rectangle.south + rectangle.north) * 0.5;
-        result.height = 0.0;
-        return result;
     };
 
     /**

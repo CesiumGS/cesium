@@ -23,16 +23,6 @@ define([
     var sin = Math.sin;
     var sqrt = Math.sqrt;
 
-    function isValidLatLon(latitude, longitude) {
-        if (latitude < -CesiumMath.PI_OVER_TWO || latitude > CesiumMath.PI_OVER_TWO) {
-            return false;
-        }
-        if (longitude > CesiumMath.PI || longitude < -CesiumMath.PI) {
-            return false;
-        }
-        return true;
-    }
-
     /**
      * @private
      */
@@ -122,7 +112,7 @@ define([
         var granYSin = 0.0;
         var granXSin = 0.0;
 
-        if (defined(rotation) && west < east) { // rotation doesn't work when center is on/near IDL
+        if (defined(rotation)) { // rotation doesn't work when center is on/near IDL
             var cosRotation = Math.cos(rotation);
             granYCos *= cosRotation;
             granXCos *= cosRotation;
@@ -156,9 +146,9 @@ define([
             east = Math.max(longitude, longitude0, longitude1, longitude2);
             west = Math.min(longitude, longitude0, longitude1, longitude2);
 
-            if (!isValidLatLon(north, west) || !isValidLatLon(north, east) ||
-                    !isValidLatLon(south, west) || !isValidLatLon(south, east)) {
-                throw new DeveloperError('Rotated rectangle is invalid.');
+            if (north < -CesiumMath.PI_OVER_TWO || north > CesiumMath.PI_OVER_TWO ||
+                    south < -CesiumMath.PI_OVER_TWO || south > CesiumMath.PI_OVER_TWO) {
+                throw new DeveloperError('Rotated extent is invalid.');
             }
 
             rectangle.north = north;
