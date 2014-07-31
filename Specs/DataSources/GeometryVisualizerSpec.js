@@ -398,6 +398,14 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('removes the listener from the entity collection when destroyed', function() {
+        var entityCollection = new EntityCollection();
+        var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, entityCollection);
+        expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
+        visualizer = visualizer.destroy();
+        expect(entityCollection.collectionChanged.numberOfListeners).toEqual(0);
+    });
+
     it('StaticGeometryPerMaterialBatch handles shared material being invalidated', function() {
         var batch = new StaticGeometryPerMaterialBatch(scene.primitives, EllipseGeometryUpdater.materialAppearanceType, false);
 
