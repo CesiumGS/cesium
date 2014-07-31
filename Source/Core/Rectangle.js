@@ -439,23 +439,19 @@ define([
         var east = rectangle.east;
         var west = rectangle.west;
 
-        if (east > west) {
-            if (!defined(result)) {
-                return new Cartographic((west + east) * 0.5, (rectangle.south + rectangle.north) * 0.5);
-            }
-            result.longitude = (west + east) * 0.5;
-            result.latitude = (rectangle.south + rectangle.north) * 0.5;
-            result.height = 0.0;
-            return result;
-        } else {
-            if (!defined(result)) {
-                return new Cartographic(CesiumMath.negativePiToPi((west + east) * 0.5 + CesiumMath.PI), (rectangle.south + rectangle.north) * 0.5);
-            }
-            result.longitude = CesiumMath.negativePiToPi((west + east) * 0.5 + CesiumMath.PI);
-            result.latitude = (rectangle.south + rectangle.north) * 0.5;
-            result.height = 0.0;
-            return result;
+        var longitude = (west + east) * 0.5;
+        if (east < west) {
+            longitude = CesiumMath.negativePiToPi(longitude + CesiumMath.PI);
         }
+
+        if (!defined(result)) {
+            return new Cartographic(longitude, (rectangle.south + rectangle.north) * 0.5);
+        }
+
+        result.longitude = longitude;
+        result.latitude = (rectangle.south + rectangle.north) * 0.5;
+        result.height = 0.0;
+        return result;
     };
 
     /**
