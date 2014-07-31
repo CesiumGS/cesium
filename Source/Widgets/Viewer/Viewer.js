@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../../Core/clone',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -28,7 +27,6 @@ define([
         '../subscribeAndEvaluate',
         '../Timeline/Timeline'
     ], function(
-        clone,
         defaultValue,
         defined,
         defineProperties,
@@ -118,6 +116,8 @@ define([
      * @see Timeline
      * @see viewerDragDropMixin
      * @see viewerEntityMixin
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Hello%20World.html|Cesium Sandcastle Hello World Demo}
      *
      * @example
      * //Initialize the viewer widget with several custom options and mixins.

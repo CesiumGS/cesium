@@ -24,7 +24,7 @@ define([
      * @param {Number} [column0Row1=0.0] The value for column 0, row 1.
      * @param {Number} [column1Row1=0.0] The value for column 1, row 1.
      *
-     * @see Matrix2.fromColumnMajor
+     * @see Matrix2.fromColumnMajorArray
      * @see Matrix2.fromRowMajorArray
      * @see Matrix2.fromScale
      * @see Matrix2.fromUniformScale

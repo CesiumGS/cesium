@@ -67,7 +67,7 @@ define([
 
         /**
          * Gets or sets the vertex positions.
-         * @memberof DynamicPolyline.prototype
+         * @memberof PolylineGraphics.prototype
          * @type {Property}
          */
         positions : createPropertyDescriptor('positions'),

@@ -5,8 +5,6 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
-        '../../Core/Event',
-        '../../Core/getTimestamp',
         '../../Scene/FrameRateMonitor',
         '../../ThirdParty/knockout',
         '../createCommand'
@@ -16,8 +14,6 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
-        Event,
-        getTimestamp,
         FrameRateMonitor,
         knockout,
         createCommand) {

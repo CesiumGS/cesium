@@ -27,8 +27,6 @@ define([
     var nyIndex = 7;
 
     var cartesian3Scratch = new Cartesian3();
-    var cartesian3Scratch2 = new Cartesian3();
-    var cartesian3Scratch3 = new Cartesian3();
     var cartographicScratch = new Cartographic();
 
     function createVerticesFromQuantizedTerrainMesh(parameters, transferableObjects) {

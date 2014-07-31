@@ -180,7 +180,7 @@ define([
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
-         * Draws the bounding sphere for each {@link DrawCommand} in the primitive.
+         * Draws the bounding sphere for each draw command in the primitive.
          * </p>
          *
          * @type {Boolean}
@@ -209,7 +209,7 @@ define([
 
     defineProperties(Polygon.prototype, {
         /**
-         * Gets and sets positions that define the boundary of the polygon.
+         * Gets or sets positions that define the boundary of the polygon.
          * @memberof Polygon.prototype
          * @type {Cartesian3[]}
          * @example

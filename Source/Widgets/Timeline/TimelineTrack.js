@@ -9,6 +9,9 @@ define([
         JulianDate) {
     "use strict";
 
+    /**
+     * @private
+     */
     function TimelineTrack(interval, pixelHeight, color, backgroundColor) {
         this.interval = interval;
         this.height = pixelHeight;

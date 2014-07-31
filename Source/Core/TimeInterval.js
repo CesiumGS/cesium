@@ -5,16 +5,14 @@ define([
         './defineProperties',
         './DeveloperError',
         './freezeObject',
-        './JulianDate',
-        './TimeStandard'
+        './JulianDate'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         freezeObject,
-        JulianDate,
-        TimeStandard) {
+        JulianDate) {
     "use strict";
 
     /**
@@ -76,13 +74,13 @@ define([
          * Gets or sets the start time of this interval.
          * @type {JulianDate}
          */
-        this.start = defined(options.start) ? options.start : new JulianDate();
+        this.start = defined(options.start) ? JulianDate.clone(options.start) : new JulianDate();
 
         /**
          * Gets or sets the stop time of this interval.
          * @type {JulianDate}
          */
-        this.stop = defined(options.stop) ? options.stop : new JulianDate();
+        this.stop = defined(options.stop) ? JulianDate.clone(options.stop) : new JulianDate();
 
         /**
          * Gets or sets the data associated with this interval.
@@ -171,6 +169,23 @@ define([
         result.isStopIncluded = isStopIncluded;
         result.data = data;
         return result;
+    };
+
+    /**
+     * Creates an ISO8601 representation of the provided interval.
+     *
+     * @param {TimeInterval} timeInterval The interval to be converted.
+     * @param {Number} [precision] The number of fractional digits used to represent the seconds component.  By default, the most precise representation is used.
+     * @returns {String} The ISO8601 representation of the provided interval.
+     */
+    TimeInterval.toIso8601 = function(timeInterval, precision) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(timeInterval)) {
+            throw new DeveloperError('timeInterval is required.');
+        }
+        //>>includeEnd('debug');
+
+        return JulianDate.toIso8601(timeInterval.start, precision) + '/' + JulianDate.toIso8601(timeInterval.stop, precision);
     };
 
     /**
@@ -361,6 +376,15 @@ define([
      */
     TimeInterval.prototype.equalsEpsilon = function(right, epsilon, dataComparer) {
         return TimeInterval.equalsEpsilon(this, right, epsilon, dataComparer);
+    };
+
+    /**
+     * Creates a string representing this TimeInterval in ISO8601 format.
+     *
+     * @returns {String} A string representing this TimeInterval in ISO8601 format.
+     */
+    TimeInterval.prototype.toString = function() {
+        return TimeInterval.toIso8601(this);
     };
 
     /**

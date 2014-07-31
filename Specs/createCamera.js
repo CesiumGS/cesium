@@ -3,13 +3,11 @@ define([
         'Core/Cartesian3',
         'Core/defaultValue',
         'Core/GeographicProjection',
-        'Core/Math',
         'Scene/Camera'
     ], function(
         Cartesian3,
         defaultValue,
         GeographicProjection,
-        CesiumMath,
         Camera) {
     "use strict";
 

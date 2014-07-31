@@ -45,8 +45,8 @@ define([
      *                 parameter nor options.data is specified, all EOP values are assumed
      *                 to be 0.0.
      * @param {Boolean} [options.addNewLeapSeconds=true] True if leap seconds that
-     *                  are specified in the EOP data but not in {@link LeapSecond#getLeapSeconds}
-     *                  should be added to {@link LeapSecond#getLeapSeconds}.  False if
+     *                  are specified in the EOP data but not in {@link JulianDate.leapSeconds}
+     *                  should be added to {@link JulianDate.leapSeconds}.  False if
      *                  new leap seconds should be handled correctly in the context
      *                  of the EOP data but otherwise ignored.
      *

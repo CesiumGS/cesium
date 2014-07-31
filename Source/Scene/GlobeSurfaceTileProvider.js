@@ -16,7 +16,6 @@ define([
         '../Core/Matrix4',
         '../Core/PrimitiveType',
         '../Core/Rectangle',
-        '../Core/TerrainProvider',
         '../Core/Visibility',
         '../Core/WebMercatorProjection',
         '../Renderer/BufferUsage',
@@ -47,7 +46,6 @@ define([
         Matrix4,
         PrimitiveType,
         Rectangle,
-        TerrainProvider,
         Visibility,
         WebMercatorProjection,
         BufferUsage,
@@ -925,46 +923,22 @@ define([
                 uniformMap.dayTextureTranslationAndScale[numberOfDayTextures] = tileImagery.textureTranslationAndScale;
                 uniformMap.dayTextureTexCoordsRectangle[numberOfDayTextures] = tileImagery.textureCoordinateRectangle;
 
-                if (typeof imageryLayer.alpha === 'function') {
-                    uniformMap.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
-                } else {
-                    uniformMap.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha;
-                }
+                uniformMap.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha;
                 applyAlpha = applyAlpha || uniformMap.dayTextureAlpha[numberOfDayTextures] !== 1.0;
 
-                if (typeof imageryLayer.brightness === 'function') {
-                    uniformMap.dayTextureBrightness[numberOfDayTextures] = imageryLayer.brightness(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
-                } else {
-                    uniformMap.dayTextureBrightness[numberOfDayTextures] = imageryLayer.brightness;
-                }
+                uniformMap.dayTextureBrightness[numberOfDayTextures] = imageryLayer.brightness;
                 applyBrightness = applyBrightness || uniformMap.dayTextureBrightness[numberOfDayTextures] !== ImageryLayer.DEFAULT_BRIGHTNESS;
 
-                if (typeof imageryLayer.contrast === 'function') {
-                    uniformMap.dayTextureContrast[numberOfDayTextures] = imageryLayer.contrast(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
-                } else {
-                    uniformMap.dayTextureContrast[numberOfDayTextures] = imageryLayer.contrast;
-                }
+                uniformMap.dayTextureContrast[numberOfDayTextures] = imageryLayer.contrast;
                 applyContrast = applyContrast || uniformMap.dayTextureContrast[numberOfDayTextures] !== ImageryLayer.DEFAULT_CONTRAST;
 
-                if (typeof imageryLayer.hue === 'function') {
-                    uniformMap.dayTextureHue[numberOfDayTextures] = imageryLayer.hue(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
-                } else {
-                    uniformMap.dayTextureHue[numberOfDayTextures] = imageryLayer.hue;
-                }
+                uniformMap.dayTextureHue[numberOfDayTextures] = imageryLayer.hue;
                 applyHue = applyHue || uniformMap.dayTextureHue[numberOfDayTextures] !== ImageryLayer.DEFAULT_HUE;
 
-                if (typeof imageryLayer.saturation === 'function') {
-                    uniformMap.dayTextureSaturation[numberOfDayTextures] = imageryLayer.saturation(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
-                } else {
-                    uniformMap.dayTextureSaturation[numberOfDayTextures] = imageryLayer.saturation;
-                }
+                uniformMap.dayTextureSaturation[numberOfDayTextures] = imageryLayer.saturation;
                 applySaturation = applySaturation || uniformMap.dayTextureSaturation[numberOfDayTextures] !== ImageryLayer.DEFAULT_SATURATION;
 
-                if (typeof imageryLayer.gamma === 'function') {
-                    uniformMap.dayTextureOneOverGamma[numberOfDayTextures] = 1.0 / imageryLayer.gamma(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
-                } else {
-                    uniformMap.dayTextureOneOverGamma[numberOfDayTextures] = 1.0 / imageryLayer.gamma;
-                }
+                uniformMap.dayTextureOneOverGamma[numberOfDayTextures] = 1.0 / imageryLayer.gamma;
                 applyGamma = applyGamma || uniformMap.dayTextureOneOverGamma[numberOfDayTextures] !== 1.0 / ImageryLayer.DEFAULT_GAMMA;
 
                 if (defined(imagery.credits)) {

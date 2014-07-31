@@ -6,7 +6,6 @@ define([
         '../Core/Cartographic',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
@@ -31,7 +30,6 @@ define([
         Cartographic,
         defaultValue,
         defined,
-        defineProperties,
         destroyObject,
         DeveloperError,
         Ellipsoid,
@@ -233,11 +231,18 @@ define([
          */
         this.minimumPickingTerrainHeight = 150000.0;
         /**
-         * The minimum height the camera must be before tesing for collision with terrain.
+         * The minimum height the camera must be before testing for collision with terrain.
          * @type {Number}
          * @default 10000.0
          */
         this.minimumCollisionTerrainHeight = 10000.0;
+        /**
+         * The minimum height the camera must be before switching from rotating a track ball to
+         * free look when clicks originate on the sky on in space.
+         * @type {Number}
+         * @default 7500000.0
+         */
+        this.minimumTrackBallHeight = 7500000.0;
 
         this._scene = scene;
         this._globe = undefined;
@@ -256,11 +261,13 @@ define([
 
         this._horizontalRotationAxis = undefined;
 
-        this._tiltCenterMousePosition = new Cartesian2();
+        this._tiltCenterMousePosition = new Cartesian2(-1.0, -1.0);
         this._tiltCenter = new Cartesian3();
-        this._rotateMousePosition = new Cartesian2();
+        this._rotateMousePosition = new Cartesian2(-1.0, -1.0);
         this._rotateStartPosition = new Cartesian3();
         this._tiltCVOffMap = false;
+        this._looking = false;
+        this._rotating = false;
 
         var projection = scene.mapProjection;
         this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
@@ -553,6 +560,15 @@ define([
     var translateCVEndMouse = new Cartesian2();
 
     function translateCV(controller, startPosition, movement, frameState) {
+        if (!Cartesian3.equals(startPosition, controller._translateMousePosition)) {
+            controller._looking = false;
+        }
+
+        if (controller._looking) {
+            look3D(controller, startPosition, movement, frameState);
+            return;
+        }
+
         var camera = controller._scene.camera;
         var startMouse = Cartesian3.clone(movement.startPosition, translateCVStartMouse);
         var endMouse = Cartesian3.clone(movement.endPosition, translateCVEndMouse);
@@ -583,6 +599,9 @@ define([
         var endPlanePos = IntersectionTests.rayPlane(endRay, plane, translateCVEndPos);
 
         if (!defined(startPlanePos) || !defined(endPlanePos)) {
+            controller._looking = true;
+            look3D(controller, startPosition, movement, frameState);
+            Cartesian2.clone(startPosition, controller._translateMousePosition);
             return;
         }
 
@@ -619,6 +638,12 @@ define([
 
         if (!Cartesian2.equals(startPosition, controller._tiltCenterMousePosition)) {
             controller._tiltCVOffMap = false;
+            controller._looking = false;
+        }
+
+        if (controller._looking) {
+            look3D(controller, startPosition, movement, frameState);
+            return;
         }
 
         var camera = controller._scene.camera;
@@ -645,7 +670,19 @@ define([
 
         var position = ray.origin;
         var direction = ray.direction;
-        var scalar = -Cartesian3.dot(normal, position) / Cartesian3.dot(normal, direction);
+        var scalar;
+        var normalDotDirection = Cartesian3.dot(normal, direction);
+        if (Math.abs(normalDotDirection) > CesiumMath.EPSILON6) {
+            scalar = -Cartesian3.dot(normal, position) / normalDotDirection;
+        }
+
+        if (!defined(scalar) || scalar <= 0.0) {
+            controller._looking = true;
+            look3D(controller, startPosition, movement, frameState);
+            Cartesian2.clone(startPosition, controller._tiltCenterMousePosition);
+            return;
+        }
+
         var center = Cartesian3.multiplyByScalar(direction, scalar, rotateCVCenter);
         Cartesian3.add(position, center, center);
 
@@ -699,7 +736,20 @@ define([
             if (!defined(center)) {
                 var position = ray.origin;
                 var direction = ray.direction;
-                var scalar = -Cartesian3.dot(normal, position) / Cartesian3.dot(normal, direction);
+
+                var scalar;
+                var normalDotDirection = Cartesian3.dot(normal, direction);
+                if (Math.abs(normalDotDirection) > CesiumMath.EPSILON6) {
+                    scalar = -Cartesian3.dot(normal, position) / normalDotDirection;
+                }
+
+                if (!defined(scalar) || scalar <= 0.0) {
+                    controller._looking = true;
+                    look3D(controller, startPosition, movement, frameState);
+                    Cartesian2.clone(startPosition, controller._tiltCenterMousePosition);
+                    return;
+                }
+
                 center = Cartesian3.multiplyByScalar(direction, scalar, rotateCVCenter);
                 Cartesian3.add(position, center, center);
             }
@@ -895,6 +945,7 @@ define([
     var scratchMousePos = new Cartesian3();
     var scratchRadii = new Cartesian3();
     var scratchEllipsoid = new Ellipsoid();
+    var scratchLookUp = new Cartesian3();
 
     function spin3D(controller, startPosition, movement, frameState) {
         var camera = controller._scene.camera;
@@ -907,13 +958,24 @@ define([
         var radii;
         var ellipsoid;
 
+        var up = controller._ellipsoid.geodeticSurfaceNormal(camera.position, scratchLookUp);
+
         if (Cartesian2.equals(startPosition, controller._rotateMousePosition)) {
-            magnitude = Cartesian3.magnitude(controller._rotateStartPosition);
-            radii = scratchRadii;
-            radii.x = radii.y = radii.z = magnitude;
-            ellipsoid = Ellipsoid.fromCartesian3(radii, scratchEllipsoid);
-            pan3D(controller, startPosition, movement, frameState, ellipsoid);
+            if (controller._looking) {
+                look3D(controller, startPosition, movement, frameState, up);
+            } else if (controller._rotating) {
+                rotate3D(controller, startPosition, movement, frameState);
+            } else {
+                magnitude = Cartesian3.magnitude(controller._rotateStartPosition);
+                radii = scratchRadii;
+                radii.x = radii.y = radii.z = magnitude;
+                ellipsoid = Ellipsoid.fromCartesian3(radii, scratchEllipsoid);
+                pan3D(controller, startPosition, movement, frameState, ellipsoid);
+            }
             return;
+        } else {
+            controller._looking = false;
+            controller._rotating = false;
         }
 
         var height = controller._ellipsoid.cartesianToCartographic(camera.positionWC, scratchCartographic).height;
@@ -927,15 +989,23 @@ define([
                 ellipsoid = Ellipsoid.fromCartesian3(radii, scratchEllipsoid);
                 pan3D(controller, startPosition, movement, frameState, ellipsoid);
 
-                Cartesian2.clone(startPosition, controller._rotateMousePosition);
                 Cartesian3.clone(mousePos, controller._rotateStartPosition);
+            } else {
+                controller._looking = true;
+                look3D(controller, startPosition, movement, frameState, up);
             }
         } else if (defined(camera.pickEllipsoid(movement.startPosition, controller._ellipsoid, spin3DPick))) {
             pan3D(controller, startPosition, movement, frameState, controller._ellipsoid);
-
-            Cartesian2.clone(startPosition, controller._rotateMousePosition);
             Cartesian3.clone(spin3DPick, controller._rotateStartPosition);
+        } else if (height > controller.minimumTrackBallHeight) {
+            controller._rotating = true;
+            rotate3D(controller, startPosition, movement, frameState);
+        } else {
+            controller._looking = true;
+            look3D(controller, startPosition, movement, frameState, up);
         }
+
+        Cartesian2.clone(startPosition, controller._rotateMousePosition);
     }
 
     function rotate3D(controller, startPosition, movement, frameState, constrainedAxis, rotateOnlyVertical, rotateOnlyHorizontal) {
@@ -1130,6 +1200,7 @@ define([
     var tilt3DQuaternion = new Quaternion();
     var tilt3DMatrix = new Matrix3();
     var tilt3DCart = new Cartographic();
+    var tilt3DLookUp = new Cartesian3();
 
     function tilt3D(controller, startPosition, movement, frameState) {
         if (!Matrix4.equals(controller._scene.camera.transform, Matrix4.IDENTITY)) {
@@ -1142,9 +1213,17 @@ define([
 
         if (!Cartesian2.equals(startPosition, controller._tiltCenterMousePosition)) {
             controller._tiltOnEllipsoid = false;
+            controller._looking = false;
         }
 
         var camera = controller._scene.camera;
+
+        if (controller._looking) {
+            var up = controller._ellipsoid.geodeticSurfaceNormal(camera.position, tilt3DLookUp);
+            look3D(controller, startPosition, movement, frameState, up);
+            return;
+        }
+
         var ellipsoid = controller._ellipsoid;
         var cartographic = ellipsoid.cartesianToCartographic(camera.position, tilt3DCart);
 
@@ -1175,7 +1254,7 @@ define([
         var intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
         if (defined(intersection)) {
             center = Ray.getPoint(ray, intersection.start, tilt3DCenter);
-        } else {
+        } else if (height > controller.minimumTrackBallHeight) {
             var grazingAltitudeLocation = IntersectionTests.grazingAltitudeLocation(ray, ellipsoid);
             if (!defined(grazingAltitudeLocation)) {
                 return;
@@ -1183,6 +1262,12 @@ define([
             var grazingAltitudeCart = ellipsoid.cartesianToCartographic(grazingAltitudeLocation, tilt3DCart);
             grazingAltitudeCart.height = 0.0;
             center = ellipsoid.cartographicToCartesian(grazingAltitudeCart, tilt3DCenter);
+        } else {
+            controller._looking = true;
+            var up = controller._ellipsoid.geodeticSurfaceNormal(camera.position, tilt3DLookUp);
+            look3D(controller, startPosition, movement, frameState, up);
+            Cartesian2.clone(startPosition, controller._tiltCenterMousePosition);
+            return;
         }
 
         var transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid, tilt3DTransform);
@@ -1227,6 +1312,13 @@ define([
             if (!defined(center)) {
                 intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
                 if (!defined(intersection)) {
+                    var cartographic = ellipsoid.cartesianToCartographic(camera.position, tilt3DCart);
+                    if (cartographic.height <= controller.minimumTrackBallHeight) {
+                        controller._looking = true;
+                        var up = controller._ellipsoid.geodeticSurfaceNormal(camera.position, tilt3DLookUp);
+                        look3D(controller, startPosition, movement, frameState, up);
+                        Cartesian2.clone(startPosition, controller._tiltCenterMousePosition);
+                    }
                     return;
                 }
                 center = Ray.getPoint(ray, intersection.start, tilt3DCenter);
@@ -1346,7 +1438,11 @@ define([
     var look3DEndPos = new Cartesian2();
     var look3DStartRay = new Ray();
     var look3DEndRay = new Ray();
-    function look3D(controller, startPosition, movement, frameState) {
+    var look3DUp = new Cartesian3();
+    var look3DNegativeRot = new Cartesian3();
+    var look3DTan = new Cartesian3();
+
+    function look3D(controller, startPosition, movement, frameState, rotationAxis) {
         var camera = controller._scene.camera;
 
         var startPos = look3DStartPos;
@@ -1364,9 +1460,12 @@ define([
             angle = Math.acos(dot);
         }
         angle = (movement.startPosition.x > movement.endPosition.x) ? -angle : angle;
-        var rotationAxis = controller._horizontalRotationAxis;
+
+        var horizontalRotationAxis = controller._horizontalRotationAxis;
         if (defined(rotationAxis)) {
-            camera.look(rotationAxis, angle);
+            camera.look(rotationAxis, -angle);
+        } else if (defined(horizontalRotationAxis)) {
+            camera.look(horizontalRotationAxis, -angle);
         } else {
             camera.lookLeft(angle);
         }
@@ -1384,7 +1483,34 @@ define([
             angle = Math.acos(dot);
         }
         angle = (movement.startPosition.y > movement.endPosition.y) ? -angle : angle;
-        camera.lookUp(angle);
+
+        rotationAxis = defaultValue(rotationAxis, horizontalRotationAxis);
+        if (defined(rotationAxis)) {
+            var direction = camera.direction;
+            var negativeRotationAxis = Cartesian3.negate(rotationAxis, look3DNegativeRot);
+            var northParallel = Cartesian3.equalsEpsilon(direction, rotationAxis, CesiumMath.EPSILON2);
+            var southParallel = Cartesian3.equalsEpsilon(direction, negativeRotationAxis, CesiumMath.EPSILON2);
+            if ((!northParallel && !southParallel)) {
+                dot = Cartesian3.dot(direction, rotationAxis);
+                var angleToAxis = CesiumMath.acosClamped(dot);
+                if (angle > 0 && angle > angleToAxis) {
+                    angle = angleToAxis - CesiumMath.EPSILON4;
+                }
+
+                dot = Cartesian3.dot(direction, negativeRotationAxis);
+                angleToAxis = CesiumMath.acosClamped(dot);
+                if (angle < 0 && -angle > angleToAxis) {
+                    angle = -angleToAxis + CesiumMath.EPSILON4;
+                }
+
+                var tangent = Cartesian3.cross(rotationAxis, direction, look3DTan);
+                camera.look(tangent, angle);
+            } else if ((northParallel && angle < 0) || (southParallel && angle > 0)) {
+                camera.look(camera.right, -angle);
+            }
+        } else {
+            camera.lookUp(angle);
+        }
     }
 
     function update3D(controller, frameState) {
