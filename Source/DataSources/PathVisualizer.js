@@ -415,6 +415,8 @@ define([
         this._updaters = {};
         this._entityCollection = entityCollection;
         this._entitiesToVisualize = new AssociativeArray();
+
+        this._onCollectionChanged(entityCollection, entityCollection.entities, [], []);
     };
 
     /**
