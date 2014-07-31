@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/AssociativeArray',
         '../Core/Cartesian3',
         '../Core/Color',
         '../Core/defined',
@@ -9,6 +10,7 @@ define([
         '../Scene/BillboardCollection',
         './Property'
     ], function(
+        AssociativeArray,
         Cartesian3,
         Color,
         defined,
@@ -47,55 +49,18 @@ define([
         }
         //>>includeEnd('debug');
 
-        entityCollection.collectionChanged.addEventListener(PointVisualizer.prototype._onObjectsRemoved, this);
-
         var billboardCollection = new BillboardCollection();
         scene.primitives.add(billboardCollection);
+        entityCollection.collectionChanged.addEventListener(PointVisualizer.prototype._onCollectionChanged, this);
 
         this._scene = scene;
         this._unusedIndexes = [];
         this._entityCollection = entityCollection;
         this._billboardCollection = billboardCollection;
+        this._entitiesToVisualize = new AssociativeArray();
+
+        this._onCollectionChanged(entityCollection, entityCollection.entities, [], []);
     };
-
-    function createCallback(centerAlpha, cssColor, cssOutlineColor, cssOutlineWidth, newPixelSize){
-        return function(id) {
-            var canvas = document.createElement('canvas');
-
-            var length = newPixelSize + (2 * cssOutlineWidth);
-            canvas.height = canvas.width = length;
-
-            var context2D = canvas.getContext('2d');
-            context2D.clearRect(0, 0, length, length);
-
-            if (cssOutlineWidth !== 0) {
-                context2D.beginPath();
-                context2D.arc(length / 2, length / 2, length / 2, 0, 2 * Math.PI, true);
-                context2D.closePath();
-                context2D.fillStyle = cssOutlineColor;
-                context2D.fill();
-                // Punch a hole in the center if needed.
-                if (centerAlpha < 1.0) {
-                    context2D.save();
-                    context2D.globalCompositeOperation = 'destination-out';
-                    context2D.beginPath();
-                    context2D.arc(length / 2, length / 2, newPixelSize / 2, 0, 2 * Math.PI, true);
-                    context2D.closePath();
-                    context2D.fillStyle = 'black';
-                    context2D.fill();
-                    context2D.restore();
-                }
-            }
-
-            context2D.beginPath();
-            context2D.arc(length / 2, length / 2, newPixelSize / 2, 0, 2 * Math.PI, true);
-            context2D.closePath();
-            context2D.fillStyle = cssColor;
-            context2D.fill();
-
-            return canvas;
-        };
-    }
 
     /**
      * Updates the primitives created by this visualizer to match their
@@ -111,16 +76,12 @@ define([
         }
         //>>includeEnd('debug');
 
-        var entities = this._entityCollection.entities;
+        var entities = this._entitiesToVisualize.values;
         var billboardCollection = this._billboardCollection;
         var unusedIndexes = this._unusedIndexes;
         for (var i = 0, len = entities.length; i < len; i++) {
             var entity = entities[i];
             var pointGraphics = entity._point;
-            if (!defined(pointGraphics)) {
-                continue;
-            }
-
             var billboard;
             var pointVisualizerIndex = entity._pointVisualizerIndex;
             var show = entity.isAvailable(time) && Property.getValueOrDefault(pointGraphics._show, time, true);
@@ -129,13 +90,7 @@ define([
                 show = defined(position);
             }
             if (!show) {
-                //don't bother creating or updating anything else
-                if (defined(pointVisualizerIndex)) {
-                    billboard = billboardCollection.get(pointVisualizerIndex);
-                    billboard.show = false;
-                    entity._pointVisualizerIndex = undefined;
-                    unusedIndexes.push(pointVisualizerIndex);
-                }
+                cleanEntity(entity, billboardCollection, unusedIndexes);
                 continue;
             }
 
@@ -207,30 +162,94 @@ define([
      * Removes and destroys all primitives created by this instance.
      */
     PointVisualizer.prototype.destroy = function() {
-        var entityCollection = this._entityCollection;
-        var entities = entityCollection.entities;
+        var entities = this._entitiesToVisualize.values;
         for (var i = entities.length - 1; i > -1; i--) {
             entities[i]._pointVisualizerIndex = undefined;
         }
-        entityCollection.collectionChanged.removeEventListener(PointVisualizer.prototype._onObjectsRemoved, this);
+        this._entityCollection.collectionChanged.removeEventListener(PointVisualizer.prototype._onCollectionChanged, this);
         this._scene.primitives.remove(this._billboardCollection);
         return destroyObject(this);
     };
 
-    PointVisualizer.prototype._onObjectsRemoved = function(entityCollection, added, entities) {
-        var thisBillboardCollection = this._billboardCollection;
-        var thisUnusedIndexes = this._unusedIndexes;
-        for (var i = entities.length - 1; i > -1; i--) {
-            var entity = entities[i];
-            var pointVisualizerIndex = entity._pointVisualizerIndex;
-            if (defined(pointVisualizerIndex)) {
-                var billboard = thisBillboardCollection.get(pointVisualizerIndex);
-                billboard.show = false;
-                entity._pointVisualizerIndex = undefined;
-                thisUnusedIndexes.push(pointVisualizerIndex);
+    PointVisualizer.prototype._onCollectionChanged = function(entityCollection, added, removed, changed) {
+        var i;
+        var entity;
+        var billboardCollection = this._billboardCollection;
+        var unusedIndexes = this._unusedIndexes;
+        var entities = this._entitiesToVisualize;
+
+        for (i = added.length - 1; i > -1; i--) {
+            entity = added[i];
+            if (defined(entity._point) && defined(entity._position)) {
+                entities.set(entity.id, entity);
             }
         }
+
+        for (i = changed.length - 1; i > -1; i--) {
+            entity = changed[i];
+            if (defined(entity._point) && defined(entity._position)) {
+                entities.set(entity.id, entity);
+            } else {
+                cleanEntity(entity, billboardCollection, unusedIndexes);
+                entities.remove(entity.id);
+            }
+        }
+
+        for (i = removed.length - 1; i > -1; i--) {
+            entity = removed[i];
+            cleanEntity(entity, billboardCollection, unusedIndexes);
+            entities.remove(entity.id);
+        }
     };
+
+    function cleanEntity(entity, collection, unusedIndexes) {
+        var pointVisualizerIndex = entity._pointVisualizerIndex;
+        if (defined(pointVisualizerIndex)) {
+            var billboard = collection.get(pointVisualizerIndex);
+            billboard.show = false;
+            entity._pointVisualizerIndex = undefined;
+            unusedIndexes.push(pointVisualizerIndex);
+        }
+    }
+
+    function createCallback(centerAlpha, cssColor, cssOutlineColor, cssOutlineWidth, newPixelSize){
+        return function(id) {
+            var canvas = document.createElement('canvas');
+
+            var length = newPixelSize + (2 * cssOutlineWidth);
+            canvas.height = canvas.width = length;
+
+            var context2D = canvas.getContext('2d');
+            context2D.clearRect(0, 0, length, length);
+
+            if (cssOutlineWidth !== 0) {
+                context2D.beginPath();
+                context2D.arc(length / 2, length / 2, length / 2, 0, 2 * Math.PI, true);
+                context2D.closePath();
+                context2D.fillStyle = cssOutlineColor;
+                context2D.fill();
+                // Punch a hole in the center if needed.
+                if (centerAlpha < 1.0) {
+                    context2D.save();
+                    context2D.globalCompositeOperation = 'destination-out';
+                    context2D.beginPath();
+                    context2D.arc(length / 2, length / 2, newPixelSize / 2, 0, 2 * Math.PI, true);
+                    context2D.closePath();
+                    context2D.fillStyle = 'black';
+                    context2D.fill();
+                    context2D.restore();
+                }
+            }
+
+            context2D.beginPath();
+            context2D.arc(length / 2, length / 2, newPixelSize / 2, 0, 2 * Math.PI, true);
+            context2D.closePath();
+            context2D.fillStyle = cssColor;
+            context2D.fill();
+
+            return canvas;
+        };
+    }
 
     return PointVisualizer;
 });

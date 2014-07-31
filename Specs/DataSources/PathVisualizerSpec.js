@@ -78,6 +78,14 @@ defineSuite([
         visualizer = undefined;
     });
 
+    it('removes the listener from the entity collection when destroyed', function() {
+        var entityCollection = new EntityCollection();
+        var visualizer = new PathVisualizer(scene, entityCollection);
+        expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
+        visualizer = visualizer.destroy();
+        expect(entityCollection.collectionChanged.numberOfListeners).toEqual(0);
+    });
+
     it('object with no path does not create one.', function() {
         var entityCollection = new EntityCollection();
         visualizer = new PathVisualizer(scene, entityCollection);
@@ -100,7 +108,7 @@ defineSuite([
         expect(scene.primitives.length).toEqual(0);
     });
 
-    it('A PathGraphics causes a primtive to be created and updated.', function() {
+    it('A PathGraphics causes a primitive to be created and updated.', function() {
         var times = [new JulianDate(0, 0), new JulianDate(1, 0)];
         var updateTime = new JulianDate(0.5, 0);
         var positions = [new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112)];
@@ -145,6 +153,37 @@ defineSuite([
         path.show = new ConstantProperty(false);
         visualizer.update(updateTime);
         expect(primitive.show).toEqual(testObject.path.show.getValue(updateTime));
+    });
+
+    it('creates primitives when an entity is already in the collection.', function() {
+        var times = [new JulianDate(0, 0), new JulianDate(1, 0)];
+        var updateTime = new JulianDate(0.5, 0);
+        var positions = [new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112)];
+
+        var entityCollection = new EntityCollection();
+
+        var testObject = entityCollection.getOrCreateEntity('test');
+        var position = new SampledPositionProperty();
+        testObject.position = position;
+        position.addSamples(times, positions);
+
+        var path = testObject.path = new PathGraphics();
+        path.show = new ConstantProperty(true);
+        path.material = new PolylineOutlineMaterialProperty();
+        path.material.color = new ConstantProperty(new Color(0.8, 0.7, 0.6, 0.5));
+        path.material.outlineColor = new ConstantProperty(new Color(0.1, 0.2, 0.3, 0.4));
+        path.material.outlineWidth = new ConstantProperty(2.5);
+        path.width = new ConstantProperty(12.5);
+        path.leadTime = new ConstantProperty(25);
+        path.trailTime = new ConstantProperty(10);
+
+        visualizer = new PathVisualizer(scene, entityCollection);
+
+        expect(scene.primitives.length).toEqual(0);
+
+        visualizer.update(updateTime);
+
+        expect(scene.primitives.length).toEqual(1);
     });
 
     it('A custom material can be used.', function() {

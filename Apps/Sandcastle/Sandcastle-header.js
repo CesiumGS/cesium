@@ -29,7 +29,8 @@
         addToolbarButton : function(text, onclick, toolbarID) {
             window.Sandcastle.declare(onclick);
             var button = document.createElement('button');
-            button.className = 'sandcastle-button';
+            button.type = 'button';
+            button.className = 'cesium-button';
             button.onclick = function() {
                 window.Sandcastle.reset();
                 window.Sandcastle.highlight(onclick);
@@ -44,7 +45,7 @@
         },
         addToolbarMenu : function(options, toolbarID) {
             var menu = document.createElement('select');
-            menu.className = 'sandcastle-button';
+            menu.className = 'cesium-button';
             menu.onchange = function() {
                 window.Sandcastle.reset();
                 var item = options[menu.selectedIndex];

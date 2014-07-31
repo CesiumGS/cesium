@@ -2,8 +2,8 @@
 defineSuite([
         'DataSources/ModelVisualizer',
         'Core/Cartesian3',
-        'Core/Transforms',
         'Core/JulianDate',
+        'Core/Transforms',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
         'DataSources/EntityCollection',
@@ -14,8 +14,8 @@ defineSuite([
     ], function(
         ModelVisualizer,
         Cartesian3,
-        Transforms,
         JulianDate,
+        Transforms,
         ConstantPositionProperty,
         ConstantProperty,
         EntityCollection,
@@ -67,6 +67,14 @@ defineSuite([
         visualizer = undefined;
     });
 
+    it('removes the listener from the entity collection when destroyed', function() {
+        var entityCollection = new EntityCollection();
+        var visualizer = new ModelVisualizer(scene, entityCollection);
+        expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
+        visualizer = visualizer.destroy();
+        expect(entityCollection.collectionChanged.numberOfListeners).toEqual(0);
+    });
+
     it('object with no model does not create one.', function() {
         var entityCollection = new EntityCollection();
         visualizer = new ModelVisualizer(scene, entityCollection);
@@ -89,7 +97,7 @@ defineSuite([
         expect(scene.primitives.length).toEqual(0);
     });
 
-    it('A ModelGraphics causes a primtive to be created and updated.', function() {
+    it('A ModelGraphics causes a primitive to be created and updated.', function() {
         var time = JulianDate.now();
         var entityCollection = new EntityCollection();
         visualizer = new ModelVisualizer(scene, entityCollection);

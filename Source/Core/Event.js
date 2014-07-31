@@ -1,8 +1,10 @@
 /*global define*/
 define([
+        './defined',
         './defineProperties',
         './DeveloperError'
     ], function(
+        defined,
         defineProperties,
         DeveloperError) {
     "use strict";
@@ -30,6 +32,8 @@ define([
     var Event = function() {
         this._listeners = [];
         this._scopes = [];
+        this._toRemove = [];
+        this._insideRaiseEvent = false;
     };
 
     defineProperties(Event.prototype, {
@@ -40,7 +44,7 @@ define([
          */
         numberOfListeners : {
             get : function() {
-                return this._listeners.length;
+                return this._listeners.length - this._toRemove.length;
             }
         }
     });
@@ -91,20 +95,29 @@ define([
         }
         //>>includeEnd('debug');
 
-        var thisListeners = this._listeners;
-        var thisScopes = this._scopes;
+        var listeners = this._listeners;
+        var scopes = this._scopes;
 
         var index = -1;
-        for (var i = 0; i < thisListeners.length; i++) {
-            if (thisListeners[i] === listener && thisScopes[i] === scope) {
+        for (var i = 0; i < listeners.length; i++) {
+            if (listeners[i] === listener && scopes[i] === scope) {
                 index = i;
                 break;
             }
         }
 
         if (index !== -1) {
-            thisListeners.splice(index, 1);
-            this._scopes.splice(index, 1);
+            if (this._insideRaiseEvent) {
+                //In order to allow removing an event subscription from within
+                //a callback, we don't actually remove the items here.  Instead
+                //remember the index they are at and undefined their value.
+                this._toRemove.push(index);
+                listeners[index] = undefined;
+                scopes[index] = undefined;
+            } else {
+                listeners.splice(index, 1);
+                scopes.splice(index, 1);
+            }
             return true;
         }
 
@@ -120,12 +133,31 @@ define([
      * @see Event#removeEventListener
      */
     Event.prototype.raiseEvent = function() {
+        this._insideRaiseEvent = true;
+
+        var i;
         var listeners = this._listeners;
         var scopes = this._scopes;
         var length = listeners.length;
-        for (var i = 0; i < length; i++) {
-            listeners[i].apply(scopes[i], arguments);
+
+        for (i = 0; i < length; i++) {
+            var listener = listeners[i];
+            if (defined(listener)) {
+                listeners[i].apply(scopes[i], arguments);
+            }
         }
+
+        //Actually remove items removed in removeEventListener.
+        var toRemove = this._toRemove;
+        length = toRemove.length;
+        for (i = 0; i < length; i++) {
+            var index = toRemove[i];
+            listeners.splice(index, 1);
+            scopes.splice(index, 1);
+        }
+        toRemove.length = 0;
+
+        this._insideRaiseEvent = false;
     };
 
     /**

@@ -14,8 +14,8 @@ define([
         '../Core/RuntimeError',
         '../Core/TileProviderError',
         '../Core/WebMercatorTilingScheme',
-        './ImageryProvider',
-        '../ThirdParty/when'
+        '../ThirdParty/when',
+        './ImageryProvider'
     ], function(
         Cartesian2,
         Cartographic,
@@ -31,8 +31,8 @@ define([
         RuntimeError,
         TileProviderError,
         WebMercatorTilingScheme,
-        ImageryProvider,
-        when) {
+        when,
+        ImageryProvider) {
     "use strict";
 
     var trailingSlashRegex = /\/$/;

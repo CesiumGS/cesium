@@ -48,6 +48,21 @@ define([
     });
 
     /**
+     * Determines if the provided key is in the array.
+     *
+     * @param {String|Number} key The key to check.
+     * @returns {Boolean} <code>true</code> if the key is in the array, <code>false</code> otherwise.
+     */
+    AssociativeArray.prototype.contains = function(key) {
+        //>>includeStart('debug', pragmas.debug);
+        if (typeof key !== 'string' && typeof key !== 'number') {
+            throw new DeveloperError('key is required to be a string or number.');
+        }
+        //>>includeEnd('debug');
+        return defined(this._hash[key]);
+    };
+
+    /**
      * Associates the provided key with the provided value.  If the key already
      * exists, it is overwritten with the new value.
      *
@@ -61,9 +76,12 @@ define([
         }
         //>>includeEnd('debug');
 
-        this.remove(key);
-        this._hash[key] = value;
-        this._array.push(value);
+        var oldValue = this._hash[key];
+        if (value !== oldValue) {
+            this.remove(key);
+            this._hash[key] = value;
+            this._array.push(value);
+        }
     };
 
     /**
