@@ -434,9 +434,11 @@ define([
         if (!defined(rectangle)) {
             throw new DeveloperError('rectangle is required');
         }
+        //>>includeEnd('debug');
+
         var east = rectangle.east;
         var west = rectangle.west;
-        //>>includeEnd('debug');
+
         if (east > west) {
             if (!defined(result)) {
                 return new Cartographic((west + east) * 0.5, (rectangle.south + rectangle.north) * 0.5);
