@@ -155,10 +155,10 @@ define([
                     deferred.resolve(xhr.response);
                 } else {
                     // busted old browsers.
-                    if (defined(xhr.responseText)) {
-                        deferred.resolve(xhr.responseText);
-                    } else if (defined(xhr.responseXML)) {
+                    if (defined(xhr.responseXML) && xhr.responseXML.hasChildNodes()) {
                         deferred.resolve(xhr.responseXML);
+                    } else if (defined(xhr.responseText)) {
+                        deferred.resolve(xhr.responseText);
                     } else {
                         throw new DeveloperError('unknown XMLHttpRequest response type.');
                     }

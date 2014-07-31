@@ -5,6 +5,7 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/Event',
+        '../../Core/FeatureDetection',
         '../../Core/formatError',
         '../../Core/TaskProcessor',
         '../../ThirdParty/knockout',
@@ -15,6 +16,7 @@ define([
         defined,
         defineProperties,
         Event,
+        FeatureDetection,
         formatError,
         TaskProcessor,
         knockout,
@@ -143,7 +145,15 @@ define([
     var sanitizerTaskProcessor;
     function defaultSanitizer(html) {
         if (!defined(sanitizerTaskProcessor)) {
-            sanitizerTaskProcessor = new TaskProcessor('sanitizeHtml', Infinity);
+            if (FeatureDetection.supportsWebWorkers()) {
+                sanitizerTaskProcessor = new TaskProcessor('sanitizeHtml', Infinity);
+            } else {
+                sanitizerTaskProcessor = {
+                    scheduleTask : function(html) {
+                        return html;
+                    }
+                };
+            }
         }
         return sanitizerTaskProcessor.scheduleTask(html);
     }
