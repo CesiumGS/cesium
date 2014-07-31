@@ -1538,8 +1538,7 @@ define([
         Cartesian3.subtract(northEast, center, northEast);
         Cartesian3.subtract(southWest, center, southWest);
 
-        var direction = ellipsoid.geodeticSurfaceNormal(center, cameraRF.direction);
-        Cartesian3.negate(direction, direction);
+        var direction = Cartesian3.negate(center, cameraRF.direction);
         Cartesian3.normalize(direction, direction);
         var right = Cartesian3.cross(direction, Cartesian3.UNIT_Z, cameraRF.right);
         Cartesian3.normalize(right, right);
