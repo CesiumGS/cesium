@@ -28,7 +28,7 @@ Change Log
             });
 
   * Updated the [Model Converter](http://cesiumjs.org/convertmodel.html) and `Model` to support [glTF 0.8](https://github.com/KhronosGroup/glTF/blob/schema-8/specification/README.md).  See the [forum post](https://groups.google.com/forum/#!topic/cesium-dev/KNl2K3Cazno) for full details.
-  * `Model` primitives are now rotated to be `Z`-up to match the reset of Cesium; glTF stores models with `Y` up.
+  * `Model` primitives are now rotated to be `Z`-up to match Cesium convention; glTF stores models with `Y` up.
   * `SimplePolylineGeometry` and `PolylineGeometry` now curve to follow the ellipsoid surface by default. To disable this behavior, set the option `followSurface` to `false`.
   * Renamed `DynamicScene` layer to `DataSources`.  The following types were also renamed:
     * `DynamicBillboard` -> `BillboardGraphics`
@@ -89,7 +89,7 @@ Change Log
   * Removed the following from the Cesium API: `Transforms.earthOrientationParameters`, `EarthOrientationParameters`, `EarthOrientationParametersSample`, `Transforms.iau2006XysData`, `Iau2006XysData`, `Iau2006XysSample`, `IauOrientationAxes`, `TimeConstants`, `Scene.frameState`, `FrameState`, `EncodedCartesian3`, `EllipsoidalOccluder`, `TextureAtlas`, and `FAR`.  These are still available but are not part of the official API and may change in future versions.
   * Removed `DynamicObject.vertexPositions`.  Use `DynamicWall.positions`, `DynamicPolygon.positions`, and `DynamicPolyline.positions` instead.
   * Removed `defaultPoint`, `defaultLine`, and `defaultPolygon` from `GeoJsonDataSource`.
-  * Removed `Primitive.allow3DOnly`, set the `Scene` level option, `scene3DOnly`, instead.
+  * Removed `Primitive.allow3DOnly`. Set the `Scene` constructor option `scene3DOnly` instead.
   * `SampledProperty` and `SampledPositionProperty` no longer extrapolate outside of their sample data time range by default.
   * Changed the following functions to properties:
     * `TerrainProvider.hasWaterMask`
@@ -102,7 +102,7 @@ Change Log
   * Removed `CustomSensorVolume`, `RectangularPyramidSensorVolume`, `DynamicCone`, `DynamicConeVisualizerUsingCustomSensor`, `DynamicPyramid` and `DynamicPyramidVisualizer`.  This will be moved to a plugin in early August.  [#1887](https://github.com/AnalyticalGraphicsInc/cesium/issues/1887)
   * If `Primitive.modelMatrix` is changed after creation, it only affects primitives with one instance and only in 3D mode.
   * `ImageryLayer` properties `alpha`, `brightness`, `contrast`, `hue`, `saturation`, and `gamma` may no longer be functions.  If you need to change these values each frame, consider moving your logic to an event handler for `Scene.preRender`.
-  * Removed `closeTop` and `closeBottom` options from `RectangleGeometry`
+  * Removed `closeTop` and `closeBottom` options from `RectangleGeometry`.
   * CZML changes:
     * CZML is now versioned using the <major>.<minor> scheme.  For example, any CZML 1.0 implementation will be able to load any 1.<minor> document (with graceful degradation).  Major version number increases will be reserved for breaking changes.  We fully expect these major version increases to happen, as CZML is still in development, but we wanted to give developers a stable target to work with.
     * A `"1.0"` version string is required to be on the document packet, which is required to be the first packet in a CZML file.  Previously the `document` packet was optional; it is now mandatory.  The simplest document packet is:
@@ -112,17 +112,17 @@ Change Log
         "version":"1.0"
       }
       ```
-    * The `vertexPositions` property has been removed.  There is now a `positions` property directly on objects that use it, currently `polyline` and `polygon`.
+    * The `vertexPositions` property has been removed.  There is now a `positions` property directly on objects that use it, currently `polyline`, `polygon`, and `wall`.
     * `cone`, `pyramid`, and `vector` have been removed from the core CZML schema.  They are now treated as extensions maintained by Analytical Graphics and have been renamed to `agi_conicSensor`, `agi_customPatternSensor`, and `agi_vector` respectively.
     * The `orientation` property has been changed to match Cesium convention.  To update existing CZML documents, conjugate the quaternion values.
     * `pixelOffset` now uses the top-left of the screen as the origin; previously it was the bottom-left.  To update existing documents, negate the `y` value.
     * Removed `color`, `outlineColor`, and `outlineWidth` properties from `polyline` and `path`.  There is a new `material` property that allows you to specify a variety of materials, such as `solidColor`, `polylineOutline` and `polylineGlow`.
     * See the [CZML Schema](https://github.com/AnalyticalGraphicsInc/cesium/wiki/CZML-Content) for more details.  We plan on greatly improving this document in the coming weeks.
 * Added camera collision detection with terrain to the default mouse interaction.
-* Modified the default camera tilt mouse behavior to tilt about the point clicked taking into account terrain.
+* Modified the default camera tilt mouse behavior to tilt about the point clicked, taking into account terrain.
 * Modified the default camera mouse behavior to look about the camera's position when the sky is clicked.
 * Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
-* Added support for rendering terrain lighting with oct-encoded per-vertex normals.  Added `CesiumTerrainProvider.requestVertexNormals` to request per vertex normals.  Added `hasVertexNormals` property to all terrain providers to indicate whether or not vertex normals will be included in the terrain tile responses.
+* Added support for rendering terrain lighting with oct-encoded per-vertex normals.  Added `CesiumTerrainProvider.requestVertexNormals` to request per vertex normals.  Added `hasVertexNormals` property to all terrain providers to indicate whether or not vertex normals are included in the requested terrain tiles.
 * Added `Globe.getHeight` and `Globe.pick` for finding the terrain height at a given Cartographic coordinate and picking the terrain with a ray.
 * Added `scene3DOnly` options to `Viewer`, `CesiumWidget`, and `Scene` constructors. This setting optimizes memory usage and performance for 3D mode at the cost of losing the ability to use 2D or Columbus View.
 * Added `forwardExtrapolationType`, `forwardExtrapolationDuration`, `backwardExtrapolationType`, and `backwardExtrapolationDuration` to `SampledProperty` and `SampledPositionProperty` which allows the user to specify how a property calculates its value when outside the range of its sample data.
