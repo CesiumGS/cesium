@@ -837,7 +837,7 @@ define([
         var hasWaterMask = this._surface.tileProvider.ready && this._surface.tileProvider.terrainProvider.hasWaterMask;
         var hasVertexNormals = this._surface.tileProvider.ready && this._surface.tileProvider.terrainProvider.hasVertexNormals;
         var hasWaterMaskChanged = this._hasWaterMask !== hasWaterMask;
-        var hasVertexNormalsChanged = this._hasVertexNormals !== hasVertexNormalsChanged;
+        var hasVertexNormalsChanged = this._hasVertexNormals !== hasVertexNormals;
         var hasEnableLightingChanged = this._enableLighting !== this.enableLighting;
 
         if (!defined(this._northPoleCommand.shaderProgram) ||
