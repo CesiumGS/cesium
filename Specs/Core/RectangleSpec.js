@@ -331,6 +331,24 @@ defineSuite([
         expect(returnedResult).toEqual(center);
     });
 
+    it('center works across IDL', function() {
+        var rectangle = Rectangle.fromDegrees(170, 0, -170, 0);
+        var returnedResult = Rectangle.center(rectangle);
+        expect(returnedResult).toEqualEpsilon(Cartographic.fromDegrees(180, 0), CesiumMath.EPSILON11);
+
+        rectangle = Rectangle.fromDegrees(160, 0, -170, 0);
+        returnedResult = Rectangle.center(rectangle);
+        expect(returnedResult).toEqualEpsilon(Cartographic.fromDegrees(175, 0), CesiumMath.EPSILON11);
+
+        rectangle = Rectangle.fromDegrees(170, 0, -160, 0);
+        returnedResult = Rectangle.center(rectangle);
+        expect(returnedResult).toEqualEpsilon(Cartographic.fromDegrees(-175, 0), CesiumMath.EPSILON11);
+
+        rectangle = Rectangle.fromDegrees(160, 0, 140, 0);
+        returnedResult = Rectangle.center(rectangle);
+        expect(returnedResult).toEqualEpsilon(Cartographic.fromDegrees(-30, 0), CesiumMath.EPSILON11);
+    });
+
     it('center throws with no rectangle', function() {
         expect(function() {
             Rectangle.center();

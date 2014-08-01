@@ -1,6 +1,7 @@
 (function() {
     "use strict";
 
+    var defaultAction;
     var bucket = window.location.href;
     var pos = bucket.lastIndexOf('/');
     if (pos > 0 && pos < (bucket.length - 1)) {
@@ -15,24 +16,48 @@
         },
         registered : [],
         finishedLoading : function() {
+            window.Sandcastle.reset();
+
+            if(defaultAction) {
+                window.Sandcastle.highlight(defaultAction);
+                defaultAction();
+                defaultAction = undefined;
+            }
+
             document.body.className = document.body.className.replace(/(?:\s|^)sandcastle-loading(?:\s|$)/, ' ');
         },
         addToolbarButton : function(text, onclick, toolbarID) {
             window.Sandcastle.declare(onclick);
             var button = document.createElement('button');
-            button.className = 'sandcastle-button';
+            button.type = 'button';
+            button.className = 'cesium-button';
             button.onclick = function() {
+                window.Sandcastle.reset();
                 window.Sandcastle.highlight(onclick);
                 onclick();
             };
             button.textContent = text;
             document.getElementById(toolbarID || 'toolbar').appendChild(button);
         },
-        addToolbarMenu : function(options, onchange, toolbarID) {
+        addDefaultToolbarButton : function(text, onclick, toolbarID) {
+            window.Sandcastle.addToolbarButton(text, onclick, toolbarID);
+            defaultAction = onclick;
+        },
+        addToolbarMenu : function(options, toolbarID) {
             var menu = document.createElement('select');
-            menu.className = 'sandcastle-button';
-            menu.onchange = onchange;
+            menu.className = 'cesium-button';
+            menu.onchange = function() {
+                window.Sandcastle.reset();
+                var item = options[menu.selectedIndex];
+                if (item && typeof item.onselect === 'function') {
+                    item.onselect();
+                }
+            };
             document.getElementById(toolbarID || 'toolbar').appendChild(menu);
+
+            if (!defaultAction && typeof options[0].onselect === 'function') {
+                defaultAction = options[0].onselect;
+            }
 
             for (var i = 0, len = options.length; i < len; ++i) {
                 var option = document.createElement('option');
@@ -40,6 +65,8 @@
                 option.value = options[i].value;
                 menu.appendChild(option);
             }
+        },
+        reset : function() {
         }
     };
 

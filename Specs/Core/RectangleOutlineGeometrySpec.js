@@ -35,6 +35,20 @@ defineSuite([
         expect(new Cartesian3(positions[0], positions[1], positions[2])).toEqualEpsilon(expectedNWCorner, CesiumMath.EPSILON9);
     });
 
+    it('computes positions across IDL', function() {
+        var rectangle = Rectangle.fromDegrees(179.0, -1.0, -179.0, 1.0);
+        var m = RectangleOutlineGeometry.createGeometry(new RectangleOutlineGeometry({
+            rectangle : rectangle
+        }));
+        var positions = m.attributes.position.values;
+
+        expect(positions.length).toEqual(8 * 3);
+        expect(m.indices.length).toEqual(8 * 2);
+
+        var expectedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(Rectangle.northwest(rectangle));
+        expect(new Cartesian3(positions[0], positions[1], positions[2])).toEqualEpsilon(expectedNWCorner, CesiumMath.EPSILON9);
+    });
+
     it('compute positions with rotation', function() {
         var rectangle = new Rectangle(-1, -1, 1, 1);
         var angle = CesiumMath.PI_OVER_TWO;
@@ -71,14 +85,6 @@ defineSuite([
                 rectangle : new Rectangle(-CesiumMath.PI_OVER_TWO, 1, CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO),
                 rotation : CesiumMath.PI_OVER_TWO
             }));
-        }).toThrowDeveloperError();
-    });
-
-    it('throws if east is less than west', function() {
-        expect(function() {
-            return new RectangleOutlineGeometry({
-                rectangle : new Rectangle(CesiumMath.PI_OVER_TWO, -CesiumMath.PI_OVER_TWO, -CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO)
-            });
         }).toThrowDeveloperError();
     });
 

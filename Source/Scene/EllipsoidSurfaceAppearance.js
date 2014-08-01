@@ -41,6 +41,8 @@ define([
      *
      * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
      *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Ellipsoid%20Surface.html|Cesium Sandcastle Ellipsoid Surface Appearance Demo}
+     *
      * @example
      * var primitive = new Cesium.Primitive({
      *   geometryInstances : new Cesium.GeometryInstance({
@@ -268,9 +270,9 @@ define([
     EllipsoidSurfaceAppearance.prototype.isTranslucent = Appearance.prototype.isTranslucent;
 
     /**
-     * Creates a render state.  This is not the final {@link RenderState} instance; instead,
-     * it can contain a subset of render state properties identical to <code>renderState</code>
-     * passed to {@link Context#createRenderState}.
+     * Creates a render state.  This is not the final render state instance; instead,
+     * it can contain a subset of render state properties identical to the render state
+     * created in the context.
      *
      * @function
      *

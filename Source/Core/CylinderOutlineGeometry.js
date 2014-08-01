@@ -52,6 +52,8 @@ define([
      *
      * @see CylinderOutlineGeometry.createGeometry
      *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cylinder%20Outline.html|Cesium Sandcastle Cylinder Outline Demo}
+     *
      * @example
      * // create cylinder geometry
      * var cylinder = new Cesium.CylinderOutlineGeometry({

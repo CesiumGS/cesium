@@ -40,14 +40,11 @@ define([
         './CompositeMaterialProperty',
         './CompositePositionProperty',
         './CompositeProperty',
-        './ConeGraphics',
         './ConstantPositionProperty',
         './ConstantProperty',
-        './createPropertyDescriptor',
         './DataSourceClock',
         './EllipseGraphics',
         './EllipsoidGraphics',
-        './Entity',
         './EntityCollection',
         './GridMaterialProperty',
         './ImageMaterialProperty',
@@ -60,7 +57,6 @@ define([
         './PolylineGraphics',
         './PolylineOutlineMaterialProperty',
         './PositionPropertyArray',
-        './PyramidGraphics',
         './RectangleGraphics',
         './ReferenceProperty',
         './SampledPositionProperty',
@@ -111,14 +107,11 @@ define([
         CompositeMaterialProperty,
         CompositePositionProperty,
         CompositeProperty,
-        ConeGraphics,
         ConstantPositionProperty,
         ConstantProperty,
-        createPropertyDescriptor,
         DataSourceClock,
         EllipseGraphics,
         EllipsoidGraphics,
-        Entity,
         EntityCollection,
         GridMaterialProperty,
         ImageMaterialProperty,
@@ -131,7 +124,6 @@ define([
         PolylineGraphics,
         PolylineOutlineMaterialProperty,
         PositionPropertyArray,
-        PyramidGraphics,
         RectangleGraphics,
         ReferenceProperty,
         SampledPositionProperty,
@@ -1032,36 +1024,6 @@ define([
         }
     }
 
-    function processCone(entity, packet, entityCollection, sourceUri) {
-        var coneData = packet.cone;
-        if (!defined(coneData)) {
-            return;
-        }
-
-        var interval;
-        var intervalString = coneData.interval;
-        if (defined(intervalString)) {
-            iso8601Scratch.iso8601 = intervalString;
-            interval = TimeInterval.fromIso8601(iso8601Scratch);
-        }
-
-        var cone = entity.cone;
-        if (!defined(cone)) {
-            entity.cone = cone = new ConeGraphics();
-        }
-
-        processPacketData(Boolean, cone, 'show', coneData.show, interval, sourceUri, entityCollection);
-        processPacketData(Number, cone, 'radius', coneData.radius, interval, sourceUri, entityCollection);
-        processPacketData(Boolean, cone, 'showIntersection', coneData.showIntersection, interval, sourceUri, entityCollection);
-        processPacketData(Color, cone, 'intersectionColor', coneData.intersectionColor, interval, sourceUri, entityCollection);
-        processPacketData(Number, cone, 'intersectionWidth', coneData.intersectionWidth, interval, sourceUri, entityCollection);
-        processPacketData(Number, cone, 'innerHalfAngle', coneData.innerHalfAngle, interval, sourceUri, entityCollection);
-        processPacketData(Number, cone, 'outerHalfAngle', coneData.outerHalfAngle, interval, sourceUri, entityCollection);
-        processPacketData(Number, cone, 'minimumClockAngle', coneData.minimumClockAngle, interval, sourceUri, entityCollection);
-        processPacketData(Number, cone, 'maximumClockAngle', coneData.maximumClockAngle, interval, sourceUri, entityCollection);
-        processMaterialPacketData(cone, 'lateralSurfaceMaterial', coneData.lateralSurfaceMaterial, interval, sourceUri, entityCollection);
-    }
-
     function processEllipse(entity, packet, entityCollection, sourceUri) {
         var ellipseData = packet.ellipse;
         if (!defined(ellipseData)) {
@@ -1347,73 +1309,6 @@ define([
         processPositions(polyline, polylineData.positions, entityCollection);
     }
 
-    function processDirectionData(pyramid, directions, interval, sourceUri, entityCollection) {
-        var i;
-        var len;
-        var values = [];
-        var unitSphericals = directions.unitSpherical;
-        var sphericals = directions.spherical;
-        var unitCartesians = directions.unitCartesian;
-
-        if (defined(unitSphericals)) {
-            for (i = 0, len = unitSphericals.length; i < len; i += 2) {
-                values.push(new Spherical(unitSphericals[i], unitSphericals[i + 1]));
-            }
-            directions.array = values;
-        } else if (defined(sphericals)) {
-            for (i = 0, len = sphericals.length; i < len; i += 3) {
-                values.push(new Spherical(sphericals[i], sphericals[i + 1], sphericals[i + 2]));
-        }
-            directions.array = values;
-        } else if (defined(unitCartesians)) {
-            for (i = 0, len = unitCartesians.length; i < len; i += 3) {
-                values.push(Spherical.fromCartesian3(new Cartesian3(unitCartesians[i], unitCartesians[i + 1], unitCartesians[i + 2])));
-            }
-            directions.array = values;
-        }
-        processPacketData(Array, pyramid, 'directions', directions, interval, sourceUri, entityCollection);
-    }
-
-    function processPyramid(entity, packet, entityCollection, sourceUri) {
-        var pyramidData = packet.pyramid;
-        if (!defined(pyramidData)) {
-            return;
-        }
-
-        var interval;
-        var intervalString = pyramidData.interval;
-        if (defined(intervalString)) {
-            iso8601Scratch.iso8601 = intervalString;
-            interval = TimeInterval.fromIso8601(iso8601Scratch);
-        }
-
-        var pyramid = entity.pyramid;
-        if (!defined(pyramid)) {
-            entity.pyramid = pyramid = new PyramidGraphics();
-        }
-
-        processPacketData(Boolean, pyramid, 'show', pyramidData.show, interval, sourceUri, entityCollection);
-        processPacketData(Number, pyramid, 'radius', pyramidData.radius, interval, sourceUri, entityCollection);
-        processPacketData(Boolean, pyramid, 'showIntersection', pyramidData.showIntersection, interval, sourceUri, entityCollection);
-        processPacketData(Color, pyramid, 'intersectionColor', pyramidData.intersectionColor, interval, sourceUri, entityCollection);
-        processPacketData(Number, pyramid, 'intersectionWidth', pyramidData.intersectionWidth, interval, sourceUri, entityCollection);
-        processMaterialPacketData(pyramid, 'lateralSurfaceMaterial', pyramidData.lateralSurfaceMaterial, interval, sourceUri, entityCollection);
-
-        //The directions property is a special case value that can be an array of unitSpherical or unit Cartesians.
-        //We pre-process this into Spherical instances and then process it like any other array.
-        var directions = pyramidData.directions;
-        if (defined(directions)) {
-            if (isArray(directions)) {
-                var length = directions.length;
-                for (var i = 0; i < length; i++) {
-                    processDirectionData(pyramid, directions[i], interval, sourceUri, entityCollection);
-                }
-            } else {
-                processDirectionData(pyramid, directions, interval, sourceUri, entityCollection);
-            }
-        }
-    }
-
     function processCzmlPacket(packet, entityCollection, updaterFunctions, sourceUri, dataSource) {
         var objectId = packet.id;
         if (!defined(objectId)) {
@@ -1551,6 +1446,8 @@ define([
      * @constructor
      *
      * @param {String} [name] An optional name for the data source.  This value will be overwritten if a loaded document contains a name.
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=CZML.html|Cesium Sandcastle CZML Demo}
      */
     var CzmlDataSource = function(name) {
         this._name = name;
@@ -1648,7 +1545,6 @@ define([
     processBillboard, //
     processEllipse, //
     processEllipsoid, //
-    processCone, //
     processLabel, //
     processModel, //
     processName, //
@@ -1657,7 +1553,6 @@ define([
     processPoint, //
     processPolygon, //
     processPolyline, //
-    processPyramid, //
     processRectangle, //
     processPosition, //
     processViewFrom, //

@@ -5,7 +5,6 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
-        './ConstantProperty',
         './createPropertyDescriptor',
         './Property'
     ], function(
@@ -14,7 +13,6 @@ define([
         defined,
         defineProperties,
         Event,
-        ConstantProperty,
         createPropertyDescriptor,
         Property) {
     "use strict";

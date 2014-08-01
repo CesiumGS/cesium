@@ -1,12 +1,9 @@
 /*global define*/
 define([
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/EllipsoidalOccluder',
         '../Core/getTimestamp',
         '../Core/Queue',
         '../Core/Visibility',
@@ -15,13 +12,10 @@ define([
         './SceneMode',
         './TileReplacementQueue'
     ], function(
-        Cartesian3,
-        Cartographic,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        EllipsoidalOccluder,
         getTimestamp,
         Queue,
         Visibility,
@@ -240,8 +234,6 @@ define([
         this._tileProvider = this._tileProvider && this._tileProvider.destroy();
     };
 
-    var scratchCameraPositionCartographic = new Cartographic();
-
     function selectTilesForRendering(primitive, context, frameState) {
         var debug = primitive._debug;
 
@@ -249,7 +241,8 @@ define([
             return;
         }
 
-        var i, j, len;
+        var i;
+        var len;
 
         // Clear the render list.
         var tilesToRender = primitive._tilesToRender;
@@ -277,8 +270,6 @@ define([
                 return;
             }
         }
-
-        var ellipsoid = primitive._tileProvider.tilingScheme.ellipsoid;
 
         primitive._occluders.ellipsoid.cameraPosition = frameState.camera.positionWC;
 
@@ -325,7 +316,7 @@ define([
             if (screenSpaceError(primitive, context, frameState, tile) < primitive.maximumScreenSpaceError) {
                 // This tile meets SSE requirements, so render it.
                 addTileToRenderList(primitive, tile);
-            } else if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(primitive, frameState, tile)) {
+            } else if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(primitive, tile)) {
                 // SSE is not good enough and children are loaded, so refine.
                 var children = tile.children;
                 // PERFORMANCE_IDEA: traverse children front-to-back so we can avoid sorting by distance later.
@@ -398,11 +389,9 @@ define([
         ++primitive._debug.tilesRendered;
     }
 
-    function queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(primitive, frameState, tile) {
+    function queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(primitive, tile) {
         var allRenderable = true;
         var allUpsampledOnly = true;
-
-        var tileProvider = primitive._tileProvider;
 
         var children = tile.children;
         for (var i = 0, len = children.length; i < len; ++i) {

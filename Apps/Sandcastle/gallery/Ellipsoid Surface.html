@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Ellipsoid surface appearances">
+    <meta name="description" content="Draw rectangles with different ellipsoid surface appearances.">
     <meta name="cesium-sandcastle-labels" content="Appearances">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -27,9 +27,12 @@
 function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
+// Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
-var scene = viewer.scene;
-var primitives = scene.primitives;
+var primitives = viewer.scene.primitives;
+
+// This appearance can be used for any geometry that
+// is parallel to the globe surface.
 
 // Stripe Material
 primitives.add(new Cesium.Primitive({

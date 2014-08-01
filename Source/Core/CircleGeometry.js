@@ -32,6 +32,8 @@ define([
      *
      * @see CircleGeometry.createGeometry
      *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Circle.html|Cesium Sandcastle Circle Demo}
+     *
      * @example
      * // Create a circle.
      * var circle = new Cesium.CircleGeometry({

@@ -58,7 +58,7 @@ define([
      * @alias Sun
      * @constructor
      *
-     * @see Scene.sun
+     * @see Scene#sun
      *
      * @example
      * scene.sun = new Cesium.Sun();

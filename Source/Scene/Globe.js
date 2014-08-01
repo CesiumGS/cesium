@@ -11,8 +11,8 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/EllipsoidTerrainProvider',
         '../Core/FeatureDetection',
@@ -28,7 +28,6 @@ define([
         '../Core/PrimitiveType',
         '../Core/Ray',
         '../Core/Rectangle',
-        '../Core/TerrainProvider',
         '../Core/Transforms',
         '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
@@ -61,8 +60,8 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         destroyObject,
+        DeveloperError,
         Ellipsoid,
         EllipsoidTerrainProvider,
         FeatureDetection,
@@ -78,7 +77,6 @@ define([
         PrimitiveType,
         Ray,
         Rectangle,
-        TerrainProvider,
         Transforms,
         BufferUsage,
         ClearCommand,
@@ -839,7 +837,7 @@ define([
         var hasWaterMask = this._surface.tileProvider.ready && this._surface.tileProvider.terrainProvider.hasWaterMask;
         var hasVertexNormals = this._surface.tileProvider.ready && this._surface.tileProvider.terrainProvider.hasVertexNormals;
         var hasWaterMaskChanged = this._hasWaterMask !== hasWaterMask;
-        var hasVertexNormalsChanged = this._hasVertexNormals !== hasVertexNormalsChanged;
+        var hasVertexNormalsChanged = this._hasVertexNormals !== hasVertexNormals;
         var hasEnableLightingChanged = this._enableLighting !== this.enableLighting;
 
         if (!defined(this._northPoleCommand.shaderProgram) ||

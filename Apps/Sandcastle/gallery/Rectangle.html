@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="An rectangle.">
+    <meta name="description" content="Draw a rectangle on the globe surface">
     <meta name="cesium-sandcastle-labels" content="Geometries">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -27,15 +27,14 @@
 function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
+// Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
-var scene = viewer.scene;
-var primitives = scene.primitives;
+var primitives = viewer.scene.primitives;
 
-// Red rectangle
-var rectangle = Cesium.Rectangle.fromDegrees(-110.0, 20.0, -80.0, 25.0);
+// Example 1: Draw a red rectangle on the globe surface.
 var redRectangleInstance = new Cesium.GeometryInstance({
     geometry : new Cesium.RectangleGeometry({
-        rectangle : rectangle,
+        rectangle : Cesium.Rectangle.fromDegrees(-110.0, 20.0, -80.0, 25.0),
         vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
     }),
     attributes: {
@@ -43,11 +42,15 @@ var redRectangleInstance = new Cesium.GeometryInstance({
     }
 });
 
-// Green extruded rectangle
-rectangle = Cesium.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+// Example 2: Draw a green extruded rectangle.
+
+// The extrudedHeight option is used to set the height of the
+// extruded side.  The height option is used to specify the distnace
+// from the globe surface to the rectangle.  The rotation
+// option can also be used to rotate the rectangle.
 var greenRectangleInstance = new Cesium.GeometryInstance({
     geometry : new Cesium.RectangleGeometry({
-        rectangle : rectangle,
+        rectangle : Cesium.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0),
         rotation : Cesium.Math.toRadians(45),
         extrudedHeight : 300000.0,
         height : 100000.0,
@@ -58,7 +61,7 @@ var greenRectangleInstance = new Cesium.GeometryInstance({
     }
 });
 
-// Add rectangle instances to primitives
+// Add both rectangle instances to primitives
 primitives.add(new Cesium.Primitive({
     geometryInstances : [redRectangleInstance, greenRectangleInstance],
     appearance : new Cesium.PerInstanceColorAppearance({
