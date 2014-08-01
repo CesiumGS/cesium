@@ -166,7 +166,7 @@ define([
         },
 
         /**
-         * Gets a value indicating whether or not the requested tiles includes vertex normals.
+         * Gets a value indicating whether or not the requested tiles include vertex normals.
          * This function should not be called before {@link ArcGisImageServerTerrainProvider#ready} returns true.
          * @memberof ArcGisImageServerTerrainProvider.prototype
          * @type {Boolean}
