@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
@@ -16,6 +17,7 @@ define([
         './SceneTransforms',
         './VerticalOrigin'
     ], function(
+        BoundingRectangle,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -711,15 +713,11 @@ define([
                 return this._imageId;
             },
             set : function(value) {
-                this._imageIndex = -1;
-                this._imageSubRegion = undefined;
-
                 if (!defined(value)) {
+                    this._imageIndex = -1;
+                    this._imageSubRegion = undefined;
                     this._imageId = undefined;
                     this._image = undefined;
-                    if (defined(this._imageIndexPromise)) {
-                        this._imageIndexPromise.cancelled = true;
-                    }
                     this._imageIndexPromise = undefined;
                     makeDirty(this, IMAGE_INDEX_INDEX);
                 } else if (typeof value === 'string') {
@@ -765,18 +763,16 @@ define([
     Billboard.prototype._loadImage = function() {
         var atlas = this._billboardCollection._textureAtlas;
 
-        if (defined(this._imageIndexPromise)) {
-            // if an async load is in progress, mark it as cancelled
-            // so that the index will be ignored when it loads
-            this._imageIndexPromise.cancelled = true;
-        }
-
+        var imageId = this._imageId;
+        var image = this._image;
+        var imageSubRegion = this._imageSubRegion;
         var imageIndexPromise;
-        if (defined(this._image)) {
-            imageIndexPromise = atlas.addImage(this._imageId, this._image);
+
+        if (defined(image)) {
+            imageIndexPromise = atlas.addImage(imageId, image);
         }
-        if (defined(this._imageSubRegion)) {
-            imageIndexPromise = atlas.addSubRegion(this._imageId, this._imageSubRegion);
+        if (defined(imageSubRegion)) {
+            imageIndexPromise = atlas.addSubRegion(imageId, imageSubRegion);
         }
 
         this._imageIndexPromise = imageIndexPromise;
@@ -787,16 +783,15 @@ define([
 
         var that = this;
         imageIndexPromise.then(function(index) {
-            if (imageIndexPromise.cancelled) {
+            if (that._imageId !== imageId || that._image !== image || !BoundingRectangle.equals(that._imageSubRegion, imageSubRegion)) {
                 // another load occurred before this one finished, ignore the index
                 return;
             }
             that._imageIndex = index;
             that._ready = true;
-            makeDirty(that, IMAGE_INDEX_INDEX);
             that._image = undefined;
-            that._imageSubRegion = undefined;
             that._imageIndexPromise = undefined;
+            makeDirty(that, IMAGE_INDEX_INDEX);
         }).otherwise(function(error) {
             /*global console*/
             console.error('Error loading image for billboard: ' + error);
@@ -848,6 +843,12 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (this._imageId === id) {
+            return;
+        }
+
+        this._imageIndex = -1;
+        this._imageSubRegion = undefined;
         this._imageId = id;
         this._image = image;
 
@@ -874,6 +875,11 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (this._imageId === id && BoundingRectangle.equals(this._imageSubRegion, subRegion)) {
+            return;
+        }
+
+        this._imageIndex = -1;
         this._imageId = id;
         this._imageSubRegion = subRegion;
 
@@ -1001,10 +1007,12 @@ define([
         return this === other ||
                defined(other) &&
                this._show === other._show &&
-               this._imageIndex === other._imageIndex &&
                this._scale === other._scale &&
                this._verticalOrigin === other._verticalOrigin &&
                this._horizontalOrigin === other._horizontalOrigin &&
+               this._id === other._id &&
+               this._imageId === other._imageId &&
+               BoundingRectangle.equals(this._imageSubRegion, other._imageSubRegion) &&
                Cartesian3.equals(this._position, other._position) &&
                Color.equals(this._color, other._color) &&
                Cartesian2.equals(this._pixelOffset, other._pixelOffset) &&
@@ -1012,11 +1020,11 @@ define([
                Cartesian3.equals(this._eyeOffset, other._eyeOffset) &&
                NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance) &&
                NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance) &&
-               NearFarScalar.equals(this._pixelOffsetScaleByDistance, other._pixelOffsetScaleByDistance) &&
-               this._id === other._id;
+               NearFarScalar.equals(this._pixelOffsetScaleByDistance, other._pixelOffsetScaleByDistance);
     };
 
     Billboard.prototype._destroy = function() {
+        this.image = undefined;
         this._pickId = this._pickId && this._pickId.destroy();
         this._billboardCollection = undefined;
     };
