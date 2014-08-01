@@ -1391,6 +1391,58 @@ defineSuite([
         });
     });
 
+    it('does not cancel image load when a billboard is set to the same URL repeatedly', function() {
+        render(context, frameState, billboards);
+
+        var one = billboards.add({
+            image : './Data/Images/Green.png'
+        });
+
+        expect(one.ready).toEqual(false);
+        expect(one.image).toEqual('./Data/Images/Green.png');
+
+        one.image = './Data/Images/Green.png';
+        one.image = './Data/Images/Green.png';
+        one.image = './Data/Images/Green.png';
+
+        waitsFor(function() {
+            return one.ready;
+        });
+    });
+
+    it('ignores calls to set image equal to the current value after load', function() {
+        render(context, frameState, billboards);
+
+        var one = billboards.add({
+            image : './Data/Images/Green.png'
+        });
+
+        expect(one.ready).toEqual(false);
+        expect(one.image).toEqual('./Data/Images/Green.png');
+
+        waitsFor(function() {
+            return one.ready;
+        });
+
+        runs(function() {
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+            render(context, frameState, billboards);
+            expect(context.readPixels()).toEqual([0, 255, 0, 255]);
+
+            one.image = './Data/Images/Green.png';
+
+            expect(one.ready).toEqual(true);
+
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+            render(context, frameState, billboards);
+            expect(context.readPixels()).toEqual([0, 255, 0, 255]);
+        });
+    });
+
     it('can create a billboard using a function', function() {
         var one = billboards.add({
             image : function() {
@@ -1534,6 +1586,29 @@ defineSuite([
             // render and yield control several times to make sure the
             // green image never loads
 
+            runs(function() {
+                ClearCommand.ALL.execute(context);
+                expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+                render(context, frameState, billboards);
+                expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+            });
+        }
+    });
+
+    it('does not crash when removing a billboard that is loading', function() {
+        render(context, frameState, billboards);
+
+        var one = billboards.add({
+            image : './Data/Images/Green.png'
+        });
+
+        billboards.remove(one);
+
+        for (var i = 0; i < 10; ++i) {
+            /*jshint loopfunc: true */
+            // render and yield control several times to make sure the
+            // green image doesn't crash when it loads
             runs(function() {
                 ClearCommand.ALL.execute(context);
                 expect(context.readPixels()).toEqual([0, 0, 0, 0]);
