@@ -103,6 +103,21 @@ Change Log
   * If `Primitive.modelMatrix` is changed after creation, it only affects primitives with one instance and only in 3D mode.
   * `ImageryLayer` properties `alpha`, `brightness`, `contrast`, `hue`, `saturation`, and `gamma` may no longer be functions.  If you need to change these values each frame, consider moving your logic to an event handler for `Scene.preRender`.
   * Removed `closeTop` and `closeBottom` options from `RectangleGeometry`
+  * CZML changes:
+    * CZML is now versioned using the <major>.<minor> scheme.  For example, any CZML 1.0 implementation will be able to load any 1.<minor> document (with graceful degradation).  Major version number increases will be reserved for breaking changes.  We fully expect these major version increases to happen, as CZML is still in development, but we wanted to give developers a stable target to work with.
+    * A `"1.0"` version string is required to be on the document packet, which is required to be the first packet in a CZML file.  Previously the `document` packet was optional; it is now mandatory.  The simplest document packet is:
+      ```
+      {
+        "id":"document",
+        "version":"1.0"
+      }
+      ```
+    * The `vertexPositions` property has been removed.  There is now a `positions` property directly on objects that use it, currently `polyline` and `polygon`.
+    * `cone`, `pyramid`, and `vector` have been removed from the core CZML schema.  They are now treated as extensions maintained by Analytical Graphics and have been renamed to `agi_conicSensor`, `agi_customPatternSensor`, and `agi_vector` respectively.
+    * The `orientation` property has been changed to match Cesium convention.  To update existing CZML documents, conjugate the quaternion values.
+    * `pixelOffset` now uses the top-left of the screen as the origin; previously it was the bottom-left.  To update existing documents, negate the `y` value.
+    * Removed `color`, `outlineColor`, and `outlineWidth` properties from `polyline` and `path`.  There is a new `material` property that allows you to specify a variety of materials, such as `solidColor`, `polylineOutline` and `polylineGlow`.
+    * See the [CZML Schema](https://github.com/AnalyticalGraphicsInc/cesium/wiki/CZML-Content) for more details.  We plan on greatly improving this document in the coming weeks.
 * Added camera collision detection with terrain to the default mouse interaction.
 * Modified the default camera tilt mouse behavior to tilt about the point clicked taking into account terrain.
 * Modified the default camera mouse behavior to look about the camera's position when the sky is clicked.
