@@ -25,7 +25,10 @@ define([
     var defaultCredit = new Credit("OGC, http://portal.opengeospatial.org/files/?artifact_id=35326");
 
     /**
-     * Provides tiled imagery Served by {@link http://www.opengeospatial.org/standards/wmts|WMTS 1.0.0} compliant servers
+     * Provides tiled imagery Served by {@link http://www.opengeospatial.org/standards/wmts|WMTS 1.0.0} compliant servers.
+     *
+     * * Support for HTTP KVP encoded GetTile requests is provided ;
+     * * SOAP and RESTFUL encoding is NOT supported.
      *
      * @alias WebMapTileServiceImageryProvider
      * @constructor

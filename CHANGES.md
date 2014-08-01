@@ -3,7 +3,7 @@ Change Log
 
 ### 1.01 - 2014-09-01
 
-* WMST 1.0.0 GetTile operation support via a new Imageryprovider : WMTSImageryProvider.
+* WMST 1.0.0 GetTile operation support via a new ImageryProvider : WebMapTileServiceImageryProvider.
 
 ### 1.0 - 2014-08-01
 
