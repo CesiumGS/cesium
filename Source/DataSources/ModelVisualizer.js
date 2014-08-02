@@ -10,6 +10,7 @@ define([
         '../Core/Quaternion',
         '../Core/Transforms',
         '../Scene/Model',
+        '../Scene/ModelAnimationLoop',
         './Property'
     ], function(
         AssociativeArray,
@@ -22,6 +23,7 @@ define([
         Quaternion,
         Transforms,
         Model,
+        ModelAnimationLoop,
         Property) {
     "use strict";
 
@@ -115,6 +117,8 @@ define([
                     url : uri
                 });
 
+                model.readyToRender.addEventListener(readyToRender, this);
+
                 model.id = entity;
                 primitives.add(model);
 
@@ -158,11 +162,12 @@ define([
      * Removes and destroys all primitives created by this instance.
      */
     ModelVisualizer.prototype.destroy = function() {
+        this._entityCollection.collectionChanged.removeEventListener(ModelVisualizer.prototype._onCollectionChanged, this);
         var entities = this._entitiesToVisualize.values;
         var modelHash = this._modelHash;
         var primitives = this._primitives;
         for (var i = entities.length - 1; i > -1; i--) {
-            removeModel(entities[i], modelHash, primitives);
+            removeModel(this, entities[i], modelHash, primitives);
         }
         return destroyObject(this);
     };
@@ -189,22 +194,23 @@ define([
             if (defined(entity._model) && defined(entity._position)) {
                 entities.set(entity.id, entity);
             } else {
-                removeModel(entity, modelHash, primitives);
+                removeModel(this, entity, modelHash, primitives);
                 entities.remove(entity.id);
             }
         }
 
         for (i = removed.length - 1; i > -1; i--) {
             entity = removed[i];
-            removeModel(entity, modelHash, primitives);
+            removeModel(this, entity, modelHash, primitives);
             entities.remove(entity.id);
         }
     };
 
-    function removeModel(entity, modelHash, primitives) {
+    function removeModel(visualizer, entity, modelHash, primitives) {
         var modelData = modelHash[entity.id];
         if (defined(modelData)) {
             var model = modelData.modelPrimitive;
+            model.readyToRender.removeEventListener(readyToRender, visualizer);
             primitives.remove(model);
             if (!model.isDestroyed()) {
                 model.destroy();
@@ -213,5 +219,10 @@ define([
         }
     }
 
+    function readyToRender(model) {
+        model.activeAnimations.addAll({
+            loop : ModelAnimationLoop.REPEAT
+        });
+    }
     return ModelVisualizer;
 });

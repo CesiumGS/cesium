@@ -220,6 +220,7 @@ define([
      * Removes and destroys all primitives created by this instance.
      */
     GeometryVisualizer.prototype.destroy = function() {
+        this._entityCollection.collectionChanged.removeEventListener(GeometryVisualizer.prototype._onCollectionChanged, this);
         this._addedObjects.removeAll();
         this._removedObjects.removeAll();
 

@@ -125,7 +125,7 @@ define([
         },
 
         /**
-         * Gets a value indicating whether or not the requested tiles includes vertex normals.
+         * Gets a value indicating whether or not the requested tiles include vertex normals.
          * This function should not be called before {@link EllipsoidTerrainProvider#ready} returns true.
          * @memberof EllipsoidTerrainProvider.prototype
          * @type {Boolean}
