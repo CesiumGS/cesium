@@ -92,7 +92,7 @@ define([
         this._layer = options.layer;
         this._style = options.style;
         this._tms = options.tms;
-        this._format = defaultValue(options.format, 'image/jpeg');
+        this._format = defaultValue(options.format,'image/jpeg');
         this._proxy = options.proxy;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
 
@@ -306,6 +306,17 @@ define([
         errorEvent : {
             get : function() {
                 return this._errorEvent;
+            }
+        },
+
+        /**
+         * Gets the mime type of images returned by this imagery provider.
+         * @memberof WebMapTileServiceImageryProvider.prototype
+         * @type {String}
+         */
+        format : {
+            get : function() {
+                return this._format;
             }
         },
 
