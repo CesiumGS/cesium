@@ -22,7 +22,6 @@ define([
     "use strict";
 
     var trailingQMarkRegex = /\?$/;
-    var defaultCredit = new Credit("OGC, http://portal.opengeospatial.org/files/?artifact_id=35326");
 
     /**
      * Provides tiled imagery Served by {@link http://www.opengeospatial.org/standards/wmts|WMTS 1.0.0} compliant servers.
