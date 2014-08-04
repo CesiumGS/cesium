@@ -1,8 +1,16 @@
 /*global define*/
 define([
         '../Core/AssociativeArray',
+        '../Core/defined',
+        '../Core/destroyObject',
+        '../Core/DeveloperError',
+        './Property'
     ], function(
-        AssociativeArray) {
+        AssociativeArray,
+        defined,
+        destroyObject,
+        DeveloperError,
+        Property) {
     "use strict";
 
     /**
@@ -28,7 +36,7 @@ define([
 
         this._scene = scene;
         this._entityCollection = entityCollection;
-        this._layerHash = {};
+        this._imageryProviderHash = {};
         this._entitiesToVisualize = new AssociativeArray();
 
         this._onCollectionChanged(entityCollection, entityCollection.entities, [], []);
@@ -50,57 +58,64 @@ define([
 
         var context = this._scene.context;
         var entities = this._entitiesToVisualize.values;
-        var layerHash = this._layerHash;
+        var imageryProviderHash = this._imageryProviderHash;
         var scene = this._scene;
-        var imageryLayers = scene.imageryLayers;
 
         for (var i = 0, len = entities.length; i < len; i++) {
             var entity = entities[i];
-            var imageryGraphics = entity._imageryLayer;
+            var layerGraphics = entity._imageryLayer;
 
-            var url;
-            var layers;
-            var layerData = layerHash[entity.id];
-            var show = entity.isAvailable(time) && Property.getValueOrDefault(imageryGraphics._show, time, true) && imageryGraphics.imageryProvider;
-
-            if (show) {
-                url = Property.getValueOrUndefined(imageryGraphics._url, time);
-                layers = Property.getValueOrUndefined(imageryGraphics._layers, time);
-                show = defined(url) && defined(layers);
+            var imageryProviderData = imageryProviderHash[entity.id];
+            if (!defined(imageryProviderData)) {
+                imageryProviderData = imageryProviderHash[entity.id] = {};
             }
 
-            if (!show) {
-                if (defined(layerData)) {
-                    layerData.layer.alpha = 0.0;
-                }
-                continue;
-            }
+            var imageryProvider = layerGraphics._imageryProvider;
+            imageryProvider.update(time, scene, entity, layerGraphics, imageryProviderData);
 
-            var layer = defined(layerData) ? modelData.layer : undefined;
-            if (!defined(layer) || url !== layerData.url || layers !== layerData.layers) {
-                if (defined(layer)) {
-                    imageryLayers.remove(layer);
-                    delete layerHash[entity.id];
+            if (defined(imageryProviderData.imageryProvider)) {
+                // TODO: Insert the imagery layer in the right z-order, especially when
+                //       replacing an existing ImageryLayer instance.
+                var layer = imageryProviderData.layer;
+                if (defined(layer) && layer.imageryProvider !== imageryProviderData.imageryProvider) {
+                    // Layer exists but refers to the wrong ImageryProvider, so remove the old layer
+                    // and create a new one.
+                    scene.imageryLayers.remove(layer);
+                    layer = imageryProviderData.layer = undefined;
                 }
 
-                var imageryProvider = new WebMapServiceImageryProvider({
-                    url : url,
-                    layers : layers
-                })
+                if (!defined(layer)) {
+                    layer = imageryProviderData.layer = scene.imageryLayers.addImageryProvider(imageryProviderData.imageryProvider);
+                }
 
-                layer = imageryLayers.addImageryProvider(imageryProvider);
-
-                layerData = {
-                    layer : layer,
-                    url : url,
-                    layers : layers
-                };
-                layerHash[entity.id] = layerData;
+                layer.show = Property.getValueOrDefault(layerGraphics._show, time, true);
+                layer.zIndex = Property.getValueOrDefault(layerGraphics._zIndex, time, 0);
+                layer.alpha = Property.getValueOrDefault(layerGraphics._alpha, time, 1.0);
+                layer.brightness = Property.getValueOrDefault(layerGraphics._brightness, time, 1.0);
+                layer.contrast = Property.getValueOrDefault(layerGraphics._contrast, time, 1.0);
+                layer.hue = Property.getValueOrDefault(layerGraphics._hue, time, 0.0);
+                layer.saturation = Property.getValueOrDefault(layerGraphics._saturation, time, 1.0);
+                layer.gamma = Property.getValueOrDefault(layerGraphics._gamma, time, 1.0);
+            } else if (defined(imageryProviderData.layer)) {
+                scene.imageryLayers.remove(imageryProviderData.layer);
+                imageryProviderData.layer = undefined;
             }
-
-            layer.alpha = defaultValue(Property.getValueOrDefault(wmsGraphics._alpha, time, 1.0));
         }
         return true;
+    };
+
+    /**
+     * Removes and destroys all imagery layers created by this instance.
+     */
+    ImageryLayerVisualizer.prototype.destroy = function() {
+        this._entityCollection.collectionChanged.removeEventListener(ImageryLayerVisualizer.prototype._onCollectionChanged, this);
+        var entities = this._entitiesToVisualize.values;
+        var imageryProviderHash = this._imageryProviderHash;
+        var imageryLayers = this._scene.imageryLayers;
+        for (var i = entities.length - 1; i > -1; i--) {
+            removeLayer(this, entities[i], imageryProviderHash, imageryLayers);
+        }
+        return destroyObject(this);
     };
 
     /**
@@ -115,14 +130,14 @@ define([
 
         for (i = added.length - 1; i > -1; i--) {
             entity = added[i];
-            if (defined(entity._webMapService)) {
+            if (defined(entity._imageryLayer)) {
                 entities.set(entity.id, entity);
             }
         }
 
         for (i = changed.length - 1; i > -1; i--) {
             entity = changed[i];
-            if (defined(entity._webMapService)) {
+            if (defined(entity._imageryLayer)) {
                 entities.set(entity.id, entity);
             } else {
                 removeLayer(this, entity, layerHash, imageryLayers);

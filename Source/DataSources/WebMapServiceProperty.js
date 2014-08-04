@@ -3,12 +3,14 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
+        '../Scene/WebMapServiceImageryProvider',
         './createPropertyDescriptor',
         './Property'
     ], function(
         defined,
         defineProperties,
         Event,
+        WebMapServiceImageryProvider,
         createPropertyDescriptor,
         Property) {
     "use strict";
@@ -109,6 +111,31 @@ define([
                (other instanceof WebMapServiceProperty && //
                 Property.equals(this._url, other._url) && //
                 Property.equals(this._layers, other._layers));
+    };
+
+    /**
+     * Updates the scene based on these WMS properties.
+     *
+     * @param  {JulianDate} time The time at which to update.
+     * @param  {Scene} scene The scene to update.
+     * @param  {ImageryLayerGraphics} layerGraphics The description of the layer's graphics.
+     * @return {Object} imageryProviderData Details about this imagery provider.
+     */
+    WebMapServiceProperty.prototype.update = function(time, scene, entity, layerGraphics, imageryProviderData) {
+        var url = Property.getValueOrUndefined(this._url, time);
+        var layers = Property.getValueOrUndefined(this._layers, time);
+
+        if (defined(url) && defined(layers)) {
+            var imageryProvider = imageryProviderData.imageryProvider;
+            if (!defined(imageryProvider) || imageryProvider.url !== url || imageryProvider.layers !== layers) {
+                imageryProvider = imageryProviderData.imageryProvider = new WebMapServiceImageryProvider({
+                    url : url,
+                    layers : layers
+                });
+            }
+        } else {
+            imageryProviderData.imageryProvider = undefined;
+        }
     };
 
     /**

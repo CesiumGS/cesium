@@ -51,6 +51,8 @@ define([
         this._ellipseSubscription = undefined;
         this._ellipsoid = undefined;
         this._ellipsoidSubscription = undefined;
+        this._imageryLayer = undefined;
+        this._imageryLayerSubscription = undefined;
         this._label = undefined;
         this._labelSubscription = undefined;
         this._model = undefined;
@@ -167,6 +169,12 @@ define([
          * @type {EllipsoidGraphics}
          */
         ellipsoid : createPropertyDescriptor('ellipsoid'),
+        /**
+         * Gets or sets the imagery layer.
+         * @memberof Entity.prototype
+         * @type {ImageryLayerGraphics}
+         */
+        imageryLayer : createPropertyDescriptor('imageryLayer'),
         /**
          * Gets or sets the label.
          * @memberof Entity.prototype

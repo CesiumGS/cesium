@@ -49,7 +49,6 @@ define([
         './GridMaterialProperty',
         './ImageMaterialProperty',
         './ImageryLayerGraphics',
-        './ImageryLayerVisualizer',
         './LabelGraphics',
         './ModelGraphics',
         './PathGraphics',
@@ -119,7 +118,6 @@ define([
         GridMaterialProperty,
         ImageMaterialProperty,
         ImageryLayerGraphics,
-        ImageryLayerVisualizer,
         LabelGraphics,
         ModelGraphics,
         PathGraphics,
@@ -1182,7 +1180,7 @@ define([
 
     function processWebMapServiceProperty(object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection, existingImageryProvider) {
         if (!(existingImageryProvider instanceof WebMapServiceProperty)) {
-            existingImageryProvider = new WebMapServiceProperty();
+            existingImageryProvider = object[propertyName] = new WebMapServiceProperty();
         }
 
         processPacketData(String, existingImageryProvider, 'url', packetData.url, constrainedInterval, sourceUri, entityCollection);

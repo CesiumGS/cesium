@@ -110,7 +110,7 @@ define([
         gamma : createPropertyDescriptor('gamma'),
 
         /**
-         * Gets or sets the {@link ImageryProvider} describing how tiled images for this layer
+         * Gets or sets the {@link Property} describing how tiled images for this layer
          * are obtained.
          * @type {ImageryProvider}
          */
