@@ -24,25 +24,23 @@ define([
     var trailingQMarkRegex = /\?$/;
 
     /**
-     * Provides tiled imagery Served by {@link http://www.opengeospatial.org/standards/wmts|WMTS 1.0.0} compliant servers.
-     *
-     * * Support for HTTP KVP encoded GetTile requests is provided ;
-     * * SOAP and RESTFUL encoding is NOT supported.
+     * Provides tiled imagery served by {@link http://www.opengeospatial.org/standards/wmts|WMTS 1.0.0} compliant servers.
+     * This provider supports HTTP KVP-encoded GetTile requests, but does not yet support SOAP and RESTful encoding.
      *
      * @alias WebMapTileServiceImageryProvider
      * @constructor
      *
      * @param {Object} options Object with the following properties:
      * @param {String} options.url The WMTS server url.
-     * @param {String} [options.format='image/jpeg'] The type mime for images on the server.
-     * @param {String} options.layer The layer name for WMTS requests
-     * @param {String} options.style The style name for WMTS requests
-     * @param {String} options.tms The TileMatrixSetId
-     * @param {Number} [options.tileWidth=256] tile width in pixels
-     * @param {Number} [options.tileHeight=256] tile height in pixels
-     * @param {TilingScheme} [options.tilingScheme] The tilingScheme corresponding to TMS definition
+     * @param {String} [options.format='image/jpeg'] The MIME type for images to retrieve from the server.
+     * @param {String} options.layer The layer name for WMTS requests.
+     * @param {String} options.style The style name for WMTS requests.
+     * @param {String} options.tileMatrixSetID The identifier of the TileMatrixSet to use for WMTS requests.
+     * @param {Number} [options.tileWidth=256] The tile width in pixels.
+     * @param {Number} [options.tileHeight=256] The tile height in pixels.
+     * @param {TilingScheme} [options.tilingScheme] The tiling scheme corresponding to the organization of the tiles in the TileMatrixSet.
      * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
-     * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
+     * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle covered by the layer.
      * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
      * @param {Number} [options.maximumLevel=18] The maximum level-of-detail supported by the imagery provider.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
@@ -54,17 +52,17 @@ define([
      * @see WebMapServiceImageryProvider
      *
      * @example
-     * // IGN French Geoportal tile provider
-     * var frenchMaps= new Cesium.WebMapTileServiceImageryProvider({
-     *                 url : 'http://wxs.ign.fr/YOUR_KEY/geoportail/wmts',
-     *                 layer : 'GEOGRAPHICALGRIDSYSTEMS.MAPS',
-     *                 style : 'normal',
-     *                 format : 'image/jpeg',
-     *                 tms : 'PM',
-     *                 credit : new Cesium.Credit("IGN", 
-     *                                            "http://wxs.ign.fr/static/logos/IGN/IGN.gif", 
-     *                                            "http://www.ign.fr/")
-     *             }) ;
+     * // USGS shaded relief tile provider
+     * var shadedRelief = new Cesium.WebMapTileServiceImageryProvider({
+     *     url : 'http://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS',
+     *     layer : 'USGSShadedReliefOnly',
+     *     style : 'default',
+     *     format : 'image/jpeg',
+     *     tileMatrixSetID : 'default028mm',
+     *     maximumLevel: 19,
+     *     credit : new Cesium.Credit('U. S. Geological Survey')
+     * });
+     * viewer.scene.imageryLayers.addImageryProvider(shadedRelief);
      */
     var WebMapTileServiceImageryProvider = function WebMapTileServiceImageryProvider(options) {
         options = defaultValue(options, {});
@@ -78,8 +76,8 @@ define([
         if (!defined(options.style)) {
             throw new DeveloperError('options.style is required.');
         }
-        if (!defined(options.tms)) {
-            throw new DeveloperError('options.tms is required.');
+        if (!defined(options.tileMatrixSetID)) {
+            throw new DeveloperError('options.tileMatrixSetID is required.');
         }
 
 
@@ -90,7 +88,7 @@ define([
 
         this._layer = options.layer;
         this._style = options.style;
-        this._tms = options.tms;
+        this._tileMatrixSetID = options.tileMatrixSetID;
         this._format = defaultValue(options.format,'image/jpeg');
         this._proxy = options.proxy;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
@@ -133,7 +131,7 @@ define([
                   "&STYLE="+ imageryProvider._style +
                   "&TILEROW="+ row +
                   "&TILECOL=" + col +
-                  "&TILEMATRIXSET=" + imageryProvider._tms +
+                  "&TILEMATRIXSET=" + imageryProvider._tileMatrixSetID +
                   "&FORMAT=" + imageryProvider._format ;
 
         var proxy = imageryProvider._proxy;
