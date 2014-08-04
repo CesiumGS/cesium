@@ -1152,25 +1152,26 @@ define([
         var existingInterval;
 
         if (defined(combinedInterval)) {
-            if (!(property instanceof CompositeImageryProviderProperty)) {
-                property = new CompositeImageryProviderProperty();
-                object[propertyName] = property;
-            }
-            //See if we already have data at that interval.
-            var thisIntervals = property.intervals;
-            existingInterval = thisIntervals.findInterval({
-                start : combinedInterval.start,
-                stop : combinedInterval.stop
-            });
-            if (defined(existingInterval)) {
-                //We have an interval, but we need to make sure the
-                //new data is the same type of material as the old data.
-                existingImageryProvider = existingInterval.data;
-            } else {
-                //If not, create it.
-                existingInterval = combinedInterval.clone();
-                thisIntervals.addInterval(existingInterval);
-            }
+            // if (!(property instanceof CompositeImageryProviderProperty)) {
+            //     property = new CompositeImageryProviderProperty();
+            //     object[propertyName] = property;
+            // }
+            // //See if we already have data at that interval.
+            // var thisIntervals = property.intervals;
+            // existingInterval = thisIntervals.findInterval({
+            //     start : combinedInterval.start,
+            //     stop : combinedInterval.stop
+            // });
+            // if (defined(existingInterval)) {
+            //     //We have an interval, but we need to make sure the
+            //     //new data is the same type of material as the old data.
+            //     existingImageryProvider = existingInterval.data;
+            // } else {
+            //     //If not, create it.
+            //     existingInterval = combinedInterval.clone();
+            //     thisIntervals.addInterval(existingInterval);
+            // }
+            // throw new DeveloperError('TODO: implement me');
         } else {
             existingImageryProvider = property;
         }
