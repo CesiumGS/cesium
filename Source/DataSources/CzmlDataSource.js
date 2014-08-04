@@ -48,6 +48,8 @@ define([
         './EntityCollection',
         './GridMaterialProperty',
         './ImageMaterialProperty',
+        './ImageryLayerGraphics',
+        './ImageryLayerVisualizer',
         './LabelGraphics',
         './ModelGraphics',
         './PathGraphics',
@@ -65,7 +67,8 @@ define([
         './StripeOrientation',
         './TimeIntervalCollectionPositionProperty',
         './TimeIntervalCollectionProperty',
-        './WallGraphics'
+        './WallGraphics',
+        './WebMapServiceProperty'
     ], function(
         Cartesian2,
         Cartesian3,
@@ -115,6 +118,8 @@ define([
         EntityCollection,
         GridMaterialProperty,
         ImageMaterialProperty,
+        ImageryLayerGraphics,
+        ImageryLayerVisualizer,
         LabelGraphics,
         ModelGraphics,
         PathGraphics,
@@ -132,7 +137,8 @@ define([
         StripeOrientation,
         TimeIntervalCollectionPositionProperty,
         TimeIntervalCollectionProperty,
-        WallGraphics) {
+        WallGraphics,
+        WebMapServiceProperty) {
     "use strict";
 
     var currentId;
@@ -1083,6 +1089,106 @@ define([
         processPacketData(Color, ellipsoid, 'outlineColor', ellipsoidData.outlineColor, interval, sourceUri, entityCollection);
     }
 
+    function processImageryLayer(entity, packet, entityCollection, sourceUri) {
+        var imageryLayerData = packet.imageryLayer;
+        if (!defined(imageryLayerData)) {
+            return;
+        }
+
+        var interval;
+        var intervalString = imageryLayerData.interval;
+        if (defined(intervalString)) {
+            iso8601Scratch.iso8601 = intervalString;
+            interval = TimeInterval.fromIso8601(iso8601Scratch);
+        }
+
+        var imageryLayer = entity.imageryLayer;
+        if (!defined(imageryLayer)) {
+            entity.imageryLayer = imageryLayer = new ImageryLayerGraphics();
+        }
+
+        processPacketData(Boolean, imageryLayer, 'show', imageryLayerData.show, interval, sourceUri, entityCollection);
+        processPacketData(Number, imageryLayer, 'zIndex', imageryLayerData.zIndex, interval, sourceUri, entityCollection);
+        processPacketData(Number, imageryLayer, 'alpha', imageryLayerData.alpha, interval, sourceUri, entityCollection);
+        processPacketData(Number, imageryLayer, 'brightness', imageryLayerData.brightness, interval, sourceUri, entityCollection);
+        processPacketData(Number, imageryLayer, 'contrast', imageryLayerData.contrast, interval, sourceUri, entityCollection);
+        processPacketData(Number, imageryLayer, 'hue', imageryLayerData.hue, interval, sourceUri, entityCollection);
+        processPacketData(Number, imageryLayer, 'saturation', imageryLayerData.saturation, interval, sourceUri, entityCollection);
+        processPacketData(Number, imageryLayer, 'gamma', imageryLayerData.gamma, interval, sourceUri, entityCollection);
+
+        var packetData;
+
+        if (defined(imageryLayerData.webMapService)) {
+            processImageryProviderPacketData(processWebMapServiceProperty, imageryLayer, 'imageryProvider', imageryLayerData.webMapService, interval, sourceUri, entityCollection);
+        }
+
+        // TODO: add support for more imagery providers, and ideally make it possible for end users
+        //       to add them as well.
+    }
+
+    function processImageryProviderPacketData(processImageryProviderFunction, object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection) {
+        if (isArray(packetData)) {
+            for (var i = 0, len = packetData.length; i < len; i++) {
+                processImageryProviderProperty(processImageryProviderFunction, object, propertyName, packetData[i], constrainedInterval, sourceUri, entityCollection);
+            }
+        } else {
+            processImageryProviderProperty(processImageryProviderFunction, object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection);
+        }
+    }
+
+    function processImageryProviderProperty(processImageryProviderFunction, object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection) {
+        var combinedInterval;
+        var packetInterval = packetData.interval;
+        if (defined(packetInterval)) {
+            iso8601Scratch.iso8601 = packetInterval;
+            combinedInterval = TimeInterval.fromIso8601(iso8601Scratch);
+            if (defined(constrainedInterval)) {
+                combinedInterval = TimeInterval.intersect(combinedInterval, constrainedInterval, scratchTimeInterval);
+            }
+        } else if (defined(constrainedInterval)) {
+            combinedInterval = constrainedInterval;
+        }
+
+        var property = object[propertyName];
+        var existingImageryProvider;
+        var existingInterval;
+
+        if (defined(combinedInterval)) {
+            if (!(property instanceof CompositeImageryProviderProperty)) {
+                property = new CompositeImageryProviderProperty();
+                object[propertyName] = property;
+            }
+            //See if we already have data at that interval.
+            var thisIntervals = property.intervals;
+            existingInterval = thisIntervals.findInterval({
+                start : combinedInterval.start,
+                stop : combinedInterval.stop
+            });
+            if (defined(existingInterval)) {
+                //We have an interval, but we need to make sure the
+                //new data is the same type of material as the old data.
+                existingImageryProvider = existingInterval.data;
+            } else {
+                //If not, create it.
+                existingInterval = combinedInterval.clone();
+                thisIntervals.addInterval(existingInterval);
+            }
+        } else {
+            existingImageryProvider = property;
+        }
+
+        processImageryProviderFunction(object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection, existingImageryProvider);
+    }
+
+    function processWebMapServiceProperty(object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection, existingImageryProvider) {
+        if (!(existingImageryProvider instanceof WebMapServiceProperty)) {
+            existingImageryProvider = new WebMapServiceProperty();
+        }
+
+        processPacketData(String, existingImageryProvider, 'url', packetData.url, constrainedInterval, sourceUri, entityCollection);
+        processPacketData(String, existingImageryProvider, 'layers', packetData.layers, constrainedInterval, sourceUri, entityCollection);
+    }
+
     function processLabel(entity, packet, entityCollection, sourceUri) {
         var labelData = packet.label;
         if (!defined(labelData)) {
@@ -1545,6 +1651,7 @@ define([
     processBillboard, //
     processEllipse, //
     processEllipsoid, //
+    processImageryLayer, //
     processLabel, //
     processModel, //
     processName, //
