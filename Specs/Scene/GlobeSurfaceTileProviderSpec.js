@@ -9,7 +9,6 @@ defineSuite([
         'Core/EllipsoidTerrainProvider',
         'Core/GeographicProjection',
         'Core/Rectangle',
-        'Core/TerrainProvider',
         'Core/WebMercatorProjection',
         'Scene/BlendingState',
         'Scene/Globe',
@@ -36,7 +35,6 @@ defineSuite([
         EllipsoidTerrainProvider,
         GeographicProjection,
         Rectangle,
-        TerrainProvider,
         WebMercatorProjection,
         BlendingState,
         Globe,
@@ -403,61 +401,6 @@ defineSuite([
         layer.gamma = 0.321;
         layer.saturation = 0.123;
         layer.hue = 0.456;
-
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
-
-        updateUntilDone(globe);
-
-        runs(function() {
-            var commandList = [];
-            expect(render(context, frameState, globe, commandList)).toBeGreaterThan(0);
-
-            var tileCommandCount = 0;
-
-            for (var i = 0; i < commandList.length; ++i) {
-                var command = commandList[i];
-
-                var uniforms = command.uniformMap;
-                if (!defined(uniforms) || !defined(uniforms.u_dayTextureAlpha)) {
-                    continue;
-                }
-
-                ++tileCommandCount;
-
-                expect(uniforms.u_dayTextureAlpha()).toEqual([0.123]);
-                expect(uniforms.u_dayTextureBrightness()).toEqual([0.456]);
-                expect(uniforms.u_dayTextureContrast()).toEqual([0.654]);
-                expect(uniforms.u_dayTextureOneOverGamma()).toEqual([1.0/0.321]);
-                expect(uniforms.u_dayTextureSaturation()).toEqual([0.123]);
-                expect(uniforms.u_dayTextureHue()).toEqual([0.456]);
-            }
-
-            expect(tileCommandCount).toBeGreaterThan(0);
-        });
-    });
-
-    it('passes functional layer adjustment values as uniforms', function() {
-        var layerCollection = globe.imageryLayers;
-        layerCollection.removeAll();
-        var layer = layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
-
-        function createFunction(value) {
-            return function(functionFrameState, functionLayer, x, y, level) {
-                expect(functionFrameState).toBe(frameState);
-                expect(functionLayer).toBe(layer);
-                expect(typeof x).toBe('number');
-                expect(typeof y).toBe('number');
-                expect(typeof level).toBe('number');
-                return value;
-            };
-        }
-
-        layer.alpha = createFunction(0.123);
-        layer.brightness = createFunction(0.456);
-        layer.contrast = createFunction(0.654);
-        layer.gamma = createFunction(0.321);
-        layer.saturation = createFunction(0.123);
-        layer.hue = createFunction(0.456);
 
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 

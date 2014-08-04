@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/BoundingSphere',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/defined',
@@ -8,9 +9,11 @@ define([
         '../Core/EllipsoidalOccluder',
         '../Core/Intersections2D',
         '../Core/Math',
+        '../Core/Oct',
         './createTaskProcessorWorker'
     ], function(
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
         Cartographic,
         defined,
@@ -18,6 +21,7 @@ define([
         EllipsoidalOccluder,
         Intersections2D,
         CesiumMath,
+        Oct,
         createTaskProcessorWorker) {
     "use strict";
 
@@ -372,18 +376,46 @@ define([
         return CesiumMath.lerp(this.first.getV(), this.second.getV(), this.ratio);
     };
 
+    var encodedScratch = new Cartesian2();
+    // An upsampled triangle may be clipped twice before it is assigned an index
+    // In this case, we need a buffer to handle the recursion of getNormalX() and getNormalY().
+    var depth = -1;
+    var cartesianScratch1 = [new Cartesian3(), new Cartesian3()];
+    var cartesianScratch2 = [new Cartesian3(), new Cartesian3()];
+    function lerpOctEncodedNormal(vertex, result) {
+        ++depth;
+
+        var first = cartesianScratch1[depth];
+        var second = cartesianScratch2[depth];
+
+        first = Oct.decode(vertex.first.getNormalX(), vertex.first.getNormalY(), first);
+        second = Oct.decode(vertex.second.getNormalX(), vertex.second.getNormalY(), second);
+        cartesian3Scratch = Cartesian3.lerp(first, second, vertex.ratio, cartesian3Scratch);
+        Cartesian3.normalize(cartesian3Scratch, cartesian3Scratch);
+
+        Oct.encode(cartesian3Scratch, result);
+
+        --depth;
+
+        return result;
+    }
+
     Vertex.prototype.getNormalX = function() {
         if (defined(this.index)) {
             return this.normalBuffer[this.index * 2];
         }
-        return Math.round(CesiumMath.lerp(this.first.getNormalX(), this.second.getNormalX(), this.ratio));
+
+        encodedScratch = lerpOctEncodedNormal(this, encodedScratch);
+        return encodedScratch.x;
     };
 
     Vertex.prototype.getNormalY = function() {
         if (defined(this.index)) {
             return this.normalBuffer[this.index * 2 + 1];
         }
-        return Math.round(CesiumMath.lerp(this.first.getNormalY(), this.second.getNormalY(), this.ratio));
+
+        encodedScratch = lerpOctEncodedNormal(this, encodedScratch);
+        return encodedScratch.y;
     };
 
     var polygonVertices = [];

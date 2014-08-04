@@ -1,12 +1,10 @@
 /*global defineSuite*/
 defineSuite([
         'Widgets/Viewer/viewerPerformanceWatchdogMixin',
-        'Core/defined',
         'Widgets/PerformanceWatchdog/PerformanceWatchdog',
         'Widgets/Viewer/Viewer'
     ], function(
         viewerPerformanceWatchdogMixin,
-        defined,
         PerformanceWatchdog,
         Viewer) {
     "use strict";

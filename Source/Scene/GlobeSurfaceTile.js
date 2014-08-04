@@ -7,7 +7,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/DeveloperError',
         '../Core/IntersectionTests',
         '../Core/PixelFormat',
         '../Core/Rectangle',
@@ -28,7 +27,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         IntersectionTests,
         PixelFormat,
         Rectangle,
@@ -188,7 +186,6 @@ define([
     var scratchV0 = new Cartesian3();
     var scratchV1 = new Cartesian3();
     var scratchV2 = new Cartesian3();
-    var scratchCartesian = new Cartesian3();
     var scratchResult = new Cartesian3();
 
     GlobeSurfaceTile.prototype.pick = function(ray, scene, cullBackFaces, result) {
@@ -535,7 +532,7 @@ define([
                     // If the terrain provider has a water mask, "upsample" that as well
                     // by computing texture translation and scale.
                     if (terrainProvider.hasWaterMask) {
-                        upsampleWaterMask(tile, context);
+                        upsampleWaterMask(tile);
                     }
 
                     propagateNewUpsampledDataToChildren(tile);
@@ -752,7 +749,7 @@ define([
         return result;
     }
 
-    function upsampleWaterMask(tile, context) {
+    function upsampleWaterMask(tile) {
         var surfaceTile = tile.data;
 
         // Find the nearest ancestor with loaded terrain.

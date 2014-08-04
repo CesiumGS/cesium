@@ -75,7 +75,16 @@ define([
 
     var timelineMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-    function Timeline(container, clock) {
+
+    /**
+     * The Timeline is a widget for displaying and controlling the current scene time.
+     * @alias Timeline
+     * @constructor
+     *
+     * @param {Element} container The parent HTML container node for this widget.
+     * @param {Clock} clock The clock to use.
+     */
+    var Timeline = function(container, clock) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
@@ -159,40 +168,33 @@ define([
 
         clock.onTick.addEventListener(this.updateFromClock, this);
         this.updateFromClock();
-    }
+    };
 
-    defineProperties(Timeline.prototype, {
-        /**
-         * Gets or sets a value indicating whether the widget is shown.
-         * @type {Boolean}
-         */
-        show : {
-            get : function() {
-                return this._show;
-            },
-            set : function(value) {
-                this._show = value;
-                if (value) {
-                    this._topDiv.style.display = 'block';
-                } else {
-                    this._topDiv.style.display = 'none';
-                }
-            }
-        }
-    });
-
+    /**
+     * @private
+     */
     Timeline.prototype.addEventListener = function(type, listener, useCapture) {
         this._topDiv.addEventListener(type, listener, useCapture);
     };
 
+    /**
+     * @private
+     */
     Timeline.prototype.removeEventListener = function(type, listener, useCapture) {
         this._topDiv.removeEventListener(type, listener, useCapture);
     };
 
+    /**
+     * @returns {Boolean} true if the object has been destroyed, false otherwise.
+     */
     Timeline.prototype.isDestroyed = function() {
         return false;
     };
 
+    /**
+     * Destroys the widget.  Should be called if permanently
+     * removing the widget from layout.
+     */
     Timeline.prototype.destroy = function() {
         this._clock.onTick.removeEventListener(this.updateFromClock, this);
 
@@ -210,6 +212,9 @@ define([
         destroyObject(this);
     };
 
+    /**
+     * @private
+     */
     Timeline.prototype.addHighlightRange = function(color, heightInPx, base) {
         var newHighlightRange = new TimelineHighlightRange(color, heightInPx, base);
         this._highlightRanges.push(newHighlightRange);
@@ -217,6 +222,9 @@ define([
         return newHighlightRange;
     };
 
+    /**
+     * @private
+     */
     Timeline.prototype.addTrack = function(interval, heightInPx, color, backgroundColor) {
         var newTrack = new TimelineTrack(interval, heightInPx, color, backgroundColor);
         this._trackList.push(newTrack);
@@ -225,17 +233,28 @@ define([
         return newTrack;
     };
 
-    Timeline.prototype.zoomTo = function(startJulianDate, endJulianDate) {
-        this._timeBarSecondsSpan = JulianDate.secondsDifference(endJulianDate, startJulianDate);
-
+    /**
+     * Sets the view to the provided times.
+     *
+     * @param {JulianDate} startTime The start time.
+     * @param {JulianDate} stopTime The stop time.
+     */
+    Timeline.prototype.zoomTo = function(startTime, stopTime) {
         //>>includeStart('debug', pragmas.debug);
-        if (this._timeBarSecondsSpan <= 0) {
+        if (!defined(startTime)) {
+            throw new DeveloperError('startTime is required.');
+        }
+        if (!defined(stopTime)) {
+            throw new DeveloperError('stopTime is required');
+        }
+        if (JulianDate.lessThanOrEquals(stopTime, startTime)) {
             throw new DeveloperError('Start time must come before end time.');
         }
         //>>includeEnd('debug');
 
-        this._startJulian = startJulianDate;
-        this._endJulian = endJulianDate;
+        this._startJulian = startTime;
+        this._endJulian = stopTime;
+        this._timeBarSecondsSpan = JulianDate.secondsDifference(stopTime, startTime);
 
         // If clock is not unbounded, clamp timeline range to clock.
         if (this._clock && (this._clock.clockRange !== ClockRange.UNBOUNDED)) {
@@ -275,6 +294,9 @@ define([
         this._topDiv.dispatchEvent(evt);
     };
 
+    /**
+     * @private
+     */
     Timeline.prototype.zoomFrom = function(amount) {
         var centerSec = JulianDate.secondsDifference(this._scrubJulian, this._startJulian);
         if ((amount > 1) || (centerSec < 0) || (centerSec > this._timeBarSecondsSpan)) {
@@ -290,8 +312,11 @@ define([
         return ((num < 10) ? ('0' + num.toString()) : num.toString());
     }
 
-    Timeline.prototype.makeLabel = function(julianDate) {
-        var gregorian = JulianDate.toGregorianDate(julianDate);
+    /**
+     * @private
+     */
+    Timeline.prototype.makeLabel = function(time) {
+        var gregorian = JulianDate.toGregorianDate(time);
         var millisecond = gregorian.millisecond, millisecondString = ' UTC';
         if ((millisecond > 0) && (this._timeBarSecondsSpan < 3600)) {
             millisecondString = Math.floor(millisecond).toString();
@@ -305,8 +330,14 @@ define([
             ':' + twoDigits(gregorian.minute) + ':' + twoDigits(gregorian.second) + millisecondString;
     };
 
+    /**
+     * @private
+     */
     Timeline.prototype.smallestTicInPixels = 7.0;
 
+    /**
+     * @private
+     */
     Timeline.prototype._makeTics = function() {
         var timeBar = this._timeBarEle;
 
@@ -521,6 +552,9 @@ define([
         });
     };
 
+    /**
+     * @private
+     */
     Timeline.prototype.updateFromClock = function() {
         this._scrubJulian = this._clock.currentTime;
         var scrubElement = this._scrubElement;
@@ -541,6 +575,9 @@ define([
         }
     };
 
+    /**
+     * @private
+     */
     Timeline.prototype._setTimeBarTime = function(xPos, seconds) {
         xPos = Math.round(xPos);
         this._scrubJulian = JulianDate.addSeconds(this._startJulian, seconds, new JulianDate());
@@ -728,6 +765,9 @@ define([
         };
     }
 
+    /**
+     * Resizes the widget to match the container size.
+     */
     Timeline.prototype.resize = function() {
         var width = this.container.clientWidth;
         var height = this.container.clientHeight;

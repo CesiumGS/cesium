@@ -1,12 +1,8 @@
 /*global define*/
 define([
-        '../Core/defined',
-        './ImageryState',
-        './TerrainState'
+        '../Core/defined'
     ], function(
-        defined,
-        ImageryState,
-        TerrainState) {
+        defined) {
     "use strict";
 
     /**

@@ -37,6 +37,8 @@ define([
      * @see BoxOutlineGeometry.fromDimensions
      * @see BoxOutlineGeometry.createGeometry
      *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Box%20Outline.html|Cesium Sandcastle Box Outline Demo}
+     *
      * @example
      * var box = new Cesium.BoxOutlineGeometry({
      *   maximumCorner : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0),

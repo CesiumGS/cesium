@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="The outline of a polygon.">
+    <meta name="description" content="Draw the outline of a polygon.">
     <meta name="cesium-sandcastle-labels" content="Geometries">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -27,11 +27,12 @@
 function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
+// Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
 var primitives = scene.primitives;
 
-// Blue polygon outline
+// Example 1: Draw the outline of a polygon on the globe surface.
 var positions = Cesium.Cartesian3.fromDegreesArray([
     -95, 37.0,
     -95, 32.0,
@@ -39,8 +40,7 @@ var positions = Cesium.Cartesian3.fromDegreesArray([
     -87, 31.0,
     -87, 35.0
 ]);
-
-var bluePolygonOutlineInstance = new Cesium.GeometryInstance({
+var polygonOutlineInstance = new Cesium.GeometryInstance({
     geometry : Cesium.PolygonOutlineGeometry.fromPositions({
         positions : positions
     }),
@@ -49,18 +49,11 @@ var bluePolygonOutlineInstance = new Cesium.GeometryInstance({
     }
 });
 
-// Blue polygon
-var bluePolygonInstance = new Cesium.GeometryInstance({
-    geometry : Cesium.PolygonGeometry.fromPositions({
-        positions : positions,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-    }),
-    attributes : {
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 0.0, 1.0, 0.5))
-    }
-});
+// Example 2: Draw a polygon outline with holes.
 
-// Green extruded polygon outline
+// To draw a polygon with holes, create a nested position
+// hierarchy defining the positions of the polygon
+// edges and the positions of the holes.
 var polygonHierarchy = {
     positions : Cesium.Cartesian3.fromDegreesArray([
         -108.0, 30.0,
@@ -77,38 +70,27 @@ var polygonHierarchy = {
         ])
     }]
 };
-var extrudedHeight = 500000.0;
-
-var greenPolygonOutlineInstance = new Cesium.GeometryInstance({
+// To extrude, use the extrudedHeight option to specify the
+// height of the polygon.
+var extrudedPolygonOutlineInstance = new Cesium.GeometryInstance({
     geometry : new Cesium.PolygonOutlineGeometry({
         polygonHierarchy : polygonHierarchy,
-        extrudedHeight : extrudedHeight
+        extrudedHeight : 500000.0
     }),
     attributes : {
         color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
     }
 });
 
-// Green extruded polygon
-var greenPolygonInstance = new Cesium.GeometryInstance({
-    geometry : new Cesium.PolygonGeometry({
-        polygonHierarchy : polygonHierarchy,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        extrudedHeight : extrudedHeight
-    }),
-    attributes : {
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 1.0, 0.0, 0.5))
-    }
-});
-
-// Red polygon outline with per position heights
+// Example 3: Draw a polygon outline with per position heights.
 positions = Cesium.Cartesian3.fromDegreesArrayHeights([
     -95, 44.0, 400000,
     -95, 39.0, 100000,
     -87, 42.0, 100000
 ]);
-
-var redPolygonOutlineInstance = new Cesium.GeometryInstance({
+// Set the perPositionHeight option to true for the polygon
+// to use the heights each position.
+var perPositionPolygonOutlineInstance = new Cesium.GeometryInstance({
     geometry : Cesium.PolygonOutlineGeometry.fromPositions({
         positions : positions,
         perPositionHeight : true
@@ -118,40 +100,20 @@ var redPolygonOutlineInstance = new Cesium.GeometryInstance({
     }
 });
 
-// Red polygon with per position heights
-var redPolygonInstance = new Cesium.GeometryInstance({
-    geometry : Cesium.PolygonGeometry.fromPositions({
-        positions : positions,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        perPositionHeight : true
-    }),
-    attributes : {
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
-    }
-});
-
-// Add polygon outline instances to primitives
+// Add all polyline outlines instances to primitives.
 primitives.add(new Cesium.Primitive({
-    geometryInstances : [redPolygonOutlineInstance, bluePolygonOutlineInstance, greenPolygonOutlineInstance],
+    geometryInstances : [polygonOutlineInstance, extrudedPolygonOutlineInstance, perPositionPolygonOutlineInstance],
     appearance : new Cesium.PerInstanceColorAppearance({
         flat : true,
         renderState : {
             depthTest : {
                 enabled : true
             },
-            lineWidth : Math.min(4.0, scene.maximumAliasedLineWidth)
+            lineWidth : Math.min(2.0, scene.maximumAliasedLineWidth)
         }
     })
 }));
-   
-// Add polygon instances to primtives
-primitives.add(new Cesium.Primitive({
-    geometryInstances : [redPolygonInstance, bluePolygonInstance, greenPolygonInstance],
-    appearance : new Cesium.PerInstanceColorAppearance({
-        closed : true
-    })
-}));
-//Sandcastle_End
+   //Sandcastle_End
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {

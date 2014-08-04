@@ -143,7 +143,6 @@ define([
     var scratchNormal = new Cartesian3();
     var scratchTangent = new Cartesian3();
     var scratchBinormal = new Cartesian3();
-    var scratchBoundingSphere = new BoundingSphere();
     var p1Scratch = new Cartesian3();
     var p2Scratch = new Cartesian3();
 
@@ -487,6 +486,8 @@ define([
      *
      * @see PolygonGeometry#createGeometry
      * @see PolygonGeometry#fromPositions
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
      *
      * @example
      * // 1. create a polygon from points

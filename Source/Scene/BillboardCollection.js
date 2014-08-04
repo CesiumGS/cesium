@@ -23,7 +23,8 @@ define([
         './BlendingState',
         './HorizontalOrigin',
         './Pass',
-        './SceneMode'
+        './SceneMode',
+        './TextureAtlas'
     ], function(
         BoundingSphere,
         Cartesian2,
@@ -48,7 +49,8 @@ define([
         BlendingState,
         HorizontalOrigin,
         Pass,
-        SceneMode) {
+        SceneMode,
+        TextureAtlas) {
     "use strict";
 
     var SHOW_INDEX = Billboard.SHOW_INDEX;
@@ -101,8 +103,8 @@ define([
      * </div>
      * <br /><br />
      * Billboards are added and removed from the collection using {@link BillboardCollection#add}
-     * and {@link BillboardCollection#remove}.  All billboards in a collection reference images
-     * from the same texture atlas, which is assigned using {@link BillboardCollection#textureAtlas}.
+     * and {@link BillboardCollection#remove}.  Billboards in a collection automatically share textures
+     * for images with the same identifier.
      *
      * @alias BillboardCollection
      * @constructor
@@ -119,29 +121,22 @@ define([
      *
      * @see BillboardCollection#add
      * @see BillboardCollection#remove
-     * @see BillboardCollection#textureAtlas
      * @see Billboard
-     * @see TextureAtlas
      * @see LabelCollection
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
      *
      * @example
      * // Create a billboard collection with two billboards
      * var billboards = new Cesium.BillboardCollection();
-     * var atlas = new Cesium.TextureAtlas({
-     *   scene : scene,
-     *   images : images
-     * });
-     * billboards.textureAtlas = atlas;
      * billboards.add({
      *   position : { x : 1.0, y : 2.0, z : 3.0 },
-     *   imageIndex : 0
+     *   image : 'url/to/image'
      * });
      * billboards.add({
      *   position : { x : 4.0, y : 5.0, z : 6.0 },
-     *   imageIndex : 1
+     *   image : 'url/to/another/image'
      * });
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
      */
     var BillboardCollection = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -207,11 +202,22 @@ define([
          * @example
          * var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
          * billboards.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-         * billboards.add({ imageIndex: 0, position : new Cesium.Cartesian3(0.0, 0.0, 0.0) }); // center
-         * billboards.add({ imageIndex: 0, position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0) }); // east
-         * billboards.add({ imageIndex: 0, position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0) }); // north
-         * billboards.add({ imageIndex: 0, position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0) }); // up
-         * ]);
+         * billboards.add({
+         *   image : 'url/to/image',
+         *   position : new Cesium.Cartesian3(0.0, 0.0, 0.0) // center
+         * });
+         * billboards.add({
+         *   image : 'url/to/image',
+         *   position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0) // east
+         * });
+         * billboards.add({
+         *   image : 'url/to/image',
+         *   position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0) // north
+         * });
+         * billboards.add({
+         *   image : 'url/to/image',
+         *   position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0) // up
+         * });
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
@@ -219,7 +225,7 @@ define([
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
-         * Draws the bounding sphere for each {@link DrawCommand} in the primitive.
+         * Draws the bounding sphere for each draw command in the primitive.
          * </p>
          *
          * @type {Boolean}
@@ -272,30 +278,10 @@ define([
         },
 
         /**
-         * Gets and sets the textureAtlas.
+         * Gets or sets the textureAtlas.
          * @memberof BillboardCollection.prototype
          * @type {TextureAtlas}
-         *
-         * @example
-         * // Set the texture atlas
-         * // Assigns a texture atlas with two images to a billboard collection.
-         * // Two billboards, each referring to one of the images, are then
-         * // added to the collection.
-         * var billboards = new Cesium.BillboardCollection();
-         * var images = [image0, image1];
-         * var atlas = new TextureAtlas({
-         *   scene : scene,
-         *   images : images
-         * });
-         * billboards.textureAtlas = atlas;
-         * billboards.add({
-         *   // ...
-         *   imageIndex : 0
-         * });
-         * billboards.add({
-         *   // ...
-         *   imageIndex : 1
-         * });
+         * @private
          */
         textureAtlas : {
             get : function() {
@@ -311,7 +297,7 @@ define([
         },
 
         /**
-         * Gets and sets the destroyTextureAtlas, which determines if the texture atlas is
+         * Gets or sets a value which determines if the texture atlas is
          * destroyed when the collection is destroyed.
          *
          * If the texture atlas is used by more than one collection, set this to <code>false</code>,
@@ -319,6 +305,7 @@ define([
          *
          * @memberof BillboardCollection.prototype
          * @type {Boolean}
+         * @private
          *
          * @example
          * // Set destroyTextureAtlas
@@ -369,7 +356,7 @@ define([
      *   horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
      *   verticalOrigin : Cesium.VerticalOrigin.CENTER,
      *   scale : 1.0,
-     *   imageIndex : 0,
+     *   image : 'url/to/image',
      *   color : Cesium.Color.WHITE,
      *   id : undefined
      * });
@@ -806,7 +793,7 @@ define([
         var bottomLeftY = 0;
         var width = 0;
         var height = 0;
-        var index = billboard.imageIndex;
+        var index = billboard._imageIndex;
         if (index !== -1) {
             var imageRectangle = textureAtlasCoordinates[index];
 
@@ -1049,14 +1036,21 @@ define([
      * list the exceptions that may be propagated when the scene is rendered:
      * </p>
      *
-     * @exception {DeveloperError} Invalid billboard image index.
+     * @exception {RuntimeError} image with id must be in the atlas.
      */
     BillboardCollection.prototype.update = function(context, frameState, commandList) {
+        var billboards = this._billboards;
+        var billboardsLength = billboards.length;
+
         var textureAtlas = this._textureAtlas;
         if (!defined(textureAtlas)) {
-            // Can't write billboard vertices until we have texture coordinates
-            // provided by a texture atlas
-            return;
+            textureAtlas = this._textureAtlas = new TextureAtlas({
+                context : context
+            });
+
+            for (var ii = 0; ii < billboardsLength; ++ii) {
+                billboards[ii]._loadImage();
+            }
         }
 
         var textureAtlasCoordinates = textureAtlas.textureCoordinates;
@@ -1069,8 +1063,8 @@ define([
         removeBillboards(this);
         updateMode(this, frameState);
 
-        var billboards = this._billboards;
-        var billboardsLength = billboards.length;
+        billboards = this._billboards;
+        billboardsLength = billboards.length;
         var billboardsToUpdate = this._billboardsToUpdate;
         var billboardsToUpdateLength = this._billboardsToUpdateIndex;
 

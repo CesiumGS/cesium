@@ -5,14 +5,14 @@ define([
         '../Core/LinearSpline',
         '../Core/Quaternion',
         '../Core/QuaternionSpline',
-        './ModelTypes'
+        './getModelAccessor'
     ], function(
         Cartesian3,
         defined,
         LinearSpline,
         Quaternion,
         QuaternionSpline,
-        ModelTypes) {
+        getModelAccessor) {
     "use strict";
     /*global WebGLRenderingContext*/
 
@@ -34,7 +34,7 @@ define([
         var buffer = buffers[bufferView.buffer];
 
         var byteOffset = bufferView.byteOffset + accessor.byteOffset;
-        var byteLength = accessor.count * ModelTypes[accessor.type].componentsPerAttribute;
+        var byteLength = accessor.count * getModelAccessor(accessor).componentsPerAttribute;
 
         return model.basePath + buffer.path + ':' + byteOffset + ':' + byteLength;
     }
@@ -53,22 +53,23 @@ define([
 
             var bufferView = bufferViews[accessor.bufferView];
 
+            var componentType = accessor.componentType;
             var type = accessor.type;
             var count = accessor.count;
 
             // Convert typed array to Cesium types
-            var typedArray = ModelTypes[type].createArrayBufferView(buffers[bufferView.buffer], bufferView.byteOffset + accessor.byteOffset, accessor.count);
+            var typedArray = getModelAccessor(accessor).createArrayBufferView(buffers[bufferView.buffer], bufferView.byteOffset + accessor.byteOffset, count);
             var i;
 
-            if (type === WebGLRenderingContext.FLOAT) {
+            if ((componentType === WebGLRenderingContext.FLOAT) && (type === 'SCALAR')) {
                 values = typedArray;
             }
-            else if (type === WebGLRenderingContext.FLOAT_VEC3) {
+            else if ((componentType === WebGLRenderingContext.FLOAT) && (type === 'VEC3')) {
                 values = new Array(count);
                 for (i = 0; i < count; ++i) {
                     values[i] = Cartesian3.fromArray(typedArray, 3 * i);
                 }
-            } else if (type === WebGLRenderingContext.FLOAT_VEC4) {
+            } else if ((componentType === WebGLRenderingContext.FLOAT) && (type === 'VEC4')) {
                 values = new Array(count);
                 for (i = 0; i < count; ++i) {
                     var byteOffset = 4 * i;
@@ -106,7 +107,7 @@ define([
 
         if (!defined(spline)) {
             var times = parameterValues[sampler.input];
-            var output = model.gltf.accessors[animation.parameters[sampler.output]];
+            var accessor = model.gltf.accessors[animation.parameters[sampler.output]];
             var controlPoints = parameterValues[sampler.output];
 
 // GLTF_SPEC: https://github.com/KhronosGroup/glTF/issues/185
@@ -114,13 +115,16 @@ define([
                 spline = new ConstantSpline(controlPoints[0]);
             } else {
 // END GLTF_SPEC
+                var componentType = accessor.componentType;
+                var type = accessor.type;
+
                 if (sampler.interpolation === 'LINEAR') {
-                    if (output.type === WebGLRenderingContext.FLOAT_VEC3) {
+                    if ((componentType === WebGLRenderingContext.FLOAT) && (type === 'VEC3')) {
                         spline = new LinearSpline({
                             times : times,
                             points : controlPoints
                         });
-                    } else if (output.type === WebGLRenderingContext.FLOAT_VEC4) {
+                    } else if ((componentType === WebGLRenderingContext.FLOAT) && (type === 'VEC4')) {
                         spline = new QuaternionSpline({
                             times : times,
                             points : controlPoints

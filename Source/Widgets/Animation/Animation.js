@@ -700,7 +700,7 @@ define([
     };
 
     /**
-     * Updates the widget to reflect any modified CSS fules for themeing.
+     * Updates the widget to reflect any modified CSS rules for theming.
      *
      * @example
      * //Switch to the cesium-lighter theme.
