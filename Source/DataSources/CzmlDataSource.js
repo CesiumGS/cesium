@@ -37,6 +37,7 @@ define([
         '../ThirdParty/when',
         './BillboardGraphics',
         './ColorMaterialProperty',
+        './CompositeImageryProviderProperty',
         './CompositeMaterialProperty',
         './CompositePositionProperty',
         './CompositeProperty',
@@ -106,6 +107,7 @@ define([
         when,
         BillboardGraphics,
         ColorMaterialProperty,
+        CompositeImageryProviderProperty,
         CompositeMaterialProperty,
         CompositePositionProperty,
         CompositeProperty,
@@ -1152,40 +1154,46 @@ define([
         var existingInterval;
 
         if (defined(combinedInterval)) {
-            // if (!(property instanceof CompositeImageryProviderProperty)) {
-            //     property = new CompositeImageryProviderProperty();
-            //     object[propertyName] = property;
-            // }
-            // //See if we already have data at that interval.
-            // var thisIntervals = property.intervals;
-            // existingInterval = thisIntervals.findInterval({
-            //     start : combinedInterval.start,
-            //     stop : combinedInterval.stop
-            // });
-            // if (defined(existingInterval)) {
-            //     //We have an interval, but we need to make sure the
-            //     //new data is the same type of material as the old data.
-            //     existingImageryProvider = existingInterval.data;
-            // } else {
-            //     //If not, create it.
-            //     existingInterval = combinedInterval.clone();
-            //     thisIntervals.addInterval(existingInterval);
-            // }
-            // throw new DeveloperError('TODO: implement me');
+            if (!(property instanceof CompositeImageryProviderProperty)) {
+                property = new CompositeImageryProviderProperty();
+                object[propertyName] = property;
+            }
+            //See if we already have data at that interval.
+            var thisIntervals = property.intervals;
+            existingInterval = thisIntervals.findInterval({
+                start : combinedInterval.start,
+                stop : combinedInterval.stop
+            });
+            if (defined(existingInterval)) {
+                //We have an interval, but we need to make sure the
+                //new data is the same type of material as the old data.
+                existingImageryProvider = existingInterval.data;
+            } else {
+                //If not, create it.
+                existingInterval = combinedInterval.clone();
+                thisIntervals.addInterval(existingInterval);
+            }
         } else {
             existingImageryProvider = property;
         }
 
-        processImageryProviderFunction(object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection, existingImageryProvider);
+        existingImageryProvider = processImageryProviderFunction(object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection, existingImageryProvider);
+        if (defined(existingInterval)) {
+            existingInterval.data = existingImageryProvider;
+        } else {
+            object[propertyName] = existingImageryProvider;
+        }
     }
 
     function processWebMapServiceProperty(object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection, existingImageryProvider) {
         if (!(existingImageryProvider instanceof WebMapServiceProperty)) {
-            existingImageryProvider = object[propertyName] = new WebMapServiceProperty();
+            existingImageryProvider = new WebMapServiceProperty();
         }
 
         processPacketData(String, existingImageryProvider, 'url', packetData.url, constrainedInterval, sourceUri, entityCollection);
         processPacketData(String, existingImageryProvider, 'layers', packetData.layers, constrainedInterval, sourceUri, entityCollection);
+
+        return existingImageryProvider;
     }
 
     function processLabel(entity, packet, entityCollection, sourceUri) {

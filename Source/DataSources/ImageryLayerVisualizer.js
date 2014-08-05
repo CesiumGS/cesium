@@ -75,9 +75,14 @@ define([
                 imageryProviderData = imageryProviderHash[entity.id] = {};
             }
 
-            var imageryProvider = layerGraphics._imageryProvider;
-            var type = imageryProvider.getType(time);
-            this._imageryProviderUpdaters[type](imageryProvider, time, scene, entity, layerGraphics, imageryProviderData);
+            var imageryProvider = Property.getValueOrUndefined(layerGraphics._imageryProvider, time);
+
+            if (defined(imageryProvider)) {
+                var type = imageryProvider.getType(time);
+                this._imageryProviderUpdaters[type](imageryProvider, time, scene, entity, layerGraphics, imageryProviderData);
+            } else {
+                imageryProviderData.imageryProvider = undefined;
+            }
 
             if (defined(imageryProviderData.imageryProvider)) {
                 // TODO: Insert the imagery layer in the right z-order, especially when
