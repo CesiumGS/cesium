@@ -91,12 +91,7 @@ define([
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
      */
     WebMapServiceProperty.prototype.getValue = function(time, result) {
-        if (!defined(result)) {
-            result = {};
-        }
-        result.url = Property.getValueOrClonedDefault(this._url, time, '', result.url);
-        result.layers = Property.getValueOrClonedDefault(this._layers, time, '', result.layers);
-        return result;
+        return this;
     };
 
     /**

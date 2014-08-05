@@ -37,7 +37,6 @@ define([
         '../ThirdParty/when',
         './BillboardGraphics',
         './ColorMaterialProperty',
-        './CompositeImageryProviderProperty',
         './CompositeMaterialProperty',
         './CompositePositionProperty',
         './CompositeProperty',
@@ -107,7 +106,6 @@ define([
         when,
         BillboardGraphics,
         ColorMaterialProperty,
-        CompositeImageryProviderProperty,
         CompositeMaterialProperty,
         CompositePositionProperty,
         CompositeProperty,
@@ -1154,8 +1152,8 @@ define([
         var existingInterval;
 
         if (defined(combinedInterval)) {
-            if (!(property instanceof CompositeImageryProviderProperty)) {
-                property = new CompositeImageryProviderProperty();
+            if (!(property instanceof CompositeProperty)) {
+                property = new CompositeProperty();
                 object[propertyName] = property;
             }
             //See if we already have data at that interval.
