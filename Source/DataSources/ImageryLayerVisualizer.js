@@ -4,12 +4,14 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Scene/WebMapServiceImageryProvider',
         './Property'
     ], function(
         AssociativeArray,
         defined,
         destroyObject,
         DeveloperError,
+        WebMapServiceImageryProvider,
         Property) {
     "use strict";
 
@@ -38,6 +40,9 @@ define([
         this._entityCollection = entityCollection;
         this._imageryProviderHash = {};
         this._entitiesToVisualize = new AssociativeArray();
+        this._imageryProviderUpdaters = {
+            WebMapServiceImageryProvider : updateWebMapServiceImageryProvider
+        };
 
         this._onCollectionChanged(entityCollection, entityCollection.entities, [], []);
     };
@@ -71,7 +76,8 @@ define([
             }
 
             var imageryProvider = layerGraphics._imageryProvider;
-            imageryProvider.update(time, scene, entity, layerGraphics, imageryProviderData);
+            var type = imageryProvider.getType(time);
+            this._imageryProviderUpdaters[type](imageryProvider, time, scene, entity, layerGraphics, imageryProviderData);
 
             if (defined(imageryProviderData.imageryProvider)) {
                 // TODO: Insert the imagery layer in the right z-order, especially when
@@ -157,6 +163,23 @@ define([
         if (defined(layerData)) {
             imageryLayers.remove(layerData.layer);
             delete layerHash[entity.id];
+        }
+    }
+
+    function updateWebMapServiceImageryProvider(imageryProviderProperty, time, scene, entity, layerGraphics, imageryProviderData) {
+        var url = Property.getValueOrUndefined(imageryProviderProperty._url, time);
+        var layers = Property.getValueOrUndefined(imageryProviderProperty._layers, time);
+
+        if (defined(url) && defined(layers)) {
+            var imageryProvider = imageryProviderData.imageryProvider;
+            if (!defined(imageryProvider) || imageryProvider.url !== url || imageryProvider.layers !== layers) {
+                imageryProvider = imageryProviderData.imageryProvider = new WebMapServiceImageryProvider({
+                    url : url,
+                    layers : layers
+                });
+            }
+        } else {
+            imageryProviderData.imageryProvider = undefined;
         }
     }
 
