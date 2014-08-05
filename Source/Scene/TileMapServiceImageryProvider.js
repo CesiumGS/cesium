@@ -7,12 +7,15 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/Ellipsoid',
         '../Core/Event',
+        '../Core/GeographicProjection',
         '../Core/GeographicTilingScheme',
         '../Core/loadXML',
         '../Core/Rectangle',
         '../Core/RuntimeError',
         '../Core/TileProviderError',
+        '../Core/WebMercatorProjection',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/when',
         './ImageryProvider'
@@ -24,12 +27,15 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        Ellipsoid,
         Event,
+        GeographicProjection,
         GeographicTilingScheme,
         loadXML,
         Rectangle,
         RuntimeError,
         TileProviderError,
+        WebMercatorProjection,
         WebMercatorTilingScheme,
         when,
         ImageryProvider) {
@@ -171,19 +177,19 @@ define([
                 flipXY = true;
             }
 
-            if (!defined(that._tilingScheme)) {
+            var projection;
+            if (defined(that._tilingScheme)) {
+                projection = that._tilingScheme.projection;
+            }
+            else {
+                var ellipsoid = Ellipsoid.WGS84;
                 if (tilingSchemeName === 'geodetic' || tilingSchemeName === 'global-geodetic') {
-                    that._tilingScheme = new GeographicTilingScheme();
-                } else if (tilingSchemeName === 'mercator' || tilingSchemeName === 'global-mercator') {
-                    that._tilingScheme = new WebMercatorTilingScheme();
-                } else {
-                    var message = url + 'tilemapresource.xml specifies an unsupported profile attribute, ' + tilingSchemeName + '.';
-                    metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
-                    return;
+                    projection = new GeographicProjection(ellipsoid);
+                }
+                else {
+                    projection = new WebMercatorProjection(ellipsoid);
                 }
             }
-
-            var tilingScheme = that._tilingScheme;
 
             // rectangle handling
             if (!defined(that._rectangle)) {
@@ -203,11 +209,11 @@ define([
                     swXY = new Cartesian2(parseFloat(bbox.getAttribute('minx')), parseFloat(bbox.getAttribute('miny')));
                     neXY = new Cartesian2(parseFloat(bbox.getAttribute('maxx')), parseFloat(bbox.getAttribute('maxy')));
 
-                    if (that._tilingScheme instanceof GeographicTilingScheme) {
+                    if (tilingSchemeName === 'geodetic' || tilingSchemeName === 'global-geodetic') {
                         sw = Cartographic.fromDegrees(swXY.x, swXY.y);
                         ne = Cartographic.fromDegrees(neXY.x, neXY.y);
-                    } else {
-                        var projection = that._tilingScheme.projection;
+                    }
+                    else {
                         sw = projection.unproject(swXY);
                         ne = projection.unproject(neXY);
                     }
@@ -216,20 +222,24 @@ define([
                 that._rectangle = new Rectangle(sw.longitude, sw.latitude, ne.longitude, ne.latitude);
             }
 
+            if (!defined(that._tilingScheme)) {
+                var tilingSchemeOptions = {
+                    projection: projection,
+                    rectangle: that._rectangle
+                };
 
-            // The rectangle must not be outside the bounds allowed by the tiling scheme.
-            if (that._rectangle.west < tilingScheme.rectangle.west) {
-                that._rectangle.west = tilingScheme.rectangle.west;
+                if (tilingSchemeName === 'geodetic' || tilingSchemeName === 'global-geodetic') {
+                    that._tilingScheme = new GeographicTilingScheme(tilingSchemeOptions);
+                } else if (tilingSchemeName === 'mercator' || tilingSchemeName === 'global-mercator') {
+                    that._tilingScheme = new WebMercatorTilingScheme(tilingSchemeOptions);
+                } else {
+                    var message = url + 'tilemapresource.xml specifies an unsupported profile attribute, ' + tilingSchemeName + '.';
+                    metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+                    return;
+                }
             }
-            if (that._rectangle.east > tilingScheme.rectangle.east) {
-                that._rectangle.east = tilingScheme.rectangle.east;
-            }
-            if (that._rectangle.south < tilingScheme.rectangle.south) {
-                that._rectangle.south = tilingScheme.rectangle.south;
-            }
-            if (that._rectangle.north > tilingScheme.rectangle.north) {
-                that._rectangle.north = tilingScheme.rectangle.north;
-            }
+
+            var tilingScheme = that._tilingScheme;
 
             // Check the number of tiles at the minimum level.  If it's more than four,
             // try requesting the lower levels anyway, because starting at the higher minimum
@@ -241,7 +251,6 @@ define([
                 that._minimumLevel = 0;
             }
 
-            that._tilingScheme = tilingScheme;
             that._ready = true;
         }
 
