@@ -158,7 +158,7 @@ define([
                 attributes.show = ShowGeometryInstanceAttribute.toValue(updater.isFilled(time) && entity.uiShow, attributes.show);
             }
             this.toggledObjects.removeAll();
-        } else if (defined(primitive) && primitive._state !== PrimitiveState.COMPLETE) {
+        } else if (defined(primitive) && !primitive.ready) {
             isUpdated = false;
         }
         this.itemsToRemove.length = removedCount;
