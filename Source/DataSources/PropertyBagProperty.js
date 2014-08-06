@@ -31,7 +31,6 @@ define([
      */
     var PropertyBagProperty = function() {
         this._definitionChanged = new Event();
-        this._primitiveName = undefined;
     };
 
     defineProperties(PropertyBagProperty.prototype, {
@@ -90,10 +89,6 @@ define([
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
      */
     PropertyBagProperty.prototype.getValue = function(time, result) {
-        if (defined(this._primitiveName)) {
-            return Property.getValueOrUndefined(this[this._primitiveName], time);
-        }
-
         if (!defined(result)) {
             result = {};
 
@@ -170,7 +165,6 @@ define([
         return name.length > 0 &&
                name[0] === '_' &&
                name !== '_definitionChanged' &&
-               name !== '_primitiveName' &&
                name.lastIndexOf('Subscription') !== name.length - 12;
     }
 
