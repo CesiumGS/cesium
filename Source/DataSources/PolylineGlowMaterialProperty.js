@@ -1,22 +1,16 @@
 /*global define*/
 define([
         '../Core/Color',
-        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/DeveloperError',
         '../Core/Event',
-        './ConstantProperty',
         './createPropertyDescriptor',
         './Property'
     ], function(
         Color,
-        defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         Event,
-        ConstantProperty,
         createPropertyDescriptor,
         Property) {
     "use strict";

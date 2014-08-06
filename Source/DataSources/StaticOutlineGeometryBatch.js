@@ -6,8 +6,7 @@ define([
         '../Core/defined',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/PerInstanceColorAppearance',
-        '../Scene/Primitive',
-        '../Scene/PrimitiveState'
+        '../Scene/Primitive'
     ], function(
         AssociativeArray,
         Color,
@@ -15,8 +14,7 @@ define([
         defined,
         ShowGeometryInstanceAttribute,
         PerInstanceColorAppearance,
-        Primitive,
-        PrimitiveState) {
+        Primitive) {
     "use strict";
 
     var Batch = function(primitives, translucent) {

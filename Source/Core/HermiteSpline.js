@@ -145,8 +145,6 @@ define([
      * @exception {DeveloperError} times.length must be equal to points.length.
      * @exception {DeveloperError} inTangents and outTangents must have a length equal to points.length - 1.
      *
-     * @see BSpline
-     * @see BezierSpline
      * @see CatmullRomSpline
      * @see LinearSpline
      * @see QuaternionSpline

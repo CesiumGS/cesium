@@ -436,10 +436,19 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (!defined(result)) {
-            return new Cartographic((rectangle.west + rectangle.east) * 0.5, (rectangle.south + rectangle.north) * 0.5);
+        var east = rectangle.east;
+        var west = rectangle.west;
+
+        var longitude = (west + east) * 0.5;
+        if (east < west) {
+            longitude = CesiumMath.negativePiToPi(longitude + CesiumMath.PI);
         }
-        result.longitude = (rectangle.west + rectangle.east) * 0.5;
+
+        if (!defined(result)) {
+            return new Cartographic(longitude, (rectangle.south + rectangle.north) * 0.5);
+        }
+
+        result.longitude = longitude;
         result.latitude = (rectangle.south + rectangle.north) * 0.5;
         result.height = 0.0;
         return result;

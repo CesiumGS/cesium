@@ -15,6 +15,8 @@ defineSuite([
     it('can manipulate values', function() {
         var associativeArray = new AssociativeArray();
 
+        expect(associativeArray.contains('key1')).toEqual(false);
+
         associativeArray.set('key1', 1);
         associativeArray.set('key2', 2);
         associativeArray.set('key3', 3);
@@ -23,6 +25,10 @@ defineSuite([
         expect(associativeArray.get('key2')).toEqual(2);
         expect(associativeArray.get('key3')).toEqual(3);
         expect(associativeArray.length).toEqual(3);
+
+        expect(associativeArray.contains('key1')).toEqual(true);
+        expect(associativeArray.contains('key2')).toEqual(true);
+        expect(associativeArray.contains('key3')).toEqual(true);
 
         var values = associativeArray.values;
         expect(values).toContain(1);
@@ -41,6 +47,7 @@ defineSuite([
 
         expect(associativeArray.remove('key1')).toBe(true);
         expect(associativeArray.get('key1')).toBeUndefined();
+        expect(associativeArray.contains('key1')).toEqual(false);
         expect(values).not.toContain(1);
         expect(values).toContain(4);
         expect(values).toContain(3);

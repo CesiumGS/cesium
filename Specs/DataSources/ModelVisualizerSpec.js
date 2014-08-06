@@ -3,20 +3,24 @@ defineSuite([
         'DataSources/ModelVisualizer',
         'Core/Cartesian3',
         'Core/JulianDate',
+        'Core/Transforms',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
         'DataSources/EntityCollection',
         'DataSources/ModelGraphics',
+        'Scene/Globe',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
         ModelVisualizer,
         Cartesian3,
         JulianDate,
+        Transforms,
         ConstantPositionProperty,
         ConstantProperty,
         EntityCollection,
         ModelGraphics,
+        Globe,
         createScene,
         destroyScene) {
     "use strict";
@@ -29,6 +33,7 @@ defineSuite([
 
     beforeAll(function() {
         scene = createScene();
+        scene.globe = new Globe();
     });
 
     afterAll(function() {
@@ -62,6 +67,14 @@ defineSuite([
         visualizer = undefined;
     });
 
+    it('removes the listener from the entity collection when destroyed', function() {
+        var entityCollection = new EntityCollection();
+        var visualizer = new ModelVisualizer(scene, entityCollection);
+        expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
+        visualizer = visualizer.destroy();
+        expect(entityCollection.collectionChanged.numberOfListeners).toEqual(0);
+    });
+
     it('object with no model does not create one.', function() {
         var entityCollection = new EntityCollection();
         visualizer = new ModelVisualizer(scene, entityCollection);
@@ -84,7 +97,7 @@ defineSuite([
         expect(scene.primitives.length).toEqual(0);
     });
 
-    it('A ModelGraphics causes a primtive to be created and updated.', function() {
+    it('A ModelGraphics causes a primitive to be created and updated.', function() {
         var time = JulianDate.now();
         var entityCollection = new EntityCollection();
         visualizer = new ModelVisualizer(scene, entityCollection);
@@ -96,7 +109,7 @@ defineSuite([
         model.uri = new ConstantProperty(duckUrl);
 
         var testObject = entityCollection.getOrCreateEntity('test');
-        testObject.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.position = new ConstantPositionProperty(Cartesian3.fromDegrees(1, 2, 3));
         testObject.model = model;
 
         visualizer.update(time);
@@ -108,6 +121,7 @@ defineSuite([
         expect(primitive.show).toEqual(true);
         expect(primitive.scale).toEqual(2);
         expect(primitive.minimumPixelSize).toEqual(24.0);
+        expect(primitive.modelMatrix).toEqual(Transforms.northEastDownToFixedFrame(Cartesian3.fromDegrees(1, 2, 3), scene.globe.ellipsoid));
     });
 
     it('removing removes primitives.', function() {

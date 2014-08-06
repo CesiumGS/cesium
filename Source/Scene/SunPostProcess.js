@@ -121,7 +121,7 @@ define([
             var rs;
             var uniformMap = {};
 
-            var downSampleCommand = this._downSampleCommand = context.createViewportQuadCommand(PassThrough, {
+            this._downSampleCommand = context.createViewportQuadCommand(PassThrough, {
                 renderState : rs,
                 uniformMap : uniformMap,
                 owner : this
@@ -140,7 +140,7 @@ define([
                 }
             };
 
-            var brightPassCommand = this._brightPassCommand = context.createViewportQuadCommand(BrightPass, {
+            this._brightPassCommand = context.createViewportQuadCommand(BrightPass, {
                 renderState : rs,
                 uniformMap : uniformMap,
                 owner : this
@@ -161,7 +161,7 @@ define([
                 }
             };
 
-            var blurXCommand = this._blurXCommand = context.createViewportQuadCommand(GaussianBlur1D, {
+            this._blurXCommand = context.createViewportQuadCommand(GaussianBlur1D, {
                 renderState : rs,
                 uniformMap : uniformMap,
                 owner : this
@@ -179,7 +179,7 @@ define([
                 }
             };
 
-            var blurYCommand = this._blurYCommand = context.createViewportQuadCommand(GaussianBlur1D, {
+            this._blurYCommand = context.createViewportQuadCommand(GaussianBlur1D, {
                 renderState : rs,
                 uniformMap : uniformMap,
                 owner : this
@@ -194,7 +194,7 @@ define([
                 }
             };
 
-            var additiveBlendCommand = this._blendCommand = context.createViewportQuadCommand(AdditiveBlend, {
+            this._blendCommand = context.createViewportQuadCommand(AdditiveBlend, {
                 renderState : rs,
                 uniformMap : uniformMap,
                 owner : this
@@ -202,7 +202,7 @@ define([
 
             uniformMap = {};
 
-            var fullScreenCommand = this._fullScreenCommand = context.createViewportQuadCommand(PassThrough, {
+            this._fullScreenCommand = context.createViewportQuadCommand(PassThrough, {
                 renderState : rs,
                 uniformMap : uniformMap,
                 owner : this

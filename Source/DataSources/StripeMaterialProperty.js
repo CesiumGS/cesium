@@ -4,7 +4,6 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
-        './ConstantProperty',
         './createPropertyDescriptor',
         './Property',
         './StripeOrientation'
@@ -13,7 +12,6 @@ define([
         defined,
         defineProperties,
         Event,
-        ConstantProperty,
         createPropertyDescriptor,
         Property,
         StripeOrientation) {

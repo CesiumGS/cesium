@@ -15,6 +15,7 @@ defineSuite([
         'DataSources/EntityCollection',
         'DataSources/GridMaterialProperty',
         'DataSources/SampledProperty',
+        'DataSources/StaticGeometryPerMaterialBatch',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
@@ -33,6 +34,7 @@ defineSuite([
         EntityCollection,
         GridMaterialProperty,
         SampledProperty,
+        StaticGeometryPerMaterialBatch,
         createScene,
         destroyScene) {
     "use strict";
@@ -394,5 +396,64 @@ defineSuite([
         expect(function() {
             visualizer.update(undefined);
         }).toThrowDeveloperError();
+    });
+
+    it('removes the listener from the entity collection when destroyed', function() {
+        var entityCollection = new EntityCollection();
+        var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, entityCollection);
+        expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
+        visualizer = visualizer.destroy();
+        expect(entityCollection.collectionChanged.numberOfListeners).toEqual(0);
+    });
+
+    it('StaticGeometryPerMaterialBatch handles shared material being invalidated', function() {
+        var batch = new StaticGeometryPerMaterialBatch(scene.primitives, EllipseGeometryUpdater.materialAppearanceType, false);
+
+        var ellipse = new EllipseGraphics();
+        ellipse.semiMajorAxis = new ConstantProperty(2);
+        ellipse.semiMinorAxis = new ConstantProperty(1);
+        ellipse.material = new GridMaterialProperty();
+
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        entity.ellipse = ellipse;
+
+        var ellipse2 = new EllipseGraphics();
+        ellipse2.semiMajorAxis = new ConstantProperty(3);
+        ellipse2.semiMinorAxis = new ConstantProperty(2);
+        ellipse2.material = new GridMaterialProperty();
+
+        var entity2 = new Entity();
+        entity2.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        entity2.ellipse = ellipse2;
+
+        var updater = new EllipseGeometryUpdater(entity);
+        var updater2 = new EllipseGeometryUpdater(entity2);
+        batch.add(time, updater);
+        batch.add(time, updater2);
+
+        waitsFor(function() {
+            scene.initializeFrame();
+            var isUpdated = batch.update(time);
+            scene.render(time);
+            return isUpdated;
+        });
+
+        runs(function() {
+            expect(scene.primitives.length).toEqual(1);
+            ellipse.material.cellAlpha = new ConstantProperty(0.5);
+        });
+
+        waitsFor(function() {
+            scene.initializeFrame();
+            var isUpdated = batch.update(time);
+            scene.render(time);
+            return isUpdated;
+        });
+
+        runs(function() {
+            expect(scene.primitives.length).toEqual(2);
+            batch.removeAllPrimitives();
+        });
     });
 }, 'WebGL');

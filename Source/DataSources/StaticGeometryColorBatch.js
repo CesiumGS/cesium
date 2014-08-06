@@ -5,16 +5,14 @@ define([
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defined',
         '../Core/ShowGeometryInstanceAttribute',
-        '../Scene/Primitive',
-        '../Scene/PrimitiveState'
+        '../Scene/Primitive'
     ], function(
         AssociativeArray,
         Color,
         ColorGeometryInstanceAttribute,
         defined,
         ShowGeometryInstanceAttribute,
-        Primitive,
-        PrimitiveState) {
+        Primitive) {
     "use strict";
 
     var colorScratch = new Color();

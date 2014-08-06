@@ -39,14 +39,12 @@ define([
         this._definitionChanged = new Event();
         this._name = undefined;
         this._parent = undefined;
-        this._propertyNames = ['billboard', 'cone', 'description', 'ellipse', 'ellipsoid', 'label', 'model', //
-                               'orientation', 'path', 'point', 'polygon', 'polyline', 'position', 'pyramid', //
+        this._propertyNames = ['billboard', 'description', 'ellipse', 'ellipsoid', 'label', 'model', //
+                               'orientation', 'path', 'point', 'polygon', 'polyline', 'position', //
                                'rectangle', 'uiShow', 'viewFrom', 'wall'];
 
         this._billboard = undefined;
         this._billboardSubscription = undefined;
-        this._cone = undefined;
-        this._coneSubscription = undefined;
         this._description = undefined;
         this._descriptionSubscription = undefined;
         this._ellipse = undefined;
@@ -69,8 +67,6 @@ define([
         this._polylineSubscription = undefined;
         this._position = undefined;
         this._positionSubscription = undefined;
-        this._pyramid = undefined;
-        this._pyramidSubscription = undefined;
         this._rectangle = undefined;
         this._rectangleSubscription = undefined;
         this._uiShow = true;
@@ -156,12 +152,6 @@ define([
          */
         billboard : createPropertyDescriptor('billboard'),
         /**
-         * Gets or sets the cone.
-         * @memberof Entity.prototype
-         * @type {ConeGraphics}
-         */
-        cone : createPropertyDescriptor('cone'),
-        /**
          * Gets or sets the description.
          * @memberof Entity.prototype
          * @type {Property}
@@ -227,12 +217,6 @@ define([
          * @type {PositionProperty}
          */
         position : createPropertyDescriptor('position'),
-        /**
-         * Gets or sets the pyramid.
-         * @memberof Entity.prototype
-         * @type {PyramidGraphics}
-         */
-        pyramid : createPropertyDescriptor('pyramid'),
         /**
          * Gets or sets the rectangle.
          * @memberof Entity.prototype

@@ -1,27 +1,43 @@
 Change Log
 ==========
 
+### 1.01 - 2014-09-01
+
+* Added a new imagery provider, `WebMapTileServiceImageryProvider`, for accessing tiles on a WMTS 1.0.0 server.
+
 ### 1.0 - 2014-08-01
 
-* Breaking changes
-  * All `Matrix2`, `Matrix3`, `Matrix4` and `Quaternion` functions that take a `result` parameter now require the parameter (except for functions starting with `from`).
-  * Removed the following from the Cesium API: `Transforms.earthOrientationParameters`, `EarthOrientationParameters`, `EarthOrientationParametersSample`, `Transforms.iau2006XysData`, `Iau2006XysData`, `Iau2006XysSample`, `IauOrientationAxes`, `TimeConstants`, `Scene.frameState`, `FrameState`, `EncodedCartesian3`, `EllipsoidalOccluder`, and `FAR`.  These are still available but are not part of the official API and may change in future versions.
-  * Removed `DynamicObject.vertexPositions`.  Use `DynamicWall.positions`, `DynamicPolygon.positions`, and `DynamicPolyline.positions` instead.
-  * Removed `Primitive.allow3DOnly`, set the `Scene` level option, `scene3DOnly`, instead.
-  * `SampledProperty` and `SampledPositionProperty` no longer extrapolate outside of their sample data time range by default.
-  * Refactored the following methods into a properties:
-    * `TerrainProvider.hasWaterMask`
-    * `CesiumTerrainProvider.hasWaterMask`
-    * `ArcGisImageServerTerrainProvider.hasWaterMask`
-    * `EllipsoidTerrainProvider.hasWaterMask`
-    * `VRTheWorldTerrainProvider.hasWaterMask`
-  * Renamed preprocessor define, `ENABLE_LIGHTING` used by `Globe` shaders to `ENABLE_DAYNIGHT_SHADING`
-  * The `DynamicScene` layer has been renamed to `DataSources` additionally, the following objects have all been renamed.
+* Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))
+  * All `Matrix2`, `Matrix3`, `Matrix4` and `Quaternion` functions that take a `result` parameter now require the parameter, except functions starting with `from`.
+  * Removed `Billboard.imageIndex` and `BillboardCollection.textureAtlas`. Instead, use `Billboard.image`.
+    * Code that looked like:
+
+            var billboards = new Cesium.BillboardCollection();
+            var textureAtlas = new Cesium.TextureAtlas({
+                scene : scene,
+                images : images // array of loaded images
+            });
+            billboards.textureAtlas = textureAtlas;
+            billboards.add({
+                imageIndex : 0,
+                position : //...
+            });
+
+    * should now look like:
+
+            var billboards = new Cesium.BillboardCollection();
+            billboards.add({
+                image : '../images/Cesium_Logo_overlay.png',
+                position : //...
+            });
+
+  * Updated the [Model Converter](http://cesiumjs.org/convertmodel.html) and `Model` to support [glTF 0.8](https://github.com/KhronosGroup/glTF/blob/schema-8/specification/README.md).  See the [forum post](https://groups.google.com/forum/#!topic/cesium-dev/KNl2K3Cazno) for full details.
+  * `Model` primitives are now rotated to be `Z`-up to match Cesium convention; glTF stores models with `Y` up.
+  * `SimplePolylineGeometry` and `PolylineGeometry` now curve to follow the ellipsoid surface by default. To disable this behavior, set the option `followSurface` to `false`.
+  * Renamed `DynamicScene` layer to `DataSources`.  The following types were also renamed:
     * `DynamicBillboard` -> `BillboardGraphics`
     * `DynamicBillboardVisualizer` -> `BillboardVisualizer`
     * `CompositeDynamicObjectCollection` -> `CompositeEntityCollection`
-    * `DynamicCone` -> `ConeGraphics`
-    * `DynamicConeVisualizerUsingCustomSensor` -> `ConeVisualizer`
     * `DynamicClock` -> `DataSourceClock`
     * `DynamicEllipse` -> `EllipseGraphics`
     * `DynamicEllipsoid` -> `EllipsoidGraphics`
@@ -38,16 +54,14 @@ Change Log
     * `DynamicPointVisualizer` -> `PointVisualizer`
     * `DynamicPolygon` -> `PolygonGraphics`
     * `DynamicPolyline` -> `PolylineGraphics`
-    * `DynamicPyramid` -> `PyramidGraphics`
-    * `DynamicPyramidVisualizer` -> `PyramidVisualizer`
     * `DynamicRectangle` -> `RectangleGraphics`
     * `DynamicWall` -> `WallGraphics`
     * `viewerDynamicObjectMixin` -> `viewerEntityMixin`
-  * Removed `DynamicVector` and `DynamicVectorVisualizer`
-  * `DataSource.dynamicObjects` has been renamed to `DataSource.entities`
-  * `EntityCollection.getObjects()` and `CompositeEntityCollection.getObjects()` have been made properties and renamed `EntityCollection.entities` and `CompositeEntityCollection.entities`. 
-  * `Viewer.trackedObject` and `Viewer.selectedObject` have been renamed to `Viewer.trackedEntity` and `Viewer.selectedEntity` when using the `viewerEntityMixin`.
-  * Renamed functions for naming consistency
+  * Removed `DynamicVector` and `DynamicVectorVisualizer`.
+  * Renamed `DataSource.dynamicObjects` to `DataSource.entities`.
+  * `EntityCollection.getObjects()` and `CompositeEntityCollection.getObjects()` are now properties named `EntityCollection.entities` and `CompositeEntityCollection.entities`.
+  * Renamed `Viewer.trackedObject` and `Viewer.selectedObject` to `Viewer.trackedEntity` and `Viewer.selectedEntity` when using the `viewerEntityMixin`.
+  * Renamed functions for consistency:
     * `BoundingSphere.getPlaneDistances` -> `BoundingSphere.computePlaneDistances`
     * `Cartesian[2,3,4].getMaximumComponent` -> `Cartesian[2,3,4].maximumComponent`
     * `Cartesian[2,3,4].getMinimumComponent` -> `Cartesian[2,3,4].minimumComponent`
@@ -75,26 +89,56 @@ Change Log
     * `Rectangle.getNortheast` -> `Rectangle.northeast`
     * `Rectangle.getCenter` -> `Rectangle.center`
     * `CullingVolume.getVisibility` -> `CullingVolume.computeVisibility`
-  * `SimplePolylineGeometry` and `PolylineGeometry` positions curve to follow the ellipsoid surface by default. To disable this behavior, set the option `followSurface=false`.
+  * Replaced `PerspectiveFrustum.fovy` with `PerspectiveFrustum.fov` which will change the field of view angle in either the `X` or `Y` direction depending on the aspect ratio.
+  * Removed the following from the Cesium API: `Transforms.earthOrientationParameters`, `EarthOrientationParameters`, `EarthOrientationParametersSample`, `Transforms.iau2006XysData`, `Iau2006XysData`, `Iau2006XysSample`, `IauOrientationAxes`, `TimeConstants`, `Scene.frameState`, `FrameState`, `EncodedCartesian3`, `EllipsoidalOccluder`, `TextureAtlas`, and `FAR`.  These are still available but are not part of the official API and may change in future versions.
+  * Removed `DynamicObject.vertexPositions`.  Use `DynamicWall.positions`, `DynamicPolygon.positions`, and `DynamicPolyline.positions` instead.
+  * Removed `defaultPoint`, `defaultLine`, and `defaultPolygon` from `GeoJsonDataSource`.
+  * Removed `Primitive.allow3DOnly`. Set the `Scene` constructor option `scene3DOnly` instead.
+  * `SampledProperty` and `SampledPositionProperty` no longer extrapolate outside of their sample data time range by default.
+  * Changed the following functions to properties:
+    * `TerrainProvider.hasWaterMask`
+    * `CesiumTerrainProvider.hasWaterMask`
+    * `ArcGisImageServerTerrainProvider.hasWaterMask`
+    * `EllipsoidTerrainProvider.hasWaterMask`
+    * `VRTheWorldTerrainProvider.hasWaterMask`
   * Removed `ScreenSpaceCameraController.ellipsoid`. The behavior that depended on the ellipsoid is now determined based on the scene state.
   * Sandcastle examples now automatically wrap the example code in RequireJS boilerplate.  To upgrade any custom examples, copy the code into an existing example (such as Hello World) and save a new file.
-  * Replaced `PerspectiveFrustum.fovy` with `PerspectiveFrustum.fov` which will change the field of view angle in either the x or y direction depending on the aspect ratio.
-* Added northUpEast transform to help support display of glTF models because Y is their up axis.
-* Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
-* Added `czm_octDecode` and `czm_signNotZero` builtin functions.
-* Added `CesiumTerrainProvider.requestVertexNormals` to request per vertex normals from the provider, if they are available.
-* Added new property to all terrain providers: `TerrainProvider.hasVertexNormals`, `CesiumTerrainProvider.hasVertexNormals`, `ArcGisImageServerTerrainProvider.hasVertexNormals`, `EllipsoidTerrainProvider.hasVertexNormals`, `VRTheWorldTerrainProvider.hasVertexNormals`.  This property indicates whether or not vertex normals will be included in the terrain tile responses.
-* Added support for rendering the globe with oct-encoded per vertex normals .
-* Added `Primitive.ready`.
-* Prevent primitives from flashing off and on when modifying static DataSources.
-* Added `scene3DOnly` options to `Viewer`, `CesiumWidget`, and `Scene` constructors. This setting optimizes memory usage and performance for 3D mode at the cost of losing the ability to use 2D or Columbus View.
-* Added the following methods to `IntersectionTests`: `rayTriangle`, `lineSegmentTriangle`, `raySphere`, and `lineSegmentSphere`.
-* Added `Globe.getHeight` and `Globe.pick` for finding the terrain height at a given Cartographic coordinate and picking the terrain with a ray.
-* Modified the default camera tilt mouse behavior to tilt about the point clicked.
+  * Removed `CustomSensorVolume`, `RectangularPyramidSensorVolume`, `DynamicCone`, `DynamicConeVisualizerUsingCustomSensor`, `DynamicPyramid` and `DynamicPyramidVisualizer`.  This will be moved to a plugin in early August.  [#1887](https://github.com/AnalyticalGraphicsInc/cesium/issues/1887)
+  * If `Primitive.modelMatrix` is changed after creation, it only affects primitives with one instance and only in 3D mode.
+  * `ImageryLayer` properties `alpha`, `brightness`, `contrast`, `hue`, `saturation`, and `gamma` may no longer be functions.  If you need to change these values each frame, consider moving your logic to an event handler for `Scene.preRender`.
+  * Removed `closeTop` and `closeBottom` options from `RectangleGeometry`.
+  * CZML changes:
+    * CZML is now versioned using the <major>.<minor> scheme.  For example, any CZML 1.0 implementation will be able to load any 1.<minor> document (with graceful degradation).  Major version number increases will be reserved for breaking changes.  We fully expect these major version increases to happen, as CZML is still in development, but we wanted to give developers a stable target to work with.
+    * A `"1.0"` version string is required to be on the document packet, which is required to be the first packet in a CZML file.  Previously the `document` packet was optional; it is now mandatory.  The simplest document packet is:
+      ```
+      {
+        "id":"document",
+        "version":"1.0"
+      }
+      ```
+    * The `vertexPositions` property has been removed.  There is now a `positions` property directly on objects that use it, currently `polyline`, `polygon`, and `wall`.
+    * `cone`, `pyramid`, and `vector` have been removed from the core CZML schema.  They are now treated as extensions maintained by Analytical Graphics and have been renamed to `agi_conicSensor`, `agi_customPatternSensor`, and `agi_vector` respectively.
+    * The `orientation` property has been changed to match Cesium convention.  To update existing CZML documents, conjugate the quaternion values.
+    * `pixelOffset` now uses the top-left of the screen as the origin; previously it was the bottom-left.  To update existing documents, negate the `y` value.
+    * Removed `color`, `outlineColor`, and `outlineWidth` properties from `polyline` and `path`.  There is a new `material` property that allows you to specify a variety of materials, such as `solidColor`, `polylineOutline` and `polylineGlow`.
+    * See the [CZML Schema](https://github.com/AnalyticalGraphicsInc/cesium/wiki/CZML-Content) for more details.  We plan on greatly improving this document in the coming weeks.
 * Added camera collision detection with terrain to the default mouse interaction.
+* Modified the default camera tilt mouse behavior to tilt about the point clicked, taking into account terrain.
+* Modified the default camera mouse behavior to look about the camera's position when the sky is clicked.
+* Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
+* Added support for rendering terrain lighting with oct-encoded per-vertex normals.  Added `CesiumTerrainProvider.requestVertexNormals` to request per vertex normals.  Added `hasVertexNormals` property to all terrain providers to indicate whether or not vertex normals are included in the requested terrain tiles.
+* Added `Globe.getHeight` and `Globe.pick` for finding the terrain height at a given Cartographic coordinate and picking the terrain with a ray.
+* Added `scene3DOnly` options to `Viewer`, `CesiumWidget`, and `Scene` constructors. This setting optimizes memory usage and performance for 3D mode at the cost of losing the ability to use 2D or Columbus View.
+* Added `forwardExtrapolationType`, `forwardExtrapolationDuration`, `backwardExtrapolationType`, and `backwardExtrapolationDuration` to `SampledProperty` and `SampledPositionProperty` which allows the user to specify how a property calculates its value when outside the range of its sample data.
+* Prevent primitives from flashing off and on when modifying static DataSources.
+* Added the following methods to `IntersectionTests`: `rayTriangle`, `lineSegmentTriangle`, `raySphere`, and `lineSegmentSphere`.
 * Matrix types now have `add` and `subtract` functions.
 * `Matrix3` type now has a `fromCrossProduct` function.
-* Added `forwardExtrapolationType`, `forwardExtrapolationDuration`, `backwardExtrapolationType`, and `backwardExtrapolationDuration` to `SampledProperty` and `SampledPositionProperty` which allows the user to specify how a property calculates its value when outside the range of its sample data.
+* Added `CesiumMath.signNotZero`, `CesiumMath.toSNorm` and `CesiumMath.fromSNorm` functions.
+* DataSource & CZML models now default to North-East-Down orientation if none is provided.
+* `TileMapServiceImageryProvider` now works with tilesets created by tools that better conform to the TMS specification.  In particular, a profile of `global-geodetic` or `global-mercator` is now supported (in addition to the previous `geodetic` and `mercator`) and in these profiles it is assumed that the X coordinates of the bounding box correspond to the longitude direction.
+* `EntityCollection` and `CompositeEntityCollection` now include the array of modified entities as the last parameter to their `onCollectionChanged` event.
+* `RectangleGeometry`, `RectangleOutlineGeometry` and `RectanglePrimitive` can cross the international date line.
 
 Beta Releases
 -------------

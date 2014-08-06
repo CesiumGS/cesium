@@ -36,21 +36,12 @@ var billboard;
 
 function addBillboard(scene) {
     var primitives = scene.primitives;
-    var image = new Image();
-    image.onload = function() {
-        var billboards = new Cesium.BillboardCollection();
-        var textureAtlas = new Cesium.TextureAtlas({
-            scene : scene,
-            image : image
-        });
-        billboards.textureAtlas = textureAtlas;
-        billboard = billboards.add({
-            position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-            imageIndex : 0
-        });
-        primitives.add(billboards);
-    };
-    image.src = '../images/Cesium_Logo_overlay.png';
+    var billboards = new Cesium.BillboardCollection();
+    billboard = billboards.add({
+        position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+        image : '../images/Cesium_Logo_overlay.png'
+    });
+    primitives.add(billboards);
 }
 
 function addOverlappingPolygons(scene) {
@@ -98,12 +89,7 @@ function addOverlappingPolygons(scene) {
     greenPolygon.picked = false;
 }
 
-function cleanup() {
-    scene.primitives.removeAll();
-    handler = handler && handler.destroy();
-}
-
-function pickCartographicPosition() {
+Sandcastle.addDefaultToolbarButton('Show Cartographic Position on Mouse Over', function() {
     var ellipsoid = scene.globe.ellipsoid;
     var labels = new Cesium.LabelCollection();
     label = labels.add();
@@ -122,17 +108,9 @@ function pickCartographicPosition() {
             label.text = '';
         }
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-}
-pickCartographicPosition();
-
-Sandcastle.addToolbarButton('Show Cartographic Position on Mouse Over', function() {
-    cleanup();
-    pickCartographicPosition();
 });
 
 Sandcastle.addToolbarButton('Pick Billboard', function() {
-    cleanup();
-
     addBillboard(scene);
 
     // If the mouse is over the billboard, change its scale and color
@@ -156,8 +134,6 @@ Sandcastle.addToolbarButton('Pick Billboard', function() {
 
 var originalColor = {};
 Sandcastle.addToolbarButton('Drill-Down Picking', function() {
-    cleanup();
-
     var primitives = scene.primitives;
     addOverlappingPolygons(scene);
 
@@ -203,6 +179,11 @@ Sandcastle.addToolbarButton('Drill-Down Picking', function() {
         }
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 });
+
+Sandcastle.reset = function() {
+    scene.primitives.removeAll();
+    handler = handler && handler.destroy();
+};
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

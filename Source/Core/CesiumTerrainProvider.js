@@ -219,22 +219,22 @@ define([
 
     /**
      * When using the Quantized-Mesh format, a tile may be returned that includes additional extensions, such as PerVertexNormals, watermask, etc.
-     * This enumeration defines the bitwise flags that define the type of extension data that has been appended to the standard mesh data.
+     * This enumeration defines the unique identifiers for each type of extension data that has been appended to the standard mesh data.
      *
      * @namespace
-     * @alias QuantizedMeshExtensionFlags
+     * @alias QuantizedMeshExtensionIds
      * @see CesiumTerrainProvider
      * @private
      */
-    var QuantizedMeshExtensionFlags = {
+    var QuantizedMeshExtensionIds = {
         /**
          * Oct-Encoded Per-Vertex Normals are included as an extension to the tile mesh
          *
          * @type {Number}
          * @constant
-         * @default 0x1
+         * @default 1
          */
-        OCT_VERTEX_NORMALS: 0x1
+        OCT_VERTEX_NORMALS: 1
     };
 
     var requestHeadersVertexNormals = {
@@ -369,14 +369,16 @@ define([
         pos += northVertexCount * Uint16Array.BYTES_PER_ELEMENT;
 
         var encodedNormalBuffer;
-        if (pos < view.byteLength) {
-            var extensionsflag = view.getUint8(pos);
+        while (pos < view.byteLength) {
+            var extensionId = view.getUint8(pos);
             pos += Uint8Array.BYTES_PER_ELEMENT;
+            var extensionLength = view.getUint32(pos);
+            pos += Uint32Array.BYTES_PER_ELEMENT;
 
-            if (extensionsflag & QuantizedMeshExtensionFlags.OCT_VERTEX_NORMALS !== 0) {
+            if (extensionId === QuantizedMeshExtensionIds.OCT_VERTEX_NORMALS) {
                 encodedNormalBuffer = new Uint8Array(buffer, pos, vertexCount * 2);
-                pos += vertexCount * 2 * Uint8Array.BYTES_PER_ELEMENT;
             }
+            pos += extensionLength;
         }
 
         var skirtHeight = provider.getLevelMaximumGeometricError(level) * 5.0;
@@ -554,7 +556,7 @@ define([
         },
 
         /**
-         * Gets a value indicating whether or not the requested tiles includes vertex normals.
+         * Gets a value indicating whether or not the requested tiles include vertex normals.
          * This function should not be called before {@link CesiumTerrainProvider#ready} returns true.
          * @memberof CesiumTerrainProvider.prototype
          * @type {Boolean}

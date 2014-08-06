@@ -4,10 +4,8 @@ define([
         './binarySearch',
         './defaultValue',
         './defined',
-        './defineProperties',
         './DeveloperError',
         './GregorianDate',
-        './isArray',
         './isLeapYear',
         './LeapSecond',
         './TimeConstants',
@@ -17,10 +15,8 @@ define([
         binarySearch,
         defaultValue,
         defined,
-        defineProperties,
         DeveloperError,
         GregorianDate,
-        isArray,
         isLeapYear,
         LeapSecond,
         TimeConstants,
@@ -972,6 +968,15 @@ define([
      */
     JulianDate.prototype.equalsEpsilon = function(right, epsilon) {
         return JulianDate.equalsEpsilon(this, right, epsilon);
+    };
+
+    /**
+     * Creates a string representing this date in ISO8601 format.
+     *
+     * @returns {String} A string representing this date in ISO8601 format.
+     */
+    JulianDate.prototype.toString = function() {
+        return JulianDate.toIso8601(this);
     };
 
     /**

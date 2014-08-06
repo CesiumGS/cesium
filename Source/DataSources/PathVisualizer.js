@@ -1,7 +1,7 @@
 /*global define*/
 define([
+        '../Core/AssociativeArray',
         '../Core/Cartesian3',
-        '../Core/Color',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -11,7 +11,6 @@ define([
         '../Core/ReferenceFrame',
         '../Core/TimeInterval',
         '../Core/Transforms',
-        '../Scene/Material',
         '../Scene/PolylineCollection',
         '../Scene/SceneMode',
         './CompositePositionProperty',
@@ -22,8 +21,8 @@ define([
         './SampledPositionProperty',
         './TimeIntervalCollectionPositionProperty'
     ], function(
+        AssociativeArray,
         Cartesian3,
-        Color,
         defined,
         destroyObject,
         DeveloperError,
@@ -33,7 +32,6 @@ define([
         ReferenceFrame,
         TimeInterval,
         Transforms,
-        Material,
         PolylineCollection,
         SceneMode,
         CompositePositionProperty,
@@ -411,11 +409,14 @@ define([
         }
         //>>includeEnd('debug');
 
-        entityCollection.collectionChanged.addEventListener(PathVisualizer.prototype._onObjectsRemoved, this);
+        entityCollection.collectionChanged.addEventListener(PathVisualizer.prototype._onCollectionChanged, this);
 
         this._scene = scene;
         this._updaters = {};
         this._entityCollection = entityCollection;
+        this._entitiesToVisualize = new AssociativeArray();
+
+        this._onCollectionChanged(entityCollection, entityCollection.entities, [], []);
     };
 
     /**
@@ -439,18 +440,10 @@ define([
             }
         }
 
-        var entities = this._entityCollection.entities;
+        var entities = this._entitiesToVisualize.values;
         for (var i = 0, len = entities.length; i < len; i++) {
             var entity = entities[i];
-
-            if (!defined(entity._path)) {
-                continue;
-            }
-
             var positionProperty = entity._position;
-            if (!defined(positionProperty)) {
-                continue;
-            }
 
             var lastUpdater = entity._pathUpdater;
 
@@ -498,7 +491,7 @@ define([
      */
     PathVisualizer.prototype.destroy = function() {
         var entityCollection = this._entityCollection;
-        entityCollection.collectionChanged.removeEventListener(PathVisualizer.prototype._onObjectsRemoved, this);
+        entityCollection.collectionChanged.removeEventListener(PathVisualizer.prototype._onCollectionChanged, this);
 
         var updaters = this._updaters;
         for ( var key in updaters) {
@@ -516,13 +509,39 @@ define([
         return destroyObject(this);
     };
 
-    PathVisualizer.prototype._onObjectsRemoved = function(entityCollection, added, entities) {
-        for (var i = entities.length - 1; i > -1; i--) {
-            var entity = entities[i];
-            var _pathUpdater = entity._pathUpdater;
+    PathVisualizer.prototype._onCollectionChanged = function(entityCollection, added, removed, changed) {
+        var i;
+        var entity;
+        var _pathUpdater;
+        var entities = this._entitiesToVisualize;
+
+        for (i = added.length - 1; i > -1; i--) {
+            entity = added[i];
+            if (defined(entity._path) && defined(entity._position)) {
+                entities.set(entity.id, entity);
+            }
+        }
+
+        for (i = changed.length - 1; i > -1; i--) {
+            entity = changed[i];
+            if (defined(entity._path) && defined(entity._position)) {
+                entities.set(entity.id, entity);
+            } else {
+                _pathUpdater = entity._pathUpdater;
+                if (defined(_pathUpdater)) {
+                    _pathUpdater.removeObject(entity);
+                }
+                entities.remove(entity.id);
+            }
+        }
+
+        for (i = removed.length - 1; i > -1; i--) {
+            entity = removed[i];
+            _pathUpdater = entity._pathUpdater;
             if (defined(_pathUpdater)) {
                 _pathUpdater.removeObject(entity);
             }
+            entities.remove(entity.id);
         }
     };
 
