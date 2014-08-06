@@ -31,6 +31,7 @@ define([
      */
     var PropertyBagProperty = function() {
         this._definitionChanged = new Event();
+        this._primitiveName = undefined;
     };
 
     defineProperties(PropertyBagProperty.prototype, {
@@ -73,6 +74,10 @@ define([
     PropertyBagProperty.prototype.addProperty = function(name) {
         if (!defined(this[name])) {
             Object.defineProperty(this, name, createPropertyDescriptor(name));
+
+            if (name === 'boolean' || name === 'string' || name === 'number') {
+                this._primitiveName = name;
+            }
         }
     };
 
@@ -85,6 +90,10 @@ define([
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
      */
     PropertyBagProperty.prototype.getValue = function(time, result) {
+        if (defined(this._primitiveName)) {
+            return Property.getValueOrUndefined(this[this._primitiveName], time);
+        }
+
         if (!defined(result)) {
             result = {};
 
@@ -112,7 +121,7 @@ define([
 
         // Check for properties of the result object that no longer exist.
         for (property in result) {
-            if (result.hasOwnProperty(property) && !this.hasOwnProperty(property)) {
+            if (!this.hasOwnProperty(property) && result.hasOwnProperty(property)) {
                 delete result[property];
                 result.propertyBagChanged = true;
             }
@@ -158,7 +167,11 @@ define([
     };
 
     function isPrivateBagProperty(name) {
-        return name.length > 0 && name[0] === '_' && name !== '_definitionChanged' && name.lastIndexOf('Subscription') !== name.length - 12;
+        return name.length > 0 &&
+               name[0] === '_' &&
+               name !== '_definitionChanged' &&
+               name !== '_primitiveName' &&
+               name.lastIndexOf('Subscription') !== name.length - 12;
     }
 
     return PropertyBagProperty;

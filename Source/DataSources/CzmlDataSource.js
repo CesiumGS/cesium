@@ -1266,7 +1266,7 @@ define([
 
                 if (typeof propertyValue === 'object') {
                     // This is an array or object literal, so treat it as an interval or array of intervals.
-                    processPropertyBagData(existingData, property, propertValue, combinedInterval, sourceUri, entityCollection);
+                    processPropertyBagData(existingData, property, propertyValue, combinedInterval, sourceUri, entityCollection);
                 } else if (defined(propertyValue) && propertyValue !== null) {
                     // This is a primitive property.
                     processPacketData(propertyValue.constructor, existingData, property, packetData[property], combinedInterval, sourceUri, entityCollection);
