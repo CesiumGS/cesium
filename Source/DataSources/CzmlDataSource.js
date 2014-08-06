@@ -1258,18 +1258,18 @@ define([
             existingData = new PropertyBagProperty();
         }
 
-        for (var property in packetData) {
-            if (packetData.hasOwnProperty(property)) {
-                var propertyValue = packetData[property];
+        for (var subProperty in packetData) {
+            if (packetData.hasOwnProperty(subProperty)) {
+                var propertyValue = packetData[subProperty];
 
-                existingData.addProperty(property);
+                existingData.addProperty(subProperty);
 
                 if (typeof propertyValue === 'object') {
                     // This is an array or object literal, so treat it as an interval or array of intervals.
-                    processPropertyBagData(existingData, property, propertyValue, combinedInterval, sourceUri, entityCollection);
+                    processPropertyBagData(existingData, subProperty, propertyValue, combinedInterval, sourceUri, entityCollection);
                 } else if (defined(propertyValue) && propertyValue !== null) {
                     // This is a primitive property.
-                    processPacketData(propertyValue.constructor, existingData, property, packetData[property], combinedInterval, sourceUri, entityCollection);
+                    processPacketData(propertyValue.constructor, existingData, subProperty, packetData[subProperty], combinedInterval, sourceUri, entityCollection);
                 }
             }
         }
