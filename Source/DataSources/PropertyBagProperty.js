@@ -113,7 +113,7 @@ define([
                 var previousValue = result[publicName];
                 result[publicName] = Property.getValueOrUndefined(this[property], time, result[publicName]);
 
-                if (result[publicName] !== previousValue || previousValue.propertyBagChanged) {
+                if (result[publicName] !== previousValue || (defined(previousValue) && previousValue.propertyBagChanged)) {
                     result.propertyBagChanged = true;
                 }
             }

@@ -1215,6 +1215,18 @@ define([
     }
 
     function processPropertyBagProperty(object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection) {
+        // Handle explicit primitive types within the property bag.
+        if (defined(packetData.number)) {
+            processPacketData(Number, object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection);
+            return;
+        } else if (defined(packetData.string)) {
+            processPacketData(String, object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection);
+            return;
+        } else if (defined(packetData.boolean)) {
+            processPacketData(Boolean, object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection);
+            return;
+        }
+
         var combinedInterval;
         var packetInterval = packetData.interval;
         if (defined(packetInterval)) {
