@@ -45,7 +45,7 @@ define([
         isConstant : {
             get : function() {
                 for (var property in this) {
-                    if (property.length > 0 && property[0] === '_' && this.hasOwnProperty(property)) {
+                    if (this.hasOwnProperty(property) && isPrivateBagProperty(property)) {
                         if (!Property.isConstant(this[property])) {
                             return false;
                         }
@@ -87,12 +87,34 @@ define([
     PropertyBagProperty.prototype.getValue = function(time, result) {
         if (!defined(result)) {
             result = {};
+
+            // Use a defined property so it won't show up in enumeration.
+            Object.defineProperty(result, 'propertyBagChanged', {
+                writable : true
+            });
         }
 
-        for (var property in this) {
+        result.propertyBagChanged = false;
+
+        var property;
+
+        for (property in this) {
             if (this.hasOwnProperty(property) && isPrivateBagProperty(property)) {
                 var publicName = property.substring(1);
+                var previousValue = result[publicName];
                 result[publicName] = Property.getValueOrUndefined(this[property], time, result[publicName]);
+
+                if (result[publicName] !== previousValue || previousValue.propertyBagChanged) {
+                    result.propertyBagChanged = true;
+                }
+            }
+        }
+
+        // Check for properties of the result object that no longer exist.
+        for (property in result) {
+            if (result.hasOwnProperty(property) && !this.hasOwnProperty(property)) {
+                delete result[property];
+                result.propertyBagChanged = true;
             }
         }
 

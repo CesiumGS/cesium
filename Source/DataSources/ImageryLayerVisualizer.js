@@ -176,14 +176,16 @@ define([
     function updateWebMapServiceImageryProvider(imageryProviderProperty, time, scene, entity, layerGraphics, imageryProviderData) {
         var url = Property.getValueOrUndefined(imageryProviderProperty._url, time);
         var layers = Property.getValueOrUndefined(imageryProviderProperty._layers, time);
-        var parameters = Property.getValueOrUndefined(imageryProviderProperty._parameters, time);
-
-        // TODO: might be slightly expensive to get the parameters every update.
-        //       How can we avoid it?
+        var parameters = Property.getValueOrUndefined(imageryProviderProperty._parameters, time, imageryProviderData.lastParameters);
+        imageryProviderData.lastParameters = parameters;
 
         if (defined(url) && defined(layers)) {
             var imageryProvider = imageryProviderData.imageryProvider;
-            if (!defined(imageryProvider) || imageryProvider.url !== url || imageryProvider.layers !== layers) {
+            if (!defined(imageryProvider) ||
+                imageryProvider.url !== url ||
+                imageryProvider.layers !== layers ||
+                parameters.propertyBagChanged) {
+
                 imageryProvider = imageryProviderData.imageryProvider = new WebMapServiceImageryProvider({
                     url : url,
                     layers : layers,
