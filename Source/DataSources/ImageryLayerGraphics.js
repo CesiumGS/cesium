@@ -118,7 +118,7 @@ define([
         /**
          * Gets or sets the {@link Property} describing how tiled images for this layer
          * are obtained.
-         * @type {ImageryProvider}
+         * @type {ImageryProviderProperty}
          */
         imageryProvider : createPropertyDescriptor('imageryProvider')
     });

@@ -27,6 +27,8 @@ define([
         this._urlSubscription = undefined;
         this._layers = undefined;
         this._layersSubscription = undefined;
+        this._parameters = undefined;
+        this._parametersSubscription = undefined;
     };
 
     defineProperties(WebMapServiceProperty.prototype, {
@@ -70,7 +72,13 @@ define([
          * @memberof WebMapServiceProperty.prototype
          * @type {Property}
          */
-        layers : createPropertyDescriptor('layers')
+        layers : createPropertyDescriptor('layers'),
+        /**
+         * Additional parameters to be passed to the WMS server
+         * @memberof WebMapServiceProperty.prototype
+         * @type {Object}
+         */
+        parameters : createPropertyDescriptor('parameters')
     });
 
     /**
