@@ -126,6 +126,10 @@ define([
         var viewProjection = scene.context.uniformState.viewProjection;
         Matrix4.multiplyByVector(viewProjection, Cartesian4.fromElements(actualPosition.x, actualPosition.y, actualPosition.z, 1, positionCC), positionCC);
 
+        if ((positionCC.z < 0) && (scene.mode !== SceneMode.SCENE2D)) {
+            return undefined;
+        }
+
         return SceneTransforms.clipToDrawingBufferCoordinates(scene, positionCC, result);
     };
 

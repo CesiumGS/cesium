@@ -1598,11 +1598,15 @@ define([
      * @param {Number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
      */
     Scene.prototype.morphTo2D = function(duration) {
+        var ellipsoid;
         var globe = this.globe;
         if (defined(globe)) {
-            duration = defaultValue(duration, 2.0);
-            this._transitioner.morphTo2D(duration, globe.ellipsoid);
+            ellipsoid = globe.ellipsoid;
+        } else {
+            ellipsoid = this.mapProjection.ellipsoid;
         }
+        duration = defaultValue(duration, 2.0);
+        this._transitioner.morphTo2D(duration, ellipsoid);
     };
 
     /**
@@ -1610,11 +1614,15 @@ define([
      * @param {Number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
      */
     Scene.prototype.morphToColumbusView = function(duration) {
+        var ellipsoid;
         var globe = this.globe;
         if (defined(globe)) {
-            duration = defaultValue(duration, 2.0);
-            this._transitioner.morphToColumbusView(duration, globe.ellipsoid);
+            ellipsoid = globe.ellipsoid;
+        } else {
+            ellipsoid = this.mapProjection.ellipsoid;
         }
+        duration = defaultValue(duration, 2.0);
+        this._transitioner.morphToColumbusView(duration, ellipsoid);
     };
 
     /**
@@ -1622,11 +1630,15 @@ define([
      * @param {Number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
      */
     Scene.prototype.morphTo3D = function(duration) {
+        var ellipsoid;
         var globe = this.globe;
         if (defined(globe)) {
-            duration = defaultValue(duration, 2.0);
-            this._transitioner.morphTo3D(duration, globe.ellipsoid);
+            ellipsoid = globe.ellipsoid;
+        } else {
+            ellipsoid = this.mapProjection.ellipsoid;
         }
+        duration = defaultValue(duration, 2.0);
+        this._transitioner.morphTo3D(duration, ellipsoid);
     };
 
     /**
