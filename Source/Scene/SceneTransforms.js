@@ -76,7 +76,7 @@ define([
         viewProjectionScratch = Matrix4.multiply(camera.frustum.projectionMatrix, camera.viewMatrix, viewProjectionScratch);
         Matrix4.multiplyByVector(viewProjectionScratch, actualPosition, positionCC);
 
-        if (positionCC.z < 0) {
+        if ((positionCC.z < 0) && (scene.mode !== SceneMode.SCENE2D)) {
             return undefined;
         }
 
