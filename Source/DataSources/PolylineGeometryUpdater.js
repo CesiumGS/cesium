@@ -47,6 +47,9 @@ define([
         Property) {
     "use strict";
 
+    //We use this object to create one polyline collection per-scene.
+    var polylineCollections = {};
+
     var defaultMaterial = ColorMaterialProperty.fromColor(Color.WHITE);
     var defaultShow = new ConstantProperty(true);
 
@@ -66,15 +69,20 @@ define([
      * @constructor
      *
      * @param {Entity} entity The entity containing the geometry to be visualized.
+     * @param {Scene} scene The scene in which the geometry will be visualized.
      */
-    var PolylineGeometryUpdater = function(entity) {
+    var PolylineGeometryUpdater = function(entity, scene) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(entity)) {
             throw new DeveloperError('entity is required');
         }
+        if (!defined(scene)) {
+            throw new DeveloperError('scene is required');
+        }
         //>>includeEnd('debug');
 
         this._entity = entity;
+        this._scene = scene;
         this._entitySubscription = entity.definitionChanged.addEventListener(PolylineGeometryUpdater.prototype._onEntityPropertyChanged, this);
         this._fillEnabled = false;
         this._dynamic = false;
@@ -414,17 +422,23 @@ define([
         return new DynamicGeometryUpdater(primitives, this);
     };
 
-    var polylineCollection;
-
     /**
      * @private
      */
     var DynamicGeometryUpdater = function(primitives, geometryUpdater) {
+        var sceneId = geometryUpdater._scene.id;
+
+        var polylineCollection = polylineCollections[sceneId];
         if (!defined(polylineCollection)) {
             polylineCollection = new PolylineCollection();
+            polylineCollections[sceneId] = polylineCollection;
             primitives.add(polylineCollection);
         }
-        this._line = polylineCollection.add();
+
+        var line = polylineCollection.add();
+        line.id = geometryUpdater._entity;
+
+        this._line = line;
         this._primitives = primitives;
         this._geometryUpdater = geometryUpdater;
         this._positions = [];
@@ -466,13 +480,16 @@ define([
     };
 
     DynamicGeometryUpdater.prototype.destroy = function() {
+        var geometryUpdater = this._geometryUpdater;
+        var sceneId = geometryUpdater._scene.id;
+        var polylineCollection = polylineCollections[sceneId];
         polylineCollection.remove(this._line);
         if (polylineCollection.length === 0) {
             this._primitives.remove(polylineCollection);
             if (!polylineCollection.isDestroyed()) {
                 polylineCollection.destroy();
             }
-            polylineCollection = undefined;
+            delete polylineCollections[sceneId];
         }
         destroyObject(this);
     };
