@@ -114,7 +114,6 @@ define([
         this._targetProperty = undefined;
         this._targetEntity = undefined;
         this._definitionChanged = new Event();
-        this._inOwnEvent = false;
 
         targetCollection.collectionChanged.addEventListener(ReferenceProperty.prototype._onCollectionChanged, this);
     };
@@ -328,20 +327,15 @@ define([
     };
 
     ReferenceProperty.prototype._onCollectionChanged = function(collection, added, removed) {
-        if (this._inOwnEvent) {
-            return;
-        }
-        this._inOwnEvent = true;
         var targetEntity = this._targetEntity;
         if (defined(targetEntity)) {
-            if (removed.indexOf(targetEntity) === -1) {
+            if (removed.indexOf(targetEntity) !== -1) {
                 targetEntity.definitionChanged.removeEventListener(ReferenceProperty.prototype._onTargetEntityDefinitionChanged, this);
                 this._targetProperty = undefined;
                 this._targetEntity = undefined;
                 this._definitionChanged.raiseEvent(this);
             }
         }
-        this._inOwnEvent = false;
     };
 
     return ReferenceProperty;
