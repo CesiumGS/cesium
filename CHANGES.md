@@ -2,6 +2,8 @@ Change Log
 ==========
 
 ### 1.01 - 2014-09-01
+
+* Added a new imagery provider, `WebMapTileServiceImageryProvider`, for accessing tiles on a WMTS 1.0.0 server.
 * Added `id` property to `Scene` which is a readonly unique identifier associated with each instance.
 * Greatly improved the performance of time-varying polylines when using DataSources.
 

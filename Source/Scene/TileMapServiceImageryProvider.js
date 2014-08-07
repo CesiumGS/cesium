@@ -63,6 +63,7 @@ define([
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
      * @see OpenStreetMapImageryProvider
+     * @see WebMapTileServiceImageryProvider
      * @see SingleTileImageryProvider
      * @see WebMapServiceImageryProvider
      *
