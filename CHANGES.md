@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.01 - 2014-09-01
+* Added `id` property to `Scene` which is a readonly unique identifier associated with each instance.
+* Greatly improved the performance of time-varying polylines when using DataSources.
+
 ### 1.0 - 2014-08-01
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))
