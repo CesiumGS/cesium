@@ -1222,7 +1222,7 @@ define([
         } else if (defined(packetData.string)) {
             processPacketData(String, object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection);
             return;
-        } else if (defined(packetData.boolean)) {
+        } else if (defined(packetData['boolean'])) {
             processPacketData(Boolean, object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection);
             return;
         }
