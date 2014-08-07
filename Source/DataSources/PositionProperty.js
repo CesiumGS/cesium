@@ -9,7 +9,7 @@ define([
         '../Core/Quaternion',
         '../Core/ReferenceFrame',
         '../Core/Transforms',
-        '../DynamicScene/DynamicObject'
+        './Entity'
     ], function(
         Cartesian3,
         defined,
@@ -20,7 +20,7 @@ define([
         Quaternion,
         ReferenceFrame,
         Transforms,
-        DynamicObject) {
+        Entity) {
     "use strict";
 
     /**
@@ -133,7 +133,7 @@ define([
         var frameOrientationValue = new Quaternion();
         var subResult = new Cartesian3();
 
-        if (first && inputFrame instanceof DynamicObject) {
+        if (first && inputFrame instanceof Entity) {
             var inFramePosition = inputFrame.position;
             var inFrameReferenceFrame = inFramePosition.referenceFrame;
             var inFramePositionValue = inFramePosition.getValueInReferenceFrame(time, inFrameReferenceFrame, framePositionValue);
@@ -151,7 +151,7 @@ define([
             return Cartesian3.add(subResult, result, result);
         }
 
-        if (outputFrame instanceof DynamicObject) {
+        if (outputFrame instanceof Entity) {
             var outFramePosition = outputFrame.position;
             var outFrameReferenceFrame = outFramePosition.referenceFrame;
             var outFramePositionValue = outFramePosition.getValueInReferenceFrame(time, outFrameReferenceFrame, framePositionValue);
@@ -159,7 +159,7 @@ define([
             var outFrameOrientationProperty = outputFrame.orientation;
             if (defined(outFrameOrientationProperty)) {
                 var outFrameOrientation = outFrameOrientationProperty.getValue(time, frameOrientationValue);
-                Matrix3.fromQuaternion(Quaternion.conjugate(outFrameOrientation), scratchMatrix3);
+                Matrix3.fromQuaternion(Quaternion.conjugate(outFrameOrientation, outFrameOrientation), scratchMatrix3);
                 Matrix3.multiplyByVector(scratchMatrix3, value, result);
                 Cartesian3.subtract(result, outFramePositionValue, result);
             } else {
