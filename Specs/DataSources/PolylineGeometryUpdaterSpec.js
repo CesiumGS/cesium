@@ -287,7 +287,7 @@ defineSuite([
         var primitives = new PrimitiveCollection();
         var dynamicUpdater = updater.createDynamicUpdater(primitives);
         expect(dynamicUpdater.isDestroyed()).toBe(false);
-        expect(primitives.length).toBe(0);
+        expect(primitives.length).toBe(1);
         dynamicUpdater.update(time1);
         expect(primitives.length).toBe(1);
         dynamicUpdater.destroy();
