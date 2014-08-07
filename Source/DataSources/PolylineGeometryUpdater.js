@@ -7,11 +7,14 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/Ellipsoid',
         '../Core/Event',
         '../Core/GeometryInstance',
         '../Core/Iso8601',
         '../Core/PolylineGeometry',
+        '../Core/PolylinePipeline',
         '../Core/ShowGeometryInstanceAttribute',
+        '../Scene/PolylineCollection',
         '../Scene/PolylineColorAppearance',
         '../Scene/PolylineMaterialAppearance',
         '../Scene/Primitive',
@@ -27,11 +30,14 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        Ellipsoid,
         Event,
         GeometryInstance,
         Iso8601,
         PolylineGeometry,
+        PolylinePipeline,
         ShowGeometryInstanceAttribute,
+        PolylineCollection,
         PolylineColorAppearance,
         PolylineMaterialAppearance,
         Primitive,
@@ -408,71 +414,51 @@ define([
         return new DynamicGeometryUpdater(primitives, this);
     };
 
+    var polylineCollection;
+
     /**
      * @private
      */
     var DynamicGeometryUpdater = function(primitives, geometryUpdater) {
+        if (!defined(polylineCollection)) {
+            polylineCollection = new PolylineCollection();
+            primitives.add(polylineCollection);
+        }
+        this._line = polylineCollection.add();
         this._primitives = primitives;
-        this._primitive = undefined;
         this._geometryUpdater = geometryUpdater;
-        this._options = new GeometryOptions(geometryUpdater._entity);
+        this._positions = [];
     };
 
     DynamicGeometryUpdater.prototype.update = function(time) {
         var geometryUpdater = this._geometryUpdater;
-
-        if (defined(this._primitive)) {
-            this._primitives.remove(this._primitive);
-        }
-
         var entity = geometryUpdater._entity;
         var polyline = entity.polyline;
-        var show = polyline.show;
+        var primitive = this._line;
 
-        if (!entity.isAvailable(time) || (defined(show) && !show.getValue(time))) {
+        var show = entity.isAvailable(time) && Property.getValueOrDefault(polyline._show, time, true);
+        if (!show) {
+            primitive.show = false;
             return;
         }
 
-        var options = this._options;
-        options.followSurface = false;
         var positionsProperty = polyline.positions;
+        var positions = positionsProperty.getValue(time, this._positions);
 
-        var positions = positionsProperty.getValue(time, options.positions);
-        //Because of the way we currently handle reference properties,
-        //we can't automatically assume the positions are  always valid.
-        if (!defined(positions) || positions.length < 2) {
-            return;
+        var followSurface = Property.getValueOrDefault(polyline._followSurface, time, true);
+        if (followSurface) {
+            var granularity = Property.getValueOrUndefined(polyline._granularity, time);
+            positions = PolylinePipeline.generateCartesianArc({
+                positions : positions,
+                granularity : granularity,
+                height : PolylinePipeline.extractHeights(positions, Ellipsoid.WGS84)
+            });
         }
 
-        options.positions = positions;
-
-        var width = polyline.width;
-        options.width = defined(width) ? width.getValue(time) : undefined;
-
-        var followSurface = polyline.followSurface;
-        options.followSurface = defined(followSurface) ? followSurface.getValue(time) : undefined;
-
-        var granularity = polyline.granularity;
-        options.granularity = defined(granularity) ? granularity.getValue(time) : undefined;
-
-        this._material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
-        var material = this._material;
-        var appearance = new PolylineMaterialAppearance({
-            material : material,
-            translucent : material.isTranslucent(),
-            closed : false
-        });
-        options.vertexFormat = appearance.vertexFormat;
-
-        this._primitive = new Primitive({
-            geometryInstances : new GeometryInstance({
-                id : entity,
-                geometry : new PolylineGeometry(options)
-            }),
-            appearance : appearance,
-            asynchronous : false
-        });
-        this._primitives.add(this._primitive);
+        primitive.show = true;
+        primitive.positions = positions;
+        primitive.material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, primitive.material);
+        primitive.width = Property.getValueOrDefault(polyline._width, time, 1);
     };
 
     DynamicGeometryUpdater.prototype.isDestroyed = function() {
@@ -480,8 +466,13 @@ define([
     };
 
     DynamicGeometryUpdater.prototype.destroy = function() {
-        if (defined(this._primitive)) {
-            this._primitives.remove(this._primitive);
+        polylineCollection.remove(this._line);
+        if (polylineCollection.length === 0) {
+            this._primitives.remove(polylineCollection);
+            if (!polylineCollection.isDestroyed()) {
+                polylineCollection.destroy();
+            }
+            polylineCollection = undefined;
         }
         destroyObject(this);
     };
