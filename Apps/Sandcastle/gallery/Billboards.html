@@ -16,7 +16,7 @@
     });
     </script>
 </head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
 </style>
@@ -24,202 +24,111 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+function startup(Cesium) {
     "use strict";
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer');
+var scene = viewer.scene;
+var primitives = scene.primitives;
 
-    var viewer = new Cesium.Viewer('cesiumContainer');
-    var scene = viewer.scene;
-    var primitives = scene.primitives;
+function addBillboard() {
+    Sandcastle.declare(addBillboard);
 
-    function reset() {
-        primitives.removeAll();
-    }
+    var billboards = scene.primitives.add(new Cesium.BillboardCollection());
+    billboards.add({
+        image : '../images/Cesium_Logo_overlay.png',
+        position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883)
+    });
+}
 
-    function addBillboard() {
-        var image = new Image();
-        image.onload = function() {
-            var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = new Cesium.TextureAtlas({
-                scene : scene,
-                image : image
-            });
-            billboards.textureAtlas = textureAtlas;
+function setBillboardProperties() {
+    Sandcastle.declare(setBillboardProperties);
 
-            billboards.add({
-                position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-                imageIndex : 0
-            });
-            scene.primitives.add(billboards);
-        };
-        image.src = '../images/Cesium_Logo_overlay.png';
-    }
-    addBillboard();
+    var billboards = scene.primitives.add(new Cesium.BillboardCollection());
+    billboards.add({
+        image : '../images/Cesium_Logo_overlay.png', // default: undefined
+        show : true, // default
+        position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+        pixelOffset : new Cesium.Cartesian2(0, -50), // default: (0, 0)
+        eyeOffset : new Cesium.Cartesian3(0.0, 0.0, 0.0), // default
+        horizontalOrigin : Cesium.HorizontalOrigin.CENTER, // default
+        verticalOrigin : Cesium.VerticalOrigin.BOTTOM, // default: CENTER
+        scale : 2.0, // default: 1.0
+        color : Cesium.Color.LIME, // default: WHITE
+        rotation : Cesium.Math.PI_OVER_FOUR, // default: 0.0
+        alignedAxis : Cesium.Cartesian3.ZERO, // default
+        width : 100, // default: undefined
+        height : 25 // default: undefined
+    });
+}
 
-    Sandcastle.addToolbarButton('Add billboard', function() {
-        reset();
-        addBillboard();
+function changeBillboardProperties() {
+    Sandcastle.declare(changeBillboardProperties);
+
+    var billboards = scene.primitives.add(new Cesium.BillboardCollection());
+
+    // add() returns a Billboard object containing functions to change
+    // the billboard's position and appearance.
+    var b = billboards.add({
+        image : '../images/Cesium_Logo_overlay.png'
     });
 
-    Sandcastle.addToolbarButton('Set billboard properties at creation', function() {
-        reset();
+    b.position = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883, 300000.0);
+    b.scale = 3.0;
+    b.color = new Cesium.Color(1.0, 1.0, 1.0, 0.25);
+}
 
-        var image = new Image();
-        image.onload = function() {
-            var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = new Cesium.TextureAtlas({
-                scene : scene,
-                image : image
-            });
-            billboards.textureAtlas = textureAtlas;
+function addMultipleBillboards() {
+    Sandcastle.declare(addMultipleBillboards);
 
-            billboards.add({
-                show : true, // default
-                position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-                pixelOffset : new Cesium.Cartesian2(0, -50), // default: (0, 0)
-                eyeOffset : new Cesium.Cartesian3(0.0, 0.0, 0.0), // default
-                horizontalOrigin : Cesium.HorizontalOrigin.CENTER, // default
-                verticalOrigin : Cesium.VerticalOrigin.BOTTOM, // default: CENTER
-                scale : 2.0, // default: 1.0
-                imageIndex : 0, // default: -1
-                color : Cesium.Color.LIME, // default: WHITE
-                rotation : Cesium.Math.PI_OVER_FOUR, // default: 0.0
-                alignedAxis : Cesium.Cartesian3.ZERO, // default
-                width : 100, // default: undefined
-                height : 25 // default: undefined
-            });
-            scene.primitives.add(billboards);
-        };
-        image.src = '../images/Cesium_Logo_overlay.png';
+    var logoUrl = '../images/Cesium_Logo_overlay.png';
+    var facilityUrl = '../images/facility.gif';
+
+    var billboards = scene.primitives.add(new Cesium.BillboardCollection());
+    billboards.add({
+        image : logoUrl,
+        position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883)
     });
-
-    Sandcastle.addToolbarButton('Change billboard properties', function() {
-        reset();
-
-        var image = new Image();
-        image.onload = function() {
-            var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = new Cesium.TextureAtlas({
-                scene : scene,
-                image : image
-            });
-            billboards.textureAtlas = textureAtlas;
-
-            // add() returns a Billboard object containing functions to change
-            // the billboard's position and appearance.
-            var b = billboards.add({
-                position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-                imageIndex : 0
-            });
-
-            b.position = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883, 300000.0);
-            b.scale = 3.0;
-            b.color = new Cesium.Color(1.0, 1.0, 1.0, 0.25);
-
-            scene.primitives.add(billboards);
-        };
-        image.src = '../images/Cesium_Logo_overlay.png';
+    billboards.add({
+        image : facilityUrl,
+        position : Cesium.Cartesian3.fromDegrees(-80.50, 35.14)
     });
-
-    Sandcastle.addToolbarButton('Add multiple billboards', function() {
-        reset();
-
-        Cesium.when.all([
-                         Cesium.loadImage('../images/Cesium_Logo_overlay.png'),
-                         Cesium.loadImage('../images/facility.gif')
-                        ],
-                        function(images) {
-            // Once both images are downloaded, they are combined into one image,
-            // called a texture atlas, which is assigned to a billboard-collection.
-            // Several billboards can be added to the same collection; each billboard
-            // references an image in the texture atlas.
-
-            var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = new Cesium.TextureAtlas({
-                scene : scene,
-                images : images
-            });
-            billboards.textureAtlas = textureAtlas;
-
-            // Logo
-            billboards.add({
-                position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-                imageIndex : 0
-            });
-
-            // Facility
-            billboards.add({
-                position : Cesium.Cartesian3.fromDegrees(-80.50, 35.14),
-                imageIndex : 1
-            });
-
-            // Facility
-            billboards.add({
-                position : Cesium.Cartesian3.fromDegrees(-80.12, 25.46),
-                imageIndex : 1
-            });
-
-            scene.primitives.add(billboards);
-        });
+    billboards.add({
+        image : facilityUrl,
+        position : Cesium.Cartesian3.fromDegrees(-80.12, 25.46)
     });
+}
 
-    Sandcastle.addToolbarButton('Scale by viewer distance', function() {
-        reset();
+function scaleByDistance() {
+    Sandcastle.declare(scaleByDistance);
 
-        var image = new Image();
-        image.onload = function() {
-            var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = new Cesium.TextureAtlas({
-                scene : scene,
-                image : image
-            });
-            billboards.textureAtlas = textureAtlas;
-
-            billboards.add({
-                position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-                imageIndex : 0,
-                scaleByDistance : new Cesium.NearFarScalar(1.5e2, 2.0, 1.5e7, 0.5)
-            });
-            scene.primitives.add(billboards);
-        };
-        image.src = '../images/facility.gif';
+    var billboards = scene.primitives.add(new Cesium.BillboardCollection());
+    billboards.add({
+        image : '../images/facility.gif',
+        position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+        scaleByDistance : new Cesium.NearFarScalar(1.5e2, 2.0, 1.5e7, 0.5)
     });
+}
 
-    Sandcastle.addToolbarButton('Fade by viewer distance', function() {
-        reset();
+function fadeByDistance() {
+    Sandcastle.declare(fadeByDistance);
 
-        var image = new Image();
-        image.onload = function() {
-            var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = new Cesium.TextureAtlas({
-                scene : scene,
-                image : image
-            });
-            billboards.textureAtlas = textureAtlas;
-
-            billboards.add({
-                position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-                imageIndex : 0,
-                translucencyByDistance : new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e7, 0.2)
-            });
-            scene.primitives.add(billboards);
-        };
-        image.src = '../images/Cesium_Logo_overlay.png';
+    var billboards = scene.primitives.add(new Cesium.BillboardCollection());
+    billboards.add({
+        image : '../images/Cesium_Logo_overlay.png',
+        position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+        translucencyByDistance : new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e7, 0.2)
     });
+}
 
-    Sandcastle.addToolbarButton('Offset by viewer distance', function() {
-        reset();
-
-        Cesium.when.all([
-                         Cesium.loadImage('../images/Cesium_Logo_overlay.png'),
-                         Cesium.loadImage('../images/facility.gif')
-                        ],
-                        function(images) {
-            var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = new Cesium.TextureAtlas({
-                scene : scene,
-                images : images
-            });
-            billboards.textureAtlas = textureAtlas;
+function offsetByDistance() {
+    Sandcastle.declare(offsetByDistance);
+    Cesium.when.all([
+         Cesium.loadImage('../images/Cesium_Logo_overlay.png'),
+         Cesium.loadImage('../images/facility.gif')
+        ],
+        function(images) {
+            var billboards = scene.primitives.add(new Cesium.BillboardCollection());
 
             // As viewer zooms closer to facility billboard,
             // increase pixelOffset on CesiumLogo billboard to this height
@@ -227,215 +136,208 @@ require(['Cesium'], function(Cesium) {
 
             // colocated billboards, separate as viewer gets closer
             billboards.add({
+                image : images[1],
                 position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
                 horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
-                verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
-                imageIndex : 1
+                verticalOrigin : Cesium.VerticalOrigin.BOTTOM
             });
             billboards.add({
+                image : images[0],
                 position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-                imageIndex : 0,
                 horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
                 verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
                 pixelOffset : new Cesium.Cartesian2(0.0, -facilityHeight),
                 pixelOffsetScaleByDistance : new Cesium.NearFarScalar(1.0e3, 1.0, 1.5e6, 0.0),
                 translucencyByDistance : new Cesium.NearFarScalar(1.0e3, 1.0, 1.5e6, 0.1)
             });
-            scene.primitives.add(billboards);
-        });
     });
+}
 
-    Sandcastle.addToolbarButton('Add point billboards', function() {
-        reset();
+function addPointBillboards() {
+    Sandcastle.declare(addPointBillboards);
 
-        // A white circle is drawn into a 2D canvas.  The canvas is used as
-        // a texture for billboards, each of which applies a different color
-        // and scale to change the point's appearance.
-        //
-        // The 2D canvas can draw much more than circles.  See:
-        // https://developer.mozilla.org/en/Canvas_tutorial
-        var canvas = document.createElement('canvas');
-        canvas.width = 16;
-        canvas.height = 16;
-        var context2D = canvas.getContext('2d');
-        context2D.beginPath();
-        context2D.arc(8, 8, 8, 0, Cesium.Math.TWO_PI, true);
-        context2D.closePath();
-        context2D.fillStyle = 'rgb(255, 255, 255)';
-        context2D.fill();
+    // A white circle is drawn into a 2D canvas.  The canvas is used as
+    // a texture for billboards, each of which applies a different color
+    // and scale to change the point's appearance.
+    //
+    // The 2D canvas can draw much more than circles.  See:
+    // https://developer.mozilla.org/en/Canvas_tutorial
+    var canvas = document.createElement('canvas');
+    canvas.width = 16;
+    canvas.height = 16;
+    var context2D = canvas.getContext('2d');
+    context2D.beginPath();
+    context2D.arc(8, 8, 8, 0, Cesium.Math.TWO_PI, true);
+    context2D.closePath();
+    context2D.fillStyle = 'rgb(255, 255, 255)';
+    context2D.fill();
 
-        var billboards = new Cesium.BillboardCollection();
-        var textureAtlas = new Cesium.TextureAtlas({
-            scene : scene,
-            image : canvas
-        });
-        billboards.textureAtlas = textureAtlas;
-
-        billboards.add({
-            position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-            color : Cesium.Color.RED,
-            scale : 0.5,
-            imageIndex : 0
-        });
-
-        billboards.add({
-            position : Cesium.Cartesian3.fromDegrees(-80.50, 35.14),
-            color : Cesium.Color.BLUE,
-            imageIndex : 0
-        });
-
-        billboards.add({
-            position : Cesium.Cartesian3.fromDegrees(-80.12, 25.46),
-            color : Cesium.Color.LIME,
-            scale : 2,
-            imageIndex : 0
-        });
-
-        scene.primitives.add(billboards);
+    var billboards = scene.primitives.add(new Cesium.BillboardCollection());
+    billboards.add({
+        imageId : 'custom canvas point',
+        image : canvas,
+        position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+        color : Cesium.Color.RED,
+        scale : 0.5
     });
-
-    Sandcastle.addToolbarButton('Add marker billboards', function() {
-        reset();
-
-        var image = new Image();
-        image.onload = function() {
-            var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = new Cesium.TextureAtlas({
-                scene : scene,
-                borderWidthInPixels : 0
-            });
-
-            // Break one image full of markers into many subregions.
-            textureAtlas.addSubRegions(image, [
-            // Dots, small to large, imageIndex 1 to 6
-            { x : 91,  y : 11,  width : 6,  height : 6 },
-            { x : 81,  y : 9,   width : 10, height : 10 },
-            { x : 67,  y : 7,   width : 14, height : 14 },
-            { x : 49,  y : 5,   width : 18, height : 18 },
-            { x : 27,  y : 3,   width : 22, height : 22 },
-            { x : 1,   y : 1,   width : 26, height : 26 },
-            // Up-Triangles, small to large, imageIndex 7 to 12
-            { x : 91,  y : 49,  width : 6,  height : 6 },
-            { x : 81,  y : 47,  width : 10, height : 10 },
-            { x : 67,  y : 45,  width : 14, height : 14 },
-            { x : 49,  y : 43,  width : 18, height : 18 },
-            { x : 27,  y : 41,  width : 22, height : 22 },
-            { x : 1,   y : 39,  width : 26, height : 26 },
-            // Down-Triangles, small to large, imageIndex 13 to 18
-            { x : 31,  y : 29,  width : 6,  height : 6 },
-            { x : 37,  y : 27,  width : 10, height : 10 },
-            { x : 47,  y : 25,  width : 14, height : 14 },
-            { x : 61,  y : 23,  width : 18, height : 18 },
-            { x : 79,  y : 21,  width : 22, height : 22 },
-            { x : 101, y : 19,  width : 26, height : 26 },
-            // Up-Arrows, small to large, imageIndex 19 to 24
-            { x : 91,  y : 84,  width : 6,  height : 6 },
-            { x : 81,  y : 82,  width : 10, height : 10 },
-            { x : 67,  y : 80,  width : 14, height : 14 },
-            { x : 49,  y : 78,  width : 18, height : 18 },
-            { x : 27,  y : 76,  width : 22, height : 22 },
-            { x : 1,   y : 74,  width : 26, height : 26 },
-            // Down-Arrows, small to large, imageIndex 25 to 30
-            { x : 31,  y : 66,  width : 6,  height : 6 },
-            { x : 37,  y : 64,  width : 10, height : 10 },
-            { x : 47,  y : 62,  width : 14, height : 14 },
-            { x : 61,  y : 60,  width : 18, height : 18 },
-            { x : 79,  y : 58,  width : 22, height : 22 },
-            { x : 101, y : 56,  width : 26, height : 26 },
-            // X's, small to large, imageIndex 31 to 36
-            { x : 91,  y : 111, width : 6,  height : 6 },
-            { x : 81,  y : 109, width : 10, height : 10 },
-            { x : 67,  y : 107, width : 14, height : 14 },
-            { x : 49,  y : 105, width : 18, height : 18 },
-            { x : 27,  y : 103, width : 22, height : 22 },
-            { x : 1,   y : 101, width : 26, height : 26 },
-            // Plus's, small to large, imageIndex 37 to 42
-            { x : 92,  y : 120, width : 5,  height : 5 },
-            { x : 109, y : 109, width : 10, height : 10 },
-            { x : 107, y : 107, width : 14, height : 14 },
-            { x : 105, y : 105, width : 18, height : 18 },
-            { x : 103, y : 103, width : 22, height : 22 },
-            { x : 101, y : 101, width : 26, height : 26 }]);
-
-            billboards.textureAtlas = textureAtlas;
-
-            // Add several billboards based on the above marker definitions.
-            billboards.add({
-                position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-                imageIndex : 10,
-                scale : 1,
-                color : Cesium.Color.LIME
-            });
-            billboards.add({
-                position : Cesium.Cartesian3.fromDegrees(-84.0, 39.0),
-                imageIndex : 16,
-                scale : 1,
-                color : new Cesium.Color(0, 0.5, 1.0, 1.0)
-            });
-            billboards.add({
-                position : Cesium.Cartesian3.fromDegrees(-70.0, 41.0),
-                imageIndex : 21,
-                scale : 1,
-                color : new Cesium.Color(0.5, 0.9, 1.0, 1.0)
-            });
-            billboards.add({
-                position : Cesium.Cartesian3.fromDegrees(-73.0, 37.0),
-                imageIndex : 35,
-                scale : 1,
-                color : Cesium.Color.RED
-            });
-            billboards.add({
-                position : Cesium.Cartesian3.fromDegrees(-79.0, 35.0),
-                imageIndex : 40,
-                scale : 1,
-                color : Cesium.Color.YELLOW
-            });
-            scene.primitives.add(billboards);
-        };
-        image.src = '../images/whiteShapes.png';
+    billboards.add({
+        imageId : 'custom canvas point',
+        image : canvas,
+        position : Cesium.Cartesian3.fromDegrees(-80.50, 35.14),
+        color : Cesium.Color.BLUE
     });
-
-    Sandcastle.addToolbarButton('Add billboards in reference frame', function() {
-        reset();
-
-        var image = new Image();
-        image.onload = function() {
-            var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = new Cesium.TextureAtlas({
-                scene : scene,
-                image : image
-            });
-            billboards.textureAtlas = textureAtlas;
-
-            var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
-            billboards.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-            // center
-            billboards.add({
-                imageIndex : 0,
-                position : new Cesium.Cartesian3(0.0, 0.0, 0.0)
-            });
-            // east
-            billboards.add({
-                imageIndex : 0,
-                position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0)
-            });
-            // north
-            billboards.add({
-                imageIndex : 0,
-                position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0)
-            });
-            // up
-            billboards.add({
-                imageIndex : 0,
-                position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0)
-            });
-            scene.primitives.add(billboards);
-        };
-        image.src = '../images/facility.gif';
+    billboards.add({
+        imageId : 'custom canvas point',
+        image : canvas,
+        position : Cesium.Cartesian3.fromDegrees(-80.12, 25.46),
+        color : Cesium.Color.LIME,
+        scale : 2
     });
+}
 
-    Sandcastle.finishedLoading();
-});
+function addMarkerBillboards() {
+    Sandcastle.declare(addMarkerBillboards);
+
+    var billboards = scene.primitives.add(new Cesium.BillboardCollection());
+
+    // Add several billboards based on the above image in the atlas.
+    billboards.add({
+        image : '../images/whiteShapes.png',
+        imageSubRegion : new Cesium.BoundingRectangle(49, 43, 18, 18),
+        position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+        color : Cesium.Color.LIME
+    });
+    billboards.add({
+        image : '../images/whiteShapes.png',
+        imageSubRegion : new Cesium.BoundingRectangle(61, 23, 18, 18),
+        position : Cesium.Cartesian3.fromDegrees(-84.0, 39.0),
+        color : new Cesium.Color(0, 0.5, 1.0, 1.0)
+    });
+    billboards.add({
+        image : '../images/whiteShapes.png',
+        imageSubRegion : new Cesium.BoundingRectangle(67, 80, 14, 14),
+        position : Cesium.Cartesian3.fromDegrees(-70.0, 41.0),
+        color : new Cesium.Color(0.5, 0.9, 1.0, 1.0)
+    });
+    billboards.add({
+        image : '../images/whiteShapes.png',
+        imageSubRegion : new Cesium.BoundingRectangle(27, 103, 22, 22),
+        position : Cesium.Cartesian3.fromDegrees(-73.0, 37.0),
+        color : Cesium.Color.RED
+    });
+    billboards.add({
+        image : '../images/whiteShapes.png',
+        imageSubRegion : new Cesium.BoundingRectangle(105, 105, 18, 18),
+        position : Cesium.Cartesian3.fromDegrees(-79.0, 35.0),
+        color : Cesium.Color.YELLOW
+    });
+}
+
+function inReferenceFrame() {
+    Sandcastle.declare(inReferenceFrame);
+
+    var billboards = scene.primitives.add(new Cesium.BillboardCollection());
+    var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+    billboards.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+
+    var facilityUrl = '../images/facility.gif';
+
+    // center
+    billboards.add({
+        image : facilityUrl,
+        position : new Cesium.Cartesian3(0.0, 0.0, 0.0)
+    });
+    // east
+    billboards.add({
+        image : facilityUrl,
+        position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0)
+    });
+    // north
+    billboards.add({
+        image : facilityUrl,
+        position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0)
+    });
+    // up
+    billboards.add({
+        image : facilityUrl,
+        position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0)
+    });
+}
+
+Sandcastle.addToolbarMenu([{
+    text : 'Add billboard',
+    onselect : function() {
+        addBillboard();
+        Sandcastle.highlight(addBillboard);
+    }
+}, {
+    text : 'Set billboard properties at creation',
+    onselect : function() {
+        setBillboardProperties();
+        Sandcastle.highlight(setBillboardProperties);
+    }
+}, {
+    text : 'Change billboard properties',
+    onselect : function() {
+        changeBillboardProperties();
+        Sandcastle.highlight(changeBillboardProperties);
+    }
+}, {
+    text : 'Add multiple billboards',
+    onselect : function() {
+        addMultipleBillboards();
+        Sandcastle.highlight(addMultipleBillboards);
+    }
+}, {
+    text : 'Scale by viewer distance',
+    onselect : function() {
+        scaleByDistance();
+        Sandcastle.highlight(scaleByDistance);
+    }
+}, {
+    text : 'Fade by viewer distance',
+    onselect : function() {
+        fadeByDistance();
+        Sandcastle.highlight(fadeByDistance);
+    }
+}, {
+    text : 'Offset by viewer distance',
+    onselect : function() {
+        offsetByDistance();
+        Sandcastle.highlight(offsetByDistance);
+    }
+}, {
+    text : 'Add point billboards',
+    onselect : function() {
+        addPointBillboards();
+        Sandcastle.highlight(addPointBillboards);
+    }
+}, {
+    text : 'Add marker billboards',
+    onselect : function() {
+        addMarkerBillboards();
+        Sandcastle.highlight(addMarkerBillboards);
+    }
+}, {
+    text : 'Add billboards in reference frame',
+    onselect : function() {
+        inReferenceFrame();
+        Sandcastle.highlight(inReferenceFrame);
+    }
+}]);
+
+Sandcastle.reset = function () {
+    primitives.removeAll();
+};
+
+//Sandcastle_End
+Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
 </script>
 </body>
 </html>

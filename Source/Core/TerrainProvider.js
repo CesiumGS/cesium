@@ -65,6 +65,28 @@ define([
          */
         ready : {
             get : DeveloperError.throwInstantiationError
+        },
+
+        /**
+         * Gets a value indicating whether or not the provider includes a water mask.  The water mask
+         * indicates which areas of the globe are water rather than land, so they can be rendered
+         * as a reflective surface with animated waves.  This function should not be
+         * called before {@link TerrainProvider#ready} returns true.
+         * @memberof TerrainProvider.prototype
+         * @type {Boolean}
+         */
+        hasWaterMask : {
+            get : DeveloperError.throwInstantiationError
+        },
+
+        /**
+         * Gets a value indicating whether or not the requested tiles include vertex normals.
+         * This function should not be called before {@link TerrainProvider#ready} returns true.
+         * @memberof TerrainProvider.prototype
+         * @type {Boolean}
+         */
+        hasVertexNormals : {
+            get : DeveloperError.throwInstantiationError
         }
     });
 
@@ -169,17 +191,6 @@ define([
      * @returns {Number} The maximum geometric error.
      */
     TerrainProvider.prototype.getLevelMaximumGeometricError = DeveloperError.throwInstantiationError;
-
-    /**
-     * Gets a value indicating whether or not the provider includes a water mask.  The water mask
-     * indicates which areas of the globe are water rather than land, so they can be rendered
-     * as a reflective surface with animated waves.  This function should not be
-     * called before {@link TerrainProvider#ready} returns true.
-     * @function
-     *
-     * @returns {Boolean} True if the provider has a water mask; otherwise, false.
-     */
-    TerrainProvider.prototype.hasWaterMask = DeveloperError.throwInstantiationError;
 
     return TerrainProvider;
 });

@@ -1,6 +1,10 @@
 @import url(../../../Source/Widgets/widgets.css);
 @import url(../../../Source/Widgets/lighter.css);
 
+html {
+    height: 100%;
+}
+
 body {
     background: #000;
     color: #eee;
@@ -11,15 +15,6 @@ body {
     width: 100%;
     height: 100%;
     overflow: hidden;
-}
-
-option {
-    background-color: #fff;
-    color: #000;
-}
-
-option:disabled {
-    color: #ccc;
 }
 
 .fullSize {
@@ -42,10 +37,6 @@ option:disabled {
     display: none;
 }
 
-.sandcastle-loading #loadingOverlay {
-    display: block;
-}
-
 #loadingOverlay h1 {
     text-align: center;
     position: relative;
@@ -53,88 +44,16 @@ option:disabled {
     margin-top: -0.5em;
 }
 
+.sandcastle-loading #loadingOverlay {
+    display: block;
+}
+
+.sandcastle-loading #toolbar {
+    display: none;
+}
+
 #toolbar {
     margin: 5px;
     padding: 2px 5px;
     position: absolute;
-}
-
-.top,.bottom {
-    display: block;
-    position: absolute;
-    border: none;
-    width: 100%;
-    height: 50%;
-    -moz-box-sizing: border-box;
-    box-sizing: border-box;
-}
-
-.top {
-    top: 0;
-    left: 0;
-    border-bottom: solid 2px #888;
-}
-
-.bottom {
-    bottom: 0;
-    left: 0;
-}
-
-#topToolbar,#bottomToolbar {
-    margin: 5px;
-    padding: 2px 5px;
-    position: absolute;
-    left: 0;
-}
-
-#topToolbar {
-    top: 0;
-}
-
-#bottomToolbar {
-    top: 50%;
-}
-
-.sandcastle-button {
-    -moz-box-shadow:inset 0px 1px 0px 0px #ffffff;
-    -webkit-box-shadow:inset 0px 1px 0px 0px #ffffff;
-    box-shadow:inset 0px 1px 0px 0px #ffffff;
-    
-    background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #f9f9f9), color-stop(1, #dedede));
-    background:-moz-linear-gradient(top, #f9f9f9 5%, #dedede 100%);
-    background:-webkit-linear-gradient(top, #f9f9f9 5%, #dedede 100%);
-    background:-o-linear-gradient(top, #f9f9f9 5%, #dedede 100%);
-    background:-ms-linear-gradient(top, #f9f9f9 5%, #dedede 100%);
-    background:linear-gradient(to bottom, #f9f9f9 5%, #dedede 100%);
-
-    border-radius:3px;
-    border:1px solid #dcdcdc;
-    display:inline-block;
-    padding:5px 10px;
-    margin:3px;
-    text-decoration:none;
-    text-shadow:0px 1px 0px #ffffff;   
-}
-
-.sandcastle-button:hover {
-    background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #dedede), color-stop(1, #f9f9f9));
-    background:-moz-linear-gradient(top, #dedede 5%, #f9f9f9 100%);
-    background:-webkit-linear-gradient(top, #dedede 5%, #f9f9f9 100%);
-    background:-o-linear-gradient(top, #dedede 5%, #f9f9f9 100%);
-    background:-ms-linear-gradient(top, #dedede 5%, #f9f9f9 100%);
-    background:linear-gradient(to bottom, #dedede 5%, #f9f9f9 100%);
-}
-
-.sandcastle-button:not(select):active {
-    -webkit-transform: translateY(1px);
-    -moz-transform: translateY(1px);
-    -ms-transform: translateY(1px);
-    -o-transform: translateY(1px);
-    transform: translateY(1px);
-}
-
-.claro .dijitTitlePaneContentOuter {
-    background-color: rgba(255, 255, 255, 0.7);
-    color: black;
-    text-shadow: 0 0 5px #fff;
 }

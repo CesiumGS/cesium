@@ -65,6 +65,8 @@ define([
      * @param {Object} [options.id] A user-defined object to return when the instance is picked with {@link Scene#pick}
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Volumes.html|Cesium Sandcastle Volumes Demo}
+     *
      * @example
      * // 1. Create a sphere using the ellipsoid primitive
      * primitives.add(new Cesium.EllipsoidPrimitive({
@@ -79,8 +81,6 @@ define([
      *   Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0));
      * e.radii = new Cesium.Cartesian3(100000.0, 100000.0, 200000.0);
      * primitives.add(e);
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Volumes.html|Cesium Sandcastle Volumes Demo}
      */
     var EllipsoidPrimitive = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -184,7 +184,7 @@ define([
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
-         * Draws the bounding sphere for each {@link DrawCommand} in the primitive.
+         * Draws the bounding sphere for each draw command in the primitive.
          * </p>
          *
          * @type {Boolean}
@@ -334,7 +334,7 @@ define([
 
         if (boundingSphereDirty) {
             Cartesian3.clone(Cartesian3.ZERO, this._boundingSphere.center);
-            this._boundingSphere.radius = Cartesian3.getMaximumComponent(radii);
+            this._boundingSphere.radius = Cartesian3.maximumComponent(radii);
             BoundingSphere.transform(this._boundingSphere, this._computedModelMatrix, this._boundingSphere);
         }
 

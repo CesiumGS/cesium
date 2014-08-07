@@ -16,7 +16,7 @@
     });
     </script>
 </head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
 </style>
@@ -24,188 +24,174 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+function startup(Cesium) {
     "use strict";
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer');
+var scene = viewer.scene;
 
-    var viewer = new Cesium.Viewer('cesiumContainer');
-    var scene = viewer.scene;
+var handler;
+var label;
+var billboard;
 
-    var handler;
-    var label;
-    var billboard;
-
-    function addBillboard(scene) {
-        var primitives = scene.primitives;
-        var image = new Image();
-        image.onload = function() {
-            var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = new Cesium.TextureAtlas({
-                scene : scene,
-                image : image
-            });
-            billboards.textureAtlas = textureAtlas;
-            billboard = billboards.add({
-                position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-                imageIndex : 0
-            });
-            primitives.add(billboards);
-        };
-        image.src = '../images/Cesium_Logo_overlay.png';
-    }
-
-    function addOverlappingPolygons(scene) {
-        var primitives = scene.primitives;
-
-        // Add primitives from bottom to top.
-        var redPolygon = primitives.add(new Cesium.Polygon({
-            positions : Cesium.Cartesian3.fromDegreesArray([
-                -70.0, 30.0,
-                -60.0, 30.0,
-                -60.0, 40.0,
-                -70.0, 40.0
-            ])
-        }));
-        redPolygon.material.uniforms.color = new Cesium.Color(1.0, 0.0, 0.0, 0.5);
-
-        var bluePolygon = primitives.add(new Cesium.Polygon({
-            positions : Cesium.Cartesian3.fromDegreesArray([
-                -75.0, 34.0,
-                -63.0, 34.0,
-                -63.0, 40.0,
-                -75.0, 40.0
-            ])
-        }));
-        bluePolygon.material.uniforms.color = new Cesium.Color(0.0, 0.0, 1.0, 0.5);
-
-        var greenPolygon = primitives.add(new Cesium.Polygon({
-            positions : Cesium.Cartesian3.fromDegreesArray([
-                -67.0, 36.0,
-                -55.0, 36.0,
-                -55.0, 30.0,
-                -67.0, 30.0
-            ])
-        }));
-        greenPolygon.material.uniforms.color = new Cesium.Color(0.0, 1.0, 0.0, 0.5);
-
-        // Give polygons identifiers for easy lookup later
-        redPolygon.id = 0;
-        bluePolygon.id = 1;
-        greenPolygon.id = 2;
-
-        // simple flags used for multi-picking
-        redPolygon.picked = false;
-        bluePolygon.picked = false;
-        greenPolygon.picked = false;
-    }
-
-    function cleanup() {
-        scene.primitives.removeAll();
-        handler = handler && handler.destroy();
-    }
-
-    function pickCartographicPosition() {
-        var ellipsoid = scene.globe.ellipsoid;
-        var labels = new Cesium.LabelCollection();
-        label = labels.add();
-        scene.primitives.add(labels);
-
-        // Mouse over the globe to see the cartographic position
-        handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-        handler.setInputAction(function(movement) {
-            var cartesian = scene.camera.pickEllipsoid(movement.endPosition, ellipsoid);
-            if (cartesian) {
-                var cartographic = ellipsoid.cartesianToCartographic(cartesian);
-                label.show = true;
-                label.text = '(' + Cesium.Math.toDegrees(cartographic.longitude).toFixed(2) + ', ' + Cesium.Math.toDegrees(cartographic.latitude).toFixed(2) + ')';
-                label.position = cartesian;
-            } else {
-                label.text = '';
-            }
-        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-    }
-    pickCartographicPosition();
-
-    Sandcastle.addToolbarButton('Show Cartographic Position on Mouse Over', function() {
-        cleanup();
-        pickCartographicPosition();
+function addBillboard(scene) {
+    var primitives = scene.primitives;
+    var billboards = new Cesium.BillboardCollection();
+    billboard = billboards.add({
+        position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+        image : '../images/Cesium_Logo_overlay.png'
     });
+    primitives.add(billboards);
+}
 
-    Sandcastle.addToolbarButton('Pick Billboard', function() {
-        cleanup();
+function addOverlappingPolygons(scene) {
+    var primitives = scene.primitives;
 
-        addBillboard(scene);
+    // Add primitives from bottom to top.
+    var redPolygon = primitives.add(new Cesium.Polygon({
+        positions : Cesium.Cartesian3.fromDegreesArray([
+            -70.0, 30.0,
+            -60.0, 30.0,
+            -60.0, 40.0,
+            -70.0, 40.0
+        ])
+    }));
+    redPolygon.material.uniforms.color = new Cesium.Color(1.0, 0.0, 0.0, 0.5);
 
-        // If the mouse is over the billboard, change its scale and color
-        handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-        handler.setInputAction(
-            function (movement) {
-                if (Cesium.defined(billboard)) {
-                    var pickedObject = scene.pick(movement.endPosition);
-                    if (Cesium.defined(pickedObject) && (pickedObject.primitive === billboard)) {
-                        billboard.scale = 2.0;
-                        billboard.color = Cesium.Color.YELLOW;
-                    } else {
-                        billboard.scale = 1.0;
-                        billboard.color = Cesium.Color.WHITE;
-                    }
-                }
-            },
-            Cesium.ScreenSpaceEventType.MOUSE_MOVE
-        );
-    });
+    var bluePolygon = primitives.add(new Cesium.Polygon({
+        positions : Cesium.Cartesian3.fromDegreesArray([
+            -75.0, 34.0,
+            -63.0, 34.0,
+            -63.0, 40.0,
+            -75.0, 40.0
+        ])
+    }));
+    bluePolygon.material.uniforms.color = new Cesium.Color(0.0, 0.0, 1.0, 0.5);
 
-    var originalColor = {};
-    Sandcastle.addToolbarButton('Drill-Down Picking', function() {
-        cleanup();
+    var greenPolygon = primitives.add(new Cesium.Polygon({
+        positions : Cesium.Cartesian3.fromDegreesArray([
+            -67.0, 36.0,
+            -55.0, 36.0,
+            -55.0, 30.0,
+            -67.0, 30.0
+        ])
+    }));
+    greenPolygon.material.uniforms.color = new Cesium.Color(0.0, 1.0, 0.0, 0.5);
 
-        var primitives = scene.primitives;
-        addOverlappingPolygons(scene);
+    // Give polygons identifiers for easy lookup later
+    redPolygon.id = 0;
+    bluePolygon.id = 1;
+    greenPolygon.id = 2;
 
-        // Move the primitive that the mouse is over to the top.
-        handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-        handler.setInputAction(function(movement) {
-            // clear picked flags
-            var numberOfPrimitves = primitives.length;
-            for (var i = 0; i < numberOfPrimitves; ++i) {
-                var p = primitives.get(i);
-                p.processedPick = false;
-            }
+    // simple flags used for multi-picking
+    redPolygon.picked = false;
+    bluePolygon.picked = false;
+    greenPolygon.picked = false;
+}
 
-            // get an array of all primitives at the mouse position
-            var pickedObjects = scene.drillPick(movement.endPosition);
-            if(Cesium.defined(pickedObjects)) {
-                for( i=0; i<pickedObjects.length; ++i) {
-                    var polygon = pickedObjects[i].primitive;
+Sandcastle.addDefaultToolbarButton('Show Cartographic Position on Mouse Over', function() {
+    var ellipsoid = scene.globe.ellipsoid;
+    var labels = new Cesium.LabelCollection();
+    label = labels.add();
+    scene.primitives.add(labels);
 
-                    if(polygon.picked === false) {
-                        originalColor[polygon.id] = polygon.material.uniforms.color;
-                        polygon.material.uniforms.color = {
-                            red : 1.0,
-                            green : 1.0,
-                            blue : 0.0,
-                            alpha : 0.5
-                        };
-                        polygon.picked = true;
-                    }
-
-                    polygon.processedPick = true;
-                }
-            }
-
-            // return unpicked primitives to their original color
-            for (i = 0; i < numberOfPrimitves; ++i) {
-                var primitive = primitives.get(i);
-
-                if(primitive.processedPick === false && Cesium.defined(originalColor[primitive.id])) {
-                    primitive.material.uniforms.color = originalColor[primitive.id];
-                    primitive.picked = false;
-                }
-            }
-        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-    });
-
-    Sandcastle.finishedLoading();
+    // Mouse over the globe to see the cartographic position
+    handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+    handler.setInputAction(function(movement) {
+        var cartesian = scene.camera.pickEllipsoid(movement.endPosition, ellipsoid);
+        if (cartesian) {
+            var cartographic = ellipsoid.cartesianToCartographic(cartesian);
+            label.show = true;
+            label.text = '(' + Cesium.Math.toDegrees(cartographic.longitude).toFixed(2) + ', ' + Cesium.Math.toDegrees(cartographic.latitude).toFixed(2) + ')';
+            label.position = cartesian;
+        } else {
+            label.text = '';
+        }
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 });
+
+Sandcastle.addToolbarButton('Pick Billboard', function() {
+    addBillboard(scene);
+
+    // If the mouse is over the billboard, change its scale and color
+    handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+    handler.setInputAction(
+        function (movement) {
+            if (Cesium.defined(billboard)) {
+                var pickedObject = scene.pick(movement.endPosition);
+                if (Cesium.defined(pickedObject) && (pickedObject.primitive === billboard)) {
+                    billboard.scale = 2.0;
+                    billboard.color = Cesium.Color.YELLOW;
+                } else {
+                    billboard.scale = 1.0;
+                    billboard.color = Cesium.Color.WHITE;
+                }
+            }
+        },
+        Cesium.ScreenSpaceEventType.MOUSE_MOVE
+    );
+});
+
+var originalColor = {};
+Sandcastle.addToolbarButton('Drill-Down Picking', function() {
+    var primitives = scene.primitives;
+    addOverlappingPolygons(scene);
+
+    // Move the primitive that the mouse is over to the top.
+    handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+    handler.setInputAction(function(movement) {
+        // clear picked flags
+        var numberOfPrimitves = primitives.length;
+        for (var i = 0; i < numberOfPrimitves; ++i) {
+            var p = primitives.get(i);
+            p.processedPick = false;
+        }
+
+        // get an array of all primitives at the mouse position
+        var pickedObjects = scene.drillPick(movement.endPosition);
+        if(Cesium.defined(pickedObjects)) {
+            for( i=0; i<pickedObjects.length; ++i) {
+                var polygon = pickedObjects[i].primitive;
+
+                if(polygon.picked === false) {
+                    originalColor[polygon.id] = polygon.material.uniforms.color;
+                    polygon.material.uniforms.color = {
+                        red : 1.0,
+                        green : 1.0,
+                        blue : 0.0,
+                        alpha : 0.5
+                    };
+                    polygon.picked = true;
+                }
+
+                polygon.processedPick = true;
+            }
+        }
+
+        // return unpicked primitives to their original color
+        for (i = 0; i < numberOfPrimitves; ++i) {
+            var primitive = primitives.get(i);
+
+            if(primitive.processedPick === false && Cesium.defined(originalColor[primitive.id])) {
+                primitive.material.uniforms.color = originalColor[primitive.id];
+                primitive.picked = false;
+            }
+        }
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+});
+
+Sandcastle.reset = function() {
+    scene.primitives.removeAll();
+    handler = handler && handler.destroy();
+};
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
 </script>
 </body>
 </html>

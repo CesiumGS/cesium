@@ -65,6 +65,8 @@ define([
      * @see WallGeometry#createGeometry
      * @see WallGeometry#fromConstantHeight
      *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Wall.html|Cesium Sandcastle Wall Demo}
+     *
      * @example
      * // create a wall that spans from ground level to 10000 meters
      * var wall = new Cesium.WallGeometry({
@@ -200,11 +202,10 @@ define([
         var ellipsoid = wallGeometry._ellipsoid;
 
         var pos = WallGeometryLibrary.computePositions(ellipsoid, wallPositions, maximumHeights, minimumHeights, granularity, true);
-        var newWallPositions = pos.newWallPositions;
         var bottomPositions = pos.bottomPositions;
         var topPositions = pos.topPositions;
 
-        var length = newWallPositions.length;
+        var length = topPositions.length;
         var size = length * 2;
 
         var positions = vertexFormat.position ? new Float64Array(size) : undefined;
@@ -246,9 +247,9 @@ define([
             if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
                 var nextPosition;
                 var nextTop = new Cartesian3();
-                var groundPosition = Cartesian3.fromArray(newWallPositions, i3, scratchCartesian3Position2);
+                var groundPosition = ellipsoid.scaleToGeodeticSurface(Cartesian3.fromArray(topPositions, i3, scratchCartesian3Position2), scratchCartesian3Position2);
                 if (i + 1 < length) {
-                    nextPosition = Cartesian3.fromArray(newWallPositions, i3 + 3, scratchCartesian3Position3);
+                    nextPosition = ellipsoid.scaleToGeodeticSurface(Cartesian3.fromArray(topPositions, i3 + 3, scratchCartesian3Position3), scratchCartesian3Position3);
                     nextTop = Cartesian3.fromArray(topPositions, i3 + 3, scratchCartesian3Position5);
                 }
 

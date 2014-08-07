@@ -8,15 +8,15 @@ define([
         './defined',
         './DeveloperError',
         './Ellipsoid',
-        './GeographicProjection',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
         './IndexDatatype',
         './Math',
-        './Matrix2',
+        './PolygonPipeline',
         './PrimitiveType',
-        './Rectangle'
+        './Rectangle',
+        './RectangleGeometryLibrary'
     ], function(
         BoundingSphere,
         Cartesian3,
@@ -26,122 +26,63 @@ define([
         defined,
         DeveloperError,
         Ellipsoid,
-        GeographicProjection,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
         IndexDatatype,
         CesiumMath,
-        Matrix2,
+        PolygonPipeline,
         PrimitiveType,
-        Rectangle) {
+        Rectangle,
+        RectangleGeometryLibrary) {
     "use strict";
 
-    function isValidLatLon(latitude, longitude) {
-        if (latitude < -CesiumMath.PI_OVER_TWO || latitude > CesiumMath.PI_OVER_TWO) {
-            return false;
-        }
-        if (longitude > CesiumMath.PI || longitude < -CesiumMath.PI) {
-            return false;
-        }
-        return true;
-    }
-
-    var nw = new Cartesian3();
-    var nwCartographic = new Cartographic();
-    var centerCartographic = new Cartographic();
-    var center = new Cartesian3();
-    var rotationMatrix = new Matrix2();
-    var proj = new GeographicProjection();
-    var position = new Cartesian3();
-    var extrudedPosition = new Cartesian3();
     var bottomBoundingSphere = new BoundingSphere();
     var topBoundingSphere = new BoundingSphere();
+    var positionScratch = new Cartesian3();
+    var rectangleScratch = new Rectangle();
 
-    var cos = Math.cos;
-    var sin = Math.sin;
-    var sqrt = Math.sqrt;
-
-    var stLatitude, stLongitude;
-
-    function computePosition(params, row, col, maxHeight, minHeight) {
-        var radiiSquared = params.radiiSquared;
-
-        stLatitude = nwCartographic.latitude - params.granYCos * row + col * params.granXSin;
-        var cosLatitude = cos(stLatitude);
-        var nZ = sin(stLatitude);
-        var kZ = radiiSquared.z * nZ;
-
-        stLongitude = nwCartographic.longitude + row * params.granYSin + col * params.granXCos;
-        var nX = cosLatitude * cos(stLongitude);
-        var nY = cosLatitude * sin(stLongitude);
-
-        var kX = radiiSquared.x * nX;
-        var kY = radiiSquared.y * nY;
-
-        var gamma = sqrt((kX * nX) + (kY * nY) + (kZ * nZ));
-
-        var rSurfaceX = kX / gamma;
-        var rSurfaceY = kY / gamma;
-        var rSurfaceZ = kZ / gamma;
-
-        if (defined(maxHeight)) {
-            position.x = rSurfaceX + nX * maxHeight; // top
-            position.y = rSurfaceY + nY * maxHeight;
-            position.z = rSurfaceZ + nZ * maxHeight;
-        }
-
-        if (defined(minHeight)) {
-            extrudedPosition.x = rSurfaceX + nX * minHeight; // bottom
-            extrudedPosition.y = rSurfaceY + nY * minHeight;
-            extrudedPosition.z = rSurfaceZ + nZ * minHeight;
-        }
-    }
-
-    function constructRectangle(params) {
-        var rectangle = params.rectangle;
-        var ellipsoid = params.ellipsoid;
-        var size = params.size;
-        var height = params.height;
-        var width = params.width;
-        var surfaceHeight = params.surfaceHeight;
-
+    function constructRectangle(options) {
+        var size = options.size;
+        var height = options.height;
+        var width = options.width;
         var positions = new Float64Array(size * 3);
 
         var posIndex = 0;
         var row = 0;
         var col;
+        var position = positionScratch;
         for (col = 0; col < width; col++) {
-            computePosition(params, row, col, surfaceHeight);
-
+            RectangleGeometryLibrary.computePosition(options, row, col, position);
             positions[posIndex++] = position.x;
             positions[posIndex++] = position.y;
             positions[posIndex++] = position.z;
         }
+
         col = width - 1;
         for (row = 1; row < height; row++) {
-            computePosition(params, row, col, surfaceHeight);
-
+            RectangleGeometryLibrary.computePosition(options, row, col, position);
             positions[posIndex++] = position.x;
             positions[posIndex++] = position.y;
             positions[posIndex++] = position.z;
         }
+
         row = height - 1;
         for (col = width-2; col >=0; col--){
-            computePosition(params, row, col, surfaceHeight);
-
+            RectangleGeometryLibrary.computePosition(options, row, col, position);
             positions[posIndex++] = position.x;
             positions[posIndex++] = position.y;
             positions[posIndex++] = position.z;
         }
+
         col = 0;
         for (row = height - 2; row > 0; row--) {
-            computePosition(params, row, col, surfaceHeight);
-
+            RectangleGeometryLibrary.computePosition(options, row, col, position);
             positions[posIndex++] = position.x;
             positions[posIndex++] = position.y;
             positions[posIndex++] = position.z;
         }
+
         var indicesSize = positions.length/3 * 2;
         var indices = IndexDatatype.createTypedArray(positions.length / 3, indicesSize);
 
@@ -153,81 +94,47 @@ define([
         indices[index++] = (positions.length/3)-1;
         indices[index++] = 0;
 
-        return {
-            boundingSphere : BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight),
-            positions: positions,
-            indices: indices
-        };
+        var geo = new Geometry({
+            attributes : new GeometryAttributes(),
+            primitiveType : PrimitiveType.LINES
+        });
+
+        geo.attributes.position = new GeometryAttribute({
+            componentDatatype : ComponentDatatype.DOUBLE,
+            componentsPerAttribute : 3,
+            values : positions
+        });
+        geo.indices = indices;
+
+        return geo;
     }
 
-    function constructExtrudedRectangle(params, extrudedHeight) {
-        var surfaceHeight = params.surfaceHeight;
+    function constructExtrudedRectangle(options) {
+        var surfaceHeight = options.surfaceHeight;
+        var extrudedHeight = options.extrudedHeight;
+        var ellipsoid = options.ellipsoid;
         var minHeight = Math.min(extrudedHeight, surfaceHeight);
         var maxHeight = Math.max(extrudedHeight, surfaceHeight);
+        var geo = constructRectangle(options);
         if (CesiumMath.equalsEpsilon(minHeight, maxHeight, 0.1)) {
-            return constructRectangle(params);
+            return geo;
         }
-        var rectangle = params.rectangle;
-        var height = params.height;
-        var width = params.width;
-        var size = params.size * 3;
-        var ellipsoid = params.ellipsoid;
+        var height = options.height;
+        var width = options.width;
 
-        var posIndex = 0;
-        var row = 0;
-        var col;
-        var positions = new Float64Array(size * 2);
-        for (col = 0; col < width; col++) {
-            computePosition(params, row, col, maxHeight, minHeight);
-
-            positions[posIndex + size] = extrudedPosition.x;
-            positions[posIndex + size + 1] = extrudedPosition.y;
-            positions[posIndex + size + 2] = extrudedPosition.z;
-
-            positions[posIndex++] = position.x;
-            positions[posIndex++] = position.y;
-            positions[posIndex++] = position.z;
-        }
-        col = width - 1;
-        for (row = 1; row < height; row++) {
-            computePosition(params, row, col, maxHeight, minHeight);
-
-            positions[posIndex + size] = extrudedPosition.x;
-            positions[posIndex + size + 1] = extrudedPosition.y;
-            positions[posIndex + size + 2] = extrudedPosition.z;
-
-            positions[posIndex++] = position.x;
-            positions[posIndex++] = position.y;
-            positions[posIndex++] = position.z;
-        }
-        row = height - 1;
-        for (col = width-2; col >=0; col--){
-            computePosition(params, row, col, maxHeight, minHeight);
-
-            positions[posIndex + size] = extrudedPosition.x;
-            positions[posIndex + size + 1] = extrudedPosition.y;
-            positions[posIndex + size + 2] = extrudedPosition.z;
-
-            positions[posIndex++] = position.x;
-            positions[posIndex++] = position.y;
-            positions[posIndex++] = position.z;
-        }
-        col = 0;
-        for (row = height - 2; row > 0; row--) {
-            computePosition(params, row, col, maxHeight, minHeight);
-
-            positions[posIndex + size] = extrudedPosition.x;
-            positions[posIndex + size + 1] = extrudedPosition.y;
-            positions[posIndex + size + 2] = extrudedPosition.z;
-
-            positions[posIndex++] = position.x;
-            positions[posIndex++] = position.y;
-            positions[posIndex++] = position.z;
-        }
+        geo = PolygonPipeline.scaleToGeodeticHeight(geo, maxHeight, ellipsoid, false);
+        var topPositions = geo.attributes.position.values;
+        var length = topPositions.length;
+        var positions = new Float64Array(length*2);
+        positions.set(topPositions);
+        geo = PolygonPipeline.scaleToGeodeticHeight(geo, minHeight, ellipsoid);
+        var bottomPositions = geo.attributes.position.values;
+        positions.set(bottomPositions, length);
+        geo.attributes.position.values = positions;
 
         var indicesSize = positions.length/3 * 2 + 8;
         var indices = IndexDatatype.createTypedArray(positions.length / 3, indicesSize);
-        var length = positions.length/6;
+        length = positions.length/6;
         var index = 0;
         for (var i = 0; i < length - 1; i++) {
             indices[index++] = i;
@@ -249,16 +156,9 @@ define([
         indices[index++] =  2*width + height - 3;
         indices[index++] = 2*width + height - 3 + length;
 
+        geo.indices = indices;
 
-        var topBS = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, maxHeight, topBoundingSphere);
-        var bottomBS = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, minHeight, bottomBoundingSphere);
-        var boundingSphere = BoundingSphere.union(topBS, bottomBS);
-
-        return {
-            boundingSphere : boundingSphere,
-            positions: positions,
-            indices: indices
-        };
+        return geo;
     }
 
     /**
@@ -284,6 +184,8 @@ define([
      *
      * @see RectangleOutlineGeometry#createGeometry
      *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Rectangle%20Outline.html|Cesium Sandcastle Rectangle Outline Demo}
+     *
      * @example
      * var rectangle = new Cesium.RectangleOutlineGeometry({
      *   ellipsoid : Cesium.Ellipsoid.WGS84,
@@ -306,9 +208,6 @@ define([
             throw new DeveloperError('rectangle is required.');
         }
         Rectangle.validate(rectangle);
-        if (rectangle.east < rectangle.west) {
-            throw new DeveloperError('options.rectangle.east must be greater than options.rectangle.west');
-        }
         if (rectangle.north < rectangle.south) {
             throw new DeveloperError('options.rectangle.north must be greater than options.rectangle.south');
         }
@@ -323,6 +222,7 @@ define([
         this._workerName = 'createRectangleOutlineGeometry';
     };
 
+    var nwScratch = new Cartographic();
     /**
      * Computes the geometric representation of an outline of an rectangle, including its vertices, indices, and a bounding sphere.
      *
@@ -332,104 +232,33 @@ define([
      * @exception {DeveloperError} Rotated rectangle is invalid.
      */
     RectangleOutlineGeometry.createGeometry = function(rectangleGeometry) {
-        var rectangle = rectangleGeometry._rectangle;
-        var granularity = rectangleGeometry._granularity;
+        var rectangle = Rectangle.clone(rectangleGeometry._rectangle, rectangleScratch);
         var ellipsoid = rectangleGeometry._ellipsoid;
         var surfaceHeight = rectangleGeometry._surfaceHeight;
-        var rotation = rectangleGeometry._rotation;
         var extrudedHeight = rectangleGeometry._extrudedHeight;
 
-        var width = Math.ceil((rectangle.east - rectangle.west) / granularity) + 1;
-        var height = Math.ceil((rectangle.north - rectangle.south) / granularity) + 1;
-        var granularityX = (rectangle.east - rectangle.west) / (width - 1);
-        var granularityY = (rectangle.north - rectangle.south) / (height - 1);
-
-        var radiiSquared = ellipsoid.radiiSquared;
-
-        Rectangle.getNorthwest(rectangle, nwCartographic);
-        Rectangle.getCenter(rectangle, centerCartographic);
-
-        var granYCos = granularityY;
-        var granXCos = granularityX;
-        var granYSin = 0.0;
-        var granXSin = 0.0;
-
-        if (defined(rotation)) {
-            var cosRotation = cos(rotation);
-            granYCos *= cosRotation;
-            granXCos *= cosRotation;
-
-            var sinRotation = sin(rotation);
-            granYSin = granularityY * sinRotation;
-            granXSin = granularityX * sinRotation;
-
-            proj.project(nwCartographic, nw);
-            proj.project(centerCartographic, center);
-
-            Cartesian3.subtract(nw, center, nw);
-            Matrix2.fromRotation(rotation, rotationMatrix);
-            Matrix2.multiplyByVector(rotationMatrix, nw, nw);
-            Cartesian3.add(nw, center, nw);
-            proj.unproject(nw, nwCartographic);
-
-            var latitude = nwCartographic.latitude;
-            var latitude0 = latitude + (width - 1) * granXSin;
-            var latitude1 = latitude - granYCos * (height - 1);
-            var latitude2 = latitude - granYCos * (height - 1) + (width - 1) * granXSin;
-
-            var north = Math.max(latitude, latitude0, latitude1, latitude2);
-            var south = Math.min(latitude, latitude0, latitude1, latitude2);
-
-            var longitude = nwCartographic.longitude;
-            var longitude0 = longitude + (width - 1) * granXCos;
-            var longitude1 = longitude + (height - 1) * granYSin;
-            var longitude2 = longitude + (height - 1) * granYSin + (width - 1) * granXCos;
-
-            var east = Math.max(longitude, longitude0, longitude1, longitude2);
-            var west = Math.min(longitude, longitude0, longitude1, longitude2);
-
-            if (!isValidLatLon(north, west) || !isValidLatLon(north, east) ||
-                    !isValidLatLon(south, west) || !isValidLatLon(south, east)) {
-                throw new DeveloperError('Rotated rectangle is invalid.');
-            }
-        }
-
-        var size = 2*width + 2*height - 4;
-
-        var params = {
-            granYCos : granYCos,
-            granYSin : granYSin,
-            granXCos : granXCos,
-            granXSin : granXSin,
-            radiiSquared : radiiSquared,
-            ellipsoid : ellipsoid,
-            rectangle : rectangle,
-            width : width,
-            height : height,
-            surfaceHeight : surfaceHeight,
-            size : size
-        };
+        var options = RectangleGeometryLibrary.computeOptions(rectangleGeometry, rectangle, nwScratch);
+        options.size =  2*options.width + 2*options.height - 4;
 
         var geometry;
+        var boundingSphere;
+        rectangle = rectangleGeometry._rectangle;
         if (defined(extrudedHeight)) {
-            geometry = constructExtrudedRectangle(params, extrudedHeight);
+            geometry = constructExtrudedRectangle(options);
+            var topBS = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight, topBoundingSphere);
+            var bottomBS = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, extrudedHeight, bottomBoundingSphere);
+            boundingSphere = BoundingSphere.union(topBS, bottomBS);
         } else {
-            geometry = constructRectangle(params);
+            geometry = constructRectangle(options);
+            geometry = PolygonPipeline.scaleToGeodeticHeight(geometry, surfaceHeight, ellipsoid, false);
+            boundingSphere = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight);
         }
 
-        var attributes = new GeometryAttributes({
-            position: new GeometryAttribute({
-                componentDatatype : ComponentDatatype.DOUBLE,
-                componentsPerAttribute : 3,
-                values : geometry.positions
-            })
-        });
-
         return new Geometry({
-            attributes : attributes,
+            attributes : geometry.attributes,
             indices : geometry.indices,
             primitiveType : PrimitiveType.LINES,
-            boundingSphere : geometry.boundingSphere
+            boundingSphere : boundingSphere
         });
     };
 

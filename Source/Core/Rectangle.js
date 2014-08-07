@@ -337,7 +337,7 @@ define([
      * @param {Cartographic} [result] The object onto which to store the result.
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
-    Rectangle.getSouthwest = function(rectangle, result) {
+    Rectangle.southwest = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(rectangle)) {
             throw new DeveloperError('rectangle is required');
@@ -360,7 +360,7 @@ define([
      * @param {Cartographic} [result] The object onto which to store the result.
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
-    Rectangle.getNorthwest = function(rectangle, result) {
+    Rectangle.northwest = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(rectangle)) {
             throw new DeveloperError('rectangle is required');
@@ -383,7 +383,7 @@ define([
      * @param {Cartographic} [result] The object onto which to store the result.
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
-    Rectangle.getNortheast = function(rectangle, result) {
+    Rectangle.northeast = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(rectangle)) {
             throw new DeveloperError('rectangle is required');
@@ -406,7 +406,7 @@ define([
      * @param {Cartographic} [result] The object onto which to store the result.
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
-    Rectangle.getSoutheast = function(rectangle, result) {
+    Rectangle.southeast = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(rectangle)) {
             throw new DeveloperError('rectangle is required');
@@ -429,17 +429,26 @@ define([
      * @param {Cartographic} [result] The object onto which to store the result.
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
-    Rectangle.getCenter = function(rectangle, result) {
+    Rectangle.center = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(rectangle)) {
             throw new DeveloperError('rectangle is required');
         }
         //>>includeEnd('debug');
 
-        if (!defined(result)) {
-            return new Cartographic((rectangle.west + rectangle.east) * 0.5, (rectangle.south + rectangle.north) * 0.5);
+        var east = rectangle.east;
+        var west = rectangle.west;
+
+        var longitude = (west + east) * 0.5;
+        if (east < west) {
+            longitude = CesiumMath.negativePiToPi(longitude + CesiumMath.PI);
         }
-        result.longitude = (rectangle.west + rectangle.east) * 0.5;
+
+        if (!defined(result)) {
+            return new Cartographic(longitude, (rectangle.south + rectangle.north) * 0.5);
+        }
+
+        result.longitude = longitude;
         result.latitude = (rectangle.south + rectangle.north) * 0.5;
         result.height = 0.0;
         return result;

@@ -70,7 +70,8 @@ defineSuite([
                         new Cartesian3(0.0, 1.0, 0.0)
                     ],
                     width : 10.0,
-                    vertexFormat : PolylineMaterialAppearance.VERTEX_FORMAT
+                    vertexFormat : PolylineMaterialAppearance.VERTEX_FORMAT,
+                    followSurface: false
                 })
             }),
             appearance : new PolylineMaterialAppearance({

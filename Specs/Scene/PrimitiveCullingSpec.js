@@ -11,7 +11,6 @@ defineSuite([
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
         'Scene/BillboardCollection',
-        'Scene/Camera',
         'Scene/HorizontalOrigin',
         'Scene/LabelCollection',
         'Scene/Material',
@@ -26,7 +25,6 @@ defineSuite([
         'Specs/createContext',
         'Specs/createFrameState',
         'Specs/destroyContext',
-        'Specs/frameState',
         'Specs/render'
     ], 'Scene/PrimitiveCulling', function(
         BoundingSphere,
@@ -40,7 +38,6 @@ defineSuite([
         TextureMagnificationFilter,
         TextureMinificationFilter,
         BillboardCollection,
-        Camera,
         HorizontalOrigin,
         LabelCollection,
         Material,
@@ -55,18 +52,19 @@ defineSuite([
         createContext,
         createFrameState,
         destroyContext,
-        frameState,
         render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
+    var frameState;
     var primitives;
     var us;
     var camera;
 
     beforeAll(function() {
         context = createContext();
+        frameState = createFrameState();
     });
 
     afterAll(function() {
@@ -365,12 +363,8 @@ defineSuite([
     });
 
     function createBillboard() {
-        var mockScene = {
-            context : context
-        };
         var atlas = new TextureAtlas({
-            scene : mockScene,
-            images : [greenImage],
+            context : context,
             borderWidthInPixels : 1,
             initialSize : new Cartesian2(3, 3)
         });
@@ -385,7 +379,7 @@ defineSuite([
         billboards.textureAtlas = atlas;
         billboards.add({
             position : Ellipsoid.WGS84.cartographicToCartesian(new Cartographic.fromDegrees(-75.10, 39.57)),
-            imageIndex : 0
+            image : greenImage
         });
 
         return billboards;

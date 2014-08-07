@@ -127,7 +127,7 @@ define([
         },
 
         /**
-         * Gets and sets the Cartesian position of this label.
+         * Gets or sets the Cartesian position of this label.
          * @memberof Label.prototype
          * @type {Cartesian3}
          */
@@ -158,7 +158,7 @@ define([
         },
 
         /**
-         * Gets and sets the text of this label.
+         * Gets or sets the text of this label.
          * @memberof Label.prototype
          * @type {String}
          */
@@ -181,7 +181,7 @@ define([
         },
 
         /**
-         * Gets and sets the font used to draw this label. Fonts are specified using the same syntax as the CSS 'font' property.
+         * Gets or sets the font used to draw this label. Fonts are specified using the same syntax as the CSS 'font' property.
          * @memberof Label.prototype
          * @type {String}
          * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#text-styles|HTML canvas 2D context text styles}
@@ -205,7 +205,7 @@ define([
         },
 
         /**
-         * Gets and sets the fill color of this label.
+         * Gets or sets the fill color of this label.
          * @memberof Label.prototype
          * @type {Color}
          * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles|HTML canvas 2D context fill and stroke styles}
@@ -230,7 +230,7 @@ define([
         },
 
         /**
-         * Gets and sets the outline color of this label.
+         * Gets or sets the outline color of this label.
          * @memberof Label.prototype
          * @type {Color}
          * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles|HTML canvas 2D context fill and stroke styles}
@@ -255,7 +255,7 @@ define([
         },
 
         /**
-         * Gets and sets the outline width of this label.
+         * Gets or sets the outline width of this label.
          * @memberof Label.prototype
          * @type {Number}
          * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles|HTML canvas 2D context fill and stroke styles}
@@ -279,7 +279,7 @@ define([
         },
 
         /**
-         * Gets and sets the style of this label.
+         * Gets or sets the style of this label.
          * @memberof Label.prototype
          * @type {LabelStyle}
          */
@@ -302,7 +302,7 @@ define([
         },
 
         /**
-         * Gets and sets the pixel offset in screen space from the origin of this label.  This is commonly used
+         * Gets or sets the pixel offset in screen space from the origin of this label.  This is commonly used
          * to align multiple labels and billboards at the same position, e.g., an image and text.  The
          * screen space origin is the top, left corner of the canvas; <code>x</code> increases from
          * left to right, and <code>y</code> increases from top to bottom.
@@ -344,7 +344,7 @@ define([
         },
 
         /**
-         * Gets and sets near and far translucency properties of a Label based on the Label's distance from the camera.
+         * Gets or sets near and far translucency properties of a Label based on the Label's distance from the camera.
          * A label's translucency will interpolate between the {@link NearFarScalar#nearValue} and
          * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
          * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
@@ -392,7 +392,7 @@ define([
         },
 
         /**
-         * Gets and sets near and far pixel offset scaling properties of a Label based on the Label's distance from the camera.
+         * Gets or sets near and far pixel offset scaling properties of a Label based on the Label's distance from the camera.
          * A label's pixel offset will be scaled between the {@link NearFarScalar#nearValue} and
          * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
          * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
@@ -489,7 +489,7 @@ define([
         },
 
         /**
-         * Gets and sets the horizontal origin of this label, which determines if the label is drawn
+         * Gets or sets the horizontal origin of this label, which determines if the label is drawn
          * to the left, center, or right of its position.
          * <br /><br />
          * <div align='center'>
@@ -521,7 +521,7 @@ define([
         },
 
         /**
-         * Gets and sets the vertical origin of this label, which determines if the label is
+         * Gets or sets the vertical origin of this label, which determines if the label is
          * to the above, below, or at the center of its position.
          * <br /><br />
          * <div align='center'>
@@ -562,7 +562,7 @@ define([
         },
 
         /**
-         * Gets and sets the uniform scale that is multiplied with the label's size in pixels.
+         * Gets or sets the uniform scale that is multiplied with the label's size in pixels.
          * A scale of <code>1.0</code> does not change the size of the label; a scale greater than
          * <code>1.0</code> enlarges the label; a positive scale less than <code>1.0</code> shrinks
          * the label.

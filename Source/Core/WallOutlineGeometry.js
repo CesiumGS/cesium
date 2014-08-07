@@ -56,6 +56,8 @@ define([
      * @see WallGeometry#createGeometry
      * @see WallGeometry#fromConstantHeight
      *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Wall%20Outline.html|Cesium Sandcastle Wall Outline Demo}
+     *
      * @example
      * // create a wall outline that spans from ground level to 10000 meters
      * var wall = new Cesium.WallOutlineGeometry({
@@ -186,11 +188,10 @@ define([
         var ellipsoid = wallGeometry._ellipsoid;
 
         var pos = WallGeometryLibrary.computePositions(ellipsoid, wallPositions, maximumHeights, minimumHeights, granularity, false);
-        var newWallPositions = pos.newWallPositions;
         var bottomPositions = pos.bottomPositions;
         var topPositions = pos.topPositions;
 
-        var length = newWallPositions.length;
+        var length = topPositions.length;
         var size = length * 2;
 
         var positions = new Float64Array(size);

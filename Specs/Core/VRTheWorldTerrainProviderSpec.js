@@ -137,7 +137,7 @@ defineSuite([
         var provider = new VRTheWorldTerrainProvider({
             url : 'made/up/url'
         });
-        expect(provider.hasWaterMask()).toBe(false);
+        expect(provider.hasWaterMask).toBe(false);
     });
 
     it('is not ready immediately', function() {

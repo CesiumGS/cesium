@@ -5,22 +5,18 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
-        '../../Core/Event',
-        '../../Core/getTimestamp',
         '../../Scene/FrameRateMonitor',
-        '../createCommand',
-        '../../ThirdParty/knockout'
+        '../../ThirdParty/knockout',
+        '../createCommand'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
-        Event,
-        getTimestamp,
         FrameRateMonitor,
-        createCommand,
-        knockout) {
+        knockout,
+        createCommand) {
     "use strict";
 
     /**

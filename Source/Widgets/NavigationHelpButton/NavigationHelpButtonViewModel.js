@@ -26,6 +26,14 @@ define([
         this._command = createCommand(function() {
             that.showInstructions = !that.showInstructions;
         });
+        this._showClick = createCommand(function() {
+            that._touch = false;
+        });
+        this._showTouch = createCommand(function() {
+            that._touch = true;
+        });
+
+        this._touch = false;
 
         /**
          * Gets or sets the tooltip.  This property is observable.
@@ -34,7 +42,7 @@ define([
          */
         this.tooltip = 'Navigation Instructions';
 
-        knockout.track(this, ['tooltip', 'showInstructions']);
+        knockout.track(this, ['tooltip', 'showInstructions', '_touch']);
     };
 
     defineProperties(NavigationHelpButtonViewModel.prototype, {
@@ -47,6 +55,30 @@ define([
         command : {
             get : function() {
                 return this._command;
+            }
+        },
+
+        /**
+         * Gets the Command that is executed when the mouse instructions should be shown.
+         * @memberof NavigationHelpButtonViewModel.prototype
+         *
+         * @type {Command}
+         */
+        showClick : {
+            get : function() {
+                return this._showClick;
+            }
+        },
+
+        /**
+         * Gets the Command that is executed when the touch instructions should be shown.
+         * @memberof NavigationHelpButtonViewModel.prototype
+         *
+         * @type {Command}
+         */
+        showTouch : {
+            get: function() {
+                return this._showTouch;
             }
         }
     });

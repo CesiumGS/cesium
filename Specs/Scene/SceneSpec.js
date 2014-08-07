@@ -11,7 +11,6 @@ defineSuite([
         'Core/WebMercatorProjection',
         'Renderer/DrawCommand',
         'Renderer/PixelDatatype',
-        'Scene/TweenCollection',
         'Scene/Camera',
         'Scene/FrameState',
         'Scene/Globe',
@@ -20,6 +19,7 @@ defineSuite([
         'Scene/RectanglePrimitive',
         'Scene/Scene',
         'Scene/ScreenSpaceCameraController',
+        'Scene/TweenCollection',
         'Specs/createScene',
         'Specs/destroyScene',
         'Specs/equals',
@@ -36,7 +36,6 @@ defineSuite([
         WebMercatorProjection,
         DrawCommand,
         PixelDatatype,
-        TweenCollection,
         Camera,
         FrameState,
         Globe,
@@ -45,6 +44,7 @@ defineSuite([
         RectanglePrimitive,
         Scene,
         ScreenSpaceCameraController,
+        TweenCollection,
         createScene,
         destroyScene,
         equals,
@@ -199,10 +199,12 @@ defineSuite([
     });
 
     it('debugShowBoundingVolume draws a bounding sphere', function() {
+        var radius = Cartesian3.magnitude(scene.camera.position) - 10.0;
+
         var c = new DrawCommand({
             pass : Pass.OPAQUE,
             debugShowBoundingVolume : true,
-            boundingVolume : new BoundingSphere(Cartesian3.ZERO, 7000000.0)
+            boundingVolume : new BoundingSphere(Cartesian3.ZERO, radius)
         });
         c.execute = function() {};
 

@@ -23,11 +23,13 @@ define([
      * @alias IauOrientationAxes
      * @constructor
      *
-     * @param {Function} [computeFunction] The function that computes the {@link IauOrientationParameters} given a {@link JulianDate}.
+     * @param {IauOrientationAxes~ComputeFunction} [computeFunction] The function that computes the {@link IauOrientationParameters} given a {@link JulianDate}.
      *
      * @see Iau2000Orientation
+     *
+     * @private
      */
-    var IauOrientationAxes = function (computeFunction) {
+    var IauOrientationAxes = function(computeFunction) {
         if (!defined(computeFunction) || typeof computeFunction !== 'function') {
             computeFunction = Iau2000Orientation.ComputeMoon;
         }
@@ -96,6 +98,13 @@ define([
         var cbi2cbf = Matrix3.multiply(rotMtx, precMtx, precMtx);
         return cbi2cbf;
     };
+
+    /**
+     * A function that computes the {@link IauOrientationParameters} for a {@link JulianDate}.
+     * @callback IauOrientationAxes~ComputeFunction
+     * @param {JulianDate} date The date to evaluate the parameters.
+     * @returns {IauOrientationParameters} The orientation parameters.
+     */
 
     return IauOrientationAxes;
 });

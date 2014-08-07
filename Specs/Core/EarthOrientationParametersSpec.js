@@ -3,13 +3,11 @@ defineSuite([
         'Core/EarthOrientationParameters',
         'Core/defined',
         'Core/JulianDate',
-        'Core/LeapSecond',
         'Core/TimeStandard'
     ], function(
         EarthOrientationParameters,
         defined,
         JulianDate,
-        LeapSecond,
         TimeStandard) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -125,7 +123,7 @@ defineSuite([
             var nColumns = eopDescription.data.columnNames.length;
             var x0 = eopDescription.data.samples[1 * nColumns + 2];
             var x1 = eopDescription.data.samples[2 * nColumns + 2];
-            var dt = JulianDate.getSecondsDifference(date, JulianDate.fromIso8601(eopDescription.data.samples[nColumns])) / 86400.0;
+            var dt = JulianDate.secondsDifference(date, JulianDate.fromIso8601(eopDescription.data.samples[nColumns])) / 86400.0;
             var expected = linearInterp(dt, x0, x1);
             expect(result.xPoleWander).toEqualEpsilon(expected, 1e-22);
             x0 = eopDescription.data.samples[1 * nColumns + 3];
@@ -179,7 +177,7 @@ defineSuite([
             var x2 = eopDescription.data.samples[3*nColumns + 6];
             var t0 = JulianDate.fromIso8601(eopDescription.data.samples[nColumns]);
             var t1 = JulianDate.fromIso8601(eopDescription.data.samples[2*nColumns]);
-            var dt = JulianDate.getSecondsDifference(dateSlightlyBefore, t0) / (86400.0 + 1);
+            var dt = JulianDate.secondsDifference(dateSlightlyBefore, t0) / (86400.0 + 1);
             // Adjust for leap second when interpolating
             var expectedBefore = linearInterp(dt, x0, (x1 - 1));
             var resultBefore = eop.compute(dateSlightlyBefore);
@@ -187,7 +185,7 @@ defineSuite([
             var expectedAt = eopDescription.data.samples[2*nColumns + 6];
             var resultAt = eop.compute(dateAtLeapSecond);
             expect(resultAt.ut1MinusUtc).toEqualEpsilon(expectedAt, 1.0e-15);
-            dt = JulianDate.getSecondsDifference(dateSlightlyAfter, t1) / (86400.0);
+            dt = JulianDate.secondsDifference(dateSlightlyAfter, t1) / (86400.0);
             var expectedAfter = linearInterp(dt, x1, x2);
             var resultAfter = eop.compute(dateSlightlyAfter);
             expect(resultAfter.ut1MinusUtc).toEqualEpsilon(expectedAfter, 1.0e-15);

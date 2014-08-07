@@ -21,18 +21,7 @@
 		<createSandcastleJsHintOptions output="${sandcastleDirectory}/jsHintOptions.js" jshintoptionspath="${jsHintOptionsPath}" />
 	</target>
 
-	<target name="combine" depends="build,combineJavaScript" description="Combines all source files into a single stand-alone script.">
-		<copy todir="${buildDirectory}">
-			<fileset dir="Apps/">
-				<include name="HelloWorld.html" />
-				<include name="index.html" />
-				<include name="server.js" />
-			</fileset>
-		</copy>
-
-		<replace file="${buildDirectory}/HelloWorld.html" token="../Build/" value="" />
-		<replace file="${buildDirectory}/index.html" token="../Build/" value="" />
-	</target>
+	<target name="combine" depends="build,combineJavaScript" description="Combines all source files into a single stand-alone script." />
 
 	<target name="minify" description="Combines all source files into a single stand-alone, minified script.">
 		<antcall target="combine">
@@ -72,37 +61,25 @@
 
 	<target name="makeZipFile" depends="release" description="Builds zip files containing all release files.">
 		<zip destfile="Cesium-${version}.zip" basedir="${basedir}">
-			<fileset dir="${buildDirectory}">
-				<include name="Cesium/**" />
-				<include name="Documentation/**" />
-				<include name="*.html" />
-				<include name="server.js" />
-			</fileset>
-			<include name="LICENSE.md" />
-			<include name="CHANGES.md" />
-			<include name="README.md" />
-		</zip>
-
-		<zip destfile="Cesium-full-${version}.zip" basedir="${basedir}">
 			<zipfileset dir="${buildDirectory}" prefix="Build">
+				<include name="Apps/**" />
+				<exclude name="Apps/TimelineDemo/**" />
 				<include name="Cesium/**" />
 				<include name="CesiumUnminified/**" />
 				<include name="Documentation/**" />
-				<include name="Apps/**" />
-				<include name="*.html" />
-				<include name="server.js" />
 			</zipfileset>
 			<include name="Apps/**" />
-			<include name="Examples/**" />
 			<include name="Source/**" />
 			<include name="Specs/**" />
 			<include name="ThirdParty/**" />
-			<include name="HelloWorld.html" />
-			<include name="index.html" />
+			<include name="logo.png" />
+			<include name="favicon.ico" />
 			<include name="server.js" />
+			<include name="package.json" />
 			<include name="LICENSE.md" />
 			<include name="CHANGES.md" />
 			<include name="README.md" />
+			<zipfileset file="index.release.html" fullpath="index.html" />
 		</zip>
 	</target>
 
@@ -126,11 +103,10 @@
 	<!-- properties controlling how to run the server-->
 	<property name="runServer.public" value="false" />
 	<property name="runServer.port" value="8080" />
-	<property name="runServer.allowedHosts" value="localhost,*.arcgisonline.com,tile.openstreetmap.org,otile1.mqcdn.com,oatile1.mqcdn.com,tile.stamen.com,*.virtualearth.net,mesonet.agron.iastate.edu" />
 
 	<!-- Inputs -->
 	<!-- this version should be set to the upcoming version, so it can be tagged without requiring a bump first -->
-	<property name="version" value="b29" />
+	<property name="version" value="1.0" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />
@@ -153,6 +129,8 @@
 	<property name="clocPath" location="${toolsDirectory}/cloc-1.60/cloc-1.60.pl" />
 	<property name="clocDefinitionsPath" location="${toolsDirectory}/cloc-1.60/cloc_definitions" />
 	<property name="jsHintOptionsPath" location=".jshintrc" />
+	<property name="nodePath" value="node" />
+	<property name="npmPath" value="npm" />
 
 	<!-- Outputs -->
 	<property name="buildDirectory" location="Build" />
@@ -265,7 +243,6 @@
 
 				<include name="Apps/**/*.js" />
 				<exclude name="Apps/Sandcastle/ThirdParty/**" />
-				<exclude name="Apps/server.js" />
 
 				<include name="Specs/**/*.js" />
 				<exclude name="Specs/SpecRunner.js" />
@@ -286,9 +263,11 @@
 		<echo message="Source:" />
 		<apply executable="perl" parallel="true">
 			<arg value="${clocPath}" />
+			<arg value="--quiet" />
+			<arg value="--progress-rate=0" />
 			<arg value="--read-lang-def=${clocDefinitionsPath}" />
 			<arg value="Source/Core/" />
-			<arg value="Source/DynamicScene/" />
+			<arg value="Source/DataSources/" />
 			<arg value="Source/Renderer/" />
 			<arg value="Source/Scene/" />
 			<arg value="Source/Widgets/" />
@@ -302,71 +281,24 @@
 		<echo message="${line.separator}Specs:" />
 		<exec executable="perl">
 			<arg value="${clocPath}" />
+			<arg value="--quiet" />
+			<arg value="--progress-rate=0" />
 			<arg value="--read-lang-def=${clocDefinitionsPath}" />
 			<arg value="Specs/" />
 		</exec>
 	</target>
 
-	<target name="setNodePathValue">
-		<condition property="nodePathValue" value="${toolsDirectory}/nodejs-0.6.17/windows/node.exe">
-			<os family="windows" />
-		</condition>
-
-		<condition property="nodePathValue" value="${toolsDirectory}/nodejs-0.6.17/mac/node">
-			<os family="mac" />
-		</condition>
-
-		<condition property="nodePathValue" value="${toolsDirectory}/nodejs-0.6.17/linux/node">
-			<os family="unix" />
-		</condition>
-	</target>
-
-	<target name="setNodePath">
-		<exec executable="node" failonerror="false" failifexecutionfails="false" resultproperty="node.exec.result">
+	<target name="checkForNode">
+		<exec executable="${nodePath}" failonerror="false" failifexecutionfails="false" resultproperty="node.exec.result">
 			<arg value="--version" />
 		</exec>
-
-		<!-- use node from path if return code is zero -->
-		<condition property="nodePath" value="node">
-			<equals arg1="${node.exec.result}" arg2="0" />
-		</condition>
-
-		<!-- otherwise on windows use the windows binary -->
-		<condition property="nodePath" value="${toolsDirectory}/nodejs-0.6.17/windows/node.exe">
-			<and>
-				<os family="windows" />
+		<fail message="Node.js is required to run this part of the build.  Install from http://nodejs.org/">
+			<condition>
 				<not>
-					<isset property="nodePath" />
+					<equals arg1="${node.exec.result}" arg2="0" />
 				</not>
-			</and>
-		</condition>
-
-		<!-- otherwise on mac use the mac binary -->
-		<condition property="nodePath" value="${toolsDirectory}/nodejs-0.6.17/mac/node">
-			<and>
-				<os family="mac" />
-				<not>
-					<isset property="nodePath" />
-				</not>
-			</and>
-		</condition>
-
-		<!-- otherwise on linux use the linux binary -->
-		<condition property="nodePath" value="${toolsDirectory}/nodejs-0.6.17/linux/node">
-			<and>
-				<os family="unix" />
-				<not>
-					<isset property="nodePath" />
-				</not>
-			</and>
-		</condition>
-
-		<!-- otherwise use node from path -->
-		<condition property="nodePath" value="node">
-			<not>
-				<isset property="nodePath" />
-			</not>
-		</condition>
+			</condition>
+		</fail>
 	</target>
 
 	<target name="combineJavaScript.create">
@@ -519,9 +451,9 @@
 		</antcall>
 	</target>
 
-	<target name="combineJavaScript" depends="setNodePath,combineJavaScript.createUnminified,combineJavaScript.copyUnminified,combineJavaScript.createMinified" />
+	<target name="combineJavaScript" depends="checkForNode,combineJavaScript.createUnminified,combineJavaScript.copyUnminified,combineJavaScript.createMinified" />
 
-	<target name="minifyCSS" depends="setNodePath">
+	<target name="minifyCSS" depends="checkForNode">
 		<copy todir="${buildOutputDirectory}" includeEmptyDirs="false" overwrite="true">
 			<fileset dir="${sourceDirectory}">
 				<include name="**/*.css" />
@@ -540,7 +472,27 @@
 		</apply>
 	</target>
 
-	<target name="generateDocumentation" depends="setNodePath" description="Generates HTML documentation.">
+	<condition property="os.windows">
+		<os family="windows" />
+	</condition>
+
+	<target name="npmInstall.nonWindows" unless="os.windows">
+		<exec executable="${npmPath}" dir="${basedir}" failonerror="true">
+			<arg value="install" />
+		</exec>
+	</target>
+
+	<target name="npmInstall.windows" if="os.windows">
+		<exec executable="cmd" dir="${basedir}" failonerror="true">
+			<arg value="/c" />
+			<arg value="${npmPath}" />
+			<arg value="install" />
+		</exec>
+	</target>
+
+	<target name="npmInstall" depends="npmInstall.windows,npmInstall.nonWindows" />
+
+	<target name="generateDocumentation" depends="checkForNode,npmInstall" description="Generates HTML documentation.">
 		<exec executable="${nodePath}" dir="${basedir}" failonerror="true">
 			<env key="CESIUM_VERSION" value="${version}" />
 			<arg value="node_modules/jsdoc/jsdoc.js" />
@@ -552,20 +504,16 @@
 		</copy>
 	</target>
 
-	<target name="runServer" description="Runs a local web server.">
-		<taskdef name="server" classname="com.agi.ServerTask">
-			<classpath>
-				<fileset dir="${webProxyDirectory}" includes="**/*.jar" />
-			</classpath>
-		</taskdef>
-
-		<!--
-		 Other server options:
-		 upstreamProxyHost: a standard proxy server that the local server will use to retrieve data
-		 upstreamProxyPort: the port number of the upstream proxy, default 80
-		 noUpstreamProxyHostList: A comma-separated list of hosts that will not use the upstreamProxy
-		-->
-		<server listenOnAllAddresses="${runServer.public}" allowedHostList="${runServer.allowedHosts}" port="${runServer.port}" baseDir="${basedir}" proxyContextPath="/proxy" terrainTranscodingContextPath="/terrain" mimeTypesPath="${webProxyDirectory}/mime.properties" />
+	<target name="runServer" depends="checkForNode,npmInstall" description="Runs a local web server.">
+		<echo>The local web server can also be launched directly by running: node server.js</echo>
+		<condition property="runServer.arg.public" value="--public" else="">
+			<istrue value="${runServer.public}" />
+		</condition>
+		<exec executable="${nodePath}" dir="${basedir}" failonerror="true">
+			<arg value="server.js" />
+			<arg line="${runServer.arg.public}" />
+			<arg line="--port ${runServer.port}" />
+		</exec>
 	</target>
 
 	<target name="runPublicServer" description="Runs a public web server.">
@@ -578,7 +526,7 @@
 		<antcall target="buildCesiumViewer" />
 	</target>
 
-	<target name="buildCesiumViewer" depends="setNodePath">
+	<target name="buildCesiumViewer" depends="checkForNode">
 		<property name="cesiumViewerDirectory" location="Apps/CesiumViewer" />
 		<property name="cesiumViewerOutputDirectory" location="${buildDirectory}/Apps/CesiumViewer" />
 		<mkdir dir="${cesiumViewerOutputDirectory}" />

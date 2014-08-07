@@ -7,10 +7,12 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
+        './Ellipsoid',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
         './IndexDatatype',
+        './Math',
         './PolylinePipeline',
         './PrimitiveType',
         './VertexFormat'
@@ -22,14 +24,50 @@ define([
         defaultValue,
         defined,
         DeveloperError,
+        Ellipsoid,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
         IndexDatatype,
+        CesiumMath,
         PolylinePipeline,
         PrimitiveType,
         VertexFormat) {
     "use strict";
+
+    function interpolateColors(p0, p1, color0, color1, granularity) {
+        var numPoints = PolylinePipeline.numberOfPoints(p0, p1, granularity);
+        var colors = new Array(numPoints);
+        var i;
+
+        var r0 = color0.red;
+        var g0 = color0.green;
+        var b0 = color0.blue;
+        var a0 = color0.alpha;
+
+        var r1 = color1.red;
+        var g1 = color1.green;
+        var b1 = color1.blue;
+        var a1 = color1.alpha;
+
+        if (Color.equals(color0, color1)) {
+            for (i = 0; i < numPoints; i++) {
+                colors[i] = Color.clone(color0);
+            }
+            return colors;
+        }
+
+        var redPerVertex = (r1 - r0) / numPoints;
+        var greenPerVertex = (g1 - g0) / numPoints;
+        var bluePerVertex = (b1 - b0) / numPoints;
+        var alphaPerVertex = (a1 - a0) / numPoints;
+
+        for (i = 0; i < numPoints; i++) {
+            colors[i] = new Color(r0 + i * redPerVertex, g0 + i * greenPerVertex, b0 + i * bluePerVertex, a0 + i * alphaPerVertex);
+        }
+
+        return colors;
+    }
 
     /**
      * A description of a polyline modeled as a line strip; the first two positions define a line segment,
@@ -44,12 +82,17 @@ define([
      * @param {Number} [options.width=1.0] The width in pixels.
      * @param {Color[]} [options.colors] An Array of {@link Color} defining the per vertex or per segment colors.
      * @param {Boolean} [options.colorsPerVertex=false] A boolean that determines whether the colors will be flat across each segment of the line or interpolated across the vertices.
+     * @param {Boolean} [options.followSurface=true] A boolean that determines whether positions will be adjusted to the surface of the ellipsoid via a great arc.
+     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude if options.followSurface=true. Determines the number of positions in the buffer.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      *
      * @exception {DeveloperError} At least two positions are required.
      * @exception {DeveloperError} width must be greater than or equal to one.
      * @exception {DeveloperError} colors has an invalid length.
      *
      * @see PolylineGeometry#createGeometry
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline.html|Cesium Sandcastle Polyline Demo}
      *
      * @example
      * // A polyline with two connected line segments
@@ -87,6 +130,9 @@ define([
         this._width = width;
         this._perVertex = perVertex;
         this._vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+        this._followSurface = defaultValue(options.followSurface, true);
+        this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         this._workerName = 'createPolylineGeometry';
     };
 
@@ -105,14 +151,57 @@ define([
         var vertexFormat = polylineGeometry._vertexFormat;
         var colors = polylineGeometry._colors;
         var perVertex = polylineGeometry._perVertex;
-
-        var segments = PolylinePipeline.wrapLongitude(polylineGeometry._positions);
-        var positions = segments.positions;
-        var lengths = segments.lengths;
+        var followSurface = polylineGeometry._followSurface;
+        var granularity = polylineGeometry._granularity;
+        var ellipsoid = polylineGeometry._ellipsoid;
 
         var i;
         var j;
         var k;
+
+        var p0;
+        var p1;
+        var c0;
+        var c1;
+        var positions = polylineGeometry._positions;
+
+        if (followSurface) {
+            var heights = PolylinePipeline.extractHeights(positions, ellipsoid);
+            var newColors = defined(colors) ? [] : undefined;
+
+            if (defined(colors)) {
+                for (i = 0; i < positions.length-1; i++) {
+                    p0 = positions[i];
+                    p1 = positions[i+1];
+                    c0 = colors[i];
+
+                    if (perVertex && i < colors.length) {
+                        c1 = colors[i+1];
+                        newColors = newColors.concat(interpolateColors(p0, p1, c0, c1, granularity));
+                    } else {
+                        var l = PolylinePipeline.numberOfPoints(p0, p1, granularity);
+                        for (j = 0; j < l; j++) {
+                            newColors.push(Color.clone(c0));
+                        }
+                    }
+                }
+                newColors.push(Color.clone(colors[colors.length-1]));
+                colors = newColors;
+            }
+
+            positions = PolylinePipeline.generateCartesianArc({
+                positions: positions,
+                granularity: granularity,
+                ellipsoid: ellipsoid,
+                height: heights
+            });
+        } else {
+            positions = polylineGeometry._positions;
+        }
+
+        var segments = PolylinePipeline.wrapLongitude(positions);
+        positions = segments.positions;
+        var lengths = segments.lengths;
 
         var size = 0;
         var length = lengths.length;

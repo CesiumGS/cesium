@@ -1,6 +1,0 @@
-{
-	"name": "DynamicScene",
-	"description": "Cesium DynamicScene",
-	"version": "0.6.0",
-	"dojoBuild": "DynamicScene.profile.js"
-}

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="A circle.">
+    <meta name="description" content="Draw a circle or extruded circle on the globe surface.">
     <meta name="cesium-sandcastle-labels" content="Geometries">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -16,7 +16,7 @@
     });
     </script>
 </head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
 </style>
@@ -24,72 +24,98 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+function startup(Cesium) {
     "use strict";
-
-    var viewer = new Cesium.Viewer('cesiumContainer');
-    var scene = viewer.scene;
-    var primitives = scene.primitives;
-           
-    // Red circle
-    var circleGeometry = new Cesium.CircleGeometry({
-        center : Cesium.Cartesian3.fromDegrees(-95.0, 43.0),
-        radius : 250000.0,
-        stRotation: Cesium.Math.toRadians(90.0),
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-    });
-    var redCircleInstance = new Cesium.GeometryInstance({
-        geometry : circleGeometry,
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
-        }
-    });
-
-    // Green extruded circle
-    circleGeometry = new Cesium.CircleGeometry({
-        center : Cesium.Cartesian3.fromDegrees(-90.0, 50.0),
-        radius : 250000.0,
-        extrudedHeight: 300000.0,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT    });
-    var greenCircleInstance = new Cesium.GeometryInstance({
-        geometry : circleGeometry,
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 1.0, 0.0, 0.5))
-        }
-    });
+//Sandcastle_Begin
+// Create the viewer.
+var viewer = new Cesium.Viewer('cesiumContainer');
+var primitives = viewer.scene.primitives;
        
-    // Blue circle with height
-    circleGeometry = new Cesium.CircleGeometry({
-        center : Cesium.Cartesian3.fromDegrees(-85.0, 40.0),
-        radius : 400000.0,
-        height : 150000.0,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-    });
-    var blueCircleInstance = new Cesium.GeometryInstance({
-        geometry : circleGeometry,
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
-        }
-    });
-    
-    // Add instances to primitives 
-    primitives.add(new Cesium.Primitive({
-        geometryInstances: [redCircleInstance, greenCircleInstance],
-        appearance: new Cesium.PerInstanceColorAppearance({
-            closed: true
-        })
-    }));
-    
-    primitives.add(new Cesium.Primitive({
-        geometryInstances: blueCircleInstance,
-        appearance: new Cesium.PerInstanceColorAppearance({
-            closed: true,
-            translucent : false
-        })
-    }));
-    
-    Sandcastle.finishedLoading();
+// Example 1: Draw a red circle on the globe surface.
+
+// Create the circle geometry.
+var circleGeometry = new Cesium.CircleGeometry({
+    center : Cesium.Cartesian3.fromDegrees(-95.0, 43.0),
+    radius : 250000.0,
+    vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
 });
+// Create a geometry instance using the circle geometry
+// created above. We can also specify a color attribute,
+// in this case, we're creating a translucent red color.
+var redCircleInstance = new Cesium.GeometryInstance({
+    geometry : circleGeometry,
+    attributes : {
+        color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
+    }
+});
+// Add the geometry instance to primitives.
+primitives.add(new Cesium.Primitive({
+    geometryInstances: [redCircleInstance],
+    appearance: new Cesium.PerInstanceColorAppearance({
+        closed: true
+    })
+}));
+
+// Example 2: Draw a green extruded circle.
+
+// Create the circle geometry.  To extrude, specify the
+// height of the geometry with the extrudedHeight option.
+circleGeometry = new Cesium.CircleGeometry({
+    center : Cesium.Cartesian3.fromDegrees(-90.0, 50.0),
+    radius : 250000.0,
+    extrudedHeight: 300000.0,
+    vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT    });
+// Create a geometry instance using the circle geometry
+// created above. Set the color attribute to a
+// translucent green.
+var greenCircleInstance = new Cesium.GeometryInstance({
+    geometry : circleGeometry,
+    attributes : {
+        color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 1.0, 0.0, 0.5))
+    }
+});
+// Add the geometry instance to primitives.
+primitives.add(new Cesium.Primitive({
+    geometryInstances: [greenCircleInstance],
+    appearance: new Cesium.PerInstanceColorAppearance({
+        closed: true
+    })
+}));
+   
+// Example 3: Draw a blue circle at a height.
+
+// Create the circle geometry.  Use the height option
+// to set the circles distance from the ground.
+circleGeometry = new Cesium.CircleGeometry({
+    center : Cesium.Cartesian3.fromDegrees(-85.0, 40.0),
+    radius : 400000.0,
+    height : 150000.0,
+    vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+});
+// Create a geometry instance using the circle geometry
+// created above. Set the color attribute to a solid blue.
+var blueCircleInstance = new Cesium.GeometryInstance({
+    geometry : circleGeometry,
+    attributes : {
+        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
+    }
+});
+// Add the geometry instance to primitives.
+primitives.add(new Cesium.Primitive({
+    geometryInstances: blueCircleInstance,
+    appearance: new Cesium.PerInstanceColorAppearance({
+        closed: true,
+        translucent : false
+    })
+}));
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
 </script>
 </body>
 </html>

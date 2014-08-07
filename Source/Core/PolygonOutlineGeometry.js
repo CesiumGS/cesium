@@ -1,7 +1,6 @@
 /*global define*/
 define([
         './BoundingSphere',
-        './Cartesian3',
         './ComponentDatatype',
         './defaultValue',
         './defined',
@@ -22,7 +21,6 @@ define([
         './WindingOrder'
     ], function(
         BoundingSphere,
-        Cartesian3,
         ComponentDatatype,
         defaultValue,
         defined,
@@ -102,10 +100,6 @@ define([
             })
         });
     }
-
-    var scratchPosition = new Cartesian3();
-    var scratchNormal = new Cartesian3();
-    var scratchBoundingSphere = new BoundingSphere();
 
     function createGeometryFromPositionsExtruded(ellipsoid, positions, granularity, perPositionHeight) {
         var cleanedPositions = PolygonPipeline.removeDuplicates(positions);
@@ -205,6 +199,8 @@ define([
      * @see PolygonOutlineGeometry#createGeometry
      * @see PolygonOutlineGeometry#fromPositions
      *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygon%20Outline.html|Cesium Sandcastle Polygon Outline Demo}
+     *
      * @example
      * // 1. create a polygon outline from points
      * var polygon = new Cesium.PolygonOutlineGeometry({
@@ -255,10 +251,10 @@ define([
      *     }]
      *   }
      * });
-     * var geometry = PolygonOutlineGeometry.createGeometry(polygonWithHole);
+     * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(polygonWithHole);
      *
      * // 3. create extruded polygon outline
-     * var extrudedPolygon = new PolygonOutlineGeometry({
+     * var extrudedPolygon = new Cesium.PolygonOutlineGeometry({
      *   positions : Cesium.Cartesian3.fromDegreesArray([
      *     -72.0, 40.0,
      *     -70.0, 35.0,
@@ -268,7 +264,7 @@ define([
      *   ]),
      *   extrudedHeight: 300000
      * });
-     * var geometry = PolygonOutlineGeometry.createGeometry(extrudedPolygon);
+     * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(extrudedPolygon);
      */
     var PolygonOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

@@ -20,7 +20,8 @@ define([
     /**
      * Contains functions to create a mesh from a heightmap image.
      *
-     * @exports HeightmapTessellator
+     * @namespace
+     * @alias HeightmapTessellator
      */
     var HeightmapTessellator = {};
 
@@ -30,13 +31,13 @@ define([
      * @constant
      */
     HeightmapTessellator.DEFAULT_STRUCTURE = freezeObject({
-            heightScale : 1.0,
-            heightOffset : 0.0,
-            elementsPerHeight : 1,
-            stride : 1,
-            elementMultiplier : 256.0,
-            isBigEndian : false
-        });
+        heightScale : 1.0,
+        heightOffset : 0.0,
+        elementsPerHeight : 1,
+        stride : 1,
+        elementMultiplier : 256.0,
+        isBigEndian : false
+    });
 
     /**
      * Fills an array of vertices from a heightmap image.  On return, the vertex data is in the order
@@ -211,7 +212,7 @@ define([
             ++endCol;
         }
 
-        for ( var rowIndex = startRow; rowIndex < endRow; ++rowIndex) {
+        for (var rowIndex = startRow; rowIndex < endRow; ++rowIndex) {
             var row = rowIndex;
             if (row < 0) {
                 row = 0;
@@ -234,7 +235,7 @@ define([
 
             var v = (latitude - geographicSouth) / (geographicNorth - geographicSouth);
 
-            for ( var colIndex = startCol; colIndex < endCol; ++colIndex) {
+            for (var colIndex = startCol; colIndex < endCol; ++colIndex) {
                 var col = colIndex;
                 if (col < 0) {
                     col = 0;

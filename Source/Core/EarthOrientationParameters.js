@@ -30,7 +30,7 @@ define([
     /**
      * Specifies Earth polar motion coordinates and the difference between UT1 and UTC.
      * These Earth Orientation Parameters (EOP) are primarily used in the transformation from
-     * the International Celestial Reference Frame (ITRF) to the International Terrestrial
+     * the International Celestial Reference Frame (ICRF) to the International Terrestrial
      * Reference Frame (ITRF).
      *
      * @alias EarthOrientationParameters
@@ -45,8 +45,8 @@ define([
      *                 parameter nor options.data is specified, all EOP values are assumed
      *                 to be 0.0.
      * @param {Boolean} [options.addNewLeapSeconds=true] True if leap seconds that
-     *                  are specified in the EOP data but not in {@link LeapSecond#getLeapSeconds}
-     *                  should be added to {@link LeapSecond#getLeapSeconds}.  False if
+     *                  are specified in the EOP data but not in {@link JulianDate.leapSeconds}
+     *                  should be added to {@link JulianDate.leapSeconds}.  False if
      *                  new leap seconds should be handled correctly in the context
      *                  of the EOP data but otherwise ignored.
      *
@@ -65,6 +65,8 @@ define([
      * // Loading the EOP data
      * var eop = new Cesium.EarthOrientationParameters({ url : 'Data/EOP.json' });
      * Cesium.Transforms.earthOrientationParameters = eop;
+     *
+     * @private
      */
     var EarthOrientationParameters = function EarthOrientationParameters(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -338,7 +340,7 @@ define([
             return result;
         }
 
-        var factor = JulianDate.getSecondsDifference(date, beforeDate) / JulianDate.getSecondsDifference(afterDate, beforeDate);
+        var factor = JulianDate.secondsDifference(date, beforeDate) / JulianDate.secondsDifference(afterDate, beforeDate);
 
         var startBefore = before * columnCount;
         var startAfter = after * columnCount;

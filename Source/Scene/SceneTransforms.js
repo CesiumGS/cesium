@@ -26,13 +26,14 @@ define([
     /**
      * Functions that do scene-dependent transforms between rendering-related coordinate systems.
      *
-     * @exports SceneTransforms
+     * @namespace
+     * @alias SceneTransforms
      */
     var SceneTransforms = {};
 
     var actualPosition = new Cartesian4(0, 0, 0, 1);
     var positionCC = new Cartesian4();
-    var viewProjectionScratch;
+    var viewProjectionScratch = new Matrix4();
 
     /**
      * Transforms a position in WGS84 coordinates to window coordinates.  This is commonly used to place an
@@ -67,7 +68,6 @@ define([
         SceneTransforms.computeActualWgs84Position(scene.frameState, position, actualPosition);
 
         if (!defined(actualPosition)) {
-            result = undefined;
             return undefined;
         }
 
@@ -75,6 +75,10 @@ define([
         var camera = scene.camera;
         viewProjectionScratch = Matrix4.multiply(camera.frustum.projectionMatrix, camera.viewMatrix, viewProjectionScratch);
         Matrix4.multiplyByVector(viewProjectionScratch, actualPosition, positionCC);
+
+        if (positionCC.z < 0) {
+            return undefined;
+        }
 
         result = SceneTransforms.clipToGLWindowCoordinates(scene, positionCC, result);
         result.y = scene.canvas.clientHeight - result.y;

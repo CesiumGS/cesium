@@ -14,12 +14,8 @@ define([
      *
      * @param {Array} array The sorted array to search.
      * @param {Object} itemToFind The item to find in the array.
-     *
-     * @param {Function} comparator The function to use to compare the item to elements in the array.
-     *        The first parameter passed to the comparator function is an item in the array, the
-     *        second is <code>itemToFind</code>.  If the array item is less than <code>itemToFind</code>,
-     *        the function should return a negative value.  If it is greater, the function should return
-     *        a positive value.  If the items are equal, it should return 0.
+     * @param {binarySearch~Comparator} comparator The function to use to compare the item to
+     *        elements in the array.
      * @returns {Number} The index of <code>itemToFind</code> in the array, if it exists.  If <code>itemToFind</code>
      *        does not exist, the return value is a negative number which is the bitwise complement (~)
      *        of the index before which the itemToFind should be inserted in order to maintain the
@@ -27,7 +23,7 @@ define([
      *
      * @example
      * // Create a comparator function to search through an array of numbers.
-     * var comparator = function (a, b) {
+     * var comparator = function(a, b) {
      *     return a - b;
      * };
      * var numbers = [0, 2, 4, 6, 8];
@@ -66,6 +62,22 @@ define([
         }
         return ~(high + 1);
     };
+
+    /**
+     * A function used to compare two items while performing a binary search.
+     * @callback binarySearch~Comparator
+     *
+     * @param {Object} a An item in the array.
+     * @param {Object} b The item being searched for.
+     * @returns {Number} Returns a negative value if <code>a</code> is less than <code>b</code>,
+     *          a positive value if <code>a</code> is greater than <code>b</code>, or
+     *          0 if <code>a</code> is equal to <code>b</code>.
+     *
+     * @example
+     * function compareNumbers(a, b) {
+     *     return a - b;
+     * }
+     */
 
     return binarySearch;
 });

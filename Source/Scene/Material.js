@@ -21,14 +21,11 @@ define([
         '../Shaders/Materials/CheckerboardMaterial',
         '../Shaders/Materials/DotMaterial',
         '../Shaders/Materials/FadeMaterial',
-        '../Shaders/Materials/FresnelMaterial',
         '../Shaders/Materials/GridMaterial',
         '../Shaders/Materials/NormalMapMaterial',
         '../Shaders/Materials/PolylineArrowMaterial',
         '../Shaders/Materials/PolylineGlowMaterial',
         '../Shaders/Materials/PolylineOutlineMaterial',
-        '../Shaders/Materials/ReflectionMaterial',
-        '../Shaders/Materials/RefractionMaterial',
         '../Shaders/Materials/RimLightingMaterial',
         '../Shaders/Materials/StripeMaterial',
         '../Shaders/Materials/Water',
@@ -55,14 +52,11 @@ define([
         CheckerboardMaterial,
         DotMaterial,
         FadeMaterial,
-        FresnelMaterial,
         GridMaterial,
         NormalMapMaterial,
         PolylineArrowMaterial,
         PolylineGlowMaterial,
         PolylineOutlineMaterial,
-        ReflectionMaterial,
-        RefractionMaterial,
         RimLightingMaterial,
         StripeMaterial,
         WaterMaterial,
@@ -149,22 +143,6 @@ define([
      *      <li><code>channels</code>:  Three character string containing any combination of r, g, b, and a for selecting the desired image channels. </li>
      *      <li><code>repeat</code>:  Object with x and y values specifying the number of times to repeat the image.</li>
      *      <li><code>strength</code>:  Bump strength value between 0.0 and 1.0 where 0.0 is small bumps and 1.0 is large bumps.</li>
-     *  </ul>
-     *  <li>Reflection</li>
-     *  <ul>
-     *      <li><code>cubeMap</code>:  Object with positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ image paths. </li>
-     *      <li><code>channels</code>:  Three character string containing any combination of r, g, b, and a for selecting the desired image channels.</li>
-     *  </ul>
-     *  <li>Refraction</li>
-     *  <ul>
-     *      <li><code>cubeMap</code>:  Object with positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ image paths. </li>
-     *      <li><code>channels</code>:  Three character string containing any combination of r, g, b, and a for selecting the desired image channels.</li>
-     *      <li><code>indexOfRefractionRatio</code>:  Number representing the refraction strength where 1.0 is the lowest and 0.0 is the highest.</li>
-     *  </ul>
-     *  <li>Fresnel</li>
-     *  <ul>
-     *      <li><code>reflection</code>:  Reflection Material.</li>
-     *      <li><code>refraction</code>:  Refraction Material.</li>
      *  </ul>
      *  <li>Grid</li>
      *  <ul>
@@ -387,6 +365,10 @@ define([
         return material;
     };
 
+    /**
+     * Gets whether or not this material is translucent.
+     * @returns <code>true</code> if this material is translucent, <code>false</code> otherwise.
+     */
     Material.prototype.isTranslucent = function() {
         if (defined(this.translucent)) {
             if (typeof this.translucent === 'function') {
@@ -997,9 +979,23 @@ define([
         }
     };
 
+    /**
+     * Gets or sets the default texture uniform value.
+     * @type {String}
+     */
     Material.DefaultImageId = 'czm_defaultImage';
+
+    /**
+     * Gets or sets the default cube map texture uniform value.
+     * @type {String}
+     */
     Material.DefaultCubeMapId = 'czm_defaultCubeMap';
 
+    /**
+     * Gets the name of the color material.
+     * @type {String}
+     * @readonly
+     */
     Material.ColorType = 'Color';
     Material._materialCache.addMaterial(Material.ColorType, {
         fabric : {
@@ -1017,6 +1013,11 @@ define([
         }
     });
 
+    /**
+     * Gets the name of the image material.
+     * @type {String}
+     * @readonly
+     */
     Material.ImageType = 'Image';
     Material._materialCache.addMaterial(Material.ImageType, {
         fabric : {
@@ -1033,6 +1034,11 @@ define([
         translucent : true
     });
 
+    /**
+     * Gets the name of the diffuce map material.
+     * @type {String}
+     * @readonly
+     */
     Material.DiffuseMapType = 'DiffuseMap';
     Material._materialCache.addMaterial(Material.DiffuseMapType, {
         fabric : {
@@ -1049,6 +1055,11 @@ define([
         translucent : false
     });
 
+    /**
+     * Gets the name of the alpha map material.
+     * @type {String}
+     * @readonly
+     */
     Material.AlphaMapType = 'AlphaMap';
     Material._materialCache.addMaterial(Material.AlphaMapType, {
         fabric : {
@@ -1065,6 +1076,11 @@ define([
         translucent : true
     });
 
+    /**
+     * Gets the name of the specular map material.
+     * @type {String}
+     * @readonly
+     */
     Material.SpecularMapType = 'SpecularMap';
     Material._materialCache.addMaterial(Material.SpecularMapType, {
         fabric : {
@@ -1081,6 +1097,11 @@ define([
         translucent : false
     });
 
+    /**
+     * Gets the name of the emmision map material.
+     * @type {String}
+     * @readonly
+     */
     Material.EmissionMapType = 'EmissionMap';
     Material._materialCache.addMaterial(Material.EmissionMapType, {
         fabric : {
@@ -1097,6 +1118,11 @@ define([
         translucent : false
     });
 
+    /**
+     * Gets the name of the bump map material.
+     * @type {String}
+     * @readonly
+     */
     Material.BumpMapType = 'BumpMap';
     Material._materialCache.addMaterial(Material.BumpMapType, {
         fabric : {
@@ -1112,6 +1138,11 @@ define([
         translucent : false
     });
 
+    /**
+     * Gets the name of the normal map material.
+     * @type {String}
+     * @readonly
+     */
     Material.NormalMapType = 'NormalMap';
     Material._materialCache.addMaterial(Material.NormalMapType, {
         fabric : {
@@ -1127,50 +1158,11 @@ define([
         translucent : false
     });
 
-    Material.ReflectionType = 'Reflection';
-    Material._materialCache.addMaterial(Material.ReflectionType, {
-        fabric : {
-            type : Material.ReflectionType,
-            uniforms : {
-                cubeMap : Material.DefaultCubeMapId,
-                channels : 'rgb'
-            },
-            source : ReflectionMaterial
-        },
-        translucent : false
-    });
-
-    Material.RefractionType = 'Refraction';
-    Material._materialCache.addMaterial(Material.RefractionType, {
-        fabric : {
-            type : Material.RefractionType,
-            uniforms : {
-                cubeMap : Material.DefaultCubeMapId,
-                channels : 'rgb',
-                indexOfRefractionRatio : 0.9
-            },
-            source : RefractionMaterial
-        },
-        translucent : false
-    });
-
-    Material.FresnelType = 'Fresnel';
-    Material._materialCache.addMaterial(Material.FresnelType, {
-        fabric : {
-            type : Material.FresnelType,
-            materials : {
-                reflection : {
-                    type : Material.ReflectionType
-                },
-                refraction : {
-                    type : Material.RefractionType
-                }
-            },
-            source : FresnelMaterial
-        },
-        translucent : false
-    });
-
+    /**
+     * Gets the name of the grid material.
+     * @type {String}
+     * @readonly
+     */
     Material.GridType = 'Grid';
     Material._materialCache.addMaterial(Material.GridType, {
         fabric : {
@@ -1190,6 +1182,11 @@ define([
         }
     });
 
+    /**
+     * Gets the name of the stripe material.
+     * @type {String}
+     * @readonly
+     */
     Material.StripeType = 'Stripe';
     Material._materialCache.addMaterial(Material.StripeType, {
         fabric : {
@@ -1209,6 +1206,11 @@ define([
         }
     });
 
+    /**
+     * Gets the name of the checkerboard material.
+     * @type {String}
+     * @readonly
+     */
     Material.CheckerboardType = 'Checkerboard';
     Material._materialCache.addMaterial(Material.CheckerboardType, {
         fabric : {
@@ -1226,6 +1228,11 @@ define([
         }
     });
 
+    /**
+     * Gets the name of the dot material.
+     * @type {String}
+     * @readonly
+     */
     Material.DotType = 'Dot';
     Material._materialCache.addMaterial(Material.DotType, {
         fabric : {
@@ -1243,6 +1250,11 @@ define([
         }
     });
 
+    /**
+     * Gets the name of the water material.
+     * @type {String}
+     * @readonly
+     */
     Material.WaterType = 'Water';
     Material._materialCache.addMaterial(Material.WaterType, {
         fabric : {
@@ -1266,6 +1278,11 @@ define([
         }
     });
 
+    /**
+     * Gets the name of the rim lighting material.
+     * @type {String}
+     * @readonly
+     */
     Material.RimLightingType = 'RimLighting';
     Material._materialCache.addMaterial(Material.RimLightingType, {
         fabric : {
@@ -1283,6 +1300,11 @@ define([
         }
     });
 
+    /**
+     * Gets the name of the fade material.
+     * @type {String}
+     * @readonly
+     */
     Material.FadeType = 'Fade';
     Material._materialCache.addMaterial(Material.FadeType, {
         fabric : {
@@ -1306,6 +1328,11 @@ define([
         }
     });
 
+    /**
+     * Gets the name of the polyline arrow material.
+     * @type {String}
+     * @readonly
+     */
     Material.PolylineArrowType = 'PolylineArrow';
     Material._materialCache.addMaterial(Material.PolylineArrowType, {
         fabric : {
@@ -1318,6 +1345,11 @@ define([
         translucent : true
     });
 
+    /**
+     * Gets the name of the polyline glow material.
+     * @type {String}
+     * @readonly
+     */
     Material.PolylineGlowType = 'PolylineGlow';
     Material._materialCache.addMaterial(Material.PolylineGlowType, {
         fabric : {
@@ -1331,6 +1363,11 @@ define([
         translucent : true
     });
 
+    /**
+     * Gets the name of the polyline outline material.
+     * @type {String}
+     * @readonly
+     */
     Material.PolylineOutlineType = 'PolylineOutline';
     Material._materialCache.addMaterial(Material.PolylineOutlineType, {
         fabric : {

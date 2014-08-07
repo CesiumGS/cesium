@@ -109,12 +109,13 @@ define([
      * @see PolylineCollection#remove
      * @see Polyline
      * @see LabelCollection
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polylines.html|Cesium Sandcastle Polyline Demo}
      *
      * @example
      * // Create a polyline collection with two polylines
      * var polylines = new Cesium.PolylineCollection();
      * polylines.add({
-     *   position : Cartesian3.fromDegreesArray([
+     *   position : Cesium.Cartesian3.fromDegreesArray([
      *     -75.10, 39.57,
      *     -77.02, 38.53,
      *     -80.50, 35.14,
@@ -123,15 +124,13 @@ define([
      * });
      *
      * polylines.add({
-     *   positions : Cartesian3.fromDegreesArray([
+     *   positions : Cesium.Cartesian3.fromDegreesArray([
      *     -73.10, 37.57,
      *     -75.02, 36.53,
      *     -78.50, 33.14,
      *     -78.12, 23.46]),
      *   width : 4
      * });
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polylines.html|Cesium Sandcastle Polyline Demo}
      */
     var PolylineCollection = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -151,7 +150,7 @@ define([
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
-         * Draws the bounding sphere for each {@link DrawCommand} in the primitive.
+         * Draws the bounding sphere for each draw command in the primitive.
          * </p>
          *
          * @type {Boolean}
@@ -1337,7 +1336,7 @@ define([
         lengths : undefined
     };
     var scratchLengths = new Array(1);
-
+    var pscratch = new Cartesian3();
     PolylineBucket.prototype.getSegments = function(polyline, projection) {
         var positions = polyline.positions;
 
@@ -1357,11 +1356,11 @@ define([
         var modelMatrix = this.modelMatrix;
         var length = positions.length;
         var position;
-        var p;
+        var p = pscratch;
 
         for ( var n = 0; n < length; ++n) {
             position = positions[n];
-            p = Matrix4.multiplyByPoint(modelMatrix, position);
+            p = Matrix4.multiplyByPoint(modelMatrix, position, p);
             newPositions.push(projection.project(ellipsoid.cartesianToCartographic(p)));
         }
 

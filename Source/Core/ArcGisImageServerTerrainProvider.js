@@ -149,6 +149,32 @@ define([
             get : function() {
                 return true;
             }
+        },
+
+        /**
+         * Gets a value indicating whether or not the provider includes a water mask.  The water mask
+         * indicates which areas of the globe are water rather than land, so they can be rendered
+         * as a reflective surface with animated waves.  This function should not be
+         * called before {@link ArcGisImageServerTerrainProvider#ready} returns true.
+         * @memberof ArcGisImageServerTerrainProvider.prototype
+         * @type {Boolean}
+         */
+        hasWaterMask : {
+            get : function() {
+                return false;
+            }
+        },
+
+        /**
+         * Gets a value indicating whether or not the requested tiles include vertex normals.
+         * This function should not be called before {@link ArcGisImageServerTerrainProvider#ready} returns true.
+         * @memberof ArcGisImageServerTerrainProvider.prototype
+         * @type {Boolean}
+         */
+        hasVertexNormals : {
+            get : function() {
+                return false;
+            }
         }
     });
 
@@ -216,17 +242,6 @@ define([
      */
     ArcGisImageServerTerrainProvider.prototype.getLevelMaximumGeometricError = function(level) {
         return this._levelZeroMaximumGeometricError / (1 << level);
-    };
-
-    /**
-     * Gets a value indicating whether or not the provider includes a water mask.  The water mask
-     * indicates which areas of the globe are water rather than land, so they can be rendered
-     * as a reflective surface with animated waves.
-     *
-     * @returns {Boolean} True if the provider has a water mask; otherwise, false.
-     */
-    ArcGisImageServerTerrainProvider.prototype.hasWaterMask = function() {
-        return false;
     };
 
     return ArcGisImageServerTerrainProvider;

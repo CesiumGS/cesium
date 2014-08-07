@@ -6,7 +6,6 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/IndexDatatype',
-        '../Core/TerrainProvider',
         '../Core/TileProviderError',
         '../Renderer/BufferUsage',
         '../ThirdParty/when',
@@ -19,7 +18,6 @@ define([
         defined,
         DeveloperError,
         IndexDatatype,
-        TerrainProvider,
         TileProviderError,
         BufferUsage,
         when,
@@ -73,19 +71,21 @@ define([
     };
 
     TileTerrain.prototype.publishToTile = function(tile) {
-        var mesh = this.mesh;
-        Cartesian3.clone(mesh.center, tile.center);
-        tile.minimumHeight = mesh.minimumHeight;
-        tile.maximumHeight = mesh.maximumHeight;
-        tile.boundingSphere3D = BoundingSphere.clone(mesh.boundingSphere3D, tile.boundingSphere3D);
+        var surfaceTile = tile.data;
 
-        tile.occludeePointInScaledSpace = Cartesian3.clone(mesh.occludeePointInScaledSpace, tile.occludeePointInScaledSpace);
+        var mesh = this.mesh;
+        Cartesian3.clone(mesh.center, surfaceTile.center);
+        surfaceTile.minimumHeight = mesh.minimumHeight;
+        surfaceTile.maximumHeight = mesh.maximumHeight;
+        surfaceTile.boundingSphere3D = BoundingSphere.clone(mesh.boundingSphere3D, surfaceTile.boundingSphere3D);
+
+        tile.data.occludeePointInScaledSpace = Cartesian3.clone(mesh.occludeePointInScaledSpace, surfaceTile.occludeePointInScaledSpace);
 
         // Free the tile's existing vertex array, if any.
-        tile.freeVertexArray();
+        surfaceTile.freeVertexArray();
 
         // Transfer ownership of the vertex array to the tile itself.
-        tile.vertexArray = this.vertexArray;
+        surfaceTile.vertexArray = this.vertexArray;
         this.vertexArray = undefined;
     };
 
@@ -207,9 +207,18 @@ define([
 
     function createResources(tileTerrain, context, terrainProvider, x, y, level) {
         var datatype = ComponentDatatype.FLOAT;
+        var stride;
+        var numTexCoordComponents;
         var typedArray = tileTerrain.mesh.vertices;
         var buffer = context.createVertexBuffer(typedArray, BufferUsage.STATIC_DRAW);
-        var stride = 6 * ComponentDatatype.getSizeInBytes(datatype);
+        if (terrainProvider.hasVertexNormals) {
+            stride = 8 * ComponentDatatype.getSizeInBytes(datatype);
+            numTexCoordComponents = 4;
+        } else {
+            stride = 6 * ComponentDatatype.getSizeInBytes(datatype);
+            numTexCoordComponents = 2;
+        }
+
         var position3DAndHeightLength = 4;
 
         var attributes = [{
@@ -220,10 +229,10 @@ define([
             offsetInBytes : 0,
             strideInBytes : stride
         }, {
-            index : terrainAttributeLocations.textureCoordinates,
+            index : terrainAttributeLocations.textureCoordAndEncodedNormals,
             vertexBuffer : buffer,
             componentDatatype : datatype,
-            componentsPerAttribute : 2,
+            componentsPerAttribute : numTexCoordComponents,
             offsetInBytes : position3DAndHeightLength * ComponentDatatype.getSizeInBytes(datatype),
             strideInBytes : stride
         }];

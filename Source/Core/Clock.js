@@ -44,11 +44,11 @@ define([
      * @example
      * // Create a clock that loops on Christmas day 2013 and runs in real-time.
      * var clock = new Cesium.Clock({
-     *    startTime : Cesium.JulianDate.fromIso8601("12-25-2013"),
-     *    currentTime : Cesium.JulianDate.fromIso8601("12-25-2013"),
-     *    stopTime : Cesium.JulianDate.fromIso8601("12-26-2013"),
+     *    startTime : Cesium.JulianDate.fromIso8601("2013-12-25"),
+     *    currentTime : Cesium.JulianDate.fromIso8601("2013-12-25"),
+     *    stopTime : Cesium.JulianDate.fromIso8601("2013-12-26"),
      *    clockRange : Cesium.ClockRange.LOOP_STOP,
-     *    clockStep : SYSTEM_CLOCK_MULTIPLIER
+     *    clockStep : Cesium.ClockStep.SYSTEM_CLOCK_MULTIPLIER
      * });
      */
     var Clock = function(options) {
@@ -192,7 +192,7 @@ define([
                         currentTime = JulianDate.clone(startTime, currentTime);
                     }
                     while (JulianDate.greaterThan(currentTime, stopTime)) {
-                        currentTime = JulianDate.addSeconds(startTime, JulianDate.getSecondsDifference(currentTime, stopTime), currentTime);
+                        currentTime = JulianDate.addSeconds(startTime, JulianDate.secondsDifference(currentTime, stopTime), currentTime);
                     }
                 }
             }

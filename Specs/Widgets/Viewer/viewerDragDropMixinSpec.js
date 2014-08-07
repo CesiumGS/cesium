@@ -85,21 +85,25 @@ defineSuite([
         expect(viewer.dropTarget).toBe(container);
     });
 
-    var czml1 = {
-        id : 'test',
-        availability : '2000-01-01/2001-01-01',
-        billboard : {
-            show : true
+    var czml1 = [{
+        id : 'document',
+        version : '1.0',
+        clock : {
+            interval : '2000-01-01/2001-01-01'
         }
-    };
+    }, {
+        id : 'test'
+    }];
 
-    var czml2 = {
-        id : 'test2',
-        availability : '2000-01-02/2001-01-02',
-        billboard : {
-            show : true
+    var czml2 = [{
+        id : 'document',
+        version : '1.0',
+        clock : {
+            interval : '2000-01-02/2001-01-02'
         }
-    };
+    }, {
+        id : 'test2'
+    }];
 
     it('handleDrop processes drop event', function() {
         var mockEvent = {
@@ -127,9 +131,9 @@ defineSuite([
         runs(function() {
             var dataSource = viewer.dataSources.get(0);
             var interval = TimeInterval.fromIso8601({
-                iso8601 : czml1.availability
+                iso8601 : czml1[0].clock.interval
             });
-            expect(dataSource.dynamicObjects.getById('test')).toBeDefined();
+            expect(dataSource.entities.getById('test')).toBeDefined();
             expect(dataSource.clock.startTime).toEqual(interval.start);
             expect(dataSource.clock.stopTime).toEqual(interval.stop);
         });
@@ -164,11 +168,11 @@ defineSuite([
         runs(function() {
             var source1 = viewer.dataSources.get(0);
             var source2 = viewer.dataSources.get(1);
-            expect(source1.dynamicObjects.getById('test')).toBeDefined();
-            expect(source2.dynamicObjects.getById('test2')).toBeDefined();
+            expect(source1.entities.getById('test')).toBeDefined();
+            expect(source2.entities.getById('test2')).toBeDefined();
             //Interval of first file should be used.
             var interval = TimeInterval.fromIso8601({
-                iso8601 : czml1.availability
+                iso8601 : czml1[0].clock.interval
             });
             expect(source1.clock.startTime).toEqual(interval.start);
             expect(source1.clock.stopTime).toEqual(interval.stop);
@@ -204,11 +208,11 @@ defineSuite([
         runs(function() {
             var source1 = viewer.dataSources.get(0);
             var source2 = viewer.dataSources.get(1);
-            expect(source1.dynamicObjects.getById('test')).toBeDefined();
-            expect(source2.dynamicObjects.getById('test2')).toBeDefined();
+            expect(source1.entities.getById('test')).toBeDefined();
+            expect(source2.entities.getById('test2')).toBeDefined();
             //Interval of first file should be used.
             var interval = TimeInterval.fromIso8601({
-                iso8601 : czml1.availability
+                iso8601 : czml1[0].clock.interval
             });
             expect(source1.clock.startTime).toEqual(interval.start);
             expect(source1.clock.stopTime).toEqual(interval.stop);
@@ -227,10 +231,10 @@ defineSuite([
             var source3 = viewer.dataSources.get(2);
             var source4 = viewer.dataSources.get(3);
 
-            expect(source1.dynamicObjects.getById('test')).toBeDefined();
-            expect(source2.dynamicObjects.getById('test2')).toBeDefined();
-            expect(source3.dynamicObjects.getById('test')).toBeDefined();
-            expect(source4.dynamicObjects.getById('test2')).toBeDefined();
+            expect(source1.entities.getById('test')).toBeDefined();
+            expect(source2.entities.getById('test2')).toBeDefined();
+            expect(source3.entities.getById('test')).toBeDefined();
+            expect(source4.entities.getById('test2')).toBeDefined();
 
             viewer.clearOnDrop = true;
             EventHelper.fireMockEvent(viewer._handleDrop, mockEvent);
@@ -243,11 +247,11 @@ defineSuite([
         runs(function() {
             var source1 = viewer.dataSources.get(0);
             var source2 = viewer.dataSources.get(1);
-            expect(source1.dynamicObjects.getById('test')).toBeDefined();
-            expect(source2.dynamicObjects.getById('test2')).toBeDefined();
+            expect(source1.entities.getById('test')).toBeDefined();
+            expect(source2.entities.getById('test2')).toBeDefined();
             //Interval of first file should be used.
             var interval = TimeInterval.fromIso8601({
-                iso8601 : czml1.availability
+                iso8601 : czml1[0].clock.interval
             });
             expect(source1.clock.startTime).toEqual(interval.start);
             expect(source1.clock.stopTime).toEqual(interval.stop);

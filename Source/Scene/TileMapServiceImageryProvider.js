@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/Cartesian2',
         '../Core/Cartographic',
         '../Core/Credit',
         '../Core/defaultValue',
@@ -10,9 +11,13 @@ define([
         '../Core/GeographicTilingScheme',
         '../Core/loadXML',
         '../Core/Rectangle',
+        '../Core/RuntimeError',
+        '../Core/TileProviderError',
         '../Core/WebMercatorTilingScheme',
+        '../ThirdParty/when',
         './ImageryProvider'
     ], function(
+        Cartesian2,
         Cartographic,
         Credit,
         defaultValue,
@@ -23,7 +28,10 @@ define([
         GeographicTilingScheme,
         loadXML,
         Rectangle,
+        RuntimeError,
+        TileProviderError,
         WebMercatorTilingScheme,
+        when,
         ImageryProvider) {
     "use strict";
 
@@ -55,6 +63,7 @@ define([
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
      * @see OpenStreetMapImageryProvider
+     * @see WebMapTileServiceImageryProvider
      * @see SingleTileImageryProvider
      * @see WebMapServiceImageryProvider
      *
@@ -96,6 +105,14 @@ define([
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._errorEvent = new Event();
 
+        this._fileExtension = options.fileExtension;
+        this._tileWidth = options.tileWidth;
+        this._tileHeight = options.tileHeight;
+        this._minimumLevel = options.minimumLevel;
+        this._maximumLevel = options.maximumLevel;
+        this._rectangle = Rectangle.clone(options.rectangle);
+        this._tilingScheme = options.tilingScheme;
+
         var credit = options.credit;
         if (typeof credit === 'string') {
             credit = new Credit(credit);
@@ -103,57 +120,102 @@ define([
         this._credit = credit;
 
         var that = this;
+        var metadataError;
 
-        // Try to load remaining parameters from XML
-        loadXML(url + 'tilemapresource.xml').then(function(xml) {
+        function metadataSuccess(xml) {
             var tileFormatRegex = /tileformat/i;
             var tileSetRegex = /tileset/i;
             var tileSetsRegex = /tilesets/i;
             var bboxRegex = /boundingbox/i;
-            var format, bbox, tilesets;
+            var srsRegex = /srs/i;
+            var format, bbox, tilesets, srs;
             var tilesetsList = []; //list of TileSets
-            // Allowing options properties to override XML values
-            var nodeList = xml.childNodes[0].childNodes;
+
+            // Allowing options properties (already copied to that) to override XML values
+
             // Iterate XML Document nodes for properties
+            var nodeList = xml.childNodes[0].childNodes;
             for (var i = 0; i < nodeList.length; i++){
-                if (tileFormatRegex.test(nodeList.item(i).nodeName)){
+                if (tileFormatRegex.test(nodeList.item(i).nodeName)) {
                     format = nodeList.item(i);
-                } else if (tileSetsRegex.test(nodeList.item(i).nodeName)){
+                } else if (tileSetsRegex.test(nodeList.item(i).nodeName)) {
                     tilesets = nodeList.item(i); // Node list of TileSets
                     var tileSetNodes = nodeList.item(i).childNodes;
                     // Iterate the nodes to find all TileSets
-                    for(var j = 0; j < tileSetNodes.length; j++){
-                        if (tileSetRegex.test(tileSetNodes.item(j).nodeName)){
+                    for(var j = 0; j < tileSetNodes.length; j++) {
+                        if (tileSetRegex.test(tileSetNodes.item(j).nodeName)) {
                             // Add them to tilesets list
                             tilesetsList.push(tileSetNodes.item(j));
                         }
                     }
-                } else if (bboxRegex.test(nodeList.item(i).nodeName)){
+                } else if (bboxRegex.test(nodeList.item(i).nodeName)) {
                     bbox = nodeList.item(i);
+                } else if (srsRegex.test(nodeList.item(i).nodeName)) {
+                    srs = nodeList.item(i).textContent;
                 }
             }
-            that._fileExtension = defaultValue(options.fileExtension, format.getAttribute('extension'));
-            that._tileWidth = defaultValue(options.tileWidth, parseInt(format.getAttribute('width'), 10));
-            that._tileHeight = defaultValue(options.tileHeight, parseInt(format.getAttribute('height'), 10));
-            that._minimumLevel = defaultValue(options.minimumLevel, parseInt(tilesetsList[0].getAttribute('order'), 10));
-            that._maximumLevel = defaultValue(options.maximumLevel, parseInt(tilesetsList[tilesetsList.length - 1].getAttribute('order'), 10));
+
+            that._fileExtension = defaultValue(that._fileExtension, format.getAttribute('extension'));
+            that._tileWidth = defaultValue(that._tileWidth, parseInt(format.getAttribute('width'), 10));
+            that._tileHeight = defaultValue(that._tileHeight, parseInt(format.getAttribute('height'), 10));
+            that._minimumLevel = defaultValue(that._minimumLevel, parseInt(tilesetsList[0].getAttribute('order'), 10));
+            that._maximumLevel = defaultValue(that._maximumLevel, parseInt(tilesetsList[tilesetsList.length - 1].getAttribute('order'), 10));
+
+            // Determine based on the profile attribute if this tileset was generated by gdal2tiles.py ('mercator' or 'geodetic' profile, in which
+            // case X is latitude and Y is longitude) or by a tool compliant with the TMS standard ('global-mercator' or 'global-geodetic' profile,
+            // in which case X is longitude and Y is latitude).
+            var tilingSchemeName = tilesets.getAttribute('profile');
+
+            var flipXY = false;
+            if (tilingSchemeName === 'geodetic' || tilingSchemeName === 'mercator') {
+                flipXY = true;
+            }
+
+            if (!defined(that._tilingScheme)) {
+                if (tilingSchemeName === 'geodetic' || tilingSchemeName === 'global-geodetic') {
+                    that._tilingScheme = new GeographicTilingScheme();
+                } else if (tilingSchemeName === 'mercator' || tilingSchemeName === 'global-mercator') {
+                    that._tilingScheme = new WebMercatorTilingScheme();
+                } else {
+                    var message = url + 'tilemapresource.xml specifies an unsupported profile attribute, ' + tilingSchemeName + '.';
+                    metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+                    return;
+                }
+            }
+
+            var tilingScheme = that._tilingScheme;
 
             // rectangle handling
-            that._rectangle = options.rectangle;
             if (!defined(that._rectangle)) {
-                var sw = Cartographic.fromDegrees(parseFloat(bbox.getAttribute('miny')), parseFloat(bbox.getAttribute('minx')));
-                var ne = Cartographic.fromDegrees(parseFloat(bbox.getAttribute('maxy')), parseFloat(bbox.getAttribute('maxx')));
+                var swXY;
+                var neXY;
+                var sw;
+                var ne;
+
+                if (flipXY) {
+                    swXY = new Cartesian2(parseFloat(bbox.getAttribute('miny')), parseFloat(bbox.getAttribute('minx')));
+                    neXY = new Cartesian2(parseFloat(bbox.getAttribute('maxy')), parseFloat(bbox.getAttribute('maxx')));
+
+                    // In old tilers with X/Y flipped, coordinate are always geodetic degrees.
+                    sw = Cartographic.fromDegrees(swXY.x, swXY.y);
+                    ne = Cartographic.fromDegrees(neXY.x, neXY.y);
+                } else {
+                    swXY = new Cartesian2(parseFloat(bbox.getAttribute('minx')), parseFloat(bbox.getAttribute('miny')));
+                    neXY = new Cartesian2(parseFloat(bbox.getAttribute('maxx')), parseFloat(bbox.getAttribute('maxy')));
+
+                    if (that._tilingScheme instanceof GeographicTilingScheme) {
+                        sw = Cartographic.fromDegrees(swXY.x, swXY.y);
+                        ne = Cartographic.fromDegrees(neXY.x, neXY.y);
+                    } else {
+                        var projection = that._tilingScheme.projection;
+                        sw = projection.unproject(swXY);
+                        ne = projection.unproject(neXY);
+                    }
+                }
+
                 that._rectangle = new Rectangle(sw.longitude, sw.latitude, ne.longitude, ne.latitude);
-            } else {
-                that._rectangle = Rectangle.clone(that._rectangle);
             }
 
-            // tiling scheme handling
-            var tilingScheme = options.tilingScheme;
-            if (!defined(tilingScheme)) {
-                var tilingSchemeName = tilesets.getAttribute('profile');
-                tilingScheme = tilingSchemeName === 'geodetic' ? new GeographicTilingScheme() : new WebMercatorTilingScheme();
-            }
 
             // The rectangle must not be outside the bounds allowed by the tiling scheme.
             if (that._rectangle.west < tilingScheme.rectangle.west) {
@@ -172,8 +234,8 @@ define([
             // Check the number of tiles at the minimum level.  If it's more than four,
             // try requesting the lower levels anyway, because starting at the higher minimum
             // level will cause too many tiles to be downloaded and rendered.
-            var swTile = tilingScheme.positionToTileXY(Rectangle.getSouthwest(that._rectangle), that._minimumLevel);
-            var neTile = tilingScheme.positionToTileXY(Rectangle.getNortheast(that._rectangle), that._minimumLevel);
+            var swTile = tilingScheme.positionToTileXY(Rectangle.southwest(that._rectangle), that._minimumLevel);
+            var neTile = tilingScheme.positionToTileXY(Rectangle.northeast(that._rectangle), that._minimumLevel);
             var tileCount = (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
             if (tileCount > 4) {
                 that._minimumLevel = 0;
@@ -181,7 +243,9 @@ define([
 
             that._tilingScheme = tilingScheme;
             that._ready = true;
-        }, function(error) {
+        }
+
+        function metadataFailure(error) {
             // Can't load XML, still allow options and defaults
             that._fileExtension = defaultValue(options.fileExtension, 'png');
             that._tileWidth = defaultValue(options.tileWidth, 256);
@@ -191,8 +255,14 @@ define([
             that._tilingScheme = defaultValue(options.tilingScheme, new WebMercatorTilingScheme());
             that._rectangle = defaultValue(options.rectangle, that._tilingScheme.rectangle);
             that._ready = true;
-        });
+        }
 
+        function requestMetadata() {
+            // Try to load remaining parameters from XML
+            when(loadXML(url + 'tilemapresource.xml'), metadataSuccess, metadataFailure);
+        }
+
+        requestMetadata();
     };
 
     function buildImageUrl(imageryProvider, x, y, level) {

@@ -137,7 +137,7 @@ defineSuite([
     });
 
     it('anyButtonDown', function() {
-        expect(handler.anyButtonDown(CameraEventType.LEFT_DRAG)).toEqual(false);
+        expect(handler.anyButtonDown).toEqual(false);
 
         var args = {
             button : MouseButtons.LEFT,
@@ -145,18 +145,18 @@ defineSuite([
             clientY : 0
         };
         canvas.fireEvents('mousedown', args);
-        expect(handler.anyButtonDown(CameraEventType.LEFT_DRAG)).toEqual(true);
+        expect(handler.anyButtonDown).toEqual(true);
 
         args.button = MouseButtons.RIGHT;
         canvas.fireEvents('mousedown', args);
-        expect(handler.anyButtonDown(CameraEventType.LEFT_DRAG)).toEqual(true);
+        expect(handler.anyButtonDown).toEqual(true);
 
         canvas.fireEvents('mouseup', args);
-        expect(handler.anyButtonDown(CameraEventType.LEFT_DRAG)).toEqual(true);
+        expect(handler.anyButtonDown).toEqual(true);
 
         args.button = MouseButtons.LEFT;
         canvas.fireEvents('mouseup', args);
-        expect(handler.anyButtonDown(CameraEventType.LEFT_DRAG)).toEqual(false);
+        expect(handler.anyButtonDown).toEqual(false);
     });
 
     it('getButtonPressTime', function() {

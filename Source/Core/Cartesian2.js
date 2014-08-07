@@ -27,14 +27,14 @@ define([
      */
     var Cartesian2 = function(x, y) {
         /**
-         * The Y component.
+         * The X component.
          * @type {Number}
          * @default 0.0
          */
         this.x = defaultValue(x, 0.0);
 
         /**
-         * The X component.
+         * The Y component.
          * @type {Number}
          * @default 0.0
          */
@@ -180,7 +180,7 @@ define([
      * @param {Cartesian2} cartesian The cartesian to use.
      * @returns {Number} The value of the maximum component.
      */
-    Cartesian2.getMaximumComponent = function(cartesian) {
+    Cartesian2.maximumComponent = function(cartesian) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
@@ -196,7 +196,7 @@ define([
      * @param {Cartesian2} cartesian The cartesian to use.
      * @returns {Number} The value of the minimum component.
      */
-    Cartesian2.getMinimumComponent = function(cartesian) {
+    Cartesian2.minimumComponent = function(cartesian) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
@@ -214,7 +214,7 @@ define([
      * @param {Cartesian2} result The object into which to store the result.
      * @returns {Cartesian2} A cartesian with the minimum components.
      */
-    Cartesian2.getMinimumByComponent = function(first, second, result) {
+    Cartesian2.minimumByComponent = function(first, second, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(first)) {
             throw new DeveloperError('first is required.');
@@ -242,7 +242,7 @@ define([
      * @param {Cartesian2} result The object into which to store the result.
      * @returns {Cartesian2} A cartesian with the maximum components.
      */
-    Cartesian2.getMaximumByComponent = function(first, second, result) {
+    Cartesian2.maximumByComponent = function(first, second, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(first)) {
             throw new DeveloperError('first is required.');

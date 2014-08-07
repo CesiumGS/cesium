@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Use the Viewer Widget to start building new applications or easily embed Cesium into existing applications.">
+    <meta name="description" content="Use the CesiumWidget to create a simple 3D globe.">
     <meta name="cesium-sandcastle-labels" content="Beginner, Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -16,7 +16,7 @@
     });
     </script>
 </head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
 </style>
@@ -24,18 +24,23 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+function startup(Cesium) {
     "use strict";
-
-    // Cesium.CesiumWidget is similar to Cesium.Viewer, but
-    // is trimmed down.  It is just a widget for the 3D globe;
-    // it does not include the animation, imagery selection,
-    // and other widgets, nor does it depend on the third-party
-    // Knockout library.
-    var widget = new Cesium.CesiumWidget('cesiumContainer');
-
+//Sandcastle_Begin
+// Cesium.CesiumWidget is similar to Cesium.Viewer, but
+// is trimmed down.  It is just a widget for the 3D globe;
+// it does not include the animation, imagery selection,
+// and other widgets, nor does it depend on the third-party
+// Knockout library.
+var widget = new Cesium.CesiumWidget('cesiumContainer');
+//Sandcastle_End
     Sandcastle.finishedLoading();
-});
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
 </script>
 </body>
 </html>

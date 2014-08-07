@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="The outline of an rectangle.">
+    <meta name="description" content="Draw the outline of a rectangle.">
     <meta name="cesium-sandcastle-labels" content="Geometries">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -16,7 +16,7 @@
     });
     </script>
 </head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
 </style>
@@ -24,52 +24,47 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+function startup(Cesium) {
     "use strict";
-    
-    var viewer = new Cesium.Viewer('cesiumContainer');
-    var scene = viewer.scene;
-    var primitives = scene.primitives;
+//Sandcastle_Begin
+// Create the viewer.
+var viewer = new Cesium.Viewer('cesiumContainer');
+var scene = viewer.scene;
+var primitives = scene.primitives;
 
-    var rectangle = Cesium.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
-    
-    // Rectangle outline
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.RectangleOutlineGeometry({
-                rectangle : rectangle
-            }),
-            attributes : {
-                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
-            }
-        }),
-        appearance : new Cesium.PerInstanceColorAppearance({
-            flat : true,
-            renderState : {
-                depthTest : {
-                    enabled : true
-                },
-                lineWidth : Math.min(4.0, scene.maximumAliasedLineWidth)
-            }
-        })
-    }));
+// Create the outline of a rectangle.
 
-    // Rectangle
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.RectangleGeometry({
-                rectangle : rectangle,
-                vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-            }),
-            attributes : {
-                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
-            }
-        }),
-        appearance : new Cesium.PerInstanceColorAppearance()
-    }));
-    
-    Sandcastle.finishedLoading();
+// Create the rectangle outline instace.
+var instance = new Cesium.GeometryInstance({
+    geometry : new Cesium.RectangleOutlineGeometry({
+        rectangle : Cesium.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0)
+    }),
+    attributes : {
+        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+    }
 });
+
+// Add the rectangle outline instance to primitives.
+primitives.add(new Cesium.Primitive({
+    geometryInstances : instance,
+    appearance : new Cesium.PerInstanceColorAppearance({
+        flat : true,
+        renderState : {
+            depthTest : {
+                enabled : true
+            },
+            lineWidth : Math.min(2.0, scene.maximumAliasedLineWidth)
+        }
+    })
+}));
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
 </script>
 </body>
 </html>

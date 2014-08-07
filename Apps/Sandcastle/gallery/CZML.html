@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="A simple CZML example showing four satellites in orbit around the Earth, and some ground objects.">
-    <meta name="cesium-sandcastle-labels" content="Showcases">
+    <meta name="cesium-sandcastle-labels" content="Showcases, DataSources">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
@@ -16,60 +16,42 @@
     });
     </script>
 </head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
+
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+function startup(Cesium) {
     "use strict";
+//Sandcastle_Begin
+var gallery = '../../SampleData/';
 
-    var gallery = '../../CesiumViewer/Gallery/';
+var viewer = new Cesium.Viewer('cesiumContainer');
+viewer.extend(Cesium.viewerEntityMixin);
 
-    var viewer = new Cesium.Viewer('cesiumContainer');
-    viewer.extend(Cesium.viewerDynamicObjectMixin);
+Sandcastle.addDefaultToolbarButton('Satellites', function() {
+    var czmlDataSource = new Cesium.CzmlDataSource();
+    czmlDataSource.loadUrl(gallery + 'simple.czml');
+    viewer.dataSources.add(czmlDataSource);
+});
 
-    function czmlSatellites() {
-        viewer.dataSources.removeAll();
+Sandcastle.addToolbarButton('Vehicle', function() {
+    var czmlDataSource = new Cesium.CzmlDataSource();
+    czmlDataSource.loadUrl(gallery + 'Vehicle.czml');
+    viewer.dataSources.add(czmlDataSource);
+});
 
-        var czmlDataSource = new Cesium.CzmlDataSource();
-        czmlDataSource.loadUrl(gallery + 'simple.czml').then(function() {
-            viewer.dataSources.add(czmlDataSource);
-            viewer.homeButton.viewModel.command();
-        });
-    }
-    czmlSatellites();
-
-    Sandcastle.addToolbarButton('Satellites', function() {
-        czmlSatellites();
-    });
-
-    Sandcastle.addToolbarButton('Sensors', function() {
-        viewer.dataSources.removeAll();
-
-        var czmlDataSource = new Cesium.CzmlDataSource();
-        czmlDataSource.loadUrl(gallery + 'LotsOfSensors.czml').then(function() {
-            viewer.dataSources.add(czmlDataSource);
-            viewer.homeButton.viewModel.command();
-        });
-    });
-
-    Sandcastle.addToolbarButton('Vehicle', function() {
-        viewer.dataSources.removeAll();
-
-        var czmlDataSource = new Cesium.CzmlDataSource();
-        czmlDataSource.loadUrl(gallery + 'Vehicle.czml').then(function() {
-            viewer.dataSources.add(czmlDataSource);
-            viewer.homeButton.viewModel.command();
-        });
-    });
-
+Sandcastle.addToolbarButton('Built-in CZML', function() {
     var builtInCzml = [{
+        "id" : "document",
+        "version" : "1.0"
+    }, {
         "id" : "Vehicle",
-        "availability" : "2012-08-04T16:00:00Z/2012-08-04T17:04:54.9962195740191Z",
+        "availability" : "2012-08-04T16:00:00Z/2012-08-04T17:04:54Z",
         "billboard" : {
             "eyeOffset" : {
                 "cartesian" : [0.0, 0.0, 0.0]
@@ -79,7 +61,7 @@ require(['Cesium'], function(Cesium) {
             "pixelOffset" : {
                 "cartesian2" : [0.0, 0.0]
             },
-            "scale" : 0.8333333333333334,
+            "scale" : 0.8,
             "show" : [{
                 "interval" : "2012-08-04T16:00:00Z/2012-08-04T18:00:00Z",
                 "boolean" : true
@@ -109,11 +91,14 @@ require(['Cesium'], function(Cesium) {
             "verticalOrigin" : "CENTER"
         },
         "path" : {
-            "color" : [{
-                "interval" : "2012-08-04T16:00:00Z/2012-08-04T18:00:00Z",
-                "rgba" : [255, 255, 0, 255]
-            }],
-            "outlineWidth" : 0.0,
+            "material" : {
+                "solidColor" : {
+                    "color" : [{
+                        "interval" : "2012-08-04T16:00:00Z/2012-08-04T18:00:00Z",
+                        "rgba" : [255, 255, 0, 255]
+                    }]
+                }
+            },
             "width" : [{
                 "interval" : "2012-08-04T16:00:00Z/2012-08-04T18:00:00Z",
                 "number" : 5.0
@@ -129,24 +114,27 @@ require(['Cesium'], function(Cesium) {
             "epoch" : "2012-08-04T16:00:00Z",
             // Trimmed to just 2 points
             "cartesian" : [0.0, -2379754.6637012, -4665332.88013588, 3628133.68924173,
-                           3894.996219574019, -2291336.52323822, -4682359.21232197, 3662718.52171165]
+                           3894.0, -2291336.52323822, -4682359.21232197, 3662718.52171165]
         }
     }];
-
-    Sandcastle.addToolbarButton('Built-in CZML', function() {
-        viewer.dataSources.removeAll();
-
-        var czmlDataSource = new Cesium.CzmlDataSource();
-        czmlDataSource.load(builtInCzml, 'Built-in CZML');
-        viewer.dataSources.add(czmlDataSource);
-
-        // Zoom in a little closer...
-        var rectangle = new Cesium.Rectangle(-2.056, 0.587, -2.010, 0.633);
-        viewer.scene.camera.viewRectangle(rectangle);
-    });
-
-    Sandcastle.finishedLoading();
+    
+    var czmlDataSource = new Cesium.CzmlDataSource();
+    czmlDataSource.load(builtInCzml, 'Built-in CZML');
+    viewer.dataSources.add(czmlDataSource);
 });
+
+Sandcastle.reset = function() {
+    viewer.dataSources.removeAll();
+    viewer.homeButton.viewModel.command();
+};
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
 </script>
 </body>
 </html>
