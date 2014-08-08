@@ -329,7 +329,7 @@ define([
     ReferenceProperty.prototype._onCollectionChanged = function(collection, added, removed) {
         var targetEntity = this._targetEntity;
         if (defined(targetEntity)) {
-            if (removed.indexOf(targetEntity) === -1) {
+            if (removed.indexOf(targetEntity) !== -1) {
                 targetEntity.definitionChanged.removeEventListener(ReferenceProperty.prototype._onTargetEntityDefinitionChanged, this);
                 this._targetProperty = undefined;
                 this._targetEntity = undefined;

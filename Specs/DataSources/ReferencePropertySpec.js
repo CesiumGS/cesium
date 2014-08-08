@@ -169,6 +169,29 @@ defineSuite([
         expect(left.equals(right)).toEqual(false);
     });
 
+    it('does not raise definition changed when target entity has not changed.', function() {
+        var testObject = new Entity('testId');
+        testObject.billboard = new BillboardGraphics();
+        testObject.billboard.scale = new ConstantProperty(5);
+
+        var otherObject = new Entity('other');
+
+        var collection = new EntityCollection();
+        collection.add(testObject);
+        collection.add(otherObject);
+
+        var property = ReferenceProperty.fromString(collection, 'testId#billboard.scale');
+        expect(property.resolvedProperty).toBe(testObject.billboard.scale);
+
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+
+        collection.remove(otherObject);
+        expect(listener).not.toHaveBeenCalled();
+        collection.remove(testObject);
+        expect(listener).toHaveBeenCalledWith(property);
+    });
+
     it('constructor throws with undefined targetCollection', function() {
         expect(function() {
             return new ReferenceProperty(undefined, 'objectid', ['property']);
