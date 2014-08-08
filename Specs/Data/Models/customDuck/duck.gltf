@@ -63,7 +63,7 @@
     },
     "animations": {},
     "asset": {
-        "generator": "collada2gltf@refs/heads/unify-up-format-changes",
+        "generator": "collada2gltf@df4892809111a8c6dbff4fab6c386a24745d344e",
         "premultipliedAlpha": true,
         "profile": "WebGL 1.0.2",
         "version": 0.7
@@ -451,7 +451,6 @@
                         }
                     },
                     "states": {
-                        "depthMask": true,
                         "enable": [
                             2884,
                             2929
