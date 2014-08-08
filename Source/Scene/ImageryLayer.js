@@ -208,7 +208,7 @@ define([
         this._skeletonPlaceholder = new TileImagery(Imagery.createPlaceholder(this));
 
         // The value of the show property on the last update.
-        this._show = false;
+        this._show = true;
 
         // The index of this layer in the ImageryLayerCollection.
         this._layerIndex = -1;

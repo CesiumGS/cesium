@@ -4,6 +4,9 @@ Change Log
 ### 1.01 - 2014-09-01
 
 * Added a new imagery provider, `WebMapTileServiceImageryProvider`, for accessing tiles on a WMTS 1.0.0 server.
+* Fixed a bug in `ImageryLayer` that caused layer images to be rendered twice for each terrain tile that existed prior to adding the imagery layer.
+* Added `FeatureDetection.supportsWebWorkers`.
+* `loadWithXhr` now works with older browsers, such as Internet Explorer 9.
 
 ### 1.0 - 2014-08-01
 
