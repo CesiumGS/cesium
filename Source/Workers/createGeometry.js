@@ -16,7 +16,17 @@ define([
     function getModule(moduleName) {
         var module = moduleCache[moduleName];
         if (!defined(module)) {
-            moduleCache[module] = module = require('Workers/' + moduleName);
+            if (typeof exports === 'object') {
+                // Use CommonJS-style require.
+                moduleCache[module] = module = require('Workers/' + moduleName);
+            } else {
+                // Use AMD-style require.
+                // in web workers, require is synchronous
+                require(['./' + moduleName], function(f) {
+                    module = f;
+                    moduleCache[module] = f;
+                });
+            }
         }
         return module;
     }
