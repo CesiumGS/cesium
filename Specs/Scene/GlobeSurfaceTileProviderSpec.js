@@ -271,6 +271,42 @@ defineSuite([
                 });
             });
         });
+
+        it('adding a layer creates its skeletons only once', function() {
+            var layerCollection = globe.imageryLayers;
+
+            layerCollection.removeAll();
+            layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
+
+            updateUntilDone(globe);
+
+            var layer2;
+
+            runs(function() {
+                // Add another layer
+                layer2 = layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Green4x4.png'}));
+            });
+
+            updateUntilDone(globe);
+
+            runs(function() {
+                // All tiles should have one or more associated images.
+                forEachRenderedTile(surface, 1, undefined, function(tile) {
+                    expect(tile.data.imagery.length).toBeGreaterThan(0);
+                    var tilesFromLayer2 = 0;
+                    for (var i = 0; i < tile.data.imagery.length; ++i) {
+                        var imageryTile = tile.data.imagery[i].readyImagery;
+                        if (!defined(imageryTile)) {
+                            imageryTile = tile.data.imagery[i].loadingImagery;
+                        }
+                        if (imageryTile.imageryLayer === layer2) {
+                            ++tilesFromLayer2;
+                        }
+                    }
+                    expect(tilesFromLayer2).toBe(1);
+                });
+            });
+        })
     }, 'WebGL');
 
     it('renders in 2D geographic', function() {
