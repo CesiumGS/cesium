@@ -306,7 +306,7 @@ defineSuite([
                     expect(tilesFromLayer2).toBe(1);
                 });
             });
-        })
+        });
     }, 'WebGL');
 
     it('renders in 2D geographic', function() {

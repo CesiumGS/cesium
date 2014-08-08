@@ -4,13 +4,15 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
-        './RequestErrorEvent'
+        './RequestErrorEvent',
+        './RuntimeError'
     ], function(
         when,
         defaultValue,
         defined,
         DeveloperError,
-        RequestErrorEvent) {
+        RequestErrorEvent,
+        RuntimeError) {
     "use strict";
 
     /**
@@ -158,7 +160,7 @@ define([
                     } else if (defined(xhr.responseText)) {
                         deferred.resolve(xhr.responseText);
                     } else {
-                        throw new DeveloperError('unknown XMLHttpRequest response type.');
+                        deferred.reject(new RuntimeError('unknown XMLHttpRequest response type.'));
                     }
                 }
             } else {
