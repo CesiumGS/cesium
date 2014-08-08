@@ -31,12 +31,10 @@ define([
      *     // an error occurred
      * });
      */
-    var loadText = function(url, headers, username, password) {
+    var loadText = function(url, headers) {
         return loadWithXhr({
             url : url,
-            headers : headers,
-            username : username,
-            password : password
+            headers : headers
         });
     };
 

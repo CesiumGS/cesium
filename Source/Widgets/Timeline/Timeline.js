@@ -3,7 +3,6 @@ define([
         '../../Core/ClockRange',
         '../../Core/defined',
         '../../Core/destroyObject',
-        '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/JulianDate',
         '../getElement',
@@ -13,7 +12,6 @@ define([
         ClockRange,
         defined,
         destroyObject,
-        defineProperties,
         DeveloperError,
         JulianDate,
         getElement,
@@ -107,7 +105,6 @@ define([
         container.appendChild(topDiv);
         this._topDiv = topDiv;
 
-        this._show = true;
         this._endJulian = undefined;
         this._epochJulian = undefined;
         this._lastXPos = undefined;

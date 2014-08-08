@@ -561,10 +561,6 @@ define([
             if (statusNode.textContent !== value) {
                 statusNode.textContent = value;
             }
-        }),
-
-        subscribeAndEvaluate(viewModel, 'show', function(value) {
-            svg.setAttributeNS(null, 'display', value ? 'inline' : 'none');
         })];
 
         this.applyThemeChanges();
@@ -593,19 +589,6 @@ define([
         viewModel : {
             get : function() {
                 return this._viewModel;
-            }
-        },
-
-        /**
-         * Gets or sets a value indicating whether the widget is shown.
-         * @type {Boolean}
-         */
-        show : {
-            get : function() {
-                return this.viewModel.show;
-            },
-            set : function(value) {
-                this.viewModel.show = value;
             }
         }
     });

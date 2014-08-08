@@ -9,11 +9,8 @@ define([
         '../Core/Event',
         '../Core/freezeObject',
         '../Core/GeographicTilingScheme',
-        '../Core/loadJson',
-        '../Core/loadXML',
         '../Core/Rectangle',
-        './ImageryProvider',
-        '../ThirdParty/when'
+        './ImageryProvider'
     ], function(
         clone,
         Credit,
@@ -24,11 +21,8 @@ define([
         Event,
         freezeObject,
         GeographicTilingScheme,
-        loadJson,
-        loadXML,
         Rectangle,
-        ImageryProvider,
-        when) {
+        ImageryProvider) {
     "use strict";
 
     /**
@@ -114,6 +108,55 @@ define([
 
         this._ready = true;
     };
+
+    function buildImageUrl(imageryProvider, x, y, level) {
+        var url = imageryProvider._url;
+        var indexOfQuestionMark = url.indexOf('?');
+        if (indexOfQuestionMark >= 0 && indexOfQuestionMark < url.length - 1) {
+            if (url[url.length - 1] !== '&') {
+                url += '&';
+            }
+        } else if (indexOfQuestionMark < 0) {
+            url += '?';
+        }
+
+        var parameters = imageryProvider._parameters;
+        for (var parameter in parameters) {
+            if (parameters.hasOwnProperty(parameter)) {
+                url += parameter + '=' + parameters[parameter] + '&';
+            }
+        }
+
+        if (!defined(parameters.layers)) {
+            url += 'layers=' + imageryProvider._layers + '&';
+        }
+
+        if (!defined(parameters.srs)) {
+            url += 'srs=EPSG:4326&';
+        }
+
+        if (!defined(parameters.bbox)) {
+            var nativeRectangle = imageryProvider._tilingScheme.tileXYToNativeRectangle(x, y, level);
+            var bbox = nativeRectangle.west + ',' + nativeRectangle.south + ',' + nativeRectangle.east + ',' + nativeRectangle.north;
+            url += 'bbox=' + bbox + '&';
+        }
+
+        if (!defined(parameters.width)) {
+            url += 'width=256&';
+        }
+
+        if (!defined(parameters.height)) {
+            url += 'height=256&';
+        }
+
+        var proxy = imageryProvider._proxy;
+        if (defined(proxy)) {
+            url = proxy.getURL(url);
+        }
+
+        return url;
+    }
+
 
     defineProperties(WebMapServiceImageryProvider.prototype, {
         /**
@@ -364,7 +407,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var url = buildUrl(this, this._parameters, x, y, level);
+        var url = buildImageUrl(this, x, y, level);
         return ImageryProvider.loadImage(this, url);
     };
 
@@ -385,53 +428,6 @@ define([
         styles : '',
         format : 'image/jpeg'
     });
-
-    function buildUrl(imageryProvider, parameters, x, y, level) {
-        var url = imageryProvider._url;
-        var indexOfQuestionMark = url.indexOf('?');
-        if (indexOfQuestionMark >= 0 && indexOfQuestionMark < url.length - 1) {
-            if (url[url.length - 1] !== '&') {
-                url += '&';
-            }
-        } else if (indexOfQuestionMark < 0) {
-            url += '?';
-        }
-
-        for (var parameter in parameters) {
-            if (parameters.hasOwnProperty(parameter)) {
-                url += parameter + '=' + parameters[parameter] + '&';
-            }
-        }
-
-        if (!defined(parameters.layers)) {
-            url += 'layers=' + imageryProvider._layers + '&';
-        }
-
-        if (!defined(parameters.srs)) {
-            url += 'srs=EPSG:4326&';
-        }
-
-        if (!defined(parameters.bbox)) {
-            var nativeRectangle = imageryProvider._tilingScheme.tileXYToNativeRectangle(x, y, level);
-            var bbox = nativeRectangle.west + ',' + nativeRectangle.south + ',' + nativeRectangle.east + ',' + nativeRectangle.north;
-            url += 'bbox=' + bbox + '&';
-        }
-
-        if (!defined(parameters.width)) {
-            url += 'width=256&';
-        }
-
-        if (!defined(parameters.height)) {
-            url += 'height=256&';
-        }
-
-        var proxy = imageryProvider._proxy;
-        if (defined(proxy)) {
-            url = proxy.getURL(url);
-        }
-
-        return url;
-    }
 
     return WebMapServiceImageryProvider;
 });
