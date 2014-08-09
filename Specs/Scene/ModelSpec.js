@@ -232,11 +232,6 @@ defineSuite([
                 functionSourceAlpha : WebGLRenderingContext.ONE,
                 functionDestinationRgb : WebGLRenderingContext.ZERO,
                 functionDestinationAlpha : WebGLRenderingContext.ZERO
-            },
-            sampleCoverage : {
-                enabled : false,
-                value : 0.0,
-                invert : 0.0
             }
         };
 
