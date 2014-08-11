@@ -487,7 +487,7 @@ define([
             return undefined;
         }
 
-        // GetFeatureInfo for all attached imagery tiles containing the pickedLocation.
+        // Pick against all attached imagery tiles containing the pickedLocation.
         var tileExtent = pickedTile.rectangle;
         var imageryTiles = pickedTile.data.imagery;
 
@@ -524,6 +524,13 @@ define([
                 if (!defined(result) || result.length === 0) {
                     waitForNextLayersResponse();
                     return;
+                }
+
+                // For features without a position, use the picked location.
+                for (var i = 0; i < result.length; ++i) {
+                    if (!defined(result[i].position)) {
+                        result[i].position = pickedLocation;
+                    }
                 }
 
                 deferred.resolve(result);
