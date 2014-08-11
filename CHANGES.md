@@ -9,6 +9,7 @@ Change Log
 * `loadWithXhr` now works with older browsers, such as Internet Explorer 9.
 * Added `id` property to `Scene` which is a readonly unique identifier associated with each instance.
 * Greatly improved the performance of time-varying polylines when using DataSources.
+* Fixes a bug that caused `SceneTransforms.wgs84ToWindowCoordinates` to incorrectly return `undefined` when in 2D.
 
 ### 1.0 - 2014-08-01
 
