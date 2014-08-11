@@ -10,6 +10,7 @@ define([
         '../../DataSources/EntityView',
         '../../Scene/SceneMode',
         '../../ThirdParty/knockout',
+        '../../ThirdParty/when',
         '../subscribeAndEvaluate'
     ], function(
         defaultValue,
@@ -22,6 +23,7 @@ define([
         EntityView,
         SceneMode,
         knockout,
+        when,
         subscribeAndEvaluate) {
     "use strict";
 
@@ -151,6 +153,9 @@ define([
                     return id;
                 }
             }
+
+            // No regular entity picked.  Try picking features from imagery layers.
+            return pickImageryLayerFeature(viewer, e.position);
         }
 
         function trackObject(entity) {
@@ -309,6 +314,62 @@ define([
             }
         });
     };
+
+    function pickImageryLayerFeature(viewer, windowPosition) {
+        var scene = viewer.scene;
+        var pickRay = scene.camera.getPickRay(windowPosition);
+        var imageryLayerFeaturePromise = scene.globe.pickImageryLayerFeature(pickRay, scene);
+        if (!defined(imageryLayerFeaturePromise)) {
+            return;
+        }
+
+        // Imagery layer feature picking is asynchronous, so put up a message while loading.
+        var loadingMessage = new Entity('Loading...');
+        loadingMessage.description = {
+            getValue : function() {
+                return 'Loading feature information...';
+            }
+        };
+
+        when(imageryLayerFeaturePromise, function(features) {
+            // Has this async pick been superseded by a later one?
+            if (viewer.selectedEntity !== loadingMessage) {
+                return;
+            }
+
+            if (!defined(features) || features.length === 0) {
+                return;
+            }
+
+            // Select the first feature.
+            var feature = features[0];
+
+            var entity = new Entity(feature.name);
+            entity.description = {
+                getValue : function() {
+                    return feature.description;
+                }
+            };
+
+            viewer.selectedEntity = entity;
+        }, function() {
+            // Has this async pick been superseded by a later one?
+            if (viewer.selectedEntity !== loadingMessage) {
+                return;
+            }
+
+            var entity = new Entity('None');
+            entity.description = {
+                getValue : function() {
+                    return 'No features found.';
+                }
+            };
+
+            viewer.selectedEntity = entity;
+        });
+
+        return loadingMessage;
+    }
 
     return viewerEntityMixin;
 });

@@ -390,6 +390,81 @@ define([
         return intersection;
     };
 
+    Globe.prototype.pickImageryLayerFeature = function(ray, scene) {
+        // Find the picked location on the globe.
+        var pickedPosition = this.pick(ray, scene);
+        if (!defined(pickedPosition)) {
+            return undefined;
+        }
+
+        var pickedLocation = this._ellipsoid.cartesianToCartographic(pickedPosition);
+
+        // Find the terrain tile containing the picked location.
+        var tilesToRender = this._surface._tilesToRender;
+        var length = tilesToRender.length;
+        var pickedTile;
+
+        for (var textureIndex = 0; !defined(pickedTile) && textureIndex < tilesToRender.length; ++textureIndex) {
+            var tile = tilesToRender[textureIndex];
+            if (Rectangle.contains(tile.rectangle, pickedLocation)) {
+                pickedTile = tile;
+            }
+        }
+
+        if (!defined(pickedTile)) {
+            return undefined;
+        }
+
+        // GetFeatureInfo for all attached imagery tiles containing the pickedLocation.
+        var tileExtent = pickedTile.rectangle;
+        var imageryTiles = pickedTile.data.imagery;
+
+        var promises = [];
+        for (var i = imageryTiles.length - 1; i >= 0; --i) {
+            var terrainImagery = imageryTiles[i];
+            var imagery = terrainImagery.readyImagery;
+            if (!defined(imagery)) {
+                continue;
+            }
+            var provider = imagery.imageryLayer.imageryProvider;
+            if (!defined(provider.pickFeatures)) {
+                continue;
+            }
+
+            promises.push(provider.pickFeatures(imagery.x, imagery.y, imagery.level, pickedLocation.longitude, pickedLocation.latitude));
+        }
+
+        if (promises.length === 0) {
+            return undefined;
+        }
+
+        var deferred = when.defer();
+
+        var nextPromiseIndex = 0;
+
+        function waitForNextLayersResponse() {
+            if (nextPromiseIndex >= promises.length) {
+                deferred.reject();
+                return;
+            }
+
+            when(promises[nextPromiseIndex++], function(result) {
+                if (!defined(result) || result.length === 0) {
+                    waitForNextLayersResponse();
+                    return;
+                }
+
+                deferred.resolve(result);
+            }, function() {
+                waitForNextLayersResponse();
+            });
+        }
+
+        waitForNextLayersResponse();
+
+        return deferred.promise;
+    };
+
     var scratchGetHeightCartesian = new Cartesian3();
     var scratchGetHeightIntersection = new Cartesian3();
     var scratchGetHeightCartographic = new Cartographic();

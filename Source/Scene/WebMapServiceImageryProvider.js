@@ -9,8 +9,12 @@ define([
         '../Core/Event',
         '../Core/freezeObject',
         '../Core/GeographicTilingScheme',
+        '../Core/loadJson',
+        '../Core/loadXML',
         '../Core/Rectangle',
-        './ImageryProvider'
+        './ImageryLayerFeatureInfo',
+        './ImageryProvider',
+        '../ThirdParty/when'
     ], function(
         clone,
         Credit,
@@ -21,8 +25,12 @@ define([
         Event,
         freezeObject,
         GeographicTilingScheme,
+        loadJson,
+        loadXML,
         Rectangle,
-        ImageryProvider) {
+        ImageryLayerFeatureInfo,
+        ImageryProvider,
+        when) {
     "use strict";
 
     /**
@@ -35,6 +43,7 @@ define([
      * @param {String} options.url The URL of the WMS service.
      * @param {String} options.layers The layers to include, separated by commas.
      * @param {Object} [options.parameters=WebMapServiceImageryProvider.DefaultParameters] Additional parameters to pass to the WMS server in the GetMap URL.
+     * @param {Object} [options.getFeatureInfoParameters=WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters] Additional parameters to pass to the WMS server in the GetFeatureInfo URL.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
      * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider.
      *        If not specified, there is no limit.
@@ -77,17 +86,32 @@ define([
         this._layers = options.layers;
 
         // Merge the parameters with the defaults, and make all parameter names lowercase
+        var parameter;
+        var parameterLowerCase;
+
         var parameters = clone(WebMapServiceImageryProvider.DefaultParameters);
         if (defined(options.parameters)) {
-            for (var parameter in options.parameters) {
+            for (parameter in options.parameters) {
                 if (options.parameters.hasOwnProperty(parameter)) {
-                    var parameterLowerCase = parameter.toLowerCase();
+                    parameterLowerCase = parameter.toLowerCase();
                     parameters[parameterLowerCase] = options.parameters[parameter];
                 }
             }
         }
 
         this._parameters = parameters;
+
+        var getFeatureInfoParameters = clone(WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters);
+        if (defined(options.getFeatureInfoParameters)) {
+            for (parameter in options.getFeatureInfoParameters) {
+                if (options.getFeatureInfoParameters.hasOwnProperty(parameter)) {
+                    parameterLowerCase = parameter.toLowerCase();
+                    getFeatureInfoParameters[parameterLowerCase] = options.getFeatureInfoParameters[parameter];
+                }
+            }
+        }
+
+        this._getFeatureInfoParameters = getFeatureInfoParameters;
 
         this._tileWidth = 256;
         this._tileHeight = 256;
@@ -108,55 +132,6 @@ define([
 
         this._ready = true;
     };
-
-    function buildImageUrl(imageryProvider, x, y, level) {
-        var url = imageryProvider._url;
-        var indexOfQuestionMark = url.indexOf('?');
-        if (indexOfQuestionMark >= 0 && indexOfQuestionMark < url.length - 1) {
-            if (url[url.length - 1] !== '&') {
-                url += '&';
-            }
-        } else if (indexOfQuestionMark < 0) {
-            url += '?';
-        }
-
-        var parameters = imageryProvider._parameters;
-        for (var parameter in parameters) {
-            if (parameters.hasOwnProperty(parameter)) {
-                url += parameter + '=' + parameters[parameter] + '&';
-            }
-        }
-
-        if (!defined(parameters.layers)) {
-            url += 'layers=' + imageryProvider._layers + '&';
-        }
-
-        if (!defined(parameters.srs)) {
-            url += 'srs=EPSG:4326&';
-        }
-
-        if (!defined(parameters.bbox)) {
-            var nativeRectangle = imageryProvider._tilingScheme.tileXYToNativeRectangle(x, y, level);
-            var bbox = nativeRectangle.west + ',' + nativeRectangle.south + ',' + nativeRectangle.east + ',' + nativeRectangle.north;
-            url += 'bbox=' + bbox + '&';
-        }
-
-        if (!defined(parameters.width)) {
-            url += 'width=256&';
-        }
-
-        if (!defined(parameters.height)) {
-            url += 'height=256&';
-        }
-
-        var proxy = imageryProvider._proxy;
-        if (defined(proxy)) {
-            url = proxy.getURL(url);
-        }
-
-        return url;
-    }
-
 
     defineProperties(WebMapServiceImageryProvider.prototype, {
         /**
@@ -412,6 +387,46 @@ define([
     };
 
     /**
+     * Asynchronously determines what features, if any, are located at a given longitude and latitude within
+     * a tile.
+     *
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level.
+     * @param {Number} longitude The longitude at which to pick features.
+     * @param {Number} latitude  The latitude at which to pick features.
+     * @return {Promise} A promise for the picked features that will resolve when the asynchronous
+     *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
+     *                   instances.  The array may be empty if no features are found at the given location.
+     *
+     * @exception {DeveloperError} <code>pickFeatures</code> must not be called before the imagery provider is ready.
+     */
+    WebMapServiceImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!this._ready) {
+            throw new DeveloperError('pickFeatures must not be called before the imagery provider is ready.');
+        }
+        //>>includeEnd('debug');
+
+        var rectangle = this._tilingScheme.tileXYToRectangle(x, y, level);
+
+        var i = (this._tileWidth * (longitude - rectangle.west) / (rectangle.east - rectangle.west)) | 0;
+        var j = (this._tileHeight * (rectangle.north - latitude) / (rectangle.north - rectangle.south)) | 0;
+
+        var url = buildGetFeatureInfoUrl(this, x, y, level, i, j);
+
+        return when(loadJson(url), function(json) {
+            return geoJsonToFeatureInfo(json);
+        }, function (e) {
+            // If something goes wrong, try requesting XML instead of GeoJSON.  Then try to interpret it.
+            url = url.replace('info_format=application/json', 'info_format=text/xml');
+            return when(loadXML(url), function(xml) {
+                return xmlToFeatureInfo(xml);
+            });
+        });
+    };
+
+    /**
      * The default parameters to include in the WMS URL to obtain images.  The values are as follows:
      *    service=WMS
      *    version=1.1.1
@@ -428,6 +443,141 @@ define([
         styles : '',
         format : 'image/jpeg'
     });
+
+    WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters = freezeObject({
+        service : 'WMS',
+        version : '1.1.1',
+        request : 'GetFeatureInfo',
+        info_format : 'application/json'
+    });
+
+    function buildImageUrl(imageryProvider, x, y, level) {
+        var url = imageryProvider._url;
+        var indexOfQuestionMark = url.indexOf('?');
+        if (indexOfQuestionMark >= 0 && indexOfQuestionMark < url.length - 1) {
+            if (url[url.length - 1] !== '&') {
+                url += '&';
+            }
+        } else if (indexOfQuestionMark < 0) {
+            url += '?';
+        }
+
+        var parameters = imageryProvider._parameters;
+        for (var parameter in parameters) {
+            if (parameters.hasOwnProperty(parameter)) {
+                url += parameter + '=' + parameters[parameter] + '&';
+            }
+        }
+
+        if (!defined(parameters.layers)) {
+            url += 'layers=' + imageryProvider._layers + '&';
+        }
+
+        if (!defined(parameters.srs)) {
+            url += 'srs=EPSG:4326&';
+        }
+
+        if (!defined(parameters.bbox)) {
+            var nativeRectangle = imageryProvider._tilingScheme.tileXYToNativeRectangle(x, y, level);
+            var bbox = nativeRectangle.west + ',' + nativeRectangle.south + ',' + nativeRectangle.east + ',' + nativeRectangle.north;
+            url += 'bbox=' + bbox + '&';
+        }
+
+        if (!defined(parameters.width)) {
+            url += 'width=' + imageryProvider._tileWidth + '&';
+        }
+
+        if (!defined(parameters.height)) {
+            url += 'height=' + imageryProvider._tileHeight + '&';
+        }
+
+        var proxy = imageryProvider._proxy;
+        if (defined(proxy)) {
+            url = proxy.getURL(url);
+        }
+
+        return url;
+    }
+
+    function buildGetFeatureInfoUrl(imageryProvider, x, y, level, i, j) {
+        var url = imageryProvider._url;
+        var indexOfQuestionMark = url.indexOf('?');
+        if (indexOfQuestionMark >= 0 && indexOfQuestionMark < url.length - 1) {
+            if (url[url.length - 1] !== '&') {
+                url += '&';
+            }
+        } else if (indexOfQuestionMark < 0) {
+            url += '?';
+        }
+
+        var parameters = imageryProvider._getFeatureInfoParameters;
+        for (var parameter in parameters) {
+            if (parameters.hasOwnProperty(parameter)) {
+                url += parameter + '=' + parameters[parameter] + '&';
+            }
+        }
+
+        if (!defined(parameters.layers)) {
+            url += 'layers=' + imageryProvider._layers + '&';
+        }
+
+        if (!defined(parameters.query_layers)) {
+            url += 'query_layers=' + imageryProvider._layers + '&';
+        }
+
+        if (!defined(parameters.srs)) {
+            url += 'srs=EPSG:4326&';
+        }
+
+        if (!defined(parameters.bbox)) {
+            var nativeRectangle = imageryProvider._tilingScheme.tileXYToNativeRectangle(x, y, level);
+            var bbox = nativeRectangle.west + ',' + nativeRectangle.south + ',' + nativeRectangle.east + ',' + nativeRectangle.north;
+            url += 'bbox=' + bbox + '&';
+        }
+
+        if (!defined(parameters.x)) {
+            url += 'x=' + i + '&';
+        }
+        if (!defined(parameters.y)) {
+            url += 'y=' + j + '&';
+        }
+
+        if (!defined(parameters.width)) {
+            url += 'width=' + imageryProvider._tileWidth + '&';
+        }
+
+        if (!defined(parameters.height)) {
+            url += 'height=' + imageryProvider._tileHeight + '&';
+        }
+
+        var proxy = imageryProvider._proxy;
+        if (defined(proxy)) {
+            url = proxy.getURL(url);
+        }
+
+        return url;
+    }
+
+    function geoJsonToFeatureInfo(json) {
+        var result = [];
+
+        var features = json.features;
+        for (var i = 0; i < features.length; ++i) {
+            var feature = features[i];
+
+            var featureInfo = new ImageryLayerFeatureInfo();
+            featureInfo.setNameFromProperties(feature.properties);
+            featureInfo.setDescriptionFromProperties(feature.properties);
+            featureInfo.data = feature;
+            result.push(featureInfo);
+        }
+
+        return result;
+    }
+
+    function xmlToFeatureInfo(xml) {
+        // TODO
+    }
 
     return WebMapServiceImageryProvider;
 });
