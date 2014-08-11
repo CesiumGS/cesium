@@ -1725,7 +1725,7 @@ define([
             return undefined;
         }
 
-        var t = intersection.start >= 0.0 ? intersection.start : intersection.stop;
+        var t = intersection.start > 0.0 ? intersection.start : intersection.stop;
         return Ray.getPoint(ray, t, result);
     }
 
