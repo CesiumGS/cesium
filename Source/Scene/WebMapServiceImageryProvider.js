@@ -639,6 +639,30 @@ define([
     }
 
     function esriXmlToFeatureInfo(xml) {
+        var result = [];
+
+        var featureInfoResponse = xml.documentElement;
+
+        var features = featureInfoResponse.getElementsByTagNameNS(esriWmsNamespace, 'FIELDS');
+        for (var featureIndex = 0; featureIndex < features.length; ++featureIndex) {
+            var feature = features[featureIndex];
+
+            var properties = {};
+
+            var propertyAttributes = feature.attributes;
+            for (var attributeIndex = 0; attributeIndex < propertyAttributes.length; ++attributeIndex) {
+                var attribute = propertyAttributes[attributeIndex];
+                properties[attribute.name] = attribute.value;
+            }
+
+            var featureInfo = new ImageryLayerFeatureInfo();
+            featureInfo.data = feature;
+            featureInfo.setNameFromProperties(properties);
+            featureInfo.setDescriptionFromProperties(properties);
+            result.push(featureInfo);
+        }
+
+        return result;
     }
 
     function unknownXmlToFeatureInfo(xml) {
