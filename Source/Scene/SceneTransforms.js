@@ -31,7 +31,7 @@ define([
      */
     var SceneTransforms = {};
 
-    var actualPosition = new Cartesian4(0, 0, 0, 1);
+    var actualPositionScratch = new Cartesian4(0, 0, 0, 1);
     var positionCC = new Cartesian4();
     var viewProjectionScratch = new Matrix4();
 
@@ -65,18 +65,17 @@ define([
         //>>includeEnd('debug');
 
         // Transform for 3D, 2D, or Columbus view
-        SceneTransforms.computeActualWgs84Position(scene.frameState, position, actualPosition);
+        var actualPosition = SceneTransforms.computeActualWgs84Position(scene.frameState, position, actualPositionScratch);
 
         if (!defined(actualPosition)) {
             return undefined;
         }
 
         // View-projection matrix to transform from world coordinates to clip coordinates
-        var camera = scene.camera;
-        viewProjectionScratch = Matrix4.multiply(camera.frustum.projectionMatrix, camera.viewMatrix, viewProjectionScratch);
-        Matrix4.multiplyByVector(viewProjectionScratch, actualPosition, positionCC);
+        var viewProjection = scene.context.uniformState.viewProjection;
+        Matrix4.multiplyByVector(viewProjection, Cartesian4.fromElements(actualPosition.x, actualPosition.y, actualPosition.z, 1, positionCC), positionCC);
 
-        if (positionCC.z < 0) {
+        if ((positionCC.z < 0) && (scene.mode !== SceneMode.SCENE2D)) {
             return undefined;
         }
 
@@ -116,7 +115,7 @@ define([
         //>>includeEnd('debug');
 
         // Transform for 3D, 2D, or Columbus view
-        SceneTransforms.computeActualWgs84Position(scene.frameState, position, actualPosition);
+        var actualPosition = SceneTransforms.computeActualWgs84Position(scene.frameState, position, actualPositionScratch);
 
         if (!defined(actualPosition)) {
             return undefined;
@@ -125,6 +124,10 @@ define([
         // View-projection matrix to transform from world coordinates to clip coordinates
         var viewProjection = scene.context.uniformState.viewProjection;
         Matrix4.multiplyByVector(viewProjection, Cartesian4.fromElements(actualPosition.x, actualPosition.y, actualPosition.z, 1, positionCC), positionCC);
+
+        if ((positionCC.z < 0) && (scene.mode !== SceneMode.SCENE2D)) {
+            return undefined;
+        }
 
         return SceneTransforms.clipToDrawingBufferCoordinates(scene, positionCC, result);
     };
@@ -143,13 +146,12 @@ define([
         }
 
         var projection = frameState.mapProjection;
-        projection.ellipsoid.cartesianToCartographic(position, positionInCartographic);
-        if (!defined(positionInCartographic)) {
-            result = undefined;
-            return result;
+        var cartographic = projection.ellipsoid.cartesianToCartographic(position, positionInCartographic);
+        if (!defined(cartographic)) {
+            return undefined;
         }
 
-        projection.project(positionInCartographic, projectedPosition);
+        projection.project(cartographic, projectedPosition);
 
         if (mode === SceneMode.COLUMBUS_VIEW) {
             return Cartesian3.fromElements(projectedPosition.z, projectedPosition.x, projectedPosition.y, result);
