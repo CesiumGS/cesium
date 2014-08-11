@@ -751,7 +751,7 @@ define([
      *
      * @example
      * var matrix = new Cesium.Matrix2();
-     * matrix[Matrix2.COLUMN0ROW0] = 5.0; // set column 0, row 0 to 5.0
+     * matrix[Cesium.Matrix2.COLUMN0ROW0] = 5.0; // set column 0, row 0 to 5.0
      */
     Matrix2.COLUMN0ROW0 = 0;
 
@@ -763,7 +763,7 @@ define([
      *
      * @example
      * var matrix = new Cesium.Matrix2();
-     * matrix[Matrix2.COLUMN0ROW1] = 5.0; // set column 0, row 1 to 5.0
+     * matrix[Cesium.Matrix2.COLUMN0ROW1] = 5.0; // set column 0, row 1 to 5.0
      */
     Matrix2.COLUMN0ROW1 = 1;
 
@@ -775,7 +775,7 @@ define([
      *
      * @example
      * var matrix = new Cesium.Matrix2();
-     * matrix[Matrix2.COLUMN1ROW0] = 5.0; // set column 1, row 0 to 5.0
+     * matrix[Cesium.Matrix2.COLUMN1ROW0] = 5.0; // set column 1, row 0 to 5.0
      */
     Matrix2.COLUMN1ROW0 = 2;
 
@@ -787,7 +787,7 @@ define([
      *
      * @example
      * var matrix = new Cesium.Matrix2();
-     * matrix[Matrix2.COLUMN1ROW1] = 5.0; // set column 1, row 1 to 5.0
+     * matrix[Cesium.Matrix2.COLUMN1ROW1] = 5.0; // set column 1, row 1 to 5.0
      */
     Matrix2.COLUMN1ROW1 = 3;
 
