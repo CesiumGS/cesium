@@ -590,8 +590,58 @@ define([
         return result;
     }
 
+    var mapInfoMxpNamespace = 'http://www.mapinfo.com/mxp';
+    var esriWmsNamespace = 'http://www.esri.com/wms';
+
     function xmlToFeatureInfo(xml) {
-        // TODO
+        var documentElement = xml.documentElement;
+        if (documentElement.localName === 'MultiFeatureCollection' && documentElement.namespaceURI === mapInfoMxpNamespace) {
+            // This looks like a MapInfo MXP response
+            return mapInfoXmlToFeatureInfo(xml);
+        } else if (documentElement.localName === 'FeatureInfoResponse' && documentElement.namespaceURI === esriWmsNamespace) {
+            // This looks like an Esri WMS response
+            return esriXmlToFeatureInfo(xml);
+        } else {
+            // Unknown response type, so just dump the XML itself into the description.
+            return unknownXmlToFeatureInfo(xml);
+        }
+    }
+
+    function mapInfoXmlToFeatureInfo(xml) {
+        var result = [];
+
+        var multiFeatureCollection = xml.documentElement;
+
+        var features = multiFeatureCollection.getElementsByTagNameNS(mapInfoMxpNamespace, 'Feature');
+        for (var featureIndex = 0; featureIndex < features.length; ++featureIndex) {
+            var feature = features[featureIndex];
+
+            var properties = {};
+
+            var propertyElements = feature.getElementsByTagNameNS(mapInfoMxpNamespace, 'Val');
+            for (var propertyIndex = 0; propertyIndex < propertyElements.length; ++propertyIndex) {
+                var propertyElement = propertyElements[propertyIndex];
+                if (propertyElement.hasAttribute('ref')) {
+                    var name = propertyElement.getAttribute('ref');
+                    var value = propertyElement.textContent.trim();
+                    properties[name] = value;
+                }
+            }
+
+            var featureInfo = new ImageryLayerFeatureInfo();
+            featureInfo.data = feature;
+            featureInfo.setNameFromProperties(properties);
+            featureInfo.setDescriptionFromProperties(properties);
+            result.push(featureInfo);
+        }
+
+        return result;
+    }
+
+    function esriXmlToFeatureInfo(xml) {
+    }
+
+    function unknownXmlToFeatureInfo(xml) {
     }
 
     return WebMapServiceImageryProvider;
