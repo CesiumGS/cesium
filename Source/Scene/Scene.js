@@ -6,6 +6,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
+        '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -55,6 +56,7 @@ define([
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
+        createGuid,
         defaultValue,
         defined,
         defineProperties,
@@ -191,6 +193,7 @@ define([
             canvas.parentNode.appendChild(creditContainer);
         }
 
+        this._id = createGuid();
         this._frameState = new FrameState(new CreditDisplay(creditContainer));
         this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
 
@@ -725,6 +728,17 @@ define([
         scene3DOnly : {
             get : function() {
                 return this._frameState.scene3DOnly;
+            }
+        },
+
+        /**
+         * Gets the unique identifier for this scene.
+         * @memberof Scene.prototype
+         * @type {String}
+         */
+        id : {
+            get : function() {
+                return this._id;
             }
         },
 
