@@ -220,7 +220,7 @@ define([
      * // Rotate a point 45 degrees counterclockwise.
      * var p = new Cesium.Cartesian2(5, 6);
      * var m = Cesium.Matrix2.fromRotation(Cesium.Math.toRadians(45.0));
-     * var rotated = Cesium.Matrix2.multiplyByVector(m, p);
+     * var rotated = Cesium.Matrix2.multiplyByVector(m, p, new Cesium.Cartesian2());
      */
     Matrix2.fromRotation = function(angle, result) {
         //>>includeStart('debug', pragmas.debug);
