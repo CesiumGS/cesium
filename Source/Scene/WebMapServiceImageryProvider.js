@@ -666,6 +666,23 @@ define([
     }
 
     function unknownXmlToFeatureInfo(xml) {
+        var xmlText = new XMLSerializer().serializeToString(xml);
+
+        var element = document.createElement('div');
+        var pre = document.createElement('pre');
+
+        if (defined(pre.textContent)) {
+            pre.textContent = xmlText;
+        } else {
+            div.innerText = xmlText;
+        }
+
+        element.appendChild(pre);
+
+        var featureInfo = new ImageryLayerFeatureInfo();
+        featureInfo.data = xml;
+        featureInfo.description = element.innerHTML;
+        return [featureInfo];
     }
 
     return WebMapServiceImageryProvider;
