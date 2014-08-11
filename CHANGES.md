@@ -4,6 +4,7 @@ Change Log
 ### 1.01 - 2014-09-01
 
 * Added a new imagery provider, `WebMapTileServiceImageryProvider`, for accessing tiles on a WMTS 1.0.0 server.
+* Fixes a bug that caused `SceneTransforms.wgs84ToWindowCoordinates` to incorrectly return `undefined` when in 2D.
 
 ### 1.0 - 2014-08-01
 
