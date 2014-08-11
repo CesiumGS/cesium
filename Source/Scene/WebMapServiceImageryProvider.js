@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/Cartographic',
         '../Core/clone',
         '../Core/Credit',
         '../Core/defaultValue',
@@ -11,11 +12,13 @@ define([
         '../Core/GeographicTilingScheme',
         '../Core/loadJson',
         '../Core/loadXML',
+        '../Core/Math',
         '../Core/Rectangle',
         './ImageryLayerFeatureInfo',
         './ImageryProvider',
         '../ThirdParty/when'
     ], function(
+        Cartographic,
         clone,
         Credit,
         defaultValue,
@@ -27,6 +30,7 @@ define([
         GeographicTilingScheme,
         loadJson,
         loadXML,
+        CesiumMath,
         Rectangle,
         ImageryLayerFeatureInfo,
         ImageryProvider,
@@ -415,10 +419,13 @@ define([
 
         var url = buildGetFeatureInfoUrl(this, x, y, level, i, j);
 
+        // Unfortunately, the WMS standard leaves the format of the GetFeatureInfo response mostly unspecified.
+        // So first we'll try to request GeoJSON (supported by GeoServer and probably others).  Failing that, we'll
+        // request XML and try to interpret the XML as one of our known formats.
         return when(loadJson(url), function(json) {
             return geoJsonToFeatureInfo(json);
         }, function (e) {
-            // If something goes wrong, try requesting XML instead of GeoJSON.  Then try to interpret it.
+            // GeoJSON failed, try XML.
             url = url.replace('info_format=application/json', 'info_format=text/xml');
             return when(loadXML(url), function(xml) {
                 return xmlToFeatureInfo(xml);
@@ -566,9 +573,17 @@ define([
             var feature = features[i];
 
             var featureInfo = new ImageryLayerFeatureInfo();
+            featureInfo.data = feature;
             featureInfo.setNameFromProperties(feature.properties);
             featureInfo.setDescriptionFromProperties(feature.properties);
-            featureInfo.data = feature;
+
+            // If this is a point feature, use the coordinates of the point.
+            if (feature.geometry.type === 'Point') {
+                var longitude = feature.geometry.coordinates[0];
+                var latitude = feature.geometry.coordinates[1];
+                featureInfo.position = Cartographic.fromDegrees(longitude, latitude);
+            }
+
             result.push(featureInfo);
         }
 

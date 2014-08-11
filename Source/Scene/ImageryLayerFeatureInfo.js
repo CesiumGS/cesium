@@ -5,10 +5,39 @@ define([
         defined) {
     "use strict";
 
-    var ImageryLayerFeatureInfo = function(name, description, data) {
-        this.name = name;
-        this.description = description;
-        this.data = data;
+    /**
+     * Describes a rasterized feature, such as a point, polygon, polyline, etc., in an imagery layer.
+     *
+     * @alias ImageryLayerFeatureInfo
+     * @constructor
+     */
+    var ImageryLayerFeatureInfo = function() {
+        /**
+         * Gets or sets the name of the feature.
+         * @type {String}
+         */
+        this.name = undefined;
+
+        /**
+         * Gets or sets an HTML description of the feature.  The HTML is not trusted and should
+         * be sanitized before display to the user.
+         * @type {String}
+         */
+        this.description = undefined;
+
+        /**
+         * Gets or sets the position of the feature, or undefined if the position is not known.
+         *
+         * @type {Cartographic}
+         */
+        this.position = undefined;
+
+        /**
+         * Gets or sets the raw data describing the feature.  The raw data may be in any
+         * number of formats, such as GeoJSON, KML, etc.
+         * @type {Object}
+         */
+        this.data = undefined;
     };
 
     /**
