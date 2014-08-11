@@ -1,11 +1,13 @@
 /*global define*/
 define([
+        '../../Core/Cartesian3',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/DeveloperError',
         '../../Core/EventHelper',
         '../../Core/ScreenSpaceEventType',
         '../../Core/wrapFunction',
+        '../../DataSources/ConstantPositionProperty',
         '../../DataSources/Entity',
         '../../DataSources/EntityView',
         '../../Scene/SceneMode',
@@ -13,12 +15,14 @@ define([
         '../../ThirdParty/when',
         '../subscribeAndEvaluate'
     ], function(
+        Cartesian3,
         defaultValue,
         defined,
         DeveloperError,
         EventHelper,
         ScreenSpaceEventType,
         wrapFunction,
+        ConstantPositionProperty,
         Entity,
         EntityView,
         SceneMode,
@@ -315,6 +319,8 @@ define([
         });
     };
 
+    var cartesian3Scratch = new Cartesian3();
+
     function pickImageryLayerFeature(viewer, windowPosition) {
         var scene = viewer.scene;
         var pickRay = scene.camera.getPickRay(windowPosition);
@@ -350,6 +356,11 @@ define([
                     return feature.description;
                 }
             };
+
+            if (defined(feature.position)) {
+                var ecfPosition = viewer.scene.globe.ellipsoid.cartographicToCartesian(feature.position, cartesian3Scratch);
+                entity.position = new ConstantPositionProperty(ecfPosition);
+            }
 
             viewer.selectedEntity = entity;
         }, function() {
