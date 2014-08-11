@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/SceneTransforms',
+        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Ellipsoid',
@@ -10,6 +11,7 @@ defineSuite([
         'Specs/destroyScene'
     ], function(
         SceneTransforms,
+        Cartesian2,
         Cartesian3,
         Cartographic,
         Ellipsoid,
@@ -52,6 +54,7 @@ defineSuite([
 
         // Update scene state
         scene.initializeFrame();
+        scene.render();
 
         var windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(scene, position);
         expect(windowCoordinates.x).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
@@ -81,6 +84,7 @@ defineSuite([
 
         // Update scene state
         scene.initializeFrame();
+        scene.render();
 
         var windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(scene, position);
         expect(windowCoordinates).not.toBeDefined();
@@ -104,14 +108,13 @@ defineSuite([
         // Update scene state
         scene.morphToColumbusView(0);
         scene.initializeFrame();
+        scene.render();
 
-        var position = new Cartesian3();
-        Cartesian3.normalize(scene.camera.position, position);
-        Cartesian3.add(position, scene.camera.direction, position);
+        var actualWindowCoordinates = new Cartesian2(0.5, 0.5);
+        var position = scene.camera.pickEllipsoid(actualWindowCoordinates);
 
         var windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(scene, position);
-        expect(windowCoordinates.x).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
-        expect(windowCoordinates.y).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
+        expect(windowCoordinates).toEqualEpsilon(actualWindowCoordinates, CesiumMath.EPSILON2);
     });
 
     it('returns correct drawing buffer position in ColumbusView', function() {
@@ -120,19 +123,18 @@ defineSuite([
         scene.initializeFrame();
         scene.render();
 
-        var position = new Cartesian3();
-        Cartesian3.normalize(scene.camera.position, position);
-        Cartesian3.add(position, scene.camera.direction, position);
+        var actualDrawingBufferCoordinates = new Cartesian2(0.5, 0.5);
+        var position = scene.camera.pickEllipsoid(actualDrawingBufferCoordinates);
 
         var drawingBufferCoordinates = SceneTransforms.wgs84ToDrawingBufferCoordinates(scene, position);
-        expect(drawingBufferCoordinates.x).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
-        expect(drawingBufferCoordinates.y).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
+        expect(drawingBufferCoordinates).toEqualEpsilon(actualDrawingBufferCoordinates, CesiumMath.EPSILON2);
     });
 
     it('returns undefined for window position behind camera in ColumbusView', function() {
         // Update scene state
         scene.morphToColumbusView(0);
         scene.initializeFrame();
+        scene.render();
 
         var position = new Cartesian3();
         Cartesian3.normalize(scene.camera.position, position);
