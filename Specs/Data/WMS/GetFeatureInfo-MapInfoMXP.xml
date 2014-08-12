@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxp:MultiFeatureCollection xmlns:mxp="http://www.mapinfo.com/mxp">
+    <mxp:FeatureCollection>
+        <gml:metaDataProperty xmlns:gml="http://www.opengis.net/gml">
+            <mxp:FeatureCollectionMetaData>
+                <mxp:AttributeDefinitionSet>
+                    <mxp:GeometryAttributeDefinition id="Obj" name="Obj" srsName="EPSG:4283" styleRef="MI_Style" use="feature"/>
+                    <mxp:StyleAttributeDefinition id="MI_Style" name="MI_Style" ref="Obj" use="feature"/>
+                    <mxp:ValueAttributeDefinition id="FILE_ID" name="FILE_ID" type="mapinfo:type int"/>
+                    <mxp:ValueAttributeDefinition id="ESA_DA" name="ESA_DA" type="mapinfo:type string 26"/>
+                    <mxp:ValueAttributeDefinition id="ESA_NAME" name="ESA_NAME" type="mapinfo:type string 46"/>
+                    <mxp:ValueAttributeDefinition id="ESA_CODE" name="ESA_CODE" type="mapinfo:type string 46"/>
+                    <mxp:ValueAttributeDefinition id="ESA_STATE" name="ESA_STATE" type="mapinfo:type string 6"/>
+                    <mxp:ValueAttributeDefinition id="AVAILABILITY" name="AVAILABILITY" type="mapinfo:type string 2"/>
+                    <mxp:ValueAttributeDefinition id="QUALITY" name="QUALITY" type="mapinfo:type string 2"/>
+                    <mxp:ValueAttributeDefinition id="AVAILABILITY_ADSL_RATING" name="AVAILABILITY_ADSL_RATING" type="mapinfo:type string 2"/>
+                    <mxp:ValueAttributeDefinition id="AVAILABILITY_HFC_RATING" name="AVAILABILITY_HFC_RATING" type="mapinfo:type string 26"/>
+                    <mxp:ValueAttributeDefinition id="QUALITY_ADSL_RATING" name="QUALITY_ADSL_RATING" type="mapinfo:type string 2"/>
+                    <mxp:ValueAttributeDefinition id="QUALITY_HFC_RATING" name="QUALITY_HFC_RATING" type="mapinfo:type string 26"/>
+                </mxp:AttributeDefinitionSet>
+                <mxp:DefaultAttributeStyleSet/>
+            </mxp:FeatureCollectionMetaData>
+        </gml:metaDataProperty>
+        <gml:boundedBy xmlns:gml="http://www.opengis.net/gml">
+            <gml:Null>unknown</gml:Null>
+        </gml:boundedBy>
+        <mxp:FeatureMembers>
+            <mxp:Feature>
+                <mxp:Geom ref="Obj">
+                    <gml:Polygon srsName="EPSG:4283" xmlns:gml="http://www.opengis.net/gml">
+                        <gml:exterior>
+                            <gml:LinearRing>
+                                <gml:coordinates>150.609996,-33.712333 150.60897,-33.712182999999996 150.606667,-33.711847999999996 150.6066,-33.711836999999996 150.605482,-33.71168 150.604502,-33.711545 150.603871,-33.711459 150.603218,-33.711369 150.602746,-33.711304999999996 150.602557,-33.711283 150.602479,-33.711275 150.59914899999998,-33.710808 150.59882299999998,-33.712396999999996 150.598579,-33.713614 150.59848599999998,-33.714078 150.594167,-33.713260999999996 150.593484,-33.713175 150.593091,-33.713232 150.59264,-33.712753 150.592973,-33.71245 150.593151,-33.712581 150.593336,-33.712451 150.593568,-33.711974999999995 150.593112,-33.711819999999996 150.593546,-33.71093 150.591309,-33.710766 150.590565,-33.711057 150.589251,-33.710181999999996 150.588948,-33.709734 150.587958,-33.709596999999995 150.587423,-33.708087 150.58701499999998,-33.706254 150.588367,-33.704888 150.58932099999998,-33.703925 150.590419,-33.702816999999996 150.59050399999998,-33.702746999999995 150.590815,-33.7029 150.590834,-33.703479 150.591389,-33.703311 150.591857,-33.703357 150.59192,-33.703148 150.591952,-33.702974999999995 150.592131,-33.701991 150.592385,-33.702027 150.592854,-33.702095 150.593843,-33.702237 150.594325,-33.702306 150.59507399999998,-33.702414 150.59640299999998,-33.702605 150.597063,-33.7027 150.597586,-33.702774999999995 150.598623,-33.702923999999996 150.599693,-33.703078 150.60063399999999,-33.703213 150.600479,-33.703962 150.601181,-33.70406 150.60195199999998,-33.704169 150.603216,-33.704346 150.60418099999998,-33.704482 150.605057,-33.704605 150.605866,-33.704718 150.606682,-33.704831999999996 150.60749099999998,-33.70495 150.607803,-33.705473 150.608126,-33.705982 150.60848,-33.706537 150.608677,-33.706835999999996 150.608941,-33.707125 150.60964099999998,-33.707713 150.610176,-33.707873 150.61066399999999,-33.708875 150.611055,-33.709816 150.611302,-33.711163 150.61055299999998,-33.712415 150.609996,-33.712333</gml:coordinates>
+                            </gml:LinearRing>
+                        </gml:exterior>
+                    </gml:Polygon>
+                </mxp:Geom>
+                <mxp:Style ref="MI_Style">
+                    <mxp:AreaStyle>
+                        <mxp:LineStyle dasharray="none" linecap="round" linejoin="round" marker-placement="none" stroke="green" width="1.0" width-unit="mapinfo:imagesize pixel">
+                            <mxp:Pen>mapinfo:Pen 2</mxp:Pen>
+                        </mxp:LineStyle>
+                        <mxp:Interior fill="(#id1)" fill-opacity="0.0">
+                            <mxp:Defs>
+                                <mxp:Pattern id="id1">
+                                    <mxp:Bitmap uri="mapinfo:brush 1">
+                                        <mxp:ColorAdjustmentSet>
+                                            <mxp:ColorAdjustment color-1="black" color-2="black"/>
+                                            <mxp:ColorAdjustment color-1="white" color-2="white"/>
+                                        </mxp:ColorAdjustmentSet>
+                                    </mxp:Bitmap>
+                                </mxp:Pattern>
+                            </mxp:Defs>
+                        </mxp:Interior>
+                    </mxp:AreaStyle>
+                </mxp:Style>
+                <mxp:Val ref="FILE_ID">40</mxp:Val>
+                <mxp:Val ref="ESA_DA">SPWD:43</mxp:Val>
+                <mxp:Val ref="ESA_NAME">SPRINGWOOD</mxp:Val>
+                <mxp:Val ref="ESA_CODE">SPWD</mxp:Val>
+                <mxp:Val ref="ESA_STATE">NSW</mxp:Val>
+                <mxp:Val ref="AVAILABILITY">A</mxp:Val>
+                <mxp:Val ref="QUALITY">E</mxp:Val>
+                <mxp:Val ref="AVAILABILITY_ADSL_RATING">A</mxp:Val>
+                <mxp:Val ref="AVAILABILITY_HFC_RATING">Not available</mxp:Val>
+                <mxp:Val ref="QUALITY_ADSL_RATING">E</mxp:Val>
+                <mxp:Val ref="QUALITY_HFC_RATING">Not available</mxp:Val>
+            </mxp:Feature>
+        </mxp:FeatureMembers>
+    </mxp:FeatureCollection>
+</mxp:MultiFeatureCollection>

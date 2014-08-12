@@ -48,6 +48,12 @@ define([
      * @param {String} options.layers The layers to include, separated by commas.
      * @param {Object} [options.parameters=WebMapServiceImageryProvider.DefaultParameters] Additional parameters to pass to the WMS server in the GetMap URL.
      * @param {Object} [options.getFeatureInfoParameters=WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters] Additional parameters to pass to the WMS server in the GetFeatureInfo URL.
+     * @param {Boolean} [options.getFeatureInfoAsGeoJson=true] true if {@link WebMapServiceImageryProvider#pickFeatures} should try requesting feature info in GeoJSON format.
+     *                                                         If getFeatureInfoAsXml is true as well, feature information will be requested first as GeoJSON, and then as XML if the GeoJSON
+     *                                                         request fails.  If both are false, this instance will not support feature picking at all.
+     * @param {Boolean} [options.getFeatureInfoAsXml=true] true if {@link WebMapServiceImageryProvider#pickFeatures} should try requesting feature info in XML format.
+     *                                                     If getFeatureInfoAsGeoJson is true as well, feature information will be requested first as GeoJSON, and then as XML if the GeoJSON
+     *                                                     request fails.  If both are false, this instance will not support feature picking at all.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
      * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider.
      *        If not specified, there is no limit.
@@ -88,6 +94,8 @@ define([
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._proxy = options.proxy;
         this._layers = options.layers;
+        this._getFeatureInfoAsGeoJson = defaultValue(options.getFeatureInfoAsGeoJson, true);
+        this._getFeatureInfoAsXml = defaultValue(options.getFeatureInfoAsXml, true);
 
         // Merge the parameters with the defaults, and make all parameter names lowercase
         var parameter;
@@ -417,20 +425,35 @@ define([
         var i = (this._tileWidth * (longitude - rectangle.west) / (rectangle.east - rectangle.west)) | 0;
         var j = (this._tileHeight * (rectangle.north - latitude) / (rectangle.north - rectangle.south)) | 0;
 
-        var url = buildGetFeatureInfoUrl(this, x, y, level, i, j);
+        var url;
 
-        // Unfortunately, the WMS standard leaves the format of the GetFeatureInfo response mostly unspecified.
-        // So first we'll try to request GeoJSON (supported by GeoServer and probably others).  Failing that, we'll
-        // request XML and try to interpret the XML as one of our known formats.
-        return when(loadJson(url), function(json) {
-            return geoJsonToFeatureInfo(json);
-        }, function (e) {
-            // GeoJSON failed, try XML.
-            url = url.replace('info_format=application/json', 'info_format=text/xml');
+        if (this._getFeatureInfoAsGeoJson) {
+            url = buildGetFeatureInfoUrl(this, 'application/json', x, y, level, i, j);
+
+            var that = this;
+            return when(loadJson(url), function(json) {
+                return geoJsonToFeatureInfo(json);
+            }, function (e) {
+                // GeoJSON failed, try XML.
+                if (!that._getFeatureInfoAsXml) {
+                    throw e;
+                }
+
+                url = buildGetFeatureInfoUrl(that, 'text/xml', x, y, level, i, j);
+
+                return when(loadXML(url), function(xml) {
+                    return xmlToFeatureInfo(xml);
+                });
+            });
+        } else if (this._getFeatureInfoAsXml) {
+            url = buildGetFeatureInfoUrl(this, 'text/xml', x, y, level, i, j);
+
             return when(loadXML(url), function(xml) {
                 return xmlToFeatureInfo(xml);
             });
-        });
+        } else {
+            return undefined;
+        }
     };
 
     /**
@@ -451,11 +474,18 @@ define([
         format : 'image/jpeg'
     });
 
+    /**
+     * The default parameters to include in the WMS URL to get feature information.  The values are as follows:
+     *     service=WMS
+     *     version=1.1.1
+     *     request=GetFeatureInfo
+     *
+     * @constant
+     */
     WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters = freezeObject({
         service : 'WMS',
         version : '1.1.1',
-        request : 'GetFeatureInfo',
-        info_format : 'application/json'
+        request : 'GetFeatureInfo'
     });
 
     function buildImageUrl(imageryProvider, x, y, level) {
@@ -506,7 +536,7 @@ define([
         return url;
     }
 
-    function buildGetFeatureInfoUrl(imageryProvider, x, y, level, i, j) {
+    function buildGetFeatureInfoUrl(imageryProvider, infoFormat, x, y, level, i, j) {
         var url = imageryProvider._url;
         var indexOfQuestionMark = url.indexOf('?');
         if (indexOfQuestionMark >= 0 && indexOfQuestionMark < url.length - 1) {
@@ -555,6 +585,10 @@ define([
 
         if (!defined(parameters.height)) {
             url += 'height=' + imageryProvider._tileHeight + '&';
+        }
+
+        if (!defined(parameters.info_format)) {
+            url += 'info_format=' + infoFormat + '&';
         }
 
         var proxy = imageryProvider._proxy;

@@ -431,7 +431,12 @@ define([
                 continue;
             }
 
-            promises.push(provider.pickFeatures(imagery.x, imagery.y, imagery.level, pickedLocation.longitude, pickedLocation.latitude));
+            var promise = provider.pickFeatures(imagery.x, imagery.y, imagery.level, pickedLocation.longitude, pickedLocation.latitude);
+            if (!defined(promise)) {
+                continue;
+            }
+
+            promises.push(promise);
         }
 
         if (promises.length === 0) {
