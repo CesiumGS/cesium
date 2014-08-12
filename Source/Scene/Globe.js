@@ -390,7 +390,20 @@ define([
         return intersection;
     };
 
-    Globe.prototype.pickImageryLayerFeature = function(ray, scene) {
+    /**
+     * Asynchronously determines the imagery layer features that are intersected by a pick ray.  The intersected imagery
+     * layer features are found by invoking {@link ImageryProvider#pickFeatures} for each imagery layer tile intersected
+     * by the pick ray.
+     *
+     * @param {Ray} ray The ray to test for intersection.
+     * @param {Scene} scene The scene.
+     * @return {Promise|ImageryLayerFeatureInfo[]} A promise that resolves to an array of features intersected by the pick ray.
+     *                                             If it can be quickly determined that no features are intersected (for example,
+     *                                             because no active imagery providers support {@link ImageryProvider#pickFeatures}
+     *                                             or because the pick ray does not intersect the surface), this function will
+     *                                             return undefined.
+     */
+    Globe.prototype.pickImageryLayerFeatures = function(ray, scene) {
         // Find the picked location on the globe.
         var pickedPosition = this.pick(ray, scene);
         if (!defined(pickedPosition)) {
@@ -443,38 +456,28 @@ define([
             return undefined;
         }
 
-        var deferred = when.defer();
+        return when.all(promises, function(results) {
+            var features = [];
 
-        var nextPromiseIndex = 0;
+            for (var resultIndex = 0; resultIndex < results.length; ++resultIndex) {
+                var result = results[resultIndex];
 
-        function waitForNextLayersResponse() {
-            if (nextPromiseIndex >= promises.length) {
-                deferred.reject();
-                return;
-            }
+                if (defined(result) && result.length > 0) {
+                    for (var featureIndex = 0; featureIndex < result.length; ++featureIndex) {
+                        var feature = result[featureIndex];
 
-            when(promises[nextPromiseIndex++], function(result) {
-                if (!defined(result) || result.length === 0) {
-                    waitForNextLayersResponse();
-                    return;
-                }
+                        // For features without a position, use the picked location.
+                        if (!defined(feature.position)) {
+                            feature.position = pickedLocation;
+                        }
 
-                // For features without a position, use the picked location.
-                for (var i = 0; i < result.length; ++i) {
-                    if (!defined(result[i].position)) {
-                        result[i].position = pickedLocation;
+                        features.push(feature);
                     }
                 }
+            }
 
-                deferred.resolve(result);
-            }, function() {
-                waitForNextLayersResponse();
-            });
-        }
-
-        waitForNextLayersResponse();
-
-        return deferred.promise;
+            return features;
+        });
     };
 
     var scratchGetHeightCartesian = new Cartesian3();
