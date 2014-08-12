@@ -41,14 +41,14 @@ define([
     };
 
     /**
-     * Sets the name of this feature by selecting an appropriate property.  The name will be obtained from
+     * Configures the name of this feature by selecting an appropriate property.  The name will be obtained from
      * one of the following sources, in this order: 1) the property with the name 'name', 2) the property with the name 'title',
      * 3) the first property containing the word 'name', 4) the first property containing the word 'title'.  If
      * the name cannot be obtained from any of these sources, the existing name will be left unchanged.
      * 
      * @param {Object} properties An object literal containing the properties of the feature.
      */
-    ImageryLayerFeatureInfo.prototype.setNameFromProperties = function(properties) {
+    ImageryLayerFeatureInfo.prototype.configureNameFromProperties = function(properties) {
         var namePropertyPrecedence = 10;
         var nameProperty;
 
@@ -78,11 +78,11 @@ define([
     };
 
     /**
-     * Sets the description of this feature by creating an HTML table of properties and their values.
+     * Configures the description of this feature by creating an HTML table of properties and their values.
      * 
      * @param {Object} properties An object literal containing the properties of the feature.
      */
-    ImageryLayerFeatureInfo.prototype.setDescriptionFromProperties = function(properties) {
+    ImageryLayerFeatureInfo.prototype.configureDescriptionFromProperties = function(properties) {
         function describe(properties) {
             var html = '<table class="cesium-infoBox-defaultTable">';
             for (var key in properties) {

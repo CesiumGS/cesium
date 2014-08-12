@@ -400,7 +400,7 @@ define([
 
     /**
      * Asynchronously determines what features, if any, are located at a given longitude and latitude within
-     * a tile.
+     * a tile.  This function should not be called before {@link ImageryProvider#ready} returns true.
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
@@ -608,8 +608,8 @@ define([
 
             var featureInfo = new ImageryLayerFeatureInfo();
             featureInfo.data = feature;
-            featureInfo.setNameFromProperties(feature.properties);
-            featureInfo.setDescriptionFromProperties(feature.properties);
+            featureInfo.configureNameFromProperties(feature.properties);
+            featureInfo.configureDescriptionFromProperties(feature.properties);
 
             // If this is a point feature, use the coordinates of the point.
             if (feature.geometry.type === 'Point') {
@@ -664,8 +664,8 @@ define([
 
             var featureInfo = new ImageryLayerFeatureInfo();
             featureInfo.data = feature;
-            featureInfo.setNameFromProperties(properties);
-            featureInfo.setDescriptionFromProperties(properties);
+            featureInfo.configureNameFromProperties(properties);
+            featureInfo.configureDescriptionFromProperties(properties);
             result.push(featureInfo);
         }
 
@@ -691,8 +691,8 @@ define([
 
             var featureInfo = new ImageryLayerFeatureInfo();
             featureInfo.data = feature;
-            featureInfo.setNameFromProperties(properties);
-            featureInfo.setDescriptionFromProperties(properties);
+            featureInfo.configureNameFromProperties(properties);
+            featureInfo.configureDescriptionFromProperties(properties);
             result.push(featureInfo);
         }
 
