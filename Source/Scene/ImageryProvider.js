@@ -251,6 +251,27 @@ define([
     ImageryProvider.prototype.requestImage = DeveloperError.throwInstantiationError;
 
     /**
+     * Asynchronously determines what features, if any, are located at a given longitude and latitude within
+     * a tile.  This function should not be called before {@link ImageryProvider#ready} returns true.
+     * This function is optional, so it may not exist on all ImageryProviders.
+     * 
+     * @function
+     *
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level.
+     * @param {Number} longitude The longitude at which to pick features.
+     * @param {Number} latitude  The latitude at which to pick features.
+     * @return {Promise} A promise for the picked features that will resolve when the asynchronous
+     *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
+     *                   instances.  The array may be empty if no features are found at the given location.
+     *                   It may also be undefined if picking is not supported.
+     *
+     * @exception {DeveloperError} <code>pickFeatures</code> must not be called before the imagery provider is ready.
+     */
+    ImageryProvider.prototype.pickFeatures = DeveloperError.throwInstantiationError;
+
+    /**
      * Loads an image from a given URL.  If the server referenced by the URL already has
      * too many requests pending, this function will instead return undefined, indicating
      * that the request should be retried later.
