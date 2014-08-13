@@ -16,7 +16,7 @@
     });
     </script>
 </head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
 </style>
@@ -24,75 +24,65 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require([
-    'Cesium',
-    'Shaders/PostProcessFilters/BlackAndWhite',
-    'Shaders/PostProcessFilters/NightVision',
-    'Shaders/PostProcessFilters/Lomo',
-    'Shaders/PostProcessFilters/Retro',
-    'Shaders/PostProcessFilters/PassThrough'
-], function(
-    Cesium,
-    BlackAndWhite,
-    NightVision,
-    Lomo,
-    Retro,
-    PassThrough
-) {
+function startup(Cesium) {
     "use strict";
+//Sandcastle_Begin
+function setFilter(scene, filter, uniforms) {
+    scene.customPostProcess = new Cesium.CustomPostProcess(filter, uniforms);
+}
 
-    function setFilter(scene, filter, uniforms) {
-        scene.customPostProcess = new Cesium.CustomPostProcess(filter, uniforms);
-    }
+var widget = new Cesium.CesiumWidget('cesiumContainer');
+var scene = widget.scene;
 
-    var widget = new Cesium.CesiumWidget('cesiumContainer');
-    var scene = widget.scene;
+setFilter(scene, Cesium._shaders.PassThrough);
+
+Sandcastle.addToolbarButton('Lomo Filter', function() {
+    var uniforms = {temperatureGamma : function() { return 0.6; },
+                    colorTemperatureBottom : function() { return 3000.0; },
+                    colorTemperatureTop : function() { return 15000.0; },
+                    vignetteAmount : function() { return 1.0; },
+                    vignetteGamma : function() { return 4.0; },
+                    saturation : function() { return 0.7; },
+                    finalMultiplier : function() { return 1.2; } };
     
-    setFilter(scene, PassThrough);
-
-    Sandcastle.addToolbarButton('Lomo Filter', function() {
-        var uniforms = {temperatureGamma : function() { return 0.6; },
-                        colorTemperatureBottom : function() { return 3000.0; },
-                        colorTemperatureTop : function() { return 15000.0; },
-                        vignetteAmount : function() { return 1.0; },
-                        vignetteGamma : function() { return 4.0; },
-                        saturation : function() { return 0.7; },
-                        finalMultiplier : function() { return 1.2; } };
-        
-        setFilter(scene, Lomo, uniforms);
-    });
-
-    Sandcastle.addToolbarButton('Retro Filter', function() {
-        var uniforms = {vignetteAmount : function() { return 0.65; },
-                        vignetteGamma : function() { return 4.0; },
-                        colorTemperatureInner : function() { return 3500.0; },
-                        colorTemperatureOuter : function() { return 12000.0; },
-                        saturation : function() { return 0.5; },
-                        postSaturation : function() { return 0.5; },
-                        finalMultiplier : function() { return 1.2; },
-                        tintColorBottom : function() { return { x : 1.1, y : 0.85, z : 0.95 }; },
-                        tintColorTop : function() { return { x : 1.1, y : 0.77, z : 0.55 }; } };
-        
-        setFilter(scene, Retro, uniforms);
-    });
-
-    Sandcastle.addToolbarButton('Night Vision Filter', function() {
-        var uniforms = { frequency : function() { return 0.001; } };
-        
-        setFilter(scene, NightVision, uniforms);
-    });
-
-    Sandcastle.addToolbarButton('Black & White Filter', function() {
-        setFilter(scene, BlackAndWhite);
-    });
-
-    Sandcastle.addToolbarButton('No Filter', function() {
-        setFilter(scene, PassThrough);
-    });
-
-    
-    Sandcastle.finishedLoading();
+    setFilter(scene, Cesium._shaders.Lomo, uniforms);
 });
+
+Sandcastle.addToolbarButton('Retro Filter', function() {
+    var uniforms = {vignetteAmount : function() { return 0.65; },
+                    vignetteGamma : function() { return 4.0; },
+                    colorTemperatureInner : function() { return 3500.0; },
+                    colorTemperatureOuter : function() { return 12000.0; },
+                    saturation : function() { return 0.5; },
+                    postSaturation : function() { return 0.5; },
+                    finalMultiplier : function() { return 1.2; },
+                    tintColorBottom : function() { return { x : 1.1, y : 0.85, z : 0.95 }; },
+                    tintColorTop : function() { return { x : 1.1, y : 0.77, z : 0.55 }; } };
+    
+    setFilter(scene, Cesium._shaders.Retro, uniforms);
+});
+
+Sandcastle.addToolbarButton('Night Vision Filter', function() {
+    var uniforms = { frequency : function() { return 0.001; } };
+    
+    setFilter(scene, Cesium._shaders.NightVision, uniforms);
+});
+
+Sandcastle.addToolbarButton('Black & White Filter', function() {
+    setFilter(scene, Cesium._shaders.BlackAndWhite);
+});
+
+Sandcastle.addToolbarButton('No Filter', function() {
+    setFilter(scene, Cesium._shaders.PassThrough);
+});
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
 </script>
 </body>
 </html>
