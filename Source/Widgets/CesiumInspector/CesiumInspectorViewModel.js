@@ -329,7 +329,7 @@ define([
         });
 
         this._showWireframe = createCommand(function() {
-            globe._surface._debug.wireframe = that.wireframe;
+            globe._surface.tileProvider._debug.wireframe = that.wireframe;
             return true;
         });
 
@@ -356,9 +356,9 @@ define([
 
         this._showTileBoundingSphere = createCommand(function() {
             if (that.tileBoundingSphere) {
-                globe._surface._debug.boundingSphereTile = that._tile;
+                globe._surface.tileProvider._debug.boundingSphereTile = that._tile;
             } else {
-                globe._surface._debug.boundingSphereTile = undefined;
+                globe._surface.tileProvider._debug.boundingSphereTile = undefined;
             }
             return true;
         });
@@ -371,21 +371,10 @@ define([
                 that.suspendUpdates = true;
                 that.doSuspendUpdates();
 
-                globe._surface._tilesToRenderByTextureCount = [];
+                globe._surface._tilesToRender = [];
 
                 if (defined(that._tile)) {
-                    var readyTextureCount = 0;
-                    var tileImageryCollection = that._tile.imagery;
-                    for (var i = 0, len = tileImageryCollection.length; i < len; ++i) {
-                        var tileImagery = tileImageryCollection[i];
-                        if (defined(tileImagery.readyImagery) && tileImagery.readyImagery.imageryLayer.alpha !== 0.0) {
-                            ++readyTextureCount;
-                        }
-                    }
-
-                    globe._surface._tilesToRenderByTextureCount[readyTextureCount] = [that._tile];
-                    globe._surface._tileLoadQueue.push(that._tile);
-
+                    globe._surface._tilesToRender.push(that._tile);
                 }
             }
             return true;
@@ -422,7 +411,7 @@ define([
 
             if (defined(cartesian)) {
                 var cartographic = ellipsoid.cartesianToCartographic(cartesian);
-                var tilesRendered = globe._surface._tilesToRenderByTextureCount;
+                var tilesRendered = globe._surface.tileProvider._tilesToRenderByTextureCount;
                 for (var textureCount = 0; !selectedTile && textureCount < tilesRendered.length; ++textureCount) {
                     var tilesRenderedByTextureCount = tilesRendered[textureCount];
                     if (!defined(tilesRenderedByTextureCount)) {
@@ -493,7 +482,7 @@ define([
         },
 
         /**
-         * Gets the command to toggle the visibility of a {@link PerformanceDisplay}
+         * Gets the command to toggle the visibility of the performance display.
          * @memberof CesiumInspectorViewModel.prototype
          *
          * @type {Command}
@@ -785,7 +774,7 @@ define([
                         this.tileText = 'L: ' + newTile.level + ' X: ' + newTile.x + ' Y: ' + newTile.y;
                         this.tileText += '<br>SW corner: ' + newTile.rectangle.west + ', ' + newTile.rectangle.south;
                         this.tileText += '<br>NE corner: ' + newTile.rectangle.east + ', ' + newTile.rectangle.north;
-                        this.tileText += '<br>Min: ' + newTile.minimumHeight + ' Max: ' + newTile.maximumHeight;
+                        this.tileText += '<br>Min: ' + newTile.data.minimumHeight + ' Max: ' + newTile.data.maximumHeight;
                     }
                     this._tile = newTile;
                     this.showTileBoundingSphere();

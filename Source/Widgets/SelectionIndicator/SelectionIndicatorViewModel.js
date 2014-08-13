@@ -5,21 +5,22 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
+        '../../Core/EasingFunction',
         '../../Scene/SceneTransforms',
-        '../../ThirdParty/knockout',
-        '../../ThirdParty/Tween'
+        '../../ThirdParty/knockout'
     ], function(
         Cartesian2,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
+        EasingFunction,
         SceneTransforms,
-        knockout,
-        Tween) {
+        knockout) {
     "use strict";
 
     var screenSpacePos = new Cartesian2();
+    var offScreen = '-1000px';
 
     /**
      * The view model for {@link SelectionIndicator}.
@@ -46,14 +47,11 @@ define([
         //>>includeEnd('debug')
 
         this._scene = scene;
-        this._screenPositionX = '-1000px';
-        this._screenPositionY = '0';
-        this._animationCollection = scene.animations;
+        this._screenPositionX = offScreen;
+        this._screenPositionY = offScreen;
+        this._tweens = scene.tweens;
         this._container = defaultValue(container, document.body);
         this._selectionIndicatorElement = selectionIndicatorElement;
-        this._computeScreenSpacePosition = function(position, result) {
-            return SceneTransforms.wgs84ToWindowCoordinates(scene, position, result);
-        };
         this._scale = 1;
 
         /**
@@ -87,69 +85,75 @@ define([
                 return 'scale(' + (this._scale) + ')';
             }
         });
+
+        /**
+         * Gets or sets the function for converting the world position of the object to the screen space position.
+         *
+         * @member
+         * @type {SelectionIndicatorViewModel~ComputeScreenSpacePosition}
+         * @default SceneTransforms.wgs84ToWindowCoordinates
+         *
+         * @example
+         * selectionIndicatorViewModel.computeScreenSpacePosition = function(position, result) {
+         *     return Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position, result);
+         * };
+         */
+        this.computeScreenSpacePosition = function(position, result) {
+            return SceneTransforms.wgs84ToWindowCoordinates(scene, position, result);
+        };
     };
 
     /**
      * Updates the view of the selection indicator to match the position and content properties of the view model.
      * This function should be called as part of the render loop.
-     * @memberof SelectionIndicatorViewModel
      */
     SelectionIndicatorViewModel.prototype.update = function() {
         if (this.showSelection && defined(this.position)) {
-            var screenPosition = this._computeScreenSpacePosition(this.position, screenSpacePos);
-            var container = this._container;
-            var containerWidth = container.parentNode.clientWidth;
-            var containerHeight = container.parentNode.clientHeight;
-            var indicatorSize = this._selectionIndicatorElement.clientWidth;
-            var halfSize = indicatorSize * 0.5;
+            var screenPosition = this.computeScreenSpacePosition(this.position, screenSpacePos);
+            if (!defined(screenPosition)) {
+                this._screenPositionX = offScreen;
+                this._screenPositionY = offScreen;
+            } else {
+                var container = this._container;
+                var containerWidth = container.parentNode.clientWidth;
+                var containerHeight = container.parentNode.clientHeight;
+                var indicatorSize = this._selectionIndicatorElement.clientWidth;
+                var halfSize = indicatorSize * 0.5;
 
-            screenPosition.x = Math.min(Math.max(screenPosition.x, 0), containerWidth) - halfSize;
-            screenPosition.y = Math.min(Math.max(screenPosition.y, 0), containerHeight) - halfSize;
+                screenPosition.x = Math.min(Math.max(screenPosition.x, -indicatorSize), containerWidth + indicatorSize) - halfSize;
+                screenPosition.y = Math.min(Math.max(screenPosition.y, -indicatorSize), containerHeight + indicatorSize) - halfSize;
 
-            this._screenPositionX = Math.floor(screenPosition.x + 0.25) + 'px';
-            this._screenPositionY = Math.floor(screenPosition.y + 0.25) + 'px';
+                this._screenPositionX = Math.floor(screenPosition.x + 0.25) + 'px';
+                this._screenPositionY = Math.floor(screenPosition.y + 0.25) + 'px';
+            }
         }
     };
 
     /**
      * Animate the indicator to draw attention to the selection.
-     * @memberof SelectionIndicatorViewModel
      */
     SelectionIndicatorViewModel.prototype.animateAppear = function() {
-        var viewModel = this;
-        this._animationCollection.add({
-            startValue : {
-                scale : 2
-            },
-            stopValue : {
-                scale: 1
-            },
-            duration : 800,
-            easingFunction : Tween.Easing.Exponential.Out,
-            onUpdate : function (value) {
-                viewModel._scale = value.scale;
-            }
+        this._tweens.addProperty({
+            object : this,
+            property : '_scale',
+            startValue : 2,
+            stopValue : 1,
+            duration : 0.8,
+            easingFunction : EasingFunction.EXPONENTIAL_OUT
         });
     };
 
     /**
      * Animate the indicator to release the selection.
-     * @memberof SelectionIndicatorViewModel
      */
     SelectionIndicatorViewModel.prototype.animateDepart = function() {
-        var viewModel = this;
-        this._animationCollection.add({
-            startValue : {
-                scale : viewModel._scale
-            },
-            stopValue : {
-                scale : 1.5
-            },
-            duration : 800,
-            easingFunction : Tween.Easing.Exponential.Out,
-            onUpdate : function (value) {
-                viewModel._scale = value.scale;
-            }
+        this._tweens.addProperty({
+            object : this,
+            property : '_scale',
+            startValue : this._scale,
+            stopValue : 1.5,
+            duration : 0.8,
+            easingFunction : EasingFunction.EXPONENTIAL_OUT
         });
     };
 
@@ -165,6 +169,7 @@ define([
                 return this._container;
             }
         },
+
         /**
          * Gets the HTML element that holds the selection indicator.
          * @memberof SelectionIndicatorViewModel.prototype
@@ -176,6 +181,7 @@ define([
                 return this._selectionIndicatorElement;
             }
         },
+
         /**
          * Gets the scene being used.
          * @memberof SelectionIndicatorViewModel.prototype
@@ -186,32 +192,16 @@ define([
             get : function() {
                 return this._scene;
             }
-        },
-        /**
-         * Gets or sets the function for converting the world position of the object to the screen space position.
-         * Expects the {@link Cartesian3} parameter for the position and the optional {@link Cartesian2} parameter for the result.
-         * Should return a {@link Cartesian2}.
-         *
-         * Defaults to SceneTransforms.wgs84ToWindowCoordinates
-         *
-         * @example
-         * selectionIndicatorViewModel.computeScreenSpacePosition = function(position, result) {
-         *     return Cartesian2.clone(position, result);
-         * };
-         *
-         * @memberof SelectionIndicatorViewModel.prototype
-         *
-         * @type {Function}
-         */
-        computeScreenSpacePosition : {
-            get : function() {
-                return this._computeScreenSpacePosition;
-            },
-            set : function(value) {
-                this._computeScreenSpacePosition = value;
-            }
         }
     });
+
+    /**
+     * A function that converts the world position of an object to a screen space position.
+     * @callback SelectionIndicatorViewModel~ComputeScreenSpacePosition
+     * @param {Cartesian3} position The position in WGS84 (world) coordinates.
+     * @param {Cartesian2} result An object to return the input position transformed to window coordinates.
+     * @returns {Cartesian2} The modified result parameter.
+     */
 
     return SelectionIndicatorViewModel;
 });

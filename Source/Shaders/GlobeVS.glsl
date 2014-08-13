@@ -1,5 +1,5 @@
 attribute vec4 position3DAndHeight;
-attribute vec2 textureCoordinates;
+attribute vec4 textureCoordAndEncodedNormals;
 
 uniform vec3 u_center3D;
 uniform mat4 u_modifiedModelView;
@@ -13,6 +13,8 @@ varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 
 varying vec2 v_textureCoordinates;
+varying vec3 v_normalMC;
+varying vec3 v_normalEC;
 
 // These functions are generated at runtime.
 vec4 getPosition(vec3 position3DWC);
@@ -31,7 +33,7 @@ float get2DMercatorYPositionFraction()
     // when we're at this level or higher.  The constant below is the expression
     // above evaluated and then rounded up at the 4th significant digit.
     const float maxTileWidth = 0.003068;
-    float positionFraction = textureCoordinates.y;
+    float positionFraction = textureCoordAndEncodedNormals.y;
     float southLatitude = u_southAndNorthLatitude.x;
     float northLatitude = u_southAndNorthLatitude.y;
     if (northLatitude - southLatitude > maxTileWidth)
@@ -40,7 +42,7 @@ float get2DMercatorYPositionFraction()
         float southMercatorYHigh = u_southMercatorYLowAndHighAndOneOverHeight.y;
         float oneOverMercatorHeight = u_southMercatorYLowAndHighAndOneOverHeight.z;
 
-        float currentLatitude = mix(southLatitude, northLatitude, textureCoordinates.y);
+        float currentLatitude = mix(southLatitude, northLatitude, textureCoordAndEncodedNormals.y);
         currentLatitude = clamp(currentLatitude, -czm_webMercatorMaxLatitude, czm_webMercatorMaxLatitude);
         positionFraction = czm_latitudeToWebMercatorFraction(currentLatitude, southMercatorYLow, southMercatorYHigh, oneOverMercatorHeight);
     }    
@@ -49,13 +51,13 @@ float get2DMercatorYPositionFraction()
 
 float get2DGeographicYPositionFraction()
 {
-    return textureCoordinates.y;
+    return textureCoordAndEncodedNormals.y;
 }
 
 vec4 getPositionPlanarEarth(vec3 position3DWC, float height2D)
 {
     float yPositionFraction = get2DYPositionFraction();
-    vec4 rtcPosition2D = vec4(height2D, mix(u_tileRectangle.st, u_tileRectangle.pq, vec2(textureCoordinates.x, yPositionFraction)), 1.0);  
+    vec4 rtcPosition2D = vec4(height2D, mix(u_tileRectangle.st, u_tileRectangle.pq, vec2(textureCoordAndEncodedNormals.x, yPositionFraction)), 1.0);  
     return czm_projection * (u_modifiedModelView * rtcPosition2D);
 }
 
@@ -74,7 +76,7 @@ vec4 getPositionMorphingMode(vec3 position3DWC)
     // We do not do RTC while morphing, so there is potential for jitter.
     // This is unlikely to be noticeable, though.
     float yPositionFraction = get2DYPositionFraction();
-    vec4 position2DWC = vec4(0.0, mix(u_tileRectangle.st, u_tileRectangle.pq, vec2(textureCoordinates.x, yPositionFraction)), 1.0);
+    vec4 position2DWC = vec4(0.0, mix(u_tileRectangle.st, u_tileRectangle.pq, vec2(textureCoordAndEncodedNormals.x, yPositionFraction)), 1.0);
     vec4 morphPosition = czm_columbusViewMorph(position2DWC, vec4(position3DWC, 1.0), czm_morphTime);
     return czm_modelViewProjection * morphPosition;
 }
@@ -85,10 +87,17 @@ void main()
 
     gl_Position = getPosition(position3DWC);
 
-#if defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_LIGHTING)
+#if defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_DAYNIGHT_SHADING)
     v_positionEC = (czm_modelView3D * vec4(position3DWC, 1.0)).xyz;
     v_positionMC = position3DWC;                                 // position in model coordinates
+#elif defined(ENABLE_VERTEX_LIGHTING)
+    v_positionEC = (czm_modelView3D * vec4(position3DWC, 1.0)).xyz;
+    v_positionMC = position3DWC;                                 // position in model coordinates
+    vec2 encodedNormal = textureCoordAndEncodedNormals.zw;
+    encodedNormal = encodedNormal / 255.0 * 2.0 - 1.0;
+    v_normalMC = czm_octDecode(encodedNormal);
+    v_normalEC = czm_normal3D * v_normalMC;
 #endif
 
-    v_textureCoordinates = textureCoordinates;
+    v_textureCoordinates = textureCoordAndEncodedNormals.xy;
 }

@@ -21,23 +21,21 @@ define([
      *
      * @exports loadWithXhr
      *
-     * @param {Object} options Options for the request.
+     * @param {Object} options Object with the following properties:
      * @param {String|Promise} options.url The URL of the data, or a promise for the URL.
      * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
      * @param {String} [options.method='GET'] The HTTP method to use.
      * @param {String} [options.data] The data to send with the request, if any.
      * @param {Object} [options.headers] HTTP headers to send with the request, if any.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
-     *
      * @returns {Promise} a promise that will resolve to the requested data when loaded.
-     *
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
-     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @see loadArrayBuffer
      * @see loadBlob
      * @see loadJson
      * @see loadText
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @example
      * // Load a single URL asynchronously. In real code, you should use loadBlob instead.
@@ -46,7 +44,7 @@ define([
      *     responseType : 'blob'
      * }).then(function(blob) {
      *     // use the data
-     * }, function(error) {
+     * }.otherwise(function(error) {
      *     // an error occurred
      * });
      */

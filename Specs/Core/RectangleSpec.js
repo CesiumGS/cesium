@@ -229,39 +229,39 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('getSouthwest works without a result parameter', function() {
+    it('southwest works without a result parameter', function() {
         var rectangle = new Rectangle(west, south, east, north);
-        var returnedResult = Rectangle.getSouthwest(rectangle);
+        var returnedResult = Rectangle.southwest(rectangle);
         expect(returnedResult.longitude).toEqual(west);
         expect(returnedResult.latitude).toEqual(south);
     });
 
-    it('getSouthwest works with a result parameter', function() {
+    it('southwest works with a result parameter', function() {
         var rectangle = new Rectangle(west, south, east, north);
         var result = new Cartographic();
-        var returnedResult = Rectangle.getSouthwest(rectangle, result);
+        var returnedResult = Rectangle.southwest(rectangle, result);
         expect(returnedResult).toBe(result);
         expect(returnedResult.longitude).toEqual(west);
         expect(returnedResult.latitude).toEqual(south);
     });
 
-    it('getSouthwest throws with no rectangle', function() {
+    it('southwest throws with no rectangle', function() {
         expect(function() {
-            Rectangle.getSouthwest();
+            Rectangle.southwest();
         }).toThrowDeveloperError();
     });
 
-    it('getNorthwest works without a result parameter', function() {
+    it('northwest works without a result parameter', function() {
         var rectangle = new Rectangle(west, south, east, north);
-        var returnedResult = Rectangle.getNorthwest(rectangle);
+        var returnedResult = Rectangle.northwest(rectangle);
         expect(returnedResult.longitude).toEqual(west);
         expect(returnedResult.latitude).toEqual(north);
     });
 
-    it('getNorthwest works with a result parameter', function() {
+    it('northwest works with a result parameter', function() {
         var rectangle = new Rectangle(west, south, east, north);
         var result = new Cartographic();
-        var returnedResult = Rectangle.getNorthwest(rectangle, result);
+        var returnedResult = Rectangle.northwest(rectangle, result);
         expect(returnedResult).toBe(result);
         expect(returnedResult.longitude).toEqual(west);
         expect(returnedResult.latitude).toEqual(north);
@@ -269,21 +269,21 @@ defineSuite([
 
     it('getNothwest throws with no rectangle', function() {
         expect(function() {
-            Rectangle.getNorthwest();
+            Rectangle.northwest();
         }).toThrowDeveloperError();
     });
 
-    it('getNortheast works without a result parameter', function() {
+    it('northeast works without a result parameter', function() {
         var rectangle = new Rectangle(west, south, east, north);
-        var returnedResult = Rectangle.getNortheast(rectangle);
+        var returnedResult = Rectangle.northeast(rectangle);
         expect(returnedResult.longitude).toEqual(east);
         expect(returnedResult.latitude).toEqual(north);
     });
 
-    it('getNortheast works with a result parameter', function() {
+    it('northeast works with a result parameter', function() {
         var rectangle = new Rectangle(west, south, east, north);
         var result = new Cartographic();
-        var returnedResult = Rectangle.getNortheast(rectangle, result);
+        var returnedResult = Rectangle.northeast(rectangle, result);
         expect(returnedResult).toBe(result);
         expect(returnedResult.longitude).toEqual(east);
         expect(returnedResult.latitude).toEqual(north);
@@ -291,49 +291,67 @@ defineSuite([
 
     it('getNotheast throws with no rectangle', function() {
         expect(function() {
-            Rectangle.getNortheast();
+            Rectangle.northeast();
         }).toThrowDeveloperError();
     });
 
-    it('getSoutheast works without a result parameter', function() {
+    it('southeast works without a result parameter', function() {
         var rectangle = new Rectangle(west, south, east, north);
-        var returnedResult = Rectangle.getSoutheast(rectangle);
+        var returnedResult = Rectangle.southeast(rectangle);
         expect(returnedResult.longitude).toEqual(east);
         expect(returnedResult.latitude).toEqual(south);
     });
 
-    it('getSoutheast works with a result parameter', function() {
+    it('southeast works with a result parameter', function() {
         var rectangle = new Rectangle(west, south, east, north);
         var result = new Cartographic();
-        var returnedResult = Rectangle.getSoutheast(rectangle, result);
+        var returnedResult = Rectangle.southeast(rectangle, result);
         expect(returnedResult).toBe(result);
         expect(returnedResult.longitude).toEqual(east);
         expect(returnedResult.latitude).toEqual(south);
     });
 
-    it('getSoutheast throws with no rectangle', function() {
+    it('southeast throws with no rectangle', function() {
         expect(function() {
-            Rectangle.getSoutheast();
+            Rectangle.southeast();
         }).toThrowDeveloperError();
     });
 
-    it('getCenter works without a result parameter', function() {
+    it('center works without a result parameter', function() {
         var rectangle = new Rectangle(west, south, east, north);
-        var returnedResult = Rectangle.getCenter(rectangle);
+        var returnedResult = Rectangle.center(rectangle);
         expect(returnedResult).toEqual(center);
     });
 
-    it('getCenter works with a result parameter', function() {
+    it('center works with a result parameter', function() {
         var rectangle = new Rectangle(west, south, east, north);
         var result = new Cartographic();
-        var returnedResult = Rectangle.getCenter(rectangle, result);
+        var returnedResult = Rectangle.center(rectangle, result);
         expect(result).toBe(returnedResult);
         expect(returnedResult).toEqual(center);
     });
 
-    it('getCenter throws with no rectangle', function() {
+    it('center works across IDL', function() {
+        var rectangle = Rectangle.fromDegrees(170, 0, -170, 0);
+        var returnedResult = Rectangle.center(rectangle);
+        expect(returnedResult).toEqualEpsilon(Cartographic.fromDegrees(180, 0), CesiumMath.EPSILON11);
+
+        rectangle = Rectangle.fromDegrees(160, 0, -170, 0);
+        returnedResult = Rectangle.center(rectangle);
+        expect(returnedResult).toEqualEpsilon(Cartographic.fromDegrees(175, 0), CesiumMath.EPSILON11);
+
+        rectangle = Rectangle.fromDegrees(170, 0, -160, 0);
+        returnedResult = Rectangle.center(rectangle);
+        expect(returnedResult).toEqualEpsilon(Cartographic.fromDegrees(-175, 0), CesiumMath.EPSILON11);
+
+        rectangle = Rectangle.fromDegrees(160, 0, 140, 0);
+        returnedResult = Rectangle.center(rectangle);
+        expect(returnedResult).toEqualEpsilon(Cartographic.fromDegrees(-30, 0), CesiumMath.EPSILON11);
+    });
+
+    it('center throws with no rectangle', function() {
         expect(function() {
-            Rectangle.getCenter();
+            Rectangle.center();
         }).toThrowDeveloperError();
     });
 
@@ -361,7 +379,7 @@ defineSuite([
         expect(Rectangle.contains(rectangle, new Cartographic(west, north))).toEqual(true);
         expect(Rectangle.contains(rectangle, new Cartographic(east, south))).toEqual(true);
         expect(Rectangle.contains(rectangle, new Cartographic(east, north))).toEqual(true);
-        expect(Rectangle.contains(rectangle, Rectangle.getCenter(rectangle))).toEqual(true);
+        expect(Rectangle.contains(rectangle, Rectangle.center(rectangle))).toEqual(true);
         expect(Rectangle.contains(rectangle, new Cartographic(west - 0.1, south))).toEqual(false);
         expect(Rectangle.contains(rectangle, new Cartographic(west, north + 0.1))).toEqual(false);
         expect(Rectangle.contains(rectangle, new Cartographic(east, south - 0.1))).toEqual(false);
@@ -411,10 +429,10 @@ defineSuite([
         var north = -0.4;
         var rectangle = new Rectangle(west, south, east, north);
         var returnedResult = Rectangle.subsample(rectangle);
-        expect(returnedResult).toEqual([Ellipsoid.WGS84.cartographicToCartesian(Rectangle.getNorthwest(rectangle)),
-                                        Ellipsoid.WGS84.cartographicToCartesian(Rectangle.getNortheast(rectangle)),
-                                        Ellipsoid.WGS84.cartographicToCartesian(Rectangle.getSoutheast(rectangle)),
-                                        Ellipsoid.WGS84.cartographicToCartesian(Rectangle.getSouthwest(rectangle))]);
+        expect(returnedResult).toEqual([Ellipsoid.WGS84.cartographicToCartesian(Rectangle.northwest(rectangle)),
+                                        Ellipsoid.WGS84.cartographicToCartesian(Rectangle.northeast(rectangle)),
+                                        Ellipsoid.WGS84.cartographicToCartesian(Rectangle.southeast(rectangle)),
+                                        Ellipsoid.WGS84.cartographicToCartesian(Rectangle.southwest(rectangle))]);
     });
 
     it('subsample works with a result parameter', function() {
@@ -428,10 +446,10 @@ defineSuite([
         var returnedResult = Rectangle.subsample(rectangle, Ellipsoid.WGS84, 0.0, results);
         expect(results).toBe(returnedResult);
         expect(results[0]).toBe(cartesian0);
-        expect(returnedResult).toEqual([Ellipsoid.WGS84.cartographicToCartesian(Rectangle.getNorthwest(rectangle)),
-                                        Ellipsoid.WGS84.cartographicToCartesian(Rectangle.getNortheast(rectangle)),
-                                        Ellipsoid.WGS84.cartographicToCartesian(Rectangle.getSoutheast(rectangle)),
-                                        Ellipsoid.WGS84.cartographicToCartesian(Rectangle.getSouthwest(rectangle))]);
+        expect(returnedResult).toEqual([Ellipsoid.WGS84.cartographicToCartesian(Rectangle.northwest(rectangle)),
+                                        Ellipsoid.WGS84.cartographicToCartesian(Rectangle.northeast(rectangle)),
+                                        Ellipsoid.WGS84.cartographicToCartesian(Rectangle.southeast(rectangle)),
+                                        Ellipsoid.WGS84.cartographicToCartesian(Rectangle.southwest(rectangle))]);
     });
 
     it('subsample works north of the equator', function() {
@@ -441,10 +459,10 @@ defineSuite([
         var north = 0.4;
         var rectangle = new Rectangle(west, south, east, north);
         var returnedResult = Rectangle.subsample(rectangle);
-        expect(returnedResult).toEqual([Ellipsoid.WGS84.cartographicToCartesian(Rectangle.getNorthwest(rectangle)),
-                                        Ellipsoid.WGS84.cartographicToCartesian(Rectangle.getNortheast(rectangle)),
-                                        Ellipsoid.WGS84.cartographicToCartesian(Rectangle.getSoutheast(rectangle)),
-                                        Ellipsoid.WGS84.cartographicToCartesian(Rectangle.getSouthwest(rectangle))]);
+        expect(returnedResult).toEqual([Ellipsoid.WGS84.cartographicToCartesian(Rectangle.northwest(rectangle)),
+                                        Ellipsoid.WGS84.cartographicToCartesian(Rectangle.northeast(rectangle)),
+                                        Ellipsoid.WGS84.cartographicToCartesian(Rectangle.southeast(rectangle)),
+                                        Ellipsoid.WGS84.cartographicToCartesian(Rectangle.southwest(rectangle))]);
     });
 
     it('subsample works on the equator', function() {
@@ -455,10 +473,10 @@ defineSuite([
         var rectangle = new Rectangle(west, south, east, north);
         var returnedResult = Rectangle.subsample(rectangle);
         expect(returnedResult.length).toEqual(6);
-        expect(returnedResult[0]).toEqual(Ellipsoid.WGS84.cartographicToCartesian(Rectangle.getNorthwest(rectangle)));
-        expect(returnedResult[1]).toEqual(Ellipsoid.WGS84.cartographicToCartesian(Rectangle.getNortheast(rectangle)));
-        expect(returnedResult[2]).toEqual(Ellipsoid.WGS84.cartographicToCartesian(Rectangle.getSoutheast(rectangle)));
-        expect(returnedResult[3]).toEqual(Ellipsoid.WGS84.cartographicToCartesian(Rectangle.getSouthwest(rectangle)));
+        expect(returnedResult[0]).toEqual(Ellipsoid.WGS84.cartographicToCartesian(Rectangle.northwest(rectangle)));
+        expect(returnedResult[1]).toEqual(Ellipsoid.WGS84.cartographicToCartesian(Rectangle.northeast(rectangle)));
+        expect(returnedResult[2]).toEqual(Ellipsoid.WGS84.cartographicToCartesian(Rectangle.southeast(rectangle)));
+        expect(returnedResult[3]).toEqual(Ellipsoid.WGS84.cartographicToCartesian(Rectangle.southwest(rectangle)));
 
         var cartographic4 = Ellipsoid.WGS84.cartesianToCartographic(returnedResult[4]);
         expect(cartographic4.latitude).toEqual(0.0);
@@ -478,13 +496,13 @@ defineSuite([
         var height = 100000.0;
         var returnedResult = Rectangle.subsample(rectangle, Ellipsoid.WGS84, height);
 
-        var nw = Rectangle.getNorthwest(rectangle);
+        var nw = Rectangle.northwest(rectangle);
         nw.height = height;
-        var ne = Rectangle.getNortheast(rectangle);
+        var ne = Rectangle.northeast(rectangle);
         ne.height = height;
-        var se = Rectangle.getSoutheast(rectangle);
+        var se = Rectangle.southeast(rectangle);
         se.height = height;
-        var sw = Rectangle.getSouthwest(rectangle);
+        var sw = Rectangle.southwest(rectangle);
         sw.height = height;
 
         expect(returnedResult).toEqual([Ellipsoid.WGS84.cartographicToCartesian(nw),

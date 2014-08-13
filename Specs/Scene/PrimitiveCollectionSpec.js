@@ -15,7 +15,6 @@ defineSuite([
         'Specs/createContext',
         'Specs/createFrameState',
         'Specs/destroyContext',
-        'Specs/frameState',
         'Specs/pick',
         'Specs/render'
     ], function(
@@ -34,7 +33,6 @@ defineSuite([
         createContext,
         createFrameState,
         destroyContext,
-        frameState,
         pick,
         render) {
     "use strict";
@@ -42,11 +40,13 @@ defineSuite([
 
     var context;
     var primitives;
+    var frameState;
     var us;
     var camera;
 
     beforeAll(function() {
         context = createContext();
+        frameState = createFrameState();
     });
 
     afterAll(function() {
@@ -56,10 +56,10 @@ defineSuite([
     beforeEach(function() {
         primitives = new PrimitiveCollection();
 
-        camera = createCamera(context);
+        camera = createCamera();
         camera.position = new Cartesian3(1.02, 0.0, 0.0);
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
-        camera.direction = Cartesian3.negate(Cartesian3.normalize(camera.position));
+        camera.direction = Cartesian3.negate(Cartesian3.normalize(camera.position, new Cartesian3()), new Cartesian3());
 
         us = context.uniformState;
         us.update(context, createFrameState(camera));

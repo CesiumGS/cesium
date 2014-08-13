@@ -56,6 +56,7 @@ define([
      * @alias EllipsoidPrimitive
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Cartesian3} [options.center=Cartesian3.ZERO] The center of the ellipsoid in the ellipsoid's model coordinates.
      * @param {Cartesian3} [options.radii] The radius of the ellipsoid along the <code>x</code>, <code>y</code>, and <code>z</code> axes in the ellipsoid's model coordinates.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the ellipsoid from model to world coordinates.
@@ -63,6 +64,8 @@ define([
      * @param {Material} [options.material=Material.ColorType] The surface appearance of the primitive.
      * @param {Object} [options.id] A user-defined object to return when the instance is picked with {@link Scene#pick}
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Volumes.html|Cesium Sandcastle Volumes Demo}
      *
      * @example
      * // 1. Create a sphere using the ellipsoid primitive
@@ -78,8 +81,6 @@ define([
      *   Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0));
      * e.radii = new Cesium.Cartesian3(100000.0, 100000.0, 200000.0);
      * primitives.add(e);
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Volumes.html|Cesium Sandcastle Volumes Demo}
      */
     var EllipsoidPrimitive = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -108,11 +109,11 @@ define([
          * @type {Cartesian3}
          * @default undefined
          *
+         * @see EllipsoidPrimitive#modelMatrix
+         *
          * @example
          * // A sphere with a radius of 2.0
          * e.radii = new Cesium.Cartesian3(2.0, 2.0, 2.0);
-         *
-         * @see EllipsoidPrimitive#modelMatrix
          */
         this.radii = Cartesian3.clone(options.radii);
         this._radii = new Cartesian3();
@@ -124,8 +125,7 @@ define([
          * The 4x4 transformation matrix that transforms the ellipsoid from model to world coordinates.
          * When this is the identity matrix, the ellipsoid is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
          * Local reference frames can be used by providing a different transformation matrix, like that returned
-         * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
-         * shaders via {@link czm_model} and derived uniforms.
+         * by {@link Transforms.eastNorthUpToFixedFrame}.
          *
          * @type {Matrix4}
          * @default {@link Matrix4.IDENTITY}
@@ -133,9 +133,6 @@ define([
          * @example
          * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
          * e.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
-         *
-         * @see Transforms.eastNorthUpToFixedFrame
-         * @see czm_model
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = new Matrix4();
@@ -159,14 +156,14 @@ define([
          * @type {Material}
          * @default Material.fromType(Material.ColorType)
          *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+         *
          * @example
          * // 1. Change the color of the default material to yellow
          * e.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
          * e.material = Cesium.Material.fromType(Material.StripeType);
-         *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
          */
         this.material = defaultValue(options.material, Material.fromType(Material.ColorType));
         this._material = undefined;
@@ -187,7 +184,7 @@ define([
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
-         * Draws the bounding sphere for each {@link DrawCommand} in the primitive.
+         * Draws the bounding sphere for each draw command in the primitive.
          * </p>
          *
          * @type {Boolean}
@@ -257,7 +254,12 @@ define([
     }
 
     /**
-     * @private
+     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
+     * get the draw commands needed to render this primitive.
+     * <p>
+     * Do not call this function directly.  This is documented just to
+     * list the exceptions that may be propagated when the scene is rendered:
+     * </p>
      *
      * @exception {DeveloperError} this.material must be defined.
      */
@@ -332,7 +334,7 @@ define([
 
         if (boundingSphereDirty) {
             Cartesian3.clone(Cartesian3.ZERO, this._boundingSphere.center);
-            this._boundingSphere.radius = Cartesian3.getMaximumComponent(radii);
+            this._boundingSphere.radius = Cartesian3.maximumComponent(radii);
             BoundingSphere.transform(this._boundingSphere, this._computedModelMatrix, this._boundingSphere);
         }
 
@@ -421,8 +423,6 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof EllipsoidPrimitive
-     *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see EllipsoidPrimitive#destroy
@@ -438,8 +438,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof EllipsoidPrimitive
      *
      * @returns {undefined}
      *

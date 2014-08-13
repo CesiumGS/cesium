@@ -23,6 +23,7 @@ define([
      * @alias PrimitiveCollection
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.show=true] Determines if the primitives in the collection will be shown.
      * @param {Boolean} [options.destroyPrimitives=true] Determines if primitives in the collection are destroyed when they are removed.
      *
@@ -65,8 +66,7 @@ define([
          * primitives = primitives.destroy();
          * var b = labels.isDestroyed(); // true
          *
-         * //////////////////////////////////////////////////////////////////
-         *
+         * @example
          * // Example 2. Do not destroy primitives in a collection.
          * var primitives = new Cesium.PrimitiveCollection();
          * primitives.destroyPrimitives = false;
@@ -97,8 +97,6 @@ define([
     /**
      * Adds a primitive to the collection.
      *
-     * @memberof PrimitiveCollection
-     *
      * @param {Object} primitive The primitive to add.
      * @returns {Object} The primitive added to the collection.
      *
@@ -127,8 +125,6 @@ define([
 
     /**
      * Removes a primitive from the collection.
-     *
-     * @memberof PrimitiveCollection
      *
      * @param {Object} [primitive] The primitive to remove.
      * @returns {Boolean} <code>true</code> if the primitive was removed; <code>false</code> if the primitive is <code>undefined</code> or was not found in the collection.
@@ -165,8 +161,6 @@ define([
     /**
      * Removes all primitives in the collection.
      *
-     * @memberof PrimitiveCollection
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      * @see PrimitiveCollection#destroyPrimitives
@@ -184,8 +178,6 @@ define([
 
     /**
      * Determines if this collection contains a primitive.
-     *
-     * @memberof PrimitiveCollection
      *
      * @param {Object} [primitive] The primitive to check for.
      * @returns {Boolean} <code>true</code> if the primitive is in the collection; <code>false</code> if the primitive is <code>undefined</code> or was not found in the collection.
@@ -215,8 +207,6 @@ define([
      * Raises a primitive "up one" in the collection.  If all primitives in the collection are drawn
      * on the globe surface, this visually moves the primitive up one.
      *
-     * @memberof PrimitiveCollection
-     *
      * @param {Object} [primitive] The primitive to raise.
      *
      * @exception {DeveloperError} primitive is not in this collection.
@@ -242,8 +232,6 @@ define([
     /**
      * Raises a primitive to the "top" of the collection.  If all primitives in the collection are drawn
      * on the globe surface, this visually moves the primitive to the top.
-     *
-     * @memberof PrimitiveCollection
      *
      * @param {Object} [primitive] The primitive to raise the top.
      *
@@ -271,8 +259,6 @@ define([
      * Lowers a primitive "down one" in the collection.  If all primitives in the collection are drawn
      * on the globe surface, this visually moves the primitive down one.
      *
-     * @memberof PrimitiveCollection
-     *
      * @param {Object} [primitive] The primitive to lower.
      *
      * @exception {DeveloperError} primitive is not in this collection.
@@ -299,8 +285,6 @@ define([
      * Lowers a primitive to the "bottom" of the collection.  If all primitives in the collection are drawn
      * on the globe surface, this visually moves the primitive to the bottom.
      *
-     * @memberof PrimitiveCollection
-     *
      * @param {Object} [primitive] The primitive to lower to the bottom.
      *
      * @exception {DeveloperError} primitive is not in this collection.
@@ -325,8 +309,6 @@ define([
 
     /**
      * Returns the primitive in the collection at the specified index.
-     *
-     * @memberof PrimitiveCollection
      *
      * @param {Number} index The zero-based index of the primitive to return.
      * @returns {Object} The primitive at the <code>index</code>.
@@ -363,8 +345,10 @@ define([
         }
 
         var primitives = this._primitives;
-        var length = primitives.length;
-        for (var i = 0; i < length; ++i) {
+        // Using primitives.length in the loop is a temporary workaround
+        // to allow quadtree updates to add and remove primitives in
+        // update().  This will be changed to manage added and removed lists.
+        for (var i = 0; i < primitives.length; ++i) {
             primitives[i].update(context, frameState, commandList);
         }
     };
@@ -374,8 +358,6 @@ define([
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof PrimitiveCollection
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
@@ -396,8 +378,6 @@ define([
      * Once this collection is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof PrimitiveCollection
      *
      * @returns {undefined}
      *

@@ -14,9 +14,9 @@
     border: 1px solid #444;
     color: #edffff;  /* For text buttons */
     fill: #edffff;   /* For SVG buttons */
-    border-radius: 14%;
-    padding: 4px 12px;
-    margin: 0 3px;
+    border-radius: 4px;
+    padding: 5px 12px;
+    margin: 2px 3px;
     cursor: pointer;
     overflow: hidden;
     -moz-user-select: none;
@@ -60,11 +60,21 @@
     cursor: default;
 }
 
+.cesium-button option {
+    background-color: #000;
+    color: #eee;
+}
+
+.cesium-button option:disabled {
+    color: #777;
+}
+
 .cesium-toolbar-button {
     -moz-box-sizing: border-box;
     box-sizing: border-box;
     width: 32px;
     height: 32px;
+    border-radius: 14%;
     padding: 0;
     vertical-align: middle;
     z-index: 0;  /* Workaround for rounded raster image corners in Chrome */

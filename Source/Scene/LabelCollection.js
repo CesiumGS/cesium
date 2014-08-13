@@ -81,10 +81,16 @@ define([
         var billboard = glyph.billboard;
         if (defined(billboard)) {
             billboard.show = false;
-            billboard.imageIndex = -1;
+            billboard.image = undefined;
             labelCollection._spareBillboards.push(billboard);
             glyph.billboard = undefined;
         }
+    }
+
+    function addGlyphToTextureAtlas(textureAtlas, id, canvas, glyphTextureInfo) {
+        textureAtlas.addImage(id, canvas).then(function(index, id) {
+            glyphTextureInfo.index = index;
+        });
     }
 
     function rebindAllGlyphs(labelCollection, label) {
@@ -93,7 +99,9 @@ define([
         var glyphs = label._glyphs;
         var glyphsLength = glyphs.length;
 
-        var glyph, glyphIndex, textIndex;
+        var glyph;
+        var glyphIndex;
+        var textIndex;
 
         // if we have more glyphs than needed, unbind the extras.
         if (textLength < glyphsLength) {
@@ -106,7 +114,6 @@ define([
         glyphs.length = textLength;
 
         var glyphTextureCache = labelCollection._glyphTextureCache;
-        var textureAtlas = labelCollection._textureAtlas;
 
         // walk the text looking for new characters (creating new glyphs for each)
         // or changed characters (rebinding existing glyphs)
@@ -134,13 +141,13 @@ define([
             var glyphTextureInfo = glyphTextureCache[id];
             if (!defined(glyphTextureInfo)) {
                 var canvas = createGlyphCanvas(character, font, fillColor, outlineColor, outlineWidth, style, verticalOrigin);
-                var index = -1;
-                if (canvas.width > 0 && canvas.height > 0) {
-                    index = textureAtlas.addImage(canvas);
-                }
 
-                glyphTextureInfo = new GlyphTextureInfo(labelCollection, index, canvas.dimensions);
+                glyphTextureInfo = new GlyphTextureInfo(labelCollection, -1, canvas.dimensions);
                 glyphTextureCache[id] = glyphTextureInfo;
+
+                if (canvas.width > 0 && canvas.height > 0) {
+                    addGlyphToTextureAtlas(labelCollection._textureAtlas, id, canvas, glyphTextureInfo);
+                }
             }
 
             glyph = glyphs[textIndex];
@@ -190,7 +197,7 @@ define([
                 billboard.scale = label._scale;
                 billboard.pickPrimitive = label;
                 billboard.id = label._id;
-                billboard.imageIndex = glyphTextureInfo.index;
+                billboard.image = id;
                 billboard.translucencyByDistance = label._translucencyByDistance;
                 billboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
             }
@@ -279,6 +286,7 @@ define([
      * @alias LabelCollection
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each label from model to world coordinates.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      *
@@ -292,6 +300,8 @@ define([
      * @see Label
      * @see BillboardCollection
      *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
+     *
      * @example
      * // Create a label collection with two labels
      * var labels = new Cesium.LabelCollection();
@@ -303,8 +313,6 @@ define([
      *   position : { x : 4.0, y : 5.0, z : 6.0 },
      *   text : 'Another label'
      * });
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      */
     var LabelCollection = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -325,14 +333,10 @@ define([
          * The 4x4 transformation matrix that transforms each label in this collection from model to world coordinates.
          * When this is the identity matrix, the labels are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
          * Local reference frames can be used by providing a different transformation matrix, like that returned
-         * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
-         * shaders via {@link czm_model} and derived uniforms.
+         * by {@link Transforms.eastNorthUpToFixedFrame}.
          *
          * @type Matrix4
          * @default {@link Matrix4.IDENTITY}
-         *
-         * @see Transforms.eastNorthUpToFixedFrame
-         * @see czm_model
          *
          * @example
          * var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
@@ -359,7 +363,7 @@ define([
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
-         * Draws the bounding sphere for each {@link DrawCommand} in the primitive.
+         * Draws the bounding sphere for each draw command in the primitive.
          * </p>
          *
          * @type {Boolean}
@@ -388,10 +392,7 @@ define([
      * Creates and adds a label with the specified initial properties to the collection.
      * The added label is returned so it can be modified or removed from the collection later.
      *
-     * @memberof LabelCollection
-     *
      * @param {Object}[options] A template describing the label's properties as shown in Example 1.
-     *
      * @returns {Label} The label that was added to the collection.
      *
      * @performance Calling <code>add</code> is expected constant time.  However, the collection's vertex buffer
@@ -421,10 +422,11 @@ define([
      *   scale : 1.0
      * });
      *
+     * @example
      * // Example 2:  Specify only the label's cartographic position,
      * // text, and font.
      * var l = labels.add({
-     *   position : ellipsoid.cartographicToCartesian(new Cesium.Cartographic(longitude, latitude, height)),
+     *   position : Cesium.Cartesian3.fromRadians(longitude, latitude, height),
      *   text : 'Hello World',
      *   font : '24px Helvetica',
      * });
@@ -441,10 +443,7 @@ define([
     /**
      * Removes a label from the collection.  Once removed, a label is no longer usable.
      *
-     * @memberof LabelCollection
-     *
      * @param {Label} label The label to remove.
-     *
      * @returns {Boolean} <code>true</code> if the label was removed; <code>false</code> if the label was not found in the collection.
      *
      * @performance Calling <code>remove</code> is expected constant time.  However, the collection's vertex buffer
@@ -478,8 +477,6 @@ define([
     /**
      * Removes all labels from the collection.
      *
-     * @memberof LabelCollection
-     *
      * @performance <code>O(n)</code>.  It is more efficient to remove all the labels
      * from a collection and then add new ones than to create a new collection entirely.
      *
@@ -506,10 +503,7 @@ define([
     /**
      * Check whether this collection contains a given label.
      *
-     * @memberof LabelCollection
-     *
      * @param {Label} label The label to check for.
-     *
      * @returns {Boolean} true if this collection contains the label, false otherwise.
      *
      * @see LabelCollection#get
@@ -524,8 +518,6 @@ define([
      * it to the left, changing their indices.  This function is commonly used with
      * {@link LabelCollection#length} to iterate over all the labels
      * in the collection.
-     *
-     * @memberof LabelCollection
      *
      * @param {Number} index The zero-based index of the billboard.
      *
@@ -568,9 +560,7 @@ define([
 
         if (!defined(this._textureAtlas)) {
             this._textureAtlas = new TextureAtlas({
-                scene : {
-                    context : context
-                }
+                context : context
             });
             billboardCollection.textureAtlas = this._textureAtlas;
         }
@@ -619,8 +609,6 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof LabelCollection
-     *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see LabelCollection#destroy
@@ -636,8 +624,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof LabelCollection
      *
      * @returns {undefined}
      *

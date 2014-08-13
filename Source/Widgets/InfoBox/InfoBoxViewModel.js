@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../../Core/Cartesian2',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -10,7 +9,6 @@ define([
         '../../ThirdParty/knockout',
         '../../ThirdParty/when'
     ], function(
-        Cartesian2,
         defaultValue,
         defined,
         defineProperties,
@@ -21,7 +19,6 @@ define([
         when) {
     "use strict";
 
-    var screenSpacePos = new Cartesian2();
     var cameraEnabledPath = 'M 13.84375 7.03125 C 11.412798 7.03125 9.46875 8.975298 9.46875 11.40625 L 9.46875 11.59375 L 2.53125 7.21875 L 2.53125 24.0625 L 9.46875 19.6875 C 9.4853444 22.104033 11.423165 24.0625 13.84375 24.0625 L 25.875 24.0625 C 28.305952 24.0625 30.28125 22.087202 30.28125 19.65625 L 30.28125 11.40625 C 30.28125 8.975298 28.305952 7.03125 25.875 7.03125 L 13.84375 7.03125 z';
     var cameraDisabledPath = 'M 27.34375 1.65625 L 5.28125 27.9375 L 8.09375 30.3125 L 30.15625 4.03125 L 27.34375 1.65625 z M 13.84375 7.03125 C 11.412798 7.03125 9.46875 8.975298 9.46875 11.40625 L 9.46875 11.59375 L 2.53125 7.21875 L 2.53125 24.0625 L 9.46875 19.6875 C 9.4724893 20.232036 9.5676108 20.7379 9.75 21.21875 L 21.65625 7.03125 L 13.84375 7.03125 z M 28.21875 7.71875 L 14.53125 24.0625 L 25.875 24.0625 C 28.305952 24.0625 30.28125 22.087202 30.28125 19.65625 L 30.28125 11.40625 C 30.28125 9.8371439 29.456025 8.4902779 28.21875 7.71875 z';
 
@@ -154,9 +151,8 @@ define([
      * By default, the Google Caja HTML/CSS sanitizer is loaded in a worker.
      * A specific instance can override this property by setting its sanitizer property.
      *
-     * This property returns a function which takes a unsanitized HTML String and returns a
-     * sanitized String, or a Promise which resolves to the sanitized version.
-     * @memberof InfoBoxViewModel
+     * @member
+     * @type {InfoBoxViewModel~Sanitizer}
      */
     InfoBoxViewModel.defaultSanitizer = defaultSanitizer;
 
@@ -184,7 +180,7 @@ define([
         /**
          * Gets the HTML sanitization function to use for the selection description.
          * @memberof InfoBoxViewModel.prototype
-         * @type {Function}
+         * @type {InfoBoxViewModel~Sanitizer}
          */
         sanitizer : {
             get : function() {
@@ -199,6 +195,17 @@ define([
             }
         }
     });
+
+    /**
+     * A function that sanitizes HTML from a potentially untrusted source, for display in the
+     * info box.
+     * @callback InfoBoxViewModel~Sanitizer
+     *
+     * @param {String} rawHTML Raw HTML to display.
+     * @returns {String|Promise} Sanitized HTML, or a Promise for sanitized HTML.
+     *
+     * @see InfoBoxViewModel.defaultSanitizer
+     */
 
     return InfoBoxViewModel;
 });

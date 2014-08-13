@@ -47,6 +47,7 @@ define([
      * @alias EllipsoidGeometry
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Cartesian3} [options.radii=Cartesian3(1.0, 1.0, 1.0)] The radii of the ellipsoid in the x, y, and z directions.
      * @param {Number} [options.stackPartitions=64] The number of times to partition the ellipsoid into stacks.
      * @param {Number} [options.slicePartitions=64] The number of times to partition the ellipsoid into radial slices.
@@ -56,6 +57,8 @@ define([
      * @exception {DeveloperError} options.stackPartitions cannot be less than three.
      *
      * @see EllipsoidGeometry#createGeometry
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Ellipsoid.html|Cesium Sandcastle Ellipsoid Demo}
      *
      * @example
      * var ellipsoid = new Cesium.EllipsoidGeometry({
@@ -90,7 +93,6 @@ define([
 
     /**
      * Computes the geometric representation of an ellipsoid, including its vertices, indices, and a bounding sphere.
-     * @memberof EllipsoidGeometry
      *
      * @param {EllipsoidGeometry} ellipsoidGeometry A description of the ellipsoid.
      * @returns {Geometry} The computed vertices and indices.

@@ -26,7 +26,7 @@ defineSuite([
         frustum.left = -1.0;
         frustum.top = 1.0;
         frustum.bottom = -1.0;
-        planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z), Cartesian3.UNIT_Y).planes;
+        planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), Cartesian3.UNIT_Y).planes;
     });
 
     it('left greater than right causes an exception', function() {
@@ -118,7 +118,7 @@ defineSuite([
 
     it('get orthographic projection matrix', function() {
         var projectionMatrix = frustum.projectionMatrix;
-        var expected = Matrix4.computeOrthographicOffCenter(frustum.left, frustum.right, frustum.bottom, frustum.top, frustum.near, frustum.far);
+        var expected = Matrix4.computeOrthographicOffCenter(frustum.left, frustum.right, frustum.bottom, frustum.top, frustum.near, frustum.far, new Matrix4());
         expect(projectionMatrix).toEqualEpsilon(expected, CesiumMath.EPSILON6);
     });
 

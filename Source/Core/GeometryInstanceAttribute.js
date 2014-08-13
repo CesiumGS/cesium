@@ -15,6 +15,7 @@ define([
      * @alias GeometryInstanceAttribute
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {ComponentDatatype} [options.componentDatatype] The datatype of each component in the attribute, e.g., individual elements in values.
      * @param {Number} [options.componentsPerAttribute] A number between 1 and 4 that defines the number of components in an attributes.
      * @param {Boolean} [options.normalize=false] When <code>true</code> and <code>componentDatatype</code> is an integer format, indicate that the components should be mapped to the range [0, 1] (unsigned) or [-1, 1] (signed) when they are accessed as floating-point for rendering.
@@ -22,13 +23,16 @@ define([
      *
      * @exception {DeveloperError} options.componentsPerAttribute must be between 1 and 4.
      *
+     * @see ColorGeometryInstanceAttribute
+     * @see ShowGeometryInstanceAttribute
+     *
      * @example
      * var instance = new Cesium.GeometryInstance({
      *   geometry : new Cesium.BoxGeometry({
      *     dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0)
      *   }),
      *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-     *     Cesium.Cartesian3.fromDegrees(0.0, 0.0)), new Cesium.Cartesian3(0.0, 0.0, 1000000.0)),
+     *     Cesium.Cartesian3.fromDegrees(0.0, 0.0)), new Cesium.Cartesian3(0.0, 0.0, 1000000.0), new Cesium.Matrxi4()),
      *   id : 'box',
      *   attributes : {
      *     color : new Cesium.GeometryInstanceAttribute({
@@ -39,9 +43,6 @@ define([
      *     }
      *   }
      * });
-     *
-     * @see ColorGeometryInstanceAttribute
-     * @see ShowGeometryInstanceAttribute
      */
     var GeometryInstanceAttribute = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

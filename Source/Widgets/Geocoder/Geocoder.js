@@ -27,6 +27,7 @@ define([
      * @alias Geocoder
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Element|String} options.container The DOM element or ID that will contain the widget.
      * @param {Scene} options.scene The Scene instance to use.
      * @param {String} [options.url='//dev.virtualearth.net'] The base URL of the Bing Maps API.
@@ -37,8 +38,7 @@ define([
      *        written to the console reminding you that you must create and supply a Bing Maps
      *        key as soon as possible.  Please do not deploy an application that uses
      *        this widget without creating a separate key for your application.
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The Scene's primary ellipsoid.
-     * @param {Number} [options.flightDuration=1500] The duration of the camera flight to an entered location, in milliseconds.
+     * @param {Number} [options.flightDuration=1.5] The duration of the camera flight to an entered location, in seconds.
      */
     var Geocoder = function(options) {
         //>>includeStart('debug', pragmas.debug);
@@ -131,7 +131,6 @@ cesiumSvgPath: { path: isSearchInProgress ? _stopSearchPath : _startSearchPath, 
     });
 
     /**
-     * @memberof Geocoder
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     Geocoder.prototype.isDestroyed = function() {
@@ -141,7 +140,6 @@ cesiumSvgPath: { path: isSearchInProgress ? _stopSearchPath : _startSearchPath, 
     /**
      * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
-     * @memberof Geocoder
      */
     Geocoder.prototype.destroy = function() {
         document.removeEventListener('mousedown', this._onInputBegin, true);

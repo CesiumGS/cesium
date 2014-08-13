@@ -1,10 +1,8 @@
 /*global define*/
 define([
-        './defined',
         './defineProperties',
         './DeveloperError'
     ], function(
-        defined,
         defineProperties,
         DeveloperError) {
     "use strict";
@@ -58,7 +56,6 @@ define([
 
     /**
      * Gets the total number of tiles in the X direction at a specified level-of-detail.
-     * @memberof TilingScheme
      * @function
      *
      * @param {Number} level The level-of-detail.
@@ -68,7 +65,6 @@ define([
 
     /**
      * Gets the total number of tiles in the Y direction at a specified level-of-detail.
-     * @memberof TilingScheme
      * @function
      *
      * @param {Number} level The level-of-detail.
@@ -79,7 +75,6 @@ define([
     /**
      * Transforms an rectangle specified in geodetic radians to the native coordinate system
      * of this tiling scheme.
-     * @memberof TilingScheme
      * @function
      *
      * @param {Rectangle} rectangle The rectangle to transform.
@@ -93,7 +88,6 @@ define([
     /**
      * Converts tile x, y coordinates and level to an rectangle expressed in the native coordinates
      * of the tiling scheme.
-     * @memberof TilingScheme
      * @function
      *
      * @param {Number} x The integer x coordinate of the tile.
@@ -101,7 +95,6 @@ define([
      * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
      * @param {Object} [result] The instance to which to copy the result, or undefined if a new instance
      *        should be created.
-     *
      * @returns {Rectangle} The specified 'result', or a new object containing the rectangle
      *          if 'result' is undefined.
      */
@@ -109,7 +102,6 @@ define([
 
     /**
      * Converts tile x, y coordinates and level to a cartographic rectangle in radians.
-     * @memberof TilingScheme
      * @function
      *
      * @param {Number} x The integer x coordinate of the tile.
@@ -117,7 +109,6 @@ define([
      * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
      * @param {Object} [result] The instance to which to copy the result, or undefined if a new instance
      *        should be created.
-     *
      * @returns {Rectangle} The specified 'result', or a new object containing the rectangle
      *          if 'result' is undefined.
      */
@@ -126,14 +117,12 @@ define([
     /**
      * Calculates the tile x, y coordinates of the tile containing
      * a given cartographic position.
-     * @memberof TilingScheme
      * @function
      *
      * @param {Cartographic} position The position.
      * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
      * @param {Cartesian} [result] The instance to which to copy the result, or undefined if a new instance
      *        should be created.
-     *
      * @returns {Cartesian2} The specified 'result', or a new object containing the tile x, y coordinates
      *          if 'result' is undefined.
      */

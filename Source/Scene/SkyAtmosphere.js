@@ -75,7 +75,7 @@ define([
 
         this._fCameraHeight = undefined;
         this._fCameraHeight2 = undefined;
-        this._outerRadius = Cartesian3.getMaximumComponent(Cartesian3.multiplyByScalar(ellipsoid.radii, 1.025));
+        this._outerRadius = Cartesian3.maximumComponent(Cartesian3.multiplyByScalar(ellipsoid.radii, 1.025, new Cartesian3()));
         var innerRadius = ellipsoid.maximumRadius;
         var rayleighScaleDepth = 0.25;
 
@@ -113,7 +113,9 @@ define([
         /**
          * Gets the ellipsoid the atmosphere is drawn around.
          * @memberof SkyAtmosphere.prototype
+         *
          * @type {Ellipsoid}
+         * @readonly
          */
         ellipsoid : {
             get : function() {
@@ -144,7 +146,7 @@ define([
 
         if (!defined(command.vertexArray)) {
             var geometry = EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
-                radii : Cartesian3.multiplyByScalar(this._ellipsoid.radii, 1.025),
+                radii : Cartesian3.multiplyByScalar(this._ellipsoid.radii, 1.025, new Cartesian3()),
                 slicePartitions : 256,
                 stackPartitions : 256,
                 vertexFormat : VertexFormat.POSITION_ONLY
@@ -197,8 +199,6 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof SkyAtmosphere
-     *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see SkyAtmosphere#destroy
@@ -214,8 +214,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof SkyAtmosphere
      *
      * @returns {undefined}
      *

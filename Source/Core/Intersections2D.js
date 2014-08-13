@@ -11,7 +11,9 @@ define([
 
     /**
      * Contains functions for operating on 2D triangles.
-     * @exports Intersections2D
+     *
+     * @namespace
+     * @alias Intersections2D
      */
     var Intersections2D = {};
 
@@ -19,8 +21,6 @@ define([
      * Splits a 2D triangle at given axis-aligned threshold value and returns the resulting
      * polygon on a given side of the threshold.  The resulting polygon may have 0, 1, 2,
      * 3, or 4 vertices.
-     *
-     * @memberof Intersections2D
      *
      * @param {Number} threshold The threshold coordinate value at which to clip the triangle.
      * @param {Boolean} keepAbove true to keep the portion of the triangle above the threshold, or false
@@ -39,9 +39,9 @@ define([
      *                     the new vertex lies on, and the fraction of the distance from the first
      *                     vertex to the second one.
      *
-     *  @example
-     *  var result = Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, false, 0.2, 0.6, 0.4);
-     *  // result === [2, 0, -1, 1, 0, 0.25, -1, 1, 2, 0.5]
+     * @example
+     * var result = Cesium.Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, false, 0.2, 0.6, 0.4);
+     * // result === [2, 0, -1, 1, 0, 0.25, -1, 1, 2, 0.5]
      */
     Intersections2D.clipTriangleAtAxisAlignedThreshold = function(threshold, keepAbove, u0, u1, u2, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -217,8 +217,6 @@ define([
     /**
      * Compute the barycentric coordinates of a 2D position within a 2D triangle.
      *
-     * @memberof Intersections2D
-     *
      * @param {Number} x The x coordinate of the position for which to find the barycentric coordinates.
      * @param {Number} y The y coordinate of the position for which to find the barycentric coordinates.
      * @param {Number} x1 The x coordinate of the triangle's first vertex.
@@ -229,12 +227,11 @@ define([
      * @param {Number} y3 The y coordinate of the triangle's third vertex.
      * @param {Cartesian3} [result] The instance into to which to copy the result.  If this parameter
      *                     is undefined, a new instance is created and returned.
-     *
      * @returns {Cartesian3} The barycentric coordinates of the position within the triangle.
      *
      * @example
-     * var result = Intersections2D.computeBarycentricCoordinates(0.0, 0.0, 0.0, 1.0, -1, -0.5, 1, -0.5);
-     * // result === new Cartesian3(1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0);
+     * var result = Cesium.Intersections2D.computeBarycentricCoordinates(0.0, 0.0, 0.0, 1.0, -1, -0.5, 1, -0.5);
+     * // result === new Cesium.Cartesian3(1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0);
      */
     Intersections2D.computeBarycentricCoordinates = function(x, y, x1, y1, x2, y2, x3, y3, result) {
         //>>includeStart('debug', pragmas.debug);

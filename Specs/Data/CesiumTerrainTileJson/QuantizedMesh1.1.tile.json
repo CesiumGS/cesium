@@ -1,0 +1,27 @@
+{
+    "tilejson": "2.1.0",
+    "format" : "quantized-mesh-1.1",
+    "version" : "1.0.0",
+    "scheme" : "tms",
+    "tiles" : [
+        "{z}/{x}/{y}.terrain?v={version}"
+    ],
+    "available" : [
+        [
+            {
+                "startX" : 0,
+                "startY" : 0,
+                "endX" : 1,
+                "endY" : 0
+            }
+        ],
+        [
+            {
+                "startX" : 0,
+                "startY" : 0,
+                "endX" : 3,
+                "endY" : 1
+            }
+        ]
+    ]
+}

@@ -267,8 +267,8 @@ define([
         extrudedPositions.set(positions);
         var newPositions = new Float64Array(length * 2);
 
-        positions = PolylinePipeline.scaleToGeodeticHeight(positions, height, ellipsoid, positions);
-        extrudedPositions = PolylinePipeline.scaleToGeodeticHeight(extrudedPositions, extrudedHeight, ellipsoid, extrudedPositions);
+        positions = CorridorGeometryLibrary.scaleToGeodeticHeight(positions, height, ellipsoid, positions);
+        extrudedPositions = CorridorGeometryLibrary.scaleToGeodeticHeight(extrudedPositions, extrudedHeight, ellipsoid, extrudedPositions);
         newPositions.set(positions);
         newPositions.set(extrudedPositions, length);
         attributes.position.values = newPositions;
@@ -306,15 +306,18 @@ define([
      * @alias CorridorOutlineGeometry
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Cartesian3[]} options.positions An array of positions that define the center of the corridor outline.
      * @param {Number} options.width The distance between the edges of the corridor outline.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Number} [options.height=0] The distance between the ellipsoid surface and the positions.
      * @param {Number} [options.extrudedHeight] The distance between the ellipsoid surface and the extrusion.
-     * @param {Boolean} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.
+     * @param {CornerType} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.
      *
      * @see CorridorOutlineGeometry.createGeometry
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Corridor%20Outline.html|Cesium Sandcastle Corridor Outline Demo}
      *
      * @example
      * var corridor = new Cesium.CorridorOutlineGeometry({
@@ -348,10 +351,8 @@ define([
 
     /**
      * Computes the geometric representation of a corridor, including its vertices, indices, and a bounding sphere.
-     * @memberof CorridorOutlineGeometry
      *
      * @param {CorridorOutlineGeometry} corridorOutlineGeometry A description of the corridor.
-     *
      * @returns {Geometry} The computed vertices and indices.
      *
      * @exception {DeveloperError} Count of unique positions must be greater than 1.
@@ -389,7 +390,7 @@ define([
         } else {
             var computedPositions = CorridorGeometryLibrary.computePositions(params);
             attr = combine(computedPositions, params.cornerType);
-            attr.attributes.position.values = PolylinePipeline.scaleToGeodeticHeight(attr.attributes.position.values, height, ellipsoid, attr.attributes.position.values);
+            attr.attributes.position.values = CorridorGeometryLibrary.scaleToGeodeticHeight(attr.attributes.position.values, height, ellipsoid, attr.attributes.position.values);
         }
         var attributes = attr.attributes;
         var boundingSphere = BoundingSphere.fromVertices(attributes.position.values, undefined, 3);

@@ -17,6 +17,7 @@ define([
      * @alias CircleOutlineGeometry
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Cartesian3} options.center The circle's center point in the fixed frame.
      * @param {Number} options.radius The radius in meters.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the circle will be on.
@@ -29,6 +30,8 @@ define([
      * @exception {DeveloperError} granularity must be greater than zero.
      *
      * @see CircleOutlineGeometry.createGeometry
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Circle%20Outline.html|Cesium Sandcastle Circle Outline Demo}
      *
      * @example
      * // Create a circle.
@@ -67,7 +70,6 @@ define([
 
     /**
      * Computes the geometric representation of an outline of a circle on an ellipsoid, including its vertices, indices, and a bounding sphere.
-     * @memberof CircleOutlineGeometry
      *
      * @param {CircleOutlineGeometry} circleGeometry A description of the circle.
      * @returns {Geometry} The computed vertices and indices.

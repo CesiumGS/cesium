@@ -11,7 +11,6 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/Ellipsoid',
         '../Core/EllipsoidGeometry',
         '../Core/Event',
         '../Core/GeographicProjection',
@@ -28,7 +27,6 @@ define([
         '../Renderer/ClearCommand',
         '../Renderer/Context',
         '../Renderer/PassState',
-        './AnimationCollection',
         './Camera',
         './CreditDisplay',
         './CullingVolume',
@@ -49,7 +47,8 @@ define([
         './SceneTransitioner',
         './ScreenSpaceCameraController',
         './SunPostProcess',
-        './CustomPostProcess'
+        './CustomPostProcess',
+        './TweenCollection'
     ], function(
         BoundingRectangle,
         BoundingSphere,
@@ -62,7 +61,6 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
-        Ellipsoid,
         EllipsoidGeometry,
         Event,
         GeographicProjection,
@@ -79,7 +77,6 @@ define([
         ClearCommand,
         Context,
         PassState,
-        AnimationCollection,
         Camera,
         CreditDisplay,
         CullingVolume,
@@ -100,7 +97,8 @@ define([
         SceneTransitioner,
         ScreenSpaceCameraController,
         SunPostProcess,
-        CustomPostProcess) {
+        CustomPostProcess,
+        TweenCollection) {
     "use strict";
 
     /**
@@ -131,40 +129,58 @@ define([
      * object used to create the WebGL context.
      * </p>
      * <p>
-     * <code>options.webgl.alpha</code> defaults to false, which can improve performance compared to the standard WebGL default
+     * <code>webgl.alpha</code> defaults to false, which can improve performance compared to the standard WebGL default
      * of true.  If an application needs to composite Cesium above other HTML elements using alpha-blending, set
-     * <code>options.webgl.alpha</code> to true.
+     * <code>webgl.alpha</code> to true.
      * </p>
      * <p>
-     * <code>options.webgl.failIfMajorPerformanceCaveat</code> defaults to true, which ensures a context is not successfully created
+     * <code>webgl.failIfMajorPerformanceCaveat</code> defaults to true, which ensures a context is not successfully created
      * if the system has a major performance issue such as only supporting software rendering.  The standard WebGL default is false,
      * which is not appropriate for almost any Cesium app.
      * </p>
      * <p>
-     * The other <code>options.webgl</code> properties match the WebGL defaults for {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}.
+     * The other <code>webgl</code> properties match the WebGL defaults for {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}.
      * </p>
      * <p>
-     * <code>options.allowTextureFilterAnisotropic</code> defaults to true, which enables anisotropic texture filtering when the
+     * <code>allowTextureFilterAnisotropic</code> defaults to true, which enables anisotropic texture filtering when the
      * WebGL extension is supported.  Setting this to false will improve performance, but hurt visual quality, especially for horizon views.
      * </p>
      *
      * @alias Scene
      * @constructor
      *
-     * @param {Canvas} canvas The HTML canvas element to create the scene for.
-     * @param {Object} [contextOptions] Context and WebGL creation properties.  See details above.
-     * @param {Element} [creditContainer] The HTML element in which the credits will be displayed.
-     *
+     * @param {Object} [options] Object with the following properties:
+     * @param {Canvas} options.canvas The HTML canvas element to create the scene for.
+     * @param {Object} [options.contextOptions] Context and WebGL creation properties.  See details above.
+     * @param {Element} [options.creditContainer] The HTML element in which the credits will be displayed.
+     * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
+     * @param {Boolean} [options.scene3DOnly=false] If true, optimizes memory use and performance for 3D mode but disables the ability to use 2D or Columbus View.     *
      * @see CesiumWidget
      * @see {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}
      *
+     * @exception {DeveloperError} options and options.canvas are required.
+     *
      * @example
      * // Create scene without anisotropic texture filtering
-     * var scene = new Cesium.Scene(canvas, {
-     *   allowTextureFilterAnisotropic : false
+     * var scene = new Cesium.Scene({
+     *   canvas : canvas,
+     *   contextOptions : {
+     *     allowTextureFilterAnisotropic : false
+     *   }
      * });
      */
-    var Scene = function(canvas, contextOptions, creditContainer) {
+    var Scene = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var canvas = options.canvas;
+        var contextOptions = options.contextOptions;
+        var creditContainer = options.creditContainer;
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(canvas)) {
+            throw new DeveloperError('options and options.canvas are required.');
+        }
+        //>>includeEnd('debug');
+
         var context = new Context(canvas, contextOptions);
         if (!defined(creditContainer)) {
             creditContainer = document.createElement('div');
@@ -176,17 +192,18 @@ define([
             creditContainer.style['padding-right'] = '5px';
             canvas.parentNode.appendChild(creditContainer);
         }
+
         this._frameState = new FrameState(new CreditDisplay(creditContainer));
+        this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
+
         this._passState = new PassState(context);
         this._canvas = canvas;
         this._context = context;
         this._globe = undefined;
         this._primitives = new PrimitiveCollection();
         this._pickFramebuffer = undefined;
-        this._camera = new Camera(this);
-        this._screenSpaceCameraController = new ScreenSpaceCameraController(canvas, this._camera);
 
-        this._animations = new AnimationCollection();
+        this._tweens = new TweenCollection();
 
         this._shaderFrameCount = 0;
 
@@ -303,22 +320,10 @@ define([
          */
         this.backgroundColor = Color.clone(Color.BLACK);
 
-        /**
-         * The current mode of the scene.
-         *
-         * @type {SceneMode}
-         * @default {@link SceneMode.SCENE3D}
-         */
-        this.mode = SceneMode.SCENE3D;
-        /**
-         * DOC_TBA
-         */
-        this.scene2D = {
-            /**
-             * The projection to use in 2D mode.
-             */
-            projection : new GeographicProjection(Ellipsoid.WGS84)
-        };
+        this._mode = SceneMode.SCENE3D;
+
+        this._mapProjection = defaultValue(options.mapProjection, new GeographicProjection());
+
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
          * with 0.0 being 2D or Columbus View and 1.0 being 3D.
@@ -361,9 +366,6 @@ define([
          * scene.debugCommandFilter = function(command) {
          *     return command.owner === billboards;
          * };
-         *
-         * @see DrawCommand
-         * @see ClearCommand
          */
         this.debugCommandFilter = undefined;
 
@@ -433,14 +435,18 @@ define([
         this._performanceDisplay = undefined;
         this._debugSphere = undefined;
 
+        var camera = new Camera(this);
+        this._camera = camera;
+        this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
+
         // initial guess at frustums.
-        var near = this._camera.frustum.near;
-        var far = this._camera.frustum.far;
+        var near = camera.frustum.near;
+        var far = camera.frustum.far;
         var numFrustums = Math.ceil(Math.log(far / near) / Math.log(this.farToNearRatio));
         updateFrustums(near, far, this.farToNearRatio, numFrustums, this._frustumCommandsList);
 
         // give frameState, camera, and screen space camera controller initial state before rendering
-        updateFrameState(this, 0.0, new JulianDate());
+        updateFrameState(this, 0.0, JulianDate.now());
         this.initializeFrame();
     };
 
@@ -448,7 +454,9 @@ define([
         /**
          * Gets the canvas element to which this scene is bound.
          * @memberof Scene.prototype
+         *
          * @type {Element}
+         * @readonly
          */
         canvas : {
             get : function() {
@@ -459,7 +467,10 @@ define([
         /**
          * The drawingBufferWidth of the underlying GL context.
          * @memberof Scene.prototype
+         *
          * @type {Number}
+         * @readonly
+         *
          * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferWidth|drawingBufferWidth}
          */
         drawingBufferHeight : {
@@ -471,7 +482,10 @@ define([
         /**
          * The drawingBufferHeight of the underlying GL context.
          * @memberof Scene.prototype
+         *
          * @type {Number}
+         * @readonly
+         *
          * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferHeight|drawingBufferHeight}
          */
         drawingBufferWidth : {
@@ -483,7 +497,10 @@ define([
         /**
          * The maximum aliased line width, in pixels, supported by this WebGL implementation.  It will be at least one.
          * @memberof Scene.prototype
+         *
          * @type {Number}
+         * @readonly
+         *
          * @see {@link http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml|glGet} with <code>ALIASED_LINE_WIDTH_RANGE</code>.
          */
         maximumAliasedLineWidth : {
@@ -495,6 +512,7 @@ define([
         /**
          * Gets or sets the depth-test ellipsoid.
          * @memberof Scene.prototype
+         *
          * @type {Globe}
          */
         globe : {
@@ -511,7 +529,9 @@ define([
         /**
          * Gets the collection of primitives.
          * @memberof Scene.prototype
+         *
          * @type {PrimitiveCollection}
+         * @readonly
          */
         primitives : {
             get : function() {
@@ -522,7 +542,9 @@ define([
         /**
          * Gets the camera.
          * @memberof Scene.prototype
+         *
          * @type {Camera}
+         * @readonly
          */
         camera : {
             get : function() {
@@ -534,7 +556,9 @@ define([
         /**
          * Gets the controller for camera input handling.
          * @memberof Scene.prototype
+         *
          * @type {ScreenSpaceCameraController}
+         * @readonly
          */
         screenSpaceCameraController : {
             get : function() {
@@ -543,10 +567,29 @@ define([
         },
 
         /**
+         * Get the map projection to use in 2D and Columbus View modes.
+         * @memberof Scene.prototype
+         *
+         * @type {MapProjection}
+         * @readonly
+         *
+         * @default new GeographicProjection()
+         */
+        mapProjection : {
+            get: function() {
+                return this._mapProjection;
+            }
+        },
+
+        /**
          * Gets state information about the current scene. If called outside of a primitive's <code>update</code>
          * function, the previous frame's state is returned.
          * @memberof Scene.prototype
+         *
          * @type {FrameState}
+         * @readonly
+         *
+         * @private
          */
         frameState : {
             get: function() {
@@ -555,20 +598,26 @@ define([
         },
 
         /**
-         * Gets the collection of animations taking place in the scene.
+         * Gets the collection of tweens taking place in the scene.
          * @memberof Scene.prototype
-         * @type {AnimationCollection}
+         *
+         * @type {TweenCollection}
+         * @readonly
+         *
+         * @private
          */
-        animations : {
+        tweens : {
             get : function() {
-                return this._animations;
+                return this._tweens;
             }
         },
 
         /**
          * Gets the collection of image layers that will be rendered on the globe.
          * @memberof Scene.prototype
+         *
          * @type {ImageryLayerCollection}
+         * @readonly
          */
         imageryLayers : {
             get : function() {
@@ -579,7 +628,9 @@ define([
         /**
          * The terrain provider providing surface geometry for the globe.
          * @memberof Scene.prototype
+         *
          * @type {TerrainProvider}
+         * @readonly
          */
         terrainProvider : {
             get : function() {
@@ -596,7 +647,9 @@ define([
          * By default, errors are not rethrown after this event is raised, but that can be changed by setting
          * the <code>rethrowRenderErrors</code> property.
          * @memberof Scene.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         renderError : {
             get : function() {
@@ -608,7 +661,9 @@ define([
          * Gets the event that will be raised at the start of each call to <code>render</code>.  Subscribers to the event
          * receive the Scene instance as the first parameter and the current time as the second parameter.
          * @memberof Scene.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         preRender : {
             get : function() {
@@ -620,7 +675,9 @@ define([
          * Gets the event that will be raised at the end of each call to <code>render</code>.  Subscribers to the event
          * receive the Scene instance as the first parameter and the current time as the second parameter.
          * @memberof Scene.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         postRender : {
             get : function() {
@@ -629,6 +686,7 @@ define([
         },
 
         /**
+         * @memberof Scene.prototype
          * @private
          */
         context : {
@@ -650,7 +708,7 @@ define([
          *
          * @memberof Scene.prototype
          *
-         * @type Object
+         * @type {Object}
          * @readonly
          *
          * @default undefined
@@ -658,6 +716,35 @@ define([
         debugFrustumStatistics : {
             get : function() {
                 return this._debugFrustumStatistics;
+            }
+        },
+
+        /**
+         * Gets whether or not the scene is optimized for 3D only viewing.
+         * @memberof Scene.prototype
+         * @type {Boolean}
+         */
+        scene3DOnly : {
+            get : function() {
+                return this._frameState.scene3DOnly;
+            }
+        },
+
+        /**
+         * Gets or sets the current mode of the scene.
+         * @memberof Scene.prototype
+         * @type {SceneMode}
+         * @default {@link SceneMode.SCENE3D}
+         */
+        mode : {
+            get : function() {
+                return this._mode;
+            },
+            set : function(value) {
+                if (this.scene3DOnly && value !== SceneMode.SCENE3D) {
+                    throw new DeveloperError('Only SceneMode.SCENE3D is valid when scene3DOnly is true.');
+                }
+                this._mode = value;
             }
         }
     });
@@ -669,7 +756,7 @@ define([
         // TODO: The occluder is the top-level globe. When we add
         //       support for multiple central bodies, this should be the closest one.
         var globe = scene.globe;
-        if (scene.mode === SceneMode.SCENE3D && defined(globe)) {
+        if (scene._mode === SceneMode.SCENE3D && defined(globe)) {
             var ellipsoid = globe.ellipsoid;
             scratchOccluderBoundingSphere.radius = ellipsoid.minimumRadius;
             scratchOccluder = Occluder.fromBoundingSphere(scratchOccluderBoundingSphere, scene._camera.positionWC, scratchOccluder);
@@ -688,9 +775,9 @@ define([
         var camera = scene._camera;
 
         var frameState = scene._frameState;
-        frameState.mode = scene.mode;
+        frameState.mode = scene._mode;
         frameState.morphTime = scene.morphTime;
-        frameState.scene2D = scene.scene2D;
+        frameState.mapProjection = scene.mapProjection;
         frameState.frameNumber = frameNumber;
         frameState.time = JulianDate.clone(time, frameState.time);
         frameState.camera = camera;
@@ -814,12 +901,12 @@ define([
                 var boundingVolume = command.boundingVolume;
                 if (defined(boundingVolume)) {
                     if (command.cull &&
-                            ((cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE) ||
+                            ((cullingVolume.computeVisibility(boundingVolume) === Intersect.OUTSIDE) ||
                              (defined(occluder) && !occluder.isBoundingSphereVisible(boundingVolume)))) {
                         continue;
                     }
 
-                    distances = BoundingSphere.getPlaneDistances(boundingVolume, position, direction, distances);
+                    distances = BoundingSphere.computePlaneDistances(boundingVolume, position, direction, distances);
                     near = Math.min(near, distances.start);
                     far = Math.max(far, distances.stop);
                 } else {
@@ -913,12 +1000,11 @@ define([
         }
     }
 
-    var transformFrom2D = Matrix4.inverseTransformation(//
-                            new Matrix4(0.0, 0.0, 1.0, 0.0, //
-                                        1.0, 0.0, 0.0, 0.0, //
-                                        0.0, 1.0, 0.0, 0.0, //
-                                        0.0, 0.0, 0.0, 1.0));
-
+    var transformFrom2D = new Matrix4(0.0, 0.0, 1.0, 0.0,
+                                        1.0, 0.0, 0.0, 0.0,
+                                        0.0, 1.0, 0.0, 0.0,
+                                        0.0, 0.0, 0.0, 1.0);
+    transformFrom2D = Matrix4.inverseTransformation(transformFrom2D, transformFrom2D);
     function executeCommand(command, scene, context, passState, renderState, shaderProgram, debugFramebuffer) {
         if ((defined(scene.debugCommandFilter)) && !scene.debugCommandFilter(command)) {
             return;
@@ -948,8 +1034,8 @@ define([
             })));
 
             if (frameState.mode !== SceneMode.SCENE3D) {
-                center = Matrix4.multiplyByPoint(transformFrom2D, center);
-                var projection = frameState.scene2D.projection;
+                center = Matrix4.multiplyByPoint(transformFrom2D, center, center);
+                var projection = frameState.mapProjection;
                 var centerCartographic = projection.unproject(center);
                 center = projection.ellipsoid.cartographicToCartesian(centerCartographic);
             }
@@ -957,7 +1043,7 @@ define([
             scene._debugSphere = new Primitive({
                 geometryInstances : new GeometryInstance({
                     geometry : geometry,
-                    modelMatrix : Matrix4.multiplyByTranslation(Matrix4.IDENTITY, center),
+                    modelMatrix : Matrix4.multiplyByTranslation(Matrix4.IDENTITY, center, new Matrix4()),
                     attributes : {
                         color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
                     }
@@ -1006,7 +1092,7 @@ define([
         return ((defined(command)) &&
                  ((!defined(command.boundingVolume)) ||
                   !command.cull ||
-                  ((cullingVolume.getVisibility(boundingVolume) !== Intersect.OUTSIDE) &&
+                  ((cullingVolume.computeVisibility(boundingVolume) !== Intersect.OUTSIDE) &&
                    (!defined(occluder) || occluder.isBoundingSphereVisible(boundingVolume)))));
     }
 
@@ -1036,7 +1122,7 @@ define([
         var us = context.uniformState;
 
         var frustum;
-        if (defined(camera.frustum.fovy)) {
+        if (defined(camera.frustum.fov)) {
             frustum = camera.frustum.clone(scratchPerspectiveFrustum);
         } else if (defined(camera.frustum.infiniteProjectionMatrix)){
             frustum = camera.frustum.clone(scratchPerspectiveOffCenterFrustum);
@@ -1223,14 +1309,14 @@ define([
             this._context.shaderCache.destroyReleasedShaderPrograms();
         }
 
-        this._animations.update();
-        this._camera.update(this.mode, this.scene2D);
-        this._screenSpaceCameraController.update(this.mode);
+        this._tweens.update();
+        this._camera.update(this._mode);
+        this._screenSpaceCameraController.update(this._frameState);
     };
 
     function render(scene, time) {
         if (!defined(time)) {
-            time = new JulianDate();
+            time = JulianDate.now();
         }
 
         scene._preRender.raiseEvent(scene, time);
@@ -1391,7 +1477,7 @@ define([
     }
 
     function getPickCullingVolume(scene, drawingBufferPosition, width, height) {
-        if (scene.mode === SceneMode.SCENE2D) {
+        if (scene._mode === SceneMode.SCENE2D) {
             return getPickOrthographicCullingVolume(scene, drawingBufferPosition, width, height);
         }
 
@@ -1410,10 +1496,7 @@ define([
      * at a particular window coordinate or undefined if nothing is at the location. Other properties may
      * potentially be set depending on the type of primitive.
      *
-     * @memberof Scene
-     *
      * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
-     *
      * @returns {Object} Object containing the picked primitive.
      *
      * @exception {DeveloperError} windowPosition is undefined.
@@ -1462,10 +1545,7 @@ define([
      * type of primitive. The primitives in the list are ordered by their visual order in the
      * scene (front to back).
      *
-     * @memberof Scene
-     *
      * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
-     *
      * @returns {Object[]} Array of objects, each containing 1 picked primitives.
      *
      * @exception {DeveloperError} windowPosition is undefined.
@@ -1522,7 +1602,6 @@ define([
 
     /**
      * Instantly completes an active transition.
-     * @memberof Scene
      */
     Scene.prototype.completeMorph = function(){
         this._transitioner.completeMorph();
@@ -1530,39 +1609,36 @@ define([
 
     /**
      * Asynchronously transitions the scene to 2D.
-     * @param {Number} [duration=2000] The amount of time, in milliseconds, for transition animations to complete.
-     * @memberof Scene
+     * @param {Number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
      */
     Scene.prototype.morphTo2D = function(duration) {
         var globe = this.globe;
         if (defined(globe)) {
-            duration = defaultValue(duration, 2000);
+            duration = defaultValue(duration, 2.0);
             this._transitioner.morphTo2D(duration, globe.ellipsoid);
         }
     };
 
     /**
      * Asynchronously transitions the scene to Columbus View.
-     * @param {Number} [duration=2000] The amount of time, in milliseconds, for transition animations to complete.
-     * @memberof Scene
+     * @param {Number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
      */
     Scene.prototype.morphToColumbusView = function(duration) {
         var globe = this.globe;
         if (defined(globe)) {
-            duration = defaultValue(duration, 2000);
+            duration = defaultValue(duration, 2.0);
             this._transitioner.morphToColumbusView(duration, globe.ellipsoid);
         }
     };
 
     /**
      * Asynchronously transitions the scene to 3D.
-     * @param {Number} [duration=2000] The amount of time, in milliseconds, for transition animations to complete.
-     * @memberof Scene
+     * @param {Number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
      */
     Scene.prototype.morphTo3D = function(duration) {
         var globe = this.globe;
         if (defined(globe)) {
-            duration = defaultValue(duration, 2000);
+            duration = defaultValue(duration, 2.0);
             this._transitioner.morphTo3D(duration, globe.ellipsoid);
         }
     };
@@ -1572,8 +1648,6 @@ define([
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof Scene
      *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
@@ -1591,8 +1665,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @memberof Scene
-     *
      * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
@@ -1603,7 +1675,7 @@ define([
      * scene = scene && scene.destroy();
      */
     Scene.prototype.destroy = function() {
-        this._animations.removeAll();
+        this._tweens.removeAll();
         this._screenSpaceCameraController = this._screenSpaceCameraController && this._screenSpaceCameraController.destroy();
         this._pickFramebuffer = this._pickFramebuffer && this._pickFramebuffer.destroy();
         this._primitives = this._primitives && this._primitives.destroy();

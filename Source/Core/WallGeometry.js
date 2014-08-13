@@ -49,13 +49,14 @@ define([
      * @alias WallGeometry
      * @constructor
      *
-     * @param {Cartesian3[]} positions An array of Cartesian objects, which are the points of the wall.
+     * @param {Object} options Object with the following properties:
+     * @param {Cartesian3[]} options.positions An array of Cartesian objects, which are the points of the wall.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Number[]} [maximumHeights] An array parallel to <code>positions</code> that give the maximum height of the
+     * @param {Number[]} [options.maximumHeights] An array parallel to <code>positions</code> that give the maximum height of the
      *        wall at <code>positions</code>. If undefined, the height of each position in used.
-     * @param {Number[]} [minimumHeights] An array parallel to <code>positions</code> that give the minimum height of the
+     * @param {Number[]} [options.minimumHeights] An array parallel to <code>positions</code> that give the minimum height of the
      *        wall at <code>positions</code>. If undefined, the height at each position is 0.0.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
      * @exception {DeveloperError} positions and maximumHeights must have the same length.
@@ -63,6 +64,8 @@ define([
      *
      * @see WallGeometry#createGeometry
      * @see WallGeometry#fromConstantHeight
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Wall.html|Cesium Sandcastle Wall Demo}
      *
      * @example
      * // create a wall that spans from ground level to 10000 meters
@@ -86,13 +89,13 @@ define([
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(wallPositions)) {
-            throw new DeveloperError('positions is required.');
+            throw new DeveloperError('options.positions is required.');
         }
         if (defined(maximumHeights) && maximumHeights.length !== wallPositions.length) {
-            throw new DeveloperError('positions and maximumHeights must have the same length.');
+            throw new DeveloperError('options.positions and options.maximumHeights must have the same length.');
         }
         if (defined(minimumHeights) && minimumHeights.length !== wallPositions.length) {
-            throw new DeveloperError('positions and minimumHeights must have the same length.');
+            throw new DeveloperError('options.positions and options.minimumHeights must have the same length.');
         }
         //>>includeEnd('debug');
 
@@ -112,8 +115,6 @@ define([
     /**
      * A description of a wall, which is similar to a KML line string. A wall is defined by a series of points,
      * which extrude down to the ground. Optionally, they can extrude downwards to a specified height.
-     *
-     * @memberof WallGeometry
      *
      * @param {Cartesian3[]} positions An array of Cartesian objects, which are the points of the wall.
      * @param {Number} [maximumHeight] A constant that defines the maximum height of the
@@ -186,7 +187,6 @@ define([
 
     /**
      * Computes the geometric representation of a wall, including its vertices, indices, and a bounding sphere.
-     * @memberof WallGeometry
      *
      * @param {WallGeometry} wallGeometry A description of the wall.
      * @returns {Geometry} The computed vertices and indices.
@@ -202,11 +202,10 @@ define([
         var ellipsoid = wallGeometry._ellipsoid;
 
         var pos = WallGeometryLibrary.computePositions(ellipsoid, wallPositions, maximumHeights, minimumHeights, granularity, true);
-        var newWallPositions = pos.newWallPositions;
         var bottomPositions = pos.bottomPositions;
         var topPositions = pos.topPositions;
 
-        var length = newWallPositions.length;
+        var length = topPositions.length;
         var size = length * 2;
 
         var positions = vertexFormat.position ? new Float64Array(size) : undefined;
@@ -248,9 +247,9 @@ define([
             if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
                 var nextPosition;
                 var nextTop = new Cartesian3();
-                var groundPosition = Cartesian3.fromArray(newWallPositions, i3, scratchCartesian3Position2);
+                var groundPosition = ellipsoid.scaleToGeodeticSurface(Cartesian3.fromArray(topPositions, i3, scratchCartesian3Position2), scratchCartesian3Position2);
                 if (i + 1 < length) {
-                    nextPosition = Cartesian3.fromArray(newWallPositions, i3 + 3, scratchCartesian3Position3);
+                    nextPosition = ellipsoid.scaleToGeodeticSurface(Cartesian3.fromArray(topPositions, i3 + 3, scratchCartesian3Position3), scratchCartesian3Position3);
                     nextTop = Cartesian3.fromArray(topPositions, i3 + 3, scratchCartesian3Position5);
                 }
 

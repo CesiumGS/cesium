@@ -46,6 +46,7 @@ define([
      * @alias CylinderGeometry
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Number} options.length The length of the cylinder.
      * @param {Number} options.topRadius The radius of the top of the cylinder.
      * @param {Number} options.bottomRadius The radius of the bottom of the cylinder.
@@ -59,6 +60,8 @@ define([
      * @exception {DeveloperError} options.slices must be greater that 3.
      *
      * @see CylinderGeometry.createGeometry
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cylinder.html|Cesium Sandcastle Cylinder Demo}
      *
      * @example
      * // create cylinder geometry
@@ -106,7 +109,6 @@ define([
 
     /**
      * Computes the geometric representation of a cylinder, including its vertices, indices, and a bounding sphere.
-     * @memberof CylinderGeometry
      *
      * @param {CylinderGeometry} cylinderGeometry A description of the cylinder.
      * @returns {Geometry} The computed vertices and indices.

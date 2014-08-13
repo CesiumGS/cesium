@@ -1,5 +1,8 @@
 /*global define*/
-define(function() {
+define([
+        '../Core/freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
@@ -7,7 +10,8 @@ define(function() {
      * For example, the horizontal origin is used to display a billboard to the left or right (in
      * screen space) of the actual position.
      *
-     * @exports HorizontalOrigin
+     * @namespace
+     * @alias HorizontalOrigin
      *
      * @see Billboard#horizontalOrigin
      */
@@ -37,5 +41,5 @@ define(function() {
         RIGHT : -1
     };
 
-    return HorizontalOrigin;
+    return freezeObject(HorizontalOrigin);
 });

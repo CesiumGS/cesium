@@ -65,6 +65,28 @@ define([
          */
         ready : {
             get : DeveloperError.throwInstantiationError
+        },
+
+        /**
+         * Gets a value indicating whether or not the provider includes a water mask.  The water mask
+         * indicates which areas of the globe are water rather than land, so they can be rendered
+         * as a reflective surface with animated waves.  This function should not be
+         * called before {@link TerrainProvider#ready} returns true.
+         * @memberof TerrainProvider.prototype
+         * @type {Boolean}
+         */
+        hasWaterMask : {
+            get : DeveloperError.throwInstantiationError
+        },
+
+        /**
+         * Gets a value indicating whether or not the requested tiles include vertex normals.
+         * This function should not be called before {@link TerrainProvider#ready} returns true.
+         * @memberof TerrainProvider.prototype
+         * @type {Boolean}
+         */
+        hasVertexNormals : {
+            get : DeveloperError.throwInstantiationError
         }
     });
 
@@ -75,8 +97,6 @@ define([
      * this function multiple times with the same grid width and height returns the
      * same list of indices.  The total number of vertices must be less than or equal
      * to 65536.
-     *
-     * @memberof TerrainProvider
      *
      * @param {Number} width The number of vertices in the regular grid in the horizontal direction.
      * @param {Number} height The number of vertices in the regular grid in the vertical direction.
@@ -148,7 +168,6 @@ define([
      * Requests the geometry for a given tile.  This function should not be called before
      * {@link TerrainProvider#ready} returns true.  The result must include terrain data and
      * may optionally include a water mask and an indication of which child tiles are available.
-     * @memberof TerrainProvider
      * @function
      *
      * @param {Number} x The X coordinate of the tile for which to request geometry.
@@ -166,25 +185,12 @@ define([
     /**
      * Gets the maximum geometric error allowed in a tile at a given level.  This function should not be
      * called before {@link TerrainProvider#ready} returns true.
-     * @memberof TerrainProvider
      * @function
      *
      * @param {Number} level The tile level for which to get the maximum geometric error.
      * @returns {Number} The maximum geometric error.
      */
     TerrainProvider.prototype.getLevelMaximumGeometricError = DeveloperError.throwInstantiationError;
-
-    /**
-     * Gets a value indicating whether or not the provider includes a water mask.  The water mask
-     * indicates which areas of the globe are water rather than land, so they can be rendered
-     * as a reflective surface with animated waves.  This function should not be
-     * called before {@link TerrainProvider#ready} returns true.
-     * @memberof TerrainProvider
-     * @function
-     *
-     * @returns {Boolean} True if the provider has a water mask; otherwise, false.
-     */
-    TerrainProvider.prototype.hasWaterMask = DeveloperError.throwInstantiationError;
 
     return TerrainProvider;
 });

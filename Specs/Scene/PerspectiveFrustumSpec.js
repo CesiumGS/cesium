@@ -22,18 +22,18 @@ defineSuite([
         frustum = new PerspectiveFrustum();
         frustum.near = 1.0;
         frustum.far = 2.0;
-        frustum.fovy = (Math.PI) / 3;
         frustum.aspectRatio = 1.0;
-        planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z), Cartesian3.UNIT_Y).planes;
+        frustum.fov = (Math.PI) / 3;
+        planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), Cartesian3.UNIT_Y).planes;
     });
 
     it('out of range fov causes an exception', function() {
-        frustum.fovy = -1.0;
+        frustum.fov = -1.0;
         expect(function() {
             return frustum.projectionMatrix;
         }).toThrowDeveloperError();
 
-        frustum.fovy = CesiumMath.TWO_PI;
+        frustum.fov = CesiumMath.TWO_PI;
         expect(function() {
             return frustum.projectionMatrix;
         }).toThrowDeveloperError();
@@ -116,7 +116,7 @@ defineSuite([
 
     it('get perspective projection matrix', function() {
         var projectionMatrix = frustum.projectionMatrix;
-        var expected = Matrix4.computePerspectiveFieldOfView(frustum.fovy, frustum.aspectRatio, frustum.near, frustum.far);
+        var expected = Matrix4.computePerspectiveFieldOfView(frustum.fovy, frustum.aspectRatio, frustum.near, frustum.far, new Matrix4());
         expect(projectionMatrix).toEqualEpsilon(expected, CesiumMath.EPSILON6);
     });
 
@@ -127,7 +127,7 @@ defineSuite([
         var left = -right;
         var near = frustum.near;
 
-        var expected = Matrix4.computeInfinitePerspectiveOffCenter(left, right, bottom, top, near);
+        var expected = Matrix4.computeInfinitePerspectiveOffCenter(left, right, bottom, top, near, new Matrix4());
         expect(frustum.infiniteProjectionMatrix).toEqual(expected);
     });
 
@@ -149,7 +149,7 @@ defineSuite([
         var frustum2 = new PerspectiveFrustum();
         frustum2.near = 1.0;
         frustum2.far = 2.0;
-        frustum2.fovy = (Math.PI) / 3.0;
+        frustum2.fov = (Math.PI) / 3.0;
         frustum2.aspectRatio = 1.0;
         expect(frustum.equals(frustum2)).toEqual(true);
     });

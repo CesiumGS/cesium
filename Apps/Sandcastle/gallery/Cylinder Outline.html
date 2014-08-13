@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="The outline of a cylinder.">
+    <meta name="description" content="Draw the outline of a cylinder.">
     <meta name="cesium-sandcastle-labels" content="Geometries">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -16,7 +16,7 @@
     });
     </script>
 </head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
 </style>
@@ -24,107 +24,61 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+function startup(Cesium) {
     "use strict";
-    
-    var viewer = new Cesium.Viewer('cesiumContainer');
-    var scene = viewer.scene;
-    var primitives = scene.primitives;
+//Sandcastle_Begin
+// Create the viewer.
+var viewer = new Cesium.Viewer('cesiumContainer');
+var scene = viewer.scene;
+var primitives = scene.primitives;
 
-    var length = 400000.0;
-    var radius = 150000.0;
+// Create a cyliner outline and position on the globe
+// surface using a model matrix.
 
-    // Red cylinder outline
-    var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-100.0, 40.0);
-    var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
-        Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
-        new Cesium.Cartesian3(0.0, 0.0, length * 0.5)
-    );
-    
-    var cylinderOutlineGeometry = new Cesium.CylinderOutlineGeometry({
-        length : length,
-        topRadius : radius,
-        bottomRadius : radius
-    });
-    
-    var redCylinderOutline = new Cesium.GeometryInstance({
-        geometry : cylinderOutlineGeometry,
-        modelMatrix : modelMatrix,
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
-        }
-    });
-
-    // Red cylinder
-    var fillGeometry = new Cesium.CylinderGeometry({
-        length : length,
-        topRadius : radius,
-        bottomRadius : radius,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-    });
-    
-    var redCylinder = new Cesium.GeometryInstance({
-        geometry : fillGeometry,
-        modelMatrix : modelMatrix,
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
-        }
-    });
-
-    // Blue cylinder outline
-    positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-95.0, 40.0);
-    modelMatrix = Cesium.Matrix4.multiplyByTranslation(
-        Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
-        new Cesium.Cartesian3(0.0, 0.0, length * 0.5)
-    );
-    cylinderOutlineGeometry = new Cesium.CylinderOutlineGeometry({
-        length : length,
-        topRadius : radius,
-        bottomRadius : radius,
-        numberOfVerticalLines: 0
-    });
-        
-    var blueCylinderOutline = new Cesium.GeometryInstance({
-        geometry : cylinderOutlineGeometry,
-        modelMatrix : modelMatrix,
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
-        }
-    });
-
-    // Blue cylinder
-    var blueCylinder = new Cesium.GeometryInstance({
-        geometry : fillGeometry,
-        modelMatrix : modelMatrix,
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 0.0, 1.0, 0.5))
-        }
-    });
-    
-    // Add outline instances to primitives
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : [redCylinderOutline, blueCylinderOutline],
-        appearance : new Cesium.PerInstanceColorAppearance({
-            flat : true,
-            renderState : {
-                depthTest : {
-                    enabled : true
-                },
-                lineWidth : Math.min(4.0, scene.maximumAliasedLineWidth)
-            }
-        })
-    }));
-    
-    // Add cylinderst to primitives
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : [redCylinder, blueCylinder],
-        appearance : new Cesium.PerInstanceColorAppearance({
-            closed : true
-        })
-    }));
-
-    Sandcastle.finishedLoading();
+// Create the model matrix.
+var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-100.0, 40.0);
+var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
+    Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
+    new Cesium.Cartesian3(0.0, 0.0, length * 0.5), new Cesium.Matrix4()
+);
+// Create the cylinder outline geometry.  The numberOfVerticalLines
+// option can be used to specify the number of lines connecting
+// the top and bottom of the cylinder.
+var cylinderOutlineGeometry = new Cesium.CylinderOutlineGeometry({
+    length : 400000.0,
+    topRadius : 150000.0,
+    bottomRadius : 150000.0,
+    numberOfVerticalLines: 16
 });
+// Create a geometry instance using the geometry.
+var cylinderOutline = new Cesium.GeometryInstance({
+    geometry : cylinderOutlineGeometry,
+    modelMatrix : modelMatrix,
+    attributes : {
+        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+    }
+});
+// Add the instance to primitives.
+primitives.add(new Cesium.Primitive({
+    geometryInstances : [cylinderOutline],
+    appearance : new Cesium.PerInstanceColorAppearance({
+        flat : true,
+        renderState : {
+            depthTest : {
+                enabled : true
+            },
+            lineWidth : Math.min(2.0, scene.maximumAliasedLineWidth)
+        }
+    })
+}));
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
 </script>
 </body>
 </html>

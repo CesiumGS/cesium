@@ -42,9 +42,9 @@ defineSuite([
             Transforms.computeTemeToPseudoFixedMatrix(date, icrfToFixed);
         }
 
-        var moonPosition = Simon1994PlanetaryPositions.ComputeMoonPositionInEarthInertialFrame(date);
+        var moonPosition = Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame(date);
         Matrix3.multiplyByVector(icrfToFixed, moonPosition, moonPosition);
-        var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(moonPosition), 1e7);
+        var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(moonPosition, new Cartesian3()), 1e7, new Cartesian3());
 
         camera.lookAt(moonPosition, cameraPosition, Cartesian3.UNIT_Z);
     }
@@ -75,9 +75,11 @@ defineSuite([
         var moon = new Moon();
         moon.show = false;
 
+        var frameState = createFrameState(createCamera({
+            near : 1.0,
+            far : 1.0e10
+        }));
         var context = scene.context;
-
-        var frameState = createFrameState(createCamera(context, undefined, undefined, undefined, 1.0, 1.0e10));
         var us = context.uniformState;
         us.update(context, frameState);
 

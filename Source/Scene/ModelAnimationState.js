@@ -1,12 +1,15 @@
 /*global define*/
-define(function() {
+define([
+        '../Core/freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
      * @private
      */
-    return {
+    return freezeObject({
         STOPPED : 0,
         ANIMATING : 1
-    };
+    });
 });

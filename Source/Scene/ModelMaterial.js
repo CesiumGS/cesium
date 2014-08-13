@@ -70,15 +70,13 @@ define([
      * depends on the glTF type of the parameter.  It will be a floating-point
      * number, Cartesian, or matrix.
      *
-     * @memberof ModelMaterial
-     *
      * @param {String} name The name of the parameter.
      * @param {Object} [value] The value to assign to the parameter.
      *
      * @exception {DeveloperError} name must match a parameter name in the material's technique that is targetable and not optimized out.
      *
      * @example
-     * material.setValue('diffuse', new Cartesian4(1.0, 0.0, 0.0, 1.0));  // vec4
+     * material.setValue('diffuse', new Cesium.Cartesian4(1.0, 0.0, 0.0, 1.0));  // vec4
      * material.setValue('shininess', 256.0);                             // scalar
      */
     ModelMaterial.prototype.setValue = function(name, value) {
@@ -104,10 +102,7 @@ define([
      * returned object depends on the glTF type of the parameter.  It will be a floating-point
      * number, Cartesian, or matrix.
      *
-     * @memberof ModelMaterial
-     *
      * @param {String} name The name of the parameter.
-     *
      * @returns {Object} The value of the parameter or <code>undefined</code> if the parameter does not exist.
      */
     ModelMaterial.prototype.getValue = function(name) {
