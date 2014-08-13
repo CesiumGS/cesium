@@ -1,16 +1,22 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/SceneTransforms',
+        'Core/Cartesian2',
+        'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/Math',
+        'Scene/SceneMode',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
         SceneTransforms,
+        Cartesian2,
+        Cartesian3,
         Cartographic,
         Ellipsoid,
         CesiumMath,
+        SceneMode,
         createScene,
         destroyScene) {
     "use strict";
@@ -40,7 +46,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('returns correct window position', function() {
+    it('returns correct window position in 3D', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var positionCartographic = ellipsoid.cartesianToCartographic(scene.camera.position);
         positionCartographic.height = 0.0;
@@ -48,13 +54,14 @@ defineSuite([
 
         // Update scene state
         scene.initializeFrame();
+        scene.render();
 
         var windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(scene, position);
-        expect(windowCoordinates.x).toEqualEpsilon(0.5, CesiumMath.EPSILON1);
-        expect(windowCoordinates.y).toEqualEpsilon(0.5, CesiumMath.EPSILON1);
+        expect(windowCoordinates.x).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
+        expect(windowCoordinates.y).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
     });
 
-    it('returns correct drawing buffer position', function() {
+    it('returns correct drawing buffer position in 3D', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var positionCartographic = ellipsoid.cartesianToCartographic(scene.camera.position);
         positionCartographic.height = 0.0;
@@ -65,8 +72,118 @@ defineSuite([
         scene.render();
 
         var drawingBufferCoordinates = SceneTransforms.wgs84ToDrawingBufferCoordinates(scene, position);
-        expect(drawingBufferCoordinates.x).toEqualEpsilon(0.5, CesiumMath.EPSILON1);
-        expect(drawingBufferCoordinates.y).toEqualEpsilon(0.5, CesiumMath.EPSILON1);
+        expect(drawingBufferCoordinates.x).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
+        expect(drawingBufferCoordinates.y).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
     });
 
+    it('returns undefined for window position behind camera in 3D', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var positionCartographic = ellipsoid.cartesianToCartographic(scene.camera.position);
+        positionCartographic.height *= 1.1;
+        var position = ellipsoid.cartographicToCartesian(positionCartographic);
+
+        // Update scene state
+        scene.initializeFrame();
+        scene.render();
+
+        var windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(scene, position);
+        expect(windowCoordinates).not.toBeDefined();
+    });
+
+    it('returns undefined for drawing buffer position behind camera in 3D', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var positionCartographic = ellipsoid.cartesianToCartographic(scene.camera.position);
+        positionCartographic.height *= 1.1;
+        var position = ellipsoid.cartographicToCartesian(positionCartographic);
+
+        // Update scene state
+        scene.initializeFrame();
+        scene.render();
+
+        var drawingBufferCoordinates = SceneTransforms.wgs84ToDrawingBufferCoordinates(scene, position);
+        expect(drawingBufferCoordinates).not.toBeDefined();
+    });
+
+    it('returns correct window position in ColumbusView', function() {
+        // Update scene state
+        scene.morphToColumbusView(0);
+        scene.initializeFrame();
+        scene.render();
+
+        var actualWindowCoordinates = new Cartesian2(0.5, 0.5);
+        var position = scene.camera.pickEllipsoid(actualWindowCoordinates);
+
+        var windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(scene, position);
+        expect(windowCoordinates).toEqualEpsilon(actualWindowCoordinates, CesiumMath.EPSILON2);
+    });
+
+    it('returns correct drawing buffer position in ColumbusView', function() {
+        // Update scene state
+        scene.morphToColumbusView(0);
+        scene.initializeFrame();
+        scene.render();
+
+        var actualDrawingBufferCoordinates = new Cartesian2(0.5, 0.5);
+        var position = scene.camera.pickEllipsoid(actualDrawingBufferCoordinates);
+
+        var drawingBufferCoordinates = SceneTransforms.wgs84ToDrawingBufferCoordinates(scene, position);
+        expect(drawingBufferCoordinates).toEqualEpsilon(actualDrawingBufferCoordinates, CesiumMath.EPSILON2);
+    });
+
+    it('returns undefined for window position behind camera in ColumbusView', function() {
+        // Update scene state
+        scene.morphToColumbusView(0);
+        scene.initializeFrame();
+        scene.render();
+
+        var position = new Cartesian3();
+        Cartesian3.normalize(scene.camera.position, position);
+        Cartesian3.add(position, scene.camera.direction, position);
+        Cartesian3.multiplyByScalar(scene.camera.direction, -1, scene.camera.direction);
+
+        var windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(scene, position);
+        expect(windowCoordinates).not.toBeDefined();
+    });
+
+    it('returns undefined for drawing buffer position behind camera in ColumbusView', function() {
+        // Update scene state
+        scene.morphToColumbusView(0);
+        scene.initializeFrame();
+        scene.render();
+
+        var position = new Cartesian3();
+        Cartesian3.normalize(scene.camera.position, position);
+        Cartesian3.add(position, scene.camera.direction, position);
+        Cartesian3.multiplyByScalar(scene.camera.direction, -1, scene.camera.direction);
+
+        var drawingBufferCoordinates = SceneTransforms.wgs84ToDrawingBufferCoordinates(scene, position);
+        expect(drawingBufferCoordinates).not.toBeDefined();
+    });
+
+    it('returns correct window position in 2D', function() {
+        // Update scene state
+        scene.morphTo2D(0);
+        scene.initializeFrame();
+
+        var ellipsoid = Ellipsoid.WGS84;
+        var position = ellipsoid.cartographicToCartesian(new Cartographic());
+
+        var windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(scene, position);
+        expect(windowCoordinates.x).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
+        expect(windowCoordinates.y).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
+    });
+
+    it('returns correct drawing buffer position in 2D', function() {
+        // Update scene state
+        scene.morphTo2D(0);
+        scene.initializeFrame();
+        scene.render();
+
+        var ellipsoid = Ellipsoid.WGS84;
+        var position = ellipsoid.cartographicToCartesian(new Cartographic());
+
+        var drawingBufferCoordinates = SceneTransforms.wgs84ToDrawingBufferCoordinates(scene, position);
+        expect(drawingBufferCoordinates.x).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
+        expect(drawingBufferCoordinates.y).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
+    });
 }, 'WebGL');
