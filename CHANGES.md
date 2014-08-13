@@ -11,6 +11,9 @@ Change Log
 * Fixed a bug in `ImageryLayer` that caused layer images to be rendered twice for each terrain tile that existed prior to adding the imagery layer.
 * `loadWithXhr` now works with older browsers, such as Internet Explorer 9.
 * Fixed a bug in `Camera.pickEllipsoid` that caused it to return the back side of the ellipsoid when near the surface.
+* Added an optional `pickFeatures` function to the `ImageryProvider` interface.  With supporting imagery providers, such as `WebMapServiceImageryProvider`, it can be used to determine the rasterized features under a particular location.
+* Added `Globe.pickImageryLayerFeatures`.  It determines the rasterized imagery layer features intersected by a given pick ray by querying supporting layers using `ImageryProvider.pickFeatures`.
+* `viewerEntityMixin` now automatically queries for imagery layer features on click and shows their properties in the `InfoBox` panel.
 
 ### 1.0 - 2014-08-01
 
