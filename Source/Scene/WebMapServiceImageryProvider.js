@@ -711,7 +711,7 @@ define([
         if (defined(pre.textContent)) {
             pre.textContent = xmlText;
         } else {
-            div.innerText = xmlText;
+            pre.innerText = xmlText;
         }
 
         element.appendChild(pre);
