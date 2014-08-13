@@ -396,7 +396,7 @@ define([
     };
 
     /**
-     * Picking features is not currently supported by this imagery provider, so this function simple returns
+     * Picking features is not currently supported by this imagery provider, so this function simply returns
      * undefined.
      *
      * @param {Number} x The tile X coordinate.
