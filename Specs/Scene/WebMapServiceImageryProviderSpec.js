@@ -573,6 +573,41 @@ defineSuite([
             });
         });
 
+        it('resolves to undefined on a ServiceException', function() {
+            var provider = new WebMapServiceImageryProvider({
+                url : 'made/up/wms/server',
+                layers : 'someLayer'
+            });
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                expect(url).toContain('GetFeatureInfo');
+                loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-ServiceException.xml', responseType, method, data, headers, deferred, overrideMimeType);
+            };
+
+            waitsFor(function() {
+                return provider.ready;
+            }, 'imagery provider to become ready');
+
+            var pickResult;
+            var resultReturned = false;
+
+            runs(function() {
+                var asyncResult = provider.pickFeatures(0, 0, 0, 0.5, 0.5);
+                when(asyncResult, function(result) {
+                    pickResult = result;
+                    resultReturned = true;
+                });
+            });
+
+            waitsFor(function() {
+                return resultReturned;
+            });
+
+            runs(function() {
+                expect(pickResult).toBeUndefined();
+            });
+        });
+
         it('returns undefined if getFeatureInfoAsGeoJson and getFeatureInfoAsXml are false', function() {
             var provider = new WebMapServiceImageryProvider({
                 url : 'made/up/wms/server',

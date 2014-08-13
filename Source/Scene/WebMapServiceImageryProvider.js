@@ -635,6 +635,9 @@ define([
         } else if (documentElement.localName === 'FeatureInfoResponse' && documentElement.namespaceURI === esriWmsNamespace) {
             // This looks like an Esri WMS response
             return esriXmlToFeatureInfo(xml);
+        } else if (documentElement.localName === 'ServiceExceptionReport') {
+            // This looks like a WMS server error, so no features picked.
+            return undefined;
         } else {
             // Unknown response type, so just dump the XML itself into the description.
             return unknownXmlToFeatureInfo(xml);

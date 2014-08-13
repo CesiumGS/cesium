@@ -328,7 +328,7 @@ define([
     function pickImageryLayerFeature(viewer, windowPosition) {
         var scene = viewer.scene;
         var pickRay = scene.camera.getPickRay(windowPosition);
-        var imageryLayerFeaturePromise = scene.globe.pickImageryLayerFeature(pickRay, scene);
+        var imageryLayerFeaturePromise = scene.globe.pickImageryLayerFeatures(pickRay, scene);
         if (!defined(imageryLayerFeaturePromise)) {
             return;
         }
@@ -348,6 +348,7 @@ define([
             }
 
             if (!defined(features) || features.length === 0) {
+                viewer.selectedEntity = createNoFeaturesEntity();
                 return;
             }
 
@@ -380,10 +381,20 @@ define([
                 }
             };
 
-            viewer.selectedEntity = entity;
+            viewer.selectedEntity = createNoFeaturesEntity();
         });
 
         return loadingMessage;
+    }
+
+    function createNoFeaturesEntity() {
+        var entity = new Entity('None');
+        entity.description = {
+            getValue : function() {
+                return 'No features found.';
+            }
+        };
+        return entity;
     }
 
     return viewerEntityMixin;
