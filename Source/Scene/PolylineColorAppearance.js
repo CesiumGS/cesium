@@ -45,7 +45,7 @@ define([
      *         5.0, 0.0
      *       ]),
      *       width : 10.0,
-     *       vertexFormat : Cesium.PolylineColorApperance.VERTEX_FORMAT
+     *       vertexFormat : Cesium.PolylineColorAppearance.VERTEX_FORMAT
      *     }),
      *     attributes : {
      *       color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 1.0, 1.0, 1.0))
@@ -54,7 +54,7 @@ define([
      *   appearance : new Cesium.PolylineColorAppearance({
      *     translucent : false
      *   })
-     * }));
+     * });
      */
     var PolylineColorAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
