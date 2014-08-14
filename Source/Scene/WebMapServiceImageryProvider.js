@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/clone',
         '../Core/Credit',
@@ -14,10 +15,12 @@ define([
         '../Core/loadXML',
         '../Core/Math',
         '../Core/Rectangle',
+        '../Core/WebMercatorTilingScheme',
         './ImageryLayerFeatureInfo',
         './ImageryProvider',
         '../ThirdParty/when'
     ], function(
+        Cartesian3,
         Cartographic,
         clone,
         Credit,
@@ -32,6 +35,7 @@ define([
         loadXML,
         CesiumMath,
         Rectangle,
+        WebMercatorTilingScheme,
         ImageryLayerFeatureInfo,
         ImageryProvider,
         when) {
@@ -55,6 +59,12 @@ define([
      *                                                     If getFeatureInfoAsGeoJson is true as well, feature information will be requested first as GeoJSON, and then as XML if the GeoJSON
      *                                                     request fails.  If both are false, this instance will not support feature picking at all.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
+     * @param {TilingScheme} [options.tilingScheme=new GeographicTilingScheme()] The tiling scheme to use to divide the world into tiles.
+     * @param {Number} [options.tileWidth=256] The width of each tile in pixels.
+     * @param {Number} [options.tileHeight=256] The height of each tile in pixels.
+     * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
+     *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
+     *                 to result in rendering problems.
      * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider.
      *        If not specified, there is no limit.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
@@ -96,6 +106,7 @@ define([
         this._layers = options.layers;
         this._getFeatureInfoAsGeoJson = defaultValue(options.getFeatureInfoAsGeoJson, true);
         this._getFeatureInfoAsXml = defaultValue(options.getFeatureInfoAsXml, true);
+        this._useWebMercator = defaultValue(options.useWebMercator, false);
 
         // Merge the parameters with the defaults, and make all parameter names lowercase
         var parameter;
@@ -125,14 +136,20 @@ define([
 
         this._getFeatureInfoParameters = getFeatureInfoParameters;
 
-        this._tileWidth = 256;
-        this._tileHeight = 256;
+        this._tileWidth = defaultValue(options.tileWidth, 256);
+        this._tileHeight = defaultValue(options.tileHeight, 256);
+        this._minimumLevel = defaultValue(options.minimumLevel, 0);
         this._maximumLevel = options.maximumLevel; // undefined means no limit
 
-        var rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
-        this._tilingScheme = new GeographicTilingScheme({
-            rectangle : rectangle
-        });
+        this._rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
+
+        if (defined(options.tilingScheme)) {
+            this._tilingScheme = options.tilingScheme;
+        } else {
+            this._tilingScheme = new GeographicTilingScheme();
+        }
+
+        this._rectangle = Rectangle.intersectWith(this._rectangle, this._tilingScheme.rectangle);
 
         var credit = options.credit;
         if (typeof credit === 'string') {
@@ -247,7 +264,7 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                return 0;
+                return this._minimumLevel;
             }
         },
 
@@ -283,7 +300,7 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                return this._tilingScheme.rectangle;
+                return this._rectangle;
             }
         },
 
@@ -396,6 +413,80 @@ define([
 
         var url = buildImageUrl(this, x, y, level);
         return ImageryProvider.loadImage(this, url);
+    };
+
+    var cartographicScratch = new Cartographic();
+    var cartesian3Scratch = new Cartesian3();
+
+    /**
+     * Asynchronously determines what features, if any, are located at a given longitude and latitude within
+     * a tile.  This function should not be called before {@link ImageryProvider#ready} returns true.
+     *
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level.
+     * @param {Number} longitude The longitude at which to pick features.
+     * @param {Number} latitude  The latitude at which to pick features.
+     * @return {Promise} A promise for the picked features that will resolve when the asynchronous
+     *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
+     *                   instances.  The array may be empty if no features are found at the given location.
+     *
+     * @exception {DeveloperError} <code>pickFeatures</code> must not be called before the imagery provider is ready.
+     */
+    WebMapServiceImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!this._ready) {
+            throw new DeveloperError('pickFeatures must not be called before the imagery provider is ready.');
+        }
+        //>>includeEnd('debug');
+
+        var rectangle = this._tilingScheme.tileXYToNativeRectangle(x, y, level);
+
+        var projected;
+        if (this._tilingScheme instanceof GeographicTilingScheme) {
+            projected = cartesian3Scratch;
+            projected.x = CesiumMath.toDegrees(longitude);
+            projected.y = CesiumMath.toDegrees(latitude);
+        } else {
+            var cartographic = cartographicScratch;
+            cartographic.longitude = longitude;
+            cartographic.latitude = latitude;
+
+            projected = this._tilingScheme.projection.project(cartographic, cartesian3Scratch);
+        }
+
+        var i = (this._tileWidth * (projected.x - rectangle.west) / (rectangle.east - rectangle.west)) | 0;
+        var j = (this._tileHeight * (rectangle.north - projected.y) / (rectangle.north - rectangle.south)) | 0;
+
+        var url;
+
+        if (this._getFeatureInfoAsGeoJson) {
+            url = buildGetFeatureInfoUrl(this, 'application/json', x, y, level, i, j);
+
+            var that = this;
+            return when(loadJson(url), function(json) {
+                return geoJsonToFeatureInfo(json);
+            }, function (e) {
+                // GeoJSON failed, try XML.
+                if (!that._getFeatureInfoAsXml) {
+                    throw e;
+                }
+
+                url = buildGetFeatureInfoUrl(that, 'text/xml', x, y, level, i, j);
+
+                return when(loadXML(url), function(xml) {
+                    return xmlToFeatureInfo(xml);
+                });
+            });
+        } else if (this._getFeatureInfoAsXml) {
+            url = buildGetFeatureInfoUrl(this, 'text/xml', x, y, level, i, j);
+
+            return when(loadXML(url), function(xml) {
+                return xmlToFeatureInfo(xml);
+            });
+        } else {
+            return undefined;
+        }
     };
 
     /**
@@ -511,7 +602,8 @@ define([
         }
 
         if (!defined(parameters.srs)) {
-            url += 'srs=EPSG:4326&';
+            var srs = imageryProvider._tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'EPSG:4326';
+            url += 'srs=' + srs + '&';
         }
 
         if (!defined(parameters.bbox)) {
@@ -563,7 +655,8 @@ define([
         }
 
         if (!defined(parameters.srs)) {
-            url += 'srs=EPSG:4326&';
+            var srs = imageryProvider._tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'EPSG:4326';
+            url += 'srs=' + srs + '&';
         }
 
         if (!defined(parameters.bbox)) {

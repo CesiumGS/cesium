@@ -10,6 +10,7 @@ defineSuite([
         'Core/loadWithXhr',
         'Core/Math',
         'Core/Rectangle',
+        'Core/WebMercatorTilingScheme',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryLayerFeatureInfo',
@@ -27,6 +28,7 @@ defineSuite([
         loadWithXhr,
         CesiumMath,
         Rectangle,
+        WebMercatorTilingScheme,
         Imagery,
         ImageryLayer,
         ImageryLayerFeatureInfo,
@@ -242,6 +244,52 @@ defineSuite([
         });
     });
 
+    it('requestImage requests tiles with SRS EPSG:3857 when tiling scheme is WebMercatorTilingScheme', function() {
+        var tilingScheme = new WebMercatorTilingScheme();
+        var provider = new WebMapServiceImageryProvider({
+            url : 'made/up/wms/server',
+            layers : 'someLayer',
+            tilingScheme : tilingScheme
+        });
+
+        expect(provider.url).toEqual('made/up/wms/server');
+        expect(provider.layers).toEqual('someLayer');
+
+        waitsFor(function() {
+            return provider.ready;
+        }, 'imagery provider to become ready');
+
+        var tile000Image;
+
+        runs(function() {
+            expect(provider.tileWidth).toEqual(256);
+            expect(provider.tileHeight).toEqual(256);
+            expect(provider.maximumLevel).toBeUndefined();
+            expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
+            expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
+
+            loadImage.createImage = function(url, crossOrigin, deferred) {
+                expect(url).toContain('srs=EPSG:3857');
+                expect(url).toContain('bbox=' + tilingScheme.tileXYToNativeRectangle(0, 0, 0).west);
+
+                // Just return any old image.
+                return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            };
+
+            when(provider.requestImage(0, 0, 0), function(image) {
+                tile000Image = image;
+            });
+        });
+
+        waitsFor(function() {
+            return defined(tile000Image);
+        }, 'requested tile to be loaded');
+
+        runs(function() {
+            expect(tile000Image).toBeInstanceOf(Image);
+        });
+    });
+
     it('does not treat parameter names as case sensitive', function() {
         var provider = new WebMapServiceImageryProvider({
             url : 'made/up/wms/server?foo=bar',
@@ -341,22 +389,6 @@ defineSuite([
             expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
             expect(provider.rectangle).toEqual(rectangle);
             expect(provider.tileDiscardPolicy).toBeUndefined();
-
-            var calledLoadImage = false;
-            loadImage.createImage = function(url, crossOrigin, deferred) {
-                var bbox = 'bbox=' +
-                            CesiumMath.toDegrees(rectangle.west) + ',' +
-                            CesiumMath.toDegrees(rectangle.south) + ',' +
-                            CesiumMath.toDegrees((rectangle.west + rectangle.east) / 2.0) + ',' +
-                            CesiumMath.toDegrees(rectangle.north);
-                expect(url.indexOf(bbox)).not.toBeLessThan(0);
-                calledLoadImage = true;
-                deferred.resolve();
-                return undefined;
-            };
-
-            provider.requestImage(0, 0, 0);
-            expect(calledLoadImage).toEqual(true);
         });
     });
 
@@ -367,6 +399,45 @@ defineSuite([
             maximumLevel : 5
         });
         expect(provider.maximumLevel).toEqual(5);
+    });
+
+    it('uses minimumLevel passed to constructor', function() {
+        var provider = new WebMapServiceImageryProvider({
+            url : 'made/up/wms/server',
+            layers : 'someLayer',
+            minimumLevel : 1
+        });
+        expect(provider.minimumLevel).toEqual(1);
+    });
+
+    it('uses tilingScheme passed to constructor', function() {
+        var tilingScheme = new WebMercatorTilingScheme();
+        var provider = new WebMapServiceImageryProvider({
+            url : 'made/up/wms/server',
+            layers : 'someLayer',
+            tilingScheme : tilingScheme
+        });
+        expect(provider.tilingScheme).toBe(tilingScheme);
+    });
+
+    it('uses tileWidth passed to constructor', function() {
+        var tilingScheme = new WebMercatorTilingScheme();
+        var provider = new WebMapServiceImageryProvider({
+            url : 'made/up/wms/server',
+            layers : 'someLayer',
+            tileWidth : 123
+        });
+        expect(provider.tileWidth).toBe(123);
+    });
+
+    it('uses tileHeight passed to constructor', function() {
+        var tilingScheme = new WebMercatorTilingScheme();
+        var provider = new WebMapServiceImageryProvider({
+            url : 'made/up/wms/server',
+            layers : 'someLayer',
+            tileWidth : 456
+        });
+        expect(provider.tileWidth).toBe(456);
     });
 
     it('raises error event when image cannot be loaded', function() {
