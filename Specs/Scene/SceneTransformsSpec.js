@@ -23,13 +23,24 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var scene;
+    var defaultCamera;
 
     beforeAll(function() {
         scene = createScene();
+        defaultCamera = scene.camera.clone();
     });
 
     afterAll(function() {
         destroyScene(scene);
+    });
+
+    beforeEach(function() {
+        scene.camera.position = defaultCamera.position.clone();
+        scene.camera.direction = defaultCamera.direction.clone();
+        scene.camera.up = defaultCamera.up.clone();
+        scene.camera.right = defaultCamera.right.clone();
+        scene.camera.transform = defaultCamera.transform.clone();
+        scene.camera.frustum = defaultCamera.frustum.clone();
     });
 
     it('throws an exception without scene', function() {
