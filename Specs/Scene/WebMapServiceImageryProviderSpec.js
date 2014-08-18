@@ -627,6 +627,24 @@ defineSuite([
             });
         });
 
+        it('returns undefined if enablePickFeatures is false', function() {
+            var provider = new WebMapServiceImageryProvider({
+                url : 'made/up/wms/server',
+                layers : 'someLayer',
+                enablePickFeatures : false
+            });
+
+            waitsFor(function() {
+                return provider.ready;
+            }, 'imagery provider to become ready');
+
+            var pickResult;
+
+            runs(function() {
+                expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).toBeUndefined();
+            });
+        });
+
         it('requests XML exclusively if getFeatureInfoAsGeoJson is false', function() {
             var provider = new WebMapServiceImageryProvider({
                 url : 'made/up/wms/server',
