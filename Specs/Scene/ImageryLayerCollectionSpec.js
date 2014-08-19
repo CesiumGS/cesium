@@ -324,6 +324,76 @@ defineSuite([
             expect(featuresPromise).toBeUndefined();
         });
 
+        it('returns undefined when ImageryProvider does not implement pickFeatures', function() {
+            var provider = {
+                ready : true,
+                rectangle : Rectangle.MAX_VALUE,
+                tileWidth : 256,
+                tileHeight : 256,
+                maximumLevel : 0,
+                minimumLevel : 0,
+                tilingScheme : new GeographicTilingScheme(),
+                errorEvent : new Event(),
+                hasAlphaChannel : true,
+
+                requestImage : function(x, y, level) {
+                    return ImageryProvider.loadImage(this, 'Data/Images/Blue.png');
+                }
+            };
+
+            globe.imageryLayers.addImageryProvider(provider);
+
+            updateUntilDone(globe);
+
+            var features;
+
+            runs(function() {
+                var ellipsoid = Ellipsoid.WGS84;
+                camera.lookAt(new Cartesian3(ellipsoid.maximumRadius + 100.0, 0.0, 0.0), new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0), Cartesian3.UNIT_Z);
+
+                var ray = new Ray(new Cartesian3(ellipsoid.maximumRadius + 100.0, 0.0, 0.0), new Cartesian3(-1.0, 0.0, 0.0));
+                var featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(ray, scene);
+                expect(featuresPromise).toBeUndefined();
+            });
+        });
+
+        it('returns undefined when ImageryProvider.pickFeatures returns undefined', function() {
+            var provider = {
+                ready : true,
+                rectangle : Rectangle.MAX_VALUE,
+                tileWidth : 256,
+                tileHeight : 256,
+                maximumLevel : 0,
+                minimumLevel : 0,
+                tilingScheme : new GeographicTilingScheme(),
+                errorEvent : new Event(),
+                hasAlphaChannel : true,
+
+                pickFeatures : function(x, y, level, longitude, latitude) {
+                    return undefined;
+                },
+
+                requestImage : function(x, y, level) {
+                    return ImageryProvider.loadImage(this, 'Data/Images/Blue.png');
+                }
+            };
+
+            globe.imageryLayers.addImageryProvider(provider);
+
+            updateUntilDone(globe);
+
+            var features;
+
+            runs(function() {
+                var ellipsoid = Ellipsoid.WGS84;
+                camera.lookAt(new Cartesian3(ellipsoid.maximumRadius + 100.0, 0.0, 0.0), new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0), Cartesian3.UNIT_Z);
+
+                var ray = new Ray(new Cartesian3(ellipsoid.maximumRadius + 100.0, 0.0, 0.0), new Cartesian3(-1.0, 0.0, 0.0));
+                var featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(ray, scene);
+                expect(featuresPromise).toBeUndefined();
+            });
+        });
+
         it('returns features from one layer', function() {
             var provider = {
                 ready : true,
