@@ -1,31 +1,39 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/WebMapServiceImageryProvider',
+        'Core/Cartographic',
         'Core/DefaultProxy',
         'Core/defined',
         'Core/GeographicTilingScheme',
         'Core/jsonp',
         'Core/loadImage',
+        'Core/loadWithXhr',
         'Core/Math',
         'Core/Rectangle',
         'Scene/Imagery',
         'Scene/ImageryLayer',
+        'Scene/ImageryLayerFeatureInfo',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
+        'Specs/waitsForPromise',
         'ThirdParty/when'
     ], function(
         WebMapServiceImageryProvider,
+        Cartographic,
         DefaultProxy,
         defined,
         GeographicTilingScheme,
         jsonp,
         loadImage,
+        loadWithXhr,
         CesiumMath,
         Rectangle,
         Imagery,
         ImageryLayer,
+        ImageryLayerFeatureInfo,
         ImageryProvider,
         ImageryState,
+        waitsForPromise,
         when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -33,6 +41,7 @@ defineSuite([
     afterEach(function() {
         jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
+        loadWithXhr.load = loadWithXhr.defaultLoad;
     });
 
     it('conforms to ImageryProvider interface', function() {
@@ -409,6 +418,241 @@ defineSuite([
             expect(imagery.image).toBeInstanceOf(Image);
             expect(tries).toEqual(2);
             imagery.releaseReference();
+        });
+    });
+
+    describe('pickFeatures', function() {
+        it('works with GeoJSON responses', function() {
+            var provider = new WebMapServiceImageryProvider({
+                url : 'made/up/wms/server',
+                layers : 'someLayer'
+            });
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                expect(url).toContain('GetFeatureInfo');
+                loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-GeoJSON.json', responseType, method, data, headers, deferred, overrideMimeType);
+            };
+
+            waitsFor(function() {
+                return provider.ready;
+            }, 'imagery provider to become ready');
+
+            runs(function() {
+                var asyncResult = provider.pickFeatures(0, 0, 0, 0.5, 0.5);
+
+                waitsForPromise(asyncResult, function(pickResult) {
+                    expect(pickResult.length).toBe(1);
+
+                    var firstResult = pickResult[0];
+                    expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
+                    expect(firstResult.name).toBe('TOP TANK');
+                    expect(firstResult.description).toContain('GEOSCIENCE AUSTRALIA');
+                    expect(firstResult.position).toEqual(Cartographic.fromDegrees(145.91299, -30.19445));
+                });
+            });
+        });
+
+        it('works with MapInfo MXP responses', function() {
+            var provider = new WebMapServiceImageryProvider({
+                url : 'made/up/wms/server',
+                layers : 'someLayer'
+            });
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                expect(url).toContain('GetFeatureInfo');
+                loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-MapInfoMXP.xml', responseType, method, data, headers, deferred, overrideMimeType);
+            };
+
+            waitsFor(function() {
+                return provider.ready;
+            }, 'imagery provider to become ready');
+
+            runs(function() {
+                var asyncResult = provider.pickFeatures(0, 0, 0, 0.5, 0.5);
+
+                waitsForPromise(asyncResult, function(pickResult) {
+                    expect(pickResult.length).toBe(1);
+
+                    var firstResult = pickResult[0];
+                    expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
+                    expect(firstResult.name).toBe('SPRINGWOOD');
+                    expect(firstResult.description).toContain('NSW');
+                });
+            });
+        });
+
+        it('works with Esri WMS responses', function() {
+            var provider = new WebMapServiceImageryProvider({
+                url : 'made/up/wms/server',
+                layers : 'someLayer'
+            });
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                expect(url).toContain('GetFeatureInfo');
+                loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-Esri.xml', responseType, method, data, headers, deferred, overrideMimeType);
+            };
+
+            waitsFor(function() {
+                return provider.ready;
+            }, 'imagery provider to become ready');
+
+            runs(function() {
+                var asyncResult = provider.pickFeatures(0, 0, 0, 0.5, 0.5);
+
+                waitsForPromise(asyncResult, function(pickResult) {
+                    expect(pickResult.length).toBe(1);
+
+                    var firstResult = pickResult[0];
+                    expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
+                    expect(firstResult.name).toBe('Kyogle (A)');
+                    expect(firstResult.description).toContain('New South Wales');
+                });
+            });
+        });
+
+        it('works with unknown XML responses', function() {
+            var provider = new WebMapServiceImageryProvider({
+                url : 'made/up/wms/server',
+                layers : 'someLayer'
+            });
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                expect(url).toContain('GetFeatureInfo');
+                loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-Unknown.xml', responseType, method, data, headers, deferred, overrideMimeType);
+            };
+
+            waitsFor(function() {
+                return provider.ready;
+            }, 'imagery provider to become ready');
+
+            runs(function() {
+                var asyncResult = provider.pickFeatures(0, 0, 0, 0.5, 0.5);
+
+                waitsForPromise(asyncResult, function(pickResult) {
+                    expect(pickResult.length).toBe(1);
+
+                    var firstResult = pickResult[0];
+                    expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
+                    expect(firstResult.name).toBeUndefined();
+                    expect(firstResult.description).toContain('&lt;FooFeature&gt;');
+                });
+            });
+        });
+
+        it('resolves to undefined on a ServiceException', function() {
+            var provider = new WebMapServiceImageryProvider({
+                url : 'made/up/wms/server',
+                layers : 'someLayer'
+            });
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                expect(url).toContain('GetFeatureInfo');
+                loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-ServiceException.xml', responseType, method, data, headers, deferred, overrideMimeType);
+            };
+
+            waitsFor(function() {
+                return provider.ready;
+            }, 'imagery provider to become ready');
+
+            runs(function() {
+                var asyncResult = provider.pickFeatures(0, 0, 0, 0.5, 0.5);
+
+                waitsForPromise(asyncResult, function(pickResult) {
+                    expect(pickResult).toBeUndefined();
+                });
+            });
+        });
+
+        it('returns undefined if getFeatureInfoAsGeoJson and getFeatureInfoAsXml are false', function() {
+            var provider = new WebMapServiceImageryProvider({
+                url : 'made/up/wms/server',
+                layers : 'someLayer',
+                getFeatureInfoAsGeoJson : false,
+                getFeatureInfoAsXml : false
+            });
+
+            waitsFor(function() {
+                return provider.ready;
+            }, 'imagery provider to become ready');
+
+            runs(function() {
+                expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).toBeUndefined();
+            });
+        });
+
+        it('returns undefined if enablePickFeatures is false', function() {
+            var provider = new WebMapServiceImageryProvider({
+                url : 'made/up/wms/server',
+                layers : 'someLayer',
+                enablePickFeatures : false
+            });
+
+            waitsFor(function() {
+                return provider.ready;
+            }, 'imagery provider to become ready');
+
+            runs(function() {
+                expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).toBeUndefined();
+            });
+        });
+
+        it('requests XML exclusively if getFeatureInfoAsGeoJson is false', function() {
+            var provider = new WebMapServiceImageryProvider({
+                url : 'made/up/wms/server',
+                layers : 'someLayer',
+                getFeatureInfoAsGeoJson : false
+            });
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                expect(url).toContain('GetFeatureInfo');
+                expect(url).not.toContain('json');
+                loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-MapInfoMXP.xml', responseType, method, data, headers, deferred, overrideMimeType);
+            };
+
+            waitsFor(function() {
+                return provider.ready;
+            }, 'imagery provider to become ready');
+
+            runs(function() {
+                var asyncResult = provider.pickFeatures(0, 0, 0, 0.5, 0.5);
+
+                waitsForPromise(asyncResult, function(pickResult) {
+                    expect(pickResult.length).toBe(1);
+
+                    var firstResult = pickResult[0];
+                    expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
+                    expect(firstResult.name).toBe('SPRINGWOOD');
+                    expect(firstResult.description).toContain('NSW');
+                });
+            });
+        });
+
+        it('requests GeoJSON exclusively if getFeatureInfoAsXml is false', function() {
+            var provider = new WebMapServiceImageryProvider({
+                url : 'made/up/wms/server',
+                layers : 'someLayer',
+                getFeatureInfoAsXml : false
+            });
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                expect(url).toContain('GetFeatureInfo');
+
+                if (url.indexOf('json') >= 0) {
+                    deferred.reject();
+                } else {
+                    // this should not happen
+                    loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-MapInfoMXP.xml', responseType, method, data, headers, deferred, overrideMimeType);
+                }
+            };
+
+            waitsFor(function() {
+                return provider.ready;
+            }, 'imagery provider to become ready');
+
+            runs(function() {
+                var asyncResult = provider.pickFeatures(0, 0, 0, 0.5, 0.5);
+                waitsForPromise.toReject(asyncResult);
+            });
         });
     });
 });
