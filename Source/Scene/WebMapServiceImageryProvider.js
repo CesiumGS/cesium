@@ -52,6 +52,10 @@ define([
      * @param {String} options.layers The layers to include, separated by commas.
      * @param {Object} [options.parameters=WebMapServiceImageryProvider.DefaultParameters] Additional parameters to pass to the WMS server in the GetMap URL.
      * @param {Object} [options.getFeatureInfoParameters=WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters] Additional parameters to pass to the WMS server in the GetFeatureInfo URL.
+     * @param {Boolean} [options.enablePickFeatures=true] If true, {@link WebMapServiceImageryProvider#pickFeatures} will invoke the GetFeatureInfo operation on the WMS server and return
+     *                                                    the features included in the response.  If false, {@link WebMapServiceImageryProvider#pickFeatures} will immediately return
+     *                                                    undefined (indicating no pickable features) without communicating with the server.  Set this property to false if you know your
+     *                                                    WMS server does not support GetFeatureInfo or if you don't want this provider's features to be pickable.
      * @param {Boolean} [options.getFeatureInfoAsGeoJson=true] true if {@link WebMapServiceImageryProvider#pickFeatures} should try requesting feature info in GeoJSON format.
      *                                                         If getFeatureInfoAsXml is true as well, feature information will be requested first as GeoJSON, and then as XML if the GeoJSON
      *                                                         request fails.  If both are false, this instance will not support feature picking at all.
@@ -87,6 +91,12 @@ define([
      *     layers : '0',
      *     proxy: new Cesium.DefaultProxy('/proxy/')
      * });
+     *
+     * viewer.scene.imageryLayers.addImageryProvider(provider);
+     *
+     * // This line is not required to use a WMS imagery layer, but adding it will enable automatic
+     * // display of WMS feature information (if available) on click.
+     * viewer.extend(Cesium.viewerEntityMixin);
      */
     var WebMapServiceImageryProvider = function WebMapServiceImageryProvider(options) {
         options = defaultValue(options, {});
@@ -104,6 +114,7 @@ define([
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._proxy = options.proxy;
         this._layers = options.layers;
+        this._enablePickFeatures = defaultValue(options.enablePickFeatures, true);
         this._getFeatureInfoAsGeoJson = defaultValue(options.getFeatureInfoAsGeoJson, true);
         this._getFeatureInfoAsXml = defaultValue(options.getFeatureInfoAsXml, true);
         this._useWebMercator = defaultValue(options.useWebMercator, false);
@@ -440,6 +451,10 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (!this._enablePickFeatures) {
+            return undefined;
+        }
+
         var rectangle = this._tilingScheme.tileXYToNativeRectangle(x, y, level);
 
         var projected;
@@ -469,7 +484,7 @@ define([
             }, function (e) {
                 // GeoJSON failed, try XML.
                 if (!that._getFeatureInfoAsXml) {
-                    throw e;
+                    return when.reject(e);
                 }
 
                 url = buildGetFeatureInfoUrl(that, 'text/xml', x, y, level, i, j);
@@ -742,13 +757,7 @@ define([
 
         var element = document.createElement('div');
         var pre = document.createElement('pre');
-
-        if (defined(pre.textContent)) {
-            pre.textContent = xmlText;
-        } else {
-            pre.innerText = xmlText;
-        }
-
+        pre.textContent = xmlText;
         element.appendChild(pre);
 
         var featureInfo = new ImageryLayerFeatureInfo();

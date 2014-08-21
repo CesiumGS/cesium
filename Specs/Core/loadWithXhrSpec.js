@@ -16,7 +16,7 @@ defineSuite([
                 url : 'data:,Hello%2C%20World!'
             });
 
-            waitsForPromise(promise).then(function(result) {
+            waitsForPromise(promise, function(result) {
                 expect(result).toEqual('Hello, World!');
             });
 
@@ -27,7 +27,7 @@ defineSuite([
                 });
             });
 
-            waitsForPromise(promise).then(function(result) {
+            waitsForPromise(promise, function(result) {
                 expect(result).toEqual('Hello, World!');
             });
         });
@@ -37,7 +37,7 @@ defineSuite([
                 url : 'data:text/plain;base64,SGVsbG8sIFdvcmxkIQ=='
             });
 
-            waitsForPromise(promise).then(function(result) {
+            waitsForPromise(promise, function(result) {
                 expect(result).toEqual('Hello, World!');
             });
 
@@ -48,7 +48,7 @@ defineSuite([
                 });
             });
 
-            waitsForPromise(promise).then(function(result) {
+            waitsForPromise(promise, function(result) {
                 expect(result).toEqual('Hello, World!');
             });
         });
@@ -58,7 +58,7 @@ defineSuite([
                 url : 'data:text/plain;base64,SGVsbG8sIFdvcmxkIQ%3D%3D'
             });
 
-            waitsForPromise(promise).then(function(result) {
+            waitsForPromise(promise, function(result) {
                 expect(result).toEqual('Hello, World!');
             });
 
@@ -69,7 +69,7 @@ defineSuite([
                 });
             });
 
-            waitsForPromise(promise).then(function(result) {
+            waitsForPromise(promise, function(result) {
                 expect(result).toEqual('Hello, World!');
             });
         });
@@ -79,7 +79,7 @@ defineSuite([
                 url : 'data:text/html,%3Ch1%3EHello%2C%20World!%3C%2Fh1%3E'
             });
 
-            waitsForPromise(promise).then(function(result) {
+            waitsForPromise(promise, function(result) {
                 expect(result).toEqual('<h1>Hello, World!</h1>');
             });
 
@@ -90,7 +90,7 @@ defineSuite([
                 });
             });
 
-            waitsForPromise(promise).then(function(result) {
+            waitsForPromise(promise, function(result) {
                 expect(result).toEqual('<h1>Hello, World!</h1>');
             });
         });
@@ -101,7 +101,7 @@ defineSuite([
                 responseType : 'json'
             });
 
-            waitsForPromise(promise).then(function(result) {
+            waitsForPromise(promise, function(result) {
                 expect(result.key).toEqual('value');
             });
         });
@@ -112,7 +112,7 @@ defineSuite([
                 responseType : 'json'
             });
 
-            waitsForPromise(promise).then(function(result) {
+            waitsForPromise(promise, function(result) {
                 expect(result.key).toEqual('value');
             });
         });
@@ -123,7 +123,7 @@ defineSuite([
                 responseType : 'document'
             });
 
-            waitsForPromise(promise).then(function(result) {
+            waitsForPromise(promise, function(result) {
                 expect(result.querySelector('h1')).not.toBeNull();
             });
         });
@@ -136,7 +136,7 @@ defineSuite([
                 responseType : 'arraybuffer'
             });
 
-            waitsForPromise(promise).then(function(result) {
+            waitsForPromise(promise, function(result) {
                 expect(result.byteLength).toEqual(3914);
             });
         });
@@ -149,13 +149,13 @@ defineSuite([
                 responseType : 'blob'
             });
 
-            waitsForPromise(promise).then(function(result) {
+            waitsForPromise(promise, function(result) {
                 expect(result.type).toEqual('image/png');
 
                 /*global URL*/
                 var blobUrl = URL.createObjectURL(result);
 
-                waitsForPromise(loadImage(blobUrl)).then(function(image) {
+                waitsForPromise(loadImage(blobUrl), function(image) {
                     expect(image.width).toEqual(24);
                     expect(image.height).toEqual(24);
                 });

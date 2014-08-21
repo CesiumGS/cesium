@@ -324,7 +324,7 @@ define([
     function pickImageryLayerFeature(viewer, windowPosition) {
         var scene = viewer.scene;
         var pickRay = scene.camera.getPickRay(windowPosition);
-        var imageryLayerFeaturePromise = scene.globe.pickImageryLayerFeatures(pickRay, scene);
+        var imageryLayerFeaturePromise = scene.imageryLayers.pickImageryLayerFeatures(pickRay, scene);
         if (!defined(imageryLayerFeaturePromise)) {
             return;
         }

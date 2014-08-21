@@ -72,7 +72,8 @@ define([
         }
 
         // View-projection matrix to transform from world coordinates to clip coordinates
-        var viewProjection = scene.context.uniformState.viewProjection;
+        var camera = scene.camera;
+        var viewProjection = Matrix4.multiply(camera.frustum.projectionMatrix, camera.viewMatrix, viewProjectionScratch);
         Matrix4.multiplyByVector(viewProjection, Cartesian4.fromElements(actualPosition.x, actualPosition.y, actualPosition.z, 1, positionCC), positionCC);
 
         if ((positionCC.z < 0) && (scene.mode !== SceneMode.SCENE2D)) {
@@ -122,7 +123,8 @@ define([
         }
 
         // View-projection matrix to transform from world coordinates to clip coordinates
-        var viewProjection = scene.context.uniformState.viewProjection;
+        var camera = scene.camera;
+        var viewProjection = Matrix4.multiply(camera.frustum.projectionMatrix, camera.viewMatrix, viewProjectionScratch);
         Matrix4.multiplyByVector(viewProjection, Cartesian4.fromElements(actualPosition.x, actualPosition.y, actualPosition.z, 1, positionCC), positionCC);
 
         if ((positionCC.z < 0) && (scene.mode !== SceneMode.SCENE2D)) {
