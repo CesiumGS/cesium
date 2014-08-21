@@ -354,10 +354,10 @@ void main() {\n\
 
         var combinedPromise = when.all([greenPromise, bluePromise, bigRedPromise, bigBluePromise]);
         waitsForPromise(combinedPromise, {}, function(indices) {
-            var greenIndex = indices.unshift();
-            var blueIndex = indices.unshift();
-            var bigRedIndex = indices.unshift();
-            var bigBlueIndex = indices.unshift();
+            var greenIndex = indices.shift();
+            var blueIndex = indices.shift();
+            var bigRedIndex = indices.shift();
+            var bigBlueIndex = indices.shift();
 
             expect(atlas.numberOfImages).toEqual(4);
 
@@ -387,10 +387,10 @@ void main() {\n\
 
         var combinedPromise = when.all([greenPromise, bluePromise, bigRedPromise, bigBluePromise]);
         waitsForPromise(combinedPromise, {}, function(indices) {
-            var greenIndex = indices.unshift();
-            var blueIndex = indices.unshift();
-            var bigRedIndex = indices.unshift();
-            var bigBlueIndex = indices.unshift();
+            var greenIndex = indices.shift();
+            var blueIndex = indices.shift();
+            var bigRedIndex = indices.shift();
+            var bigBlueIndex = indices.shift();
 
             expect(atlas.borderWidthInPixels).toEqual(2);
             expect(atlas.numberOfImages).toEqual(4);
@@ -441,10 +441,10 @@ void main() {\n\
 
         var combinedPromise = when.all([greenPromise, bluePromise, bigRedPromise, bigBluePromise]);
         waitsForPromise(combinedPromise, {}, function(indices) {
-            var greenIndex = indices.unshift();
-            var blueIndex = indices.unshift();
-            var bigRedIndex = indices.unshift();
-            var bigBlueIndex = indices.unshift();
+            var greenIndex = indices.shift();
+            var blueIndex = indices.shift();
+            var bigRedIndex = indices.shift();
+            var bigBlueIndex = indices.shift();
 
             expect(atlas.numberOfImages).toEqual(4);
 
@@ -634,8 +634,8 @@ void main() {\n\
 
         var combinedPromise = when.all([greenPromise, bluePromise]);
         waitsForPromise(combinedPromise, {}, function(indices) {
-            var greenIndex = indices.unshift();
-            var blueIndex = indices.unshift();
+            var greenIndex = indices.shift();
+            var blueIndex = indices.shift();
 
             var texture = atlas.texture;
             var coordinates = atlas.textureCoordinates;
@@ -671,8 +671,8 @@ void main() {\n\
 
         var combinedPromise = when.all([greenPromise, bluePromise]);
         waitsForPromise(combinedPromise, {}, function(indices) {
-            var greenIndex = indices.unshift();
-            var blueIndex = indices.unshift();
+            var greenIndex = indices.shift();
+            var blueIndex = indices.shift();
 
             var texture = atlas.texture;
             var coordinates = atlas.textureCoordinates;
@@ -740,9 +740,9 @@ void main() {\n\
 
         var combinedPromise = when.all([bluePromise, bigGreenPromise, bigRedPromise]);
         waitsForPromise(combinedPromise, {}, function(indices) {
-            var blueIndex = indices.unshift();
-            var bigGreenIndex = indices.unshift();
-            var bigRedIndex = indices.unshift();
+            var blueIndex = indices.shift();
+            var bigGreenIndex = indices.shift();
+            var bigRedIndex = indices.shift();
 
             var texture = atlas.texture;
             var blueCoordinates = atlas.textureCoordinates[blueIndex];
@@ -818,10 +818,10 @@ void main() {\n\
 
         var combinedPromise = when.all([promise1, promise2, promise3, promise4]);
         waitsForPromise(combinedPromise, {}, function(indices) {
-            var index1 = indices.unshift();
-            var index2 = indices.unshift();
-            var index3 = indices.unshift();
-            var index4 = indices.unshift();
+            var index1 = indices.shift();
+            var index2 = indices.shift();
+            var index3 = indices.shift();
+            var index4 = indices.shift();
 
             expect(atlas.numberOfImages).toEqual(5);
 
@@ -867,14 +867,14 @@ void main() {\n\
 
         var combinedPromise = when.all([promise1, promise2, promise3, promise4]);
         waitsForPromise(combinedPromise, {}, function(indices) {
-            var index1 = indices.unshift();
-            var index2 = indices.unshift();
-            var index3 = indices.unshift();
-            var index4 = indices.unshift();
+            var index1 = indices.shift();
+            var index2 = indices.shift();
+            var index3 = indices.shift();
+            var index4 = indices.shift();
 
             expect(atlas.numberOfImages).toEqual(5);
 
-            var bluePromise = atlas.addImage(blueImage);
+            var bluePromise = atlas.addImage(blueImage.src, blueImage);
             waitsForPromise(bluePromise, {}, function(blueIndex) {
                 expect(atlas.numberOfImages).toEqual(6);
 
