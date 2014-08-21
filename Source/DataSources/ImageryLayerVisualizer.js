@@ -4,6 +4,8 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/Rectangle',
+        '../Scene/ImageryLayer',
         '../Scene/WebMapServiceImageryProvider',
         './Property'
     ], function(
@@ -11,6 +13,8 @@ define([
         defined,
         destroyObject,
         DeveloperError,
+        Rectangle,
+        ImageryLayer,
         WebMapServiceImageryProvider,
         Property) {
     "use strict";
@@ -90,7 +94,7 @@ define([
                 var layer = imageryProviderData.layer;
                 if (defined(layer) &&
                     (layer.imageryProvider !== imageryProviderData.imageryProvider ||
-                     !Rectangle.equals(layer.rectangle, layerGraphics.rectangle)) {
+                     !Rectangle.equals(layer.rectangle, layerGraphics.rectangle))) {
                     // Layer exists but refers to the wrong ImageryProvider or has the wrong rectangle,
                     // so remove the old layer and create a new one.
                     scene.imageryLayers.remove(layer);

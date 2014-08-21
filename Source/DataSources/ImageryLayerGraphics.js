@@ -5,6 +5,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/Rectangle',
         './createPropertyDescriptor'
     ], function(
         defaultValue,
@@ -12,6 +13,7 @@ define([
         defineProperties,
         DeveloperError,
         Event,
+        Rectangle,
         createPropertyDescriptor) {
     "use strict";
 
