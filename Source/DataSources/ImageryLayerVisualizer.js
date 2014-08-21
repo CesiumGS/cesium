@@ -105,8 +105,7 @@ define([
                     layer = imageryProviderData.layer = new ImageryLayer(imageryProviderData.imageryProvider, {
                         rectangle : Rectangle.clone(layerGraphics.rectangle)
                     });
-
-                    //scene.imageryLayers.addImageryProvider(imageryProviderData.imageryProvider);
+                    scene.imageryLayers.add(layer);
                 }
 
                 layer.show = Property.getValueOrDefault(layerGraphics._show, time, true);
