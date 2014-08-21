@@ -89,7 +89,7 @@ define([
             }
 
             if (defined(imageryProviderData.imageryProvider)) {
-                var currentRectangle = Property.getValueOrUndefined(layerGraphics._rectangle, time);
+                var currentRectangle = Property.getValueOrDefault(layerGraphics._rectangle, time, Rectangle.MAX_VALUE);
 
                 // TODO: Insert the imagery layer in the right z-order, especially when
                 //       replacing an existing ImageryLayer instance.
