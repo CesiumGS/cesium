@@ -19,6 +19,9 @@ defineSuite([
                 imageryLayer : {
                     alpha : 0.5,
                     zIndex : 10,
+                    rectangle : {
+                        wsenDegrees : [-100, 40, -80, 60]
+                    },
                     webMapService : {
                         url : 'http://geoserver.research.nicta.com.au/geotopo_250k/ows',
                         layers : 'railways',

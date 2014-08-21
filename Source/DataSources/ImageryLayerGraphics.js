@@ -38,6 +38,8 @@ define([
         this._saturationSubscription = undefined;
         this._gamma = undefined;
         this._gammaSubscription = undefined;
+        this._rectangle = undefined;
+        this._rectangleSubscription = undefined;
 
         this._imageryProvider = undefined;
         this._imageryProviderSubscription = undefined;
@@ -116,6 +118,13 @@ define([
         gamma : createPropertyDescriptor('gamma'),
 
         /**
+         * Gets or sets the {@link Rectangle} {@link Property} specifying the geographic
+         * rectangle in which to show the imagery layer.
+         * @type {Property}
+         */
+        rectangle : createPropertyDescriptor('rectangle'),
+
+        /**
          * Gets or sets the {@link Property} describing how tiled images for this layer
          * are obtained.
          * @type {ImageryProviderProperty}
@@ -141,6 +150,7 @@ define([
         result.hue = this.hue;
         result.saturation = this.saturation;
         result.gamma = this.gamma;
+        result.rectangle = Rectangle.clone(this.rectangle);
         result.imageryProvider = this.imageryProvider;
         return result;
     };
@@ -166,6 +176,7 @@ define([
         this.hue = defaultValue(this.hue, source.hue);
         this.saturation = defaultValue(this.saturation, source.saturation);
         this.gamma = defaultValue(this.gamma, source.gamma);
+        this.rectangle = defaultValue(this.rectangle, source.rectangle);
         this.imageryProvider = defaultValue(this.imageryProvider, source.imageryProvider);
     };
 

@@ -88,15 +88,21 @@ define([
                 // TODO: Insert the imagery layer in the right z-order, especially when
                 //       replacing an existing ImageryLayer instance.
                 var layer = imageryProviderData.layer;
-                if (defined(layer) && layer.imageryProvider !== imageryProviderData.imageryProvider) {
-                    // Layer exists but refers to the wrong ImageryProvider, so remove the old layer
-                    // and create a new one.
+                if (defined(layer) &&
+                    (layer.imageryProvider !== imageryProviderData.imageryProvider ||
+                     !Rectangle.equals(layer.rectangle, layerGraphics.rectangle)) {
+                    // Layer exists but refers to the wrong ImageryProvider or has the wrong rectangle,
+                    // so remove the old layer and create a new one.
                     scene.imageryLayers.remove(layer);
                     layer = imageryProviderData.layer = undefined;
                 }
 
                 if (!defined(layer)) {
-                    layer = imageryProviderData.layer = scene.imageryLayers.addImageryProvider(imageryProviderData.imageryProvider);
+                    layer = imageryProviderData.layer = new ImageryLayer(imageryProviderData.imageryProvider, {
+                        rectangle : Rectangle.clone(layerGraphics.rectangle)
+                    });
+
+                    //scene.imageryLayers.addImageryProvider(imageryProviderData.imageryProvider);
                 }
 
                 layer.show = Property.getValueOrDefault(layerGraphics._show, time, true);

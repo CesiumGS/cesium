@@ -1117,6 +1117,7 @@ define([
         processPacketData(Number, imageryLayer, 'hue', imageryLayerData.hue, interval, sourceUri, entityCollection);
         processPacketData(Number, imageryLayer, 'saturation', imageryLayerData.saturation, interval, sourceUri, entityCollection);
         processPacketData(Number, imageryLayer, 'gamma', imageryLayerData.gamma, interval, sourceUri, entityCollection);
+        processPacketData(Rectangle, imageryLayer, 'rectangle', imageryLayerData.rectangle, interval, sourceUri, entityCollection);
 
         var packetData;
 
