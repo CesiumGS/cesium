@@ -14,6 +14,7 @@ defineSuite([
         'Scene/ImageryProvider',
         'Specs/createScene',
         'Specs/destroyScene',
+        'Specs/waitsForPromise',
         'ThirdParty/when'
     ], function(
         ImageryLayerCollection,
@@ -30,6 +31,7 @@ defineSuite([
         ImageryProvider,
         createScene,
         destroyScene,
+        waitsForPromise,
         when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -426,8 +428,6 @@ defineSuite([
 
             updateUntilDone(globe);
 
-            var features;
-
             runs(function() {
                 var ellipsoid = Ellipsoid.WGS84;
                 camera.lookAt(new Cartesian3(ellipsoid.maximumRadius + 100.0, 0.0, 0.0), new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0), Cartesian3.UNIT_Z);
@@ -437,19 +437,11 @@ defineSuite([
 
                 expect(featuresPromise).toBeDefined();
 
-                when(featuresPromise, function(result) {
-                    features = result;
+                waitsForPromise(featuresPromise, function(features) {
+                    expect(features.length).toBe(1);
+                    expect(features[0].name).toEqual('Foo');
+                    expect(features[0].description).toContain('Foo!');
                 });
-            });
-
-            waitsFor(function() {
-                return defined(features);
-            });
-
-            runs(function() {
-                expect(features.length).toBe(1);
-                expect(features[0].name).toEqual('Foo');
-                expect(features[0].description).toContain('Foo!');
             });
         });
 
@@ -525,21 +517,13 @@ defineSuite([
 
                 expect(featuresPromise).toBeDefined();
 
-                when(featuresPromise, function(result) {
-                    features = result;
+                waitsForPromise(featuresPromise, function(features) {
+                    expect(features.length).toBe(2);
+                    expect(features[0].name).toEqual('Bar');
+                    expect(features[0].description).toContain('Bar!');
+                    expect(features[1].name).toEqual('Foo');
+                    expect(features[1].description).toContain('Foo!');
                 });
-            });
-
-            waitsFor(function() {
-                return defined(features);
-            });
-
-            runs(function() {
-                expect(features.length).toBe(2);
-                expect(features[0].name).toEqual('Bar');
-                expect(features[0].description).toContain('Bar!');
-                expect(features[1].name).toEqual('Foo');
-                expect(features[1].description).toContain('Foo!');
             });
         });
     });
