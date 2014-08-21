@@ -117,7 +117,6 @@ define([
         this._enablePickFeatures = defaultValue(options.enablePickFeatures, true);
         this._getFeatureInfoAsGeoJson = defaultValue(options.getFeatureInfoAsGeoJson, true);
         this._getFeatureInfoAsXml = defaultValue(options.getFeatureInfoAsXml, true);
-        this._useWebMercator = defaultValue(options.useWebMercator, false);
 
         // Merge the parameters with the defaults, and make all parameter names lowercase
         var parameter;
