@@ -722,13 +722,7 @@ define([
 
         var element = document.createElement('div');
         var pre = document.createElement('pre');
-
-        if (defined(pre.textContent)) {
-            pre.textContent = xmlText;
-        } else {
-            pre.innerText = xmlText;
-        }
-
+        pre.textContent = xmlText;
         element.appendChild(pre);
 
         var featureInfo = new ImageryLayerFeatureInfo();
