@@ -806,10 +806,12 @@ define([
                     createUniform(material, imageDimensionsUniformName);
                 }
             }
+
             // Add uniform declaration to source code.
-            var uniformPhrase = 'uniform ' + uniformType + ' ' + uniformId + ';\n';
-            if (material.shaderSource.indexOf(uniformPhrase) === -1) {
-                material.shaderSource = uniformPhrase + material.shaderSource;
+            var uniformDeclarationRegex = new RegExp('uniform\\s+' + uniformType + '\\s+' + uniformId + '\\s*;');
+            if (!uniformDeclarationRegex.test(material.shaderSource)) {
+                var uniformDeclaration = 'uniform ' + uniformType + ' ' + uniformId + ';';
+                material.shaderSource = uniformDeclaration + material.shaderSource;
             }
 
             var newUniformId = uniformId + '_' + material._count++;
@@ -921,9 +923,8 @@ define([
     function replaceToken(material, token, newToken, excludePeriod) {
         excludePeriod = defaultValue(excludePeriod, true);
         var count = 0;
-        var invalidCharacters = 'a-zA-Z0-9_';
-        var suffixChars = '([' + invalidCharacters + '])?';
-        var prefixChars = '([' + invalidCharacters + (excludePeriod ? '.' : '') + '])?';
+        var suffixChars = '([\\w])?';
+        var prefixChars = '([\\w' + (excludePeriod ? '.' : '') + '])?';
         var regExp = new RegExp(prefixChars + token + suffixChars, 'g');
         material.shaderSource = material.shaderSource.replace(regExp, function($0, $1, $2) {
             if ($1 || $2) {
