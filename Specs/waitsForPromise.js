@@ -1,14 +1,16 @@
 /*global define*/
 define([
         'Core/defaultValue',
+        'Core/defined',
         'ThirdParty/when'
     ], function(
         defaultValue,
+        defined,
         when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    function waitsForPromise(promise, options) {
+    function waitsForPromise(promise, options, resolveOrRejectCallback) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var expectRejection = defaultValue(options.expectRejection, false);
 
@@ -28,25 +30,26 @@ define([
             return resolved || rejected;
         }, 'promise did not resolve or reject within timeout', options.timeout);
 
-        var deferred = when.defer();
-
         runs(function() {
             if (rejected) {
                 if (!expectRejection) {
                     throw 'expected promise to resolve, but rejected: ' + error;
                 }
-                deferred.reject(error);
+
+                if (defined(resolveOrRejectCallback)) {
+                    resolveOrRejectCallback(error);
+                }
             }
 
             if (resolved) {
                 if (expectRejection) {
                     throw 'expected promise to reject, but resolved: ' + result;
                 }
-                deferred.resolve(result);
+                if (defined(resolveOrRejectCallback)) {
+                    resolveOrRejectCallback(result);
+                }
             }
         });
-
-        return deferred;
     }
 
     return waitsForPromise;

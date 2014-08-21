@@ -129,7 +129,7 @@ void main() {\n\
 
         var promise = atlas.addImage(greenImage.src, greenImage);
 
-        waitsForPromise(promise).then(function(index) {
+        waitsForPromise(promise, {}, function(index) {
             expect(index).toEqual(0);
 
             expect(atlas.numberOfImages).toEqual(1);
@@ -159,7 +159,7 @@ void main() {\n\
 
         var promise = atlas.addImage(greenImage.src, greenImage);
 
-        waitsForPromise(promise).then(function(index) {
+        waitsForPromise(promise, {}, function(index) {
             var texture = atlas.texture;
             var coords = atlas.textureCoordinates[index];
 
@@ -174,7 +174,7 @@ void main() {\n\
 
         var promise = atlas.addImage(greenImage.src, greenImage);
 
-        waitsForPromise(promise).then(function(index) {
+        waitsForPromise(promise, {}, function(index) {
             expect(index).toEqual(0);
 
             expect(atlas.numberOfImages).toEqual(1);
@@ -203,7 +203,7 @@ void main() {\n\
 
         var promise = atlas.addImage(greenImage.src, greenImage);
 
-        waitsForPromise(promise).then(function(index) {
+        waitsForPromise(promise, {}, function(index) {
             var texture = atlas.texture;
             var coords = atlas.textureCoordinates[index];
 
@@ -220,7 +220,7 @@ void main() {\n\
 
         var promise = atlas.addImage(tallGreenImage.src, tallGreenImage);
 
-        waitsForPromise(promise).then(function(index) {
+        waitsForPromise(promise, {}, function(index) {
             expect(index).toEqual(0);
 
             expect(atlas.numberOfImages).toEqual(1);
@@ -249,7 +249,7 @@ void main() {\n\
 
         var promise = atlas.addImage(tallGreenImage.src, tallGreenImage);
 
-        waitsForPromise(promise).then(function(index) {
+        waitsForPromise(promise, {}, function(index) {
             var texture = atlas.texture;
             var coords = atlas.textureCoordinates[index];
 
@@ -267,7 +267,7 @@ void main() {\n\
         var greenPromise = atlas.addImage(greenImage.src, greenImage);
         var greenIndex;
 
-        waitsForPromise(greenPromise).then(function(index) {
+        waitsForPromise(greenPromise, {}, function(index) {
             greenIndex = index;
         });
 
@@ -277,7 +277,7 @@ void main() {\n\
         runs(function() {
             bluePromise = atlas.addImage(blueImage.src, blueImage);
 
-            waitsForPromise(bluePromise).then(function(index) {
+            waitsForPromise(bluePromise, {}, function(index) {
                 blueIndex = index;
             });
         });
@@ -315,7 +315,7 @@ void main() {\n\
         var greenPromise = atlas.addImage(greenImage.src, greenImage);
         var greenIndex;
 
-        waitsForPromise(greenPromise).then(function(index) {
+        waitsForPromise(greenPromise, {}, function(index) {
             greenIndex = index;
         });
 
@@ -325,7 +325,7 @@ void main() {\n\
         runs(function() {
             bluePromise = atlas.addImage(blueImage.src, blueImage);
 
-            waitsForPromise(bluePromise).then(function(index) {
+            waitsForPromise(bluePromise, {}, function(index) {
                 blueIndex = index;
             });
         });
@@ -353,7 +353,7 @@ void main() {\n\
         var bigBluePromise = atlas.addImage(bigBlueImage.src, bigBlueImage);
 
         var combinedPromise = when.all([greenPromise, bluePromise, bigRedPromise, bigBluePromise]);
-        waitsForPromise(combinedPromise, function(indices) {
+        waitsForPromise(combinedPromise, {}, function(indices) {
             var greenIndex = indices.unshift();
             var blueIndex = indices.unshift();
             var bigRedIndex = indices.unshift();
@@ -386,7 +386,7 @@ void main() {\n\
         var bigBluePromise = atlas.addImage(bigBlueImage.src, bigBlueImage);
 
         var combinedPromise = when.all([greenPromise, bluePromise, bigRedPromise, bigBluePromise]);
-        waitsForPromise(combinedPromise, function(indices) {
+        waitsForPromise(combinedPromise, {}, function(indices) {
             var greenIndex = indices.unshift();
             var blueIndex = indices.unshift();
             var bigRedIndex = indices.unshift();
@@ -440,7 +440,7 @@ void main() {\n\
         var bigBluePromise = atlas.addImage(bigBlueImage.src, bigBlueImage);
 
         var combinedPromise = when.all([greenPromise, bluePromise, bigRedPromise, bigBluePromise]);
-        waitsForPromise(combinedPromise, function(indices) {
+        waitsForPromise(combinedPromise, {}, function(indices) {
             var greenIndex = indices.unshift();
             var blueIndex = indices.unshift();
             var bigRedIndex = indices.unshift();
@@ -471,7 +471,7 @@ void main() {\n\
         var bluePromise = atlas.addImage(blueImage.src, blueImage);
         var blueIndex;
 
-        waitsForPromise(bluePromise).then(function(index) {
+        waitsForPromise(bluePromise, {}, function(index) {
             blueIndex = index;
         });
 
@@ -499,7 +499,7 @@ void main() {\n\
             //Add the big green image
             greenPromise = atlas.addImage(bigGreenImage.src, bigGreenImage);
 
-            waitsForPromise(greenPromise).then(function(index) {
+            waitsForPromise(greenPromise, {}, function(index) {
                 greenIndex = index;
             });
         });
@@ -539,7 +539,7 @@ void main() {\n\
         var bluePromise = atlas.addImage(blueImage.src, blueImage);
         var blueIndex;
 
-        waitsForPromise(bluePromise).then(function(index) {
+        waitsForPromise(bluePromise, {}, function(index) {
             blueIndex = index;
         });
 
@@ -559,7 +559,7 @@ void main() {\n\
             //Add the big green image
             greenPromise = atlas.addImage(bigGreenImage.src, bigGreenImage);
 
-            waitsForPromise(greenPromise).then(function(index) {
+            waitsForPromise(greenPromise, {}, function(index) {
                 greenIndex = index;
             });
         });
@@ -587,7 +587,7 @@ void main() {\n\
 
         var promise = atlas.addImage(bigRedImage.src, bigRedImage);
 
-        waitsForPromise(promise).then(function(index) {
+        waitsForPromise(promise, {}, function(index) {
             expect(atlas.numberOfImages).toEqual(1);
 
             var texture = atlas.texture;
@@ -614,7 +614,7 @@ void main() {\n\
 
         var promise = atlas.addImage(bigRedImage.src, bigRedImage);
 
-        waitsForPromise(promise).then(function(index) {
+        waitsForPromise(promise, {}, function(index) {
             var texture = atlas.texture;
             var coords = atlas.textureCoordinates[index];
 
@@ -633,7 +633,7 @@ void main() {\n\
         var bluePromise = atlas.addImage(blueImage.src, blueImage);
 
         var combinedPromise = when.all([greenPromise, bluePromise]);
-        waitsForPromise(combinedPromise).then(function(indices) {
+        waitsForPromise(combinedPromise, {}, function(indices) {
             var greenIndex = indices.unshift();
             var blueIndex = indices.unshift();
 
@@ -670,7 +670,7 @@ void main() {\n\
         var bluePromise = atlas.addImage(blueImage.src, blueImage);
 
         var combinedPromise = when.all([greenPromise, bluePromise]);
-        waitsForPromise(combinedPromise).then(function(indices) {
+        waitsForPromise(combinedPromise, {}, function(indices) {
             var greenIndex = indices.unshift();
             var blueIndex = indices.unshift();
 
@@ -693,7 +693,7 @@ void main() {\n\
         });
 
         var promise = atlas.addImage(tallGreenImage.src, tallGreenImage);
-        waitsForPromise(promise).then(function(index) {
+        waitsForPromise(promise, {}, function(index) {
             expect(atlas.numberOfImages).toEqual(1);
 
             var texture = atlas.texture;
@@ -719,7 +719,7 @@ void main() {\n\
         });
 
         var promise = atlas.addImage(tallGreenImage.src, tallGreenImage);
-        waitsForPromise(promise).then(function(index) {
+        waitsForPromise(promise, {}, function(index) {
             var texture = atlas.texture;
             var coords = atlas.textureCoordinates[index];
 
@@ -739,7 +739,7 @@ void main() {\n\
         var bigRedPromise = atlas.addImage(bigRedImage.src, bigRedImage);
 
         var combinedPromise = when.all([bluePromise, bigGreenPromise, bigRedPromise]);
-        waitsForPromise(combinedPromise, function(indices) {
+        waitsForPromise(combinedPromise, {}, function(indices) {
             var blueIndex = indices.unshift();
             var bigGreenIndex = indices.unshift();
             var bigRedIndex = indices.unshift();
@@ -765,7 +765,7 @@ void main() {\n\
         var promise = atlas.addImage(blueImage.src, blueImage);
         var blueIndex;
 
-        waitsForPromise(promise).then(function(index) {
+        waitsForPromise(promise, {}, function(index) {
             expect(index).toEqual(0);
             blueIndex = index;
         });
@@ -774,7 +774,7 @@ void main() {\n\
         runs(function() {
             promise = atlas.addImage(greenImage.src, greenImage);
 
-            waitsForPromise(promise).then(function(index) {
+            waitsForPromise(promise, {}, function(index) {
                 expect(index).toEqual(1);
                 greenIndex = index;
             });
@@ -783,7 +783,7 @@ void main() {\n\
         runs(function() {
             promise = atlas.addImage(blueImage.src, blueImage);
 
-            waitsForPromise(promise).then(function(index) {
+            waitsForPromise(promise, {}, function(index) {
                 expect(index).toEqual(blueIndex);
             });
         });
@@ -817,7 +817,7 @@ void main() {\n\
         var promise4 = atlas.addSubRegion(greenImage.src, new BoundingRectangle(0.5, 0.5, 0.5, 0.5));
 
         var combinedPromise = when.all([promise1, promise2, promise3, promise4]);
-        waitsForPromise(combinedPromise, function(indices) {
+        waitsForPromise(combinedPromise, {}, function(indices) {
             var index1 = indices.unshift();
             var index2 = indices.unshift();
             var index3 = indices.unshift();
@@ -866,7 +866,7 @@ void main() {\n\
         var promise4 = atlas.addSubRegion(greenImage.src, new BoundingRectangle(0.5, 0.5, 0.5, 0.5));
 
         var combinedPromise = when.all([promise1, promise2, promise3, promise4]);
-        waitsForPromise(combinedPromise, function(indices) {
+        waitsForPromise(combinedPromise, {}, function(indices) {
             var index1 = indices.unshift();
             var index2 = indices.unshift();
             var index3 = indices.unshift();
@@ -875,7 +875,7 @@ void main() {\n\
             expect(atlas.numberOfImages).toEqual(5);
 
             var bluePromise = atlas.addImage(blueImage);
-            waitsForPromise(bluePromise, function(blueIndex) {
+            waitsForPromise(bluePromise, {}, function(blueIndex) {
                 expect(atlas.numberOfImages).toEqual(6);
 
                 var coordinates = atlas.textureCoordinates;
@@ -926,12 +926,12 @@ void main() {\n\
         });
 
         var greenIndex;
-        waitsForPromise(greenPromise).then(function(index) {
+        waitsForPromise(greenPromise, {}, function(index) {
             greenIndex = index;
         });
 
         var blueIndex;
-        waitsForPromise(bluePromise).then(function(index) {
+        waitsForPromise(bluePromise, {}, function(index) {
             blueIndex = index;
         });
 
@@ -952,7 +952,7 @@ void main() {\n\
                 throw 'should not get here';
             });
 
-            waitsForPromise(bluePromise).then(function(index) {
+            waitsForPromise(bluePromise, {}, function(index) {
                 expect(index).toEqual(blueIndex);
             });
         });
@@ -966,12 +966,12 @@ void main() {\n\
         var guid1 = atlas.guid;
 
         var promise = atlas.addImage(greenImage.src, greenImage);
-        waitsForPromise(promise).then(function(index) {
+        waitsForPromise(promise, {}, function(index) {
             var guid2 = atlas.guid;
             expect(guid1).toNotEqual(guid2);
 
             promise = atlas.addSubRegion(greenImage.src, new BoundingRectangle(0.0, 0.0, 0.5, 0.5));
-            waitsForPromise(promise).then(function(index) {
+            waitsForPromise(promise, {}, function(index) {
                 var guid3 = atlas.guid;
                 expect(guid2).toNotEqual(guid3);
             });

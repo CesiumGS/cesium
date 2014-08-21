@@ -15,6 +15,7 @@ defineSuite([
         'Scene/ImageryLayerFeatureInfo',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
+        'Specs/waitsForPromise',
         'ThirdParty/when'
     ], function(
         WebMapServiceImageryProvider,
@@ -32,6 +33,7 @@ defineSuite([
         ImageryLayerFeatureInfo,
         ImageryProvider,
         ImageryState,
+        waitsForPromise,
         when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -435,27 +437,18 @@ defineSuite([
                 return provider.ready;
             }, 'imagery provider to become ready');
 
-            var pickResult;
-
             runs(function() {
                 var asyncResult = provider.pickFeatures(0, 0, 0, 0.5, 0.5);
-                when(asyncResult, function(result) {
-                    pickResult = result;
+
+                waitsForPromise(asyncResult, {}, function(pickResult) {
+                    expect(pickResult.length).toBe(1);
+
+                    var firstResult = pickResult[0];
+                    expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
+                    expect(firstResult.name).toBe('TOP TANK');
+                    expect(firstResult.description).toContain('GEOSCIENCE AUSTRALIA');
+                    expect(firstResult.position).toEqual(Cartographic.fromDegrees(145.91299, -30.19445));
                 });
-            });
-
-            waitsFor(function() {
-                return defined(pickResult);
-            });
-
-            runs(function() {
-                expect(pickResult.length).toBe(1);
-
-                var firstResult = pickResult[0];
-                expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
-                expect(firstResult.name).toBe('TOP TANK');
-                expect(firstResult.description).toContain('GEOSCIENCE AUSTRALIA');
-                expect(firstResult.position).toEqual(Cartographic.fromDegrees(145.91299, -30.19445));
             });
         });
 
@@ -474,26 +467,17 @@ defineSuite([
                 return provider.ready;
             }, 'imagery provider to become ready');
 
-            var pickResult;
-
             runs(function() {
                 var asyncResult = provider.pickFeatures(0, 0, 0, 0.5, 0.5);
-                when(asyncResult, function(result) {
-                    pickResult = result;
+
+                waitsForPromise(asyncResult, {}, function(pickResult) {
+                    expect(pickResult.length).toBe(1);
+
+                    var firstResult = pickResult[0];
+                    expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
+                    expect(firstResult.name).toBe('SPRINGWOOD');
+                    expect(firstResult.description).toContain('NSW');
                 });
-            });
-
-            waitsFor(function() {
-                return defined(pickResult);
-            });
-
-            runs(function() {
-                expect(pickResult.length).toBe(1);
-
-                var firstResult = pickResult[0];
-                expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
-                expect(firstResult.name).toBe('SPRINGWOOD');
-                expect(firstResult.description).toContain('NSW');
             });
         });
 
@@ -512,26 +496,17 @@ defineSuite([
                 return provider.ready;
             }, 'imagery provider to become ready');
 
-            var pickResult;
-
             runs(function() {
                 var asyncResult = provider.pickFeatures(0, 0, 0, 0.5, 0.5);
-                when(asyncResult, function(result) {
-                    pickResult = result;
+
+                waitsForPromise(asyncResult, {}, function(pickResult) {
+                    expect(pickResult.length).toBe(1);
+
+                    var firstResult = pickResult[0];
+                    expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
+                    expect(firstResult.name).toBe('Kyogle (A)');
+                    expect(firstResult.description).toContain('New South Wales');
                 });
-            });
-
-            waitsFor(function() {
-                return defined(pickResult);
-            });
-
-            runs(function() {
-                expect(pickResult.length).toBe(1);
-
-                var firstResult = pickResult[0];
-                expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
-                expect(firstResult.name).toBe('Kyogle (A)');
-                expect(firstResult.description).toContain('New South Wales');
             });
         });
 
@@ -550,26 +525,17 @@ defineSuite([
                 return provider.ready;
             }, 'imagery provider to become ready');
 
-            var pickResult;
-
             runs(function() {
                 var asyncResult = provider.pickFeatures(0, 0, 0, 0.5, 0.5);
-                when(asyncResult, function(result) {
-                    pickResult = result;
+
+                waitsForPromise(asyncResult, {}, function(pickResult) {
+                    expect(pickResult.length).toBe(1);
+
+                    var firstResult = pickResult[0];
+                    expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
+                    expect(firstResult.name).toBeUndefined();
+                    expect(firstResult.description).toContain('&lt;FooFeature&gt;');
                 });
-            });
-
-            waitsFor(function() {
-                return defined(pickResult);
-            });
-
-            runs(function() {
-                expect(pickResult.length).toBe(1);
-
-                var firstResult = pickResult[0];
-                expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
-                expect(firstResult.name).toBeUndefined();
-                expect(firstResult.description).toContain('&lt;FooFeature&gt;');
             });
         });
 
@@ -588,23 +554,12 @@ defineSuite([
                 return provider.ready;
             }, 'imagery provider to become ready');
 
-            var pickResult;
-            var resultReturned = false;
-
             runs(function() {
                 var asyncResult = provider.pickFeatures(0, 0, 0, 0.5, 0.5);
-                when(asyncResult, function(result) {
-                    pickResult = result;
-                    resultReturned = true;
+
+                waitsForPromise(asyncResult, {}, function(pickResult) {
+                    expect(pickResult).toBeUndefined();
                 });
-            });
-
-            waitsFor(function() {
-                return resultReturned;
-            });
-
-            runs(function() {
-                expect(pickResult).toBeUndefined();
             });
         });
 
@@ -619,8 +574,6 @@ defineSuite([
             waitsFor(function() {
                 return provider.ready;
             }, 'imagery provider to become ready');
-
-            var pickResult;
 
             runs(function() {
                 expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).toBeUndefined();
@@ -637,8 +590,6 @@ defineSuite([
             waitsFor(function() {
                 return provider.ready;
             }, 'imagery provider to become ready');
-
-            var pickResult;
 
             runs(function() {
                 expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).toBeUndefined();
@@ -662,26 +613,17 @@ defineSuite([
                 return provider.ready;
             }, 'imagery provider to become ready');
 
-            var pickResult;
-
             runs(function() {
                 var asyncResult = provider.pickFeatures(0, 0, 0, 0.5, 0.5);
-                when(asyncResult, function(result) {
-                    pickResult = result;
+
+                waitsForPromise(asyncResult, {}, function(pickResult) {
+                    expect(pickResult.length).toBe(1);
+
+                    var firstResult = pickResult[0];
+                    expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
+                    expect(firstResult.name).toBe('SPRINGWOOD');
+                    expect(firstResult.description).toContain('NSW');
                 });
-            });
-
-            waitsFor(function() {
-                return defined(pickResult);
-            });
-
-            runs(function() {
-                expect(pickResult.length).toBe(1);
-
-                var firstResult = pickResult[0];
-                expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
-                expect(firstResult.name).toBe('SPRINGWOOD');
-                expect(firstResult.description).toContain('NSW');
             });
         });
 
@@ -707,25 +649,11 @@ defineSuite([
                 return provider.ready;
             }, 'imagery provider to become ready');
 
-            var success = false;
-            var failure = false;
-
             runs(function() {
                 var asyncResult = provider.pickFeatures(0, 0, 0, 0.5, 0.5);
-                when(asyncResult, function(result) {
-                    success = true;
-                }, function(e) {
-                    failure = true;
+                waitsForPromise(asyncResult, {
+                    expectRejection : true
                 });
-            });
-
-            waitsFor(function() {
-                return success || failure;
-            });
-
-            runs(function() {
-                expect(success).toBe(false);
-                expect(failure).toBe(true);
             });
         });
     });
