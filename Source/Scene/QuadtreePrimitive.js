@@ -60,22 +60,22 @@ define([
         this._tileProvider.quadtree = this;
 
         this._debug = {
-                enableDebugOutput : false,
+            enableDebugOutput : false,
 
-                maxDepth : 0,
-                tilesVisited : 0,
-                tilesCulled : 0,
-                tilesRendered : 0,
-                tilesWaitingForChildren : 0,
+            maxDepth : 0,
+            tilesVisited : 0,
+            tilesCulled : 0,
+            tilesRendered : 0,
+            tilesWaitingForChildren : 0,
 
-                lastMaxDepth : -1,
-                lastTilesVisited : -1,
-                lastTilesCulled : -1,
-                lastTilesRendered : -1,
-                lastTilesWaitingForChildren : -1,
+            lastMaxDepth : -1,
+            lastTilesVisited : -1,
+            lastTilesCulled : -1,
+            lastTilesRendered : -1,
+            lastTilesWaitingForChildren : -1,
 
-                suspendLodUpdate : false
-            };
+            suspendLodUpdate : false
+        };
 
         var tilingScheme = this._tileProvider.tilingScheme;
         var ellipsoid = tilingScheme.ellipsoid;

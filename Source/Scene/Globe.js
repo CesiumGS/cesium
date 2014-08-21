@@ -111,7 +111,9 @@ define([
      */
     var Globe = function(ellipsoid) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        var terrainProvider = new EllipsoidTerrainProvider({ellipsoid : ellipsoid});
+        var terrainProvider = new EllipsoidTerrainProvider({
+            ellipsoid : ellipsoid
+        });
         var imageryLayerCollection = new ImageryLayerCollection();
 
         /**
