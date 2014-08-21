@@ -451,7 +451,7 @@ define([
             }, function (e) {
                 // GeoJSON failed, try XML.
                 if (!that._getFeatureInfoAsXml) {
-                    throw e;
+                    return when.reject(e);
                 }
 
                 url = buildGetFeatureInfoUrl(that, 'text/xml', x, y, level, i, j);
