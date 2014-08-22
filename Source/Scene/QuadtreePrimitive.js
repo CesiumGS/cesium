@@ -86,6 +86,7 @@ define([
         this._tileReplacementQueue = new TileReplacementQueue();
         this._levelZeroTiles = undefined;
         this._levelZeroTilesReady = false;
+        this._loadQueueTimeSlice = 5.0;
 
         /**
          * Gets or sets the maximum screen-space error, in pixels, that is allowed.
