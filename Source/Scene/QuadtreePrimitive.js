@@ -446,11 +446,11 @@ define([
         }
     }
 
-    function createRenderCommandsForSelectedTiles(primitive, context, frameState, commandList) {
-        function tileDistanceSortFunction(a, b) {
-            return a._distance - b._distance;
-        }
+    function tileDistanceSortFunction(a, b) {
+        return a._distance - b._distance;
+    }
 
+    function createRenderCommandsForSelectedTiles(primitive, context, frameState, commandList) {
         var tileProvider = primitive._tileProvider;
         var tilesToRender = primitive._tilesToRender;
 

@@ -138,7 +138,7 @@ define([
         options = defaultValue(options, {});
 
         /**
-         * The alpha blending value of this layer, with 0.0 representing fully transparent and 
+         * The alpha blending value of this layer, with 0.0 representing fully transparent and
          * 1.0 representing fully opaque.
          *
          * @type {Number}
