@@ -14,6 +14,7 @@ Change Log
 * Added an optional `pickFeatures` function to the `ImageryProvider` interface.  With supporting imagery providers, such as `WebMapServiceImageryProvider`, it can be used to determine the rasterized features under a particular location.
 * Added `ImageryLayerCollection.pickImageryLayerFeatures`.  It determines the rasterized imagery layer features intersected by a given pick ray by querying supporting layers using `ImageryProvider.pickFeatures`.
 * `viewerEntityMixin` now automatically queries for imagery layer features on click and shows their properties in the `InfoBox` panel.
+* Fixed a bug in terrain and imagery loading that could cause a choppy, inconsistent frame rate when moving around the globe, especially on a faster internet connection.
 
 ### 1.0 - 2014-08-01
 
