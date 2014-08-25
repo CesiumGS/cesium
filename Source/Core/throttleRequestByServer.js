@@ -1,9 +1,11 @@
 /*global define*/
 define([
+        '../ThirdParty/Uri',
         '../ThirdParty/when',
         './defaultValue',
         './defined'
     ], function(
+        Uri,
         when,
         defaultValue,
         defined) {
@@ -11,14 +13,16 @@ define([
 
     var maximumRequestsPerServer = 6;
     var activeRequests = {};
-    var anchor;
 
+    var pageUri = new Uri(document.location.href);
     function getServer(url) {
-        if (!defined(anchor)) {
-            anchor = document.createElement('a');
+        var uri = new Uri(url).resolve(pageUri);
+        uri.normalize();
+        var server = uri.authority;
+        if (!/:/.test(server)) {
+            server = server + ':' + (uri.scheme === 'https' ? '443' : '80');
         }
-        anchor.href = url;
-        return anchor.hostname + '%' + anchor.port;
+        return server;
     }
 
     /**
