@@ -261,7 +261,7 @@ define([
      *
      * // 3. create extruded polygon outline
      * var extrudedPolygon = new Cesium.PolygonOutlineGeometry({
-	 *   polygonHierarchy : { 
+     *   polygonHierarchy : { 
      *     positions : Cesium.Cartesian3.fromDegreesArray([
      *       -72.0, 40.0,
      *       -70.0, 35.0,
@@ -270,7 +270,7 @@ define([
      *       -68.0, 40.0
      *     ]),
      *     extrudedHeight: 300000
-	 *   }
+     *   }
      * });
      * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(extrudedPolygon);
      */
