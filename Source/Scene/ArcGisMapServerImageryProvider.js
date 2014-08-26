@@ -44,6 +44,7 @@ define([
      * @alias ArcGisMapServerImageryProvider
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {String} options.url The URL of the ArcGIS MapServer service.
      * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
      *        is invalid and should be discarded.  If this value is not specified, a default
@@ -403,7 +404,9 @@ define([
          * will return the value of `options.usePreCachedTilesIfAvailable`, even if the MapServer does
          * not have pre-cached tiles.
          * @memberof ArcGisMapServerImageryProvider.prototype
-         * @returns {Boolean}
+         *
+         * @type {Boolean}
+         * @default true
          */
         usingPrecachedTiles : {
             get : function() {
@@ -418,7 +421,9 @@ define([
          * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
          * and texture upload time are reduced.
          * @memberof ArcGisMapServerImageryProvider.prototype
+         *
          * @type {Boolean}
+         * @default true
          */
         hasAlphaChannel : {
             get : function() {
@@ -431,12 +436,9 @@ define([
     /**
      * Gets the credits to be displayed when a given tile is displayed.
      *
-     * @memberof ArcGisMapServerImageryProvider
-     *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level;
-     *
      * @returns {Credit[]} The credits to be displayed when the tile is displayed.
      *
      * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
@@ -449,12 +451,9 @@ define([
      * Requests the image for a given tile.  This function should
      * not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
      *
-     * @memberof ArcGisMapServerImageryProvider
-     *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
-     *
      * @returns {Promise} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
@@ -471,6 +470,24 @@ define([
 
         var url = buildImageUrl(this, x, y, level);
         return ImageryProvider.loadImage(this, url);
+    };
+
+    /**
+     * Picking features is not currently supported by this imagery provider, so this function simply returns
+     * undefined.
+     *
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level.
+     * @param {Number} longitude The longitude at which to pick features.
+     * @param {Number} latitude  The latitude at which to pick features.
+     * @return {Promise} A promise for the picked features that will resolve when the asynchronous
+     *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
+     *                   instances.  The array may be empty if no features are found at the given location.
+     *                   It may also be undefined if picking is not supported.
+     */
+    ArcGisMapServerImageryProvider.prototype.pickFeatures = function() {
+        return undefined;
     };
 
     return ArcGisMapServerImageryProvider;

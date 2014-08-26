@@ -1,11 +1,15 @@
 /*global define*/
-define(function() {
+define([
+        './freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
      * Constants for identifying well-known reference frames.
      *
-     * @exports ReferenceFrame
+     * @namespace
+     * @alias ReferenceFrame
      */
     var ReferenceFrame = {
         /**
@@ -25,5 +29,5 @@ define(function() {
         INERTIAL : 1
     };
 
-    return ReferenceFrame;
+    return freezeObject(ReferenceFrame);
 });

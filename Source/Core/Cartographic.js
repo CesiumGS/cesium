@@ -50,7 +50,6 @@ define([
     /**
      * Creates a new Cartographic instance from longitude and latitude
      * specified in radians.
-     * @memberof Cartographic
      *
      * @param {Number} longitude The longitude, in radians.
      * @param {Number} latitude The latitude, in radians.
@@ -67,9 +66,9 @@ define([
             throw new DeveloperError('latitude is required.');
         }
         //>>includeEnd('debug');
-        
+
         height = defaultValue(height, 0.0);
-        
+
         if (!defined(result)) {
             return new Cartographic(longitude, latitude, height);
         }
@@ -84,7 +83,6 @@ define([
      * Creates a new Cartographic instance from longitude and latitude
      * specified in degrees.  The values in the resulting object will
      * be in radians.
-     * @memberof Cartographic
      *
      * @param {Number} longitude The longitude, in degrees.
      * @param {Number} latitude The latitude, in degrees.
@@ -109,7 +107,6 @@ define([
 
     /**
      * Duplicates a Cartographic instance.
-     * @memberof Cartographic
      *
      * @param {Cartographic} cartographic The cartographic to duplicate.
      * @param {Cartographic} [result] The object onto which to store the result.
@@ -131,7 +128,6 @@ define([
     /**
      * Compares the provided cartographics componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof Cartographic
      *
      * @param {Cartographic} [left] The first cartographic.
      * @param {Cartographic} [right] The second cartographic.
@@ -150,7 +146,6 @@ define([
      * Compares the provided cartographics componentwise and returns
      * <code>true</code> if they are within the provided epsilon,
      * <code>false</code> otherwise.
-     * @memberof Cartographic
      *
      * @param {Cartographic} [left] The first cartographic.
      * @param {Cartographic} [right] The second cartographic.
@@ -173,32 +168,15 @@ define([
     };
 
     /**
-     * Creates a string representing the provided cartographic in the format '(longitude, latitude, height)'.
-     * @memberof Cartographic
-     *
-     * @param {Cartographic} cartographic The cartographic to stringify.
-     * @returns {String} A string representing the provided cartographic in the format '(longitude, latitude, height)'.
-     */
-    Cartographic.toString = function(cartographic) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartographic)) {
-            throw new DeveloperError('cartographic is required');
-        }
-        //>>includeEnd('debug');
-
-        return '(' + cartographic.longitude + ', ' + cartographic.latitude + ', ' + cartographic.height + ')';
-    };
-
-    /**
      * An immutable Cartographic instance initialized to (0.0, 0.0, 0.0).
      *
-     * @memberof Cartographic
+     * @type {Cartographic}
+     * @constant
      */
     Cartographic.ZERO = freezeObject(new Cartographic(0.0, 0.0, 0.0));
 
     /**
      * Duplicates this instance.
-     * @memberof Cartographic
      *
      * @param {Cartographic} [result] The object onto which to store the result.
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if one was not provided.
@@ -210,7 +188,6 @@ define([
     /**
      * Compares the provided against this cartographic componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof Cartographic
      *
      * @param {Cartographic} [right] The second cartographic.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
@@ -223,7 +200,6 @@ define([
      * Compares the provided against this cartographic componentwise and returns
      * <code>true</code> if they are within the provided epsilon,
      * <code>false</code> otherwise.
-     * @memberof Cartographic
      *
      * @param {Cartographic} [right] The second cartographic.
      * @param {Number} epsilon The epsilon to use for equality testing.
@@ -235,12 +211,11 @@ define([
 
     /**
      * Creates a string representing this cartographic in the format '(longitude, latitude, height)'.
-     * @memberof Cartographic
      *
      * @returns {String} A string representing the provided cartographic in the format '(longitude, latitude, height)'.
      */
     Cartographic.prototype.toString = function() {
-        return Cartographic.toString(this);
+        return '(' + this.longitude + ', ' + this.latitude + ', ' + this.height + ')';
     };
 
     return Cartographic;

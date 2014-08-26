@@ -47,6 +47,28 @@ defineSuite([
         expect(spyListener).not.toHaveBeenCalled();
     });
 
+    it('can remove from withing a callback', function() {
+        var doNothing = function(evt) {
+        };
+
+        var removeEventCb = function(evt) {
+            event.removeEventListener(removeEventCb);
+        };
+
+        var doNothing2 = function(evt) {
+        };
+
+        event.addEventListener(doNothing);
+        event.addEventListener(removeEventCb);
+        event.addEventListener(doNothing2);
+        event.raiseEvent();
+        expect(event.numberOfListeners).toEqual(2);
+
+        event.removeEventListener(doNothing);
+        event.removeEventListener(doNothing2);
+        expect(event.numberOfListeners).toEqual(0);
+    });
+
     it('addEventListener and removeEventListener works with same function of different scopes', function() {
         var Scope = function() {
             this.timesCalled = 0;
@@ -94,6 +116,27 @@ defineSuite([
 
         event.removeEventListener(callback2);
         expect(event.numberOfListeners).toEqual(1);
+    });
+
+    it('removeEventListener indicates if the listener is registered with the event', function() {
+        var callback = function() {
+        };
+
+        event.addEventListener(callback);
+        expect(event.numberOfListeners).toEqual(1);
+
+        expect(event.removeEventListener(callback)).toEqual(true);
+        expect(event.numberOfListeners).toEqual(0);
+
+        expect(event.removeEventListener(callback)).toEqual(false);
+    });
+
+    it('removeEventListener does not remove a registered listener of a different scope', function() {
+        var myFunc = function() {
+        };
+        var scope = {};
+        event.addEventListener(myFunc, scope);
+        expect(event.removeEventListener(myFunc)).toEqual(false);
     });
 
     it('works with no listeners', function() {
@@ -158,24 +201,6 @@ defineSuite([
     it('removeEventListener throws with null listener', function() {
         expect(function() {
             event.removeEventListener(null);
-        }).toThrowDeveloperError();
-    });
-
-    it('removeEventListener throws with non registered listener', function() {
-        expect(function() {
-            event.removeEventListener(function() {
-            });
-        }).toThrowDeveloperError();
-    });
-
-    it('removeEventListener throws with registered listener of a different scope', function() {
-        var myFunc = function() {
-        };
-        var scope = {};
-        event.addEventListener(myFunc, scope);
-
-        expect(function() {
-            event.removeEventListener(myFunc);
         }).toThrowDeveloperError();
     });
 });

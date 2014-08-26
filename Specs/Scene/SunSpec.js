@@ -37,7 +37,7 @@ defineSuite([
         var camera = scene.camera;
 
         var sunPosition = us.sunPositionWC;
-        var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition), 1e8);
+        var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition, new Cartesian3()), 1e8, new Cartesian3());
         camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
         scene.initializeFrame();
@@ -56,7 +56,7 @@ defineSuite([
         var camera = scene.camera;
 
         var sunPosition = us.sunPositionColumbusView;
-        var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition), 1e8);
+        var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition, new Cartesian3()), 1e8, new Cartesian3());
         camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
         scene.initializeFrame();
@@ -68,14 +68,16 @@ defineSuite([
         var sun = new Sun();
         sun.show = false;
 
+        var frameState = createFrameState(createCamera({
+            near : 1.0,
+            far : 1.0e10
+        }));
         var context = scene.context;
-
-        var frameState = createFrameState(createCamera(context, undefined, undefined, undefined, 1.0, 1.0e10));
         var us = context.uniformState;
         us.update(context, frameState);
 
         var sunPosition = us.sunPositionWC;
-        var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition), 1e8);
+        var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition, new Cartesian3()), 1e8, new Cartesian3());
         frameState.camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
         us.update(context, frameState);
@@ -89,15 +91,17 @@ defineSuite([
     it('does not render in 2D', function() {
         var sun = new Sun();
 
-        var context = scene.context;
-
-        var frameState = createFrameState(createCamera(context, undefined, undefined, undefined, 1.0, 1.0e10));
+        var frameState = createFrameState(createCamera({
+            near : 1.0,
+            far : 1.0e10
+        }));
         frameState.mode = SceneMode.SCENE2D;
+        var context = scene.context;
         var us = context.uniformState;
         us.update(context, frameState);
 
         var sunPosition = us.sunPositionWC;
-        var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition), 1e8);
+        var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition, new Cartesian3()), 1e8, new Cartesian3());
         frameState.camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
         us.update(context, frameState);
@@ -111,15 +115,17 @@ defineSuite([
     it('does not render without a render pass', function() {
         var sun = new Sun();
 
-        var context = scene.context;
-
-        var frameState = createFrameState(createCamera(context, undefined, undefined, undefined, 1.0, 1.0e10));
+        var frameState = createFrameState(createCamera({
+            near : 1.0,
+            far : 1.0e10
+        }));
         frameState.passes.render = false;
+        var context = scene.context;
         var us = context.uniformState;
         us.update(context, frameState);
 
         var sunPosition = us.sunPositionWC;
-        var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition), 1e8);
+        var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition, new Cartesian3()), 1e8, new Cartesian3());
         frameState.camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
         us.update(context, frameState);
@@ -148,7 +154,7 @@ defineSuite([
         var camera = scene.camera;
 
         var sunPosition = us.sunPositionWC;
-        var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition), 1e8);
+        var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition, new Cartesian3()), 1e8, new Cartesian3());
         camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
         scene.initializeFrame();

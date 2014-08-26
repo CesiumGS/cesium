@@ -26,7 +26,7 @@ defineSuite([
         frustum.bottom = -frustum.top;
         frustum.near = 1.0;
         frustum.far = 2.0;
-        planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z), Cartesian3.UNIT_Y).planes;
+        planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), Cartesian3.UNIT_Y).planes;
     });
 
     it('out of range near plane throws an exception', function() {
@@ -110,7 +110,7 @@ defineSuite([
         var left = frustum.left;
         var near = frustum.near;
         var far = frustum.far;
-        var expected = Matrix4.computePerspectiveOffCenter(left, right, bottom, top, near, far);
+        var expected = Matrix4.computePerspectiveOffCenter(left, right, bottom, top, near, far, new Matrix4());
 
         expect(projectionMatrix).toEqualEpsilon(expected, CesiumMath.EPSILON6);
     });
@@ -122,7 +122,7 @@ defineSuite([
         var left = frustum.left;
         var near = frustum.near;
 
-        var expected = Matrix4.computeInfinitePerspectiveOffCenter(left, right, bottom, top, near);
+        var expected = Matrix4.computeInfinitePerspectiveOffCenter(left, right, bottom, top, near, new Matrix4());
         expect(expected).toEqual(frustum.infiniteProjectionMatrix);
     });
 
@@ -159,7 +159,7 @@ defineSuite([
         frustum2.near = 1.0;
         frustum2.far = 2.0;
         frustum2.position = new Cartesian3();
-        frustum2.direction =  Cartesian3.negate(Cartesian3.UNIT_Z);
+        frustum2.direction =  Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
         frustum2.up = Cartesian3.UNIT_Y;
 
         expect(frustum).toEqual(frustum2);

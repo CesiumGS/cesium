@@ -28,8 +28,9 @@ defineSuite([
     });
 
     it('Can construct and destroy', function() {
-        var viewModel = new SceneModePickerViewModel(scene);
+        var viewModel = new SceneModePickerViewModel(scene, 1.0);
         expect(viewModel.scene).toBe(scene);
+        expect(viewModel.duration).toEqual(1.0);
         expect(scene.morphStart.numberOfListeners).toEqual(1);
         expect(viewModel.isDestroyed()).toEqual(false);
         viewModel.destroy();

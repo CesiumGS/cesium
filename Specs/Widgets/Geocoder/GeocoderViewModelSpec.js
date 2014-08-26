@@ -2,13 +2,11 @@
 defineSuite([
         'Widgets/Geocoder/GeocoderViewModel',
         'Core/Cartesian3',
-        'Core/Ellipsoid',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
         GeocoderViewModel,
         Cartesian3,
-        Ellipsoid,
         createScene,
         destroyScene) {
     "use strict";
@@ -24,21 +22,18 @@ defineSuite([
     });
 
     it('constructor sets expected properties', function() {
-        var ellipsoid = new Ellipsoid();
         var flightDuration = 1234;
         var url = 'bing.invalid/';
         var key = 'testKey';
 
         var viewModel = new GeocoderViewModel({
             scene : scene,
-            ellipsoid : ellipsoid,
             flightDuration : flightDuration,
             url : url,
             key : key
         });
 
         expect(viewModel.scene).toBe(scene);
-        expect(viewModel.ellipsoid).toBe(ellipsoid);
         expect(viewModel.flightDuration).toBe(flightDuration);
         expect(viewModel.url).toBe(url);
         expect(viewModel.key).toBe(key);
@@ -76,9 +71,8 @@ defineSuite([
         viewModel.search();
 
         waitsFor(function() {
-            scene.animations.update();
-            var newCameraPosition = scene.camera.position;
-            return cameraPosition.x !== newCameraPosition.x || cameraPosition.y !== newCameraPosition.y || cameraPosition.z !== newCameraPosition.z;
+            scene.tweens.update();
+            return !Cartesian3.equals(cameraPosition, scene.camera.position);
         });
     });
 

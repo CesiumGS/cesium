@@ -2,32 +2,34 @@
 defineSuite([
         'Scene/TileReplacementQueue',
         'Core/defined',
-        'Scene/ImageryState',
-        'Scene/TerrainState',
-        'Scene/TileState'
+        'Core/GeographicTilingScheme',
+        'Scene/QuadtreeTile',
+        'Scene/QuadtreeTileLoadState'
     ], function(
         TileReplacementQueue,
         defined,
-        ImageryState,
-        TerrainState,
-        TileState) {
+        GeographicTilingScheme,
+        QuadtreeTile,
+        QuadtreeTileLoadState) {
     "use strict";
-    /*global document,describe,it,expect,beforeEach*/
+    /*global describe,it,expect,beforeEach*/
 
     function Tile(num, loadedState, upsampledState) {
         this._num = num;
-        this.state = TileState.LOADING;
-        this.imagery = [];
+        this.state = QuadtreeTileLoadState.LOADING;
+        this.data = {};
+        this.data.imagery = [];
         if (defined(loadedState)) {
-            this.loadedTerrain = {
+            this.data.loadedTerrain = {
                 state : loadedState
             };
         }
         if (defined(upsampledState)) {
-            this.upsampledTerrain = {
+            this.data.upsampledTerrain = {
                 state : upsampledState
             };
         }
+        this.eligibleForUnloading = true;
     }
 
     Tile.prototype.freeResources = function() {
@@ -35,15 +37,47 @@ defineSuite([
     };
 
     var queue;
-    var one, two, three, four, loadTransitioning, upsampleTransitioning;
+    var one;
+    var two;
+    var three;
+    var four;
+    var notEligibleForUnloading;
     beforeEach(function() {
+        var tilingScheme = new GeographicTilingScheme();
         queue = new TileReplacementQueue();
-        one = new Tile(1);
-        two = new Tile(2);
-        three = new Tile(3);
-        four = new Tile(4);
-        loadTransitioning = new Tile(5, TerrainState.RECEIVING);
-        upsampleTransitioning = new Tile(6, undefined, TerrainState.TRANSFORMING);
+        one = new QuadtreeTile({
+            tilingScheme : tilingScheme,
+            level : 0,
+            x : 0,
+            y : 0
+        });
+        two = new QuadtreeTile({
+            tilingScheme : tilingScheme,
+            level : 0,
+            x : 1,
+            y : 0
+        });
+        three = new QuadtreeTile({
+            tilingScheme : tilingScheme,
+            level : 1,
+            x : 0,
+            y : 0
+        });
+        four = new QuadtreeTile({
+            tilingScheme : tilingScheme,
+            level : 1,
+            x : 2,
+            y : 1
+        });
+        notEligibleForUnloading = new QuadtreeTile({
+            tilingScheme : tilingScheme,
+            level : 1,
+            x : 2,
+            y : 1
+        });
+        notEligibleForUnloading.data = {
+            eligibleForUnloading : false
+        };
     });
 
     describe('markStartOfRenderFrame', function() {
@@ -104,54 +138,34 @@ defineSuite([
     });
 
     describe('trimTiles', function() {
-        it('does not remove a transitioning tile.', function() {
+        it('does not remove a tile that is not eligible for unloading.', function() {
             queue.markTileRendered(one);
             queue.markTileRendered(two);
-            queue.markTileRendered(loadTransitioning);
-            queue.markTileRendered(upsampleTransitioning);
+            queue.markTileRendered(notEligibleForUnloading);
             queue.markTileRendered(three);
-
-            queue.markStartOfRenderFrame();
-
-            queue.trimTiles(0);
-            expect(queue.count).toEqual(2);
-            expect(queue.head.replacementNext).toEqual(loadTransitioning);
-            expect(queue.head).toEqual(upsampleTransitioning);
-        });
-
-        it('does not remove a tile with transitioning imagery.', function() {
-            queue.markTileRendered(one);
-            queue.markTileRendered(two);
-            queue.markTileRendered(three);
-
-            two.imagery.push({
-                loadingImagery : {
-                    state : ImageryState.TRANSITIONING
-                }
-            });
 
             queue.markStartOfRenderFrame();
 
             queue.trimTiles(0);
             expect(queue.count).toEqual(1);
-            expect(queue.head).toEqual(two);
+            expect(queue.head).toEqual(notEligibleForUnloading);
         });
 
         it('does not remove a transitioning tile at the end of the last render frame.', function() {
             queue.markTileRendered(one);
             queue.markTileRendered(two);
             queue.markTileRendered(three);
-            queue.markTileRendered(loadTransitioning);
+            queue.markTileRendered(notEligibleForUnloading);
 
             queue.markStartOfRenderFrame();
 
             queue.trimTiles(0);
             expect(queue.count).toEqual(1);
-            expect(queue.head).toEqual(loadTransitioning);
+            expect(queue.head).toEqual(notEligibleForUnloading);
         });
 
         it('removes two tiles not used last render frame.', function() {
-            queue.markTileRendered(loadTransitioning);
+            queue.markTileRendered(notEligibleForUnloading);
             queue.markTileRendered(one);
             queue.markTileRendered(two);
             queue.markStartOfRenderFrame();

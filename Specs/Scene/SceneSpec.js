@@ -4,19 +4,22 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Color',
         'Core/Ellipsoid',
+        'Core/GeographicProjection',
         'Core/PixelFormat',
         'Core/Rectangle',
         'Core/RuntimeError',
+        'Core/WebMercatorProjection',
         'Renderer/DrawCommand',
         'Renderer/PixelDatatype',
-        'Scene/AnimationCollection',
         'Scene/Camera',
         'Scene/FrameState',
         'Scene/Globe',
         'Scene/Pass',
         'Scene/PrimitiveCollection',
         'Scene/RectanglePrimitive',
+        'Scene/Scene',
         'Scene/ScreenSpaceCameraController',
+        'Scene/TweenCollection',
         'Specs/createScene',
         'Specs/destroyScene',
         'Specs/equals',
@@ -26,19 +29,22 @@ defineSuite([
         Cartesian3,
         Color,
         Ellipsoid,
+        GeographicProjection,
         PixelFormat,
         Rectangle,
         RuntimeError,
+        WebMercatorProjection,
         DrawCommand,
         PixelDatatype,
-        AnimationCollection,
         Camera,
         FrameState,
         Globe,
         Pass,
         PrimitiveCollection,
         RectanglePrimitive,
+        Scene,
         ScreenSpaceCameraController,
+        TweenCollection,
         createScene,
         destroyScene,
         equals,
@@ -69,8 +75,9 @@ defineSuite([
         expect(scene.primitives).toBeInstanceOf(PrimitiveCollection);
         expect(scene.camera).toBeInstanceOf(Camera);
         expect(scene.screenSpaceCameraController).toBeInstanceOf(ScreenSpaceCameraController);
+        expect(scene.mapProjection).toBeInstanceOf(GeographicProjection);
         expect(scene.frameState).toBeInstanceOf(FrameState);
-        expect(scene.animations).toBeInstanceOf(AnimationCollection);
+        expect(scene.tweens).toBeInstanceOf(TweenCollection);
 
         var contextAttributes = scene.context._gl.getContextAttributes();
         // Do not check depth and antialias since they are requests not requirements
@@ -80,7 +87,7 @@ defineSuite([
         expect(contextAttributes.preserveDrawingBuffer).toEqual(false);
     });
 
-    it('constructor sets contextOptions', function() {
+    it('constructor sets options', function() {
         var webglOptions = {
             alpha : true,
             depth : true, //TODO Change to false when https://bugzilla.mozilla.org/show_bug.cgi?id=745912 is fixed.
@@ -89,9 +96,13 @@ defineSuite([
             premultipliedAlpha : true, // Workaround IE 11.0.8, which does not honor false.
             preserveDrawingBuffer : true
         };
+        var mapProjection = new WebMercatorProjection();
 
         var s = createScene({
-            webgl : webglOptions
+            contextOptions : {
+                webgl : webglOptions
+            },
+            mapProjection : mapProjection
         });
 
         var contextAttributes = s.context._gl.getContextAttributes();
@@ -101,9 +112,22 @@ defineSuite([
         expect(contextAttributes.antialias).toEqual(webglOptions.antialias);
         expect(contextAttributes.premultipliedAlpha).toEqual(webglOptions.premultipliedAlpha);
         expect(contextAttributes.preserveDrawingBuffer).toEqual(webglOptions.preserveDrawingBuffer);
+        expect(s.mapProjection).toEqual(mapProjection);
 
         destroyScene(s);
     });
+
+    it('constructor throws without options', function() {
+        expect(function() {
+            return new Scene();
+        }).toThrowDeveloperError();
+    });
+
+    it('constructor throws without options.canvas', function() {
+      expect(function() {
+          return new Scene({});
+      }).toThrowDeveloperError();
+  });
 
     it('draws background color', function() {
         scene.initializeFrame();
@@ -175,10 +199,12 @@ defineSuite([
     });
 
     it('debugShowBoundingVolume draws a bounding sphere', function() {
+        var radius = Cartesian3.magnitude(scene.camera.position) - 10.0;
+
         var c = new DrawCommand({
             pass : Pass.OPAQUE,
             debugShowBoundingVolume : true,
-            boundingVolume : new BoundingSphere(Cartesian3.ZERO, 7000000.0)
+            boundingVolume : new BoundingSphere(Cartesian3.ZERO, radius)
         });
         c.execute = function() {};
 
@@ -430,7 +456,7 @@ defineSuite([
         s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
         s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
         s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
-        s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position));
+        s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position, new Cartesian3()), new Cartesian3());
 
         s.initializeFrame();
         s.render();

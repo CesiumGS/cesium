@@ -34,6 +34,7 @@ define([
      * @alias HeightmapTerrainData
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {TypedArray} options.buffer The buffer containing height data.
      * @param {Number} options.width The width (longitude direction) of the heightmap, in samples.
      * @param {Number} options.height The height (latitude direction) of the heightmap, in samples.
@@ -148,8 +149,6 @@ define([
     /**
      * Creates a {@link TerrainMesh} from this terrain data.
      *
-     * @memberof HeightmapTerrainData
-     *
      * @param {TilingScheme} tilingScheme The tiling scheme to which this tile belongs.
      * @param {Number} x The X coordinate of the tile for which to create the terrain data.
      * @param {Number} y The Y coordinate of the tile for which to create the terrain data.
@@ -179,7 +178,7 @@ define([
         var rectangle = tilingScheme.tileXYToRectangle(x, y, level);
 
         // Compute the center of the tile for RTC rendering.
-        var center = ellipsoid.cartographicToCartesian(Rectangle.getCenter(rectangle));
+        var center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangle));
 
         var structure = this._structure;
 
@@ -219,8 +218,6 @@ define([
     /**
      * Computes the terrain height at a specified longitude and latitude.
      *
-     * @memberof HeightmapTerrainData
-     *
      * @param {Rectangle} rectangle The rectangle covered by this terrain data.
      * @param {Number} longitude The longitude in radians.
      * @param {Number} latitude The latitude in radians.
@@ -253,8 +250,6 @@ define([
      * Upsamples this terrain data for use by a descendant tile.  The resulting instance will contain a subset of the
      * height samples in this instance, interpolated if necessary.
      *
-     * @memberof HeightmapTerrainData
-     *
      * @param {TilingScheme} tilingScheme The tiling scheme of this terrain data.
      * @param {Number} thisX The X coordinate of this tile in the tiling scheme.
      * @param {Number} thisY The Y coordinate of this tile in the tiling scheme.
@@ -262,7 +257,6 @@ define([
      * @param {Number} descendantX The X coordinate within the tiling scheme of the descendant tile for which we are upsampling.
      * @param {Number} descendantY The Y coordinate within the tiling scheme of the descendant tile for which we are upsampling.
      * @param {Number} descendantLevel The level within the tiling scheme of the descendant tile for which we are upsampling.
-     *
      * @returns {Promise|HeightmapTerrainData} A promise for upsampled heightmap terrain data for the descendant tile,
      *          or undefined if too many asynchronous upsample operations are in progress and the request has been
      *          deferred.
@@ -317,8 +311,6 @@ define([
      * to be one of the four children of this tile.  If non-child tile coordinates are
      * given, the availability of the southeast child tile is returned.
      *
-     * @memberof HeightmapTerrainData
-     *
      * @param {Number} thisX The tile X coordinate of this (the parent) tile.
      * @param {Number} thisY The tile Y coordinate of this (the parent) tile.
      * @param {Number} childX The tile X coordinate of the child tile to check for availability.
@@ -357,8 +349,6 @@ define([
      * terrain data.  If this value is false, the data was obtained from some other source, such
      * as by downloading it from a remote server.  This method should return true for instances
      * returned from a call to {@link HeightmapTerrainData#upsample}.
-     *
-     * @memberof HeightmapTerrainData
      *
      * @returns {Boolean} True if this instance was created by upsampling; otherwise, false.
      */

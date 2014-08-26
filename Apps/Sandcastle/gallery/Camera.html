@@ -16,7 +16,7 @@
     });
     </script>
 </head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
 </style>
@@ -24,191 +24,192 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+function startup(Cesium) {
     "use strict";
-    function flyToSanDiego(scene) {
-        Sandcastle.declare(flyToSanDiego); // For highlighting in Sandcastle.
-        var destination = Cesium.Cartesian3.fromDegrees(-117.16, 32.71, 15000.0);
-        
-        var flight = Cesium.CameraFlightPath.createAnimation(scene, {
-            destination : destination
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer');
+var scene = viewer.scene;
+var clock = viewer.clock;
+
+function flyToSanDiego() {
+    Sandcastle.declare(flyToSanDiego);
+    scene.camera.flyTo({
+        destination : Cesium.Cartesian3.fromDegrees(-117.16, 32.71, 15000.0)
+    });
+}
+
+function flyToLocation() {
+    Sandcastle.declare(flyToLocation);
+
+    // Create callback for browser's geolocation
+    function fly(position) {
+        scene.camera.flyTo({
+            destination : Cesium.Cartesian3.fromDegrees(position.coords.longitude, position.coords.latitude, 1000.0)
         });
-        scene.animations.add(flight);
     }
 
-    function flyToMyLocation(scene) {
-        Sandcastle.declare(flyToMyLocation); // For highlighting in Sandcastle.
-        function fly(position) {
-            var destination = Cesium.Cartesian3.fromDegrees(position.coords.longitude, position.coords.latitude, 1000.0);
+    // Ask browser for location, and fly there.
+    navigator.geolocation.getCurrentPosition(fly);
+}
 
-            var flight = Cesium.CameraFlightPath.createAnimation(scene, {
-                destination : destination
-            });
-            scene.animations.add(flight);
-        }
+function viewRectangle() {
+    Sandcastle.declare(viewRectangle);
 
-        navigator.geolocation.getCurrentPosition(fly);
-    }
+    var west = -77.0;
+    var south = 38.0;
+    var east = -72.0;
+    var north = 42.0;
 
-    function viewAnRectangle(scene) {
-        Sandcastle.declare(viewAnRectangle); // For highlighting in Sandcastle.
-        var west = -77.0;
-        var south = 38.0;
-        var east = -72.0;
-        var north = 42.0;
+    scene.camera.viewRectangle(Cesium.Rectangle.fromDegrees(west, south, east, north));
 
-        var rectangle = Cesium.Rectangle.fromDegrees(west, south, east, north);
-        scene.camera.viewRectangle(rectangle, scene.globe.ellipsoid);
+    // Show the rectangle.  Not required; just for show.
+    var polylines = scene.primitives.add(new Cesium.PolylineCollection());
+    polylines.add({
+        positions : Cesium.Cartesian3.fromDegreesArray([
+            west, south,
+            west, north,
+            east, north,
+            east, south,
+            west, south
+        ])
+    });
+}
 
-        // Show the rectangle.  Not required; just for show.
-        var polylines = new Cesium.PolylineCollection();
-        polylines.add({
-            positions : Cesium.Cartesian3.fromDegreesArray([
-                     west, south,
-                     west, north,
-                     east, north,
-                     east, south,
-                     west, south
-                    ])
-        });
-        scene.primitives.add(polylines);
-    }
+function flyToRectangle() {
+    Sandcastle.declare(flyToRectangle);
 
-    function flyToRectangle(scene) {
-        Sandcastle.declare(flyToRectangle); // For highlighting in Sandcastle.
-        var west = -90.0;
-        var south = 38.0;
-        var east = -87.0;
-        var north = 40.0;
+    var west = -90.0;
+    var south = 38.0;
+    var east = -87.0;
+    var north = 40.0;
 
-        var rectangle = Cesium.Rectangle.fromDegrees(west, south, east, north);
-
-        var flight = Cesium.CameraFlightPath.createAnimationRectangle(scene, {
-            destination : rectangle
-        });
-        scene.animations.add(flight);
-
-        // Show the rectangle.  Not required; just for show.
-        var polylines = new Cesium.PolylineCollection();
-        polylines.add({
-            positions : Cesium.Cartesian3.fromDegreesArray([
-                     west, south,
-                     west, north,
-                     east, north,
-                     east, south,
-                     west, south
-                    ])
-        });
-        scene.primitives.add(polylines);
-    }
-
-    function eastNorthUp(scene) {
-        Sandcastle.declare(eastNorthUp); // For highlighting in Sandcastle.
-        var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
-        var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-
-        // View in east-north-up frame
-        var camera = scene.camera;
-        Cesium.Matrix4.clone(transform, camera.transform);
-        camera.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
-
-        var controller = scene.screenSpaceCameraController;
-        controller.ellipsoid = Cesium.Ellipsoid.UNIT_SPHERE;
-        controller.enableTilt = false;
-
-        // Zoom in
-        camera.lookAt(
-                new Cesium.Cartesian3(-120000.0, -120000.0, 120000.0),
-                Cesium.Cartesian3.ZERO,
-                Cesium.Cartesian3.UNIT_Z);
-
-        // Show reference frame.  Not required.
-        var primitives = scene.primitives;
-        var polylines = new Cesium.PolylineCollection();
-        Cesium.Matrix4.clone(transform, polylines.modelMatrix);
-
-        var xAxis = {
-            color : Cesium.Color.RED,
-            positions : [
-                         Cesium.Cartesian3.ZERO,
-                         new Cesium.Cartesian3(100000.0, 0.0, 0.0)
-                        ]
-        };
-        polylines.add(xAxis);
-
-        var yAxis = {
-            color : Cesium.Color.LIME,
-            positions : [
-                         Cesium.Cartesian3.ZERO,
-                         new Cesium.Cartesian3(0.0, 100000.0, 0.0)
-                        ]
-        };
-        polylines.add(yAxis);
-
-        var zAxis = {
-            color : Cesium.Color.BLUE,
-            positions : [
-                         Cesium.Cartesian3.ZERO,
-                         new Cesium.Cartesian3(0.0, 0.0, 100000.0)
-                        ]
-        };
-        polylines.add(zAxis);
-
-        primitives.add(polylines);
-    }
-
-    function reset(scene) {
-        var ellipsoid = scene.globe.ellipsoid;
-        scene.primitives.removeAll();
-        scene.animations.removeAll();
-        
-        var controller = scene.screenSpaceCameraController;
-        controller.ellipsoid = ellipsoid;
-        controller.enableTilt = true;
-        
-        var camera = scene.camera;
-        camera.setTransform(Cesium.Matrix4.IDENTITY);
-    }
-
-    var viewer = new Cesium.Viewer('cesiumContainer');
-    var scene = viewer.scene;
-    
-    scene.morphComplete.addEventListener(function() {
-        reset(scene);
+    scene.camera.flyToRectangle({
+        destination : Cesium.Rectangle.fromDegrees(west, south, east, north)
     });
 
-    Sandcastle.addToolbarButton('Fly to San Diego', function() {
-        reset(scene);
-        flyToSanDiego(scene);
+    // Show the rectangle.  Not required; just for show.
+    var polylines = scene.primitives.add(new Cesium.PolylineCollection());
+    polylines.add({
+        positions : Cesium.Cartesian3.fromDegreesArray([
+            west, south,
+            west, north,
+            east, north,
+            east, south,
+            west, south
+        ])
+    });
+}
+
+function setReferenceFrame() {
+    Sandcastle.declare(setReferenceFrame);
+
+    var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+    var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+
+    // View in east-north-up frame
+    var camera = scene.camera;
+    Cesium.Matrix4.clone(transform, camera.transform);
+    camera.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
+
+    // Zoom in
+    camera.lookAt(
+        new Cesium.Cartesian3(-120000.0, -120000.0, 120000.0),
+        Cesium.Cartesian3.ZERO,
+        Cesium.Cartesian3.UNIT_Z);
+
+    // Show reference frame.  Not required.
+    scene.primitives.add(new Cesium.DebugModelMatrixPrimitive({
+        modelMatrix : transform,
+        length : 100000.0
+    }));
+}
+
+function icrf(scene, time) {
+    if (scene.mode !== Cesium.SceneMode.SCENE3D) {
+        return;
+    }
+
+    var icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(time);
+    if (Cesium.defined(icrfToFixed)) {
+        scene.camera.transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed, Cesium.Cartesian3.ZERO);
+    }
+}
+
+function viewInICRF() {
+    Sandcastle.declare(viewInICRF);
+
+    var vm = viewer.homeButton.viewModel;
+    vm.duration = 0.0;
+    vm.command();
+    vm.duration = 3.0;
+
+    clock.multiplier = 3 * 60 * 60;
+    scene.preRender.addEventListener(icrf);
+    scene.globe.enableLighting = true;
+}
+
+Sandcastle.addToolbarMenu([{
+    text : 'Camera Options'
+}, {
+    text : 'Fly to San Diego',
+    onselect : function() {
+        flyToSanDiego();
         Sandcastle.highlight(flyToSanDiego);
-    });
-
-    Sandcastle.addToolbarButton('Fly to My Location', function() {
-        reset(scene);
-        flyToMyLocation(scene);
-        Sandcastle.highlight(flyToMyLocation);
-    });
-
-    Sandcastle.addToolbarButton('Fly to Rectangle', function() {
-        reset(scene);
-        flyToRectangle(scene);
+    }
+}, {
+    text : 'Fly to My Location',
+    onselect : function() {
+        flyToLocation();
+        Sandcastle.highlight(flyToLocation);
+    }
+}, {
+    text : 'Fly to Rectangle',
+    onselect : function() {
+        flyToRectangle();
         Sandcastle.highlight(flyToRectangle);
-    });
+    }
+}, {
+    text : 'View a Rectangle',
+    onselect : function() {
+        viewRectangle();
+        Sandcastle.highlight(viewRectangle);
+    }
+}, {
+    text : 'Set camera reference frame',
+    onselect : function() {
+        setReferenceFrame();
+        Sandcastle.highlight(setReferenceFrame);
+    }
+}, {
+    text : 'View in ICRF',
+    onselect : function() {
+        viewInICRF();
+        Sandcastle.highlight(viewInICRF);
+    }
+}]);
 
-    Sandcastle.addToolbarButton('View a Rectangle', function() {
-        reset(scene);
-        viewAnRectangle(scene);
-        Sandcastle.highlight(viewAnRectangle);
-    });
+Sandcastle.reset = function() {
+    scene.primitives.removeAll();
+    scene.tweens.removeAll();
 
-    Sandcastle.addToolbarButton('Set camera reference frame', function() {
-        reset(scene);
-        eastNorthUp(scene);
-        Sandcastle.highlight(eastNorthUp);
-    });
+    scene.camera.setTransform(Cesium.Matrix4.IDENTITY);
 
-    Sandcastle.finishedLoading();
+    clock.multiplier = 1.0;
+    scene.preRender.removeEventListener(icrf);
+    scene.globe.enableLighting = false;
+};
+
+scene.morphComplete.addEventListener(function() {
+    Sandcastle.reset();
 });
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
 </script>
 </body>
 </html>

@@ -8,7 +8,7 @@ define([
     "use strict";
 
     /**
-     * Terrain data for a single {@link Tile}.  This type describes an
+     * Terrain data for a single tile.  This type describes an
      * interface and is not intended to be instantiated directly.
      *
      * @alias TerrainData
@@ -36,7 +36,6 @@ define([
 
     /**
      * Computes the terrain height at a specified longitude and latitude.
-     * @memberof TerrainData
      * @function
      *
      * @param {Rectangle} rectangle The rectangle covered by this terrain data.
@@ -53,7 +52,6 @@ define([
      * {@link TerrainData#childTileMask}.  The given child tile coordinates are assumed
      * to be one of the four children of this tile.  If non-child tile coordinates are
      * given, the availability of the southeast child tile is returned.
-     * @memberof TerrainData
      * @function
      *
      * @param {Number} thisX The tile X coordinate of this (the parent) tile.
@@ -66,7 +64,6 @@ define([
 
     /**
      * Creates a {@link TerrainMesh} from this terrain data.
-     * @memberof TerrainData
      * @function
      *
      * @param {TilingScheme} tilingScheme The tiling scheme to which this tile belongs.
@@ -81,7 +78,6 @@ define([
 
     /**
      * Upsamples this terrain data for use by a descendant tile.
-     * @memberof TerrainData
      * @function
      *
      * @param {TilingScheme} tilingScheme The tiling scheme of this terrain data.
@@ -91,7 +87,6 @@ define([
      * @param {Number} descendantX The X coordinate within the tiling scheme of the descendant tile for which we are upsampling.
      * @param {Number} descendantY The Y coordinate within the tiling scheme of the descendant tile for which we are upsampling.
      * @param {Number} descendantLevel The level within the tiling scheme of the descendant tile for which we are upsampling.
-     *
      * @returns {Promise|TerrainData} A promise for upsampled terrain data for the descendant tile,
      *          or undefined if too many asynchronous upsample operations are in progress and the request has been
      *          deferred.
@@ -103,7 +98,6 @@ define([
      * terrain data.  If this value is false, the data was obtained from some other source, such
      * as by downloading it from a remote server.  This method should return true for instances
      * returned from a call to {@link TerrainData#upsample}.
-     * @memberof TerrainData
      * @function
      *
      * @returns {Boolean} True if this instance was created by upsampling; otherwise, false.

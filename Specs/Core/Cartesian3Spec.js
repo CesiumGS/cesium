@@ -37,19 +37,10 @@ defineSuite([
         magnitude : Math.sqrt(8.0)
     };
 
-    it('convert Spherical to a new Cartesian3 instance', function() {
-        expect(cartesian).toEqualEpsilon(Cartesian3.fromSpherical(spherical), CesiumMath.EPSILON15);
-    });
-
     it('convert Spherical to an existing Cartesian3 instance', function() {
         var existing = new Cartesian3();
         expect(cartesian).toEqualEpsilon(Cartesian3.fromSpherical(spherical, existing), CesiumMath.EPSILON15);
         expect(cartesian).toEqualEpsilon(existing, CesiumMath.EPSILON15);
-    });
-
-    it('fromArray creates a Cartesian3', function() {
-        var cartesian = Cartesian3.fromArray([1.0, 2.0, 3.0]);
-        expect(cartesian).toEqual(new Cartesian3(1.0, 2.0, 3.0));
     });
 
     it('fromArray with an offset creates a Cartesian3', function() {
@@ -70,13 +61,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('clone without a result parameter', function() {
-        var cartesian = new Cartesian3(1.0, 2.0, 3.0);
-        var result = Cartesian3.clone(cartesian);
-        expect(cartesian).toNotBe(result);
-        expect(cartesian).toEqual(result);
-    });
-
     it('clone with a result parameter', function() {
         var cartesian = new Cartesian3(1.0, 2.0, 3.0);
         var result = new Cartesian3();
@@ -92,230 +76,212 @@ defineSuite([
         expect(cartesian).toBe(returnedResult);
     });
 
-    it('getMaximumComponent works when X is greater', function() {
+    it('maximumComponent works when X is greater', function() {
         var cartesian = new Cartesian3(2.0, 1.0, 0.0);
-        expect(Cartesian3.getMaximumComponent(cartesian)).toEqual(cartesian.x);
+        expect(Cartesian3.maximumComponent(cartesian)).toEqual(cartesian.x);
     });
 
-    it('getMaximumComponent works when Y is greater', function() {
+    it('maximumComponent works when Y is greater', function() {
         var cartesian = new Cartesian3(1.0, 2.0, 0.0);
-        expect(Cartesian3.getMaximumComponent(cartesian)).toEqual(cartesian.y);
+        expect(Cartesian3.maximumComponent(cartesian)).toEqual(cartesian.y);
     });
 
-    it('getMaximumComponent works when Z is greater', function() {
+    it('maximumComponent works when Z is greater', function() {
         var cartesian = new Cartesian3(1.0, 2.0, 3.0);
-        expect(Cartesian3.getMaximumComponent(cartesian)).toEqual(cartesian.z);
+        expect(Cartesian3.maximumComponent(cartesian)).toEqual(cartesian.z);
     });
 
-    it('getMinimumComponent works when X is lesser', function() {
+    it('minimumComponent works when X is lesser', function() {
         var cartesian = new Cartesian3(1.0, 2.0, 3.0);
-        expect(Cartesian3.getMinimumComponent(cartesian)).toEqual(cartesian.x);
+        expect(Cartesian3.minimumComponent(cartesian)).toEqual(cartesian.x);
     });
 
-    it('getMinimumComponent works when Y is lesser', function() {
+    it('minimumComponent works when Y is lesser', function() {
         var cartesian = new Cartesian3(2.0, 1.0, 3.0);
-        expect(Cartesian3.getMinimumComponent(cartesian)).toEqual(cartesian.y);
+        expect(Cartesian3.minimumComponent(cartesian)).toEqual(cartesian.y);
     });
 
-    it('getMinimumComponent works when Z is lesser', function() {
+    it('minimumComponent works when Z is lesser', function() {
         var cartesian = new Cartesian3(2.0, 1.0, 0.0);
-        expect(Cartesian3.getMinimumComponent(cartesian)).toEqual(cartesian.z);
+        expect(Cartesian3.minimumComponent(cartesian)).toEqual(cartesian.z);
     });
 
-    it('getMinimumByComponent without a result parameter', function() {
+    it('minimumByComponent', function() {
         var first = new Cartesian3(2.0, 0.0, 0.0);
         var second = new Cartesian3(1.0, 0.0, 0.0);
         var result = new Cartesian3(1.0, 0.0, 0.0);
-        expect(Cartesian3.getMinimumByComponent(first, second)).toEqual(result);
+        expect(Cartesian3.minimumByComponent(first, second, result)).toEqual(result);
         first = new Cartesian3(1.0, 0.0, 0.0);
         second = new Cartesian3(2.0, 0.0, 0.0);
         result = new Cartesian3(1.0, 0.0, 0.0);
-        expect(Cartesian3.getMinimumByComponent(first, second)).toEqual(result);
+        expect(Cartesian3.minimumByComponent(first, second, result)).toEqual(result);
         first = new Cartesian3(2.0, -15.0, 0.0);
         second = new Cartesian3(1.0, -20.0, 0.0);
         result = new Cartesian3(1.0, -20.0, 0.0);
-        expect(Cartesian3.getMinimumByComponent(first, second)).toEqual(result);
+        expect(Cartesian3.minimumByComponent(first, second, result)).toEqual(result);
         first = new Cartesian3(2.0, -20.0, 0.0);
         second = new Cartesian3(1.0, -15.0, 0.0);
         result = new Cartesian3(1.0, -20.0, 0.0);
-        expect(Cartesian3.getMinimumByComponent(first, second)).toEqual(result);
+        expect(Cartesian3.minimumByComponent(first, second, result)).toEqual(result);
         first = new Cartesian3(2.0, -15.0, 26.4);
         second = new Cartesian3(1.0, -20.0, 26.5);
         result = new Cartesian3(1.0, -20.0, 26.4);
-        expect(Cartesian3.getMinimumByComponent(first, second)).toEqual(result);
+        expect(Cartesian3.minimumByComponent(first, second, result)).toEqual(result);
         first = new Cartesian3(2.0, -15.0, 26.5);
         second = new Cartesian3(1.0, -20.0, 26.4);
         result = new Cartesian3(1.0, -20.0, 26.4);
-        expect(Cartesian3.getMinimumByComponent(first, second)).toEqual(result);
+        expect(Cartesian3.minimumByComponent(first, second, result)).toEqual(result);
     });
 
-    it('getMinimumByComponent with a result parameter', function() {
-        var first = new Cartesian3(2.0, 0.0, 0.0);
-        var second = new Cartesian3(1.0, 0.0, 0.0);
-        var result = new Cartesian3();
-        var returnedResult = Cartesian3.getMinimumByComponent(first, second, result);
-        expect(returnedResult).toBe(result);
-        expect(returnedResult).toEqual(result);
-    });
-
-    it('getMinimumByComponent with a result parameter that is an input parameter', function() {
+    it('minimumByComponent with a result parameter that is an input parameter', function() {
         var first = new Cartesian3(2.0, 0.0, 0.0);
         var second = new Cartesian3(1.0, 0.0, 0.0);
         var result = new Cartesian3(1.0, 0.0, 0.0);
-        expect(Cartesian3.getMinimumByComponent(first, second, first)).toEqual(result);
+        expect(Cartesian3.minimumByComponent(first, second, first)).toEqual(result);
         first.x = 1.0;
         second.x = 2.0;
-        expect(Cartesian3.getMinimumByComponent(first, second, first)).toEqual(result);
+        expect(Cartesian3.minimumByComponent(first, second, first)).toEqual(result);
     });
 
-    it('getMinimumByComponent with a result parameter that is an input parameter', function() {
+    it('minimumByComponent with a result parameter that is an input parameter', function() {
         var first = new Cartesian3(2.0, 0.0, 0.0);
         var second = new Cartesian3(1.0, 0.0, 0.0);
         var result = new Cartesian3(1.0, 0.0, 0.0);
-        expect(Cartesian3.getMinimumByComponent(first, second, second)).toEqual(result);
+        expect(Cartesian3.minimumByComponent(first, second, second)).toEqual(result);
         first.x = 1.0;
         second.x = 2.0;
-        expect(Cartesian3.getMinimumByComponent(first, second, second)).toEqual(result);
+        expect(Cartesian3.minimumByComponent(first, second, second)).toEqual(result);
     });
 
-    it('getMinimumByComponent throws without first', function() {
+    it('minimumByComponent throws without first', function() {
         expect(function() {
-            Cartesian3.getMinimumByComponent();
+            Cartesian3.minimumByComponent();
         }).toThrowDeveloperError();
     });
 
-    it('getMinimumByComponent throws without second', function() {
+    it('minimumByComponent throws without second', function() {
         expect(function() {
-            Cartesian3.getMinimumByComponent(new Cartesian3());
+            Cartesian3.minimumByComponent(new Cartesian3());
         }).toThrowDeveloperError();
     });
 
-    it('getMinimumByComponent works when first\'s or second\'s X is lesser', function() {
+    it('minimumByComponent works when first\'s or second\'s X is lesser', function() {
         var first = new Cartesian3(2.0, 0.0, 0.0);
         var second = new Cartesian3(1.0, 0.0, 0.0);
         var result = new Cartesian3(1.0, 0.0, 0.0);
-        expect(Cartesian3.getMinimumByComponent(first, second)).toEqual(result);
+        expect(Cartesian3.minimumByComponent(first, second, new Cartesian3())).toEqual(result);
         second.x = 3.0;
         result.x = 2.0;
-        expect(Cartesian3.getMinimumByComponent(first, second)).toEqual(result);
+        expect(Cartesian3.minimumByComponent(first, second, new Cartesian3())).toEqual(result);
     });
 
-    it('getMinimumByComponent works when first\'s or second\'s Y is lesser', function() {
+    it('minimumByComponent works when first\'s or second\'s Y is lesser', function() {
         var first = new Cartesian3(0.0, 2.0, 0.0);
         var second = new Cartesian3(0.0, 1.0, 0.0);
         var result = new Cartesian3(0.0, 1.0, 0.0);
-        expect(Cartesian3.getMinimumByComponent(first, second)).toEqual(result);
+        expect(Cartesian3.minimumByComponent(first, second, new Cartesian3())).toEqual(result);
         second.y = 3.0;
         result.y = 2.0;
-        expect(Cartesian3.getMinimumByComponent(first, second)).toEqual(result);
+        expect(Cartesian3.minimumByComponent(first, second, new Cartesian3())).toEqual(result);
     });
 
-    it('getMinimumByComponent works when first\'s or second\'s Z is lesser', function() {
+    it('minimumByComponent works when first\'s or second\'s Z is lesser', function() {
         var first = new Cartesian3(0.0, 0.0, 2.0);
         var second = new Cartesian3(0.0, 0.0, 1.0);
         var result = new Cartesian3(0.0, 0.0, 1.0);
-        expect(Cartesian3.getMinimumByComponent(first, second)).toEqual(result);
+        expect(Cartesian3.minimumByComponent(first, second, new Cartesian3())).toEqual(result);
         second.z = 3.0;
         result.z = 2.0;
-        expect(Cartesian3.getMinimumByComponent(first, second)).toEqual(result);
+        expect(Cartesian3.minimumByComponent(first, second, new Cartesian3())).toEqual(result);
     });
 
-    it('getMaximumByComponent without a result parameter', function() {
+    it('maximumByComponent', function() {
         var first = new Cartesian3(2.0, 0.0, 0.0);
         var second = new Cartesian3(1.0, 0.0, 0.0);
         var result = new Cartesian3(2.0, 0.0, 0.0);
-        expect(Cartesian3.getMaximumByComponent(first, second)).toEqual(result);
+        expect(Cartesian3.maximumByComponent(first, second, result)).toEqual(result);
         first = new Cartesian3(1.0, 0.0, 0.0);
         second = new Cartesian3(2.0, 0.0, 0.0);
         result = new Cartesian3(2.0, 0.0, 0.0);
-        expect(Cartesian3.getMaximumByComponent(first, second)).toEqual(result);
+        expect(Cartesian3.maximumByComponent(first, second, result)).toEqual(result);
         first = new Cartesian3(2.0, -15.0, 0.0);
         second = new Cartesian3(1.0, -20.0, 0.0);
         result = new Cartesian3(2.0, -15.0, 0.0);
-        expect(Cartesian3.getMaximumByComponent(first, second)).toEqual(result);
+        expect(Cartesian3.maximumByComponent(first, second, result)).toEqual(result);
         first = new Cartesian3(2.0, -20.0, 0.0);
         second = new Cartesian3(1.0, -15.0, 0.0);
         result = new Cartesian3(2.0, -15.0, 0.0);
-        expect(Cartesian3.getMaximumByComponent(first, second)).toEqual(result);
+        expect(Cartesian3.maximumByComponent(first, second, result)).toEqual(result);
         first = new Cartesian3(2.0, -15.0, 26.4);
         second = new Cartesian3(1.0, -20.0, 26.5);
         result = new Cartesian3(2.0, -15.0, 26.5);
-        expect(Cartesian3.getMaximumByComponent(first, second)).toEqual(result);
+        expect(Cartesian3.maximumByComponent(first, second, result)).toEqual(result);
         first = new Cartesian3(2.0, -15.0, 26.5);
         second = new Cartesian3(1.0, -20.0, 26.4);
         result = new Cartesian3(2.0, -15.0, 26.5);
-        expect(Cartesian3.getMaximumByComponent(first, second)).toEqual(result);
+        expect(Cartesian3.maximumByComponent(first, second, result)).toEqual(result);
     });
 
-    it('getMaximumByComponent with a result parameter', function() {
-        var first = new Cartesian3(2.0, 0.0, 0.0);
-        var second = new Cartesian3(1.0, 0.0, 0.0);
-        var result = new Cartesian3();
-        var returnedResult = Cartesian3.getMaximumByComponent(first, second, result);
-        expect(returnedResult).toBe(result);
-        expect(returnedResult).toEqual(result);
-    });
-
-    it('getMaximumByComponent with a result parameter that is an input parameter', function() {
+    it('maximumByComponent with a result parameter that is an input parameter', function() {
         var first = new Cartesian3(2.0, 0.0, 0.0);
         var second = new Cartesian3(1.0, 0.0, 0.0);
         var result = new Cartesian3(2.0, 0.0, 0.0);
-        expect(Cartesian3.getMaximumByComponent(first, second, first)).toEqual(result);
+        expect(Cartesian3.maximumByComponent(first, second, first)).toEqual(result);
         first.x = 1.0;
         second.x = 2.0;
-        expect(Cartesian3.getMaximumByComponent(first, second, first)).toEqual(result);
+        expect(Cartesian3.maximumByComponent(first, second, first)).toEqual(result);
     });
 
-    it('getMaximumByComponent with a result parameter that is an input parameter', function() {
+    it('maximumByComponent with a result parameter that is an input parameter', function() {
         var first = new Cartesian3(2.0, 0.0, 0.0);
         var second = new Cartesian3(1.0, 0.0, 0.0);
         var result = new Cartesian3(2.0, 0.0, 0.0);
-        expect(Cartesian3.getMaximumByComponent(first, second, second)).toEqual(result);
+        expect(Cartesian3.maximumByComponent(first, second, second)).toEqual(result);
         first.x = 1.0;
         second.x = 2.0;
-        expect(Cartesian3.getMaximumByComponent(first, second, second)).toEqual(result);
+        expect(Cartesian3.maximumByComponent(first, second, second)).toEqual(result);
     });
 
-    it('getMaximumByComponent throws without first', function() {
+    it('maximumByComponent throws without first', function() {
         expect(function() {
-            Cartesian3.getMaximumByComponent();
+            Cartesian3.maximumByComponent();
         }).toThrowDeveloperError();
     });
 
-    it('getMaximumByComponent throws without second', function() {
+    it('maximumByComponent throws without second', function() {
         expect(function() {
-            Cartesian3.getMaximumByComponent(new Cartesian3());
+            Cartesian3.maximumByComponent(new Cartesian3());
         }).toThrowDeveloperError();
     });
 
-    it('getMaximumByComponent works when first\'s or second\'s X is greater', function() {
+    it('maximumByComponent works when first\'s or second\'s X is greater', function() {
         var first = new Cartesian3(2.0, 0.0, 0.0);
         var second = new Cartesian3(1.0, 0.0, 0.0);
         var result = new Cartesian3(2.0, 0.0, 0.0);
-        expect(Cartesian3.getMaximumByComponent(first, second)).toEqual(result);
+        expect(Cartesian3.maximumByComponent(first, second, result)).toEqual(result);
         second.x = 3.0;
         result.x = 3.0;
-        expect(Cartesian3.getMaximumByComponent(first, second)).toEqual(result);
+        expect(Cartesian3.maximumByComponent(first, second, result)).toEqual(result);
     });
 
-    it('getMaximumByComponent works when first\'s or second\'s Y is greater', function() {
+    it('maximumByComponent works when first\'s or second\'s Y is greater', function() {
         var first = new Cartesian3(0.0, 2.0, 0.0);
         var second = new Cartesian3(0.0, 1.0, 0.0);
         var result = new Cartesian3(0.0, 2.0, 0.0);
-        expect(Cartesian3.getMaximumByComponent(first, second)).toEqual(result);
+        expect(Cartesian3.maximumByComponent(first, second, result)).toEqual(result);
         second.y = 3.0;
         result.y = 3.0;
-        expect(Cartesian3.getMaximumByComponent(first, second)).toEqual(result);
+        expect(Cartesian3.maximumByComponent(first, second, result)).toEqual(result);
     });
 
-    it('getMaximumByComponent works when first\'s or second\'s Z is greater', function() {
+    it('maximumByComponent works when first\'s or second\'s Z is greater', function() {
         var first = new Cartesian3(0.0, 0.0, 2.0);
         var second = new Cartesian3(0.0, 0.0, 1.0);
         var result = new Cartesian3(0.0, 0.0, 2.0);
-        expect(Cartesian3.getMaximumByComponent(first, second)).toEqual(result);
+        expect(Cartesian3.maximumByComponent(first, second, result)).toEqual(result);
         second.z = 3.0;
         result.z = 3.0;
-        expect(Cartesian3.getMaximumByComponent(first, second)).toEqual(result);
+        expect(Cartesian3.maximumByComponent(first, second, result)).toEqual(result);
     });
 
     it('magnitudeSquared', function() {
@@ -345,13 +311,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('normalize works without a result parameter', function() {
-        var cartesian = new Cartesian3(2.0, 0.0, 0.0);
-        var expectedResult = new Cartesian3(1.0, 0.0, 0.0);
-        var result = Cartesian3.normalize(cartesian);
-        expect(result).toEqual(expectedResult);
-    });
-
     it('normalize works with a result parameter', function() {
         var cartesian = new Cartesian3(2.0, 0.0, 0.0);
         var expectedResult = new Cartesian3(1.0, 0.0, 0.0);
@@ -367,14 +326,6 @@ defineSuite([
         var returnedResult = Cartesian3.normalize(cartesian, cartesian);
         expect(cartesian).toBe(returnedResult);
         expect(cartesian).toEqual(expectedResult);
-    });
-
-    it('multiplyComponents works without a result parameter', function() {
-        var left = new Cartesian3(2.0, 3.0, 6.0);
-        var right = new Cartesian3(4.0, 5.0, 7.0);
-        var expectedResult = new Cartesian3(8.0, 15.0, 42.0);
-        var result = Cartesian3.multiplyComponents(left, right);
-        expect(result).toEqual(expectedResult);
     });
 
     it('multiplyComponents works with a result parameter', function() {
@@ -404,14 +355,6 @@ defineSuite([
         expect(result).toEqual(expectedResult);
     });
 
-    it('add works without a result parameter', function() {
-        var left = new Cartesian3(2.0, 3.0, 6.0);
-        var right = new Cartesian3(4.0, 5.0, 7.0);
-        var expectedResult = new Cartesian3(6.0, 8.0, 13.0);
-        var result = Cartesian3.add(left, right);
-        expect(result).toEqual(expectedResult);
-    });
-
     it('add works with a result parameter', function() {
         var left = new Cartesian3(2.0, 3.0, 6.0);
         var right = new Cartesian3(4.0, 5.0, 7.0);
@@ -429,14 +372,6 @@ defineSuite([
         var returnedResult = Cartesian3.add(left, right, left);
         expect(returnedResult).toBe(left);
         expect(left).toEqual(expectedResult);
-    });
-
-    it('subtract works without a result parameter', function() {
-        var left = new Cartesian3(2.0, 3.0, 4.0);
-        var right = new Cartesian3(1.0, 5.0, 7.0);
-        var expectedResult = new Cartesian3(1.0, -2.0, -3.0);
-        var result = Cartesian3.subtract(left, right);
-        expect(result).toEqual(expectedResult);
     });
 
     it('subtract works with a result parameter', function() {
@@ -458,14 +393,6 @@ defineSuite([
         expect(left).toEqual(expectedResult);
     });
 
-    it('multiplyByScalar without a result parameter', function() {
-        var cartesian = new Cartesian3(1.0, 2.0, 3.0);
-        var scalar = 2;
-        var expectedResult = new Cartesian3(2.0, 4.0, 6.0);
-        var result = Cartesian3.multiplyByScalar(cartesian, scalar);
-        expect(result).toEqual(expectedResult);
-    });
-
     it('multiplyByScalar with a result parameter', function() {
         var cartesian = new Cartesian3(1.0, 2.0, 3.0);
         var result = new Cartesian3();
@@ -483,14 +410,6 @@ defineSuite([
         var returnedResult = Cartesian3.multiplyByScalar(cartesian, scalar, cartesian);
         expect(cartesian).toBe(returnedResult);
         expect(cartesian).toEqual(expectedResult);
-    });
-
-    it('divideByScalar without a result parameter', function() {
-        var cartesian = new Cartesian3(1.0, 2.0, 3.0);
-        var scalar = 2;
-        var expectedResult = new Cartesian3(0.5, 1.0, 1.5);
-        var result = Cartesian3.divideByScalar(cartesian, scalar);
-        expect(result).toEqual(expectedResult);
     });
 
     it('divideByScalar with a result parameter', function() {
@@ -515,7 +434,7 @@ defineSuite([
     it('negate without a result parameter', function() {
         var cartesian = new Cartesian3(1.0, -2.0, -5.0);
         var expectedResult = new Cartesian3(-1.0, 2.0, 5.0);
-        var result = Cartesian3.negate(cartesian);
+        var result = Cartesian3.negate(cartesian, new Cartesian3());
         expect(result).toEqual(expectedResult);
     });
 
@@ -539,7 +458,7 @@ defineSuite([
     it('abs without a result parameter', function() {
         var cartesian = new Cartesian3(1.0, -2.0, -4.0);
         var expectedResult = new Cartesian3(1.0, 2.0, 4.0);
-        var result = Cartesian3.abs(cartesian);
+        var result = Cartesian3.abs(cartesian, new Cartesian3());
         expect(result).toEqual(expectedResult);
     });
 
@@ -558,15 +477,6 @@ defineSuite([
         var returnedResult = Cartesian3.abs(cartesian, cartesian);
         expect(cartesian).toBe(returnedResult);
         expect(cartesian).toEqual(expectedResult);
-    });
-
-    it('lerp works without a result parameter', function() {
-        var start = new Cartesian3(4.0, 8.0, 10.0);
-        var end = new Cartesian3(8.0, 20.0, 20.0);
-        var t = 0.25;
-        var expectedResult = new Cartesian3(5.0, 11.0, 12.5);
-        var result = Cartesian3.lerp(start, end, t);
-        expect(result).toEqual(expectedResult);
     });
 
     it('lerp works with a result parameter', function() {
@@ -595,7 +505,7 @@ defineSuite([
         var end = new Cartesian3(8.0, 20.0, 20.0);
         var t = 2.0;
         var expectedResult = new Cartesian3(12.0, 32.0, 30.0);
-        var result = Cartesian3.lerp(start, end, t);
+        var result = Cartesian3.lerp(start, end, t, new Cartesian3());
         expect(result).toEqual(expectedResult);
     });
 
@@ -604,7 +514,7 @@ defineSuite([
         var end = new Cartesian3(8.0, 20.0, 20.0);
         var t = -1.0;
         var expectedResult = new Cartesian3(0.0, -4.0, 0.0);
-        var result = Cartesian3.lerp(start, end, t);
+        var result = Cartesian3.lerp(start, end, t, new Cartesian3());
         expect(result).toEqual(expectedResult);
     });
 
@@ -636,20 +546,20 @@ defineSuite([
 
     it('most orthogonal angle is x', function() {
         var v = new Cartesian3(0.0, 1.0, 2.0);
-        expect(Cartesian3.mostOrthogonalAxis(v)).toEqual(Cartesian3.UNIT_X);
+        expect(Cartesian3.mostOrthogonalAxis(v, new Cartesian3())).toEqual(Cartesian3.UNIT_X);
     });
 
     it('most orthogonal angle is y', function() {
         var v = new Cartesian3(1.0, 0.0, 2.0);
-        expect(Cartesian3.mostOrthogonalAxis(v)).toEqual(Cartesian3.UNIT_Y);
+        expect(Cartesian3.mostOrthogonalAxis(v, new Cartesian3())).toEqual(Cartesian3.UNIT_Y);
     });
 
     it('most orthogonal angle is z', function() {
         var v = new Cartesian3(1.0, 3.0, 0.0);
-        expect(Cartesian3.mostOrthogonalAxis(v)).toEqual(Cartesian3.UNIT_Z);
+        expect(Cartesian3.mostOrthogonalAxis(v, new Cartesian3())).toEqual(Cartesian3.UNIT_Z);
 
         v = new Cartesian3(3.0, 1.0, 0.0);
-        expect(Cartesian3.mostOrthogonalAxis(v)).toEqual(Cartesian3.UNIT_Z);
+        expect(Cartesian3.mostOrthogonalAxis(v, new Cartesian3())).toEqual(Cartesian3.UNIT_Z);
     });
 
     it('equals', function() {
@@ -679,14 +589,6 @@ defineSuite([
         expect(cartesian.toString()).toEqual('(1.123, 2.345, 6.789)');
     });
 
-    it('cross works without a result parameter', function() {
-        var left = new Cartesian3(1, 2, 5);
-        var right = new Cartesian3(4, 3, 6);
-        var expectedResult = new Cartesian3(-3, 14, -5);
-        var returnedResult = Cartesian3.cross(left, right);
-        expect(returnedResult).toEqual(expectedResult);
-    });
-
     it('cross works with a result parameter', function() {
         var left = new Cartesian3(1, 2, 5);
         var right = new Cartesian3(4, 3, 6);
@@ -712,20 +614,29 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('fromSpherical work with no result parameter', function() {
+        expect(function() {
+            Cartesian3.fromSpherical({
+                    clock : sixtyDegrees,
+                    cone : (fortyFiveDegrees + Math.PI / 2.0),
+                    magnitude : Math.sqrt(8.0)
+            });
+        }).not.toThrowDeveloperError();
+    });
 
     it('clone returns undefined with no parameter', function() {
         expect(Cartesian3.clone()).toBeUndefined();
     });
 
-    it('getMaximumComponent throws with no parameter', function() {
+    it('maximumComponent throws with no parameter', function() {
         expect(function() {
-            Cartesian3.getMaximumComponent();
+            Cartesian3.maximumComponent();
         }).toThrowDeveloperError();
     });
 
-    it('getMinimumComponent throws with no parameter', function() {
+    it('minimumComponent throws with no parameter', function() {
         expect(function() {
-            Cartesian3.getMinimumComponent();
+            Cartesian3.minimumComponent();
         }).toThrowDeveloperError();
     });
 
@@ -1038,6 +949,20 @@ defineSuite([
         expect(actual).toEqual(expected);
     });
 
+    it('fromRadiansArray with result', function(){
+        var lon1 = CesiumMath.toRadians(90);
+        var lat1 = CesiumMath.toRadians(-70);
+        var lon2 = CesiumMath.toRadians(-100);
+        var lat2 = CesiumMath.toRadians(40);
+
+        var ellipsoid = Ellipsoid.WGS84;
+        var result = [new Cartesian3(), new Cartesian3()];
+        var actual = Cartesian3.fromRadiansArray([lon1, lat1, lon2, lat2], ellipsoid, result);
+        var expected = ellipsoid.cartographicArrayToCartesianArray([new Cartographic(lon1, lat1), new Cartographic(lon2, lat2)]);
+        expect(result).toEqual(expected);
+        expect(actual).toBe(result);
+    });
+
     it('fromRadiansArray throws with no positions', function() {
         expect(function() {
             Cartesian3.fromRadiansArray();
@@ -1102,6 +1027,22 @@ defineSuite([
         expect(actual).toEqual(expected);
     });
 
+    it('fromRadiansArrayHeights with result', function(){
+        var lon1 = CesiumMath.toRadians(90);
+        var lat1 = CesiumMath.toRadians(-70);
+        var alt1 = 200000;
+        var lon2 = CesiumMath.toRadians(-100);
+        var lat2 = CesiumMath.toRadians(40);
+        var alt2 = 100000;
+
+        var ellipsoid = Ellipsoid.WGS84;
+        var result = [new Cartesian3(), new Cartesian3()];
+        var actual = Cartesian3.fromRadiansArrayHeights([lon1, lat1, alt1, lon2, lat2, alt2], ellipsoid, result);
+        var expected = ellipsoid.cartographicArrayToCartesianArray([new Cartographic(lon1, lat1, alt1), new Cartographic(lon2, lat2, alt2)]);
+        expect(result).toEqual(expected);
+        expect(actual).toBe(result);
+    });
+
     it('fromRadiansArrayHeights throws with no positions', function() {
         expect(function() {
             Cartesian3.fromRadiansArrayHeights();
@@ -1117,6 +1058,84 @@ defineSuite([
     it('fromRadiansArrayHeights throws with positions length not multiple of 3', function() {
         expect(function() {
             Cartesian3.fromRadiansArrayHeights([1, 3, 5, 2]);
+        }).toThrowDeveloperError();
+    });
+
+    it('minimumByComponent throws with no result', function() {
+        expect(function() {
+            Cartesian3.minimumByComponent(new Cartesian3(), new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('maximumByComponent throws with no result', function() {
+        expect(function() {
+            Cartesian3.maximumByComponent(new Cartesian3(), new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('normalize throws with no result', function() {
+        expect(function() {
+            Cartesian3.normalize(new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyComponents throws with no result', function() {
+        expect(function() {
+            Cartesian3.multiplyComponents(new Cartesian3(), new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('add throws with no result', function() {
+        expect(function() {
+            Cartesian3.add(new Cartesian3(), new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('subtract throws with no result', function() {
+        expect(function() {
+            Cartesian3.subtract(new Cartesian3(), new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyByScalar throws with no result', function() {
+        expect(function() {
+            Cartesian3.multiplyByScalar(new Cartesian3(), 5);
+        }).toThrowDeveloperError();
+    });
+
+    it('divideByScalar throws with no result', function() {
+        expect(function() {
+            Cartesian3.divideByScalar(new Cartesian3(), 5);
+        }).toThrowDeveloperError();
+    });
+
+    it('negate throws with no result', function() {
+        expect(function() {
+            Cartesian3.negate(new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('abs throws with no result', function() {
+        expect(function() {
+            Cartesian3.abs(new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('cross throws with no result', function() {
+        expect(function() {
+            Cartesian3.cross(new Cartesian3(), new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('lerp throws with no result', function() {
+        expect(function() {
+            Cartesian3.lerp(new Cartesian3(), new Cartesian3(), 10);
+        }).toThrowDeveloperError();
+    });
+
+    it('mostOrthogonalAxis throws with no result', function() {
+        expect(function() {
+            Cartesian3.mostOrthogonalAxis(new Cartesian3());
         }).toThrowDeveloperError();
     });
 

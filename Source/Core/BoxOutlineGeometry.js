@@ -37,6 +37,8 @@ define([
      * @see BoxOutlineGeometry.fromDimensions
      * @see BoxOutlineGeometry.createGeometry
      *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Box%20Outline.html|Cesium Sandcastle Box Outline Demo}
+     *
      * @example
      * var box = new Cesium.BoxOutlineGeometry({
      *   maximumCorner : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0),
@@ -66,7 +68,6 @@ define([
 
     /**
      * Creates an outline of a cube centered at the origin given its dimensions.
-     * @memberof BoxOutlineGeometry
      *
      * @param {Cartesian3} options.dimensions The width, depth, and height of the box stored in the x, y, and z coordinates of the <code>Cartesian3</code>, respectively.
      *
@@ -93,8 +94,8 @@ define([
         }
         //>>includeEnd('debug');
 
-        var corner = Cartesian3.multiplyByScalar(dimensions, 0.5);
-        var min = Cartesian3.negate(corner);
+        var corner = Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3());
+        var min = Cartesian3.negate(corner, new Cartesian3());
         var max = corner;
 
         var newOptions = {
@@ -106,7 +107,6 @@ define([
 
     /**
      * Computes the geometric representation of an outline of a box, including its vertices, indices, and a bounding sphere.
-     * @memberof BoxOutlineGeometry
      *
      * @param {BoxOutlineGeometry} boxGeometry A description of the box outline.
      * @returns {Geometry} The computed vertices and indices.

@@ -121,7 +121,7 @@ define([
             var rs;
             var uniformMap = {};
 
-            var downSampleCommand = this._downSampleCommand = context.createViewportQuadCommand(PassThrough, {
+            this._downSampleCommand = context.createViewportQuadCommand(PassThrough, {
                 renderState : rs,
                 uniformMap : uniformMap,
                 owner : this
@@ -140,7 +140,7 @@ define([
                 }
             };
 
-            var brightPassCommand = this._brightPassCommand = context.createViewportQuadCommand(BrightPass, {
+            this._brightPassCommand = context.createViewportQuadCommand(BrightPass, {
                 renderState : rs,
                 uniformMap : uniformMap,
                 owner : this
@@ -161,7 +161,7 @@ define([
                 }
             };
 
-            var blurXCommand = this._blurXCommand = context.createViewportQuadCommand(GaussianBlur1D, {
+            this._blurXCommand = context.createViewportQuadCommand(GaussianBlur1D, {
                 renderState : rs,
                 uniformMap : uniformMap,
                 owner : this
@@ -179,7 +179,7 @@ define([
                 }
             };
 
-            var blurYCommand = this._blurYCommand = context.createViewportQuadCommand(GaussianBlur1D, {
+            this._blurYCommand = context.createViewportQuadCommand(GaussianBlur1D, {
                 renderState : rs,
                 uniformMap : uniformMap,
                 owner : this
@@ -194,7 +194,7 @@ define([
                 }
             };
 
-            var additiveBlendCommand = this._blendCommand = context.createViewportQuadCommand(AdditiveBlend, {
+            this._blendCommand = context.createViewportQuadCommand(AdditiveBlend, {
                 renderState : rs,
                 uniformMap : uniformMap,
                 owner : this
@@ -202,7 +202,7 @@ define([
 
             uniformMap = {};
 
-            var fullScreenCommand = this._fullScreenCommand = context.createViewportQuadCommand(PassThrough, {
+            this._fullScreenCommand = context.createViewportQuadCommand(PassThrough, {
                 renderState : rs,
                 uniformMap : uniformMap,
                 owner : this
@@ -328,10 +328,10 @@ define([
         // create up sampled render state
         var viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, postProcessMatrix4Scratch);
         var sunPositionEC = Matrix4.multiplyByPoint(viewMatrix, sunPosition, sunPositionECScratch);
-        var sunPositionWC = Transforms.pointToWindowCoordinates(viewProjectionMatrix, viewportTransformation, sunPosition, sunPositionWCScratch);
+        var sunPositionWC = Transforms.pointToGLWindowCoordinates(viewProjectionMatrix, viewportTransformation, sunPosition, sunPositionWCScratch);
 
         sunPositionEC.x += CesiumMath.SOLAR_RADIUS;
-        var limbWC = Transforms.pointToWindowCoordinates(projectionMatrix, viewportTransformation, sunPositionEC, sunPositionEC);
+        var limbWC = Transforms.pointToGLWindowCoordinates(projectionMatrix, viewportTransformation, sunPositionEC, sunPositionEC);
         var sunSize = Cartesian2.magnitude(Cartesian2.subtract(limbWC, sunPositionWC, limbWC)) * 30.0 * 2.0;
 
         var size = sizeScratch;
@@ -344,12 +344,12 @@ define([
         scissorRectangle.width = Math.min(size.x, width);
         scissorRectangle.height = Math.min(size.y, height);
 
-        Cartesian2.clone(sunPositionWC, this._uCenter);
+        this._uCenter = Cartesian2.clone(sunPositionWC, this._uCenter);
         this._uRadius = Math.max(size.x, size.y) * 0.5;
 
         // create down sampled render state
         viewportTransformation = Matrix4.computeViewportTransformation(downSampleViewport, 0.0, 1.0, postProcessMatrix4Scratch);
-        sunPositionWC = Transforms.pointToWindowCoordinates(viewProjectionMatrix, viewportTransformation, sunPosition, sunPositionWCScratch);
+        sunPositionWC = Transforms.pointToGLWindowCoordinates(viewProjectionMatrix, viewportTransformation, sunPosition, sunPositionWCScratch);
 
         size.x *= downSampleWidth / width;
         size.y *= downSampleHeight / height;

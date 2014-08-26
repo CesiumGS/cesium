@@ -22,7 +22,6 @@ define(function() {
      * Enqueues the specified item.
      *
      * @param {Object} item The item to enqueue.
-     * @memberof Queue
      */
     Queue.prototype.enqueue = function(item) {
         this._array.push(item);
@@ -31,8 +30,6 @@ define(function() {
 
     /**
      * Dequeues an item.  Returns undefined if the queue is empty.
-     *
-     * @memberof Queue
      */
     Queue.prototype.dequeue = function() {
         if (this.length === 0) {
@@ -61,7 +58,6 @@ define(function() {
      * Check whether this queue contains the specified item.
      *
      * @param {Object} item the item to search for.
-     * @memberof Queue
      */
     Queue.prototype.contains = function(item) {
         return this._array.indexOf(item) !== -1;
@@ -69,7 +65,6 @@ define(function() {
 
     /**
      * Remove all items from the queue.
-     * @memberof Queue
      */
     Queue.prototype.clear = function() {
         this._array.length = this._offset = this.length = 0;
@@ -78,8 +73,7 @@ define(function() {
     /**
      * Sort the items in the queue in-place.
      *
-     * @param {Function} compareFunction a function that defines the sort order.
-     * @memberof Queue
+     * @param {Queue~Comparator} compareFunction A function that defines the sort order.
      */
     Queue.prototype.sort = function(compareFunction) {
         if (this._offset > 0) {
@@ -90,6 +84,22 @@ define(function() {
 
         this._array.sort(compareFunction);
     };
+
+    /**
+     * A function used to compare two items while sorting a queue.
+     * @callback Queue~Comparator
+     *
+     * @param {Object} a An item in the array.
+     * @param {Object} b An item in the array.
+     * @returns {Number} Returns a negative value if <code>a</code> is less than <code>b</code>,
+     *          a positive value if <code>a</code> is greater than <code>b</code>, or
+     *          0 if <code>a</code> is equal to <code>b</code>.
+     *
+     * @example
+     * function compareNumbers(a, b) {
+     *     return a - b;
+     * }
+     */
 
     return Queue;
 });

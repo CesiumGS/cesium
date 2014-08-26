@@ -48,9 +48,23 @@ define([
     });
 
     /**
+     * Determines if the provided key is in the array.
+     *
+     * @param {String|Number} key The key to check.
+     * @returns {Boolean} <code>true</code> if the key is in the array, <code>false</code> otherwise.
+     */
+    AssociativeArray.prototype.contains = function(key) {
+        //>>includeStart('debug', pragmas.debug);
+        if (typeof key !== 'string' && typeof key !== 'number') {
+            throw new DeveloperError('key is required to be a string or number.');
+        }
+        //>>includeEnd('debug');
+        return defined(this._hash[key]);
+    };
+
+    /**
      * Associates the provided key with the provided value.  If the key already
      * exists, it is overwritten with the new value.
-     * @memberof AssociativeArray
      *
      * @param {String|Number} key A unique identifier.
      * @param {Object} value The value to associate with the provided key.
@@ -62,14 +76,16 @@ define([
         }
         //>>includeEnd('debug');
 
-        this.remove(key);
-        this._hash[key] = value;
-        this._array.push(value);
+        var oldValue = this._hash[key];
+        if (value !== oldValue) {
+            this.remove(key);
+            this._hash[key] = value;
+            this._array.push(value);
+        }
     };
 
     /**
      * Retrieves the value associated with the provided key.
-     * @memberof AssociativeArray
      *
      * @param {String|Number} key The key whose value is to be retrieved.
      * @returns {Object} The associated value, or undefined if the key does not exist in the collection.
@@ -85,7 +101,6 @@ define([
 
     /**
      * Removes a key-value pair from the collection.
-     * @memberof AssociativeArray
      *
      * @param {String|Number} key The key to be removed.
      * @returns {Boolean} True if it was removed, false if the key was not in the collection.
@@ -109,7 +124,6 @@ define([
 
     /**
      * Clears the collection.
-     * @memberof AssociativeArray
      */
     AssociativeArray.prototype.removeAll = function() {
         this._hash = {};

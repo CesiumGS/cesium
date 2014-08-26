@@ -15,7 +15,6 @@ defineSuite([
         'Specs/createScene',
         'Specs/destroyContext',
         'Specs/destroyScene',
-        'Specs/frameState',
         'Specs/pick',
         'Specs/render'
     ], function(
@@ -34,18 +33,19 @@ defineSuite([
         createScene,
         destroyContext,
         destroyScene,
-        frameState,
         pick,
         render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
+    var frameState;
     var rectangle;
     var us;
 
     beforeAll(function() {
         context = createContext();
+        frameState = createFrameState();
     });
 
     afterAll(function() {
@@ -56,7 +56,11 @@ defineSuite([
         rectangle = new RectanglePrimitive();
 
         us = context.uniformState;
-        us.update(context, createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z)));
+        us.update(context, createFrameState(createCamera({
+            eye : new Cartesian3(1.02, 0.0, 0.0),
+            target : Cartesian3.ZERO,
+            up : Cartesian3.UNIT_Z
+        })));
     });
 
     afterEach(function() {
@@ -141,7 +145,7 @@ defineSuite([
 
         var camera = scene.camera;
         camera.position = new Cartesian3(1.02, 0.0, 0.0);
-        camera.direction = Cartesian3.negate(Cartesian3.UNIT_X);
+        camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
 
         scene.initializeFrame();
@@ -200,7 +204,7 @@ defineSuite([
         frameState.mode = mode;
 
         var b3D = BoundingSphere.fromRectangle3D(rectangle.rectangle, Ellipsoid.UNIT_SPHERE);
-        expect(boundingVolume).toEqual(BoundingSphere.projectTo2D(b3D, frameState.scene2D.projection));
+        expect(boundingVolume).toEqual(BoundingSphere.projectTo2D(b3D, frameState.mapProjection));
     });
 
     it('test 2D bounding sphere', function() {
@@ -214,7 +218,7 @@ defineSuite([
         frameState.mode = mode;
 
         var b3D = BoundingSphere.fromRectangle3D(rectangle.rectangle, Ellipsoid.UNIT_SPHERE);
-        var b2D = BoundingSphere.projectTo2D(b3D, frameState.scene2D.projection);
+        var b2D = BoundingSphere.projectTo2D(b3D, frameState.mapProjection);
         b2D.center.x = 0.0;
         expect(boundingVolume).toEqual(b2D);
     });

@@ -62,12 +62,10 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (defined(options.translucencyByDistance) &&
-                options.translucencyByDistance.far <= options.translucencyByDistance.near) {
+        if (defined(options.translucencyByDistance) && options.translucencyByDistance.far <= options.translucencyByDistance.near) {
             throw new DeveloperError('translucencyByDistance.far must be greater than translucencyByDistance.near.');
         }
-        if (defined(options.pixelOffsetScaleByDistance) &&
-                options.pixelOffsetScaleByDistance.far <= options.pixelOffsetScaleByDistance.near) {
+        if (defined(options.pixelOffsetScaleByDistance) && options.pixelOffsetScaleByDistance.far <= options.pixelOffsetScaleByDistance.near) {
             throw new DeveloperError('pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near.');
         }
         //>>includeEnd('debug');
@@ -81,7 +79,7 @@ define([
         this._style = defaultValue(options.style, LabelStyle.FILL);
         this._verticalOrigin = defaultValue(options.verticalOrigin, VerticalOrigin.BOTTOM);
         this._horizontalOrigin = defaultValue(options.horizontalOrigin, HorizontalOrigin.LEFT);
-        this._pixelOffset = Cartesian2.clone(defaultValue(options.pixelOffset, Cartesian2.ZERO));
+        this._pixelOffset = Cartesian2.clone(defaultValue(options.pixelOffset, Cartesian2.ZERO), new Cartesian2());
         this._eyeOffset = Cartesian3.clone(defaultValue(options.eyeOffset, Cartesian3.ZERO));
         this._position = Cartesian3.clone(defaultValue(options.position, Cartesian3.ZERO));
         this._scale = defaultValue(options.scale, 1.0);
@@ -103,22 +101,22 @@ define([
          * @memberof Label.prototype
          * @type {Boolean}
          */
-        show: {
-            get: function() {
+        show : {
+            get : function() {
                 return this._show;
             },
-            set: function(value) {
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(value)) {
                     throw new DeveloperError('value is required.');
                 }
                 //>>includeEnd('debug');
 
-                if (value !== this._show) {
+                if (this._show !== value) {
                     this._show = value;
 
                     var glyphs = this._glyphs;
-                    for ( var i = 0, len = glyphs.length; i < len; i++) {
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
                         var glyph = glyphs[i];
                         if (defined(glyph.billboard)) {
                             glyph.billboard.show = value;
@@ -129,15 +127,15 @@ define([
         },
 
         /**
-         * Gets and sets the Cartesian position of this label.
+         * Gets or sets the Cartesian position of this label.
          * @memberof Label.prototype
          * @type {Cartesian3}
          */
-        position: {
+        position : {
             get : function() {
                 return this._position;
             },
-            set: function(value) {
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(value)) {
                     throw new DeveloperError('value is required.');
@@ -149,7 +147,7 @@ define([
                     Cartesian3.clone(value, position);
 
                     var glyphs = this._glyphs;
-                    for ( var i = 0, len = glyphs.length; i < len; i++) {
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
                         var glyph = glyphs[i];
                         if (defined(glyph.billboard)) {
                             glyph.billboard.position = value;
@@ -160,22 +158,22 @@ define([
         },
 
         /**
-         * Gets and sets the text of this label.
+         * Gets or sets the text of this label.
          * @memberof Label.prototype
          * @type {String}
          */
-        text: {
-            get: function() {
+        text : {
+            get : function() {
                 return this._text;
             },
-            set: function(value) {
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(value)) {
                     throw new DeveloperError('value is required.');
                 }
                 //>>includeEnd('debug');
 
-                if (value !== this._text) {
+                if (this._text !== value) {
                     this._text = value;
                     rebindAllGlyphs(this);
                 }
@@ -183,16 +181,16 @@ define([
         },
 
         /**
-         * Gets and sets the font used to draw this label. Fonts are specified using the same syntax as the CSS 'font' property.
+         * Gets or sets the font used to draw this label. Fonts are specified using the same syntax as the CSS 'font' property.
          * @memberof Label.prototype
          * @type {String}
          * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#text-styles|HTML canvas 2D context text styles}
          */
-        font: {
+        font : {
             get : function() {
                 return this._font;
             },
-            set: function(value) {
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(value)) {
                     throw new DeveloperError('value is required.');
@@ -207,7 +205,7 @@ define([
         },
 
         /**
-         * Gets and sets the fill color of this label.
+         * Gets or sets the fill color of this label.
          * @memberof Label.prototype
          * @type {Color}
          * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles|HTML canvas 2D context fill and stroke styles}
@@ -232,7 +230,7 @@ define([
         },
 
         /**
-         * Gets and sets the outline color of this label.
+         * Gets or sets the outline color of this label.
          * @memberof Label.prototype
          * @type {Color}
          * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles|HTML canvas 2D context fill and stroke styles}
@@ -257,12 +255,12 @@ define([
         },
 
         /**
-         * Gets and sets the outline width of this label.
+         * Gets or sets the outline width of this label.
          * @memberof Label.prototype
          * @type {Number}
          * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles|HTML canvas 2D context fill and stroke styles}
          */
-        outlineWidth: {
+        outlineWidth : {
             get : function() {
                 return this._outlineWidth;
             },
@@ -281,11 +279,11 @@ define([
         },
 
         /**
-         * Gets and sets the style of this label.
+         * Gets or sets the style of this label.
          * @memberof Label.prototype
          * @type {LabelStyle}
          */
-        style: {
+        style : {
             get : function() {
                 return this._style;
             },
@@ -304,22 +302,22 @@ define([
         },
 
         /**
-         * Gets and sets the pixel offset in screen space from the origin of this label.  This is commonly used
+         * Gets or sets the pixel offset in screen space from the origin of this label.  This is commonly used
          * to align multiple labels and billboards at the same position, e.g., an image and text.  The
-         * screen space origin is the bottom, left corner of the canvas; <code>x</code> increases from
-         * left to right, and <code>y</code> increases from bottom to top.
+         * screen space origin is the top, left corner of the canvas; <code>x</code> increases from
+         * left to right, and <code>y</code> increases from top to bottom.
          * <br /><br />
          * <div align='center'>
          * <table border='0' cellpadding='5'><tr>
          * <td align='center'><code>default</code><br/><img src='images/Label.setPixelOffset.default.png' width='250' height='188' /></td>
-         * <td align='center'><code>l.pixeloffset = new Cartesian2(25, -75);</code><br/><img src='images/Label.setPixelOffset.x50y-25.png' width='250' height='188' /></td>
+         * <td align='center'><code>l.pixeloffset = new Cartesian2(25, 75);</code><br/><img src='images/Label.setPixelOffset.x50y-25.png' width='250' height='188' /></td>
          * </tr></table>
          * The label's origin is indicated by the yellow point.
          * </div>
          * @memberof Label.prototype
          * @type {Cartesian2}
          */
-        pixelOffset: {
+        pixelOffset : {
             get : function() {
                 return this._pixelOffset;
             },
@@ -333,13 +331,20 @@ define([
                 var pixelOffset = this._pixelOffset;
                 if (!Cartesian2.equals(pixelOffset, value)) {
                     Cartesian2.clone(value, pixelOffset);
-                    repositionAllGlyphs(this);
+
+                    var glyphs = this._glyphs;
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
+                        var glyph = glyphs[i];
+                        if (defined(glyph.billboard)) {
+                            glyph.billboard.pixelOffset = value;
+                        }
+                    }
                 }
             }
         },
 
         /**
-         * Gets and sets near and far translucency properties of a Label based on the Label's distance from the camera.
+         * Gets or sets near and far translucency properties of a Label based on the Label's distance from the camera.
          * A label's translucency will interpolate between the {@link NearFarScalar#nearValue} and
          * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
          * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
@@ -347,6 +352,7 @@ define([
          * translucencyByDistance will be disabled.
          * @memberof Label.prototype
          * @type {NearFarScalar}
+         *
          * @example
          * // Example 1.
          * // Set a label's translucencyByDistance to 1.0 when the
@@ -354,6 +360,7 @@ define([
          * // the camera distance approaches 8.0e6 meters.
          * text.translucencyByDistance = new Cesium.NearFarScalar(1.5e2, 1.0, 8.0e6, 0.0);
          *
+         * @example
          * // Example 2.
          * // disable translucency by distance
          * text.translucencyByDistance = undefined;
@@ -363,23 +370,29 @@ define([
                 return this._translucencyByDistance;
             },
             set : function(value) {
-                if (NearFarScalar.equals(this._translucencyByDistance, value)) {
-                    return;
-                }
-
                 //>>includeStart('debug', pragmas.debug);
-                if (value.far <= value.near) {
+                if (defined(value) && value.far <= value.near) {
                     throw new DeveloperError('far distance must be greater than near distance.');
                 }
                 //>>includeEnd('debug');
 
-                this._translucencyByDistance = NearFarScalar.clone(value, this._translucencyByDistance);
-                rebindAllGlyphs(this);
+                var translucencyByDistance = this._translucencyByDistance;
+                if (!NearFarScalar.equals(translucencyByDistance, value)) {
+                    this._translucencyByDistance = NearFarScalar.clone(value, translucencyByDistance);
+
+                    var glyphs = this._glyphs;
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
+                        var glyph = glyphs[i];
+                        if (defined(glyph.billboard)) {
+                            glyph.billboard.translucencyByDistance = value;
+                        }
+                    }
+                }
             }
         },
 
         /**
-         * Gets and sets near and far pixel offset scaling properties of a Label based on the Label's distance from the camera.
+         * Gets or sets near and far pixel offset scaling properties of a Label based on the Label's distance from the camera.
          * A label's pixel offset will be scaled between the {@link NearFarScalar#nearValue} and
          * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
          * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
@@ -387,6 +400,7 @@ define([
          * pixelOffsetScaleByDistance will be disabled.
          * @memberof Label.prototype
          * @type {NearFarScalar}
+         *
          * @example
          * // Example 1.
          * // Set a label's pixel offset scale to 0.0 when the
@@ -395,6 +409,7 @@ define([
          * text.pixelOffset = new Cesium.Cartesian2(0.0, 1.0);
          * text.pixelOffsetScaleByDistance = new Cesium.NearFarScalar(1.5e2, 0.0, 8.0e6, 10.0);
          *
+         * @example
          * // Example 2.
          * // disable pixel offset by distance
          * text.pixelOffsetScaleByDistance = undefined;
@@ -404,23 +419,29 @@ define([
                 return this._pixelOffsetScaleByDistance;
             },
             set : function(value) {
-                if (NearFarScalar.equals(this._pixelOffsetScaleByDistance, value)) {
-                    return;
-                }
-
                 //>>includeStart('debug', pragmas.debug);
-                if (value.far <= value.near) {
+                if (defined(value) && value.far <= value.near) {
                     throw new DeveloperError('far distance must be greater than near distance.');
                 }
                 //>>includeEnd('debug');
 
-                this._pixelOffsetScaleByDistance = NearFarScalar.clone(value, this._pixelOffsetScaleByDistance);
-                rebindAllGlyphs(this);
+                var pixelOffsetScaleByDistance = this._pixelOffsetScaleByDistance;
+                if (!NearFarScalar.equals(pixelOffsetScaleByDistance, value)) {
+                    this._pixelOffsetScaleByDistance = NearFarScalar.clone(value, pixelOffsetScaleByDistance);
+
+                    var glyphs = this._glyphs;
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
+                        var glyph = glyphs[i];
+                        if (defined(glyph.billboard)) {
+                            glyph.billboard.pixelOffsetScaleByDistance = value;
+                        }
+                    }
+                }
             }
         },
 
         /**
-         * Gest and sets the 3D Cartesian offset applied to this label in eye coordinates.  Eye coordinates is a left-handed
+         * Gets and sets the 3D Cartesian offset applied to this label in eye coordinates.  Eye coordinates is a left-handed
          * coordinate system, where <code>x</code> points towards the viewer's right, <code>y</code> points up, and
          * <code>z</code> points into the screen.  Eye coordinates use the same scale as world and model coordinates,
          * which is typically meters.
@@ -457,7 +478,7 @@ define([
                     Cartesian3.clone(value, eyeOffset);
 
                     var glyphs = this._glyphs;
-                    for ( var i = 0, len = glyphs.length; i < len; i++) {
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
                         var glyph = glyphs[i];
                         if (defined(glyph.billboard)) {
                             glyph.billboard.eyeOffset = value;
@@ -468,7 +489,7 @@ define([
         },
 
         /**
-         * Gets and sets the horizontal origin of this label, which determines if the label is drawn
+         * Gets or sets the horizontal origin of this label, which determines if the label is drawn
          * to the left, center, or right of its position.
          * <br /><br />
          * <div align='center'>
@@ -481,7 +502,7 @@ define([
          * l.horizontalOrigin = Cesium.HorizontalOrigin.RIGHT;
          * l.verticalOrigin = Cesium.VerticalOrigin.TOP;
          */
-        horizontalOrigin: {
+        horizontalOrigin : {
             get : function() {
                 return this._horizontalOrigin;
             },
@@ -500,7 +521,7 @@ define([
         },
 
         /**
-         * Gets and sets the vertical origin of this label, which determines if the label is
+         * Gets or sets the vertical origin of this label, which determines if the label is
          * to the above, below, or at the center of its position.
          * <br /><br />
          * <div align='center'>
@@ -513,7 +534,7 @@ define([
          * l.horizontalOrigin = Cesium.HorizontalOrigin.RIGHT;
          * l.verticalOrigin = Cesium.VerticalOrigin.TOP;
          */
-        verticalOrigin: {
+        verticalOrigin : {
             get : function() {
                 return this._verticalOrigin;
             },
@@ -526,13 +547,22 @@ define([
 
                 if (this._verticalOrigin !== value) {
                     this._verticalOrigin = value;
+
+                    var glyphs = this._glyphs;
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
+                        var glyph = glyphs[i];
+                        if (defined(glyph.billboard)) {
+                            glyph.billboard.verticalOrigin = value;
+                        }
+                    }
+
                     repositionAllGlyphs(this);
                 }
             }
         },
 
         /**
-         * Gets and sets the uniform scale that is multiplied with the label's size in pixels.
+         * Gets or sets the uniform scale that is multiplied with the label's size in pixels.
          * A scale of <code>1.0</code> does not change the size of the label; a scale greater than
          * <code>1.0</code> enlarges the label; a positive scale less than <code>1.0</code> shrinks
          * the label.
@@ -552,7 +582,7 @@ define([
             get : function() {
                 return this._scale;
             },
-            set: function(value) {
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(value)) {
                     throw new DeveloperError('value is required.');
@@ -563,7 +593,7 @@ define([
                     this._scale = value;
 
                     var glyphs = this._glyphs;
-                    for ( var i = 0, len = glyphs.length; i < len; i++) {
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
                         var glyph = glyphs[i];
                         if (defined(glyph.billboard)) {
                             glyph.billboard.scale = value;
@@ -585,12 +615,15 @@ define([
                 return this._id;
             },
             set : function(value) {
-                this._id = value;
-                var glyphs = this._glyphs;
-                for (var i = 0, len = glyphs.length; i < len; i++) {
-                    var glyph = glyphs[i];
-                    if (defined(glyph.billboard)) {
-                        glyph.billboard.id = value;
+                if (this._id !== value) {
+                    this._id = value;
+
+                    var glyphs = this._glyphs;
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
+                        var glyph = glyphs[i];
+                        if (defined(glyph.billboard)) {
+                            glyph.billboard.id = value;
+                        }
                     }
                 }
             }
@@ -599,13 +632,10 @@ define([
 
     /**
      * Computes the screen-space position of the label's origin, taking into account eye and pixel offsets.
-     * The screen space origin is the bottom, left corner of the canvas; <code>x</code> increases from
-     * left to right, and <code>y</code> increases from bottom to top.
-     *
-     * @memberof Label
+     * The screen space origin is the top, left corner of the canvas; <code>x</code> increases from
+     * left to right, and <code>y</code> increases from top to bottom.
      *
      * @param {Scene} scene The scene the label is in.
-     *
      * @returns {Cartesian2} The screen-space position of the label.
      *
      * @see Label#eyeOffset
@@ -625,17 +655,16 @@ define([
         var modelMatrix = labelCollection.modelMatrix;
         var actualPosition = Billboard._computeActualPosition(this._position, scene.frameState, modelMatrix);
 
-        return Billboard._computeScreenSpacePosition(modelMatrix, actualPosition, this._eyeOffset, this._pixelOffset, scene);
+        var windowCoordinates = Billboard._computeScreenSpacePosition(modelMatrix, actualPosition, this._eyeOffset, this._pixelOffset, scene);
+        windowCoordinates.y = scene.canvas.clientHeight - windowCoordinates.y;
+        return windowCoordinates;
     };
 
     /**
      * Determines if this label equals another label.  Labels are equal if all their properties
      * are equal.  Labels in different collections can be equal.
      *
-     * @memberof Label
-     *
      * @param {Label} other The label to compare for equality.
-     *
      * @returns {Boolean} <code>true</code> if the labels are equal; otherwise, <code>false</code>.
      */
     Label.prototype.equals = function(other) {
@@ -663,8 +692,6 @@ define([
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof Label
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */

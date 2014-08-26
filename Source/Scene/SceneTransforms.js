@@ -26,24 +26,22 @@ define([
     /**
      * Functions that do scene-dependent transforms between rendering-related coordinate systems.
      *
-     * @exports SceneTransforms
+     * @namespace
+     * @alias SceneTransforms
      */
     var SceneTransforms = {};
 
-    var actualPosition = new Cartesian4(0, 0, 0, 1);
+    var actualPositionScratch = new Cartesian4(0, 0, 0, 1);
     var positionCC = new Cartesian4();
-    var viewProjectionScratch;
+    var viewProjectionScratch = new Matrix4();
 
     /**
      * Transforms a position in WGS84 coordinates to window coordinates.  This is commonly used to place an
      * HTML element at the same screen position as an object in the scene.
      *
-     * @memberof SceneTransforms
-     *
      * @param {Scene} scene The scene.
      * @param {Cartesian3} position The position in WGS84 (world) coordinates.
      * @param {Cartesian2} [result] An optional object to return the input position transformed to window coordinates.
-     *
      * @returns {Cartesian2} The modified result parameter or a new Cartesian3 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
      *
      * @example
@@ -67,31 +65,33 @@ define([
         //>>includeEnd('debug');
 
         // Transform for 3D, 2D, or Columbus view
-        SceneTransforms.computeActualWgs84Position(scene.frameState, position, actualPosition);
+        var actualPosition = SceneTransforms.computeActualWgs84Position(scene.frameState, position, actualPositionScratch);
 
         if (!defined(actualPosition)) {
-            result = undefined;
             return undefined;
         }
 
         // View-projection matrix to transform from world coordinates to clip coordinates
         var camera = scene.camera;
-        viewProjectionScratch = Matrix4.multiply(camera.frustum.projectionMatrix, camera.viewMatrix, viewProjectionScratch);
-        Matrix4.multiplyByVector(viewProjectionScratch, actualPosition, positionCC);
+        var viewProjection = Matrix4.multiply(camera.frustum.projectionMatrix, camera.viewMatrix, viewProjectionScratch);
+        Matrix4.multiplyByVector(viewProjection, Cartesian4.fromElements(actualPosition.x, actualPosition.y, actualPosition.z, 1, positionCC), positionCC);
 
-        return SceneTransforms.clipToWindowCoordinates(scene, positionCC, result);
+        if ((positionCC.z < 0) && (scene.mode !== SceneMode.SCENE2D)) {
+            return undefined;
+        }
+
+        result = SceneTransforms.clipToGLWindowCoordinates(scene, positionCC, result);
+        result.y = scene.canvas.clientHeight - result.y;
+        return result;
     };
 
     /**
      * Transforms a position in WGS84 coordinates to drawing buffer coordinates.  This may produce different
      * results from SceneTransforms.wgs84ToWindowCoordinates when the browser zoom is not 100%, or on high-DPI displays.
      *
-     * @memberof SceneTransforms
-     *
      * @param {Scene} scene The scene.
      * @param {Cartesian3} position The position in WGS84 (world) coordinates.
      * @param {Cartesian2} [result] An optional object to return the input position transformed to window coordinates.
-     *
      * @returns {Cartesian2} The modified result parameter or a new Cartesian3 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
      *
      * @example
@@ -116,15 +116,20 @@ define([
         //>>includeEnd('debug');
 
         // Transform for 3D, 2D, or Columbus view
-        SceneTransforms.computeActualWgs84Position(scene.frameState, position, actualPosition);
+        var actualPosition = SceneTransforms.computeActualWgs84Position(scene.frameState, position, actualPositionScratch);
 
         if (!defined(actualPosition)) {
             return undefined;
         }
 
         // View-projection matrix to transform from world coordinates to clip coordinates
-        var viewProjection = scene.context.uniformState.viewProjection;
+        var camera = scene.camera;
+        var viewProjection = Matrix4.multiply(camera.frustum.projectionMatrix, camera.viewMatrix, viewProjectionScratch);
         Matrix4.multiplyByVector(viewProjection, Cartesian4.fromElements(actualPosition.x, actualPosition.y, actualPosition.z, 1, positionCC), positionCC);
+
+        if ((positionCC.z < 0) && (scene.mode !== SceneMode.SCENE2D)) {
+            return undefined;
+        }
 
         return SceneTransforms.clipToDrawingBufferCoordinates(scene, positionCC, result);
     };
@@ -142,14 +147,13 @@ define([
             return Cartesian3.clone(position, result);
         }
 
-        var projection = frameState.scene2D.projection;
-        projection.ellipsoid.cartesianToCartographic(position, positionInCartographic);
-        if (!defined(positionInCartographic)) {
-            result = undefined;
-            return result;
+        var projection = frameState.mapProjection;
+        var cartographic = projection.ellipsoid.cartesianToCartographic(position, positionInCartographic);
+        if (!defined(cartographic)) {
+            return undefined;
         }
 
-        projection.project(positionInCartographic, projectedPosition);
+        projection.project(cartographic, projectedPosition);
 
         if (mode === SceneMode.COLUMBUS_VIEW) {
             return Cartesian3.fromElements(projectedPosition.z, projectedPosition.x, projectedPosition.y, result);
@@ -176,7 +180,7 @@ define([
     /**
      * @private
      */
-    SceneTransforms.clipToWindowCoordinates = function(scene, position, result) {
+    SceneTransforms.clipToGLWindowCoordinates = function(scene, position, result) {
         var canvas = scene.canvas;
 
         // Perspective divide to transform from clip coordinates to normalized device coordinates

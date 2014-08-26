@@ -1,5 +1,8 @@
 /*global define*/
-define(function() {
+define([
+        './freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
@@ -8,7 +11,8 @@ define(function() {
      * partially inside the frustum and partially outside (INTERSECTING), or somwhere entirely
      * outside of the frustum's 6 planes (OUTSIDE).
      *
-     * @exports Intersect
+     * @namespace
+     * @alias Intersect
      */
     var Intersect = {
         /**
@@ -36,5 +40,5 @@ define(function() {
         INSIDE : 1
     };
 
-    return Intersect;
+    return freezeObject(Intersect);
 });

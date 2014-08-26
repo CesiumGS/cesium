@@ -28,8 +28,6 @@ define([
      * @exception {DeveloperError} points.length must be greater than or equal to 2.
      * @exception {DeveloperError} times.length must be equal to points.length.
      *
-     * @see BSpline
-     * @see BezierSpline
      * @see HermiteSpline
      * @see CatmullRomSpline
      * @see QuaternionSpline
@@ -106,7 +104,7 @@ define([
     /**
      * Finds an index <code>i</code> in <code>times</code> such that the parameter
      * <code>time</code> is in the interval <code>[times[i], times[i + 1]]</code>.
-     * @memberof QuaternionSpline
+     * @function
      *
      * @param {Number} time The time.
      * @returns {Number} The index for the element at the start of the interval.
@@ -119,7 +117,6 @@ define([
 
     /**
      * Evaluates the curve at a given time.
-     * @memberof LinearSpline
      *
      * @param {Number} time The time at which to evaluate the curve.
      * @param {Cartesian3} [result] The object onto which to store the result.

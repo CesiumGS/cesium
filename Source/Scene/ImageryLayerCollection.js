@@ -6,8 +6,10 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/Rectangle',
         '../Core/Math',
-        './ImageryLayer'
+        './ImageryLayer',
+        '../ThirdParty/when'
     ], function(
         defaultValue,
         defined,
@@ -15,8 +17,10 @@ define([
         destroyObject,
         DeveloperError,
         Event,
+        Rectangle,
         CesiumMath,
-        ImageryLayer) {
+        ImageryLayer,
+        when) {
     "use strict";
 
     /**
@@ -83,8 +87,6 @@ define([
     /**
      * Adds a layer to the collection.
      *
-     * @memberof ImageryLayerCollection
-     *
      * @param {ImageryLayer} layer the layer to add.
      * @param {Number} [index] the index to add the layer at.  If omitted, the layer will
      *                         added on top of all existing layers.
@@ -121,12 +123,9 @@ define([
     /**
      * Creates a new layer using the given ImageryProvider and adds it to the collection.
      *
-     * @memberof ImageryLayerCollection
-     *
      * @param {ImageryProvider} imageryProvider the imagery provider to create a new layer for.
      * @param {Number} [index] the index to add the layer at.  If omitted, the layer will
      *                         added on top of all existing layers.
-     *
      * @returns {ImageryLayer} The newly created layer.
      */
     ImageryLayerCollection.prototype.addImageryProvider = function(imageryProvider, index) {
@@ -144,11 +143,8 @@ define([
     /**
      * Removes a layer from this collection, if present.
      *
-     * @memberof ImageryLayerCollection
-     *
      * @param {ImageryLayer} layer The layer to remove.
      * @param {Boolean} [destroy=true] whether to destroy the layers in addition to removing them.
-     *
      * @returns {Boolean} true if the layer was in the collection and was removed,
      *                    false if the layer was not in the collection.
      */
@@ -176,15 +172,13 @@ define([
     /**
      * Removes all layers from this collection.
      *
-     * @memberof ImageryLayerCollection
-     *
      * @param {Boolean} [destroy=true] whether to destroy the layers in addition to removing them.
      */
     ImageryLayerCollection.prototype.removeAll = function(destroy) {
         destroy = defaultValue(destroy, true);
 
         var layers = this._layers;
-        for ( var i = 0, len = layers.length; i < len; i++) {
+        for (var i = 0, len = layers.length; i < len; i++) {
             var layer = layers[i];
             this.layerRemoved.raiseEvent(layer, i);
 
@@ -199,8 +193,6 @@ define([
     /**
      * Checks to see if the collection contains a given layer.
      *
-     * @memberof ImageryLayerCollection
-     *
      * @param {ImageryLayer} layer the layer to check for.
      *
      * @returns {Boolean} true if the collection contains the layer, false otherwise.
@@ -212,8 +204,6 @@ define([
     /**
      * Determines the index of a given layer in the collection.
      *
-     * @memberof ImageryLayerCollection
-     *
      * @param {ImageryLayer} layer The layer to find the index of.
      *
      * @returns {Number} The index of the layer in the collection, or -1 if the layer does not exist in the collection.
@@ -224,8 +214,6 @@ define([
 
     /**
      * Gets a layer by index from the collection.
-     *
-     * @memberof ImageryLayerCollection
      *
      * @param {Number} index the index to retrieve.
      *
@@ -280,8 +268,6 @@ define([
     /**
      * Raises a layer up one position in the collection.
      *
-     * @memberof ImageryLayerCollection
-     *
      * @param {ImageryLayer} layer the layer to move.
      *
      * @exception {DeveloperError} layer is not in this collection.
@@ -295,8 +281,6 @@ define([
     /**
      * Lowers a layer down one position in the collection.
      *
-     * @memberof ImageryLayerCollection
-     *
      * @param {ImageryLayer} layer the layer to move.
      *
      * @exception {DeveloperError} layer is not in this collection.
@@ -309,8 +293,6 @@ define([
 
     /**
      * Raises a layer to the top of the collection.
-     *
-     * @memberof ImageryLayerCollection
      *
      * @param {ImageryLayer} layer the layer to move.
      *
@@ -333,8 +315,6 @@ define([
     /**
      * Lowers a layer to the bottom of the collection.
      *
-     * @memberof ImageryLayerCollection
-     *
      * @param {ImageryLayer} layer the layer to move.
      *
      * @exception {DeveloperError} layer is not in this collection.
@@ -354,12 +334,116 @@ define([
     };
 
     /**
+     * Asynchronously determines the imagery layer features that are intersected by a pick ray.  The intersected imagery
+     * layer features are found by invoking {@link ImageryProvider#pickFeatures} for each imagery layer tile intersected
+     * by the pick ray.  To compute a pick ray from a location on the screen, use {@link Camera.getPickRay}.
+     *
+     * @param {Ray} ray The ray to test for intersection.
+     * @param {Scene} scene The scene.
+     * @return {Promise|ImageryLayerFeatureInfo[]} A promise that resolves to an array of features intersected by the pick ray.
+     *                                             If it can be quickly determined that no features are intersected (for example,
+     *                                             because no active imagery providers support {@link ImageryProvider#pickFeatures}
+     *                                             or because the pick ray does not intersect the surface), this function will
+     *                                             return undefined.
+     *
+     * @example
+     * var pickRay = viewer.scene.camera.getPickRay(windowPosition);
+     * var featuresPromise = viewer.scene.imageryLayers.pickImageryLayerFeatures(pickRay, viewer.scene);
+     * if (!Cesium.defined(featuresPromise)) {
+     *     console.log('No features picked.');
+     * } else {
+     *     Cesium.when(featuresPromise, function(features) {
+     *         // This function is called asynchronously when the list if picked features is available.
+     *         console.log('Number of features: ' + features.length);
+     *         if (features.length > 0) {
+     *             console.log('First feature name: ' + features[0].name);
+     *             }
+     *         });
+     *     });
+     * }
+     */
+    ImageryLayerCollection.prototype.pickImageryLayerFeatures = function(ray, scene) {
+        // Find the picked location on the globe.
+        var pickedPosition = scene.globe.pick(ray, scene);
+        if (!defined(pickedPosition)) {
+            return undefined;
+        }
+
+        var pickedLocation = scene.globe.ellipsoid.cartesianToCartographic(pickedPosition);
+
+        // Find the terrain tile containing the picked location.
+        var tilesToRender = scene.globe._surface._tilesToRender;
+        var length = tilesToRender.length;
+        var pickedTile;
+
+        for (var textureIndex = 0; !defined(pickedTile) && textureIndex < tilesToRender.length; ++textureIndex) {
+            var tile = tilesToRender[textureIndex];
+            if (Rectangle.contains(tile.rectangle, pickedLocation)) {
+                pickedTile = tile;
+            }
+        }
+
+        if (!defined(pickedTile)) {
+            return undefined;
+        }
+
+        // Pick against all attached imagery tiles containing the pickedLocation.
+        var tileExtent = pickedTile.rectangle;
+        var imageryTiles = pickedTile.data.imagery;
+
+        var promises = [];
+        for (var i = imageryTiles.length - 1; i >= 0; --i) {
+            var terrainImagery = imageryTiles[i];
+            var imagery = terrainImagery.readyImagery;
+            if (!defined(imagery)) {
+                continue;
+            }
+            var provider = imagery.imageryLayer.imageryProvider;
+            if (!defined(provider.pickFeatures)) {
+                continue;
+            }
+
+            var promise = provider.pickFeatures(imagery.x, imagery.y, imagery.level, pickedLocation.longitude, pickedLocation.latitude);
+            if (!defined(promise)) {
+                continue;
+            }
+
+            promises.push(promise);
+        }
+
+        if (promises.length === 0) {
+            return undefined;
+        }
+
+        return when.all(promises, function(results) {
+            var features = [];
+
+            for (var resultIndex = 0; resultIndex < results.length; ++resultIndex) {
+                var result = results[resultIndex];
+
+                if (defined(result) && result.length > 0) {
+                    for (var featureIndex = 0; featureIndex < result.length; ++featureIndex) {
+                        var feature = result[featureIndex];
+
+                        // For features without a position, use the picked location.
+                        if (!defined(feature.position)) {
+                            feature.position = pickedLocation;
+                        }
+
+                        features.push(feature);
+                    }
+                }
+            }
+
+            return features;
+        });
+    };
+
+    /**
      * Returns true if this object was destroyed; otherwise, false.
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof ImageryLayerCollection
      *
      * @returns {Boolean} true if this object was destroyed; otherwise, false.
      *
@@ -377,8 +461,6 @@ define([
      * Once this object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof ImageryLayerCollection
      *
      * @returns {undefined}
      *

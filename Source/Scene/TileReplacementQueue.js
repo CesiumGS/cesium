@@ -1,12 +1,8 @@
 /*global define*/
 define([
-        '../Core/defined',
-        './ImageryState',
-        './TerrainState'
+        '../Core/defined'
     ], function(
-        defined,
-        ImageryState,
-        TerrainState) {
+        defined) {
     "use strict";
 
     /**
@@ -36,8 +32,6 @@ define([
      * tiles.  Tiles that were used last frame will not be unloaded, even if that puts the number
      * of tiles above the specified maximum.
      *
-     * @memberof TileReplacementQueue
-     *
      * @param {Number} maximumTiles The maximum number of tiles in the queue.
      */
     TileReplacementQueue.prototype.trimTiles = function(maximumTiles) {
@@ -53,25 +47,7 @@ define([
 
             var previous = tileToTrim.replacementPrevious;
 
-            // Do not remove tiles that are transitioning or that have
-            // imagery that is transitioning.
-            var loadedTerrain = tileToTrim.loadedTerrain;
-            var loadingIsTransitioning = defined(loadedTerrain) &&
-                                         (loadedTerrain.state === TerrainState.RECEIVING || loadedTerrain.state === TerrainState.TRANSFORMING);
-
-            var upsampledTerrain = tileToTrim.upsampledTerrain;
-            var upsamplingIsTransitioning = defined(upsampledTerrain) &&
-                                            (upsampledTerrain.state === TerrainState.RECEIVING || upsampledTerrain.state === TerrainState.TRANSFORMING);
-
-            var shouldRemoveTile = !loadingIsTransitioning && !upsamplingIsTransitioning;
-
-            var imagery = tileToTrim.imagery;
-            for (var i = 0, len = imagery.length; shouldRemoveTile && i < len; ++i) {
-                var tileImagery = imagery[i];
-                shouldRemoveTile = !defined(tileImagery.loadingImagery) || tileImagery.loadingImagery.state !== ImageryState.TRANSITIONING;
-            }
-
-            if (shouldRemoveTile) {
+            if (tileToTrim.eligibleForUnloading) {
                 tileToTrim.freeResources();
                 remove(this, tileToTrim);
             }
@@ -109,8 +85,6 @@ define([
     /**
      * Marks a tile as rendered this frame and moves it before the first tile that was not rendered
      * this frame.
-     *
-     * @memberof TileReplacementQueue
      *
      * @param {TileReplacementQueue} item The tile that was rendered.
      */

@@ -30,11 +30,12 @@ define([
     "use strict";
 
     /**
-     * A renderable rectangular rectangle.
+     * A renderable rectangle.
      *
      * @alias RectanglePrimitive
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid that the rectangle is drawn on.
      * @param {Rectangle} [options.rectangle] The rectangle, which defines the rectangular region to draw.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude in the underlying geometry.
@@ -142,14 +143,14 @@ define([
          *
          * @type Material
          *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+         *
          * @example
          * // 1. Change the color of the default material to yellow
          * rectangle.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
          * rectangle.material = Cesium.Material.fromType(Material.StripeType);
-         *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
          */
         this.material = defaultValue(options.material, material);
 
@@ -178,7 +179,7 @@ define([
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
-         * Draws the bounding sphere for each {@link DrawCommand} in the primitive.
+         * Draws the bounding sphere for each draw command in the primitive.
          * </p>
          *
          * @type {Boolean}
@@ -191,7 +192,16 @@ define([
     };
 
     /**
-     * @private
+     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
+     * get the draw commands needed to render this primitive.
+     * <p>
+     * Do not call this function directly.  This is documented just to
+     * list the exceptions that may be propagated when the scene is rendered:
+     * </p>
+     *
+     * @exception {DeveloperError} this.ellipsoid must be defined.
+     * @exception {DeveloperError} this.material must be defined.
+     * @exception {DeveloperError} this.granularity must be defined.
      */
     RectanglePrimitive.prototype.update = function(context, frameState, commandList) {
         //>>includeStart('debug', pragmas.debug);
@@ -202,7 +212,7 @@ define([
             throw new DeveloperError('this.material must be defined.');
         }
         if (this.granularity < 0.0) {
-            throw new DeveloperError('this.granularity and scene2D/scene3D overrides must be greater than zero.');
+            throw new DeveloperError('this.granularity must be greater than zero.');
         }
         //>>includeEnd('debug');
 
@@ -265,8 +275,6 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof Rectangle
-     *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see Rectangle#destroy
@@ -283,16 +291,14 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @memberof Rectangle
-     *
      * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Rectangle#isDestroyed
-     *
      * @example
      * rectangle = rectangle && rectangle.destroy();
+     *
+     * @see Rectangle#isDestroyed
      */
     RectanglePrimitive.prototype.destroy = function() {
         this._primitive = this._primitive && this._primitive.destroy();

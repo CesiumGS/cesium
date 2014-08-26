@@ -134,6 +134,7 @@ define([
      * @alias HermiteSpline
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point.
      *                The values are in no way connected to the clock time. They are the parameterization for the curve.
      * @param {Cartesian3[]} options.points The array of {@link Cartesian3} control points.
@@ -144,8 +145,6 @@ define([
      * @exception {DeveloperError} times.length must be equal to points.length.
      * @exception {DeveloperError} inTangents and outTangents must have a length equal to points.length - 1.
      *
-     * @see BSpline
-     * @see BezierSpline
      * @see CatmullRomSpline
      * @see LinearSpline
      * @see QuaternionSpline
@@ -270,7 +269,6 @@ define([
     /**
      * Creates a spline where the tangents at each control point are the same.
      * The curves are guaranteed to be at least in the class C<sup>1</sup>.
-     * @memberof HermiteSpline
      *
      * @param {Number[]} options.times The array of control point times.
      * @param {Cartesian3[]} options.points The array of control points.
@@ -293,8 +291,9 @@ define([
      * // Add tangents
      * var tangents = new Array(points.length);
      * tangents[0] = new Cesium.Cartesian3(1125196, -161816, 270551);
+     * var temp = new Cesium.Cartesian3();
      * for (var i = 1; i < tangents.length - 1; ++i) {
-     *     tangents[i] = Cesium.Cartesian3.multiplyByScalar(Cesium.Cartesian3.subtract(points[i + 1], points[i - 1]), 0.5);
+     *     tangents[i] = Cesium.Cartesian3.multiplyByScalar(Cesium.Cartesian3.subtract(points[i + 1], points[i - 1], temp), 0.5, new Cesium.Cartesian3());
      * }
      * tangents[tangents.length - 1] = new Cesium.Cartesian3(1165345, 112641, 47281);
      *
@@ -337,7 +336,6 @@ define([
     /**
      * Creates a natural cubic spline. The tangents at the control points are generated
      * to create a curve in the class C<sup>2</sup>.
-     * @memberof HermiteSpline
      *
      * @param {Number[]} options.times The array of control point times.
      * @param {Cartesian3[]} options.points The array of control points.
@@ -400,7 +398,6 @@ define([
     /**
      * Creates a clamped cubic spline. The tangents at the interior control points are generated
      * to create a curve in the class C<sup>2</sup>.
-     * @memberof HermiteSpline
      *
      * @param {Number[]} options.times The array of control point times.
      * @param {Cartesian3[]} options.points The array of control points.
@@ -475,7 +472,7 @@ define([
     /**
      * Finds an index <code>i</code> in <code>times</code> such that the parameter
      * <code>time</code> is in the interval <code>[times[i], times[i + 1]]</code>.
-     * @memberof HermiteSpline
+     * @function
      *
      * @param {Number} time The time.
      * @returns {Number} The index for the element at the start of the interval.
@@ -491,7 +488,6 @@ define([
 
     /**
      * Evaluates the curve at a given time.
-     * @memberof HermiteSpline
      *
      * @param {Number} time The time at which to evaluate the curve.
      * @param {Cartesian3} [result] The object onto which to store the result.
@@ -502,6 +498,9 @@ define([
      *                             in the array <code>times</code>.
      */
     HermiteSpline.prototype.evaluate = function(time, result) {
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
         var points = this.points;
         var times = this.times;
         var inTangents = this.inTangents;

@@ -200,7 +200,6 @@ define([
      *
      * @alias EllipsoidGeodesic
      * @constructor
-     * @immutable
      *
      * @param {Cartographic} [start] The initial planetodetic point on the path.
      * @param {Cartographic} [end] The final planetodetic point on the path.
@@ -300,7 +299,6 @@ define([
 
     /**
      * Sets the start and end points of the geodesic
-     * @memberof EllipsoidGeodesic
      *
      * @param {Cartographic} start The initial planetodetic point on the path.
      * @param {Cartographic} end The final planetodetic point on the path.
@@ -320,10 +318,8 @@ define([
 
     /**
      * Provides the location of a point at the indicated portion along the geodesic.
-     * @memberof EllipsoidGeodesic
      *
      * @param {Number} fraction The portion of the distance between the initial and final points.
-     *
      * @returns {Cartographic} The location of the point along the geodesic.
      */
     EllipsoidGeodesic.prototype.interpolateUsingFraction = function(fraction, result) {
@@ -332,10 +328,8 @@ define([
 
     /**
      * Provides the location of a point at the indicated distance along the geodesic.
-     * @memberof EllipsoidGeodesic
      *
      * @param {Number} distance The distance from the inital point to the point of interest along the geodesic
-     *
      * @returns {Cartographic} The location of the point along the geodesic.
      *
      * @exception {DeveloperError} start and end must be set before calling funciton interpolateUsingSurfaceDistance

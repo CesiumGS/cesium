@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="A polyline">
+    <meta name="description" content="Draw a polyline with a set width.">
     <meta name="cesium-sandcastle-labels" content="Geometries">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -16,7 +16,7 @@
     });
     </script>
 </head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
 </style>
@@ -24,75 +24,63 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require(['Cesium'], function(Cesium) {
+function startup(Cesium) {
     "use strict";
-    
-    var viewer = new Cesium.Viewer('cesiumContainer');
-    var scene = viewer.scene;
-    var primitives = scene.primitives;
-          
-    // Create a glowing polyline
-    var positions = [];
-    for (var i = 0; i < 10; ++i) {
-        positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 36.0));
-    }
+//Sandcastle_Begin
+// Create the viewer.
+var viewer = new Cesium.Viewer('cesiumContainer');
+var primitives = viewer.scene.primitives;
+      
+// Example 1: Draw a red polyline on the globe surface
 
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.PolylineGeometry({
-                positions : positions,
-                width : 10.0,
-                vertexFormat : Cesium.PolylineMaterialAppearance.VERTEX_FORMAT
-            })
+primitives.add(new Cesium.Primitive({
+    geometryInstances : new Cesium.GeometryInstance({
+        geometry : new Cesium.PolylineGeometry({
+            positions : Cesium.Cartesian3.fromDegreesArray([
+                -124.0, 40.0,
+                -80.0, 40.0
+            ]),
+            width : 5.0,
+            vertexFormat : Cesium.PolylineColorAppearance.VERTEX_FORMAT
         }),
-        appearance : new Cesium.PolylineMaterialAppearance({
-            material : Cesium.Material.fromType(Cesium.Material.PolylineGlowType)
-        })
-    }));
-    
-    // Polyline with per segment color
-    positions = [];
-    var colors = [];
-    for (i = 0; i < 10; ++i) {
-        positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 35.0));
-        colors.push(Cesium.Color.fromRandom({alpha : 1.0}));
-    }
+        attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.8))
+        }
+    }),
+    appearance : new Cesium.PolylineColorAppearance()
+}));
 
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.PolylineGeometry({
-                positions : positions,
-                width : 10.0,
-                vertexFormat : Cesium.PolylineColorAppearance.VERTEX_FORMAT,
-                colors : colors
-            })
+
+// Example 2: Draw a straight blue polyline
+
+// Setting the followSurface option to false will allow
+// you to draw a straight polyline.  Otherwise, it will
+// curve to the globe surface.
+primitives.add(new Cesium.Primitive({
+    geometryInstances : new Cesium.GeometryInstance({
+        geometry : new Cesium.PolylineGeometry({
+            positions : Cesium.Cartesian3.fromDegreesArrayHeights([
+                -84.0, 50.0, 0.0,
+                -100.0, 30.0, 1000000.0
+            ]),
+            width : 5.0,
+            vertexFormat : Cesium.PolylineColorAppearance.VERTEX_FORMAT,
+            followSurface: false
         }),
-        appearance : new Cesium.PolylineColorAppearance()
-    }));
-    
-    // Polyline with per vertex color
-    positions = [];
-    colors = [];
-    for (i = 0; i < 10; ++i) {
-        positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 34.0));
-        colors.push(Cesium.Color.fromRandom({alpha : 1.0}));
-    }
-
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.PolylineGeometry({
-                positions : positions,
-                width : 10.0,
-                vertexFormat : Cesium.PolylineColorAppearance.VERTEX_FORMAT,
-                colors : colors,
-                colorsPerVertex : true
-            })
-        }),
-        appearance : new Cesium.PolylineColorAppearance()
-    }));
-
+        attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
+        }
+    }),
+    appearance : new Cesium.PolylineColorAppearance()
+}));
+//Sandcastle_End
     Sandcastle.finishedLoading();
-});
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
 </script>
 </body>
 </html>
