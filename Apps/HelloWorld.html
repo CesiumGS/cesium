@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
   <!-- Use correct character set. -->
@@ -9,8 +10,15 @@
   <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
   <title>Hello World!</title>
   <script src="../Build/Cesium/Cesium.js"></script>
+  <script src="Inovaworks/CompassPrimitive.js"></script>  
+  <script src="Inovaworks/DomePrimitive.js"></script>  
+  <script src="Inovaworks/PathPrimitive.js"></script>  
+  <script src="Inovaworks/SpaceNavigator.js"></script>  
+  <script src="Inovaworks/ScaleWidget.js"></script>  
+  
   <style>
       @import url(../Build/Cesium/Widgets/widgets.css);
+	  @import url(Inovaworks/inovaworks.css);
 
       #cesiumContainer {
           position: absolute;
@@ -24,22 +32,68 @@
           font-family: sans-serif;
       }
 
-      html {
-        height: 100%;
-      }
-
       body {
           padding: 0;
           margin: 0;
           overflow: hidden;
-          height: 100%;
       }
   </style>
 </head>
-<body>
-  <div id="cesiumContainer"></div>
-  <script>
-    var viewer = new Cesium.Viewer('cesiumContainer');
-  </script>
+<body bgcolor="#000000">
+	<div id="appContainer" style="width:1000;height:800px;">
+		<div id="cesiumContainer"></div>		
+	</div>	
+	<script>	
+		var widget = new Cesium.CesiumWidget('cesiumContainer');
+
+		var scene = widget.scene;
+		var camera = scene.camera;
+		var canvas = scene.canvas;
+		var ellipsoid = scene.globe.ellipsoid;
+		
+		Error.stackTraceLimit= 1000;
+		
+		scene.debugShowFramesPerSecond  = true;
+		
+		//var controller = new Cesium.CameraController(camera);		  
+		var compassOptions = {texturePath:"compass_da2.png"};
+		scene.primitives.add(new CompassPrimitive(camera, ellipsoid, canvas, compassOptions));	
+
+        var points = new Array();
+        points.push(Cesium.Cartographic.fromDegrees(-9.1394, 38.7138));
+        points.push(Cesium.Cartographic.fromDegrees(-9.4206, 38.6969));
+        points.push(Cesium.Cartographic.fromDegrees(-9.3606, 38.8355));
+        points.push(Cesium.Cartographic.fromDegrees(-9.16, 39.05));
+        points.push(Cesium.Cartographic.fromDegrees(-9.08, 39.24));		
+		scene.primitives.add(new PathPrimitive(points, ellipsoid));			
+
+		var domeOptions = {
+			lineWidth:1.0,
+			angle:45,
+			wireMaterial: Cesium.Material.fromType(Cesium.Material.ColorType, {color : new Cesium.Color(1.0, 1.0, 1.0, 1.0)}),
+			material: Cesium.Material.fromType(Cesium.Material.ColorType, {color : new Cesium.Color(0.85, 0.72, 0.2, 0.5)})
+					   };
+		
+		scene.primitives.add(new DomePrimitive(Cesium.Cartographic.fromDegrees(-9.1394, 38.7138), ellipsoid, domeOptions));	
+			
+		var scaleOptions = {x:10, y:10};			
+		var scalebar = new ScaleWidget('appContainer', canvas, camera, ellipsoid, scaleOptions);
+		
+		
+		var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
+			Cesium.Cartesian3.fromDegrees(-9.1394 , 38.7138 , 0.0));
+		
+	
+		scene.primitives.add(Cesium.Model.fromGltf({
+			url : 'SampleData/models/CesiumGround/Cesium_Ground.gltf',	
+			modelMatrix : modelMatrix,
+			//cache:modelcache,
+			minimumRenderDistance:50000.0,
+			maximumRenderDistance:200000.0,
+			scale : 20000.0
+		}));
+		
+		//var myNavigator = new SpaceNavigator(scene);
+	</script>
 </body>
-</html>
+</html>	
