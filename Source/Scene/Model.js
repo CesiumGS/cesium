@@ -211,6 +211,7 @@ define([
 		this._minimumRenderDistance = options.minimumRenderDistance;
 		this._maximumRenderDistance = options.maximumRenderDistance;
 		this._distanceToCamera = 0;
+		this._hasDistanceChecks = (defined(this._minimumRenderDistance) || defined(this._maximumRenderDistance));
 
         /**
          * A uniform scale applied to this model before the {@link Model#modelMatrix}.
@@ -2287,12 +2288,11 @@ define([
         // and then have them visibile immediately when show is set to true.
         if (show) {
 		
-			if (defined(this._boundingSphere))
+			if (this._hasDistanceChecks)
 			{
 				Matrix4.getTranslation(this._modelMatrix, scratchPosition);
 				this._distanceToCamera = Cartesian3.distance(scratchPosition, frameState.camera.position);	
-				console.log ('dist '+this._distanceToCamera);
-				
+								
 				if (defined(this._minimumRenderDistance)){
 					if (this._distanceToCamera<this._minimumRenderDistance){
 						return;
