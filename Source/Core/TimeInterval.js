@@ -37,7 +37,7 @@ define([
      *     stop : Cesium.JulianDate.fromIso8601('1980-08-02T00:00:00Z'),
      *     isStartTimeIncluded : true,
      *     iSStopTimeIncluded : false,
-     *     data : Cesium.Cartesian.fromDegrees(39.921037, -75.170082)
+     *     data : Cesium.Cartesian3.fromDegrees(39.921037, -75.170082)
      * });
      *
      * @example
