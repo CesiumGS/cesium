@@ -178,7 +178,7 @@ define([
         destroy = defaultValue(destroy, true);
 
         var layers = this._layers;
-        for ( var i = 0, len = layers.length; i < len; i++) {
+        for (var i = 0, len = layers.length; i < len; i++) {
             var layer = layers[i];
             this.layerRemoved.raiseEvent(layer, i);
 
