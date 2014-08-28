@@ -161,8 +161,8 @@ define([
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
      * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
-	 * @param {Number} [options.minimumRenderDistance=0.0] The minimum distance to camera where the model will be showed.	 
-	 * @param {Number} [options.maximumRenderDistance=0.0] The maximum distance to camera where the model will be showed.	 
+     * @param {Number} [options.minimumRenderDistance=0.0] The minimum distance to camera where the model will be showed.    
+     * @param {Number} [options.maximumRenderDistance=0.0] The maximum distance to camera where the model will be showed.    
      * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
@@ -209,11 +209,11 @@ define([
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = Matrix4.clone(this.modelMatrix);
-		
-		this._minimumRenderDistance = options.minimumRenderDistance;
-		this._maximumRenderDistance = options.maximumRenderDistance;
-		this._distanceToCamera = 0;
-		this._hasDistanceChecks = (defined(this._minimumRenderDistance) || defined(this._maximumRenderDistance));
+        
+        this._minimumRenderDistance = options.minimumRenderDistance;
+        this._maximumRenderDistance = options.maximumRenderDistance;
+        this._distanceToCamera = 0;
+        this._hasDistanceChecks = (defined(this._minimumRenderDistance) || defined(this._maximumRenderDistance));
 
         /**
          * A uniform scale applied to this model before the {@link Model#modelMatrix}.
@@ -2195,7 +2195,7 @@ define([
         return scale;
     }
 
-	
+    
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -2287,25 +2287,25 @@ define([
         // want to be able to progressively load models when they are not shown,
         // and then have them visibile immediately when show is set to true.
         if (show) {
-		
-			if (this._hasDistanceChecks)
-			{
-				Matrix4.getTranslation(this._modelMatrix, scratchPosition);
-				this._distanceToCamera = Cartesian3.distance(scratchPosition, frameState.camera.position);	
-								
-				if (defined(this._minimumRenderDistance)){
-					if (this._distanceToCamera<this._minimumRenderDistance){
-						return;
-					}
-				}
+        
+            if (this._hasDistanceChecks)
+            {
+                Matrix4.getTranslation(this._modelMatrix, scratchPosition);
+                this._distanceToCamera = Cartesian3.distance(scratchPosition, frameState.camera.position);  
+                                
+                if (defined(this._minimumRenderDistance)){
+                    if (this._distanceToCamera<this._minimumRenderDistance){
+                        return;
+                    }
+                }
 
-				if (defined(this._maximumRenderDistance)){
-					if (this._distanceToCamera>this._maximumRenderDistance){
-						return;
-					}
-				}
-			}
-			
+                if (defined(this._maximumRenderDistance)){
+                    if (this._distanceToCamera>this._maximumRenderDistance){
+                        return;
+                    }
+                }
+            }
+            
 // PERFORMANCE_IDEA: This is terriable
             var passes = frameState.passes;
             var i;
