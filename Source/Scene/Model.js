@@ -161,6 +161,8 @@ define([
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
      * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
+	 * @param {Number} [options.minimumRenderDistance=0.0] The minimum distance to camera where the model will be showed.	 
+	 * @param {Number} [options.maximumRenderDistance=0.0] The maximum distance to camera where the model will be showed.	 
      * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
@@ -2193,8 +2195,6 @@ define([
         return scale;
     }
 
-
-	var scratchPosition = new Cartesian3();
 	
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
