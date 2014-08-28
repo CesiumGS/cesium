@@ -887,10 +887,6 @@ define([
      *     width : 1024.0,
      *     height : 768.0
      * }, 0.0, 1.0, new Cesium.Matrix4());
-     *
-     * @example
-     * // Example 2.  Create viewport transformation using the context's viewport.
-     * var m = Cesium.Matrix4.computeViewportTransformation(context.getViewport());
      */
     Matrix4.computeViewportTransformation = function(viewport, nearDepthRange, farDepthRange, result) {
         //>>includeStart('debug', pragmas.debug);
