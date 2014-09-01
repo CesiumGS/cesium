@@ -2291,7 +2291,7 @@ define([
             if (this._hasDistanceChecks)
             {
                 Matrix4.getTranslation(this._modelMatrix, scratchPosition);
-                this._distanceToCamera = Cartesian3.distance(scratchPosition, frameState.camera.position);  
+                this._distanceToCamera = Cartesian3.distance(scratchPosition, frameState.camera.position);
                                 
                 if (defined(this._minimumRenderDistance)){
                     if (this._distanceToCamera<this._minimumRenderDistance){

@@ -65,19 +65,19 @@ define([
          * Gets or sets the Number {@link Property} specifying the model's approximate minimum pixel size regardless of zoom.
          * @memberof ModelGraphics.prototype
          * @type {Property}
-         */      
+         */
         minimumPixelSize : createPropertyDescriptor('minimumPixelSize'),
         /**
          * Gets or sets the Number {@link Property} specifying the model's minimum distance from camera where it should be displayed.
          * @memberof ModelGraphics.prototype
          * @type {Property}
-         */      
+         */
         minimumRenderDistance : createPropertyDescriptor('minimumRenderDistance'),
         /**
          * Gets or sets the Number {@link Property} specifying the model's maximum distance from camera where it should be displayed.
          * @memberof ModelGraphics.prototype
          * @type {Property}
-         */      
+         */
         maximumRenderDistance : createPropertyDescriptor('maximumRenderDistance'),
         /**
          * Gets or sets the string {@link Property} specifying the model's uri.
