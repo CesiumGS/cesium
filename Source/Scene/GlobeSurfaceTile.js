@@ -378,7 +378,7 @@ define([
             surfaceTile.upsampledTerrain = new TileTerrain(upsampleTileDetails);
         }
 
-        if (isDataAvailable(tile)) {
+        if (isDataAvailable(tile, terrainProvider)) {
             surfaceTile.loadedTerrain = new TileTerrain();
         }
 
@@ -618,7 +618,10 @@ define([
         }
     }
 
-    function isDataAvailable(tile) {
+    function isDataAvailable(tile, terrainProvider) {
+        if (terrainProvider.supportsTileDataAvailable()) {
+            return terrainProvider.getTileDataAvailable(tile.level, tile.x, tile.y);
+        }
         var parent = tile.parent;
         if (!defined(parent)) {
             // Data is assumed to be available for root tiles.

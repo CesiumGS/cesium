@@ -192,5 +192,8 @@ define([
      */
     TerrainProvider.prototype.getLevelMaximumGeometricError = DeveloperError.throwInstantiationError;
 
+    TerrainProvider.prototype.supportsTileDataAvailable = DeveloperError.throwInstantiationError;
+    TerrainProvider.prototype.getTileDataAvailable = DeveloperError.throwInstantiationError;
+
     return TerrainProvider;
 });

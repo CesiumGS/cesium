@@ -636,5 +636,22 @@ define([
         return false;
     }
 
+    CesiumTerrainProvider.prototype.supportsTileDataAvailable = function() {
+        var available = this._availableTiles;
+        if (!available || available.length === 0) {
+            return false;
+        } else {
+            return true;
+        }
+    };
+
+    CesiumTerrainProvider.prototype.getTileDataAvailable = function(level, x, y) {
+        var available = this._availableTiles;
+        if( level >= available.length)
+            return false;
+        var levelAvailable = available[level];
+        return isTileInRange(levelAvailable, x, y);
+    };
+
     return CesiumTerrainProvider;
 });
