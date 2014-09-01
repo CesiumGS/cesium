@@ -192,7 +192,9 @@ define([
      */
     TerrainProvider.prototype.getLevelMaximumGeometricError = DeveloperError.throwInstantiationError;
 
-    TerrainProvider.prototype.supportsTileDataAvailable = DeveloperError.throwInstantiationError;
+    TerrainProvider.prototype.supportsTileDataAvailable = function() {
+        return false;
+    };
     TerrainProvider.prototype.getTileDataAvailable = DeveloperError.throwInstantiationError;
 
     return TerrainProvider;

@@ -647,7 +647,7 @@ define([
 
     CesiumTerrainProvider.prototype.getTileDataAvailable = function(level, x, y) {
         var available = this._availableTiles;
-        if( level >= available.length)
+        if (level >= available.length)
             return false;
         var levelAvailable = available[level];
         return isTileInRange(levelAvailable, x, y);
