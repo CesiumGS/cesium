@@ -650,8 +650,9 @@ define([
         if (!available || available.length === 0) {
             return undefined;
         } else {
-            if (level >= available.length)
+            if (level >= available.length) {
                 return false;
+            }
             var levelAvailable = available[level];
             return isTileInRange(levelAvailable, x, y);
         }
