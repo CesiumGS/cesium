@@ -619,7 +619,7 @@ define([
     }
 
     function isDataAvailable(tile, terrainProvider) {
-        if (terrainProvider.supportsTileDataAvailable()) {
+        if (defined(terrainProvider.supportsTileDataAvailable) && terrainProvider.supportsTileDataAvailable()) {
             return terrainProvider.getTileDataAvailable(tile.level, tile.x, tile.y);
         }
         var parent = tile.parent;
