@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.2 - 2014-10-01
+
+* Eliminated imagery artifacts at some zoom levels due to Mercator reprojection.
+
 ### 1.1 - 2014-09-02
 
 * Added a new imagery provider, `WebMapTileServiceImageryProvider`, for accessing tiles on a WMTS 1.0.0 server.
