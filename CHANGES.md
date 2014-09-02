@@ -16,6 +16,7 @@ Change Log
 * Added `FeatureDetection.supportsWebWorkers`.
 * Added `id` property to `Scene` which is a readonly unique identifier associated with each instance.
 * `loadWithXhr` now works with older browsers, such as Internet Explorer 9.
+* Added wkid 102113 detection (equivilent to 102100) to ArcGis Imagery Provider.
 
 ### 1.0 - 2014-08-01
 
