@@ -60,22 +60,22 @@ define([
         this._tileProvider.quadtree = this;
 
         this._debug = {
-                enableDebugOutput : false,
+            enableDebugOutput : false,
 
-                maxDepth : 0,
-                tilesVisited : 0,
-                tilesCulled : 0,
-                tilesRendered : 0,
-                tilesWaitingForChildren : 0,
+            maxDepth : 0,
+            tilesVisited : 0,
+            tilesCulled : 0,
+            tilesRendered : 0,
+            tilesWaitingForChildren : 0,
 
-                lastMaxDepth : -1,
-                lastTilesVisited : -1,
-                lastTilesCulled : -1,
-                lastTilesRendered : -1,
-                lastTilesWaitingForChildren : -1,
+            lastMaxDepth : -1,
+            lastTilesVisited : -1,
+            lastTilesCulled : -1,
+            lastTilesRendered : -1,
+            lastTilesWaitingForChildren : -1,
 
-                suspendLodUpdate : false
-            };
+            suspendLodUpdate : false
+        };
 
         var tilingScheme = this._tileProvider.tilingScheme;
         var ellipsoid = tilingScheme.ellipsoid;
@@ -86,6 +86,7 @@ define([
         this._tileReplacementQueue = new TileReplacementQueue();
         this._levelZeroTiles = undefined;
         this._levelZeroTilesReady = false;
+        this._loadQueueTimeSlice = 5.0;
 
         /**
          * Gets or sets the maximum screen-space error, in pixels, that is allowed.
@@ -445,11 +446,11 @@ define([
         }
     }
 
-    function createRenderCommandsForSelectedTiles(primitive, context, frameState, commandList) {
-        function tileDistanceSortFunction(a, b) {
-            return a._distance - b._distance;
-        }
+    function tileDistanceSortFunction(a, b) {
+        return a._distance - b._distance;
+    }
 
+    function createRenderCommandsForSelectedTiles(primitive, context, frameState, commandList) {
         var tileProvider = primitive._tileProvider;
         var tilesToRender = primitive._tilesToRender;
 

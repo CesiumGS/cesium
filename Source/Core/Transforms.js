@@ -546,9 +546,9 @@ define([
      * @example
      * // Transform a point from the ICRF axes to the Fixed axes.
      * var now = new Cesium.JulianDate();
-     * var pointInFixed = new Cesium.Cartesian3(...);
+     * var pointInFixed = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
      * var fixedToIcrf = Cesium.Transforms.computeIcrfToFixedMatrix(now);
-     * var pointInInertial = new Cartesian3();
+     * var pointInInertial = new Cesium.Cartesian3();
      * if (Cesium.defined(fixedToIcrf)) {
      *     pointInInertial = Cesium.Matrix3.multiplyByVector(fixedToIcrf, pointInFixed, pointInInertial);
      * }
