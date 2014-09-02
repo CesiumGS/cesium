@@ -619,9 +619,14 @@ define([
     }
 
     function isDataAvailable(tile, terrainProvider) {
-        if (defined(terrainProvider.supportsTileDataAvailable) && terrainProvider.supportsTileDataAvailable()) {
-            return terrainProvider.getTileDataAvailable(tile.level, tile.x, tile.y);
+
+        if (defined(terrainProvider.getTileDataAvailable)) {
+            var tileDataAvailable = terrainProvider.getTileDataAvailable(tile.x, tile.y, tile.level);
+            if (defined(tileDataAvailable)) {
+                return tileDataAvailable;
+            }
         }
+
         var parent = tile.parent;
         if (!defined(parent)) {
             // Data is assumed to be available for root tiles.

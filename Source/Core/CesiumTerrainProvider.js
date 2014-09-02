@@ -636,21 +636,25 @@ define([
         return false;
     }
 
-    CesiumTerrainProvider.prototype.supportsTileDataAvailable = function() {
+    /**
+     * Determines whether data for a tile is available to be loaded.
+     *
+     * @param {Number} x The X coordinate of the tile for which to request geometry.
+     * @param {Number} y The Y coordinate of the tile for which to request geometry.
+     * @param {Number} level The level of the tile for which to request geometry.
+     * @returns {Number} Undefined if not supported, otherwise true or false.
+     */
+    CesiumTerrainProvider.prototype.getTileDataAvailable = function(x, y, level) {
         var available = this._availableTiles;
-        if (!available || available.length === 0) {
-            return false;
-        } else {
-            return true;
-        }
-    };
 
-    CesiumTerrainProvider.prototype.getTileDataAvailable = function(level, x, y) {
-        var available = this._availableTiles;
-        if (level >= available.length)
-            return false;
-        var levelAvailable = available[level];
-        return isTileInRange(levelAvailable, x, y);
+        if (!available || available.length === 0) {
+            return undefined;
+        } else {
+            if (level >= available.length)
+                return false;
+            var levelAvailable = available[level];
+            return isTileInRange(levelAvailable, x, y);
+        }
     };
 
     return CesiumTerrainProvider;
