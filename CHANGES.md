@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.2 - 2014-10-01
+
+* Removed rendering artifact caused by inaccurate values from WebGL `sin` function in `czm_latitudeToWebMercatorFraction`.
+
 ### 1.1 - 2014-09-02
 
 * Added a new imagery provider, `WebMapTileServiceImageryProvider`, for accessing tiles on a WMTS 1.0.0 server.
