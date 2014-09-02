@@ -3,7 +3,7 @@ Change Log
 
 ### 1.2 - 2014-10-01
 
-* Removed rendering artifact caused by inaccurate values from WebGL `sin` function in `czm_latitudeToWebMercatorFraction`.
+* Eliminated imagery artifacts at some zoom levels due to Mercator reprojection.
 
 ### 1.1 - 2014-09-02
 
