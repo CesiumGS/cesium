@@ -1,6 +1,6 @@
 (function() {
     "use strict";
-    /*global console,require,__dirname*/
+    /*global console,require,__dirname,process*/
     /*jshint es3:false*/
 
     var express = require('express');
@@ -125,7 +125,36 @@
         });
     });
 
-    app.listen(argv.port, argv.public ? undefined : 'localhost');
+    var server = app.listen(argv.port, argv.public ? undefined : 'localhost', function() {
+        if (argv.public) {
+            console.log('Cesium development server running publicly.  Connect to http://localhost:%d/', server.address().port);
+        } else {
+            console.log('Cesium development server running locally.  Connect to http://localhost:%d/', server.address().port);
+        }
+    });
 
-    console.log('Cesium development server running.  Connect to http://localhost:%d.', argv.port);
+    server.on('error', function (e) {
+        if (e.code === 'EADDRINUSE') {
+            console.log('Error: Port %d is already in use, select a different port.', argv.port);
+            console.log('Example: node server.js --port %d', argv.port + 1);
+        } else if (e.code === 'EACCES') {
+            console.log('Error: This process does not have permission to listen on port %d.', argv.port);
+            if (argv.port < 1024) {
+                console.log('Try a port number higher than 1024.');
+            }
+        }
+        console.log(e);
+        process.exit(1);
+    });
+
+    server.on('close', function() {
+        console.log('Cesium development server stopped.');
+    });
+
+    process.on('SIGINT', function() {
+        server.close(function() {
+            process.exit(0);
+        });
+    });
+
 })();

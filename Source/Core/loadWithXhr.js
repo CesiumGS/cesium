@@ -4,13 +4,15 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
-        './RequestErrorEvent'
+        './RequestErrorEvent',
+        './RuntimeError'
     ], function(
         when,
         defaultValue,
         defined,
         DeveloperError,
-        RequestErrorEvent) {
+        RequestErrorEvent,
+        RuntimeError) {
     "use strict";
 
     /**
@@ -129,7 +131,7 @@ define([
 
         var xhr = new XMLHttpRequest();
 
-        if (defined(overrideMimeType)) {
+        if (defined(overrideMimeType) && defined(xhr.overrideMimeType)) {
             xhr.overrideMimeType(overrideMimeType);
         }
 
@@ -149,7 +151,18 @@ define([
 
         xhr.onload = function(e) {
             if (xhr.status === 200) {
-                deferred.resolve(xhr.response);
+                if (defined(xhr.response)) {
+                    deferred.resolve(xhr.response);
+                } else {
+                    // busted old browsers.
+                    if (defined(xhr.responseXML) && xhr.responseXML.hasChildNodes()) {
+                        deferred.resolve(xhr.responseXML);
+                    } else if (defined(xhr.responseText)) {
+                        deferred.resolve(xhr.responseText);
+                    } else {
+                        deferred.reject(new RuntimeError('unknown XMLHttpRequest response type.'));
+                    }
+                }
             } else {
                 deferred.reject(new RequestErrorEvent(xhr.status, xhr.response, xhr.getAllResponseHeaders()));
             }

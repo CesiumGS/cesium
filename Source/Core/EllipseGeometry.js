@@ -584,7 +584,7 @@ define([
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
      * @exception {DeveloperError} semiMajorAxis and semiMinorAxis must be greater than zero.
-     * @exception {DeveloperError} semiMajorAxis must be larger than the semiMajorAxis.
+     * @exception {DeveloperError} semiMajorAxis must be larger than the semiMinorAxis.
      * @exception {DeveloperError} granularity must be greater than zero.
      *
      * @see EllipseGeometry.createGeometry
@@ -626,7 +626,7 @@ define([
             throw new DeveloperError('Semi-major and semi-minor axes must be greater than zero.');
         }
         if (semiMajorAxis < semiMinorAxis) {
-            throw new DeveloperError('semiMajorAxis must be larger than the semiMajorAxis.');
+            throw new DeveloperError('semiMajorAxis must be larger than the semiMinorAxis.');
         }
         if (granularity <= 0.0) {
             throw new DeveloperError('granularity must be greater than zero.');

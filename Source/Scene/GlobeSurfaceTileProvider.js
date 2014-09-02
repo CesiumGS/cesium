@@ -208,6 +208,20 @@ define([
         }
     });
 
+    function sortTileImageryByLayerIndex(a, b) {
+        var aImagery = a.loadingImagery;
+        if (!defined(aImagery)) {
+            aImagery = a.readyImagery;
+        }
+
+        var bImagery = b.loadingImagery;
+        if (!defined(bImagery)) {
+            bImagery = b.readyImagery;
+        }
+
+        return aImagery.imageryLayer._layerIndex - bImagery.imageryLayer._layerIndex;
+    }
+
     /**
      * Called at the beginning of the update cycle for each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
      * or any other functions.
@@ -218,20 +232,6 @@ define([
      *        commands into this array.
      */
     GlobeSurfaceTileProvider.prototype.beginUpdate = function(context, frameState, commandList) {
-        function sortTileImageryByLayerIndex(a, b) {
-            var aImagery = a.loadingImagery;
-            if (!defined(aImagery)) {
-                aImagery = a.readyImagery;
-            }
-
-            var bImagery = b.loadingImagery;
-            if (!defined(bImagery)) {
-                bImagery = b.readyImagery;
-            }
-
-            return aImagery.imageryLayer._layerIndex - bImagery.imageryLayer._layerIndex;
-        }
-
         this._imageryLayers._update();
 
         if (this._layerOrderChanged) {
@@ -411,7 +411,7 @@ define([
     /**
      * Shows a specified tile in this frame.  The provider can cause the tile to be shown by adding
      * render commands to the commandList, or use any other method as appropriate.  The tile is not
-     * expected to be visible next frame as well, unless this method is call next frame, too.
+     * expected to be visible next frame as well, unless this method is called next frame, too.
      *
      * @param {Object} tile The tile instance.
      * @param {Context} context The rendering context.
@@ -421,7 +421,7 @@ define([
     GlobeSurfaceTileProvider.prototype.showTileThisFrame = function(tile, context, frameState, commandList) {
         var readyTextureCount = 0;
         var tileImageryCollection = tile.data.imagery;
-        for ( var i = 0, len = tileImageryCollection.length; i < len; ++i) {
+        for (var i = 0, len = tileImageryCollection.length; i < len; ++i) {
             var tileImagery = tileImageryCollection[i];
             if (defined(tileImagery.readyImagery) && tileImagery.readyImagery.imageryLayer.alpha !== 0.0) {
                 ++readyTextureCount;
@@ -582,7 +582,7 @@ define([
 
             var startIndex = -1;
             var numDestroyed = 0;
-            for ( var i = 0, len = tileImageryCollection.length; i < len; ++i) {
+            for (var i = 0, len = tileImageryCollection.length; i < len; ++i) {
                 var tileImagery = tileImageryCollection[i];
                 var imagery = tileImagery.loadingImagery;
                 if (!defined(imagery)) {
@@ -680,7 +680,7 @@ define([
                 return this.southAndNorthLatitude;
             },
             u_southMercatorYLowAndHighAndOneOverHeight : function() {
-               return this.southMercatorYLowAndHighAndOneOverHeight;
+                return this.southMercatorYLowAndHighAndOneOverHeight;
             },
             u_waterMask : function() {
                 return this.waterMask;

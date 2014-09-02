@@ -360,7 +360,7 @@ define([
      * // Rotate a point 45 degrees counterclockwise around the x-axis.
      * var p = new Cesium.Cartesian3(5, 6, 7);
      * var m = Cesium.Matrix3.fromRotationX(Cesium.Math.toRadians(45.0));
-     * var rotated = Cesium.Matrix3.multiplyByVector(m, p);
+     * var rotated = Cesium.Matrix3.multiplyByVector(m, p, new Cesium.Cartesian3());
      */
     Matrix3.fromRotationX = function(angle, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -403,7 +403,7 @@ define([
      * // Rotate a point 45 degrees counterclockwise around the y-axis.
      * var p = new Cesium.Cartesian3(5, 6, 7);
      * var m = Cesium.Matrix3.fromRotationY(Cesium.Math.toRadians(45.0));
-     * var rotated = Cesium.Matrix3.multiplyByVector(m, p);
+     * var rotated = Cesium.Matrix3.multiplyByVector(m, p, new Cesium.Cartesian3());
      */
     Matrix3.fromRotationY = function(angle, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -446,7 +446,7 @@ define([
      * // Rotate a point 45 degrees counterclockwise around the z-axis.
      * var p = new Cesium.Cartesian3(5, 6, 7);
      * var m = Cesium.Matrix3.fromRotationZ(Cesium.Math.toRadians(45.0));
-     * var rotated = Cesium.Matrix3.multiplyByVector(m, p);
+     * var rotated = Cesium.Matrix3.multiplyByVector(m, p, new Cesium.Cartesian3());
      */
     Matrix3.fromRotationZ = function(angle, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1067,13 +1067,13 @@ define([
      * };
      * Cesium.Matrix3.computeEigenDecomposition(a, result);
      *
-     * var unitaryTranspose = Cesium.Matrix3.transpose(result.unitary);
-     * var b = Cesium.Matrix3.multiply(result.unitary, result.diagonal);
+     * var unitaryTranspose = Cesium.Matrix3.transpose(result.unitary, new Cesium.Matrix3());
+     * var b = Cesium.Matrix3.multiply(result.unitary, result.diagonal, new Cesium.Matrix3());
      * Cesium.Matrix3.multiply(b, unitaryTranspose, b); // b is now equal to a
      *
-     * var lambda = Cesium.Matrix3.getColumn(result.diagonal, 0).x;  // first eigenvalue
-     * var v = Cesium.Matrix3.getColumn(result.unitary, 0);          // first eigenvector
-     * var c = Cesium.Cartesian3.multiplyByScalar(v, lambda, new Cartesian3());        // equal to Cesium.Matrix3.multiplyByVector(a, v)
+     * var lambda = Cesium.Matrix3.getColumn(result.diagonal, 0, new Cesium.Cartesian3()).x;  // first eigenvalue
+     * var v = Cesium.Matrix3.getColumn(result.unitary, 0, new Cesium.Cartesian3());          // first eigenvector
+     * var c = Cesium.Cartesian3.multiplyByScalar(v, lambda, new Cesium.Cartesian3());        // equal to Cesium.Matrix3.multiplyByVector(a, v)
      */
     Matrix3.computeEigenDecomposition = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1344,7 +1344,7 @@ define([
     /**
      * The index into Matrix3 for column 2, row 1.
      *
-     * @type {Matrix3}
+     * @type {Number}
      * @constant
      */
     Matrix3.COLUMN2ROW1 = 7;
@@ -1352,7 +1352,7 @@ define([
     /**
      * The index into Matrix3 for column 2, row 2.
      *
-     * @type {Matrix3}
+     * @type {Number}
      * @constant
      */
     Matrix3.COLUMN2ROW2 = 8;
