@@ -629,7 +629,8 @@ defineSuite([
             }, 'request to complete');
 
             runs(function() {
-                expect(terrainProvider.getTileDataAvailable(0,0,0)).toBe(true);
+                expect(terrainProvider.getTileDataAvailable(0, 0, 0)).toBe(true);
+                expect(terrainProvider.getTileDataAvailable(0, 0, 2)).toBe(false);
             });
         });
     });
