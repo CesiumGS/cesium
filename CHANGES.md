@@ -1,6 +1,22 @@
 Change Log
 ==========
 
+### 1.1 - 2014-09-02
+
+* Added a new imagery provider, `WebMapTileServiceImageryProvider`, for accessing tiles on a WMTS 1.0.0 server.
+* Added an optional `pickFeatures` function to the `ImageryProvider` interface.  With supporting imagery providers, such as `WebMapServiceImageryProvider`, it can be used to determine the rasterized features under a particular location.
+* Added `ImageryLayerCollection.pickImageryLayerFeatures`.  It determines the rasterized imagery layer features intersected by a given pick ray by querying supporting layers using `ImageryProvider.pickFeatures`.
+* Added `tileWidth`, `tileHeight`, `minimumLevel`, and `tilingScheme` parameters to the `WebMapServiceImageryProvider` constructor.
+* Added `id` property to `Scene` which is a readonly unique identifier associated with each instance.
+* Added `FeatureDetection.supportsWebWorkers`.
+* Greatly improved the performance of time-varying polylines when using DataSources.
+* `viewerEntityMixin` now automatically queries for imagery layer features on click and shows their properties in the `InfoBox` panel.
+* Fixed a bug in terrain and imagery loading that could cause an inconsistent frame rate when moving around the globe, especially on a faster internet connection.
+* Fixed a bug that caused `SceneTransforms.wgs84ToWindowCoordinates` to incorrectly return `undefined` when in 2D.
+* Fixed a bug in `ImageryLayer` that caused layer images to be rendered twice for each terrain tile that existed prior to adding the imagery layer.
+* Fixed a bug in `Camera.pickEllipsoid` that caused it to return the back side of the ellipsoid when near the surface.
+* Fixed a bug which prevented `loadWithXhr` from working with older browsers, such as Internet Explorer 9.
+
 ### 1.0 - 2014-08-01
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))

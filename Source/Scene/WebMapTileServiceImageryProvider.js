@@ -21,26 +21,29 @@ define([
         ImageryProvider) {
     "use strict";
 
-    var trailingSlashRegex = /\/$/;
-    var defaultCredit = new Credit('MapQuest, Open Street Map and contributors, CC-BY-SA');
+    var trailingQMarkRegex = /\?$/;
 
     /**
-     * Provides tiled imagery hosted by OpenStreetMap or another provider of Slippy tiles.  Please be aware
-     * that a default-constructed instance of this class will connect to OpenStreetMap's volunteer-run
-     * servers, so you must conform to their
-     * {@link http://wiki.openstreetmap.org/wiki/Tile_usage_policy|Tile Usage Policy}.
+     * Provides tiled imagery served by {@link http://www.opengeospatial.org/standards/wmts|WMTS 1.0.0} compliant servers.
+     * This provider supports HTTP KVP-encoded GetTile requests, but does not yet support SOAP and RESTful encoding.
      *
-     * @alias OpenStreetMapImageryProvider
+     * @alias WebMapTileServiceImageryProvider
      * @constructor
      *
-     * @param {Object} [options] Object with the following properties:
-     * @param {String} [options.url='//a.tile.openstreetmap.org'] The OpenStreetMap server url.
-     * @param {String} [options.fileExtension='png'] The file extension for images on the server.
+     * @param {Object} options Object with the following properties:
+     * @param {String} options.url The WMTS server url.
+     * @param {String} [options.format='image/jpeg'] The MIME type for images to retrieve from the server.
+     * @param {String} options.layer The layer name for WMTS requests.
+     * @param {String} options.style The style name for WMTS requests.
+     * @param {String} options.tileMatrixSetID The identifier of the TileMatrixSet to use for WMTS requests.
+     * @param {Number} [options.tileWidth=256] The tile width in pixels.
+     * @param {Number} [options.tileHeight=256] The tile height in pixels.
+     * @param {TilingScheme} [options.tilingScheme] The tiling scheme corresponding to the organization of the tiles in the TileMatrixSet.
      * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
-     * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
+     * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle covered by the layer.
      * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
      * @param {Number} [options.maximumLevel=18] The maximum level-of-detail supported by the imagery provider.
-     * @param {Credit|String} [options.credit='MapQuest, Open Street Map and contributors, CC-BY-SA'] A credit for the data source, which is displayed on the canvas.
+     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
@@ -48,33 +51,51 @@ define([
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      *
-     * @see {@link http://wiki.openstreetmap.org/wiki/Main_Page|OpenStreetMap Wiki}
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
-     *
      * @example
-     * // OpenStreetMap tile provider
-     * var osm = new Cesium.OpenStreetMapImageryProvider({
-     *     url : '//a.tile.openstreetmap.org/'
+     * // USGS shaded relief tile provider
+     * var shadedRelief = new Cesium.WebMapTileServiceImageryProvider({
+     *     url : 'http://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS',
+     *     layer : 'USGSShadedReliefOnly',
+     *     style : 'default',
+     *     format : 'image/jpeg',
+     *     tileMatrixSetID : 'default028mm',
+     *     maximumLevel: 19,
+     *     credit : new Cesium.Credit('U. S. Geological Survey')
      * });
+     * viewer.scene.imageryLayers.addImageryProvider(shadedRelief);
      */
-    var OpenStreetMapImageryProvider = function OpenStreetMapImageryProvider(options) {
+    var WebMapTileServiceImageryProvider = function WebMapTileServiceImageryProvider(options) {
         options = defaultValue(options, {});
 
-        var url = defaultValue(options.url, '//a.tile.openstreetmap.org/');
-
-        if (!trailingSlashRegex.test(url)) {
-            url = url + '/';
+        if (!defined(options.url)) {
+            throw new DeveloperError('options.url is required.');
+        }
+        if (!defined(options.layer)) {
+            throw new DeveloperError('options.layer is required.');
+        }
+        if (!defined(options.style)) {
+            throw new DeveloperError('options.style is required.');
+        }
+        if (!defined(options.tileMatrixSetID)) {
+            throw new DeveloperError('options.tileMatrixSetID is required.');
         }
 
-        this._url = url;
-        this._fileExtension = defaultValue(options.fileExtension, 'png');
+
+        this._url = options.url;
+        if (!trailingQMarkRegex.test(this._url)) {
+            this._url = this._url + '?';
+        }
+
+        this._layer = options.layer;
+        this._style = options.style;
+        this._tileMatrixSetID = options.tileMatrixSetID;
+        this._format = defaultValue(options.format,'image/jpeg');
         this._proxy = options.proxy;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
 
-        this._tilingScheme = new WebMercatorTilingScheme();
-
-        this._tileWidth = 256;
-        this._tileHeight = 256;
+        this._tilingScheme = defaultValue(options.tilingScheme,new WebMercatorTilingScheme());
+        this._tileWidth = defaultValue(options.tileWidth,256);
+        this._tileHeight = defaultValue(options.tileHeight,256);
 
         this._minimumLevel = defaultValue(options.minimumLevel, 0);
         this._maximumLevel = defaultValue(options.maximumLevel, 18);
@@ -95,15 +116,23 @@ define([
 
         this._ready = true;
 
-        var credit = defaultValue(options.credit, defaultCredit);
+        var credit = options.credit;
         if (typeof credit === 'string') {
             credit = new Credit(credit);
         }
         this._credit = credit;
     };
 
-    function buildImageUrl(imageryProvider, x, y, level) {
-        var url = imageryProvider._url + level + '/' + x + '/' + y + '.' + imageryProvider._fileExtension;
+    function buildImageUrl(imageryProvider, col, row, level) {
+        var url = imageryProvider._url +
+                  "service=WMTS&VERSION=1.0.0&request=GetTile" +
+                  "&TILEMATRIX="+ level +
+                  "&LAYER="+ imageryProvider._layer +
+                  "&STYLE="+ imageryProvider._style +
+                  "&TILEROW="+ row +
+                  "&TILECOL=" + col +
+                  "&TILEMATRIXSET=" + imageryProvider._tileMatrixSetID +
+                  "&FORMAT=" + imageryProvider._format ;
 
         var proxy = imageryProvider._proxy;
         if (defined(proxy)) {
@@ -113,10 +142,10 @@ define([
         return url;
     }
 
-    defineProperties(OpenStreetMapImageryProvider.prototype, {
+    defineProperties(WebMapTileServiceImageryProvider.prototype, {
         /**
          * Gets the URL of the service hosting the imagery.
-         * @memberof OpenStreetMapImageryProvider.prototype
+         * @memberof WebMapTileServiceImageryProvider.prototype
          * @type {String}
          */
         url : {
@@ -127,7 +156,7 @@ define([
 
         /**
          * Gets the proxy used by this provider.
-         * @memberof OpenStreetMapImageryProvider.prototype
+         * @memberof WebMapTileServiceImageryProvider.prototype
          * @type {Proxy}
          */
         proxy : {
@@ -138,8 +167,8 @@ define([
 
         /**
          * Gets the width of each tile, in pixels. This function should
-         * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
-         * @memberof OpenStreetMapImageryProvider.prototype
+         * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
+         * @memberof WebMapTileServiceImageryProvider.prototype
          * @type {Number}
          */
         tileWidth : {
@@ -156,8 +185,8 @@ define([
 
         /**
          * Gets the height of each tile, in pixels.  This function should
-         * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
-         * @memberof OpenStreetMapImageryProvider.prototype
+         * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
+         * @memberof WebMapTileServiceImageryProvider.prototype
          * @type {Number}
          */
         tileHeight: {
@@ -174,8 +203,8 @@ define([
 
         /**
          * Gets the maximum level-of-detail that can be requested.  This function should
-         * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
-         * @memberof OpenStreetMapImageryProvider.prototype
+         * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
+         * @memberof WebMapTileServiceImageryProvider.prototype
          * @type {Number}
          */
         maximumLevel : {
@@ -192,8 +221,8 @@ define([
 
         /**
          * Gets the minimum level-of-detail that can be requested.  This function should
-         * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
-         * @memberof OpenStreetMapImageryProvider.prototype
+         * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
+         * @memberof WebMapTileServiceImageryProvider.prototype
          * @type {Number}
          */
         minimumLevel : {
@@ -210,8 +239,8 @@ define([
 
         /**
          * Gets the tiling scheme used by this provider.  This function should
-         * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
-         * @memberof OpenStreetMapImageryProvider.prototype
+         * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
+         * @memberof WebMapTileServiceImageryProvider.prototype
          * @type {TilingScheme}
          */
         tilingScheme : {
@@ -228,8 +257,8 @@ define([
 
         /**
          * Gets the rectangle, in radians, of the imagery provided by this instance.  This function should
-         * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
-         * @memberof OpenStreetMapImageryProvider.prototype
+         * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
+         * @memberof WebMapTileServiceImageryProvider.prototype
          * @type {Rectangle}
          */
         rectangle : {
@@ -248,8 +277,8 @@ define([
          * Gets the tile discard policy.  If not undefined, the discard policy is responsible
          * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
          * returns undefined, no tiles are filtered.  This function should
-         * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
-         * @memberof OpenStreetMapImageryProvider.prototype
+         * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
+         * @memberof WebMapTileServiceImageryProvider.prototype
          * @type {TileDiscardPolicy}
          */
         tileDiscardPolicy : {
@@ -268,7 +297,7 @@ define([
          * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
          * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
          * are passed an instance of {@link TileProviderError}.
-         * @memberof OpenStreetMapImageryProvider.prototype
+         * @memberof WebMapTileServiceImageryProvider.prototype
          * @type {Event}
          */
         errorEvent : {
@@ -278,8 +307,19 @@ define([
         },
 
         /**
+         * Gets the mime type of images returned by this imagery provider.
+         * @memberof WebMapTileServiceImageryProvider.prototype
+         * @type {String}
+         */
+        format : {
+            get : function() {
+                return this._format;
+            }
+        },
+
+        /**
          * Gets a value indicating whether or not the provider is ready for use.
-         * @memberof OpenStreetMapImageryProvider.prototype
+         * @memberof WebMapTileServiceImageryProvider.prototype
          * @type {Boolean}
          */
         ready : {
@@ -290,8 +330,8 @@ define([
 
         /**
          * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
-         * the source of the imagery.  This function should not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
-         * @memberof OpenStreetMapImageryProvider.prototype
+         * the source of the imagery.  This function should not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
+         * @memberof WebMapTileServiceImageryProvider.prototype
          * @type {Credit}
          */
         credit : {
@@ -306,7 +346,7 @@ define([
          * be ignored.  If this property is true, any images without an alpha channel will be treated
          * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
          * and texture upload time are reduced.
-         * @memberof OpenStreetMapImageryProvider.prototype
+         * @memberof WebMapTileServiceImageryProvider.prototype
          * @type {Boolean}
          */
         hasAlphaChannel : {
@@ -326,13 +366,13 @@ define([
      *
      * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
      */
-    OpenStreetMapImageryProvider.prototype.getTileCredits = function(x, y, level) {
+    WebMapTileServiceImageryProvider.prototype.getTileCredits = function(x, y, level) {
         return undefined;
     };
 
     /**
      * Requests the image for a given tile.  This function should
-     * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
+     * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
@@ -344,7 +384,7 @@ define([
      *
      * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
-    OpenStreetMapImageryProvider.prototype.requestImage = function(x, y, level) {
+    WebMapTileServiceImageryProvider.prototype.requestImage = function(x, y, level) {
         //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
@@ -369,9 +409,9 @@ define([
      *                   instances.  The array may be empty if no features are found at the given location.
      *                   It may also be undefined if picking is not supported.
      */
-    OpenStreetMapImageryProvider.prototype.pickFeatures = function() {
+    WebMapTileServiceImageryProvider.prototype.pickFeatures = function() {
         return undefined;
     };
 
-    return OpenStreetMapImageryProvider;
+    return WebMapTileServiceImageryProvider;
 });

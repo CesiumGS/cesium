@@ -75,7 +75,7 @@ define([
      * //Create a third object, but use the fromString helper function.
      * var object3 = new Cesium.Entity('object3');
      * object3.billboard = new Cesium.BillboardGraphics();
-     * object3.billboard.scale = Cesium.ReferenceProperty.fromString(collection, 'object1#billboard.scale']);
+     * object3.billboard.scale = Cesium.ReferenceProperty.fromString(collection, 'object1#billboard.scale');
      * collection.add(object3);
      *
      * //You can refer to an entity with a # or . in id and property names by escaping them.
@@ -329,7 +329,7 @@ define([
     ReferenceProperty.prototype._onCollectionChanged = function(collection, added, removed) {
         var targetEntity = this._targetEntity;
         if (defined(targetEntity)) {
-            if (removed.indexOf(targetEntity) === -1) {
+            if (removed.indexOf(targetEntity) !== -1) {
                 targetEntity.definitionChanged.removeEventListener(ReferenceProperty.prototype._onTargetEntityDefinitionChanged, this);
                 this._targetProperty = undefined;
                 this._targetEntity = undefined;

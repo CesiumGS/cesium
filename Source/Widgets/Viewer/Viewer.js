@@ -147,7 +147,6 @@ define([
      *         }
      *     }),
      *     // Show Columbus View map with Web Mercator projection
-     *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
      *     mapProjection : new Cesium.WebMercatorProjection()
      * });
      *
