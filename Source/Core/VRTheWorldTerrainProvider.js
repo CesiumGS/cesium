@@ -341,7 +341,7 @@ define([
      * @param {Number} x The X coordinate of the tile for which to request geometry.
      * @param {Number} y The Y coordinate of the tile for which to request geometry.
      * @param {Number} level The level of the tile for which to request geometry.
-     * @returns {Number} Undefined if not supported, otherwise true or false.
+     * @returns {Boolean} Undefined if not supported, otherwise true or false.
      */
     VRTheWorldTerrainProvider.prototype.getTileDataAvailable = function(x, y, level) {
         return undefined;
