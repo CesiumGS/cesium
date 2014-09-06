@@ -274,4 +274,18 @@ defineSuite([
             '}';
         verifyDraw(fs);
     });
+
+    it('has czm_cosineAndSine in all 4 quadrants', function() {
+        var fs =
+            'bool isBounded(float value, float min, float max) { ' +
+            '  return ((value < max) && (value > min)); ' +
+            '}' +
+            'void main() { ' +
+            '  gl_FragColor = vec4(isBounded(czm_cosineAndSine(czm_piOverFour).x, 0.707106, 0.707107) && isBounded(czm_cosineAndSine(czm_piOverFour).y, 0.707106, 0.707107), ' +
+            '                      isBounded(czm_cosineAndSine(czm_pi - czm_piOverFour).x, -0.707107, -0.707106) && isBounded(czm_cosineAndSine(czm_pi - czm_piOverFour).y, 0.707106, 0.707107), ' +
+            '                      isBounded(czm_cosineAndSine(-czm_piOverFour).x, 0.707106, 0.707107) && isBounded(czm_cosineAndSine(-czm_piOverFour).y, -0.707107, -0.707106), ' +
+            '                      isBounded(czm_cosineAndSine(-czm_pi + czm_piOverFour).x, -0.707107, -0.707106) && isBounded(czm_cosineAndSine(-czm_pi + czm_piOverFour).y, -0.707107, -0.707106)); ' +
+            '}';
+        verifyDraw(fs);
+    });
 }, 'WebGL');
