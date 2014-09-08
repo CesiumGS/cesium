@@ -416,6 +416,15 @@ define([
         this.debugShowFramesPerSecond = false;
 
         /**
+         * If <code>true</code>, enables order independent translucency on configurations where it is supported.
+         *
+         * @type Boolean
+         *
+         * @default true
+         */
+        this.enableOrderIndependentTranslucency = true;
+
+        /**
          * If <code>true</code>, enables Fast Aproximate Anti-aliasing only if order independent translucency
          * is supported.
          *
@@ -1175,7 +1184,7 @@ define([
             }
         }
 
-        var useOIT = !picking && renderTranslucentCommands && scene._oit.isSupported();
+        var useOIT = !picking && scene.enableOrderIndependentTranslucency && renderTranslucentCommands && scene._oit.isSupported();
         if (useOIT) {
             scene._oit.update(context);
             scene._oit.clear(context, passState, clearColor);
