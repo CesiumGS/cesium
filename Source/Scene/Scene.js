@@ -154,6 +154,7 @@ define([
      * @param {Object} [options.contextOptions] Context and WebGL creation properties.  See details above.
      * @param {Element} [options.creditContainer] The HTML element in which the credits will be displayed.
      * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
+     * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
      * @param {Boolean} [options.scene3DOnly=false] If true, optimizes memory use and performance for 3D mode but disables the ability to use 2D or Columbus View.     *
      * @see CesiumWidget
      * @see {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}
@@ -214,7 +215,8 @@ define([
         this._frustumCommandsList = [];
         this._overlayCommandList = [];
 
-        this._oit = new OIT(context);
+        this._oit = (defined(options.orderIndependentTranslucency) && options.orderIndependentTranslucency === false) ?
+                undefined : new OIT(context);
         this._executeOITFunction = undefined;
 
         this._fxaa = new FXAA();
@@ -414,15 +416,6 @@ define([
          * @default false
          */
         this.debugShowFramesPerSecond = false;
-
-        /**
-         * If <code>true</code>, enables order independent translucency on configurations where it is supported.
-         *
-         * @type Boolean
-         *
-         * @default true
-         */
-        this.enableOrderIndependentTranslucency = true;
 
         /**
          * If <code>true</code>, enables Fast Aproximate Anti-aliasing only if order independent translucency
@@ -1184,7 +1177,7 @@ define([
             }
         }
 
-        var useOIT = !picking && scene.enableOrderIndependentTranslucency && renderTranslucentCommands && scene._oit.isSupported();
+        var useOIT = !picking && renderTranslucentCommands && defined(scene._oit) && scene._oit.isSupported();
         if (useOIT) {
             scene._oit.update(context);
             scene._oit.clear(context, passState, clearColor);
@@ -1709,7 +1702,9 @@ define([
 
         this._transitioner.destroy();
 
-        this._oit.destroy();
+        if (defined(this._oit)) {
+            this._oit.destroy();
+        }
         this._fxaa.destroy();
 
         this._context = this._context && this._context.destroy();
