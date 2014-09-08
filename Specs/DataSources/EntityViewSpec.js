@@ -46,6 +46,15 @@ defineSuite([
         expect(view.ellipsoid).toBe(Ellipsoid.UNIT_SPHERE);
     });
 
+    it('setDefaultViewVector throws without vector parameter', function() {
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(Cartesian3.ZERO);
+        var view = new EntityView(entity, scene);
+        expect(function() {
+            view.setDefaultViewVector(undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('update throws without time parameter', function() {
         var entity = new Entity();
         entity.position = new ConstantPositionProperty(Cartesian3.ZERO);

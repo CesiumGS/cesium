@@ -191,18 +191,35 @@ define([
         //Re-usable objects to be used for retrieving position.
         this._lastCartesian = new Cartesian3();
 
-        this._defaultOffset3D = new Cartesian3(-10000, 2500, 2500);
-        this._defaultUp3D = Cartesian3.cross(this._defaultOffset3D, Cartesian3.cross(Cartesian3.UNIT_Z, this._defaultOffset3D, offset3DCrossScratch), new Cartesian3());
-        Cartesian3.normalize(this._defaultUp3D, this._defaultUp3D);
-
-        this._defaultOffset2D = new Cartesian3(0.0, 0.0, Cartesian3.magnitude(this._defaultOffset3D));
-        this._defaultUp2D = Cartesian3.clone(Cartesian3.UNIT_Y);
-
         this._offset3D = new Cartesian3();
         this._up3D = new Cartesian3();
         this._offset2D = new Cartesian3();
         this._up2D = new Cartesian3();
     };
+
+    /**
+     * Initialize the default entity view based on a camera offset vector.
+     * This function can be called on a specific EntityView to set a default
+     * view for the instance, or, this function can be called directly on
+     * EntityView.prototype itself, to set a default for all future EntityView
+     * instances that have yet to be constructed.
+     * @param {Cartesian3} vector The default distance from the camera to the entity.
+     */
+    EntityView.prototype.setDefaultViewVector = function(vector) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(vector)) {
+            throw new DeveloperError('vector is required.');
+        }
+        //>>includeEnd('debug');
+
+        this._defaultOffset3D = Cartesian3.clone(vector, new Cartesian3());
+        this._defaultUp3D = Cartesian3.cross(this._defaultOffset3D, Cartesian3.cross(Cartesian3.UNIT_Z, this._defaultOffset3D, offset3DCrossScratch), new Cartesian3());
+        Cartesian3.normalize(this._defaultUp3D, this._defaultUp3D);
+
+        this._defaultOffset2D = new Cartesian3(0.0, 0.0, Cartesian3.magnitude(this._defaultOffset3D));
+        this._defaultUp2D = Cartesian3.clone(Cartesian3.UNIT_Y);
+    };
+    EntityView.prototype.setDefaultViewVector(new Cartesian3(-14000, 3500, 3500));
 
     /**
     * Should be called each animation frame to update the camera
