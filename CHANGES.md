@@ -3,6 +3,7 @@ Change Log
 
 ### 1.2 - 2014-10-01
 
+* Added `Scene.enableOrderIndependentTranslucency` to toggle OIT at runtime.
 * Eliminated imagery artifacts at some zoom levels due to Mercator reprojection.
 * Fixed a bug in `Model` where the wrong animations could be used when the model was created from glTF JSON instead of 
 a url to a glTF file.  [#2078](https://github.com/AnalyticalGraphicsInc/cesium/issues/2078)
