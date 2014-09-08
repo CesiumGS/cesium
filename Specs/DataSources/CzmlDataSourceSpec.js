@@ -167,6 +167,12 @@ defineSuite([
         expect(dataSource.name).toEqual('simple.czml');
     });
 
+    it('does not overwrite existing name if CZML name is undefined', function() {
+        var dataSource = new CzmlDataSource('myName');
+        dataSource.load(clockCzml, 'Gallery/simple.czml');
+        expect(dataSource.name).toEqual('myName');
+    });
+
     it('clock returns undefined for static CZML', function() {
         var dataSource = new CzmlDataSource();
         dataSource.load(makePacket(staticCzml));

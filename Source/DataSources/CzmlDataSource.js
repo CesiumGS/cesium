@@ -1417,7 +1417,7 @@ define([
         if (defined(documentPacket.name) && dataSource._name !== documentPacket.name) {
             dataSource._name = documentPacket.name;
             raiseChangedEvent = true;
-        } else if (defined(sourceUri)) {
+        } else if (!defined(dataSource._name) && defined(sourceUri)) {
             dataSource._name = getFilenameFromUri(sourceUri);
             raiseChangedEvent = true;
         }
