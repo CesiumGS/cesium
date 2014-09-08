@@ -37,7 +37,7 @@ define([
      *
      * @example
      * // Construct an occluder one unit away from the origin with a radius of one.
-     * var cameraPosition = new Cesium.Cartesian3.ZERO;
+     * var cameraPosition = Cesium.Cartesian3.ZERO;
      * var occluderBoundingSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -1), 1);
      * var occluder = new Cesium.Occluder(occluderBoundingSphere, cameraPosition);
      */
@@ -339,7 +339,7 @@ define([
      * var positions = [new Cesium.Cartesian3(-0.25, 0, -5.3), new Cesium.Cartesian3(0.25, 0, -5.3)];
      * var tileOccluderSphere = Cesium.BoundingSphere.fromPoints(positions);
      * var occludeePosition = tileOccluderSphere.center;
-     * var occludeePt = occluder.computeOccludeePoint(occluderBoundingSphere, occludeePosition, positions);
+     * var occludeePt = Cesium.Occluder.computeOccludeePoint(occluderBoundingSphere, occludeePosition, positions);
      */
     Occluder.computeOccludeePoint = function(occluderBoundingSphere, occludeePosition, positions) {
         //>>includeStart('debug', pragmas.debug);

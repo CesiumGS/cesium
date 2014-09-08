@@ -6,6 +6,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
+        '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -55,6 +56,7 @@ define([
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
+        createGuid,
         defaultValue,
         defined,
         defineProperties,
@@ -191,6 +193,7 @@ define([
             canvas.parentNode.appendChild(creditContainer);
         }
 
+        this._id = createGuid();
         this._frameState = new FrameState(new CreditDisplay(creditContainer));
         this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
 
@@ -725,6 +728,17 @@ define([
         scene3DOnly : {
             get : function() {
                 return this._frameState.scene3DOnly;
+            }
+        },
+
+        /**
+         * Gets the unique identifier for this scene.
+         * @memberof Scene.prototype
+         * @type {String}
+         */
+        id : {
+            get : function() {
+                return this._id;
             }
         },
 
@@ -1598,11 +1612,15 @@ define([
      * @param {Number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
      */
     Scene.prototype.morphTo2D = function(duration) {
+        var ellipsoid;
         var globe = this.globe;
         if (defined(globe)) {
-            duration = defaultValue(duration, 2.0);
-            this._transitioner.morphTo2D(duration, globe.ellipsoid);
+            ellipsoid = globe.ellipsoid;
+        } else {
+            ellipsoid = this.mapProjection.ellipsoid;
         }
+        duration = defaultValue(duration, 2.0);
+        this._transitioner.morphTo2D(duration, ellipsoid);
     };
 
     /**
@@ -1610,11 +1628,15 @@ define([
      * @param {Number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
      */
     Scene.prototype.morphToColumbusView = function(duration) {
+        var ellipsoid;
         var globe = this.globe;
         if (defined(globe)) {
-            duration = defaultValue(duration, 2.0);
-            this._transitioner.morphToColumbusView(duration, globe.ellipsoid);
+            ellipsoid = globe.ellipsoid;
+        } else {
+            ellipsoid = this.mapProjection.ellipsoid;
         }
+        duration = defaultValue(duration, 2.0);
+        this._transitioner.morphToColumbusView(duration, ellipsoid);
     };
 
     /**
@@ -1622,11 +1644,15 @@ define([
      * @param {Number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
      */
     Scene.prototype.morphTo3D = function(duration) {
+        var ellipsoid;
         var globe = this.globe;
         if (defined(globe)) {
-            duration = defaultValue(duration, 2.0);
-            this._transitioner.morphTo3D(duration, globe.ellipsoid);
+            ellipsoid = globe.ellipsoid;
+        } else {
+            ellipsoid = this.mapProjection.ellipsoid;
         }
+        duration = defaultValue(duration, 2.0);
+        this._transitioner.morphTo3D(duration, ellipsoid);
     };
 
     /**

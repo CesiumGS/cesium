@@ -1725,7 +1725,7 @@ define([
             return undefined;
         }
 
-        var t = (Cartesian3.magnitude(ray.origin) < ellipsoid.maximumRadius) ? intersection.stop : intersection.start;
+        var t = intersection.start > 0.0 ? intersection.start : intersection.stop;
         return Ray.getPoint(ray, t, result);
     }
 
