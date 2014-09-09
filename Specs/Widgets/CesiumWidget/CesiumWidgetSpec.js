@@ -181,6 +181,20 @@ defineSuite([
         expect(contextAttributes.preserveDrawingBuffer).toEqual(webglOptions.preserveDrawingBuffer);
     });
 
+    it('can enable Order Independent Translucency', function() {
+        widget = new CesiumWidget(container, {
+            orderIndependentTranslucency : true
+        });
+        expect(widget.scene._oit).toBeDefined();
+    });
+
+    it('can disable Order Independent Translucency', function() {
+        widget = new CesiumWidget(container, {
+            orderIndependentTranslucency : false
+        });
+        expect(widget.scene._oit).not.toBeDefined();
+    });
+
     it('throws if no container provided', function() {
         expect(function() {
             return new CesiumWidget(undefined);
