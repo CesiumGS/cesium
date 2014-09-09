@@ -185,14 +185,14 @@ defineSuite([
         widget = new CesiumWidget(container, {
             orderIndependentTranslucency : true
         });
-        expect(widget.scene._oit).toBeDefined();
+        expect(widget.scene.orderIndependentTranslucency).toBe(true);
     });
 
     it('can disable Order Independent Translucency', function() {
         widget = new CesiumWidget(container, {
             orderIndependentTranslucency : false
         });
-        expect(widget.scene._oit).not.toBeDefined();
+        expect(widget.scene.orderIndependentTranslucency).toBe(false);
     });
 
     it('throws if no container provided', function() {

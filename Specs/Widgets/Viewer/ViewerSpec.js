@@ -316,14 +316,14 @@ defineSuite([
         viewer = new Viewer(container, {
             orderIndependentTranslucency : true
         });
-        expect(viewer.scene._oit).toBeDefined();
+        expect(viewer.scene.orderIndependentTranslucency).toBe(true);
     });
 
     it('can disable Order Independent Translucency', function() {
         viewer = new Viewer(container, {
             orderIndependentTranslucency : false
         });
-        expect(viewer.scene._oit).not.toBeDefined();
+        expect(viewer.scene.orderIndependentTranslucency).toBe(false);
     });
 
     it('can set scene mode', function() {

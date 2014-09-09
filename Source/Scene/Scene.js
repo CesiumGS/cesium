@@ -733,6 +733,19 @@ define([
         },
 
         /**
+         * Gets whether or not the scene has order independent translucency enabled.
+         * Note that this only reflects the original construction option, and there are
+         * other factors that could prevent OIT from functioning on a given system configuration.
+         * @memberof Scene.prototype
+         * @type {Boolean}
+         */
+        orderIndependentTranslucency : {
+            get : function() {
+                return defined(this._oit);
+            }
+        },
+
+        /**
          * Gets the unique identifier for this scene.
          * @memberof Scene.prototype
          * @type {String}
