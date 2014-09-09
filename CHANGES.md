@@ -7,6 +7,7 @@ Change Log
 * Eliminated imagery artifacts at some zoom levels due to Mercator reprojection.
 * Fixed a bug in `Model` where the wrong animations could be used when the model was created from glTF JSON instead of 
 a url to a glTF file.  [#2078](https://github.com/AnalyticalGraphicsInc/cesium/issues/2078)
+* Added support for WKID 102113 (equivalent to 102100) to `ArcGisMapServerImageryProvider`.
 
 ### 1.1 - 2014-09-02
 
