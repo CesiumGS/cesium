@@ -215,8 +215,7 @@ define([
         this._frustumCommandsList = [];
         this._overlayCommandList = [];
 
-        this._oit = (defined(options.orderIndependentTranslucency) && options.orderIndependentTranslucency === false) ?
-                undefined : new OIT(context);
+        this._oit = defaultValue(options.orderIndependentTranslucency, true) ? new OIT(context) : undefined;
         this._executeOITFunction = undefined;
 
         this._fxaa = new FXAA();
