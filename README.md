@@ -39,6 +39,6 @@ We appreciate attribution by including the Cesium logo and link in your app.
 <a href="http://cesiumjs.org/demos/vega.html"><img src="http://cesiumjs.org/demos/images/vega.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html"><img src="http://cesiumjs.org/images/Sandcastle.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/Cesium/Build/Apps/CesiumViewer/"><img src="http://cesiumjs.org/images/CesiumViewer.png" height="150" /></a>&nbsp;
-<a href="http://cesiumjs.org/LotsOfSatellites/"><img src="http://cesiumjs.org/images/LotsOfSatellites.png" height="150" /></a>&nbsp;
+<a href="http://apps.agi.com/SatelliteViewer/"><img src="http://cesiumjs.org/images/SatelliteViewer.png" height="150" /></a>&nbsp;
 </p>
 
