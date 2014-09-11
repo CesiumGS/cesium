@@ -1337,7 +1337,7 @@ define([
 
         this._tweens.update();
         this._camera.update(this._mode);
-        this._screenSpaceCameraController.update(this._frameState);
+        this._screenSpaceCameraController.update();
     };
 
     function render(scene, time) {
