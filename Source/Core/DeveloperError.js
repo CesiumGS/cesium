@@ -70,5 +70,15 @@ define([
         throw new DeveloperError('This function defines an interface and should not be called directly.');
     };
 
+    /**
+     * @private
+     */
+    DeveloperError.assertNumber = function(value, name) {
+        // NaN is the only value where x !== x
+        if (typeof value !== 'number' || value !== value) {
+            throw new DeveloperError('Expected ' + name + ' to be number, but was ' + value + '.');
+        }
+    };
+
     return DeveloperError;
 });

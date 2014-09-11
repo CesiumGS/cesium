@@ -13,6 +13,12 @@ define([
         CesiumMath) {
     "use strict";
 
+    function validate(o) {
+        DeveloperError.assertNumber(o.x, 'x');
+        DeveloperError.assertNumber(o.y, 'y');
+        DeveloperError.assertNumber(o.z, 'z');
+    }
+
     /**
      * A 3D Cartesian point.
      * @alias Cartesian3
@@ -47,6 +53,10 @@ define([
          * @default 0.0
          */
         this.z = defaultValue(z, 0.0);
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(this);
+        //>>includeEnd('debug');
     };
 
     /**
@@ -74,6 +84,11 @@ define([
         result.x = radial * Math.cos(clock);
         result.y = radial * Math.sin(clock);
         result.z = magnitude * Math.cos(cone);
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -94,6 +109,11 @@ define([
         result.x = x;
         result.y = y;
         result.z = z;
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -115,6 +135,11 @@ define([
         result.x = cartesian.x;
         result.y = cartesian.y;
         result.z = cartesian.z;
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -182,6 +207,11 @@ define([
         result.x = array[startingIndex++];
         result.y = array[startingIndex++];
         result.z = array[startingIndex];
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -262,6 +292,10 @@ define([
         result.y = Math.min(first.y, second.y);
         result.z = Math.min(first.z, second.z);
 
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -289,6 +323,11 @@ define([
         result.x = Math.max(first.x, second.x);
         result.y = Math.max(first.y, second.y);
         result.z = Math.max(first.z, second.z);
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -364,6 +403,11 @@ define([
         result.x = cartesian.x / magnitude;
         result.y = cartesian.y / magnitude;
         result.z = cartesian.z / magnitude;
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -411,6 +455,11 @@ define([
         result.x = left.x * right.x;
         result.y = left.y * right.y;
         result.z = left.z * right.z;
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -438,6 +487,11 @@ define([
         result.x = left.x + right.x;
         result.y = left.y + right.y;
         result.z = left.z + right.z;
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -465,6 +519,11 @@ define([
         result.x = left.x - right.x;
         result.y = left.y - right.y;
         result.z = left.z - right.z;
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -492,6 +551,11 @@ define([
         result.x = cartesian.x * scalar;
         result.y = cartesian.y * scalar;
         result.z = cartesian.z * scalar;
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -519,6 +583,11 @@ define([
         result.x = cartesian.x / scalar;
         result.y = cartesian.y / scalar;
         result.z = cartesian.z / scalar;
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -542,6 +611,11 @@ define([
         result.x = -cartesian.x;
         result.y = -cartesian.y;
         result.z = -cartesian.z;
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -565,6 +639,11 @@ define([
         result.x = Math.abs(cartesian.x);
         result.y = Math.abs(cartesian.y);
         result.z = Math.abs(cartesian.z);
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -660,6 +739,10 @@ define([
             }
         }
 
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -740,6 +823,11 @@ define([
         result.x = x;
         result.y = y;
         result.z = z;
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -881,6 +969,10 @@ define([
             result[i/2] = Cartesian3.fromRadians(lon, lat, 0, ellipsoid, result[i/2]);
         }
 
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -955,6 +1047,10 @@ define([
             var alt = coordinates[i+2];
             result[i/3] = Cartesian3.fromRadians(lon, lat, alt, ellipsoid, result[i/3]);
         }
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
 
         return result;
     };
