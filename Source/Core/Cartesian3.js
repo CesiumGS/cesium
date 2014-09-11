@@ -958,20 +958,16 @@ define([
 
         var length = coordinates.length;
         if (!defined(result)) {
-            result = new Array(length/2);
+            result = new Array(length / 2);
         } else {
-            result.length = length/2;
+            result.length = length / 2;
         }
 
-        for ( var i = 0; i < length; i+=2) {
+        for (var i = 0; i < length; i += 2) {
             var lon = coordinates[i];
-            var lat = coordinates[i+1];
-            result[i/2] = Cartesian3.fromRadians(lon, lat, 0, ellipsoid, result[i/2]);
+            var lat = coordinates[i + 1];
+            result[i / 2] = Cartesian3.fromRadians(lon, lat, 0, ellipsoid, result[i / 2]);
         }
-
-        //>>includeStart('debug', pragmas.debug);
-        validate(result);
-        //>>includeEnd('debug');
 
         return result;
     };
@@ -1001,10 +997,10 @@ define([
         //>>includeEnd('debug');
 
         var pos = new Array(coordinates.length);
-        for (var i = 0; i < coordinates.length; i+=3) {
+        for (var i = 0; i < coordinates.length; i += 3) {
             pos[i] = CesiumMath.toRadians(coordinates[i]);
-            pos[i+1] = CesiumMath.toRadians(coordinates[i+1]);
-            pos[i+2] = coordinates[i+2];
+            pos[i + 1] = CesiumMath.toRadians(coordinates[i + 1]);
+            pos[i + 2] = coordinates[i + 2];
         }
 
         return Cartesian3.fromRadiansArrayHeights(pos, ellipsoid, result);
@@ -1036,21 +1032,17 @@ define([
 
         var length = coordinates.length;
         if (!defined(result)) {
-            result = new Array(length/3);
+            result = new Array(length / 3);
         } else {
-            result.length = length/3;
+            result.length = length / 3;
         }
 
-        for ( var i = 0; i < length; i+=3) {
+        for (var i = 0; i < length; i += 3) {
             var lon = coordinates[i];
-            var lat = coordinates[i+1];
-            var alt = coordinates[i+2];
-            result[i/3] = Cartesian3.fromRadians(lon, lat, alt, ellipsoid, result[i/3]);
+            var lat = coordinates[i + 1];
+            var alt = coordinates[i + 2];
+            result[i / 3] = Cartesian3.fromRadians(lon, lat, alt, ellipsoid, result[i / 3]);
         }
-
-        //>>includeStart('debug', pragmas.debug);
-        validate(result);
-        //>>includeEnd('debug');
 
         return result;
     };

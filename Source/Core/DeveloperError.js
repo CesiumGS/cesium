@@ -76,7 +76,7 @@ define([
     DeveloperError.assertNumber = function(value, name) {
         // NaN is the only value where x !== x
         if (typeof value !== 'number' || value !== value) {
-            throw new DeveloperError('Expected ' + name + ' to be number, but was ' + value + '.');
+            throw new DeveloperError('Expected ' + name + ' to be a number, but was ' + value + '.');
         }
     };
 

@@ -13,6 +13,11 @@ define([
         CesiumMath) {
     "use strict";
 
+    function validate(o) {
+        DeveloperError.assertNumber(o.x, 'x');
+        DeveloperError.assertNumber(o.y, 'y');
+    }
+
     /**
      * A 2D Cartesian point.
      * @alias Cartesian2
@@ -39,6 +44,10 @@ define([
          * @default 0.0
          */
         this.y = defaultValue(y, 0.0);
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(this);
+        //>>includeEnd('debug');
     };
 
     /**
@@ -56,6 +65,11 @@ define([
 
         result.x = x;
         result.y = y;
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -76,6 +90,11 @@ define([
 
         result.x = cartesian.x;
         result.y = cartesian.y;
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -151,6 +170,11 @@ define([
         }
         result.x = array[startingIndex++];
         result.y = array[startingIndex];
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -231,6 +255,10 @@ define([
         result.x = Math.min(first.x, second.x);
         result.y = Math.min(first.y, second.y);
 
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -257,6 +285,11 @@ define([
 
         result.x = Math.max(first.x, second.x);
         result.y = Math.max(first.y, second.y);
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -331,6 +364,11 @@ define([
 
         result.x = cartesian.x / magnitude;
         result.y = cartesian.y / magnitude;
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -377,6 +415,11 @@ define([
 
         result.x = left.x * right.x;
         result.y = left.y * right.y;
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -403,6 +446,11 @@ define([
 
         result.x = left.x + right.x;
         result.y = left.y + right.y;
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -429,6 +477,11 @@ define([
 
         result.x = left.x - right.x;
         result.y = left.y - right.y;
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -455,6 +508,11 @@ define([
 
         result.x = cartesian.x * scalar;
         result.y = cartesian.y * scalar;
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -481,6 +539,11 @@ define([
 
         result.x = cartesian.x / scalar;
         result.y = cartesian.y / scalar;
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -503,6 +566,11 @@ define([
 
         result.x = -cartesian.x;
         result.y = -cartesian.y;
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -525,6 +593,11 @@ define([
 
         result.x = Math.abs(cartesian.x);
         result.y = Math.abs(cartesian.y);
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -609,6 +682,10 @@ define([
         } else {
             result = Cartesian2.clone(Cartesian2.UNIT_Y, result);
         }
+
+        //>>includeStart('debug', pragmas.debug);
+        validate(result);
+        //>>includeEnd('debug');
 
         return result;
     };
