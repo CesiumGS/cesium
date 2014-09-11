@@ -154,6 +154,7 @@ define([
      * @param {Object} [options.contextOptions] Context and WebGL creation properties.  See details above.
      * @param {Element} [options.creditContainer] The HTML element in which the credits will be displayed.
      * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
+     * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
      * @param {Boolean} [options.scene3DOnly=false] If true, optimizes memory use and performance for 3D mode but disables the ability to use 2D or Columbus View.     *
      * @see CesiumWidget
      * @see {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}
@@ -214,7 +215,7 @@ define([
         this._frustumCommandsList = [];
         this._overlayCommandList = [];
 
-        this._oit = new OIT(context);
+        this._oit = defaultValue(options.orderIndependentTranslucency, true) ? new OIT(context) : undefined;
         this._executeOITFunction = undefined;
 
         this._fxaa = new FXAA();
@@ -732,6 +733,19 @@ define([
         },
 
         /**
+         * Gets whether or not the scene has order independent translucency enabled.
+         * Note that this only reflects the original construction option, and there are
+         * other factors that could prevent OIT from functioning on a given system configuration.
+         * @memberof Scene.prototype
+         * @type {Boolean}
+         */
+        orderIndependentTranslucency : {
+            get : function() {
+                return defined(this._oit);
+            }
+        },
+
+        /**
          * Gets the unique identifier for this scene.
          * @memberof Scene.prototype
          * @type {String}
@@ -1175,7 +1189,7 @@ define([
             }
         }
 
-        var useOIT = !picking && renderTranslucentCommands && scene._oit.isSupported();
+        var useOIT = !picking && renderTranslucentCommands && defined(scene._oit) && scene._oit.isSupported();
         if (useOIT) {
             scene._oit.update(context);
             scene._oit.clear(context, passState, clearColor);
@@ -1323,7 +1337,7 @@ define([
 
         this._tweens.update();
         this._camera.update(this._mode);
-        this._screenSpaceCameraController.update(this._frameState);
+        this._screenSpaceCameraController.update();
     };
 
     function render(scene, time) {
@@ -1700,7 +1714,9 @@ define([
 
         this._transitioner.destroy();
 
-        this._oit.destroy();
+        if (defined(this._oit)) {
+            this._oit.destroy();
+        }
         this._fxaa.destroy();
 
         this._context = this._context && this._context.destroy();
