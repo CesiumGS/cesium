@@ -4,7 +4,6 @@ defineSuite([
         'Core/PolygonGeometry',
         'Core/BoundingSphere',
         'Core/Cartesian3',
-        'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/Math',
         'Core/VertexFormat'
@@ -12,7 +11,6 @@ defineSuite([
         PolygonGeometry,
         BoundingSphere,
         Cartesian3,
-        Cartographic,
         Ellipsoid,
         CesiumMath,
         VertexFormat) {
@@ -48,23 +46,18 @@ defineSuite([
     });
 
     it('throws due to duplicate positions', function() {
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
-
         expect(function() {
             return PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
                 positions : Cartesian3.fromDegreesArray([
                     0.0, 0.0,
                     0.0, 0.0,
                     0.0, 0.0
-                ]),
-                ellipsoid : ellipsoid
+                ])
             }));
         }).toThrowDeveloperError();
     });
 
     it('throws due to duplicate positions extruded', function() {
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
-
         expect(function() {
             return PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
                 positions : Cartesian3.fromDegreesArray([
@@ -72,14 +65,12 @@ defineSuite([
                     0.0, 0.0,
                     0.0, 0.0
                 ]),
-                ellipsoid : ellipsoid,
                 extrudedHeight: 2
             }));
         }).toThrowDeveloperError();
     });
 
     it('throws due to duplicate hierarchy positions', function() {
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var hierarchy = {
                 positions : Cartesian3.fromDegreesArray([
                     1.0, 1.0,
@@ -97,8 +88,7 @@ defineSuite([
 
         expect(function() {
             return PolygonGeometry.createGeometry(new PolygonGeometry({
-                polygonHierarchy : hierarchy,
-                ellipsoid : ellipsoid
+                polygonHierarchy : hierarchy
             }));
         }).toThrowDeveloperError();
     });

@@ -2,16 +2,12 @@
 defineSuite([
         'Core/CorridorGeometry',
         'Core/Cartesian3',
-        'Core/Cartographic',
         'Core/CornerType',
-        'Core/Ellipsoid',
         'Core/VertexFormat'
     ], function(
         CorridorGeometry,
         Cartesian3,
-        Cartographic,
         CornerType,
-        Ellipsoid,
         VertexFormat) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/

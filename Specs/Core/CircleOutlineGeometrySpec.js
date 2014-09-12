@@ -46,9 +46,8 @@ defineSuite([
     });
 
     it('computes positions', function() {
-        var ellipsoid = Ellipsoid.WGS84;
         var m = CircleOutlineGeometry.createGeometry(new CircleOutlineGeometry({
-            ellipsoid : ellipsoid,
+            ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
             granularity : 0.75,
             radius : 1.0
@@ -60,9 +59,8 @@ defineSuite([
     });
 
     it('computes positions extruded', function() {
-        var ellipsoid = Ellipsoid.WGS84;
         var m = CircleOutlineGeometry.createGeometry(new CircleOutlineGeometry({
-            ellipsoid : ellipsoid,
+            ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
             granularity : 0.75,
             radius : 1.0,
@@ -73,11 +71,9 @@ defineSuite([
         expect(m.indices.length).toEqual(2 * 10 * 2 + (16*2));
     });
 
-
     it('computes positions extruded, no lines between top and bottom', function() {
-        var ellipsoid = Ellipsoid.WGS84;
         var m = CircleOutlineGeometry.createGeometry(new CircleOutlineGeometry({
-            ellipsoid : ellipsoid,
+            ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
             granularity : 0.75,
             radius : 1.0,

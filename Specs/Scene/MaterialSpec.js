@@ -2,7 +2,6 @@
 defineSuite([
         'Scene/Material',
         'Core/Cartesian3',
-        'Core/Cartographic',
         'Core/Color',
         'Core/Ellipsoid',
         'Core/Math',
@@ -17,7 +16,6 @@ defineSuite([
     ], function(
         Material,
         Cartesian3,
-        Cartographic,
         Color,
         Ellipsoid,
         CesiumMath,

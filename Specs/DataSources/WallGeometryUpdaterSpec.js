@@ -2,10 +2,8 @@
 defineSuite([
         'DataSources/WallGeometryUpdater',
         'Core/Cartesian3',
-        'Core/Cartographic',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
-        'Core/Ellipsoid',
         'Core/JulianDate',
         'Core/ShowGeometryInstanceAttribute',
         'Core/TimeInterval',
@@ -23,10 +21,8 @@ defineSuite([
     ], function(
         WallGeometryUpdater,
         Cartesian3,
-        Cartographic,
         Color,
         ColorGeometryInstanceAttribute,
-        Ellipsoid,
         JulianDate,
         ShowGeometryInstanceAttribute,
         TimeInterval,

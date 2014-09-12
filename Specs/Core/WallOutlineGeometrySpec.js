@@ -2,13 +2,11 @@
 defineSuite([
         'Core/WallOutlineGeometry',
         'Core/Cartesian3',
-        'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/Math'
     ], function(
         WallOutlineGeometry,
         Cartesian3,
-        Cartographic,
         Ellipsoid,
         CesiumMath) {
     "use strict";

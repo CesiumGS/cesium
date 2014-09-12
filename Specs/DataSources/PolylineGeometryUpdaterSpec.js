@@ -2,10 +2,8 @@
 defineSuite([
         'DataSources/PolylineGeometryUpdater',
         'Core/Cartesian3',
-        'Core/Cartographic',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
-        'Core/Ellipsoid',
         'Core/JulianDate',
         'Core/ShowGeometryInstanceAttribute',
         'Core/TimeInterval',
@@ -25,10 +23,8 @@ defineSuite([
     ], function(
         PolylineGeometryUpdater,
         Cartesian3,
-        Cartographic,
         Color,
         ColorGeometryInstanceAttribute,
-        Ellipsoid,
         JulianDate,
         ShowGeometryInstanceAttribute,
         TimeInterval,

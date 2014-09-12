@@ -3,7 +3,6 @@ defineSuite([
         'Scene/Polygon',
         'Core/BoundingSphere',
         'Core/Cartesian3',
-        'Core/Cartographic',
         'Core/defaultValue',
         'Core/Ellipsoid',
         'Core/Math',
@@ -22,7 +21,6 @@ defineSuite([
         Polygon,
         BoundingSphere,
         Cartesian3,
-        Cartographic,
         defaultValue,
         Ellipsoid,
         CesiumMath,
@@ -339,7 +337,7 @@ defineSuite([
             0.0, 0.0,
             0.0, 0.0,
             0.0, 0.0
-        ]);
+        ], ellipsoid);
         polygon.asynchronous = false;
 
         expect(function() {
@@ -354,13 +352,13 @@ defineSuite([
                     1.0, 1.0,
                     1.0, 1.0,
                     1.0, 1.0
-                ]),
+                ], ellipsoid),
                 holes : [{
                         positions : Cartesian3.fromDegreesArray([
                             0.0, 0.0,
                             0.0, 0.0,
                             0.0, 0.0
-                        ])
+                        ], ellipsoid)
                 }]
         };
 
@@ -418,7 +416,7 @@ defineSuite([
             1.0, -1.0,
             1.0, 1.0,
             -1.0, 1.0
-        ]);
+        ], ellipsoid);
 
         var polygon = new Polygon();
         polygon.ellipsoid = ellipsoid;

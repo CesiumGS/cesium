@@ -73,10 +73,9 @@ defineSuite([
     });
 
     it('computes positions', function() {
-        var ellipsoid = Ellipsoid.WGS84;
         var m = EllipseGeometry.createGeometry(new EllipseGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
-            ellipsoid : ellipsoid,
+            ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
             granularity : 0.75,
             semiMajorAxis : 1.0,
@@ -89,10 +88,9 @@ defineSuite([
     });
 
     it('compute all vertex attributes', function() {
-        var ellipsoid = Ellipsoid.WGS84;
         var m = EllipseGeometry.createGeometry(new EllipseGeometry({
             vertexFormat : VertexFormat.ALL,
-            ellipsoid : ellipsoid,
+            ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
             granularity : 0.75,
             semiMajorAxis : 1.0,
@@ -108,10 +106,9 @@ defineSuite([
     });
 
     it('compute texture coordinates with rotation', function() {
-        var ellipsoid = Ellipsoid.WGS84;
         var m = EllipseGeometry.createGeometry(new EllipseGeometry({
             vertexFormat : VertexFormat.POSITION_AND_ST,
-            ellipsoid : ellipsoid,
+            ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
             granularity : 0.75,
             semiMajorAxis : 1.0,
@@ -132,10 +129,9 @@ defineSuite([
     });
 
     it('computes positions extruded', function() {
-        var ellipsoid = Ellipsoid.WGS84;
         var m = EllipseGeometry.createGeometry(new EllipseGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
-            ellipsoid : ellipsoid,
+            ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
             granularity : 0.75,
             semiMajorAxis : 1.0,
@@ -148,10 +144,9 @@ defineSuite([
     });
 
     it('compute all vertex attributes extruded', function() {
-        var ellipsoid = Ellipsoid.WGS84;
         var m = EllipseGeometry.createGeometry(new EllipseGeometry({
             vertexFormat : VertexFormat.ALL,
-            ellipsoid : ellipsoid,
+            ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
             granularity : 0.75,
             semiMajorAxis : 1.0,

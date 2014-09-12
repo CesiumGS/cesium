@@ -2,8 +2,6 @@
 defineSuite([
         'DataSources/GeoJsonDataSource',
         'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/Ellipsoid',
         'Core/Event',
         'Core/JulianDate',
         'DataSources/EntityCollection',
@@ -11,8 +9,6 @@ defineSuite([
     ], function(
         GeoJsonDataSource,
         Cartesian3,
-        Cartographic,
-        Ellipsoid,
         Event,
         JulianDate,
         EntityCollection,

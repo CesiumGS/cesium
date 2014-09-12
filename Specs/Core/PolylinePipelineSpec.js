@@ -2,14 +2,12 @@
 defineSuite([
         'Core/PolylinePipeline',
         'Core/Cartesian3',
-        'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/Math',
         'Core/Transforms'
     ], function(
         PolylinePipeline,
         Cartesian3,
-        Cartographic,
         Ellipsoid,
         CesiumMath,
         Transforms) {
@@ -87,7 +85,6 @@ defineSuite([
     });
 
     it('generateArc subdivides in half', function() {
-        var ellipsoid = Ellipsoid.WGS84;
         var p1 = Cartesian3.fromDegrees(0, 0);
         var p2 = Cartesian3.fromDegrees(90, 0);
         var p3 = Cartesian3.fromDegrees(45, 0);
@@ -96,7 +93,7 @@ defineSuite([
         var newPositions = PolylinePipeline.generateArc({
             positions: positions,
             granularity: CesiumMath.PI_OVER_TWO/2,
-            ellipsoid: ellipsoid
+            ellipsoid: Ellipsoid.WGS84
         });
 
         expect(newPositions.length).toEqual(3*3);

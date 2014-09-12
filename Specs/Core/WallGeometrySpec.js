@@ -2,14 +2,12 @@
 defineSuite([
         'Core/WallGeometry',
         'Core/Cartesian3',
-        'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/Math',
         'Core/VertexFormat'
     ], function(
         WallGeometry,
         Cartesian3,
-        Cartographic,
         Ellipsoid,
         CesiumMath,
         VertexFormat) {

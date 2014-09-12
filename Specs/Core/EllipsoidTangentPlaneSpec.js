@@ -3,13 +3,11 @@ defineSuite([
         'Core/EllipsoidTangentPlane',
         'Core/Cartesian2',
         'Core/Cartesian3',
-        'Core/Cartographic',
         'Core/Ellipsoid'
     ], function(
         EllipsoidTangentPlane,
         Cartesian2,
         Cartesian3,
-        Cartographic,
         Ellipsoid) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -171,8 +169,6 @@ defineSuite([
     });
 
     it('projectPointsOntoEllipsoid works with an arbitrary ellipsoid using fromPoints', function () {
-        var ellipsoid = Ellipsoid.WGS84;
-
         var points = Cartesian3.fromDegreesArray([
             -72.0, 40.0,
             -68.0, 35.0,
@@ -181,7 +177,7 @@ defineSuite([
             -68.0, 40.0
         ]);
 
-        var tangentPlane = EllipsoidTangentPlane.fromPoints(points, ellipsoid);
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(points, Ellipsoid.WGS84);
         var points2D = tangentPlane.projectPointsOntoPlane(points);
         var positionsBack = tangentPlane.projectPointsOntoEllipsoid(points2D);
 

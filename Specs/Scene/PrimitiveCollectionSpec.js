@@ -2,7 +2,6 @@
 defineSuite([
         'Scene/PrimitiveCollection',
         'Core/Cartesian3',
-        'Core/Cartographic',
         'Core/defaultValue',
         'Core/Ellipsoid',
         'Core/Math',
@@ -20,7 +19,6 @@ defineSuite([
     ], function(
         PrimitiveCollection,
         Cartesian3,
-        Cartographic,
         defaultValue,
         Ellipsoid,
         CesiumMath,
@@ -97,7 +95,7 @@ defineSuite([
             degree, -degree,
             degree,  degree,
             -degree,  degree
-        ]);
+        ], ellipsoid);
         polygon.asynchronous = false;
         return polygon;
     }

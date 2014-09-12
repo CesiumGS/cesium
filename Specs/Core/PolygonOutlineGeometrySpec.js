@@ -3,14 +3,12 @@ defineSuite([
         'Core/PolygonOutlineGeometry',
         'Core/BoundingSphere',
         'Core/Cartesian3',
-        'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/Math'
     ], function(
         PolygonOutlineGeometry,
         BoundingSphere,
         Cartesian3,
-        Cartographic,
         Ellipsoid,
         CesiumMath) {
     "use strict";
@@ -45,24 +43,19 @@ defineSuite([
     });
 
     it('throws due to duplicate positions', function() {
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
-
         expect(function() {
             return PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
                 positions : Cartesian3.fromDegreesArray([
                     0.0, 0.0,
                     0.0, 0.0,
                     0.0, 0.0
-                ]),
-                ellipsoid : ellipsoid
+                ])
             }));
         }).toThrowDeveloperError();
     });
 
 
     it('throws due to duplicate positions extruded', function() {
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
-
         expect(function() {
             return PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
                 positions : Cartesian3.fromDegreesArray([
@@ -70,14 +63,12 @@ defineSuite([
                     0.0, 0.0,
                     0.0, 0.0
                 ]),
-                ellipsoid : ellipsoid,
                 extrudedeHeight: 2
             }));
         }).toThrowDeveloperError();
     });
 
     it('throws due to duplicate hierarchy positions', function() {
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var hierarchy = {
                 positions : Cartesian3.fromDegreesArray([
                     1.0, 1.0,
@@ -95,8 +86,7 @@ defineSuite([
 
         expect(function() {
             return PolygonOutlineGeometry.createGeometry(new PolygonOutlineGeometry({
-                polygonHierarchy : hierarchy,
-                ellipsoid : ellipsoid
+                polygonHierarchy : hierarchy
             }));
         }).toThrowDeveloperError();
     });
@@ -221,7 +211,6 @@ defineSuite([
     });
 
     it('computes correct bounding sphere at height >>> 0', function() {
-        var ellipsoid = Ellipsoid.WGS84;
         var height = 40000000.0;
         var positions = Cartesian3.fromDegreesArray([
             -108.0, 1.0,

@@ -3,14 +3,12 @@ defineSuite([
         'Core/PolygonPipeline',
         'Core/Cartesian2',
         'Core/Cartesian3',
-        'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/WindingOrder'
     ], function(
         PolygonPipeline,
         Cartesian2,
         Cartesian3,
-        Cartographic,
         Ellipsoid,
         WindingOrder) {
     "use strict";
@@ -374,23 +372,24 @@ defineSuite([
     });
 
     it('eliminateHoles works with non-WGS84 ellipsoids', function() {
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var outerRing = Cartesian3.fromDegreesArray([
             -122.0, 37.0,
             -121.9, 37.0,
             -121.9, 37.1,
             -122.0, 37.1,
             -122.0, 37.0
-        ], Ellipsoid.UNIT_SPHERE);
+        ], ellipsoid);
 
         var innerRing = Cartesian3.fromDegreesArray([
             -121.96, 37.04,
             -121.96, 37.01,
             -121.99, 37.01,
             -121.99, 37.04
-        ], Ellipsoid.UNIT_SPHERE);
+        ], ellipsoid);
 
         var innerRings = [innerRing];
-        var positions = PolygonPipeline.eliminateHoles(outerRing, innerRings, Ellipsoid.UNIT_SPHERE);
+        var positions = PolygonPipeline.eliminateHoles(outerRing, innerRings, ellipsoid);
 
         expect(positions[0]).toEqual(outerRing[0]);
         expect(positions[1]).toEqual(outerRing[1]);
