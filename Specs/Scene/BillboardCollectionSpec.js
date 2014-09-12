@@ -1242,11 +1242,11 @@ defineSuite([
 
         var one = billboards.add({
             image : greenImage,
-            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0))
+            position : Cartesian3.fromDegrees(-50.0, -50.0)
         });
         var two = billboards.add({
             image : greenImage,
-            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
+            position : Cartesian3.fromDegrees(-50.0, 50.0)
         });
 
         var commandList = [];
@@ -1265,11 +1265,11 @@ defineSuite([
 
         var one = billboards.add({
             image : greenImage,
-            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0))
+            position : Cartesian3.fromDegrees(-50.0, -50.0)
         });
         var two = billboards.add({
             image : greenImage,
-            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
+            position : Cartesian3.fromDegrees(-50.0, 50.0)
         });
 
         var mode = frameState.mode;
@@ -1295,11 +1295,11 @@ defineSuite([
 
         var one = billboards.add({
             image : greenImage,
-            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0))
+            position : Cartesian3.fromDegrees(-50.0, -50.0)
         });
         var two = billboards.add({
             image : greenImage,
-            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
+            position : Cartesian3.fromDegrees(-50.0, 50.0)
         });
 
         var maxRadii = ellipsoid.maximumRadius;
@@ -1340,12 +1340,12 @@ defineSuite([
 
         var one = billboards.add({
             image : greenImage,
-            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
+            position : Cartesian3.fromDegrees(-50.0, -50.0),
             pixelOffset : new Cartesian2(0.0, 200.0)
         });
         var two = billboards.add({
             image : greenImage,
-            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0)),
+            position : Cartesian3.fromDegrees(-50.0, 50.0),
             pixelOffset : new Cartesian2(0.0, 200.0)
         });
 

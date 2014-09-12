@@ -364,7 +364,7 @@ define([
      * @example
      * // Example 2:  Specify only the billboard's cartographic position.
      * var b = billboards.add({
-     *   position : ellipsoid.cartographicToCartesian(new Cesium.Cartographic(longitude, latitude, height))
+     *   position : Cesium.Cartesian3.fromDegrees(longitude, latitude, height)
      * });
      */
     BillboardCollection.prototype.add = function(billboard) {

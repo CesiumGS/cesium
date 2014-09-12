@@ -23,7 +23,7 @@ defineSuite([
     var time = new JulianDate();
 
     function coordinatesToCartesian(coordinates) {
-        return Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(coordinates[0], coordinates[1]));
+        return Cartesian3.fromDegrees(coordinates[0], coordinates[1]);
     }
 
     function coordinatesArrayToCartesian(coordinates) {

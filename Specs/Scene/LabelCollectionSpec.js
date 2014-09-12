@@ -1564,11 +1564,11 @@ defineSuite([
         var ellipsoid = projection.ellipsoid;
 
         var one = labels.add({
-            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
+            position : Cartesian3.fromDegrees(-50.0, -50.0),
             text : 'one'
         });
         var two = labels.add({
-            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0)),
+            position : Cartesian3.fromDegrees(-50.0, 50.0),
             text : 'two'
         });
 

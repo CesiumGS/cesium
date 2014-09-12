@@ -1,13 +1,13 @@
 /*global defineSuite*/
 defineSuite([
         'Core/CircleGeometry',
-        'Core/Cartographic',
+        'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/Math',
         'Core/VertexFormat'
     ], function(
         CircleGeometry,
-        Cartographic,
+        Cartesian3,
         Ellipsoid,
         CesiumMath,
         VertexFormat) {
@@ -25,7 +25,7 @@ defineSuite([
     it('throws without a radius', function() {
         expect(function() {
             return new CircleGeometry({
-                center : Ellipsoid.WGS84.cartographicToCartesian(new Cartographic())
+                center : Cartesian3.fromDegrees(0,0)
             });
         }).toThrowDeveloperError();
     });
@@ -33,7 +33,7 @@ defineSuite([
     it('throws with a negative radius', function() {
         expect(function() {
             return new CircleGeometry({
-                center : Ellipsoid.WGS84.cartographicToCartesian(new Cartographic()),
+                center : Cartesian3.fromDegrees(0,0),
                 radius : -1.0
             });
         }).toThrowDeveloperError();
@@ -42,7 +42,7 @@ defineSuite([
     it('throws with a negative granularity', function() {
         expect(function() {
             return new CircleGeometry({
-                center : Ellipsoid.WGS84.cartographicToCartesian(new Cartographic()),
+                center : Cartesian3.fromDegrees(0,0),
                 radius : 1.0,
                 granularity : -1.0
             });
@@ -54,7 +54,7 @@ defineSuite([
         var m = CircleGeometry.createGeometry(new CircleGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
             ellipsoid : ellipsoid,
-            center : ellipsoid.cartographicToCartesian(new Cartographic()),
+            center : Cartesian3.fromDegrees(0,0),
             granularity : 0.75,
             radius : 1.0
         }));
@@ -69,7 +69,7 @@ defineSuite([
         var m = CircleGeometry.createGeometry(new CircleGeometry({
             vertexFormat : VertexFormat.ALL,
             ellipsoid : ellipsoid,
-            center : ellipsoid.cartographicToCartesian(new Cartographic()),
+            center : Cartesian3.fromDegrees(0,0),
             granularity : 0.75,
             radius : 1.0
         }));
@@ -87,7 +87,7 @@ defineSuite([
         var m = CircleGeometry.createGeometry(new CircleGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
             ellipsoid : ellipsoid,
-            center : ellipsoid.cartographicToCartesian(new Cartographic()),
+            center : Cartesian3.fromDegrees(0,0),
             granularity : 0.75,
             radius : 1.0,
             extrudedHeight: 10000
@@ -102,7 +102,7 @@ defineSuite([
         var m = CircleGeometry.createGeometry(new CircleGeometry({
             vertexFormat : VertexFormat.ALL,
             ellipsoid : ellipsoid,
-            center : ellipsoid.cartographicToCartesian(new Cartographic()),
+            center : Cartesian3.fromDegrees(0,0),
             granularity : 0.75,
             radius : 1.0,
             extrudedHeight: 10000
@@ -121,7 +121,7 @@ defineSuite([
         var m = CircleGeometry.createGeometry(new CircleGeometry({
             vertexFormat : VertexFormat.POSITION_AND_ST,
             ellipsoid : ellipsoid,
-            center : ellipsoid.cartographicToCartesian(new Cartographic()),
+            center : Cartesian3.fromDegrees(0,0),
             granularity : 0.75,
             radius : 1.0,
             stRotation : CesiumMath.PI_OVER_TWO

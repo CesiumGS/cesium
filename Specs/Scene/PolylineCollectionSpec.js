@@ -1559,16 +1559,16 @@ defineSuite([
         var ellipsoid = projection.ellipsoid;
 
         var one = polylines.add({
-            positions : [
-                ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
-                ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, -50.0, 0.0))
-            ]
+            positions : Cartesian3.fromDegreesArray([
+                -50.0, -50.0,
+                50.0, -50.0
+            ])
         });
         var two = polylines.add({
-            positions : [
-                ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, 50.0, 0.0)),
-                ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
-            ]
+            positions : Cartesian3.fromDegreesArray([
+                50.0, 50.0,
+                -50.0, 50.0
+            ])
         });
 
         var mode = frameState.mode;

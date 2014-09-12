@@ -48,7 +48,12 @@ defineSuite([
 
     function createBasicPolygon() {
         var polygon = new PolygonGraphics();
-        polygon.positions = new ConstantProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray([new Cartographic(0, 0, 0), new Cartographic(1, 0, 0), new Cartographic(1, 1, 0), new Cartographic(0, 1, 0)]));
+        polygon.positions = new ConstantProperty(Cartesian3.fromRadiansArray([
+            0, 0,
+            1, 0,
+            1, 1,
+            0, 1
+        ]));
         var entity = new Entity();
         entity.polygon = polygon;
         return entity;

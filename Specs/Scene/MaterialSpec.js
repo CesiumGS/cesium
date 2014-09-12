@@ -60,18 +60,20 @@ defineSuite([
         polygon = new Polygon();
         polygon.ellipsoid = ellipsoid;
         polygon.granularity = CesiumMath.toRadians(20.0);
-        polygon.positions = [ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
-            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, -50.0, 0.0)),
-            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, 50.0, 0.0)),
-            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))];
+        polygon.positions = Cartesian3.fromDegreesArray([
+            -50.0, -50.0,
+            50.0, -50.0,
+            50.0, 50.0,
+            -50.0, 50.0
+        ], ellipsoid);
         polygon.asynchronous = false;
 
         polylines = new PolylineCollection();
         polyline = polylines.add({
-            positions : [
-                ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 0.0, 0.0)),
-                ellipsoid.cartographicToCartesian(Cartographic.fromDegrees( 50.0, 0.0, 0.0))
-            ],
+            positions : Cartesian3.fromDegreesArray([
+                -50.0, 0.0,
+                50.0, 0.0
+            ], ellipsoid),
             width : 5.0
         });
     });

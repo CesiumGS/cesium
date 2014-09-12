@@ -43,7 +43,7 @@ defineSuite([
     it('throws with less than 2 positions', function() {
         expect(function() {
             return WallOutlineGeometry.createGeometry(new WallOutlineGeometry({
-                positions : ellipsoid.cartographicArrayToCartesianArray([Cartographic.fromDegrees(49.0, 18.0, 1000.0)])
+                positions : [Cartesian3.fromDegrees(49.0, 18.0, 1000.0)]
             }));
         }).toThrowDeveloperError();
     });
@@ -51,23 +51,21 @@ defineSuite([
     it('throws with less than 2 unique positions', function() {
         expect(function() {
             return WallOutlineGeometry.createGeometry(new WallOutlineGeometry({
-                positions : ellipsoid.cartographicArrayToCartesianArray([
-                    Cartographic.fromDegrees(49.0, 18.0, 1000.0),
-                    Cartographic.fromDegrees(49.0, 18.0, 5000.0),
-                    Cartographic.fromDegrees(49.0, 18.0, 1000.0)
+                positions : Cartesian3.fromDegreesArrayHeights([
+                    49.0, 18.0, 1000.0,
+                    49.0, 18.0, 5000.0,
+                    49.0, 18.0, 1000.0
                 ])
             }));
         }).toThrowDeveloperError();
     });
 
     it('creates positions relative to ellipsoid', function() {
-        var coords = [
-            Cartographic.fromDegrees(49.0, 18.0, 1000.0),
-            Cartographic.fromDegrees(50.0, 18.0, 1000.0)
-        ];
-
         var w = WallOutlineGeometry.createGeometry(new WallOutlineGeometry({
-            positions    : ellipsoid.cartographicArrayToCartesianArray(coords),
+            positions : Cartesian3.fromDegreesArrayHeights([
+                49.0, 18.0, 1000.0,
+                50.0, 18.0, 1000.0
+            ]),
             granularity : Math.PI
         }));
 
@@ -83,13 +81,11 @@ defineSuite([
     });
 
     it('creates positions with minimum and maximum heights', function() {
-        var coords = [
-            Cartographic.fromDegrees(49.0, 18.0, 1000.0),
-            Cartographic.fromDegrees(50.0, 18.0, 1000.0)
-        ];
-
         var w = WallOutlineGeometry.createGeometry(new WallOutlineGeometry({
-            positions    : ellipsoid.cartographicArrayToCartesianArray(coords),
+            positions    : Cartesian3.fromDegreesArrayHeights([
+                49.0, 18.0, 1000.0,
+                50.0, 18.0, 1000.0
+            ]),
             minimumHeights : [1000.0, 2000.0],
             maximumHeights : [3000.0, 4000.0],
             granularity : Math.PI
@@ -113,17 +109,16 @@ defineSuite([
     });
 
     it('cleans positions with duplicates', function() {
-        var coords = [
-            Cartographic.fromDegrees(49.0, 18.0, 1000.0),
-            Cartographic.fromDegrees(49.0, 18.0, 2000.0),
-            Cartographic.fromDegrees(50.0, 18.0, 1000.0),
-            Cartographic.fromDegrees(50.0, 18.0, 1000.0),
-            Cartographic.fromDegrees(50.0, 18.0, 1000.0),
-            Cartographic.fromDegrees(51.0, 18.0, 1000.0),
-            Cartographic.fromDegrees(51.0, 18.0, 1000.0)
-        ];
         var w = WallOutlineGeometry.createGeometry(new WallOutlineGeometry({
-            positions    : ellipsoid.cartographicArrayToCartesianArray(coords)
+            positions    : Cartesian3.fromDegreesArrayHeights([
+                49.0, 18.0, 1000.0,
+                49.0, 18.0, 2000.0,
+                50.0, 18.0, 1000.0,
+                50.0, 18.0, 1000.0,
+                50.0, 18.0, 1000.0,
+                51.0, 18.0, 1000.0,
+                51.0, 18.0, 1000.0
+            ])
         }));
 
         var positions = w.attributes.position.values;
@@ -144,16 +139,14 @@ defineSuite([
     });
 
     it('creates positions with constant minimum and maximum heights', function() {
-        var coords = [
-            Cartographic.fromDegrees(49.0, 18.0, 1000.0),
-            Cartographic.fromDegrees(50.0, 18.0, 1000.0)
-        ];
-
         var min = 1000.0;
         var max = 2000.0;
 
         var w = WallOutlineGeometry.createGeometry(WallOutlineGeometry.fromConstantHeights({
-            positions    : ellipsoid.cartographicArrayToCartesianArray(coords),
+            positions    : Cartesian3.fromDegreesArrayHeights([
+                49.0, 18.0, 1000.0,
+                50.0, 18.0, 1000.0
+            ]),
             minimumHeight : min,
             maximumHeight : max
         }));
