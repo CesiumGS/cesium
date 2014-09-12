@@ -737,7 +737,6 @@ define([
 
         var center;
         var ray;
-        var intersection;
         var normal = Cartesian3.UNIT_X;
 
         if (Cartesian2.equals(startPosition, controller._tiltCenterMousePosition)) {
@@ -1222,7 +1221,6 @@ define([
     var tilt3DVerticalCenter = new Cartesian3();
     var tilt3DTransform = new Matrix4();
     var tilt3DVerticalTransform = new Matrix4();
-    var tilt3DNormal = new Cartesian3();
     var tilt3DCartesian3 = new Cartesian3();
     var tilt3DOldTransform = new Matrix4();
     var tilt3DQuaternion = new Quaternion();
@@ -1472,7 +1470,6 @@ define([
     var look3DEndPos = new Cartesian2();
     var look3DStartRay = new Ray();
     var look3DEndRay = new Ray();
-    var look3DUp = new Cartesian3();
     var look3DNegativeRot = new Cartesian3();
     var look3DTan = new Cartesian3();
 

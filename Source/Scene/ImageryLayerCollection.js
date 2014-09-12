@@ -6,10 +6,10 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/Rectangle',
         '../Core/Math',
-        './ImageryLayer',
-        '../ThirdParty/when'
+        '../Core/Rectangle',
+        '../ThirdParty/when',
+        './ImageryLayer'
     ], function(
         defaultValue,
         defined,
@@ -17,10 +17,10 @@ define([
         destroyObject,
         DeveloperError,
         Event,
-        Rectangle,
         CesiumMath,
-        ImageryLayer,
-        when) {
+        Rectangle,
+        when,
+        ImageryLayer) {
     "use strict";
 
     /**
