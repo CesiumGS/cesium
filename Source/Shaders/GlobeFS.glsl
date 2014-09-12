@@ -219,7 +219,7 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
     vec4 noise = czm_getWaterNoise(u_oceanNormalMap, textureCoordinates * oceanFrequencyHighAltitude, time, 0.0);
     vec3 normalTangentSpaceHighAltitude = noise.xyz * vec3(1.0, 1.0, (1.0 / oceanAmplitudeHighAltitude));
     
-    // high altitude waves
+    // low altitude waves
 	time = czm_frameNumber * oceanAnimationSpeedLowAltitude;
     noise = czm_getWaterNoise(u_oceanNormalMap, textureCoordinates * oceanFrequencyLowAltitude, time, 0.0);
     vec3 normalTangentSpaceLowAltitude = noise.xyz * vec3(1.0, 1.0, (1.0 / oceanAmplitudeLowAltitude));
