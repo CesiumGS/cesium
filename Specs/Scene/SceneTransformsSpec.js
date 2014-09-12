@@ -6,7 +6,6 @@ defineSuite([
         'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/Math',
-        'Scene/SceneMode',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
@@ -16,7 +15,6 @@ defineSuite([
         Cartographic,
         Ellipsoid,
         CesiumMath,
-        SceneMode,
         createScene,
         destroyScene) {
     "use strict";

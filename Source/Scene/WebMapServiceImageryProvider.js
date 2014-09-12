@@ -16,9 +16,9 @@ define([
         '../Core/Math',
         '../Core/Rectangle',
         '../Core/WebMercatorTilingScheme',
+        '../ThirdParty/when',
         './ImageryLayerFeatureInfo',
-        './ImageryProvider',
-        '../ThirdParty/when'
+        './ImageryProvider'
     ], function(
         Cartesian3,
         Cartographic,
@@ -36,9 +36,9 @@ define([
         CesiumMath,
         Rectangle,
         WebMercatorTilingScheme,
+        when,
         ImageryLayerFeatureInfo,
-        ImageryProvider,
-        when) {
+        ImageryProvider) {
     "use strict";
 
     /**

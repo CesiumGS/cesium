@@ -1,14 +1,13 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/WebMapTileServiceImageryProvider',
-        'Core/DefaultProxy',
         'Core/Credit',
+        'Core/DefaultProxy',
         'Core/defined',
+        'Core/GeographicTilingScheme',
         'Core/jsonp',
         'Core/loadImage',
-        'Core/Rectangle',
         'Core/WebMercatorTilingScheme',
-        'Core/GeographicTilingScheme',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
@@ -16,14 +15,13 @@ defineSuite([
         'ThirdParty/when'
     ], function(
         WebMapTileServiceImageryProvider,
-        DefaultProxy,
         Credit,
+        DefaultProxy,
         defined,
+        GeographicTilingScheme,
         jsonp,
         loadImage,
-        Rectangle,
         WebMercatorTilingScheme,
-        GeographicTilingScheme,
         Imagery,
         ImageryLayer,
         ImageryProvider,

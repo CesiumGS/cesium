@@ -249,10 +249,6 @@ define([
         return result;
     };
 
-    var northUpEastToFixedFrameNormal = new Cartesian3();
-    var northUpEastToFixedFrameTangent = new Cartesian3();
-    var northUpEastToFixedFrameBitangent = new Cartesian3();
-
     /**
      * Computes a 4x4 transformation matrix from a reference frame with an north-up-east axes
      * centered at the provided origin to the provided ellipsoid's fixed reference frame.
