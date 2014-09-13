@@ -66,7 +66,7 @@ define([
      *
      * @example
      * // Get the transform from local east-north-up at cartographic (0.0, 0.0) to Earth's fixed frame.
-     * var center = Cesium.Cartesian3.fromDegrees(0, 0);
+     * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
      * var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
      */
     Transforms.eastNorthUpToFixedFrame = function(origin, ellipsoid, result) {
@@ -167,7 +167,7 @@ define([
      *
      * @example
      * // Get the transform from local north-east-down at cartographic (0.0, 0.0) to Earth's fixed frame.
-     * var center = Cesium.Cartesian3.fromDegrees(0,0);
+     * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
      * var transform = Cesium.Transforms.northEastDownToFixedFrame(center);
      */
     Transforms.northEastDownToFixedFrame = function(origin, ellipsoid, result) {
@@ -264,7 +264,7 @@ define([
      *
      * @example
      * // Get the transform from local north-up-east at cartographic (0.0, 0.0) to Earth's fixed frame.
-     * var center = Cesium.Cartesian3.fromDegrees(0,0);
+     * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
      * var transform = Cesium.Transforms.northUpEastToFixedFrame(center);
      */
     Transforms.northUpEastToFixedFrame = function(origin, ellipsoid, result) {
