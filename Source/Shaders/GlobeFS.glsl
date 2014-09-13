@@ -185,7 +185,7 @@ float waveFade(float edge0, float edge1, float x)
 
 float linearFade(float edge0, float edge1, float x)
 {
-	 return clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
+    return clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
 }
 
 // Based on water rendering by Jonas Wagner:
@@ -194,13 +194,13 @@ float linearFade(float edge0, float edge1, float x)
 // low altitude wave settings
 const float oceanFrequencyLowAltitude = 825000.0;
 const float oceanAnimationSpeedLowAltitude = 0.004;
-const float oceanAmplitudeLowAltitude = 2.0;
+const float oceanOneOverAmplitudeLowAltitude = 1.0 / 2.0;
 const float oceanSpecularIntensity = 0.5;
  
 // high altitude wave settings
 const float oceanFrequencyHighAltitude = 125000.0;
 const float oceanAnimationSpeedHighAltitude = 0.008;
-const float oceanAmplitudeHighAltitude = 2.0;
+const float oceanOneOverAmplitudeHighAltitude = 1.0 / 2.0;
 
 vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec4 imageryColor, float specularMapValue)
 {
@@ -211,18 +211,18 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
     vec3 normalizedpositionToEyeEC = normalize(normalize(positionToEyeEC));
     
     // Fade out the waves as the camera moves far from the surface.
-    float waveIntensity = waveFade(70000.0, 1000000.0, positionToEyeECLength);   
+    float waveIntensity = waveFade(70000.0, 1000000.0, positionToEyeECLength);
 
 #ifdef SHOW_OCEAN_WAVES
     // high altitude waves
     float time = czm_frameNumber * oceanAnimationSpeedHighAltitude;
     vec4 noise = czm_getWaterNoise(u_oceanNormalMap, textureCoordinates * oceanFrequencyHighAltitude, time, 0.0);
-    vec3 normalTangentSpaceHighAltitude = noise.xyz * vec3(1.0, 1.0, (1.0 / oceanAmplitudeHighAltitude));
+    vec3 normalTangentSpaceHighAltitude = vec3(noise.xy, noise.z * oceanOneOverAmplitudeHighAltitude);
     
     // low altitude waves
     time = czm_frameNumber * oceanAnimationSpeedLowAltitude;
     noise = czm_getWaterNoise(u_oceanNormalMap, textureCoordinates * oceanFrequencyLowAltitude, time, 0.0);
-    vec3 normalTangentSpaceLowAltitude = noise.xyz * vec3(1.0, 1.0, (1.0 / oceanAmplitudeLowAltitude));
+    vec3 normalTangentSpaceLowAltitude = vec3(noise.xy, noise.z * oceanOneOverAmplitudeLowAltitude);
     
     // blend the 2 wave layers based on distance to surface
     float highAltitudeFade = linearFade(0.0, 60000.0, positionToEyeECLength);
@@ -230,7 +230,7 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
     vec3 normalTangentSpace = 
     	(highAltitudeFade * normalTangentSpaceHighAltitude) + 
     	(lowAltitudeFade * normalTangentSpaceLowAltitude);
-	normalTangentSpace = normalize(normalTangentSpace);
+    normalTangentSpace = normalize(normalTangentSpace);
     
     // fade out the normal perturbation as we move farther from the water surface
     normalTangentSpace.xy *= waveIntensity;
