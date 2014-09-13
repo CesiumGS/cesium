@@ -289,7 +289,9 @@ define([
                 },
                 depthTest : {
                     enabled : true
-                }
+                },
+                depthMask : false,
+                blending : BlendingState.ALPHA_BLEND
             });
         }
 

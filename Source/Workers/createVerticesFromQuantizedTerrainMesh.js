@@ -83,9 +83,10 @@ define([
         }
 
         var edgeTriangleCount = Math.max(0, (edgeVertexCount - 4) * 2);
-        var indexBuffer = new Uint16Array(parameters.indices.length + edgeTriangleCount * 3);
+        var indexBuffer = new Uint16Array(parameters.indices.length /* + edgeTriangleCount */ * 3);
         indexBuffer.set(parameters.indices, 0);
 
+/*
         // Add skirts.
         var vertexBufferIndex = quantizedVertexCount * vertexStride;
         var indexBufferIndex = parameters.indices.length;
@@ -97,6 +98,7 @@ define([
         vertexBufferIndex += parameters.eastIndices.length * vertexStride;
         indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.northIndices, center, ellipsoid, rectangle, parameters.northSkirtHeight, true, hasVertexNormals);
         vertexBufferIndex += parameters.northIndices.length * vertexStride;
+*/
 
         transferableObjects.push(vertexBuffer.buffer, indexBuffer.buffer);
 

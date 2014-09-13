@@ -173,6 +173,8 @@ void main()
 #else
     gl_FragColor = color;
 #endif
+
+    gl_FragColor.a = 0.5;
 }
 
 #ifdef SHOW_REFLECTIVE_OCEAN

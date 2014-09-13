@@ -40,6 +40,7 @@ define([
         '../Shaders/GlobeVSDepth',
         '../Shaders/GlobeVSPole',
         '../ThirdParty/when',
+        './BlendingState',
         './DepthFunction',
         './GlobeSurfaceShaderSet',
         './GlobeSurfaceTileProvider',
@@ -89,6 +90,7 @@ define([
         GlobeVSDepth,
         GlobeVSPole,
         when,
+        BlendingState,
         DepthFunction,
         GlobeSurfaceShaderSet,
         GlobeSurfaceTileProvider,
@@ -742,11 +744,15 @@ define([
                     depthTest : {
                         enabled : true
                     }
+//                    depthMask : false,
+//                    blending : BlendingState.ALPHA_BLEND
                 });
                 this._rsColorWithoutDepthTest = context.createRenderState({ // Write color, not depth
                     cull : {
                         enabled : true
                     }
+//                    depthMask : false,
+//                    blending : BlendingState.ALPHA_BLEND
                 });
                 this._depthCommand.renderState = context.createRenderState({ // Write depth, not color
                     cull : {
@@ -762,22 +768,27 @@ define([
                         blue : false,
                         alpha : false
                     }
+//                    depthMask : false,
+//                    blending : BlendingState.ALPHA_BLEND
                 });
             } else {
                 this._rsColor = context.createRenderState({
                     cull : {
                         enabled : true
                     }
+//                    blending : BlendingState.ALPHA_BLEND
                 });
                 this._rsColorWithoutDepthTest = context.createRenderState({
                     cull : {
                         enabled : true
                     }
+//                    blending : BlendingState.ALPHA_BLEND
                 });
                 this._depthCommand.renderState = context.createRenderState({
                     cull : {
                         enabled : true
                     }
+//                    blending : BlendingState.ALPHA_BLEND
                 });
             }
         }
@@ -960,13 +971,13 @@ define([
 
             // render depth plane
             if (mode === SceneMode.SCENE3D || mode === SceneMode.COLUMBUS_VIEW) {
-                if (!this.depthTestAgainstTerrain) {
+//                if (!this.depthTestAgainstTerrain) {
                     commandList.push(this._clearDepthCommand);
                     if (mode === SceneMode.SCENE3D) {
                         commandList.push(this._depthCommand);
                     }
                 }
-            }
+//            }
         }
 
         if (pass.pick) {
