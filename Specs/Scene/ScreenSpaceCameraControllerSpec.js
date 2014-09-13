@@ -3,7 +3,6 @@ defineSuite([
         'Scene/ScreenSpaceCameraController',
         'Core/Cartesian2',
         'Core/Cartesian3',
-        'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/GeographicProjection',
         'Core/IntersectionTests',
@@ -20,7 +19,6 @@ defineSuite([
         ScreenSpaceCameraController,
         Cartesian2,
         Cartesian3,
-        Cartographic,
         Ellipsoid,
         GeographicProjection,
         IntersectionTests,
@@ -547,7 +545,7 @@ defineSuite([
     it('rotates in Columus view with camera transform set', function() {
         setUpCV();
 
-        var origin = Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-72.0, 40.0));
+        var origin = Cartesian3.fromDegrees(-72.0, 40.0);
         camera.transform = Transforms.eastNorthUpToFixedFrame(origin);
 
         var position = Cartesian3.clone(camera.position);
@@ -566,7 +564,7 @@ defineSuite([
     it('zooms in Columus view with camera transform set', function() {
         setUpCV();
 
-        var origin = Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-72.0, 40.0));
+        var origin = Cartesian3.fromDegrees(-72.0, 40.0);
         camera.transform = Transforms.eastNorthUpToFixedFrame(origin);
 
         var position = Cartesian3.clone(camera.position);
@@ -583,7 +581,7 @@ defineSuite([
     it('zoom in Columbus view with camera transform set and with wheel', function() {
         setUpCV();
 
-        var origin = Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-72.0, 40.0));
+        var origin = Cartesian3.fromDegrees(-72.0, 40.0);
         camera.transform = Transforms.eastNorthUpToFixedFrame(origin);
 
         var position = Cartesian3.clone(camera.position);
