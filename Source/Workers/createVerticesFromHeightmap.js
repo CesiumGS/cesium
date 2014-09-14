@@ -21,6 +21,8 @@ define([
         var arrayWidth = parameters.width;
         var arrayHeight = parameters.height;
 
+        parameters.skirtHeight = 0.0;
+
         if (parameters.skirtHeight > 0.0) {
             arrayWidth += 2;
             arrayHeight += 2;
