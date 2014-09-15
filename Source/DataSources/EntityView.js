@@ -202,12 +202,12 @@ define([
     // STATIC properties defined here, not per-instance.
     defineProperties(EntityView, {
         /**
-         * Gets or sets a camera offset vector that will be used to
+         * Gets or sets a camera offset that will be used to
          * initialize subsequent EntityViews.
          * @memberof EntityView
          * @type {Cartesian3}
          */
-        defaultViewVector : {
+        defaultOffset3D : {
             get : function() {
                 return this._defaultOffset3D;
             },
@@ -224,7 +224,7 @@ define([
     });
 
     // Initialize the static property.
-    EntityView.defaultViewVector = new Cartesian3(-14000, 3500, 3500);
+    EntityView.defaultOffset3D = new Cartesian3(-14000, 3500, 3500);
 
     /**
     * Should be called each animation frame to update the camera
