@@ -54,7 +54,7 @@ define([
      *   appearance : new Cesium.PolylineMaterialAppearance({
      *     material : Cesium.Material.fromType('Color')
      *   })
-     * }));
+     * });
      */
     var PolylineMaterialAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

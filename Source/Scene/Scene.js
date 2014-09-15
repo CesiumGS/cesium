@@ -6,6 +6,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
+        '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -55,6 +56,7 @@ define([
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
+        createGuid,
         defaultValue,
         defined,
         defineProperties,
@@ -152,6 +154,7 @@ define([
      * @param {Object} [options.contextOptions] Context and WebGL creation properties.  See details above.
      * @param {Element} [options.creditContainer] The HTML element in which the credits will be displayed.
      * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
+     * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
      * @param {Boolean} [options.scene3DOnly=false] If true, optimizes memory use and performance for 3D mode but disables the ability to use 2D or Columbus View.     *
      * @see CesiumWidget
      * @see {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}
@@ -191,6 +194,7 @@ define([
             canvas.parentNode.appendChild(creditContainer);
         }
 
+        this._id = createGuid();
         this._frameState = new FrameState(new CreditDisplay(creditContainer));
         this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
 
@@ -211,7 +215,7 @@ define([
         this._frustumCommandsList = [];
         this._overlayCommandList = [];
 
-        this._oit = new OIT(context);
+        this._oit = defaultValue(options.orderIndependentTranslucency, true) ? new OIT(context) : undefined;
         this._executeOITFunction = undefined;
 
         this._fxaa = new FXAA();
@@ -729,6 +733,30 @@ define([
         },
 
         /**
+         * Gets whether or not the scene has order independent translucency enabled.
+         * Note that this only reflects the original construction option, and there are
+         * other factors that could prevent OIT from functioning on a given system configuration.
+         * @memberof Scene.prototype
+         * @type {Boolean}
+         */
+        orderIndependentTranslucency : {
+            get : function() {
+                return defined(this._oit);
+            }
+        },
+
+        /**
+         * Gets the unique identifier for this scene.
+         * @memberof Scene.prototype
+         * @type {String}
+         */
+        id : {
+            get : function() {
+                return this._id;
+            }
+        },
+
+        /**
          * Gets or sets the current mode of the scene.
          * @memberof Scene.prototype
          * @type {SceneMode}
@@ -1161,7 +1189,7 @@ define([
             }
         }
 
-        var useOIT = !picking && renderTranslucentCommands && scene._oit.isSupported();
+        var useOIT = !picking && renderTranslucentCommands && defined(scene._oit) && scene._oit.isSupported();
         if (useOIT) {
             scene._oit.update(context);
             scene._oit.clear(context, passState, clearColor);
@@ -1309,7 +1337,7 @@ define([
 
         this._tweens.update();
         this._camera.update(this._mode);
-        this._screenSpaceCameraController.update(this._frameState);
+        this._screenSpaceCameraController.update();
     };
 
     function render(scene, time) {
@@ -1598,11 +1626,15 @@ define([
      * @param {Number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
      */
     Scene.prototype.morphTo2D = function(duration) {
+        var ellipsoid;
         var globe = this.globe;
         if (defined(globe)) {
-            duration = defaultValue(duration, 2.0);
-            this._transitioner.morphTo2D(duration, globe.ellipsoid);
+            ellipsoid = globe.ellipsoid;
+        } else {
+            ellipsoid = this.mapProjection.ellipsoid;
         }
+        duration = defaultValue(duration, 2.0);
+        this._transitioner.morphTo2D(duration, ellipsoid);
     };
 
     /**
@@ -1610,11 +1642,15 @@ define([
      * @param {Number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
      */
     Scene.prototype.morphToColumbusView = function(duration) {
+        var ellipsoid;
         var globe = this.globe;
         if (defined(globe)) {
-            duration = defaultValue(duration, 2.0);
-            this._transitioner.morphToColumbusView(duration, globe.ellipsoid);
+            ellipsoid = globe.ellipsoid;
+        } else {
+            ellipsoid = this.mapProjection.ellipsoid;
         }
+        duration = defaultValue(duration, 2.0);
+        this._transitioner.morphToColumbusView(duration, ellipsoid);
     };
 
     /**
@@ -1622,11 +1658,15 @@ define([
      * @param {Number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
      */
     Scene.prototype.morphTo3D = function(duration) {
+        var ellipsoid;
         var globe = this.globe;
         if (defined(globe)) {
-            duration = defaultValue(duration, 2.0);
-            this._transitioner.morphTo3D(duration, globe.ellipsoid);
+            ellipsoid = globe.ellipsoid;
+        } else {
+            ellipsoid = this.mapProjection.ellipsoid;
         }
+        duration = defaultValue(duration, 2.0);
+        this._transitioner.morphTo3D(duration, ellipsoid);
     };
 
     /**
@@ -1674,7 +1714,9 @@ define([
 
         this._transitioner.destroy();
 
-        this._oit.destroy();
+        if (defined(this._oit)) {
+            this._oit.destroy();
+        }
         this._fxaa.destroy();
 
         this._context = this._context && this._context.destroy();

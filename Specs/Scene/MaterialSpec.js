@@ -2,7 +2,6 @@
 defineSuite([
         'Scene/Material',
         'Core/Cartesian3',
-        'Core/Cartographic',
         'Core/Color',
         'Core/Ellipsoid',
         'Core/Math',
@@ -17,7 +16,6 @@ defineSuite([
     ], function(
         Material,
         Cartesian3,
-        Cartographic,
         Color,
         Ellipsoid,
         CesiumMath,
@@ -60,18 +58,20 @@ defineSuite([
         polygon = new Polygon();
         polygon.ellipsoid = ellipsoid;
         polygon.granularity = CesiumMath.toRadians(20.0);
-        polygon.positions = [ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
-            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, -50.0, 0.0)),
-            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, 50.0, 0.0)),
-            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))];
+        polygon.positions = Cartesian3.fromDegreesArray([
+            -50.0, -50.0,
+            50.0, -50.0,
+            50.0, 50.0,
+            -50.0, 50.0
+        ], ellipsoid);
         polygon.asynchronous = false;
 
         polylines = new PolylineCollection();
         polyline = polylines.add({
-            positions : [
-                ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 0.0, 0.0)),
-                ellipsoid.cartographicToCartesian(Cartographic.fromDegrees( 50.0, 0.0, 0.0))
-            ],
+            positions : Cartesian3.fromDegreesArray([
+                -50.0, 0.0,
+                50.0, 0.0
+            ], ellipsoid),
             width : 5.0
         });
     });
@@ -347,6 +347,33 @@ defineSuite([
                     '    material.diffuse = textureCube(cubeMap, vec3(1.0)).xyz;\n' +
                     '    return material;\n' +
                     '}\n'
+            }
+        });
+        var pixel = renderMaterial(material);
+        expect(pixel).not.toEqual([0, 0, 0, 0]);
+    });
+
+    it('does not crash if source uniform is formatted differently', function() {
+        var material = new Material({
+            strict : true,
+            fabric : {
+                uniforms : {
+                    cubeMap : {
+                        positiveX : './Data/Images/Blue.png',
+                        negativeX : './Data/Images/Blue.png',
+                        positiveY : './Data/Images/Blue.png',
+                        negativeY : './Data/Images/Blue.png',
+                        positiveZ : './Data/Images/Blue.png',
+                        negativeZ : './Data/Images/Blue.png'
+                    }
+                },
+                source : 'uniform   samplerCube   cubeMap  ;\r\n' +
+                    'czm_material czm_getMaterial(czm_materialInput materialInput)\r\n' +
+                    '{\r\n' +
+                    '    czm_material material = czm_getDefaultMaterial(materialInput);\r\n' +
+                    '    material.diffuse = textureCube(cubeMap, vec3(1.0)).xyz;\r\n' +
+                    '    return material;\r\n' +
+                    '}'
             }
         });
         var pixel = renderMaterial(material);

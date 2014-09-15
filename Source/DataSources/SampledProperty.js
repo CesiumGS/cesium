@@ -135,8 +135,6 @@ define([
      * @example
      * //Create a linearly interpolated Cartesian2
      * var property = new Cesium.SampledProperty(Cesium.Cartesian2);
-     * property.interpolationDegree = 1;
-     * property.interpolationAlgorithm = LinearApproximation;
      *
      * //Populate it with data
      * property.addSample(Cesium.JulianDate.fromIso8601(`2012-08-01T00:00:00.00Z`), new Cesium.Cartesian2(0, 0));

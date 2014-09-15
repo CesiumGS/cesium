@@ -1101,6 +1101,20 @@ defineSuite([
         expect(p).toBeUndefined();
     });
 
+    it('pickEllipsoid works near the surface', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var minRadii = ellipsoid.minimumRadius;
+
+        // Ten meters above the surface at the north pole, looking down.
+        camera.position = new Cartesian3(0.0, 0.0, minRadii + 10.0);
+        camera.direction = new Cartesian3(0.0, 0.0, -1.0);
+        camera.up = new Cartesian3(1.0, 0.0, 0.0);
+        camera.right = new Cartesian3(0.0, 1.0, 0.0);
+
+        var p = camera.pickEllipsoid(Cartesian2.ZERO, ellipsoid);
+        expect(p.z).toEqualEpsilon(minRadii, 1e-4);
+    });
+
     it('pick map in 2D', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new GeographicProjection(ellipsoid);
