@@ -7,6 +7,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/IntersectionTests',
         '../Core/PixelFormat',
         '../Core/Rectangle',
@@ -27,6 +28,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         IntersectionTests,
         PixelFormat,
         Rectangle,
@@ -625,6 +627,8 @@ define([
             if (defined(tileDataAvailable)) {
                 return tileDataAvailable;
             }
+        } else {
+            deprecationWarning('TerrainProvider.getTileDataAvailable', 'TerrainProviders must now implement the getTileDataAvailable function.');
         }
 
         var parent = tile.parent;
