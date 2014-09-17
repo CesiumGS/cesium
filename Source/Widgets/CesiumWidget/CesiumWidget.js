@@ -138,6 +138,7 @@ define([
      * @param {SkyBox} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      * @param {Boolean} [options.scene3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
+     * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
      * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
      * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
@@ -233,6 +234,7 @@ define([
                 contextOptions : options.contextOptions,
                 creditContainer : creditContainer,
                 mapProjection : options.mapProjection,
+                orderIndependentTranslucency : options.orderIndependentTranslucency,
                 scene3DOnly : defaultValue(options.scene3DOnly, false)
             });
             this._scene = scene;

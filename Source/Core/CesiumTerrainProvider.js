@@ -274,7 +274,6 @@ define([
         var boundingSphereElements = cartesian3Elements + 1;
         var cartesian3Length = Float64Array.BYTES_PER_ELEMENT * cartesian3Elements;
         var boundingSphereLength = Float64Array.BYTES_PER_ELEMENT * boundingSphereElements;
-        var vertexElements = 6;
         var encodedVertexElements = 3;
         var encodedVertexLength = Uint16Array.BYTES_PER_ELEMENT * encodedVertexElements;
         var triangleElements = 3;
