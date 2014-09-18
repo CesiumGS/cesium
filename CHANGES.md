@@ -4,7 +4,7 @@ Change Log
 ### 1.2 - 2014-10-01
 
 * Deprecated
-  * Types implementing the `TerrainProvider` interface should now include the new `getTileDataAvailable` function.  The function will be required starting in Cesium 1.04.
+  * Types implementing the `TerrainProvider` interface should now include the new `getTileDataAvailable` function.  The function will be required starting in Cesium 1.4.
 * Added a constructor option to `Scene`, `CesiumWidget`, and `Viewer` to disable order independent translucency.
 * Eliminated imagery artifacts at some zoom levels due to Mercator reprojection.
 * Fixed a bug in `Model` where the wrong animations could be used when the model was created from glTF JSON instead of 
