@@ -638,7 +638,6 @@ define([
         for (var i = 0; i < rootNodesLength; ++i) {
             var n = gltfNodes[rootNodes[i]];
             n._transformToRoot = getTransform(n);
-            Matrix4.multiplyTransformation(n._transformToRoot, yUpToZUp, n._transformToRoot);
             nodeStack.push(n);
 
             while (nodeStack.length > 0) {
@@ -680,6 +679,8 @@ define([
             }
         }
 
+        Matrix4.multiplyByPoint(yUpToZUp, min, min);
+        Matrix4.multiplyByPoint(yUpToZUp, max, max);
         return BoundingSphere.fromCornerPoints(min, max);
     }
 
