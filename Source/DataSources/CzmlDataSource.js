@@ -1117,7 +1117,7 @@ define([
 
     function processModel(entity, packet, entityCollection, sourceUri) {
         var modelData = packet.model;
-        if (typeof modelData === 'undefined') {
+        if (!defined(modelData)) {
             return;
         }
 
