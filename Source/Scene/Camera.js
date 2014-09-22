@@ -733,9 +733,7 @@ define([
                 //>>includeEnd('debug');
 
                 if (this._mode === SceneMode.COLUMBUS_VIEW || this._mode === SceneMode.SCENE3D) {
-                    angle = CesiumMath.clamp(angle, 0.0, CesiumMath.PI_OVER_TWO);
                     angle = angle - this.tilt;
-
                     this.look(this.right, angle);
                 }
             }

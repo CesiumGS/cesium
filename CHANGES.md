@@ -11,6 +11,7 @@ Change Log
 a url to a glTF file.  [#2078](https://github.com/AnalyticalGraphicsInc/cesium/issues/2078)
 * Added support for WKID 102113 (equivalent to 102100) to `ArcGisMapServerImageryProvider`.
 * Added `TerrainProvider.getTileDataAvailable` to improve tile loading performance when camera starts near globe.
+* Removed clamp of Camera.tilt to [0, pi / 2].
 
 ### 1.1 - 2014-09-02
 
