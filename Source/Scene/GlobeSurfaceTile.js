@@ -277,13 +277,13 @@ define([
             }
         }
 
-        if (typeof this.wireframeVertexArray !== 'undefined') {
+        if (defined(this.wireframeVertexArray)) {
             indexBuffer = this.wireframeVertexArray.indexBuffer;
 
             this.wireframeVertexArray.destroy();
             this.wireframeVertexArray = undefined;
 
-            if (!indexBuffer.isDestroyed() && typeof indexBuffer.referenceCount !== 'undefined') {
+            if (!indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
                 --indexBuffer.referenceCount;
                 if (indexBuffer.referenceCount === 0) {
                     indexBuffer.destroy();
