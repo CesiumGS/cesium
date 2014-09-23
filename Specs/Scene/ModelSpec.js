@@ -61,7 +61,7 @@ defineSuite([
     function addZoomTo(model) {
         model.zoomTo = function() {
             var center = Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cartesian3());
-            var transform = Transforms.northEastDownToFixedFrame(center);
+            var transform = Transforms.eastNorthUpToFixedFrame(center);
 
             // View in east-north-up frame
             var camera = scene.camera;
@@ -71,7 +71,7 @@ defineSuite([
             // Zoom in
             var r = Math.max(model.boundingSphere.radius, camera.frustum.near);
             camera.lookAt(
-                new Cartesian3(r, r, r),
+                new Cartesian3(r, -r, -r),
                 Cartesian3.ZERO,
                 Cartesian3.UNIT_Z);
         };
@@ -82,7 +82,7 @@ defineSuite([
 
         var model = primitives.add(Model.fromGltf({
             url : url,
-            modelMatrix : Transforms.northEastDownToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
+            modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
             show : false,
             scale : options.scale,
             minimumPixelSize : options.minimumPixelSize,
@@ -117,7 +117,7 @@ defineSuite([
     });
 
     it('sets model properties', function() {
-        var modelMatrix = Transforms.northEastDownToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0));
+        var modelMatrix = Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0));
 
        expect(duckModel.gltf).toBeDefined();
        expect(duckModel.basePath).toEqual('./Data/Models/duck/');
@@ -147,7 +147,7 @@ defineSuite([
         // Simulate using procedural glTF as opposed to loading it from a file
         var model = primitives.add(new Model({
             gltf : duckModel.gltf,
-            modelMatrix : Transforms.northEastDownToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
+            modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
             show : false
         }));
         addZoomTo(model);
@@ -452,7 +452,7 @@ defineSuite([
 
     it('boundingSphere returns the bounding sphere', function() {
         var boundingSphere = duckModel.boundingSphere;
-        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.134, -0.037, -0.869), CesiumMath.EPSILON3);
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.134, 0.037, 0.869), CesiumMath.EPSILON3);
         expect(boundingSphere.radius).toEqualEpsilon(1.268, CesiumMath.EPSILON3);
     });
 

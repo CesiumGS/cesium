@@ -604,10 +604,6 @@ define([
             if (startIndex !== -1) {
                 tileImageryCollection.splice(startIndex, numDestroyed);
             }
-            // If the base layer has been removed, mark the tile as non-renderable.
-            if (layer.isBaseLayer()) {
-                tile.isRenderable = false;
-            }
         });
     };
 
