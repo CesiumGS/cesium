@@ -65,7 +65,6 @@ defineSuite([
         return returnTileJson('Data/CesiumTerrainTileJson/VertexNormals.tile.json');
     }
 
-
     /**
      * Repeatedly calls update until the load queue is empty.  You must wrap any code to follow
      * this in a "runs" function.
@@ -82,6 +81,26 @@ defineSuite([
 
     it('renders with enableLighting', function() {
         globe.enableLighting = true;
+
+        var layerCollection = globe.imageryLayers;
+        layerCollection.removeAll();
+        layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
+
+        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+
+        updateUntilDone(globe);
+
+        runs(function() {
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+            render(context, frameState, globe);
+            expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        });
+    });
+
+    it('renders with showWaterEffect set to false', function() {
+        globe.showWaterEffect = false;
 
         var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
