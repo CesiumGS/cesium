@@ -3,10 +3,17 @@ Change Log
 
 ### 1.2 - 2014-10-01
 
-* Eliminated imagery artifacts at some zoom levels due to Mercator reprojection.
+* Deprecated
+  * Types implementing the `TerrainProvider` interface should now include the new `getTileDataAvailable` function.  The function will be required starting in Cesium 1.4.
+* Fixed model orientations to follow the same Z-up convention used throughout Cesium. There was also an orientation issue fixed in the [online model converter](http://cesiumjs.org/convertmodel.html). If you are having orientation issues after updating, try reconverting your models.
 * Fixed a bug in `Model` where the wrong animations could be used when the model was created from glTF JSON instead of 
 a url to a glTF file.  [#2078](https://github.com/AnalyticalGraphicsInc/cesium/issues/2078)
-
+* Eliminated imagery artifacts at some zoom levels due to Mercator reprojection.
+* Added a constructor option to `Scene`, `CesiumWidget`, and `Viewer` to disable order independent translucency.
+* Added support for WKID 102113 (equivalent to 102100) to `ArcGisMapServerImageryProvider`.
+* Added `TerrainProvider.getTileDataAvailable` to improve tile loading performance when camera starts near globe.
+* Added `Globe.showWaterEffect` to enable/disable the water effect for supported terrain providers.
+* 
 ### 1.1 - 2014-09-02
 
 * Added a new imagery provider, `WebMapTileServiceImageryProvider`, for accessing tiles on a WMTS 1.0.0 server.
