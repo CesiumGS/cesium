@@ -121,7 +121,9 @@ define([
             boundingSphereTile : undefined
         };
 
-        this._baseColor = new Color(0.0, 0.0, 0.5, 1.0);
+        this._baseColor = undefined;
+        this._firstPassInitialColor = undefined;
+        this.baseColor = new Color(0.0, 0.0, 0.5, 1.0);
     };
 
     defineProperties(GlobeSurfaceTileProvider.prototype, {
