@@ -1,22 +1,36 @@
 Change Log
 ==========
 
-### 1.01 - 2014-09-01
+### 1.2 - 2014-10-01
+
+* Deprecated
+  * Types implementing the `TerrainProvider` interface should now include the new `getTileDataAvailable` function.  The function will be required starting in Cesium 1.4.
+* Fixed model orientations to follow the same Z-up convention used throughout Cesium. There was also an orientation issue fixed in the [online model converter](http://cesiumjs.org/convertmodel.html). If you are having orientation issues after updating, try reconverting your models.
+* Fixed a bug in `Model` where the wrong animations could be used when the model was created from glTF JSON instead of 
+a url to a glTF file.  [#2078](https://github.com/AnalyticalGraphicsInc/cesium/issues/2078)
+* Eliminated imagery artifacts at some zoom levels due to Mercator reprojection.
+* Added a constructor option to `Scene`, `CesiumWidget`, and `Viewer` to disable order independent translucency.
+* Added support for WKID 102113 (equivalent to 102100) to `ArcGisMapServerImageryProvider`.
+* Added `TerrainProvider.getTileDataAvailable` to improve tile loading performance when camera starts near globe.
+* Added `Globe.showWaterEffect` to enable/disable the water effect for supported terrain providers.
+* Added `Globe.baseColor` to set the color of the globe when no imagery is available.
+* Fixed a bug that could crash a crash when quickly adding and removing imagery layers.
+
+### 1.1 - 2014-09-02
 
 * Added a new imagery provider, `WebMapTileServiceImageryProvider`, for accessing tiles on a WMTS 1.0.0 server.
-* Greatly improved the performance of time-varying polylines when using DataSources.
 * Added an optional `pickFeatures` function to the `ImageryProvider` interface.  With supporting imagery providers, such as `WebMapServiceImageryProvider`, it can be used to determine the rasterized features under a particular location.
 * Added `ImageryLayerCollection.pickImageryLayerFeatures`.  It determines the rasterized imagery layer features intersected by a given pick ray by querying supporting layers using `ImageryProvider.pickFeatures`.
+* Added `tileWidth`, `tileHeight`, `minimumLevel`, and `tilingScheme` parameters to the `WebMapServiceImageryProvider` constructor.
+* Added `id` property to `Scene` which is a readonly unique identifier associated with each instance.
+* Added `FeatureDetection.supportsWebWorkers`.
+* Greatly improved the performance of time-varying polylines when using DataSources.
 * `viewerEntityMixin` now automatically queries for imagery layer features on click and shows their properties in the `InfoBox` panel.
-* `WebMapServiceImageryProvider` now accepts `tileWidth`, `tileHeight`, `minimumLevel`, and `tilingScheme` parameters to its constructor.
-* Fixed a bug in terrain and imagery loading that could cause a choppy, inconsistent frame rate when moving around the globe, especially on a faster internet connection.
+* Fixed a bug in terrain and imagery loading that could cause an inconsistent frame rate when moving around the globe, especially on a faster internet connection.
 * Fixed a bug that caused `SceneTransforms.wgs84ToWindowCoordinates` to incorrectly return `undefined` when in 2D.
 * Fixed a bug in `ImageryLayer` that caused layer images to be rendered twice for each terrain tile that existed prior to adding the imagery layer.
 * Fixed a bug in `Camera.pickEllipsoid` that caused it to return the back side of the ellipsoid when near the surface.
-* Added `FeatureDetection.supportsWebWorkers`.
-* Added `id` property to `Scene` which is a readonly unique identifier associated with each instance.
-* `loadWithXhr` now works with older browsers, such as Internet Explorer 9.
-* Added wkid 102113 detection (equivilent to 102100) to ArcGis Imagery Provider.
+* Fixed a bug which prevented `loadWithXhr` from working with older browsers, such as Internet Explorer 9.
 
 ### 1.0 - 2014-08-01
 

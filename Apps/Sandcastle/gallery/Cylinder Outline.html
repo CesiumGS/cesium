@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
-    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Draw the outline of a cylinder.">
     <meta name="cesium-sandcastle-labels" content="Geometries">
     <title>Cesium Demo</title>
@@ -36,6 +36,7 @@ var primitives = scene.primitives;
 // surface using a model matrix.
 
 // Create the model matrix.
+var length = 400000.0;
 var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-100.0, 40.0);
 var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
     Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
@@ -45,7 +46,7 @@ var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
 // option can be used to specify the number of lines connecting
 // the top and bottom of the cylinder.
 var cylinderOutlineGeometry = new Cesium.CylinderOutlineGeometry({
-    length : 400000.0,
+    length : length,
     topRadius : 150000.0,
     bottomRadius : 150000.0,
     numberOfVerticalLines: 16

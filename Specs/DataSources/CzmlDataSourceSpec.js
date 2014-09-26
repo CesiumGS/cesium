@@ -17,7 +17,6 @@ defineSuite([
         'Core/Quaternion',
         'Core/Rectangle',
         'Core/ReferenceFrame',
-        'Core/Spherical',
         'Core/TimeInterval',
         'DataSources/EntityCollection',
         'DataSources/ReferenceProperty',
@@ -43,7 +42,6 @@ defineSuite([
         Quaternion,
         Rectangle,
         ReferenceFrame,
-        Spherical,
         TimeInterval,
         EntityCollection,
         ReferenceProperty,
@@ -165,6 +163,12 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.load(clockCzml, 'Gallery/simple.czml?asd=true');
         expect(dataSource.name).toEqual('simple.czml');
+    });
+
+    it('does not overwrite existing name if CZML name is undefined', function() {
+        var dataSource = new CzmlDataSource('myName');
+        dataSource.load(clockCzml, 'Gallery/simple.czml');
+        expect(dataSource.name).toEqual('myName');
     });
 
     it('clock returns undefined for static CZML', function() {
@@ -636,14 +640,13 @@ defineSuite([
                 cartographicDegrees : [34, 117, 10000]
             }
         };
-        var cartographic = Cartographic.fromDegrees(34, 117, 10000);
 
         var dataSource = new CzmlDataSource();
         dataSource.load(makePacket(czml));
 
         var entity = dataSource.entities.entities[0];
         var resultCartesian = entity.position.getValue(JulianDate.now());
-        expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
+        expect(resultCartesian).toEqual(Cartesian3.fromDegrees(34, 117, 10000));
     });
 
     it('CZML sampled cartographicsDegrees positions work.', function() {
@@ -655,18 +658,16 @@ defineSuite([
                 cartographicDegrees : [0, 34, 117, 10000, 1, 34, 117, 20000]
             }
         };
-        var cartographic = Cartographic.fromDegrees(34, 117, 10000);
-        var cartographic2 = Cartographic.fromDegrees(34, 117, 20000);
 
         var dataSource = new CzmlDataSource();
         dataSource.load(makePacket(czml));
 
         var entity = dataSource.entities.entities[0];
         var resultCartesian = entity.position.getValue(epoch);
-        expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
+        expect(resultCartesian).toEqual(Cartesian3.fromDegrees(34, 117, 10000));
 
         resultCartesian = entity.position.getValue(JulianDate.addSeconds(epoch, 1, new JulianDate()));
-        expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic2));
+        expect(resultCartesian).toEqual(Cartesian3.fromDegrees(34, 117, 20000));
     });
 
     it('CZML sampled positions work without epoch.', function() {
@@ -678,18 +679,16 @@ defineSuite([
                 cartographicDegrees : [JulianDate.toIso8601(firstDate), 34, 117, 10000, JulianDate.toIso8601(lastDate), 34, 117, 20000]
             }
         };
-        var cartographic = Cartographic.fromDegrees(34, 117, 10000);
-        var cartographic2 = Cartographic.fromDegrees(34, 117, 20000);
 
         var dataSource = new CzmlDataSource();
         dataSource.load(makePacket(czml));
 
         var entity = dataSource.entities.entities[0];
         var resultCartesian = entity.position.getValue(firstDate);
-        expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
+        expect(resultCartesian).toEqual(Cartesian3.fromDegrees(34, 117, 10000));
 
         resultCartesian = entity.position.getValue(lastDate);
-        expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic2));
+        expect(resultCartesian).toEqual(Cartesian3.fromDegrees(34, 117, 20000));
     });
 
     it('CZML constant cartographicRadians positions work.', function() {
@@ -698,14 +697,13 @@ defineSuite([
                 cartographicRadians : [1, 2, 10000]
             }
         };
-        var cartographic = new Cartographic(1, 2, 10000);
 
         var dataSource = new CzmlDataSource();
         dataSource.load(makePacket(czml));
 
         var entity = dataSource.entities.entities[0];
         var resultCartesian = entity.position.getValue(JulianDate.now());
-        expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
+        expect(resultCartesian).toEqual(Cartesian3.fromRadians(1, 2, 10000));
     });
 
     it('Can set reference frame', function() {
@@ -773,18 +771,16 @@ defineSuite([
                 cartographicRadians : [0, 2, 0.3, 10000, 1, 0.2, 0.5, 20000]
             }
         };
-        var cartographic = new Cartographic(2, 0.3, 10000);
-        var cartographic2 = new Cartographic(0.2, 0.5, 20000);
 
         var dataSource = new CzmlDataSource();
         dataSource.load(makePacket(czml));
 
         var entity = dataSource.entities.entities[0];
         var resultCartesian = entity.position.getValue(epoch);
-        expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
+        expect(resultCartesian).toEqual(Cartesian3.fromRadians(2, 0.3, 10000));
 
         resultCartesian = entity.position.getValue(JulianDate.addSeconds(epoch, 1, new JulianDate()));
-        expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic2));
+        expect(resultCartesian).toEqual(Cartesian3.fromRadians(0.2, 0.5, 20000));
     });
 
     it('CZML sampled numbers work without epoch.', function() {
@@ -1119,7 +1115,10 @@ defineSuite([
     });
 
     it('positions work with cartographicDegrees.', function() {
-        var expectedResult = Ellipsoid.WGS84.cartographicArrayToCartesianArray([Cartographic.fromDegrees(1.0, 2.0, 3.0), Cartographic.fromDegrees(5.0, 6.0, 7.0)]);
+        var expectedResult = Cartesian3.fromDegreesArrayHeights([
+            1.0, 2.0, 3.0,
+            5.0, 6.0, 7.0
+        ]);
 
         var packet = {
             polyline : {

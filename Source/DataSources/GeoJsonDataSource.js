@@ -57,7 +57,7 @@ define([
     polygonGraphics.outlineColor = new ConstantProperty(Color.BLACK);
 
     function describe(properties, nameProperty) {
-        var html = '<table class="cesium-infoBox-defaultTable">';
+        var html = '<table class="cesium-infoBox-defaultTable"><tbody>';
         for ( var key in properties) {
             if (properties.hasOwnProperty(key)) {
                 if (key === nameProperty) {
@@ -66,14 +66,14 @@ define([
                 var value = properties[key];
                 if (defined(value)) {
                     if (typeof value === 'object') {
-                        html += '<tr><td>' + key + '</td><td>' + describe(value) + '</td></tr>';
+                        html += '<tr><th>' + key + '</th><td>' + describe(value) + '</td></tr>';
                     } else {
-                        html += '<tr><td>' + key + '</td><td>' + value + '</td></tr>';
+                        html += '<tr><th>' + key + '</th><td>' + value + '</td></tr>';
                     }
                 }
             }
         }
-        html += '</table>';
+        html += '</tbody></table>';
         return html;
     }
 

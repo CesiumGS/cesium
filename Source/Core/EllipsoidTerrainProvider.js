@@ -166,5 +166,17 @@ define([
         return this._levelZeroMaximumGeometricError / (1 << level);
     };
 
+    /**
+     * Determines whether data for a tile is available to be loaded.
+     *
+     * @param {Number} x The X coordinate of the tile for which to request geometry.
+     * @param {Number} y The Y coordinate of the tile for which to request geometry.
+     * @param {Number} level The level of the tile for which to request geometry.
+     * @returns {Boolean} Undefined if not supported, otherwise true or false.
+     */
+    EllipsoidTerrainProvider.prototype.getTileDataAvailable = function(x, y, level) {
+        return undefined;
+    };
+
     return EllipsoidTerrainProvider;
 });
