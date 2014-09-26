@@ -318,7 +318,7 @@ define([
                     if (defined(that._modelMatrixPrimitive) && command.owner === that._modelMatrixPrimitive._primitive) {
                         return true;
                     } else if (defined(that._primitive)) {
-                        return command.owner === that._primitive || command.owner === that._primitive._billboardCollection;
+                        return command.owner === that._primitive || command.owner === that._primitive._billboardCollection || command.owner.primitive === that._primitive;
                     }
                     return false;
                 };

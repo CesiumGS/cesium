@@ -297,6 +297,7 @@ define([
          * @default false
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
+        this._debugShowBoudingVolume = this.debugShowBoundingVolume;
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -2249,6 +2250,21 @@ define([
                 var computedModelMatrix = this._computedModelMatrix;
                 Matrix4.multiplyByUniformScale(this.modelMatrix, scale, computedModelMatrix);
                 Matrix4.multiplyTransformation(computedModelMatrix, yUpToZUp, computedModelMatrix);
+            }
+
+            var toggleShowBoundingVolume = this.debugShowBoundingVolume !== this._debugShowBoundingVolume;
+            if (toggleShowBoundingVolume) {
+                this._debugShowBoundingVolume = this.debugShowBoundingVolume;
+                var nodes = this._runtime.nodes;
+                for (var nodeName in nodes) {
+                    if (nodes.hasOwnProperty(nodeName)) {
+                        var node = nodes[nodeName];
+                        for (var j = 0; j < node.commands.length; j++) {
+                            var command = node.commands[j].command;
+                            command.debugShowBoundingVolume = this.debugShowBoundingVolume;
+                        }
+                    }
+                }
             }
 
             // Update modelMatrix throughout the graph as needed
