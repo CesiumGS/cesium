@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Model',
+        'Scene/ModelResourceCache',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
@@ -16,6 +17,7 @@ defineSuite([
         'Specs/destroyScene'
     ], function(
         Model,
+        ModelResourceCache,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -42,6 +44,8 @@ defineSuite([
     var duckModel;
     var customDuckModel;
     var separateDuckModel;
+    var cachedDuckModel;
+    var anotherCachedDuckModel;
     var cesiumAirModel;
     var animBoxesModel;
     var riggedFigureModel;
@@ -61,7 +65,7 @@ defineSuite([
     function addZoomTo(model) {
         model.zoomTo = function() {
             var center = Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cartesian3());
-            var transform = Transforms.northEastDownToFixedFrame(center);
+            var transform = Transforms.eastNorthUpToFixedFrame(center);
 
             // View in east-north-up frame
             var camera = scene.camera;
@@ -71,7 +75,7 @@ defineSuite([
             // Zoom in
             var r = Math.max(model.boundingSphere.radius, camera.frustum.near);
             camera.lookAt(
-                new Cartesian3(r, r, r),
+                new Cartesian3(r, -r, -r),
                 Cartesian3.ZERO,
                 Cartesian3.UNIT_Z);
         };
@@ -82,8 +86,9 @@ defineSuite([
 
         var model = primitives.add(Model.fromGltf({
             url : url,
-            modelMatrix : Transforms.northEastDownToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
+            modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
             show : false,
+            cache : options.cache,
             scale : options.scale,
             minimumPixelSize : options.minimumPixelSize,
             id : url,        // for picking tests
@@ -117,7 +122,7 @@ defineSuite([
     });
 
     it('sets model properties', function() {
-        var modelMatrix = Transforms.northEastDownToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0));
+        var modelMatrix = Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0));
 
        expect(duckModel.gltf).toBeDefined();
        expect(duckModel.basePath).toEqual('./Data/Models/duck/');
@@ -147,7 +152,7 @@ defineSuite([
         // Simulate using procedural glTF as opposed to loading it from a file
         var model = primitives.add(new Model({
             gltf : duckModel.gltf,
-            modelMatrix : Transforms.northEastDownToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
+            modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
             show : false
         }));
         addZoomTo(model);
@@ -452,7 +457,7 @@ defineSuite([
 
     it('boundingSphere returns the bounding sphere', function() {
         var boundingSphere = duckModel.boundingSphere;
-        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.134, -0.037, -0.869), CesiumMath.EPSILON3);
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.134, 0.037, 0.869), CesiumMath.EPSILON3);
         expect(boundingSphere.radius).toEqualEpsilon(1.268, CesiumMath.EPSILON3);
     });
 
@@ -494,6 +499,48 @@ defineSuite([
         separateDuckModel.zoomTo();
         expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
         separateDuckModel.show = false;
+    });
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    var testCache = new ModelResourceCache();
+
+    it('loads cached duck', function() {
+        cachedDuckModel = loadModel(duckUrl, {
+            cache : testCache
+        });
+    });
+
+    it('loads second cached duck', function() {
+        anotherCachedDuckModel = loadModel(duckUrl, {
+            cache : testCache
+        });
+    });
+
+    it('renders cachedDuckModel', function() {
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        cachedDuckModel.show = true;
+        cachedDuckModel.zoomTo();
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        cachedDuckModel.show = false;
+    });
+
+    it('renders second cachedDuckModel', function() {
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        anotherCachedDuckModel.show = true;
+        anotherCachedDuckModel.zoomTo();
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        anotherCachedDuckModel.show = false;
+    });
+
+    it('checks ducks are really cached', function() {
+        expect(testCache.getNumberOfCachedModels()).toEqual(1);
+    });
+
+    it('checks ducks share resources', function() {
+        expect(cachedDuckModel.isSharingResources(anotherCachedDuckModel)).toEqual(true);
     });
 
     ///////////////////////////////////////////////////////////////////////////

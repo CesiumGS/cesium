@@ -35,7 +35,7 @@ define([
         './ModelAnimationCollection',
         './ModelMaterial',
         './ModelResources',
-		'./ModelResourceCache',
+        './ModelResourceCache',
         './ModelMesh',
         './ModelNode',
         './Pass',
@@ -76,7 +76,7 @@ define([
         ModelAnimationCollection,
         ModelMaterial,
         ModelResources,
-		ModelResourceCache,
+        ModelResourceCache,
         ModelMesh,
         ModelNode,
         Pass,
@@ -138,10 +138,10 @@ define([
         }
         //>>includeEnd('debug');
 
-	
-		this._modelResources = modelResources;
-		this._uniformMaps = {};
-		this.skinnedNodesNames = [];
+
+        this._modelResources = modelResources;
+        this._uniformMaps = {};
+        this.skinnedNodesNames = [];
 
        this._runtime = {
             animations : undefined,
@@ -151,9 +151,9 @@ define([
             skinnedNodes : undefined,
             meshesByName : undefined,     // Indexed with the name property in the mesh
             materialsByName : undefined,  // Indexed with the name property in the material
-            materialsById : undefined     // Indexed with the material's property name			
+            materialsById : undefined     // Indexed with the material's property name
         };
-		
+
         /**
          * Determines if the model primitive will be shown.
          *
@@ -294,7 +294,7 @@ define([
         this._pickCommands = [];
         this._pickIds = [];
 
-		this._needsUpdate = true;
+        this._needsUpdate = true;
     };
 
     defineProperties(Model.prototype, {
@@ -303,6 +303,13 @@ define([
                 return this._modelResources;
             }
         },
+
+        gltf: {
+            get : function() {
+                return this._modelResources.gltf;
+            }
+        },
+
 
         /**
          * The base path that paths in the glTF JSON are relative to.  The base
@@ -318,9 +325,9 @@ define([
          *
          * @default ''
          */
-        basePath : {
+        basePath: {
             get : function() {
-                return this._basePath;
+                return this._modelResources.basePath;
             }
         },
 
@@ -421,6 +428,7 @@ define([
      * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
+     * @param {ModelResourceCache} [options.cache] Selects what cache to use for the model resources. If not specified the model will not cache resources.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @returns {Model} The newly created model.
@@ -453,6 +461,20 @@ define([
      *   // Play all animations when the model is ready to render
      *   model.activeAnimations.addAll();
      * });
+     *
+     * @example
+     * // Example 3. Using a cache for resources
+     * var modelCache = new Cesium.ModelResourceCache();
+     * var modelURL = './duck/duck.json';
+     * var model1 = scene.primitives.add(Cesium.Model.fromGltf({
+     *   url : modelURL,
+     *   cache : modelCache
+     * }));
+     * var model2 = scene.primitives.add(Cesium.Model.fromGltf({
+     *   url : modelURL,
+     *   cache : modelCache
+     * }));
+     *
      */
     Model.fromGltf = function(options) {
         //>>includeStart('debug', pragmas.debug);
@@ -462,28 +484,32 @@ define([
 
         //>>includeEnd('debug');
 
-		var modelResources = undefined;
+        var modelResources;
 
         if (defined(options.cache)){
-			modelResources = options.cache.getModel(options.url);
+            modelResources = options.cache.getModel(options.url);
         }
 
-		if (!defined(modelResources))
-		{
-			modelResources = new ModelResources(options.url, options.headers);
-			if (defined(options.cache))
-			{
-				options.cache.putModel(modelResources, options.url);
-			}
-		}
+        if (!defined(modelResources))
+        {
+            modelResources = new ModelResources(options.url, options.headers);
+            if (defined(options.cache))
+            {
+                options.cache.putModel(modelResources, options.url);
+            }
+        }
 
-		var model = new Model(modelResources, options);
+        var model = new Model(modelResources, options);
 
         return model;
     };
 
     function getRuntime(model, runtimeName, name) {
         //>>includeStart('debug', pragmas.debug);
+        if (!defined(model)) {
+            throw new DeveloperError('model is required.');
+        }
+
         if (model._state !== ModelState.LOADED) {
             throw new DeveloperError('The model is not loaded.  Wait for the model\'s readyToRender event or ready property.');
         }
@@ -493,7 +519,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        return (this._runtime[runtimeName])[name];
+        return model._runtime[runtimeName][name];
     }
 
 
@@ -703,7 +729,7 @@ define([
     var scratchNodeStack = [];
 
     function updateNodeHierarchyModelMatrix(model, modelTransformChanged) {
-		var modelResources = model._modelResources;
+        var modelResources = model._modelResources;
         var maxDirtyNumber = model._maxDirtyNumber;
         var allowPicking = model.allowPicking;
 
@@ -713,7 +739,7 @@ define([
         var nodeStack = scratchNodeStack;
         var computedModelMatrix = model._computedModelMatrix;
 
-		var justLoaded = model._needsUpdate;
+        var justLoaded = model._needsUpdate;
 
         for (var i = 0; i < length; ++i) {
             var n = rootNodes[i];
@@ -738,7 +764,7 @@ define([
                             // PERFORMANCE_IDEA: Can use transformWithoutScale if no node up to the root has scale (inclug animation)
                             BoundingSphere.transform(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
 
-							//TODO
+                            //TODO
                             /*if (allowPicking) {
                                 var pickCommand = primitiveCommand.pickCommand;
                                 Matrix4.clone(command.modelMatrix, pickCommand.modelMatrix);
@@ -785,9 +811,15 @@ define([
             return color;
         };
     }
-	
+
+    function createJointMatricesFunction(runtimeNode) {
+        return function() {
+            return runtimeNode.computedJointMatrices;
+        };
+    }
+
     function createCommand(model, gltfNode, runtimeNode, context) {
-		var commands = model._renderCommands;
+        var commands = model._renderCommands;
         var pickCommands = model._pickCommands;
         var pickIds = model._pickIds;
         var allowPicking = model.allowPicking;
@@ -795,14 +827,14 @@ define([
 
         var debugShowBoundingVolume = model.debugShowBoundingVolume;
 
-		var modelResources = model._modelResources;
+        var modelResources = model._modelResources;
         var resources = modelResources._rendererResources;
         var rendererVertexArrays = resources.vertexArrays;
         var rendererPrograms = resources.programs;
         var rendererPickPrograms = resources.pickPrograms;
         var rendererRenderStates = resources.renderStates;
-        
-		var rendererUniformMaps = model._uniformMaps;
+
+        var rendererUniformMaps = model._uniformMaps;
 
         var gltf = modelResources.gltf;
         var accessors = gltf.accessors;
@@ -985,7 +1017,7 @@ define([
         }
         // JOINTMATRIX created in createCommands()
     };
-	
+
     function getScalarUniformFunction(value, model) {
         var that = {
             value : value,
@@ -1084,7 +1116,7 @@ define([
             return runtimeNode.computedMatrix;
         };
     }
-	
+
     var gltfUniformFunctions = {};
 
     // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
@@ -1107,11 +1139,11 @@ define([
         gltfUniformFunctions[WebGLRenderingContext.SAMPLER_2D] = getTextureUniformFunction;
         // GLTF_SPEC: Support SAMPLER_CUBE. https://github.com/KhronosGroup/glTF/issues/40
     }
-	
-    function createUniformMaps(model, context) 
-	{
-		var modelResources = model._modelResources;
-		var gltf = modelResources.gltf;
+
+    function createUniformMaps(model, context)
+    {
+        var modelResources = model._modelResources;
+        var gltf = modelResources.gltf;
         var materials = gltf.materials;
         var techniques = gltf.techniques;
         var programs = gltf.programs;
@@ -1180,9 +1212,9 @@ define([
             }
         }
     }
-	
+
     function parseNodes(model) {
-		var modelResources = model._modelResources;
+        var modelResources = model._modelResources;
         var runtimeNodes = {};
         var runtimeNodesByName = {};
         var skinnedNodes = [];
@@ -1243,7 +1275,7 @@ define([
     }
 
     function parseMaterials(model) {
-		var modelResources = model._modelResources;
+        var modelResources = model._modelResources;
         var runtimeMaterials = {};
         var runtimeMaterialsById = {};
         var materials = modelResources.gltf.materials;
@@ -1268,9 +1300,9 @@ define([
         model._runtime.materialsByName = runtimeMaterials;
         model._runtime.materialsById = runtimeMaterialsById;
     }
-	
+
     function parseMeshes(model) {
-		var modelResources = model._modelResources;
+        var modelResources = model._modelResources;
         var runtimeMeshes = {};
         var runtimeMaterialsById = model._runtime.materialsById;
         var meshes = modelResources.gltf.meshes;
@@ -1291,8 +1323,8 @@ define([
         parseNodes(model);
     }
 
-	 function createRuntimeNodes(model, context) {
-		var modelResources = model._modelResources;
+     function createRuntimeNodes(model, context) {
+        var modelResources = model._modelResources;
 
         var rootNodes = [];
         var runtimeNodes = model._runtime.nodes;
@@ -1339,10 +1371,10 @@ define([
                 } else {
                     rootNodes.push(runtimeNode);
                 }
-				
-				
+
+
                 if (defined(gltfNode.meshes) || defined(gltfNode.instanceSkin)) {
-					runtimeNode.gltfNode = gltfNode; // maybe this should changed later
+                    runtimeNode.gltfNode = gltfNode; // maybe this should changed later
                     createCommand(model, gltfNode, runtimeNode, context);
                 }
 
@@ -1362,18 +1394,42 @@ define([
         model._runtime.nodes = runtimeNodes;
     }
 
+    function searchForest(forest, jointName) {
+        var length = forest.length;
+        for (var i = 0; i < length; ++i) {
+            var stack = [forest[i]]; // Push root node of tree
+
+            while (stack.length > 0) {
+                var n = stack.pop();
+
+                if (n.jointName === jointName) {
+                    return n;
+                }
+
+                var children = n.children;
+                var childrenLength = children.length;
+                for (var k = 0; k < childrenLength; ++k) {
+                    stack.push(children[k]);
+                }
+            }
+        }
+
+        // This should never happen; the skeleton should have a node for all joints in the skin.
+        return undefined;
+    }
+
     function createJoints(model, runtimeSkins) {
-		var modelResources = model._modelResources;
+        var modelResources = model._modelResources;
         var gltf = modelResources.gltf;
         var skins = gltf.skins;
         var nodes = gltf.nodes;
         var runtimeNodes = model._runtime.nodes;
 
         var skinnedNodesNames = modelResources.skinnedNodesNames;
-		if (!defined(skinnedNodesNames)) {
-			return;
-		}
-		
+        if (!defined(skinnedNodesNames)) {
+            return;
+        }
+
         var length = skinnedNodesNames.length;
         for (var j = 0; j < length; ++j) {
             var name = skinnedNodesNames[j];
@@ -1404,7 +1460,7 @@ define([
     }
 
     function createSkins(model) {
-		var modelResources = model._modelResources;
+        var modelResources = model._modelResources;
         var gltf = modelResources.gltf;
         var buffers = modelResources.buffers;
         var accessors = gltf.accessors;
@@ -1447,9 +1503,9 @@ define([
 
     var scratchObjectSpace = new Matrix4();
 
-	
+
     function applySkins(model) {
-		var modelResources = model._modelResources;
+        var modelResources = model._modelResources;
         var skinnedNodes = model._runtime.skinnedNodes;
         var length = skinnedNodes.length;
 
@@ -1478,7 +1534,7 @@ define([
             }
         }
     }
-	
+
     function getChannelEvaluator(model, runtimeNode, targetPath, spline) {
         return function(localAnimationTime) {
 //  Workaround for https://github.com/KhronosGroup/glTF/issues/219
@@ -1493,7 +1549,7 @@ define([
     }
 
     function createAnimations(model) {
-		var modelResources = model._modelResources;
+        var modelResources = model._modelResources;
 
         model._animations = { };
 
@@ -1546,7 +1602,7 @@ define([
              }
          }
     }
-	
+
     function updateWireframe(model) {
         if (model._debugWireframe !== model.debugWireframe) {
             model._debugWireframe = model.debugWireframe;
@@ -1563,19 +1619,6 @@ define([
         }
     }
 
-	
-	function updatePickIds(modelResources, context) {
-        var id = ModelResources.id;
-        if (modelResources._id !== id) {
-            modelResources._id = id;
-
-            var pickIds = modelResources._pickIds;
-            var length = pickIds.length;
-            for (var i = 0; i < length; ++i) {
-                pickIds[i].object.id = id;
-            }
-        }
-    }
 
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
@@ -1600,16 +1643,16 @@ define([
 
         }
 
-		var justLoaded = this._modelResources.update(context, frameState);
-		
-		if (justLoaded) 
-		{
-			var model = this;
+        var justLoaded = this._modelResources.update(context, frameState);
+
+        if (justLoaded)
+        {
+            var model = this;
             frameState.afterRender.push(function() {
                 model._ready = true;
                 model.readyToRender.raiseEvent(model);
             });
-		}
+        }
 
 
         var show = this.show && (this.scale !== 0.0);
@@ -1636,20 +1679,20 @@ define([
                 Matrix4.multiplyTransformation(computedModelMatrix, yUpToZUp, computedModelMatrix);
             }
 
-			if (this._renderCommands.length<=0 && this._needsUpdate)
-			{
-				parse(this);				
-				createSkins(this);
-				createAnimations(this);
-				createUniformMaps(this, context) ;
-				createRuntimeNodes(this, context); // using glTF scene									
-			}
+            if (this._renderCommands.length<=0 && this._needsUpdate)
+            {
+                parse(this);
+                createSkins(this);
+                createAnimations(this);
+                createUniformMaps(this, context) ;
+                createRuntimeNodes(this, context); // using glTF scene
+            }
 
             // Update modelMatrix throughout the graph as needed
             if (animated || modelTransformChanged || this._needsUpdate) {
                 updateNodeHierarchyModelMatrix(this, modelTransformChanged);
 
-				// TODO
+                // TODO
                 /*if (animated || this._needsUpdate) {
                     // Apply skins if animation changed any node transforms
                     applySkins(this);
@@ -1659,7 +1702,7 @@ define([
             updatePickIds(this, context);
             // updateWireframe(this); //TODO
 
-			this._needsUpdate = false;
+            this._needsUpdate = false;
         }
 
 
@@ -1687,6 +1730,22 @@ define([
                 }
             }
         }
+    };
+
+    /**
+     * Compares if two models share same resources.
+     * <br /><br />
+     *
+     * @returns {Boolean} <code>true</code> if this object swas destroyed; otherwise, <code>false</code>.
+     *
+     * @see Model#destroy
+     */
+    Model.prototype.isSharingResources = function(otherModel) {
+        if (!defined(otherModel) || !defined(otherModel._modelResources) || !defined(this._modelResources)) {
+            return false;
+        }
+
+        return (otherModel._modelResources === this._modelResources);
     };
 
     /**
@@ -1721,8 +1780,8 @@ define([
 
     /**
      * Destroys the WebGL resources held by this object, only if the resources are not cached.
-	 * Destroying an object allows for deterministic release of WebGL resources, instead of
-	 * relying on the garbage collector to destroy this object. <br /><br />
+     * Destroying an object allows for deterministic release of WebGL resources, instead of
+     * relying on the garbage collector to destroy this object. <br /><br />
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
@@ -1745,6 +1804,7 @@ define([
 
         return destroyObject(this);
     };
+
 
     return Model;
 });
