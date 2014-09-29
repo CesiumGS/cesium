@@ -76,9 +76,7 @@ define([
 
         document.body.removeChild(par);
 
-        var baseImage = new Image();
-        baseImage.src = "data:image/svg+xml," + xml;
-        return baseImage;
+        return 'data:image/svg+xml;base64,' + btoa(xml);
     }
 
     function createPin(url, color, size, pinPromise, cache, serializer) {
@@ -97,54 +95,58 @@ define([
 
         if (defined(url)) {
             when.all([pinPromise, loadImage(url)], function(images) {
-                var baseImage = loadBase(images[0], size, color, serializer);
-                var baseImageWhite = loadBase(images[0], size, Color.WHITE, serializer);
-                var baseImageBLACK = loadBase(images[0], size, Color.BLACK, serializer);
-                var iconImage = images[1];
+                var baseImage = new Image();
+                baseImage.onload = function() {
+                    var iconImage = images[1];
 
-                var canvas = document.createElement('canvas');
-                canvas.width = size;
-                canvas.height = size;
-                var ctx = canvas.getContext("2d");
+                    var canvas = document.createElement('canvas');
+                    canvas.width = size;
+                    canvas.height = size;
+                    var ctx = canvas.getContext("2d");
 
-                ctx.drawImage(baseImage, 0, 0);
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.drawImage(baseImage, 0, 0);
 
-                var shrink = (size / 15);
-                size = (size / 2) - shrink;
-                var x = (size / 2) + shrink;
-                var y = (size / 3) + (shrink / 2);
+                    var shrink = (size / 15);
+                    size = (size / 2) - shrink;
+                    var x = (size / 2) + shrink;
+                    var y = (size / 3) + (shrink / 2);
 
-                ctx.globalCompositeOperation = 'destination-out';
-                ctx.drawImage(iconImage, x - 1, y, size, size);
-                ctx.globalCompositeOperation = 'destination-out';
-                ctx.drawImage(iconImage, x, y - 1, size, size);
-                ctx.globalCompositeOperation = 'destination-out';
-                ctx.drawImage(iconImage, x + 1, y, size, size);
-                ctx.globalCompositeOperation = 'destination-out';
-                ctx.drawImage(iconImage, x, y + 1, size, size);
+                    ctx.globalCompositeOperation = 'destination-out';
+                    ctx.drawImage(iconImage, x - 1, y, size, size);
+                    ctx.drawImage(iconImage, x, y - 1, size, size);
+                    ctx.drawImage(iconImage, x + 1, y, size, size);
+                    ctx.drawImage(iconImage, x, y + 1, size, size);
 
-                ctx.globalCompositeOperation = 'destination-over';
-                ctx.drawImage(baseImageBLACK, 0, 0);
+                    ctx.globalCompositeOperation = 'destination-over';
+                    ctx.fillStyle = Color.BLACK.toCssColorString();
+                    ctx.fillRect(x - 1, y - 1, size + 1, size + 1);
 
-                ctx.globalCompositeOperation = 'destination-out';
-                ctx.drawImage(iconImage, x, y, size, size);
+                    ctx.globalCompositeOperation = 'destination-out';
+                    ctx.drawImage(iconImage, x, y, size, size);
 
-                ctx.globalCompositeOperation = 'destination-over';
-                ctx.drawImage(baseImageWhite, 0, 0);
+                    ctx.globalCompositeOperation = 'destination-over';
+                    ctx.fillStyle = Color.WHITE.toCssColorString();
+                    ctx.fillRect(x, y, size, size);
 
-                deferred.resolve(canvas);
+                    deferred.resolve(canvas);
+                };
+                baseImage.src = loadBase(images[0], size, color, serializer);
             }).otherwise(function(e) {
                 deferred.reject(e);
             });
         } else {
             when(pinPromise, function(image) {
-                var baseImage = loadBase(image, size, color, serializer);
-                var canvas = document.createElement('canvas');
-                canvas.width = size;
-                canvas.height = size;
-                var ctx = canvas.getContext("2d");
-                ctx.drawImage(baseImage, 0, 0);
-                deferred.resolve(canvas);
+                var baseImage = new Image();
+                baseImage.onload = function() {
+                    var canvas = document.createElement('canvas');
+                    canvas.width = size;
+                    canvas.height = size;
+                    var ctx = canvas.getContext("2d");
+                    ctx.drawImage(baseImage, 0, 0);
+                    deferred.resolve(canvas);
+                };
+                baseImage.src = loadBase(image, size, color, serializer);
             }).otherwise(function(e) {
                 deferred.reject(e);
             });
