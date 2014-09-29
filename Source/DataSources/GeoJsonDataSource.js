@@ -194,7 +194,7 @@ define([
     }
 
     function createPoint(dataSource, geoJson, crsFunction, coordinates) {
-        var image;
+        var symbol;
         var color = Color.ROYALBLUE;
         var size = sizes.medium;
 
@@ -206,15 +206,19 @@ define([
             }
 
             size = defaultValue(sizes[properties['marker-size']], sizes.medium);
-            image = defaultValue(properties['marker-symbol'], image);
+            symbol = defaultValue(properties['marker-symbol'], symbol);
         }
 
         var billboard = new BillboardGraphics();
         billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
 
         var promise;
-        if (defined(image)) {
-            promise = dataSource._pinBuilder.fromMakiName(image, size, color);
+        if (defined(symbol)) {
+            if (symbol.length === 1) {
+                promise = dataSource._pinBuilder.fromText(symbol, size, color);
+            } else {
+                promise = dataSource._pinBuilder.fromMakiIconId(symbol, size, color);
+            }
         } else {
             promise = dataSource._pinBuilder.fromColor(size, color);
         }
@@ -401,6 +405,9 @@ define([
     /**
      * A {@link DataSource} which processes both
      * {@link http://www.geojson.org/|GeoJSON} and {@link https://github.com/mbostock/topojson|TopoJSON} data.
+     * {@link https://github.com/mapbox/simplestyle-spec|Simplestyle} properties will also be used if they
+     * are present.
+     *
      * @alias GeoJsonDataSource
      * @constructor
      *
