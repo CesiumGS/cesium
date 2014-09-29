@@ -9,6 +9,7 @@ define([
         '../Core/Visibility',
         './QuadtreeOccluders',
         './QuadtreeTile',
+        './QuadtreeTileLoadState',
         './SceneMode',
         './TileReplacementQueue'
     ], function(
@@ -21,6 +22,7 @@ define([
         Visibility,
         QuadtreeOccluders,
         QuadtreeTile,
+        QuadtreeTileLoadState,
         SceneMode,
         TileReplacementQueue) {
     "use strict";
@@ -159,7 +161,9 @@ define([
     QuadtreePrimitive.prototype.forEachLoadedTile = function(tileFunction) {
         var tile = this._tileReplacementQueue.head;
         while (defined(tile)) {
-            tileFunction(tile);
+            if (tile.state !== QuadtreeTileLoadState.START) {
+                tileFunction(tile);
+            }
             tile = tile.replacementNext;
         }
     };
