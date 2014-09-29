@@ -4,6 +4,7 @@ define([
         './buildModuleUrl',
         './Color',
         './defined',
+        './DeveloperError',
         './loadImage',
         './loadXML',
         './writeTextToCanvas'
@@ -12,51 +13,117 @@ define([
         buildModuleUrl,
         Color,
         defined,
+        DeveloperError,
         loadImage,
         loadXML,
         writeTextToCanvas) {
     "use strict";
 
+    /**
+     * A utility class for generating custom map pins as canvas elements.
+     * <br /><br />
+     * <div align='center'>
+     * <img src='images/PinBuilder.png' width='500'/><br />
+     * Example pins generated using both the maki icon set, which ships with Cesium, and single character text.
+     * </div>
+     *
+     * @alias PinBuilder
+     * @constructor
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=PinBuilder.html|Cesium Sandcastle PinBuilder Demo}
+     */
     var PinBuilder = function() {
         this._cache = {};
     };
 
+    /**
+     * Creates an empty pin of the specified color and size.
+     *
+     * @param {Color} color The color of the pin.
+     * @param {Number} size The size of the pin, in pixels.
+     * @returns {Promise} A promise that resolves to the canvas element which represents the generated pin.
+     */
     PinBuilder.prototype.fromColor = function(color, size) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(color)) {
+            throw new DeveloperError('color is required');
         }
         if (!defined(size)) {
+            throw new DeveloperError('size is required');
         }
-        return createPin(undefined, undefined, size, color, this._cache);
+        //>>includeEnd('debug');
+        return createPin(undefined, undefined, color, size, this._cache);
     };
 
+    /**
+     * Creates a pin with the specified icon, color, and size.
+     *
+     * @param {String} url The url of the image to be stamped onto the pin.
+     * @param {Color} color The color of the pin.
+     * @param {Number} size The size of the pin, in pixels.
+     * @returns {Promise} A promise that resolves to the canvas element which represents the generated pin.
+     */
     PinBuilder.prototype.fromUrl = function(url, color, size) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
+            throw new DeveloperError('url is required');
         }
         if (!defined(color)) {
+            throw new DeveloperError('color is required');
         }
         if (!defined(size)) {
+            throw new DeveloperError('size is required');
         }
-        return createPin(url, undefined, size, color, this._cache);
+        //>>includeEnd('debug');
+        return createPin(url, undefined, color, size, this._cache);
     };
 
+    /**
+     * Creates a pin with the specified {@link https://www.mapbox.com/maki/|maki} icon identifier, color, and size.
+     *
+     * @param {String} id The id of the maki icon to be stamped onto the pin.
+     * @param {Color} color The color of the pin.
+     * @param {Number} size The size of the pin, in pixels.
+     * @returns {Promise} A promise that resolves to the canvas element which represents the generated pin.
+     */
     PinBuilder.prototype.fromMakiIconId = function(id, color, size) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(id)) {
+            throw new DeveloperError('id is required');
         }
         if (!defined(color)) {
+            throw new DeveloperError('color is required');
         }
         if (!defined(size)) {
+            throw new DeveloperError('size is required');
         }
-        return createPin(buildModuleUrl('Assets/Textures/maki/' + id + '.png'), undefined, size, color, this._cache);
+        //>>includeEnd('debug');
+        return createPin(buildModuleUrl('Assets/Textures/maki/' + id + '.png'), undefined, color, size, this._cache);
     };
 
+    /**
+     * Creates a pin with the specified text, color, and size.  The text will be sized to be as large as possible
+     * while still being contained completely within the pin.
+     *
+     * @param {String} text The text to be stamped onto the pin.
+     * @param {Color} color The color of the pin.
+     * @param {Number} size The size of the pin, in pixels.
+     * @returns {Promise} A promise that resolves to the canvas element which represents the generated pin.
+     */
     PinBuilder.prototype.fromText = function(text, color, size) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(text)) {
+            throw new DeveloperError('text is required');
         }
         if (!defined(color)) {
+            throw new DeveloperError('color is required');
         }
         if (!defined(size)) {
+            throw new DeveloperError('size is required');
         }
-        return createPin(undefined, text, size, color, this._cache);
+        //>>includeEnd('debug');
+
+        return createPin(undefined, text, color, size, this._cache);
     };
 
     var colorScratch = new Color();
@@ -66,7 +133,7 @@ define([
     //The reason we simply can't load and draw the SVG directly to the canvas is because
     //it taints the canvas in Internet Explorer (and possibly some other browsers); making
     //it impossible to create a WebGL texture from the result.
-    function drawPin(context2D, size, color) {
+    function drawPin(context2D, color, size) {
         context2D.save();
         context2D.scale(size / 24, size / 24); //Added to auto-generated code to scale up to desired size.
         context2D.fillStyle = color.toCssColorString(); //Modified from auto-generated code.
@@ -154,7 +221,7 @@ define([
         canvas.height = size;
 
         var context2D = canvas.getContext("2d");
-        drawPin(context2D, size, color);
+        drawPin(context2D, color, size);
 
         if (defined(url)) {
             //If we have an image url, load it and then stamp the pin.

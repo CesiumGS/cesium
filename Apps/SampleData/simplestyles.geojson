@@ -1,0 +1,2314 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.0,
+          0.0
+        ]
+      },
+      "properties": {
+        "name": "Unnamed",
+        "marker-color": "#B9EB14"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.1,
+          0.0
+        ]
+      },
+      "properties": {
+        "name": "0",
+        "marker-symbol": "0",
+        "marker-color": "#D13C3C"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.2,
+          0.0
+        ]
+      },
+      "properties": {
+        "name": "1",
+        "marker-symbol": "1",
+        "marker-color": "#C49D22"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.30000000000000004,
+          0.0
+        ]
+      },
+      "properties": {
+        "name": "2",
+        "marker-symbol": "2",
+        "marker-color": "#8EE3A6"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.4,
+          0.0
+        ]
+      },
+      "properties": {
+        "name": "3",
+        "marker-symbol": "3",
+        "marker-color": "#34BE96"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.5,
+          0.0
+        ]
+      },
+      "properties": {
+        "name": "4",
+        "marker-symbol": "4",
+        "marker-color": "#8F1312"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.60000000000000009,
+          0.0
+        ]
+      },
+      "properties": {
+        "name": "5",
+        "marker-symbol": "5",
+        "marker-color": "#E7F163"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.70000000000000007,
+          0.0
+        ]
+      },
+      "properties": {
+        "name": "6",
+        "marker-symbol": "6",
+        "marker-color": "#713291"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.8,
+          0.0
+        ]
+      },
+      "properties": {
+        "name": "7",
+        "marker-symbol": "7",
+        "marker-color": "#FA40B3"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.9,
+          0.0
+        ]
+      },
+      "properties": {
+        "name": "8",
+        "marker-symbol": "8",
+        "marker-color": "#46117E"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.0,
+          0.0
+        ]
+      },
+      "properties": {
+        "name": "9",
+        "marker-symbol": "9",
+        "marker-color": "#4ABA5E"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.1,
+          0.0
+        ]
+      },
+      "properties": {
+        "name": "a",
+        "marker-symbol": "a",
+        "marker-color": "#77A1EF"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.2000000000000002,
+          0.0
+        ]
+      },
+      "properties": {
+        "name": "b",
+        "marker-symbol": "b",
+        "marker-color": "#A1F5F1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.3,
+          0.0
+        ]
+      },
+      "properties": {
+        "name": "c",
+        "marker-symbol": "c",
+        "marker-color": "#7831EE"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.4000000000000001,
+          0.0
+        ]
+      },
+      "properties": {
+        "name": "d",
+        "marker-symbol": "d",
+        "marker-color": "#FB6E43"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.0,
+          -0.1
+        ]
+      },
+      "properties": {
+        "name": "e",
+        "marker-symbol": "e",
+        "marker-color": "#07C621"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.1,
+          -0.1
+        ]
+      },
+      "properties": {
+        "name": "f",
+        "marker-symbol": "f",
+        "marker-color": "#DCC44A"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.2,
+          -0.1
+        ]
+      },
+      "properties": {
+        "name": "g",
+        "marker-symbol": "g",
+        "marker-color": "#FECF10"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.30000000000000004,
+          -0.1
+        ]
+      },
+      "properties": {
+        "name": "h",
+        "marker-symbol": "h",
+        "marker-color": "#AD5BBE"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.4,
+          -0.1
+        ]
+      },
+      "properties": {
+        "name": "i",
+        "marker-symbol": "i",
+        "marker-color": "#508916"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.5,
+          -0.1
+        ]
+      },
+      "properties": {
+        "name": "j",
+        "marker-symbol": "j",
+        "marker-color": "#D120E0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.60000000000000009,
+          -0.1
+        ]
+      },
+      "properties": {
+        "name": "k",
+        "marker-symbol": "k",
+        "marker-color": "#D919EB"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.70000000000000007,
+          -0.1
+        ]
+      },
+      "properties": {
+        "name": "l",
+        "marker-symbol": "l",
+        "marker-color": "#FDED4D"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.8,
+          -0.1
+        ]
+      },
+      "properties": {
+        "name": "m",
+        "marker-symbol": "m",
+        "marker-color": "#085A20"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.9,
+          -0.1
+        ]
+      },
+      "properties": {
+        "name": "n",
+        "marker-symbol": "n",
+        "marker-color": "#B32F65"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.0,
+          -0.1
+        ]
+      },
+      "properties": {
+        "name": "o",
+        "marker-symbol": "o",
+        "marker-color": "#86BA8E"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.1,
+          -0.1
+        ]
+      },
+      "properties": {
+        "name": "p",
+        "marker-symbol": "p",
+        "marker-color": "#EF1BD8"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.2000000000000002,
+          -0.1
+        ]
+      },
+      "properties": {
+        "name": "q",
+        "marker-symbol": "q",
+        "marker-color": "#B007E2"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.3,
+          -0.1
+        ]
+      },
+      "properties": {
+        "name": "r",
+        "marker-symbol": "r",
+        "marker-color": "#8BFC18"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.4000000000000001,
+          -0.1
+        ]
+      },
+      "properties": {
+        "name": "s",
+        "marker-symbol": "s",
+        "marker-color": "#14C39F"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.0,
+          -0.2
+        ]
+      },
+      "properties": {
+        "name": "t",
+        "marker-symbol": "t",
+        "marker-color": "#2FE765"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.1,
+          -0.2
+        ]
+      },
+      "properties": {
+        "name": "u",
+        "marker-symbol": "u",
+        "marker-color": "#740D40"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.2,
+          -0.2
+        ]
+      },
+      "properties": {
+        "name": "v",
+        "marker-symbol": "v",
+        "marker-color": "#4C1374"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.30000000000000004,
+          -0.2
+        ]
+      },
+      "properties": {
+        "name": "w",
+        "marker-symbol": "w",
+        "marker-color": "#FD1134"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.4,
+          -0.2
+        ]
+      },
+      "properties": {
+        "name": "x",
+        "marker-symbol": "x",
+        "marker-color": "#A487D2"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.5,
+          -0.2
+        ]
+      },
+      "properties": {
+        "name": "y",
+        "marker-symbol": "y",
+        "marker-color": "#C35194"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.60000000000000009,
+          -0.2
+        ]
+      },
+      "properties": {
+        "name": "z",
+        "marker-symbol": "z",
+        "marker-color": "#07C7EB"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.70000000000000007,
+          -0.2
+        ]
+      },
+      "properties": {
+        "name": "airfield",
+        "marker-symbol": "airfield",
+        "marker-color": "#618982"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.8,
+          -0.2
+        ]
+      },
+      "properties": {
+        "name": "airport",
+        "marker-symbol": "airport",
+        "marker-color": "#57D824"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.9,
+          -0.2
+        ]
+      },
+      "properties": {
+        "name": "alcohol-shop",
+        "marker-symbol": "alcohol-shop",
+        "marker-color": "#F51BC8"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.0,
+          -0.2
+        ]
+      },
+      "properties": {
+        "name": "america-football",
+        "marker-symbol": "america-football",
+        "marker-color": "#815025"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.1,
+          -0.2
+        ]
+      },
+      "properties": {
+        "name": "art-gallery",
+        "marker-symbol": "art-gallery",
+        "marker-color": "#B749F9"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.2000000000000002,
+          -0.2
+        ]
+      },
+      "properties": {
+        "name": "bakery",
+        "marker-symbol": "bakery",
+        "marker-color": "#1E7403"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.3,
+          -0.2
+        ]
+      },
+      "properties": {
+        "name": "bank",
+        "marker-symbol": "bank",
+        "marker-color": "#4600EA"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.4000000000000001,
+          -0.2
+        ]
+      },
+      "properties": {
+        "name": "bar",
+        "marker-symbol": "bar",
+        "marker-color": "#E83792"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.0,
+          -0.30000000000000004
+        ]
+      },
+      "properties": {
+        "name": "baseball",
+        "marker-symbol": "baseball",
+        "marker-color": "#CB75C2"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.1,
+          -0.30000000000000004
+        ]
+      },
+      "properties": {
+        "name": "basketball",
+        "marker-symbol": "basketball",
+        "marker-color": "#565023"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.2,
+          -0.30000000000000004
+        ]
+      },
+      "properties": {
+        "name": "beer",
+        "marker-symbol": "beer",
+        "marker-color": "#750BA2"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.30000000000000004,
+          -0.30000000000000004
+        ]
+      },
+      "properties": {
+        "name": "bicycle",
+        "marker-symbol": "bicycle",
+        "marker-color": "#259653"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.4,
+          -0.30000000000000004
+        ]
+      },
+      "properties": {
+        "name": "building",
+        "marker-symbol": "building",
+        "marker-color": "#38A815"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.5,
+          -0.30000000000000004
+        ]
+      },
+      "properties": {
+        "name": "bus",
+        "marker-symbol": "bus",
+        "marker-color": "#68FA8F"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.60000000000000009,
+          -0.30000000000000004
+        ]
+      },
+      "properties": {
+        "name": "cafe",
+        "marker-symbol": "cafe",
+        "marker-color": "#B7FE7B"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.70000000000000007,
+          -0.30000000000000004
+        ]
+      },
+      "properties": {
+        "name": "camera",
+        "marker-symbol": "camera",
+        "marker-color": "#9EAD32"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.8,
+          -0.30000000000000004
+        ]
+      },
+      "properties": {
+        "name": "campsite",
+        "marker-symbol": "campsite",
+        "marker-color": "#7CEB79"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.9,
+          -0.30000000000000004
+        ]
+      },
+      "properties": {
+        "name": "car",
+        "marker-symbol": "car",
+        "marker-color": "#31E5D8"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.0,
+          -0.30000000000000004
+        ]
+      },
+      "properties": {
+        "name": "cemetery",
+        "marker-symbol": "cemetery",
+        "marker-color": "#E0D128"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.1,
+          -0.30000000000000004
+        ]
+      },
+      "properties": {
+        "name": "cesium",
+        "marker-symbol": "cesium",
+        "marker-color": "#D34EEF"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.2000000000000002,
+          -0.30000000000000004
+        ]
+      },
+      "properties": {
+        "name": "chemist",
+        "marker-symbol": "chemist",
+        "marker-color": "#BC4302"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.3,
+          -0.30000000000000004
+        ]
+      },
+      "properties": {
+        "name": "cinema",
+        "marker-symbol": "cinema",
+        "marker-color": "#DBB441"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.4000000000000001,
+          -0.30000000000000004
+        ]
+      },
+      "properties": {
+        "name": "circle-stroked",
+        "marker-symbol": "circle-stroked",
+        "marker-color": "#AE0407"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.0,
+          -0.4
+        ]
+      },
+      "properties": {
+        "name": "circle",
+        "marker-symbol": "circle",
+        "marker-color": "#9FF73A"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.1,
+          -0.4
+        ]
+      },
+      "properties": {
+        "name": "city",
+        "marker-symbol": "city",
+        "marker-color": "#37E981"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.2,
+          -0.4
+        ]
+      },
+      "properties": {
+        "name": "clothing-store",
+        "marker-symbol": "clothing-store",
+        "marker-color": "#E53679"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.30000000000000004,
+          -0.4
+        ]
+      },
+      "properties": {
+        "name": "college",
+        "marker-symbol": "college",
+        "marker-color": "#E57D14"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.4,
+          -0.4
+        ]
+      },
+      "properties": {
+        "name": "commercial",
+        "marker-symbol": "commercial",
+        "marker-color": "#162A19"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.5,
+          -0.4
+        ]
+      },
+      "properties": {
+        "name": "cricket",
+        "marker-symbol": "cricket",
+        "marker-color": "#D6AD1E"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.60000000000000009,
+          -0.4
+        ]
+      },
+      "properties": {
+        "name": "cross",
+        "marker-symbol": "cross",
+        "marker-color": "#2B8E7B"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.70000000000000007,
+          -0.4
+        ]
+      },
+      "properties": {
+        "name": "dam",
+        "marker-symbol": "dam",
+        "marker-color": "#A4E4BD"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.8,
+          -0.4
+        ]
+      },
+      "properties": {
+        "name": "danger",
+        "marker-symbol": "danger",
+        "marker-color": "#D3AA1B"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.9,
+          -0.4
+        ]
+      },
+      "properties": {
+        "name": "disability",
+        "marker-symbol": "disability",
+        "marker-color": "#381CAE"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.0,
+          -0.4
+        ]
+      },
+      "properties": {
+        "name": "dog-park",
+        "marker-symbol": "dog-park",
+        "marker-color": "#FFFE35"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.1,
+          -0.4
+        ]
+      },
+      "properties": {
+        "name": "embassy",
+        "marker-symbol": "embassy",
+        "marker-color": "#7B3AC7"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.2000000000000002,
+          -0.4
+        ]
+      },
+      "properties": {
+        "name": "emergency-telephone",
+        "marker-symbol": "emergency-telephone",
+        "marker-color": "#A6F6EC"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.3,
+          -0.4
+        ]
+      },
+      "properties": {
+        "name": "entrance",
+        "marker-symbol": "entrance",
+        "marker-color": "#B83FF6"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.4000000000000001,
+          -0.4
+        ]
+      },
+      "properties": {
+        "name": "farm",
+        "marker-symbol": "farm",
+        "marker-color": "#CF38F0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.0,
+          -0.5
+        ]
+      },
+      "properties": {
+        "name": "fast-food",
+        "marker-symbol": "fast-food",
+        "marker-color": "#19D6E6"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.1,
+          -0.5
+        ]
+      },
+      "properties": {
+        "name": "ferry",
+        "marker-symbol": "ferry",
+        "marker-color": "#BAA5E8"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.2,
+          -0.5
+        ]
+      },
+      "properties": {
+        "name": "fire-station",
+        "marker-symbol": "fire-station",
+        "marker-color": "#B7EC62"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.30000000000000004,
+          -0.5
+        ]
+      },
+      "properties": {
+        "name": "fuel",
+        "marker-symbol": "fuel",
+        "marker-color": "#20228D"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.4,
+          -0.5
+        ]
+      },
+      "properties": {
+        "name": "garden",
+        "marker-symbol": "garden",
+        "marker-color": "#E7B9A3"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.5,
+          -0.5
+        ]
+      },
+      "properties": {
+        "name": "gift",
+        "marker-symbol": "gift",
+        "marker-color": "#306A6A"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.60000000000000009,
+          -0.5
+        ]
+      },
+      "properties": {
+        "name": "golf",
+        "marker-symbol": "golf",
+        "marker-color": "#7A1036"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.70000000000000007,
+          -0.5
+        ]
+      },
+      "properties": {
+        "name": "grocery",
+        "marker-symbol": "grocery",
+        "marker-color": "#8A718E"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.8,
+          -0.5
+        ]
+      },
+      "properties": {
+        "name": "hairdresser",
+        "marker-symbol": "hairdresser",
+        "marker-color": "#535403"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.9,
+          -0.5
+        ]
+      },
+      "properties": {
+        "name": "harbor",
+        "marker-symbol": "harbor",
+        "marker-color": "#ABC90F"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.0,
+          -0.5
+        ]
+      },
+      "properties": {
+        "name": "heart",
+        "marker-symbol": "heart",
+        "marker-color": "#77E8EA"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.1,
+          -0.5
+        ]
+      },
+      "properties": {
+        "name": "heliport",
+        "marker-symbol": "heliport",
+        "marker-color": "#D5600D"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.2000000000000002,
+          -0.5
+        ]
+      },
+      "properties": {
+        "name": "hospital",
+        "marker-symbol": "hospital",
+        "marker-color": "#CF27FB"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.3,
+          -0.5
+        ]
+      },
+      "properties": {
+        "name": "ice-cream",
+        "marker-symbol": "ice-cream",
+        "marker-color": "#CB2B5B"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.4000000000000001,
+          -0.5
+        ]
+      },
+      "properties": {
+        "name": "industrial",
+        "marker-symbol": "industrial",
+        "marker-color": "#C3B6AA"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.0,
+          -0.60000000000000009
+        ]
+      },
+      "properties": {
+        "name": "land-use",
+        "marker-symbol": "land-use",
+        "marker-color": "#F002A5"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.1,
+          -0.60000000000000009
+        ]
+      },
+      "properties": {
+        "name": "laundry",
+        "marker-symbol": "laundry",
+        "marker-color": "#4B84E9"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.2,
+          -0.60000000000000009
+        ]
+      },
+      "properties": {
+        "name": "library",
+        "marker-symbol": "library",
+        "marker-color": "#85D541"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.30000000000000004,
+          -0.60000000000000009
+        ]
+      },
+      "properties": {
+        "name": "lighthouse",
+        "marker-symbol": "lighthouse",
+        "marker-color": "#A9D41C"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.4,
+          -0.60000000000000009
+        ]
+      },
+      "properties": {
+        "name": "lodging",
+        "marker-symbol": "lodging",
+        "marker-color": "#55248D"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.5,
+          -0.60000000000000009
+        ]
+      },
+      "properties": {
+        "name": "logging",
+        "marker-symbol": "logging",
+        "marker-color": "#4966A4"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.60000000000000009,
+          -0.60000000000000009
+        ]
+      },
+      "properties": {
+        "name": "london-underground",
+        "marker-symbol": "london-underground",
+        "marker-color": "#D21380"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.70000000000000007,
+          -0.60000000000000009
+        ]
+      },
+      "properties": {
+        "name": "marker-stroked",
+        "marker-symbol": "marker-stroked",
+        "marker-color": "#38F6EF"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.8,
+          -0.60000000000000009
+        ]
+      },
+      "properties": {
+        "name": "marker",
+        "marker-symbol": "marker",
+        "marker-color": "#2FD6D1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.9,
+          -0.60000000000000009
+        ]
+      },
+      "properties": {
+        "name": "minefield",
+        "marker-symbol": "minefield",
+        "marker-color": "#118A73"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.0,
+          -0.60000000000000009
+        ]
+      },
+      "properties": {
+        "name": "mobilephone",
+        "marker-symbol": "mobilephone",
+        "marker-color": "#9FE746"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.1,
+          -0.60000000000000009
+        ]
+      },
+      "properties": {
+        "name": "monument",
+        "marker-symbol": "monument",
+        "marker-color": "#B16B66"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.2000000000000002,
+          -0.60000000000000009
+        ]
+      },
+      "properties": {
+        "name": "museum",
+        "marker-symbol": "museum",
+        "marker-color": "#A16186"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.3,
+          -0.60000000000000009
+        ]
+      },
+      "properties": {
+        "name": "music",
+        "marker-symbol": "music",
+        "marker-color": "#ED79A4"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.4000000000000001,
+          -0.60000000000000009
+        ]
+      },
+      "properties": {
+        "name": "oil-well",
+        "marker-symbol": "oil-well",
+        "marker-color": "#38A9DF"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.0,
+          -0.70000000000000007
+        ]
+      },
+      "properties": {
+        "name": "park",
+        "marker-symbol": "park",
+        "marker-color": "#EDBFC8"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.1,
+          -0.70000000000000007
+        ]
+      },
+      "properties": {
+        "name": "park2",
+        "marker-symbol": "park2",
+        "marker-color": "#11078F"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.2,
+          -0.70000000000000007
+        ]
+      },
+      "properties": {
+        "name": "parking-garage",
+        "marker-symbol": "parking-garage",
+        "marker-color": "#E66D3C"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.30000000000000004,
+          -0.70000000000000007
+        ]
+      },
+      "properties": {
+        "name": "parking",
+        "marker-symbol": "parking",
+        "marker-color": "#ADB288"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.4,
+          -0.70000000000000007
+        ]
+      },
+      "properties": {
+        "name": "pharmacy",
+        "marker-symbol": "pharmacy",
+        "marker-color": "#180EF1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.5,
+          -0.70000000000000007
+        ]
+      },
+      "properties": {
+        "name": "pitch",
+        "marker-symbol": "pitch",
+        "marker-color": "#262B3F"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.60000000000000009,
+          -0.70000000000000007
+        ]
+      },
+      "properties": {
+        "name": "place-of-worship",
+        "marker-symbol": "place-of-worship",
+        "marker-color": "#1B628C"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.70000000000000007,
+          -0.70000000000000007
+        ]
+      },
+      "properties": {
+        "name": "playground",
+        "marker-symbol": "playground",
+        "marker-color": "#9C2074"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.8,
+          -0.70000000000000007
+        ]
+      },
+      "properties": {
+        "name": "police",
+        "marker-symbol": "police",
+        "marker-color": "#F3FA9D"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.9,
+          -0.70000000000000007
+        ]
+      },
+      "properties": {
+        "name": "polling-place",
+        "marker-symbol": "polling-place",
+        "marker-color": "#7D999D"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.0,
+          -0.70000000000000007
+        ]
+      },
+      "properties": {
+        "name": "post",
+        "marker-symbol": "post",
+        "marker-color": "#25E703"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.1,
+          -0.70000000000000007
+        ]
+      },
+      "properties": {
+        "name": "prison",
+        "marker-symbol": "prison",
+        "marker-color": "#AD77F3"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.2000000000000002,
+          -0.70000000000000007
+        ]
+      },
+      "properties": {
+        "name": "rail-above",
+        "marker-symbol": "rail-above",
+        "marker-color": "#91E275"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.3,
+          -0.70000000000000007
+        ]
+      },
+      "properties": {
+        "name": "rail-light",
+        "marker-symbol": "rail-light",
+        "marker-color": "#39B405"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.4000000000000001,
+          -0.70000000000000007
+        ]
+      },
+      "properties": {
+        "name": "rail-metro",
+        "marker-symbol": "rail-metro",
+        "marker-color": "#9E412F"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.0,
+          -0.8
+        ]
+      },
+      "properties": {
+        "name": "rail-underground",
+        "marker-symbol": "rail-underground",
+        "marker-color": "#014D11"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.1,
+          -0.8
+        ]
+      },
+      "properties": {
+        "name": "rail",
+        "marker-symbol": "rail",
+        "marker-color": "#5C667F"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.2,
+          -0.8
+        ]
+      },
+      "properties": {
+        "name": "religious-christian",
+        "marker-symbol": "religious-christian",
+        "marker-color": "#D9B961"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.30000000000000004,
+          -0.8
+        ]
+      },
+      "properties": {
+        "name": "religious-jewish",
+        "marker-symbol": "religious-jewish",
+        "marker-color": "#0FF371"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.4,
+          -0.8
+        ]
+      },
+      "properties": {
+        "name": "religious-muslim",
+        "marker-symbol": "religious-muslim",
+        "marker-color": "#481A08"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.5,
+          -0.8
+        ]
+      },
+      "properties": {
+        "name": "restaurant",
+        "marker-symbol": "restaurant",
+        "marker-color": "#B4794C"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.60000000000000009,
+          -0.8
+        ]
+      },
+      "properties": {
+        "name": "roadblock",
+        "marker-symbol": "roadblock",
+        "marker-color": "#F56585"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.70000000000000007,
+          -0.8
+        ]
+      },
+      "properties": {
+        "name": "rocket",
+        "marker-symbol": "rocket",
+        "marker-color": "#FD22CF"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.8,
+          -0.8
+        ]
+      },
+      "properties": {
+        "name": "school",
+        "marker-symbol": "school",
+        "marker-color": "#631B68"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.9,
+          -0.8
+        ]
+      },
+      "properties": {
+        "name": "scooter",
+        "marker-symbol": "scooter",
+        "marker-color": "#85D24C"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.0,
+          -0.8
+        ]
+      },
+      "properties": {
+        "name": "shop",
+        "marker-symbol": "shop",
+        "marker-color": "#47C366"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.1,
+          -0.8
+        ]
+      },
+      "properties": {
+        "name": "skiing",
+        "marker-symbol": "skiing",
+        "marker-color": "#81AEF9"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.2000000000000002,
+          -0.8
+        ]
+      },
+      "properties": {
+        "name": "slaughterhouse",
+        "marker-symbol": "slaughterhouse",
+        "marker-color": "#881591"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.3,
+          -0.8
+        ]
+      },
+      "properties": {
+        "name": "soccer",
+        "marker-symbol": "soccer",
+        "marker-color": "#0E981A"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.4000000000000001,
+          -0.8
+        ]
+      },
+      "properties": {
+        "name": "square-stroked",
+        "marker-symbol": "square-stroked",
+        "marker-color": "#47D25C"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.0,
+          -0.9
+        ]
+      },
+      "properties": {
+        "name": "square",
+        "marker-symbol": "square",
+        "marker-color": "#7EFF04"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.1,
+          -0.9
+        ]
+      },
+      "properties": {
+        "name": "star-stroked",
+        "marker-symbol": "star-stroked",
+        "marker-color": "#D8AEAF"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.2,
+          -0.9
+        ]
+      },
+      "properties": {
+        "name": "star",
+        "marker-symbol": "star",
+        "marker-color": "#9CF7E9"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.30000000000000004,
+          -0.9
+        ]
+      },
+      "properties": {
+        "name": "suitcase",
+        "marker-symbol": "suitcase",
+        "marker-color": "#1AAA24"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.4,
+          -0.9
+        ]
+      },
+      "properties": {
+        "name": "swimming",
+        "marker-symbol": "swimming",
+        "marker-color": "#BE0946"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.5,
+          -0.9
+        ]
+      },
+      "properties": {
+        "name": "telephone",
+        "marker-symbol": "telephone",
+        "marker-color": "#66E15A"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.60000000000000009,
+          -0.9
+        ]
+      },
+      "properties": {
+        "name": "tennis",
+        "marker-symbol": "tennis",
+        "marker-color": "#EEF2D1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.70000000000000007,
+          -0.9
+        ]
+      },
+      "properties": {
+        "name": "theatre",
+        "marker-symbol": "theatre",
+        "marker-color": "#217572"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.8,
+          -0.9
+        ]
+      },
+      "properties": {
+        "name": "toilets",
+        "marker-symbol": "toilets",
+        "marker-color": "#B31C69"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.9,
+          -0.9
+        ]
+      },
+      "properties": {
+        "name": "town-hall",
+        "marker-symbol": "town-hall",
+        "marker-color": "#9D8B6A"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.0,
+          -0.9
+        ]
+      },
+      "properties": {
+        "name": "town",
+        "marker-symbol": "town",
+        "marker-color": "#D4A019"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.1,
+          -0.9
+        ]
+      },
+      "properties": {
+        "name": "triangle-stroked",
+        "marker-symbol": "triangle-stroked",
+        "marker-color": "#AF6474"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.2000000000000002,
+          -0.9
+        ]
+      },
+      "properties": {
+        "name": "triangle",
+        "marker-symbol": "triangle",
+        "marker-color": "#91DAA4"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.3,
+          -0.9
+        ]
+      },
+      "properties": {
+        "name": "village",
+        "marker-symbol": "village",
+        "marker-color": "#2C3A7F"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.4000000000000001,
+          -0.9
+        ]
+      },
+      "properties": {
+        "name": "warehouse",
+        "marker-symbol": "warehouse",
+        "marker-color": "#2F3D8A"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.0,
+          -1.0
+        ]
+      },
+      "properties": {
+        "name": "waste-basket",
+        "marker-symbol": "waste-basket",
+        "marker-color": "#9BEEB0"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.1,
+          -1.0
+        ]
+      },
+      "properties": {
+        "name": "water",
+        "marker-symbol": "water",
+        "marker-color": "#40310A"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.2,
+          -1.0
+        ]
+      },
+      "properties": {
+        "name": "wetland",
+        "marker-symbol": "wetland",
+        "marker-color": "#FF42EA"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.30000000000000004,
+          -1.0
+        ]
+      },
+      "properties": {
+        "name": "zoo",
+        "marker-symbol": "zoo",
+        "marker-color": "#9195A1"
+      }
+    }
+  ]
+}

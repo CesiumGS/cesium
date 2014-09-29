@@ -210,13 +210,10 @@ define([
             symbol = defaultValue(properties['marker-symbol'], symbol);
         }
 
-        var billboard = new BillboardGraphics();
-        billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
-
         var promise;
         if (defined(symbol)) {
             if (symbol.length === 1) {
-                promise = dataSource._pinBuilder.fromText(symbol, size, color);
+                promise = dataSource._pinBuilder.fromText(symbol.toUpperCase(), size, color);
             } else {
                 promise = dataSource._pinBuilder.fromMakiIconId(symbol, size, color);
             }
@@ -225,12 +222,14 @@ define([
         }
 
         dataSource._promises.push(when(promise, function(canvas) {
+            var billboard = new BillboardGraphics();
+            billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
             billboard.image = new ConstantProperty(canvas.toDataURL());
-        }));
 
-        var entity = createObject(geoJson, dataSource._entityCollection);
-        entity.billboard = billboard;
-        entity.position = new ConstantPositionProperty(crsFunction(coordinates));
+            var entity = createObject(geoJson, dataSource._entityCollection);
+            entity.billboard = billboard;
+            entity.position = new ConstantPositionProperty(crsFunction(coordinates));
+        }));
     }
 
     function processPoint(dataSource, geoJson, geometry, crsFunction) {
@@ -416,6 +415,7 @@ define([
      *                        the name of the GeoJSON file.
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=GeoJSON%20and%20TopoJSON.html|Cesium Sandcastle GeoJSON and TopoJSON Demo}
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=GeoJSON%20simplestyle.html|Cesium Sandcastle GeoJSON simplestyle Demo}
      *
      * @example
      * var viewer = new Cesium.Viewer('cesiumContainer');
@@ -432,6 +432,23 @@ define([
         this._entityCollection = new EntityCollection();
         this._promises = [];
         this._pinBuilder = new PinBuilder();
+    };
+
+    /**
+     * Creates a new instance and asynchronously loads the provided url.
+     *
+     * @param {Object} url The url to be processed.
+     *
+     * @returns {GeoJsonDataSource} A new instance set to load the specified url.
+     *
+     * @example
+     * var viewer = new Cesium.Viewer('cesiumContainer');
+     * viewer.dataSources.add(Cesium.GeoJsonDataSource.fromUrl('sample.geojson'));
+     */
+    GeoJsonDataSource.fromUrl = function(url) {
+        var result = new GeoJsonDataSource();
+        result.loadUrl(url);
+        return result;
     };
 
     defineProperties(GeoJsonDataSource.prototype, {
