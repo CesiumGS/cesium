@@ -242,7 +242,7 @@ defineSuite([
             var pointObject = entityCollection.entities[0];
             expect(pointObject.properties).toBe(feature.properties);
             expect(pointObject.position.getValue(time)).toEqual(coordinatesToCartesian(feature.geometry.coordinates));
-            expect(pointObject.point).toBeDefined();
+            expect(pointObject.billboard).toBeDefined();
         });
     });
 
@@ -259,7 +259,7 @@ defineSuite([
             expect(pointObject.name).toBeUndefined();
             expect(pointObject.properties).toBe(featureWithNullName.properties);
             expect(pointObject.position.getValue(time)).toEqual(coordinatesToCartesian(featureWithNullName.geometry.coordinates));
-            expect(pointObject.point).toBeDefined();
+            expect(pointObject.billboard).toBeDefined();
         });
     });
 
@@ -291,7 +291,7 @@ defineSuite([
             var pointObject = entityCollection.entities[0];
             expect(pointObject.properties).toBe(point.properties);
             expect(pointObject.position.getValue(time)).toEqual(coordinatesToCartesian(point.coordinates));
-            expect(pointObject.point).toBeDefined();
+            expect(pointObject.billboard).toBeDefined();
         });
     });
 
@@ -310,7 +310,7 @@ defineSuite([
                 var object = objects[i];
                 expect(object.properties).toBe(multiPoint.properties);
                 expect(object.position.getValue(time)).toEqual(expectedPositions[i]);
-                expect(object.point).toBeDefined();
+                expect(object.billboard).toBeDefined();
             }
         });
     });
@@ -463,7 +463,7 @@ defineSuite([
             var object = entityCollection.entities[0];
             expect(object.properties).toBe(geometryCollection.properties);
             expect(object.position.getValue(time)).toEqual(coordinatesToCartesian(geometryCollection.geometries[0].coordinates));
-            expect(object.point).toBeDefined();
+            expect(object.billboard).toBeDefined();
 
             object = entityCollection.entities[1];
             expect(object.properties).toBe(geometryCollection.properties);

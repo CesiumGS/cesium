@@ -3,64 +3,73 @@ define([
         '../Core/Cartesian3',
         '../Core/Color',
         '../Core/createGuid',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/getFilenameFromUri',
         '../Core/loadJson',
+        '../Core/PinBuilder',
         '../Core/RuntimeError',
+        '../Scene/VerticalOrigin',
         '../ThirdParty/topojson',
         '../ThirdParty/when',
+        './BillboardGraphics',
         './ColorMaterialProperty',
         './ConstantPositionProperty',
         './ConstantProperty',
         './EntityCollection',
-        './PointGraphics',
         './PolygonGraphics',
         './PolylineGraphics'
     ], function(
         Cartesian3,
         Color,
         createGuid,
+        defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
         getFilenameFromUri,
         loadJson,
+        PinBuilder,
         RuntimeError,
+        VerticalOrigin,
         topojson,
         when,
+        BillboardGraphics,
         ColorMaterialProperty,
         ConstantPositionProperty,
         ConstantProperty,
         EntityCollection,
-        PointGraphics,
         PolygonGraphics,
         PolylineGraphics) {
     "use strict";
 
-    var pointGraphics = new PointGraphics();
-    pointGraphics.color = new ConstantProperty(Color.YELLOW);
-    pointGraphics.pixelSize = new ConstantProperty(10);
-    pointGraphics.outlineColor = new ConstantProperty(Color.BLACK);
-    pointGraphics.outlineWidth = new ConstantProperty(1);
+    var sizes = {
+        small : 24,
+        medium : 48,
+        large : 64
+    };
 
-    var polylineGraphics = new PolylineGraphics();
-    polylineGraphics.material = ColorMaterialProperty.fromColor(Color.YELLOW);
-    polylineGraphics.width = new ConstantProperty(2);
+    var defaultPolylineMaterial = ColorMaterialProperty.fromColor(Color.YELLOW);
+    var defaultPolylineWidth = new ConstantProperty(2);
 
-    var polygonGraphics = new PolygonGraphics();
-    polygonGraphics.material = ColorMaterialProperty.fromColor(new Color(1.0, 1.0, 0.0, 0.3));
-    polygonGraphics.outline = new ConstantProperty(true);
-    polygonGraphics.outlineColor = new ConstantProperty(Color.BLACK);
+    var defaultPolygonMaterial = ColorMaterialProperty.fromColor(Color.fromBytes(255, 255, 0, 100));
+    var defaultPolygonOutline = new ConstantProperty(true);
+    var defaultPolygonOutlineColor = Color.BLACK;
+    var defaultPolygonOutlineColorProperty = new ConstantProperty(defaultPolygonOutlineColor);
+
+    var simpleStyleIdentifiers = ['title', 'description', //
+    'marker-size', 'marker-symbol', 'marker-color', 'stroke', //
+    'stroke-opacity', 'stroke-width', 'fill', 'fill-opacity'];
 
     function describe(properties, nameProperty) {
         var html = '<table class="cesium-infoBox-defaultTable"><tbody>';
         for ( var key in properties) {
             if (properties.hasOwnProperty(key)) {
-                if (key === nameProperty) {
+                if (key === nameProperty || simpleStyleIdentifiers.indexOf(key) !== -1) {
                     continue;
                 }
                 var value = properties[key];
@@ -101,31 +110,38 @@ define([
             entity.properties = properties;
 
             var key;
-            var nameProperty;
-            for (key in properties) {
-                if (properties.hasOwnProperty(key) && properties[key]) {
-                    var lowerKey = key.toLowerCase();
-                    if (lowerKey === 'name' || lowerKey === 'title') {
-                        nameProperty = key;
-                        entity.name = properties[key];
-                        break;
-                    }
-                }
-            }
-
-            if (!defined(nameProperty)) {
+            var nameProperty = properties.title;
+            if (defined(nameProperty)) {
+                entity.name = nameProperty;
+            } else {
                 for (key in properties) {
                     if (properties.hasOwnProperty(key) && properties[key]) {
-                        if (/name/i.test(key) || /title/i.test(key)) {
+                        var lowerKey = key.toLowerCase();
+                        if (lowerKey === 'name' || lowerKey === 'title') {
                             nameProperty = key;
                             entity.name = properties[key];
                             break;
                         }
                     }
                 }
+
+                if (!defined(nameProperty)) {
+                    for (key in properties) {
+                        if (properties.hasOwnProperty(key) && properties[key]) {
+                            if (/name/i.test(key) || /title/i.test(key)) {
+                                nameProperty = key;
+                                entity.name = properties[key];
+                                break;
+                            }
+                        }
+                    }
+                }
             }
 
-            entity.description = new ConstantProperty(describe(properties, nameProperty));
+            var description = properties.description;
+            if (!defined(description)) {
+                entity.description = new ConstantProperty(describe(properties, nameProperty));
+            }
         }
         return entity;
     }
@@ -177,48 +193,156 @@ define([
         }
     }
 
-    function processPoint(dataSource, geoJson, geometry, crsFunction) {
+    function createPoint(dataSource, geoJson, crsFunction, coordinates) {
+        var image;
+        var color = Color.ROYALBLUE;
+        var size = sizes.medium;
+
+        var properties = geoJson.properties;
+        if (defined(properties)) {
+            var cssColor = properties['marker-color'];
+            if (defined(cssColor)) {
+                color = Color.fromCssColorString(cssColor);
+            }
+
+            size = defaultValue(sizes[properties['marker-size']], sizes.medium);
+            image = defaultValue(properties['marker-symbol'], image);
+        }
+
+        var billboard = new BillboardGraphics();
+        billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
+
+        var promise;
+        if (defined(image)) {
+            promise = dataSource._pinBuilder.fromMakiName(image, size, color);
+        } else {
+            promise = dataSource._pinBuilder.fromColor(size, color);
+        }
+
+        dataSource._promises.push(when(promise, function(canvas) {
+            billboard.image = new ConstantProperty(canvas.toDataURL());
+        }));
+
         var entity = createObject(geoJson, dataSource._entityCollection);
-        entity.point = pointGraphics.clone();
-        entity.position = new ConstantPositionProperty(crsFunction(geometry.coordinates));
+        entity.billboard = billboard;
+        entity.position = new ConstantPositionProperty(crsFunction(coordinates));
+    }
+
+    function processPoint(dataSource, geoJson, geometry, crsFunction) {
+        createPoint(dataSource, geoJson, crsFunction, geometry.coordinates);
     }
 
     function processMultiPoint(dataSource, geoJson, geometry, crsFunction) {
         var coordinates = geometry.coordinates;
         for (var i = 0; i < coordinates.length; i++) {
-            var entity = createObject(geoJson, dataSource._entityCollection);
-            entity.point = pointGraphics.clone();
-            entity.position = new ConstantPositionProperty(crsFunction(coordinates[i]));
+            createPoint(dataSource, geoJson, crsFunction, coordinates[i]);
         }
     }
 
-    function processLineString(dataSource, geoJson, geometry, crsFunction) {
+    function createLineString(dataSource, geoJson, crsFunction, coordinates) {
+        var material = defaultPolylineMaterial;
+        var widthProperty = defaultPolylineWidth;
+
+        var properties = geoJson.properties;
+        if (defined(properties)) {
+            var width = properties['stroke-width'];
+            if (defined(width)) {
+                widthProperty = new ConstantProperty(width);
+            }
+
+            var color;
+            var stroke = properties.stroke;
+            if (defined(stroke)) {
+                color = Color.fromCssColorString(stroke);
+            }
+            var opacity = properties['stroke-opacity'];
+            if (defined(opacity) && opacity !== 1.0) {
+                if (!defined(color)) {
+                    color = material.color.clone();
+                }
+                color.alpha = opacity;
+            }
+            if (defined(color)) {
+                material = ColorMaterialProperty.fromColor(color);
+            }
+        }
+
+        var polyline = new PolylineGraphics();
+        polyline.material = material;
+        polyline.width = widthProperty;
+        polyline.positions = new ConstantProperty(coordinatesArrayToCartesianArray(coordinates, crsFunction));
+
         var entity = createObject(geoJson, dataSource._entityCollection);
-        entity.polyline = polylineGraphics.clone();
-        entity.polyline.positions = new ConstantProperty(coordinatesArrayToCartesianArray(geometry.coordinates, crsFunction));
+        entity.polyline = polyline;
+    }
+
+    function processLineString(dataSource, geoJson, geometry, crsFunction) {
+        createLineString(dataSource, geoJson, crsFunction, geometry.coordinates);
     }
 
     function processMultiLineString(dataSource, geoJson, geometry, crsFunction) {
         var lineStrings = geometry.coordinates;
         for (var i = 0; i < lineStrings.length; i++) {
-            var entity = createObject(geoJson, dataSource._entityCollection);
-            entity.polyline = polylineGraphics.clone();
-            entity.polyline.positions = new ConstantProperty(coordinatesArrayToCartesianArray(lineStrings[i], crsFunction));
+            createLineString(dataSource, geoJson, crsFunction, lineStrings[i]);
         }
     }
 
-    function createPolygon(dataSource, geoJson, crsFunction, coordinateArray) {
-        var entity = createObject(geoJson, dataSource._entityCollection);
-        entity.polygon = polygonGraphics.clone();
-        entity.polygon.positions = new ConstantProperty(coordinatesArrayToCartesianArray(coordinateArray, crsFunction));
-        if (coordinateArray.length > 0 && coordinateArray[0].length > 2) {
-            entity.polygon.perPositionHeight = new ConstantProperty(true);
+    function createPolygon(dataSource, geoJson, crsFunction, coordinates) {
+        var outlineColorProperty = defaultPolygonOutlineColorProperty;
+        var material = defaultPolygonMaterial;
+
+        var properties = geoJson.properties;
+        if (defined(properties)) {
+            var color;
+            var stroke = properties.stroke;
+            if (defined(stroke)) {
+                color = Color.fromCssColorString(stroke);
+            }
+            var opacity = properties['stroke-opacity'];
+            if (defined(opacity) && opacity !== 1.0) {
+                if (!defined(color)) {
+                    color = defaultPolygonOutlineColor.clone();
+                }
+                color.alpha = opacity;
+            }
+
+            if (defined(color)) {
+                outlineColorProperty = new ConstantProperty(color);
+            }
+
+            var fillColor;
+            var fill = properties.fill;
+            if (defined(fill)) {
+                fillColor = Color.fromCssColorString(fill);
+                fillColor.alpha = material.color.alpha;
+            }
+            opacity = properties['fill-opacity'];
+            if (defined(opacity) && opacity !== material.color.alpha) {
+                if (!defined(fillColor)) {
+                    fillColor = material.color.clone();
+                }
+                fillColor.alpha = opacity;
+            }
+            if (defined(fillColor)) {
+                material = ColorMaterialProperty.fromColor(fillColor);
+            }
         }
+
+        var polygon = new PolygonGraphics();
+        polygon.outline = defaultPolygonOutline;
+        polygon.outlineColor = outlineColorProperty;
+        polygon.material = material;
+        polygon.positions = new ConstantProperty(coordinatesArrayToCartesianArray(coordinates, crsFunction));
+        if (coordinates.length > 0 && coordinates[0].length > 2) {
+            polygon.perPositionHeight = new ConstantProperty(true);
+        }
+
+        var entity = createObject(geoJson, dataSource._entityCollection);
+        entity.polygon = polygon;
     }
 
     function processPolygon(dataSource, geoJson, geometry, crsFunction) {
-        var coordinateArray = geometry.coordinates[0];
-        createPolygon(dataSource, geoJson, crsFunction, coordinateArray);
+        createPolygon(dataSource, geoJson, crsFunction, geometry.coordinates[0]);
     }
 
     function processMultiPolygon(dataSource, geoJson, geometry, crsFunction) {
@@ -298,6 +422,8 @@ define([
         this._isLoading = false;
         this._loading = new Event();
         this._entityCollection = new EntityCollection();
+        this._promises = [];
+        this._pinBuilder = new PinBuilder();
     };
 
     defineProperties(GeoJsonDataSource.prototype, {
@@ -478,8 +604,12 @@ define([
         return when(crsFunction, function(crsFunction) {
             dataSource._entityCollection.removeAll();
             typeHandler(dataSource, geoJson, geoJson, crsFunction);
-            setLoading(dataSource, false);
-            dataSource._changed.raiseEvent(dataSource);
+
+            when.all(dataSource._promises, function() {
+                dataSource._promises.length = 0;
+                setLoading(dataSource, false);
+                dataSource._changed.raiseEvent(dataSource);
+            });
         }).otherwise(function(error) {
             setLoading(dataSource, false);
             dataSource._error.raiseEvent(dataSource, error);
