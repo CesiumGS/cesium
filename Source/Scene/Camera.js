@@ -553,6 +553,21 @@ define([
         return CesiumMath.PI_OVER_TWO - CesiumMath.acosClamped(Cartesian3.dot(camera.direction, direction));
     }
 
+    function getRoll3D(camera) {
+        var ellipsoid = camera._projection.ellipsoid;
+        var toFixedFrame = Transforms.eastNorthUpToFixedFrame(camera.position, ellipsoid, scratchHeadingMatrix4);
+        var transform = Matrix4.getRotation(toFixedFrame, scratchHeadingMatrix3);
+        Matrix3.transpose(transform, transform);
+
+        var up = Matrix3.multiplyByVector(transform, camera.up, scratchHeadingCartesian3);
+        if (CesiumMath.equalsEpsilon(Math.abs(up.z), 1.0, CesiumMath.EPSILON6)) {
+            return 0.0;
+        }
+
+        var right = Matrix3.multiplyByVector(transform, camera.right, scratchHeadingCartesian3);
+        return Math.atan2(right.z, right.x);
+    }
+
     defineProperties(Camera.prototype, {
         /**
          * Gets the inverse camera transform.
@@ -708,7 +723,7 @@ define([
         },
 
         /**
-         * Gets or sets the camera tilt in radians
+         * Gets or sets the camera tilt in radians.
          * @memberof Camera.prototype
          *
          * @type {Number}
@@ -733,8 +748,39 @@ define([
                 //>>includeEnd('debug');
 
                 if (this._mode === SceneMode.COLUMBUS_VIEW || this._mode === SceneMode.SCENE3D) {
+                    angle = CesiumMath.clamp(angle, -CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO);
                     angle = angle - this.tilt;
                     this.look(this.right, angle);
+                }
+            }
+        },
+
+        /**
+         * Gets or sets the camera roll in radians.
+         * @memberof Camera.prototype
+         *
+         * @type {Number}
+         */
+        roll : {
+            get : function() {
+                if (this._mode === SceneMode.COLUMBUS_VIEW || this._mode === SceneMode.SCENE3D) {
+                    return getRoll3D(this);
+                }
+
+                return undefined;
+            },
+            //TODO See https://github.com/AnalyticalGraphicsInc/cesium/issues/832
+            set : function(angle) {
+
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(angle)) {
+                    throw new DeveloperError('angle is required.');
+                }
+                //>>includeEnd('debug');
+
+                if (this._mode === SceneMode.COLUMBUS_VIEW || this._mode === SceneMode.SCENE3D) {
+                    angle = getRoll3D(this) - angle;
+                    this.look(this.direction, angle);
                 }
             }
         }
