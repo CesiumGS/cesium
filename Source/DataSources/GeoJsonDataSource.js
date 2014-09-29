@@ -140,8 +140,9 @@ define([
 
             var description = properties.description;
             if (!defined(description)) {
-                entity.description = new ConstantProperty(describe(properties, nameProperty));
+                describe(properties, nameProperty);
             }
+            entity.description = new ConstantProperty(description);
         }
         return entity;
     }

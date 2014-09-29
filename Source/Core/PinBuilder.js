@@ -68,7 +68,7 @@ define([
     //it impossible to create a WebGL texture from the result.
     function drawPin(context2D, size, color) {
         context2D.save();
-        context2D.scale(size / 24, size / 24); //Added to auto-generated code.
+        context2D.scale(size / 24, size / 24); //Added to auto-generated code to scale up to desired size.
         context2D.fillStyle = color.toCssColorString(); //Modified from auto-generated code.
         context2D.strokeStyle = color.brighten(0.5, colorScratch).toCssColorString(); //Modified from auto-generated code.
         context2D.lineWidth = 0.846;
@@ -96,6 +96,7 @@ define([
     //values of the input image are ignored completely and only the alpha
     //values are used.
     function drawIcon(context2D, image, size) {
+        //Size is the largest image that looks good inside of pin box.
         var imageSize = size / 2.5;
         var sizeX = imageSize;
         var sizeY = imageSize;
@@ -106,6 +107,7 @@ define([
             sizeX = imageSize * (image.width / image.height);
         }
 
+        //x and y are the center of the pin box
         var x = (size - sizeX) / 2;
         var y = ((7 / 24) * size) - (sizeY / 2);
 
@@ -150,8 +152,8 @@ define([
         var canvas = document.createElement('canvas');
         canvas.width = size;
         canvas.height = size;
-        var context2D = canvas.getContext("2d");
 
+        var context2D = canvas.getContext("2d");
         drawPin(context2D, size, color);
 
         if (defined(url)) {
@@ -172,6 +174,8 @@ define([
             }), function(image) {
                 drawIcon(context2D, image, size);
                 deferred.resolve(canvas);
+            }).otherwise(function(e) {
+                deferred.reject(e);
             });
         } else {
             //If we are using a blank pin, resolve immediately.

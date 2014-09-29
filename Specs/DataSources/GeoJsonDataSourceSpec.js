@@ -2,6 +2,7 @@
 defineSuite([
         'DataSources/GeoJsonDataSource',
         'Core/Cartesian3',
+        'Core/Color',
         'Core/Event',
         'Core/JulianDate',
         'DataSources/EntityCollection',
@@ -9,6 +10,7 @@ defineSuite([
     ], function(
         GeoJsonDataSource,
         Cartesian3,
+        Color,
         Event,
         JulianDate,
         EntityCollection,
@@ -181,28 +183,28 @@ defineSuite([
     };
 
     var topoJson = {
-        type : "Topology",
+        type : 'Topology',
         transform : {
             scale : [1, 1],
             translate : [0, 0]
         },
         objects : {
             polygon : {
-                type : "Polygon",
+                type : 'Polygon',
                 arcs : [[0, 1, 2, 3]],
                 properties : {
                     myProps : 0
                 }
             },
             lineString : {
-                type : "LineString",
+                type : 'LineString',
                 arcs : [4],
                 properties : {
                     myProps : 1
                 }
             }
         },
-        "arcs" : [[[0, 0], [1, 0], [0, 1], [-1, 0], [0, -1]], [[0, 0], [1, 0], [0, 1]], [[1, 1], [-1, 0], [0, -1]], [[1, 1]], [[0, 0]]]
+        arcs : [[[0, 0], [1, 0], [0, 1], [-1, 0], [0, -1]], [[0, 0], [1, 0], [0, 1]], [[1, 1], [-1, 0], [0, -1]], [[1, 1]], [[0, 0]]]
     };
 
     it('default constructor has expected values', function() {
@@ -292,6 +294,7 @@ defineSuite([
             expect(pointObject.properties).toBe(point.properties);
             expect(pointObject.position.getValue(time)).toEqual(coordinatesToCartesian(point.coordinates));
             expect(pointObject.billboard).toBeDefined();
+            expect(pointObject.billboard.image).toBeDefined();
         });
     });
 
@@ -311,6 +314,7 @@ defineSuite([
                 expect(object.properties).toBe(multiPoint.properties);
                 expect(object.position.getValue(time)).toEqual(expectedPositions[i]);
                 expect(object.billboard).toBeDefined();
+                expect(object.billboard.image).toBeDefined();
             }
         });
     });
@@ -327,6 +331,8 @@ defineSuite([
             var object = entityCollection.entities[0];
             expect(object.properties).toBe(lineString.properties);
             expect(object.polyline.positions.getValue(time)).toEqual(coordinatesArrayToCartesian(lineString.coordinates));
+            expect(object.polyline.material.color.getValue(time)).toEqual(Color.YELLOW);
+            expect(object.polyline.width.getValue(time)).toEqual(2);
         });
     });
 
@@ -345,6 +351,8 @@ defineSuite([
                 var object = objects[i];
                 expect(object.properties).toBe(multiLineString.properties);
                 expect(object.polyline.positions.getValue(time)).toEqual(lines[i]);
+                expect(object.polyline.material.color.getValue(time)).toEqual(Color.YELLOW);
+                expect(object.polyline.width.getValue(time)).toEqual(2);
             }
         });
     });
@@ -362,6 +370,9 @@ defineSuite([
             expect(object.properties).toBe(polygon.properties);
             expect(object.polygon.positions.getValue(time)).toEqual(polygonCoordinatesToCartesian(polygon.coordinates));
             expect(object.polygon.perPositionHeight).toBeUndefined();
+            expect(object.polygon.material.color.getValue(time)).toEqual(Color.fromBytes(255, 255, 0, 100));
+            expect(object.polygon.outline.getValue(time)).toEqual(true);
+            expect(object.polygon.outlineColor.getValue(time)).toEqual(Color.BLACK);
         });
     });
 
@@ -378,6 +389,9 @@ defineSuite([
             expect(object.properties).toBe(polygonWithHeights.properties);
             expect(object.polygon.positions.getValue(time)).toEqual(polygonCoordinatesToCartesian(polygonWithHeights.coordinates));
             expect(object.polygon.perPositionHeight.getValue(time)).toBe(true);
+            expect(object.polygon.material.color.getValue(time)).toEqual(Color.fromBytes(255, 255, 0, 100));
+            expect(object.polygon.outline.getValue(time)).toEqual(true);
+            expect(object.polygon.outlineColor.getValue(time)).toEqual(Color.BLACK);
         });
     });
 
@@ -521,6 +535,84 @@ defineSuite([
         runs(function() {
             var pointObject = entityCollection.entities[0];
             expect(pointObject.position.getValue(time)).toEqual(coordinatesToCartesian(point.coordinates));
+        });
+    });
+
+    it('Works with polyline using simplestyle', function() {
+        var geoJson = {
+            type : 'Feature',
+            geometry : {
+                type : 'LineString',
+                coordinates : [[100.0, 0.0], [101.0, 1.0]]
+            },
+            properties : {
+                title : 'textMarker',
+                description : 'My description',
+                stroke : '#aabbcc',
+                'stroke-opacity' : 0.5,
+                'stroke-width' : 5
+            }
+        };
+
+        var dataSource = new GeoJsonDataSource();
+        dataSource.load(geoJson);
+
+        var entityCollection = dataSource.entities;
+        waitsFor(function() {
+            return entityCollection.entities.length === 1;
+        });
+        runs(function() {
+            var entity = entityCollection.entities[0];
+            expect(entity.name).toEqual(geoJson.properties.title);
+            expect(entity.description.getValue(time)).toEqual(geoJson.properties.description);
+
+            var expectedColor = Color.fromCssColorString(geoJson.properties.stroke);
+            expectedColor.alpha = geoJson.properties['stroke-opacity'];
+            expect(entity.polyline.material.color.getValue(time)).toEqual(expectedColor);
+            expect(entity.polyline.width.getValue(time)).toEqual(geoJson.properties['stroke-width']);
+        });
+    });
+
+
+    it('Works with polygon using simplestyle', function() {
+        var geoJson = {
+            type : 'Feature',
+            geometry : {
+                type : 'Polygon',
+                coordinates : [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]]]
+            },
+            properties : {
+                title : 'textMarker',
+                description : 'My description',
+                stroke : '#aabbcc',
+                'stroke-opacity' : 0.5,
+                'stroke-width' : 5,
+                fill : '#ccaabb',
+                'fill-opacity' : 0.25
+            }
+        };
+
+        var dataSource = new GeoJsonDataSource();
+        dataSource.load(geoJson);
+
+        var entityCollection = dataSource.entities;
+        waitsFor(function() {
+            return entityCollection.entities.length === 1;
+        });
+        runs(function() {
+            var entity = entityCollection.entities[0];
+            expect(entity.name).toEqual(geoJson.properties.title);
+            expect(entity.description.getValue(time)).toEqual(geoJson.properties.description);
+
+            var expectedFill = Color.fromCssColorString(geoJson.properties.fill);
+            expectedFill.alpha = geoJson.properties['fill-opacity'];
+
+            var expectedOutlineColor = Color.fromCssColorString(geoJson.properties.stroke);
+            expectedOutlineColor.alpha = geoJson.properties['stroke-opacity'];
+
+            expect(entity.polygon.material.color.getValue(time)).toEqual(expectedFill);
+            expect(entity.polygon.outline.getValue(time)).toEqual(true);
+            expect(entity.polygon.outlineColor.getValue(time)).toEqual(expectedOutlineColor);
         });
     });
 
