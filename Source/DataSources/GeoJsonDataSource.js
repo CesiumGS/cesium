@@ -213,12 +213,12 @@ define([
         var promise;
         if (defined(symbol)) {
             if (symbol.length === 1) {
-                promise = dataSource._pinBuilder.fromText(symbol.toUpperCase(), size, color);
+                promise = dataSource._pinBuilder.fromText(symbol.toUpperCase(), color, size);
             } else {
-                promise = dataSource._pinBuilder.fromMakiIconId(symbol, size, color);
+                promise = dataSource._pinBuilder.fromMakiIconId(symbol, color, size);
             }
         } else {
-            promise = dataSource._pinBuilder.fromColor(size, color);
+            promise = dataSource._pinBuilder.fromColor(color, size);
         }
 
         dataSource._promises.push(when(promise, function(canvas) {
