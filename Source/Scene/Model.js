@@ -84,7 +84,7 @@ define([
     "use strict";
     /*global WebGLRenderingContext*/
 
-    var yUpToZUp = Matrix4.fromRotationTranslation(Matrix3.fromRotationX(-CesiumMath.PI_OVER_TWO), Cartesian3.ZERO);
+    var yUpToZUp = Matrix4.fromRotationTranslation(Matrix3.fromRotationX(CesiumMath.PI_OVER_TWO), Cartesian3.ZERO);
 
     var ModelState = {
         NEEDS_LOAD : 0,
@@ -129,17 +129,19 @@ define([
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
      */
-    var Model = function(modelResources, options) {
+    var Model = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(modelResources)) {
-            throw new DeveloperError('modelResources is required');
+        if (defined(options.modelResources))
+        {
+            this._modelResources = options.modelResources;
         }
-        //>>includeEnd('debug');
+        else
+        {
+            this._modelResources = new ModelResources(options);
+        }
 
-
-        this._modelResources = modelResources;
+        
         this._uniformMaps = {};
         this.skinnedNodesNames = [];
 
@@ -492,14 +494,15 @@ define([
 
         if (!defined(modelResources))
         {
-            modelResources = new ModelResources(options.url, options.headers);
+            modelResources = new ModelResources(options);
             if (defined(options.cache))
             {
                 options.cache.putModel(modelResources, options.url);
             }
         }
 
-        var model = new Model(modelResources, options);
+        options.modelResources = modelResources;
+        var model = new Model(options, modelResources);
 
         return model;
     };
@@ -510,7 +513,7 @@ define([
             throw new DeveloperError('model is required.');
         }
 
-        if (model._state !== ModelState.LOADED) {
+        if (model._modelResources._state !== ModelState.LOADED) {
             throw new DeveloperError('The model is not loaded.  Wait for the model\'s readyToRender event or ready property.');
         }
 
@@ -538,7 +541,7 @@ define([
      * node.matrix =Cesium. Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
      */
     Model.prototype.getNode = function(name) {
-        var node = this.getRuntime('nodesByName', name);
+        var node = getRuntime(this, 'nodesByName', name);
         return defined(node) ? node.publicNode : undefined;
     };
 
@@ -552,7 +555,7 @@ define([
      * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event or ready property.
      */
     Model.prototype.getMesh = function(name) {
-        return this.getRuntime('meshesByName', name);
+        return getRuntime(this, 'meshesByName', name);
     };
 
     /**
@@ -564,7 +567,7 @@ define([
      * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event or ready property.
      */
     Model.prototype.getMaterial = function(name) {
-        return this.getRuntime('materialsByName', name);
+        return getRuntime(this, 'materialsByName', name);
     };
 
     var nodeAxisScratch = new Cartesian3();
@@ -763,13 +766,12 @@ define([
 
                             // PERFORMANCE_IDEA: Can use transformWithoutScale if no node up to the root has scale (inclug animation)
                             BoundingSphere.transform(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
-
-                            //TODO
-                            /*if (allowPicking) {
+                            
+                            if (allowPicking) {
                                 var pickCommand = primitiveCommand.pickCommand;
                                 Matrix4.clone(command.modelMatrix, pickCommand.modelMatrix);
                                 BoundingSphere.clone(command.boundingVolume, pickCommand.boundingVolume);
-                            }*/
+                            }
                         }
                     } else {
                         // Node has a light or camera
@@ -1643,15 +1645,17 @@ define([
 
         }
 
-        var justLoaded = this._modelResources.update(context, frameState);
-
-        if (justLoaded)
+        this._modelResources.update(context, frameState);
+        
+        if (!this._ready && this._modelResources._state === ModelState.LOADED)
         {
             var model = this;
             frameState.afterRender.push(function() {
                 model._ready = true;
                 model.readyToRender.raiseEvent(model);
             });
+            
+            return;
         }
 
 
@@ -1692,15 +1696,14 @@ define([
             if (animated || modelTransformChanged || this._needsUpdate) {
                 updateNodeHierarchyModelMatrix(this, modelTransformChanged);
 
-                // TODO
-                /*if (animated || this._needsUpdate) {
+                if (animated || this._needsUpdate) {
                     // Apply skins if animation changed any node transforms
                     applySkins(this);
-                }*/
+                }
             }
 
             updatePickIds(this, context);
-            // updateWireframe(this); //TODO
+            updateWireframe(this); 
 
             this._needsUpdate = false;
         }
@@ -1710,7 +1713,7 @@ define([
         // want to be able to progressively load models when they are not shown,
         // and then have them visibile immediately when show is set to true.
         if (show) {
-// PERFORMANCE_IDEA: This is terriable
+// PERFORMANCE_IDEA: This is terrible
             var passes = frameState.passes;
             var i;
             var length;

@@ -144,7 +144,8 @@ defineSuite([
 
         duckModel.show = true;
         duckModel.zoomTo();
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        var result = scene.renderForSpecs();
+        expect(result).not.toEqual([0, 0, 0, 255]);
         duckModel.show = false;
     });
 
