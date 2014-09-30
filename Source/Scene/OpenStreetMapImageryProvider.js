@@ -33,6 +33,7 @@ define([
      * @alias OpenStreetMapImageryProvider
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {String} [options.url='//a.tile.openstreetmap.org'] The OpenStreetMap server url.
      * @param {String} [options.fileExtension='png'] The file extension for images on the server.
      * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
@@ -83,8 +84,8 @@ define([
         // Check the number of tiles at the minimum level.  If it's more than four,
         // throw an exception, because starting at the higher minimum
         // level will cause too many tiles to be downloaded and rendered.
-        var swTile = this._tilingScheme.positionToTileXY(Rectangle.getSouthwest(this._rectangle), this._minimumLevel);
-        var neTile = this._tilingScheme.positionToTileXY(Rectangle.getNortheast(this._rectangle), this._minimumLevel);
+        var swTile = this._tilingScheme.positionToTileXY(Rectangle.southwest(this._rectangle), this._minimumLevel);
+        var neTile = this._tilingScheme.positionToTileXY(Rectangle.northeast(this._rectangle), this._minimumLevel);
         var tileCount = (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
         if (tileCount > 4) {
             throw new DeveloperError('The imagery provider\'s rectangle and minimumLevel indicate that there are ' + tileCount + ' tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.');
@@ -126,7 +127,7 @@ define([
 
         /**
          * Gets the proxy used by this provider.
-         * @memberof OpenStreetMapImageryProvider
+         * @memberof OpenStreetMapImageryProvider.prototype
          * @type {Proxy}
          */
         proxy : {
@@ -228,7 +229,7 @@ define([
         /**
          * Gets the rectangle, in radians, of the imagery provided by this instance.  This function should
          * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
-         * @memberof OpenStreetMapImageryProviderr.prototype
+         * @memberof OpenStreetMapImageryProvider.prototype
          * @type {Rectangle}
          */
         rectangle : {
@@ -318,12 +319,9 @@ define([
     /**
      * Gets the credits to be displayed when a given tile is displayed.
      *
-     * @memberof OpenStreetMapImageryProvider
-     *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level;
-     *
      * @returns {Credit[]} The credits to be displayed when the tile is displayed.
      *
      * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
@@ -336,12 +334,9 @@ define([
      * Requests the image for a given tile.  This function should
      * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
      *
-     * @memberof OpenStreetMapImageryProvider
-     *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
-     *
      * @returns {Promise} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
@@ -358,6 +353,24 @@ define([
 
         var url = buildImageUrl(this, x, y, level);
         return ImageryProvider.loadImage(this, url);
+    };
+
+    /**
+     * Picking features is not currently supported by this imagery provider, so this function simply returns
+     * undefined.
+     *
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level.
+     * @param {Number} longitude The longitude at which to pick features.
+     * @param {Number} latitude  The latitude at which to pick features.
+     * @return {Promise} A promise for the picked features that will resolve when the asynchronous
+     *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
+     *                   instances.  The array may be empty if no features are found at the given location.
+     *                   It may also be undefined if picking is not supported.
+     */
+    OpenStreetMapImageryProvider.prototype.pickFeatures = function() {
+        return undefined;
     };
 
     return OpenStreetMapImageryProvider;

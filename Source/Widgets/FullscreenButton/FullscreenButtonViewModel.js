@@ -125,7 +125,6 @@ define([
     });
 
     /**
-     * @memberof FullscreenButtonViewModel
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     FullscreenButtonViewModel.prototype.isDestroyed = function() {
@@ -135,7 +134,6 @@ define([
     /**
      * Destroys the view model.  Should be called to
      * properly clean up the view model when it is no longer needed.
-     * @memberof FullscreenButtonViewModel
      */
     FullscreenButtonViewModel.prototype.destroy = function() {
         document.removeEventListener(Fullscreen.changeEventName, this._callback);

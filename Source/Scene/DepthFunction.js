@@ -1,11 +1,15 @@
 /*global define*/
-define(function() {
+define([
+        '../Core/freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
      * Determines the function used to compare two depths for the depth test.
      *
-     * @exports DepthFunction
+     * @namespace
+     * @alias DepthFunction
      */
     var DepthFunction = {
         /**
@@ -73,5 +77,5 @@ define(function() {
         ALWAYS : 0x0207
     };
 
-    return DepthFunction;
+    return freezeObject(DepthFunction);
 });

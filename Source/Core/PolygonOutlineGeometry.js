@@ -1,7 +1,6 @@
 /*global define*/
 define([
         './BoundingSphere',
-        './Cartesian3',
         './ComponentDatatype',
         './defaultValue',
         './defined',
@@ -22,7 +21,6 @@ define([
         './WindingOrder'
     ], function(
         BoundingSphere,
-        Cartesian3,
         ComponentDatatype,
         defaultValue,
         defined,
@@ -102,10 +100,6 @@ define([
             })
         });
     }
-
-    var scratchPosition = new Cartesian3();
-    var scratchNormal = new Cartesian3();
-    var scratchBoundingSphere = new BoundingSphere();
 
     function createGeometryFromPositionsExtruded(ellipsoid, positions, granularity, perPositionHeight) {
         var cleanedPositions = PolygonPipeline.removeDuplicates(positions);
@@ -193,6 +187,7 @@ define([
      * @alias PolygonOutlineGeometry
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Object} options.polygonHierarchy A polygon hierarchy that can include holes.
      * @param {Number} [options.height=0.0] The height of the polygon.
      * @param {Number} [options.extrudedHeight] The height of the polygon.
@@ -203,6 +198,8 @@ define([
      *
      * @see PolygonOutlineGeometry#createGeometry
      * @see PolygonOutlineGeometry#fromPositions
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygon%20Outline.html|Cesium Sandcastle Polygon Outline Demo}
      *
      * @example
      * // 1. create a polygon outline from points
@@ -254,20 +251,22 @@ define([
      *     }]
      *   }
      * });
-     * var geometry = PolygonOutlineGeometry.createGeometry(polygonWithHole);
+     * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(polygonWithHole);
      *
      * // 3. create extruded polygon outline
-     * var extrudedPolygon = new PolygonOutlineGeometry({
-     *   positions : Cesium.Cartesian3.fromDegreesArray([
-     *     -72.0, 40.0,
-     *     -70.0, 35.0,
-     *     -75.0, 30.0,
-     *     -70.0, 30.0,
-     *     -68.0, 40.0
-     *   ]),
-     *   extrudedHeight: 300000
+     * var extrudedPolygon = new Cesium.PolygonOutlineGeometry({
+     *   polygonHierarchy : { 
+     *     positions : Cesium.Cartesian3.fromDegreesArray([
+     *       -72.0, 40.0,
+     *       -70.0, 35.0,
+     *       -75.0, 30.0,
+     *       -70.0, 30.0,
+     *       -68.0, 40.0
+     *     ]),
+     *     extrudedHeight: 300000
+     *   }
      * });
-     * var geometry = PolygonOutlineGeometry.createGeometry(extrudedPolygon);
+     * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(extrudedPolygon);
      */
     var PolygonOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -304,8 +303,6 @@ define([
 
     /**
      * A description of a polygon outline from an array of positions.
-     *
-     * @memberof PolygonOutlineGeometry
      *
      * @param {Cartesian3[]} options.positions An array of positions that defined the corner points of the polygon.
      * @param {Number} [options.height=0.0] The height of the polygon.
@@ -353,7 +350,6 @@ define([
 
     /**
      * Computes the geometric representation of a polygon outline, including its vertices, indices, and a bounding sphere.
-     * @memberof PolygonOutlineGeometry
      *
      * @param {PolygonOutlineGeometry} polygonGeometry A description of the polygon outline.
      * @returns {Geometry} The computed vertices and indices.

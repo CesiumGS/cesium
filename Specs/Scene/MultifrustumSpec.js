@@ -62,13 +62,13 @@ defineSuite([
 
         var camera = scene.camera;
         camera.position = new Cartesian3();
-        camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
+        camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
         camera.right = Cartesian3.clone(Cartesian3.UNIT_X);
 
         camera.frustum.near = 1.0;
         camera.frustum.far = 1000000000.0;
-        camera.frustum.fovy = CesiumMath.toRadians(60.0);
+        camera.frustum.fov = CesiumMath.toRadians(60.0);
         camera.frustum.aspectRatio = 1.0;
 
         greenImage = new Image();
@@ -96,8 +96,7 @@ defineSuite([
 
     function createBillboards() {
         atlas = new TextureAtlas({
-            scene : scene,
-            images : [greenImage, blueImage, whiteImage],
+            context : context,
             borderWidthInPixels : 1,
             initialSize : new Cartesian2(3, 3)
         });
@@ -113,7 +112,7 @@ defineSuite([
         billboards.destroyTextureAtlas = false;
         billboard0 = billboards.add({
             position : new Cartesian3(0.0, 0.0, -50.0),
-            imageIndex : 0
+            image : greenImage
         });
         primitives.add(billboards);
 
@@ -122,7 +121,7 @@ defineSuite([
         billboards.destroyTextureAtlas = false;
         billboard1 = billboards.add({
             position : new Cartesian3(0.0, 0.0, -50000.0),
-            imageIndex : 1
+            image : blueImage
         });
         primitives.add(billboards);
 
@@ -131,7 +130,7 @@ defineSuite([
         billboards.destroyTextureAtlas = false;
         billboard2 = billboards.add({
             position : new Cartesian3(0.0, 0.0, -50000000.0),
-            imageIndex : 2
+            image : whiteImage
         });
         primitives.add(billboards);
 
@@ -208,7 +207,7 @@ defineSuite([
             this._va = undefined;
             this._sp = undefined;
             this._rs = undefined;
-            this._modelMatrix = Matrix4.fromTranslation(new Cartesian3(0.0, 0.0, -50000.0));
+            this._modelMatrix = Matrix4.fromTranslation(new Cartesian3(0.0, 0.0, -50000.0), new Matrix4());
 
             this.color = new Color(1.0, 1.0, 0.0, 1.0);
 
@@ -240,8 +239,8 @@ defineSuite([
                 fs += '}';
 
                 var dimensions = new Cartesian3(500000.0, 500000.0, 500000.0);
-                var maximumCorner = Cartesian3.multiplyByScalar(dimensions, 0.5);
-                var minimumCorner = Cartesian3.negate(maximumCorner);
+                var maximumCorner = Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3());
+                var minimumCorner = Cartesian3.negate(maximumCorner, new Cartesian3());
                 var geometry = BoxGeometry.createGeometry(new BoxGeometry({
                     minimumCorner: minimumCorner,
                     maximumCorner: maximumCorner

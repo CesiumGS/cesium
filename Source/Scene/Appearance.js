@@ -25,12 +25,22 @@ define([
      * @alias Appearance
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
+     * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link Appearance#renderState} has alpha blending enabled.
+     * @param {Boolean} [options.closed=false] When <code>true</code>, the geometry is expected to be closed so {@link Appearance#renderState} has backface culling enabled.
+     * @param {Material} [options.material=Material.ColorType] The material used to determine the fragment color.
+     * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
+     * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
+     * @param {RenderState} [options.renderState] Optional render state to override the default render state.
+     *
      * @see MaterialAppearance
      * @see EllipsoidSurfaceAppearance
      * @see PerInstanceColorAppearance
      * @see DebugAppearance
      * @see PolylineColorAppearance
      * @see PolylineMaterialAppearance
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Geometry%20and%20Appearances.html|Geometry and Appearances Demo}
      */
     var Appearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -126,8 +136,6 @@ define([
      * Procedurally creates the full GLSL fragment shader source for this appearance
      * taking into account {@link Appearance#fragmentShaderSource} and {@link Appearance#material}.
      *
-     * @memberof Appearance
-     *
      * @returns {String} The full GLSL fragment shader source.
      */
     Appearance.prototype.getFragmentShaderSource = function() {
@@ -140,8 +148,6 @@ define([
     /**
      * Determines if the geometry is translucent based on {@link Appearance#translucent} and {@link Material#isTranslucent}.
      *
-     * @memberof Appearance
-     *
      * @returns {Boolean} <code>true</code> if the appearance is translucent.
      */
     Appearance.prototype.isTranslucent = function() {
@@ -149,11 +155,9 @@ define([
     };
 
     /**
-     * Creates a render state.  This is not the final {@link RenderState} instance; instead,
-     * it can contain a subset of render state properties identical to <code>renderState</code>
-     * passed to {@link Context#createRenderState}.
-     *
-     * @memberof Appearance
+     * Creates a render state.  This is not the final render state instance; instead,
+     * it can contain a subset of render state properties identical to the render state
+     * created in the context.
      *
      * @returns {Object} The render state.
      */

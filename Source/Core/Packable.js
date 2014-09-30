@@ -10,7 +10,8 @@ define([
      * elements in an array.  These methods and properties are expected to be
      * defined on a constructor function.
      *
-     * @exports Packable
+     * @namespace
+     * @alias Packable
      *
      * @see PackableForInterpolation
      */
@@ -23,7 +24,6 @@ define([
 
         /**
          * Stores the provided instance into the provided array.
-         * @memberof Packable
          * @function
          *
          * @param {Object} value The value to pack.
@@ -34,7 +34,6 @@ define([
 
         /**
          * Retrieves an instance from a packed array.
-         * @memberof Packable
          * @function
          *
          * @param {Number[]} array The packed array.

@@ -10,7 +10,8 @@ define([
      * different representation than their packed value.  These methods and
      * properties are expected to be defined on a constructor function.
      *
-     * @exports PackableForInterpolation
+     * @namespace
+     * @alias PackableForInterpolation
      *
      * @see Packable
      */
@@ -23,7 +24,6 @@ define([
 
         /**
          * Converts a packed array into a form suitable for interpolation.
-         * @memberof PackableForInterpolation
          * @function
          *
          * @param {Number[]} packedArray The packed array.
@@ -34,8 +34,7 @@ define([
         convertPackedArrayForInterpolation : DeveloperError.throwInstantiationError,
 
         /**
-         * Retrieves an instance from a packed array converted with {@link convertPackedArrayForInterpolation}.
-         * @memberof PackableForInterpolation
+         * Retrieves an instance from a packed array converted with {@link PackableForInterpolation.convertPackedArrayForInterpolation}.
          * @function
          *
          * @param {Number[]} array The original packed array.

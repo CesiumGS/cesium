@@ -23,7 +23,7 @@ define([
         quads[length - 1] = defined(lastInnerQuadrangle) ? lastInnerQuadrangle : points[length - 1];
 
         for (var i = 1; i < length - 1; ++i) {
-            quads[i] = Quaternion.innerQuadrangle(points[i - 1], points[i], points[i + 1]);
+            quads[i] = Quaternion.computeInnerQuadrangle(points[i - 1], points[i], points[i + 1], new Quaternion());
         }
 
         return quads;
@@ -43,6 +43,9 @@ define([
             var q1 = points[1];
 
             return function(time, result) {
+                if (!defined(result)){
+                    result = new Quaternion();
+                }
                 var u = (time - t0) * invSpan;
                 return Quaternion.fastSlerp(q0, q1, u, result);
             };
@@ -50,6 +53,9 @@ define([
 
         // use quad interpolation for more than 3 points
         return function(time, result) {
+            if (!defined(result)){
+                result = new Quaternion();
+            }
             var i = spline._lastTimeIndex = spline.findTimeInterval(time, spline._lastTimeIndex);
             var u = (time - times[i]) / (times[i + 1] - times[i]);
 
@@ -69,6 +75,7 @@ define([
      * @alias QuaternionSpline
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point.
      *                The values are in no way connected to the clock time. They are the parameterization for the curve.
      * @param {Quaternion[]} options.points The array of {@link Quaternion} control points.
@@ -80,8 +87,6 @@ define([
      * @exception {DeveloperError} points.length must be greater than or equal to 2.
      * @exception {DeveloperError} times.length must be equal to points.length.
      *
-     * @see BSpline
-     * @see BezierSpline
      * @see HermiteSpline
      * @see CatmullRomSpline
      * @see LinearSpline
@@ -163,7 +168,7 @@ define([
     /**
      * Finds an index <code>i</code> in <code>times</code> such that the parameter
      * <code>time</code> is in the interval <code>[times[i], times[i + 1]]</code>.
-     * @memberof QuaternionSpline
+     * @function
      *
      * @param {Number} time The time.
      * @returns {Number} The index for the element at the start of the interval.
@@ -176,7 +181,6 @@ define([
 
     /**
      * Evaluates the curve at a given time.
-     * @memberof QuaternionSpline
      *
      * @param {Number} time The time at which to evaluate the curve.
      * @param {Quaternion} [result] The object onto which to store the result.

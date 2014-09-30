@@ -5,11 +5,9 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
-        '../../Core/Ellipsoid',
         '../../Core/Matrix4',
         '../../Core/Rectangle',
         '../../Scene/Camera',
-        '../../Scene/CameraFlightPath',
         '../../Scene/SceneMode',
         '../../ThirdParty/knockout',
         '../createCommand'
@@ -19,65 +17,68 @@ define([
         defined,
         defineProperties,
         DeveloperError,
-        Ellipsoid,
         Matrix4,
         Rectangle,
         Camera,
-        CameraFlightPath,
         SceneMode,
         knockout,
         createCommand) {
     "use strict";
 
-    function viewHome(scene, ellipsoid, duration) {
+    function viewHome(scene, duration) {
         var mode = scene.mode;
-        var controller = scene.screenSpaceCameraController;
-
-        controller.ellipsoid = ellipsoid;
 
         if (defined(scene) && mode === SceneMode.MORPHING) {
             scene.completeMorph();
         }
-        var flight;
-        var options;
+
+        var direction;
+        var right;
+        var up;
 
         if (mode === SceneMode.SCENE2D) {
-            options = {
+            scene.camera.flyToRectangle({
                 destination : Rectangle.MAX_VALUE,
                 duration : duration,
-                endReferenceFrame : Matrix4.IDENTITY
-            };
-            flight = CameraFlightPath.createAnimationRectangle(scene, options);
-            scene.animations.add(flight);
+                endTransform : Matrix4.IDENTITY
+            });
         } else if (mode === SceneMode.SCENE3D) {
-            var defaultCamera = new Camera(scene);
-            options = {
-                destination : defaultCamera.position,
-                duration : duration,
-                up : defaultCamera.up,
-                direction : defaultCamera.direction,
-                endReferenceFrame : Matrix4.IDENTITY
-            };
-            flight = CameraFlightPath.createAnimation(scene, options);
-            scene.animations.add(flight);
-        } else if (mode === SceneMode.COLUMBUS_VIEW) {
-            var maxRadii = ellipsoid.maximumRadius;
-            var position = Cartesian3.multiplyByScalar(Cartesian3.normalize(new Cartesian3(0.0, -1.0, 1.0)), 5.0 * maxRadii);
-            var direction = Cartesian3.normalize(Cartesian3.subtract(Cartesian3.ZERO, position));
-            var right = Cartesian3.cross(direction, Cartesian3.UNIT_Z);
-            var up = Cartesian3.cross(right, direction);
+            var destination = scene.camera.getRectangleCameraCoordinates(Camera.DEFAULT_VIEW_RECTANGLE);
 
-            options = {
+            var mag = Cartesian3.magnitude(destination);
+            mag += mag * Camera.DEFAULT_VIEW_FACTOR;
+            Cartesian3.normalize(destination, destination);
+            Cartesian3.multiplyByScalar(destination, mag, destination);
+
+            direction = Cartesian3.normalize(destination, new Cartesian3());
+            Cartesian3.negate(direction, direction);
+            right = Cartesian3.cross(direction, Cartesian3.UNIT_Z, new Cartesian3());
+            up = Cartesian3.cross(right, direction, new Cartesian3());
+
+            scene.camera.flyTo({
+                destination : destination,
+                direction: direction,
+                up : up,
+                duration : duration,
+                endTransform : Matrix4.IDENTITY
+            });
+        } else if (mode === SceneMode.COLUMBUS_VIEW) {
+            var maxRadii = scene.globe.ellipsoid.maximumRadius;
+            var position = new Cartesian3(0.0, -1.0, 1.0);
+            position = Cartesian3.multiplyByScalar(Cartesian3.normalize(position, position), 5.0 * maxRadii, position);
+            direction = new Cartesian3();
+            direction = Cartesian3.normalize(Cartesian3.subtract(Cartesian3.ZERO, position, direction), direction);
+            right = Cartesian3.cross(direction, Cartesian3.UNIT_Z, new Cartesian3());
+            up = Cartesian3.cross(right, direction, new Cartesian3());
+
+            scene.camera.flyTo({
                 destination : position,
                 duration : duration,
                 up : up,
                 direction : direction,
-                endReferenceFrame : Matrix4.IDENTITY,
+                endTransform : Matrix4.IDENTITY,
                 convert : false
-            };
-
-            flight = CameraFlightPath.createAnimation(scene, options);
-            scene.animations.add(flight);
+            });
         }
     }
 
@@ -87,26 +88,23 @@ define([
      * @constructor
      *
      * @param {Scene} scene The scene instance to use.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to be viewed when in home position.
-     * @param {Number} [duration=1500] The duration of the camera flight in milliseconds
+     * @param {Number} [duration=1.5] The duration of the camera flight in seconds.
      */
-    var HomeButtonViewModel = function(scene, ellipsoid, duration) {
+    var HomeButtonViewModel = function(scene, duration) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
         //>>includeEnd('debug');
 
-        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        duration = defaultValue(duration, 1500);
+        duration = defaultValue(duration, 1.5);
 
         this._scene = scene;
-        this._ellipsoid = ellipsoid;
         this._duration = duration;
 
         var that = this;
         this._command = createCommand(function() {
-            viewHome(that._scene, that._ellipsoid, that._duration);
+            viewHome(that._scene, that._duration);
         });
 
         /**
@@ -133,18 +131,6 @@ define([
         },
 
         /**
-         * Gets the ellipsoid to be viewed when in home position.
-         * @memberof HomeButtonViewModel.prototype
-         *
-         * @type {Ellipsoid}
-         */
-        ellipsoid : {
-            get : function() {
-                return this._ellipsoid;
-            }
-        },
-
-        /**
          * Gets the Command that is executed when the button is clicked.
          * @memberof HomeButtonViewModel.prototype
          *
@@ -157,7 +143,7 @@ define([
         },
 
         /**
-         * Gets or sets the the duration of the camera flight in milliseconds.
+         * Gets or sets the the duration of the camera flight in seconds.
          * A value of zero causes the camera to instantly switch to home view.
          * @memberof HomeButtonViewModel.prototype
          *

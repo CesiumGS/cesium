@@ -1,5 +1,8 @@
 /*global define*/
-define(function() {
+define([
+        '../Core/freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
@@ -7,7 +10,8 @@ define(function() {
      * For example, the vertical origin is used to display a billboard above or below (in
      * screen space) of the actual position.
      *
-     * @exports VerticalOrigin
+     * @namespace
+     * @alias VerticalOrigin
      *
      * @see Billboard#verticalOrigin
      */
@@ -37,5 +41,5 @@ define(function() {
         TOP : -1
     };
 
-    return VerticalOrigin;
+    return freezeObject(VerticalOrigin);
 });

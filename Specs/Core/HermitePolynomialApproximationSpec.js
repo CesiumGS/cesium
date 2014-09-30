@@ -36,26 +36,28 @@ defineSuite([
     for ( var i = 0; i < yTable.length / 2; ++i) {
         yTableCombined[i * 4 + 0] = yTable[i * 2 + 0];
         yTableCombined[i * 4 + 1] = yTable[i * 2 + 1];
-        yTableCombined[i * 4 + 2] = yTable[i * 2 + 2];
-        yTableCombined[i * 4 + 3] = dyTable[i * 2 + 0];
-        yTableCombined[i * 4 + 4] = dyTable[i * 2 + 1];
-        yTableCombined[i * 4 + 5] = dyTable[i * 2 + 2];
+        yTableCombined[i * 4 + 2] = dyTable[i * 2 + 0];
+        yTableCombined[i * 4 + 3] = dyTable[i * 2 + 1];
     }
 
     var x = 100.0;
 
     it('interpolating produces correct results.', function() {
-        var result = HermitePolynomialApproximation.interpolateOrderZero(x, xTable, yTableCombined, 2);
-        var expectedResult = [13379311.51716268, 92.73903788149451];
-        expect(result).toEqualEpsilon(expectedResult, 1e-15);
+        // Since we want a zero order calculation we need to switch to a yStride of 4.
+        var result = HermitePolynomialApproximation.interpolateOrderZero(x, xTable, yTableCombined, 4);
+        var expectedResult = 13367002.870928625;
+        //The accuracy is lower because we are no longer using derivative info
+        expect(result[0]).toEqualEpsilon(expectedResult, 1e-6);
     });
 
     it('interpolating produces correct results with a result parameter.', function() {
-        var result = new Array(2);
-        var returnedResult = HermitePolynomialApproximation.interpolateOrderZero(x, xTable, yTableCombined, 2, result);
-        var expectedResult = [13379311.51716268, 92.73903788149451];
+        // Since we want a zero order calculation we need to switch to a yStride of 4.
+        var result = new Array(4);
+        var returnedResult = HermitePolynomialApproximation.interpolateOrderZero(x, xTable, yTableCombined, 4, result);
+        var expectedResult = 13367002.870928625;
         expect(result).toBe(returnedResult);
-        expect(result).toEqualEpsilon(expectedResult, 1e-15);
+        //The accuracy is lower because we are no longer using derivative info
+        expect(result[0]).toEqualEpsilon(expectedResult, 1e-6);
     });
 
     it('getRequiredDataPoints should be 1 more than degree, except for 0, which requires 2', function() {
@@ -63,5 +65,15 @@ defineSuite([
         expect(HermitePolynomialApproximation.getRequiredDataPoints(1)).toEqual(2);
         expect(HermitePolynomialApproximation.getRequiredDataPoints(2)).toEqual(3);
         expect(HermitePolynomialApproximation.getRequiredDataPoints(3)).toEqual(4);
+        expect(HermitePolynomialApproximation.getRequiredDataPoints(3, 1)).toEqual(2);
+        expect(HermitePolynomialApproximation.getRequiredDataPoints(5, 1)).toEqual(3);
+        expect(HermitePolynomialApproximation.getRequiredDataPoints(7, 1)).toEqual(4);
     });
+
+    it('higher order interpolation produces correct results.', function() {
+        var result = HermitePolynomialApproximation.interpolate(x, xTable, yTableCombined, 2, 1, 1);
+        var expectedResult = [13367002.870928625, 0.0, -222.65168787012135, 0.0];
+        expect(result).toEqualEpsilon(expectedResult, 1e-8);
+    });
+
 });

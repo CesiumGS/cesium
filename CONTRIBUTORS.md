@@ -20,8 +20,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Hannah Pinkos](https://github.com/hpinkos)
    * [Alex Wood](https://github.com/abwood)
    * [Dan Yankowsky](https://github.com/balefrost)
+   * [Michael Dunkel](https://github.com/mdunkel)
+   * [Pat Mahoney](https://github.com/PatMahoney)
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
+   * [Kevin Ring](https://github.com/kring)
+   * [Keith Grochow](https://github.com/kgrochow)
 * [EU Edge](http://euedge.com/)
    * [Ákos Maróy](https://github.com/akosmaroy)
 * [Raytheon Intelligence and Information Systems](http://www.raytheon.com/)
@@ -42,5 +46,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [You Lu](https://github.com/YouLu)
 * [David Hite](https://github.com/dav3hit3)
 * [Kevin Ring](https://github.com/kring)
+* [M.Eng. René Schwarz](https://github.com/DigNative)
+* [Gilles Cébélieu (IGN France)](https://github.com/gcebelieu)
 
 Also see [our contributors page](http://cesiumjs.org/contributors.html) for more information.

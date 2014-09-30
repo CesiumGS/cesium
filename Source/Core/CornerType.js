@@ -1,15 +1,23 @@
 /*global define*/
-define(function() {
+define([
+        './freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
-     * @exports CornerType
+     * Style options for corners.
+     *
+     * @namespace
+     * @alias CornerType
      */
     var CornerType = {
         /**
-         *   ___
+         * <pre>
+         *  _____
          * (  ___
          * | |
+         * </pre>
          *
          * Corner is circular.
          * @type {Number}
@@ -18,9 +26,11 @@ define(function() {
         ROUNDED : 0,
 
         /**
+         * <pre>
          *  ______
-         * |  ___
+         * |  ____
          * | |
+         * </pre>
          *
          * Corner point is the intersection of adjacent edges.
          * @type {Number}
@@ -29,9 +39,11 @@ define(function() {
         MITERED : 1,
 
         /**
-         *   ___
+         * <pre>
+         *  _____
          * /  ___
          * | |
+         * </pre>
          *
          * Corner is clipped.
          * @type {Number}
@@ -40,5 +52,5 @@ define(function() {
         BEVELED : 2
     };
 
-    return CornerType;
+    return freezeObject(CornerType);
 });

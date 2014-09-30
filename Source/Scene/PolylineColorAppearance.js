@@ -27,10 +27,13 @@ define([
      * @alias PolylineColorAppearance
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link PolylineColorAppearance#renderState} has alpha blending enabled.
      * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
      * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
      * @param {RenderState} [options.renderState] Optional render state to override the default render state.
+     *
+     *@demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline%20Color.html|Cesium Sandcastle Polyline Color Appearance Demo}
      *
      * @example
      * // A solid white line segment
@@ -42,7 +45,7 @@ define([
      *         5.0, 0.0
      *       ]),
      *       width : 10.0,
-     *       vertexFormat : Cesium.PolylineColorApperance.VERTEX_FORMAT
+     *       vertexFormat : Cesium.PolylineColorAppearance.VERTEX_FORMAT
      *     }),
      *     attributes : {
      *       color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 1.0, 1.0, 1.0))
@@ -51,7 +54,7 @@ define([
      *   appearance : new Cesium.PolylineColorAppearance({
      *     translucent : false
      *   })
-     * }));
+     * });
      */
     var PolylineColorAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -189,7 +192,7 @@ define([
     /**
      * Procedurally creates the full GLSL fragment shader source.
      *
-     * @memberof PolylineColorAppearance
+     * @function
      *
      * @returns String The full GLSL fragment shader source.
      */
@@ -198,18 +201,18 @@ define([
     /**
      * Determines if the geometry is translucent based on {@link PolylineColorAppearance#translucent}.
      *
-     * @memberof PolylineColorAppearance
+     * @function
      *
      * @returns {Boolean} <code>true</code> if the appearance is translucent.
      */
     PolylineColorAppearance.prototype.isTranslucent = Appearance.prototype.isTranslucent;
 
     /**
-     * Creates a render state.  This is not the final {@link RenderState} instance; instead,
-     * it can contain a subset of render state properties identical to <code>renderState</code>
-     * passed to {@link Context#createRenderState}.
+     * Creates a render state.  This is not the final render state instance; instead,
+     * it can contain a subset of render state properties identical to the render state
+     * created in the context.
      *
-     * @memberof PolylineColorAppearance
+     * @function
      *
      * @returns {Object} The render state.
      */

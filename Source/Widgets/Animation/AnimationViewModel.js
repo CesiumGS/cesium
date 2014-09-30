@@ -6,6 +6,7 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
+        '../../Core/JulianDate',
         '../../ThirdParty/knockout',
         '../../ThirdParty/sprintf',
         '../createCommand',
@@ -17,6 +18,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        JulianDate,
         knockout,
         sprintf,
         createCommand,
@@ -241,10 +243,10 @@ define([
 
             var result = false;
             if (clockRange === ClockRange.LOOP_STOP) {
-                result = currentTime.greaterThan(startTime) || (currentTime.equals(startTime) && multiplier > 0);
+                result = JulianDate.greaterThan(currentTime, startTime) || (currentTime.equals(startTime) && multiplier > 0);
             } else {
                 var stopTime = clockViewModel.stopTime;
-                result = (currentTime.greaterThan(startTime) && currentTime.lessThan(stopTime)) || //
+                result = (JulianDate.greaterThan(currentTime, startTime) && JulianDate.lessThan(currentTime, stopTime)) || //
                 (currentTime.equals(startTime) && multiplier > 0) || //
                 (currentTime.equals(stopTime) && multiplier < 0);
             }
@@ -264,7 +266,7 @@ define([
             }
 
             var systemTime = clockViewModel.systemTime;
-            return systemTime.greaterThanOrEquals(clockViewModel.startTime) && systemTime.lessThanOrEquals(clockViewModel.stopTime);
+            return JulianDate.greaterThanOrEquals(systemTime, clockViewModel.startTime) && JulianDate.lessThanOrEquals(systemTime, clockViewModel.stopTime);
         });
 
         this._isAnimating = undefined;
@@ -363,21 +365,18 @@ define([
     };
 
     /**
-     * The default date formatter used by new instances.
-     * @memberof AnimationViewModel
+     * Gets or sets the default date formatter used by new instances.
      *
-     * @param {JulianDate} date The date to be formatted
-     * @param {AnimationViewModel} viewModel The AnimationViewModel instance requesting formatting.
-     * @returns {String} The string representation of the calendar date portion of the provided date.
+     * @member
+     * @type {AnimationViewModel~DateFormatter}
      */
     AnimationViewModel.defaultDateFormatter = function(date, viewModel) {
-        var gregorianDate = date.toGregorianDate();
+        var gregorianDate = JulianDate.toGregorianDate(date);
         return monthNames[gregorianDate.month - 1] + ' ' + gregorianDate.day + ' ' + gregorianDate.year;
     };
 
     /**
      * Gets or sets the default array of known clock multipliers associated with new instances of the shuttle ring.
-     * @memberof AnimationViewModel
      */
     AnimationViewModel.defaultTicks = [//
     0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0,//
@@ -385,15 +384,13 @@ define([
     21600.0, 43200.0, 86400.0, 172800.0, 345600.0, 604800.0];
 
     /**
-     * The default time formatter used by new instances.
-     * @memberof AnimationViewModel
+     * Gets or sets the default time formatter used by new instances.
      *
-     * @param {JulianDate} date The date to be formatted
-     * @param {AnimationViewModel} viewModel The AnimationViewModel instance requesting formatting.
-     * @returns {String} The string representation of the time portion of the provided date.
+     * @member
+     * @type {AnimationViewModel~TimeFormatter}
      */
     AnimationViewModel.defaultTimeFormatter = function(date, viewModel) {
-        var gregorianDate = date.toGregorianDate();
+        var gregorianDate = JulianDate.toGregorianDate(date);
         var millisecond = Math.round(gregorianDate.millisecond);
         if (Math.abs(viewModel._clockViewModel.multiplier) < 1) {
             return sprintf("%02d:%02d:%02d.%03d", gregorianDate.hour, gregorianDate.minute, gregorianDate.second, millisecond);
@@ -404,7 +401,6 @@ define([
     /**
      * Gets a copy of the array of positive known clock multipliers to associate with the shuttle ring.
      *
-     * @memberof AnimationViewModel
      * @returns The array of known clock multipliers associated with the shuttle ring.
      */
     AnimationViewModel.prototype.getShuttleRingTicks = function() {
@@ -417,7 +413,6 @@ define([
      * and maximum range of values for the shuttle ring as well as the values that are snapped
      * to when a single click is made.  The values need not be in order, as they will be sorted
      * automatically, and duplicate values will be removed.
-     * @memberof AnimationViewModel
      *
      * @param {Number[]} positiveTicks The list of known positive clock multipliers to associate with the shuttle ring.
      */
@@ -541,12 +536,11 @@ define([
         },
 
         /**
-         * Gets or sets the current date formatting function, which takes a
-         * {@link JulianDate} and an AnimationViewModel instance and
-         * returns a string representation of the calendar date portion.
+         * Gets or sets the function which formats a date for display.
          * @memberof AnimationViewModel.prototype
          *
-         * @type {Function}
+         * @type {AnimationViewModel~DateFormatter}
+         * @default AnimationViewModel.defaultDateFormatter
          */
         dateFormatter : {
             //TODO:@exception {DeveloperError} dateFormatter must be a function.
@@ -565,12 +559,11 @@ define([
         },
 
         /**
-         * Gets or sets the current time formatting function, which takes a
-         * {@link JulianDate} and an AnimationViewModel instance and
-         * returns a string representation of the time portion.
+         * Gets or sets the function which formats a time for display.
          * @memberof AnimationViewModel.prototype
          *
-         * @type {Function}
+         * @type {AnimationViewModel~TimeFormatter}
+         * @default AnimationViewModel.defaultTimeFormatter
          */
         timeFormatter : {
             //TODO:@exception {DeveloperError} timeFormatter must be a function.
@@ -592,6 +585,24 @@ define([
     //Currently exposed for tests.
     AnimationViewModel._maxShuttleRingAngle = maxShuttleRingAngle;
     AnimationViewModel._realtimeShuttleRingAngle = realtimeShuttleRingAngle;
+
+    /**
+     * A function that formats a date for display.
+     * @callback AnimationViewModel~DateFormatter
+     *
+     * @param {JulianDate} date The date to be formatted
+     * @param {AnimationViewModel} viewModel The AnimationViewModel instance requesting formatting.
+     * @returns {String} The string representation of the calendar date portion of the provided date.
+     */
+
+    /**
+     * A function that formats a time for display.
+     * @callback AnimationViewModel~TimeFormatter
+     *
+     * @param {JulianDate} date The date to be formatted
+     * @param {AnimationViewModel} viewModel The AnimationViewModel instance requesting formatting.
+     * @returns {String} The string representation of the time portion of the provided date.
+     */
 
     return AnimationViewModel;
 });

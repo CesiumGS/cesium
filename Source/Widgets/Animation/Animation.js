@@ -594,7 +594,6 @@ define([
     });
 
     /**
-     * @memberof Animation
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     Animation.prototype.isDestroyed = function() {
@@ -604,7 +603,6 @@ define([
     /**
      * Destroys the animation widget.  Should be called if permanently
      * removing the widget from layout.
-     * @memberof Animation
      */
     Animation.prototype.destroy = function() {
         var mouseCallback = this._mouseCallback;
@@ -639,7 +637,6 @@ define([
     /**
      * Resizes the widget to match the container size.
      * This function should be called whenever the container size is changed.
-     * @memberof Animation
      */
     Animation.prototype.resize = function() {
         var parentWidth = this._container.clientWidth;
@@ -686,8 +683,7 @@ define([
     };
 
     /**
-     * Updates the widget to reflect any modified CSS fules for themeing.
-     * @memberof Animation
+     * Updates the widget to reflect any modified CSS rules for theming.
      *
      * @example
      * //Switch to the cesium-lighter theme.

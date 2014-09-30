@@ -1,11 +1,15 @@
 /*global define*/
-define(function() {
+define([
+        '../Core/freezeObject'
+    ], function(
+        freezeObject) {
     "use strict";
 
     /**
      * The types of imagery provided by Bing Maps.
      *
-     * @exports BingMapsStyle
+     * @namespace
+     * @alias BingMapsStyle
      *
      * @see BingMapsImageryProvider
      */
@@ -51,5 +55,5 @@ define(function() {
         COLLINS_BART : 'CollinsBart'
     };
 
-    return BingMapsStyle;
+    return freezeObject(BingMapsStyle);
 });

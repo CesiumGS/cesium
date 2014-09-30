@@ -9,7 +9,6 @@ define([
         '../Core/FeatureDetection',
         '../Core/Math',
         '../Core/PixelFormat',
-        '../Core/RuntimeError',
         './MipmapHint',
         './PixelDatatype',
         './TextureMagnificationFilter',
@@ -25,7 +24,6 @@ define([
         FeatureDetection,
         CesiumMath,
         PixelFormat,
-        RuntimeError,
         MipmapHint,
         PixelDatatype,
         TextureMagnificationFilter,
@@ -85,7 +83,7 @@ define([
         //>>includeEnd('debug');
 
         if ((pixelDatatype === PixelDatatype.FLOAT) && !context.floatingPointTexture) {
-            throw new RuntimeError('When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.');
+            throw new DeveloperError('When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.  Check context.floatingPointTexture.');
         }
 
         if (PixelFormat.isDepthFormat(pixelFormat)) {
@@ -96,7 +94,7 @@ define([
             //>>includeEnd('debug');
 
             if (!context.depthTexture) {
-                throw new RuntimeError('When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.  Check depthTexture.');
+                throw new DeveloperError('When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.  Check context.depthTexture.');
             }
         }
 
@@ -271,8 +269,6 @@ define([
      * Copy new image data into this texture, from a source {@link ImageData}, {@link Image}, {@link Canvas}, or {@link Video}.
      * or an object with width, height, and arrayBufferView properties.
      *
-     * @memberof Texture
-     *
      * @param {Object} source The source {@link ImageData}, {@link Image}, {@link Canvas}, or {@link Video},
      *                        or an object with width, height, and arrayBufferView properties.
      * @param {Number} [xOffset=0] The offset in the x direction within the texture to copy into.
@@ -316,28 +312,6 @@ define([
             throw new DeveloperError('yOffset + source.height must be less than or equal to height.');
         }
         //>>includeEnd('debug');
-
-        // Internet Explorer 11.0.8 is apparently unable to upload a texture to a non-zero
-        // yOffset when the pipeline is configured to FLIP_Y.  So do the flip manually.
-        if (FeatureDetection.isInternetExplorer() && yOffset !== 0 && this._flipY) {
-            var texture = new Texture(this._context, {
-                source : source,
-                flipY : true,
-                pixelFormat : this._pixelFormat,
-                pixelDatatype : this._pixelDatatype,
-                preMultiplyAlpha : this._preMultiplyAlpha
-            });
-
-            var framebuffer = this._context.createFramebuffer({
-                colorTextures : [texture]
-            });
-            framebuffer._bind();
-            this.copyFromFramebuffer(xOffset, yOffset, 0, 0, texture.width, texture.height);
-            framebuffer._unBind();
-            framebuffer.destroy();
-
-            return;
-        }
 
         var gl = this._context._gl;
         var target = this._textureTarget;

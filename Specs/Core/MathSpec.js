@@ -18,6 +18,59 @@ defineSuite([
         expect(CesiumMath.sign(0)).toEqual(0);
     });
 
+    it('signNotZero of -2', function() {
+        expect(CesiumMath.signNotZero(-2)).toEqual(-1);
+    });
+
+    it('signNotZero of 2', function() {
+        expect(CesiumMath.signNotZero(2)).toEqual(1);
+    });
+
+    it('signNotZero of 0', function() {
+        expect(CesiumMath.signNotZero(0)).toEqual(1);
+    });
+
+    //////////////////////////////////////////////////////////////////////
+    it('toSNorm -1.0', function() {
+        expect(CesiumMath.toSNorm(-1.0)).toEqual(0);
+    });
+
+    it('toSNorm 1.0', function() {
+        expect(CesiumMath.toSNorm(1.0)).toEqual(255);
+    });
+
+    it('toSNorm -1.0001', function() {
+        expect(CesiumMath.toSNorm(-1.0001)).toEqual(0);
+    });
+
+    it('toSNorm 1.0001', function() {
+        expect(CesiumMath.toSNorm(1.0001)).toEqual(255);
+    });
+
+    it('toSNorm 0.0', function() {
+        expect(CesiumMath.toSNorm(0.0)).toEqual(128);
+    });
+
+    it('fromSNorm 0', function() {
+        expect(CesiumMath.fromSNorm(0)).toEqual(-1.0);
+    });
+
+    it('fromSNorm 255', function() {
+        expect(CesiumMath.fromSNorm(255)).toEqual(1.0);
+    });
+
+    it('fromSNorm -0.0001', function() {
+        expect(CesiumMath.fromSNorm(-0.0001)).toEqual(-1.0);
+    });
+
+    it('fromSNorm 255.00001', function() {
+        expect(CesiumMath.fromSNorm(255.00001)).toEqual(1.0);
+    });
+
+    it('fromSNorm 128', function() {
+        expect(CesiumMath.fromSNorm(255.0 / 2)).toEqual(0.0);
+    });
+
     //////////////////////////////////////////////////////////////////////
 
     it('cosh', function() {
@@ -264,5 +317,31 @@ defineSuite([
         expect(function() {
             CesiumMath.clamp();
         }).toThrowDeveloperError();
+    });
+
+    it('acosClamped returns acos for normal values', function() {
+        expect(CesiumMath.acosClamped(0.5)).toBe(Math.acos(0.5));
+        expect(CesiumMath.acosClamped(0.123)).toBe(Math.acos(0.123));
+        expect(CesiumMath.acosClamped(-0.123)).toBe(Math.acos(-0.123));
+        expect(CesiumMath.acosClamped(-1.0)).toBe(Math.acos(-1.0));
+        expect(CesiumMath.acosClamped(1.0)).toBe(Math.acos(1.0));
+    });
+
+    it('acosClamped returns acos of clamped value when value is outside the valid range', function() {
+        expect(CesiumMath.acosClamped(-1.01)).toBe(Math.acos(-1.0));
+        expect(CesiumMath.acosClamped(1.01)).toBe(Math.acos(1.0));
+    });
+
+    it('asinClamped returns asin for normal values', function() {
+        expect(CesiumMath.asinClamped(0.5)).toBe(Math.asin(0.5));
+        expect(CesiumMath.asinClamped(0.123)).toBe(Math.asin(0.123));
+        expect(CesiumMath.asinClamped(-0.123)).toBe(Math.asin(-0.123));
+        expect(CesiumMath.asinClamped(-1.0)).toBe(Math.asin(-1.0));
+        expect(CesiumMath.asinClamped(1.0)).toBe(Math.asin(1.0));
+    });
+
+    it('asinClamped returns asin of clamped value when value is outside the valid range', function() {
+        expect(CesiumMath.asinClamped(-1.01)).toBe(Math.asin(-1.0));
+        expect(CesiumMath.asinClamped(1.01)).toBe(Math.asin(1.0));
     });
 });

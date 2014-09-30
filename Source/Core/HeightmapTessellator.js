@@ -20,31 +20,31 @@ define([
     /**
      * Contains functions to create a mesh from a heightmap image.
      *
-     * @exports HeightmapTessellator
+     * @namespace
+     * @alias HeightmapTessellator
      */
     var HeightmapTessellator = {};
 
     /**
      * The default structure of a heightmap, as given to {@link HeightmapTessellator.computeVertices}.
      *
-     * @memberof HeightmapTessellator
+     * @constant
      */
     HeightmapTessellator.DEFAULT_STRUCTURE = freezeObject({
-            heightScale : 1.0,
-            heightOffset : 0.0,
-            elementsPerHeight : 1,
-            stride : 1,
-            elementMultiplier : 256.0,
-            isBigEndian : false
-        });
+        heightScale : 1.0,
+        heightOffset : 0.0,
+        elementsPerHeight : 1,
+        stride : 1,
+        elementMultiplier : 256.0,
+        isBigEndian : false
+    });
 
     /**
      * Fills an array of vertices from a heightmap image.  On return, the vertex data is in the order
      * [X, Y, Z, H, U, V], where X, Y, and Z represent the Cartesian position of the vertex, H is the
      * height above the ellipsoid, and U and V are the texture coordinates.
      *
-     * @memberof HeightmapTessellator
-     *
+     * @param {Object} options Object with the following properties:
      * @param {Array|Float32Array} options.vertices The array to use to store computed vertices.
      *                             If options.skirtHeight is 0.0, the array should have
      *                             options.width * options.height * 6 elements.  If
@@ -92,7 +92,6 @@ define([
      * var width = 5;
      * var height = 5;
      * var vertices = new Float32Array(width * height * 6);
-     * var options = ;
      * Cesium.HeightmapTessellator.computeVertices({
      *     vertices : vertices,
      *     heightmap : [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
@@ -212,7 +211,7 @@ define([
             ++endCol;
         }
 
-        for ( var rowIndex = startRow; rowIndex < endRow; ++rowIndex) {
+        for (var rowIndex = startRow; rowIndex < endRow; ++rowIndex) {
             var row = rowIndex;
             if (row < 0) {
                 row = 0;
@@ -235,7 +234,7 @@ define([
 
             var v = (latitude - geographicSouth) / (geographicNorth - geographicSouth);
 
-            for ( var colIndex = startCol; colIndex < endCol; ++colIndex) {
+            for (var colIndex = startCol; colIndex < endCol; ++colIndex) {
                 var col = colIndex;
                 if (col < 0) {
                     col = 0;

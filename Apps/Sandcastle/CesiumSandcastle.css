@@ -165,6 +165,7 @@ a.linkButton:focus, a.linkButton:hover {
 
 .CodeMirror, .CodeMirror-scroll {
     height: 100%;
+    font-size: 13px;
 }
 
 .highlightToolbarButton {

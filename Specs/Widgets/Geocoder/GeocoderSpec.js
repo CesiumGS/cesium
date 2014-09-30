@@ -1,12 +1,10 @@
 /*global defineSuite*/
 defineSuite([
         'Widgets/Geocoder/Geocoder',
-        'Core/Ellipsoid',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
         Geocoder,
-        Ellipsoid,
         createScene,
         destroyScene) {
     "use strict";
@@ -22,7 +20,6 @@ defineSuite([
     });
 
     it('constructor sets expected properties', function() {
-        var ellipsoid = new Ellipsoid();
         var flightDuration = 1234;
         var url = 'bing.invalid/';
         var key = 'testKey';
@@ -30,7 +27,6 @@ defineSuite([
         var geocoder = new Geocoder({
             container : document.body,
             scene : scene,
-            ellipsoid : ellipsoid,
             flightDuration : flightDuration,
             url : url,
             key : key
@@ -38,7 +34,6 @@ defineSuite([
 
         var viewModel = geocoder.viewModel;
         expect(viewModel.scene).toBe(scene);
-        expect(viewModel.ellipsoid).toBe(ellipsoid);
         expect(viewModel.flightDuration).toBe(flightDuration);
         expect(viewModel.url).toBe(url);
         expect(viewModel.key).toBe(key);

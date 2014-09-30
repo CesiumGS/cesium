@@ -21,22 +21,24 @@ define([
      *
      * @param {Boolean} [show=true] Determines if the geometry instance will be shown.
      *
+     * @see GeometryInstance
+     * @see GeometryInstanceAttribute
+     *
      * @example
      * var instance = new Cesium.GeometryInstance({
      *   geometry : new Cesium.BoxGeometry({
      *     vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
-     *     dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0)
+     *     dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0),
+     *     minimumCorner : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0),
+     *     maximumCorner : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0)  
      *   }),
      *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-     *     Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883), new Cesium.Cartesian3(0.0, 0.0, 1000000.0)),
+     *     Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 1000000.0), new Cesium.Matrix4()),
      *   id : 'box',
      *   attributes : {
      *     show : new Cesium.ShowGeometryInstanceAttribute(false)
      *   }
      * });
-     *
-     * @see GeometryInstance
-     * @see GeometryInstanceAttribute
      */
     var ShowGeometryInstanceAttribute = function(show) {
         show = defaultValue(show, true);
@@ -109,7 +111,6 @@ define([
      *
      * @param {Boolean} show The show value.
      * @param {Uint8Array} [result] The array to store the result in, if undefined a new instance will be created.
-     *
      * @returns {Uint8Array} The modified result parameter or a new instance if result was undefined.
      *
      * @example

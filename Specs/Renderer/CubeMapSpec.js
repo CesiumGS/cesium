@@ -2,6 +2,7 @@
 defineSuite([
         'Core/Cartesian3',
         'Core/Color',
+        'Core/FeatureDetection',
         'Core/PixelFormat',
         'Core/PrimitiveType',
         'Renderer/BufferUsage',
@@ -16,6 +17,7 @@ defineSuite([
     ], 'Renderer/CubeMap', function(
         Cartesian3,
         Color,
+        FeatureDetection,
         PixelFormat,
         PrimitiveType,
         BufferUsage,

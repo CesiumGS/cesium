@@ -26,6 +26,7 @@ define([
      * @alias EllipsoidTerrainProvider
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {TilingScheme} [options.tilingScheme] The tiling scheme specifying how the ellipsoidal
      * surface is broken into tiles.  If this parameter is not provided, a {@link GeographicTilingScheme}
      * is used.
@@ -107,6 +108,32 @@ define([
             get : function() {
                 return true;
             }
+        },
+
+        /**
+         * Gets a value indicating whether or not the provider includes a water mask.  The water mask
+         * indicates which areas of the globe are water rather than land, so they can be rendered
+         * as a reflective surface with animated waves.  This function should not be
+         * called before {@link EllipsoidTerrainProvider#ready} returns true.
+         * @memberof EllipsoidTerrainProvider.prototype
+         * @type {Boolean}
+         */
+        hasWaterMask : {
+            get : function() {
+                return false;
+            }
+        },
+
+        /**
+         * Gets a value indicating whether or not the requested tiles include vertex normals.
+         * This function should not be called before {@link EllipsoidTerrainProvider#ready} returns true.
+         * @memberof EllipsoidTerrainProvider.prototype
+         * @type {Boolean}
+         */
+        hasVertexNormals : {
+            get : function() {
+                return false;
+            }
         }
     });
 
@@ -114,8 +141,6 @@ define([
      * Requests the geometry for a given tile.  This function should not be called before
      * {@link TerrainProvider#ready} returns true.  The result includes terrain
      * data and indicates that all child tiles are available.
-     *
-     * @memberof EllipsoidTerrainProvider
      *
      * @param {Number} x The X coordinate of the tile for which to request geometry.
      * @param {Number} y The Y coordinate of the tile for which to request geometry.
@@ -134,8 +159,6 @@ define([
     /**
      * Gets the maximum geometric error allowed in a tile at a given level.
      *
-     * @memberof EllipsoidTerrainProvider
-     *
      * @param {Number} level The tile level for which to get the maximum geometric error.
      * @returns {Number} The maximum geometric error.
      */
@@ -144,16 +167,15 @@ define([
     };
 
     /**
-     * Gets a value indicating whether or not the provider includes a water mask.  The water mask
-     * indicates which areas of the globe are water rather than land, so they can be rendered
-     * as a reflective surface with animated waves.
+     * Determines whether data for a tile is available to be loaded.
      *
-     * @memberof EllipsoidTerrainProvider
-     *
-     * @returns {Boolean} True if the provider has a water mask; otherwise, false.
+     * @param {Number} x The X coordinate of the tile for which to request geometry.
+     * @param {Number} y The Y coordinate of the tile for which to request geometry.
+     * @param {Number} level The level of the tile for which to request geometry.
+     * @returns {Boolean} Undefined if not supported, otherwise true or false.
      */
-    EllipsoidTerrainProvider.prototype.hasWaterMask = function() {
-        return false;
+    EllipsoidTerrainProvider.prototype.getTileDataAvailable = function(x, y, level) {
+        return undefined;
     };
 
     return EllipsoidTerrainProvider;

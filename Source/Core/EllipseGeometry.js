@@ -571,6 +571,7 @@ define([
      * @alias EllipseGeometry
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Cartesian3} options.center The ellipse's center point in the fixed frame.
      * @param {Number} options.semiMajorAxis The length of the ellipse's semi-major axis in meters.
      * @param {Number} options.semiMinorAxis The length of the ellipse's semi-minor axis in meters.
@@ -583,10 +584,12 @@ define([
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
      * @exception {DeveloperError} semiMajorAxis and semiMinorAxis must be greater than zero.
-     * @exception {DeveloperError} semiMajorAxis must be larger than the semiMajorAxis.
+     * @exception {DeveloperError} semiMajorAxis must be larger than the semiMinorAxis.
      * @exception {DeveloperError} granularity must be greater than zero.
      *
      * @see EllipseGeometry.createGeometry
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Ellipse.html|Cesium Sandcastle Ellipse Demo}
      *
      * @example
      * // Create an ellipse.
@@ -623,7 +626,7 @@ define([
             throw new DeveloperError('Semi-major and semi-minor axes must be greater than zero.');
         }
         if (semiMajorAxis < semiMinorAxis) {
-            throw new DeveloperError('semiMajorAxis must be larger than the semiMajorAxis.');
+            throw new DeveloperError('semiMajorAxis must be larger than the semiMinorAxis.');
         }
         if (granularity <= 0.0) {
             throw new DeveloperError('granularity must be greater than zero.');
@@ -646,7 +649,6 @@ define([
 
     /**
      * Computes the geometric representation of a ellipse on an ellipsoid, including its vertices, indices, and a bounding sphere.
-     * @memberof EllipseGeometry
      *
      * @param {EllipseGeometry} ellipseGeometry A description of the ellipse.
      * @returns {Geometry} The computed vertices and indices.

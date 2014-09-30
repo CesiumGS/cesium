@@ -25,7 +25,6 @@ define([
      * @param {Boolean} [allowCrossOrigin=true] Whether to request the image using Cross-Origin
      *        Resource Sharing (CORS).  CORS is only actually used if the image URL is actually cross-origin.
      *        Data URIs are never requested using CORS.
-     *
      * @returns {Promise} a promise that will resolve to the requested data when loaded.
      *
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
@@ -35,7 +34,7 @@ define([
      * // load a single image asynchronously
      * Cesium.loadImage('some/image/url.png').then(function(image) {
      *     // use the loaded image
-     * }, function(error) {
+     * }.otherwise(function(error) {
      *     // an error occurred
      * });
      *

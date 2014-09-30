@@ -67,14 +67,11 @@ define([
     /**
      * Creates an rectangle given the boundary longitude and latitude in degrees.
      *
-     * @memberof Rectangle
-     *
      * @param {Number} [west=0.0] The westernmost longitude in degrees in the range [-180.0, 180.0].
      * @param {Number} [south=0.0] The southernmost latitude in degrees in the range [-90.0, 90.0].
      * @param {Number} [east=0.0] The easternmost longitude in degrees in the range [-180.0, 180.0].
      * @param {Number} [north=0.0] The northernmost latitude in degrees in the range [-90.0, 90.0].
      * @param {Rectangle} [result] The object onto which to store the result, or undefined if a new instance should be created.
-     *
      * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
      *
      * @example
@@ -100,7 +97,6 @@ define([
 
     /**
      * Creates the smallest possible Rectangle that encloses all positions in the provided array.
-     * @memberof Rectangle
      *
      * @param {Cartographic[]} cartographics The list of Cartographic instances.
      * @param {Rectangle} [result] The object onto which to store the result, or undefined if a new instance should be created.
@@ -145,7 +141,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @memberof Rectangle
      *
      * @param {Rectangle} value The value to pack.
      * @param {Number[]} array The array to pack into.
@@ -172,7 +167,6 @@ define([
 
     /**
      * Retrieves an instance from a packed array.
-     * @memberof Rectangle
      *
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
@@ -200,8 +194,6 @@ define([
     /**
      * Duplicates an Rectangle.
      *
-     * @memberof Rectangle
-     *
      * @param {Rectangle} rectangle The rectangle to clone.
      * @param {Rectangle} [result] The object onto which to store the result, or undefined if a new instance should be created.
      * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided. (Returns undefined if rectangle is undefined)
@@ -225,8 +217,6 @@ define([
     /**
      * Duplicates this Rectangle.
      *
-     * @memberof Rectangle
-     *
      * @param {Rectangle} [result] The object onto which to store the result.
      * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
      */
@@ -237,7 +227,6 @@ define([
     /**
      * Compares the provided Rectangle with this Rectangle componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof Rectangle
      *
      * @param {Rectangle} [other] The Rectangle to compare.
      * @returns {Boolean} <code>true</code> if the Rectangles are equal, <code>false</code> otherwise.
@@ -250,11 +239,8 @@ define([
      * Compares the provided rectangles and returns <code>true</code> if they are equal,
      * <code>false</code> otherwise.
      *
-     * @memberof Rectangle
-     *
      * @param {Rectangle} [left] The first Rectangle.
      * @param {Rectangle} [right] The second Rectangle.
-     *
      * @returns {Boolean} <code>true</code> if left and right are equal; otherwise <code>false</code>.
      */
     Rectangle.equals = function(left, right) {
@@ -271,7 +257,6 @@ define([
      * Compares the provided Rectangle with this Rectangle componentwise and returns
      * <code>true</code> if they are within the provided epsilon,
      * <code>false</code> otherwise.
-     * @memberof Rectangle
      *
      * @param {Rectangle} [other] The Rectangle to compare.
      * @param {Number} epsilon The epsilon to use for equality testing.
@@ -347,13 +332,12 @@ define([
 
     /**
      * Computes the southwest corner of an rectangle.
-     * @memberof Rectangle
      *
      * @param {Rectangle} rectangle The rectangle for which to find the corner
      * @param {Cartographic} [result] The object onto which to store the result.
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
-    Rectangle.getSouthwest = function(rectangle, result) {
+    Rectangle.southwest = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(rectangle)) {
             throw new DeveloperError('rectangle is required');
@@ -371,13 +355,12 @@ define([
 
     /**
      * Computes the northwest corner of an rectangle.
-     * @memberof Rectangle
      *
      * @param {Rectangle} rectangle The rectangle for which to find the corner
      * @param {Cartographic} [result] The object onto which to store the result.
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
-    Rectangle.getNorthwest = function(rectangle, result) {
+    Rectangle.northwest = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(rectangle)) {
             throw new DeveloperError('rectangle is required');
@@ -395,13 +378,12 @@ define([
 
     /**
      * Computes the northeast corner of an rectangle.
-     * @memberof Rectangle
      *
      * @param {Rectangle} rectangle The rectangle for which to find the corner
      * @param {Cartographic} [result] The object onto which to store the result.
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
-    Rectangle.getNortheast = function(rectangle, result) {
+    Rectangle.northeast = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(rectangle)) {
             throw new DeveloperError('rectangle is required');
@@ -419,13 +401,12 @@ define([
 
     /**
      * Computes the southeast corner of an rectangle.
-     * @memberof Rectangle
      *
      * @param {Rectangle} rectangle The rectangle for which to find the corner
      * @param {Cartographic} [result] The object onto which to store the result.
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
-    Rectangle.getSoutheast = function(rectangle, result) {
+    Rectangle.southeast = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(rectangle)) {
             throw new DeveloperError('rectangle is required');
@@ -443,23 +424,31 @@ define([
 
     /**
      * Computes the center of an rectangle.
-     * @memberof Rectangle
      *
      * @param {Rectangle} rectangle The rectangle for which to find the center
      * @param {Cartographic} [result] The object onto which to store the result.
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
-    Rectangle.getCenter = function(rectangle, result) {
+    Rectangle.center = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(rectangle)) {
             throw new DeveloperError('rectangle is required');
         }
         //>>includeEnd('debug');
 
-        if (!defined(result)) {
-            return new Cartographic((rectangle.west + rectangle.east) * 0.5, (rectangle.south + rectangle.north) * 0.5);
+        var east = rectangle.east;
+        var west = rectangle.west;
+
+        var longitude = (west + east) * 0.5;
+        if (east < west) {
+            longitude = CesiumMath.negativePiToPi(longitude + CesiumMath.PI);
         }
-        result.longitude = (rectangle.west + rectangle.east) * 0.5;
+
+        if (!defined(result)) {
+            return new Cartographic(longitude, (rectangle.south + rectangle.north) * 0.5);
+        }
+
+        result.longitude = longitude;
         result.latitude = (rectangle.south + rectangle.north) * 0.5;
         result.height = 0.0;
         return result;
@@ -467,7 +456,6 @@ define([
 
     /**
      * Computes the intersection of two rectangles
-     * @memberof Rectangle
      *
      * @param {Rectangle} rectangle On rectangle to find an intersection
      * @param {Rectangle} otherRectangle Another rectangle to find an intersection
@@ -500,7 +488,6 @@ define([
 
     /**
      * Returns true if the cartographic is on or inside the rectangle, false otherwise.
-     * @memberof Rectangle
      *
      * @param {Rectangle} rectangle The rectangle
      * @param {Cartographic} cartographic The cartographic to test.
@@ -525,8 +512,6 @@ define([
     /**
      * Determines if the rectangle is empty, i.e., if <code>west >= east</code>
      * or <code>south >= north</code>.
-     *
-     * @memberof Rectangle
      *
      * @param {Rectangle} rectangle The rectangle
      * @returns {Boolean} True if the rectangle is empty; otherwise, false.
@@ -624,8 +609,9 @@ define([
 
     /**
      * The largest possible rectangle.
-     * @memberof Rectangle
-     * @type Rectangle
+     *
+     * @type {Rectangle}
+     * @constant
     */
     Rectangle.MAX_VALUE = freezeObject(new Rectangle(-Math.PI, -CesiumMath.PI_OVER_TWO, Math.PI, CesiumMath.PI_OVER_TWO));
 

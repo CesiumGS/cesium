@@ -39,8 +39,8 @@ define([
         return {};
     }
 
-    function transformToWorldCoordinates(instances, primitiveModelMatrix, allow3DOnly) {
-        var toWorld = !allow3DOnly;
+    function transformToWorldCoordinates(instances, primitiveModelMatrix, scene3DOnly) {
+        var toWorld = !scene3DOnly;
         var length = instances.length;
         var i;
 
@@ -169,7 +169,7 @@ define([
         var pickIds = parameters.pickIds;
         var projection = parameters.projection;
         var uintIndexSupport = parameters.elementIndexUintSupported;
-        var allow3DOnly = parameters.allow3DOnly;
+        var scene3DOnly = parameters.scene3DOnly;
         var allowPicking = parameters.allowPicking;
         var vertexCacheOptimize = parameters.vertexCacheOptimize;
         var modelMatrix = parameters.modelMatrix;
@@ -187,10 +187,10 @@ define([
         //>>includeEnd('debug');
 
         // Unify to world coordinates before combining.
-        transformToWorldCoordinates(instances, modelMatrix, allow3DOnly);
+        transformToWorldCoordinates(instances, modelMatrix, scene3DOnly);
 
         // Clip to IDL
-        if (!allow3DOnly) {
+        if (!scene3DOnly) {
             for (i = 0; i < length; ++i) {
                 GeometryPipeline.wrapLongitude(instances[i].geometry);
             }
@@ -219,7 +219,7 @@ define([
         // Split positions for GPU RTE
         var attributes = geometry.attributes;
         var name;
-        if (!allow3DOnly) {
+        if (!scene3DOnly) {
             for (name in attributes) {
                 if (attributes.hasOwnProperty(name) && attributes[name].componentDatatype === ComponentDatatype.DOUBLE) {
                     var name3D = name + '3D';
@@ -361,21 +361,10 @@ define([
      * @private
      */
     PrimitivePipeline.combineGeometry = function(parameters) {
-        var clonedParameters = {
-            instances : parameters.instances,
-            pickIds : parameters.pickIds,
-            ellipsoid : parameters.ellipsoid,
-            projection : parameters.projection,
-            elementIndexUintSupported : parameters.elementIndexUintSupported,
-            allow3DOnly : parameters.allow3DOnly,
-            allowPicking : parameters.allowPicking,
-            vertexCacheOptimize : parameters.vertexCacheOptimize,
-            modelMatrix : Matrix4.clone(parameters.modelMatrix)
-        };
-        var geometries = geometryPipeline(clonedParameters);
+        var geometries = geometryPipeline(parameters);
         var attributeLocations = GeometryPipeline.createAttributeLocations(geometries[0]);
 
-        var instances = clonedParameters.instances;
+        var instances = parameters.instances;
         var perInstanceAttributeNames = getCommonPerInstanceAttributeNames(instances);
 
         var perInstanceAttributes = [];
@@ -389,7 +378,7 @@ define([
 
         return {
             geometries : geometries,
-            modelMatrix : clonedParameters.modelMatrix,
+            modelMatrix : parameters.modelMatrix,
             attributeLocations : attributeLocations,
             vaAttributes : perInstanceAttributes,
             vaAttributeLocations : indices
@@ -844,7 +833,7 @@ define([
             ellipsoid : parameters.ellipsoid,
             isGeographic : parameters.projection instanceof GeographicProjection,
             elementIndexUintSupported : parameters.elementIndexUintSupported,
-            allow3DOnly : parameters.allow3DOnly,
+            scene3DOnly : parameters.scene3DOnly,
             allowPicking : parameters.allowPicking,
             vertexCacheOptimize : parameters.vertexCacheOptimize,
             modelMatrix : parameters.modelMatrix
@@ -871,7 +860,6 @@ define([
 
         var ellipsoid = Ellipsoid.clone(packedParameters.ellipsoid);
         var projection = packedParameters.isGeographic ? new GeographicProjection(ellipsoid) : new WebMercatorProjection(ellipsoid);
-        var modelMatrix = Matrix4.clone(packedParameters.modelMatrix);
 
         return {
             instances : instances,
@@ -879,10 +867,10 @@ define([
             ellipsoid : ellipsoid,
             projection : projection,
             elementIndexUintSupported : packedParameters.elementIndexUintSupported,
-            allow3DOnly : packedParameters.allow3DOnly,
+            scene3DOnly : packedParameters.scene3DOnly,
             allowPicking : packedParameters.allowPicking,
             vertexCacheOptimize : packedParameters.vertexCacheOptimize,
-            modelMatrix : packedParameters.modelMatrix
+            modelMatrix : Matrix4.clone(packedParameters.modelMatrix)
         };
     };
 

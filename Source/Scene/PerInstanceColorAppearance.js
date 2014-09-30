@@ -27,6 +27,7 @@ define([
      * @alias PerInstanceColorAppearance
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.flat=false] When <code>true</code>, flat shading is used in the fragment shader, which means lighting is not taking into account.
      * @param {Boolean} [options.faceForward=!options.closed] When <code>true</code>, the fragment shader flips the surface normal as needed to ensure that the normal faces the viewer to avoid dark spots.  This is useful when both sides of a geometry should be shaded like {@link WallGeometry}.
      * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link PerInstanceColorAppearance#renderState} has alpha blending enabled.
@@ -34,6 +35,8 @@ define([
      * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
      * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
      * @param {RenderState} [options.renderState] Optional render state to override the default render state.
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Per%20Instance%20Color.html|Cesium Sandcastle Per Instance Color Appearance Demo}
      *
      * @example
      * // A solid white line segment
@@ -53,7 +56,7 @@ define([
      *     flat : true,
      *     translucent : false
      *   })
-     * }));
+     * });
      *
      * // Two rectangles in a primitive, each with a different color
      * var instance = new Cesium.GeometryInstance({
@@ -263,7 +266,7 @@ define([
      * this is derived from {@link PerInstanceColorAppearance#fragmentShaderSource}, {@link PerInstanceColorAppearance#flat},
      * and {@link PerInstanceColorAppearance#faceForward}.
      *
-     * @memberof PerInstanceColorAppearance
+     * @function
      *
      * @returns String The full GLSL fragment shader source.
      */
@@ -272,18 +275,18 @@ define([
     /**
      * Determines if the geometry is translucent based on {@link PerInstanceColorAppearance#translucent}.
      *
-     * @memberof PerInstanceColorAppearance
+     * @function
      *
      * @returns {Boolean} <code>true</code> if the appearance is translucent.
      */
     PerInstanceColorAppearance.prototype.isTranslucent = Appearance.prototype.isTranslucent;
 
     /**
-     * Creates a render state.  This is not the final {@link RenderState} instance; instead,
-     * it can contain a subset of render state properties identical to <code>renderState</code>
-     * passed to {@link Context#createRenderState}.
+     * Creates a render state.  This is not the final render state instance; instead,
+     * it can contain a subset of render state properties identical to the render state
+     * created in the context.
      *
-     * @memberof PerInstanceColorAppearance
+     * @function
      *
      * @returns {Object} The render state.
      */

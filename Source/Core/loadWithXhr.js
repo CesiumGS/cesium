@@ -4,13 +4,15 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
-        './RequestErrorEvent'
+        './RequestErrorEvent',
+        './RuntimeError'
     ], function(
         when,
         defaultValue,
         defined,
         DeveloperError,
-        RequestErrorEvent) {
+        RequestErrorEvent,
+        RuntimeError) {
     "use strict";
 
     /**
@@ -21,23 +23,21 @@ define([
      *
      * @exports loadWithXhr
      *
-     * @param {Object} options Options for the request.
+     * @param {Object} options Object with the following properties:
      * @param {String|Promise} options.url The URL of the data, or a promise for the URL.
      * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
      * @param {String} [options.method='GET'] The HTTP method to use.
      * @param {String} [options.data] The data to send with the request, if any.
      * @param {Object} [options.headers] HTTP headers to send with the request, if any.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
-     *
      * @returns {Promise} a promise that will resolve to the requested data when loaded.
-     *
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
-     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @see loadArrayBuffer
      * @see loadBlob
      * @see loadJson
      * @see loadText
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @example
      * // Load a single URL asynchronously. In real code, you should use loadBlob instead.
@@ -46,7 +46,7 @@ define([
      *     responseType : 'blob'
      * }).then(function(blob) {
      *     // use the data
-     * }, function(error) {
+     * }.otherwise(function(error) {
      *     // an error occurred
      * });
      */
@@ -131,7 +131,7 @@ define([
 
         var xhr = new XMLHttpRequest();
 
-        if (defined(overrideMimeType)) {
+        if (defined(overrideMimeType) && defined(xhr.overrideMimeType)) {
             xhr.overrideMimeType(overrideMimeType);
         }
 
@@ -151,7 +151,18 @@ define([
 
         xhr.onload = function(e) {
             if (xhr.status === 200) {
-                deferred.resolve(xhr.response);
+                if (defined(xhr.response)) {
+                    deferred.resolve(xhr.response);
+                } else {
+                    // busted old browsers.
+                    if (defined(xhr.responseXML) && xhr.responseXML.hasChildNodes()) {
+                        deferred.resolve(xhr.responseXML);
+                    } else if (defined(xhr.responseText)) {
+                        deferred.resolve(xhr.responseText);
+                    } else {
+                        deferred.reject(new RuntimeError('unknown XMLHttpRequest response type.'));
+                    }
+                }
             } else {
                 deferred.reject(new RequestErrorEvent(xhr.status, xhr.response, xhr.getAllResponseHeaders()));
             }

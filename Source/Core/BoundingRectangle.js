@@ -64,7 +64,6 @@ define([
     /**
      * Computes a bounding rectangle enclosing the list of 2D points.
      * The rectangle is oriented with the corner at the bottom left.
-     * @memberof BoundingRectangle
      *
      * @param {Cartesian2[]} positions List of points that the bounding rectangle will enclose.  Each point must have <code>x</code> and <code>y</code> properties.
      * @param {BoundingRectangle} [result] The object onto which to store the result.
@@ -114,7 +113,6 @@ define([
     var fromRectangleUpperRight = new Cartographic();
     /**
      * Computes a bounding rectangle from an rectangle.
-     * @memberof BoundingRectangle
      *
      * @param {Rectangle} rectangle The valid rectangle used to create a bounding rectangle.
      * @param {Object} [projection=GeographicProjection] The projection used to project the rectangle into 2D.
@@ -136,8 +134,8 @@ define([
 
         projection = defaultValue(projection, defaultProjection);
 
-        var lowerLeft = projection.project(Rectangle.getSouthwest(rectangle, fromRectangleLowerLeft));
-        var upperRight = projection.project(Rectangle.getNortheast(rectangle, fromRectangleUpperRight));
+        var lowerLeft = projection.project(Rectangle.southwest(rectangle, fromRectangleLowerLeft));
+        var upperRight = projection.project(Rectangle.northeast(rectangle, fromRectangleUpperRight));
 
         Cartesian2.subtract(upperRight, lowerLeft, upperRight);
 
@@ -150,7 +148,6 @@ define([
 
     /**
      * Duplicates a BoundingRectangle instance.
-     * @memberof BoundingRectangle
      *
      * @param {BoundingRectangle} rectangle The bounding rectangle to duplicate.
      * @param {BoundingRectangle} [result] The object onto which to store the result.
@@ -174,7 +171,6 @@ define([
 
     /**
      * Computes a bounding rectangle that is the union of the left and right bounding rectangles.
-     * @memberof BoundingRectangle
      *
      * @param {BoundingRectangle} left A rectangle to enclose in bounding rectangle.
      * @param {BoundingRectangle} right A rectangle to enclose in a bounding rectangle.
@@ -209,7 +205,6 @@ define([
 
     /**
      * Computes a bounding rectangle by enlarging the provided rectangle until it contains the provided point.
-     * @memberof BoundingRectangle
      *
      * @param {BoundingRectangle} rectangle A rectangle to expand.
      * @param {Cartesian2} point A point to enclose in a bounding rectangle.
@@ -250,7 +245,6 @@ define([
 
     /**
      * Determines if two rectangles intersect.
-     * @memberof BoundingRectangle
      *
      * @param {BoundingRectangle} left A rectangle to check for intersection.
      * @param {BoundingRectangle} right The other rectangle to check for intersection.
@@ -283,7 +277,6 @@ define([
     /**
      * Compares the provided BoundingRectangles componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof BoundingRectangle
      *
      * @param {BoundingRectangle} [left] The first BoundingRectangle.
      * @param {BoundingRectangle} [right] The second BoundingRectangle.
@@ -301,7 +294,6 @@ define([
 
     /**
      * Duplicates this BoundingRectangle instance.
-     * @memberof BoundingRectangle
      *
      * @param {BoundingRectangle} [result] The object onto which to store the result.
      * @returns {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
@@ -312,7 +304,6 @@ define([
 
     /**
      * Determines if this rectangle intersects with another.
-     * @memberof BoundingRectangle
      *
      * @param {BoundingRectangle} right A rectangle to check for intersection.
      * @returns {Intersect} <code>Intersect.INTESECTING</code> if the rectangles intersect, <code>Intersect.OUTSIDE</code> otherwise.
@@ -324,7 +315,6 @@ define([
     /**
      * Compares this BoundingRectangle against the provided BoundingRectangle componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof BoundingRectangle
      *
      * @param {BoundingRectangle} [right] The right hand side BoundingRectangle.
      * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.

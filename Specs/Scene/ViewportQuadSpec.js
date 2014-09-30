@@ -9,7 +9,6 @@ defineSuite([
         'Specs/createContext',
         'Specs/createFrameState',
         'Specs/destroyContext',
-        'Specs/frameState',
         'Specs/render'
     ], function(
         ViewportQuad,
@@ -21,21 +20,21 @@ defineSuite([
         createContext,
         createFrameState,
         destroyContext,
-        frameState,
         render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
+    var frameState;
     var viewportQuad;
     var us;
     var testImage;
 
     beforeAll(function() {
         context = createContext();
+        frameState = createFrameState();
         testImage = new Image();
         testImage.src = './Data/Images/Red16x16.png';
-
     });
 
     afterAll(function() {
@@ -47,7 +46,7 @@ defineSuite([
         viewportQuad.rectangle = new BoundingRectangle(0, 0, 2, 2);
 
         us = context.uniformState;
-        us.update(context, createFrameState(createCamera(context)));
+        us.update(context, createFrameState(createCamera()));
     });
 
     afterEach(function() {

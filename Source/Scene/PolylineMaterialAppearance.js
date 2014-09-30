@@ -29,11 +29,15 @@ define([
      * @alias PolylineMaterialAppearance
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link PolylineMaterialAppearance#renderState} has alpha blending enabled.
      * @param {Material} [options.material=Material.ColorType] The material used to determine the fragment color.
      * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
      * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
      * @param {RenderState} [options.renderState] Optional render state to override the default render state.
+     *
+     * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline%20Material.html|Cesium Sandcastle Polyline Material Appearance Demo}
      *
      * @example
      * var primitive = new Cesium.Primitive({
@@ -50,9 +54,7 @@ define([
      *   appearance : new Cesium.PolylineMaterialAppearance({
      *     material : Cesium.Material.fromType('Color')
      *   })
-     * }));
-     *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+     * });
      */
     var PolylineMaterialAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -194,7 +196,7 @@ define([
      * Procedurally creates the full GLSL fragment shader source.  For {@link PolylineMaterialAppearance},
      * this is derived from {@link PolylineMaterialAppearance#fragmentShaderSource} and {@link PolylineMaterialAppearance#material}.
      *
-     * @memberof PolylineMaterialAppearance
+     * @function
      *
      * @returns String The full GLSL fragment shader source.
      */
@@ -203,18 +205,18 @@ define([
     /**
      * Determines if the geometry is translucent based on {@link PolylineMaterialAppearance#translucent} and {@link Material#isTranslucent}.
      *
-     * @memberof PolylineMaterialAppearance
+     * @function
      *
      * @returns {Boolean} <code>true</code> if the appearance is translucent.
      */
     PolylineMaterialAppearance.prototype.isTranslucent = Appearance.prototype.isTranslucent;
 
     /**
-     * Creates a render state.  This is not the final {@link RenderState} instance; instead,
-     * it can contain a subset of render state properties identical to <code>renderState</code>
-     * passed to {@link Context#createRenderState}.
+     * Creates a render state.  This is not the final render state instance; instead,
+     * it can contain a subset of render state properties identical to the render state
+     * created in the context.
      *
-     * @memberof PolylineMaterialAppearance
+     * @function
      *
      * @returns {Object} The render state.
      */

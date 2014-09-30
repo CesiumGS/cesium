@@ -31,19 +31,16 @@ float getNearFarScalar(vec4 nearFarScalar, float cameraDistSq)
     float nearDistanceSq = nearFarScalar.x * nearFarScalar.x;
     float farDistanceSq = nearFarScalar.z * nearFarScalar.z;
 
-    // ensure that t will fall within the range of [0.0, 1.0]
-    cameraDistSq = clamp(cameraDistSq, nearDistanceSq, farDistanceSq);
-
     float t = (cameraDistSq - nearDistanceSq) / (farDistanceSq - nearDistanceSq);
 
-    t = pow(t, 0.15);
+    t = pow(clamp(t, 0.0, 1.0), 0.2);
 
     return mix(valueAtMin, valueAtMax, t);
 }
 
 void main() 
 {
-    // Modifying this shader may also require modifications to Billboard.computeScreenSpacePosition
+    // Modifying this shader may also require modifications to Billboard._computeScreenSpacePosition
     
     // unpack attributes
     vec3 eyeOffset = eyeOffsetAndScale.xyz;

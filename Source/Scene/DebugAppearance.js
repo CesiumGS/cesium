@@ -24,6 +24,7 @@ define([
      * @alias DebugAppearance
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {String} options.attributeName The name of the attribute to visualize.
      * @param {String} [options.glslDatatype='vec3'] The GLSL datatype of the attribute.  Supported datatypes are <code>float</code>, <code>vec2</code>, <code>vec3</code>, and <code>vec4</code>.
      * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
@@ -224,7 +225,7 @@ define([
      * Returns the full GLSL fragment shader source, which for {@link DebugAppearance} is just
      * {@link DebugAppearance#fragmentShaderSource}.
      *
-     * @memberof DebugAppearance
+     * @function
      *
      * @returns String The full GLSL fragment shader source.
      */
@@ -233,18 +234,18 @@ define([
     /**
      * Determines if the geometry is translucent based on {@link DebugAppearance#translucent}.
      *
-     * @memberof DebugAppearance
+     * @function
      *
      * @returns {Boolean} <code>true</code> if the appearance is translucent.
      */
     DebugAppearance.prototype.isTranslucent = Appearance.prototype.isTranslucent;
 
     /**
-     * Creates a render state.  This is not the final {@link RenderState} instance; instead,
-     * it can contain a subset of render state properties identical to <code>renderState</code>
-     * passed to {@link Context#createRenderState}.
+     * Creates a render state.  This is not the final render state instance; instead,
+     * it can contain a subset of render state properties identical to the render state
+     * created in the context.
      *
-     * @memberof DebugAppearance
+     * @function
      *
      * @returns {Object} The render state.
      */

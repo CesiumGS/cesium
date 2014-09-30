@@ -42,7 +42,7 @@ define([
         var el = document.createElement('div');
         el.className = 'cesium-selection-wrapper';
         el.setAttribute('data-bind', '\
-style: { "bottom" : _screenPositionY, "left" : _screenPositionX },\
+style: { "top" : _screenPositionY, "left" : _screenPositionX },\
 css: { "cesium-selection-wrapper-visible" : isVisible }');
         container.appendChild(el);
         this._element = el;
@@ -99,7 +99,6 @@ css: { "cesium-selection-wrapper-visible" : isVisible }');
     });
 
     /**
-     * @memberof SelectionIndicator
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     SelectionIndicator.prototype.isDestroyed = function() {
@@ -109,7 +108,6 @@ css: { "cesium-selection-wrapper-visible" : isVisible }');
     /**
      * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
-     * @memberof SelectionIndicator
      */
     SelectionIndicator.prototype.destroy = function() {
         var container = this._container;

@@ -95,6 +95,7 @@ define([
      * @alias PolylineCollection
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each polyline from model to world coordinates.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      *
@@ -108,27 +109,28 @@ define([
      * @see PolylineCollection#remove
      * @see Polyline
      * @see LabelCollection
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polylines.html|Cesium Sandcastle Polyline Demo}
      *
      * @example
      * // Create a polyline collection with two polylines
-     * var polylines = new Cesium.PolylineCollection(undefined);
-     * polylines.add({positions:ellipsoid.cartographicDegreesToCartesians([
-     *     new Cesium.Cartographic2(-75.10, 39.57),
-     *     new Cesium.Cartographic2(-77.02, 38.53),
-     *     new Cesium.Cartographic2(-80.50, 35.14),
-     *     new Cesium.Cartographic2(-80.12, 25.46)]),
-     *     width:2
-     *     });
-     *
-     * polylines.add({positions:ellipsoid.cartographicDegreesToCartesians([
-     *     new Cesium.Cartographic2(-73.10, 37.57),
-     *     new Cesium.Cartographic2(-75.02, 36.53),
-     *     new Cesium.Cartographic2(-78.50, 33.14),
-     *     new Cesium.Cartographic2(-78.12, 23.46)]),
-     *     width:4
+     * var polylines = new Cesium.PolylineCollection();
+     * polylines.add({
+     *   position : Cesium.Cartesian3.fromDegreesArray([
+     *     -75.10, 39.57,
+     *     -77.02, 38.53,
+     *     -80.50, 35.14,
+     *     -80.12, 25.46]),
+     *   width : 2
      * });
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polylines.html|Cesium Sandcastle Polyline Demo}
+     * polylines.add({
+     *   positions : Cesium.Cartesian3.fromDegreesArray([
+     *     -73.10, 37.57,
+     *     -75.02, 36.53,
+     *     -78.50, 33.14,
+     *     -78.12, 23.46]),
+     *   width : 4
+     * });
      */
     var PolylineCollection = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -137,14 +139,10 @@ define([
          * The 4x4 transformation matrix that transforms each polyline in this collection from model to world coordinates.
          * When this is the identity matrix, the polylines are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
          * Local reference frames can be used by providing a different transformation matrix, like that returned
-         * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
-         * shaders via {@link czm_model} and derived uniforms.
+         * by {@link Transforms.eastNorthUpToFixedFrame}.
          *
          * @type {Matrix4}
          * @default {@link Matrix4.IDENTITY}
-         *
-         * @see Transforms.eastNorthUpToFixedFrame
-         * @see czm_model
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
@@ -152,7 +150,7 @@ define([
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
-         * Draws the bounding sphere for each {@link DrawCommand} in the primitive.
+         * Draws the bounding sphere for each draw command in the primitive.
          * </p>
          *
          * @type {Boolean}
@@ -210,10 +208,7 @@ define([
      * Creates and adds a polyline with the specified initial properties to the collection.
      * The added polyline is returned so it can be modified or removed from the collection later.
      *
-     * @memberof PolylineCollection
-     *
      * @param {Object}[polyline] A template describing the polyline's properties as shown in Example 1.
-     *
      * @returns {Polyline} The polyline that was added to the collection.
      *
      * @performance After calling <code>add</code>, {@link PolylineCollection#update} is called and
@@ -247,10 +242,7 @@ define([
     /**
      * Removes a polyline from the collection.
      *
-     * @memberof PolylineCollection
-     *
      * @param {Polyline} polyline The polyline to remove.
-     *
      * @returns {Boolean} <code>true</code> if the polyline was removed; <code>false</code> if the polyline was not found in the collection.
      *
      * @performance After calling <code>remove</code>, {@link PolylineCollection#update} is called and
@@ -293,8 +285,6 @@ define([
      * @performance <code>O(n)</code>.  It is more efficient to remove all the polylines
      * from a collection and then add new ones than to create a new collection entirely.
      *
-     * @memberof PolylineCollection
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      * @see PolylineCollection#add
@@ -319,10 +309,7 @@ define([
     /**
      * Determines if this collection contains the specified polyline.
      *
-     * @memberof PolylineCollection
-     *
      * @param {Polyline} polyline The polyline to check for.
-     *
      * @returns {Boolean} true if this collection contains the billboard, false otherwise.
      *
      * @see PolylineCollection#get
@@ -338,10 +325,7 @@ define([
      * {@link PolylineCollection#length} to iterate over all the polylines
      * in the collection.
      *
-     * @memberof PolylineCollection
-     *
      * @param {Number} index The zero-based index of the polyline.
-     *
      * @returns {Polyline} The polyline at the specified index.
      *
      * @performance If polylines were removed from the collection and
@@ -350,8 +334,6 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PolylineCollection#length
-     *
      * @example
      * // Toggle the show property of every polyline in the collection
      * var len = polylines.length;
@@ -359,6 +341,8 @@ define([
      *   var p = polylines.get(i);
      *   p.show = !p.show;
      * }
+     *
+     * @see PolylineCollection#length
      */
     PolylineCollection.prototype.get = function(index) {
         //>>includeStart('debug', pragmas.debug);
@@ -383,11 +367,12 @@ define([
 
         updateMode(this, frameState);
 
+        var projection = frameState.mapProjection;
         var polyline;
         var properties = this._propertiesChanged;
 
         if (this._createVertexArray || computeNewBuffersUsage(this)) {
-            createVertexArrays(this, context);
+            createVertexArrays(this, context, projection);
         } else if (this._polylinesUpdated) {
             // Polylines were modified, but no polylines were added or removed.
             var polylinesToUpdate = this._polylinesToUpdate;
@@ -402,7 +387,7 @@ define([
             // if a polyline's positions size changes, we need to recreate the vertex arrays and vertex buffers because the indices will be different.
             // if a polyline's material changes, we need to recreate the VAOs and VBOs because they will be batched differenty.
             if (properties[POSITION_SIZE_INDEX] || properties[MATERIAL_INDEX]) {
-                createVertexArrays(this, context);
+                createVertexArrays(this, context, projection);
             } else {
                 var length = polylinesToUpdate.length;
                 var polylineBuckets = this._polylineBuckets;
@@ -415,7 +400,7 @@ define([
                         if (polylineBuckets.hasOwnProperty(x)) {
                             if (polylineBuckets[x] === bucket) {
                                 if (properties[POSITION_INDEX] || properties[SHOW_INDEX] || properties[WIDTH_INDEX]) {
-                                    bucket.writeUpdate(index, polyline, this._positionBuffer, this._texCoordExpandWidthAndShowBuffer);
+                                    bucket.writeUpdate(index, polyline, this._positionBuffer, this._texCoordExpandWidthAndShowBuffer, projection);
                                 }
                                 break;
                             }
@@ -617,8 +602,6 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof PolylineCollection
-     *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see PolylineCollection#destroy
@@ -634,8 +617,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof PolylineCollection
      *
      * @returns {undefined}
      *
@@ -685,7 +666,7 @@ define([
 
     var emptyVertexBuffer = [0.0, 0.0, 0.0];
 
-    function createVertexArrays(collection, context) {
+    function createVertexArrays(collection, context, projection) {
         collection._createVertexArray = false;
         releaseShaders(collection);
         destroyVertexArrays(collection);
@@ -728,7 +709,7 @@ define([
             for (x in polylineBuckets) {
                 if (polylineBuckets.hasOwnProperty(x)) {
                     bucket = polylineBuckets[x];
-                    bucket.write(positionArray, pickColorArray, texCoordExpandWidthAndShowArray, positionIndex, colorIndex, texCoordExpandWidthAndShowIndex, context);
+                    bucket.write(positionArray, pickColorArray, texCoordExpandWidthAndShowArray, positionIndex, colorIndex, texCoordExpandWidthAndShowIndex, context, projection);
 
                     if (mode === SceneMode.MORPHING) {
                         if (!defined(position3DArray)) {
@@ -933,7 +914,6 @@ define([
 
     function sortPolylinesIntoBuckets(collection) {
         var mode = collection._mode;
-        var projection = collection._projection;
         var modelMatrix = collection._modelMatrix;
 
         var polylineBuckets = collection._polylineBuckets = {};
@@ -946,7 +926,7 @@ define([
                 var material = p.material;
                 var value = polylineBuckets[material.type];
                 if (!defined(value)) {
-                    value = polylineBuckets[material.type] = new PolylineBucket(material, mode, projection, modelMatrix);
+                    value = polylineBuckets[material.type] = new PolylineBucket(material, mode, modelMatrix);
                 }
                 value.addPolyline(p);
             }
@@ -955,11 +935,9 @@ define([
 
     function updateMode(collection, frameState) {
         var mode = frameState.mode;
-        var projection = frameState.scene2D.projection;
 
-        if (collection._mode !== mode || (collection._projection !== projection) || (!Matrix4.equals(collection._modelMatrix, collection.modelMatrix))) {
+        if (collection._mode !== mode || (!Matrix4.equals(collection._modelMatrix, collection.modelMatrix))) {
             collection._mode = mode;
-            collection._projection = projection;
             collection._modelMatrix = Matrix4.clone(collection.modelMatrix);
             collection._createVertexArray = true;
         }
@@ -1027,15 +1005,13 @@ define([
         this.bucket = bucket;
     }
 
-    var PolylineBucket = function(material, mode, projection, modelMatrix) {
+    var PolylineBucket = function(material, mode, modelMatrix) {
         this.polylines = [];
         this.lengthOfPositions = 0;
         this.material = material;
         this.shaderProgram = undefined;
         this.pickShaderProgram = undefined;
         this.mode = mode;
-        this.projection = projection;
-        this.ellipsoid = projection.ellipsoid;
         this.modelMatrix = modelMatrix;
     };
 
@@ -1086,7 +1062,7 @@ define([
     var scratchWriteNextPosition = new Cartesian3();
     var scratchWriteVector = new Cartesian3();
 
-    PolylineBucket.prototype.write = function(positionArray, pickColorArray, texCoordExpandWidthAndShowArray, positionIndex, colorIndex, texCoordExpandWidthAndShowIndex, context) {
+    PolylineBucket.prototype.write = function(positionArray, pickColorArray, texCoordExpandWidthAndShowArray, positionIndex, colorIndex, texCoordExpandWidthAndShowIndex, context, projection) {
         var mode = this.mode;
         var polylines = this.polylines;
         var length = polylines.length;
@@ -1094,7 +1070,7 @@ define([
             var polyline = polylines[i];
             var width = polyline.width;
             var show = polyline.show && width > 0.0;
-            var segments = this.getSegments(polyline);
+            var segments = this.getSegments(polyline, projection);
             var positions = segments.positions;
             var lengths = segments.lengths;
             var positionsLength = positions.length;
@@ -1360,8 +1336,8 @@ define([
         lengths : undefined
     };
     var scratchLengths = new Array(1);
-
-    PolylineBucket.prototype.getSegments = function(polyline) {
+    var pscratch = new Cartesian3();
+    PolylineBucket.prototype.getSegments = function(polyline, projection) {
         var positions = polyline.positions;
 
         if (this.mode === SceneMode.SCENE3D) {
@@ -1375,17 +1351,16 @@ define([
             positions = polyline._segments.positions;
         }
 
-        var ellipsoid = this.ellipsoid;
-        var projection = this.projection;
+        var ellipsoid = projection.ellipsoid;
         var newPositions = [];
         var modelMatrix = this.modelMatrix;
         var length = positions.length;
         var position;
-        var p;
+        var p = pscratch;
 
         for ( var n = 0; n < length; ++n) {
             position = positions[n];
-            p = Matrix4.multiplyByPoint(modelMatrix, position);
+            p = Matrix4.multiplyByPoint(modelMatrix, position, p);
             newPositions.push(projection.project(ellipsoid.cartesianToCartographic(p)));
         }
 
@@ -1403,7 +1378,7 @@ define([
     var scratchPositionsArray;
     var scratchTexCoordArray;
 
-    PolylineBucket.prototype.writeUpdate = function(index, polyline, positionBuffer, texCoordExpandWidthAndShowBuffer) {
+    PolylineBucket.prototype.writeUpdate = function(index, polyline, positionBuffer, texCoordExpandWidthAndShowBuffer, projection) {
         var mode = this.mode;
         var positionsLength = polyline._actualLength;
         if (positionsLength) {
@@ -1425,7 +1400,7 @@ define([
             var positionIndex = 0;
             var texCoordExpandWidthAndShowIndex = 0;
 
-            var segments = this.getSegments(polyline);
+            var segments = this.getSegments(polyline, projection);
             var positions = segments.positions;
             var lengths = segments.lengths;
 

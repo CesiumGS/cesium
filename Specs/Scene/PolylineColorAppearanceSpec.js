@@ -45,7 +45,7 @@ defineSuite([
     });
 
     beforeEach(function() {
-        frameState = createFrameState(createCamera(context));
+        frameState = createFrameState(createCamera());
         us = context.uniformState;
         us.update(context, frameState);
     });
@@ -71,7 +71,8 @@ defineSuite([
                         new Cartesian3(0.0, 1.0, 0.0)
                     ],
                     width : 10.0,
-                    vertexFormat : PolylineColorAppearance.VERTEX_FORMAT
+                    vertexFormat : PolylineColorAppearance.VERTEX_FORMAT,
+                    followSurface: false
                 }),
                 attributes : {
                     color : ColorGeometryInstanceAttribute.fromColor(new Color(1.0, 1.0, 0.0, 1.0))

@@ -1,12 +1,17 @@
 /*global define*/
 define([
         '../../Core/Color',
-        '../../Core/defined'
+        '../../Core/defined',
+        '../../Core/JulianDate'
     ], function(
         Color,
-        defined) {
+        defined,
+        JulianDate) {
     "use strict";
 
+    /**
+     * @private
+     */
     function TimelineTrack(interval, pixelHeight, color, backgroundColor) {
         this.interval = interval;
         this.height = pixelHeight;
@@ -19,21 +24,21 @@ define([
         var stopInterval = this.interval.stop;
 
         var spanStart = renderState.startJulian;
-        var spanStop = renderState.startJulian.addSeconds(renderState.duration);
+        var spanStop = JulianDate.addSeconds(renderState.startJulian, renderState.duration, new JulianDate());
 
-        if (startInterval.lessThan(spanStart) && stopInterval.greaterThan(spanStop)) {
+        if (JulianDate.lessThan(startInterval, spanStart) && JulianDate.greaterThan(stopInterval, spanStop)) {
             //The track takes up the entire visible span.
             context.fillStyle = this.color.toCssColorString();
             context.fillRect(0, renderState.y, renderState.timeBarWidth, this.height);
-        } else if (startInterval.lessThanOrEquals(spanStop) && stopInterval.greaterThanOrEquals(spanStart)) {
+        } else if (JulianDate.lessThanOrEquals(startInterval, spanStop) && JulianDate.greaterThanOrEquals(stopInterval, spanStart)) {
             //The track only takes up some of the visible span, compute that span.
             var x;
             var start, stop;
             for (x = 0; x < renderState.timeBarWidth; ++x) {
-                var currentTime = renderState.startJulian.addSeconds((x / renderState.timeBarWidth) * renderState.duration);
-                if (!defined(start) && currentTime.greaterThanOrEquals(startInterval)) {
+                var currentTime = JulianDate.addSeconds(renderState.startJulian, (x / renderState.timeBarWidth) * renderState.duration, new JulianDate());
+                if (!defined(start) && JulianDate.greaterThanOrEquals(currentTime, startInterval)) {
                     start = x;
-                } else if (!defined(stop) && currentTime.greaterThanOrEquals(stopInterval)) {
+                } else if (!defined(stop) && JulianDate.greaterThanOrEquals(currentTime, stopInterval)) {
                     stop = x;
                 }
             }

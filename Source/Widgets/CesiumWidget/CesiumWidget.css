@@ -18,10 +18,6 @@
     padding-right: 5px;
 }
 
-.cesium-credit-text {
-    white-space: nowrap;
-}
-
 .cesium-widget-errorPanel {
     position: absolute;
     top: 0;
