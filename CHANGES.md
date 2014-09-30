@@ -16,6 +16,7 @@ a url to a glTF file.  [#2078](https://github.com/AnalyticalGraphicsInc/cesium/i
 * Added `Globe.showWaterEffect` to enable/disable the water effect for supported terrain providers.
 * Added `Globe.baseColor` to set the color of the globe when no imagery is available.
 * Fixed a bug that could crash a crash when quickly adding and removing imagery layers.
+* Cesium now ships with a default web.config file to simplify IIS deployment.  
 
 ### 1.1 - 2014-09-02
 
