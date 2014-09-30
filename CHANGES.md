@@ -12,6 +12,7 @@ a url to a glTF file.  [#2078](https://github.com/AnalyticalGraphicsInc/cesium/i
 * Fixed a bug that could cause a crash when quickly adding and removing imagery layers.
 * Eliminated imagery artifacts at some zoom levels due to Mercator reprojection.
 * Added support for the GeoJSON [simplestyle specification](https://github.com/mapbox/simplestyle-spec). [Sandcastle example](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=GeoJSON%20simplestyle.html);
+* Added `GeoJson.fromUrl` to make it easy to add a data source in less code.
 * Added `PinBuilder` class for easy creation of map pins. [Sandcastle example](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=PinBuilder.html);
 * Added `Color.brighten` and `Color.darken` to make it easy to brighten or darker a color instance.
 * Added a constructor option to `Scene`, `CesiumWidget`, and `Viewer` to disable order independent translucency.
@@ -20,6 +21,7 @@ a url to a glTF file.  [#2078](https://github.com/AnalyticalGraphicsInc/cesium/i
 * Added `Globe.showWaterEffect` to enable/disable the water effect for supported terrain providers.
 * Added `Globe.baseColor` to set the color of the globe when no imagery is available.
 * Cesium now ships with a version of the [maki icon set](https://www.mapbox.com/maki/) for use with `PinBuilder` and GeoJSON simplestyle support.
+* Changed default `GeoJSON` Point feature graphics to use `BillboardGraphics` with a blue map pin instead of color `PointGraphics`.
 
 ### 1.1 - 2014-09-02
 
