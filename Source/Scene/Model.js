@@ -704,9 +704,10 @@ define([
         var buffers = model.gltf.buffers;
         for (var name in buffers) {
             if (buffers.hasOwnProperty(name)) {
+                var buffer = buffers[name];
+
                 if (buffer.type === 'arraybuffer') {
                     ++model._loadResources.pendingBufferLoads;
-                    var buffer = buffers[name];
                     var uri = new Uri(buffer.uri);
                     var bufferPath = uri.resolve(model._baseUri).toString();
                     loadArrayBuffer(bufferPath).then(bufferLoad(model, name)).otherwise(getFailedLoadFunction(model, 'buffer', bufferPath));
