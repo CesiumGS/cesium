@@ -19,7 +19,7 @@ defineSuite([
     var time = new JulianDate();
 
     function coordinatesToCartesian(coordinates) {
-        return Cartesian3.fromDegrees(coordinates[0], coordinates[1]);
+        return Cartesian3.fromDegrees(coordinates[0], coordinates[1], coordinates[2]);
     }
 
     function coordinatesArrayToCartesian(coordinates) {
@@ -103,6 +103,11 @@ defineSuite([
         type : 'Polygon',
         coordinates : [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]], [[100.2, 0.2], [100.8, 0.2], [100.8, 0.8], [100.2, 0.8], [100.2, 0.2]]]
     };
+
+    var polygonWithHeights = {
+            type : 'Polygon',
+            coordinates : [[[100.0, 0.0, 1.0], [101.0, 0.0, 2.0], [101.0, 1.0, 1.0], [100.0, 1.0, 2.0], [100.0, 0.0, 3.0]]]
+        };
 
     var multiPoint = {
         type : 'MultiPoint',
@@ -356,6 +361,23 @@ defineSuite([
             var object = entityCollection.entities[0];
             expect(object.properties).toBe(polygon.properties);
             expect(object.polygon.positions.getValue(time)).toEqual(polygonCoordinatesToCartesian(polygon.coordinates));
+            expect(object.polygon.perPositionHeight).toBeUndefined();
+        });
+    });
+
+    it('Works with polygon geometry with Heights', function() {
+        var dataSource = new GeoJsonDataSource();
+        dataSource.load(polygonWithHeights);
+
+        var entityCollection = dataSource.entities;
+        waitsFor(function() {
+            return entityCollection.entities.length === 1;
+        });
+        runs(function() {
+            var object = entityCollection.entities[0];
+            expect(object.properties).toBe(polygonWithHeights.properties);
+            expect(object.polygon.positions.getValue(time)).toEqual(polygonCoordinatesToCartesian(polygonWithHeights.coordinates));
+            expect(object.polygon.perPositionHeight.getValue(time)).toBe(true);
         });
     });
 
