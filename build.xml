@@ -79,6 +79,7 @@
 			<include name="LICENSE.md" />
 			<include name="CHANGES.md" />
 			<include name="README.md" />
+			<include name="web.config" />
 			<zipfileset file="index.release.html" fullpath="index.html" />
 		</zip>
 	</target>
@@ -567,6 +568,9 @@
 		<copy todir="${cesiumViewerOutputDirectory}">
 			<fileset dir="${buildOutputDirectory}" excludes="Cesium.js" />
 		</copy>
+
+		<!-- Copy web.config -->
+		<copy file="${basedir}/web.config" tofile="${cesiumViewerOutputDirectory}/web.config" />
 
 		<!-- rewrite the paths in the configuration -->
 		<replace dir="${cesiumViewerOutputDirectory}" summary="true">

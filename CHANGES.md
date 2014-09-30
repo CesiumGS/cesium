@@ -20,8 +20,9 @@ a url to a glTF file.  [#2078](https://github.com/AnalyticalGraphicsInc/cesium/i
 * Added `TerrainProvider.getTileDataAvailable` to improve tile loading performance when camera starts near globe.
 * Added `Globe.showWaterEffect` to enable/disable the water effect for supported terrain providers.
 * Added `Globe.baseColor` to set the color of the globe when no imagery is available.
-* Cesium now ships with a version of the [maki icon set](https://www.mapbox.com/maki/) for use with `PinBuilder` and GeoJSON simplestyle support.
 * Changed default `GeoJSON` Point feature graphics to use `BillboardGraphics` with a blue map pin instead of color `PointGraphics`.
+* Cesium now ships with a version of the [maki icon set](https://www.mapbox.com/maki/) for use with `PinBuilder` and GeoJSON simplestyle support.
+* Cesium now ships with a default web.config file to simplify IIS deployment.
 
 ### 1.1 - 2014-09-02
 

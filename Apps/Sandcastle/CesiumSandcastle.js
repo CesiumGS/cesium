@@ -12,6 +12,9 @@ require({
     }, {
         name : 'Sandcastle',
         location : '../Apps/Sandcastle'
+    }, {
+        name : 'Source',
+        location : '.'
     }]
 }, [
         'dijit/layout/ContentPane',
@@ -29,6 +32,7 @@ require({
         'dojo/parser',
         'dojo/query',
         'Sandcastle/LinkButton',
+        'Source/Cesium',
         'dijit/form/Button',
         'dijit/form/DropDownButton',
         'dijit/form/ToggleButton',
@@ -59,8 +63,12 @@ require({
         on,
         parser,
         query,
-        LinkButton) {
+        LinkButton,
+        Cesium) {
     "use strict";
+
+    //In order for CodeMirror auto-complete to work, Cesium needs to be defined as a global.
+    window.Cesium = Cesium;
 
     function defined(value) {
         return value !== undefined;
