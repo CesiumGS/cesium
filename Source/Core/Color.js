@@ -606,9 +606,10 @@ define([
         }
         //>>includeEnd('debug');
 
-        result.red = Math.min(1.0, this.red + magnitude);
-        result.green = Math.min(1.0, this.green + magnitude);
-        result.blue = Math.min(1.0, this.blue + magnitude);
+        magnitude = (1.0 - magnitude);
+        result.red = 1.0 - ((1.0 - this.red) * magnitude);
+        result.green = 1.0 - ((1.0 - this.green) * magnitude);
+        result.blue = 1.0 - ((1.0 - this.blue) * magnitude);
         result.alpha = this.alpha;
         return result;
     };
@@ -636,9 +637,10 @@ define([
         }
         //>>includeEnd('debug');
 
-        result.red = Math.max(0.0, this.red - magnitude);
-        result.green = Math.max(0.0, this.green - magnitude);
-        result.blue = Math.max(0.0, this.blue - magnitude);
+        magnitude = (1.0 - magnitude);
+        result.red = this.red * magnitude;
+        result.green = this.green * magnitude;
+        result.blue = this.blue * magnitude;
         result.alpha = this.alpha;
         return result;
     };

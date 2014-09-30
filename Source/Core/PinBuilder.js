@@ -137,7 +137,7 @@ define([
         context2D.save();
         context2D.scale(size / 24, size / 24); //Added to auto-generated code to scale up to desired size.
         context2D.fillStyle = color.toCssColorString(); //Modified from auto-generated code.
-        context2D.strokeStyle = color.brighten(0.5, colorScratch).toCssColorString(); //Modified from auto-generated code.
+        context2D.strokeStyle = color.brighten(0.6, colorScratch).toCssColorString(); //Modified from auto-generated code.
         context2D.lineWidth = 0.846;
         context2D.beginPath();
         context2D.moveTo(6.72, 0.422);

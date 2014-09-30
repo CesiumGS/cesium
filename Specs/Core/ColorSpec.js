@@ -368,18 +368,18 @@ defineSuite([
     it('Can brighten', function() {
         var dark = new Color(0.2, 0.4, 0.6, 0.8);
         var brighter = dark.brighten(0.5, new Color());
-        expect(brighter.red).toEqual(0.7);
-        expect(brighter.green).toEqual(0.9);
-        expect(brighter.blue).toEqual(1.0);
+        expect(brighter.red).toEqual(0.6);
+        expect(brighter.green).toEqual(0.7);
+        expect(brighter.blue).toEqual(0.8);
         expect(brighter.alpha).toEqual(0.8);
     });
 
     it('Can darken', function() {
         var dark = new Color(0.1, 0.6, 0.8, 0.8);
         var darker = dark.darken(0.2, new Color());
-        expect(darker.red).toEqualEpsilon(0.0, CesiumMath.EPSILON15);
-        expect(darker.green).toEqualEpsilon(0.4, CesiumMath.EPSILON15);
-        expect(darker.blue).toEqualEpsilon(0.6, CesiumMath.EPSILON15);
+        expect(darker.red).toEqualEpsilon(0.08, CesiumMath.EPSILON15);
+        expect(darker.green).toEqualEpsilon(0.48, CesiumMath.EPSILON15);
+        expect(darker.blue).toEqualEpsilon(0.64, CesiumMath.EPSILON15);
         expect(darker.alpha).toEqualEpsilon(0.8, CesiumMath.EPSILON15);
     });
 
