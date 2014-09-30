@@ -59,7 +59,17 @@ define([
         if (!defined(gltf.asset)) {
             gltf.asset = {};
         }
-        gltf.asset.premultipliedAlpha = defaultValue(gltf.asset.premultipliedAlpha, false);
+        var asset = gltf.asset;
+
+        if (!defined(asset.profile)) {
+            asset.profile = {};
+        }
+        var profile = asset.profile;
+
+        asset.premultipliedAlpha = defaultValue(gltf.asset.premultipliedAlpha, false);
+        profile.api = defaultValue(profile.api, 'WebGL');
+        profile.version = defaultValue(profile.version, '1.0.2');
+        asset.version = defaultValue(gltf.version, '0.9');
     }
 
     function bufferDefaults(gltf) {
@@ -411,8 +421,6 @@ define([
         shaderDefaults(gltf);
         skinDefaults(gltf);
         techniqueDefaults(gltf);
-        gltf.profile = defaultValue(gltf.profile, 'WebGL 1.0.2');
-        gltf.version = defaultValue(gltf.version, '1.0');
         textureDefaults(gltf);
 
         return gltf;
