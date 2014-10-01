@@ -11,7 +11,7 @@
         ]
       },
       "properties": {
-        "name": "Unnamed",
+        "title": "Unnamed",
         "marker-color": "#B9EB14"
       }
     },
@@ -25,7 +25,7 @@
         ]
       },
       "properties": {
-        "name": "0",
+        "title": "0",
         "marker-symbol": "0",
         "marker-color": "#D13C3C"
       }
@@ -40,7 +40,7 @@
         ]
       },
       "properties": {
-        "name": "1",
+        "title": "1",
         "marker-symbol": "1",
         "marker-color": "#C49D22"
       }
@@ -55,7 +55,7 @@
         ]
       },
       "properties": {
-        "name": "2",
+        "title": "2",
         "marker-symbol": "2",
         "marker-color": "#8EE3A6"
       }
@@ -70,7 +70,7 @@
         ]
       },
       "properties": {
-        "name": "3",
+        "title": "3",
         "marker-symbol": "3",
         "marker-color": "#34BE96"
       }
@@ -85,7 +85,7 @@
         ]
       },
       "properties": {
-        "name": "4",
+        "title": "4",
         "marker-symbol": "4",
         "marker-color": "#8F1312"
       }
@@ -100,7 +100,7 @@
         ]
       },
       "properties": {
-        "name": "5",
+        "title": "5",
         "marker-symbol": "5",
         "marker-color": "#E7F163"
       }
@@ -115,7 +115,7 @@
         ]
       },
       "properties": {
-        "name": "6",
+        "title": "6",
         "marker-symbol": "6",
         "marker-color": "#713291"
       }
@@ -130,7 +130,7 @@
         ]
       },
       "properties": {
-        "name": "7",
+        "title": "7",
         "marker-symbol": "7",
         "marker-color": "#FA40B3"
       }
@@ -145,7 +145,7 @@
         ]
       },
       "properties": {
-        "name": "8",
+        "title": "8",
         "marker-symbol": "8",
         "marker-color": "#46117E"
       }
@@ -160,7 +160,7 @@
         ]
       },
       "properties": {
-        "name": "9",
+        "title": "9",
         "marker-symbol": "9",
         "marker-color": "#4ABA5E"
       }
@@ -175,7 +175,7 @@
         ]
       },
       "properties": {
-        "name": "a",
+        "title": "a",
         "marker-symbol": "a",
         "marker-color": "#77A1EF"
       }
@@ -190,7 +190,7 @@
         ]
       },
       "properties": {
-        "name": "b",
+        "title": "b",
         "marker-symbol": "b",
         "marker-color": "#A1F5F1"
       }
@@ -205,7 +205,7 @@
         ]
       },
       "properties": {
-        "name": "c",
+        "title": "c",
         "marker-symbol": "c",
         "marker-color": "#7831EE"
       }
@@ -220,7 +220,7 @@
         ]
       },
       "properties": {
-        "name": "d",
+        "title": "d",
         "marker-symbol": "d",
         "marker-color": "#FB6E43"
       }
@@ -235,7 +235,7 @@
         ]
       },
       "properties": {
-        "name": "e",
+        "title": "e",
         "marker-symbol": "e",
         "marker-color": "#07C621"
       }
@@ -250,7 +250,7 @@
         ]
       },
       "properties": {
-        "name": "f",
+        "title": "f",
         "marker-symbol": "f",
         "marker-color": "#DCC44A"
       }
@@ -265,7 +265,7 @@
         ]
       },
       "properties": {
-        "name": "g",
+        "title": "g",
         "marker-symbol": "g",
         "marker-color": "#FECF10"
       }
@@ -280,7 +280,7 @@
         ]
       },
       "properties": {
-        "name": "h",
+        "title": "h",
         "marker-symbol": "h",
         "marker-color": "#AD5BBE"
       }
@@ -295,7 +295,7 @@
         ]
       },
       "properties": {
-        "name": "i",
+        "title": "i",
         "marker-symbol": "i",
         "marker-color": "#508916"
       }
@@ -310,7 +310,7 @@
         ]
       },
       "properties": {
-        "name": "j",
+        "title": "j",
         "marker-symbol": "j",
         "marker-color": "#D120E0"
       }
@@ -325,7 +325,7 @@
         ]
       },
       "properties": {
-        "name": "k",
+        "title": "k",
         "marker-symbol": "k",
         "marker-color": "#D919EB"
       }
@@ -340,7 +340,7 @@
         ]
       },
       "properties": {
-        "name": "l",
+        "title": "l",
         "marker-symbol": "l",
         "marker-color": "#FDED4D"
       }
@@ -355,7 +355,7 @@
         ]
       },
       "properties": {
-        "name": "m",
+        "title": "m",
         "marker-symbol": "m",
         "marker-color": "#085A20"
       }
@@ -370,7 +370,7 @@
         ]
       },
       "properties": {
-        "name": "n",
+        "title": "n",
         "marker-symbol": "n",
         "marker-color": "#B32F65"
       }
@@ -385,7 +385,7 @@
         ]
       },
       "properties": {
-        "name": "o",
+        "title": "o",
         "marker-symbol": "o",
         "marker-color": "#86BA8E"
       }
@@ -400,7 +400,7 @@
         ]
       },
       "properties": {
-        "name": "p",
+        "title": "p",
         "marker-symbol": "p",
         "marker-color": "#EF1BD8"
       }
@@ -415,7 +415,7 @@
         ]
       },
       "properties": {
-        "name": "q",
+        "title": "q",
         "marker-symbol": "q",
         "marker-color": "#B007E2"
       }
@@ -430,7 +430,7 @@
         ]
       },
       "properties": {
-        "name": "r",
+        "title": "r",
         "marker-symbol": "r",
         "marker-color": "#8BFC18"
       }
@@ -445,7 +445,7 @@
         ]
       },
       "properties": {
-        "name": "s",
+        "title": "s",
         "marker-symbol": "s",
         "marker-color": "#14C39F"
       }
@@ -460,7 +460,7 @@
         ]
       },
       "properties": {
-        "name": "t",
+        "title": "t",
         "marker-symbol": "t",
         "marker-color": "#2FE765"
       }
@@ -475,7 +475,7 @@
         ]
       },
       "properties": {
-        "name": "u",
+        "title": "u",
         "marker-symbol": "u",
         "marker-color": "#740D40"
       }
@@ -490,7 +490,7 @@
         ]
       },
       "properties": {
-        "name": "v",
+        "title": "v",
         "marker-symbol": "v",
         "marker-color": "#4C1374"
       }
@@ -505,7 +505,7 @@
         ]
       },
       "properties": {
-        "name": "w",
+        "title": "w",
         "marker-symbol": "w",
         "marker-color": "#FD1134"
       }
@@ -520,7 +520,7 @@
         ]
       },
       "properties": {
-        "name": "x",
+        "title": "x",
         "marker-symbol": "x",
         "marker-color": "#A487D2"
       }
@@ -535,7 +535,7 @@
         ]
       },
       "properties": {
-        "name": "y",
+        "title": "y",
         "marker-symbol": "y",
         "marker-color": "#C35194"
       }
@@ -550,7 +550,7 @@
         ]
       },
       "properties": {
-        "name": "z",
+        "title": "z",
         "marker-symbol": "z",
         "marker-color": "#07C7EB"
       }
@@ -565,7 +565,7 @@
         ]
       },
       "properties": {
-        "name": "airfield",
+        "title": "airfield",
         "marker-symbol": "airfield",
         "marker-color": "#618982"
       }
@@ -580,7 +580,7 @@
         ]
       },
       "properties": {
-        "name": "airport",
+        "title": "airport",
         "marker-symbol": "airport",
         "marker-color": "#57D824"
       }
@@ -595,7 +595,7 @@
         ]
       },
       "properties": {
-        "name": "alcohol-shop",
+        "title": "alcohol-shop",
         "marker-symbol": "alcohol-shop",
         "marker-color": "#F51BC8"
       }
@@ -610,7 +610,7 @@
         ]
       },
       "properties": {
-        "name": "america-football",
+        "title": "america-football",
         "marker-symbol": "america-football",
         "marker-color": "#815025"
       }
@@ -625,7 +625,7 @@
         ]
       },
       "properties": {
-        "name": "art-gallery",
+        "title": "art-gallery",
         "marker-symbol": "art-gallery",
         "marker-color": "#B749F9"
       }
@@ -640,7 +640,7 @@
         ]
       },
       "properties": {
-        "name": "bakery",
+        "title": "bakery",
         "marker-symbol": "bakery",
         "marker-color": "#1E7403"
       }
@@ -655,7 +655,7 @@
         ]
       },
       "properties": {
-        "name": "bank",
+        "title": "bank",
         "marker-symbol": "bank",
         "marker-color": "#4600EA"
       }
@@ -670,7 +670,7 @@
         ]
       },
       "properties": {
-        "name": "bar",
+        "title": "bar",
         "marker-symbol": "bar",
         "marker-color": "#E83792"
       }
@@ -685,7 +685,7 @@
         ]
       },
       "properties": {
-        "name": "baseball",
+        "title": "baseball",
         "marker-symbol": "baseball",
         "marker-color": "#CB75C2"
       }
@@ -700,7 +700,7 @@
         ]
       },
       "properties": {
-        "name": "basketball",
+        "title": "basketball",
         "marker-symbol": "basketball",
         "marker-color": "#565023"
       }
@@ -715,7 +715,7 @@
         ]
       },
       "properties": {
-        "name": "beer",
+        "title": "beer",
         "marker-symbol": "beer",
         "marker-color": "#750BA2"
       }
@@ -730,7 +730,7 @@
         ]
       },
       "properties": {
-        "name": "bicycle",
+        "title": "bicycle",
         "marker-symbol": "bicycle",
         "marker-color": "#259653"
       }
@@ -745,7 +745,7 @@
         ]
       },
       "properties": {
-        "name": "building",
+        "title": "building",
         "marker-symbol": "building",
         "marker-color": "#38A815"
       }
@@ -760,7 +760,7 @@
         ]
       },
       "properties": {
-        "name": "bus",
+        "title": "bus",
         "marker-symbol": "bus",
         "marker-color": "#68FA8F"
       }
@@ -775,7 +775,7 @@
         ]
       },
       "properties": {
-        "name": "cafe",
+        "title": "cafe",
         "marker-symbol": "cafe",
         "marker-color": "#B7FE7B"
       }
@@ -790,7 +790,7 @@
         ]
       },
       "properties": {
-        "name": "camera",
+        "title": "camera",
         "marker-symbol": "camera",
         "marker-color": "#9EAD32"
       }
@@ -805,7 +805,7 @@
         ]
       },
       "properties": {
-        "name": "campsite",
+        "title": "campsite",
         "marker-symbol": "campsite",
         "marker-color": "#7CEB79"
       }
@@ -820,7 +820,7 @@
         ]
       },
       "properties": {
-        "name": "car",
+        "title": "car",
         "marker-symbol": "car",
         "marker-color": "#31E5D8"
       }
@@ -835,7 +835,7 @@
         ]
       },
       "properties": {
-        "name": "cemetery",
+        "title": "cemetery",
         "marker-symbol": "cemetery",
         "marker-color": "#E0D128"
       }
@@ -850,7 +850,7 @@
         ]
       },
       "properties": {
-        "name": "cesium",
+        "title": "cesium",
         "marker-symbol": "cesium",
         "marker-color": "#D34EEF"
       }
@@ -865,7 +865,7 @@
         ]
       },
       "properties": {
-        "name": "chemist",
+        "title": "chemist",
         "marker-symbol": "chemist",
         "marker-color": "#BC4302"
       }
@@ -880,7 +880,7 @@
         ]
       },
       "properties": {
-        "name": "cinema",
+        "title": "cinema",
         "marker-symbol": "cinema",
         "marker-color": "#DBB441"
       }
@@ -895,7 +895,7 @@
         ]
       },
       "properties": {
-        "name": "circle-stroked",
+        "title": "circle-stroked",
         "marker-symbol": "circle-stroked",
         "marker-color": "#AE0407"
       }
@@ -910,7 +910,7 @@
         ]
       },
       "properties": {
-        "name": "circle",
+        "title": "circle",
         "marker-symbol": "circle",
         "marker-color": "#9FF73A"
       }
@@ -925,7 +925,7 @@
         ]
       },
       "properties": {
-        "name": "city",
+        "title": "city",
         "marker-symbol": "city",
         "marker-color": "#37E981"
       }
@@ -940,7 +940,7 @@
         ]
       },
       "properties": {
-        "name": "clothing-store",
+        "title": "clothing-store",
         "marker-symbol": "clothing-store",
         "marker-color": "#E53679"
       }
@@ -955,7 +955,7 @@
         ]
       },
       "properties": {
-        "name": "college",
+        "title": "college",
         "marker-symbol": "college",
         "marker-color": "#E57D14"
       }
@@ -970,7 +970,7 @@
         ]
       },
       "properties": {
-        "name": "commercial",
+        "title": "commercial",
         "marker-symbol": "commercial",
         "marker-color": "#162A19"
       }
@@ -985,7 +985,7 @@
         ]
       },
       "properties": {
-        "name": "cricket",
+        "title": "cricket",
         "marker-symbol": "cricket",
         "marker-color": "#D6AD1E"
       }
@@ -1000,7 +1000,7 @@
         ]
       },
       "properties": {
-        "name": "cross",
+        "title": "cross",
         "marker-symbol": "cross",
         "marker-color": "#2B8E7B"
       }
@@ -1015,7 +1015,7 @@
         ]
       },
       "properties": {
-        "name": "dam",
+        "title": "dam",
         "marker-symbol": "dam",
         "marker-color": "#A4E4BD"
       }
@@ -1030,7 +1030,7 @@
         ]
       },
       "properties": {
-        "name": "danger",
+        "title": "danger",
         "marker-symbol": "danger",
         "marker-color": "#D3AA1B"
       }
@@ -1045,7 +1045,7 @@
         ]
       },
       "properties": {
-        "name": "disability",
+        "title": "disability",
         "marker-symbol": "disability",
         "marker-color": "#381CAE"
       }
@@ -1060,7 +1060,7 @@
         ]
       },
       "properties": {
-        "name": "dog-park",
+        "title": "dog-park",
         "marker-symbol": "dog-park",
         "marker-color": "#FFFE35"
       }
@@ -1075,7 +1075,7 @@
         ]
       },
       "properties": {
-        "name": "embassy",
+        "title": "embassy",
         "marker-symbol": "embassy",
         "marker-color": "#7B3AC7"
       }
@@ -1090,7 +1090,7 @@
         ]
       },
       "properties": {
-        "name": "emergency-telephone",
+        "title": "emergency-telephone",
         "marker-symbol": "emergency-telephone",
         "marker-color": "#A6F6EC"
       }
@@ -1105,7 +1105,7 @@
         ]
       },
       "properties": {
-        "name": "entrance",
+        "title": "entrance",
         "marker-symbol": "entrance",
         "marker-color": "#B83FF6"
       }
@@ -1120,7 +1120,7 @@
         ]
       },
       "properties": {
-        "name": "farm",
+        "title": "farm",
         "marker-symbol": "farm",
         "marker-color": "#CF38F0"
       }
@@ -1135,7 +1135,7 @@
         ]
       },
       "properties": {
-        "name": "fast-food",
+        "title": "fast-food",
         "marker-symbol": "fast-food",
         "marker-color": "#19D6E6"
       }
@@ -1150,7 +1150,7 @@
         ]
       },
       "properties": {
-        "name": "ferry",
+        "title": "ferry",
         "marker-symbol": "ferry",
         "marker-color": "#BAA5E8"
       }
@@ -1165,7 +1165,7 @@
         ]
       },
       "properties": {
-        "name": "fire-station",
+        "title": "fire-station",
         "marker-symbol": "fire-station",
         "marker-color": "#B7EC62"
       }
@@ -1180,7 +1180,7 @@
         ]
       },
       "properties": {
-        "name": "fuel",
+        "title": "fuel",
         "marker-symbol": "fuel",
         "marker-color": "#20228D"
       }
@@ -1195,7 +1195,7 @@
         ]
       },
       "properties": {
-        "name": "garden",
+        "title": "garden",
         "marker-symbol": "garden",
         "marker-color": "#E7B9A3"
       }
@@ -1210,7 +1210,7 @@
         ]
       },
       "properties": {
-        "name": "gift",
+        "title": "gift",
         "marker-symbol": "gift",
         "marker-color": "#306A6A"
       }
@@ -1225,7 +1225,7 @@
         ]
       },
       "properties": {
-        "name": "golf",
+        "title": "golf",
         "marker-symbol": "golf",
         "marker-color": "#7A1036"
       }
@@ -1240,7 +1240,7 @@
         ]
       },
       "properties": {
-        "name": "grocery",
+        "title": "grocery",
         "marker-symbol": "grocery",
         "marker-color": "#8A718E"
       }
@@ -1255,7 +1255,7 @@
         ]
       },
       "properties": {
-        "name": "hairdresser",
+        "title": "hairdresser",
         "marker-symbol": "hairdresser",
         "marker-color": "#535403"
       }
@@ -1270,7 +1270,7 @@
         ]
       },
       "properties": {
-        "name": "harbor",
+        "title": "harbor",
         "marker-symbol": "harbor",
         "marker-color": "#ABC90F"
       }
@@ -1285,7 +1285,7 @@
         ]
       },
       "properties": {
-        "name": "heart",
+        "title": "heart",
         "marker-symbol": "heart",
         "marker-color": "#77E8EA"
       }
@@ -1300,7 +1300,7 @@
         ]
       },
       "properties": {
-        "name": "heliport",
+        "title": "heliport",
         "marker-symbol": "heliport",
         "marker-color": "#D5600D"
       }
@@ -1315,7 +1315,7 @@
         ]
       },
       "properties": {
-        "name": "hospital",
+        "title": "hospital",
         "marker-symbol": "hospital",
         "marker-color": "#CF27FB"
       }
@@ -1330,7 +1330,7 @@
         ]
       },
       "properties": {
-        "name": "ice-cream",
+        "title": "ice-cream",
         "marker-symbol": "ice-cream",
         "marker-color": "#CB2B5B"
       }
@@ -1345,7 +1345,7 @@
         ]
       },
       "properties": {
-        "name": "industrial",
+        "title": "industrial",
         "marker-symbol": "industrial",
         "marker-color": "#C3B6AA"
       }
@@ -1360,7 +1360,7 @@
         ]
       },
       "properties": {
-        "name": "land-use",
+        "title": "land-use",
         "marker-symbol": "land-use",
         "marker-color": "#F002A5"
       }
@@ -1375,7 +1375,7 @@
         ]
       },
       "properties": {
-        "name": "laundry",
+        "title": "laundry",
         "marker-symbol": "laundry",
         "marker-color": "#4B84E9"
       }
@@ -1390,7 +1390,7 @@
         ]
       },
       "properties": {
-        "name": "library",
+        "title": "library",
         "marker-symbol": "library",
         "marker-color": "#85D541"
       }
@@ -1405,7 +1405,7 @@
         ]
       },
       "properties": {
-        "name": "lighthouse",
+        "title": "lighthouse",
         "marker-symbol": "lighthouse",
         "marker-color": "#A9D41C"
       }
@@ -1420,7 +1420,7 @@
         ]
       },
       "properties": {
-        "name": "lodging",
+        "title": "lodging",
         "marker-symbol": "lodging",
         "marker-color": "#55248D"
       }
@@ -1435,7 +1435,7 @@
         ]
       },
       "properties": {
-        "name": "logging",
+        "title": "logging",
         "marker-symbol": "logging",
         "marker-color": "#4966A4"
       }
@@ -1450,7 +1450,7 @@
         ]
       },
       "properties": {
-        "name": "london-underground",
+        "title": "london-underground",
         "marker-symbol": "london-underground",
         "marker-color": "#D21380"
       }
@@ -1465,7 +1465,7 @@
         ]
       },
       "properties": {
-        "name": "marker-stroked",
+        "title": "marker-stroked",
         "marker-symbol": "marker-stroked",
         "marker-color": "#38F6EF"
       }
@@ -1480,7 +1480,7 @@
         ]
       },
       "properties": {
-        "name": "marker",
+        "title": "marker",
         "marker-symbol": "marker",
         "marker-color": "#2FD6D1"
       }
@@ -1495,7 +1495,7 @@
         ]
       },
       "properties": {
-        "name": "minefield",
+        "title": "minefield",
         "marker-symbol": "minefield",
         "marker-color": "#118A73"
       }
@@ -1510,7 +1510,7 @@
         ]
       },
       "properties": {
-        "name": "mobilephone",
+        "title": "mobilephone",
         "marker-symbol": "mobilephone",
         "marker-color": "#9FE746"
       }
@@ -1525,7 +1525,7 @@
         ]
       },
       "properties": {
-        "name": "monument",
+        "title": "monument",
         "marker-symbol": "monument",
         "marker-color": "#B16B66"
       }
@@ -1540,7 +1540,7 @@
         ]
       },
       "properties": {
-        "name": "museum",
+        "title": "museum",
         "marker-symbol": "museum",
         "marker-color": "#A16186"
       }
@@ -1555,7 +1555,7 @@
         ]
       },
       "properties": {
-        "name": "music",
+        "title": "music",
         "marker-symbol": "music",
         "marker-color": "#ED79A4"
       }
@@ -1570,7 +1570,7 @@
         ]
       },
       "properties": {
-        "name": "oil-well",
+        "title": "oil-well",
         "marker-symbol": "oil-well",
         "marker-color": "#38A9DF"
       }
@@ -1585,7 +1585,7 @@
         ]
       },
       "properties": {
-        "name": "park",
+        "title": "park",
         "marker-symbol": "park",
         "marker-color": "#EDBFC8"
       }
@@ -1600,7 +1600,7 @@
         ]
       },
       "properties": {
-        "name": "park2",
+        "title": "park2",
         "marker-symbol": "park2",
         "marker-color": "#11078F"
       }
@@ -1615,7 +1615,7 @@
         ]
       },
       "properties": {
-        "name": "parking-garage",
+        "title": "parking-garage",
         "marker-symbol": "parking-garage",
         "marker-color": "#E66D3C"
       }
@@ -1630,7 +1630,7 @@
         ]
       },
       "properties": {
-        "name": "parking",
+        "title": "parking",
         "marker-symbol": "parking",
         "marker-color": "#ADB288"
       }
@@ -1645,7 +1645,7 @@
         ]
       },
       "properties": {
-        "name": "pharmacy",
+        "title": "pharmacy",
         "marker-symbol": "pharmacy",
         "marker-color": "#180EF1"
       }
@@ -1660,7 +1660,7 @@
         ]
       },
       "properties": {
-        "name": "pitch",
+        "title": "pitch",
         "marker-symbol": "pitch",
         "marker-color": "#262B3F"
       }
@@ -1675,7 +1675,7 @@
         ]
       },
       "properties": {
-        "name": "place-of-worship",
+        "title": "place-of-worship",
         "marker-symbol": "place-of-worship",
         "marker-color": "#1B628C"
       }
@@ -1690,7 +1690,7 @@
         ]
       },
       "properties": {
-        "name": "playground",
+        "title": "playground",
         "marker-symbol": "playground",
         "marker-color": "#9C2074"
       }
@@ -1705,7 +1705,7 @@
         ]
       },
       "properties": {
-        "name": "police",
+        "title": "police",
         "marker-symbol": "police",
         "marker-color": "#F3FA9D"
       }
@@ -1720,7 +1720,7 @@
         ]
       },
       "properties": {
-        "name": "polling-place",
+        "title": "polling-place",
         "marker-symbol": "polling-place",
         "marker-color": "#7D999D"
       }
@@ -1735,7 +1735,7 @@
         ]
       },
       "properties": {
-        "name": "post",
+        "title": "post",
         "marker-symbol": "post",
         "marker-color": "#25E703"
       }
@@ -1750,7 +1750,7 @@
         ]
       },
       "properties": {
-        "name": "prison",
+        "title": "prison",
         "marker-symbol": "prison",
         "marker-color": "#AD77F3"
       }
@@ -1765,7 +1765,7 @@
         ]
       },
       "properties": {
-        "name": "rail-above",
+        "title": "rail-above",
         "marker-symbol": "rail-above",
         "marker-color": "#91E275"
       }
@@ -1780,7 +1780,7 @@
         ]
       },
       "properties": {
-        "name": "rail-light",
+        "title": "rail-light",
         "marker-symbol": "rail-light",
         "marker-color": "#39B405"
       }
@@ -1795,7 +1795,7 @@
         ]
       },
       "properties": {
-        "name": "rail-metro",
+        "title": "rail-metro",
         "marker-symbol": "rail-metro",
         "marker-color": "#9E412F"
       }
@@ -1810,7 +1810,7 @@
         ]
       },
       "properties": {
-        "name": "rail-underground",
+        "title": "rail-underground",
         "marker-symbol": "rail-underground",
         "marker-color": "#014D11"
       }
@@ -1825,7 +1825,7 @@
         ]
       },
       "properties": {
-        "name": "rail",
+        "title": "rail",
         "marker-symbol": "rail",
         "marker-color": "#5C667F"
       }
@@ -1840,7 +1840,7 @@
         ]
       },
       "properties": {
-        "name": "religious-christian",
+        "title": "religious-christian",
         "marker-symbol": "religious-christian",
         "marker-color": "#D9B961"
       }
@@ -1855,7 +1855,7 @@
         ]
       },
       "properties": {
-        "name": "religious-jewish",
+        "title": "religious-jewish",
         "marker-symbol": "religious-jewish",
         "marker-color": "#0FF371"
       }
@@ -1870,7 +1870,7 @@
         ]
       },
       "properties": {
-        "name": "religious-muslim",
+        "title": "religious-muslim",
         "marker-symbol": "religious-muslim",
         "marker-color": "#481A08"
       }
@@ -1885,7 +1885,7 @@
         ]
       },
       "properties": {
-        "name": "restaurant",
+        "title": "restaurant",
         "marker-symbol": "restaurant",
         "marker-color": "#B4794C"
       }
@@ -1900,7 +1900,7 @@
         ]
       },
       "properties": {
-        "name": "roadblock",
+        "title": "roadblock",
         "marker-symbol": "roadblock",
         "marker-color": "#F56585"
       }
@@ -1915,7 +1915,7 @@
         ]
       },
       "properties": {
-        "name": "rocket",
+        "title": "rocket",
         "marker-symbol": "rocket",
         "marker-color": "#FD22CF"
       }
@@ -1930,7 +1930,7 @@
         ]
       },
       "properties": {
-        "name": "school",
+        "title": "school",
         "marker-symbol": "school",
         "marker-color": "#631B68"
       }
@@ -1945,7 +1945,7 @@
         ]
       },
       "properties": {
-        "name": "scooter",
+        "title": "scooter",
         "marker-symbol": "scooter",
         "marker-color": "#85D24C"
       }
@@ -1960,7 +1960,7 @@
         ]
       },
       "properties": {
-        "name": "shop",
+        "title": "shop",
         "marker-symbol": "shop",
         "marker-color": "#47C366"
       }
@@ -1975,7 +1975,7 @@
         ]
       },
       "properties": {
-        "name": "skiing",
+        "title": "skiing",
         "marker-symbol": "skiing",
         "marker-color": "#81AEF9"
       }
@@ -1990,7 +1990,7 @@
         ]
       },
       "properties": {
-        "name": "slaughterhouse",
+        "title": "slaughterhouse",
         "marker-symbol": "slaughterhouse",
         "marker-color": "#881591"
       }
@@ -2005,7 +2005,7 @@
         ]
       },
       "properties": {
-        "name": "soccer",
+        "title": "soccer",
         "marker-symbol": "soccer",
         "marker-color": "#0E981A"
       }
@@ -2020,7 +2020,7 @@
         ]
       },
       "properties": {
-        "name": "square-stroked",
+        "title": "square-stroked",
         "marker-symbol": "square-stroked",
         "marker-color": "#47D25C"
       }
@@ -2035,7 +2035,7 @@
         ]
       },
       "properties": {
-        "name": "square",
+        "title": "square",
         "marker-symbol": "square",
         "marker-color": "#7EFF04"
       }
@@ -2050,7 +2050,7 @@
         ]
       },
       "properties": {
-        "name": "star-stroked",
+        "title": "star-stroked",
         "marker-symbol": "star-stroked",
         "marker-color": "#D8AEAF"
       }
@@ -2065,7 +2065,7 @@
         ]
       },
       "properties": {
-        "name": "star",
+        "title": "star",
         "marker-symbol": "star",
         "marker-color": "#9CF7E9"
       }
@@ -2080,7 +2080,7 @@
         ]
       },
       "properties": {
-        "name": "suitcase",
+        "title": "suitcase",
         "marker-symbol": "suitcase",
         "marker-color": "#1AAA24"
       }
@@ -2095,7 +2095,7 @@
         ]
       },
       "properties": {
-        "name": "swimming",
+        "title": "swimming",
         "marker-symbol": "swimming",
         "marker-color": "#BE0946"
       }
@@ -2110,7 +2110,7 @@
         ]
       },
       "properties": {
-        "name": "telephone",
+        "title": "telephone",
         "marker-symbol": "telephone",
         "marker-color": "#66E15A"
       }
@@ -2125,7 +2125,7 @@
         ]
       },
       "properties": {
-        "name": "tennis",
+        "title": "tennis",
         "marker-symbol": "tennis",
         "marker-color": "#EEF2D1"
       }
@@ -2140,7 +2140,7 @@
         ]
       },
       "properties": {
-        "name": "theatre",
+        "title": "theatre",
         "marker-symbol": "theatre",
         "marker-color": "#217572"
       }
@@ -2155,7 +2155,7 @@
         ]
       },
       "properties": {
-        "name": "toilets",
+        "title": "toilets",
         "marker-symbol": "toilets",
         "marker-color": "#B31C69"
       }
@@ -2170,7 +2170,7 @@
         ]
       },
       "properties": {
-        "name": "town-hall",
+        "title": "town-hall",
         "marker-symbol": "town-hall",
         "marker-color": "#9D8B6A"
       }
@@ -2185,7 +2185,7 @@
         ]
       },
       "properties": {
-        "name": "town",
+        "title": "town",
         "marker-symbol": "town",
         "marker-color": "#D4A019"
       }
@@ -2200,7 +2200,7 @@
         ]
       },
       "properties": {
-        "name": "triangle-stroked",
+        "title": "triangle-stroked",
         "marker-symbol": "triangle-stroked",
         "marker-color": "#AF6474"
       }
@@ -2215,7 +2215,7 @@
         ]
       },
       "properties": {
-        "name": "triangle",
+        "title": "triangle",
         "marker-symbol": "triangle",
         "marker-color": "#91DAA4"
       }
@@ -2230,7 +2230,7 @@
         ]
       },
       "properties": {
-        "name": "village",
+        "title": "village",
         "marker-symbol": "village",
         "marker-color": "#2C3A7F"
       }
@@ -2245,7 +2245,7 @@
         ]
       },
       "properties": {
-        "name": "warehouse",
+        "title": "warehouse",
         "marker-symbol": "warehouse",
         "marker-color": "#2F3D8A"
       }
@@ -2260,7 +2260,7 @@
         ]
       },
       "properties": {
-        "name": "waste-basket",
+        "title": "waste-basket",
         "marker-symbol": "waste-basket",
         "marker-color": "#9BEEB0"
       }
@@ -2275,7 +2275,7 @@
         ]
       },
       "properties": {
-        "name": "water",
+        "title": "water",
         "marker-symbol": "water",
         "marker-color": "#40310A"
       }
@@ -2290,7 +2290,7 @@
         ]
       },
       "properties": {
-        "name": "wetland",
+        "title": "wetland",
         "marker-symbol": "wetland",
         "marker-color": "#FF42EA"
       }
@@ -2305,7 +2305,7 @@
         ]
       },
       "properties": {
-        "name": "zoo",
+        "title": "zoo",
         "marker-symbol": "zoo",
         "marker-color": "#9195A1"
       }

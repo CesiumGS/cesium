@@ -110,37 +110,44 @@ define([
             entity.properties = properties;
 
             var key;
-            var nameProperty = properties.title;
-            if (defined(nameProperty)) {
-                entity.name = nameProperty;
+            var nameProperty;
+
+            //First, check for the simplestyle specified name
+            var name = properties.title;
+            if (defined(name)) {
+                nameProperty = 'title';
             } else {
+                //If we didn't find the name, loop through the properties
+                //and look for any case-insensitive property named 'name' or 'title'
                 for (key in properties) {
                     if (properties.hasOwnProperty(key) && properties[key]) {
-                        var lowerKey = key.toLowerCase();
-                        if (lowerKey === 'name' || lowerKey === 'title') {
+                        if (/^name$/i.test(key) || /^title$/i.test(key)) {
                             nameProperty = key;
-                            entity.name = properties[key];
+                            name = properties[key];
                             break;
                         }
                     }
                 }
 
+                //If we still didn't find the name, loop through the properties
+                //again and look for a partial case-insensitive match for 'name' or 'title'
                 if (!defined(nameProperty)) {
                     for (key in properties) {
                         if (properties.hasOwnProperty(key) && properties[key]) {
                             if (/name/i.test(key) || /title/i.test(key)) {
                                 nameProperty = key;
-                                entity.name = properties[key];
+                                name = properties[key];
                                 break;
                             }
                         }
                     }
                 }
             }
+            entity.name = name;
 
             var description = properties.description;
             if (!defined(description)) {
-                describe(properties, nameProperty);
+                description = describe(properties, nameProperty);
             }
             entity.description = new ConstantProperty(description);
         }

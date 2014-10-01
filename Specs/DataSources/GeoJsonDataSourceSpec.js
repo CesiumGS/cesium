@@ -248,6 +248,63 @@ defineSuite([
         });
     });
 
+    it('Creates description from properties', function() {
+        var featureWithProperties = {
+            type : 'Feature',
+            geometry : point,
+            properties : {
+                prop1 : 'dog',
+                prop2 : 'cat',
+                prop3 : 'liger'
+            }
+        };
+
+        var dataSource = new GeoJsonDataSource();
+        dataSource.load(featureWithProperties);
+
+        var entityCollection = dataSource.entities;
+        waitsFor(function() {
+            return entityCollection.entities.length === 1;
+        });
+        runs(function() {
+            var pointObject = entityCollection.entities[0];
+            expect(pointObject.description).toBeDefined();
+            var description = pointObject.description.getValue(time);
+            expect(description).toContain('prop1');
+            expect(description).toContain('prop2');
+            expect(description).toContain('prop3');
+            expect(description).toContain('dog');
+            expect(description).toContain('cat');
+            expect(description).toContain('liger');
+        });
+    });
+
+    it('Uses description if present', function() {
+        var featureWithDescription = {
+            type : 'Feature',
+            geometry : point,
+            properties : {
+                prop1 : 'dog',
+                prop2 : 'cat',
+                prop3 : 'liger',
+                description : 'This is my descriptiong!'
+            }
+        };
+
+        var dataSource = new GeoJsonDataSource();
+        dataSource.load(featureWithDescription);
+
+        var entityCollection = dataSource.entities;
+        waitsFor(function() {
+            return entityCollection.entities.length === 1;
+        });
+        runs(function() {
+            var pointObject = entityCollection.entities[0];
+            expect(pointObject.description).toBeDefined();
+            expect(pointObject.description.getValue(time)).toEqual(featureWithDescription.properties.description);
+        });
+    });
+
     it('Does not use "name" property as the object\'s name if it is null', function() {
         var dataSource = new GeoJsonDataSource();
         dataSource.load(featureWithNullName);
