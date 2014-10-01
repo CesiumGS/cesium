@@ -584,6 +584,68 @@ define([
     };
 
     /**
+     * Brightens this color by the provided magnitude.
+     *
+     * @param {Number} magnitude A positive number indicating the amount to brighten.
+     * @param {Color} result The object onto which to store the result.
+     * @returns {Color} The modified result parameter.
+     *
+     * @example
+     * var brightBlue = Cesium.Color.BLUE.brighten(0.5, new Color());
+     */
+    Color.prototype.brighten = function(magnitude, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(magnitude)) {
+            throw new DeveloperError('magnitude is required.');
+        }
+        if (magnitude < 0.0) {
+            throw new DeveloperError('magnitude must be positive.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required.');
+        }
+        //>>includeEnd('debug');
+
+        magnitude = (1.0 - magnitude);
+        result.red = 1.0 - ((1.0 - this.red) * magnitude);
+        result.green = 1.0 - ((1.0 - this.green) * magnitude);
+        result.blue = 1.0 - ((1.0 - this.blue) * magnitude);
+        result.alpha = this.alpha;
+        return result;
+    };
+
+    /**
+     * Darkens this color by the provided magnitude.
+     *
+     * @param {Number} magnitude A positive number indicating the amount to darken.
+     * @param {Color} result The object onto which to store the result.
+     * @returns {Color} The modified result parameter.
+     *
+     * @example
+     * var darkBlue = Cesium.Color.BLUE.darken(0.5, new Color());
+     */
+    Color.prototype.darken = function(magnitude, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(magnitude)) {
+            throw new DeveloperError('magnitude is required.');
+        }
+        if (magnitude < 0.0) {
+            throw new DeveloperError('magnitude must be positive.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required.');
+        }
+        //>>includeEnd('debug');
+
+        magnitude = (1.0 - magnitude);
+        result.red = this.red * magnitude;
+        result.green = this.green * magnitude;
+        result.blue = this.blue * magnitude;
+        result.alpha = this.alpha;
+        return result;
+    };
+
+    /**
      * An immutable Color instance initialized to CSS color #F0F8FF
      * <span class="colorSwath" style="background: #F0F8FF;"></span>
      *

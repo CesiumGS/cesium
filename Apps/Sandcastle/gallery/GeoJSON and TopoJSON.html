@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
-    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Load GeoJSON or TopoJSON data and apply custom styling.">
     <meta name="cesium-sandcastle-labels" content="Showcases, Tutorials, DataSources">
     <title>Cesium Demo</title>
@@ -33,9 +33,7 @@ Cesium.viewerEntityMixin(viewer);
 
 //Example 1: Load a GeoJSON or TopoJSON file with default settings.
 Sandcastle.addDefaultToolbarButton('Basic loading', function() {
-    var dataSource = new Cesium.GeoJsonDataSource();
-    viewer.dataSources.add(dataSource);
-    dataSource.loadUrl('../../SampleData/ne_10m_us_states.topojson');
+    viewer.dataSources.add(Cesium.GeoJsonDataSource.fromUrl('../../SampleData/ne_10m_us_states.topojson'));
 });
 
 //Example 2: Apply custom graphics to a GeoJSON or TopoJSON file 

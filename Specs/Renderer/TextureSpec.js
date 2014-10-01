@@ -3,7 +3,6 @@ defineSuite([
         'Renderer/Texture',
         'Core/Cartesian2',
         'Core/Color',
-        'Core/FeatureDetection',
         'Core/loadImage',
         'Core/PixelFormat',
         'Core/PrimitiveType',
@@ -20,7 +19,6 @@ defineSuite([
         Texture,
         Cartesian2,
         Color,
-        FeatureDetection,
         loadImage,
         PixelFormat,
         PrimitiveType,
@@ -194,11 +192,6 @@ defineSuite([
     });
 
     it('renders with premultiplied alpha', function() {
-        if (FeatureDetection.isInternetExplorer()) {
-            // Workaround IE 11.0.8, which does not support premultiplied alpha
-            return;
-        }
-
         texture = context.createTexture2D({
             source : blueAlphaImage,
             pixelFormat : PixelFormat.RGBA,

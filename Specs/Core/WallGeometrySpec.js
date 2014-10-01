@@ -2,14 +2,12 @@
 defineSuite([
         'Core/WallGeometry',
         'Core/Cartesian3',
-        'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/Math',
         'Core/VertexFormat'
     ], function(
         WallGeometry,
         Cartesian3,
-        Cartographic,
         Ellipsoid,
         CesiumMath,
         VertexFormat) {
@@ -46,7 +44,7 @@ defineSuite([
         expect(function() {
             return WallGeometry.createGeometry(new WallGeometry({
                 vertexFormat : VertexFormat.POSITION_ONLY,
-                positions    : ellipsoid.cartographicArrayToCartesianArray([Cartographic.fromDegrees(49.0, 18.0, 1000.0)])
+                positions    : ([Cartesian3.fromDegrees(49.0, 18.0, 1000.0)])
             }));
         }).toThrowDeveloperError();
     });
@@ -55,10 +53,11 @@ defineSuite([
         expect(function() {
             return WallGeometry.createGeometry(new WallGeometry({
                 vertexFormat : VertexFormat.POSITION_ONLY,
-                positions    : ellipsoid.cartographicArrayToCartesianArray([
-                                    Cartographic.fromDegrees(49.0, 18.0, 1000.0),
-                                    Cartographic.fromDegrees(49.0, 18.0, 5000.0),
-                                    Cartographic.fromDegrees(49.0, 18.0, 1000.0)])
+                positions    : Cartesian3.fromDegreesArrayHeights([
+                    49.0, 18.0, 1000.0,
+                    49.0, 18.0, 5000.0,
+                    49.0, 18.0, 1000.0
+                ])
             }));
         }).toThrowDeveloperError();
     });
@@ -66,21 +65,20 @@ defineSuite([
     it('does not throw when positions are unique but close', function() {
         WallGeometry.createGeometry(new WallGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
-            positions    : ellipsoid.cartographicArrayToCartesianArray([
-                                Cartographic.fromDegrees(-47.93121266896352,-15.771192496304398),
-                                Cartographic.fromDegrees(-47.93119792786269,-15.771148001875085)])
+            positions    : Cartesian3.fromDegreesArray([
+                -47.93121266896352,-15.771192496304398,
+                -47.93119792786269,-15.771148001875085
+            ])
         }));
     });
 
     it('creates positions relative to ellipsoid', function() {
-        var coords = [
-            Cartographic.fromDegrees(49.0, 18.0, 1000.0),
-            Cartographic.fromDegrees(50.0, 18.0, 1000.0)
-        ];
-
         var w = WallGeometry.createGeometry(new WallGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
-            positions    : ellipsoid.cartographicArrayToCartesianArray(coords)
+            positions    : Cartesian3.fromDegreesArrayHeights([
+                49.0, 18.0, 1000.0,
+                50.0, 18.0, 1000.0
+            ])
         }));
 
         var positions = w.attributes.position.values;
@@ -95,14 +93,12 @@ defineSuite([
     });
 
     it('creates positions with minimum and maximum heights', function() {
-        var coords = [
-            Cartographic.fromDegrees(49.0, 18.0, 1000.0),
-            Cartographic.fromDegrees(50.0, 18.0, 1000.0)
-        ];
-
         var w = WallGeometry.createGeometry(new WallGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
-            positions    : ellipsoid.cartographicArrayToCartesianArray(coords),
+            positions    : Cartesian3.fromDegreesArrayHeights([
+                49.0, 18.0, 1000.0,
+                50.0, 18.0, 1000.0
+            ]),
             minimumHeights : [1000.0, 2000.0],
             maximumHeights : [3000.0, 4000.0]
         }));
@@ -125,18 +121,17 @@ defineSuite([
     });
 
     it('cleans positions with duplicates', function() {
-        var coords = [
-                      Cartographic.fromDegrees(49.0, 18.0, 1000.0),
-                      Cartographic.fromDegrees(49.0, 18.0, 2000.0),
-                      Cartographic.fromDegrees(50.0, 18.0, 1000.0),
-                      Cartographic.fromDegrees(50.0, 18.0, 1000.0),
-                      Cartographic.fromDegrees(50.0, 18.0, 1000.0),
-                      Cartographic.fromDegrees(51.0, 18.0, 1000.0),
-                      Cartographic.fromDegrees(51.0, 18.0, 1000.0)
-                  ];
         var w = WallGeometry.createGeometry(new WallGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
-            positions    : ellipsoid.cartographicArrayToCartesianArray(coords)
+            positions    : Cartesian3.fromDegreesArrayHeights([
+                49.0, 18.0, 1000.0,
+                49.0, 18.0, 2000.0,
+                50.0, 18.0, 1000.0,
+                50.0, 18.0, 1000.0,
+                50.0, 18.0, 1000.0,
+                51.0, 18.0, 1000.0,
+                51.0, 18.0, 1000.0
+            ])
         }));
 
         var positions = w.attributes.position.values;
@@ -151,16 +146,15 @@ defineSuite([
     });
 
     it('cleans selects maximum height from duplicates', function() {
-        var coords = [
-                      Cartographic.fromDegrees(49.0, 18.0, 1000.0),
-                      Cartographic.fromDegrees(50.0, 18.0, 1000.0),
-                      Cartographic.fromDegrees(50.0, 18.0, 6000.0),
-                      Cartographic.fromDegrees(50.0, 18.0, 10000.0),
-                      Cartographic.fromDegrees(51.0, 18.0, 1000.0)
-                  ];
         var w = WallGeometry.createGeometry(new WallGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
-            positions    : ellipsoid.cartographicArrayToCartesianArray(coords)
+            positions    : Cartesian3.fromDegreesArrayHeights([
+                49.0, 18.0, 1000.0,
+                50.0, 18.0, 1000.0,
+                50.0, 18.0, 6000.0,
+                50.0, 18.0, 10000.0,
+                51.0, 18.0, 1000.0
+            ])
         }));
 
         var positions = w.attributes.position.values;
@@ -175,15 +169,13 @@ defineSuite([
     });
 
     it('creates all attributes', function() {
-        var coords = [
-            Cartographic.fromDegrees(49.0, 18.0, 1000.0),
-            Cartographic.fromDegrees(50.0, 18.0, 1000.0),
-            Cartographic.fromDegrees(51.0, 18.0, 1000.0)
-        ];
-
         var w = WallGeometry.createGeometry(new WallGeometry({
             vertexFormat : VertexFormat.ALL,
-            positions    : ellipsoid.cartographicArrayToCartesianArray(coords)
+            positions    : Cartesian3.fromDegreesArrayHeights([
+                49.0, 18.0, 1000.0,
+                50.0, 18.0, 1000.0,
+                51.0, 18.0, 1000.0
+            ])
         }));
 
         expect(w.attributes.position.values.length).toEqual(4 * 2 * 3);
@@ -201,17 +193,15 @@ defineSuite([
     });
 
     it('creates positions with constant minimum and maximum heights', function() {
-        var coords = [
-            Cartographic.fromDegrees(49.0, 18.0, 1000.0),
-            Cartographic.fromDegrees(50.0, 18.0, 1000.0)
-        ];
-
         var min = 1000.0;
         var max = 2000.0;
 
         var w = WallGeometry.createGeometry(WallGeometry.fromConstantHeights({
             vertexFormat : VertexFormat.POSITION_ONLY,
-            positions    : ellipsoid.cartographicArrayToCartesianArray(coords),
+            positions    : Cartesian3.fromDegreesArrayHeights([
+                49.0, 18.0, 1000.0,
+                50.0, 18.0, 1000.0
+            ]),
             minimumHeight : min,
             maximumHeight : max
         }));

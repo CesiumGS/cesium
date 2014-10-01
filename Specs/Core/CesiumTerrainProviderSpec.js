@@ -59,6 +59,10 @@ defineSuite([
         return returnTileJson('Data/CesiumTerrainTileJson/VertexNormals.tile.json');
     }
 
+    function returnPartialAvailabilityTileJson() {
+        return returnTileJson('Data/CesiumTerrainTileJson/PartialAvailability.tile.json');
+    }
+
     it('conforms to TerrainProvider interface', function() {
         expect(CesiumTerrainProvider).toConformToInterface(TerrainProvider);
     });
@@ -594,6 +598,62 @@ defineSuite([
                 for (i = 0; i < deferreds.length; ++i) {
                     deferreds[i].resolve();
                 }
+            });
+        });
+
+        it('supports getTileDataAvailable()', function() {
+            var baseUrl = 'made/up/url';
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                return loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.terrain', responseType, method, data, headers, deferred);
+            };
+
+            returnQuantizedMeshTileJson();
+
+            var terrainProvider = new CesiumTerrainProvider({
+                url : baseUrl
+            });
+
+            waitsFor(function() {
+                return terrainProvider.ready;
+            });
+
+            var loadedData;
+
+            runs(function() {
+                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
+
+                when(promise, function(terrainData) {
+                    loadedData = terrainData;
+                });
+            });
+
+            waitsFor(function() {
+                return defined(loadedData);
+            }, 'request to complete');
+
+            runs(function() {
+                expect(terrainProvider.getTileDataAvailable(0, 0, 0)).toBe(true);
+                expect(terrainProvider.getTileDataAvailable(0, 0, 2)).toBe(false);
+            });
+        });
+
+        it('getTileDataAvailable() converts xyz to tms', function() {
+            var baseUrl = 'made/up/url';
+
+            returnPartialAvailabilityTileJson();
+
+            var terrainProvider = new CesiumTerrainProvider({
+                url : baseUrl
+            });
+
+            waitsFor(function() {
+                return terrainProvider.ready;
+            });
+
+            runs(function() {
+                expect(terrainProvider.getTileDataAvailable(1, 3, 2)).toBe(true);
+                expect(terrainProvider.getTileDataAvailable(1, 0, 2)).toBe(false);
             });
         });
     });
