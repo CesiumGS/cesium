@@ -587,7 +587,7 @@ define([
      * Brightens this color by the provided magnitude.
      *
      * @param {Number} magnitude A positive number indicating the amount to brighten.
-     * @param {Color} [result] The object onto which to store the result.
+     * @param {Color} result The object onto which to store the result.
      * @returns {Color} The modified result parameter.
      *
      * @example
@@ -618,7 +618,7 @@ define([
      * Darkens this color by the provided magnitude.
      *
      * @param {Number} magnitude A positive number indicating the amount to darken.
-     * @param {Color} [result] The object onto which to store the result.
+     * @param {Color} result The object onto which to store the result.
      * @returns {Color} The modified result parameter.
      *
      * @example
