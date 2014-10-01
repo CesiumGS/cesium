@@ -98,7 +98,7 @@ define([
             throw new DeveloperError('size is required');
         }
         //>>includeEnd('debug');
-        return createPin(buildModuleUrl('Assets/Textures/maki/' + id + '.png'), undefined, color, size, this._cache);
+        return createPin(buildModuleUrl('Assets/Textures/maki/' + encodeURIComponent(id) + '.png'), undefined, color, size, this._cache);
     };
 
     /**
