@@ -1,21 +1,17 @@
 /*global define*/
 define([
-        '../ThirdParty/when',
         './buildModuleUrl',
         './Color',
         './defined',
         './DeveloperError',
         './loadImage',
-        './loadXML',
         './writeTextToCanvas'
     ], function(
-        when,
         buildModuleUrl,
         Color,
         defined,
         DeveloperError,
         loadImage,
-        loadXML,
         writeTextToCanvas) {
     "use strict";
 
