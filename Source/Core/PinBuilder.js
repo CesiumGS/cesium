@@ -196,14 +196,14 @@ define([
         context2D.fillRect(x, y, sizeX, sizeY);
     }
 
+    var stringifyScratch = new Array(4);
     function createPin(url, label, color, size, cache) {
         //Use the parameters as a unique ID for caching.
-        var id = JSON.stringify({
-            url : url,
-            label : label,
-            color : color,
-            size : size
-        });
+        stringifyScratch[0] = url;
+        stringifyScratch[1] = label;
+        stringifyScratch[2] = color;
+        stringifyScratch[3] = size;
+        var id = JSON.stringify(stringifyScratch);
 
         //If the promise is already in our cache, return it.
         var item = cache[id];
@@ -233,17 +233,11 @@ define([
             });
         } else if (defined(label)) {
             //If we have a label, write it to a canvas and then stamp the pin.
-            when(writeTextToCanvas(label, {
-                font : 'bold ' + size + 'px sans-serif',
-                fill : true,
-                fillColor : Color.WHITE,
-                strokWidth : 1
-            }), function(image) {
-                drawIcon(context2D, image, size);
-                deferred.resolve(canvas);
-            }).otherwise(function(e) {
-                deferred.reject(e);
+            var image = writeTextToCanvas(label, {
+                font : 'bold ' + size + 'px sans-serif'
             });
+            drawIcon(context2D, image, size);
+            deferred.resolve(canvas);
         } else {
             //If we are using a blank pin, resolve immediately.
             deferred.resolve(canvas);
