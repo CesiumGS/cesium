@@ -206,22 +206,22 @@ define([
                 color = Color.fromCssColorString(cssColor);
             }
 
-            size = defaultValue(sizes[properties['marker-size']], sizes.medium);
-            symbol = defaultValue(properties['marker-symbol'], symbol);
+            size = defaultValue(sizes[properties['marker-size']], size);
+            symbol = properties['marker-symbol'];
         }
 
-        var promise;
+        var canvasOrPromise;
         if (defined(symbol)) {
             if (symbol.length === 1) {
-                promise = dataSource._pinBuilder.fromText(symbol.toUpperCase(), color, size);
+                canvasOrPromise = dataSource._pinBuilder.fromText(symbol.toUpperCase(), color, size);
             } else {
-                promise = dataSource._pinBuilder.fromMakiIconId(symbol, color, size);
+                canvasOrPromise = dataSource._pinBuilder.fromMakiIconId(symbol, color, size);
             }
         } else {
-            promise = dataSource._pinBuilder.fromColor(color, size);
+            canvasOrPromise = dataSource._pinBuilder.fromColor(color, size);
         }
 
-        dataSource._promises.push(when(promise, function(canvas) {
+        dataSource._promises.push(when(canvasOrPromise, function(canvas) {
             var billboard = new BillboardGraphics();
             billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
             billboard.image = new ConstantProperty(canvas.toDataURL());
