@@ -11,7 +11,7 @@ define([
      * Converts an object representing a set of name/value pairs into a query string,
      * with names and values encoded properly for use in a URL.  Values that are arrays
      * will produce multiple values with the same name.
-     * @exports queryToObject
+     * @exports objectToQuery
      *
      * @param {Object} obj The object containing data to encode.
      * @returns {String} An encoded query string.
@@ -19,7 +19,7 @@ define([
      * @see queryToObject
      *
      * @example
-     * var str = Cesium.queryToObject({
+     * var str = Cesium.objectToQuery({
      *     key1 : 'some value',
      *     key2 : 'a/b'
      * });
