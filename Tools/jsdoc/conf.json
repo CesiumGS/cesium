@@ -19,6 +19,7 @@
     "opts": {
         "destination": "Build/Documentation",
         "template": "cesium_template",
-        "recurse": true
+        "recurse": true,
+        "tutorials": "Documentation/Tutorials"
     }
 }

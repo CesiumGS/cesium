@@ -180,6 +180,16 @@ function buildNav(members) {
         classNav = '',
         globalNav = '';
 
+    if (members.tutorials.length) {
+        nav += '<b>Tutorials</b><ul>';
+        members.tutorials.forEach(function(t) {
+            nav += '<li>' + tutoriallink(t.name) + '</li>';
+        });
+
+        nav += '</ul>';
+    }
+
+    nav += '<b>Reference</b><ul>';
     var items = members.modules.concat(members.classes).concat(members.namespaces).sort(function(a, b) {
         return a.longname.toLowerCase().localeCompare(b.longname.toLowerCase());
     });
@@ -344,6 +354,7 @@ exports.publish = function(taffyData, opts, tutorials) {
     });
 
     var members = helper.getMembers(data);
+    members.tutorials = tutorials.children;
 
     // add template helpers
     view.find = find;
@@ -412,4 +423,31 @@ exports.publish = function(taffyData, opts, tutorials) {
     });
 
     fs.writeFileSync(outdir + '/types.txt', JSON.stringify(typesJson), 'utf8');
+
+    // TODO: move the tutorial functions to templateHelper.js
+    function generateTutorial(title, tutorial, filename) {
+        var tutorialData = {
+            title: title,
+            header: tutorial.title,
+            content: tutorial.parse(),
+            children: tutorial.children
+        };
+
+        var tutorialPath = path.join(outdir, filename),
+            html = view.render('tutorial.tmpl', tutorialData);
+
+        // yes, you can use {@link} in tutorials too!
+        html = helper.resolveLinks(html); // turn {@link foo} into <a href="foodoc.html">foo</a>
+
+        fs.writeFileSync(tutorialPath, html, 'utf8');
+    }
+
+    // tutorials can have only one parent so there is no risk for loops
+    function saveChildren(node) {
+        node.children.forEach(function(child) {
+            generateTutorial(child.title, child, helper.tutorialToUrl(child.name));
+            saveChildren(child);
+        });
+    }
+    saveChildren(tutorials);
 };
