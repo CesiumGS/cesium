@@ -28,38 +28,16 @@ defineSuite([
 
     it('fromColor creates icon of correct color', function() {
         var builder = new PinBuilder();
-
-        var canvas;
-        when(builder.fromColor(Color.GREEN, 128), function(c) {
-            canvas = c;
-        });
-
-        waitsFor(function() {
-            return defined(canvas);
-        });
-
-        runs(function() {
-            expect(getPinColor(canvas)).toEqual(Color.GREEN);
-        });
+        var canvas = builder.fromColor(Color.GREEN, 128);
+        expect(getPinColor(canvas)).toEqual(Color.GREEN);
     });
 
     it('fromText creates icon of correct color with symbol', function() {
         var builder = new PinBuilder();
-
-        var canvas;
         //Solid square icon
-        when(builder.fromText('\u25A0', Color.BLUE, 128), function(c) {
-            canvas = c;
-        });
-
-        waitsFor(function() {
-            return defined(canvas);
-        });
-
-        runs(function() {
-            expect(getPinColor(canvas)).toEqual(Color.BLUE);
-            expect(getIconColor(canvas)).toEqual(Color.WHITE);
-        });
+        var canvas = builder.fromText('\u25A0', Color.BLUE, 128);
+        expect(getPinColor(canvas)).toEqual(Color.BLUE);
+        expect(getIconColor(canvas)).toEqual(Color.WHITE);
     });
 
     it('fromUrl creates icon of correct color with symbol', function() {
@@ -102,24 +80,9 @@ defineSuite([
 
     it('caches and returns existing canvas', function() {
         var builder = new PinBuilder();
-
-        var canvas;
-        var canvas2;
-        when(builder.fromColor(Color.GREEN, 128), function(c) {
-            canvas = c;
-        });
-
-        when(builder.fromColor(Color.GREEN, 128), function(c) {
-            canvas2 = c;
-        });
-
-        waitsFor(function() {
-            return defined(canvas) && defined(canvas2);
-        });
-
-        runs(function() {
-            expect(canvas).toBe(canvas2);
-        });
+        var canvas = builder.fromColor(Color.GREEN, 128);
+        var canvas2 = builder.fromColor(Color.GREEN, 128);
+        expect(canvas).toBe(canvas2);
     });
 
     it('fromColor throws without color', function() {

@@ -41,7 +41,7 @@ define([
      *
      * @param {Color} color The color of the pin.
      * @param {Number} size The size of the pin, in pixels.
-     * @returns {Promise} A promise that resolves to the canvas element which represents the generated pin.
+     * @returns {Canvas} The canvas element that represents the generated pin.
      */
     PinBuilder.prototype.fromColor = function(color, size) {
         //>>includeStart('debug', pragmas.debug);
@@ -61,7 +61,7 @@ define([
      * @param {String} url The url of the image to be stamped onto the pin.
      * @param {Color} color The color of the pin.
      * @param {Number} size The size of the pin, in pixels.
-     * @returns {Promise} A promise that resolves to the canvas element which represents the generated pin.
+     * @returns {Canvas|Promise} The canvas element or a Promise to the canvas element that represents the generated pin.
      */
     PinBuilder.prototype.fromUrl = function(url, color, size) {
         //>>includeStart('debug', pragmas.debug);
@@ -84,7 +84,7 @@ define([
      * @param {String} id The id of the maki icon to be stamped onto the pin.
      * @param {Color} color The color of the pin.
      * @param {Number} size The size of the pin, in pixels.
-     * @returns {Promise} A promise that resolves to the canvas element which represents the generated pin.
+     * @returns {Canvas|Promise} The canvas element or a Promise to the canvas element that represents the generated pin.
      */
     PinBuilder.prototype.fromMakiIconId = function(id, color, size) {
         //>>includeStart('debug', pragmas.debug);
@@ -108,7 +108,7 @@ define([
      * @param {String} text The text to be stamped onto the pin.
      * @param {Color} color The color of the pin.
      * @param {Number} size The size of the pin, in pixels.
-     * @returns {Promise} A promise that resolves to the canvas element which represents the generated pin.
+     * @returns {Canvas} The canvas element that represents the generated pin.
      */
     PinBuilder.prototype.fromText = function(text, color, size) {
         //>>includeStart('debug', pragmas.debug);
@@ -205,17 +205,11 @@ define([
         stringifyScratch[3] = size;
         var id = JSON.stringify(stringifyScratch);
 
-        //If the promise is already in our cache, return it.
         var item = cache[id];
         if (defined(item)) {
             return item;
         }
 
-        //Otherwise, create a deferred promise and add it to the cache.
-        var deferred = when.defer();
-        cache[id] = deferred.promise;
-
-        //If it's a new item, draw the canvas which we will resolve our promise too.
         var canvas = document.createElement('canvas');
         canvas.width = size;
         canvas.height = size;
@@ -225,25 +219,23 @@ define([
 
         if (defined(url)) {
             //If we have an image url, load it and then stamp the pin.
-            when(loadImage(url), function(image) {
+            var promise = loadImage(url).then(function(image) {
                 drawIcon(context2D, image, size);
-                deferred.resolve(canvas);
-            }).otherwise(function(e) {
-                deferred.reject(e);
+                cache[id] = canvas;
+                return canvas;
             });
+            cache[id] = promise;
+            return promise;
         } else if (defined(label)) {
             //If we have a label, write it to a canvas and then stamp the pin.
             var image = writeTextToCanvas(label, {
                 font : 'bold ' + size + 'px sans-serif'
             });
             drawIcon(context2D, image, size);
-            deferred.resolve(canvas);
-        } else {
-            //If we are using a blank pin, resolve immediately.
-            deferred.resolve(canvas);
         }
 
-        return deferred.promise;
+        cache[id] = canvas;
+        return canvas;
     }
 
     return PinBuilder;
