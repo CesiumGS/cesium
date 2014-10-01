@@ -109,41 +109,45 @@ define([
             entity.addProperty('properties');
             entity.properties = properties;
 
-            var key;
             var nameProperty;
 
-            //First, check for the simplestyle specified name
+            //Check for the simplestyle specified name first.
             var name = properties.title;
             if (defined(name)) {
+                entity.name = name;
                 nameProperty = 'title';
             } else {
-                //If we didn't find the name, loop through the properties
-                //and look for any case-insensitive property named 'name' or 'title'
-                for (key in properties) {
+                //Else, find the name by selecting an appropriate property.
+                //The name will be obtained based on this order:
+                //1) The first case-insensitive property with the name 'title',
+                //2) The first case-insensitive property with the name 'name',
+                //3) The first property containing the word 'title'.
+                //4) The first property containing the word 'name',
+                var namePropertyPrecedence = Number.MAX_VALUE;
+                for ( var key in properties) {
                     if (properties.hasOwnProperty(key) && properties[key]) {
-                        if (/^name$/i.test(key) || /^title$/i.test(key)) {
+                        var lowerKey = key.toLowerCase();
+
+                        if (namePropertyPrecedence > 1 && lowerKey === 'title') {
+                            namePropertyPrecedence = 1;
                             nameProperty = key;
-                            name = properties[key];
                             break;
+                        } else if (namePropertyPrecedence > 2 && lowerKey === 'name') {
+                            namePropertyPrecedence = 2;
+                            nameProperty = key;
+                        } else if (namePropertyPrecedence > 3 && /title/i.test(key)) {
+                            namePropertyPrecedence = 3;
+                            nameProperty = key;
+                        } else if (namePropertyPrecedence > 4 && /name/i.test(key)) {
+                            namePropertyPrecedence = 4;
+                            nameProperty = key;
                         }
                     }
                 }
-
-                //If we still didn't find the name, loop through the properties
-                //again and look for a partial case-insensitive match for 'name' or 'title'
-                if (!defined(nameProperty)) {
-                    for (key in properties) {
-                        if (properties.hasOwnProperty(key) && properties[key]) {
-                            if (/name/i.test(key) || /title/i.test(key)) {
-                                nameProperty = key;
-                                name = properties[key];
-                                break;
-                            }
-                        }
-                    }
+                if (defined(nameProperty)) {
+                    entity.name = properties[nameProperty];
                 }
             }
-            entity.name = name;
 
             var description = properties.description;
             if (!defined(description)) {
