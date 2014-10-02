@@ -891,6 +891,16 @@ defineSuite([
         expect(Matrix4.multiply(returnedResult, matrix, new Matrix4())).toEqualEpsilon(Matrix4.IDENTITY, CesiumMath.EPSILON15);
     });
 
+    it('inverse translates zero scale matrix', function() {
+        var matrix = Matrix4.fromTranslation(new Cartesian3(1.0, 2.0, 3.0));
+        matrix = Matrix4.multiplyByUniformScale(matrix, 0.0, matrix);
+        var expected = Matrix4.fromTranslation(new Cartesian3(-1.0, -2.0, -3.0));
+        expected = Matrix4.multiplyByUniformScale(expected, 0.0, expected);
+
+        var result = Matrix4.inverse(matrix, new Matrix4());
+        expect(expected).toEqualEpsilon(result, CesiumMath.EPSILON20);
+    });
+
     it('inverseTransformation works', function() {
         var matrix = new Matrix4(1, 0, 0, 10,
                                  0, 0, 1, 20,
