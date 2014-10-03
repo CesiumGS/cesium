@@ -250,7 +250,7 @@ define([
             that._tileHeight = defaultValue(options.tileHeight, 256);
             that._minimumLevel = defaultValue(options.minimumLevel, 0);
             that._maximumLevel = defaultValue(options.maximumLevel, 18);
-            that._tilingScheme = defaultValue(options.tilingScheme, new WebMercatorTilingScheme());
+            that._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new WebMercatorTilingScheme();
             that._rectangle = defaultValue(options.rectangle, that._tilingScheme.rectangle);
             that._ready = true;
         }

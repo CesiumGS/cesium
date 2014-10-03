@@ -96,7 +96,7 @@ define([
         this._proxy = options.proxy;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
 
-        this._tilingScheme = defaultValue(options.tilingScheme, new WebMercatorTilingScheme());
+        this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new WebMercatorTilingScheme();
         this._tileWidth = defaultValue(options.tileWidth, 256);
         this._tileHeight = defaultValue(options.tileHeight, 256);
 

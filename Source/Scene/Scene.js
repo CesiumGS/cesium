@@ -324,7 +324,7 @@ define([
 
         this._mode = SceneMode.SCENE3D;
 
-        this._mapProjection = defaultValue(options.mapProjection, new GeographicProjection());
+        this._mapProjection = defined(options.mapProjection) ? options.mapProjection : new GeographicProjection();
 
         /**
          * The current morph transition time between 2D/Columbus View and 3D,

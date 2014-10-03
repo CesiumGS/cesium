@@ -149,7 +149,7 @@ define([
         this._maximumLevel = options.maximumLevel; // undefined means no limit
 
         this._rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
-        this._tilingScheme = defaultValue(options.tilingScheme, new GeographicTilingScheme());
+        this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new GeographicTilingScheme();
 
         this._rectangle = Rectangle.intersectWith(this._rectangle, this._tilingScheme.rectangle);
 
