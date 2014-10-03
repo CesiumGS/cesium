@@ -32,7 +32,7 @@ defineSuite([
         var oldLoad = loadWithXhr.load;
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             if (url.indexOf('layer.json') >= 0) {
-                return loadWithXhr.defaultLoad(path, responseType, method, data, headers, deferred);
+                loadWithXhr.defaultLoad(path, responseType, method, data, headers, deferred);
             } else {
                 return oldLoad(url, responseType, method, data, headers, deferred, overrideMimeType);
             }
@@ -348,7 +348,7 @@ defineSuite([
                 expect(url.indexOf('/proxy/?')).toBe(0);
 
                 // Just return any old file, as long as its big enough
-                return loadWithXhr.defaultLoad('Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json', responseType, method, data, headers, deferred);
+                loadWithXhr.defaultLoad('Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json', responseType, method, data, headers, deferred);
             };
 
             returnHeightmapTileJson();
@@ -382,7 +382,7 @@ defineSuite([
 
             loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 // Just return any old file, as long as its big enough
-                return loadWithXhr.defaultLoad('Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json', responseType, method, data, headers, deferred);
+                loadWithXhr.defaultLoad('Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json', responseType, method, data, headers, deferred);
             };
 
             returnHeightmapTileJson();
@@ -418,7 +418,7 @@ defineSuite([
             var baseUrl = 'made/up/url';
 
             loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-                return loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.terrain', responseType, method, data, headers, deferred);
+                loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.terrain', responseType, method, data, headers, deferred);
             };
 
             returnQuantizedMeshTileJson();
@@ -454,7 +454,7 @@ defineSuite([
             var baseUrl = 'made/up/url';
 
             loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-                return loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.vertexnormals.terrain', responseType, method, data, headers, deferred);
+                loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.vertexnormals.terrain', responseType, method, data, headers, deferred);
             };
 
             returnVertexNormalTileJson();
@@ -492,7 +492,7 @@ defineSuite([
             var baseUrl = 'made/up/url';
 
             loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-                return loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.vertexnormals.unknownext.terrain', responseType, method, data, headers, deferred);
+                loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.vertexnormals.unknownext.terrain', responseType, method, data, headers, deferred);
             };
 
             returnVertexNormalTileJson();
@@ -530,7 +530,7 @@ defineSuite([
             var baseUrl = 'made/up/url';
 
             loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-                return loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.unknownext.terrain', responseType, method, data, headers, deferred);
+                loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.unknownext.terrain', responseType, method, data, headers, deferred);
             };
 
             returnVertexNormalTileJson();
@@ -605,7 +605,7 @@ defineSuite([
             var baseUrl = 'made/up/url';
 
             loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-                return loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.terrain', responseType, method, data, headers, deferred);
+                loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.terrain', responseType, method, data, headers, deferred);
             };
 
             returnQuantizedMeshTileJson();

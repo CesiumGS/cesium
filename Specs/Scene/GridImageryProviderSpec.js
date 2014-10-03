@@ -1,18 +1,16 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/GridImageryProvider',
-        'Core/defined',
         'Core/GeographicTilingScheme',
         'Core/WebMercatorTilingScheme',
         'Scene/ImageryProvider',
-        'ThirdParty/when'
+        'Specs/waitsForPromise'
     ], function(
         GridImageryProvider,
-        defined,
         GeographicTilingScheme,
         WebMercatorTilingScheme,
         ImageryProvider,
-        when) {
+        waitsForPromise) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -39,8 +37,6 @@ defineSuite([
             return provider.ready;
         }, 'imagery provider to become ready');
 
-        var tile000Image;
-
         runs(function() {
             expect(provider.tileWidth).toEqual(256);
             expect(provider.tileHeight).toEqual(256);
@@ -49,17 +45,9 @@ defineSuite([
             expect(provider.tileDiscardPolicy).toBeUndefined();
             expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
 
-            when(provider.requestImage(0, 0, 0), function(image) {
-                tile000Image = image;
+            waitsForPromise(provider.requestImage(0, 0, 0), function(image) {
+                expect(image).toBeDefined();
             });
-        });
-
-        waitsFor(function() {
-            return defined(tile000Image);
-        }, 'requested tile to be loaded');
-
-        runs(function() {
-            expect(tile000Image).toBeDefined();
         });
     });
 
