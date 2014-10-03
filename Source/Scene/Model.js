@@ -1427,7 +1427,7 @@ define([
         var nodes = gltf.nodes;
         var runtimeNodes = model._runtime.nodes;
 
-        var skinnedNodesNames = modelResources.skinnedNodesNames;
+        var skinnedNodesNames = model.skinnedNodesNames;
         if (!defined(skinnedNodesNames)) {
             return;
         }
