@@ -1,9 +1,11 @@
 /*global define*/
 define([
         './defined',
+        './DeveloperError',
         './isArray'
     ], function(
         defined,
+        DeveloperError,
         isArray) {
     'use strict';
 
@@ -19,14 +21,21 @@ define([
      * @see objectToQuery
      *
      * @example
-     * var obj = Cesium.queryToObject('key1=some%20value&key2=a%2Fb');
+     * var obj = Cesium.queryToObject('key1=some%20value&key2=a%2Fb&key3=x&key3=y');
      * // obj will be:
      * // {
-     * //   'key1' : 'some value'
-     * //   'key2' : 'a/b'
+     * //   key1 : 'some value',
+     * //   key2 : 'a/b',
+     * //   key3 : ['x', 'y']
      * // }
      */
     var queryToObject = function(queryString) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(queryString)) {
+            throw new DeveloperError('queryString is required.');
+        }
+        //>>includeEnd('debug');
+
         var result = {};
         if (queryString === '') {
             return result;
@@ -43,11 +52,12 @@ define([
                 value = '';
             }
 
-            if (typeof result[name] === 'string') {
+            var resultValue = result[name];
+            if (typeof resultValue === 'string') {
                 // expand the single value to an array
-                result[name] = [result[name], value];
-            } else if (isArray(result[name])) {
-                result[name].push(value);
+                result[name] = [resultValue, value];
+            } else if (isArray(resultValue)) {
+                resultValue.push(value);
             } else {
                 result[name] = value;
             }

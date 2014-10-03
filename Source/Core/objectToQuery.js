@@ -1,11 +1,13 @@
 /*global define*/
 define([
+        './defined',
+        './DeveloperError',
         './isArray'
     ], function(
+        defined,
+        DeveloperError,
         isArray) {
     'use strict';
-
-    var scratchArray = [];
 
     /**
      * Converts an object representing a set of name/value pairs into a query string,
@@ -21,12 +23,20 @@ define([
      * @example
      * var str = Cesium.objectToQuery({
      *     key1 : 'some value',
-     *     key2 : 'a/b'
+     *     key2 : 'a/b',
+     *     key3 : ['x', 'y']
      * });
      * // str will be:
-     * // 'key1=some+value&key2=a%2Fb'
+     * // 'key1=some+value&key2=a%2Fb&key3=x&key3=y'
      */
     var objectToQuery = function(obj) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(obj)) {
+            throw new DeveloperError('obj is required.');
+        }
+        //>>includeEnd('debug');
+
+        var result = '';
         for ( var propName in obj) {
             if (obj.hasOwnProperty(propName)) {
                 var value = obj[propName];
@@ -34,16 +44,18 @@ define([
                 var part = encodeURIComponent(propName) + '=';
                 if (isArray(value)) {
                     for (var i = 0, len = value.length; i < len; ++i) {
-                        scratchArray.push(part + encodeURIComponent(value[i]));
+                        result += part + encodeURIComponent(value[i]) + '&';
                     }
                 } else {
-                    scratchArray.push(part + encodeURIComponent(value));
+                    result += part + encodeURIComponent(value) + '&';
                 }
             }
         }
 
-        var result = scratchArray.join('&').replace(/%20/g, '+');
-        scratchArray.length = 0;
+        // trim last &
+        result = result.slice(0, -1);
+        result = result.replace(/%20/g, '+');
+
         return result;
     };
 

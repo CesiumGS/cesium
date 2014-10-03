@@ -27,6 +27,15 @@ defineSuite([
         expect(str).toEqual('key=a&key=b');
     });
 
+    it('runs example code from the documentation', function() {
+        var str = objectToQuery({
+            key1 : 'some value',
+            key2 : 'a/b',
+            key3 : ['x', 'y']
+        });
+        expect(str).toEqual('key1=some+value&key2=a%2Fb&key3=x&key3=y');
+    });
+
     it('can round-trip', function() {
         var obj = {
             foo : ['bar', 'bar2'],
@@ -40,5 +49,11 @@ defineSuite([
 
     it('can encode blank', function() {
         expect(objectToQuery({})).toEqual('');
+    });
+
+    it('requires obj', function() {
+        expect(function() {
+            objectToQuery();
+        }).toThrowDeveloperError();
     });
 });

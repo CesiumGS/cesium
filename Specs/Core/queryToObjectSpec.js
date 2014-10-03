@@ -43,4 +43,10 @@ defineSuite([
     it('can decode blank', function() {
         expect(queryToObject('')).toEqual({});
     });
+
+    it('requires queryString', function() {
+        expect(function() {
+            queryToObject();
+        }).toThrowDeveloperError();
+    });
 });
