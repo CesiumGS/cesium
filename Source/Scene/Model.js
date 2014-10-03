@@ -1112,8 +1112,8 @@ define([
         return that;
     }
 
-    function getUniformFunctionFromSource(source, modelResources) {
-        var runtimeNode = modelResources._runtime.nodes[source];
+    function getUniformFunctionFromSource(source, model) {
+        var runtimeNode = model._runtime.nodes[source];
         return function() {
             return runtimeNode.computedMatrix;
         };
@@ -1197,10 +1197,10 @@ define([
                                 jointMatrixUniformName = name;
                             }
                         } else if (defined(parameter.source)) {
-                            uniformMap[name] = getUniformFunctionFromSource(parameter.source, modelResources);
+                            uniformMap[name] = getUniformFunctionFromSource(parameter.source, model);
                         } else if (defined(parameter.value)) {
                             // Technique value that isn't overridden by a material
-                            var uv2 = gltfUniformFunctions[parameter.type](parameter.value, modelResources);
+                            var uv2 = gltfUniformFunctions[parameter.type](parameter.value, model);
                             uniformMap[name] = uv2.func;
                             uniformValues[parameterName] = uv2;
                         }
@@ -1259,7 +1259,7 @@ define([
                     // Publicly-accessible ModelNode instance to modify animation targets
                     publicNode : undefined
                 };
-                runtimeNode.publicNode = new ModelNode(modelResources, node, runtimeNode, name);
+                runtimeNode.publicNode = new ModelNode(model, node, runtimeNode, name);
 
                 runtimeNodes[name] = runtimeNode;
                 runtimeNodesByName[node.name] = runtimeNode;
@@ -1553,7 +1553,7 @@ define([
     function createAnimations(model) {
         var modelResources = model._modelResources;
 
-        model._animations = { };
+        model._runtime.animations = { };
 
         var runtimeNodes = model._runtime.nodes;
         var animations = modelResources.gltf.animations;
@@ -1593,10 +1593,10 @@ define([
 
                      var spline = ModelAnimationCache.getAnimationSpline(modelResources, animationName, animation, channel.sampler, sampler, parameterValues);
                      // GLTF_SPEC: Support more targets like materials. https://github.com/KhronosGroup/glTF/issues/142
-                     channelEvaluators[i] = getChannelEvaluator(modelResources, runtimeNodes[target.id], target.path, spline);
+                     channelEvaluators[i] = getChannelEvaluator(model, runtimeNodes[target.id], target.path, spline);
                  }
 
-                 model._animations[animationName] = {
+                 model._runtime.animations[animationName] = {
                      startTime : startTime,
                      stopTime : stopTime,
                      channelEvaluators : channelEvaluators
@@ -1639,12 +1639,13 @@ define([
 
         if ((this._modelResources._state === ModelState.NEEDS_LOAD) && defined(this._modelResources.gltf)) {
             this._modelResources.startLoading();
-
-            this._boundingSphere = computeBoundingSphere(this._modelResources.gltf);
-            this._initialRadius = this._boundingSphere.radius;
-
         }
 
+        if (this._modelResources._state === ModelState.LOADED && defined(this._modelResources.gltf) && !defined(this._boundingSphere)) {
+            this._boundingSphere = computeBoundingSphere(this._modelResources.gltf);
+            this._initialRadius = this._boundingSphere.radius;
+        }
+        
         this._modelResources.update(context, frameState);
         
         if (!this._ready && this._modelResources._state === ModelState.LOADED)
@@ -1683,7 +1684,7 @@ define([
                 Matrix4.multiplyTransformation(computedModelMatrix, yUpToZUp, computedModelMatrix);
             }
 
-            if (this._renderCommands.length<=0 && this._needsUpdate)
+            if (this._needsUpdate)
             {
                 parse(this);
                 createSkins(this);
