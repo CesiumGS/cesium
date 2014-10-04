@@ -2,7 +2,6 @@
 defineSuite([
         'Core/BoundingRectangle',
         'Core/Color',
-        'Core/FeatureDetection',
         'Core/IndexDatatype',
         'Core/PrimitiveType',
         'Core/WindingOrder',
@@ -14,7 +13,6 @@ defineSuite([
     ], 'Renderer/Draw', function(
         BoundingRectangle,
         Color,
-        FeatureDetection,
         IndexDatatype,
         PrimitiveType,
         WindingOrder,

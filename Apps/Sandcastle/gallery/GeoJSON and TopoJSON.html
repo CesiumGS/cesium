@@ -33,9 +33,7 @@ Cesium.viewerEntityMixin(viewer);
 
 //Example 1: Load a GeoJSON or TopoJSON file with default settings.
 Sandcastle.addDefaultToolbarButton('Basic loading', function() {
-    var dataSource = new Cesium.GeoJsonDataSource();
-    viewer.dataSources.add(dataSource);
-    dataSource.loadUrl('../../SampleData/ne_10m_us_states.topojson');
+    viewer.dataSources.add(Cesium.GeoJsonDataSource.fromUrl('../../SampleData/ne_10m_us_states.topojson'));
 });
 
 //Example 2: Apply custom graphics to a GeoJSON or TopoJSON file 
