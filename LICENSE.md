@@ -343,6 +343,12 @@ http://raphaeljs.com/license.html
 
 http://www.flaticon.com/authors/freepik
 
+### Maki icon set from Mapbox
+
+https://www.mapbox.com/maki/
+
+https://github.com/mapbox/maki
+
 ### population909500.json ###
 
 https://github.com/dataarts/webgl-globe

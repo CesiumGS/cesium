@@ -2,16 +2,22 @@
 define([
         '../Core/Color',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
         '../Core/GeographicTilingScheme'
     ], function(
         Color,
         defaultValue,
+        defined,
         defineProperties,
         Event,
         GeographicTilingScheme) {
     "use strict";
+
+    var defaultColor = new Color(1.0, 1.0, 1.0, 0.4);
+    var defaultGlowColor = new Color(0.0, 1.0, 0.0, 0.05);
+    var defaultBackgroundColor = new Color(0.0, 0.5, 0.0, 0.2);
 
     /**
      * An {@link ImageryProvider} that draws a wireframe grid on every tile with controllable background and glow.
@@ -32,14 +38,14 @@ define([
      * @param {Number} [options.canvasSize=256] The size of the canvas used for rendering.
      */
     var GridImageryProvider = function GridImageryProvider(options) {
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        this._tilingScheme = defaultValue(options.tilingScheme, new GeographicTilingScheme());
+        this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new GeographicTilingScheme();
         this._cells = defaultValue(options.cells, 8);
-        this._color = defaultValue(options.color, new Color(1.0, 1.0, 1.0, 0.4));
-        this._glowColor = defaultValue(options.glowColor, new Color(0.0, 1.0, 0.0, 0.05));
+        this._color = defaultValue(options.color, defaultColor);
+        this._glowColor = defaultValue(options.glowColor, defaultGlowColor);
         this._glowWidth = defaultValue(options.glowWidth, 6);
-        this._backgroundColor = defaultValue(options.backgroundColor, new Color(0.0, 0.5, 0.0, 0.2));
+        this._backgroundColor = defaultValue(options.backgroundColor, defaultBackgroundColor);
         this._errorEvent = new Event();
 
         this._tileWidth = defaultValue(options.tileWidth, 256);
@@ -83,12 +89,11 @@ define([
          * @memberof GridImageryProvider.prototype
          * @type {Number}
          */
-        tileHeight: {
+        tileHeight : {
             get : function() {
                 return this._tileHeight;
             }
         },
-
 
         /**
          * Gets the maximum level-of-detail that can be requested.  This function should
@@ -210,9 +215,9 @@ define([
     GridImageryProvider.prototype._drawGrid = function(context) {
         var minPixel = 0;
         var maxPixel = this._canvasSize;
-        for( var x = 0; x <= this._cells; ++x ){
+        for (var x = 0; x <= this._cells; ++x) {
             var nx = x / this._cells;
-            var val = 1 + nx * (maxPixel-1);
+            var val = 1 + nx * (maxPixel - 1);
 
             context.moveTo(val, minPixel);
             context.lineTo(val, maxPixel);
@@ -250,7 +255,6 @@ define([
         context.lineWidth = this._glowWidth * 0.5;
         context.strokeRect(minPixel, minPixel, maxPixel, maxPixel);
         this._drawGrid(context);
-
 
         // Grid lines
         var cssColor = this._color.toCssColorString();

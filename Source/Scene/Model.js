@@ -2164,7 +2164,7 @@ define([
     var scratchPosition = new Cartesian3();
 
     function getScale(model, context, frameState) {
-        var scale = model._scale;
+        var scale = model.scale;
 
         if (model.minimumPixelSize !== 0.0) {
             // Compute size of bounding sphere in pixels
