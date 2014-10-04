@@ -28,6 +28,8 @@ define([
         this._scaleSubscription = undefined;
         this._minimumPixelSize = undefined;
         this._minimumPixelSizeSubscription = undefined;
+        this._minimumRenderDistance = undefined;
+        this._maximumRenderDistance = undefined;
         this._uri = undefined;
         this._uriSubscription = undefined;
         this._definitionChanged = new Event();
@@ -66,6 +68,18 @@ define([
          */
         minimumPixelSize : createPropertyDescriptor('minimumPixelSize'),
         /**
+         * Gets or sets the Number {@link Property} specifying the model's minimum distance from camera where it should be displayed.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         */
+        minimumRenderDistance : createPropertyDescriptor('minimumRenderDistance'),
+        /**
+         * Gets or sets the Number {@link Property} specifying the model's maximum distance from camera where it should be displayed.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         */
+        maximumRenderDistance : createPropertyDescriptor('maximumRenderDistance'),
+        /**
          * Gets or sets the string {@link Property} specifying the model's uri.
          * @memberof ModelGraphics.prototype
          * @type {Property}
@@ -86,6 +100,8 @@ define([
         result.show = this.show;
         result.scale = this.scale;
         result.minimumPixelSize = this.minimumPixelSize;
+        result.minimumRenderDistance = this.minimumRenderDistance;
+        result.maximumRenderDistance = this.maximumRenderDistance;
         result.uri = this.uri;
         return result;
     };
@@ -106,6 +122,8 @@ define([
         this.show = defaultValue(this.show, source.show);
         this.scale = defaultValue(this.scale, source.scale);
         this.minimumPixelSize = defaultValue(this.minimumPixelSize, source.minimumPixelSize);
+        this.minimumRenderDistance = defaultValue(this.minimumRenderDistance, source.minimumRenderDistance);
+        this.maximumRenderDistance = defaultValue(this.maximumRenderDistance, source.maximumRenderDistance);
         this.uri = defaultValue(this.uri, source.uri);
     };
 

@@ -1136,6 +1136,8 @@ define([
         processPacketData(Boolean, model, 'show', modelData.show, interval, sourceUri, entityCollection);
         processPacketData(Number, model, 'scale', modelData.scale, interval, sourceUri, entityCollection);
         processPacketData(Number, model, 'minimumPixelSize', modelData.minimumPixelSize, interval, sourceUri, entityCollection);
+        processPacketData(Number, model, 'minimumRenderDistance', modelData.minimumRenderDistance, interval, sourceUri, entityCollection);
+        processPacketData(Number, model, 'maximumRenderDistance', modelData.maximumRenderDistance, interval, sourceUri, entityCollection);
         processPacketData(Uri, model, 'uri', modelData.gltf, interval, sourceUri, entityCollection);
     }
 
