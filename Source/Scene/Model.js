@@ -1704,7 +1704,7 @@ define([
             }
 
             updatePickIds(this, context);
-            updateWireframe(this); 
+            updateWireframe(this);
 
             this._needsUpdate = false;
         }
