@@ -66,9 +66,15 @@ define([
      * @exception {DeveloperError} scene is required.
      */
     var CesiumInspectorViewModel = function(scene, performanceContainer) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required');
         }
+
+        if (!defined(performanceContainer)) {
+            throw new DeveloperError('performanceContainer is required');
+        }
+        //>>includeEnd('debug');
 
         var that = this;
         var canvas = scene.canvas;
@@ -451,6 +457,18 @@ define([
         scene : {
             get : function() {
                 return this._scene;
+            }
+        },
+
+        /**
+         * Gets the container of the PerformanceDisplay
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Element}
+         */
+        performanceContainer : {
+            get : function() {
+                return this._performanceContainer;
             }
         },
 
