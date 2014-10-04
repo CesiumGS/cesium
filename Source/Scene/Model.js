@@ -2252,21 +2252,6 @@ define([
                 Matrix4.multiplyTransformation(computedModelMatrix, yUpToZUp, computedModelMatrix);
             }
 
-            var toggleShowBoundingVolume = this.debugShowBoundingVolume !== this._debugShowBoundingVolume;
-            if (toggleShowBoundingVolume) {
-                this._debugShowBoundingVolume = this.debugShowBoundingVolume;
-                var nodes = this._runtime.nodes;
-                for (var nodeName in nodes) {
-                    if (nodes.hasOwnProperty(nodeName)) {
-                        var node = nodes[nodeName];
-                        for (var j = 0; j < node.commands.length; j++) {
-                            var command = node.commands[j].command;
-                            command.debugShowBoundingVolume = this.debugShowBoundingVolume;
-                        }
-                    }
-                }
-            }
-
             // Update modelMatrix throughout the graph as needed
             if (animated || modelTransformChanged || justLoaded) {
                 updateNodeHierarchyModelMatrix(this, modelTransformChanged, justLoaded);
@@ -2293,9 +2278,9 @@ define([
 
         // We don't check show at the top of the function since we
         // want to be able to progressively load models when they are not shown,
-        // and then have them visibile immediately when show is set to true.
+        // and then have them visible immediately when show is set to true.
         if (show) {
-// PERFORMANCE_IDEA: This is terriable
+// PERFORMANCE_IDEA: This is terrible
             var passes = frameState.passes;
             var i;
             var length;
@@ -2306,7 +2291,15 @@ define([
                 for (i = 0; i < length; ++i) {
                     commandList.push(commands[i]);
                 }
+
+                if (this.debugShowBoundingVolume !== this._debugShowBoundingVolume) {
+                    this._debugShowBoundingVolume = this.debugShowBoundingVolume;
+                    for (i = 0; i < commands.length; i++) {
+                        commands[i].debugShowBoundingVolume = this.debugShowBoundingVolume;
+                    }
+                }
             }
+
             if (passes.pick) {
                 commands = this._pickCommands;
                 length = commands.length;
