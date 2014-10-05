@@ -332,6 +332,10 @@ define([
         return destroyObject(this);
     };
 
+    var imageryBoundsScratch = new Rectangle();
+    var tileImageryBoundsScratch = new Rectangle();
+    var clippedRectangleScratch = new Rectangle();
+
     /**
      * Create skeletons for the imagery tiles that partially or completely overlap a given terrain
      * tile.
@@ -372,8 +376,8 @@ define([
         // the geometry tile.  The ImageryProvider and ImageryLayer both have the
         // opportunity to constrain the rectangle.  The imagery TilingScheme's rectangle
         // always fully contains the ImageryProvider's rectangle.
-        var rectangle = Rectangle.intersectWith(tile.rectangle, imageryProvider.rectangle);
-        rectangle = Rectangle.intersectWith(rectangle, this._rectangle);
+        var imageryBounds = Rectangle.intersectWith(imageryProvider.rectangle, this._rectangle, imageryBoundsScratch);
+        var rectangle = Rectangle.intersectWith(tile.rectangle, imageryBounds, tileImageryBoundsScratch);
 
         if (rectangle.east <= rectangle.west || rectangle.north <= rectangle.south) {
             // There is no overlap between this terrain tile and this imagery
@@ -461,6 +465,7 @@ define([
 
         var terrainRectangle = tile.rectangle;
         var imageryRectangle = imageryTilingScheme.tileXYToRectangle(northwestTileCoordinates.x, northwestTileCoordinates.y, imageryLevel);
+        var clippedImageryRectangle = Rectangle.intersectWith(imageryRectangle, imageryBounds, clippedRectangleScratch);
 
         var minU;
         var maxU = 0.0;
@@ -471,12 +476,12 @@ define([
         // If this is the northern-most or western-most tile in the imagery tiling scheme,
         // it may not start at the northern or western edge of the terrain tile.
         // Calculate where it does start.
-        if (!this.isBaseLayer() && Math.abs(imageryRectangle.west - tile.rectangle.west) >= veryCloseX) {
-            maxU = Math.min(1.0, (imageryRectangle.west - terrainRectangle.west) / (terrainRectangle.east - terrainRectangle.west));
+        if (!this.isBaseLayer() && Math.abs(clippedImageryRectangle.west - tile.rectangle.west) >= veryCloseX) {
+            maxU = Math.min(1.0, (clippedImageryRectangle.west - terrainRectangle.west) / (terrainRectangle.east - terrainRectangle.west));
         }
 
-        if (!this.isBaseLayer() && Math.abs(imageryRectangle.north - tile.rectangle.north) >= veryCloseY) {
-            minV = Math.max(0.0, (imageryRectangle.north - terrainRectangle.south) / (terrainRectangle.north - terrainRectangle.south));
+        if (!this.isBaseLayer() && Math.abs(clippedImageryRectangle.north - tile.rectangle.north) >= veryCloseY) {
+            minV = Math.max(0.0, (clippedImageryRectangle.north - terrainRectangle.south) / (terrainRectangle.north - terrainRectangle.south));
         }
 
         var initialMinV = minV;
@@ -485,13 +490,15 @@ define([
             minU = maxU;
 
             imageryRectangle = imageryTilingScheme.tileXYToRectangle(i, northwestTileCoordinates.y, imageryLevel);
-            maxU = Math.min(1.0, (imageryRectangle.east - terrainRectangle.west) / (terrainRectangle.east - terrainRectangle.west));
+            clippedImageryRectangle = Rectangle.intersectWith(imageryRectangle, imageryBounds, clippedRectangleScratch);
+
+            maxU = Math.min(1.0, (clippedImageryRectangle.east - terrainRectangle.west) / (terrainRectangle.east - terrainRectangle.west));
 
             // If this is the eastern-most imagery tile mapped to this terrain tile,
             // and there are more imagery tiles to the east of this one, the maxU
             // should be 1.0 to make sure rounding errors don't make the last
             // image fall shy of the edge of the terrain tile.
-            if (i === southeastTileCoordinates.x && (this.isBaseLayer() || Math.abs(imageryRectangle.east - tile.rectangle.east) < veryCloseX)) {
+            if (i === southeastTileCoordinates.x && (this.isBaseLayer() || Math.abs(clippedImageryRectangle.east - tile.rectangle.east) < veryCloseX)) {
                 maxU = 1.0;
             }
 
@@ -501,13 +508,14 @@ define([
                 maxV = minV;
 
                 imageryRectangle = imageryTilingScheme.tileXYToRectangle(i, j, imageryLevel);
-                minV = Math.max(0.0, (imageryRectangle.south - terrainRectangle.south) / (terrainRectangle.north - terrainRectangle.south));
+                clippedImageryRectangle = Rectangle.intersectWith(imageryRectangle, imageryBounds, clippedRectangleScratch);
+                minV = Math.max(0.0, (clippedImageryRectangle.south - terrainRectangle.south) / (terrainRectangle.north - terrainRectangle.south));
 
                 // If this is the southern-most imagery tile mapped to this terrain tile,
                 // and there are more imagery tiles to the south of this one, the minV
                 // should be 0.0 to make sure rounding errors don't make the last
                 // image fall shy of the edge of the terrain tile.
-                if (j === southeastTileCoordinates.y && (this.isBaseLayer() || Math.abs(imageryRectangle.south - tile.rectangle.south) < veryCloseY)) {
+                if (j === southeastTileCoordinates.y && (this.isBaseLayer() || Math.abs(clippedImageryRectangle.south - tile.rectangle.south) < veryCloseY)) {
                     minV = 0.0;
                 }
 
