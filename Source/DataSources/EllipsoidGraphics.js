@@ -34,6 +34,12 @@ define([
         this._slicePartitionsSubscription = undefined;
         this._subdivisions = undefined;
         this._subdivisionsSubscription = undefined;
+        this._outline = undefined;
+        this._outlineSubscription = undefined;
+        this._outlineColor = undefined;
+        this._outlineColorSubscription = undefined;
+        this._outlineWidth = undefined;
+        this._outlineWidthSubscription = undefined;
         this._definitionChanged = new Event();
     };
 
@@ -94,6 +100,13 @@ define([
         outlineColor : createPropertyDescriptor('outlineColor'),
 
         /**
+         * Gets or sets the Number {@link Property} specifying the width of the outline.
+         * @memberof EllipsoidGraphics.prototype
+         * @type {Property}
+         */
+        outlineWidth : createPropertyDescriptor('outlineWidth'),
+
+        /**
          * Gets or sets the Number {@link Property} specifying the number of times to partition the ellipsoid into stacks.
          * @memberof EllipsoidGraphics.prototype
          * @type {Property}
@@ -131,6 +144,7 @@ define([
         result.fill = this.fill;
         result.outline = this.outline;
         result.outlineColor = this.outlineColor;
+        result.outlineWidth = this.outlineWidth;
         result.stackPartitions = this.stackPartitions;
         result.slicePartitions = this.slicePartitions;
         result.subdivisions = this.subdivisions;
@@ -157,6 +171,7 @@ define([
         this.fill = defaultValue(this.fill, source.fill);
         this.outline = defaultValue(this.outline, source.outline);
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
+        this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
         this.stackPartitions = defaultValue(this.stackPartitions, source.stackPartitions);
         this.slicePartitions = defaultValue(this.slicePartitions, source.slicePartitions);
         this.subdivisions = defaultValue(this.subdivisions, source.subdivisions);

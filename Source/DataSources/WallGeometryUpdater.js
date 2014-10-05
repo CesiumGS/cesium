@@ -48,6 +48,7 @@ define([
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
+    var defaultOutlineWidth = new ConstantProperty(1);
 
     var GeometryOptions = function(entity) {
         this.id = entity;
@@ -84,6 +85,7 @@ define([
         this._hasConstantOutline = true;
         this._showOutlineProperty = undefined;
         this._outlineColorProperty = undefined;
+        this._outlineWidthProperty = undefined;
         this._options = new GeometryOptions(entity);
         this._onEntityPropertyChanged(entity, 'wall', entity.wall, undefined);
     };
@@ -196,6 +198,18 @@ define([
         outlineColorProperty : {
             get : function() {
                 return this._outlineColorProperty;
+            }
+        },
+        /**
+         * Gets the width property for the geometry outline.
+         * @memberof WallGeometryUpdater.prototype
+         *
+         * @type {Property}
+         * @readonly
+         */
+        outlineWidthProperty : {
+            get : function() {
+                return this._outlineWidthProperty;
             }
         },
         /**
@@ -416,6 +430,7 @@ define([
         this._showProperty = defaultValue(show, defaultShow);
         this._showOutlineProperty = defaultValue(wall.outline, defaultOutline);
         this._outlineColorProperty = outlineEnabled ? defaultValue(wall.outlineColor, defaultOutlineColor) : undefined;
+        this._outlineWidthProperty = outlineEnabled ? defaultValue(wall.outlineWidth, defaultOutlineWidth) : undefined;
 
         var minimumHeights = wall.minimumHeights;
         var maximumHeights = wall.maximumHeights;

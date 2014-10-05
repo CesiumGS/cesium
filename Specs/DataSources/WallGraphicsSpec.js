@@ -25,6 +25,7 @@ defineSuite([
         source.fill = new ConstantProperty();
         source.outline = new ConstantProperty();
         source.outlineColor = new ConstantProperty();
+        source.outlineWidth = new ConstantProperty();
         source.minimumHeights = new ConstantProperty();
         source.maximumHeights = new ConstantProperty();
 
@@ -38,6 +39,7 @@ defineSuite([
         expect(target.fill).toBe(source.fill);
         expect(target.outline).toBe(source.outline);
         expect(target.outlineColor).toBe(source.outlineColor);
+        expect(target.outlineWidth).toBe(source.outlineWidth);
         expect(target.minimumHeights).toBe(source.minimumHeights);
         expect(target.maximumHeights).toBe(source.maximumHeights);
     });
@@ -52,6 +54,7 @@ defineSuite([
         var fill = new ConstantProperty();
         var outline = new ConstantProperty();
         var outlineColor = new ConstantProperty();
+        var outlineWidth = new ConstantProperty();
         var minimumHeights = new ConstantProperty();
         var maximumHeights = new ConstantProperty();
 
@@ -63,6 +66,7 @@ defineSuite([
         target.fill = fill;
         target.outline = outline;
         target.outlineColor = outlineColor;
+        target.outlineWidth = outlineWidth;
         target.minimumHeights = minimumHeights;
         target.maximumHeights = maximumHeights;
 
@@ -75,6 +79,7 @@ defineSuite([
         expect(target.fill).toBe(fill);
         expect(target.outline).toBe(outline);
         expect(target.outlineColor).toBe(outlineColor);
+        expect(target.outlineWidth).toBe(outlineWidth);
         expect(target.minimumHeights).toBe(minimumHeights);
         expect(target.maximumHeights).toBe(maximumHeights);
     });
@@ -88,6 +93,7 @@ defineSuite([
         source.fill = new ConstantProperty();
         source.outline = new ConstantProperty();
         source.outlineColor = new ConstantProperty();
+        source.outlineWidth = new ConstantProperty();
         source.minimumHeights = new ConstantProperty();
         source.maximumHeights = new ConstantProperty();
 
@@ -99,6 +105,7 @@ defineSuite([
         expect(result.fill).toBe(source.fill);
         expect(result.outline).toBe(source.outline);
         expect(result.outlineColor).toBe(source.outlineColor);
+        expect(result.outlineWidth).toBe(source.outlineWidth);
         expect(result.minimumHeights).toBe(source.minimumHeights);
         expect(result.maximumHeights).toBe(source.maximumHeights);
     });
@@ -119,6 +126,7 @@ defineSuite([
         testDefinitionChanged(property, 'fill', false, true);
         testDefinitionChanged(property, 'outline', true, false);
         testDefinitionChanged(property, 'outlineColor', Color.RED, Color.BLUE);
+        testDefinitionChanged(property, 'outlineWidth', 2, 3);
         testDefinitionChanged(property, 'minimumHeights', [0, 1], [2, 3]);
         testDefinitionChanged(property, 'maximumHeights', [3, 5], [7, 8]);
     });

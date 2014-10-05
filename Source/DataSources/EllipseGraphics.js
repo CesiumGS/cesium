@@ -44,6 +44,8 @@ define([
         this._outlineSubscription = undefined;
         this._outlineColor = undefined;
         this._outlineColorSubscription = undefined;
+        this._outlineWidth = undefined;
+        this._outlineWidthSubscription = undefined;
         this._numberOfVerticalLines = undefined;
         this._numberOfVerticalLinesSubscription = undefined;
         this._definitionChanged = new Event();
@@ -146,11 +148,18 @@ define([
         outline : createPropertyDescriptor('outline'),
 
         /**
-         * Gets or sets the Color {@link Property} specifying whether the color of the outline.
+         * Gets or sets the Color {@link Property} specifying the color of the outline.
          * @memberof EllipseGraphics.prototype
          * @type {Property}
          */
         outlineColor : createPropertyDescriptor('outlineColor'),
+
+        /**
+         * Gets or sets the Number {@link Property} specifying the width of the outline.
+         * @memberof EllipseGraphics.prototype
+         * @type {Property}
+         */
+        outlineWidth : createPropertyDescriptor('outlineWidth'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the number of vertical lines
@@ -183,6 +192,7 @@ define([
         result.fill = this.fill;
         result.outline = this.outline;
         result.outlineColor = this.outlineColor;
+        result.outlineWidth = this.outlineWidth;
         result.numberOfVerticalLines = this.numberOfVerticalLines;
         return result;
     };
@@ -212,6 +222,7 @@ define([
         this.fill = defaultValue(this.fill, source.fill);
         this.outline = defaultValue(this.outline, source.outline);
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
+        this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
         this.numberOfVerticalLines = defaultValue(this.numberOfVerticalLines, source.numberOfVerticalLines);
     };
 

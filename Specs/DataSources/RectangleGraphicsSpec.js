@@ -31,6 +31,7 @@ defineSuite([
         source.fill = new ConstantProperty();
         source.outline = new ConstantProperty();
         source.outlineColor = new ConstantProperty();
+        source.outlineWidth = new ConstantProperty();
         source.closeTop = new ConstantProperty();
         source.closeBottom = new ConstantProperty();
 
@@ -48,6 +49,7 @@ defineSuite([
         expect(target.fill).toBe(source.fill);
         expect(target.outline).toBe(source.outline);
         expect(target.outlineColor).toBe(source.outlineColor);
+        expect(target.outlineWidth).toBe(source.outlineWidth);
         expect(target.closeTop).toBe(source.closeTop);
         expect(target.closeBottom).toBe(source.closeBottom);
     });
@@ -66,6 +68,7 @@ defineSuite([
         var fill = new ConstantProperty();
         var outline = new ConstantProperty();
         var outlineColor = new ConstantProperty();
+        var outlineWidth = new ConstantProperty();
         var closeTop = new ConstantProperty();
         var closeBottom = new ConstantProperty();
 
@@ -81,6 +84,7 @@ defineSuite([
         target.fill = fill;
         target.outline = outline;
         target.outlineColor = outlineColor;
+        target.outlineWidth = outlineWidth;
         target.closeTop = closeTop;
         target.closeBottom = closeBottom;
 
@@ -97,6 +101,7 @@ defineSuite([
         expect(target.fill).toBe(fill);
         expect(target.outline).toBe(outline);
         expect(target.outlineColor).toBe(outlineColor);
+        expect(target.outlineWidth).toBe(outlineWidth);
         expect(target.closeTop).toBe(closeTop);
         expect(target.closeBottom).toBe(closeBottom);
     });
@@ -114,6 +119,7 @@ defineSuite([
         source.fill = new ConstantProperty();
         source.outline = new ConstantProperty();
         source.outlineColor = new ConstantProperty();
+        source.outlineWidth = new ConstantProperty();
         source.closeTop = new ConstantProperty();
         source.closeBottom = new ConstantProperty();
 
@@ -129,6 +135,7 @@ defineSuite([
         expect(result.fill).toBe(source.fill);
         expect(result.outline).toBe(source.outline);
         expect(result.outlineColor).toBe(source.outlineColor);
+        expect(result.outlineWidth).toBe(source.outlineWidth);
         expect(result.closeTop).toBe(source.closeTop);
         expect(result.closeBottom).toBe(source.closeBottom);
     });
@@ -153,6 +160,7 @@ defineSuite([
         testDefinitionChanged(property, 'fill', false, true);
         testDefinitionChanged(property, 'outline', true, false);
         testDefinitionChanged(property, 'outlineColor', Color.RED, Color.BLUE);
+        testDefinitionChanged(property, 'outlineWidth', 2, 3);
         testDefinitionChanged(property, 'closeTop', false, true);
         testDefinitionChanged(property, 'closeBottom', false, true);
     });

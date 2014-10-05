@@ -56,6 +56,7 @@ define([
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
+    var defaultOutlineWidth = new ConstantProperty(1);
 
     var positionScratch;
     var orientationScratch;
@@ -103,6 +104,7 @@ define([
         this._hasConstantOutline = true;
         this._showOutlineProperty = undefined;
         this._outlineColorProperty = undefined;
+        this._outlineWidthProperty = undefined;
         this._options = new GeometryOptions(entity);
         this._onEntityPropertyChanged(entity, 'ellipsoid', entity.ellipsoid, undefined);
     };
@@ -215,6 +217,18 @@ define([
         outlineColorProperty : {
             get : function() {
                 return this._outlineColorProperty;
+            }
+        },
+        /**
+         * Gets the width property for the geometry outline.
+         * @memberof EllipsoidGeometryUpdater.prototype
+         *
+         * @type {Property}
+         * @readonly
+         */
+        outlineWidthProperty : {
+            get : function() {
+                return this._outlineWidthProperty;
             }
         },
         /**
@@ -445,6 +459,7 @@ define([
         this._showProperty = defaultValue(show, defaultShow);
         this._showOutlineProperty = defaultValue(ellipsoid.outline, defaultOutline);
         this._outlineColorProperty = outlineEnabled ? defaultValue(ellipsoid.outlineColor, defaultOutlineColor) : undefined;
+        this._outlineWidthProperty = outlineEnabled ? defaultValue(ellipsoid.outlineWidth, defaultOutlineWidth) : undefined;
         this._fillEnabled = fillEnabled;
         this._outlineEnabled = outlineEnabled;
 

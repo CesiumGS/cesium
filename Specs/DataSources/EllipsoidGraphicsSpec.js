@@ -2,24 +2,34 @@
 defineSuite([
         'DataSources/EllipsoidGraphics',
         'Core/Cartesian3',
+        'Core/Color',
         'DataSources/ColorMaterialProperty',
-        'DataSources/ConstantProperty'
+        'DataSources/ConstantProperty',
+        'Specs/testDefinitionChanged',
+        'Specs/testMaterialDefinitionChanged'
     ], function(
         EllipsoidGraphics,
         Cartesian3,
+        Color,
         ColorMaterialProperty,
-        ConstantProperty) {
+        ConstantProperty,
+        testDefinitionChanged,
+        testMaterialDefinitionChanged) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('merge assigns unassigned properties', function() {
         var source = new EllipsoidGraphics();
         source.material = new ColorMaterialProperty();
-        source.radii = new ConstantProperty(new Cartesian3());
-        source.show = new ConstantProperty(true);
-        source.stackPartitions = new ConstantProperty(16);
-        source.slicePartitions = new ConstantProperty(32);
-        source.subdivisions = new ConstantProperty(64);
+        source.radii = new ConstantProperty();
+        source.show = new ConstantProperty();
+        source.stackPartitions = new ConstantProperty();
+        source.slicePartitions = new ConstantProperty();
+        source.subdivisions = new ConstantProperty();
+        source.fill = new ConstantProperty();
+        source.outline = new ConstantProperty();
+        source.outlineColor = new ConstantProperty();
+        source.outlineWidth = new ConstantProperty();
 
         var target = new EllipsoidGraphics();
         target.merge(source);
@@ -30,23 +40,25 @@ defineSuite([
         expect(target.stackPartitions).toBe(source.stackPartitions);
         expect(target.slicePartitions).toBe(source.slicePartitions);
         expect(target.subdivisions).toBe(source.subdivisions);
+        expect(target.fill).toBe(source.fill);
+        expect(target.outline).toBe(source.outline);
+        expect(target.outlineColor).toBe(source.outlineColor);
+        expect(target.outlineWidth).toBe(source.outlineWidth);
     });
 
     it('merge does not assign assigned properties', function() {
         var source = new EllipsoidGraphics();
-        source.material = new ColorMaterialProperty();
-        source.radii = new ConstantProperty(new Cartesian3());
-        source.show = new ConstantProperty(true);
-        source.stackPartitions = new ConstantProperty(16);
-        source.slicePartitions = new ConstantProperty(32);
-        source.subdivisions = new ConstantProperty(64);
 
         var material = new ColorMaterialProperty();
-        var radii = new ConstantProperty(new Cartesian3());
-        var show = new ConstantProperty(true);
-        var stackPartitions = new ConstantProperty(1);
-        var slicePartitions = new ConstantProperty(2);
-        var subdivisions = new ConstantProperty(3);
+        var radii = new ConstantProperty();
+        var show = new ConstantProperty();
+        var stackPartitions = new ConstantProperty();
+        var slicePartitions = new ConstantProperty();
+        var subdivisions = new ConstantProperty();
+        var fill = new ConstantProperty();
+        var outline = new ConstantProperty();
+        var outlineColor = new ConstantProperty();
+        var outlineWidth = new ConstantProperty();
 
         var target = new EllipsoidGraphics();
         target.material = material;
@@ -55,6 +67,10 @@ defineSuite([
         target.stackPartitions = stackPartitions;
         target.slicePartitions = slicePartitions;
         target.subdivisions = subdivisions;
+        source.fill = fill;
+        source.outline = outline;
+        source.outlineColor = outlineColor;
+        source.outlineWidth = outlineWidth;
 
         target.merge(source);
 
@@ -64,16 +80,24 @@ defineSuite([
         expect(target.stackPartitions).toBe(stackPartitions);
         expect(target.slicePartitions).toBe(slicePartitions);
         expect(target.subdivisions).toBe(subdivisions);
+        expect(target.fill).toBe(fill);
+        expect(target.outline).toBe(outline);
+        expect(target.outlineColor).toBe(outlineColor);
+        expect(target.outlineWidth).toBe(outlineWidth);
     });
 
     it('clone works', function() {
         var source = new EllipsoidGraphics();
         source.material = new ColorMaterialProperty();
-        source.radii = new ConstantProperty(new Cartesian3());
-        source.show = new ConstantProperty(true);
-        source.stackPartitions = new ConstantProperty(16);
-        source.slicePartitions = new ConstantProperty(32);
-        source.subdivisions = new ConstantProperty(64);
+        source.radii = new ConstantProperty();
+        source.show = new ConstantProperty();
+        source.stackPartitions = new ConstantProperty();
+        source.slicePartitions = new ConstantProperty();
+        source.subdivisions = new ConstantProperty();
+        source.fill = new ConstantProperty();
+        source.outline = new ConstantProperty();
+        source.outlineColor = new ConstantProperty();
+        source.outlineWidth = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -82,6 +106,10 @@ defineSuite([
         expect(result.stackPartitions).toBe(source.stackPartitions);
         expect(result.slicePartitions).toBe(source.slicePartitions);
         expect(result.subdivisions).toBe(source.subdivisions);
+        expect(result.fill).toBe(source.fill);
+        expect(result.outline).toBe(source.outline);
+        expect(result.outlineColor).toBe(source.outlineColor);
+        expect(result.outlineWidth).toBe(source.outlineWidth);
     });
 
     it('merge throws if source undefined', function() {
@@ -89,5 +117,19 @@ defineSuite([
         expect(function() {
             target.merge(undefined);
         }).toThrowDeveloperError();
+    });
+
+    it('raises definitionChanged when a property is assigned or modified', function() {
+        var property = new EllipsoidGraphics();
+        testMaterialDefinitionChanged(property, 'material', Color.RED, Color.BLUE);
+        testDefinitionChanged(property, 'radii', new Cartesian3(1, 2, 3), new Cartesian3(4, 5, 6));
+        testDefinitionChanged(property, 'show', true, false);
+        testDefinitionChanged(property, 'stackPartitions', 1, 2);
+        testDefinitionChanged(property, 'slicePartitions', 1, 2);
+        testDefinitionChanged(property, 'subdivisions', 1, 2);
+        testDefinitionChanged(property, 'fill', false, true);
+        testDefinitionChanged(property, 'outline', true, false);
+        testDefinitionChanged(property, 'outlineColor', Color.RED, Color.BLUE);
+        testDefinitionChanged(property, 'outlineWidth', 2, 3);
     });
 });

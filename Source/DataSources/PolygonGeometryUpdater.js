@@ -48,6 +48,7 @@ define([
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
+    var defaultOutlineWidth = new ConstantProperty(1);
 
     var GeometryOptions = function(entity) {
         this.id = entity;
@@ -89,6 +90,7 @@ define([
         this._hasConstantOutline = true;
         this._showOutlineProperty = undefined;
         this._outlineColorProperty = undefined;
+        this._outlineWidthProperty = undefined;
         this._options = new GeometryOptions(entity);
         this._onEntityPropertyChanged(entity, 'polygon', entity.polygon, undefined);
     };
@@ -201,6 +203,18 @@ define([
         outlineColorProperty : {
             get : function() {
                 return this._outlineColorProperty;
+            }
+        },
+        /**
+         * Gets the width property for the geometry outline.
+         * @memberof PolygonGeometryUpdater.prototype
+         *
+         * @type {Property}
+         * @readonly
+         */
+        outlineWidthProperty : {
+            get : function() {
+                return this._outlineWidthProperty;
             }
         },
         /**
@@ -421,6 +435,7 @@ define([
         this._showProperty = defaultValue(show, defaultShow);
         this._showOutlineProperty = defaultValue(polygon.outline, defaultOutline);
         this._outlineColorProperty = outlineEnabled ? defaultValue(polygon.outlineColor, defaultOutlineColor) : undefined;
+        this._outlineWidthProperty = outlineEnabled ? defaultValue(polygon.outlineWidth, defaultOutlineWidth) : undefined;
 
         var height = polygon.height;
         var extrudedHeight = polygon.extrudedHeight;
