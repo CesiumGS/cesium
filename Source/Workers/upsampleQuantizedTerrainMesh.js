@@ -251,7 +251,13 @@ define([
             vertices[start + i] = maxShort * (heightBuffer[i] - minimumHeight) / heightRange;
         }
 
-        var indicesTypedArray = new Uint16Array(indices);
+        var indicesTypedArray;
+        if (uBuffer.length <= 64 * 1024) {
+            indicesTypedArray = new Uint16Array(indices);
+        } else {
+            indicesTypedArray = new Uint32Array(indices);
+        }
+
         var encodedNormals;
         if (hasVertexNormals) {
             var normalArray = new Uint8Array(normalBuffer);
