@@ -271,6 +271,7 @@ define([
          * @default false
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
+        this._debugShowBoudingVolume = this.debugShowBoundingVolume;
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -297,6 +298,7 @@ define([
         this._pickIds = [];
 
         this._needsUpdate = true;
+        this._needsInit = true;
     };
 
     defineProperties(Model.prototype, {
@@ -1621,6 +1623,64 @@ define([
         }
     }
 
+    var scratchDrawingBufferDimensions = new Cartesian2();
+    var scratchToCenter = new Cartesian3();
+    var scratchProj = new Cartesian3();
+
+    function scaleInPixels(positionWC, radius, context, frameState) {
+        var camera = frameState.camera;
+        var frustum = camera.frustum;
+
+        var toCenter = Cartesian3.subtract(camera.positionWC, positionWC, scratchToCenter);
+        var proj = Cartesian3.multiplyByScalar(camera.directionWC, Cartesian3.dot(toCenter, camera.directionWC), scratchProj);
+        var distance = Math.max(frustum.near, Cartesian3.magnitude(proj) - radius);
+
+        scratchDrawingBufferDimensions.x = context.drawingBufferWidth;
+        scratchDrawingBufferDimensions.y = context.drawingBufferHeight;
+        var pixelSize = frustum.getPixelSize(scratchDrawingBufferDimensions, distance);
+        var pixelScale = Math.max(pixelSize.x, pixelSize.y);
+
+        return pixelScale;
+    }
+
+    var scratchPosition = new Cartesian3();
+
+    function getScale(model, context, frameState) {
+        var scale = model.scale;
+
+        if (model.minimumPixelSize !== 0.0) {
+            // Compute size of bounding sphere in pixels
+            var maxPixelSize = Math.max(context.drawingBufferWidth, context.drawingBufferHeight);
+            var m = model.modelMatrix;
+            scratchPosition.x = m[12];
+            scratchPosition.y = m[13];
+            scratchPosition.z = m[14];
+            var radius = model.boundingSphere.radius;
+            var metersPerPixel = scaleInPixels(scratchPosition, radius, context, frameState);
+
+            // metersPerPixel is always > 0.0
+            var pixelsPerMeter = 1.0 / metersPerPixel;
+            var diameterInPixels = Math.min(pixelsPerMeter * (2.0 * radius), maxPixelSize);
+
+            // Maintain model's minimum pixel size
+            if (diameterInPixels < model.minimumPixelSize) {
+                scale = (model.minimumPixelSize * metersPerPixel) / (2.0 * model._initialRadius);
+            }
+        }
+
+        return scale;
+    }
+    
+    function initModel(model, context){
+        
+    	parse(model);
+    	createSkins(model);
+        createAnimations(model);
+        createUniformMaps(model, context) ;
+        createRuntimeNodes(model, context); // using glTF scene
+        
+        model._needsInit = false;
+	}
 
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
@@ -1652,6 +1712,8 @@ define([
         {
             var model = this;
             frameState.afterRender.push(function() {
+            
+            	initModel(model, context);
                 model._ready = true;
                 model.readyToRender.raiseEvent(model);
             });
@@ -1684,13 +1746,8 @@ define([
                 Matrix4.multiplyTransformation(computedModelMatrix, yUpToZUp, computedModelMatrix);
             }
 
-            if (this._needsUpdate)
-            {
-                parse(this);
-                createSkins(this);
-                createAnimations(this);
-                createUniformMaps(this, context) ;
-                createRuntimeNodes(this, context); // using glTF scene
+            if (this._needsUpdate && this._needsInit){
+            	initModel(this, context);
             }
 
             // Update modelMatrix throughout the graph as needed
@@ -1712,7 +1769,7 @@ define([
 
         // We don't check show at the top of the function since we
         // want to be able to progressively load models when they are not shown,
-        // and then have them visibile immediately when show is set to true.
+        // and then have them visible immediately when show is set to true.
         if (show) {
 // PERFORMANCE_IDEA: This is terrible
             var passes = frameState.passes;
@@ -1725,7 +1782,15 @@ define([
                 for (i = 0; i < length; ++i) {
                     commandList.push(commands[i]);
                 }
+
+                if (this.debugShowBoundingVolume !== this._debugShowBoundingVolume) {
+                    this._debugShowBoundingVolume = this.debugShowBoundingVolume;
+                    for (i = 0; i < commands.length; i++) {
+                        commands[i].debugShowBoundingVolume = this.debugShowBoundingVolume;
+                    }
+                }
             }
+
             if (passes.pick) {
                 commands = this._pickCommands;
                 length = commands.length;
