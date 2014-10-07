@@ -387,7 +387,7 @@ define([
                 return false;
             }
 
-            var baseImageryRectangle = Rectangle.intersectWith(imageryProvider.rectangle, this._rectangle);
+            var baseImageryRectangle = imageryBounds;
             var baseTerrainRectangle = tile.rectangle;
 
             if (baseTerrainRectangle.south >= baseImageryRectangle.north) {
