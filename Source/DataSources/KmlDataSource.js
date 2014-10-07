@@ -151,17 +151,17 @@ define(['../Core/createGuid',
 
     function getNumericValue(node, tagName) {
         var element = node.getElementsByTagName(tagName)[0];
-        return defined(element) ? parseFloat(element.textContent) : undefined;
+        return defined(element) && /\S/.test(element.textContent) ? parseFloat(element.textContent) : undefined;
     }
 
     function getStringValue(node, tagName) {
         var element = node.getElementsByTagName(tagName)[0];
-        return defined(element) ? element.textContent : undefined;
+        return defined(element) && /\S/.test(element.textContent) ? element.textContent : undefined;
     }
 
     function getBooleanValue(node, tagName) {
         var element = node.getElementsByTagName(tagName)[0];
-        return defined(element) ? element.textContent === '1' : undefined;
+        return defined(element) && /\S/.test(element.textContent) ? element.textContent === '1' : undefined;
     }
 
     function resolveHref(href, dataSource, sourceUri, uriResolver) {
@@ -187,7 +187,7 @@ define(['../Core/createGuid',
         var element = node.getElementsByTagName(tagName)[0];
         var colorModeNode = node.getElementsByTagName('colorMode')[0];
         var value = defined(element) ? element.textContent : undefined;
-        if (!defined(value)) {
+        if (!defined(value) || /\s/.test(value)) {
             return undefined;
         }
         var colorMode = defined(colorModeNode) ? colorModeNode.textContent : undefined;
