@@ -37,7 +37,7 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {Uint16Array} options.quantizedVertices The buffer containing the quantized mesh.
-     * @param {Uint16Array} options.indices The indices specifying how the quantized vertices are linked
+     * @param {Uint16Array|Uint32Array} options.indices The indices specifying how the quantized vertices are linked
      *                      together into triangles.  Each three indices specifies one triangle.
      * @param {Uint8Array} options.encodedNormals The buffer containing per vertex normals, encoded using 'oct' encoding
      * @param {Number} options.minimumHeight The minimum terrain height within the tile, in meters above the ellipsoid.
@@ -167,10 +167,11 @@ define([
             return uValues[a] - uValues[b];
         }
 
-        this._westIndices = sortIndicesIfNecessary(options.westIndices, sortByV);
-        this._southIndices = sortIndicesIfNecessary(options.southIndices, sortByU);
-        this._eastIndices = sortIndicesIfNecessary(options.eastIndices, sortByV);
-        this._northIndices = sortIndicesIfNecessary(options.northIndices, sortByU);
+        var requires32BitIndices = vertexCount > 64 * 1024;
+        this._westIndices = sortIndicesIfNecessary(options.westIndices, sortByV, requires32BitIndices);
+        this._southIndices = sortIndicesIfNecessary(options.southIndices, sortByU, requires32BitIndices);
+        this._eastIndices = sortIndicesIfNecessary(options.eastIndices, sortByV, requires32BitIndices);
+        this._northIndices = sortIndicesIfNecessary(options.northIndices, sortByU, requires32BitIndices);
 
         this._westSkirtHeight = options.westSkirtHeight;
         this._southSkirtHeight = options.southSkirtHeight;
@@ -200,7 +201,7 @@ define([
 
     var arrayScratch = [];
 
-    function sortIndicesIfNecessary(indices, sortFunction) {
+    function sortIndicesIfNecessary(indices, sortFunction, requires32BitIndices) {
         arrayScratch.length = indices.length;
 
         var needsSort = false;
@@ -211,7 +212,7 @@ define([
 
         if (needsSort) {
             arrayScratch.sort(sortFunction);
-            return new Uint16Array(arrayScratch);
+            return requires32BitIndices ? new Uint32Array(arrayScratch) : new Uint16Array(arrayScratch);
         } else {
             return indices;
         }
@@ -275,10 +276,23 @@ define([
 
         var that = this;
         return when(verticesPromise, function(result) {
+            var indicesTypedArray;
+            var verticesTypedArray = new Float32Array(result.vertices);
+            var stride = 6;
+            if (defined(that._encodedNormals)) {
+                stride += 2;
+            }
+            var vertexCount = verticesTypedArray.length / stride;
+            if (vertexCount <= 64 * 1024) {
+                indicesTypedArray = new Uint16Array(result.indices);
+            } else {
+                indicesTypedArray = new Uint32Array(result.indices);
+            }
+
             return new TerrainMesh(
                     that._boundingSphere.center,
-                    new Float32Array(result.vertices),
-                    new Uint16Array(result.indices),
+                    verticesTypedArray,
+                    indicesTypedArray,
                     that._minimumHeight,
                     that._maximumHeight,
                     that._boundingSphere,
@@ -366,12 +380,22 @@ define([
 
         return when(upsamplePromise, function(result) {
             var encodedNormals;
+            var indicesTypedArray;
+            var quantizedVertices = new Uint16Array(result.vertices);
             if (defined(result.encodedNormals)) {
                 encodedNormals = new Uint8Array(result.encodedNormals);
             }
+
+            var vertexCount = quantizedVertices.length / 3;
+            if (vertexCount <= 64 * 1024) {
+                indicesTypedArray = new Uint16Array(result.indices);
+            } else {
+                indicesTypedArray = new Uint32Array(result.indices);
+            }
+
             return new QuantizedMeshTerrainData({
-                quantizedVertices : new Uint16Array(result.vertices),
-                indices : new Uint16Array(result.indices),
+                quantizedVertices : quantizedVertices,
+                indices : indicesTypedArray,
                 encodedNormals : encodedNormals,
                 minimumHeight : result.minimumHeight,
                 maximumHeight : result.maximumHeight,

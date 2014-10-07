@@ -5,9 +5,9 @@ defineSuite([
         'Core/DefaultProxy',
         'Core/defined',
         'Core/GeographicTilingScheme',
-        'Core/jsonp',
         'Core/loadImage',
         'Core/loadWithXhr',
+        'Core/queryToObject',
         'Core/Rectangle',
         'Core/WebMercatorTilingScheme',
         'Scene/Imagery',
@@ -16,6 +16,7 @@ defineSuite([
         'Scene/ImageryProvider',
         'Scene/ImageryState',
         'Specs/waitsForPromise',
+        'ThirdParty/Uri',
         'ThirdParty/when'
     ], function(
         WebMapServiceImageryProvider,
@@ -23,9 +24,9 @@ defineSuite([
         DefaultProxy,
         defined,
         GeographicTilingScheme,
-        jsonp,
         loadImage,
         loadWithXhr,
+        queryToObject,
         Rectangle,
         WebMercatorTilingScheme,
         Imagery,
@@ -34,12 +35,12 @@ defineSuite([
         ImageryProvider,
         ImageryState,
         waitsForPromise,
+        Uri,
         when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     afterEach(function() {
-        jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
         loadWithXhr.load = loadWithXhr.defaultLoad;
     });
@@ -96,17 +97,16 @@ defineSuite([
         }, 'imagery provider to become ready');
 
         runs(function() {
-            var calledLoadImage = false;
-            loadImage.createImage = function(url, crossOrigin, deferred) {
-                expect(url).toMatch('something=foo');
-                expect(url).toMatch('another=false');
-                calledLoadImage = true;
-                deferred.resolve();
-                return undefined;
-            };
+            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+                var uri = new Uri(url);
+                var params = queryToObject(uri.query);
+                expect(params.something).toEqual('foo');
+                expect(params.another).toEqual('false');
+            });
 
             provider.requestImage(0, 0, 0);
-            expect(calledLoadImage).toEqual(true);
+
+            expect(loadImage.createImage).toHaveBeenCalled();
         });
     });
 
@@ -121,21 +121,14 @@ defineSuite([
         }, 'imagery provider to become ready');
 
         runs(function() {
-            var calledLoadImage = false;
-            loadImage.createImage = function(url, crossOrigin, deferred) {
-                var firstQuestionMarkIndex = url.indexOf('?');
-                expect(firstQuestionMarkIndex).toBeGreaterThan(-1);
-
-                var secondQuestionMarkIndex = url.indexOf('?', firstQuestionMarkIndex + 1);
-                expect(secondQuestionMarkIndex).toBeLessThan(0);
-
-                calledLoadImage = true;
-                deferred.resolve();
-                return undefined;
-            };
+            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+                var questionMarkCount = url.match(/\?/g).length;
+                expect(questionMarkCount).toEqual(1);
+            });
 
             provider.requestImage(0, 0, 0);
-            expect(calledLoadImage).toEqual(true);
+
+            expect(loadImage.createImage).toHaveBeenCalled();
         });
     });
 
@@ -150,24 +143,16 @@ defineSuite([
         }, 'imagery provider to become ready');
 
         runs(function() {
-            var calledLoadImage = false;
-            loadImage.createImage = function(url, crossOrigin, deferred) {
-                var firstQuestionMarkIndex = url.indexOf('?');
-                expect(firstQuestionMarkIndex).toBeGreaterThan(-1);
+            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+                var questionMarkCount = url.match(/\?/g).length;
+                expect(questionMarkCount).toEqual(1);
 
-                var secondQuestionMarkIndex = url.indexOf('?', firstQuestionMarkIndex + 1);
-                expect(secondQuestionMarkIndex).toBeLessThan(0);
-
-                var doubleAmpersandIndex = url.indexOf('&&');
-                expect(doubleAmpersandIndex).toBeLessThan(0);
-
-                calledLoadImage = true;
-                deferred.resolve();
-                return undefined;
-            };
+                expect(url).not.toContain('&&');
+            });
 
             provider.requestImage(0, 0, 0);
-            expect(calledLoadImage).toEqual(true);
+
+            expect(loadImage.createImage).toHaveBeenCalled();
         });
     });
 
@@ -182,24 +167,18 @@ defineSuite([
         }, 'imagery provider to become ready');
 
         runs(function() {
-            var calledLoadImage = false;
-            loadImage.createImage = function(url, crossOrigin, deferred) {
-                var firstQuestionMarkIndex = url.indexOf('?');
-                expect(firstQuestionMarkIndex).toBeGreaterThan(-1);
+            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+                var questionMarkCount = url.match(/\?/g).length;
+                expect(questionMarkCount).toEqual(1);
 
-                var secondQuestionMarkIndex = url.indexOf('?', firstQuestionMarkIndex + 1);
-                expect(secondQuestionMarkIndex).toBeLessThan(0);
-
-                var delimitedQueryParameterIndex = url.indexOf('foo=bar&');
-                expect(delimitedQueryParameterIndex).not.toBeLessThan(0);
-
-                calledLoadImage = true;
-                deferred.resolve();
-                return undefined;
-            };
+                var uri = new Uri(url);
+                var params = queryToObject(uri.query);
+                expect(params.foo).toEqual('bar');
+            });
 
             provider.requestImage(0, 0, 0);
-            expect(calledLoadImage).toEqual(true);
+
+            expect(loadImage.createImage).toHaveBeenCalled();
         });
     });
 
@@ -216,8 +195,6 @@ defineSuite([
             return provider.ready;
         }, 'imagery provider to become ready');
 
-        var tile000Image;
-
         runs(function() {
             expect(provider.tileWidth).toEqual(256);
             expect(provider.tileHeight).toEqual(256);
@@ -225,22 +202,15 @@ defineSuite([
             expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
             expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
 
-            loadImage.createImage = function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
                 // Just return any old image.
-                return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
-            };
-
-            when(provider.requestImage(0, 0, 0), function(image) {
-                tile000Image = image;
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
-        });
 
-        waitsFor(function() {
-            return defined(tile000Image);
-        }, 'requested tile to be loaded');
-
-        runs(function() {
-            expect(tile000Image).toBeInstanceOf(Image);
+            waitsForPromise(provider.requestImage(0, 0, 0), function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(image).toBeInstanceOf(Image);
+            });
         });
     });
 
@@ -259,8 +229,6 @@ defineSuite([
             return provider.ready;
         }, 'imagery provider to become ready');
 
-        var tile000Image;
-
         runs(function() {
             expect(provider.tileWidth).toEqual(256);
             expect(provider.tileHeight).toEqual(256);
@@ -268,25 +236,22 @@ defineSuite([
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
 
-            loadImage.createImage = function(url, crossOrigin, deferred) {
-                expect(url).toContain('srs=EPSG:3857');
-                expect(url).toContain('bbox=' + tilingScheme.tileXYToNativeRectangle(0, 0, 0).west);
+            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+                var uri = new Uri(url);
+                var params = queryToObject(uri.query);
 
-                // Just return any old image.
-                return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
-            };
+                expect(params.srs).toEqual('EPSG:3857');
 
-            when(provider.requestImage(0, 0, 0), function(image) {
-                tile000Image = image;
+                var rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
+                expect(params.bbox).toEqual(rect.west + ',' + rect.south + ',' + rect.east + ',' + rect.north);
+
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
-        });
 
-        waitsFor(function() {
-            return defined(tile000Image);
-        }, 'requested tile to be loaded');
-
-        runs(function() {
-            expect(tile000Image).toBeInstanceOf(Image);
+            waitsForPromise(provider.requestImage(0, 0, 0), function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(image).toBeInstanceOf(Image);
+            });
         });
     });
 
@@ -304,17 +269,17 @@ defineSuite([
         }, 'imagery provider to become ready');
 
         runs(function() {
-            var calledLoadImage = false;
-            loadImage.createImage = function(url, crossOrigin, deferred) {
-                expect(url).toMatch('format=foo');
-                expect(url).not.toMatch('format=image/jpeg');
-                calledLoadImage = true;
-                deferred.resolve();
-                return undefined;
-            };
+            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+                var uri = new Uri(url);
+                var params = queryToObject(uri.query);
+
+                expect(params.format).toEqual('foo');
+                expect(params.format).not.toEqual('image/jpeg');
+            });
 
             provider.requestImage(0, 0, 0);
-            expect(calledLoadImage).toEqual(true);
+
+            expect(loadImage.createImage).toHaveBeenCalled();
         });
     });
 
@@ -345,28 +310,20 @@ defineSuite([
             return provider.ready;
         }, 'imagery provider to become ready');
 
-        var tile000Image;
-
         runs(function() {
-            loadImage.createImage = function(url, crossOrigin, deferred) {
+            expect(provider.proxy).toEqual(proxy);
+
+            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
                 expect(url.indexOf(proxy.getURL('made/up/wms/server'))).toEqual(0);
-                expect(provider.proxy).toEqual(proxy);
 
                 // Just return any old image.
-                return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
-            };
-
-            when(provider.requestImage(0, 0, 0), function(image) {
-                tile000Image = image;
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
-        });
 
-        waitsFor(function() {
-            return defined(tile000Image);
-        }, 'requested tile to be loaded');
-
-        runs(function() {
-            expect(tile000Image).toBeInstanceOf(Image);
+            waitsForPromise(provider.requestImage(0, 0, 0), function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(image).toBeInstanceOf(Image);
+            });
         });
     });
 
@@ -446,6 +403,10 @@ defineSuite([
             layers : 'someLayer'
         });
 
+        waitsFor(function() {
+            return provider.ready;
+        }, 'imagery provider to become ready');
+
         var layer = new ImageryLayer(provider);
 
         var tries = 0;
@@ -458,19 +419,16 @@ defineSuite([
         });
 
         loadImage.createImage = function(url, crossOrigin, deferred) {
-            // Succeed after 2 tries
             if (tries === 2) {
-                // valid URL
-                return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                // Succeed after 2 tries
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            } else {
+                // fail
+                setTimeout(function() {
+                    deferred.reject();
+                }, 1);
             }
-
-            // invalid URL
-            return loadImage.defaultCreateImage(url, crossOrigin, deferred);
         };
-
-        waitsFor(function() {
-            return provider.ready;
-        }, 'imagery provider to become ready');
 
         var imagery;
         runs(function() {
@@ -703,6 +661,10 @@ defineSuite([
                 getFeatureInfoAsXml : false
             });
 
+            waitsFor(function() {
+                return provider.ready;
+            }, 'imagery provider to become ready');
+
             loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toContain('GetFeatureInfo');
 
@@ -713,10 +675,6 @@ defineSuite([
                     loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-MapInfoMXP.xml', responseType, method, data, headers, deferred, overrideMimeType);
                 }
             };
-
-            waitsFor(function() {
-                return provider.ready;
-            }, 'imagery provider to become ready');
 
             runs(function() {
                 var asyncResult = provider.pickFeatures(0, 0, 0, 0.5, 0.5);

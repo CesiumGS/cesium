@@ -2,8 +2,6 @@
 defineSuite([
         'Scene/OpenStreetMapImageryProvider',
         'Core/DefaultProxy',
-        'Core/defined',
-        'Core/jsonp',
         'Core/loadImage',
         'Core/Rectangle',
         'Core/WebMercatorTilingScheme',
@@ -11,12 +9,10 @@ defineSuite([
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
-        'ThirdParty/when'
+        'Specs/waitsForPromise'
     ], function(
         OpenStreetMapImageryProvider,
         DefaultProxy,
-        defined,
-        jsonp,
         loadImage,
         Rectangle,
         WebMercatorTilingScheme,
@@ -24,12 +20,11 @@ defineSuite([
         ImageryLayer,
         ImageryProvider,
         ImageryState,
-        when) {
+        waitsForPromise) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     afterEach(function() {
-        jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
     });
 
@@ -65,18 +60,17 @@ defineSuite([
         }, 'imagery provider to become ready');
 
         runs(function() {
-            var calledLoadImage = false;
-            loadImage.createImage = function(url, crossOrigin, deferred) {
-                var doubleSlashIndex = url.indexOf('//');
-                expect(doubleSlashIndex).toBeLessThan(0);
+            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+                expect(url).not.toContain('//');
 
-                calledLoadImage = true;
-                deferred.resolve();
-                return undefined;
-            };
+                // Just return any old image.
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            });
 
-            provider.requestImage(0, 0, 0);
-            expect(calledLoadImage).toEqual(true);
+            waitsForPromise(provider.requestImage(0, 0, 0), function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(image).toBeInstanceOf(Image);
+            });
         });
     });
 
@@ -90,18 +84,17 @@ defineSuite([
         }, 'imagery provider to become ready');
 
         runs(function() {
-            var calledLoadImage = false;
-            loadImage.createImage = function(url, crossOrigin, deferred) {
-                var index = url.indexOf('made/up/osm/server/');
-                expect(index).toBeGreaterThan(-1);
+            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+                expect(url).toContain('made/up/osm/server/');
 
-                calledLoadImage = true;
-                deferred.resolve();
-                return undefined;
-            };
+                // Just return any old image.
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            });
 
-            provider.requestImage(0, 0, 0);
-            expect(calledLoadImage).toEqual(true);
+            waitsForPromise(provider.requestImage(0, 0, 0), function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(image).toBeInstanceOf(Image);
+            });
         });
     });
 
@@ -116,8 +109,6 @@ defineSuite([
             return provider.ready;
         }, 'imagery provider to become ready');
 
-        var tile000Image;
-
         runs(function() {
             expect(provider.tileWidth).toEqual(256);
             expect(provider.tileHeight).toEqual(256);
@@ -125,22 +116,15 @@ defineSuite([
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
 
-            loadImage.createImage = function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
                 // Just return any old image.
-                return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
-            };
-
-            when(provider.requestImage(0, 0, 0), function(image) {
-                tile000Image = image;
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
-        });
 
-        waitsFor(function() {
-            return defined(tile000Image);
-        }, 'requested tile to be loaded');
-
-        runs(function() {
-            expect(tile000Image).toBeInstanceOf(Image);
+            waitsForPromise(provider.requestImage(0, 0, 0), function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(image).toBeInstanceOf(Image);
+            });
         });
     });
 
@@ -170,28 +154,20 @@ defineSuite([
             return provider.ready;
         }, 'imagery provider to become ready');
 
-        var tile000Image;
-
         runs(function() {
-            loadImage.createImage = function(url, crossOrigin, deferred) {
+            expect(provider.proxy).toEqual(proxy);
+
+            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
                 expect(url.indexOf(proxy.getURL('made/up/osm/server'))).toEqual(0);
-                expect(provider.proxy).toEqual(proxy);
 
                 // Just return any old image.
-                return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
-            };
-
-            when(provider.requestImage(0, 0, 0), function(image) {
-                tile000Image = image;
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
-        });
 
-        waitsFor(function() {
-            return defined(tile000Image);
-        }, 'requested tile to be loaded');
-
-        runs(function() {
-            expect(tile000Image).toBeInstanceOf(Image);
+            waitsForPromise(provider.requestImage(0, 0, 0), function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(image).toBeInstanceOf(Image);
+            });
         });
     });
 
@@ -214,16 +190,17 @@ defineSuite([
             expect(provider.rectangle).toEqual(rectangle);
             expect(provider.tileDiscardPolicy).toBeUndefined();
 
-            var calledLoadImage = false;
-            loadImage.createImage = function(url, crossOrigin, deferred) {
-                expect(url.indexOf('/0/0/0')).not.toBeLessThan(0);
-                calledLoadImage = true;
-                deferred.resolve();
-                return undefined;
-            };
+            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+                expect(url).toContain('/0/0/0');
 
-            provider.requestImage(0, 0, 0);
-            expect(calledLoadImage).toEqual(true);
+                // Just return any old image.
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            });
+
+            waitsForPromise(provider.requestImage(0, 0, 0), function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(image).toBeInstanceOf(Image);
+            });
         });
     });
 
@@ -260,14 +237,15 @@ defineSuite([
         });
 
         loadImage.createImage = function(url, crossOrigin, deferred) {
-            // Succeed after 2 tries
             if (tries === 2) {
-                // valid URL
-                return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                // Succeed after 2 tries
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            } else {
+                // fail
+                setTimeout(function() {
+                    deferred.reject();
+                }, 1);
             }
-
-            // invalid URL
-            return loadImage.defaultCreateImage(url, crossOrigin, deferred);
         };
 
         waitsFor(function() {

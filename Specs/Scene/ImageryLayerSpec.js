@@ -70,11 +70,11 @@ defineSuite([
 
     it('discards tiles when the ImageryProviders discard policy says to do so', function() {
         loadImage.createImage = function(url, crossOrigin, deferred) {
-            return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
         };
 
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
+            loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
         };
 
         var discardPolicy = new CustomDiscardPolicy();
@@ -138,11 +138,11 @@ defineSuite([
         };
 
         loadImage.createImage = function(url, crossOrigin, deferred) {
-            return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
         };
 
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
+            loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
         };
 
         var provider = new BingMapsImageryProvider({

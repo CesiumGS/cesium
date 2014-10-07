@@ -2,12 +2,14 @@
 define([
         '../Core/Color',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
         '../Core/GeographicTilingScheme'
     ], function(
         Color,
         defaultValue,
+        defined,
         defineProperties,
         Event,
         GeographicTilingScheme) {
@@ -28,15 +30,14 @@ define([
      * @param {Number} [options.tileHeight=256] The height of the tile for level-of-detail selection purposes.
      */
     var TileCoordinatesImageryProvider = function TileCoordinatesImageryProvider(options) {
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        this._tilingScheme = defaultValue(options.tilingScheme, new GeographicTilingScheme());
+        this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new GeographicTilingScheme();
         this._color = defaultValue(options.color, Color.YELLOW);
         this._errorEvent = new Event();
         this._tileWidth = defaultValue(options.tileWidth, 256);
         this._tileHeight = defaultValue(options.tileHeight, 256);
     };
-
 
     defineProperties(TileCoordinatesImageryProvider.prototype, {
         /**

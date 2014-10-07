@@ -43,7 +43,7 @@ function createModel(url, height) {
     }));
 
     model.readyToRender.addEventListener(function(model) {
-        // Play and loop all animations at half-spead
+        // Play and loop all animations at half-speed
         model.activeAnimations.addAll({
             speedup : 0.5,
             loop : Cesium.ModelAnimationLoop.REPEAT

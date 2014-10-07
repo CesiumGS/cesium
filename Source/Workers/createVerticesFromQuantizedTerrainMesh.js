@@ -83,7 +83,12 @@ define([
         }
 
         var edgeTriangleCount = Math.max(0, (edgeVertexCount - 4) * 2);
-        var indexBuffer = new Uint16Array(parameters.indices.length + edgeTriangleCount * 3);
+        var indexBuffer;
+        if (quantizedVertexCount + edgeVertexCount <= 64 * 1024) {
+            indexBuffer = new Uint16Array(parameters.indices.length + edgeTriangleCount * 3);
+        } else {
+            indexBuffer = new Uint32Array(parameters.indices.length + edgeTriangleCount * 3);
+        }
         indexBuffer.set(parameters.indices, 0);
 
         // Add skirts.
