@@ -653,7 +653,9 @@ define([
                 return false;
             }
             var levelAvailable = available[level];
-            return isTileInRange(levelAvailable, x, y);
+            var yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
+            var tmsY = (yTiles - y - 1);
+            return isTileInRange(levelAvailable, x, tmsY);
         }
     };
 

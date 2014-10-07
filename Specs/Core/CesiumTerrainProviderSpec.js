@@ -59,6 +59,10 @@ defineSuite([
         return returnTileJson('Data/CesiumTerrainTileJson/VertexNormals.tile.json');
     }
 
+    function returnPartialAvailabilityTileJson() {
+        return returnTileJson('Data/CesiumTerrainTileJson/PartialAvailability.tile.json');
+    }
+
     it('conforms to TerrainProvider interface', function() {
         expect(CesiumTerrainProvider).toConformToInterface(TerrainProvider);
     });
@@ -631,6 +635,25 @@ defineSuite([
             runs(function() {
                 expect(terrainProvider.getTileDataAvailable(0, 0, 0)).toBe(true);
                 expect(terrainProvider.getTileDataAvailable(0, 0, 2)).toBe(false);
+            });
+        });
+
+        it('getTileDataAvailable() converts xyz to tms', function() {
+            var baseUrl = 'made/up/url';
+
+            returnPartialAvailabilityTileJson();
+
+            var terrainProvider = new CesiumTerrainProvider({
+                url : baseUrl
+            });
+
+            waitsFor(function() {
+                return terrainProvider.ready;
+            });
+
+            runs(function() {
+                expect(terrainProvider.getTileDataAvailable(1, 3, 2)).toBe(true);
+                expect(terrainProvider.getTileDataAvailable(1, 0, 2)).toBe(false);
             });
         });
     });

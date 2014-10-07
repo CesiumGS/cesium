@@ -312,6 +312,19 @@ define([
             get : function() {
                 return this._imageryLayerCollection;
             }
+        },
+        /**
+         * Gets or sets the color of the globe when no imagery is available.
+         * @memberof Globe.prototype
+         * @type {Color}
+         */
+        baseColor : {
+            get : function() {
+                return this._surface.tileProvider.baseColor;
+            },
+            set : function(value) {
+                this._surface.tileProvider.baseColor = value;
+            }
         }
     });
 

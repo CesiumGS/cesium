@@ -38,6 +38,7 @@ var primitives = scene.primitives;
 // Cylinder geometries are initially centered on the origin.
 // We can use a model matrix to position the cylinder on the
 // globe surface.
+var length = 400000.0;
 var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-100.0, 40.0);
 var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
     Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
@@ -45,7 +46,7 @@ var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
 );
 // Create the cylinder geometry.
 var cylinderGeometry = new Cesium.CylinderGeometry({
-    length : 400000.0,
+    length : length,
     topRadius : 200000.0,
     bottomRadius : 200000.0,
     vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
@@ -71,7 +72,7 @@ modelMatrix = Cesium.Matrix4.multiplyByTranslation(
 // Create the cylinder geometry.  To create a cone, set the
 // top radius to zero.
 cylinderGeometry = new Cesium.CylinderGeometry({
-    length : 400000.0,
+    length : length,
     topRadius : 0.0,
     bottomRadius : 200000.0,
     vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
