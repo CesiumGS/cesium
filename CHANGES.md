@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.3 - 2014-11-03
+
+* Fixed a bug that caused non-base imagery layers with a limited `rectangle` to be stretched to the edges of imagery tiles.
+
 ### 1.2 - 2014-10-01
 
 * Deprecated
