@@ -180,30 +180,36 @@ function buildNav(members) {
         classNav = '',
         globalNav = '';
 
-    if (members.tutorials.length) {
-        nav += '<b>Tutorials</b><ul>';
-        members.tutorials.forEach(function(t) {
-            nav += '<li>' + tutoriallink(t.name) + '</li>';
-        });
-
-        nav += '</ul>';
-    }
-
-    nav += '<b>Reference</b><ul>';
     var items = members.modules.concat(members.classes).concat(members.namespaces).sort(function(a, b) {
         return a.longname.toLowerCase().localeCompare(b.longname.toLowerCase());
     });
 
+    nav += '<li>' + tutoriallink('Welcome') + '</li>';
+    nav += '<li>' + tutoriallink('WhatsNew') + '</li>';
+    nav += '<li>' + tutoriallink('GettingStarted') + '</li>';
+
+    nav += '<li>';
+    nav += "<b>Programmer's Guide</b>";
+    nav += '<ul>';
+    nav += '<li>' + tutoriallink('Architecture') + '</li>';
+    nav += '</ul>';
+
+    nav += '</li>';
+
     if (items.length) {
+        nav += '<li>';
+        nav += "<b>API Reference</b>";
+        nav += '<ul>';
         items.forEach(function(m) {
-            if ( !hasOwnProp.call(seen, m.longname) ) {
+            if (!hasOwnProp.call(seen, m.longname)) {
                 nav += '<li data-name="' + m.name + '">' + linkto(m.longname, m.name) + '</li>';
             }
             seen[m.longname] = true;
         });
 
-        nav += '</ul>';
+        nav += '</li>';
     }
+    nav += '</ul>';
 
     return nav;
 }
