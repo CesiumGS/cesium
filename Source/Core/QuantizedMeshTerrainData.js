@@ -277,21 +277,15 @@ define([
         var that = this;
         return when(verticesPromise, function(result) {
             var indicesTypedArray;
-            var verticesTypedArray = new Float32Array(result.vertices);
-            var stride = 6;
-            if (defined(that._encodedNormals)) {
-                stride += 2;
-            }
-            var vertexCount = verticesTypedArray.length / stride;
-            if (vertexCount <= 64 * 1024) {
-                indicesTypedArray = new Uint16Array(result.indices);
-            } else {
+            if (result.has32BitIndices) {
                 indicesTypedArray = new Uint32Array(result.indices);
+            } else {
+                indicesTypedArray = new Uint16Array(result.indices);
             }
 
             return new TerrainMesh(
                     that._boundingSphere.center,
-                    verticesTypedArray,
+                    new Float32Array(result.vertices),
                     indicesTypedArray,
                     that._minimumHeight,
                     that._maximumHeight,
@@ -381,20 +375,18 @@ define([
         return when(upsamplePromise, function(result) {
             var encodedNormals;
             var indicesTypedArray;
-            var quantizedVertices = new Uint16Array(result.vertices);
             if (defined(result.encodedNormals)) {
                 encodedNormals = new Uint8Array(result.encodedNormals);
             }
 
-            var vertexCount = quantizedVertices.length / 3;
-            if (vertexCount <= 64 * 1024) {
-                indicesTypedArray = new Uint16Array(result.indices);
-            } else {
+            if (result.has32BitIndices) {
                 indicesTypedArray = new Uint32Array(result.indices);
+            } else {
+                indicesTypedArray = new Uint16Array(result.indices);
             }
 
             return new QuantizedMeshTerrainData({
-                quantizedVertices : quantizedVertices,
+                quantizedVertices : new Uint16Array(result.vertices),
                 indices : indicesTypedArray,
                 encodedNormals : encodedNormals,
                 minimumHeight : result.minimumHeight,

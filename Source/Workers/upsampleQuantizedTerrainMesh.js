@@ -252,10 +252,11 @@ define([
         }
 
         var indicesTypedArray;
-        if (uBuffer.length <= 64 * 1024) {
-            indicesTypedArray = new Uint16Array(indices);
-        } else {
+        var requires32BitIndices = uBuffer.length > 64 * 1024;
+        if (requires32BitIndices) {
             indicesTypedArray = new Uint32Array(indices);
+        } else {
+            indicesTypedArray = new Uint16Array(indices);
         }
 
         var encodedNormals;
@@ -271,6 +272,7 @@ define([
             vertices : vertices.buffer,
             encodedNormals : encodedNormals,
             indices : indicesTypedArray.buffer,
+            has32BitIndices : requires32BitIndices,
             minimumHeight : minimumHeight,
             maximumHeight : maximumHeight,
             westIndices : westIndices,

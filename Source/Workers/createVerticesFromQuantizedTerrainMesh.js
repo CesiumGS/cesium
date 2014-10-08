@@ -84,10 +84,11 @@ define([
 
         var edgeTriangleCount = Math.max(0, (edgeVertexCount - 4) * 2);
         var indexBuffer;
-        if (quantizedVertexCount + edgeVertexCount <= 64 * 1024) {
-            indexBuffer = new Uint16Array(parameters.indices.length + edgeTriangleCount * 3);
-        } else {
+        var requires32BitIndices = quantizedVertexCount + edgeVertexCount > 64 * 1024;
+        if (requires32BitIndices) {
             indexBuffer = new Uint32Array(parameters.indices.length + edgeTriangleCount * 3);
+        } else {
+            indexBuffer = new Uint16Array(parameters.indices.length + edgeTriangleCount * 3);
         }
         indexBuffer.set(parameters.indices, 0);
 
@@ -107,7 +108,8 @@ define([
 
         return {
             vertices : vertexBuffer.buffer,
-            indices : indexBuffer.buffer
+            indices : indexBuffer.buffer,
+            has32BitIndices : requires32BitIndices
         };
     }
 
