@@ -342,7 +342,7 @@ define([
         }
 
         // skip over any additional padding that was added for 2/4 byte alignment
-        if (pos % bytesPerIndex != 0) {
+        if (pos % bytesPerIndex !== 0) {
             pos += (bytesPerIndex - (pos % bytesPerIndex));
         }
 

@@ -450,6 +450,43 @@ defineSuite([
             });
         });
 
+        it('provides QuantizedMeshTerrainData with 32bit indices', function() {
+            var baseUrl = 'made/up/url';
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.32bitIndices.terrain', responseType, method, data, headers, deferred);
+            };
+
+            returnQuantizedMeshTileJson();
+
+            var terrainProvider = new CesiumTerrainProvider({
+                url : baseUrl
+            });
+
+            waitsFor(function() {
+                return terrainProvider.ready;
+            });
+
+            var loadedData;
+
+            runs(function() {
+                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
+
+                when(promise, function(terrainData) {
+                    loadedData = terrainData;
+                });
+            });
+
+            waitsFor(function() {
+                return defined(loadedData);
+            }, 'request to complete');
+
+            runs(function() {
+                expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
+                expect(loadedData._indices.BYTES_PER_ELEMENT).toBe(4);
+            });
+        });
+
         it('provides QuantizedMeshTerrainData with VertexNormals', function() {
             var baseUrl = 'made/up/url';
 
