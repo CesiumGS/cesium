@@ -3,6 +3,7 @@ define([
         'Core/defined',
         'Core/formatError',
         'Core/getFilenameFromUri',
+        'Core/queryToObject',
         'DataSources/CzmlDataSource',
         'DataSources/GeoJsonDataSource',
         'DataSources/KmlDataSource',
@@ -16,6 +17,7 @@ define([
         defined,
         formatError,
         getFilenameFromUri,
+        queryToObject,
         CzmlDataSource,
         GeoJsonDataSource,
         KmlDataSource,
@@ -35,29 +37,16 @@ define([
      * 'theme'  : 'lighter',    // Use the dark-text-on-light-background theme.
      * 'scene3DOnly' : false    // Enable 3D only mode
      */
-    var endUserOptions = {};
-    var queryString = window.location.search.substring(1);
-    if (queryString !== '') {
-        var params = queryString.split('&');
-        for (var i = 0, len = params.length; i < len; ++i) {
-            var param = params[i];
-            var keyValuePair = param.split('=');
-            if (keyValuePair.length > 1) {
-                endUserOptions[keyValuePair[0]] = decodeURIComponent(keyValuePair[1].replace(/\+/g, ' '));
-            }
-        }
-    }
-
-    var loadingIndicator = document.getElementById('loadingIndicator');
+    var endUserOptions = queryToObject(window.location.search.substring(1));
 
     var imageryProvider;
-
     if (endUserOptions.tmsImageryUrl) {
         imageryProvider = new TileMapServiceImageryProvider({
             url : endUserOptions.tmsImageryUrl
         });
     }
 
+    var loadingIndicator = document.getElementById('loadingIndicator');
     var viewer;
     try {
         viewer = new Viewer('cesiumContainer', {

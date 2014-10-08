@@ -324,7 +324,7 @@ define([
 
         this._mode = SceneMode.SCENE3D;
 
-        this._mapProjection = defaultValue(options.mapProjection, new GeographicProjection());
+        this._mapProjection = defined(options.mapProjection) ? options.mapProjection : new GeographicProjection();
 
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
@@ -1374,9 +1374,10 @@ define([
         if (scene.debugShowFramesPerSecond) {
             if (!defined(scene._performanceDisplay)) {
                 var performanceContainer = document.createElement('div');
+                performanceContainer.className = 'cesium-performanceDisplay';
                 performanceContainer.style.position = 'absolute';
-                performanceContainer.style.top = '10px';
-                performanceContainer.style.left = '10px';
+                performanceContainer.style.top = '50px';
+                performanceContainer.style.right = '10px';
                 var container = scene._canvas.parentNode;
                 container.appendChild(performanceContainer);
                 var performanceDisplay = new PerformanceDisplay({container: performanceContainer});

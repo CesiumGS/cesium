@@ -79,6 +79,7 @@
 			<include name="LICENSE.md" />
 			<include name="CHANGES.md" />
 			<include name="README.md" />
+			<include name="web.config" />
 			<zipfileset file="index.release.html" fullpath="index.html" />
 		</zip>
 	</target>
@@ -106,7 +107,7 @@
 
 	<!-- Inputs -->
 	<!-- this version should be set to the upcoming version, so it can be tagged without requiring a bump first -->
-	<property name="version" value="1.1" />
+	<property name="version" value="1.2" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />
@@ -568,6 +569,9 @@
 		<copy todir="${cesiumViewerOutputDirectory}">
 			<fileset dir="${buildOutputDirectory}" excludes="Cesium.js" />
 		</copy>
+
+		<!-- Copy web.config -->
+		<copy file="${basedir}/web.config" tofile="${cesiumViewerOutputDirectory}/web.config" />
 
 		<!-- rewrite the paths in the configuration -->
 		<replace dir="${cesiumViewerOutputDirectory}" summary="true">
