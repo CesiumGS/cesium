@@ -4,6 +4,7 @@ define([
         '../Core/Cartographic',
         '../Core/defined',
         '../Core/Ellipsoid',
+        '../Core/IndexDatatype',
         '../Core/Math',
         './createTaskProcessorWorker'
     ], function(
@@ -11,6 +12,7 @@ define([
         Cartographic,
         defined,
         Ellipsoid,
+        IndexDatatype,
         CesiumMath,
         createTaskProcessorWorker) {
     "use strict";
@@ -83,13 +85,8 @@ define([
         }
 
         var edgeTriangleCount = Math.max(0, (edgeVertexCount - 4) * 2);
-        var indexBuffer;
-        var requires32BitIndices = quantizedVertexCount + edgeVertexCount > 64 * 1024;
-        if (requires32BitIndices) {
-            indexBuffer = new Uint32Array(parameters.indices.length + edgeTriangleCount * 3);
-        } else {
-            indexBuffer = new Uint16Array(parameters.indices.length + edgeTriangleCount * 3);
-        }
+        var indexBufferLength = parameters.indices.length + edgeTriangleCount * 3;
+        var indexBuffer = IndexDatatype.createTypedArray(quantizedVertexCount + edgeVertexCount, indexBufferLength);
         indexBuffer.set(parameters.indices, 0);
 
         // Add skirts.
@@ -109,7 +106,6 @@ define([
         return {
             vertices : vertexBuffer.buffer,
             indices : indexBuffer.buffer,
-            has32BitIndices : requires32BitIndices
         };
     }
 

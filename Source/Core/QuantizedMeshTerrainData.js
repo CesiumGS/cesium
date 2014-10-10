@@ -7,6 +7,7 @@ define([
         './defined',
         './defineProperties',
         './DeveloperError',
+        './IndexDatatype',
         './Intersections2D',
         './Math',
         './TaskProcessor',
@@ -19,6 +20,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        IndexDatatype,
         Intersections2D,
         CesiumMath,
         TaskProcessor,
@@ -168,10 +170,10 @@ define([
         }
 
         var requires32BitIndices = vertexCount > 64 * 1024;
-        this._westIndices = sortIndicesIfNecessary(options.westIndices, sortByV, requires32BitIndices);
-        this._southIndices = sortIndicesIfNecessary(options.southIndices, sortByU, requires32BitIndices);
-        this._eastIndices = sortIndicesIfNecessary(options.eastIndices, sortByV, requires32BitIndices);
-        this._northIndices = sortIndicesIfNecessary(options.northIndices, sortByU, requires32BitIndices);
+        this._westIndices = sortIndicesIfNecessary(options.westIndices, sortByV, vertexCount);
+        this._southIndices = sortIndicesIfNecessary(options.southIndices, sortByU, vertexCount);
+        this._eastIndices = sortIndicesIfNecessary(options.eastIndices, sortByV, vertexCount);
+        this._northIndices = sortIndicesIfNecessary(options.northIndices, sortByU, vertexCount);
 
         this._westSkirtHeight = options.westSkirtHeight;
         this._southSkirtHeight = options.southSkirtHeight;
@@ -201,7 +203,7 @@ define([
 
     var arrayScratch = [];
 
-    function sortIndicesIfNecessary(indices, sortFunction, requires32BitIndices) {
+    function sortIndicesIfNecessary(indices, sortFunction, vertexCount) {
         arrayScratch.length = indices.length;
 
         var needsSort = false;
@@ -212,7 +214,7 @@ define([
 
         if (needsSort) {
             arrayScratch.sort(sortFunction);
-            return requires32BitIndices ? new Uint32Array(arrayScratch) : new Uint16Array(arrayScratch);
+            return IndexDatatype.createTypedArray(vertexCount, arrayScratch);
         } else {
             return indices;
         }
@@ -276,12 +278,9 @@ define([
 
         var that = this;
         return when(verticesPromise, function(result) {
-            var indicesTypedArray;
-            if (result.has32BitIndices) {
-                indicesTypedArray = new Uint32Array(result.indices);
-            } else {
-                indicesTypedArray = new Uint16Array(result.indices);
-            }
+            var vertexCount = that._quantizedVertices.length / 3;
+            vertexCount += that._westIndices.length + that._southIndices.length + that._eastIndices.length + that._northIndices.length;
+            var indicesTypedArray = IndexDatatype.createTypedArray(vertexCount, result.indices);
 
             return new TerrainMesh(
                     that._boundingSphere.center,
@@ -373,16 +372,10 @@ define([
         var northSkirtHeight = isNorthChild ? this._northSkirtHeight : (shortestSkirt * 0.5);
 
         return when(upsamplePromise, function(result) {
+            var indicesTypedArray = IndexDatatype.createTypedArray(result.vertices.length / 3, result.indices);
             var encodedNormals;
-            var indicesTypedArray;
             if (defined(result.encodedNormals)) {
                 encodedNormals = new Uint8Array(result.encodedNormals);
-            }
-
-            if (result.has32BitIndices) {
-                indicesTypedArray = new Uint32Array(result.indices);
-            } else {
-                indicesTypedArray = new Uint16Array(result.indices);
             }
 
             return new QuantizedMeshTerrainData({

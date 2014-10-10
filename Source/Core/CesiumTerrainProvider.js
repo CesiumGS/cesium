@@ -12,6 +12,7 @@ define([
         './Event',
         './GeographicTilingScheme',
         './HeightmapTerrainData',
+        './IndexDatatype',
         './loadArrayBuffer',
         './loadJson',
         './QuantizedMeshTerrainData',
@@ -32,6 +33,7 @@ define([
         Event,
         GeographicTilingScheme,
         HeightmapTerrainData,
+        IndexDatatype,
         loadArrayBuffer,
         loadJson,
         QuantizedMeshTerrainData,
@@ -332,15 +334,6 @@ define([
             heightBuffer[i] = height;
         }
 
-        function createIndexBuffer(srcBuffer, byteOffset, length) {
-            if (vertexCount <= 64 * 1024) {
-                return new Uint16Array(srcBuffer, byteOffset, length);
-            } else {
-                // TODO: check flag on provider to determine if 32 bit indices are supported on the client
-                return new Uint32Array(srcBuffer, byteOffset, length);
-            }
-        }
-
         // skip over any additional padding that was added for 2/4 byte alignment
         if (pos % bytesPerIndex !== 0) {
             pos += (bytesPerIndex - (pos % bytesPerIndex));
@@ -348,7 +341,7 @@ define([
 
         var triangleCount = view.getUint32(pos, true);
         pos += Uint32Array.BYTES_PER_ELEMENT;
-        var indices = createIndexBuffer(buffer, pos, triangleCount * triangleElements);
+        var indices = IndexDatatype.createTypedArrayFromArrayBuffer(vertexCount, buffer, pos, triangleCount * triangleElements);
         pos += triangleCount * triangleLength;
 
         // High water mark decoding based on decompressIndices_ in webgl-loader's loader.js.
@@ -365,22 +358,22 @@ define([
 
         var westVertexCount = view.getUint32(pos, true);
         pos += Uint32Array.BYTES_PER_ELEMENT;
-        var westIndices = createIndexBuffer(buffer, pos, westVertexCount);
+        var westIndices = IndexDatatype.createTypedArrayFromArrayBuffer(vertexCount, buffer, pos, westVertexCount);
         pos += westVertexCount * bytesPerIndex;
 
         var southVertexCount = view.getUint32(pos, true);
         pos += Uint32Array.BYTES_PER_ELEMENT;
-        var southIndices = createIndexBuffer(buffer, pos, southVertexCount);
+        var southIndices = IndexDatatype.createTypedArrayFromArrayBuffer(vertexCount, buffer, pos, southVertexCount);
         pos += southVertexCount * bytesPerIndex;
 
         var eastVertexCount = view.getUint32(pos, true);
         pos += Uint32Array.BYTES_PER_ELEMENT;
-        var eastIndices = createIndexBuffer(buffer, pos, eastVertexCount);
+        var eastIndices = IndexDatatype.createTypedArrayFromArrayBuffer(vertexCount, buffer, pos, eastVertexCount);
         pos += eastVertexCount * bytesPerIndex;
 
         var northVertexCount = view.getUint32(pos, true);
         pos += Uint32Array.BYTES_PER_ELEMENT;
-        var northIndices = createIndexBuffer(buffer, pos, northVertexCount);
+        var northIndices = IndexDatatype.createTypedArrayFromArrayBuffer(vertexCount, buffer, pos, northVertexCount);
         pos += northVertexCount * bytesPerIndex;
 
         var encodedNormalBuffer;
