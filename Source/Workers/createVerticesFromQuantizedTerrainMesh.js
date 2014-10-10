@@ -105,7 +105,7 @@ define([
 
         return {
             vertices : vertexBuffer.buffer,
-            indices : indexBuffer.buffer,
+            indices : indexBuffer.buffer
         };
     }
 
