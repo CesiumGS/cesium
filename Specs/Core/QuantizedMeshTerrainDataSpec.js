@@ -8,6 +8,7 @@ defineSuite([
         'Core/Math',
         'Core/TerrainData',
         'Core/TerrainMesh',
+        'Specs/waitsForPromise',
         'ThirdParty/when'
     ], function(
         QuantizedMeshTerrainData,
@@ -18,6 +19,7 @@ defineSuite([
         CesiumMath,
         TerrainData,
         TerrainMesh,
+        waitsForPromise,
         when) {
      "use strict";
      /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -250,16 +252,9 @@ defineSuite([
              });
 
              var tilingScheme = new GeographicTilingScheme();
-
-             var upsampledPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
-
              var upsampled;
-             when(upsampledPromise, function(result) {
+             waitsForPromise(data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1), function(result) {
                  upsampled = result;
-             });
-
-             waitsFor(function() {
-                 return defined(upsampled);
              });
 
              runs(function() {
@@ -363,17 +358,11 @@ defineSuite([
          });
 
          it('creates specified vertices plus skirt vertices', function() {
-             var promise = data.createMesh(tilingScheme, 0, 0, 0);
-             expect(promise).toBeDefined();
 
              var mesh;
-             when(promise, function(meshResult) {
+             waitsForPromise(data.createMesh(tilingScheme, 0, 0, 0), function(meshResult) {
                  mesh = meshResult;
              });
-
-             waitsFor(function() {
-                 return defined(mesh);
-             }, 'mesh to be created');
 
              runs(function() {
                  expect(mesh).toBeInstanceOf(TerrainMesh);
@@ -419,17 +408,10 @@ defineSuite([
              childTileMask : 15
          });
 
-         var promise = data.createMesh(tilingScheme, 0, 0, 0);
-         expect(promise).toBeDefined();
-
          var mesh;
-         when(promise, function(meshResult) {
+         waitsForPromise(data.createMesh(tilingScheme, 0, 0, 0), function(meshResult) {
              mesh = meshResult;
          });
-
-         waitsFor(function() {
-             return defined(mesh);
-         }, 'mesh to be created');
 
          runs(function() {
              expect(mesh).toBeInstanceOf(TerrainMesh);
