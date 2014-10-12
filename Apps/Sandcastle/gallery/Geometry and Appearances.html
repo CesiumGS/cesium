@@ -431,7 +431,7 @@ var wallOutlineInstance = new Cesium.GeometryInstance({
     }
 });
 
-scene.primitives.add(new Cesium.Primitive({
+primitives.add(new Cesium.Primitive({
     geometryInstances : wallInstance,
     appearance : new Cesium.PerInstanceColorAppearance()
 }));
@@ -821,7 +821,7 @@ wallInstance = new Cesium.GeometryInstance({
     })
 });
 
-scene.primitives.add(new Cesium.Primitive({
+primitives.add(new Cesium.Primitive({
     geometryInstances : wallInstance,
     appearance : new Cesium.MaterialAppearance({
         material : Cesium.Material.fromType('Checkerboard', {
