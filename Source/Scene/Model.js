@@ -466,19 +466,22 @@ define([
      * });
      *
      * @example
-     * // Example 3. Using a cache for resources
-     * var modelCache = new Cesium.ModelResourceCache();
+     * // Example 3. Using a custom cache for resources
+     * var customModelCache = new Cesium.ModelResourceCache();
      * var modelURL = './duck/duck.json';
      * var model1 = scene.primitives.add(Cesium.Model.fromGltf({
      *   url : modelURL,
-     *   cache : modelCache
+     *   cache : customModelCache
      * }));
      * var model2 = scene.primitives.add(Cesium.Model.fromGltf({
      *   url : modelURL,
-     *   cache : modelCache
+     *   cache : customModelCache
      * }));
      *
      */
+     
+    var globalModelCache = new ModelResourceCache();
+     
     Model.fromGltf = function(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.url)) {
@@ -487,19 +490,13 @@ define([
 
         //>>includeEnd('debug');
 
-        var modelResources;
-
-        if (defined(options.cache)){
-            modelResources = options.cache.getModel(options.url);
-        }
+        var modelCache = defaultValue(options.cache, globalModelCache);
+        var  modelResources = modelCache.getModel(options.url);
 
         if (!defined(modelResources))
         {
             modelResources = new ModelResources(options);
-            if (defined(options.cache))
-            {
-                options.cache.putModel(modelResources, options.url);
-            }
+            modelCache.putModel(modelResources, options.url);
         }
 
         options.modelResources = modelResources;

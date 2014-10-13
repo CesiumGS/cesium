@@ -992,7 +992,7 @@ require({
         var demoLink = document.createElement('a');
         demoLink.id = demo.name + tabName;
         demoLink.className = 'linkButton';
-        demoLink.href = 'gallery/' + demo.name + '.html';
+        demoLink.href = 'gallery/' + encodeURIComponent(demo.name) + '.html';
         tab.appendChild(demoLink);
 
         demoLink.onclick = function(e) {
