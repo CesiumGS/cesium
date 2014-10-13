@@ -27,7 +27,7 @@ define([
      *     key3 : ['x', 'y']
      * });
      * // str will be:
-     * // 'key1=some+value&key2=a%2Fb&key3=x&key3=y'
+     * // 'key1=some%20value&key2=a%2Fb&key3=x&key3=y'
      */
     var objectToQuery = function(obj) {
         //>>includeStart('debug', pragmas.debug);
@@ -54,7 +54,6 @@ define([
 
         // trim last &
         result = result.slice(0, -1);
-        result = result.replace(/%20/g, '+');
 
         return result;
     };
