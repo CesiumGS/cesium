@@ -252,12 +252,7 @@ defineSuite([
              });
 
              var tilingScheme = new GeographicTilingScheme();
-             var upsampled;
-             waitsForPromise(data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1), function(result) {
-                 upsampled = result;
-             });
-
-             runs(function() {
+             waitsForPromise(data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1), function(upsampled) {
                  var uBuffer = upsampled._uValues;
                  var vBuffer = upsampled._vValues;
                  var ib = upsampled._indices;
@@ -358,13 +353,7 @@ defineSuite([
          });
 
          it('creates specified vertices plus skirt vertices', function() {
-
-             var mesh;
-             waitsForPromise(data.createMesh(tilingScheme, 0, 0, 0), function(meshResult) {
-                 mesh = meshResult;
-             });
-
-             runs(function() {
+             waitsForPromise(data.createMesh(tilingScheme, 0, 0, 0), function(mesh) {
                  expect(mesh).toBeInstanceOf(TerrainMesh);
                  expect(mesh.vertices.length).toBe(12 * 6); // 4 regular vertices, 8 skirt vertices.
                  expect(mesh.indices.length).toBe(10 * 3); // 2 regular triangles, 8 skirt triangles.
@@ -408,12 +397,7 @@ defineSuite([
              childTileMask : 15
          });
 
-         var mesh;
-         waitsForPromise(data.createMesh(tilingScheme, 0, 0, 0), function(meshResult) {
-             mesh = meshResult;
-         });
-
-         runs(function() {
+         waitsForPromise(data.createMesh(tilingScheme, 0, 0, 0), function(mesh) {
              expect(mesh).toBeInstanceOf(TerrainMesh);
              expect(mesh.indices.BYTES_PER_ELEMENT).toBe(4);
          });
