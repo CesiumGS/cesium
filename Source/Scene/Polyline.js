@@ -60,8 +60,10 @@ define([
             positions = [];
         }
 
+        positions = PolylinePipeline.removeDuplicates(positions);
+
         this._positions = positions;
-        if (this._loop && positions.length > 2 && !Cartesian3.equals(positions[0], positions[positions.length - 1])) {
+        if (this._loop && positions.length > 2) {
             positions.push(Cartesian3.clone(positions[0]));
         }
 
@@ -151,7 +153,8 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                if (this._loop && value.length > 2 && !Cartesian3.equals(value[0], value[value.length - 1])) {
+                value = PolylinePipeline.removeDuplicates(value);
+                if (this._loop && value.length > 2) {
                     value.push(Cartesian3.clone(value[0]));
                 }
 

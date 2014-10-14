@@ -137,6 +137,14 @@ defineSuite([
         expect(p.positions.length).toEqual(2);
     });
 
+    it('removes duplicate positions', function() {
+        var p = polylines.add({
+            positions : [new Cartesian3(0.0, 1.0, 2.0), new Cartesian3(3.0, 4.0, 5.0), new Cartesian3(3.0, 4.0, 5.0)]
+        });
+
+        expect(p.positions.length).toEqual(2);
+    });
+
     it('sets removed polyline properties', function() {
         var p = polylines.add();
         polylines.remove(p);
@@ -1371,6 +1379,13 @@ defineSuite([
         p.positions = positions;
         render(context, frameState, polylines);
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+    });
+
+    it('setting positions property removes duplicates', function() {
+        var p = polylines.add();
+        expect(p.positions.length).toEqual(0);
+        p.positions = [new Cartesian3(0.0, 1.0, 2.0), new Cartesian3(3.0, 4.0, 5.0), new Cartesian3(3.0, 4.0, 5.0)];
+        expect(p.positions.length).toEqual(2);
     });
 
     it('changes polyline width property', function() {
