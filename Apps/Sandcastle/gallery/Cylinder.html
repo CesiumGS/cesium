@@ -30,7 +30,6 @@ function startup(Cesium) {
 // Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
-var primitives = scene.primitives;
 
 // Example 1: Draw a green cylinder and position with
 // a model matrix.
@@ -88,7 +87,7 @@ var redCone = new Cesium.GeometryInstance({
 });
 
 // Add both instances to primitives.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : [greenCylinder, redCone],
     appearance : new Cesium.PerInstanceColorAppearance({
         closed : true,

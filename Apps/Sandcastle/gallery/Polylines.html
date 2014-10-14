@@ -28,8 +28,7 @@ function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
 function createPrimitives(scene) {
-    var primitives = scene.primitives;
-    var polylines = new Cesium.PolylineCollection();
+    var polylines = scene.primitives.add(new Cesium.PolylineCollection());
 
     // A simple polyline with two points.
     var polyline = polylines.add({
@@ -85,11 +84,9 @@ function createPrimitives(scene) {
     });
     Sandcastle.declare(loopPolyline);   // For highlighting on mouseover in Sandcastle.
 
-    primitives.add(polylines);
-
     // Draw a line in a local reference frame
     // The arrow points to the east, i.e. along the local x-axis.
-    var localPolylines = new Cesium.PolylineCollection();
+    var localPolylines = scene.primitives.add(new Cesium.PolylineCollection());
     var center = Cesium.Cartesian3.fromDegrees(-80.0, 35.0);
     localPolylines.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
     
@@ -102,7 +99,6 @@ function createPrimitives(scene) {
         material : Cesium.Material.fromType(Cesium.Material.PolylineArrowType)
     });
     Sandcastle.declare(localPolyline);  // For highlighting on mouseover in Sandcastle.
-    primitives.add(localPolylines);
 }
 
 var viewer = new Cesium.Viewer('cesiumContainer');

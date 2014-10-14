@@ -29,7 +29,7 @@ function startup(Cesium) {
 //Sandcastle_Begin
 // Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
-var primitives = viewer.scene.primitives;
+var scene = viewer.scene;
 
 // Draw a red box and position it on the globe surface.
 
@@ -56,7 +56,7 @@ var boxGeometryInstance = new Cesium.GeometryInstance({
     }
 });
 // Add the geometry instance to primitives.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : boxGeometryInstance,
     appearance : new Cesium.PerInstanceColorAppearance({
         closed: true

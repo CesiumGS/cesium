@@ -70,11 +70,11 @@ defineSuite([
 
     it('discards tiles when the ImageryProviders discard policy says to do so', function() {
         loadImage.createImage = function(url, crossOrigin, deferred) {
-            return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
         };
 
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
+            loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
         };
 
         var discardPolicy = new CustomDiscardPolicy();
@@ -138,11 +138,11 @@ defineSuite([
         };
 
         loadImage.createImage = function(url, crossOrigin, deferred) {
-            return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
         };
 
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
+            loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
         };
 
         var provider = new BingMapsImageryProvider({
@@ -206,149 +206,194 @@ defineSuite([
         expect(layer.isDestroyed()).toEqual(true);
     });
 
-    it('createTileImagerySkeletons handles a base layer that does not cover the entire globe', function() {
-        var provider = new TileMapServiceImageryProvider({
-            url : 'Data/TMS/SmallArea'
+    describe('createTileImagerySkeletons', function() {
+        it('handles a base layer that does not cover the entire globe', function() {
+            var provider = new TileMapServiceImageryProvider({
+                url : 'Data/TMS/SmallArea'
+            });
+
+            var layers = new ImageryLayerCollection();
+            var layer = layers.addImageryProvider(provider);
+            var terrainProvider = new EllipsoidTerrainProvider();
+
+            waitsFor(function() {
+                return provider.ready && terrainProvider.ready;
+            }, 'imagery provider to become ready');
+
+            runs(function() {
+                var tiles = QuadtreeTile.createLevelZeroTiles(terrainProvider.tilingScheme);
+                tiles[0].data = new GlobeSurfaceTile();
+                tiles[1].data = new GlobeSurfaceTile();
+
+                layer._createTileImagerySkeletons(tiles[0], terrainProvider);
+                layer._createTileImagerySkeletons(tiles[1], terrainProvider);
+
+                // Both tiles should have imagery from this layer completely covering them.
+                expect(tiles[0].data.imagery.length).toBe(4);
+                expect(tiles[0].data.imagery[0].textureCoordinateRectangle.x).toBe(0.0);
+                expect(tiles[0].data.imagery[0].textureCoordinateRectangle.w).toBe(1.0);
+                expect(tiles[0].data.imagery[1].textureCoordinateRectangle.x).toBe(0.0);
+                expect(tiles[0].data.imagery[1].textureCoordinateRectangle.y).toBe(0.0);
+                expect(tiles[0].data.imagery[2].textureCoordinateRectangle.z).toBe(1.0);
+                expect(tiles[0].data.imagery[2].textureCoordinateRectangle.w).toBe(1.0);
+                expect(tiles[0].data.imagery[3].textureCoordinateRectangle.y).toBe(0.0);
+                expect(tiles[0].data.imagery[3].textureCoordinateRectangle.z).toBe(1.0);
+
+                expect(tiles[1].data.imagery.length).toBe(2);
+                expect(tiles[1].data.imagery[0].textureCoordinateRectangle.x).toBe(0.0);
+                expect(tiles[1].data.imagery[0].textureCoordinateRectangle.w).toBe(1.0);
+                expect(tiles[1].data.imagery[0].textureCoordinateRectangle.z).toBe(1.0);
+                expect(tiles[1].data.imagery[1].textureCoordinateRectangle.x).toBe(0.0);
+                expect(tiles[1].data.imagery[1].textureCoordinateRectangle.y).toBe(0.0);
+                expect(tiles[1].data.imagery[1].textureCoordinateRectangle.z).toBe(1.0);
+            });
         });
 
-        var layers = new ImageryLayerCollection();
-        var layer = layers.addImageryProvider(provider);
-        var terrainProvider = new EllipsoidTerrainProvider();
+        it('handles a non-base layer that does not cover the entire globe', function() {
+            var baseProvider = new SingleTileImageryProvider({
+                url : 'Data/Images/Green4x4.png'
+            });
 
-        waitsFor(function() {
-            return provider.ready && terrainProvider.ready;
-        }, 'imagery provider to become ready');
+            var provider = new TileMapServiceImageryProvider({
+                url : 'Data/TMS/SmallArea'
+            });
 
-        runs(function() {
-            var tiles = QuadtreeTile.createLevelZeroTiles(terrainProvider.tilingScheme);
-            tiles[0].data = new GlobeSurfaceTile();
-            tiles[1].data = new GlobeSurfaceTile();
+            var layers = new ImageryLayerCollection();
+            layers.addImageryProvider(baseProvider);
+            var layer = layers.addImageryProvider(provider);
+            var terrainProvider = new EllipsoidTerrainProvider();
 
-            layer._createTileImagerySkeletons(tiles[0], terrainProvider);
-            layer._createTileImagerySkeletons(tiles[1], terrainProvider);
+            waitsFor(function() {
+                return provider.ready && terrainProvider.ready;
+            }, 'imagery provider to become ready');
 
-            // Both tiles should have imagery from this layer completely covering them.
-            expect(tiles[0].data.imagery.length).toBe(4);
-            expect(tiles[0].data.imagery[0].textureCoordinateRectangle.x).toBe(0.0);
-            expect(tiles[0].data.imagery[0].textureCoordinateRectangle.w).toBe(1.0);
-            expect(tiles[0].data.imagery[1].textureCoordinateRectangle.x).toBe(0.0);
-            expect(tiles[0].data.imagery[1].textureCoordinateRectangle.y).toBe(0.0);
-            expect(tiles[0].data.imagery[2].textureCoordinateRectangle.z).toBe(1.0);
-            expect(tiles[0].data.imagery[2].textureCoordinateRectangle.w).toBe(1.0);
-            expect(tiles[0].data.imagery[3].textureCoordinateRectangle.y).toBe(0.0);
-            expect(tiles[0].data.imagery[3].textureCoordinateRectangle.z).toBe(1.0);
+            runs(function() {
+                var tiles = QuadtreeTile.createLevelZeroTiles(terrainProvider.tilingScheme);
+                tiles[0].data = new GlobeSurfaceTile();
+                tiles[1].data = new GlobeSurfaceTile();
 
-            expect(tiles[1].data.imagery.length).toBe(2);
-            expect(tiles[1].data.imagery[0].textureCoordinateRectangle.x).toBe(0.0);
-            expect(tiles[1].data.imagery[0].textureCoordinateRectangle.w).toBe(1.0);
-            expect(tiles[1].data.imagery[0].textureCoordinateRectangle.z).toBe(1.0);
-            expect(tiles[1].data.imagery[1].textureCoordinateRectangle.x).toBe(0.0);
-            expect(tiles[1].data.imagery[1].textureCoordinateRectangle.y).toBe(0.0);
-            expect(tiles[1].data.imagery[1].textureCoordinateRectangle.z).toBe(1.0);
-        });
-    });
+                layer._createTileImagerySkeletons(tiles[0], terrainProvider);
+                layer._createTileImagerySkeletons(tiles[1], terrainProvider);
 
-    it('createTileImagerySkeletons handles a non-base layer that does not cover the entire globe', function() {
-        var baseProvider = new SingleTileImageryProvider({
-            url : 'Data/Images/Green4x4.png'
-        });
+                // Only the western tile should have imagery from this layer.
+                // And the imagery should not cover it completely.
+                expect(tiles[0].data.imagery.length).toBe(4);
+                expect(tiles[0].data.imagery[0].textureCoordinateRectangle.x).not.toBe(0.0);
+                expect(tiles[0].data.imagery[0].textureCoordinateRectangle.y).not.toBe(0.0);
+                expect(tiles[0].data.imagery[0].textureCoordinateRectangle.z).not.toBe(1.0);
+                expect(tiles[0].data.imagery[0].textureCoordinateRectangle.w).not.toBe(1.0);
+                expect(tiles[0].data.imagery[1].textureCoordinateRectangle.x).not.toBe(0.0);
+                expect(tiles[0].data.imagery[1].textureCoordinateRectangle.y).not.toBe(0.0);
+                expect(tiles[0].data.imagery[1].textureCoordinateRectangle.z).not.toBe(1.0);
+                expect(tiles[0].data.imagery[1].textureCoordinateRectangle.w).not.toBe(1.0);
+                expect(tiles[0].data.imagery[2].textureCoordinateRectangle.x).not.toBe(0.0);
+                expect(tiles[0].data.imagery[2].textureCoordinateRectangle.y).not.toBe(0.0);
+                expect(tiles[0].data.imagery[2].textureCoordinateRectangle.z).not.toBe(1.0);
+                expect(tiles[0].data.imagery[2].textureCoordinateRectangle.w).not.toBe(1.0);
+                expect(tiles[0].data.imagery[3].textureCoordinateRectangle.x).not.toBe(0.0);
+                expect(tiles[0].data.imagery[3].textureCoordinateRectangle.y).not.toBe(0.0);
+                expect(tiles[0].data.imagery[3].textureCoordinateRectangle.z).not.toBe(1.0);
+                expect(tiles[0].data.imagery[3].textureCoordinateRectangle.w).not.toBe(1.0);
 
-        var provider = new TileMapServiceImageryProvider({
-            url : 'Data/TMS/SmallArea'
-        });
-
-        var layers = new ImageryLayerCollection();
-        layers.addImageryProvider(baseProvider);
-        var layer = layers.addImageryProvider(provider);
-        var terrainProvider = new EllipsoidTerrainProvider();
-
-        waitsFor(function() {
-            return provider.ready && terrainProvider.ready;
-        }, 'imagery provider to become ready');
-
-        runs(function() {
-            var tiles = QuadtreeTile.createLevelZeroTiles(terrainProvider.tilingScheme);
-            tiles[0].data = new GlobeSurfaceTile();
-            tiles[1].data = new GlobeSurfaceTile();
-
-            layer._createTileImagerySkeletons(tiles[0], terrainProvider);
-            layer._createTileImagerySkeletons(tiles[1], terrainProvider);
-
-            // Only the western tile should have imagery from this layer.
-            // And the imagery should not cover it completely.
-            expect(tiles[0].data.imagery.length).toBe(4);
-            expect(tiles[0].data.imagery[0].textureCoordinateRectangle.x).not.toBe(0.0);
-            expect(tiles[0].data.imagery[0].textureCoordinateRectangle.y).not.toBe(0.0);
-            expect(tiles[0].data.imagery[0].textureCoordinateRectangle.z).not.toBe(1.0);
-            expect(tiles[0].data.imagery[0].textureCoordinateRectangle.w).not.toBe(1.0);
-            expect(tiles[0].data.imagery[1].textureCoordinateRectangle.x).not.toBe(0.0);
-            expect(tiles[0].data.imagery[1].textureCoordinateRectangle.y).not.toBe(0.0);
-            expect(tiles[0].data.imagery[1].textureCoordinateRectangle.z).not.toBe(1.0);
-            expect(tiles[0].data.imagery[1].textureCoordinateRectangle.w).not.toBe(1.0);
-            expect(tiles[0].data.imagery[2].textureCoordinateRectangle.x).not.toBe(0.0);
-            expect(tiles[0].data.imagery[2].textureCoordinateRectangle.y).not.toBe(0.0);
-            expect(tiles[0].data.imagery[2].textureCoordinateRectangle.z).not.toBe(1.0);
-            expect(tiles[0].data.imagery[2].textureCoordinateRectangle.w).not.toBe(1.0);
-            expect(tiles[0].data.imagery[3].textureCoordinateRectangle.x).not.toBe(0.0);
-            expect(tiles[0].data.imagery[3].textureCoordinateRectangle.y).not.toBe(0.0);
-            expect(tiles[0].data.imagery[3].textureCoordinateRectangle.z).not.toBe(1.0);
-            expect(tiles[0].data.imagery[3].textureCoordinateRectangle.w).not.toBe(1.0);
-
-            expect(tiles[1].data.imagery.length).toBe(0);
-        });
-    });
-
-    it('createTileImagerySkeletons honors the minimumTerrainLevel and maximumTerrainLevel properties', function() {
-        var provider = new SingleTileImageryProvider({
-            url : 'Data/Images/Green4x4.png'
+                expect(tiles[1].data.imagery.length).toBe(0);
+            });
         });
 
-        var layer = new ImageryLayer(provider, {
-            minimumTerrainLevel : 2,
-            maximumTerrainLevel : 4
+        it('honors the minimumTerrainLevel and maximumTerrainLevel properties', function() {
+            var provider = new SingleTileImageryProvider({
+                url : 'Data/Images/Green4x4.png'
+            });
+
+            var layer = new ImageryLayer(provider, {
+                minimumTerrainLevel : 2,
+                maximumTerrainLevel : 4
+            });
+
+            var layers = new ImageryLayerCollection();
+            layers.add(layer);
+
+            var terrainProvider = new EllipsoidTerrainProvider();
+
+            waitsFor(function() {
+                return provider.ready && terrainProvider.ready;
+            }, 'imagery provider to become ready');
+
+            runs(function() {
+                var level0 = QuadtreeTile.createLevelZeroTiles(terrainProvider.tilingScheme);
+                var level1 = level0[0].children;
+                var level2 = level1[0].children;
+                var level3 = level2[0].children;
+                var level4 = level3[0].children;
+                var level5 = level4[0].children;
+
+                level0[0].data = new GlobeSurfaceTile();
+                level1[0].data = new GlobeSurfaceTile();
+                level2[0].data = new GlobeSurfaceTile();
+                level3[0].data = new GlobeSurfaceTile();
+                level4[0].data = new GlobeSurfaceTile();
+                level5[0].data = new GlobeSurfaceTile();
+
+                layer._createTileImagerySkeletons(level0[0], terrainProvider);
+                expect(level0[0].data.imagery.length).toBe(0);
+
+                layer._createTileImagerySkeletons(level1[0], terrainProvider);
+                expect(level1[0].data.imagery.length).toBe(0);
+
+                layer._createTileImagerySkeletons(level2[0], terrainProvider);
+                expect(level2[0].data.imagery.length).toBe(1);
+
+                layer._createTileImagerySkeletons(level3[0], terrainProvider);
+                expect(level3[0].data.imagery.length).toBe(1);
+
+                layer._createTileImagerySkeletons(level4[0], terrainProvider);
+                expect(level4[0].data.imagery.length).toBe(1);
+
+                layer._createTileImagerySkeletons(level5[0], terrainProvider);
+                expect(level5[0].data.imagery.length).toBe(0);
+            });
         });
 
-        var layers = new ImageryLayerCollection();
-        layers.add(layer);
+        it('honors limited extent of non-base ImageryLayer', function() {
+            var provider = new SingleTileImageryProvider({
+                url : 'Data/Images/Green4x4.png'
+            });
 
-        var terrainProvider = new EllipsoidTerrainProvider();
+            var layer = new ImageryLayer(provider, {
+                rectangle : Rectangle.fromDegrees(7.2, 60.9, 9.0, 61.7)
+            });
 
-        waitsFor(function() {
-            return provider.ready && terrainProvider.ready;
-        }, 'imagery provider to become ready');
+            var layers = new ImageryLayerCollection();
+            layers.addImageryProvider(new SingleTileImageryProvider({
+                url : 'Data/Images/Red16x16.png'
+            }));
+            layers.add(layer);
 
-        runs(function() {
-            var level0 = QuadtreeTile.createLevelZeroTiles(terrainProvider.tilingScheme);
-            var level1 = level0[0].children;
-            var level2 = level1[0].children;
-            var level3 = level2[0].children;
-            var level4 = level3[0].children;
-            var level5 = level4[0].children;
+            var terrainProvider = new EllipsoidTerrainProvider();
 
-            level0[0].data = new GlobeSurfaceTile();
-            level1[0].data = new GlobeSurfaceTile();
-            level2[0].data = new GlobeSurfaceTile();
-            level3[0].data = new GlobeSurfaceTile();
-            level4[0].data = new GlobeSurfaceTile();
-            level5[0].data = new GlobeSurfaceTile();
+            waitsFor(function() {
+                return provider.ready && terrainProvider.ready;
+            }, 'imagery provider to become ready');
 
-            layer._createTileImagerySkeletons(level0[0], terrainProvider);
-            expect(level0[0].data.imagery.length).toBe(0);
+            runs(function() {
+                var tiles = QuadtreeTile.createLevelZeroTiles(terrainProvider.tilingScheme);
+                tiles[0].data = new GlobeSurfaceTile();
+                tiles[1].data = new GlobeSurfaceTile();
 
-            layer._createTileImagerySkeletons(level1[0], terrainProvider);
-            expect(level1[0].data.imagery.length).toBe(0);
+                layer._createTileImagerySkeletons(tiles[0], terrainProvider);
+                layer._createTileImagerySkeletons(tiles[1], terrainProvider);
 
-            layer._createTileImagerySkeletons(level2[0], terrainProvider);
-            expect(level2[0].data.imagery.length).toBe(1);
+                // The western hemisphere should not have any imagery tiles mapped to it.
+                expect(tiles[0].data.imagery.length).toBe(0);
 
-            layer._createTileImagerySkeletons(level3[0], terrainProvider);
-            expect(level3[0].data.imagery.length).toBe(1);
+                // The eastern hemisphere should have one tile with limited extent.
+                expect(tiles[1].data.imagery.length).toBe(1);
 
-            layer._createTileImagerySkeletons(level4[0], terrainProvider);
-            expect(level4[0].data.imagery.length).toBe(1);
-
-            layer._createTileImagerySkeletons(level5[0], terrainProvider);
-            expect(level5[0].data.imagery.length).toBe(0);
+                var textureCoordinates = tiles[1].data.imagery[0].textureCoordinateRectangle;
+                expect(textureCoordinates.x).toBeGreaterThan(0.0);
+                expect(textureCoordinates.y).toBeGreaterThan(0.0);
+                expect(textureCoordinates.z).toBeLessThan(1.0);
+                expect(textureCoordinates.w).toBeLessThan(1.0);
+            });
         });
     });
 }, 'WebGL');
