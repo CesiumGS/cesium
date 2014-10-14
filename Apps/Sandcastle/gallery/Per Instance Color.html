@@ -28,7 +28,7 @@ function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
-var primitives = viewer.scene.primitives;
+var scene = viewer.scene;
 
 var instances = [];
 
@@ -44,7 +44,7 @@ for (var i = 0; i < 4; i++) {
     }));
 }
 
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : instances,
     appearance : new Cesium.PerInstanceColorAppearance()
 }));

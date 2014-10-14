@@ -28,10 +28,10 @@ function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
-var primitives = viewer.scene.primitives;
+var scene = viewer.scene;
 
 // Checkerboard Wall
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : new Cesium.GeometryInstance({
         geometry : new Cesium.WallGeometry({
             positions : Cesium.Cartesian3.fromDegreesArrayHeights([
@@ -46,7 +46,7 @@ primitives.add(new Cesium.Primitive({
 }));
 
 // Striped Wall
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : new Cesium.GeometryInstance({
         geometry : new Cesium.WallGeometry({
             positions : Cesium.Cartesian3.fromDegreesArrayHeights([
