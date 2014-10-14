@@ -553,6 +553,15 @@ define([
         return CesiumMath.PI_OVER_TWO - CesiumMath.acosClamped(Cartesian3.dot(camera.direction, direction));
     }
 
+    function getRollCV(camera) {
+        if (CesiumMath.equalsEpsilon(Math.abs(camera.up.z), 1.0, CesiumMath.EPSILON6)) {
+            return 0.0;
+        }
+
+        var right = camera.right;
+        return Math.atan2(right.z, right.x);
+    }
+
     function getRoll3D(camera) {
         var ellipsoid = camera._projection.ellipsoid;
         var toFixedFrame = Transforms.eastNorthUpToFixedFrame(camera.position, ellipsoid, scratchHeadingMatrix4);
@@ -763,7 +772,9 @@ define([
          */
         roll : {
             get : function() {
-                if (this._mode === SceneMode.COLUMBUS_VIEW || this._mode === SceneMode.SCENE3D) {
+                if (this._mode === SceneMode.COLUMBUS_VIEW) {
+                    return getRollCV(this);
+                } else if (this._mode === SceneMode.SCENE3D) {
                     return getRoll3D(this);
                 }
 
@@ -779,7 +790,7 @@ define([
                 //>>includeEnd('debug');
 
                 if (this._mode === SceneMode.COLUMBUS_VIEW || this._mode === SceneMode.SCENE3D) {
-                    angle = getRoll3D(this) - angle;
+                    angle = angle - this.roll;
                     this.look(this.direction, angle);
                 }
             }

@@ -5,6 +5,8 @@ Change Log
 
 * Fixed a bug that caused non-base imagery layers with a limited `rectangle` to be stretched to the edges of imagery tiles. [#416](https://github.com/AnalyticalGraphicsInc/cesium/issues/416)
 * Added support to the `CesiumTerrainProvider` for handling terrain tiles that define more than 64k vertices.
+* Clamp of `Camera.tilt` to [-pi / 2, pi / 2] instead of [0, pi / 2].
+* Add `Camera.roll`.
 
 ### 1.2 - 2014-10-01
 
@@ -22,8 +24,6 @@ Change Log
 * Added a constructor option to `Scene`, `CesiumWidget`, and `Viewer` to disable order independent translucency.
 * Added support for WKID 102113 (equivalent to 102100) to `ArcGisMapServerImageryProvider`.
 * Added `TerrainProvider.getTileDataAvailable` to improve tile loading performance when camera starts near globe.
-* Clamp of `Camera.tilt` to [-pi / 2, pi / 2] instead of [0, pi / 2].
-* Add `Camera.roll`.
 * Added `Globe.showWaterEffect` to enable/disable the water effect for supported terrain providers.
 * Added `Globe.baseColor` to set the color of the globe when no imagery is available.
 * Changed default `GeoJSON` Point feature graphics to use `BillboardGraphics` with a blue map pin instead of color `PointGraphics`.
