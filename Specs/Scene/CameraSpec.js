@@ -258,6 +258,12 @@ defineSuite([
     it('get roll in CV', function() {
         camera._mode = SceneMode.COLUMBUS_VIEW;
 
+        camera.position = new Cartesian3(100.0, 0.0, 100.0);
+        camera.direction = new Cartesian3(0.0, 1.0, -1.0);
+        Cartesian3.normalize(camera.direction, camera.direction);
+        camera.right = Cartesian3.cross(camera.direction, Cartesian3.UNIT_Z, new Cartesian3());
+        camera.up = Cartesian3.cross(camera.right, camera.direction, new Cartesian3());
+
         var roll = Math.atan2(right.z, right.x);
         expect(camera.roll).toEqual(roll);
     });
@@ -266,6 +272,13 @@ defineSuite([
         camera._mode = SceneMode.SCENE3D;
 
         var ellipsoid = Ellipsoid.WGS84;
+        camera.position = Cartesian3.clone(Cartesian3.UNIT_X);
+        Cartesian3.multiplyByScalar(camera.position, ellipsoid.maximumRadius + 100.0, camera.position);
+        camera.direction = new Cartesian3(-1.0, 0.0, 1.0);
+        Cartesian3.normalize(camera.direction, camera.direction);
+        camera.right = Cartesian3.cross(camera.direction, Cartesian3.UNIT_Z, new Cartesian3());
+        camera.up = Cartesian3.cross(camera.right, camera.direction, new Cartesian3());
+
         var toFixedFrame = Transforms.eastNorthUpToFixedFrame(camera.position, ellipsoid);
         var transform = Matrix4.getRotation(toFixedFrame, new Matrix3());
         Matrix3.transpose(transform, transform);

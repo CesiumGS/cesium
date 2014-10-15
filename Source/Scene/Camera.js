@@ -554,8 +554,8 @@ define([
     }
 
     function getRollCV(camera) {
-        if (CesiumMath.equalsEpsilon(Math.abs(camera.up.z), 1.0, CesiumMath.EPSILON6)) {
-            return 0.0;
+        if (CesiumMath.equalsEpsilon(Math.abs(camera.direction.z), 1.0, CesiumMath.EPSILON6)) {
+            return undefined;
         }
 
         var right = camera.right;
@@ -568,9 +568,9 @@ define([
         var transform = Matrix4.getRotation(toFixedFrame, scratchHeadingMatrix3);
         Matrix3.transpose(transform, transform);
 
-        var up = Matrix3.multiplyByVector(transform, camera.up, scratchHeadingCartesian3);
-        if (CesiumMath.equalsEpsilon(Math.abs(up.z), 1.0, CesiumMath.EPSILON6)) {
-            return 0.0;
+        var direction = Matrix3.multiplyByVector(transform, camera.direction, scratchHeadingCartesian3);
+        if (CesiumMath.equalsEpsilon(Math.abs(direction.z), 1.0, CesiumMath.EPSILON3)) {
+            return undefined;
         }
 
         var right = Matrix3.multiplyByVector(transform, camera.right, scratchHeadingCartesian3);
@@ -790,8 +790,11 @@ define([
                 //>>includeEnd('debug');
 
                 if (this._mode === SceneMode.COLUMBUS_VIEW || this._mode === SceneMode.SCENE3D) {
-                    angle = angle - this.roll;
-                    this.look(this.direction, angle);
+                    var roll = this.roll;
+                    if (defined(roll)) {
+                        angle = angle - roll;
+                        this.look(this.direction, angle);
+                    }
                 }
             }
         }
