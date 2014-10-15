@@ -191,7 +191,10 @@ a.linkButton:focus, a.linkButton:hover {
     background-color: #9ED3FF !important;
 }
 
-.CodeMirror pre.errorMarker {
+.gutter {
+}
+
+.errorMarker {
     color: #222;
     font-weight: bold;
     background: #F42;
@@ -202,7 +205,7 @@ a.linkButton:focus, a.linkButton:hover {
     background: rgba(200, 50, 0, 0.2);
 }
 
-.CodeMirror pre.hintMarker {
+.hintMarker {
     color: #222;
     font-weight: bold;
     background: #FE2;
@@ -213,7 +216,7 @@ a.linkButton:focus, a.linkButton:hover {
     background: rgba(200, 200, 0, 0.2);
 }
 
-.CodeMirror pre.highlightMarker {
+.highlightMarker {
     color: #222;
     font-weight: bold;
     background: #2E2;
@@ -224,7 +227,7 @@ a.linkButton:focus, a.linkButton:hover {
     background: rgba(0, 200, 0, 0.2);
 }
 
-.CodeMirror pre.searchMarker {
+.searchMarker {
     color: #222;
     font-weight: bold;
     background: #CEF;
