@@ -448,18 +448,12 @@ require({
         }
     };
 
-    CodeMirror.commands.autocomplete = function(cm) {
-        CodeMirror.simpleHint(cm, CodeMirror.cesiumHint);
-    };
-
     jsEditor = CodeMirror.fromTextArea(document.getElementById('code'), {
         mode : 'javascript',
-        gutters: ['gutter'],
+        gutters : ['gutter'],
         lineNumbers : true,
         matchBrackets : true,
         indentUnit : 4,
-        onCursorActivity : onCursorActivity,
-        onChange : scheduleHint,
         extraKeys : {
             'Ctrl-Space' : 'autocomplete',
             'F8' : 'runCesium',
@@ -467,6 +461,9 @@ require({
             'Shift-Tab' : 'indentLess'
         }
     });
+
+    jsEditor.on('cursorActivity', onCursorActivity);
+    jsEditor.on('change', scheduleHint);
 
     htmlEditor = CodeMirror.fromTextArea(document.getElementById('htmlBody'), {
         mode : 'text/html',
