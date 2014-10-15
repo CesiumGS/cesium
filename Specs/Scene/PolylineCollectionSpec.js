@@ -89,7 +89,7 @@ defineSuite([
         expect(p.positions[0]).toEqual(new Cartesian3(1.0, 2.0, 3.0));
         expect(p.positions[1]).toEqual(new Cartesian3(4.0, 5.0, 6.0));
         expect(p.positions[2]).toEqual(new Cartesian3(7.0, 8.0, 9.0));
-        expect(p.positions.length).toEqual(4);
+        expect(p.positions.length).toEqual(3);
         expect(p.loop).toEqual(true);
         expect(p.width).toEqual(2);
         expect(p.material.uniforms.color).toEqual(material.uniforms.color);
@@ -111,7 +111,7 @@ defineSuite([
         expect(p.positions[0]).toEqual(new Cartesian3(1.0, 2.0, 3.0));
         expect(p.positions[1]).toEqual(new Cartesian3(4.0, 5.0, 6.0));
         expect(p.positions[2]).toEqual(new Cartesian3(7.0, 8.0, 9.0));
-        expect(p.positions.length).toEqual(4);
+        expect(p.positions.length).toEqual(3);
         expect(p.loop).toEqual(true);
         expect(p.width).toEqual(2);
         expect(p.material.uniforms.color).toEqual(material.uniforms.color);
@@ -133,14 +133,6 @@ defineSuite([
             positions : [new Cartesian3(0.0, 1.0, 2.0), new Cartesian3(3.0, 4.0, 5.0)]
         });
         p.loop = true;
-
-        expect(p.positions.length).toEqual(2);
-    });
-
-    it('removes duplicate positions', function() {
-        var p = polylines.add({
-            positions : [new Cartesian3(0.0, 1.0, 2.0), new Cartesian3(3.0, 4.0, 5.0), new Cartesian3(3.0, 4.0, 5.0)]
-        });
 
         expect(p.positions.length).toEqual(2);
     });
@@ -421,6 +413,39 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+    });
+
+    it('renders polylines with duplicate positions at construction', function() {
+        var p = polylines.add({
+            positions : [
+                         new Cartesian3(0.0, -1.0, 0.0),
+                         new Cartesian3(0.0, 1.0, 0.0),
+                         new Cartesian3(0.0, 1.0, 0.0),
+                         new Cartesian3(0.0, 2.0, 0.0)
+            ]
+        });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        render(context, frameState, polylines);
+        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+    });
+
+    it('renders polylines with duplicate positions after setting positions', function() {
+        var p = polylines.add();
+        p.positions = [
+                       new Cartesian3(0.0, -1.0, 0.0),
+                       new Cartesian3(0.0, 1.0, 0.0),
+                       new Cartesian3(0.0, 1.0, 0.0),
+                       new Cartesian3(0.0, 2.0, 0.0)
+        ];
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        render(context, frameState, polylines);
+        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
     });
 
     it('A polyline that used to cross the IDL but now does not, triggers vertex creation (This code used to crash)', function() {
@@ -1379,13 +1404,6 @@ defineSuite([
         p.positions = positions;
         render(context, frameState, polylines);
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
-    });
-
-    it('setting positions property removes duplicates', function() {
-        var p = polylines.add();
-        expect(p.positions.length).toEqual(0);
-        p.positions = [new Cartesian3(0.0, 1.0, 2.0), new Cartesian3(3.0, 4.0, 5.0), new Cartesian3(3.0, 4.0, 5.0)];
-        expect(p.positions.length).toEqual(2);
     });
 
     it('changes polyline width property', function() {

@@ -921,7 +921,7 @@ define([
         var length = polylines.length;
         for ( var i = 0; i < length; ++i) {
             var p = polylines[i];
-            if (p.positions.length > 1) {
+            if (p._actualPositions.length > 1) {
                 p.update();
                 var material = p.material;
                 var value = polylineBuckets[material.type];
@@ -1043,7 +1043,7 @@ define([
     PolylineBucket.prototype.getPolylinePositionsLength = function(polyline) {
         var length;
         if (this.mode === SceneMode.SCENE3D || !intersectsIDL(polyline)) {
-            length = polyline.positions.length;
+            length = polyline._actualPositions.length;
             return length * 4.0 - 4.0;
         }
 
@@ -1251,7 +1251,7 @@ define([
             var segments;
             if (this.mode === SceneMode.SCENE3D) {
                 segments = scratchSegmentLengths;
-                var positionsLength = polyline.positions.length;
+                var positionsLength = polyline._actualPositions.length;
                 if (positionsLength > 0) {
                     segments[0] = positionsLength;
                 } else {
@@ -1338,7 +1338,7 @@ define([
     var scratchLengths = new Array(1);
     var pscratch = new Cartesian3();
     PolylineBucket.prototype.getSegments = function(polyline, projection) {
-        var positions = polyline.positions;
+        var positions = polyline._actualPositions;
 
         if (this.mode === SceneMode.SCENE3D) {
             scratchLengths[0] = positions.length;
