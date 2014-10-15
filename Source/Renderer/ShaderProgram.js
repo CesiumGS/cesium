@@ -693,6 +693,10 @@ define([
             log = gl.getProgramInfoLog(program);
             gl.deleteProgram(program);
             console.error('[GL] Shader program link log: ' + log);
+            if (defined(debugShaders)) {
+                console.error('[GL] Translated vertex shader source:\n' + debugShaders.getTranslatedShaderSource(vertexShader));
+                console.error('[GL] Translated fragment shader source:\n' + debugShaders.getTranslatedShaderSource(fragmentShader));
+            }
             throw new RuntimeError('Program failed to link.  Link log: ' + log);
         }
 
