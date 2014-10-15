@@ -274,6 +274,8 @@ define([
         this._maximumDrawBuffers = defined(this._drawBuffers) ? gl.getParameter(this._drawBuffers.MAX_DRAW_BUFFERS_WEBGL) : 1;
         this._maximumColorAttachments = defined(this._drawBuffers) ? gl.getParameter(this._drawBuffers.MAX_COLOR_ATTACHMENTS_WEBGL) : 1; // min when supported: 4
 
+        this._debugShaders = getExtension(gl, ['WEBGL_debug_shaders']);
+
         var cc = gl.getParameter(gl.COLOR_CLEAR_VALUE);
         this._clearColor = new Color(cc[0], cc[1], cc[2], cc[3]);
         this._clearDepth = gl.getParameter(gl.DEPTH_CLEAR_VALUE);
@@ -822,6 +824,12 @@ define([
         maximumColorAttachments : {
             get : function() {
                 return this._maximumColorAttachments;
+            }
+        },
+
+        debugShaders : {
+            get : function() {
+                return this._debugShaders;
             }
         },
 

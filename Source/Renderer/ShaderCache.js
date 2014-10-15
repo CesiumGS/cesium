@@ -57,7 +57,7 @@ define([
             delete this._shadersToRelease[keyword];
         } else {
             var context = this._context;
-            var sp = new ShaderProgram(context._gl, context.logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations);
+            var sp = new ShaderProgram(context._gl, context.logShaderCompilation, context.debugShaders, vertexShaderSource, fragmentShaderSource, attributeLocations);
 
             cachedShader = {
                 cache : this,

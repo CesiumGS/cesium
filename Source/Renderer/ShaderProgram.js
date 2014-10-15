@@ -340,9 +340,10 @@ define([
     /**
      * @private
      */
-    var ShaderProgram = function(gl, logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations) {
+    var ShaderProgram = function(gl, logShaderCompilation, debugShaders, vertexShaderSource, fragmentShaderSource, attributeLocations) {
         this._gl = gl;
         this._logShaderCompilation = logShaderCompilation;
+        this._debugShaders = debugShaders;
         this._attributeLocations = attributeLocations;
 
         this._program = undefined;
@@ -624,7 +625,7 @@ define([
                '#endif \n\n';
     }
 
-    function createAndLinkProgram(gl, logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations) {
+    function createAndLinkProgram(gl, logShaderCompilation, debugShaders, vertexShaderSource, fragmentShaderSource, attributeLocations) {
         var vsSourceVersioned = extractShaderVersion(vertexShaderSource);
         var fsSourceVersioned = extractShaderVersion(fragmentShaderSource);
 
@@ -672,6 +673,10 @@ define([
                 log = gl.getShaderInfoLog(fragmentShader);
                 gl.deleteProgram(program);
                 console.error('[GL] Fragment shader compile log: ' + log);
+                if (defined(debugShaders)) {
+                    console.error('[GL] Translated fragment shader source:\n' + debugShaders.getTranslatedShaderSource(fragmentShader));
+                }
+
                 throw new RuntimeError('Fragment shader failed to compile.  Compile log: ' + log);
             }
 
@@ -679,6 +684,9 @@ define([
                 log = gl.getShaderInfoLog(vertexShader);
                 gl.deleteProgram(program);
                 console.error('[GL] Vertex shader compile log: ' + log);
+                if (defined(debugShaders)) {
+                    console.error('[GL] Translated vertex shader source:\n' + debugShaders.getTranslatedShaderSource(vertexShader));
+                }
                 throw new RuntimeError('Vertex shader failed to compile.  Compile log: ' + log);
             }
 
@@ -858,7 +866,7 @@ define([
         }
 
         var gl = shader._gl;
-        var program = createAndLinkProgram(gl, shader._logShaderCompilation, shader.vertexShaderSource, shader.fragmentShaderSource, shader._attributeLocations);
+        var program = createAndLinkProgram(gl, shader._logShaderCompilation, shader._debugShaders, shader.vertexShaderSource, shader.fragmentShaderSource, shader._attributeLocations);
         var numberOfVertexAttributes = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
         var uniforms = findUniforms(gl, program);
         var partitionedUniforms = partitionUniforms(uniforms.uniformsByName);
