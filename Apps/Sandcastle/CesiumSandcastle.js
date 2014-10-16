@@ -260,8 +260,8 @@ require({
 
     function makeLineLabel(msg, className) {
         var element = document.createElement('abbr');
-        element.textContent = '!';
         element.className = className;
+        element.innerHTML = '&nbsp;';
         element.title = msg;
         return element;
     }

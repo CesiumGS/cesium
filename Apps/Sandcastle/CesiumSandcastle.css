@@ -192,9 +192,11 @@ a.linkButton:focus, a.linkButton:hover {
 }
 
 .errorMarker {
+    width: 100%;
+    height: 100%;
     color: #222;
     font-weight: bold;
-    background: #F42;
+    background-color: #F42;
     border-radius: 3px;
 }
 
@@ -203,9 +205,11 @@ a.linkButton:focus, a.linkButton:hover {
 }
 
 .hintMarker {
+    width: 100%;
+    height: 100%;
     color: #222;
     font-weight: bold;
-    background: #FE2;
+    background-color: #FE2;
     border-radius: 3px;
 }
 
@@ -214,9 +218,11 @@ a.linkButton:focus, a.linkButton:hover {
 }
 
 .highlightMarker {
+    width: 100%;
+    height: 100%;
     color: #222;
     font-weight: bold;
-    background: #2E2;
+    background-color: #2E2;
     border-radius: 3px;
 }
 
@@ -225,9 +231,11 @@ a.linkButton:focus, a.linkButton:hover {
 }
 
 .searchMarker {
+    width: 100%;
+    height: 100%;
     color: #222;
     font-weight: bold;
-    background: #CEF;
+    background-color: #CEF;
     border-radius: 3px;
 }
 
