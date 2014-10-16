@@ -1,11 +1,9 @@
 /*global require*/
 require({
-    baseUrl : '../../Source',
+    baseUrl : '.',
     paths : {
-        CesiumViewer : '../Apps/CesiumViewer',
-        domReady : '../ThirdParty/requirejs-2.1.9/domReady'
+        domReady : '../../ThirdParty/requirejs-2.1.9/domReady',
+        Cesium : '../../Source'
     }
-}, [
-        'CesiumViewer/CesiumViewer'
-    ], function() {
+}, ['CesiumViewer'], function() {
 });

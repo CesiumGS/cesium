@@ -7,6 +7,7 @@ Change Log
 * Added support to the `CesiumTerrainProvider` for handling terrain tiles that define more than 64k vertices.
 * Clamp of `Camera.tilt` to [-pi / 2, pi / 2] instead of [0, pi / 2].
 * Add `Camera.roll`.
+* Upgraded topojson from 1.6.8 to 1.6.18.
 
 ### 1.2 - 2014-10-01
 
