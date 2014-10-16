@@ -47,11 +47,11 @@ defineSuite([
         expect(segments.lengths[1]).toEqual(2);
     });
 
-    it('removeDuplicates to return one positions', function() {
+    it('removeDuplicates returns false', function() {
         var positions = [Cartesian3.ZERO];
-        var nonDuplicatePositions = PolylinePipeline.removeDuplicates(positions);
-        expect(nonDuplicatePositions).not.toBe(positions);
-        expect(nonDuplicatePositions).toEqual(positions);
+        var noDuplicates = PolylinePipeline.removeDuplicates(positions);
+        expect(noDuplicates.removedDuplicates).toEqual(false);
+        expect(noDuplicates.array).not.toBeDefined();
     });
 
     it('removeDuplicates to remove duplicates', function() {
@@ -67,9 +67,9 @@ defineSuite([
             new Cartesian3(1.0, 1.0, 1.0),
             new Cartesian3(2.0, 2.0, 2.0),
             new Cartesian3(3.0, 3.0, 3.0)];
-        var nonDuplicatePositions = PolylinePipeline.removeDuplicates(positions);
-        expect(nonDuplicatePositions).not.toBe(expectedPositions);
-        expect(nonDuplicatePositions).toEqual(expectedPositions);
+        var duplicateResult = PolylinePipeline.removeDuplicates(positions);
+        expect(duplicateResult.removedDuplicates).toEqual(true);
+        expect(duplicateResult.array).toEqual(expectedPositions);
     });
 
     it('removeDuplicates throws without positions', function() {

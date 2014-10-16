@@ -216,24 +216,47 @@ define([
         }
         //>>includeEnd('debug');
 
+        var result = {
+            removedDuplicates : false,
+            array : undefined
+        };
+
         var length = positions.length;
         if (length < 2) {
-            return positions.slice(0);
+            return result;
         }
 
-        var cleanedPositions = [];
+        var i;
+        var v0;
+        var v1;
+
+        var containsDuplicates = false;
+        for (i = 1; i < length; ++i) {
+            v0 = positions[i - 1];
+            v1 = positions[i];
+            if (Cartesian3.equals(v0, v1)) {
+                containsDuplicates = true;
+                break;
+            }
+        }
+
+        if (!containsDuplicates) {
+            return result;
+        }
+
+        result.removedDuplicates = true;
+        var cleanedPositions = result.array = [];
         cleanedPositions.push(positions[0]);
 
-        for (var i = 1; i < length; ++i) {
-            var v0 = positions[i - 1];
-            var v1 = positions[i];
-
+        for (i = 1; i < length; ++i) {
+            v0 = positions[i - 1];
+            v1 = positions[i];
             if (!Cartesian3.equals(v0, v1)) {
                 cleanedPositions.push(v1); // Shallow copy!
             }
         }
 
-        return cleanedPositions;
+        return result;
     };
 
     /**

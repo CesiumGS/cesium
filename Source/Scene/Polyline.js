@@ -61,8 +61,13 @@ define([
         }
 
         this._positions = positions;
-        this._actualPositions = PolylinePipeline.removeDuplicates(positions);
+        var duplicateResult = PolylinePipeline.removeDuplicates(positions);
+        this._actualPositions = duplicateResult.removedDuplicates ? duplicateResult.array : positions;
+
         if (this._loop && this._actualPositions.length > 2) {
+            if (!duplicateResult.removeDuplicates) {
+                this._actualPositions = positions.slice();
+            }
             this._actualPositions.push(Cartesian3.clone(this._actualPositions[0]));
         }
 
@@ -152,8 +157,13 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                var positions = PolylinePipeline.removeDuplicates(value);
+                var duplicatesResult = PolylinePipeline.removeDuplicates(value);
+                var positions = duplicatesResult.removedDuplicates ? duplicatesResult.array : value;
+
                 if (this._loop && positions.length > 2) {
+                    if (!duplicatesResult.removedDuplicates) {
+                        positions = value.slice();
+                    }
                     positions.push(Cartesian3.clone(positions[0]));
                 }
 
@@ -240,11 +250,18 @@ define([
                     var positions = this._actualPositions;
                     if (value) {
                         if (positions.length > 2 && !Cartesian3.equals(positions[0], positions[positions.length - 1])) {
+                            if (positions.length === this._positions.length) {
+                                this._actualPositions = positions = this._positions.slice();
+                            }
                             positions.push(Cartesian3.clone(positions[0]));
                         }
                     } else {
                         if (positions.length > 2 && Cartesian3.equals(positions[0], positions[positions.length - 1])) {
-                            positions.pop();
+                            if (positions.length - 1 === this._positions.length) {
+                                this._actualPositions = this._positions;
+                            } else {
+                                positions.pop();
+                            }
                         }
                     }
 
