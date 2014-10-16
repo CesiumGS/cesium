@@ -199,7 +199,7 @@ define([
      * Removes adjacent duplicate positions in an array of positions.
      *
      * @param {Cartesian3[]} positions The array of positions.
-     * @returns {Cartesian3[]} A new array of positions with no adjacent duplicate positions.  Positions are shallow copied.
+     * @returns {Cartesian3[]|undefined} A new array of positions with no adjacent duplicate positions or <code>undefined</code> if no duplicates were found.
      *
      * @example
      * // Returns [(1.0, 1.0, 1.0), (2.0, 2.0, 2.0)]
@@ -218,18 +218,33 @@ define([
 
         var length = positions.length;
         if (length < 2) {
-            return positions.slice(0);
+            return undefined;
+        }
+
+        var i;
+        var v0;
+        var v1;
+
+        for (i = 1; i < length; ++i) {
+            v0 = positions[i - 1];
+            v1 = positions[i];
+            if (Cartesian3.equals(v0, v1)) {
+                break;
+            }
+        }
+
+        if (i === length) {
+            return undefined;
         }
 
         var cleanedPositions = [];
         cleanedPositions.push(positions[0]);
 
-        for (var i = 1; i < length; ++i) {
-            var v0 = positions[i - 1];
-            var v1 = positions[i];
-
+        for (; i < length; ++i) {
+            v0 = positions[i - 1];
+            v1 = positions[i];
             if (!Cartesian3.equals(v0, v1)) {
-                cleanedPositions.push(v1); // Shallow copy!
+                cleanedPositions.push(Cartesian3.clone(v1));
             }
         }
 
