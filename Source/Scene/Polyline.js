@@ -61,11 +61,13 @@ define([
         }
 
         this._positions = positions;
-        var duplicateResult = PolylinePipeline.removeDuplicates(positions);
-        this._actualPositions = duplicateResult.removedDuplicates ? duplicateResult.array : positions;
+        this._actualPositions = PolylinePipeline.removeDuplicates(positions);
+        if (!defined(this._actualPositions)) {
+            this._actualPositions = positions;
+        }
 
         if (this._loop && this._actualPositions.length > 2) {
-            if (!duplicateResult.removeDuplicates) {
+            if (this._actualPositions === this._positions) {
                 this._actualPositions = positions.slice();
             }
             this._actualPositions.push(Cartesian3.clone(this._actualPositions[0]));
@@ -157,11 +159,13 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                var duplicatesResult = PolylinePipeline.removeDuplicates(value);
-                var positions = duplicatesResult.removedDuplicates ? duplicatesResult.array : value;
+                var positions = PolylinePipeline.removeDuplicates(value);
+                if (!defined(positions)) {
+                    positions = value;
+                }
 
                 if (this._loop && positions.length > 2) {
-                    if (!duplicatesResult.removedDuplicates) {
+                    if (positions === value) {
                         positions = value.slice();
                     }
                     positions.push(Cartesian3.clone(positions[0]));

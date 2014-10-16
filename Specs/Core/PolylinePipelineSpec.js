@@ -50,8 +50,7 @@ defineSuite([
     it('removeDuplicates returns false', function() {
         var positions = [Cartesian3.ZERO];
         var noDuplicates = PolylinePipeline.removeDuplicates(positions);
-        expect(noDuplicates.removedDuplicates).toEqual(false);
-        expect(noDuplicates.array).not.toBeDefined();
+        expect(noDuplicates).not.toBeDefined();
     });
 
     it('removeDuplicates to remove duplicates', function() {
@@ -67,9 +66,8 @@ defineSuite([
             new Cartesian3(1.0, 1.0, 1.0),
             new Cartesian3(2.0, 2.0, 2.0),
             new Cartesian3(3.0, 3.0, 3.0)];
-        var duplicateResult = PolylinePipeline.removeDuplicates(positions);
-        expect(duplicateResult.removedDuplicates).toEqual(true);
-        expect(duplicateResult.array).toEqual(expectedPositions);
+        var noDuplicates = PolylinePipeline.removeDuplicates(positions);
+        expect(noDuplicates).toEqual(expectedPositions);
     });
 
     it('removeDuplicates throws without positions', function() {
