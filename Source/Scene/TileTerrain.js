@@ -241,7 +241,8 @@ define([
         var indexBuffer = indexBuffers[context.id];
         if (!defined(indexBuffer) || indexBuffer.isDestroyed()) {
             var indices = tileTerrain.mesh.indices;
-            indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+            var indexDatatype = (indices.BYTES_PER_ELEMENT === 2) ?  IndexDatatype.UNSIGNED_SHORT : IndexDatatype.UNSIGNED_INT;
+            indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, indexDatatype);
             indexBuffer.vertexArrayDestroyable = false;
             indexBuffer.referenceCount = 1;
             indexBuffers[context.id] = indexBuffer;

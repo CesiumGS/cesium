@@ -13,7 +13,7 @@ defineSuite([
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
-        'ThirdParty/when'
+        'Specs/waitsForPromise'
     ], function(
         BingMapsImageryProvider,
         DefaultProxy,
@@ -28,7 +28,7 @@ defineSuite([
         ImageryLayer,
         ImageryProvider,
         ImageryState,
-        when) {
+        waitsForPromise) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -179,8 +179,6 @@ defineSuite([
             return provider.ready;
         }, 'imagery provider to become ready');
 
-        var tile000Image;
-
         runs(function() {
             expect(provider.tileWidth).toEqual(256);
             expect(provider.tileHeight).toEqual(256);
@@ -198,32 +196,27 @@ defineSuite([
             expect(provider.credit).toBeInstanceOf(Object);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
-                if (url.indexOf('blob:') !== 0) {
+                if (/^blob:/.test(url)) {
+                    // load blob url normally
+                    loadImage.defaultCreateImage(url, crossOrigin, deferred);
+                } else {
                     expect(url).toEqual('http://fake.t0.tiles.fake.invalid/tiles/r0?g=1062&lbl=l1&productSet=mmCB');
-                }
 
-                // Just return any old image.
-                return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                    // Just return any old image.
+                    loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                }
             };
 
             loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toEqual('http://fake.t0.tiles.fake.invalid/tiles/r0?g=1062&lbl=l1&productSet=mmCB');
 
                 // Just return any old image.
-                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
+                loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
             };
 
-            when(provider.requestImage(0, 0, 0), function(image) {
-                tile000Image = image;
+            waitsForPromise(provider.requestImage(0, 0, 0), function(image) {
+                expect(image).toBeInstanceOf(Image);
             });
-        });
-
-        waitsFor(function() {
-            return defined(tile000Image);
-        }, 'requested tile to be loaded');
-
-        runs(function() {
-            expect(tile000Image).toBeInstanceOf(Image);
         });
     });
 
@@ -275,36 +268,29 @@ defineSuite([
             return provider.ready;
         }, 'imagery provider to become ready');
 
-        var tile000Image;
-
         runs(function() {
             loadImage.createImage = function(url, crossOrigin, deferred) {
-                if (url.indexOf('blob:') !== 0) {
+                if (/^blob:/.test(url)) {
+                    // load blob url normally
+                    loadImage.defaultCreateImage(url, crossOrigin, deferred);
+                } else {
                     expect(url).toEqual(proxy.getURL('http://ecn.t0.tiles.virtualearth.net/tiles/r0?g=1062&lbl=l1&productSet=mmCB'));
-                }
 
-                // Just return any old image.
-                return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                    // Just return any old image.
+                    loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                }
             };
 
             loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toEqual(proxy.getURL('http://ecn.t0.tiles.virtualearth.net/tiles/r0?g=1062&lbl=l1&productSet=mmCB'));
 
                 // Just return any old image.
-                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
+                loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
             };
 
-            when(provider.requestImage(0, 0, 0), function(image) {
-                tile000Image = image;
+            waitsForPromise(provider.requestImage(0, 0, 0), function(image) {
+                expect(image).toBeInstanceOf(Image);
             });
-        });
-
-        waitsFor(function() {
-            return defined(tile000Image);
-        }, 'requested tile to be loaded');
-
-        runs(function() {
-            expect(tile000Image).toBeInstanceOf(Image);
         });
     });
 
@@ -376,25 +362,30 @@ defineSuite([
         });
 
         loadImage.createImage = function(url, crossOrigin, deferred) {
-            // Succeed after 2 tries
-            if (url.indexOf('blob:') !== 0 && tries === 2) {
-                // valid URL
-                return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            if (/^blob:/.test(url)) {
+                // load blob url normally
+                loadImage.defaultCreateImage(url, crossOrigin, deferred);
+            } else if (tries === 2) {
+                // Succeed after 2 tries
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            } else {
+                // fail
+                setTimeout(function() {
+                    deferred.reject();
+                }, 1);
             }
-
-            // invalid URL
-            return loadImage.defaultCreateImage(url, crossOrigin, deferred);
         };
 
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            // Succeed after 2 tries
             if (tries === 2) {
-                // valid URL
-                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
+                // Succeed after 2 tries
+                loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
+            } else {
+                // fail
+                setTimeout(function() {
+                    deferred.reject();
+                }, 1);
             }
-
-            // invalid URL
-            return loadWithXhr.defaultLoad(url, responseType, method, data, headers, deferred, overrideMimeType);
         };
 
         waitsFor(function() {

@@ -465,6 +465,7 @@ define([
             if (!defined(compositeEntity)) {
                 composite.removeById(removedId);
             }
+            compositeEntity = undefined;
         }
 
         var addedLength = added.length;
@@ -491,6 +492,7 @@ define([
                     compositeEntity.merge(entity);
                 }
             }
+            compositeEntity = undefined;
         }
 
         composite.resumeEvents();

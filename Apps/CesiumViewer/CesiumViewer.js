@@ -1,22 +1,24 @@
 /*global define*/
 define([
-        'Core/defined',
-        'Core/formatError',
-        'Core/getFilenameFromUri',
-        'DataSources/CzmlDataSource',
-        'DataSources/GeoJsonDataSource',
-        'Scene/TileMapServiceImageryProvider',
-        'Widgets/DataSourceBrowser/DataSourcePanelViewModel',
-        'Widgets/DataSourceBrowser/ListDataSourcePanel',
-        'Widgets/Viewer/Viewer',
-        'Widgets/Viewer/viewerCesiumInspectorMixin',
-        'Widgets/Viewer/viewerDragDropMixin',
-        'Widgets/Viewer/viewerEntityMixin',
+        'Cesium/Core/defined',
+        'Cesium/Core/formatError',
+        'Cesium/Core/getFilenameFromUri',
+        'Cesium/Core/queryToObject',
+        'Cesium/DataSources/CzmlDataSource',
+        'Cesium/DataSources/GeoJsonDataSource',
+        'Cesium/Scene/TileMapServiceImageryProvider',
+        'Cesium/Widgets/DataSourceBrowser/DataSourcePanelViewModel',
+        'Cesium/Widgets/DataSourceBrowser/ListDataSourcePanel',
+        'Cesium/Widgets/Viewer/Viewer',
+        'Cesium/Widgets/Viewer/viewerCesiumInspectorMixin',
+        'Cesium/Widgets/Viewer/viewerDragDropMixin',
+        'Cesium/Widgets/Viewer/viewerEntityMixin',
         'domReady!'
     ], function(
         defined,
         formatError,
         getFilenameFromUri,
+        queryToObject,
         CzmlDataSource,
         GeoJsonDataSource,
         TileMapServiceImageryProvider,
@@ -37,31 +39,18 @@ define([
      * 'theme'  : 'lighter',    // Use the dark-text-on-light-background theme.
      * 'scene3DOnly' : false    // Enable 3D only mode
      */
-    var endUserOptions = {};
-    var queryString = window.location.search.substring(1);
-    if (queryString !== '') {
-        var params = queryString.split('&');
-        for (var i = 0, len = params.length; i < len; ++i) {
-            var param = params[i];
-            var keyValuePair = param.split('=');
-            if (keyValuePair.length > 1) {
-                endUserOptions[keyValuePair[0]] = decodeURIComponent(keyValuePair[1].replace(/\+/g, ' '));
-            }
-        }
-    }
-
-    var loadingIndicator = document.getElementById('loadingIndicator');
+    var endUserOptions = queryToObject(window.location.search.substring(1));
 
     DataSourcePanelViewModel.defaultDataSourcePanels.unshift(new ListDataSourcePanel('Local Gallery', '/Apps/SampleData/'));
 
     var imageryProvider;
-
     if (endUserOptions.tmsImageryUrl) {
         imageryProvider = new TileMapServiceImageryProvider({
             url : endUserOptions.tmsImageryUrl
         });
     }
 
+    var loadingIndicator = document.getElementById('loadingIndicator');
     var viewer;
     try {
         viewer = new Viewer('cesiumContainer', {

@@ -54,7 +54,7 @@ defineSuite([
         var oldLoad = loadWithXhr.load;
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             if (url.indexOf('layer.json') >= 0) {
-                return loadWithXhr.defaultLoad(path, responseType, method, data, headers, deferred);
+                loadWithXhr.defaultLoad(path, responseType, method, data, headers, deferred);
             } else {
                 return oldLoad(url, responseType, method, data, headers, deferred, overrideMimeType);
             }
@@ -127,7 +127,7 @@ defineSuite([
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            return loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.vertexnormals.terrain', responseType, method, data, headers, deferred);
+            loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.vertexnormals.terrain', responseType, method, data, headers, deferred);
         };
 
         returnVertexNormalTileJson();

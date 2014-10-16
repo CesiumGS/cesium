@@ -28,10 +28,10 @@ function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
-var primitives = viewer.scene.primitives;
+var scene = viewer.scene;
 
 // Polyline Glow
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : new Cesium.GeometryInstance({
         geometry : new Cesium.PolylineGeometry({
             positions : Cesium.Cartesian3.fromDegreesArray([
@@ -48,7 +48,7 @@ primitives.add(new Cesium.Primitive({
 }));
 
 // Polyline Arrow
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : new Cesium.GeometryInstance({
         geometry : new Cesium.PolylineGeometry({
             positions : Cesium.Cartesian3.fromDegreesArray([
@@ -65,7 +65,7 @@ primitives.add(new Cesium.Primitive({
 }));
 
 // Polyline Outline
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : new Cesium.GeometryInstance({
         geometry : new Cesium.PolylineGeometry({
             positions : Cesium.Cartesian3.fromDegreesArray([

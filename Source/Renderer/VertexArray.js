@@ -119,7 +119,7 @@ define([
      * @private
      */
     var VertexArray = function(gl, vertexArrayObject, attributes, indexBuffer) {
-        //>>includeStart('debug', pragmas.debug
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(attributes)) {
             throw new DeveloperError('attributes is required.');
         }

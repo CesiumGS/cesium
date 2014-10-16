@@ -7,6 +7,7 @@ define([
         './defined',
         './defineProperties',
         './DeveloperError',
+        './IndexDatatype',
         './Intersections2D',
         './Math',
         './TaskProcessor',
@@ -19,6 +20,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        IndexDatatype,
         Intersections2D,
         CesiumMath,
         TaskProcessor,
@@ -37,7 +39,7 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {Uint16Array} options.quantizedVertices The buffer containing the quantized mesh.
-     * @param {Uint16Array} options.indices The indices specifying how the quantized vertices are linked
+     * @param {Uint16Array|Uint32Array} options.indices The indices specifying how the quantized vertices are linked
      *                      together into triangles.  Each three indices specifies one triangle.
      * @param {Uint8Array} options.encodedNormals The buffer containing per vertex normals, encoded using 'oct' encoding
      * @param {Number} options.minimumHeight The minimum terrain height within the tile, in meters above the ellipsoid.
@@ -167,10 +169,11 @@ define([
             return uValues[a] - uValues[b];
         }
 
-        this._westIndices = sortIndicesIfNecessary(options.westIndices, sortByV);
-        this._southIndices = sortIndicesIfNecessary(options.southIndices, sortByU);
-        this._eastIndices = sortIndicesIfNecessary(options.eastIndices, sortByV);
-        this._northIndices = sortIndicesIfNecessary(options.northIndices, sortByU);
+        var requires32BitIndices = vertexCount > 64 * 1024;
+        this._westIndices = sortIndicesIfNecessary(options.westIndices, sortByV, vertexCount);
+        this._southIndices = sortIndicesIfNecessary(options.southIndices, sortByU, vertexCount);
+        this._eastIndices = sortIndicesIfNecessary(options.eastIndices, sortByV, vertexCount);
+        this._northIndices = sortIndicesIfNecessary(options.northIndices, sortByU, vertexCount);
 
         this._westSkirtHeight = options.westSkirtHeight;
         this._southSkirtHeight = options.southSkirtHeight;
@@ -200,7 +203,7 @@ define([
 
     var arrayScratch = [];
 
-    function sortIndicesIfNecessary(indices, sortFunction) {
+    function sortIndicesIfNecessary(indices, sortFunction, vertexCount) {
         arrayScratch.length = indices.length;
 
         var needsSort = false;
@@ -211,7 +214,7 @@ define([
 
         if (needsSort) {
             arrayScratch.sort(sortFunction);
-            return new Uint16Array(arrayScratch);
+            return IndexDatatype.createTypedArray(vertexCount, arrayScratch);
         } else {
             return indices;
         }
@@ -275,10 +278,14 @@ define([
 
         var that = this;
         return when(verticesPromise, function(result) {
+            var vertexCount = that._quantizedVertices.length / 3;
+            vertexCount += that._westIndices.length + that._southIndices.length + that._eastIndices.length + that._northIndices.length;
+            var indicesTypedArray = IndexDatatype.createTypedArray(vertexCount, result.indices);
+
             return new TerrainMesh(
                     that._boundingSphere.center,
                     new Float32Array(result.vertices),
-                    new Uint16Array(result.indices),
+                    indicesTypedArray,
                     that._minimumHeight,
                     that._maximumHeight,
                     that._boundingSphere,
@@ -365,13 +372,15 @@ define([
         var northSkirtHeight = isNorthChild ? this._northSkirtHeight : (shortestSkirt * 0.5);
 
         return when(upsamplePromise, function(result) {
+            var indicesTypedArray = IndexDatatype.createTypedArray(result.vertices.length / 3, result.indices);
             var encodedNormals;
             if (defined(result.encodedNormals)) {
                 encodedNormals = new Uint8Array(result.encodedNormals);
             }
+
             return new QuantizedMeshTerrainData({
                 quantizedVertices : new Uint16Array(result.vertices),
-                indices : new Uint16Array(result.indices),
+                indices : indicesTypedArray,
                 encodedNormals : encodedNormals,
                 minimumHeight : result.minimumHeight,
                 maximumHeight : result.maximumHeight,

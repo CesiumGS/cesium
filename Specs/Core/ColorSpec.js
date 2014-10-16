@@ -365,5 +365,59 @@ defineSuite([
         expect(rgba).toEqual(newRgba);
     });
 
+    it('Can brighten', function() {
+        var dark = new Color(0.2, 0.4, 0.6, 0.8);
+        var brighter = dark.brighten(0.5, new Color());
+        expect(brighter.red).toEqual(0.6);
+        expect(brighter.green).toEqual(0.7);
+        expect(brighter.blue).toEqual(0.8);
+        expect(brighter.alpha).toEqual(0.8);
+    });
+
+    it('Can darken', function() {
+        var dark = new Color(0.1, 0.6, 0.8, 0.8);
+        var darker = dark.darken(0.2, new Color());
+        expect(darker.red).toEqualEpsilon(0.08, CesiumMath.EPSILON15);
+        expect(darker.green).toEqualEpsilon(0.48, CesiumMath.EPSILON15);
+        expect(darker.blue).toEqualEpsilon(0.64, CesiumMath.EPSILON15);
+        expect(darker.alpha).toEqualEpsilon(0.8, CesiumMath.EPSILON15);
+    });
+
+    it('brighten throws without result', function(){
+        expect(function() {
+            Color.RED.brighten(0.5, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('darken throws without result', function(){
+        expect(function() {
+            Color.RED.darken(0.5, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('brighten throws negative magnitude', function(){
+        expect(function() {
+            Color.RED.brighten(-0.5, new Color());
+        }).toThrowDeveloperError();
+    });
+
+    it('darken throws negative magnitude', function(){
+        expect(function() {
+            Color.RED.darken(-0.5, new Color());
+        }).toThrowDeveloperError();
+    });
+
+    it('brighten throws undefined magnitude', function(){
+        expect(function() {
+            Color.RED.brighten(undefined, new Color());
+        }).toThrowDeveloperError();
+    });
+
+    it('darken throws undefined magnitude', function(){
+        expect(function() {
+            Color.RED.darken(undefined, new Color());
+        }).toThrowDeveloperError();
+    });
+
     createPackableSpecs(Color, new Color(0.1, 0.2, 0.3, 0.4), [0.1, 0.2, 0.3, 0.4]);
 });

@@ -14,7 +14,7 @@ define(function() {
       *                       The vertex data is in the order [X, Y, Z, H, U, V], where X, Y, and Z represent
       *                       the Cartesian position of the vertex, H is the height above the ellipsoid, and
       *                       U and V are the texture coordinates.
-      * @param {Uint16Array} indices The indices describing how the vertices are connected to form triangles.
+      * @param {Uint16Array|Uint32Array} indices The indices describing how the vertices are connected to form triangles.
       * @param {Number} minimumHeight The lowest height in the tile, in meters above the ellipsoid.
       * @param {Number} maximumHeight The highest height in the tile, in meters above the ellipsoid.
       * @param {BoundingSphere} boundingSphere3D A bounding sphere that completely contains the tile.
@@ -40,7 +40,7 @@ define(function() {
 
         /**
          * The indices describing how the vertices are connected to form triangles.
-         * @type {Uint16Array}
+         * @type {Uint16Array|Uint32Array}
          */
         this.indices = indices;
 
