@@ -5,6 +5,7 @@ Change Log
 
 * Fixed a bug that caused non-base imagery layers with a limited `rectangle` to be stretched to the edges of imagery tiles. [#416](https://github.com/AnalyticalGraphicsInc/cesium/issues/416)
 * Added support to the `CesiumTerrainProvider` for handling terrain tiles that define more than 64k vertices.
+* Upgrade CodeMirror, used by SandCastle, from 2.24 to 4.6.
 
 ### 1.2 - 2014-10-01
 

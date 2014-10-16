@@ -191,9 +191,6 @@ a.linkButton:focus, a.linkButton:hover {
     background-color: #9ED3FF !important;
 }
 
-.gutter {
-}
-
 .errorMarker {
     color: #222;
     font-weight: bold;
