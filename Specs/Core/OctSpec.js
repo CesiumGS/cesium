@@ -2,11 +2,13 @@
 defineSuite([
         'Core/Oct',
         'Core/Cartesian2',
-        'Core/Cartesian3'
+        'Core/Cartesian3',
+        'Core/Math'
     ], function(
         Oct,
         Cartesian2,
-        Cartesian3) {
+        Cartesian3,
+        CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -98,4 +100,226 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('oct encoding', function() {
+        var epsilon = CesiumMath.EPSILON1;
+
+        var encoded = new Cartesian2();
+        var result = new Cartesian3();
+        var normal = new Cartesian3(0.0, 0.0, 1.0);
+        Oct.encode(normal, encoded);
+        expect(Oct.decode(encoded.x, encoded.y, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(0.0, 0.0, -1.0);
+        Oct.encode(normal, encoded);
+        expect(Oct.decode(encoded.x, encoded.y, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(0.0, 1.0, 0.0);
+        Oct.encode(normal, encoded);
+        expect(Oct.decode(encoded.x, encoded.y, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(0.0, -1.0, 0.0);
+        Oct.encode(normal, encoded);
+        expect(Oct.decode(encoded.x, encoded.y, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(1.0, 0.0, 0.0);
+        Oct.encode(normal, encoded);
+        expect(Oct.decode(encoded.x, encoded.y, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(-1.0, 0.0, 0.0);
+        Oct.encode(normal, encoded);
+        expect(Oct.decode(encoded.x, encoded.y, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(1.0, 1.0, 1.0);
+        Cartesian3.normalize(normal, normal);
+        Oct.encode(normal, encoded);
+        expect(Oct.decode(encoded.x, encoded.y, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(1.0, -1.0, 1.0);
+        Cartesian3.normalize(normal, normal);
+        Oct.encode(normal, encoded);
+        expect(Oct.decode(encoded.x, encoded.y, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(-1.0, -1.0, 1.0);
+        Cartesian3.normalize(normal, normal);
+        Oct.encode(normal, encoded);
+        expect(Oct.decode(encoded.x, encoded.y, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(-1.0, 1.0, 1.0);
+        Cartesian3.normalize(normal, normal);
+        Oct.encode(normal, encoded);
+        expect(Oct.decode(encoded.x, encoded.y, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(1.0, 1.0, -1.0);
+        Cartesian3.normalize(normal, normal);
+        Oct.encode(normal, encoded);
+        expect(Oct.decode(encoded.x, encoded.y, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(1.0, -1.0, -1.0);
+        Cartesian3.normalize(normal, normal);
+        Oct.encode(normal, encoded);
+        expect(Oct.decode(encoded.x, encoded.y, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(-1.0, 1.0, -1.0);
+        Cartesian3.normalize(normal, normal);
+        Oct.encode(normal, encoded);
+        expect(Oct.decode(encoded.x, encoded.y, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(-1.0, -1.0, -1.0);
+        Cartesian3.normalize(normal, normal);
+        Oct.encode(normal, encoded);
+        expect(Oct.decode(encoded.x, encoded.y, result)).toEqualEpsilon(normal, epsilon);
+    });
+
+    it('octFloat encoding', function() {
+        var epsilon = CesiumMath.EPSILON1;
+
+        var result = new Cartesian3();
+        var normal = new Cartesian3(0.0, 0.0, 1.0);
+        expect(Oct.decodeFloat(Oct.encodeFloat(normal), result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(0.0, 0.0, -1.0);
+        expect(Oct.decodeFloat(Oct.encodeFloat(normal), result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(0.0, 1.0, 0.0);
+        expect(Oct.decodeFloat(Oct.encodeFloat(normal), result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(0.0, -1.0, 0.0);
+        expect(Oct.decodeFloat(Oct.encodeFloat(normal), result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(1.0, 0.0, 0.0);
+        expect(Oct.decodeFloat(Oct.encodeFloat(normal), result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(-1.0, 0.0, 0.0);
+        expect(Oct.decodeFloat(Oct.encodeFloat(normal), result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(1.0, 1.0, 1.0);
+        Cartesian3.normalize(normal, normal);
+        expect(Oct.decodeFloat(Oct.encodeFloat(normal), result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(1.0, -1.0, 1.0);
+        Cartesian3.normalize(normal, normal);
+        expect(Oct.decodeFloat(Oct.encodeFloat(normal), result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(-1.0, -1.0, 1.0);
+        Cartesian3.normalize(normal, normal);
+        expect(Oct.decodeFloat(Oct.encodeFloat(normal), result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(-1.0, 1.0, 1.0);
+        Cartesian3.normalize(normal, normal);
+        expect(Oct.decodeFloat(Oct.encodeFloat(normal), result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(1.0, 1.0, -1.0);
+        Cartesian3.normalize(normal, normal);
+        expect(Oct.decodeFloat(Oct.encodeFloat(normal), result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(1.0, -1.0, -1.0);
+        Cartesian3.normalize(normal, normal);
+        expect(Oct.decodeFloat(Oct.encodeFloat(normal), result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(-1.0, 1.0, -1.0);
+        Cartesian3.normalize(normal, normal);
+        expect(Oct.decodeFloat(Oct.encodeFloat(normal), result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(-1.0, -1.0, -1.0);
+        Cartesian3.normalize(normal, normal);
+        expect(Oct.decodeFloat(Oct.encodeFloat(normal), result)).toEqualEpsilon(normal, epsilon);
+    });
+
+    it('octFloat encoding is equivalent to oct encoding', function() {
+        var encoded = new Cartesian2();
+        var result1 = new Cartesian3();
+        var result2 = new Cartesian3();
+
+        var normal = new Cartesian3(0.0, 0.0, 1.0);
+        Oct.encode(normal, encoded);
+        Oct.decode(encoded.x, encoded.y, result1);
+        Oct.decodeFloat(Oct.encodeFloat(normal), result2);
+        expect(result1).toEqual(result2);
+
+        normal = new Cartesian3(0.0, 0.0, -1.0);
+        Oct.encode(normal, encoded);
+        Oct.decode(encoded.x, encoded.y, result1);
+        Oct.decodeFloat(Oct.encodeFloat(normal), result2);
+        expect(result1).toEqual(result2);
+
+        normal = new Cartesian3(0.0, 1.0, 0.0);
+        Oct.encode(normal, encoded);
+        Oct.decode(encoded.x, encoded.y, result1);
+        Oct.decodeFloat(Oct.encodeFloat(normal), result2);
+        expect(result1).toEqual(result2);
+
+        normal = new Cartesian3(0.0, -1.0, 0.0);
+        Oct.encode(normal, encoded);
+        Oct.decode(encoded.x, encoded.y, result1);
+        Oct.decodeFloat(Oct.encodeFloat(normal), result2);
+        expect(result1).toEqual(result2);
+
+        normal = new Cartesian3(1.0, 0.0, 0.0);
+        Oct.encode(normal, encoded);
+        Oct.decode(encoded.x, encoded.y, result1);
+        Oct.decodeFloat(Oct.encodeFloat(normal), result2);
+        expect(result1).toEqual(result2);
+
+        normal = new Cartesian3(-1.0, 0.0, 0.0);
+        Oct.encode(normal, encoded);
+        Oct.decode(encoded.x, encoded.y, result1);
+        Oct.decodeFloat(Oct.encodeFloat(normal), result2);
+        expect(result1).toEqual(result2);
+
+        normal = new Cartesian3(1.0, 1.0, 1.0);
+        Cartesian3.normalize(normal, normal);
+        Oct.encode(normal, encoded);
+        Oct.decode(encoded.x, encoded.y, result1);
+        Oct.decodeFloat(Oct.encodeFloat(normal), result2);
+        expect(result1).toEqual(result2);
+
+        normal = new Cartesian3(1.0, -1.0, 1.0);
+        Cartesian3.normalize(normal, normal);
+        Oct.encode(normal, encoded);
+        Oct.decode(encoded.x, encoded.y, result1);
+        Oct.decodeFloat(Oct.encodeFloat(normal), result2);
+        expect(result1).toEqual(result2);
+
+        normal = new Cartesian3(-1.0, -1.0, 1.0);
+        Cartesian3.normalize(normal, normal);
+        Oct.encode(normal, encoded);
+        Oct.decode(encoded.x, encoded.y, result1);
+        Oct.decodeFloat(Oct.encodeFloat(normal), result2);
+        expect(result1).toEqual(result2);
+
+        normal = new Cartesian3(-1.0, 1.0, 1.0);
+        Cartesian3.normalize(normal, normal);
+        Oct.encode(normal, encoded);
+        Oct.decode(encoded.x, encoded.y, result1);
+        Oct.decodeFloat(Oct.encodeFloat(normal), result2);
+        expect(result1).toEqual(result2);
+
+        normal = new Cartesian3(1.0, 1.0, -1.0);
+        Cartesian3.normalize(normal, normal);
+        Oct.encode(normal, encoded);
+        Oct.decode(encoded.x, encoded.y, result1);
+        Oct.decodeFloat(Oct.encodeFloat(normal), result2);
+        expect(result1).toEqual(result2);
+
+        normal = new Cartesian3(1.0, -1.0, -1.0);
+        Cartesian3.normalize(normal, normal);
+        Oct.encode(normal, encoded);
+        Oct.decode(encoded.x, encoded.y, result1);
+        Oct.decodeFloat(Oct.encodeFloat(normal), result2);
+        expect(result1).toEqual(result2);
+
+        normal = new Cartesian3(-1.0, 1.0, -1.0);
+        Cartesian3.normalize(normal, normal);
+        Oct.encode(normal, encoded);
+        Oct.decode(encoded.x, encoded.y, result1);
+        Oct.decodeFloat(Oct.encodeFloat(normal), result2);
+        expect(result1).toEqual(result2);
+
+        normal = new Cartesian3(-1.0, -1.0, -1.0);
+        Cartesian3.normalize(normal, normal);
+        Oct.encode(normal, encoded);
+        Oct.decode(encoded.x, encoded.y, result1);
+        Oct.decodeFloat(Oct.encodeFloat(normal), result2);
+        expect(result1).toEqual(result2);
+    });
 });

@@ -224,10 +224,18 @@ defineSuite([
         verifyDraw(fs);
     });
 
-    it('has czm_octDecode', function() {
+    it('has czm_octDecode(vec2)', function() {
         var fs =
             'void main() { ' +
             '  gl_FragColor = vec4(czm_octDecode(vec2(0.0, 0.0)) == vec3(0.0, 0.0, 1.0)); ' +
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('has czm_octDecode(float)', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_octDecode(0.0) == vec3(0.0, 0.0, 1.0)); ' +
             '}';
         verifyDraw(fs);
     });
