@@ -172,6 +172,7 @@ define([
         var scene3DOnly = parameters.scene3DOnly;
         var allowPicking = parameters.allowPicking;
         var vertexCacheOptimize = parameters.vertexCacheOptimize;
+        var compressNormals = parameters.compressNormals;
         var modelMatrix = parameters.modelMatrix;
 
         var i;
@@ -238,6 +239,11 @@ define([
                     GeometryPipeline.encodeAttribute(geometry, name, name + '3DHigh', name + '3DLow');
                 }
             }
+        }
+
+        // oct encode and pack normals
+        if (compressNormals) {
+            GeometryPipeline.compressNormals(geometry);
         }
 
         if (!uintIndexSupport) {

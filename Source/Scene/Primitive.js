@@ -87,6 +87,7 @@ define([
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
      * @param {Boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
+     * @param {Boolean} [options.compressNormal=true] When <code>true</code>, geometry normals are compressed, which will save memory.
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
@@ -228,6 +229,7 @@ define([
         this._releaseGeometryInstances = defaultValue(options.releaseGeometryInstances, true);
         this._allowPicking = defaultValue(options.allowPicking, true);
         this._asynchronous = defaultValue(options.asynchronous, true);
+        this._compressNormals = defaultValue(options.compressNormals, true);
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -354,6 +356,22 @@ define([
         asynchronous : {
             get : function() {
                 return this._asynchronous;
+            }
+        },
+
+        /**
+         * When <code>true</code>, geometry normals are compressed, which will save memory.
+         *
+         * @memberof Primitive.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default true
+         */
+        compressNormals : {
+            get : function() {
+                return this._compressNormals;
             }
         },
 
@@ -519,6 +537,100 @@ define([
         return renamedVS + '\n' + showMain;
     }
 
+    function modifyForEncodedNormals(primitive, vertexShaderSource) {
+        if (!primitive.compressNormals) {
+            return vertexShaderSource;
+        }
+
+        var containsNormal = vertexShaderSource.search(/attribute\s+vec3\s+normal;/g) !== -1;
+        if (!containsNormal) {
+            return vertexShaderSource;
+        }
+
+        var containsSt = vertexShaderSource.search(/attribute\s+vec3\s+st;/g) !== -1;
+        var containsTangent = vertexShaderSource.search(/attribute\s+vec3\s+st;/g) !== -1;
+        var containsBinormal = vertexShaderSource.search(/attribute\s+vec3\s+st;/g) !== -1;
+
+        var attributeDecl = '';
+        var functionDecl = '';
+        var decodeFunctions = '';
+        var modifiedVS = vertexShaderSource;
+
+        if (containsNormal && containsSt) {
+            attributeDecl += 'attribute vec4 stNormal;\n';
+            functionDecl +=
+                'vec3 czm_decodeNormal();\n' +
+                'vec3 czm_decodeSt();\n';
+            decodeFunctions +=
+                'vec3 czm_decodeNormal()\n' +
+                '{\n' +
+                '    return czm_octDecode(stNormal.zw);\n' +
+                '}\n\n' +
+                'vec3 czm_decodeSt()\n' +
+                '{\n' +
+                '    return stNormal.xy;\n' +
+                '}\n\n';
+
+            modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+normal;/g, '');
+            modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+st;/g, '');
+            modifiedVS = modifiedVS.replace(/([^_0-9a-zA-Z])normal([^_0-9a-zA-Z])/g, '$1czm_decodeNormal()$2');
+            modifiedVS = modifiedVS.replace(/([^_0-9a-zA-Z])st([^_0-9a-zA-Z])/g, '$1czm_decodeSt()$2');
+        } else {
+            functionDecl += 'vec3 czm_decodeNormal();\n';
+            decodeFunctions +=
+                'vec3 czm_decodeNormal()\n' +
+                '{\n' +
+                '    return czm_octDecode(normal);\n' +
+                '}\n\n';
+
+            modifiedVS = modifiedVS.replace(/([^_0-9a-zA-Z])normal([^_0-9a-zA-Z])/g, '$1czm_decodeNormal()$2');
+            modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+czm_decodeNormal\(\);/g, 'attribute vec2 normal;');
+        }
+
+        if (containsTangent && containsBinormal) {
+            attributeDecl += 'attribute vec4 tangentBinormal;\n';
+            functionDecl +=
+                'vec3 czm_decodeTangent();\n' +
+                'vec3 czm_decodeBinormal();\n';
+            decodeFunctions +=
+                'vec3 czm_decodeTangent()\n' +
+                '{\n' +
+                '    return czm_octDecode(tangentBinormal.xy);\n' +
+                '}\n\n' +
+                'vec3 czm_decodeBinormal()\n' +
+                '{\n' +
+                '    return czm_octDecode(tangentBinormal.zw);\n' +
+                '}\n\n';
+
+            modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+tangent;/g, '');
+            modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+binormal;/g, '');
+            modifiedVS = modifiedVS.replace(/([^_0-9a-zA-Z])tangent([^_0-9a-zA-Z])/g, '$1czm_decodeTangent()$2');
+            modifiedVS = modifiedVS.replace(/([^_0-9a-zA-Z])binormal([^_0-9a-zA-Z])/g, '$1czm_decodeBinormal()$2');
+        } else if (containsTangent) {
+            functionDecl += 'vec3 czm_decodeTangent();\n';
+            decodeFunctions +=
+                'vec3 czm_decodeTangent()\n' +
+                '{\n' +
+                '    return czm_octDecode(tangent.xy);\n' +
+                '}\n\n';
+
+            modifiedVS = modifiedVS.replace(/([^_0-9a-zA-Z])tangent([^_0-9a-zA-Z])/g, '$1czm_decodeTangent()$2');
+            modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+czm_decodeTangent\(\);/g, 'attribute vec2 tangent;');
+        } else if (containsBinormal) {
+            functionDecl += 'vec3 czm_decodeBinormal();\n';
+            decodeFunctions +=
+                'vec3 czm_decodeBinormal()\n' +
+                '{\n' +
+                '    return czm_octDecode(binormal.xy);\n' +
+                '}\n\n';
+
+            modifiedVS = modifiedVS.replace(/([^_0-9a-zA-Z])binormal([^_0-9a-zA-Z])/g, '$1czm_decodeBinormal()$2');
+            modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+czm_decodeBinormal\(\);/g, 'attribute vec2 binormal;');
+        }
+
+        return createShaderSource({ sources : [attributeDecl, functionDecl, modifiedVS, decodeFunctions] });
+    }
+
     function validateShaderMatching(shaderProgram, attributeLocations) {
         // For a VAO and shader program to be compatible, the VAO must have
         // all active attribute in the shader program.  The VAO may have
@@ -662,6 +774,7 @@ define([
                         scene3DOnly : scene3DOnly,
                         allowPicking : allowPicking,
                         vertexCacheOptimize : this.vertexCacheOptimize,
+                        compressNormals : this.compressNormals,
                         modelMatrix : this.modelMatrix
                     }, transferableObjects), transferableObjects);
 
@@ -711,6 +824,7 @@ define([
                     scene3DOnly : scene3DOnly,
                     allowPicking : allowPicking,
                     vertexCacheOptimize : this.vertexCacheOptimize,
+                    compressNormals : this.compressNormals,
                     modelMatrix : this.modelMatrix
                 });
 
@@ -847,6 +961,7 @@ define([
         if (createSP) {
             var vs = createColumbusViewShader(this, appearance.vertexShaderSource, scene3DOnly);
             vs = appendShow(this, vs);
+            vs = modifyForEncodedNormals(this, vs);
             var fs = appearance.getFragmentShaderSource();
 
             this._sp = context.replaceShaderProgram(this._sp, vs, fs, attributeLocations);
