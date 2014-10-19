@@ -601,11 +601,11 @@ define([
         modifiedVS = modifiedVS.replace(/([^_0-9a-zA-Z])normal([^_0-9a-zA-Z])/g, '$1czm_decodeNormal()$2');
 
         if (containsSt) {
-            functionDecl += 'vec3 czm_decodeSt();\n';
+            functionDecl += 'vec2 czm_decodeSt();\n';
             decodeFunctions +=
-                'vec3 czm_decodeSt()\n' +
+                'vec2 czm_decodeSt()\n' +
                 '{\n' +
-                '    return czm_octDecode(' + attributeName + '.' + stComponent + ');\n' +
+                '    return czm_octDecode(' + attributeName + '.' + stComponent + ').xy;\n' +
                 '}\n';
 
             modifiedVS = modifiedVS.replace(/attribute\s+vec2\s+st;/g, '');
