@@ -551,81 +551,89 @@ define([
         var containsTangent = vertexShaderSource.search(/attribute\s+vec3\s+st;/g) !== -1;
         var containsBinormal = vertexShaderSource.search(/attribute\s+vec3\s+st;/g) !== -1;
 
-        var attributeDecl = '';
-        var functionDecl = '';
-        var decodeFunctions = '';
-        var modifiedVS = vertexShaderSource;
+        var numComponents = 1;
+        numComponents += containsSt ? 1 : 0;
+        numComponents += containsTangent ? 1 : 0;
+        numComponents += containsBinormal ? 1 : 0;
 
-        if (containsNormal && containsSt) {
-            attributeDecl += 'attribute vec4 stNormal;\n';
-            functionDecl +=
-                'vec3 czm_decodeNormal();\n' +
-                'vec3 czm_decodeSt();\n';
-            decodeFunctions +=
-                'vec3 czm_decodeNormal()\n' +
-                '{\n' +
-                '    return czm_octDecode(stNormal.zw);\n' +
-                '}\n\n' +
-                'vec3 czm_decodeSt()\n' +
-                '{\n' +
-                '    return stNormal.xy;\n' +
-                '}\n\n';
+        var type = (numComponents > 1) ? 'vec' + numComponents : 'float';
 
-            modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+normal;/g, '');
-            modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+st;/g, '');
-            modifiedVS = modifiedVS.replace(/([^_0-9a-zA-Z])normal([^_0-9a-zA-Z])/g, '$1czm_decodeNormal()$2');
-            modifiedVS = modifiedVS.replace(/([^_0-9a-zA-Z])st([^_0-9a-zA-Z])/g, '$1czm_decodeSt()$2');
+        var attributeName = containsSt ? 'stCompressedNormals' : 'compressedNormals';
+        var attributeDecl = 'attribute ' + type + ' ' + attributeName + ';';
+
+        var stComponent;
+        var normalComponent;
+        var tangentComponent;
+        var binormalComponent;
+
+        if (containsSt) {
+            stComponent = 'x';
+            normalComponent = 'y';
+            if (containsTangent) {
+                tangentComponent = 'z';
+                if (containsBinormal) {
+                    binormalComponent = 'w';
+                }
+            } else if (containsBinormal) {
+                binormalComponent = 'z';
+            }
         } else {
-            functionDecl += 'vec3 czm_decodeNormal();\n';
-            decodeFunctions +=
-                'vec3 czm_decodeNormal()\n' +
-                '{\n' +
-                '    return czm_octDecode(normal);\n' +
-                '}\n\n';
-
-            modifiedVS = modifiedVS.replace(/([^_0-9a-zA-Z])normal([^_0-9a-zA-Z])/g, '$1czm_decodeNormal()$2');
-            modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+czm_decodeNormal\(\);/g, 'attribute vec2 normal;');
+            normalComponent = 'x';
+            if (containsTangent) {
+                tangentComponent = 'y';
+                if (containsBinormal) {
+                    binormalComponent = 'z';
+                }
+            } else if (containsBinormal) {
+                binormalComponent = 'y';
+            }
         }
 
-        if (containsTangent && containsBinormal) {
-            attributeDecl += 'attribute vec4 tangentBinormal;\n';
-            functionDecl +=
-                'vec3 czm_decodeTangent();\n' +
-                'vec3 czm_decodeBinormal();\n';
-            decodeFunctions +=
-                'vec3 czm_decodeTangent()\n' +
-                '{\n' +
-                '    return czm_octDecode(tangentBinormal.xy);\n' +
-                '}\n\n' +
-                'vec3 czm_decodeBinormal()\n' +
-                '{\n' +
-                '    return czm_octDecode(tangentBinormal.zw);\n' +
-                '}\n\n';
+        var functionDecl = 'vec3 czm_decodeNormal();\n';
+        var decodeFunctions =
+            'vec3 czm_decodeNormal()\n' +
+            '{\n' +
+            '    return czm_octDecode(' + attributeName + (numComponents > 1 ? '.' + normalComponent : '') + ');\n' +
+            '}\n';
 
-            modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+tangent;/g, '');
-            modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+binormal;/g, '');
-            modifiedVS = modifiedVS.replace(/([^_0-9a-zA-Z])tangent([^_0-9a-zA-Z])/g, '$1czm_decodeTangent()$2');
-            modifiedVS = modifiedVS.replace(/([^_0-9a-zA-Z])binormal([^_0-9a-zA-Z])/g, '$1czm_decodeBinormal()$2');
-        } else if (containsTangent) {
+        var modifiedVS = vertexShaderSource;
+        modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+normal;/g, '');
+        modifiedVS = modifiedVS.replace(/([^_0-9a-zA-Z])normal([^_0-9a-zA-Z])/g, '$1czm_decodeNormal()$2');
+
+        if (containsSt) {
+            functionDecl += 'vec3 czm_decodeSt();\n';
+            decodeFunctions +=
+                'vec3 czm_decodeSt()\n' +
+                '{\n' +
+                '    return czm_octDecode(' + attributeName + '.' + stComponent + ');\n' +
+                '}\n';
+
+            modifiedVS = modifiedVS.replace(/attribute\s+vec2\s+st;/g, '');
+            modifiedVS = modifiedVS.replace(/([^_0-9a-zA-Z])st([^_0-9a-zA-Z])/g, '$1czm_decodeSt()$2');
+        }
+
+        if (containsTangent) {
             functionDecl += 'vec3 czm_decodeTangent();\n';
             decodeFunctions +=
                 'vec3 czm_decodeTangent()\n' +
                 '{\n' +
-                '    return czm_octDecode(tangent.xy);\n' +
-                '}\n\n';
+                '    return czm_octDecode(' + attributeName + '.' + tangentComponent + ');\n' +
+                '}\n';
 
+            modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+tangent;/g, '');
             modifiedVS = modifiedVS.replace(/([^_0-9a-zA-Z])tangent([^_0-9a-zA-Z])/g, '$1czm_decodeTangent()$2');
-            modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+czm_decodeTangent\(\);/g, 'attribute vec2 tangent;');
-        } else if (containsBinormal) {
+        }
+
+        if (containsBinormal) {
             functionDecl += 'vec3 czm_decodeBinormal();\n';
             decodeFunctions +=
                 'vec3 czm_decodeBinormal()\n' +
                 '{\n' +
-                '    return czm_octDecode(binormal.xy);\n' +
+                '    return czm_octDecode(' + attributeName + '.' + binormalComponent + ');\n' +
                 '}\n\n';
 
+            modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+binormal;/g, '');
             modifiedVS = modifiedVS.replace(/([^_0-9a-zA-Z])binormal([^_0-9a-zA-Z])/g, '$1czm_decodeBinormal()$2');
-            modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+czm_decodeBinormal\(\);/g, 'attribute vec2 binormal;');
         }
 
         return createShaderSource({ sources : [attributeDecl, functionDecl, modifiedVS, decodeFunctions] });
