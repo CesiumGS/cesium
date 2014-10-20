@@ -1,10 +1,12 @@
 /*global define*/
 define([
+        './Cartesian2',
         './Cartesian3',
         './defined',
         './DeveloperError',
         './Math'
     ], function(
+        Cartesian2,
         Cartesian3,
         defined,
         DeveloperError,
@@ -99,6 +101,39 @@ define([
         }
 
         return Cartesian3.normalize(result, result);
+    };
+
+    var scratchEncodeCart2 = new Cartesian2();
+
+    /**
+     * Encodes a normalized vector into 2 SNORM values in the range of [0-255] following the 'oct' encoding and
+     * stores those values in a single float-point number.
+     *
+     * @param {Cartesian3} vector The normalized vector to be compressed into 2 byte 'oct' encoding.
+     * @returns {Number} The 2 byte oct-encoded unit length vector.
+     *
+     * @exception {DeveloperError} vector must be defined.
+     * @exception {DeveloperError} vector must be normalized.
+     */
+    Oct.encodeFloat = function(vector) {
+        Oct.encode(vector, scratchEncodeCart2);
+        return 256.0 * scratchEncodeCart2.x + scratchEncodeCart2.y;
+    };
+
+    /**
+     * Decodes a unit-length vector in 'oct' encoding to a normalized 3-component vector.
+     *
+     * @param {Number} value The oct-encoded unit length vector stored as a single floating-point number.
+     * @param {Cartesian3} result The decoded and normalized vector
+     * @returns {Cartesian3} The decoded and normalized vector.
+     *
+     * @exception {DeveloperError} result must be defined.
+     */
+    Oct.decodeFloat = function(value, result) {
+        var temp = value / 256.0;
+        var x = Math.floor(temp);
+        var y = (temp - x) * 256.0;
+        return Oct.decode(x, y, result);
     };
 
     return Oct;
