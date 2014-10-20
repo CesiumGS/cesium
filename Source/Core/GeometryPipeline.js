@@ -1307,7 +1307,10 @@ define([
         return geometry;
     };
 
-    var toEncode = new Cartesian3();
+    var scratchPacked = new Cartesian2();
+    var toEncode1 = new Cartesian3();
+    var toEncode2 = new Cartesian3();
+    var toEncode3 = new Cartesian3();
 
     /**
      * Compresses and packs geometry normal attribute values to save memory.
@@ -1350,9 +1353,8 @@ define([
         var length = normals.length;
         var compressedLength = length / 3.0;
         var numComponents = 1.0;
-        numComponents += defined(st) ? 1.0 : 0.0;
-        numComponents += defined(tangents) ? 1.0 : 0.0;
-        numComponents += defined(binormals) ? 1.0 : 0.0;
+        numComponents += defined(st) ? 2.0 : 0.0;
+        numComponents += defined(tangents) || defined(binormals) ? 1.0 : 0.0;
         compressedLength *= numComponents;
         var compressedNormals = new Float32Array(compressedLength);
 
@@ -1362,24 +1364,31 @@ define([
 
         for (var i = 0; i < length; i += 3) {
             if (defined(st)) {
-                toEncode.x = st[stIndex++];
-                toEncode.y = st[stIndex++];
-                toEncode.z = 0.0;
-
-                compressedNormals[normalIndex++] = Oct.encodeFloat(toEncode);
+                compressedNormals[normalIndex++] = st[stIndex++];
+                compressedNormals[normalIndex++] = st[stIndex++];
             }
 
-            Cartesian3.fromArray(normals, i, toEncode);
-            compressedNormals[normalIndex++] = Oct.encodeFloat(toEncode);
+            if (defined(tangents) && defined(binormals)) {
+                Cartesian3.fromArray(normals, i, toEncode1);
+                Cartesian3.fromArray(tangents, i, toEncode2);
+                Cartesian3.fromArray(binormals, i, toEncode3);
 
-            if (defined(tangents)) {
-                Cartesian3.fromArray(tangents, i, toEncode);
-                compressedNormals[normalIndex++] = Oct.encodeFloat(toEncode);
-            }
+                Oct.pack(toEncode1, toEncode2, toEncode3, scratchPacked);
+                compressedNormals[normalIndex++] = scratchPacked.x;
+                compressedNormals[normalIndex++] = scratchPacked.y;
+            } else {
+                Cartesian3.fromArray(normals, i, toEncode1);
+                compressedNormals[normalIndex++] = Oct.encodeFloat(toEncode1);
 
-            if (defined(binormals)) {
-                Cartesian3.fromArray(binormals, i, toEncode);
-                compressedNormals[normalIndex++] = Oct.encodeFloat(toEncode);
+                if (defined(tangents)) {
+                    Cartesian3.fromArray(tangents, i, toEncode1);
+                    compressedNormals[normalIndex++] = Oct.encodeFloat(toEncode1);
+                }
+
+                if (defined(binormals)) {
+                    Cartesian3.fromArray(binormals, i, toEncode1);
+                    compressedNormals[normalIndex++] = Oct.encodeFloat(toEncode1);
+                }
             }
         }
 
@@ -1399,7 +1408,7 @@ define([
             delete geometry.attributes.tangent;
         }
 
-        if (defined(st)) {
+        if (defined(binormals)) {
             delete geometry.attributes.binormal;
         }
 

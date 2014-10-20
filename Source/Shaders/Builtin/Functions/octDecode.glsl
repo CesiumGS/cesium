@@ -35,3 +35,18 @@
     return czm_octDecode(vec2(x, y));
  }
  
+ void czm_octDecode(vec2 encoded, out vec3 vector1, out vec3 vector2, out vec3 vector3)
+ {
+    float temp = encoded.x / 65536.0;
+    float x = floor(temp);
+    float encodedFloat1 = (temp - x) * 65536.0;
+
+    temp = encoded.y / 65536.0;
+    float y = floor(temp);
+    float encodedFloat2 = (temp - y) * 65536.0;
+
+    vector1 = czm_octDecode(encodedFloat1);
+    vector2 = czm_octDecode(encodedFloat2);
+    vector3 = czm_octDecode(vec2(x, y));
+ }
+ 

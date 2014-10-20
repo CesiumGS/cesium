@@ -133,7 +133,32 @@ define([
         var temp = value / 256.0;
         var x = Math.floor(temp);
         var y = (temp - x) * 256.0;
+
         return Oct.decode(x, y, result);
+    };
+
+    Oct.pack = function(v1, v2, v3, result) {
+        var encoded1 = Oct.encodeFloat(v1);
+        var encoded2 = Oct.encodeFloat(v2);
+
+        var encoded3 = Oct.encode(v3, scratchEncodeCart2);
+        result.x = 65536.0 * encoded3.x + encoded1;
+        result.y = 65536.0 * encoded3.y + encoded2;
+        return result;
+    };
+
+    Oct.unpack = function(packed, v1, v2, v3) {
+        var temp = packed.x / 65536.0;
+        var x = Math.floor(temp);
+        var encodedFloat1 = (temp - x) * 65536.0;
+
+        temp = packed.y / 65536.0;
+        var y = Math.floor(temp);
+        var encodedFloat2 = (temp - y) * 65536.0;
+
+        Oct.decodeFloat(encodedFloat1, v1);
+        Oct.decodeFloat(encodedFloat2, v2);
+        Oct.decode(x, y, v3);
     };
 
     return Oct;
