@@ -842,6 +842,7 @@ define([
             scene3DOnly : parameters.scene3DOnly,
             allowPicking : parameters.allowPicking,
             vertexCacheOptimize : parameters.vertexCacheOptimize,
+            compressNormals : parameters.compressNormals,
             modelMatrix : parameters.modelMatrix
         };
     };
@@ -876,6 +877,7 @@ define([
             scene3DOnly : packedParameters.scene3DOnly,
             allowPicking : packedParameters.allowPicking,
             vertexCacheOptimize : packedParameters.vertexCacheOptimize,
+            compressNormals : packedParameters.compressNormals,
             modelMatrix : Matrix4.clone(packedParameters.modelMatrix)
         };
     };
