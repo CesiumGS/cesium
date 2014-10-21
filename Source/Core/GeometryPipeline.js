@@ -1403,11 +1403,12 @@ define([
             delete geometry.attributes.normal;
             delete geometry.attributes.st;
         } else {
-            geometry.attributes.normal = new GeometryAttribute({
+            geometry.attributes.compressedNormal = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 2,
                 values : compressedNormals
             });
+            delete geometry.attributes.normal;
         }
 
         if (defined(tangents) && defined(binormals)) {
@@ -1419,17 +1420,19 @@ define([
             delete geometry.attributes.tangent;
             delete geometry.attributes.binormal;
         } else if (defined(tangents)) {
-            geometry.attributes.tangent = new GeometryAttribute({
+            geometry.attributes.compressedTangent = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 2,
                 values : compressedTangents
             });
+            delete geometry.attributes.tangent;
         } else if (defined(binormals)) {
-            geometry.attributes.binormal = new GeometryAttribute({
+            geometry.attributes.compressedBinormal = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 2,
                 values : compressedTangents
             });
+            delete geometry.attributes.binormal;
         }
 
         return geometry;

@@ -188,7 +188,8 @@ defineSuite([
             appearance : new DebugAppearance({
                 attributeName : 'normal'
             }),
-            asynchronous : false
+            asynchronous : false,
+            compressNormals : false
         });
 
         ClearCommand.ALL.execute(context);
@@ -211,7 +212,8 @@ defineSuite([
             appearance : new DebugAppearance({
                 attributeName : 'binormal'
             }),
-            asynchronous : false
+            asynchronous : false,
+            compressNormals : false
         });
 
         ClearCommand.ALL.execute(context);
@@ -234,7 +236,8 @@ defineSuite([
             appearance : new DebugAppearance({
                 attributeName : 'tangent'
             }),
-            asynchronous : false
+            asynchronous : false,
+            compressNormals : false
         });
 
         ClearCommand.ALL.execute(context);
@@ -256,7 +259,8 @@ defineSuite([
             appearance : new DebugAppearance({
                 attributeName : 'st'
             }),
-            asynchronous : false
+            asynchronous : false,
+            compressNormals : false
         });
 
         ClearCommand.ALL.execute(context);

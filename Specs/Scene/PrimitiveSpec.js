@@ -783,7 +783,9 @@ defineSuite([
     it('renders when using asynchronous pipeline', function() {
         var primitive = new Primitive({
             geometryInstances : rectangleInstance1,
-            appearance : new PerInstanceColorAppearance()
+            appearance : new PerInstanceColorAppearance({
+                flat : true
+            })
         });
 
         frameState.camera.viewRectangle(rectangle1);

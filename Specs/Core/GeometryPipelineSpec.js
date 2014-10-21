@@ -1667,9 +1667,9 @@ defineSuite([
 
         geometry = GeometryPipeline.compressNormals(geometry);
 
-        expect(geometry.attributes.normal).toBeDefined();
+        expect(geometry.attributes.compressedNormal).toBeDefined();
 
-        var normals = geometry.attributes.normal.values;
+        var normals = geometry.attributes.compressedNormal.values;
         expect(normals.length).toEqual(originalNormals.length / 3 * 2);
 
         for (var i = 0; i < normals.length; i += 2) {
