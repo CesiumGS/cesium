@@ -589,13 +589,13 @@ define([
         } else if (containsTangent) {
             globalDecl += 'vec3 tangent;\n';
             decode +=
-                '    tangent = czm_octDecode(compressedTangent.xy);\n';
+                '    tangent = czm_octDecode(compressedTangent);\n';
 
             modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+tangent;/g, 'attribute vec2 compressedTangent;');
         } else if (containsBinormal) {
             globalDecl += 'vec3 binormal;\n';
             decode +=
-                '    binormal = czm_octDecode(compressedBinormal.xy);\n';
+                '    binormal = czm_octDecode(compressedBinormal);\n';
 
             modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+binormal;/g, 'attribute vec2 compressedBinormal;');
         }
