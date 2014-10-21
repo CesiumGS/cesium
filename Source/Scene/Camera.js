@@ -559,7 +559,7 @@ define([
         }
 
         var right = camera.right;
-        return Math.atan2(right.z, right.x);
+        return CesiumMath.PI_OVER_TWO - Math.acos(right.z);
     }
 
     function getRoll3D(camera) {
@@ -574,7 +574,7 @@ define([
         }
 
         var right = Matrix3.multiplyByVector(transform, camera.right, scratchHeadingCartesian3);
-        return Math.atan2(right.z, right.x);
+        return CesiumMath.PI_OVER_TWO - Math.acos(right.z);
     }
 
     defineProperties(Camera.prototype, {

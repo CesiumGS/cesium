@@ -262,6 +262,7 @@ defineSuite([
         camera.direction = new Cartesian3(0.0, 1.0, -1.0);
         Cartesian3.normalize(camera.direction, camera.direction);
         camera.right = Cartesian3.cross(camera.direction, Cartesian3.UNIT_Z, new Cartesian3());
+        Cartesian3.normalize(camera.right, camera.right);
         camera.up = Cartesian3.cross(camera.right, camera.direction, new Cartesian3());
 
         var roll = Math.atan2(right.z, right.x);
@@ -277,6 +278,7 @@ defineSuite([
         camera.direction = new Cartesian3(-1.0, 0.0, 1.0);
         Cartesian3.normalize(camera.direction, camera.direction);
         camera.right = Cartesian3.cross(camera.direction, Cartesian3.UNIT_Z, new Cartesian3());
+        Cartesian3.normalize(camera.right, camera.right);
         camera.up = Cartesian3.cross(camera.right, camera.direction, new Cartesian3());
 
         var toFixedFrame = Transforms.eastNorthUpToFixedFrame(camera.position, ellipsoid);
@@ -302,6 +304,7 @@ defineSuite([
         camera.direction = new Cartesian3(0.0, 1.0, -1.0);
         Cartesian3.normalize(camera.direction, camera.direction);
         camera.right = Cartesian3.cross(camera.direction, Cartesian3.UNIT_Z, new Cartesian3());
+        Cartesian3.normalize(camera.right, camera.right);
         camera.up = Cartesian3.cross(camera.right, camera.direction, new Cartesian3());
 
         var roll = camera.roll;
@@ -320,6 +323,7 @@ defineSuite([
         camera.direction = new Cartesian3(-1.0, 0.0, 1.0);
         Cartesian3.normalize(camera.direction, camera.direction);
         camera.right = Cartesian3.cross(camera.direction, Cartesian3.UNIT_Z, new Cartesian3());
+        Cartesian3.normalize(camera.right, camera.right);
         camera.up = Cartesian3.cross(camera.right, camera.direction, new Cartesian3());
 
         var roll = camera.roll;
