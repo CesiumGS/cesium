@@ -111,6 +111,25 @@ define([
         return isInternetExplorer() && internetExplorerVersionResult;
     }
 
+    var isFirefoxResult;
+    var firefoxVersionResult;
+    function isFirefox() {
+        if (!defined(isFirefoxResult)) {
+            var fields = /Firefox\/([\.0-9]+)/.exec(navigator.userAgent);
+            if (fields === null) {
+                isFirefoxResult = false
+            } else {
+                isFirefoxResult = true;
+                firefoxVersionResult = extractVersion(fields[1]);
+            }
+        }
+        return isFirefoxResult;
+    }
+
+    function firefoxVersion() {
+        return isFirefox() && firefoxVersionResult;
+    }
+
     /**
      * A set of functions to detect whether the current browser supports
      * various features.
@@ -127,6 +146,8 @@ define([
         webkitVersion : webkitVersion,
         isInternetExplorer : isInternetExplorer,
         internetExplorerVersion : internetExplorerVersion,
+        isFirefox : isFirefox,
+        firefoxVersion : firefoxVersion,
         hardwareConcurrency : defaultValue(navigator.hardwareConcurrency, 3)
     };
 
