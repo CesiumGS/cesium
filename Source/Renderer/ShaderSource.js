@@ -253,8 +253,7 @@ void main()\n\
      * // 1. Prepend #defines to a shader
      * var source = new Cesium.ShaderSource({
      *   defines : ['WHITE'],
-     *   so
-     *   urces : ['void main() { \n#ifdef WHITE\n gl_FragColor = vec4(1.0); \n#else\n gl_FragColor = vec4(0.0); \n#endif\n }']
+     *   sources : ['void main() { \n#ifdef WHITE\n gl_FragColor = vec4(1.0); \n#else\n gl_FragColor = vec4(0.0); \n#endif\n }']
      * });
      *
      * // 2. Modify a fragment shader for picking
