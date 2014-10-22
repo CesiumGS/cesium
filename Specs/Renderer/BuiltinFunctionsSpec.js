@@ -227,7 +227,7 @@ defineSuite([
     it('has czm_octDecode(vec2)', function() {
         var fs =
             'void main() { ' +
-            '  gl_FragColor = vec4(czm_octDecode(vec2(0.0, 0.0)) == vec3(0.0, 0.0, 1.0)); ' +
+            '  gl_FragColor = vec4(all(lessThanEqual(czm_octDecode(vec2(128.0, 128.0)) - vec3(0.0, 0.0, 1.0), vec3(0.01)))); ' +
             '}';
         verifyDraw(fs);
     });
@@ -235,7 +235,7 @@ defineSuite([
     it('has czm_octDecode(float)', function() {
         var fs =
             'void main() { ' +
-            '  gl_FragColor = vec4(czm_octDecode(0.0) == vec3(0.0, 0.0, 1.0)); ' +
+            '  gl_FragColor = vec4(all(lessThanEqual(czm_octDecode(32896.0) - vec3(0.0, 0.0, 1.0), vec3(0.01)))); ' +
             '}';
         verifyDraw(fs);
     });

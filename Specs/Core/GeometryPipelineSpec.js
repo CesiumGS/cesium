@@ -3,6 +3,7 @@ defineSuite([
         'Core/GeometryPipeline',
         'Core/BoundingSphere',
         'Core/BoxGeometry',
+        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/ComponentDatatype',
         'Core/Ellipsoid',
@@ -22,6 +23,7 @@ defineSuite([
         GeometryPipeline,
         BoundingSphere,
         BoxGeometry,
+        Cartesian2,
         Cartesian3,
         ComponentDatatype,
         Ellipsoid,
@@ -1667,13 +1669,13 @@ defineSuite([
 
         geometry = GeometryPipeline.compressNormals(geometry);
 
-        expect(geometry.attributes.compressedNormal).toBeDefined();
+        expect(geometry.attributes.compressedNormals).toBeDefined();
 
-        var normals = geometry.attributes.compressedNormal.values;
-        expect(normals.length).toEqual(originalNormals.length / 3 * 2);
+        var normals = geometry.attributes.compressedNormals.values;
+        expect(normals.length).toEqual(originalNormals.length / 3);
 
-        for (var i = 0; i < normals.length; i += 2) {
-            expect(Oct.decode(normals[i], normals[i + 1], new Cartesian3())).toEqualEpsilon(Cartesian3.fromArray(originalNormals, i / 2 * 3), CesiumMath.EPSILON2);
+        for (var i = 0; i < normals.length; ++i) {
+            expect(Oct.decodeFloat(normals[i], new Cartesian3())).toEqualEpsilon(Cartesian3.fromArray(originalNormals, i * 3), CesiumMath.EPSILON2);
         }
     });
 
@@ -1696,15 +1698,15 @@ defineSuite([
 
         expect(geometry.attributes.normal).not.toBeDefined();
         expect(geometry.attributes.st).not.toBeDefined();
-        expect(geometry.attributes.stNormal).toBeDefined();
+        expect(geometry.attributes.stCompressedNormals).toBeDefined();
 
-        var stNormal = geometry.attributes.stNormal.values;
-        expect(stNormal.length).toEqual(originalNormals.length / 3 * 4);
+        var stNormal = geometry.attributes.stCompressedNormals.values;
+        expect(stNormal.length).toEqual(originalNormals.length);
 
-        for (var i = 0; i < stNormal.length; i += 4) {
-            expect(stNormal[i]).toEqual(originalST[i / 4 * 2]);
-            expect(stNormal[i + 1]).toEqual(originalST[i / 4 * 2 + 1]);
-            expect(Oct.decode(stNormal[i + 2], stNormal[i + 3], new Cartesian3())).toEqualEpsilon(Cartesian3.fromArray(originalNormals, i / 4 * 3), CesiumMath.EPSILON2);
+        for (var i = 0; i < stNormal.length; i += 3) {
+            expect(stNormal[i]).toEqual(originalST[i / 3 * 2]);
+            expect(stNormal[i + 1]).toEqual(originalST[i / 3 * 2 + 1]);
+            expect(Oct.decodeFloat(stNormal[i + 2], new Cartesian3())).toEqualEpsilon(Cartesian3.fromArray(originalNormals, i), CesiumMath.EPSILON2);
         }
     });
 
@@ -1730,14 +1732,22 @@ defineSuite([
 
         expect(geometry.attributes.tangent).not.toBeDefined();
         expect(geometry.attributes.binormal).not.toBeDefined();
-        expect(geometry.attributes.tangentBinormal).toBeDefined();
+        expect(geometry.attributes.compressedNormals).toBeDefined();
 
-        var tangentBinormal = geometry.attributes.tangentBinormal.values;
-        expect(tangentBinormal.length).toEqual(originalNormals.length / 3 * 4);
+        var compressedNormals = geometry.attributes.compressedNormals.values;
+        expect(compressedNormals.length).toEqual(originalNormals.length / 3 * 2);
 
-        for (var i = 0; i < tangentBinormal.length; i += 4) {
-            expect(Oct.decode(tangentBinormal[i], tangentBinormal[i + 1], new Cartesian3())).toEqualEpsilon(Cartesian3.fromArray(originalTangents, i / 4 * 3), CesiumMath.EPSILON2);
-            expect(Oct.decode(tangentBinormal[i + 2], tangentBinormal[i + 3], new Cartesian3())).toEqualEpsilon(Cartesian3.fromArray(originalBinormals, i / 4 * 3), CesiumMath.EPSILON2);
+        var normal = new Cartesian3();
+        var tangent = new Cartesian3();
+        var binormal = new Cartesian3();
+
+        for (var i = 0; i < compressedNormals.length; i += 2) {
+            var compressed = Cartesian2.fromArray(compressedNormals, i, new Cartesian2());
+            Oct.unpack(compressed, normal, tangent, binormal);
+
+            expect(normal).toEqualEpsilon(Cartesian3.fromArray(originalNormals, i / 2 * 3), CesiumMath.EPSILON2);
+            expect(tangent).toEqualEpsilon(Cartesian3.fromArray(originalTangents, i / 2 * 3), CesiumMath.EPSILON2);
+            expect(binormal).toEqualEpsilon(Cartesian3.fromArray(originalBinormals, i / 2 * 3), CesiumMath.EPSILON2);
         }
     });
 
