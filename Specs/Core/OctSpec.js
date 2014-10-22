@@ -322,4 +322,86 @@ defineSuite([
         Oct.decodeFloat(Oct.encodeFloat(normal), result2);
         expect(result1).toEqual(result2);
     });
+
+    it('encodeFloat throws without vector', function() {
+        expect(function() {
+            Oct.encodeFloat(undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('decodeFloat throws without value', function() {
+        expect(function() {
+            Oct.decodeFloat(undefined, new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('decodeFloat throws without result', function() {
+        expect(function() {
+            Oct.decodeFloat(0.0, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('pack is equivalent to oct encoding', function() {
+        var x = Cartesian3.UNIT_X;
+        var y = Cartesian3.UNIT_Y;
+        var z = Cartesian3.UNIT_Z;
+
+        var packed = Oct.pack(x, y, z, new Cartesian2());
+        var decodedX = new Cartesian3();
+        var decodedY = new Cartesian3();
+        var decodedZ = new Cartesian3();
+        Oct.unpack(packed, decodedX, decodedY, decodedZ);
+
+        expect(decodedX).toEqual(Oct.decodeFloat(Oct.encodeFloat(x), new Cartesian3()));
+        expect(decodedY).toEqual(Oct.decodeFloat(Oct.encodeFloat(y), new Cartesian3()));
+        expect(decodedZ).toEqual(Oct.decodeFloat(Oct.encodeFloat(z), new Cartesian3()));
+    });
+
+    it('pack throws without v1', function() {
+        expect(function() {
+            Oct.pack(undefined, new Cartesian3(), new Cartesian3(), new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+
+    it('pack throws without v2', function() {
+        expect(function() {
+            Oct.pack(new Cartesian3(), undefined, new Cartesian3(), new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+
+    it('pack throws without v3', function() {
+        expect(function() {
+            Oct.pack(new Cartesian3(), new Cartesian3(), undefined, new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+
+    it('pack throws without result', function() {
+        expect(function() {
+            Oct.pack(new Cartesian3(), new Cartesian3(), new Cartesian3(), undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('unpack throws without packed', function() {
+        expect(function() {
+            Oct.unpack(undefined, new Cartesian3(), new Cartesian3(), new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('unpack throws without v1', function() {
+        expect(function() {
+            Oct.unpack(new Cartesian2(), undefined, new Cartesian3(), new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('unpack throws without v2', function() {
+        expect(function() {
+            Oct.unpack(new Cartesian2(), new Cartesian3(), undefined, new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('unpack throws without v3', function() {
+        expect(function() {
+            Oct.unpack(new Cartesian2(), new Cartesian3(), new Cartesian3(), undefined);
+        }).toThrowDeveloperError();
+    });
 });
