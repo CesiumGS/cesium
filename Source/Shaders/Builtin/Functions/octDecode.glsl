@@ -20,7 +20,7 @@
  }
 
  /**
- * Decodes a unit-length vector in 'oct' encoding to a normalized 3-component Cartesian vector.
+ * Decodes a unit-length vector in 'oct' encoding packed into a floating-point number to a normalized 3-component Cartesian vector.
  * The 'oct' encoding is described in "A Survey of Efficient Representations of Independent Unit Vectors",
  * Cigolle et al 2014: http://jcgt.org/published/0003/02/01/
  * 
@@ -36,6 +36,17 @@
     return czm_octDecode(vec2(x, y));
  }
  
+/**
+ * Decodes three unit-length vectors in 'oct' encoding packed into two floating-point numbers to normalized 3-component Cartesian vectors.
+ * The 'oct' encoding is described in "A Survey of Efficient Representations of Independent Unit Vectors",
+ * Cigolle et al 2014: http://jcgt.org/published/0003/02/01/
+ * 
+ * @name czm_octDecode
+ * @param {vec2} encoded The packed oct-encoded, unit-length vectors.
+ * @param {vec3} vector1 One decoded and normalized vector.
+ * @param {vec3} vector2 One decoded and normalized vector.
+ * @param {vec3} vector3 One decoded and normalized vector.
+ */
   void czm_octDecode(vec2 encoded, out vec3 vector1, out vec3 vector2, out vec3 vector3)
  {
     float temp = encoded.x / 65536.0;
