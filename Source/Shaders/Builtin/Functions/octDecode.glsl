@@ -9,6 +9,7 @@
  */
  vec3 czm_octDecode(vec2 encoded)
  {
+    encoded = encoded / 255.0 * 2.0 - 1.0;
     vec3 v = vec3(encoded.x, encoded.y, 1.0 - abs(encoded.x) - abs(encoded.y));
     if (v.z < 0.0)
     {
