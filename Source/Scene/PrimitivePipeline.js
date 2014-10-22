@@ -172,7 +172,7 @@ define([
         var scene3DOnly = parameters.scene3DOnly;
         var allowPicking = parameters.allowPicking;
         var vertexCacheOptimize = parameters.vertexCacheOptimize;
-        var compressNormals = parameters.compressNormals;
+        var compressVertices = parameters.compressVertices;
         var modelMatrix = parameters.modelMatrix;
 
         var i;
@@ -242,7 +242,7 @@ define([
         }
 
         // oct encode and pack normals
-        if (compressNormals) {
+        if (compressVertices) {
             GeometryPipeline.compressNormals(geometry);
         }
 
@@ -842,7 +842,7 @@ define([
             scene3DOnly : parameters.scene3DOnly,
             allowPicking : parameters.allowPicking,
             vertexCacheOptimize : parameters.vertexCacheOptimize,
-            compressNormals : parameters.compressNormals,
+            compressVertices : parameters.compressVertices,
             modelMatrix : parameters.modelMatrix
         };
     };
@@ -877,7 +877,7 @@ define([
             scene3DOnly : packedParameters.scene3DOnly,
             allowPicking : packedParameters.allowPicking,
             vertexCacheOptimize : packedParameters.vertexCacheOptimize,
-            compressNormals : packedParameters.compressNormals,
+            compressVertices : packedParameters.compressVertices,
             modelMatrix : Matrix4.clone(packedParameters.modelMatrix)
         };
     };

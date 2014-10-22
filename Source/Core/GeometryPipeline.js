@@ -1328,26 +1328,29 @@ define([
         }
         //>>includeEnd('debug');
 
-        var normals = geometry.attributes.normal;
-        if (!defined(normals)) {
+        var normalAttribute = geometry.attributes.normal;
+        if (!defined(normalAttribute)) {
             return geometry;
         }
 
-        normals = normals.values;
+        var stAttribute = geometry.attributes.st;
+        var tangentAttribute = geometry.attributes.tangent;
+        var binormalAttribute = geometry.attributes.binormal;
 
-        var st = geometry.attributes.st;
-        if (defined(st)) {
-            st = st.values;
+        var normals = normalAttribute.values;
+        var st;
+        var tangents;
+        var binormals;
+
+
+        if (defined(stAttribute)) {
+            st = stAttribute.values;
         }
-
-        var tangents = geometry.attributes.tangent;
-        if (defined(tangents)) {
-            tangents = tangents.values;
+        if (defined(tangentAttribute)) {
+            tangents = tangentAttribute.values;
         }
-
-        var binormals = geometry.attributes.binormal;
-        if (binormals) {
-            binormals = binormals.values;
+        if (binormalAttribute) {
+            binormals = binormalAttribute.values;
         }
 
         var length = normals.length;

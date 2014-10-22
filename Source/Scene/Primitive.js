@@ -87,7 +87,7 @@ define([
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
      * @param {Boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
-     * @param {Boolean} [options.compressNormal=true] When <code>true</code>, geometry normals are compressed, which will save memory.
+     * @param {Boolean} [options.compressVertices=true] When <code>true</code>, the geometry vertices are compressed, which will save memory.
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
@@ -229,7 +229,7 @@ define([
         this._releaseGeometryInstances = defaultValue(options.releaseGeometryInstances, true);
         this._allowPicking = defaultValue(options.allowPicking, true);
         this._asynchronous = defaultValue(options.asynchronous, true);
-        this._compressNormals = defaultValue(options.compressNormals, true);
+        this._compressVertices = defaultValue(options.compressVertices, true);
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -360,7 +360,7 @@ define([
         },
 
         /**
-         * When <code>true</code>, geometry normals are compressed, which will save memory.
+         * When <code>true</code>, geometry vertices are compressed, which will save memory.
          *
          * @memberof Primitive.prototype
          *
@@ -369,9 +369,9 @@ define([
          *
          * @default true
          */
-        compressNormals : {
+        compressVertices : {
             get : function() {
-                return this._compressNormals;
+                return this._compressVertices;
             }
         },
 
@@ -538,7 +538,7 @@ define([
     }
 
     function modifyForEncodedNormals(primitive, vertexShaderSource) {
-        if (!primitive.compressNormals) {
+        if (!primitive.compressVertices) {
             return vertexShaderSource;
         }
 
@@ -746,7 +746,7 @@ define([
                         scene3DOnly : scene3DOnly,
                         allowPicking : allowPicking,
                         vertexCacheOptimize : this.vertexCacheOptimize,
-                        compressNormals : this.compressNormals,
+                        compressVertices : this.compressVertices,
                         modelMatrix : this.modelMatrix
                     }, transferableObjects), transferableObjects);
 
@@ -796,7 +796,7 @@ define([
                     scene3DOnly : scene3DOnly,
                     allowPicking : allowPicking,
                     vertexCacheOptimize : this.vertexCacheOptimize,
-                    compressNormals : this.compressNormals,
+                    compressVertices : this.compressVertices,
                     modelMatrix : this.modelMatrix
                 });
 
