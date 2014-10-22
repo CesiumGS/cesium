@@ -6,7 +6,7 @@ define([
         '../Core/destroyObject',
         '../Core/PixelFormat',
         '../Renderer/ClearCommand',
-        '../Renderer/createShaderSource',
+        '../Renderer/ShaderSource',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderbufferFormat',
         '../Shaders/PostProcessFilters/FXAA'
@@ -17,7 +17,7 @@ define([
         destroyObject,
         PixelFormat,
         ClearCommand,
-        createShaderSource,
+        ShaderSource,
         PixelDatatype,
         RenderbufferFormat,
         FXAAFS) {
@@ -104,11 +104,7 @@ define([
         }
 
         if (!defined(this._command)) {
-            var fs = createShaderSource({
-                sources : [FXAAFS]
-            });
-
-            this._command = context.createViewportQuadCommand(fs, {
+            this._command = context.createViewportQuadCommand(FXAAFS, {
                 renderState : context.createRenderState(),
                 owner : this
             });

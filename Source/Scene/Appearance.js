@@ -4,7 +4,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Renderer/createShaderSource',
+        '../Renderer/ShaderSource',
         './BlendingState',
         './CullFace'
     ], function(
@@ -12,7 +12,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        createShaderSource,
+        ShaderSource,
         BlendingState,
         CullFace) {
     "use strict";
@@ -139,10 +139,28 @@ define([
      * @returns {String} The full GLSL fragment shader source.
      */
     Appearance.prototype.getFragmentShaderSource = function() {
-        return createShaderSource({
-            defines : [this.flat ? 'FLAT' : '', this.faceForward ? 'FACE_FORWARD' : ''],
-            sources : [defined(this.material) ? this.material.shaderSource : '', this.fragmentShaderSource]
+        var defines = [];
+        if (this.flat) {
+            defines.push('FLAT');
+        }
+        if (this.faceForward) {
+            defines.push('FACE_FORWARD');
+        }
+
+        var sources = [];
+        if (defined(this.material)) {
+            sources.push(this.material.shaderSource);
+        }
+        sources.push(this.fragmentShaderSource);
+
+        // includeBuiltIns is false because the primitive will create its own ShaderSource containing our source
+        var shaderSource = new ShaderSource({
+            defines : defines,
+            sources : sources,
+            includeBuiltIns : false
         });
+
+        return shaderSource.getCombinedShader(true);
     };
 
     /**
