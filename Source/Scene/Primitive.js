@@ -551,55 +551,47 @@ define([
         var containsTangent = vertexShaderSource.search(/attribute\s+vec3\s+tangent;/g) !== -1;
         var containsBinormal = vertexShaderSource.search(/attribute\s+vec3\s+binormal;/g) !== -1;
 
-        var attributeDecl = '';
-        var globalDecl = '';
+        var numComponents = 1;
+        numComponents += containsSt ? 2 : 0;
+        numComponents += containsTangent || containsBinormal ? 1 : 0;
+
+        var type = (numComponents > 1) ? 'vec' + numComponents : 'float';
+
+        var attributeName = containsSt ? 'stCompressedNormals' : 'compressedNormals';
+        var attributeDecl = 'attribute ' + type + ' ' + attributeName + ';';
+
+        var globalDecl = 'vec3 normal;\n';
         var decode = '';
-        var modifiedVS = vertexShaderSource;
 
-        if (containsNormal && containsSt) {
-            attributeDecl += 'attribute vec4 stNormal;\n';
-            globalDecl +=
-                'vec3 normal;\n' +
-                'vec2 st;\n';
-            decode +=
-                '    normal = czm_octDecode(stNormal.zw);\n' +
-                '    st = stNormal.xy;\n';
-
-            modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+normal;/g, '');
-            modifiedVS = modifiedVS.replace(/attribute\s+vec2\s+st;/g, '');
-        } else {
-            globalDecl += 'vec3 normal;\n';
-            decode +=
-                '    normal = czm_octDecode(compressedNormal);\n';
-
-            modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+normal;/g, 'attribute vec2 compressedNormal;');
+        if (containsSt) {
+            globalDecl += 'vec2 st;\n';
+            decode += '    st = ' + attributeName + '.xy;\n';
         }
 
         if (containsTangent && containsBinormal) {
-            attributeDecl += 'attribute vec4 tangentBinormal;\n';
             globalDecl +=
                 'vec3 tangent;\n' +
                 'vec3 binormal;\n';
-            decode +=
-                '    tangent = czm_octDecode(tangentBinormal.xy);\n' +
-                '    binormal = czm_octDecode(tangentBinormal.zw);\n';
+            decode += '    czm_octDecode(' + attributeName + '.' + (containsSt ? 'zw' : 'xy') + ', normal, tangent, binormal);\n';
+        } else {
+            decode += '    normal = czm_octDecode(' + attributeName + (numComponents > 1 ? '.' + (containsSt ? 'z' : 'x') : '') + ');\n';
 
-            modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+tangent;/g, '');
-            modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+binormal;/g, '');
-        } else if (containsTangent) {
-            globalDecl += 'vec3 tangent;\n';
-            decode +=
-                '    tangent = czm_octDecode(compressedTangent);\n';
+            if (containsTangent) {
+                globalDecl += 'vec3 tangent;\n';
+                decode += '    tangent = czm_octDecode(' + attributeName + '.' + (containsSt ? 'w' : 'y') + ');\n';
+            }
 
-            modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+tangent;/g, 'attribute vec2 compressedTangent;');
-        } else if (containsBinormal) {
-            globalDecl += 'vec3 binormal;\n';
-            decode +=
-                '    binormal = czm_octDecode(compressedBinormal);\n';
-
-            modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+binormal;/g, 'attribute vec2 compressedBinormal;');
+            if (containsBinormal) {
+                globalDecl += 'vec3 binormal;\n';
+                decode += '    binormal = czm_octDecode(' + attributeName + '.' + (containsSt ? 'w' : 'y') + ');\n';
+            }
         }
 
+        var modifiedVS = vertexShaderSource;
+        modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+normal;/g, '');
+        modifiedVS = modifiedVS.replace(/attribute\s+vec2\s+st;/g, '');
+        modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+tangent;/g, '');
+        modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+binormal;/g, '');
         modifiedVS = modifiedVS.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_non_compressed_main()');
         var compressedMain =
             'void main() \n' +
