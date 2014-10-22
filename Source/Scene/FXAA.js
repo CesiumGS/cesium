@@ -6,9 +6,9 @@ define([
         '../Core/destroyObject',
         '../Core/PixelFormat',
         '../Renderer/ClearCommand',
-        '../Renderer/ShaderSource',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderbufferFormat',
+        '../Renderer/ShaderSource',
         '../Shaders/PostProcessFilters/FXAA'
     ], function(
         Cartesian2,
@@ -17,9 +17,9 @@ define([
         destroyObject,
         PixelFormat,
         ClearCommand,
-        ShaderSource,
         PixelDatatype,
         RenderbufferFormat,
+        ShaderSource,
         FXAAFS) {
     "use strict";
 
