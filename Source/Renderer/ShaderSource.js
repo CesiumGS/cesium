@@ -2,25 +2,16 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/FeatureDetection',
-        '../Core/RuntimeError',
         '../Shaders/Builtin/CzmBuiltins',
         './AutomaticUniforms'
     ], function(
         defaultValue,
         defined,
-        defineProperties,
-        destroyObject,
         DeveloperError,
-        FeatureDetection,
-        RuntimeError,
         CzmBuiltins,
         AutomaticUniforms) {
     "use strict";
-    /*global console*/
 
     function removeComments(source) {
         return source.replace(/\/\*\*[\s\S]*?\*\//gm, function(match) {
@@ -78,7 +69,7 @@ define([
                 return czmMatches.indexOf(elem) === pos;
             });
 
-            czmMatches.forEach(function(element, index, array) {
+            czmMatches.forEach(function(element) {
                 if (element !== currentNode.name && ShaderSource._czmBuiltinsAndUniforms.hasOwnProperty(element)) {
                     var referencedNode = getDependencyNode(element, ShaderSource._czmBuiltinsAndUniforms[element], dependencyNodes);
                     currentNode.dependsOn.push(referencedNode);
