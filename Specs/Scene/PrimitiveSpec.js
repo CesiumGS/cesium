@@ -131,7 +131,7 @@ defineSuite([
         expect(primitive.allowPicking).toEqual(true);
         expect(primitive.asynchronous).toEqual(true);
         expect(primitive.debugShowBoundingVolume).toEqual(false);
-        expect(primitive.compressNormals).toEqual(true);
+        expect(primitive.compressVertices).toEqual(true);
     });
 
     it('releases geometry instances when releaseGeometryInstances is true', function() {

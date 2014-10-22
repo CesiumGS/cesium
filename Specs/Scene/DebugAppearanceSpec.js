@@ -189,7 +189,7 @@ defineSuite([
                 attributeName : 'normal'
             }),
             asynchronous : false,
-            compressNormals : false
+            compressVertices : false
         });
 
         ClearCommand.ALL.execute(context);
@@ -213,7 +213,7 @@ defineSuite([
                 attributeName : 'binormal'
             }),
             asynchronous : false,
-            compressNormals : false
+            compressVertices : false
         });
 
         ClearCommand.ALL.execute(context);
@@ -237,7 +237,7 @@ defineSuite([
                 attributeName : 'tangent'
             }),
             asynchronous : false,
-            compressNormals : false
+            compressVertices : false
         });
 
         ClearCommand.ALL.execute(context);
@@ -260,7 +260,7 @@ defineSuite([
                 attributeName : 'st'
             }),
             asynchronous : false,
-            compressNormals : false
+            compressVertices : false
         });
 
         ClearCommand.ALL.execute(context);
