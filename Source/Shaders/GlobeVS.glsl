@@ -94,7 +94,6 @@ void main()
     v_positionEC = (czm_modelView3D * vec4(position3DWC, 1.0)).xyz;
     v_positionMC = position3DWC;                                 // position in model coordinates
     vec2 encodedNormal = textureCoordAndEncodedNormals.zw;
-    encodedNormal = encodedNormal / 255.0 * 2.0 - 1.0;
     v_normalMC = czm_octDecode(encodedNormal);
     v_normalEC = czm_normal3D * v_normalMC;
 #endif
