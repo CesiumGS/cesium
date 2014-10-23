@@ -413,7 +413,8 @@ var wallInstance = new Cesium.GeometryInstance({
     geometry : new Cesium.WallGeometry({
         positions : positions,
         maximumHeights : maximumHeights,
-        minimumHeights : minimumHeights
+        minimumHeights : minimumHeights,
+        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
     }),
     attributes : {
         color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 0.7}))

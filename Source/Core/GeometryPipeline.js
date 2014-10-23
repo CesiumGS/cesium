@@ -20,6 +20,7 @@ define([
         './Math',
         './Matrix3',
         './Matrix4',
+        './Oct',
         './Plane',
         './PrimitiveType',
         './Tipsify'
@@ -44,6 +45,7 @@ define([
         CesiumMath,
         Matrix3,
         Matrix4,
+        Oct,
         Plane,
         PrimitiveType,
         Tipsify) {
@@ -275,7 +277,11 @@ define([
             'normal',
             'st',
             'binormal',
-            'tangent'
+            'tangent',
+
+            // From compressing normals
+            'stCompressedNormals',
+            'compressedNormals'
         ];
 
         var attributes = geometry.attributes;
@@ -1297,6 +1303,117 @@ define([
             componentsPerAttribute : 3,
             values : binormalValues
         });
+
+        return geometry;
+    };
+
+    var scratchPacked = new Cartesian2();
+    var toEncode1 = new Cartesian3();
+    var toEncode2 = new Cartesian3();
+    var toEncode3 = new Cartesian3();
+
+    /**
+     * Compresses and packs geometry normal attribute values to save memory.
+     *
+     * @param {Geometry} geometry The geometry to modify.
+     * @returns {Geometry} The modified <code>geometry</code> argument, with its normals compressed and packed.
+     *
+     * @example
+     * geometry = Cesium.GeometryPipeline.compressNormals(geometry);
+     */
+    GeometryPipeline.compressNormals = function(geometry) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(geometry)) {
+            throw new DeveloperError('geometry is required.');
+        }
+        //>>includeEnd('debug');
+
+        var normalAttribute = geometry.attributes.normal;
+        if (!defined(normalAttribute)) {
+            return geometry;
+        }
+
+        var stAttribute = geometry.attributes.st;
+        var tangentAttribute = geometry.attributes.tangent;
+        var binormalAttribute = geometry.attributes.binormal;
+
+        var normals = normalAttribute.values;
+        var st;
+        var tangents;
+        var binormals;
+
+
+        if (defined(stAttribute)) {
+            st = stAttribute.values;
+        }
+        if (defined(tangentAttribute)) {
+            tangents = tangentAttribute.values;
+        }
+        if (binormalAttribute) {
+            binormals = binormalAttribute.values;
+        }
+
+        var length = normals.length;
+        var compressedLength = length / 3.0;
+        var numComponents = 1.0;
+        numComponents += defined(st) ? 2.0 : 0.0;
+        numComponents += defined(tangents) || defined(binormals) ? 1.0 : 0.0;
+        compressedLength *= numComponents;
+        var compressedNormals = new Float32Array(compressedLength);
+
+        var normalIndex = 0;
+        var stIndex = 0;
+        var tangentsIndex = 0;
+
+        for (var i = 0; i < length; i += 3) {
+            if (defined(st)) {
+                compressedNormals[normalIndex++] = st[stIndex++];
+                compressedNormals[normalIndex++] = st[stIndex++];
+            }
+
+            if (defined(tangents) && defined(binormals)) {
+                Cartesian3.fromArray(normals, i, toEncode1);
+                Cartesian3.fromArray(tangents, i, toEncode2);
+                Cartesian3.fromArray(binormals, i, toEncode3);
+
+                Oct.pack(toEncode1, toEncode2, toEncode3, scratchPacked);
+                compressedNormals[normalIndex++] = scratchPacked.x;
+                compressedNormals[normalIndex++] = scratchPacked.y;
+            } else {
+                Cartesian3.fromArray(normals, i, toEncode1);
+                compressedNormals[normalIndex++] = Oct.encodeFloat(toEncode1);
+
+                if (defined(tangents)) {
+                    Cartesian3.fromArray(tangents, i, toEncode1);
+                    compressedNormals[normalIndex++] = Oct.encodeFloat(toEncode1);
+                }
+
+                if (defined(binormals)) {
+                    Cartesian3.fromArray(binormals, i, toEncode1);
+                    compressedNormals[normalIndex++] = Oct.encodeFloat(toEncode1);
+                }
+            }
+        }
+
+        var attributeName = defined(st) ? 'stCompressedNormals' : 'compressedNormals';
+        geometry.attributes[attributeName] = new GeometryAttribute({
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : numComponents,
+            values : compressedNormals
+        });
+        delete geometry.attributes.normal;
+
+        if (defined(st)) {
+            delete geometry.attributes.st;
+        }
+
+        if (defined(tangents)) {
+            delete geometry.attributes.tangent;
+        }
+
+        if (defined(binormals)) {
+            delete geometry.attributes.binormal;
+        }
 
         return geometry;
     };
