@@ -103,6 +103,23 @@ define([
         return Cartesian3.normalize(result, result);
     };
 
+    /**
+     * Packs an oct encoded vector into a single floating-point number.
+     *
+     * @param {Cartesian2} encoded The oct encoded vector.
+     * @returns {Number} The oct encoded vector packed into a single float.
+     *
+     * @exception {DeveloperError} encoded is required.
+     */
+    Oct.packFloat = function(encoded) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(encoded)) {
+            throw new DeveloperError('encoded is required.');
+        }
+        //>>includeEnd('debug');
+        return 256.0 * encoded.x + encoded.y;
+    };
+
     var scratchEncodeCart2 = new Cartesian2();
 
     /**
@@ -117,23 +134,113 @@ define([
      */
     Oct.encodeFloat = function(vector) {
         Oct.encode(vector, scratchEncodeCart2);
-        return 256.0 * scratchEncodeCart2.x + scratchEncodeCart2.y;
+        return Oct.packFloat(scratchEncodeCart2);
     };
 
     /**
-     * Decodes a unit-length vector in 'oct' encoding to a normalized 3-component vector.
+     * Decodes a unit-length vector in 'oct' encoding packed in a floating-point number to a normalized 3-component vector.
      *
      * @param {Number} value The oct-encoded unit length vector stored as a single floating-point number.
      * @param {Cartesian3} result The decoded and normalized vector
      * @returns {Cartesian3} The decoded and normalized vector.
      *
+     * @exception {DeveloperError} value must be defined.
      * @exception {DeveloperError} result must be defined.
      */
     Oct.decodeFloat = function(value, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required.');
+        }
+        //>>includeEnd('debug');
+
         var temp = value / 256.0;
         var x = Math.floor(temp);
         var y = (temp - x) * 256.0;
+
         return Oct.decode(x, y, result);
+    };
+
+    /**
+     * Encodes three normalized vectors into 6 SNORM values in the range of [0-255] following the 'oct' encoding and
+     * packs those into two floating-point numbers.
+     *
+     * @param {Cartesian3} v1 A normalized vector to be compressed.
+     * @param {Cartesian3} v2 A normalized vector to be compressed.
+     * @param {Cartesian3} v3 A normalized vector to be compressed.
+     * @param {Cartesian2} result The 'oct' encoded vectors packed into two floating-point numbers.
+     * @returns {Cartesian2} The 'oct' encoded vectors packed into two floating-point numbers.
+     *
+     * @exception {DeveloperError} v1 must be defined.
+     * @exception {DeveloperError} v2 must be defined.
+     * @exception {DeveloperError} v3 must be defined.
+     * @exception {DeveloperError} result must be defined.
+     */
+    Oct.pack = function(v1, v2, v3, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(v1)) {
+            throw new DeveloperError('v1 is required.');
+        }
+        if (!defined(v2)) {
+            throw new DeveloperError('v2 is required.');
+        }
+        if (!defined(v3)) {
+            throw new DeveloperError('v3 is required.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required.');
+        }
+        //>>includeEnd('debug');
+
+        var encoded1 = Oct.encodeFloat(v1);
+        var encoded2 = Oct.encodeFloat(v2);
+
+        var encoded3 = Oct.encode(v3, scratchEncodeCart2);
+        result.x = 65536.0 * encoded3.x + encoded1;
+        result.y = 65536.0 * encoded3.y + encoded2;
+        return result;
+    };
+
+    /**
+     * Decodes three unit-length vectors in 'oct' encoding packed into a floating-point number to a normalized 3-component vector.
+     *
+     * @param {Cartesian2} packed The three oct-encoded unit length vectors stored as two floating-point number.
+     * @param {Cartesian3} v1 One decoded and normalized vector.
+     * @param {Cartesian3} v2 One decoded and normalized vector.
+     * @param {Cartesian3} v3 One decoded and normalized vector.
+     *
+     * @exception {DeveloperError} packed must be defined.
+     * @exception {DeveloperError} v1 must be defined.
+     * @exception {DeveloperError} v2 must be defined.
+     * @exception {DeveloperError} v3 must be defined.
+     */
+    Oct.unpack = function(packed, v1, v2, v3) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(packed)) {
+            throw new DeveloperError('packed is required.');
+        }
+        if (!defined(v1)) {
+            throw new DeveloperError('v1 is required.');
+        }
+        if (!defined(v2)) {
+            throw new DeveloperError('v2 is required.');
+        }
+        if (!defined(v3)) {
+            throw new DeveloperError('v3 is required.');
+        }
+        //>>includeEnd('debug');
+
+        var temp = packed.x / 65536.0;
+        var x = Math.floor(temp);
+        var encodedFloat1 = (temp - x) * 65536.0;
+
+        temp = packed.y / 65536.0;
+        var y = Math.floor(temp);
+        var encodedFloat2 = (temp - y) * 65536.0;
+
+        Oct.decodeFloat(encodedFloat1, v1);
+        Oct.decodeFloat(encodedFloat2, v2);
+        Oct.decode(x, y, v3);
     };
 
     return Oct;

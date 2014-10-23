@@ -6,6 +6,7 @@ Change Log
 * Fixed a bug that caused non-base imagery layers with a limited `rectangle` to be stretched to the edges of imagery tiles. [#416](https://github.com/AnalyticalGraphicsInc/cesium/issues/416)
 * Fixed rendering polylines with duplicate positions. [#898](https://github.com/AnalyticalGraphicsInc/cesium/issues/898)
 * Added support to the `CesiumTerrainProvider` for handling terrain tiles that define more than 64k vertices.
+* Added `Primitive.compressVertices`. When true, the geometry vertices are compressed, which will save memory.
 * Upgraded topojson from 1.6.8 to 1.6.18.
 
 ### 1.2 - 2014-10-01

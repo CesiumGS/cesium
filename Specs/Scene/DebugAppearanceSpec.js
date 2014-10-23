@@ -2,6 +2,7 @@
 defineSuite([
         'Scene/DebugAppearance',
         'Core/ComponentDatatype',
+        'Core/defaultValue',
         'Core/GeometryInstance',
         'Core/GeometryInstanceAttribute',
         'Core/Rectangle',
@@ -17,6 +18,7 @@ defineSuite([
     ], function(
         DebugAppearance,
         ComponentDatatype,
+        defaultValue,
         GeometryInstance,
         GeometryInstanceAttribute,
         Rectangle,
@@ -34,19 +36,11 @@ defineSuite([
 
     var context;
     var frameState;
-    var rectangleInstance;
+    var rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
 
     beforeAll(function() {
         context = createContext();
         frameState = createFrameState();
-
-        var rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
-        rectangleInstance = new GeometryInstance({
-            geometry : new RectangleGeometry({
-                vertexFormat : VertexFormat.ALL,
-                rectangle : rectangle
-            })
-        });
 
         frameState.camera.viewRectangle(rectangle);
         var us = context.uniformState;
@@ -56,6 +50,15 @@ defineSuite([
     afterAll(function() {
         destroyContext(context);
     });
+
+    function createInstance(vertexFormat) {
+        return new GeometryInstance({
+            geometry : new RectangleGeometry({
+                vertexFormat : defaultValue(vertexFormat, VertexFormat.ALL),
+                rectangle : rectangle
+            })
+        });
+    }
 
     it('constructor throws without attributeName', function() {
         expect(function() {
@@ -176,12 +179,17 @@ defineSuite([
     });
 
     it('renders normal', function() {
+        var vertexFormat = new VertexFormat({
+            position : true,
+            normal : true
+        });
         var primitive = new Primitive({
-            geometryInstances : rectangleInstance,
+            geometryInstances : createInstance(vertexFormat),
             appearance : new DebugAppearance({
                 attributeName : 'normal'
             }),
-            asynchronous : false
+            asynchronous : false,
+            compressVertices : false
         });
 
         ClearCommand.ALL.execute(context);
@@ -194,12 +202,18 @@ defineSuite([
     });
 
     it('renders binormal', function() {
+        var vertexFormat = new VertexFormat({
+            position : true,
+            normal : true,
+            binormal : true
+        });
         var primitive = new Primitive({
-            geometryInstances : rectangleInstance,
+            geometryInstances : createInstance(vertexFormat),
             appearance : new DebugAppearance({
                 attributeName : 'binormal'
             }),
-            asynchronous : false
+            asynchronous : false,
+            compressVertices : false
         });
 
         ClearCommand.ALL.execute(context);
@@ -212,12 +226,18 @@ defineSuite([
     });
 
     it('renders tangent', function() {
+        var vertexFormat = new VertexFormat({
+            position : true,
+            normal : true,
+            tangent : true
+        });
         var primitive = new Primitive({
-            geometryInstances : rectangleInstance,
+            geometryInstances : createInstance(vertexFormat),
             appearance : new DebugAppearance({
                 attributeName : 'tangent'
             }),
-            asynchronous : false
+            asynchronous : false,
+            compressVertices : false
         });
 
         ClearCommand.ALL.execute(context);
@@ -230,12 +250,17 @@ defineSuite([
     });
 
     it('renders st', function() {
+        var vertexFormat = new VertexFormat({
+            position : true,
+            st : true
+        });
         var primitive = new Primitive({
-            geometryInstances : rectangleInstance,
+            geometryInstances : createInstance(vertexFormat),
             appearance : new DebugAppearance({
                 attributeName : 'st'
             }),
-            asynchronous : false
+            asynchronous : false,
+            compressVertices : false
         });
 
         ClearCommand.ALL.execute(context);
@@ -248,6 +273,7 @@ defineSuite([
     });
 
     it('renders float', function() {
+        var rectangleInstance = createInstance();
         rectangleInstance.attributes = {
             debug : new GeometryInstanceAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
@@ -274,6 +300,7 @@ defineSuite([
     });
 
     it('renders vec2', function() {
+        var rectangleInstance = createInstance();
         rectangleInstance.attributes = {
             debug : new GeometryInstanceAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
@@ -300,6 +327,7 @@ defineSuite([
     });
 
     it('renders vec3', function() {
+        var rectangleInstance = createInstance();
         rectangleInstance.attributes = {
             debug : new GeometryInstanceAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
@@ -326,6 +354,7 @@ defineSuite([
     });
 
     it('renders vec4', function() {
+        var rectangleInstance = createInstance();
         rectangleInstance.attributes = {
             debug : new GeometryInstanceAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
