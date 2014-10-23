@@ -218,14 +218,12 @@ define([
         var uniformMap;
 
         if (!defined(this._compositeCommand)) {
-            var defines = [];
-            if (this._translucentMRTSupport) {
-                defines.push('MRT');
-            }
             fs = new ShaderSource({
-                defines : defines,
                 sources : [CompositeOITFS]
             });
+            if (this._translucentMRTSupport) {
+                fs.defines.push('MRT');
+            }
 
             uniformMap = {
                 u_opaque : function() {

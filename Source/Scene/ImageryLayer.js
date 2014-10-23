@@ -836,9 +836,6 @@ define([
             var vs = new ShaderSource({
                 sources : [ReprojectWebMercatorVS]
             });
-            var fs = new ShaderSource({
-                sources : [ReprojectWebMercatorFS]
-            });
 
             // Firefox 33-34 has a regression that prevents the CORDIC implementation from compiling
             // https://github.com/AnalyticalGraphicsInc/cesium/issues/2197
@@ -849,7 +846,7 @@ define([
                 }
             }
 
-            reproject.shaderProgram = context.createShaderProgram(vs, fs, reprojectAttribInds);
+            reproject.shaderProgram = context.createShaderProgram(vs, ReprojectWebMercatorFS, reprojectAttribInds);
 
             var maximumSupportedAnisotropy = context.maximumTextureFilterAnisotropy;
             reproject.sampler = context.createSampler({

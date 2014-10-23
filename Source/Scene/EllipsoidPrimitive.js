@@ -346,29 +346,22 @@ define([
         this._onlySunLighting = this.onlySunLighting;
 
         var colorCommand = this._colorCommand;
-
-        var defines;
+        var vs;
+        var fs;
 
         // Recompile shader when material, lighting, or translucency changes
         if (materialChanged || lightingChanged || translucencyChanged) {
-            var colorVS = new ShaderSource({
-                sources : [EllipsoidVS]
-            });
-
-            defines = [];
-            if (this.onlySunLighting) {
-                defines.push('ONLY_SUN_LIGHTING');
-            }
-            if (!translucent && context.fragmentDepth) {
-                defines.push('WRITE_DEPTH');
-            }
-
-            var colorFS = new ShaderSource({
-                defines : defines,
+            fs = new ShaderSource({
                 sources : [this.material.shaderSource, EllipsoidFS]
             });
+            if (this.onlySunLighting) {
+                fs.defines.push('ONLY_SUN_LIGHTING');
+            }
+            if (!translucent && context.fragmentDepth) {
+                fs.defines.push('WRITE_DEPTH');
+            }
 
-            this._sp = context.replaceShaderProgram(this._sp, colorVS, colorFS, attributeLocations);
+            this._sp = context.replaceShaderProgram(this._sp, EllipsoidVS, fs, attributeLocations);
 
             colorCommand.vertexArray = this._va;
             colorCommand.renderState = this._rs;
@@ -402,25 +395,18 @@ define([
 
             // Recompile shader when material changes
             if (materialChanged || lightingChanged || !defined(this._pickSP)) {
-                var pickVS = new ShaderSource({
-                    sources : [EllipsoidVS]
-                });
-
-                defines = [];
-                if (this.onlySunLighting) {
-                    defines.push('ONLY_SUN_LIGHTING');
-                }
-                if (!translucent && context.fragmentDepth) {
-                    defines.push('WRITE_DEPTH');
-                }
-
-                var pickFS = new ShaderSource({
-                    defines : defines,
+                fs = new ShaderSource({
                     sources : [this.material.shaderSource, EllipsoidFS],
                     pickColorQualifier : 'uniform'
                 });
+                if (this.onlySunLighting) {
+                    fs.defines.push('ONLY_SUN_LIGHTING');
+                }
+                if (!translucent && context.fragmentDepth) {
+                    fs.defines.push('WRITE_DEPTH');
+                }
 
-                this._pickSP = context.replaceShaderProgram(this._pickSP, pickVS, pickFS, attributeLocations);
+                this._pickSP = context.replaceShaderProgram(this._pickSP, EllipsoidVS, fs, attributeLocations);
 
                 pickCommand.vertexArray = this._va;
                 pickCommand.renderState = this._rs;

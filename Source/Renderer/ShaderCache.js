@@ -73,8 +73,8 @@ define([
             });
         }
 
-        var vertexShaderText = vertexShaderSource.getCombinedShader(false);
-        var fragmentShaderText = fragmentShaderSource.getCombinedShader(true);
+        var vertexShaderText = vertexShaderSource.createCombinedVertexShader();
+        var fragmentShaderText = fragmentShaderSource.createCombinedFragmentShader();
 
         var keyword = vertexShaderText + fragmentShaderText + JSON.stringify(attributeLocations);
         var cachedShader;

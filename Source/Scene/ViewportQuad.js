@@ -133,10 +133,10 @@ define([
                     this._overlayCommand.shaderProgram.destroy();
                 }
 
-                var fsSource = new ShaderSource({
+                var fs = new ShaderSource({
                     sources : [this._material.shaderSource, ViewportQuadFS]
                 });
-                this._overlayCommand = context.createViewportQuadCommand(fsSource, {
+                this._overlayCommand = context.createViewportQuadCommand(fs, {
                     renderState : this._rs,
                     uniformMap : this._material._uniforms,
                     owner : this

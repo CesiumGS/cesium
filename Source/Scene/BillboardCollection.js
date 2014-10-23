@@ -1213,7 +1213,6 @@ define([
         var vaLength;
         var command;
         var j;
-        var defines;
         var vs;
         var fs;
 
@@ -1235,29 +1234,23 @@ define([
                     (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistance) ||
                     (this._shaderPixelOffsetScaleByDistance && !this._compiledShaderPixelOffsetScaleByDistance)) {
 
-                defines = [];
-                if (this._shaderRotation) {
-                    defines.push('ROTATION');
-                }
-                if (this._shaderScaleByDistance) {
-                    defines.push('EYE_DISTANCE_SCALING');
-                }
-                if (this._shaderTranslucencyByDistance) {
-                    defines.push('EYE_DISTANCE_TRANSLUCENCY');
-                }
-                if (this._shaderPixelOffsetScaleByDistance) {
-                    defines.push('EYE_DISTANCE_PIXEL_OFFSET');
-                }
-
                 vs = new ShaderSource({
-                    defines : defines,
                     sources : [BillboardCollectionVS]
                 });
-                fs = new ShaderSource({
-                    sources : [BillboardCollectionFS]
-                });
+                if (this._shaderRotation) {
+                    vs.defines.push('ROTATION');
+                }
+                if (this._shaderScaleByDistance) {
+                    vs.defines.push('EYE_DISTANCE_SCALING');
+                }
+                if (this._shaderTranslucencyByDistance) {
+                    vs.defines.push('EYE_DISTANCE_TRANSLUCENCY');
+                }
+                if (this._shaderPixelOffsetScaleByDistance) {
+                    vs.defines.push('EYE_DISTANCE_PIXEL_OFFSET');
+                }
 
-                this._sp = context.replaceShaderProgram(this._sp, vs, fs, attributeLocations);
+                this._sp = context.replaceShaderProgram(this._sp, vs, BillboardCollectionFS, attributeLocations);
                 this._compiledShaderRotation = this._shaderRotation;
                 this._compiledShaderScaleByDistance = this._shaderScaleByDistance;
                 this._compiledShaderTranslucencyByDistance = this._shaderTranslucencyByDistance;
@@ -1299,24 +1292,24 @@ define([
                     (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistancePick) ||
                     (this._shaderPixelOffsetScaleByDistance && !this._compiledShaderPixelOffsetScaleByDistancePick)) {
 
-                defines = ['RENDER_FOR_PICK'];
-                if (this._shaderRotation) {
-                    defines.push('ROTATION');
-                }
-                if (this._shaderScaleByDistance) {
-                    defines.push('EYE_DISTANCE_SCALING');
-                }
-                if (this._shaderTranslucencyByDistance) {
-                    defines.push('EYE_DISTANCE_TRANSLUCENCY');
-                }
-                if (this._shaderPixelOffsetScaleByDistance) {
-                    defines.push('EYE_DISTANCE_PIXEL_OFFSET');
-                }
-
                 vs = new ShaderSource({
-                    defines : defines,
+                    defines : ['RENDER_FOR_PICK'],
                     sources : [BillboardCollectionVS]
                 });
+
+                if (this._shaderRotation) {
+                    vs.defines.push('ROTATION');
+                }
+                if (this._shaderScaleByDistance) {
+                    vs.defines.push('EYE_DISTANCE_SCALING');
+                }
+                if (this._shaderTranslucencyByDistance) {
+                    vs.defines.push('EYE_DISTANCE_TRANSLUCENCY');
+                }
+                if (this._shaderPixelOffsetScaleByDistance) {
+                    vs.defines.push('EYE_DISTANCE_PIXEL_OFFSET');
+                }
+
                 fs = new ShaderSource({
                     defines : ['RENDER_FOR_PICK'],
                     sources : [BillboardCollectionFS]

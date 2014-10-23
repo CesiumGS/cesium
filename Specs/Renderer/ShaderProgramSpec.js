@@ -100,13 +100,13 @@ defineSuite([
 
         var expectedVSText = new ShaderSource({
             sources : [vs]
-        }).getCombinedShader(false);
+        }).createCombinedVertexShader();
 
         expect(sp._vertexShaderText).toEqual(expectedVSText);
 
         var expectedFSText = new ShaderSource({
             sources : [fs]
-        }).getCombinedShader(true);
+        }).createCombinedFragmentShader();
 
         expect(sp._fragmentShaderText).toEqual(expectedFSText);
     });

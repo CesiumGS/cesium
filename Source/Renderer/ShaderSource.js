@@ -290,19 +290,21 @@ void main()\n\
     };
 
     /**
-     * Create a single string containing the full, combined shader with all dependencies and defines.
+     * Create a single string containing the full, combined vertex shader with all dependencies and defines.
      *
-     * @param {Boolean} isFragmentShader True if this shader will be a fragment shader.
      * @returns {String} The combined shader string.
      */
-    ShaderSource.prototype.getCombinedShader = function(isFragmentShader) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(isFragmentShader)) {
-            throw new DeveloperError('isFragmentShader is required.');
-        }
-        //>>includeEnd('debug');
+    ShaderSource.prototype.createCombinedVertexShader = function() {
+        return combineShader(this, false);
+    };
 
-        return combineShader(this, isFragmentShader);
+    /**
+     * Create a single string containing the full, combined fragment shader with all dependencies and defines.
+     *
+     * @returns {String} The combined shader string.
+     */
+    ShaderSource.prototype.createCombinedFragmentShader = function() {
+        return combineShader(this, true);
     };
 
     /**
