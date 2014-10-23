@@ -600,7 +600,7 @@ define([
             '    czm_non_compressed_main(); \n' +
             '}';
 
-        return createShaderSource({ sources : [attributeDecl, globalDecl, modifiedVS, compressedMain] });
+        return [attributeDecl, globalDecl, modifiedVS, compressedMain].join('\n');
     }
 
     function validateShaderMatching(shaderProgram, attributeLocations) {
