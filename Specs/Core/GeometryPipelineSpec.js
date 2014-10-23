@@ -1679,6 +1679,35 @@ defineSuite([
         }
     });
 
+    it('compressVertices compresses texture coordinates', function() {
+        var geometry = BoxGeometry.createGeometry(new BoxGeometry({
+            vertexFormat : new VertexFormat({
+                position : true,
+                st : true
+            }),
+            maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
+        }));
+        expect(geometry.attributes.st).toBeDefined();
+        var originalST = Array.prototype.slice.call(geometry.attributes.st.values);
+
+        geometry = GeometryPipeline.compressVertices(geometry);
+
+        expect(geometry.attributes.st).not.toBeDefined();
+        expect(geometry.attributes.compressedAttributes).toBeDefined();
+
+        var st = geometry.attributes.compressedAttributes.values;
+        expect(st.length).toEqual(originalST.length / 2);
+
+        for (var i = 0; i < st.length; ++i) {
+            var temp = st[i] / 4096.0;
+            var stx = Math.floor(temp) / 4096.0;
+            var sty = temp - Math.floor(temp);
+            var texCoord = new Cartesian2(stx, sty);
+            expect(texCoord).toEqualEpsilon(Cartesian2.fromArray(originalST, i * 2, new Cartesian2()), CesiumMath.EPSILON2);
+        }
+    });
+
     it('compressVertices packs compressed normals with texture coordinates', function() {
         var geometry = BoxGeometry.createGeometry(new BoxGeometry({
             vertexFormat : new VertexFormat({
