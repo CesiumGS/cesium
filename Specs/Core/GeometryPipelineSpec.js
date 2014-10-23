@@ -1636,13 +1636,13 @@ defineSuite([
         }
     });
 
-    it('compressNormals throws without geometry', function() {
+    it('compressVertices throws without geometry', function() {
         expect(function() {
-            return GeometryPipeline.compressNormals();
+            return GeometryPipeline.compressVertices();
         }).toThrowDeveloperError();
     });
 
-    it('compressNormals on geometry without normals does nothing', function() {
+    it('compressVertices on geometry without normals does nothing', function() {
         var geometry = BoxGeometry.createGeometry(new BoxGeometry({
             vertexFormat : new VertexFormat({
                 position : true
@@ -1651,11 +1651,11 @@ defineSuite([
             minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
         }));
         expect(geometry.attributes.normal).not.toBeDefined();
-        geometry = GeometryPipeline.compressNormals(geometry);
+        geometry = GeometryPipeline.compressVertices(geometry);
         expect(geometry.attributes.normal).not.toBeDefined();
     });
 
-    it('compressNormals compresses normals', function() {
+    it('compressVertices compresses normals', function() {
         var geometry = BoxGeometry.createGeometry(new BoxGeometry({
             vertexFormat : new VertexFormat({
                 position : true,
@@ -1667,7 +1667,7 @@ defineSuite([
         expect(geometry.attributes.normal).toBeDefined();
         var originalNormals = Array.prototype.slice.call(geometry.attributes.normal.values);
 
-        geometry = GeometryPipeline.compressNormals(geometry);
+        geometry = GeometryPipeline.compressVertices(geometry);
 
         expect(geometry.attributes.compressedNormals).toBeDefined();
 
@@ -1679,7 +1679,7 @@ defineSuite([
         }
     });
 
-    it('compressNormals packs compressed normals with texture coordinates', function() {
+    it('compressVertices packs compressed normals with texture coordinates', function() {
         var geometry = BoxGeometry.createGeometry(new BoxGeometry({
             vertexFormat : new VertexFormat({
                 position : true,
@@ -1694,7 +1694,7 @@ defineSuite([
         var originalNormals = Array.prototype.slice.call(geometry.attributes.normal.values);
         var originalST = Array.prototype.slice.call(geometry.attributes.st.values);
 
-        geometry = GeometryPipeline.compressNormals(geometry);
+        geometry = GeometryPipeline.compressVertices(geometry);
 
         expect(geometry.attributes.normal).not.toBeDefined();
         expect(geometry.attributes.st).not.toBeDefined();
@@ -1710,7 +1710,7 @@ defineSuite([
         }
     });
 
-    it('compressNormals packs compressed tangents and binormals', function() {
+    it('compressVertices packs compressed tangents and binormals', function() {
         var geometry = BoxGeometry.createGeometry(new BoxGeometry({
             vertexFormat : new VertexFormat({
                 position : true,
@@ -1728,7 +1728,7 @@ defineSuite([
         var originalTangents = Array.prototype.slice.call(geometry.attributes.tangent.values);
         var originalBinormals = Array.prototype.slice.call(geometry.attributes.binormal.values);
 
-        geometry = GeometryPipeline.compressNormals(geometry);
+        geometry = GeometryPipeline.compressVertices(geometry);
 
         expect(geometry.attributes.tangent).not.toBeDefined();
         expect(geometry.attributes.binormal).not.toBeDefined();

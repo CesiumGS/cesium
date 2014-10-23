@@ -243,7 +243,7 @@ define([
 
         // oct encode and pack normals
         if (compressVertices) {
-            GeometryPipeline.compressNormals(geometry);
+            GeometryPipeline.compressVertices(geometry);
         }
 
         if (!uintIndexSupport) {
