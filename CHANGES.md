@@ -6,6 +6,7 @@ Change Log
 * Fixed a bug that caused non-base imagery layers with a limited `rectangle` to be stretched to the edges of imagery tiles. [#416](https://github.com/AnalyticalGraphicsInc/cesium/issues/416)
 * Added support to the `CesiumTerrainProvider` for handling terrain tiles that define more than 64k vertices.
 * Upgraded topojson from 1.6.8 to 1.6.18.
+* `ReferenceProperty` instances now retain their last value if the entity being referenced is removed from the target collection.  The reference will be automatically reattached if the target is reintroduced. 
 
 ### 1.2 - 2014-10-01
 
