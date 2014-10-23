@@ -8,7 +8,6 @@ define([
         '../Renderer/ClearCommand',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderbufferFormat',
-        '../Renderer/ShaderSource',
         '../Shaders/PostProcessFilters/FXAA'
     ], function(
         Cartesian2,
@@ -19,7 +18,6 @@ define([
         ClearCommand,
         PixelDatatype,
         RenderbufferFormat,
-        ShaderSource,
         FXAAFS) {
     "use strict";
 
