@@ -103,6 +103,23 @@ define([
         return Cartesian3.normalize(result, result);
     };
 
+    /**
+     * Packs an oct encoded vector into a single floating-point number.
+     *
+     * @param {Cartesian2} encoded The oct encoded vector.
+     * @returns {Number} The oct encoded vector packed into a single float.
+     *
+     * @exception {DeveloperError} encoded is required.
+     */
+    Oct.packFloat = function(encoded) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(encoded)) {
+            throw new DeveloperError('encoded is required.');
+        }
+        //>>includeEnd('debug');
+        return 256.0 * encoded.x + encoded.y;
+    };
+
     var scratchEncodeCart2 = new Cartesian2();
 
     /**
@@ -117,7 +134,7 @@ define([
      */
     Oct.encodeFloat = function(vector) {
         Oct.encode(vector, scratchEncodeCart2);
-        return 256.0 * scratchEncodeCart2.x + scratchEncodeCart2.y;
+        return Oct.packFloat(scratchEncodeCart2);
     };
 
     /**
