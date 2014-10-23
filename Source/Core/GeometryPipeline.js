@@ -279,9 +279,8 @@ define([
             'binormal',
             'tangent',
 
-            // From compressing normals
-            'stCompressedNormals',
-            'compressedNormals'
+            // From compressing texture coordinates and normals
+            'compressedAttributes'
         ];
 
         var attributes = geometry.attributes;
@@ -1319,9 +1318,9 @@ define([
      * @returns {Geometry} The modified <code>geometry</code> argument, with its normals compressed and packed.
      *
      * @example
-     * geometry = Cesium.GeometryPipeline.compressNormals(geometry);
+     * geometry = Cesium.GeometryPipeline.compressVertices(geometry);
      */
-    GeometryPipeline.compressNormals = function(geometry) {
+    GeometryPipeline.compressVertices = function(geometry) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(geometry)) {
             throw new DeveloperError('geometry is required.');
