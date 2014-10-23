@@ -19,8 +19,8 @@ define([
         '../Core/subdivideArray',
         '../Core/TaskProcessor',
         '../Renderer/BufferUsage',
-        '../Renderer/createShaderSource',
         '../Renderer/DrawCommand',
+        '../Renderer/ShaderSource',
         '../ThirdParty/when',
         './CullFace',
         './Pass',
@@ -47,8 +47,8 @@ define([
         subdivideArray,
         TaskProcessor,
         BufferUsage,
-        createShaderSource,
         DrawCommand,
+        ShaderSource,
         when,
         CullFace,
         Pass,
@@ -503,7 +503,7 @@ define([
             }
         }
 
-        return createShaderSource({ sources : [forwardDecl, attributes, vertexShaderSource, computeFunctions] });
+        return [forwardDecl, attributes, vertexShaderSource, computeFunctions].join('\n');
     }
 
     function createPickVertexShaderSource(vertexShaderSource) {
@@ -600,7 +600,7 @@ define([
             '    czm_non_compressed_main(); \n' +
             '}';
 
-        return createShaderSource({ sources : [attributeDecl, globalDecl, modifiedVS, compressedMain] });
+        return [attributeDecl, globalDecl, modifiedVS, compressedMain].join('\n');
     }
 
     function validateShaderMatching(shaderProgram, attributeLocations) {
@@ -940,7 +940,10 @@ define([
             validateShaderMatching(this._sp, attributeLocations);
 
             if (allowPicking) {
-                var pickFS = createShaderSource({ sources : [fs], pickColorQualifier : 'varying' });
+                var pickFS = new ShaderSource({
+                    sources : [fs],
+                    pickColorQualifier : 'varying'
+                });
                 this._pickSP = context.replaceShaderProgram(this._pickSP, createPickVertexShaderSource(vs), pickFS, attributeLocations);
             } else {
                 this._pickSP = context.createShaderProgram(vs, fs, attributeLocations);

@@ -4,7 +4,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Renderer/createShaderSource',
         './BlendingState',
         './CullFace'
     ], function(
@@ -12,7 +11,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        createShaderSource,
         BlendingState,
         CullFace) {
     "use strict";
@@ -139,10 +137,19 @@ define([
      * @returns {String} The full GLSL fragment shader source.
      */
     Appearance.prototype.getFragmentShaderSource = function() {
-        return createShaderSource({
-            defines : [this.flat ? 'FLAT' : '', this.faceForward ? 'FACE_FORWARD' : ''],
-            sources : [defined(this.material) ? this.material.shaderSource : '', this.fragmentShaderSource]
-        });
+        var parts = [];
+        if (this.flat) {
+            parts.push('#define FLAT');
+        }
+        if (this.faceForward) {
+            parts.push('#define FACE_FORWARD');
+        }
+        if (defined(this.material)) {
+            parts.push(this.material.shaderSource);
+        }
+        parts.push(this.fragmentShaderSource);
+
+        return parts.join('\n');
     };
 
     /**
