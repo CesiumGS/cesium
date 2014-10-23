@@ -287,7 +287,7 @@ define([
      *
      * @exception {DeveloperError} This instance does not represent a filled geometry.
      */
-    EllipsoidGeometryUpdater.prototype.createFillGeometryInstance = function(time) {
+    EllipsoidGeometryUpdater.prototype.createFillGeometryInstance = function(time, vertexFormat) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
@@ -325,9 +325,12 @@ define([
         orientationScratch = entity.orientation.getValue(Iso8601.MINIMUM_VALUE, orientationScratch);
         matrix3Scratch = Matrix3.fromQuaternion(orientationScratch, matrix3Scratch);
 
+        var options = this._options;
+        options.vertexFormat = vertexFormat;
+
         return new GeometryInstance({
             id : entity,
-            geometry : new EllipsoidGeometry(this._options),
+            geometry : new EllipsoidGeometry(options),
             modelMatrix : Matrix4.fromRotationTranslation(matrix3Scratch, positionScratch),
             attributes : attributes
         });
@@ -438,9 +441,7 @@ define([
             return;
         }
 
-        var material = defaultValue(ellipsoid.material, defaultMaterial);
-        var isColorMaterial = material instanceof ColorMaterialProperty;
-        this._materialProperty = material;
+        this._materialProperty = defaultValue(ellipsoid.material, defaultMaterial);
         this._fillProperty = defaultValue(fillProperty, defaultFill);
         this._showProperty = defaultValue(show, defaultShow);
         this._showOutlineProperty = defaultValue(ellipsoid.outline, defaultOutline);
@@ -464,7 +465,6 @@ define([
             }
         } else {
             var options = this._options;
-            options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.VERTEX_FORMAT;
             options.radii = radii.getValue(Iso8601.MINIMUM_VALUE, options.radii);
             options.stackPartitions = defined(stackPartitions) ? stackPartitions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.slicePartitions = defined(slicePartitions) ? slicePartitions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
@@ -604,7 +604,11 @@ define([
             });
             this._primitives.add(this._primitive);
 
-            options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
+            appearance = new PerInstanceColorAppearance({
+                flat : true,
+                translucent : outlineColor.alpha !== 1.0
+            });
+            options.vertexFormat = appearance.vertexFormat;
             this._outlinePrimitive = new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
@@ -615,10 +619,7 @@ define([
                         color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
                     }
                 }),
-                appearance : new PerInstanceColorAppearance({
-                    flat : true,
-                    translucent : outlineColor.alpha !== 1.0
-                }),
+                appearance : appearance,
                 asynchronous : false
             });
             this._primitives.add(this._outlinePrimitive);

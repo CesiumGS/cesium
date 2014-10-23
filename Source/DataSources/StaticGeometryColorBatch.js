@@ -17,9 +17,8 @@ define([
 
     var colorScratch = new Color();
 
-    var Batch = function(primitives, translucent, appearanceType, closed) {
+    var Batch = function(primitives, translucent, AppearanceType, closed) {
         this.translucent = translucent;
-        this.appearanceType = appearanceType;
         this.closed = closed;
         this.primitives = primitives;
         this.createPrimitive = false;
@@ -30,6 +29,10 @@ define([
         this.updatersWithAttributes = new AssociativeArray();
         this.attributes = new AssociativeArray();
         this.itemsToRemove = [];
+        this.appearance = new AppearanceType({
+            translucent : this.translucent,
+            closed : this.closed
+        });
     };
 
     Batch.prototype.add = function(updater, instance) {
@@ -70,10 +73,7 @@ define([
                 primitive = new Primitive({
                     asynchronous : true,
                     geometryInstances : geometry,
-                    appearance : new this.appearanceType({
-                        translucent : this.translucent,
-                        closed : this.closed
-                    })
+                    appearance : this.appearance
                 });
                 primitive.show = show;
                 primitives.add(primitive);
@@ -146,7 +146,7 @@ define([
     };
 
     StaticGeometryColorBatch.prototype.add = function(time, updater) {
-        var instance = updater.createFillGeometryInstance(time);
+        var instance = updater.createFillGeometryInstance(time, this._solidBatch.appearance.vertexFormat);
         if (instance.attributes.color.value[3] === 255) {
             this._solidBatch.add(updater, instance);
         } else {

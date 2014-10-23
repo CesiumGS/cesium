@@ -275,7 +275,7 @@ define([
      *
      * @exception {DeveloperError} This instance does not represent a filled geometry.
      */
-    RectangleGeometryUpdater.prototype.createFillGeometryInstance = function(time) {
+    RectangleGeometryUpdater.prototype.createFillGeometryInstance = function(time, vertexFormat) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
@@ -309,9 +309,12 @@ define([
             };
         }
 
+        var options = this._options;
+        options.vertexFormat = vertexFormat;
+
         return new GeometryInstance({
             id : entity,
-            geometry : new RectangleGeometry(this._options),
+            geometry : new RectangleGeometry(options),
             attributes : attributes
         });
     };
@@ -414,9 +417,7 @@ define([
             return;
         }
 
-        var material = defaultValue(rectangle.material, defaultMaterial);
-        var isColorMaterial = material instanceof ColorMaterialProperty;
-        this._materialProperty = material;
+        this._materialProperty = defaultValue(rectangle.material, defaultMaterial);
         this._fillProperty = defaultValue(fillProperty, defaultFill);
         this._showProperty = defaultValue(show, defaultShow);
         this._showOutlineProperty = defaultValue(rectangle.outline, defaultOutline);
@@ -447,7 +448,6 @@ define([
             }
         } else {
             var options = this._options;
-            options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.VERTEX_FORMAT;
             options.rectangle = coordinates.getValue(Iso8601.MINIMUM_VALUE, options.rectangle);
             options.height = defined(height) ? height.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
@@ -530,6 +530,7 @@ define([
         var granularity = rectangle.granularity;
         var stRotation = rectangle.stRotation;
         var rotation = rectangle.rotation;
+        var appearance;
 
         options.rectangle = coordinates.getValue(time, options.rectangle);
         options.height = defined(height) ? height.getValue(time, options) : undefined;
@@ -544,7 +545,7 @@ define([
 
             this._material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
             var material = this._material;
-            var appearance = new MaterialAppearance({
+            appearance = new MaterialAppearance({
                 material : material,
                 translucent : material.isTranslucent(),
                 closed : options.closeTop && options.closeBottom
@@ -563,9 +564,14 @@ define([
         }
 
         if (defined(rectangle.outline) && rectangle.outline.getValue(time)) {
-            options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
-
             var outlineColor = defined(rectangle.outlineColor) ? rectangle.outlineColor.getValue(time) : Color.BLACK;
+
+            appearance = new PerInstanceColorAppearance({
+                flat : true,
+                translucent : outlineColor.alpha !== 1.0
+            });
+            options.vertexFormat = appearance.vertexFormat;
+
             this._outlinePrimitive = new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
@@ -574,10 +580,7 @@ define([
                         color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
                     }
                 }),
-                appearance : new PerInstanceColorAppearance({
-                    flat : true,
-                    translucent : outlineColor.alpha !== 1.0
-                }),
+                appearance : appearance,
                 asynchronous : false
             });
             this._primitives.add(this._outlinePrimitive);

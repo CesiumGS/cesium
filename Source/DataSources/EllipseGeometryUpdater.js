@@ -276,7 +276,7 @@ define([
      *
      * @exception {DeveloperError} This instance does not represent a filled geometry.
      */
-    EllipseGeometryUpdater.prototype.createFillGeometryInstance = function(time) {
+    EllipseGeometryUpdater.prototype.createFillGeometryInstance = function(time, vertexFormat) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
@@ -310,9 +310,12 @@ define([
             };
         }
 
+        var options = this._options;
+        options.vertexFormat = vertexFormat;
+
         return new GeometryInstance({
             id : entity,
-            geometry : new EllipseGeometry(this._options),
+            geometry : new EllipseGeometry(options),
             attributes : attributes
         });
     };
@@ -417,9 +420,7 @@ define([
             return;
         }
 
-        var material = defaultValue(ellipse.material, defaultMaterial);
-        var isColorMaterial = material instanceof ColorMaterialProperty;
-        this._materialProperty = material;
+        this._materialProperty = defaultValue(ellipse.material, defaultMaterial);
         this._fillProperty = defaultValue(fillProperty, defaultFill);
         this._showProperty = defaultValue(show, defaultShow);
         this._showOutlineProperty = defaultValue(ellipse.outline, defaultOutline);
@@ -451,7 +452,6 @@ define([
             }
         } else {
             var options = this._options;
-            options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.VERTEX_FORMAT;
             options.center = position.getValue(Iso8601.MINIMUM_VALUE, options.center);
             options.semiMajorAxis = semiMajorAxis.getValue(Iso8601.MINIMUM_VALUE, options.semiMajorAxis);
             options.semiMinorAxis = semiMinorAxis.getValue(Iso8601.MINIMUM_VALUE, options.semiMinorAxis);
@@ -535,6 +535,7 @@ define([
         var granularity = ellipse.granularity;
         var stRotation = ellipse.stRotation;
         var numberOfVerticalLines = ellipse.numberOfVerticalLines;
+        var appearance;
 
         options.center = position.getValue(time, options.center);
         options.semiMajorAxis = semiMajorAxis.getValue(time, options.semiMajorAxis);
@@ -548,7 +549,7 @@ define([
         if (!defined(ellipse.fill) || ellipse.fill.getValue(time)) {
             this._material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
             var material = this._material;
-            var appearance = new MaterialAppearance({
+            appearance = new MaterialAppearance({
                 material : material,
                 translucent : material.isTranslucent(),
                 closed : defined(options.extrudedHeight)
@@ -567,10 +568,15 @@ define([
         }
 
         if (defined(ellipse.outline) && ellipse.outline.getValue(time)) {
-            options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
+            var outlineColor = defined(ellipse.outlineColor) ? ellipse.outlineColor.getValue(time) : Color.BLACK;
+            appearance = new PerInstanceColorAppearance({
+                flat : true,
+                translucent : outlineColor.alpha !== 1.0
+            });
+
+            options.vertexFormat = appearance.vertexFormat;
             options.numberOfVerticalLines = defined(numberOfVerticalLines) ? numberOfVerticalLines.getValue(time) : undefined;
 
-            var outlineColor = defined(ellipse.outlineColor) ? ellipse.outlineColor.getValue(time) : Color.BLACK;
             this._outlinePrimitive = new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
@@ -579,10 +585,7 @@ define([
                         color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
                     }
                 }),
-                appearance : new PerInstanceColorAppearance({
-                    flat : true,
-                    translucent : outlineColor.alpha !== 1.0
-                }),
+                appearance : appearance,
                 asynchronous : false
             });
             this._primitives.add(this._outlinePrimitive);

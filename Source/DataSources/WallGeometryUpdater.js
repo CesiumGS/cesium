@@ -270,7 +270,7 @@ define([
      *
      * @exception {DeveloperError} This instance does not represent a filled geometry.
      */
-    WallGeometryUpdater.prototype.createFillGeometryInstance = function(time) {
+    WallGeometryUpdater.prototype.createFillGeometryInstance = function(time, vertexFormat) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
@@ -304,9 +304,12 @@ define([
             };
         }
 
+        var options = this._options;
+        options.vertexFormat = vertexFormat;
+
         return new GeometryInstance({
             id : entity,
-            geometry : new WallGeometry(this._options),
+            geometry : new WallGeometry(options),
             attributes : attributes
         });
     };
@@ -409,9 +412,7 @@ define([
             return;
         }
 
-        var material = defaultValue(wall.material, defaultMaterial);
-        var isColorMaterial = material instanceof ColorMaterialProperty;
-        this._materialProperty = material;
+        this._materialProperty = defaultValue(wall.material, defaultMaterial);
         this._fillProperty = defaultValue(fillProperty, defaultFill);
         this._showProperty = defaultValue(show, defaultShow);
         this._showOutlineProperty = defaultValue(wall.outline, defaultOutline);
@@ -434,7 +435,6 @@ define([
             }
         } else {
             var options = this._options;
-            options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.VERTEX_FORMAT;
             options.positions = positions.getValue(Iso8601.MINIMUM_VALUE, options.positions);
             options.minimumHeights = defined(minimumHeights) ? minimumHeights.getValue(Iso8601.MINIMUM_VALUE, options.minimumHeights) : undefined;
             options.maximumHeights = defined(maximumHeights) ? maximumHeights.getValue(Iso8601.MINIMUM_VALUE, options.maximumHeights) : undefined;
@@ -508,6 +508,7 @@ define([
         var minimumHeights = wall.minimumHeights;
         var maximumHeights = wall.maximumHeights;
         var granularity = wall.granularity;
+        var appearance;
 
         options.positions = positions.getValue(time, options.positions);
         options.minimumHeights = defined(minimumHeights) ? minimumHeights.getValue(time, options.minimumHeights) : undefined;
@@ -517,7 +518,7 @@ define([
         if (!defined(wall.fill) || wall.fill.getValue(time)) {
             this._material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
             var material = this._material;
-            var appearance = new MaterialAppearance({
+            appearance = new MaterialAppearance({
                 material : material,
                 translucent : material.isTranslucent(),
                 closed : false
@@ -536,9 +537,13 @@ define([
         }
 
         if (defined(wall.outline) && wall.outline.getValue(time)) {
-            options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
-
             var outlineColor = defined(wall.outlineColor) ? wall.outlineColor.getValue(time) : Color.BLACK;
+            appearance = new PerInstanceColorAppearance({
+                flat : true,
+                translucent : outlineColor.alpha !== 1.0
+            });
+            options.vertexFormat = appearance.vertexFormat;
+
             this._outlinePrimitive = new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
@@ -547,10 +552,7 @@ define([
                         color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
                     }
                 }),
-                appearance : new PerInstanceColorAppearance({
-                    flat : true,
-                    translucent : outlineColor.alpha !== 1.0
-                }),
+                appearance : appearance,
                 asynchronous : false
             });
             this._primitives.add(this._outlinePrimitive);

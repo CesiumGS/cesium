@@ -275,7 +275,7 @@ define([
      *
      * @exception {DeveloperError} This instance does not represent a filled geometry.
      */
-    PolygonGeometryUpdater.prototype.createFillGeometryInstance = function(time) {
+    PolygonGeometryUpdater.prototype.createFillGeometryInstance = function(time, vertexFormat) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
@@ -309,9 +309,12 @@ define([
             };
         }
 
+        var options = this._options;
+        options.vertexFormat = vertexFormat;
+
         return new GeometryInstance({
             id : entity,
-            geometry : new PolygonGeometry(this._options),
+            geometry : new PolygonGeometry(options),
             attributes : attributes
         });
     };
@@ -414,9 +417,7 @@ define([
             return;
         }
 
-        var material = defaultValue(polygon.material, defaultMaterial);
-        var isColorMaterial = material instanceof ColorMaterialProperty;
-        this._materialProperty = material;
+        this._materialProperty = defaultValue(polygon.material, defaultMaterial);
         this._fillProperty = defaultValue(fillProperty, defaultFill);
         this._showProperty = defaultValue(show, defaultShow);
         this._showOutlineProperty = defaultValue(polygon.outline, defaultOutline);
@@ -444,7 +445,6 @@ define([
             }
         } else {
             var options = this._options;
-            options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.VERTEX_FORMAT;
             options.polygonHierarchy.positions = positions.getValue(Iso8601.MINIMUM_VALUE, options.polygonHierarchy.positions);
             options.height = defined(height) ? height.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
@@ -522,6 +522,7 @@ define([
         var extrudedHeight = polygon.extrudedHeight;
         var granularity = polygon.granularity;
         var stRotation = polygon.stRotation;
+        var appearance;
 
         options.polygonHierarchy.positions = positions.getValue(time, options.polygonHierarchy.positions);
         options.height = defined(height) ? height.getValue(time, options) : undefined;
@@ -534,7 +535,7 @@ define([
 
             this._material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
             var material = this._material;
-            var appearance = new MaterialAppearance({
+            appearance = new MaterialAppearance({
                 material : material,
                 translucent : material.isTranslucent(),
                 closed : defined(options.extrudedHeight)
@@ -553,9 +554,14 @@ define([
         }
 
         if (defined(polygon.outline) && polygon.outline.getValue(time)) {
-            options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
-
             var outlineColor = defined(polygon.outlineColor) ? polygon.outlineColor.getValue(time) : Color.BLACK;
+            appearance = new PerInstanceColorAppearance({
+                flat : true,
+                translucent : outlineColor.alpha !== 1.0
+            });
+
+            options.vertexFormat = appearance.vertexFormat;
+
             this._outlinePrimitive = new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
@@ -564,10 +570,7 @@ define([
                         color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
                     }
                 }),
-                appearance : new PerInstanceColorAppearance({
-                    flat : true,
-                    translucent : outlineColor.alpha !== 1.0
-                }),
+                appearance : appearance,
                 asynchronous : false
             });
             this._primitives.add(this._outlinePrimitive);

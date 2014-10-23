@@ -258,7 +258,7 @@ define([
      *
      * @exception {DeveloperError} This instance does not represent a filled geometry.
      */
-    PolylineGeometryUpdater.prototype.createFillGeometryInstance = function(time) {
+    PolylineGeometryUpdater.prototype.createFillGeometryInstance = function(time, vertexformat) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
@@ -291,9 +291,12 @@ define([
             };
         }
 
+        var options = this._options;
+        options.vertexformat = vertexformat;
+
         return new GeometryInstance({
             id : entity,
-            geometry : new PolylineGeometry(this._options),
+            geometry : new PolylineGeometry(options),
             attributes : attributes
         });
     };
@@ -358,9 +361,7 @@ define([
             return;
         }
 
-        var material = defaultValue(polyline.material, defaultMaterial);
-        var isColorMaterial = material instanceof ColorMaterialProperty;
-        this._materialProperty = material;
+        this._materialProperty = defaultValue(polyline.material, defaultMaterial);
         this._showProperty = defaultValue(show, defaultShow);
         this._fillEnabled = true;
 
@@ -388,7 +389,6 @@ define([
                 return;
             }
 
-            options.vertexFormat = isColorMaterial ? PolylineColorAppearance.VERTEX_FORMAT : PolylineMaterialAppearance.VERTEX_FORMAT;
             options.positions = positions;
             options.width = defined(width) ? width.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.followSurface = defined(followSurface) ? followSurface.getValue(Iso8601.MINIMUM_VALUE) : undefined;
