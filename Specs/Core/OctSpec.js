@@ -350,6 +350,12 @@ defineSuite([
         expect(Oct.decodeFloat(encodedFloat, new Cartesian3())).toEqual(Oct.decode(encoded.x, encoded.y, new Cartesian3()));
     });
 
+    it('packFloat throws without encoded', function() {
+        expect(function() {
+            Oct.packFloat(undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('pack is equivalent to oct encoding', function() {
         var x = Cartesian3.UNIT_X;
         var y = Cartesian3.UNIT_Y;
