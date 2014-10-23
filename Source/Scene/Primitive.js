@@ -567,8 +567,8 @@ define([
             var stComponent = numComponents > 1 ? attributeName + '.x' : attributeName;
             decode +=
                 '    float temp = ' + stComponent + ' / 4096.0;\n' +
-                '    float stx = clamp(floor(temp) / 4096.0, 0.0, 1.0);\n' +
-                '    float sty = clamp(temp - floor(temp), 0.0, 1.0);\n' +
+                '    float stx = floor(temp) / 4096.0;\n' +
+                '    float sty = temp - floor(temp);\n' +
                 '    st = vec2(stx, sty);\n';
         }
 
