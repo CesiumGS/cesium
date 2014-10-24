@@ -289,7 +289,8 @@ define([
                     that._minimumHeight,
                     that._maximumHeight,
                     that._boundingSphere,
-                    that._horizonOcclusionPoint);
+                    that._horizonOcclusionPoint,
+                    defined(that._encodedNormals) ? 7 : 6);
         });
     };
 

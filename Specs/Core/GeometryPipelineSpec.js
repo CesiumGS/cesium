@@ -3,6 +3,7 @@ defineSuite([
         'Core/GeometryPipeline',
         'Core/BoundingSphere',
         'Core/BoxGeometry',
+        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/ComponentDatatype',
         'Core/Ellipsoid',
@@ -14,6 +15,7 @@ defineSuite([
         'Core/GeometryInstance',
         'Core/Math',
         'Core/Matrix4',
+        'Core/Oct',
         'Core/PrimitiveType',
         'Core/Tipsify',
         'Core/VertexFormat'
@@ -21,6 +23,7 @@ defineSuite([
         GeometryPipeline,
         BoundingSphere,
         BoxGeometry,
+        Cartesian2,
         Cartesian3,
         ComponentDatatype,
         Ellipsoid,
@@ -32,6 +35,7 @@ defineSuite([
         GeometryInstance,
         CesiumMath,
         Matrix4,
+        Oct,
         PrimitiveType,
         Tipsify,
         VertexFormat) {
@@ -1629,6 +1633,121 @@ defineSuite([
             actual = Cartesian3.fromArray(actualBinormals, i);
             expected = Cartesian3.fromArray(expectedBinormals, i);
             expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON1);
+        }
+    });
+
+    it('compressNormals throws without geometry', function() {
+        expect(function() {
+            return GeometryPipeline.compressNormals();
+        }).toThrowDeveloperError();
+    });
+
+    it('compressNormals on geometry without normals does nothing', function() {
+        var geometry = BoxGeometry.createGeometry(new BoxGeometry({
+            vertexFormat : new VertexFormat({
+                position : true
+            }),
+            maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
+        }));
+        expect(geometry.attributes.normal).not.toBeDefined();
+        geometry = GeometryPipeline.compressNormals(geometry);
+        expect(geometry.attributes.normal).not.toBeDefined();
+    });
+
+    it('compressNormals compresses normals', function() {
+        var geometry = BoxGeometry.createGeometry(new BoxGeometry({
+            vertexFormat : new VertexFormat({
+                position : true,
+                normal : true
+            }),
+            maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
+        }));
+        expect(geometry.attributes.normal).toBeDefined();
+        var originalNormals = Array.prototype.slice.call(geometry.attributes.normal.values);
+
+        geometry = GeometryPipeline.compressNormals(geometry);
+
+        expect(geometry.attributes.compressedNormals).toBeDefined();
+
+        var normals = geometry.attributes.compressedNormals.values;
+        expect(normals.length).toEqual(originalNormals.length / 3);
+
+        for (var i = 0; i < normals.length; ++i) {
+            expect(Oct.decodeFloat(normals[i], new Cartesian3())).toEqualEpsilon(Cartesian3.fromArray(originalNormals, i * 3), CesiumMath.EPSILON2);
+        }
+    });
+
+    it('compressNormals packs compressed normals with texture coordinates', function() {
+        var geometry = BoxGeometry.createGeometry(new BoxGeometry({
+            vertexFormat : new VertexFormat({
+                position : true,
+                normal : true,
+                st : true
+            }),
+            maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
+        }));
+        expect(geometry.attributes.normal).toBeDefined();
+        expect(geometry.attributes.st).toBeDefined();
+        var originalNormals = Array.prototype.slice.call(geometry.attributes.normal.values);
+        var originalST = Array.prototype.slice.call(geometry.attributes.st.values);
+
+        geometry = GeometryPipeline.compressNormals(geometry);
+
+        expect(geometry.attributes.normal).not.toBeDefined();
+        expect(geometry.attributes.st).not.toBeDefined();
+        expect(geometry.attributes.stCompressedNormals).toBeDefined();
+
+        var stNormal = geometry.attributes.stCompressedNormals.values;
+        expect(stNormal.length).toEqual(originalNormals.length);
+
+        for (var i = 0; i < stNormal.length; i += 3) {
+            expect(stNormal[i]).toEqual(originalST[i / 3 * 2]);
+            expect(stNormal[i + 1]).toEqual(originalST[i / 3 * 2 + 1]);
+            expect(Oct.decodeFloat(stNormal[i + 2], new Cartesian3())).toEqualEpsilon(Cartesian3.fromArray(originalNormals, i), CesiumMath.EPSILON2);
+        }
+    });
+
+    it('compressNormals packs compressed tangents and binormals', function() {
+        var geometry = BoxGeometry.createGeometry(new BoxGeometry({
+            vertexFormat : new VertexFormat({
+                position : true,
+                normal : true,
+                tangent : true,
+                binormal : true
+            }),
+            maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
+        }));
+        expect(geometry.attributes.normal).toBeDefined();
+        expect(geometry.attributes.tangent).toBeDefined();
+        expect(geometry.attributes.binormal).toBeDefined();
+        var originalNormals = Array.prototype.slice.call(geometry.attributes.normal.values);
+        var originalTangents = Array.prototype.slice.call(geometry.attributes.tangent.values);
+        var originalBinormals = Array.prototype.slice.call(geometry.attributes.binormal.values);
+
+        geometry = GeometryPipeline.compressNormals(geometry);
+
+        expect(geometry.attributes.tangent).not.toBeDefined();
+        expect(geometry.attributes.binormal).not.toBeDefined();
+        expect(geometry.attributes.compressedNormals).toBeDefined();
+
+        var compressedNormals = geometry.attributes.compressedNormals.values;
+        expect(compressedNormals.length).toEqual(originalNormals.length / 3 * 2);
+
+        var normal = new Cartesian3();
+        var tangent = new Cartesian3();
+        var binormal = new Cartesian3();
+
+        for (var i = 0; i < compressedNormals.length; i += 2) {
+            var compressed = Cartesian2.fromArray(compressedNormals, i, new Cartesian2());
+            Oct.unpack(compressed, normal, tangent, binormal);
+
+            expect(normal).toEqualEpsilon(Cartesian3.fromArray(originalNormals, i / 2 * 3), CesiumMath.EPSILON2);
+            expect(tangent).toEqualEpsilon(Cartesian3.fromArray(originalTangents, i / 2 * 3), CesiumMath.EPSILON2);
+            expect(binormal).toEqualEpsilon(Cartesian3.fromArray(originalBinormals, i / 2 * 3), CesiumMath.EPSILON2);
         }
     });
 
