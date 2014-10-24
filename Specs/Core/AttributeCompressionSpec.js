@@ -419,4 +419,27 @@ defineSuite([
             AttributeCompression.octUnpack(new Cartesian2(), new Cartesian3(), new Cartesian3(), undefined);
         }).toThrowDeveloperError();
     });
+
+    it('compresses texture coordinates', function() {
+        var coords = new Cartesian2(0.5, 0.5);
+        expect(AttributeCompression.decompressTextureCoordinates(AttributeCompression.compressTextureCoordinates(coords), new Cartesian2())).toEqual(coords);
+    });
+    
+    it('compress texture coordinates throws without texture coordinates', function() {
+        expect(function() {
+            AttributeCompression.compressTextureCoordinates(undefined);
+        }).toThrowDeveloperError();
+    });
+    
+    it('decompress texture coordinates throws without encoded texture coordinates', function() {
+        expect(function() {
+            AttributeCompression.decompressTextureCoordinates(undefined, new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+    
+    it('decompress texture coordinates throws without result', function() {
+        expect(function() {
+            AttributeCompression.decompressTextureCoordinates(0.0, undefined);
+        }).toThrowDeveloperError();
+    });
 });
