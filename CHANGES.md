@@ -9,6 +9,7 @@ Change Log
 * Added support to the `CesiumTerrainProvider` for handling terrain tiles that define more than 64k vertices.
 * Added `Primitive.compressVertices`. When true, the geometry vertices are compressed, which will save memory.
 * Upgraded topojson from 1.6.8 to 1.6.18.
+* Fixed a bug in `Globe.pick` that caused it to return incorrect results when using terrain data with vertex normals.  The bug manifested itself as strange behavior when navigating around the surface with the mouse as well as incorrect results when using `Camera.viewRectangle`.
 
 ### 1.2 - 2014-10-01
 
