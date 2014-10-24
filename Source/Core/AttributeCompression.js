@@ -14,21 +14,21 @@ define([
     "use strict";
 
     /**
-     * Oct encoding and decoding functions.
+     * Attribute compression and decompression functions.
+     *
+     * @namespace
+     * @alias AttributeCompression
+     *
+     * @private
+     */
+    var AttributeCompression = {};
+
+    /**
+     * Encodes a normalized vector into 2 SNORM values in the range of [0-255] following the 'oct' encoding.
      *
      * Oct encoding is a compact representation of unit length vectors.  The encoding and decoding functions are low cost, and represent the normalized vector within 1 degree of error.
      * The 'oct' encoding is described in "A Survey of Efficient Representations of Independent Unit Vectors",
      * Cigolle et al 2014: {@link http://jcgt.org/published/0003/02/01/}
-     *
-     * @namespace
-     * @alias Oct
-     *
-     * @private
-     */
-    var Oct = {};
-
-    /**
-     * Encodes a normalized vector into 2 SNORM values in the range of [0-255] following the 'oct' encoding.
      *
      * @param {Cartesian3} vector The normalized vector to be compressed into 2 byte 'oct' encoding.
      * @param {Cartesian2} result The 2 byte oct-encoded unit length vector.
@@ -37,8 +37,10 @@ define([
      * @exception {DeveloperError} vector must be defined.
      * @exception {DeveloperError} result must be defined.
      * @exception {DeveloperError} vector must be normalized.
+     *
+     * @see AttributeCompression.octDecode
      */
-    Oct.encode = function(vector, result) {
+    AttributeCompression.octEncode = function(vector, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(vector)) {
             throw new DeveloperError('vector is required.');
@@ -78,8 +80,9 @@ define([
      * @exception {DeveloperError} result must be defined.
      * @exception {DeveloperError} x and y must be a signed normalized integer between 0 and 255.
      *
+     * @see AttributeCompression.octEncode
      */
-    Oct.decode = function(x, y, result) {
+    AttributeCompression.octDecode = function(x, y, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(result)) {
             throw new DeveloperError('result is required.');
@@ -111,7 +114,7 @@ define([
      *
      * @exception {DeveloperError} encoded is required.
      */
-    Oct.packFloat = function(encoded) {
+    AttributeCompression.octPackFloat = function(encoded) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(encoded)) {
             throw new DeveloperError('encoded is required.');
@@ -132,9 +135,9 @@ define([
      * @exception {DeveloperError} vector must be defined.
      * @exception {DeveloperError} vector must be normalized.
      */
-    Oct.encodeFloat = function(vector) {
-        Oct.encode(vector, scratchEncodeCart2);
-        return Oct.packFloat(scratchEncodeCart2);
+    AttributeCompression.octEncodeFloat = function(vector) {
+        AttributeCompression.octEncode(vector, scratchEncodeCart2);
+        return AttributeCompression.octPackFloat(scratchEncodeCart2);
     };
 
     /**
@@ -147,7 +150,7 @@ define([
      * @exception {DeveloperError} value must be defined.
      * @exception {DeveloperError} result must be defined.
      */
-    Oct.decodeFloat = function(value, result) {
+    AttributeCompression.octDecodeFloat = function(value, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
@@ -158,7 +161,7 @@ define([
         var x = Math.floor(temp);
         var y = (temp - x) * 256.0;
 
-        return Oct.decode(x, y, result);
+        return AttributeCompression.octDecode(x, y, result);
     };
 
     /**
@@ -176,7 +179,7 @@ define([
      * @exception {DeveloperError} v3 must be defined.
      * @exception {DeveloperError} result must be defined.
      */
-    Oct.pack = function(v1, v2, v3, result) {
+    AttributeCompression.octPack = function(v1, v2, v3, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(v1)) {
             throw new DeveloperError('v1 is required.');
@@ -192,10 +195,10 @@ define([
         }
         //>>includeEnd('debug');
 
-        var encoded1 = Oct.encodeFloat(v1);
-        var encoded2 = Oct.encodeFloat(v2);
+        var encoded1 = AttributeCompression.octEncodeFloat(v1);
+        var encoded2 = AttributeCompression.octEncodeFloat(v2);
 
-        var encoded3 = Oct.encode(v3, scratchEncodeCart2);
+        var encoded3 = AttributeCompression.octEncode(v3, scratchEncodeCart2);
         result.x = 65536.0 * encoded3.x + encoded1;
         result.y = 65536.0 * encoded3.y + encoded2;
         return result;
@@ -214,7 +217,7 @@ define([
      * @exception {DeveloperError} v2 must be defined.
      * @exception {DeveloperError} v3 must be defined.
      */
-    Oct.unpack = function(packed, v1, v2, v3) {
+    AttributeCompression.octUnpack = function(packed, v1, v2, v3) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(packed)) {
             throw new DeveloperError('packed is required.');
@@ -238,10 +241,10 @@ define([
         var y = Math.floor(temp);
         var encodedFloat2 = (temp - y) * 65536.0;
 
-        Oct.decodeFloat(encodedFloat1, v1);
-        Oct.decodeFloat(encodedFloat2, v2);
-        Oct.decode(x, y, v3);
+        AttributeCompression.octDecodeFloat(encodedFloat1, v1);
+        AttributeCompression.octDecodeFloat(encodedFloat2, v2);
+        AttributeCompression.octDecode(x, y, v3);
     };
 
-    return Oct;
+    return AttributeCompression;
 });

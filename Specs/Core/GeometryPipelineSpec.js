@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
         'Core/GeometryPipeline',
+        'Core/AttributeCompression',
         'Core/BoundingSphere',
         'Core/BoxGeometry',
         'Core/Cartesian2',
@@ -15,12 +16,12 @@ defineSuite([
         'Core/GeometryInstance',
         'Core/Math',
         'Core/Matrix4',
-        'Core/Oct',
         'Core/PrimitiveType',
         'Core/Tipsify',
         'Core/VertexFormat'
     ], function(
         GeometryPipeline,
+        AttributeCompression,
         BoundingSphere,
         BoxGeometry,
         Cartesian2,
@@ -35,7 +36,6 @@ defineSuite([
         GeometryInstance,
         CesiumMath,
         Matrix4,
-        Oct,
         PrimitiveType,
         Tipsify,
         VertexFormat) {
@@ -1675,7 +1675,7 @@ defineSuite([
         expect(normals.length).toEqual(originalNormals.length / 3);
 
         for (var i = 0; i < normals.length; ++i) {
-            expect(Oct.decodeFloat(normals[i], new Cartesian3())).toEqualEpsilon(Cartesian3.fromArray(originalNormals, i * 3), CesiumMath.EPSILON2);
+            expect(AttributeCompression.octDecodeFloat(normals[i], new Cartesian3())).toEqualEpsilon(Cartesian3.fromArray(originalNormals, i * 3), CesiumMath.EPSILON2);
         }
     });
 
@@ -1738,7 +1738,7 @@ defineSuite([
             var sty = temp - Math.floor(temp);
             var texCoord = new Cartesian2(stx, sty);
             expect(texCoord).toEqualEpsilon(Cartesian2.fromArray(originalST, i, new Cartesian2()), CesiumMath.EPSILON2);
-            expect(Oct.decodeFloat(stNormal[i + 1], new Cartesian3())).toEqualEpsilon(Cartesian3.fromArray(originalNormals, i / 2 * 3), CesiumMath.EPSILON2);
+            expect(AttributeCompression.octDecodeFloat(stNormal[i + 1], new Cartesian3())).toEqualEpsilon(Cartesian3.fromArray(originalNormals, i / 2 * 3), CesiumMath.EPSILON2);
         }
     });
 
@@ -1775,7 +1775,7 @@ defineSuite([
 
         for (var i = 0; i < compressedNormals.length; i += 2) {
             var compressed = Cartesian2.fromArray(compressedNormals, i, new Cartesian2());
-            Oct.unpack(compressed, normal, tangent, binormal);
+            AttributeCompression.octUnpack(compressed, normal, tangent, binormal);
 
             expect(normal).toEqualEpsilon(Cartesian3.fromArray(originalNormals, i / 2 * 3), CesiumMath.EPSILON2);
             expect(tangent).toEqualEpsilon(Cartesian3.fromArray(originalTangents, i / 2 * 3), CesiumMath.EPSILON2);

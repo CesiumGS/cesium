@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './AttributeCompression',
         './barycentricCoordinates',
         './BoundingSphere',
         './Cartesian2',
@@ -20,11 +21,11 @@ define([
         './Math',
         './Matrix3',
         './Matrix4',
-        './Oct',
         './Plane',
         './PrimitiveType',
         './Tipsify'
     ], function(
+        AttributeCompression,
         barycentricCoordinates,
         BoundingSphere,
         Cartesian2,
@@ -45,7 +46,6 @@ define([
         CesiumMath,
         Matrix3,
         Matrix4,
-        Oct,
         Plane,
         PrimitiveType,
         Tipsify) {
@@ -1380,23 +1380,23 @@ define([
                 Cartesian3.fromArray(tangents, index, toEncode2);
                 Cartesian3.fromArray(binormals, index, toEncode3);
 
-                Oct.pack(toEncode1, toEncode2, toEncode3, scratchCartesian2);
+                AttributeCompression.octPack(toEncode1, toEncode2, toEncode3, scratchCartesian2);
                 compressedAttributes[normalIndex++] = scratchCartesian2.x;
                 compressedAttributes[normalIndex++] = scratchCartesian2.y;
             } else {
                 if (defined(normals)) {
                     Cartesian3.fromArray(normals, index, toEncode1);
-                    compressedAttributes[normalIndex++] = Oct.encodeFloat(toEncode1);
+                    compressedAttributes[normalIndex++] = AttributeCompression.octEncodeFloat(toEncode1);
                 }
 
                 if (defined(tangents)) {
                     Cartesian3.fromArray(tangents, index, toEncode1);
-                    compressedAttributes[normalIndex++] = Oct.encodeFloat(toEncode1);
+                    compressedAttributes[normalIndex++] = AttributeCompression.octEncodeFloat(toEncode1);
                 }
 
                 if (defined(binormals)) {
                     Cartesian3.fromArray(binormals, index, toEncode1);
-                    compressedAttributes[normalIndex++] = Oct.encodeFloat(toEncode1);
+                    compressedAttributes[normalIndex++] = AttributeCompression.octEncodeFloat(toEncode1);
                 }
             }
         }
