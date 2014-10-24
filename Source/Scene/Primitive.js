@@ -565,11 +565,7 @@ define([
         if (containsSt) {
             globalDecl += 'vec2 st;\n';
             var stComponent = numComponents > 1 ? attributeName + '.x' : attributeName;
-            decode +=
-                '    float temp = ' + stComponent + ' / 4096.0;\n' +
-                '    float stx = floor(temp) / 4096.0;\n' +
-                '    float sty = temp - floor(temp);\n' +
-                '    st = vec2(stx, sty);\n';
+            decode += '    st = czm_decompressTextureCoordinates(' + stComponent + ');\n';
         }
 
         if (containsNormal && containsTangent && containsBinormal) {

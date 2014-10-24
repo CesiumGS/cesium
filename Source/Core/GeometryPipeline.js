@@ -1369,9 +1369,7 @@ define([
         for (var i = 0; i < numVertices; ++i) {
             if (defined(st)) {
                 Cartesian2.fromArray(st, i * 2.0, scratchCartesian2);
-                var x = scratchCartesian2.x === 1.0 ? 4095.0 : (scratchCartesian2.x * 4096.0) | 0;
-                var y = scratchCartesian2.y === 1.0 ? 4095.0 : (scratchCartesian2.y * 4096.0) | 0;
-                compressedAttributes[normalIndex++] = 4096.0 * x + y;
+                compressedAttributes[normalIndex++] = AttributeCompression.compressTextureCoordinates(scratchCartesian2);
             }
 
             var index = i * 3.0;

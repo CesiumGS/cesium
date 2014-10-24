@@ -1733,11 +1733,7 @@ defineSuite([
         expect(stNormal.length).toEqual(originalST.length);
 
         for (var i = 0; i < stNormal.length; i += 2) {
-            var temp = stNormal[i] / 4096.0;
-            var stx = Math.floor(temp) / 4096.0;
-            var sty = temp - Math.floor(temp);
-            var texCoord = new Cartesian2(stx, sty);
-            expect(texCoord).toEqualEpsilon(Cartesian2.fromArray(originalST, i, new Cartesian2()), CesiumMath.EPSILON2);
+            expect(AttributeCompression.decompressTextureCoordinates(stNormal[i], new Cartesian2())).toEqualEpsilon(Cartesian2.fromArray(originalST, i, new Cartesian2()), CesiumMath.EPSILON2);
             expect(AttributeCompression.octDecodeFloat(stNormal[i + 1], new Cartesian3())).toEqualEpsilon(Cartesian3.fromArray(originalNormals, i / 2 * 3), CesiumMath.EPSILON2);
         }
     });
