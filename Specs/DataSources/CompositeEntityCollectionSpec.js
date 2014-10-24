@@ -519,7 +519,7 @@ defineSuite([
         expect(composite.getById('id2')).toBeDefined();
     });
 
-    it('custom entity properties are properly registed on composited entity.', function() {
+    it('custom entity properties are properly registed on new composited entity.', function() {
         var oldValue = 'tubelcane';
         var newValue = 'fizzbuzz';
         var propertyName = 'customProperty';
@@ -530,6 +530,29 @@ defineSuite([
         e1[propertyName] = oldValue;
 
         var composite = new CompositeEntityCollection([collection]);
+        var e1Composite = composite.getById('id1');
+        expect(e1Composite[propertyName]).toEqual(e1[propertyName]);
+
+        var listener = jasmine.createSpy('listener');
+        e1Composite.definitionChanged.addEventListener(listener);
+
+        e1[propertyName] = newValue;
+        expect(listener).toHaveBeenCalledWith(e1Composite, propertyName, newValue, oldValue);
+    });
+
+    it('custom entity properties are properly registed on existing composited entity.', function() {
+        var oldValue = 'tubelcane';
+        var newValue = 'fizzbuzz';
+        var propertyName = 'customProperty';
+
+        var collection = new EntityCollection();
+        var e1 = collection.getOrCreateEntity('id1');
+
+        var composite = new CompositeEntityCollection([collection]);
+
+        e1.addProperty(propertyName);
+        e1[propertyName] = oldValue;
+
         var e1Composite = composite.getById('id1');
         expect(e1Composite[propertyName]).toEqual(e1[propertyName]);
 

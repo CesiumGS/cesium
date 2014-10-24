@@ -985,8 +985,12 @@ define([
     function createDebugFragmentShaderProgram(command, scene, shaderProgram) {
         var context = scene.context;
         var sp = defaultValue(shaderProgram, command.shaderProgram);
-        var fragmentShaderSource = sp.fragmentShaderSource;
-        var renamedFS = fragmentShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_Debug_main()');
+        var fs = sp.fragmentShaderSource.clone();
+
+        fs.sources = fs.sources.map(function(source) {
+            source = source.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_Debug_main()');
+            return source;
+        });
 
         var newMain =
             'void main() \n' +
@@ -1012,9 +1016,10 @@ define([
 
         newMain += '}';
 
-        var source = renamedFS + '\n' + newMain;
+        fs.sources.push(newMain);
+
         var attributeLocations = getAttributeLocations(sp);
-        return context.createShaderProgram(sp.vertexShaderSource, source, attributeLocations);
+        return context.createShaderProgram(sp.vertexShaderSource, fs, attributeLocations);
     }
 
     function executeDebugCommand(command, scene, passState, renderState, shaderProgram) {
