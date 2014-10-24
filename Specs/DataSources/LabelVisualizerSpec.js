@@ -55,13 +55,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('constructor adds collection to scene.', function() {
-        var entityCollection = new EntityCollection();
-        visualizer = new LabelVisualizer(scene, entityCollection);
-        var labelCollection = scene.primitives.get(0);
-        expect(labelCollection instanceof LabelCollection).toEqual(true);
-    });
-
     it('update throws if no time specified.', function() {
         var entityCollection = new EntityCollection();
         visualizer = new LabelVisualizer(scene, entityCollection);
@@ -94,8 +87,7 @@ defineSuite([
         var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         visualizer.update(JulianDate.now());
-        var labelCollection = scene.primitives.get(0);
-        expect(labelCollection.length).toEqual(0);
+        expect(scene.primitives.get(0)).toBeUndefined();
     });
 
     it('object with no position does not create a label.', function() {
@@ -108,8 +100,7 @@ defineSuite([
         label.text = new ConstantProperty('lorum ipsum');
 
         visualizer.update(JulianDate.now());
-        var labelCollection = scene.primitives.get(0);
-        expect(labelCollection.length).toEqual(0);
+        expect(scene.primitives.get(0)).toBeUndefined();
     });
 
     it('object with no text does not create a label.', function() {
@@ -122,16 +113,12 @@ defineSuite([
         label.show = new ConstantProperty(true);
 
         visualizer.update(JulianDate.now());
-        var labelCollection = scene.primitives.get(0);
-        expect(labelCollection.length).toEqual(0);
+        expect(scene.primitives.get(0)).toBeUndefined();
     });
 
     it('A LabelGraphics causes a label to be created and updated.', function() {
         var entityCollection = new EntityCollection();
         visualizer = new LabelVisualizer(scene, entityCollection);
-
-        var labelCollection = scene.primitives.get(0);
-        expect(labelCollection.length).toEqual(0);
 
         var testObject = entityCollection.getOrCreateEntity('test');
 
@@ -157,6 +144,7 @@ defineSuite([
 
         visualizer.update(time);
 
+        var labelCollection = scene.primitives.get(0);
         expect(labelCollection.length).toEqual(1);
 
         l = labelCollection.get(0);
@@ -219,11 +207,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new LabelVisualizer(scene, entityCollection);
 
-        var labelCollection = scene.primitives.get(0);
-        expect(labelCollection.length).toEqual(0);
-
         var testObject = entityCollection.getOrCreateEntity('test');
-
         var time = JulianDate.now();
         var label = testObject.label = new LabelGraphics();
 
@@ -232,6 +216,7 @@ defineSuite([
         label.text = new ConstantProperty('lorum ipsum');
         visualizer.update(time);
 
+        var labelCollection = scene.primitives.get(0);
         expect(labelCollection.length).toEqual(1);
         var l = labelCollection.get(0);
         expect(l.show).toEqual(true);
@@ -247,11 +232,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new LabelVisualizer(scene, entityCollection);
 
-        var labelCollection = scene.primitives.get(0);
-        expect(labelCollection.length).toEqual(0);
-
         var testObject = entityCollection.getOrCreateEntity('test');
-
         var time = JulianDate.now();
         var label = testObject.label = new LabelGraphics();
 
@@ -259,6 +240,8 @@ defineSuite([
         label.show = new ConstantProperty(true);
         label.text = new ConstantProperty('lorum ipsum');
         visualizer.update(time);
+
+        var labelCollection = scene.primitives.get(0);
         expect(labelCollection.length).toEqual(1);
         var l = labelCollection.get(0);
         expect(l.id).toEqual(testObject);

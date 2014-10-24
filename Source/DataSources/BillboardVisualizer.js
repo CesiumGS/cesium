@@ -74,7 +74,6 @@ define([
         this._billboardCollection = undefined;
         this._entityCollection = entityCollection;
         this._items = new AssociativeArray();
-
         this._onCollectionChanged(entityCollection, entityCollection.entities, [], []);
     };
 
@@ -115,8 +114,6 @@ define([
             }
 
             if (!defined(billboard)) {
-                var length = unusedIndexes.length;
-
                 var billboardCollection = this._billboardCollection;
                 if (!defined(billboardCollection)) {
                     billboardCollection = new BillboardCollection();
@@ -124,6 +121,7 @@ define([
                     this._scene.primitives.add(billboardCollection);
                 }
 
+                var length = unusedIndexes.length;
                 if (length > 0) {
                     billboard = billboardCollection.get(unusedIndexes.pop());
                 } else {
