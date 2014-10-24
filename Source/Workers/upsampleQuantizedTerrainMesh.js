@@ -7,6 +7,7 @@ define([
         '../Core/defined',
         '../Core/Ellipsoid',
         '../Core/EllipsoidalOccluder',
+        '../Core/IndexDatatype',
         '../Core/Intersections2D',
         '../Core/Math',
         '../Core/Oct',
@@ -19,6 +20,7 @@ define([
         defined,
         Ellipsoid,
         EllipsoidalOccluder,
+        IndexDatatype,
         Intersections2D,
         CesiumMath,
         Oct,
@@ -251,7 +253,8 @@ define([
             vertices[start + i] = maxShort * (heightBuffer[i] - minimumHeight) / heightRange;
         }
 
-        var indicesTypedArray = new Uint16Array(indices);
+        var indicesTypedArray = IndexDatatype.createTypedArray(uBuffer.length, indices);
+
         var encodedNormals;
         if (hasVertexNormals) {
             var normalArray = new Uint8Array(normalBuffer);

@@ -29,7 +29,7 @@ function startup(Cesium) {
 //Sandcastle_Begin
 // Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
-var primitives = viewer.scene.primitives;
+var scene = viewer.scene;
        
 // Example 1: Draw a red circle on the globe surface.
 
@@ -49,7 +49,7 @@ var redCircleInstance = new Cesium.GeometryInstance({
     }
 });
 // Add the geometry instance to primitives.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances: [redCircleInstance],
     appearance: new Cesium.PerInstanceColorAppearance({
         closed: true
@@ -75,7 +75,7 @@ var greenCircleInstance = new Cesium.GeometryInstance({
     }
 });
 // Add the geometry instance to primitives.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances: [greenCircleInstance],
     appearance: new Cesium.PerInstanceColorAppearance({
         closed: true
@@ -101,7 +101,7 @@ var blueCircleInstance = new Cesium.GeometryInstance({
     }
 });
 // Add the geometry instance to primitives.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances: blueCircleInstance,
     appearance: new Cesium.PerInstanceColorAppearance({
         closed: true,

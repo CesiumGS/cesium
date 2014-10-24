@@ -413,7 +413,8 @@ var wallInstance = new Cesium.GeometryInstance({
     geometry : new Cesium.WallGeometry({
         positions : positions,
         maximumHeights : maximumHeights,
-        minimumHeights : minimumHeights
+        minimumHeights : minimumHeights,
+        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
     }),
     attributes : {
         color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 0.7}))
@@ -431,7 +432,7 @@ var wallOutlineInstance = new Cesium.GeometryInstance({
     }
 });
 
-scene.primitives.add(new Cesium.Primitive({
+primitives.add(new Cesium.Primitive({
     geometryInstances : wallInstance,
     appearance : new Cesium.PerInstanceColorAppearance()
 }));
@@ -821,7 +822,7 @@ wallInstance = new Cesium.GeometryInstance({
     })
 });
 
-scene.primitives.add(new Cesium.Primitive({
+primitives.add(new Cesium.Primitive({
     geometryInstances : wallInstance,
     appearance : new Cesium.MaterialAppearance({
         material : Cesium.Material.fromType('Checkerboard', {

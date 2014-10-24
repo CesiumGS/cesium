@@ -23,6 +23,7 @@ define([
         '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
         '../Renderer/MipmapHint',
+        '../Renderer/ShaderSource',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
@@ -56,6 +57,7 @@ define([
         ClearCommand,
         DrawCommand,
         MipmapHint,
+        ShaderSource,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
@@ -831,10 +833,20 @@ define([
                 bufferUsage : BufferUsage.STATIC_DRAW
             });
 
-            reproject.shaderProgram = context.createShaderProgram(
-                ReprojectWebMercatorVS,
-                ReprojectWebMercatorFS,
-                reprojectAttribInds);
+            var vs = new ShaderSource({
+                sources : [ReprojectWebMercatorVS]
+            });
+
+            // Firefox 33-34 has a regression that prevents the CORDIC implementation from compiling
+            // https://github.com/AnalyticalGraphicsInc/cesium/issues/2197
+            if (FeatureDetection.isFirefox()) {
+                var firefoxVersion = FeatureDetection.firefoxVersion();
+                if (firefoxVersion[0] >= 33 && firefoxVersion[0] <= 34) {
+                    vs.defines.push('DISABLE_CORDIC');
+                }
+            }
+
+            reproject.shaderProgram = context.createShaderProgram(vs, ReprojectWebMercatorFS, reprojectAttribInds);
 
             var maximumSupportedAnisotropy = context.maximumTextureFilterAnisotropy;
             reproject.sampler = context.createSampler({
