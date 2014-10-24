@@ -101,6 +101,7 @@ define([
      * @param {Element|String} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added to the bottom of the widget itself.
      * @param {DataSourceCollection} [options.dataSources=new DataSourceCollection()] The collection of data sources visualized by the widget.  If this parameter is provided,
                                      the instance is assumed to be owned by the caller and will not be destroyed when the viewer is destroyed.
+     * @param {Clock} [options.clock=new Clock()] The clock to use to control current time.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      * @exception {DeveloperError} options.imageryProvider is not available when using the BaseLayerPicker widget, specify options.selectedImageryProviderViewModel instead.
@@ -220,6 +221,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         // Cesium widget
         var cesiumWidget = new CesiumWidget(cesiumWidgetContainer, {
+            clock : options.clock,
             terrainProvider : options.terrainProvider,
             imageryProvider : createBaseLayerPicker ? false : options.imageryProvider,
             skyBox : options.skyBox,
