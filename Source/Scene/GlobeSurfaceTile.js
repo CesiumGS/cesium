@@ -170,8 +170,8 @@ define([
         }
     });
 
-    function getPosition(tile, scene, vertices, index, result) {
-        Cartesian3.unpack(vertices, index * 6, result);
+    function getPosition(tile, scene, vertices, stride, index, result) {
+        Cartesian3.unpack(vertices, index * stride, result);
         Cartesian3.add(tile.center, result, result);
 
         if (defined(scene) && scene.mode !== SceneMode.SCENE3D) {
@@ -202,6 +202,7 @@ define([
         }
 
         var vertices = mesh.vertices;
+        var stride = mesh.stride;
         var indices = mesh.indices;
 
         var length = indices.length;
@@ -210,9 +211,9 @@ define([
             var i1 = indices[i + 1];
             var i2 = indices[i + 2];
 
-            var v0 = getPosition(this, scene, vertices, i0, scratchV0);
-            var v1 = getPosition(this, scene, vertices, i1, scratchV1);
-            var v2 = getPosition(this, scene, vertices, i2, scratchV2);
+            var v0 = getPosition(this, scene, vertices, stride, i0, scratchV0);
+            var v1 = getPosition(this, scene, vertices, stride, i1, scratchV1);
+            var v2 = getPosition(this, scene, vertices, stride, i2, scratchV2);
 
             var intersection = IntersectionTests.rayTriangle(ray, v0, v1, v2, cullBackFaces, scratchResult);
             if (defined(intersection)) {

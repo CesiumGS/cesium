@@ -506,6 +506,7 @@ define([
         var id = entity.id;
         var compositeEntity = composite.getById(id);
         var compositeProperty = compositeEntity[propertyName];
+        var newProperty = !defined(compositeProperty);
 
         var firstTime = true;
         for (var q = collectionsLength - 1; q >= 0; q--) {
@@ -529,6 +530,11 @@ define([
                 }
             }
         }
+
+        if (newProperty && compositeEntity.propertyNames.indexOf(propertyName) === -1) {
+            compositeEntity.addProperty(propertyName);
+        }
+
         compositeEntity[propertyName] = compositeProperty;
     };
 

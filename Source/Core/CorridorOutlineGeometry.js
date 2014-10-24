@@ -362,7 +362,11 @@ define([
         var height = corridorOutlineGeometry._height;
         var extrudedHeight = corridorOutlineGeometry._extrudedHeight;
         var extrude = (height !== extrudedHeight);
+
         var cleanPositions = PolylinePipeline.removeDuplicates(positions);
+        if (!defined(cleanPositions)) {
+            cleanPositions = positions;
+        }
 
         //>>includeStart('debug', pragmas.debug);
         if (cleanPositions.length < 2) {

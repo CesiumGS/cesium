@@ -11,6 +11,7 @@ defineSuite([
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
         'Renderer/DrawCommand',
+        'Renderer/ShaderSource',
         'Specs/createContext',
         'Specs/destroyContext'
     ], function(
@@ -25,6 +26,7 @@ defineSuite([
         BufferUsage,
         ClearCommand,
         DrawCommand,
+        ShaderSource,
         createContext,
         destroyContext) {
     "use strict";
@@ -53,9 +55,9 @@ defineSuite([
     beforeAll(function() {
         context = createContext();
 
-        for(var functionName in injectedTestFunctions) {
-            if(injectedTestFunctions.hasOwnProperty(functionName)) {
-                ShaderProgram._czmBuiltinsAndUniforms[functionName] = injectedTestFunctions[functionName];
+        for ( var functionName in injectedTestFunctions) {
+            if (injectedTestFunctions.hasOwnProperty(functionName)) {
+                ShaderSource._czmBuiltinsAndUniforms[functionName] = injectedTestFunctions[functionName];
             }
         }
 
@@ -66,7 +68,7 @@ defineSuite([
 
         for ( var functionName in injectedTestFunctions) {
             if (injectedTestFunctions.hasOwnProperty(functionName)) {
-                delete ShaderProgram._czmBuiltinsAndUniforms[functionName];
+                delete ShaderSource._czmBuiltinsAndUniforms[functionName];
             }
         }
     });
@@ -96,8 +98,17 @@ defineSuite([
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
-        expect(sp.vertexShaderSource).toEqual(vs);
-        expect(sp.fragmentShaderSource).toEqual(fs);
+        var expectedVSText = new ShaderSource({
+            sources : [vs]
+        }).createCombinedVertexShader();
+
+        expect(sp._vertexShaderText).toEqual(expectedVSText);
+
+        var expectedFSText = new ShaderSource({
+            sources : [fs]
+        }).createCombinedFragmentShader();
+
+        expect(sp._fragmentShaderText).toEqual(expectedFSText);
     });
 
     it('has a position vertex attribute', function() {
@@ -649,8 +660,8 @@ defineSuite([
     it('fails with built-in function circular dependency', function() {
         var vs = 'void main() { gl_Position = vec4(0.0); }';
         var fs = 'void main() { czm_circularDependency1(); gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
         expect(function() {
+            sp = context.createShaderProgram(vs, fs);
             sp._bind();
         }).toThrowDeveloperError();
     });
