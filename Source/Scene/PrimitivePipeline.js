@@ -241,9 +241,9 @@ define([
             }
         }
 
-        // oct encode and pack normals
+        // oct encode and pack normals, compress texture coordinates
         if (compressVertices) {
-            GeometryPipeline.compressNormals(geometry);
+            GeometryPipeline.compressVertices(geometry);
         }
 
         if (!uintIndexSupport) {
