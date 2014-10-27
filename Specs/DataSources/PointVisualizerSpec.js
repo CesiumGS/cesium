@@ -47,14 +47,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('constructor adds collection to scene.', function() {
-        var entityCollection = new EntityCollection();
-        visualizer = new PointVisualizer(scene, entityCollection);
-        expect(scene.primitives.length).toEqual(1);
-        var billboardCollection = scene.primitives.get(0);
-        expect(billboardCollection instanceof BillboardCollection).toEqual(true);
-    });
-
     it('update throws if no time specified.', function() {
         var entityCollection = new EntityCollection();
         visualizer = new PointVisualizer(scene, entityCollection);
@@ -87,8 +79,7 @@ defineSuite([
         var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         visualizer.update(JulianDate.now());
-        var billboardCollection = scene.primitives.get(0);
-        expect(billboardCollection.length).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
     });
 
     it('object with no position does not create a billboard.', function() {
@@ -100,8 +91,7 @@ defineSuite([
         point.show = new ConstantProperty(true);
 
         visualizer.update(JulianDate.now());
-        var billboardCollection = scene.primitives.get(0);
-        expect(billboardCollection.length).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
     });
 
     it('A PointGraphics causes a Billboard to be created and updated.', function() {
@@ -109,9 +99,6 @@ defineSuite([
 
         var entityCollection = new EntityCollection();
         visualizer = new PointVisualizer(scene, entityCollection);
-
-        var billboardCollection = scene.primitives.get(0);
-        expect(billboardCollection.length).toEqual(0);
 
         var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
@@ -126,18 +113,14 @@ defineSuite([
 
         visualizer.update(time);
 
+        var billboardCollection = scene.primitives.get(0);
         expect(billboardCollection.length).toEqual(1);
-
         var bb = billboardCollection.get(0);
 
         visualizer.update(time);
         expect(bb.show).toEqual(testObject.point.show.getValue(time));
         expect(bb.position).toEqual(testObject.position.getValue(time));
         expect(bb.scaleByDistance).toEqual(testObject.point.scaleByDistance.getValue(time));
-        expect(bb._visualizerColor).toEqual(testObject.point.color.getValue(time));
-        expect(bb._visualizerOutlineColor).toEqual(testObject.point.outlineColor.getValue(time));
-        expect(bb._visualizerOutlineWidth).toEqual(testObject.point.outlineWidth.getValue(time));
-        expect(bb._visualizerPixelSize).toEqual(testObject.point.pixelSize.getValue(time));
 
         //There used to be a caching but with point visualizers.
         //In order to verify it actually detect changes properly, we modify existing values
@@ -152,10 +135,6 @@ defineSuite([
         expect(bb.show).toEqual(testObject.point.show.getValue(time));
         expect(bb.position).toEqual(testObject.position.getValue(time));
         expect(bb.scaleByDistance).toEqual(testObject.point.scaleByDistance.getValue(time));
-        expect(bb._visualizerColor).toEqual(testObject.point.color.getValue(time));
-        expect(bb._visualizerOutlineColor).toEqual(testObject.point.outlineColor.getValue(time));
-        expect(bb._visualizerOutlineWidth).toEqual(testObject.point.outlineWidth.getValue(time));
-        expect(bb._visualizerPixelSize).toEqual(testObject.point.pixelSize.getValue(time));
 
         point.show = new ConstantProperty(false);
         visualizer.update(time);
@@ -165,8 +144,6 @@ defineSuite([
     it('clear hides billboards.', function() {
         var entityCollection = new EntityCollection();
         visualizer = new PointVisualizer(scene, entityCollection);
-        var billboardCollection = scene.primitives.get(0);
-        expect(billboardCollection.length).toEqual(0);
         var testObject = entityCollection.getOrCreateEntity('test');
         var time = JulianDate.now();
 
@@ -175,6 +152,7 @@ defineSuite([
         point.show = new ConstantProperty(true);
         visualizer.update(time);
 
+        var billboardCollection = scene.primitives.get(0);
         expect(billboardCollection.length).toEqual(1);
         var bb = billboardCollection.get(0);
 
@@ -189,11 +167,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new PointVisualizer(scene, entityCollection);
 
-        var billboardCollection = scene.primitives.get(0);
-        expect(billboardCollection.length).toEqual(0);
-
         var testObject = entityCollection.getOrCreateEntity('test');
-
         var time = JulianDate.now();
         var point = testObject.point = new PointGraphics();
 
@@ -201,6 +175,8 @@ defineSuite([
         point.show = new ConstantProperty(true);
 
         visualizer.update(time);
+
+        var billboardCollection = scene.primitives.get(0);
         expect(billboardCollection.length).toEqual(1);
         var bb = billboardCollection.get(0);
         expect(bb.id).toEqual(testObject);
