@@ -314,22 +314,24 @@ require({
         var len;
         hintTimer = undefined;
         closeGalleryTooltip();
+        jsEditor.clearGutter('hintGutter');
+        jsEditor.clearGutter('highlightGutter');
+        jsEditor.clearGutter('errorGutter');
+        jsEditor.clearGutter('searchGutter');
         while (errorLines.length > 0) {
             line = errorLines.pop();
             jsEditor.removeLineClass(line, 'text');
-            jsEditor.clearGutter(line);
         }
         while (highlightLines.length > 0) {
             line = highlightLines.pop();
             jsEditor.removeLineClass(line, 'text');
-            jsEditor.clearGutter(line);
         }
         var code = jsEditor.getValue();
         if (searchTerm !== '') {
             var codeLines = code.split('\n');
             for (i = 0, len = codeLines.length; i < len; ++i) {
                 if (searchRegExp.test(codeLines[i])) {
-                    line = jsEditor.setGutterMarker(i, 'gutter', makeLineLabel('Search: ' + searchTerm, 'searchMarker'));
+                    line = jsEditor.setGutterMarker(i, 'searchGutter', makeLineLabel('Search: ' + searchTerm, 'searchMarker'));
                     jsEditor.addLineClass(line, 'text', 'searchLine');
                     errorLines.push(line);
                 }
@@ -342,7 +344,7 @@ require({
             for (i = 0, len = hints.length; i < len; ++i) {
                 var hint = hints[i];
                 if (hint !== null && defined(hint.reason) && hint.line > 0) {
-                    line = jsEditor.setGutterMarker(scriptLineToEditorLine(hint.line), 'gutter', makeLineLabel(hint.reason, 'hintMarker'));
+                    line = jsEditor.setGutterMarker(scriptLineToEditorLine(hint.line), 'hintGutter', makeLineLabel(hint.reason, 'hintMarker'));
                     jsEditor.addLineClass(line, 'text', 'hintLine');
                     errorLines.push(line);
                 }
@@ -390,14 +392,14 @@ require({
 
     function highlightLine(lineNum) {
         var line;
+        jsEditor.clearGutter('highlightGutter');
         while (highlightLines.length > 0) {
             line = highlightLines.pop();
             jsEditor.removeLineClass(line, 'text');
-            jsEditor.clearGutter(line);
         }
         if (lineNum > 0) {
             lineNum = scriptLineToEditorLine(lineNum);
-            line = jsEditor.setGutterMarker(lineNum, 'gutter', makeLineLabel('highlighted by demo', 'highlightMarker'));
+            line = jsEditor.setGutterMarker(lineNum, 'highlightGutter', makeLineLabel('highlighted by demo', 'highlightMarker'));
             jsEditor.addLineClass(line, 'text', 'highlightLine');
             highlightLines.push(line);
             scrollToLine(lineNum);
@@ -450,7 +452,7 @@ require({
 
     jsEditor = CodeMirror.fromTextArea(document.getElementById('code'), {
         mode : 'javascript',
-        gutters : ['gutter'],
+        gutters : ['hintGutter', 'errorGutter', 'searchGutter', 'highlightGutter'],
         lineNumbers : true,
         matchBrackets : true,
         indentUnit : 4,
@@ -736,7 +738,7 @@ require({
                 } else {
                     lineNumber = scriptLineToEditorLine(lineNumber);
                     errorMsg += (lineNumber + 1) + ')';
-                    line = jsEditor.setGutterMarker(lineNumber, 'gutter', makeLineLabel(e.data.error, 'errorMarker'));
+                    line = jsEditor.setGutterMarker(lineNumber, 'errorGutter', makeLineLabel(e.data.error, 'errorMarker'));
                     jsEditor.addLineClass(line, 'text', 'errorLine');
                     errorLines.push(line);
                     scrollToLine(lineNumber);
