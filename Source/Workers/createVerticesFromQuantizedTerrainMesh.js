@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/AttributeCompression',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
@@ -7,9 +8,9 @@ define([
         '../Core/Ellipsoid',
         '../Core/IndexDatatype',
         '../Core/Math',
-        '../Core/Oct',
         './createTaskProcessorWorker'
     ], function(
+        AttributeCompression,
         Cartesian2,
         Cartesian3,
         Cartographic,
@@ -17,7 +18,6 @@ define([
         Ellipsoid,
         IndexDatatype,
         CesiumMath,
-        Oct,
         createTaskProcessorWorker) {
     "use strict";
 
@@ -85,7 +85,7 @@ define([
             if (hasVertexNormals) {
                 toPack.x = octEncodedNormals[n];
                 toPack.y = octEncodedNormals[n + 1];
-                vertexBuffer[bufferIndex + nIndex] = Oct.packFloat(toPack);
+                vertexBuffer[bufferIndex + nIndex] = AttributeCompression.octPackFloat(toPack);
             }
         }
 
