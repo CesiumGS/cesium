@@ -12,6 +12,7 @@ define([
         '../Core/DeveloperError',
         '../Core/EncodedCartesian3',
         '../Core/IndexDatatype',
+        '../Core/Math',
         '../Core/Matrix4',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
@@ -38,6 +39,7 @@ define([
         DeveloperError,
         EncodedCartesian3,
         IndexDatatype,
+        CesiumMath,
         Matrix4,
         BufferUsage,
         DrawCommand,
@@ -74,17 +76,15 @@ define([
     var attributeLocations = {
         positionHighAndScale : 0,
         positionLowAndRotation : 1,
-        pixelOffsetAndTranslate : 2,
+        compressedAttribute0 : 2,
         eyeOffset : 3,
         textureCoordinatesAndImageSize : 4,
-        originAndShow : 5,
-        direction : 6,
-        pickColor : 7,  // pickColor and color shared an index because pickColor is only used during
-        color : 7,      // the 'pick' pass and 'color' is only used during the 'color' pass.
-        alignedAxis : 8,
-        scaleByDistance : 9,
-        translucencyByDistance : 10,
-        pixelOffsetScaleByDistance : 11
+        pickColor : 5,  // pickColor and color shared an index because pickColor is only used during
+        color : 5,      // the 'pick' pass and 'color' is only used during the 'color' pass.
+        alignedAxis : 6,
+        scaleByDistance : 7,
+        translucencyByDistance : 8,
+        pixelOffsetScaleByDistance : 9
     };
 
     // Identifies to the VertexArrayFacade the attributes that are used only for the pick
@@ -513,38 +513,6 @@ define([
         return this._billboards[index];
     };
 
-
-    function getDirectionsVertexBuffer(context) {
-        var sixteenK = 16 * 1024;
-
-        var directionsVertexBuffer = context.cache.billboardCollection_directionsVertexBuffer;
-        if (defined(directionsVertexBuffer)) {
-            return directionsVertexBuffer;
-        }
-
-        var directions = new Uint8Array(sixteenK * 4 * 2);
-        for (var i = 0, j = 0; i < sixteenK; ++i) {
-            directions[j++] = 0;
-            directions[j++] = 0;
-
-            directions[j++] = 255;
-            directions[j++] = 0.0;
-
-            directions[j++] = 255;
-            directions[j++] = 255;
-
-            directions[j++] = 0.0;
-            directions[j++] = 255;
-        }
-
-        // PERFORMANCE_IDEA:  Should we reference count billboard collections, and eventually delete this?
-        // Is this too much memory to allocate up front?  Should we dynamically grow it?
-        directionsVertexBuffer = context.createVertexBuffer(directions, BufferUsage.STATIC_DRAW);
-        directionsVertexBuffer.vertexArrayDestroyable = false;
-        context.cache.billboardCollection_directionsVertexBuffer = directionsVertexBuffer;
-        return directionsVertexBuffer;
-    }
-
     function getIndexBuffer(context) {
         var sixteenK = 16 * 1024;
 
@@ -588,9 +556,6 @@ define([
     };
 
     function createVAF(context, numberOfBillboards, buffersUsage) {
-        // Different billboard collections share the same vertex buffer for directions.
-        var directionVertexBuffer = getDirectionsVertexBuffer(context);
-
         return new VertexArrayFacade(context, [{
             index : attributeLocations.positionHighAndScale,
             componentsPerAttribute : 4,
@@ -602,11 +567,11 @@ define([
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[POSITION_INDEX]
         }, {
-            index : attributeLocations.pixelOffsetAndTranslate,
+            index : attributeLocations.compressedAttribute0,
             componentsPerAttribute : 4,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[PIXEL_OFFSET_INDEX]
-        }, {
+        },{
             index : attributeLocations.eyeOffset,
             componentsPerAttribute : 3,
             componentDatatype : ComponentDatatype.FLOAT,
@@ -630,17 +595,6 @@ define([
             componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
             usage : buffersUsage[COLOR_INDEX],
             purpose : colorPassPurpose
-        }, {
-            index : attributeLocations.originAndShow,
-            componentsPerAttribute : 3,
-            componentDatatype : ComponentDatatype.BYTE,
-            usage : buffersUsage[SHOW_INDEX] // buffersUsage[HORIZONTAL_ORIGIN_INDEX] and buffersUsage[VERTICAL_ORIGIN_INDEX] ignored
-        }, {
-            index : attributeLocations.direction,
-            vertexBuffer : directionVertexBuffer,
-            componentsPerAttribute : 2,
-            normalize : true,
-            componentDatatype : ComponentDatatype.UNSIGNED_BYTE
         }, {
             index : attributeLocations.alignedAxis,
             componentsPerAttribute : 3,
@@ -709,18 +663,60 @@ define([
         positionLowWriter(i + 3, low.x, low.y, low.z, rotation);
     }
 
-    function writePixelOffsetAndTranslate(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
+    function writeCompressedAttrib0(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = billboard._index * 4;
-        var pixelOffset = billboard.pixelOffset;
-        var translate = billboard._translate;
-        billboardCollection._maxPixelOffset = Math.max(billboardCollection._maxPixelOffset, Math.abs(pixelOffset.x + translate.x), Math.abs(-pixelOffset.y + translate.y));
-        var allPurposeWriters = vafWriters[allPassPurpose];
 
-        var writer = allPurposeWriters[attributeLocations.pixelOffsetAndTranslate];
-        writer(i + 0, pixelOffset.x, -pixelOffset.y, translate.x, translate.y);
-        writer(i + 1, pixelOffset.x, -pixelOffset.y, translate.x, translate.y);
-        writer(i + 2, pixelOffset.x, -pixelOffset.y, translate.x, translate.y);
-        writer(i + 3, pixelOffset.x, -pixelOffset.y, translate.x, translate.y);
+        var pixelOffset = billboard.pixelOffset;
+        var pixelOffsetX = pixelOffset.x;
+        var pixelOffsetY = pixelOffset.y;
+
+        var translate = billboard._translate;
+        var translateX = translate.x;
+        var translateY = translate.y;
+
+        billboardCollection._maxPixelOffset = Math.max(billboardCollection._maxPixelOffset, Math.abs(pixelOffsetX + translateX), Math.abs(-pixelOffsetY + translateY));
+
+        var horizontalOrigin = billboard.horizontalOrigin;
+        var verticalOrigin = billboard.verticalOrigin;
+        var show = billboard.show;
+
+        // If the color alpha is zero, do not show this billboard.  This lets us avoid providing
+        // color during the pick pass and also eliminates a discard in the fragment shader.
+        if (billboard.color.alpha === 0.0) {
+            show = false;
+        }
+
+        billboardCollection._allHorizontalCenter = billboardCollection._allHorizontalCenter && horizontalOrigin === HorizontalOrigin.CENTER;
+
+        var lowerLeft = 0.0;
+        var lowerRight = 2.0;
+        var upperRight = 3.0;
+        var upperLeft = 1.0;
+
+        var upperBound = Math.pow(2.0, 15.0);
+
+        var compressed0 = Math.floor(CesiumMath.clamp(pixelOffsetX, -upperBound, upperBound) + upperBound) * Math.pow(2.0, 7.0);
+        compressed0 += (horizontalOrigin + 1.0) * Math.pow(2.0, 5.0);
+        compressed0 += (verticalOrigin + 1.0) * Math.pow(2.0, 3.0);
+        compressed0 += (show ? 1.0 : 0.0) * Math.pow(2.0, 2.0);
+
+        var compressed1 = Math.floor(CesiumMath.clamp(pixelOffsetY, -upperBound, upperBound) + upperBound) * Math.pow(2.0, 8.0);
+        var compressed2 = Math.floor(CesiumMath.clamp(translateX, -upperBound, upperBound) + upperBound) * Math.pow(2.0, 8.0);
+
+        var tempTanslateY = (CesiumMath.clamp(translateY, -upperBound, upperBound) + upperBound) / Math.pow(2.0, 8.0);
+        var upperTranslateY = Math.floor(tempTanslateY);
+        var lowerTranslateY = Math.floor((tempTanslateY - upperTranslateY) * Math.pow(2.0, 8.0));
+
+        compressed1 += upperTranslateY;
+        compressed2 += lowerTranslateY;
+
+        var allPurposeWriters = vafWriters[allPassPurpose];
+        var writer = allPurposeWriters[attributeLocations.compressedAttribute0];
+
+        writer(i + 0, compressed0 + lowerLeft, compressed1, compressed2, lowerLeft);
+        writer(i + 1, compressed0 + lowerRight, compressed1, compressed2, lowerRight);
+        writer(i + 2, compressed0 + upperRight, compressed1, compressed2, upperRight);
+        writer(i + 3, compressed0 + upperLeft, compressed1, compressed2, upperLeft);
     }
 
     function writeEyeOffset(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
@@ -770,28 +766,6 @@ define([
         writer(i + 1, red, green, blue, alpha);
         writer(i + 2, red, green, blue, alpha);
         writer(i + 3, red, green, blue, alpha);
-    }
-
-    function writeOriginAndShow(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
-        var i = billboard._index * 4;
-        var horizontalOrigin = billboard.horizontalOrigin;
-        var verticalOrigin = billboard.verticalOrigin;
-        var show = billboard.show;
-
-        // If the color alpha is zero, do not show this billboard.  This lets us avoid providing
-        // color during the pick pass and also eliminates a discard in the fragment shader.
-        if (billboard.color.alpha === 0.0) {
-            show = false;
-        }
-
-        billboardCollection._allHorizontalCenter = billboardCollection._allHorizontalCenter && horizontalOrigin === HorizontalOrigin.CENTER;
-
-        var allPurposeWriters = vafWriters[allPassPurpose];
-        var writer = allPurposeWriters[attributeLocations.originAndShow];
-        writer(i + 0, horizontalOrigin, verticalOrigin, show);
-        writer(i + 1, horizontalOrigin, verticalOrigin, show);
-        writer(i + 2, horizontalOrigin, verticalOrigin, show);
-        writer(i + 3, horizontalOrigin, verticalOrigin, show);
     }
 
     function writeTextureCoordinatesAndImageSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
@@ -942,11 +916,10 @@ define([
 
     function writeBillboard(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         writePositionScaleAndRotation(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
-        writePixelOffsetAndTranslate(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
+        writeCompressedAttrib0(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeEyeOffset(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writePickColor(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeColor(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
-        writeOriginAndShow(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeTextureCoordinatesAndImageSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeAlignedAxis(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
@@ -1121,8 +1094,8 @@ define([
                     writers.push(writePositionScaleAndRotation);
                 }
 
-                if (properties[PIXEL_OFFSET_INDEX]) {
-                    writers.push(writePixelOffsetAndTranslate);
+                if (properties[PIXEL_OFFSET_INDEX] || properties[HORIZONTAL_ORIGIN_INDEX] || properties[VERTICAL_ORIGIN_INDEX] || properties[SHOW_INDEX]) {
+                    writers.push(writeCompressedAttrib0);
                 }
 
                 if (properties[EYE_OFFSET_INDEX]) {
@@ -1135,10 +1108,6 @@ define([
 
                 if (properties[COLOR_INDEX]) {
                     writers.push(writeColor);
-                }
-
-                if (properties[HORIZONTAL_ORIGIN_INDEX] || properties[VERTICAL_ORIGIN_INDEX] || properties[SHOW_INDEX]) {
-                    writers.push(writeOriginAndShow);
                 }
 
                 if (properties[ALIGNED_AXIS_INDEX]) {

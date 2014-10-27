@@ -1,9 +1,7 @@
 attribute vec4 positionHighAndScale;
 attribute vec4 positionLowAndRotation;
-attribute vec2 direction;                       // in screen space
+attribute vec4 compressedAttribute0;
 attribute vec4 textureCoordinatesAndImageSize;  // size in normalized texture coordinates
-attribute vec3 originAndShow;                   // show is 0.0 (false) or 1.0 (true)
-attribute vec4 pixelOffsetAndTranslate;         // x,y, translateX, translateY
 attribute vec3 eyeOffset;                       // eye offset in meters
 attribute vec3 alignedAxis;
 attribute vec4 scaleByDistance;                 // near, nearScale, far, farScale
@@ -45,14 +43,48 @@ void main()
     // unpack attributes
     vec3 positionHigh = positionHighAndScale.xyz;
     vec3 positionLow = positionLowAndRotation.xyz;
-    vec3 eyeOffset = eyeOffset;
     float scale = positionHighAndScale.w;
+    float rotation = positionLowAndRotation.w;
+    
+    float upperBound = pow(2.0, 15.0);
+    float compressed = compressedAttribute0.x;
+    
+    vec2 pixelOffset;
+    pixelOffset.x = floor(compressed / pow(2.0, 7.0));
+    compressed -= pixelOffset.x * pow(2.0, 7.0);
+    pixelOffset.x -= upperBound;
+    
+    vec2 origin;
+    origin.x = floor(compressed / pow(2.0, 5.0));
+    compressed -= origin.x * pow(2.0, 5.0);
+    
+    origin.y = floor(compressed / pow(2.0, 3.0));
+    compressed -= origin.y * pow(2.0, 3.0);
+    
+    origin -= vec2(1.0);
+    
+    float show = floor(compressed / pow(2.0, 2.0));
+    compressed -= show * pow(2.0, 2.0);
+    
+    vec2 direction;
+    direction.x = floor(compressed / 2.0);
+    direction.y = compressed - direction.x * 2.0;
+    
+    float temp = compressedAttribute0.y / pow(2.0, 8.0);
+    pixelOffset.y = floor(temp) - upperBound;
+    
+    vec2 translate;
+    translate.y = (temp - floor(temp)) * pow(2.0, 16.0);
+    
+    temp = compressedAttribute0.z / pow(2.0, 8.0);
+    translate.x = floor(temp) - upperBound;
+    
+    translate.y += (temp - floor(temp)) * pow(2.0, 8.0);
+    translate.y -= upperBound;
+    
+    vec3 eyeOffset = eyeOffset;
     vec2 textureCoordinates = textureCoordinatesAndImageSize.xy;
     vec2 imageSize = textureCoordinatesAndImageSize.zw;
-    vec2 origin = originAndShow.xy;
-    float show = originAndShow.z;
-    vec2 pixelOffset = pixelOffsetAndTranslate.xy;
-    vec2 translate = pixelOffsetAndTranslate.zw;
     
     ///////////////////////////////////////////////////////////////////////////
     
@@ -109,8 +141,6 @@ void main()
     positionWC.xy += (origin * abs(halfSize));
     
 #ifdef ROTATION
-    float rotation = positionLowAndRotation.w;
-    
     if (!all(equal(alignedAxis, vec3(0.0))) || rotation != 0.0)
     {
         float angle = rotation;
