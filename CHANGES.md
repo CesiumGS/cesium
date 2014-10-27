@@ -13,6 +13,7 @@ Change Log
 * `ReferenceProperty` instances now retain their last value if the entity being referenced is removed from the target collection.  The reference will be automatically reattached if the target is reintroduced. 
 * Upgraded topojson from 1.6.8 to 1.6.18.
 * Upgraded Knockout from version 3.1.0 to 3.2.0.
+* Upgraded CodeMirror, used by SandCastle, from 2.24 to 4.6.
 
 ### 1.2 - 2014-10-01
 
