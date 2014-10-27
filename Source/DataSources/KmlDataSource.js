@@ -328,7 +328,7 @@ define(['../Core/createGuid',
             }
             var extent = Rectangle.fromDegrees(west, south, east, north);
             rectangle.coordinates = new ConstantProperty(extent);
-            entity.position = new ConstantPositionProperty(Ellipsoid.WGS84.cartographicToCartesian(Rectangle.getCenter(extent, scratchCartesian), scratchCartographic));
+            entity.position = new ConstantPositionProperty(Ellipsoid.WGS84.cartographicToCartesian(Rectangle.center(extent, scratchCartesian), scratchCartographic));
 
             var material;
             var href = getStringValue(groundOverlay, 'href');
