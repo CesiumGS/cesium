@@ -116,7 +116,7 @@ define([
 
             if (!show) {
                 //don't bother creating or updating anything else
-                returnLabel(entity, unusedIndexes);
+                returnLabel(item, unusedIndexes);
                 continue;
             }
 
