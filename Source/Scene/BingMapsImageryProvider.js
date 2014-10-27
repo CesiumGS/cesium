@@ -56,6 +56,9 @@ define([
      *        By default, tiles are loaded using the same protocol as the page.
      * @param {String} [options.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps
      *        imagery to load.
+     * @param {String} [options.culture=''] The culture to use when requesting Bing Maps imagery. Not
+     *        all cultures are supported. See {@link http://msdn.microsoft.com/en-us/library/hh441729.aspx}
+     *        for information on the supported cultures.
      * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
      *        is invalid and should be discarded.  If this value is not specified, a default
      *        {@link DiscardMissingTileImagePolicy} is used which requests
@@ -100,6 +103,7 @@ define([
         this._url = options.url;
         this._tileProtocol = options.tileProtocol;
         this._mapStyle = defaultValue(options.mapStyle, BingMapsStyle.AERIAL);
+        this._culture = defaultValue(options.culture, '');
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._proxy = options.proxy;
         this._credit = new Credit('Bing Imagery', BingMapsImageryProvider._logoData, 'http://www.bing.com');
@@ -144,7 +148,7 @@ define([
             that._tileHeight = resource.imageHeight;
             that._maximumLevel = resource.zoomMax - 1;
             that._imageUrlSubdomains = resource.imageUrlSubdomains;
-            that._imageUrlTemplate = resource.imageUrl.replace('{culture}', '');
+            that._imageUrlTemplate = resource.imageUrl.replace('{culture}', that._culture);
 
             var tileProtocol = that._tileProtocol;
             if (!defined(tileProtocol)) {
@@ -250,6 +254,19 @@ define([
         mapStyle : {
             get : function() {
                 return this._mapStyle;
+            }
+        },
+
+        /**
+         * The culture to use when requesting Bing Maps imagery. Not
+         * all cultures are supported. See {@link http://msdn.microsoft.com/en-us/library/hh441729.aspx}
+         * for information on the supported cultures.
+         * @memberof BingMapsImageryProvider.prototype
+         * @type {String}
+         */
+        culture : {
+            get : function() {
+                return this._culture;
             }
         },
 
