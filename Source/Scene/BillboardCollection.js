@@ -72,16 +72,16 @@ define([
     // PERFORMANCE_IDEA:  Use vertex compression so we don't run out of
     // vec4 attributes (WebGL minimum: 8)
     var attributeLocations = {
-        positionHigh : 0,
-        positionLow : 1,
+        positionHighAndScale : 0,
+        positionLowAndRotation : 1,
         pixelOffsetAndTranslate : 2,
-        eyeOffsetAndScale : 3,
+        eyeOffset : 3,
         textureCoordinatesAndImageSize : 4,
         originAndShow : 5,
         direction : 6,
         pickColor : 7,  // pickColor and color shared an index because pickColor is only used during
         color : 7,      // the 'pick' pass and 'color' is only used during the 'color' pass.
-        rotationAndAlignedAxis : 8,
+        alignedAxis : 8,
         scaleByDistance : 9,
         translucencyByDistance : 10,
         pixelOffsetScaleByDistance : 11
@@ -592,13 +592,13 @@ define([
         var directionVertexBuffer = getDirectionsVertexBuffer(context);
 
         return new VertexArrayFacade(context, [{
-            index : attributeLocations.positionHigh,
-            componentsPerAttribute : 3,
+            index : attributeLocations.positionHighAndScale,
+            componentsPerAttribute : 4,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[POSITION_INDEX]
         }, {
-            index : attributeLocations.positionLow,
-            componentsPerAttribute : 3,
+            index : attributeLocations.positionLowAndRotation,
+            componentsPerAttribute : 4,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[POSITION_INDEX]
         }, {
@@ -607,8 +607,8 @@ define([
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[PIXEL_OFFSET_INDEX]
         }, {
-            index : attributeLocations.eyeOffsetAndScale,
-            componentsPerAttribute : 4,
+            index : attributeLocations.eyeOffset,
+            componentsPerAttribute : 3,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[SCALE_INDEX] // buffersUsage[EYE_OFFSET_INDEX] ignored
         }, {
@@ -642,8 +642,8 @@ define([
             normalize : true,
             componentDatatype : ComponentDatatype.UNSIGNED_BYTE
         }, {
-            index : attributeLocations.rotationAndAlignedAxis,
-            componentsPerAttribute : 4,
+            index : attributeLocations.alignedAxis,
+            componentsPerAttribute : 3,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[ROTATION_INDEX] // buffersUsage[ALIGNED_AXIS_INDEX] ignored
         }, {
@@ -673,7 +673,7 @@ define([
 
     var writePositionScratch = new EncodedCartesian3();
 
-    function writePosition(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
+    function writePositionScaleAndRotation(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = billboard._index * 4;
         var position = billboard._getActualPosition();
 
@@ -683,21 +683,30 @@ define([
         }
 
         EncodedCartesian3.fromCartesian(position, writePositionScratch);
+        var scale = billboard.scale;
+        var rotation = billboard.rotation;
+        var alignedAxis = billboard.alignedAxis;
+
+        if (rotation !== 0.0 || !Cartesian3.equals(alignedAxis, Cartesian3.ZERO)) {
+            billboardCollection._shaderRotation = true;
+        }
+
+        billboardCollection._maxScale = Math.max(billboardCollection._maxScale, scale);
 
         var allPurposeWriters = vafWriters[allPassPurpose];
-        var positionHighWriter = allPurposeWriters[attributeLocations.positionHigh];
+        var positionHighWriter = allPurposeWriters[attributeLocations.positionHighAndScale];
         var high = writePositionScratch.high;
-        positionHighWriter(i + 0, high.x, high.y, high.z);
-        positionHighWriter(i + 1, high.x, high.y, high.z);
-        positionHighWriter(i + 2, high.x, high.y, high.z);
-        positionHighWriter(i + 3, high.x, high.y, high.z);
+        positionHighWriter(i + 0, high.x, high.y, high.z, scale);
+        positionHighWriter(i + 1, high.x, high.y, high.z, scale);
+        positionHighWriter(i + 2, high.x, high.y, high.z, scale);
+        positionHighWriter(i + 3, high.x, high.y, high.z, scale);
 
-        var positionLowWriter = allPurposeWriters[attributeLocations.positionLow];
+        var positionLowWriter = allPurposeWriters[attributeLocations.positionLowAndRotation];
         var low = writePositionScratch.low;
-        positionLowWriter(i + 0, low.x, low.y, low.z);
-        positionLowWriter(i + 1, low.x, low.y, low.z);
-        positionLowWriter(i + 2, low.x, low.y, low.z);
-        positionLowWriter(i + 3, low.x, low.y, low.z);
+        positionLowWriter(i + 0, low.x, low.y, low.z, rotation);
+        positionLowWriter(i + 1, low.x, low.y, low.z, rotation);
+        positionLowWriter(i + 2, low.x, low.y, low.z, rotation);
+        positionLowWriter(i + 3, low.x, low.y, low.z, rotation);
     }
 
     function writePixelOffsetAndTranslate(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
@@ -714,19 +723,17 @@ define([
         writer(i + 3, pixelOffset.x, -pixelOffset.y, translate.x, translate.y);
     }
 
-    function writeEyeOffsetAndScale(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
+    function writeEyeOffset(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = billboard._index * 4;
         var eyeOffset = billboard.eyeOffset;
-        var scale = billboard.scale;
         billboardCollection._maxEyeOffset = Math.max(billboardCollection._maxEyeOffset, Math.abs(eyeOffset.x), Math.abs(eyeOffset.y), Math.abs(eyeOffset.z));
-        billboardCollection._maxScale = Math.max(billboardCollection._maxScale, scale);
 
         var allPurposeWriters = vafWriters[allPassPurpose];
-        var writer = allPurposeWriters[attributeLocations.eyeOffsetAndScale];
-        writer(i + 0, eyeOffset.x, eyeOffset.y, eyeOffset.z, scale);
-        writer(i + 1, eyeOffset.x, eyeOffset.y, eyeOffset.z, scale);
-        writer(i + 2, eyeOffset.x, eyeOffset.y, eyeOffset.z, scale);
-        writer(i + 3, eyeOffset.x, eyeOffset.y, eyeOffset.z, scale);
+        var writer = allPurposeWriters[attributeLocations.eyeOffset];
+        writer(i + 0, eyeOffset.x, eyeOffset.y, eyeOffset.z);
+        writer(i + 1, eyeOffset.x, eyeOffset.y, eyeOffset.z);
+        writer(i + 2, eyeOffset.x, eyeOffset.y, eyeOffset.z);
+        writer(i + 3, eyeOffset.x, eyeOffset.y, eyeOffset.z);
     }
 
     function writePickColor(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
@@ -825,7 +832,7 @@ define([
         writer(i + 3, bottomLeftX, topRightY, imageWidth, imageHeight); // Upper Left
     }
 
-    function writeRotationAndAlignedAxis(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
+    function writeAlignedAxis(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = billboard._index * 4;
         var rotation = billboard.rotation;
         var alignedAxis = billboard.alignedAxis;
@@ -839,11 +846,11 @@ define([
         var z = alignedAxis.z;
 
         var allPurposeWriters = vafWriters[allPassPurpose];
-        var writer = allPurposeWriters[attributeLocations.rotationAndAlignedAxis];
-        writer(i + 0, rotation, x, y, z);
-        writer(i + 1, rotation, x, y, z);
-        writer(i + 2, rotation, x, y, z);
-        writer(i + 3, rotation, x, y, z);
+        var writer = allPurposeWriters[attributeLocations.alignedAxis];
+        writer(i + 0, x, y, z);
+        writer(i + 1, x, y, z);
+        writer(i + 2, x, y, z);
+        writer(i + 3, x, y, z);
     }
 
     function writeScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
@@ -934,14 +941,14 @@ define([
     }
 
     function writeBillboard(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
-        writePosition(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
+        writePositionScaleAndRotation(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writePixelOffsetAndTranslate(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
-        writeEyeOffsetAndScale(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
+        writeEyeOffset(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writePickColor(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeColor(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeOriginAndShow(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeTextureCoordinatesAndImageSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
-        writeRotationAndAlignedAxis(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
+        writeAlignedAxis(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeTranslucencyByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writePixelOffsetScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
@@ -1110,16 +1117,16 @@ define([
             if (billboardsToUpdateLength > 0) {
                 var writers = [];
 
-                if (properties[POSITION_INDEX]) {
-                    writers.push(writePosition);
+                if (properties[POSITION_INDEX] || properties[ROTATION_INDEX] || properties[SCALE_INDEX]) {
+                    writers.push(writePositionScaleAndRotation);
                 }
 
                 if (properties[PIXEL_OFFSET_INDEX]) {
                     writers.push(writePixelOffsetAndTranslate);
                 }
 
-                if (properties[EYE_OFFSET_INDEX] || properties[SCALE_INDEX]) {
-                    writers.push(writeEyeOffsetAndScale);
+                if (properties[EYE_OFFSET_INDEX]) {
+                    writers.push(writeEyeOffset);
                 }
 
                 if (properties[IMAGE_INDEX_INDEX]) {
@@ -1134,8 +1141,8 @@ define([
                     writers.push(writeOriginAndShow);
                 }
 
-                if (properties[ROTATION_INDEX] || properties[ALIGNED_AXIS_INDEX]) {
-                    writers.push(writeRotationAndAlignedAxis);
+                if (properties[ALIGNED_AXIS_INDEX]) {
+                    writers.push(writeAlignedAxis);
                 }
 
                 if (properties[SCALE_BY_DISTANCE_INDEX]) {

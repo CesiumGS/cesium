@@ -1,11 +1,11 @@
-attribute vec3 positionHigh;
-attribute vec3 positionLow;
+attribute vec4 positionHighAndScale;
+attribute vec4 positionLowAndRotation;
 attribute vec2 direction;                       // in screen space
 attribute vec4 textureCoordinatesAndImageSize;  // size in normalized texture coordinates
 attribute vec3 originAndShow;                   // show is 0.0 (false) or 1.0 (true)
 attribute vec4 pixelOffsetAndTranslate;         // x,y, translateX, translateY
-attribute vec4 eyeOffsetAndScale;               // eye offset in meters
-attribute vec4 rotationAndAlignedAxis;
+attribute vec3 eyeOffset;                       // eye offset in meters
+attribute vec3 alignedAxis;
 attribute vec4 scaleByDistance;                 // near, nearScale, far, farScale
 attribute vec4 translucencyByDistance;          // near, nearTrans, far, farTrans
 attribute vec4 pixelOffsetScaleByDistance;      // near, nearScale, far, farScale
@@ -43,8 +43,10 @@ void main()
     // Modifying this shader may also require modifications to Billboard._computeScreenSpacePosition
     
     // unpack attributes
-    vec3 eyeOffset = eyeOffsetAndScale.xyz;
-    float scale = eyeOffsetAndScale.w;
+    vec3 positionHigh = positionHighAndScale.xyz;
+    vec3 positionLow = positionLowAndRotation.xyz;
+    vec3 eyeOffset = eyeOffset;
+    float scale = positionHighAndScale.w;
     vec2 textureCoordinates = textureCoordinatesAndImageSize.xy;
     vec2 imageSize = textureCoordinatesAndImageSize.zw;
     vec2 origin = originAndShow.xy;
@@ -107,10 +109,9 @@ void main()
     positionWC.xy += (origin * abs(halfSize));
     
 #ifdef ROTATION
-    float rotation = rotationAndAlignedAxis.x;
-    vec3 alignedAxis = rotationAndAlignedAxis.yzw;
+    float rotation = positionLowAndRotation.w;
     
-    if (!all(equal(rotationAndAlignedAxis, vec4(0.0))))
+    if (!all(equal(alignedAxis, vec3(0.0))) || rotation != 0.0)
     {
         float angle = rotation;
         if (!all(equal(alignedAxis, vec3(0.0))))
