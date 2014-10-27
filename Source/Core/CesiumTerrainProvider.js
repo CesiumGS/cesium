@@ -121,6 +121,13 @@ define([
          * @private
          */
         this._requestVertexNormals = defaultValue(options.requestVertexNormals, false);
+        /**
+         * Boolean flag that indicates if the client should request tile watermasks from the server.
+         * @type {Boolean}
+         * @default false
+         * @private
+         */
+        this._requestWaterMask = defaultValue(options.requestWaterMask, false);
 
         this._errorEvent = new Event();
 
@@ -165,9 +172,8 @@ define([
                         isBigEndian : false
                     };
                 that._hasWaterMask = true;
-            } else if (data.format.indexOf('quantized-mesh-1.') === 0) {
-                that._hasWaterMask = false;
-            } else {
+                that._requestWaterMask = true;
+            } else if (data.format.indexOf('quantized-mesh-1.') !== 0) {
                 message = 'The tile format "' + data.format + '" is invalid or not supported.';
                 metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
                 return;
@@ -188,6 +194,9 @@ define([
 
             if (defined(data.extensions) && data.extensions.indexOf('vertexnormals') !== -1) {
                 that._hasVertexNormals = true;
+            }
+            if (defined(data.extensions) && data.extensions.indexOf('watermask') !== -1) {
+                that._hasWaterMask = true;
             }
 
             that._ready = true;
@@ -236,26 +245,30 @@ define([
          * @constant
          * @default 1
          */
-        OCT_VERTEX_NORMALS: 1
+        OCT_VERTEX_NORMALS: 1,
+        /**
+         * A watermask is included as an extension to the tile mesh
+         *
+         * @type {Number}
+         * @constant
+         * @default 2
+         */
+        WATER_MASK: 2
     };
 
-    var requestHeadersVertexNormals = {
-            // prefer quantized-mesh media-type
-            // only request vertex normals if Lighting is enabled on the CesiumTerrainProvider
-            Accept : 'application/vnd.quantized-mesh;extensions=vertexnormals,application/octet-stream;q=0.9,*/*;q=0.01'
-    };
-
-    function loadTileVertexNormals(url) {
-        return loadArrayBuffer(url, requestHeadersVertexNormals);
-    }
-
-    var requestHeadersDefault = {
-            // prefer quantized-mesh media-type
-            Accept : 'application/vnd.quantized-mesh,application/octet-stream;q=0.9,*/*;q=0.01'
-    };
-
-    function loadTile(url) {
-        return loadArrayBuffer(url, requestHeadersDefault);
+    function getRequestHeader(extensionsList) {
+        if (!defined(extensionsList) || extensionsList.length === 0) {
+            return {
+                // prefer quantized-mesh media-type
+                Accept : 'application/vnd.quantized-mesh,application/octet-stream;q=0.9,*/*;q=0.01'
+            };
+        } else {
+            var extensions = extensionsList.join(':');
+            return {
+                // prefer quantized-mesh media-type
+                Accept : 'application/vnd.quantized-mesh;extensions=' + extensions + ',application/octet-stream;q=0.9,*/*;q=0.01'
+            };
+        }
     }
 
     function createHeightmapTerrainData(provider, buffer, level, x, y, tmsY) {
@@ -377,6 +390,7 @@ define([
         pos += northVertexCount * bytesPerIndex;
 
         var encodedNormalBuffer;
+        var waterMaskBuffer;
         while (pos < view.byteLength) {
             var extensionId = view.getUint8(pos);
             pos += Uint8Array.BYTES_PER_ELEMENT;
@@ -385,6 +399,8 @@ define([
 
             if (extensionId === QuantizedMeshExtensionIds.OCT_VERTEX_NORMALS) {
                 encodedNormalBuffer = new Uint8Array(buffer, pos, vertexCount * 2);
+            } else if (extensionId === QuantizedMeshExtensionIds.WATER_MASK) {
+                waterMaskBuffer = new Uint8Array(buffer, pos, extensionLength);
             }
             pos += extensionLength;
         }
@@ -408,7 +424,8 @@ define([
             southSkirtHeight : skirtHeight,
             eastSkirtHeight : skirtHeight,
             northSkirtHeight : skirtHeight,
-            childTileMask: getChildMaskForTile(provider, level, x, tmsY)
+            childTileMask: getChildMaskForTile(provider, level, x, tmsY),
+            waterMask: waterMaskBuffer
         });
     }
 
@@ -456,10 +473,16 @@ define([
 
         var promise;
 
-        var tileLoader = loadTile;
+        var extensionList = [];
         if (this._requestVertexNormals && this._hasVertexNormals) {
-            tileLoader = loadTileVertexNormals;
+            extensionList.push("vertexnormals");
         }
+        if (this._requestWaterMask && this._hasWaterMask) {
+            extensionList.push("watermask");
+        }
+        var tileLoader = function(tileUrl) {
+            return loadArrayBuffer(tileUrl, getRequestHeader(extensionList));
+        };
 
         throttleRequests = defaultValue(throttleRequests, true);
         if (throttleRequests) {
@@ -559,7 +582,7 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                return this._hasWaterMask;
+                return this._hasWaterMask && this._requestWaterMask;
             }
         },
 
@@ -596,6 +619,22 @@ define([
         requestVertexNormals : {
             get : function() {
                 return this._requestVertexNormals;
+            }
+        },
+
+        /**
+         * Boolean flag that indicates if the client should request a watermask from the server.
+         * Watermask data is appended to the standard tile mesh data only if the client requests the watermask and
+         * if the server provides a watermask.
+         *
+         * This property is read only. To change this value, a new CesiumTerrainProvider must be constructed that requests
+         * a watermask to ensure that all existing tiles are requested that includes/excludes watermask extension data.
+         * @memberof CesiumTerrainProvider.prototype
+         * @type {Boolean}
+         */
+        requestWaterMask : {
+            get : function() {
+                return this._requestWaterMask;
             }
         }
     });

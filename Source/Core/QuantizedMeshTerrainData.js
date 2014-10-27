@@ -69,6 +69,7 @@ define([
      *                 </table>
      * @param {Boolean} [options.createdByUpsampling=false] True if this instance was created by upsampling another instance;
      *                  otherwise, false.
+     * @param {Uint8Array} options.waterMask The buffer containing the watermask.
      *
      * @see TerrainData
      * @see HeightmapTerrainData
