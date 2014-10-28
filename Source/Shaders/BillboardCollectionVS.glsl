@@ -37,8 +37,11 @@ void main()
     vec3 positionHigh = positionHighAndScale.xyz;
     vec3 positionLow = positionLowAndRotation.xyz;
     float scale = positionHighAndScale.w;
-    float rotation = positionLowAndRotation.w;
     
+#ifdef ROTATION
+    float rotation = positionLowAndRotation.w;
+#endif
+
     float upperBound = pow(2.0, 15.0);
     float compressed = compressedAttribute0.x;
     
@@ -75,18 +78,25 @@ void main()
     translate.y += (temp - floor(temp)) * pow(2.0, 8.0);
     translate.y -= upperBound;
     
+    temp = compressedAttribute1.x / pow(2.0, 8.0);
+    vec3 eyeOffset = czm_octDecode(floor(temp)) * compressedAttribute2.x;
+    
+#ifdef EYE_DISTANCE_TRANSLUCENCY
     vec4 translucencyByDistance;
     translucencyByDistance.x = compressedAttribute1.z;
     translucencyByDistance.z = compressedAttribute1.w;
     
-    temp = compressedAttribute1.x / pow(2.0, 8.0);
     translucencyByDistance.y = ((temp - floor(temp)) * pow(2.0, 8.0)) / 255.0;
-    vec3 eyeOffset = czm_octDecode(floor(temp)) * compressedAttribute2.x;
     
     temp = compressedAttribute1.y / pow(2.0, 8.0);
     translucencyByDistance.z = ((temp - floor(temp)) * pow(2.0, 8.0)) / 255.0;
-    //vec3 alignedAxis = czm_octDecode(floor(temp));
+#endif
+
+#ifdef ALIGNED_AXIS
+    vec3 alignedAxis = czm_octDecode(floor(temp));
+#else
     vec3 alignedAxis = vec3(0.0);
+#endif
     
     vec2 textureCoordinates = textureCoordinatesAndImageSize.xy;
     vec2 imageSize = textureCoordinatesAndImageSize.zw;
@@ -166,7 +176,7 @@ void main()
     
     positionWC.xy += (origin * abs(halfSize));
     
-#ifdef ROTATION
+#if defined(ROTATION) || defined(ALIGNED_AXIS)
     if (!all(equal(alignedAxis, vec3(0.0))) || rotation != 0.0)
     {
         float angle = rotation;

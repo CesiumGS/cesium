@@ -156,6 +156,10 @@ define([
         this._compiledShaderRotation = false;
         this._compiledShaderRotationPick = false;
 
+        this._shaderAlignedAxis = false;
+        this._compiledShaderAlignedAxis = false;
+        this._compiledShaderAlignedAxisPick = false;
+
         this._shaderScaleByDistance = false;
         this._compiledShaderScaleByDistance = false;
         this._compiledShaderScaleByDistancePick = false;
@@ -617,9 +621,8 @@ define([
         EncodedCartesian3.fromCartesian(position, writePositionScratch);
         var scale = billboard.scale;
         var rotation = billboard.rotation;
-        var alignedAxis = billboard.alignedAxis;
 
-        if (rotation !== 0.0 || !Cartesian3.equals(alignedAxis, Cartesian3.ZERO)) {
+        if (rotation !== 0.0) {
             billboardCollection._shaderRotation = true;
         }
 
@@ -709,11 +712,9 @@ define([
             eyeOffset = Cartesian3.UNIT_X;
         }
 
-        var rotation = billboard.rotation;
         var alignedAxis = billboard.alignedAxis;
-
-        if (rotation !== 0.0 || !Cartesian3.equals(alignedAxis, Cartesian3.ZERO)) {
-            billboardCollection._shaderRotation = true;
+        if (!Cartesian3.equals(alignedAxis, Cartesian3.ZERO)) {
+            billboardCollection._shaderAlignedAxis = true;
         }
 
         var near = 0.0;
@@ -738,8 +739,11 @@ define([
         eyeOffset = Cartesian3.normalize(eyeOffset, scratchCartesian3);
 
         var compressed0 = AttributeCompression.octEncodeFloat(eyeOffset);
-        //var compressed1 = AttributeCompression.octEncodeFloat(alignedAxis);
         var compressed1 = 0.0;
+
+        if (Cartesian3.magnitudeSquared(alignedAxis) - 1.0 < CesiumMath.EPSILON6) {
+            compressed1 = AttributeCompression.octEncodeFloat(alignedAxis);
+        }
 
         nearValue = CesiumMath.clamp(nearValue, 0.0, 1.0) * 255.0;
         compressed0 = compressed0 * Math.pow(2.0, 8.0) + nearValue;
@@ -1159,6 +1163,7 @@ define([
 
             if (!defined(this._sp) ||
                     (this._shaderRotation && !this._compiledShaderRotation) ||
+                    (this._shaderAlignedAxis && !this._compiledShaderAlignedAxis) ||
                     (this._shaderScaleByDistance && !this._compiledShaderScaleByDistance) ||
                     (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistance) ||
                     (this._shaderPixelOffsetScaleByDistance && !this._compiledShaderPixelOffsetScaleByDistance)) {
@@ -1168,6 +1173,9 @@ define([
                 });
                 if (this._shaderRotation) {
                     vs.defines.push('ROTATION');
+                }
+                if (this._shaderAlignedAxis) {
+                    vs.defines.push('ALIGNED_AXIS');
                 }
                 if (this._shaderScaleByDistance) {
                     vs.defines.push('EYE_DISTANCE_SCALING');
@@ -1181,6 +1189,7 @@ define([
 
                 this._sp = context.replaceShaderProgram(this._sp, vs, BillboardCollectionFS, attributeLocations);
                 this._compiledShaderRotation = this._shaderRotation;
+                this._compiledShaderAlignedAxis = this._shaderAlignedAxis;
                 this._compiledShaderScaleByDistance = this._shaderScaleByDistance;
                 this._compiledShaderTranslucencyByDistance = this._shaderTranslucencyByDistance;
                 this._compiledShaderPixelOffsetScaleByDistance = this._shaderPixelOffsetScaleByDistance;
@@ -1217,6 +1226,7 @@ define([
 
             if (!defined(this._spPick) ||
                     (this._shaderRotation && !this._compiledShaderRotationPick) ||
+                    (this._shaderAlignedAxis && !this._compiledShaderAlignedAxisPick) ||
                     (this._shaderScaleByDistance && !this._compiledShaderScaleByDistancePick) ||
                     (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistancePick) ||
                     (this._shaderPixelOffsetScaleByDistance && !this._compiledShaderPixelOffsetScaleByDistancePick)) {
@@ -1228,6 +1238,9 @@ define([
 
                 if (this._shaderRotation) {
                     vs.defines.push('ROTATION');
+                }
+                if (this._shaderAlignedAxis) {
+                    vs.defines.push('ALIGNED_AXIS');
                 }
                 if (this._shaderScaleByDistance) {
                     vs.defines.push('EYE_DISTANCE_SCALING');
@@ -1246,6 +1259,7 @@ define([
 
                 this._spPick = context.replaceShaderProgram(this._spPick, vs, fs, attributeLocations);
                 this._compiledShaderRotationPick = this._shaderRotation;
+                this._compiledShaderAlignedAxisPick = this._shaderAlignedAxis;
                 this._compiledShaderScaleByDistancePick = this._shaderScaleByDistance;
                 this._compiledShaderTranslucencyByDistancePick = this._shaderTranslucencyByDistance;
                 this._compiledShaderPixelOffsetScaleByDistancePick = this._shaderPixelOffsetScaleByDistance;
