@@ -101,26 +101,28 @@ void main()
     vec3 alignedAxis = vec3(0.0);
 #endif
     
+#ifdef RENDER_FOR_PICK
+    temp = compressedAttribute2.y;
+#else
+    temp = compressedAttribute2.x;
+#endif
+
     vec4 color;
-    temp = compressedAttribute2.x / pow(2.0, 8.0);
+    temp = temp / pow(2.0, 8.0);
     color.b = (temp - floor(temp)) * pow(2.0, 8.0);
     temp = floor(temp) / pow(2.0, 8.0);
     color.g = (temp - floor(temp)) * pow(2.0, 8.0);
     color.r = floor(temp);
     
-    vec4 pickColor;
-    temp = compressedAttribute2.y / pow(2.0, 8.0);
-    pickColor.b = (temp - floor(temp)) * pow(2.0, 8.0);
-    temp = floor(temp) / pow(2.0, 8.0);
-    pickColor.g = (temp - floor(temp)) * pow(2.0, 8.0);
-    pickColor.r = floor(temp);
-    
     temp = compressedAttribute2.z / pow(2.0, 8.0);
-    pickColor.a = (temp - floor(temp)) * pow(2.0, 8.0);
-    color.a = floor(temp);
     
+#ifdef RENDER_FOR_PICK
+    color.a = (temp - floor(temp)) * pow(2.0, 8.0);
+    vec4 pickColor = color / 255.0;
+#else
+    color.a = floor(temp);
     color /= 255.0;
-    pickColor /= 255.0;
+#endif
     
     ///////////////////////////////////////////////////////////////////////////
     
