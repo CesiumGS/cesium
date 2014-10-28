@@ -82,7 +82,7 @@ define([
         compressedAttribute1 : 3,
         compressedAttribute2 : 4,
         eyeOffset : 5,
-        textureCoordinatesAndImageSize : 6,
+        imageSize : 6,
         scaleByDistance : 7,
         pixelOffsetScaleByDistance : 8
     };
@@ -589,8 +589,8 @@ define([
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[EYE_OFFSET_INDEX]
         }, {
-            index : attributeLocations.textureCoordinatesAndImageSize,
-            componentsPerAttribute : 4,
+            index : attributeLocations.imageSize,
+            componentsPerAttribute : 2,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[IMAGE_INDEX_INDEX]
         }, {
@@ -650,6 +650,8 @@ define([
         positionLowWriter(i + 3, low.x, low.y, low.z, rotation);
     }
 
+    var scratchCartesian2 = new Cartesian2();
+
     function writeCompressedAttrib0(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = billboard._index * 4;
 
@@ -675,10 +677,27 @@ define([
 
         billboardCollection._allHorizontalCenter = billboardCollection._allHorizontalCenter && horizontalOrigin === HorizontalOrigin.CENTER;
 
-        var lowerLeft = 0.0;
-        var lowerRight = 2.0;
-        var upperRight = 3.0;
-        var upperLeft = 1.0;
+        var bottomLeftX = 0;
+        var bottomLeftY = 0;
+        var width = 0;
+        var height = 0;
+        var index = billboard._imageIndex;
+        if (index !== -1) {
+            var imageRectangle = textureAtlasCoordinates[index];
+
+            //>>includeStart('debug', pragmas.debug);
+            if (!defined(imageRectangle)) {
+                throw new DeveloperError('Invalid billboard image index: ' + index);
+            }
+            //>>includeEnd('debug');
+
+            bottomLeftX = imageRectangle.x;
+            bottomLeftY = imageRectangle.y;
+            width = imageRectangle.width;
+            height = imageRectangle.height;
+        }
+        var topRightX = bottomLeftX + width;
+        var topRightY = bottomLeftY + height;
 
         var upperBound = Math.pow(2.0, 15.0);
 
@@ -697,16 +716,29 @@ define([
         compressed1 += upperTranslateY;
         compressed2 += lowerTranslateY;
 
+        scratchCartesian2.x = bottomLeftX;
+        scratchCartesian2.y = bottomLeftY;
+        var compressedTexCoordsLL = AttributeCompression.compressTextureCoordinates(scratchCartesian2);
+        scratchCartesian2.x = topRightX;
+        var compressedTexCoordsLR = AttributeCompression.compressTextureCoordinates(scratchCartesian2);
+        scratchCartesian2.y = topRightY;
+        var compressedTexCoordsUR = AttributeCompression.compressTextureCoordinates(scratchCartesian2);
+        scratchCartesian2.x = bottomLeftX;
+        var compressedTexCoordsUL = AttributeCompression.compressTextureCoordinates(scratchCartesian2);
+
+        var lowerLeftDirection = 0.0;
+        var lowerRightDirection = 2.0;
+        var upperRightDirection = 3.0;
+        var upperLeftDirection = 1.0;
+
         var allPurposeWriters = vafWriters[allPassPurpose];
         var writer = allPurposeWriters[attributeLocations.compressedAttribute0];
 
-        writer(i + 0, compressed0 + lowerLeft, compressed1, compressed2, lowerLeft);
-        writer(i + 1, compressed0 + lowerRight, compressed1, compressed2, lowerRight);
-        writer(i + 2, compressed0 + upperRight, compressed1, compressed2, upperRight);
-        writer(i + 3, compressed0 + upperLeft, compressed1, compressed2, upperLeft);
+        writer(i + 0, compressed0 + lowerLeftDirection, compressed1, compressed2, compressedTexCoordsLL);
+        writer(i + 1, compressed0 + lowerRightDirection, compressed1, compressed2, compressedTexCoordsLR);
+        writer(i + 2, compressed0 + upperRightDirection, compressed1, compressed2, compressedTexCoordsUR);
+        writer(i + 3, compressed0 + upperLeftDirection, compressed1, compressed2, compressedTexCoordsUL);
     }
-
-    var scratchCartesian2 = new Cartesian2();
 
     function writeCompressedAttrib1(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = billboard._index * 4;
@@ -794,11 +826,8 @@ define([
         writer(i + 3, eyeOffset.x, eyeOffset.y, eyeOffset.z);
     }
 
-
     function writeTextureCoordinatesAndImageSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = billboard._index * 4;
-        var bottomLeftX = 0;
-        var bottomLeftY = 0;
         var width = 0;
         var height = 0;
         var index = billboard._imageIndex;
@@ -811,13 +840,9 @@ define([
             }
             //>>includeEnd('debug');
 
-            bottomLeftX = imageRectangle.x;
-            bottomLeftY = imageRectangle.y;
             width = imageRectangle.width;
             height = imageRectangle.height;
         }
-        var topRightX = bottomLeftX + width;
-        var topRightY = bottomLeftY + height;
 
         var dimensions = billboardCollection._textureAtlas.texture.dimensions;
         var imageWidth = defaultValue(billboard.width, dimensions.x * width) * 0.5;
@@ -826,11 +851,11 @@ define([
         billboardCollection._maxSize = Math.max(billboardCollection._maxSize, imageWidth, imageHeight);
 
         var allPurposeWriters = vafWriters[allPassPurpose];
-        var writer = allPurposeWriters[attributeLocations.textureCoordinatesAndImageSize];
-        writer(i + 0, bottomLeftX, bottomLeftY, imageWidth, imageHeight); // Lower Left
-        writer(i + 1, topRightX, bottomLeftY, imageWidth, imageHeight); // Lower Right
-        writer(i + 2, topRightX, topRightY, imageWidth, imageHeight); // Upper Right
-        writer(i + 3, bottomLeftX, topRightY, imageWidth, imageHeight); // Upper Left
+        var writer = allPurposeWriters[attributeLocations.imageSize];
+        writer(i + 0, imageWidth, imageHeight); // Lower Left
+        writer(i + 1, imageWidth, imageHeight); // Lower Right
+        writer(i + 2, imageWidth, imageHeight); // Upper Right
+        writer(i + 3, imageWidth, imageHeight); // Upper Left
     }
 
     function writeScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {

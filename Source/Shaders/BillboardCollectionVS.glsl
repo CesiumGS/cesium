@@ -4,7 +4,7 @@ attribute vec4 compressedAttribute0;
 attribute vec4 compressedAttribute1;
 attribute vec4 compressedAttribute2;
 attribute vec3 eyeOffset;
-attribute vec4 textureCoordinatesAndImageSize;  // size in normalized texture coordinates
+attribute vec2 imageSize;                       // size in normalized texture coordinates
 attribute vec4 scaleByDistance;                 // near, nearScale, far, farScale
 attribute vec4 pixelOffsetScaleByDistance;      // near, nearScale, far, farScale
 
@@ -79,6 +79,8 @@ void main()
     translate.y += (temp - floor(temp)) * pow(2.0, 8.0);
     translate.y -= upperBound;
     
+    vec2 textureCoordinates = czm_decompressTextureCoordinates(compressedAttribute0.w);
+    
     temp = compressedAttribute1.x / pow(2.0, 8.0);
     
 #ifdef EYE_DISTANCE_TRANSLUCENCY
@@ -97,9 +99,6 @@ void main()
 #else
     vec3 alignedAxis = vec3(0.0);
 #endif
-    
-    vec2 textureCoordinates = textureCoordinatesAndImageSize.xy;
-    vec2 imageSize = textureCoordinatesAndImageSize.zw;
     
     vec4 color;
     temp = compressedAttribute2.x / pow(2.0, 8.0);
