@@ -92,7 +92,7 @@ void main()
     translucencyByDistance.y = ((temp - floor(temp)) * pow(2.0, 8.0)) / 255.0;
     
     temp = compressedAttribute1.y / pow(2.0, 8.0);
-    translucencyByDistance.z = ((temp - floor(temp)) * pow(2.0, 8.0)) / 255.0;
+    translucencyByDistance.w = ((temp - floor(temp)) * pow(2.0, 8.0)) / 255.0;
 #endif
 
 #ifdef ALIGNED_AXIS
