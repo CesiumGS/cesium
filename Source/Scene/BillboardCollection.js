@@ -741,7 +741,7 @@ define([
         var compressed0 = AttributeCompression.octEncodeFloat(eyeOffset);
         var compressed1 = 0.0;
 
-        if (Cartesian3.magnitudeSquared(alignedAxis) - 1.0 < CesiumMath.EPSILON6) {
+        if (Math.abs(Cartesian3.magnitudeSquared(alignedAxis) - 1.0) < CesiumMath.EPSILON6) {
             compressed1 = AttributeCompression.octEncodeFloat(alignedAxis);
         }
 
