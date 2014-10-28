@@ -38,7 +38,7 @@ void main()
     vec3 positionLow = positionLowAndRotation.xyz;
     float scale = positionHighAndScale.w;
     
-#ifdef ROTATION
+#if defined(ROTATION) || defined(ALIGNED_AXIS)
     float rotation = positionLowAndRotation.w;
 #endif
 

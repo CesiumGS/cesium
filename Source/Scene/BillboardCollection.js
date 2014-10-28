@@ -776,7 +776,7 @@ define([
         }
 
         var dimensions = billboardCollection._textureAtlas.texture.dimensions;
-        var imageWidth = defaultValue(billboard.width, dimensions.x * width) * 0.5;
+        var imageWidth = Math.ceil(defaultValue(billboard.width, dimensions.x * width) * 0.5);
         billboardCollection._maxSize = Math.max(billboardCollection._maxSize, imageWidth);
 
         var compressed0 = CesiumMath.clamp(imageWidth, 0.0, Math.pow(2.0, 16.0));
@@ -786,10 +786,12 @@ define([
             compressed1 = AttributeCompression.octEncodeFloat(alignedAxis);
         }
 
-        nearValue = CesiumMath.clamp(nearValue, 0.0, 1.0) * 255.0;
+        nearValue = CesiumMath.clamp(nearValue, 0.0, 1.0);
+        nearValue = nearValue === 1.0 ? 255.0 : (nearValue * 255.0) | 0;
         compressed0 = compressed0 * Math.pow(2.0, 8.0) + nearValue;
 
-        farValue = CesiumMath.clamp(farValue, 0.0, 1.0) * 255.0;
+        farValue = CesiumMath.clamp(farValue, 0.0, 1.0);
+        farValue = farValue === 1.0 ? 255.0 : (farValue * 255.0) | 0;
         compressed1 = compressed1 * Math.pow(2.0, 8.0) + farValue;
 
         var allPurposeWriters = vafWriters[allPassPurpose];
@@ -821,7 +823,7 @@ define([
         }
 
         var dimensions = billboardCollection._textureAtlas.texture.dimensions;
-        var imageHeight = defaultValue(billboard.height, dimensions.y * height) * 0.5;
+        var imageHeight = Math.ceil(defaultValue(billboard.height, dimensions.y * height) * 0.5);
         billboardCollection._maxSize = Math.max(billboardCollection._maxSize, imageHeight);
 
         var red = Color.floatToByte(color.red);
