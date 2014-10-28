@@ -81,9 +81,10 @@ define([
         compressedAttribute0 : 2,
         compressedAttribute1 : 3,
         compressedAttribute2 : 4,
-        textureCoordinatesAndImageSize : 5,
-        scaleByDistance : 6,
-        pixelOffsetScaleByDistance : 7
+        eyeOffset : 5,
+        textureCoordinatesAndImageSize : 6,
+        scaleByDistance : 7,
+        pixelOffsetScaleByDistance : 8
     };
 
     // Identifies to the VertexArrayFacade the attributes that are used only for the pick
@@ -576,12 +577,17 @@ define([
             index : attributeLocations.compressedAttribute1,
             componentsPerAttribute : 4,
             componentDatatype : ComponentDatatype.FLOAT,
-            usage : buffersUsage[EYE_OFFSET_INDEX]
+            usage : buffersUsage[TRANSLUCENCY_BY_DISTANCE_INDEX]
         }, {
             index : attributeLocations.compressedAttribute2,
             componentsPerAttribute : 4,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[COLOR_INDEX]
+        }, {
+            index : attributeLocations.eyeOffset,
+            componentsPerAttribute : 3,
+            componentDatatype : ComponentDatatype.FLOAT,
+            usage : buffersUsage[EYE_OFFSET_INDEX]
         }, {
             index : attributeLocations.textureCoordinatesAndImageSize,
             componentsPerAttribute : 4,
@@ -700,17 +706,10 @@ define([
         writer(i + 3, compressed0 + upperLeft, compressed1, compressed2, upperLeft);
     }
 
-    var scratchCartesian3 = new Cartesian3();
     var scratchCartesian2 = new Cartesian2();
 
     function writeCompressedAttrib1(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = billboard._index * 4;
-
-        var eyeOffset = billboard.eyeOffset;
-        billboardCollection._maxEyeOffset = Math.max(billboardCollection._maxEyeOffset, Math.abs(eyeOffset.x), Math.abs(eyeOffset.y), Math.abs(eyeOffset.z));
-        if (Cartesian3.magnitudeSquared(eyeOffset) < CesiumMath.EPSILON6) {
-            eyeOffset = Cartesian3.UNIT_X;
-        }
 
         var alignedAxis = billboard.alignedAxis;
         if (!Cartesian3.equals(alignedAxis, Cartesian3.ZERO)) {
@@ -736,9 +735,7 @@ define([
             }
         }
 
-        eyeOffset = Cartesian3.normalize(eyeOffset, scratchCartesian3);
-
-        var compressed0 = AttributeCompression.octEncodeFloat(eyeOffset);
+        var compressed0 = 0.0;
         var compressed1 = 0.0;
 
         if (Math.abs(Cartesian3.magnitudeSquared(alignedAxis) - 1.0) < CesiumMath.EPSILON6) {
@@ -762,8 +759,6 @@ define([
     function writeCompressedAttrib2(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = billboard._index * 4;
 
-        var eyeOffsetMagnitude = 0.0;//Cartesian3.magnitude(billboard.eyeOffset);
-
         var color = billboard.color;
         var red = Color.floatToByte(color.red);
         var green = Color.floatToByte(color.green);
@@ -780,11 +775,25 @@ define([
 
         var allPurposeWriters = vafWriters[allPassPurpose];
         var writer = allPurposeWriters[attributeLocations.compressedAttribute2];
-        writer(i + 0, eyeOffsetMagnitude, compressed0, compressed1, compressed2);
-        writer(i + 1, eyeOffsetMagnitude, compressed0, compressed1, compressed2);
-        writer(i + 2, eyeOffsetMagnitude, compressed0, compressed1, compressed2);
-        writer(i + 3, eyeOffsetMagnitude, compressed0, compressed1, compressed2);
+        writer(i + 0, compressed0, compressed1, compressed2);
+        writer(i + 1, compressed0, compressed1, compressed2);
+        writer(i + 2, compressed0, compressed1, compressed2);
+        writer(i + 3, compressed0, compressed1, compressed2);
     }
+
+    function writeEyeOffset(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
+        var i = billboard._index * 4;
+        var eyeOffset = billboard.eyeOffset;
+        billboardCollection._maxEyeOffset = Math.max(billboardCollection._maxEyeOffset, Math.abs(eyeOffset.x), Math.abs(eyeOffset.y), Math.abs(eyeOffset.z));
+
+        var allPurposeWriters = vafWriters[allPassPurpose];
+        var writer = allPurposeWriters[attributeLocations.eyeOffset];
+        writer(i + 0, eyeOffset.x, eyeOffset.y, eyeOffset.z);
+        writer(i + 1, eyeOffset.x, eyeOffset.y, eyeOffset.z);
+        writer(i + 2, eyeOffset.x, eyeOffset.y, eyeOffset.z);
+        writer(i + 3, eyeOffset.x, eyeOffset.y, eyeOffset.z);
+    }
+
 
     function writeTextureCoordinatesAndImageSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = billboard._index * 4;
@@ -887,6 +896,7 @@ define([
         writeCompressedAttrib0(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeCompressedAttrib1(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeCompressedAttrib2(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
+        writeEyeOffset(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeTextureCoordinatesAndImageSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writePixelOffsetScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
@@ -1063,12 +1073,16 @@ define([
                     writers.push(writeCompressedAttrib0);
                 }
 
-                if (properties[EYE_OFFSET_INDEX] || properties[ALIGNED_AXIS_INDEX] || properties[TRANSLUCENCY_BY_DISTANCE_INDEX]) {
+                if (properties[ALIGNED_AXIS_INDEX] || properties[TRANSLUCENCY_BY_DISTANCE_INDEX]) {
                     writers.push(writeCompressedAttrib1);
                 }
 
-                if (properties[EYE_OFFSET_INDEX] || properties[COLOR_INDEX]) {
+                if (properties[COLOR_INDEX]) {
                     writers.push(writeCompressedAttrib2);
+                }
+
+                if (properties[EYE_OFFSET_INDEX]) {
+                    writers.push(writeEyeOffset);
                 }
 
                 if (properties[IMAGE_INDEX_INDEX]) {

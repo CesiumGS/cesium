@@ -3,6 +3,7 @@ attribute vec4 positionLowAndRotation;
 attribute vec4 compressedAttribute0;
 attribute vec4 compressedAttribute1;
 attribute vec4 compressedAttribute2;
+attribute vec3 eyeOffset;
 attribute vec4 textureCoordinatesAndImageSize;  // size in normalized texture coordinates
 attribute vec4 scaleByDistance;                 // near, nearScale, far, farScale
 attribute vec4 pixelOffsetScaleByDistance;      // near, nearScale, far, farScale
@@ -79,7 +80,6 @@ void main()
     translate.y -= upperBound;
     
     temp = compressedAttribute1.x / pow(2.0, 8.0);
-    vec3 eyeOffset = czm_octDecode(floor(temp)) * compressedAttribute2.x;
     
 #ifdef EYE_DISTANCE_TRANSLUCENCY
     vec4 translucencyByDistance;
@@ -102,20 +102,20 @@ void main()
     vec2 imageSize = textureCoordinatesAndImageSize.zw;
     
     vec4 color;
-    temp = compressedAttribute2.y / pow(2.0, 8.0);
+    temp = compressedAttribute2.x / pow(2.0, 8.0);
     color.b = (temp - floor(temp)) * pow(2.0, 8.0);
     temp = floor(temp) / pow(2.0, 8.0);
     color.g = (temp - floor(temp)) * pow(2.0, 8.0);
     color.r = floor(temp);
     
     vec4 pickColor;
-    temp = compressedAttribute2.z / pow(2.0, 8.0);
+    temp = compressedAttribute2.y / pow(2.0, 8.0);
     pickColor.b = (temp - floor(temp)) * pow(2.0, 8.0);
     temp = floor(temp) / pow(2.0, 8.0);
     pickColor.g = (temp - floor(temp)) * pow(2.0, 8.0);
     pickColor.r = floor(temp);
     
-    temp = compressedAttribute2.w / pow(2.0, 8.0);
+    temp = compressedAttribute2.z / pow(2.0, 8.0);
     pickColor.a = (temp - floor(temp)) * pow(2.0, 8.0);
     color.a = floor(temp);
     
