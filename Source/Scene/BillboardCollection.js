@@ -78,9 +78,9 @@ define([
     var attributeLocations = {
         positionHighAndScale : 0,
         positionLowAndRotation : 1,
-        compressedAttribute0 : 2,
-        compressedAttribute1 : 3,
-        compressedAttribute2 : 4,
+        compressedAttribute0 : 2,        // pixel offset, translate, horizontal origin, vertical origin, show, texture coordinates, direction
+        compressedAttribute1 : 3,        // aligned axis, translucency by distance, image width
+        compressedAttribute2 : 4,        // image height, color, pick color, 2 bytes free
         eyeOffset : 5,
         scaleByDistance : 6,
         pixelOffsetScaleByDistance : 7

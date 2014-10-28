@@ -1,11 +1,11 @@
 attribute vec4 positionHighAndScale;
-attribute vec4 positionLowAndRotation;
-attribute vec4 compressedAttribute0;
-attribute vec4 compressedAttribute1;
-attribute vec4 compressedAttribute2;
-attribute vec3 eyeOffset;
-attribute vec4 scaleByDistance;                 // near, nearScale, far, farScale
-attribute vec4 pixelOffsetScaleByDistance;      // near, nearScale, far, farScale
+attribute vec4 positionLowAndRotation;   
+attribute vec4 compressedAttribute0;        // pixel offset, translate, horizontal origin, vertical origin, show, texture coordinates, direction
+attribute vec4 compressedAttribute1;        // aligned axis, translucency by distance, image width
+attribute vec4 compressedAttribute2;        // image height, color, pick color, 2 bytes free
+attribute vec3 eyeOffset;                   // eye offset in meters
+attribute vec4 scaleByDistance;             // near, nearScale, far, farScale
+attribute vec4 pixelOffsetScaleByDistance;  // near, nearScale, far, farScale
 
 varying vec2 v_textureCoordinates;
 
