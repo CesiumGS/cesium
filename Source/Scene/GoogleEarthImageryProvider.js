@@ -223,6 +223,7 @@ define([
          * Gets the URL of the Google Earth MapServer.
          * @memberof GoogleEarthImageryProvider.prototype
          * @type {String}
+         * @readonly
          */
         url : {
             get : function() {
@@ -234,6 +235,7 @@ define([
          * Gets the url path of the data on the Google Earth server.
          * @memberof GoogleEarthImageryProvider.prototype
          * @type {String}
+         * @readonly
          */
         path : {
             get : function() {
@@ -245,6 +247,7 @@ define([
          * Gets the proxy used by this provider.
          * @memberof GoogleEarthImageryProvider.prototype
          * @type {Proxy}
+         * @readonly
          */
         proxy : {
             get : function() {
@@ -256,6 +259,7 @@ define([
          * Gets the imagery channel (id) currently being used.
          * @memberof GoogleEarthImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         channel : {
             get : function() {
@@ -268,6 +272,7 @@ define([
          * not be called before {@link GoogleEarthImageryProvider#ready} returns true.
          * @memberof GoogleEarthImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         tileWidth : {
             get : function() {
@@ -286,6 +291,7 @@ define([
          * not be called before {@link GoogleEarthImageryProvider#ready} returns true.
          * @memberof GoogleEarthImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         tileHeight: {
             get : function() {
@@ -304,6 +310,7 @@ define([
          * not be called before {@link GoogleEarthImageryProvider#ready} returns true.
          * @memberof GoogleEarthImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         maximumLevel : {
             get : function() {
@@ -322,6 +329,7 @@ define([
          * not be called before {@link GoogleEarthImageryProvider#ready} returns true.
          * @memberof GoogleEarthImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         minimumLevel : {
             get : function() {
@@ -340,6 +348,7 @@ define([
          * not be called before {@link GoogleEarthImageryProvider#ready} returns true.
          * @memberof GoogleEarthImageryProvider.prototype
          * @type {TilingScheme}
+         * @readonly
          */
         tilingScheme : {
             get : function() {
@@ -358,6 +367,7 @@ define([
          * not be called before {@link GoogleEarthImageryProvider#ready} returns true.
          * @memberof GoogleEarthImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         version : {
             get : function() {
@@ -376,6 +386,7 @@ define([
          * not be called before {@link GoogleEarthImageryProvider#ready} returns true.
          * @memberof GoogleEarthImageryProvider.prototype
          * @type {String}
+         * @readonly
          */
         requestType : {
             get : function() {
@@ -393,6 +404,7 @@ define([
          * not be called before {@link GoogleEarthImageryProvider#ready} returns true.
          * @memberof GoogleEarthImageryProvider.prototype
          * @type {Rectangle}
+         * @readonly
          */
         rectangle : {
             get : function() {
@@ -413,6 +425,7 @@ define([
          * not be called before {@link GoogleEarthImageryProvider#ready} returns true.
          * @memberof GoogleEarthImageryProvider.prototype
          * @type {TileDiscardPolicy}
+         * @readonly
          */
         tileDiscardPolicy : {
             get : function() {
@@ -432,6 +445,7 @@ define([
          * are passed an instance of {@link TileProviderError}.
          * @memberof GoogleEarthImageryProvider.prototype
          * @type {Event}
+         * @readonly
          */
         errorEvent : {
             get : function() {
@@ -443,6 +457,7 @@ define([
          * Gets a value indicating whether or not the provider is ready for use.
          * @memberof GoogleEarthImageryProvider.prototype
          * @type {Boolean}
+         * @readonly
          */
         ready : {
             get : function() {
@@ -455,6 +470,7 @@ define([
          * the source of the imagery.  This function should not be called before {@link GoogleEarthImageryProvider#ready} returns true.
          * @memberof GoogleEarthImageryProvider.prototype
          * @type {Credit}
+         * @readonly
          */
         credit : {
             get : function() {
@@ -470,6 +486,7 @@ define([
          * and texture upload time are reduced.
          * @memberof GoogleEarthImageryProvider.prototype
          * @type {Boolean}
+         * @readonly
          */
         hasAlphaChannel : {
             get : function() {
