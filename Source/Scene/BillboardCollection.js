@@ -82,9 +82,8 @@ define([
         compressedAttribute1 : 3,
         compressedAttribute2 : 4,
         eyeOffset : 5,
-        imageSize : 6,
-        scaleByDistance : 7,
-        pixelOffsetScaleByDistance : 8
+        scaleByDistance : 6,
+        pixelOffsetScaleByDistance : 7
     };
 
     // Identifies to the VertexArrayFacade the attributes that are used only for the pick
@@ -589,11 +588,6 @@ define([
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[EYE_OFFSET_INDEX]
         }, {
-            index : attributeLocations.imageSize,
-            componentsPerAttribute : 2,
-            componentDatatype : ComponentDatatype.FLOAT,
-            usage : buffersUsage[IMAGE_INDEX_INDEX]
-        }, {
             index : attributeLocations.scaleByDistance,
             componentsPerAttribute : 4,
             componentDatatype : ComponentDatatype.FLOAT,
@@ -767,7 +761,25 @@ define([
             }
         }
 
-        var compressed0 = 0.0;
+        var width = 0;
+        var index = billboard._imageIndex;
+        if (index !== -1) {
+            var imageRectangle = textureAtlasCoordinates[index];
+
+            //>>includeStart('debug', pragmas.debug);
+            if (!defined(imageRectangle)) {
+                throw new DeveloperError('Invalid billboard image index: ' + index);
+            }
+            //>>includeEnd('debug');
+
+            width = imageRectangle.width;
+        }
+
+        var dimensions = billboardCollection._textureAtlas.texture.dimensions;
+        var imageWidth = defaultValue(billboard.width, dimensions.x * width) * 0.5;
+        billboardCollection._maxSize = Math.max(billboardCollection._maxSize, imageWidth);
+
+        var compressed0 = CesiumMath.clamp(imageWidth, 0.0, Math.pow(2.0, 16.0));
         var compressed1 = 0.0;
 
         if (Math.abs(Cartesian3.magnitudeSquared(alignedAxis) - 1.0) < CesiumMath.EPSILON6) {
@@ -792,12 +804,31 @@ define([
         var i = billboard._index * 4;
 
         var color = billboard.color;
+        var pickColor = billboard.getPickId(context).color;
+
+        var height = 0;
+        var index = billboard._imageIndex;
+        if (index !== -1) {
+            var imageRectangle = textureAtlasCoordinates[index];
+
+            //>>includeStart('debug', pragmas.debug);
+            if (!defined(imageRectangle)) {
+                throw new DeveloperError('Invalid billboard image index: ' + index);
+            }
+            //>>includeEnd('debug');
+
+            height = imageRectangle.height;
+        }
+
+        var dimensions = billboardCollection._textureAtlas.texture.dimensions;
+        var imageHeight = defaultValue(billboard.height, dimensions.y * height) * 0.5;
+        billboardCollection._maxSize = Math.max(billboardCollection._maxSize, imageHeight);
+
         var red = Color.floatToByte(color.red);
         var green = Color.floatToByte(color.green);
         var blue = Color.floatToByte(color.blue);
         var compressed0 = red * Math.pow(2.0, 16.0) + green * Math.pow(2.0, 8.0) + blue;
 
-        var pickColor = billboard.getPickId(context).color;
         red = Color.floatToByte(pickColor.red);
         green = Color.floatToByte(pickColor.green);
         blue = Color.floatToByte(pickColor.blue);
@@ -807,10 +838,10 @@ define([
 
         var allPurposeWriters = vafWriters[allPassPurpose];
         var writer = allPurposeWriters[attributeLocations.compressedAttribute2];
-        writer(i + 0, compressed0, compressed1, compressed2);
-        writer(i + 1, compressed0, compressed1, compressed2);
-        writer(i + 2, compressed0, compressed1, compressed2);
-        writer(i + 3, compressed0, compressed1, compressed2);
+        writer(i + 0, compressed0, compressed1, compressed2, imageHeight);
+        writer(i + 1, compressed0, compressed1, compressed2, imageHeight);
+        writer(i + 2, compressed0, compressed1, compressed2, imageHeight);
+        writer(i + 3, compressed0, compressed1, compressed2, imageHeight);
     }
 
     function writeEyeOffset(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
@@ -824,38 +855,6 @@ define([
         writer(i + 1, eyeOffset.x, eyeOffset.y, eyeOffset.z);
         writer(i + 2, eyeOffset.x, eyeOffset.y, eyeOffset.z);
         writer(i + 3, eyeOffset.x, eyeOffset.y, eyeOffset.z);
-    }
-
-    function writeTextureCoordinatesAndImageSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
-        var i = billboard._index * 4;
-        var width = 0;
-        var height = 0;
-        var index = billboard._imageIndex;
-        if (index !== -1) {
-            var imageRectangle = textureAtlasCoordinates[index];
-
-            //>>includeStart('debug', pragmas.debug);
-            if (!defined(imageRectangle)) {
-                throw new DeveloperError('Invalid billboard image index: ' + index);
-            }
-            //>>includeEnd('debug');
-
-            width = imageRectangle.width;
-            height = imageRectangle.height;
-        }
-
-        var dimensions = billboardCollection._textureAtlas.texture.dimensions;
-        var imageWidth = defaultValue(billboard.width, dimensions.x * width) * 0.5;
-        var imageHeight = defaultValue(billboard.height, dimensions.y * height) * 0.5;
-
-        billboardCollection._maxSize = Math.max(billboardCollection._maxSize, imageWidth, imageHeight);
-
-        var allPurposeWriters = vafWriters[allPassPurpose];
-        var writer = allPurposeWriters[attributeLocations.imageSize];
-        writer(i + 0, imageWidth, imageHeight); // Lower Left
-        writer(i + 1, imageWidth, imageHeight); // Lower Right
-        writer(i + 2, imageWidth, imageHeight); // Upper Right
-        writer(i + 3, imageWidth, imageHeight); // Upper Left
     }
 
     function writeScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
@@ -922,7 +921,6 @@ define([
         writeCompressedAttrib1(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeCompressedAttrib2(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeEyeOffset(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
-        writeTextureCoordinatesAndImageSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writePixelOffsetScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
     }
@@ -1094,24 +1092,20 @@ define([
                     writers.push(writePositionScaleAndRotation);
                 }
 
-                if (properties[PIXEL_OFFSET_INDEX] || properties[HORIZONTAL_ORIGIN_INDEX] || properties[VERTICAL_ORIGIN_INDEX] || properties[SHOW_INDEX]) {
+                if (properties[IMAGE_INDEX_INDEX] || properties[PIXEL_OFFSET_INDEX] || properties[HORIZONTAL_ORIGIN_INDEX] || properties[VERTICAL_ORIGIN_INDEX] || properties[SHOW_INDEX]) {
                     writers.push(writeCompressedAttrib0);
                 }
 
-                if (properties[ALIGNED_AXIS_INDEX] || properties[TRANSLUCENCY_BY_DISTANCE_INDEX]) {
+                if (properties[IMAGE_INDEX_INDEX] || properties[ALIGNED_AXIS_INDEX] || properties[TRANSLUCENCY_BY_DISTANCE_INDEX]) {
                     writers.push(writeCompressedAttrib1);
                 }
 
-                if (properties[COLOR_INDEX]) {
+                if (properties[IMAGE_INDEX_INDEX] || properties[COLOR_INDEX]) {
                     writers.push(writeCompressedAttrib2);
                 }
 
                 if (properties[EYE_OFFSET_INDEX]) {
                     writers.push(writeEyeOffset);
-                }
-
-                if (properties[IMAGE_INDEX_INDEX]) {
-                    writers.push(writeTextureCoordinatesAndImageSize);
                 }
 
                 if (properties[SCALE_BY_DISTANCE_INDEX]) {
