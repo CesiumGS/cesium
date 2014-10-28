@@ -610,9 +610,6 @@ define([
          * Boolean flag that indicates if the client should request vertex normals from the server.
          * Vertex normals data is appended to the standard tile mesh data only if the client requests the vertex normals and
          * if the server provides vertex normals.
-         *
-         * This property is read only. To change this value, a new CesiumTerrainProvider must be constructed that requests
-         * vertex normals to ensure that all existing tiles are requested that includes/excludes vertex normal extension data.
          * @memberof CesiumTerrainProvider.prototype
          * @type {Boolean}
          */
@@ -626,9 +623,6 @@ define([
          * Boolean flag that indicates if the client should request a watermask from the server.
          * Watermask data is appended to the standard tile mesh data only if the client requests the watermask and
          * if the server provides a watermask.
-         *
-         * This property is read only. To change this value, a new CesiumTerrainProvider must be constructed that requests
-         * a watermask to ensure that all existing tiles are requested that includes/excludes watermask extension data.
          * @memberof CesiumTerrainProvider.prototype
          * @type {Boolean}
          */
