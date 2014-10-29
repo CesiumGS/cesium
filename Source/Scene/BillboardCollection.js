@@ -84,10 +84,6 @@ define([
         pixelOffsetScaleByDistance : 7
     };
 
-    // Identifies to the VertexArrayFacade the attributes that are used only for the pick
-    // pass or only for the color pass.
-    var allPassPurpose = 'all';
-
     /**
      * A renderable collection of billboards.  Billboards are viewport-aligned
      * images positioned in the 3D scene.
@@ -626,15 +622,14 @@ define([
 
         billboardCollection._maxScale = Math.max(billboardCollection._maxScale, scale);
 
-        var allPurposeWriters = vafWriters[allPassPurpose];
-        var positionHighWriter = allPurposeWriters[attributeLocations.positionHighAndScale];
+        var positionHighWriter = vafWriters[attributeLocations.positionHighAndScale];
         var high = writePositionScratch.high;
         positionHighWriter(i + 0, high.x, high.y, high.z, scale);
         positionHighWriter(i + 1, high.x, high.y, high.z, scale);
         positionHighWriter(i + 2, high.x, high.y, high.z, scale);
         positionHighWriter(i + 3, high.x, high.y, high.z, scale);
 
-        var positionLowWriter = allPurposeWriters[attributeLocations.positionLowAndRotation];
+        var positionLowWriter = vafWriters[attributeLocations.positionLowAndRotation];
         var low = writePositionScratch.low;
         positionLowWriter(i + 0, low.x, low.y, low.z, rotation);
         positionLowWriter(i + 1, low.x, low.y, low.z, rotation);
@@ -723,8 +718,7 @@ define([
         var upperRightDirection = 3.0;
         var upperLeftDirection = 1.0;
 
-        var allPurposeWriters = vafWriters[allPassPurpose];
-        var writer = allPurposeWriters[attributeLocations.compressedAttribute0];
+        var writer = vafWriters[attributeLocations.compressedAttribute0];
 
         writer(i + 0, compressed0 + lowerLeftDirection, compressed1, compressed2, compressedTexCoordsLL);
         writer(i + 1, compressed0 + lowerRightDirection, compressed1, compressed2, compressedTexCoordsLR);
@@ -792,8 +786,7 @@ define([
         farValue = farValue === 1.0 ? 255.0 : (farValue * 255.0) | 0;
         compressed1 = compressed1 * Math.pow(2.0, 8.0) + farValue;
 
-        var allPurposeWriters = vafWriters[allPassPurpose];
-        var writer = allPurposeWriters[attributeLocations.compressedAttribute1];
+        var writer = vafWriters[attributeLocations.compressedAttribute1];
         writer(i + 0, compressed0, compressed1, near, far);
         writer(i + 1, compressed0, compressed1, near, far);
         writer(i + 2, compressed0, compressed1, near, far);
@@ -836,8 +829,7 @@ define([
 
         var compressed2 = Color.floatToByte(color.alpha) * Math.pow(2.0, 8.0) + Color.floatToByte(pickColor.alpha);
 
-        var allPurposeWriters = vafWriters[allPassPurpose];
-        var writer = allPurposeWriters[attributeLocations.compressedAttribute2];
+        var writer = vafWriters[attributeLocations.compressedAttribute2];
         writer(i + 0, compressed0, compressed1, compressed2, imageHeight);
         writer(i + 1, compressed0, compressed1, compressed2, imageHeight);
         writer(i + 2, compressed0, compressed1, compressed2, imageHeight);
@@ -849,8 +841,7 @@ define([
         var eyeOffset = billboard.eyeOffset;
         billboardCollection._maxEyeOffset = Math.max(billboardCollection._maxEyeOffset, Math.abs(eyeOffset.x), Math.abs(eyeOffset.y), Math.abs(eyeOffset.z));
 
-        var allPurposeWriters = vafWriters[allPassPurpose];
-        var writer = allPurposeWriters[attributeLocations.eyeOffset];
+        var writer = vafWriters[attributeLocations.eyeOffset];
         writer(i + 0, eyeOffset.x, eyeOffset.y, eyeOffset.z);
         writer(i + 1, eyeOffset.x, eyeOffset.y, eyeOffset.z);
         writer(i + 2, eyeOffset.x, eyeOffset.y, eyeOffset.z);
@@ -859,8 +850,7 @@ define([
 
     function writeScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = billboard._index * 4;
-        var allPurposeWriters = vafWriters[allPassPurpose];
-        var writer = allPurposeWriters[attributeLocations.scaleByDistance];
+        var writer = vafWriters[attributeLocations.scaleByDistance];
         var near = 0.0;
         var nearValue = 1.0;
         var far = 1.0;
@@ -888,8 +878,7 @@ define([
 
     function writePixelOffsetScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = billboard._index * 4;
-        var allPurposeWriters = vafWriters[allPassPurpose];
-        var writer = allPurposeWriters[attributeLocations.pixelOffsetScaleByDistance];
+        var writer = vafWriters[attributeLocations.pixelOffsetScaleByDistance];
         var near = 0.0;
         var nearValue = 1.0;
         var far = 1.0;
@@ -1156,7 +1145,7 @@ define([
             billboardsToUpdate.length = billboardsLength;
         }
 
-        if (!defined(this._vaf) || !defined(this._vaf.vaByPurpose)) {
+        if (!defined(this._vaf) || !defined(this._vaf.va)) {
             return;
         }
 
@@ -1228,7 +1217,7 @@ define([
                 this._compiledShaderPixelOffsetScaleByDistance = this._shaderPixelOffsetScaleByDistance;
             }
 
-            va = this._vaf.vaByPurpose[allPassPurpose];
+            va = this._vaf.va;
             vaLength = va.length;
 
             colorList.length = vaLength;
@@ -1298,7 +1287,7 @@ define([
                 this._compiledShaderPixelOffsetScaleByDistancePick = this._shaderPixelOffsetScaleByDistance;
             }
 
-            va = this._vaf.vaByPurpose[allPassPurpose];
+            va = this._vaf.va;
             vaLength = va.length;
 
             pickList.length = vaLength;
