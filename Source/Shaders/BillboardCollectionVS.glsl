@@ -29,6 +29,23 @@ float getNearFarScalar(vec4 nearFarScalar, float cameraDistSq)
     return mix(valueAtMin, valueAtMax, t);
 }
 
+const float UPPER_BOUND = 32768.0;
+
+const float SHIFT_LEFT16 = 65536.0;
+const float SHIFT_LEFT8 = 256.0;
+const float SHIFT_LEFT7 = 128.0;
+const float SHIFT_LEFT5 = 32.0;
+const float SHIFT_LEFT3 = 8.0;
+const float SHIFT_LEFT2 = 4.0;
+const float SHIFT_LEFT1 = 2.0;
+
+const float SHIFT_RIGHT8 = 1.0 / 256.0;
+const float SHIFT_RIGHT7 = 1.0 / 128.0;
+const float SHIFT_RIGHT5 = 1.0 / 32.0;
+const float SHIFT_RIGHT3 = 1.0 / 8.0;
+const float SHIFT_RIGHT2 = 1.0 / 4.0;
+const float SHIFT_RIGHT1 = 1.0 / 2.0;
+
 void main() 
 {
     // Modifying this shader may also require modifications to Billboard._computeScreenSpacePosition
@@ -42,45 +59,44 @@ void main()
     float rotation = positionLowAndRotation.w;
 #endif
 
-    float upperBound = pow(2.0, 15.0);
     float compressed = compressedAttribute0.x;
     
     vec2 pixelOffset;
-    pixelOffset.x = floor(compressed / pow(2.0, 7.0));
-    compressed -= pixelOffset.x * pow(2.0, 7.0);
-    pixelOffset.x -= upperBound;
+    pixelOffset.x = floor(compressed * SHIFT_RIGHT7);
+    compressed -= pixelOffset.x * SHIFT_LEFT7;
+    pixelOffset.x -= UPPER_BOUND;
     
     vec2 origin;
-    origin.x = floor(compressed / pow(2.0, 5.0));
-    compressed -= origin.x * pow(2.0, 5.0);
+    origin.x = floor(compressed * SHIFT_RIGHT5);
+    compressed -= origin.x * SHIFT_LEFT5;
     
-    origin.y = floor(compressed / pow(2.0, 3.0));
-    compressed -= origin.y * pow(2.0, 3.0);
+    origin.y = floor(compressed * SHIFT_RIGHT3);
+    compressed -= origin.y * SHIFT_LEFT3;
     
     origin -= vec2(1.0);
     
-    float show = floor(compressed / pow(2.0, 2.0));
-    compressed -= show * pow(2.0, 2.0);
+    float show = floor(compressed * SHIFT_RIGHT2);
+    compressed -= show * SHIFT_LEFT2;
     
     vec2 direction;
-    direction.x = floor(compressed / 2.0);
-    direction.y = compressed - direction.x * 2.0;
+    direction.x = floor(compressed * SHIFT_RIGHT1);
+    direction.y = compressed - direction.x * SHIFT_LEFT1;
     
-    float temp = compressedAttribute0.y / pow(2.0, 8.0);
-    pixelOffset.y = floor(temp) - upperBound;
+    float temp = compressedAttribute0.y  * SHIFT_RIGHT8;
+    pixelOffset.y = -(floor(temp) - UPPER_BOUND);
     
     vec2 translate;
-    translate.y = (temp - floor(temp)) * pow(2.0, 16.0);
+    translate.y = (temp - floor(temp)) * SHIFT_LEFT16;
     
-    temp = compressedAttribute0.z / pow(2.0, 8.0);
-    translate.x = floor(temp) - upperBound;
+    temp = compressedAttribute0.z * SHIFT_RIGHT8;
+    translate.x = floor(temp) - UPPER_BOUND;
     
-    translate.y += (temp - floor(temp)) * pow(2.0, 8.0);
-    translate.y -= upperBound;
+    translate.y += (temp - floor(temp)) * SHIFT_LEFT8;
+    translate.y -= UPPER_BOUND;
     
     vec2 textureCoordinates = czm_decompressTextureCoordinates(compressedAttribute0.w);
     
-    temp = compressedAttribute1.x / pow(2.0, 8.0);
+    temp = compressedAttribute1.x * SHIFT_RIGHT8;
     
     vec2 imageSize = vec2(floor(temp), compressedAttribute2.w);
     
@@ -89,10 +105,10 @@ void main()
     translucencyByDistance.x = compressedAttribute1.z;
     translucencyByDistance.z = compressedAttribute1.w;
     
-    translucencyByDistance.y = ((temp - floor(temp)) * pow(2.0, 8.0)) / 255.0;
+    translucencyByDistance.y = ((temp - floor(temp)) * SHIFT_LEFT8) / 255.0;
     
-    temp = compressedAttribute1.y / pow(2.0, 8.0);
-    translucencyByDistance.w = ((temp - floor(temp)) * pow(2.0, 8.0)) / 255.0;
+    temp = compressedAttribute1.y * SHIFT_RIGHT8;
+    translucencyByDistance.w = ((temp - floor(temp)) * SHIFT_LEFT8) / 255.0;
 #endif
 
 #ifdef ALIGNED_AXIS
@@ -108,16 +124,16 @@ void main()
 #endif
 
     vec4 color;
-    temp = temp / pow(2.0, 8.0);
-    color.b = (temp - floor(temp)) * pow(2.0, 8.0);
-    temp = floor(temp) / pow(2.0, 8.0);
-    color.g = (temp - floor(temp)) * pow(2.0, 8.0);
+    temp = temp * SHIFT_RIGHT8;
+    color.b = (temp - floor(temp)) * SHIFT_LEFT8;
+    temp = floor(temp) * SHIFT_RIGHT8;
+    color.g = (temp - floor(temp)) * SHIFT_LEFT8;
     color.r = floor(temp);
     
-    temp = compressedAttribute2.z / pow(2.0, 8.0);
+    temp = compressedAttribute2.z * SHIFT_RIGHT8;
     
 #ifdef RENDER_FOR_PICK
-    color.a = (temp - floor(temp)) * pow(2.0, 8.0);
+    color.a = (temp - floor(temp)) * SHIFT_LEFT8;
     vec4 pickColor = color / 255.0;
 #else
     color.a = floor(temp);

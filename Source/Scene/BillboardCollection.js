@@ -639,6 +639,22 @@ define([
 
     var scratchCartesian2 = new Cartesian2();
 
+    var UPPER_BOUND = 32768.0;  // 2^15
+
+    var LEFT_SHIFT16 = 65536.0; // 2^16
+    var LEFT_SHIFT8 = 256.0;    // 2^8
+    var LEFT_SHIFT7 = 128.0;
+    var LEFT_SHIFT5 = 32.0;
+    var LEFT_SHIFT3 = 8.0;
+    var LEFT_SHIFT2 = 4.0;
+
+    var RIGHT_SHIFT8 = 1.0 / 256.0;
+
+    var LOWER_LEFT = 0.0;
+    var LOWER_RIGHT = 2.0;
+    var UPPER_RIGHT = 3.0;
+    var UPPER_LEFT = 1.0;
+
     function writeCompressedAttrib0(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = billboard._index * 4;
 
@@ -686,19 +702,17 @@ define([
         var topRightX = bottomLeftX + width;
         var topRightY = bottomLeftY + height;
 
-        var upperBound = Math.pow(2.0, 15.0);
+        var compressed0 = Math.floor(CesiumMath.clamp(pixelOffsetX, -UPPER_BOUND, UPPER_BOUND) + UPPER_BOUND) * LEFT_SHIFT7;
+        compressed0 += (horizontalOrigin + 1.0) * LEFT_SHIFT5;
+        compressed0 += (verticalOrigin + 1.0) * LEFT_SHIFT3;
+        compressed0 += (show ? 1.0 : 0.0) * LEFT_SHIFT2;
 
-        var compressed0 = Math.floor(CesiumMath.clamp(pixelOffsetX, -upperBound, upperBound) + upperBound) * Math.pow(2.0, 7.0);
-        compressed0 += (horizontalOrigin + 1.0) * Math.pow(2.0, 5.0);
-        compressed0 += (verticalOrigin + 1.0) * Math.pow(2.0, 3.0);
-        compressed0 += (show ? 1.0 : 0.0) * Math.pow(2.0, 2.0);
+        var compressed1 = Math.floor(CesiumMath.clamp(pixelOffsetY, -UPPER_BOUND, UPPER_BOUND) + UPPER_BOUND) * LEFT_SHIFT8;
+        var compressed2 = Math.floor(CesiumMath.clamp(translateX, -UPPER_BOUND, UPPER_BOUND) + UPPER_BOUND) * LEFT_SHIFT8;
 
-        var compressed1 = Math.floor(CesiumMath.clamp(pixelOffsetY, -upperBound, upperBound) + upperBound) * Math.pow(2.0, 8.0);
-        var compressed2 = Math.floor(CesiumMath.clamp(translateX, -upperBound, upperBound) + upperBound) * Math.pow(2.0, 8.0);
-
-        var tempTanslateY = (CesiumMath.clamp(translateY, -upperBound, upperBound) + upperBound) / Math.pow(2.0, 8.0);
+        var tempTanslateY = (CesiumMath.clamp(translateY, -UPPER_BOUND, UPPER_BOUND) + UPPER_BOUND) * RIGHT_SHIFT8;
         var upperTranslateY = Math.floor(tempTanslateY);
-        var lowerTranslateY = Math.floor((tempTanslateY - upperTranslateY) * Math.pow(2.0, 8.0));
+        var lowerTranslateY = Math.floor((tempTanslateY - upperTranslateY) * LEFT_SHIFT8);
 
         compressed1 += upperTranslateY;
         compressed2 += lowerTranslateY;
@@ -713,17 +727,12 @@ define([
         scratchCartesian2.x = bottomLeftX;
         var compressedTexCoordsUL = AttributeCompression.compressTextureCoordinates(scratchCartesian2);
 
-        var lowerLeftDirection = 0.0;
-        var lowerRightDirection = 2.0;
-        var upperRightDirection = 3.0;
-        var upperLeftDirection = 1.0;
-
         var writer = vafWriters[attributeLocations.compressedAttribute0];
 
-        writer(i + 0, compressed0 + lowerLeftDirection, compressed1, compressed2, compressedTexCoordsLL);
-        writer(i + 1, compressed0 + lowerRightDirection, compressed1, compressed2, compressedTexCoordsLR);
-        writer(i + 2, compressed0 + upperRightDirection, compressed1, compressed2, compressedTexCoordsUR);
-        writer(i + 3, compressed0 + upperLeftDirection, compressed1, compressed2, compressedTexCoordsUL);
+        writer(i + 0, compressed0 + LOWER_LEFT, compressed1, compressed2, compressedTexCoordsLL);
+        writer(i + 1, compressed0 + LOWER_RIGHT, compressed1, compressed2, compressedTexCoordsLR);
+        writer(i + 2, compressed0 + UPPER_RIGHT, compressed1, compressed2, compressedTexCoordsUR);
+        writer(i + 3, compressed0 + UPPER_LEFT, compressed1, compressed2, compressedTexCoordsUL);
     }
 
     function writeCompressedAttrib1(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
@@ -771,7 +780,7 @@ define([
         var imageWidth = Math.ceil(defaultValue(billboard.width, dimensions.x * width) * 0.5);
         billboardCollection._maxSize = Math.max(billboardCollection._maxSize, imageWidth);
 
-        var compressed0 = CesiumMath.clamp(imageWidth, 0.0, Math.pow(2.0, 16.0));
+        var compressed0 = CesiumMath.clamp(imageWidth, 0.0, LEFT_SHIFT16);
         var compressed1 = 0.0;
 
         if (Math.abs(Cartesian3.magnitudeSquared(alignedAxis) - 1.0) < CesiumMath.EPSILON6) {
@@ -780,11 +789,11 @@ define([
 
         nearValue = CesiumMath.clamp(nearValue, 0.0, 1.0);
         nearValue = nearValue === 1.0 ? 255.0 : (nearValue * 255.0) | 0;
-        compressed0 = compressed0 * Math.pow(2.0, 8.0) + nearValue;
+        compressed0 = compressed0 * LEFT_SHIFT8 + nearValue;
 
         farValue = CesiumMath.clamp(farValue, 0.0, 1.0);
         farValue = farValue === 1.0 ? 255.0 : (farValue * 255.0) | 0;
-        compressed1 = compressed1 * Math.pow(2.0, 8.0) + farValue;
+        compressed1 = compressed1 * LEFT_SHIFT8 + farValue;
 
         var writer = vafWriters[attributeLocations.compressedAttribute1];
         writer(i + 0, compressed0, compressed1, near, far);
@@ -820,14 +829,14 @@ define([
         var red = Color.floatToByte(color.red);
         var green = Color.floatToByte(color.green);
         var blue = Color.floatToByte(color.blue);
-        var compressed0 = red * Math.pow(2.0, 16.0) + green * Math.pow(2.0, 8.0) + blue;
+        var compressed0 = red * LEFT_SHIFT16 + green * LEFT_SHIFT8 + blue;
 
         red = Color.floatToByte(pickColor.red);
         green = Color.floatToByte(pickColor.green);
         blue = Color.floatToByte(pickColor.blue);
-        var compressed1 = red * Math.pow(2.0, 16.0) + green * Math.pow(2.0, 8.0) + blue;
+        var compressed1 = red * LEFT_SHIFT16 + green * LEFT_SHIFT8 + blue;
 
-        var compressed2 = Color.floatToByte(color.alpha) * Math.pow(2.0, 8.0) + Color.floatToByte(pickColor.alpha);
+        var compressed2 = Color.floatToByte(color.alpha) * LEFT_SHIFT8 + Color.floatToByte(pickColor.alpha);
 
         var writer = vafWriters[attributeLocations.compressedAttribute2];
         writer(i + 0, compressed0, compressed1, compressed2, imageHeight);
