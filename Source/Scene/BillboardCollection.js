@@ -73,8 +73,6 @@ define([
     var PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX;
     var NUMBER_OF_PROPERTIES = Billboard.NUMBER_OF_PROPERTIES;
 
-    // PERFORMANCE_IDEA:  Use vertex compression so we don't run out of
-    // vec4 attributes (WebGL minimum: 8)
     var attributeLocations = {
         positionHighAndScale : 0,
         positionLowAndRotation : 1,
