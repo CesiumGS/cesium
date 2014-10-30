@@ -9,7 +9,7 @@ define([
         defaultValue) {
     "use strict";
 
-    var maximumRequestsPerServer = 6;
+    var maximumRequestsPerServer = 1;
     var activeRequests = {};
 
     var pageUri = new Uri(document.location.href);
@@ -59,7 +59,7 @@ define([
         var server = getServer(url);
 
         var activeRequestsForServer = defaultValue(activeRequests[server], 0);
-        if (activeRequestsForServer > maximumRequestsPerServer) {
+        if (activeRequestsForServer >= maximumRequestsPerServer) {
             return undefined;
         }
 
