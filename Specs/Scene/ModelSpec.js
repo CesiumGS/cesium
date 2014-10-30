@@ -95,7 +95,7 @@ defineSuite([
             // Render scene to progressively load the model
             scene.renderForSpecs();
             return model.ready;
-        }, url + ' readyToRender', 10000);
+        }, url + ' ready', 10000);
 
         return model;
     }
