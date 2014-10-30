@@ -84,6 +84,7 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances - or a single geometry instance - to render.
      * @param {Appearance} [options.appearance] The appearance used to render the primitive.
+     * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the primitive (all geometry instances) from model to world coordinates.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
      * @param {Boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
