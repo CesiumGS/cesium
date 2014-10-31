@@ -47,7 +47,7 @@ defineSuite([
         };
         var promise = taskProcessor.scheduleTask(parameters);
 
-        waitsForPromise(promise).then(function(result) {
+        waitsForPromise(promise, function(result) {
             expect(result).toEqual(parameters);
         });
     });
@@ -69,7 +69,7 @@ defineSuite([
         var parameters = new ArrayBuffer(byteLength);
         expect(parameters.byteLength).toEqual(byteLength);
 
-        waitsForPromise(TaskProcessor._canTransferArrayBuffer).then(function(canTransferArrayBuffer) {
+        waitsForPromise(TaskProcessor._canTransferArrayBuffer, function(canTransferArrayBuffer) {
             var promise = taskProcessor.scheduleTask(parameters, [parameters]);
 
             if (canTransferArrayBuffer) {
@@ -78,7 +78,7 @@ defineSuite([
             }
 
             // the worker should see the array with proper byte length
-            waitsForPromise(promise).then(function(result) {
+            waitsForPromise(promise, function(result) {
                 expect(result).toEqual(byteLength);
             });
         });
@@ -95,7 +95,7 @@ defineSuite([
         var promise = taskProcessor.scheduleTask(parameters);
 
         // the worker should see the array with proper byte length
-        waitsForPromise(promise).then(function(result) {
+        waitsForPromise(promise, function(result) {
             expect(result.byteLength).toEqual(100);
         });
     });
@@ -110,9 +110,7 @@ defineSuite([
 
         var promise = taskProcessor.scheduleTask(parameters);
 
-        waitsForPromise(promise, {
-            expectRejection : true
-        }).then(undefined, function(error) {
+        waitsForPromise.toReject(promise, function(error) {
             expect(error.message).toEqual(message);
         });
     });
@@ -127,9 +125,7 @@ defineSuite([
 
         var promise = taskProcessor.scheduleTask(parameters);
 
-        waitsForPromise(promise, {
-            expectRejection : true
-        }).then(undefined, function(error) {
+        waitsForPromise.toReject(promise, function(error) {
             expect(error).toContain('postMessage failed');
         });
     });

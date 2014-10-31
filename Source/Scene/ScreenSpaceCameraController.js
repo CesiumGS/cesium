@@ -302,7 +302,7 @@ define([
     // hardware. Should be investigated further.
     var inertiaMaxClickTimeThreshold = 0.4;
 
-    function maintainInertia(aggregator, frameState, type, modifier, decayCoef, action, object, lastMovementName) {
+    function maintainInertia(aggregator, type, modifier, decayCoef, action, object, lastMovementName) {
         var movementState = object[lastMovementName];
         if (!defined(movementState)) {
             movementState = object[lastMovementName] = {
@@ -344,7 +344,7 @@ define([
                 movementState.endPosition = Cartesian2.multiplyByScalar(movementState.motion, d, movementState.endPosition);
                 movementState.endPosition = Cartesian2.add(movementState.startPosition, movementState.endPosition, movementState.endPosition);
 
-                movementState.motion = Cartesian3.clone(Cartesian2.ZERO, movementState.motion);
+                movementState.motion = Cartesian2.clone(Cartesian2.ZERO, movementState.motion);
             }
 
             // If value from the decreasing exponential function is close to zero,
@@ -356,7 +356,7 @@ define([
 
             if (!aggregator.isButtonDown(type, modifier)) {
                 var startPosition = aggregator.getStartMousePosition(type, modifier);
-                action(object, startPosition, movementState, frameState);
+                action(object, startPosition, movementState);
             }
         } else {
             movementState.active = false;
@@ -365,7 +365,7 @@ define([
 
     var scratchEventTypeArray = [];
 
-    function reactToInput(controller, frameState, enabled, eventTypes, action, inertiaConstant, inertiaStateName) {
+    function reactToInput(controller, enabled, eventTypes, action, inertiaConstant, inertiaStateName) {
         if (!defined(eventTypes)) {
             return;
         }
@@ -388,15 +388,15 @@ define([
 
             if (controller.enableInputs && enabled) {
                 if (movement) {
-                    action(controller, startPosition, movement, frameState);
+                    action(controller, startPosition, movement);
                 } else if (inertiaConstant < 1.0) {
-                    maintainInertia(aggregator, frameState, type, modifier, inertiaConstant, action, controller, inertiaStateName);
+                    maintainInertia(aggregator, type, modifier, inertiaConstant, action, controller, inertiaStateName);
                 }
             }
         }
     }
 
-    function handleZoom(object, startPosition, movement, frameState, zoomFactor, distanceMeasure, unitPositionDotDirection) {
+    function handleZoom(object, startPosition, movement, zoomFactor, distanceMeasure, unitPositionDotDirection) {
         var percentage = 1.0;
         if (defined(unitPositionDotDirection)) {
             percentage = CesiumMath.clamp(Math.abs(unitPositionDotDirection), 0.25, 1.0);
@@ -438,8 +438,9 @@ define([
     var scratchTranslateP0 = new Cartesian3();
     var scratchTranslateP1 = new Cartesian3();
 
-    function translate2D(controller, startPosition, movement, frameState) {
-        var camera = controller._scene.camera;
+    function translate2D(controller, startPosition, movement) {
+        var scene = controller._scene;
+        var camera = scene.camera;
         var start = camera.getPickRay(movement.startPosition, translate2DStart).origin;
         var end = camera.getPickRay(movement.endPosition, translate2DEnd).origin;
 
@@ -455,23 +456,28 @@ define([
         }
     }
 
-    function zoom2D(controller, startPosition, movement, frameState) {
+    function zoom2D(controller, startPosition, movement) {
         if (defined(movement.distance)) {
             movement = movement.distance;
         }
 
-        handleZoom(controller, startPosition, movement, frameState, controller._zoomFactor, controller._scene.camera.getMagnitude());
+        var scene = controller._scene;
+        var camera = scene.camera;
+
+        handleZoom(controller, startPosition, movement, controller._zoomFactor, camera.getMagnitude());
     }
 
     var twist2DStart = new Cartesian2();
     var twist2DEnd = new Cartesian2();
-    function twist2D(controller, startPosition, movement, frameState) {
+    function twist2D(controller, startPosition, movement) {
         if (defined(movement.angleAndHeight)) {
-            singleAxisTwist2D(controller, startPosition, movement.angleAndHeight, frameState);
+            singleAxisTwist2D(controller, startPosition, movement.angleAndHeight);
             return;
         }
 
-        var canvas = controller._scene.canvas;
+        var scene = controller._scene;
+        var camera = scene.camera;
+        var canvas = scene.canvas;
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
 
@@ -495,10 +501,10 @@ define([
         }
         var theta = endTheta - startTheta;
 
-        controller._scene.camera.twistRight(theta);
+        camera.twistRight(theta);
     }
 
-    function singleAxisTwist2D(controller, startPosition, movement, frameState) {
+    function singleAxisTwist2D(controller, startPosition, movement) {
         var rotateRate = controller._rotateFactor * controller._rotateRateRangeAdjustment;
 
         if (rotateRate > controller._maximumRotateRate) {
@@ -509,30 +515,35 @@ define([
             rotateRate = controller._minimumRotateRate;
         }
 
-        var phiWindowRatio = (movement.endPosition.x - movement.startPosition.x) / controller._scene.canvas.clientWidth;
+        var scene = controller._scene;
+        var camera = scene.camera;
+        var canvas = scene.canvas;
+
+        var phiWindowRatio = (movement.endPosition.x - movement.startPosition.x) / canvas.clientWidth;
         phiWindowRatio = Math.min(phiWindowRatio, controller.maximumMovementRatio);
 
         var deltaPhi = rotateRate * phiWindowRatio * Math.PI * 4.0;
 
-        controller._scene.camera.twistRight(deltaPhi);
+        camera.twistRight(deltaPhi);
     }
 
-    function update2D(controller, frameState) {
+    function update2D(controller) {
         var tweens = controller._tweens;
         if (controller._aggregator.anyButtonDown) {
             tweens.removeAll();
         }
 
-        var camera = controller._scene.camera;
+        var scene = controller._scene;
+        var camera = scene.camera;
 
         if (!tweens.contains(controller._tween)) {
             if (!Matrix4.equals(Matrix4.IDENTITY, camera.transform)) {
-                reactToInput(controller, frameState, controller.enableRotate, controller.translateEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaSpinMovement');
-                reactToInput(controller, frameState, controller.enableZoom, controller.zoomEventTypes, zoom2D, controller.inertiaZoom, '_lastInertiaZoomMovement');
+                reactToInput(controller, controller.enableRotate, controller.translateEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaSpinMovement');
+                reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom2D, controller.inertiaZoom, '_lastInertiaZoomMovement');
             } else {
-                reactToInput(controller, frameState, controller.enableTranslate, controller.translateEventTypes, translate2D, controller.inertiaTranslate, '_lastInertiaTranslateMovement');
-                reactToInput(controller, frameState, controller.enableZoom, controller.zoomEventTypes, zoom2D, controller.inertiaZoom, '_lastInertiaZoomMovement');
-                reactToInput(controller, frameState, controller.enableRotate, controller.tiltEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaTiltMovement');
+                reactToInput(controller, controller.enableTranslate, controller.translateEventTypes, translate2D, controller.inertiaTranslate, '_lastInertiaTranslateMovement');
+                reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom2D, controller.inertiaZoom, '_lastInertiaZoomMovement');
+                reactToInput(controller, controller.enableRotate, controller.tiltEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaTiltMovement');
             }
         }
 
@@ -559,26 +570,27 @@ define([
     var translateCVStartMouse = new Cartesian2();
     var translateCVEndMouse = new Cartesian2();
 
-    function translateCV(controller, startPosition, movement, frameState) {
+    function translateCV(controller, startPosition, movement) {
         if (!Cartesian3.equals(startPosition, controller._translateMousePosition)) {
             controller._looking = false;
         }
 
         if (controller._looking) {
-            look3D(controller, startPosition, movement, frameState);
+            look3D(controller, startPosition, movement);
             return;
         }
 
-        var camera = controller._scene.camera;
-        var startMouse = Cartesian3.clone(movement.startPosition, translateCVStartMouse);
-        var endMouse = Cartesian3.clone(movement.endPosition, translateCVEndMouse);
+        var scene = controller._scene;
+        var camera = scene.camera;
+        var startMouse = Cartesian2.clone(movement.startPosition, translateCVStartMouse);
+        var endMouse = Cartesian2.clone(movement.endPosition, translateCVEndMouse);
         var startRay = camera.getPickRay(startMouse, translateCVStartRay);
 
         var origin = Cartesian3.clone(Cartesian3.ZERO, translateCVOrigin);
         var normal = Cartesian3.UNIT_X;
 
         if (defined(controller._globe) && camera.position.z < controller.minimumPickingTerrainHeight) {
-            var intersection = controller._globe.pick(startRay, frameState, translateCVStartPos);
+            var intersection = controller._globe.pick(startRay, scene, translateCVStartPos);
             if (defined(intersection)) {
                 origin.x = intersection.x;
             }
@@ -600,7 +612,7 @@ define([
 
         if (!defined(startPlanePos) || !defined(endPlanePos)) {
             controller._looking = true;
-            look3D(controller, startPosition, movement, frameState);
+            look3D(controller, startPosition, movement);
             Cartesian2.clone(startPosition, controller._translateMousePosition);
             return;
         }
@@ -631,7 +643,7 @@ define([
     var rotateCVQuaternion = new Quaternion();
     var rotateCVMatrix = new Matrix3();
 
-    function rotateCV(controller, startPosition, movement, frameState) {
+    function rotateCV(controller, startPosition, movement) {
         if (defined(movement.angleAndHeight)) {
             movement = movement.angleAndHeight;
         }
@@ -642,25 +654,27 @@ define([
         }
 
         if (controller._looking) {
-            look3D(controller, startPosition, movement, frameState);
+            look3D(controller, startPosition, movement);
             return;
         }
 
-        var camera = controller._scene.camera;
+        var scene = controller._scene;
+        var camera = scene.camera;
         var maxCoord = controller._maxCoord;
         var onMap = Math.abs(camera.position.x) - maxCoord.x < 0 && Math.abs(camera.position.y) - maxCoord.y < 0;
 
         if (controller._tiltCVOffMap || !onMap || camera.position.z > controller.minimumPickingTerrainHeight) {
             controller._tiltCVOffMap = true;
-            rotateCVOnPlane(controller, startPosition, movement, frameState);
+            rotateCVOnPlane(controller, startPosition, movement);
         } else {
-            rotateCVOnTerrain(controller, startPosition, movement, frameState);
+            rotateCVOnTerrain(controller, startPosition, movement);
         }
     }
 
-    function rotateCVOnPlane(controller, startPosition, movement, frameState) {
-        var camera = controller._scene.camera;
-        var canvas = controller._scene.canvas;
+    function rotateCVOnPlane(controller, startPosition, movement) {
+        var scene = controller._scene;
+        var camera = scene.camera;
+        var canvas = scene.canvas;
 
         var windowPosition = rotateCVWindowPos;
         windowPosition.x = canvas.clientWidth / 2;
@@ -678,7 +692,7 @@ define([
 
         if (!defined(scalar) || scalar <= 0.0) {
             controller._looking = true;
-            look3D(controller, startPosition, movement, frameState);
+            look3D(controller, startPosition, movement);
             Cartesian2.clone(startPosition, controller._tiltCenterMousePosition);
             return;
         }
@@ -686,7 +700,7 @@ define([
         var center = Cartesian3.multiplyByScalar(direction, scalar, rotateCVCenter);
         Cartesian3.add(position, center, center);
 
-        var projection = controller._scene.mapProjection;
+        var projection = scene.mapProjection;
         var ellipsoid = projection.ellipsoid;
 
         Cartesian3.fromElements(center.y, center.z, center.x, center);
@@ -705,7 +719,7 @@ define([
         var oldTransform = Matrix4.clone(camera.transform, rotateCVOldTransform);
         camera.setTransform(transform);
 
-        rotate3D(controller, startPosition, movement, frameState, Cartesian3.UNIT_Z);
+        rotate3D(controller, startPosition, movement, Cartesian3.UNIT_Z);
 
         camera.setTransform(oldTransform);
         controller._globe = oldGlobe;
@@ -716,13 +730,13 @@ define([
         controller._rotateRateRangeAdjustment = radius;
     }
 
-    function rotateCVOnTerrain(controller, startPosition, movement, frameState) {
+    function rotateCVOnTerrain(controller, startPosition, movement) {
         var ellipsoid = controller._ellipsoid;
-        var camera = controller._scene.camera;
+        var scene = controller._scene;
+        var camera = scene.camera;
 
         var center;
         var ray;
-        var intersection;
         var normal = Cartesian3.UNIT_X;
 
         if (Cartesian2.equals(startPosition, controller._tiltCenterMousePosition)) {
@@ -730,7 +744,7 @@ define([
         } else {
             ray = camera.getPickRay(startPosition, rotateCVWindowRay);
             if (defined(controller._globe) && camera.position.z < controller.minimumPickingTerrainHeight) {
-                center = controller._globe.pick(ray, frameState, rotateCVCenter);
+                center = controller._globe.pick(ray, scene, rotateCVCenter);
             }
 
             if (!defined(center)) {
@@ -745,7 +759,7 @@ define([
 
                 if (!defined(scalar) || scalar <= 0.0) {
                     controller._looking = true;
-                    look3D(controller, startPosition, movement, frameState);
+                    look3D(controller, startPosition, movement);
                     Cartesian2.clone(startPosition, controller._tiltCenterMousePosition);
                     return;
                 }
@@ -758,8 +772,10 @@ define([
             Cartesian3.clone(center, controller._tiltCenter);
         }
 
+        var canvas = scene.canvas;
+
         var windowPosition = rotateCVWindowPos;
-        windowPosition.x = controller._scene.canvas.clientWidth / 2;
+        windowPosition.x = canvas.clientWidth / 2;
         windowPosition.y = controller._tiltCenterMousePosition.y;
         ray = camera.getPickRay(windowPosition, rotateCVWindowRay);
 
@@ -769,7 +785,7 @@ define([
         var plane = Plane.fromPointNormal(origin, normal, rotateCVPlane);
         var verticalCenter = IntersectionTests.rayPlane(ray, plane, rotateCVVerticalCenter);
 
-        var projection = controller._scene.camera._projection;
+        var projection = camera._projection;
         ellipsoid = projection.ellipsoid;
 
         Cartesian3.fromElements(center.y, center.z, center.x, center);
@@ -804,7 +820,7 @@ define([
         var tangent = Cartesian3.cross(Cartesian3.UNIT_Z, Cartesian3.normalize(camera.position, rotateCVCartesian3), rotateCVCartesian3);
         var dot = Cartesian3.dot(camera.right, tangent);
 
-        rotate3D(controller, startPosition, movement, frameState, constrainedAxis, false, true);
+        rotate3D(controller, startPosition, movement, constrainedAxis, false, true);
 
         camera.setTransform(verticalTransform);
         if (dot < 0.0) {
@@ -815,11 +831,11 @@ define([
             var oldConstrainedAxis = camera.constrainedAxis;
             camera.constrainedAxis = undefined;
 
-            rotate3D(controller, startPosition, movement, frameState, constrainedAxis, true, false);
+            rotate3D(controller, startPosition, movement, constrainedAxis, true, false);
 
             camera.constrainedAxis = oldConstrainedAxis;
         } else {
-            rotate3D(controller, startPosition, movement, frameState, constrainedAxis, true, false);
+            rotate3D(controller, startPosition, movement, constrainedAxis, true, false);
         }
 
         if (defined(camera.constrainedAxis)) {
@@ -846,7 +862,7 @@ define([
         controller._rotateRateRangeAdjustment = radius;
 
         var originalPosition = Cartesian3.clone(camera.positionWC, rotateCVCartesian3);
-        adjustHeightForTerrain(controller, frameState);
+        adjustHeightForTerrain(controller);
 
         if (!Cartesian3.equals(camera.positionWC, originalPosition)) {
             camera.setTransform(verticalTransform);
@@ -877,13 +893,14 @@ define([
     var zoomCVWindowRay = new Ray();
     var zoomCVIntersection = new Cartesian3();
 
-    function zoomCV(controller, startPosition, movement, frameState) {
+    function zoomCV(controller, startPosition, movement) {
         if (defined(movement.distance)) {
             movement = movement.distance;
         }
 
-        var canvas = controller._scene.canvas;
-        var camera = controller._scene.camera;
+        var scene = controller._scene;
+        var camera = scene.camera;
+        var canvas = scene.canvas;
 
         var windowPosition = zoomCVWindowPos;
         windowPosition.x = canvas.clientWidth / 2;
@@ -892,7 +909,7 @@ define([
 
         var intersection;
         if (defined(controller._globe) && camera.position.z < controller.minimumPickingTerrainHeight) {
-            intersection = controller._globe.pick(ray, frameState, zoomCVIntersection);
+            intersection = controller._globe.pick(ray, scene, zoomCVIntersection);
         }
 
         var distance;
@@ -905,15 +922,16 @@ define([
             distance = -Cartesian3.dot(normal, position) / Cartesian3.dot(normal, direction);
         }
 
-        handleZoom(controller, startPosition, movement, frameState, controller._zoomFactor, distance);
+        handleZoom(controller, startPosition, movement, controller._zoomFactor, distance);
     }
 
-    function updateCV(controller, frameState) {
-        var camera = controller._scene.camera;
+    function updateCV(controller) {
+        var scene = controller._scene;
+        var camera = scene.camera;
 
         if (!Matrix4.equals(Matrix4.IDENTITY, camera.transform)) {
-            reactToInput(controller, frameState, controller.enableRotate, controller.rotateEventTypes, rotate3D, controller.inertiaSpin, '_lastInertiaSpinMovement');
-            reactToInput(controller, frameState, controller.enableZoom, controller.zoomEventTypes, zoom3D, controller.inertiaZoom, '_lastInertiaZoomMovement');
+            reactToInput(controller, controller.enableRotate, controller.rotateEventTypes, rotate3D, controller.inertiaSpin, '_lastInertiaSpinMovement');
+            reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom3D, controller.inertiaZoom, '_lastInertiaZoomMovement');
         } else {
             var tweens = controller._tweens;
 
@@ -921,12 +939,13 @@ define([
                 tweens.removeAll();
             }
 
-            reactToInput(controller, frameState, controller.enableTilt, controller.tiltEventTypes, rotateCV, controller.inertiaSpin, '_lastInertiaTiltMovement');
-            reactToInput(controller, frameState, controller.enableTranslate, controller.translateEventTypes, translateCV, controller.inertiaTranslate, '_lastInertiaTranslateMovement');
-            reactToInput(controller, frameState, controller.enableZoom, controller.zoomEventTypes, zoomCV, controller.inertiaZoom, '_lastInertiaZoomMovement');
-            reactToInput(controller, frameState, controller.enableLook, controller.lookEventTypes, look3D);
+            reactToInput(controller, controller.enableTilt, controller.tiltEventTypes, rotateCV, controller.inertiaSpin, '_lastInertiaTiltMovement');
+            reactToInput(controller, controller.enableTranslate, controller.translateEventTypes, translateCV, controller.inertiaTranslate, '_lastInertiaTranslateMovement');
+            reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoomCV, controller.inertiaZoom, '_lastInertiaZoomMovement');
+            reactToInput(controller, controller.enableLook, controller.lookEventTypes, look3D);
 
-            if (!controller._aggregator.anyButtonDown && (!defined(controller._lastInertiaZoomMovement) || !controller._lastInertiaZoomMovement.active) &&
+            if (!controller._aggregator.anyButtonDown &&
+                    (!defined(controller._lastInertiaZoomMovement) || !controller._lastInertiaZoomMovement.active) &&
                     (!defined(controller._lastInertiaTranslateMovement) || !controller._lastInertiaTranslateMovement.active) &&
                     !tweens.contains(controller._tween)) {
                 var tween = camera.createCorrectPositionTween(controller.bounceAnimationTime);
@@ -947,10 +966,12 @@ define([
     var scratchEllipsoid = new Ellipsoid();
     var scratchLookUp = new Cartesian3();
 
-    function spin3D(controller, startPosition, movement, frameState) {
-        var camera = controller._scene.camera;
+    function spin3D(controller, startPosition, movement) {
+        var scene = controller._scene;
+        var camera = scene.camera;
+
         if (!Matrix4.equals(camera.transform, Matrix4.IDENTITY)) {
-            rotate3D(controller, startPosition, movement, frameState);
+            rotate3D(controller, startPosition, movement);
             return;
         }
 
@@ -962,15 +983,15 @@ define([
 
         if (Cartesian2.equals(startPosition, controller._rotateMousePosition)) {
             if (controller._looking) {
-                look3D(controller, startPosition, movement, frameState, up);
+                look3D(controller, startPosition, movement, up);
             } else if (controller._rotating) {
-                rotate3D(controller, startPosition, movement, frameState);
+                rotate3D(controller, startPosition, movement);
             } else {
                 magnitude = Cartesian3.magnitude(controller._rotateStartPosition);
                 radii = scratchRadii;
                 radii.x = radii.y = radii.z = magnitude;
                 ellipsoid = Ellipsoid.fromCartesian3(radii, scratchEllipsoid);
-                pan3D(controller, startPosition, movement, frameState, ellipsoid);
+                pan3D(controller, startPosition, movement, ellipsoid);
             }
             return;
         } else {
@@ -981,38 +1002,41 @@ define([
         var height = controller._ellipsoid.cartesianToCartographic(camera.positionWC, scratchCartographic).height;
         if (defined(controller._globe) && height < controller.minimumPickingTerrainHeight) {
             var startRay = camera.getPickRay(movement.startPosition, scratchStartRay);
-            var mousePos = controller._globe.pick(startRay, frameState, scratchMousePos);
+            var mousePos = controller._globe.pick(startRay, scene, scratchMousePos);
             if (defined(mousePos)) {
                 magnitude = Cartesian3.magnitude(mousePos);
                 radii = scratchRadii;
                 radii.x = radii.y = radii.z = magnitude;
                 ellipsoid = Ellipsoid.fromCartesian3(radii, scratchEllipsoid);
-                pan3D(controller, startPosition, movement, frameState, ellipsoid);
+                pan3D(controller, startPosition, movement, ellipsoid);
 
                 Cartesian3.clone(mousePos, controller._rotateStartPosition);
             } else {
                 controller._looking = true;
-                look3D(controller, startPosition, movement, frameState, up);
+                look3D(controller, startPosition, movement, up);
             }
         } else if (defined(camera.pickEllipsoid(movement.startPosition, controller._ellipsoid, spin3DPick))) {
-            pan3D(controller, startPosition, movement, frameState, controller._ellipsoid);
+            pan3D(controller, startPosition, movement, controller._ellipsoid);
             Cartesian3.clone(spin3DPick, controller._rotateStartPosition);
         } else if (height > controller.minimumTrackBallHeight) {
             controller._rotating = true;
-            rotate3D(controller, startPosition, movement, frameState);
+            rotate3D(controller, startPosition, movement);
         } else {
             controller._looking = true;
-            look3D(controller, startPosition, movement, frameState, up);
+            look3D(controller, startPosition, movement, up);
         }
 
         Cartesian2.clone(startPosition, controller._rotateMousePosition);
     }
 
-    function rotate3D(controller, startPosition, movement, frameState, constrainedAxis, rotateOnlyVertical, rotateOnlyHorizontal) {
+    function rotate3D(controller, startPosition, movement, constrainedAxis, rotateOnlyVertical, rotateOnlyHorizontal) {
         rotateOnlyVertical = defaultValue(rotateOnlyVertical, false);
         rotateOnlyHorizontal = defaultValue(rotateOnlyHorizontal, false);
 
-        var camera = controller._scene.camera;
+        var scene = controller._scene;
+        var camera = scene.camera;
+        var canvas = scene.canvas;
+
         var oldAxis = camera.constrainedAxis;
         if (defined(constrainedAxis)) {
             camera.constrainedAxis = constrainedAxis;
@@ -1029,7 +1053,6 @@ define([
             rotateRate = controller._minimumRotateRate;
         }
 
-        var canvas = controller._scene.canvas;
         var phiWindowRatio = (movement.startPosition.x - movement.endPosition.x) / canvas.clientWidth;
         var thetaWindowRatio = (movement.startPosition.y - movement.endPosition.y) / canvas.clientHeight;
         phiWindowRatio = Math.min(phiWindowRatio, controller.maximumMovementRatio);
@@ -1058,8 +1081,9 @@ define([
     var pan3DStartMousePosition = new Cartesian2();
     var pan3DEndMousePosition = new Cartesian2();
 
-    function pan3D(controller, startPosition, movement, frameState, ellipsoid) {
-        var camera = controller._scene.camera;
+    function pan3D(controller, startPosition, movement, ellipsoid) {
+        var scene = controller._scene;
+        var camera = scene.camera;
         var cameraPosMag = Cartesian3.magnitude(camera.position);
 
         var startMousePosition = Cartesian2.clone(movement.startPosition, pan3DStartMousePosition);
@@ -1079,7 +1103,7 @@ define([
 
         if (!defined(p0) || !defined(p1)) {
             controller._rotating = true;
-            rotate3D(controller, startPosition, movement, frameState);
+            rotate3D(controller, startPosition, movement);
             return;
         }
 
@@ -1159,14 +1183,15 @@ define([
     }
 
     var zoom3DUnitPosition = new Cartesian3();
-    function zoom3D(controller, startPosition, movement, frameState) {
+    function zoom3D(controller, startPosition, movement) {
         if (defined(movement.distance)) {
             movement = movement.distance;
         }
 
-        var camera = controller._scene.camera;
         var ellipsoid = controller._ellipsoid;
-        var canvas = controller._scene.canvas;
+        var scene = controller._scene;
+        var camera = scene.camera;
+        var canvas = scene.canvas;
 
         var windowPosition = zoomCVWindowPos;
         windowPosition.x = canvas.clientWidth / 2;
@@ -1176,7 +1201,7 @@ define([
         var intersection;
         var height = ellipsoid.cartesianToCartographic(camera.position).height;
         if (defined(controller._globe) && height < controller.minimumPickingTerrainHeight) {
-            intersection = controller._globe.pick(ray, frameState, zoomCVIntersection);
+            intersection = controller._globe.pick(ray, scene, zoomCVIntersection);
         }
 
         var distance;
@@ -1187,7 +1212,7 @@ define([
         }
 
         var unitPosition = Cartesian3.normalize(camera.position, zoom3DUnitPosition);
-        handleZoom(controller, startPosition, movement, frameState, controller._zoomFactor, distance, Cartesian3.dot(unitPosition, camera.direction));
+        handleZoom(controller, startPosition, movement, controller._zoomFactor, distance, Cartesian3.dot(unitPosition, camera.direction));
     }
 
     var tilt3DWindowPos = new Cartesian2();
@@ -1196,7 +1221,6 @@ define([
     var tilt3DVerticalCenter = new Cartesian3();
     var tilt3DTransform = new Matrix4();
     var tilt3DVerticalTransform = new Matrix4();
-    var tilt3DNormal = new Cartesian3();
     var tilt3DCartesian3 = new Cartesian3();
     var tilt3DOldTransform = new Matrix4();
     var tilt3DQuaternion = new Quaternion();
@@ -1204,8 +1228,11 @@ define([
     var tilt3DCart = new Cartographic();
     var tilt3DLookUp = new Cartesian3();
 
-    function tilt3D(controller, startPosition, movement, frameState) {
-        if (!Matrix4.equals(controller._scene.camera.transform, Matrix4.IDENTITY)) {
+    function tilt3D(controller, startPosition, movement) {
+        var scene = controller._scene;
+        var camera = scene.camera;
+
+        if (!Matrix4.equals(camera.transform, Matrix4.IDENTITY)) {
             return;
         }
 
@@ -1218,11 +1245,9 @@ define([
             controller._looking = false;
         }
 
-        var camera = controller._scene.camera;
-
         if (controller._looking) {
             var up = controller._ellipsoid.geodeticSurfaceNormal(camera.position, tilt3DLookUp);
-            look3D(controller, startPosition, movement, frameState, up);
+            look3D(controller, startPosition, movement, up);
             return;
         }
 
@@ -1231,15 +1256,16 @@ define([
 
         if (controller._tiltOnEllipsoid || cartographic.height > controller.minimumCollisionTerrainHeight) {
             controller._tiltOnEllipsoid = true;
-            tilt3DOnEllipsoid(controller, startPosition, movement, frameState);
+            tilt3DOnEllipsoid(controller, startPosition, movement);
         } else {
-            tilt3DOnTerrain(controller, startPosition, movement, frameState);
+            tilt3DOnTerrain(controller, startPosition, movement);
         }
     }
 
-    function tilt3DOnEllipsoid(controller, startPosition, movement, frameState) {
-        var camera = controller._scene.camera;
+    function tilt3DOnEllipsoid(controller, startPosition, movement) {
         var ellipsoid = controller._ellipsoid;
+        var scene = controller._scene;
+        var camera = scene.camera;
         var minHeight = controller.minimumZoomDistance * 0.25;
         var height = ellipsoid.cartesianToCartographic(camera.positionWC).height;
         if (height - minHeight - 1.0 < CesiumMath.EPSILON3 &&
@@ -1247,9 +1273,11 @@ define([
             return;
         }
 
+        var canvas = scene.canvas;
+
         var windowPosition = tilt3DWindowPos;
-        windowPosition.x = controller._scene.canvas.clientWidth / 2;
-        windowPosition.y = controller._scene.canvas.clientHeight / 2;
+        windowPosition.x = canvas.clientWidth / 2;
+        windowPosition.y = canvas.clientHeight / 2;
         var ray = camera.getPickRay(windowPosition, tilt3DRay);
 
         var center;
@@ -1267,7 +1295,7 @@ define([
         } else {
             controller._looking = true;
             var up = controller._ellipsoid.geodeticSurfaceNormal(camera.position, tilt3DLookUp);
-            look3D(controller, startPosition, movement, frameState, up);
+            look3D(controller, startPosition, movement, up);
             Cartesian2.clone(startPosition, controller._tiltCenterMousePosition);
             return;
         }
@@ -1284,7 +1312,7 @@ define([
         var oldTransform = Matrix4.clone(camera.transform, tilt3DOldTransform);
         camera.setTransform(transform);
 
-        rotate3D(controller, startPosition, movement, frameState, Cartesian3.UNIT_Z);
+        rotate3D(controller, startPosition, movement, Cartesian3.UNIT_Z);
 
         camera.setTransform(oldTransform);
         controller._globe = oldGlobe;
@@ -1295,9 +1323,10 @@ define([
         controller._rotateRateRangeAdjustment = radius;
     }
 
-    function tilt3DOnTerrain(controller, startPosition, movement, frameState) {
-        var camera = controller._scene.camera;
+    function tilt3DOnTerrain(controller, startPosition, movement) {
         var ellipsoid = controller._ellipsoid;
+        var scene = controller._scene;
+        var camera = scene.camera;
 
         var center;
         var ray;
@@ -1308,7 +1337,7 @@ define([
         } else {
             ray = camera.getPickRay(startPosition, tilt3DRay);
             if (defined(controller._globe)) {
-                center = controller._globe.pick(ray, frameState, tilt3DCenter);
+                center = controller._globe.pick(ray, scene, tilt3DCenter);
             }
 
             if (!defined(center)) {
@@ -1318,7 +1347,7 @@ define([
                     if (cartographic.height <= controller.minimumTrackBallHeight) {
                         controller._looking = true;
                         var up = controller._ellipsoid.geodeticSurfaceNormal(camera.position, tilt3DLookUp);
-                        look3D(controller, startPosition, movement, frameState, up);
+                        look3D(controller, startPosition, movement, up);
                         Cartesian2.clone(startPosition, controller._tiltCenterMousePosition);
                     }
                     return;
@@ -1330,9 +1359,10 @@ define([
             Cartesian3.clone(center, controller._tiltCenter);
         }
 
+        var canvas = scene.canvas;
 
         var windowPosition = tilt3DWindowPos;
-        windowPosition.x = controller._scene.canvas.clientWidth / 2;
+        windowPosition.x = canvas.clientWidth / 2;
         windowPosition.y = controller._tiltCenterMousePosition.y;
         ray = camera.getPickRay(windowPosition, tilt3DRay);
 
@@ -1366,7 +1396,7 @@ define([
         var tangent = Cartesian3.cross(verticalCenter, camera.positionWC, tilt3DCartesian3);
         var dot = Cartesian3.dot(camera.rightWC, tangent);
 
-        rotate3D(controller, startPosition, movement, frameState, constrainedAxis, false, true);
+        rotate3D(controller, startPosition, movement, constrainedAxis, false, true);
 
         camera.setTransform(verticalTransform);
 
@@ -1378,11 +1408,11 @@ define([
             var oldConstrainedAxis = camera.constrainedAxis;
             camera.constrainedAxis = undefined;
 
-            rotate3D(controller, startPosition, movement, frameState, constrainedAxis, true, false);
+            rotate3D(controller, startPosition, movement, constrainedAxis, true, false);
 
             camera.constrainedAxis = oldConstrainedAxis;
         } else {
-            rotate3D(controller, startPosition, movement, frameState, constrainedAxis, true, false);
+            rotate3D(controller, startPosition, movement, constrainedAxis, true, false);
         }
 
         if (defined(camera.constrainedAxis)) {
@@ -1409,7 +1439,7 @@ define([
         controller._rotateRateRangeAdjustment = radius;
 
         var originalPosition = Cartesian3.clone(camera.positionWC, tilt3DCartesian3);
-        adjustHeightForTerrain(controller, frameState);
+        adjustHeightForTerrain(controller);
 
         if (!Cartesian3.equals(camera.positionWC, originalPosition)) {
             camera.setTransform(verticalTransform);
@@ -1440,12 +1470,12 @@ define([
     var look3DEndPos = new Cartesian2();
     var look3DStartRay = new Ray();
     var look3DEndRay = new Ray();
-    var look3DUp = new Cartesian3();
     var look3DNegativeRot = new Cartesian3();
     var look3DTan = new Cartesian3();
 
-    function look3D(controller, startPosition, movement, frameState, rotationAxis) {
-        var camera = controller._scene.camera;
+    function look3D(controller, startPosition, movement, rotationAxis) {
+        var scene = controller._scene;
+        var camera = scene.camera;
 
         var startPos = look3DStartPos;
         startPos.x = movement.startPosition.x;
@@ -1515,26 +1545,27 @@ define([
         }
     }
 
-    function update3D(controller, frameState) {
-        reactToInput(controller, frameState, controller.enableRotate, controller.rotateEventTypes, spin3D, controller.inertiaSpin, '_lastInertiaSpinMovement');
-        reactToInput(controller, frameState, controller.enableZoom, controller.zoomEventTypes, zoom3D, controller.inertiaZoom, '_lastInertiaZoomMovement');
-        reactToInput(controller, frameState, controller.enableTilt, controller.tiltEventTypes, tilt3D, controller.inertiaSpin, '_lastInertiaTiltMovement');
-        reactToInput(controller, frameState, controller.enableLook, controller.lookEventTypes, look3D);
+    function update3D(controller) {
+        reactToInput(controller, controller.enableRotate, controller.rotateEventTypes, spin3D, controller.inertiaSpin, '_lastInertiaSpinMovement');
+        reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom3D, controller.inertiaZoom, '_lastInertiaZoomMovement');
+        reactToInput(controller, controller.enableTilt, controller.tiltEventTypes, tilt3D, controller.inertiaSpin, '_lastInertiaTiltMovement');
+        reactToInput(controller, controller.enableLook, controller.lookEventTypes, look3D);
     }
 
     var scratchAdjustHeightCartographic = new Cartographic();
 
-    function adjustHeightForTerrain(controller, frameState) {
-        var mode = frameState.mode;
+    function adjustHeightForTerrain(controller) {
+        var scene = controller._scene;
+        var mode = scene.mode;
         var globe = controller._globe;
 
         if (!defined(globe) || mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
             return;
         }
 
-        var camera = controller._scene.camera;
+        var camera = scene.camera;
         var ellipsoid = controller._ellipsoid;
-        var projection = frameState.mapProjection;
+        var projection = scene.mapProjection;
 
         var cartographic = scratchAdjustHeightCartographic;
         if (mode === SceneMode.SCENE3D) {
@@ -1547,7 +1578,7 @@ define([
             return;
         }
 
-        var height = globe.getHeight(cartographic, frameState);
+        var height = globe.getHeight(cartographic);
         if (!defined(height)) {
             return;
         }
@@ -1568,7 +1599,7 @@ define([
     /**
      * @private
      */
-    ScreenSpaceCameraController.prototype.update = function(frameState) {
+    ScreenSpaceCameraController.prototype.update = function() {
         if (!Matrix4.equals(this._scene.camera.transform, Matrix4.IDENTITY)) {
             this._globe = undefined;
             this._ellipsoid = Ellipsoid.UNIT_SPHERE;
@@ -1581,18 +1612,19 @@ define([
         this._rotateFactor = 1.0 / radius;
         this._rotateRateRangeAdjustment = radius;
 
-        var mode = frameState.mode;
+        var scene = this._scene;
+        var mode = scene.mode;
         if (mode === SceneMode.SCENE2D) {
-            update2D(this, frameState);
+            update2D(this);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
             this._horizontalRotationAxis = Cartesian3.UNIT_Z;
-            updateCV(this, frameState);
+            updateCV(this);
         } else if (mode === SceneMode.SCENE3D) {
             this._horizontalRotationAxis = undefined;
-            update3D(this, frameState);
+            update3D(this);
         }
 
-        adjustHeightForTerrain(this, frameState);
+        adjustHeightForTerrain(this);
 
         this._aggregator.reset();
     };

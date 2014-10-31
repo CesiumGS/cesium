@@ -3,9 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
-    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <title>Cesium Sandcastle</title>
-    <link rel="stylesheet" href="../../ThirdParty/CodeMirror-2.24/lib/codemirror.css">
+    <link rel="stylesheet" href="../../ThirdParty/codemirror-4.6/lib/codemirror.css">
     <link rel="stylesheet" href="CesiumSandcastle.css">
     <script>
     if (window.location.protocol === 'file:') {
@@ -15,23 +15,15 @@
     }
     </script>
     <script src="../../ThirdParty/jshint-2.1.10/jshint.js"></script>
-    <script src="../../ThirdParty/CodeMirror-2.24/lib/codemirror.js"></script>
-    <!-- The next four lines, including Cesium itself, are only for autocomplete -->
-    <script src="../../Build/CesiumUnminified/Cesium.js"></script>
-    <script src="../../ThirdParty/CodeMirror-2.24/lib/util/simple-hint.js"></script>
-    <link rel="stylesheet" href="../../ThirdParty/CodeMirror-2.24/lib/util/simple-hint.css">
-    <script src="ThirdParty/Cesium-hint.js"></script>
-    <!-- End of autocomplete -->
-    <script src="../../ThirdParty/CodeMirror-2.24/mode/javascript/javascript.js"></script>
-    <script src="../../ThirdParty/CodeMirror-2.24/mode/css/css.js"></script>
-    <script src="../../ThirdParty/CodeMirror-2.24/mode/xml/xml.js"></script>
-    <script src="../../ThirdParty/CodeMirror-2.24/mode/htmlmixed/htmlmixed.js"></script>
 
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../ThirdParty/dojo-release-1.9.3/dojo/dojo.js"></script>
 
     <script src="jsHintOptions.js"></script>
     <script src="gallery/gallery-index.js"></script>
     <script src="CesiumSandcastle.js"></script>
+    <!-- The next three lines are for autocomplete -->
+    <link rel="stylesheet" href="../../ThirdParty/codemirror-4.6/addon/hint/show-hint.css">
+    <!-- End of autocomplete -->
     <meta property="og:title" content="Cesium Sandcastle" />
     <meta property="og:description" content="The Cesium Sandcastle provides an interactive environment for testing Cesium code." />
     <meta property="og:type" content="website" />

@@ -312,6 +312,20 @@ defineSuite([
         expect(contextAttributes.preserveDrawingBuffer).toEqual(webglOptions.preserveDrawingBuffer);
     });
 
+    it('can enable Order Independent Translucency', function() {
+        viewer = new Viewer(container, {
+            orderIndependentTranslucency : true
+        });
+        expect(viewer.scene.orderIndependentTranslucency).toBe(true);
+    });
+
+    it('can disable Order Independent Translucency', function() {
+        viewer = new Viewer(container, {
+            orderIndependentTranslucency : false
+        });
+        expect(viewer.scene.orderIndependentTranslucency).toBe(false);
+    });
+
     it('can set scene mode', function() {
         viewer = new Viewer(container, {
             sceneMode : SceneMode.SCENE2D

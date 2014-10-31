@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
-    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Draw a corridor.">
     <meta name="cesium-sandcastle-labels" content="Geometries">
     <title>Cesium Demo</title>
@@ -30,7 +30,6 @@ function startup(Cesium) {
 // Create the viewer
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
-var primitives = scene.primitives;
 
 // Example 1: Draw a red corridor on the globe surface.
 
@@ -54,7 +53,7 @@ var redCorridorInstance = new Cesium.GeometryInstance({
     }
 });
 // Add the geometry instance to primitives.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : [redCorridorInstance],
     appearance : new Cesium.PerInstanceColorAppearance({
         closed : true
@@ -88,7 +87,7 @@ var greenCorridorInstance = new Cesium.GeometryInstance({
     }
 });
 // Add the geometry instance to primitives.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : greenCorridorInstance,
     appearance : new Cesium.PerInstanceColorAppearance({
         closed : true,
@@ -123,7 +122,7 @@ var blueCorridorInstance = new Cesium.GeometryInstance({
     }
 });
 // Add the geometry instance to primitives.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : [blueCorridorInstance],
     appearance : new Cesium.PerInstanceColorAppearance({
         closed : true

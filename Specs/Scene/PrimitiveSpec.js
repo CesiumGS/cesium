@@ -131,6 +131,7 @@ defineSuite([
         expect(primitive.allowPicking).toEqual(true);
         expect(primitive.asynchronous).toEqual(true);
         expect(primitive.debugShowBoundingVolume).toEqual(false);
+        expect(primitive.compressVertices).toEqual(true);
     });
 
     it('releases geometry instances when releaseGeometryInstances is true', function() {
@@ -704,7 +705,8 @@ defineSuite([
             appearance : new MaterialAppearance({
                 materialSupport : MaterialAppearance.MaterialSupport.ALL
             }),
-            asynchronous : false
+            asynchronous : false,
+            compressVertices : false
         });
 
         expect(function() {
@@ -783,7 +785,9 @@ defineSuite([
     it('renders when using asynchronous pipeline', function() {
         var primitive = new Primitive({
             geometryInstances : rectangleInstance1,
-            appearance : new PerInstanceColorAppearance()
+            appearance : new PerInstanceColorAppearance({
+                flat : true
+            })
         });
 
         frameState.camera.viewRectangle(rectangle1);

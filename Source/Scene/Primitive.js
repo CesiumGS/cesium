@@ -19,8 +19,8 @@ define([
         '../Core/subdivideArray',
         '../Core/TaskProcessor',
         '../Renderer/BufferUsage',
-        '../Renderer/createShaderSource',
         '../Renderer/DrawCommand',
+        '../Renderer/ShaderSource',
         '../ThirdParty/when',
         './CullFace',
         './Pass',
@@ -47,8 +47,8 @@ define([
         subdivideArray,
         TaskProcessor,
         BufferUsage,
-        createShaderSource,
         DrawCommand,
+        ShaderSource,
         when,
         CullFace,
         Pass,
@@ -87,6 +87,7 @@ define([
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
      * @param {Boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
+     * @param {Boolean} [options.compressVertices=true] When <code>true</code>, the geometry vertices are compressed, which will save memory.
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
@@ -99,73 +100,67 @@ define([
      * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
      * var instance = new Cesium.GeometryInstance({
      *   geometry : new Cesium.EllipseGeometry({
-     *       vertexFormat : Cesium.VertexFormat.POSITION_AND_ST,
-     *       ellipsoid : ellipsoid,
      *       center : Cesium.Cartesian3.fromDegrees(-100.0, 20.0),
      *       semiMinorAxis : 500000.0,
      *       semiMajorAxis : 1000000.0,
-     *       rotation : Cesium.Math.PI_OVER_FOUR
+     *       rotation : Cesium.Math.PI_OVER_FOUR,
+     *       vertexFormat : Cesium.VertexFormat.POSITION_AND_ST
      *   }),
      *   id : 'object returned when this instance is picked and to get/set per-instance attributes'
      * });
-     * var primitive = new Cesium.Primitive({
+     * scene.primitives.add(new Cesium.Primitive({
      *   geometryInstances : instance,
      *   appearance : new Cesium.EllipsoidSurfaceAppearance({
      *     material : Cesium.Material.fromType('Checkerboard')
      *   })
-     * });
-     * scene.primitives.add(primitive);
+     * }));
      *
+     * @example
      * // 2. Draw different instances each with a unique color
      * var rectangleInstance = new Cesium.GeometryInstance({
      *   geometry : new Cesium.RectangleGeometry({
-     *     vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
-     *     rectangle : new Cesium.Rectangle(
-     *       Cesium.Math.toRadians(-140.0),
-     *       Cesium.Math.toRadians(30.0),
-     *       Cesium.Math.toRadians(-100.0),
-     *       Cesium.Math.toRadians(40.0))
-     *     }),
+     *     rectangle : Cesium.Rectangle.fromDegrees(-140.0, 30.0, -100.0, 40.0),
+     *     vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+     *   }),
      *   id : 'rectangle',
-     *   attribute : {
+     *   attributes : {
      *     color : new Cesium.ColorGeometryInstanceAttribute(0.0, 1.0, 1.0, 0.5)
      *   }
      * });
      * var ellipsoidInstance = new Cesium.GeometryInstance({
      *   geometry : new Cesium.EllipsoidGeometry({
-     *     vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
-     *     radii : new Cesium.Cartesian3(500000.0, 500000.0, 1000000.0)
+     *     radii : new Cesium.Cartesian3(500000.0, 500000.0, 1000000.0),
+     *     vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL
      *   }),
      *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
      *     Cesium.Cartesian3.fromDegrees(-95.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 500000.0), new Cesium.Matrix4()),
      *   id : 'ellipsoid',
-     *   attribute : {
+     *   attributes : {
      *     color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.AQUA)
      *   }
      * });
-     * var primitive = new Cesium.Primitive({
+     * scene.primitives.add(new Cesium.Primitive({
      *   geometryInstances : [rectangleInstance, ellipsoidInstance],
      *   appearance : new Cesium.PerInstanceColorAppearance()
-     * });
-     * scene.primitives.add(primitive);
+     * }));
      *
+     * @example
      * // 3. Create the geometry on the main thread.
-     * var primitive = new Cesium.Primitive({
+     * scene.primitives.add(new Cesium.Primitive({
      *   geometryInstances : new Cesium.GeometryInstance({
      *       geometry : Cesium.EllipsoidGeometry.createGeometry(new Cesium.EllipsoidGeometry({
-     *         vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
-     *         radii : new Cesium.Cartesian3(500000.0, 500000.0, 1000000.0)
+     *         radii : new Cesium.Cartesian3(500000.0, 500000.0, 1000000.0),
+     *         vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL
      *       })),
      *       modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
      *         Cesium.Cartesian3.fromDegrees(-95.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 500000.0), new Cesium.Matrix4()),
      *       id : 'ellipsoid',
-     *       attribute : {
+     *       attributes : {
      *         color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.AQUA)
      *       }
      *   }),
      *   appearance : new Cesium.PerInstanceColorAppearance()
-     * });
-     * scene.primitives.add(primitive);
+     * }));
      */
     var Primitive = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -234,6 +229,7 @@ define([
         this._releaseGeometryInstances = defaultValue(options.releaseGeometryInstances, true);
         this._allowPicking = defaultValue(options.allowPicking, true);
         this._asynchronous = defaultValue(options.asynchronous, true);
+        this._compressVertices = defaultValue(options.compressVertices, true);
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -360,6 +356,22 @@ define([
         asynchronous : {
             get : function() {
                 return this._asynchronous;
+            }
+        },
+
+        /**
+         * When <code>true</code>, geometry vertices are compressed, which will save memory.
+         *
+         * @memberof Primitive.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default true
+         */
+        compressVertices : {
+            get : function() {
+                return this._compressVertices;
             }
         },
 
@@ -491,7 +503,7 @@ define([
             }
         }
 
-        return createShaderSource({ sources : [forwardDecl, attributes, vertexShaderSource, computeFunctions] });
+        return [forwardDecl, attributes, vertexShaderSource, computeFunctions].join('\n');
     }
 
     function createPickVertexShaderSource(vertexShaderSource) {
@@ -523,6 +535,76 @@ define([
             '}';
 
         return renamedVS + '\n' + showMain;
+    }
+
+    function modifyForEncodedNormals(primitive, vertexShaderSource) {
+        if (!primitive.compressVertices) {
+            return vertexShaderSource;
+        }
+
+        var containsNormal = vertexShaderSource.search(/attribute\s+vec3\s+normal;/g) !== -1;
+        var containsSt = vertexShaderSource.search(/attribute\s+vec2\s+st;/g) !== -1;
+        if (!containsNormal && !containsSt) {
+            return vertexShaderSource;
+        }
+
+        var containsTangent = vertexShaderSource.search(/attribute\s+vec3\s+tangent;/g) !== -1;
+        var containsBinormal = vertexShaderSource.search(/attribute\s+vec3\s+binormal;/g) !== -1;
+
+        var numComponents = containsSt && containsNormal ? 2.0 : 1.0;
+        numComponents += containsTangent || containsBinormal ? 1 : 0;
+
+        var type = (numComponents > 1) ? 'vec' + numComponents : 'float';
+
+        var attributeName = 'compressedAttributes';
+        var attributeDecl = 'attribute ' + type + ' ' + attributeName + ';';
+
+        var globalDecl = '';
+        var decode = '';
+
+        if (containsSt) {
+            globalDecl += 'vec2 st;\n';
+            var stComponent = numComponents > 1 ? attributeName + '.x' : attributeName;
+            decode += '    st = czm_decompressTextureCoordinates(' + stComponent + ');\n';
+        }
+
+        if (containsNormal && containsTangent && containsBinormal) {
+            globalDecl +=
+                'vec3 normal;\n' +
+                'vec3 tangent;\n' +
+                'vec3 binormal;\n';
+            decode += '    czm_octDecode(' + attributeName + '.' + (containsSt ? 'yz' : 'xy') + ', normal, tangent, binormal);\n';
+        } else {
+            if (containsNormal) {
+                globalDecl += 'vec3 normal;\n';
+                decode += '    normal = czm_octDecode(' + attributeName + (numComponents > 1 ? '.' + (containsSt ? 'y' : 'x') : '') + ');\n';
+            }
+
+            if (containsTangent) {
+                globalDecl += 'vec3 tangent;\n';
+                decode += '    tangent = czm_octDecode(' + attributeName + '.' + (containsSt && containsNormal ? 'z' : 'y') + ');\n';
+            }
+
+            if (containsBinormal) {
+                globalDecl += 'vec3 binormal;\n';
+                decode += '    binormal = czm_octDecode(' + attributeName + '.' + (containsSt && containsNormal ? 'z' : 'y') + ');\n';
+            }
+        }
+
+        var modifiedVS = vertexShaderSource;
+        modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+normal;/g, '');
+        modifiedVS = modifiedVS.replace(/attribute\s+vec2\s+st;/g, '');
+        modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+tangent;/g, '');
+        modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+binormal;/g, '');
+        modifiedVS = modifiedVS.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_non_compressed_main()');
+        var compressedMain =
+            'void main() \n' +
+            '{ \n' +
+            decode +
+            '    czm_non_compressed_main(); \n' +
+            '}';
+
+        return [attributeDecl, globalDecl, modifiedVS, compressedMain].join('\n');
     }
 
     function validateShaderMatching(shaderProgram, attributeLocations) {
@@ -668,6 +750,7 @@ define([
                         scene3DOnly : scene3DOnly,
                         allowPicking : allowPicking,
                         vertexCacheOptimize : this.vertexCacheOptimize,
+                        compressVertices : this.compressVertices,
                         modelMatrix : this.modelMatrix
                     }, transferableObjects), transferableObjects);
 
@@ -717,6 +800,7 @@ define([
                     scene3DOnly : scene3DOnly,
                     allowPicking : allowPicking,
                     vertexCacheOptimize : this.vertexCacheOptimize,
+                    compressVertices : this.compressVertices,
                     modelMatrix : this.modelMatrix
                 });
 
@@ -724,7 +808,6 @@ define([
                 this._attributeLocations = result.attributeLocations;
                 this._vaAttributes = result.vaAttributes;
                 this._perInstanceAttributeLocations = result.vaAttributeLocations;
-                this.modelMatrix = Matrix4.clone(result.modelMatrix, this.modelMatrix);
                 this._state = PrimitiveState.COMBINED;
             }
         }
@@ -854,13 +937,17 @@ define([
         if (createSP) {
             var vs = createColumbusViewShader(this, appearance.vertexShaderSource, scene3DOnly);
             vs = appendShow(this, vs);
+            vs = modifyForEncodedNormals(this, vs);
             var fs = appearance.getFragmentShaderSource();
 
             this._sp = context.replaceShaderProgram(this._sp, vs, fs, attributeLocations);
             validateShaderMatching(this._sp, attributeLocations);
 
             if (allowPicking) {
-                var pickFS = createShaderSource({ sources : [fs], pickColorQualifier : 'varying' });
+                var pickFS = new ShaderSource({
+                    sources : [fs],
+                    pickColorQualifier : 'varying'
+                });
                 this._pickSP = context.replaceShaderProgram(this._pickSP, createPickVertexShaderSource(vs), pickFS, attributeLocations);
             } else {
                 this._pickSP = context.createShaderProgram(vs, fs, attributeLocations);

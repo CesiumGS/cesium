@@ -9,7 +9,7 @@ define([
         createTaskProcessorWorker) {
     "use strict";
 
-    var cajaScript = '//caja.appspot.com/html-css-sanitizer-minified.js';
+    var cajaScript = 'https://caja.appspot.com/html-css-sanitizer-minified.js';
     var html_sanitize;
 
     /**

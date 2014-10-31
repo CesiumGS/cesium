@@ -46,6 +46,17 @@ defineSuite([
         expect(view.ellipsoid).toBe(Ellipsoid.UNIT_SPHERE);
     });
 
+    it('can set and get defaultOffset3D', function() {
+        var sampleOffset = new Cartesian3(1, 2, 3);
+        EntityView.defaultOffset3D = sampleOffset;
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(Cartesian3.ZERO);
+        var view = new EntityView(entity, scene);
+        view.update(JulianDate.now());
+        expect(Cartesian3.equalsEpsilon(EntityView.defaultOffset3D, sampleOffset, 1e-10)).toBe(true);
+        expect(Cartesian3.equalsEpsilon(view.scene.camera.position, sampleOffset, 1e-10)).toBe(true);
+    });
+
     it('update throws without time parameter', function() {
         var entity = new Entity();
         entity.position = new ConstantPositionProperty(Cartesian3.ZERO);

@@ -3,6 +3,7 @@ define([
         '../Core/Cartesian3',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/JulianDate',
@@ -14,6 +15,7 @@ define([
         Cartesian3,
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         Ellipsoid,
         JulianDate,
@@ -191,18 +193,38 @@ define([
         //Re-usable objects to be used for retrieving position.
         this._lastCartesian = new Cartesian3();
 
-        this._defaultOffset3D = new Cartesian3(-10000, 2500, 2500);
-        this._defaultUp3D = Cartesian3.cross(this._defaultOffset3D, Cartesian3.cross(Cartesian3.UNIT_Z, this._defaultOffset3D, offset3DCrossScratch), new Cartesian3());
-        Cartesian3.normalize(this._defaultUp3D, this._defaultUp3D);
-
-        this._defaultOffset2D = new Cartesian3(0.0, 0.0, Cartesian3.magnitude(this._defaultOffset3D));
-        this._defaultUp2D = Cartesian3.clone(Cartesian3.UNIT_Y);
-
         this._offset3D = new Cartesian3();
         this._up3D = new Cartesian3();
         this._offset2D = new Cartesian3();
         this._up2D = new Cartesian3();
     };
+
+    // STATIC properties defined here, not per-instance.
+    defineProperties(EntityView, {
+        /**
+         * Gets or sets a camera offset that will be used to
+         * initialize subsequent EntityViews.
+         * @memberof EntityView
+         * @type {Cartesian3}
+         */
+        defaultOffset3D : {
+            get : function() {
+                return this._defaultOffset3D;
+            },
+            set : function(vector) {
+                this._defaultOffset3D = Cartesian3.clone(vector, new Cartesian3());
+                this._defaultUp3D = Cartesian3.cross(this._defaultOffset3D, Cartesian3.cross(Cartesian3.UNIT_Z,
+                        this._defaultOffset3D, offset3DCrossScratch), new Cartesian3());
+                Cartesian3.normalize(this._defaultUp3D, this._defaultUp3D);
+
+                this._defaultOffset2D = new Cartesian3(0.0, 0.0, Cartesian3.magnitude(this._defaultOffset3D));
+                this._defaultUp2D = Cartesian3.clone(Cartesian3.UNIT_Y);
+            }
+        }
+    });
+
+    // Initialize the static property.
+    EntityView.defaultOffset3D = new Cartesian3(-14000, 3500, 3500);
 
     /**
     * Should be called each animation frame to update the camera
@@ -246,10 +268,10 @@ define([
         if (objectChanged) {
             var viewFromProperty = entity.viewFrom;
             if (!defined(viewFromProperty) || !defined(viewFromProperty.getValue(time, offset3D))) {
-                Cartesian3.clone(this._defaultOffset2D, offset2D);
-                Cartesian3.clone(this._defaultUp2D, up2D);
-                Cartesian3.clone(this._defaultOffset3D, offset3D);
-                Cartesian3.clone(this._defaultUp3D, up3D);
+                Cartesian3.clone(EntityView._defaultOffset2D, offset2D);
+                Cartesian3.clone(EntityView._defaultUp2D, up2D);
+                Cartesian3.clone(EntityView._defaultOffset3D, offset3D);
+                Cartesian3.clone(EntityView._defaultUp3D, up3D);
             } else {
                 Cartesian3.cross(Cartesian3.UNIT_Z, offset3D, up3D);
                 Cartesian3.cross(offset3D, up3D, up3D);

@@ -3,7 +3,6 @@ define([
         '../Core/defaultValue',
         '../Core/defineProperties',
         '../Core/VertexFormat',
-        '../Renderer/createShaderSource',
         '../Shaders/Appearances/PerInstanceFlatColorAppearanceFS',
         '../Shaders/Appearances/PolylineColorAppearanceVS',
         '../Shaders/PolylineCommon',
@@ -12,12 +11,14 @@ define([
         defaultValue,
         defineProperties,
         VertexFormat,
-        createShaderSource,
         PerInstanceFlatColorAppearanceFS,
         PolylineColorAppearanceVS,
         PolylineCommon,
         Appearance) {
     "use strict";
+
+    var defaultVertexShaderSource = PolylineCommon + '\n' + PolylineColorAppearanceVS;
+    var defaultFragmentShaderSource = PerInstanceFlatColorAppearanceFS;
 
     /**
      * An appearance for {@link GeometryInstance} instances with color attributes and {@link PolylineGeometry}.
@@ -45,7 +46,7 @@ define([
      *         5.0, 0.0
      *       ]),
      *       width : 10.0,
-     *       vertexFormat : Cesium.PolylineColorApperance.VERTEX_FORMAT
+     *       vertexFormat : Cesium.PolylineColorAppearance.VERTEX_FORMAT
      *     }),
      *     attributes : {
      *       color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 1.0, 1.0, 1.0))
@@ -54,15 +55,13 @@ define([
      *   appearance : new Cesium.PolylineColorAppearance({
      *     translucent : false
      *   })
-     * }));
+     * });
      */
     var PolylineColorAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var translucent = defaultValue(options.translucent, true);
         var closed = false;
-        var vs = createShaderSource({ sources : [PolylineCommon, PolylineColorAppearanceVS] });
-        var fs = PerInstanceFlatColorAppearanceFS;
         var vertexFormat = PolylineColorAppearance.VERTEX_FORMAT;
 
         /**
@@ -85,8 +84,8 @@ define([
          */
         this.translucent = translucent;
 
-        this._vertexShaderSource = defaultValue(options.vertexShaderSource, vs);
-        this._fragmentShaderSource = defaultValue(options.fragmentShaderSource, fs);
+        this._vertexShaderSource = defaultValue(options.vertexShaderSource, defaultVertexShaderSource);
+        this._fragmentShaderSource = defaultValue(options.fragmentShaderSource, defaultFragmentShaderSource);
         this._renderState = defaultValue(options.renderState, Appearance.getDefaultRenderState(translucent, closed));
         this._closed = closed;
 

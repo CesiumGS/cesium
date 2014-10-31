@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
-    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Create and style textual labels.">
     <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
@@ -29,23 +29,21 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
-var primitives = scene.primitives;
 
 function addLabel() {
     Sandcastle.declare(addLabel);
-    primitives.removeAll();
-    var labels = new Cesium.LabelCollection();
+    scene.primitives.removeAll();
+    var labels = scene.primitives.add(new Cesium.LabelCollection());
     labels.add({
         position : Cesium.Cartesian3.fromDegrees(-75.10, 39.57),
         text     : 'Philadelphia'
     });
-    scene.primitives.add(labels);
 }
 
 function setFont() {
     Sandcastle.declare(setFont);
-    primitives.removeAll();
-    var labels = new Cesium.LabelCollection();
+    scene.primitives.removeAll();
+    var labels = scene.primitives.add(new Cesium.LabelCollection());
     labels.add({
         position  : Cesium.Cartesian3.fromDegrees(-75.10, 39.57),
         text      : 'Philadelphia',
@@ -56,13 +54,12 @@ function setFont() {
         outlineWidth : 2,
         style : Cesium.LabelStyle.FILL_AND_OUTLINE
     });
-    scene.primitives.add(labels);
 }
 
 function setProperties() {
     Sandcastle.declare(setProperties);
-    primitives.removeAll();
-    var labels = new Cesium.LabelCollection();
+    scene.primitives.removeAll();
+    var labels = scene.primitives.add(new Cesium.LabelCollection());
     var l = labels.add({
         position : Cesium.Cartesian3.fromDegrees(-75.10, 39.57),
         text     : 'Philadelphia'
@@ -70,14 +67,13 @@ function setProperties() {
 
     l.position = Cesium.Cartesian3.fromDegrees(-75.10, 39.57, 300000.0);
     l.scale = 2.0;
-    scene.primitives.add(labels);
 }
 
 function inReferenceFrame() {
     Sandcastle.declare(inReferenceFrame);
-    primitives.removeAll();
+    scene.primitives.removeAll();
     var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
-    var labels = new Cesium.LabelCollection(undefined);
+    var labels = scene.primitives.add(new Cesium.LabelCollection());
     labels.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
     labels.add({
         position : new Cesium.Cartesian3(0.0, 0.0, 0.0),
@@ -95,22 +91,21 @@ function inReferenceFrame() {
         position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0),
         text     : 'Up'
     });
-    scene.primitives.add(labels);
 }
 
 function offsetByDistance() {
     Sandcastle.declare(offsetByDistance);
-    primitives.removeAll();
+    scene.primitives.removeAll();
     var image = new Image();
     image.onload = function() {
-        var billboards = new Cesium.BillboardCollection();
+        var billboards = scene.primitives.add(new Cesium.BillboardCollection());
         billboards.add({
             position : Cesium.Cartesian3.fromDegrees(-75.10, 39.57),
             scaleByDistance : new Cesium.NearFarScalar(1.5e2, 5.0, 1.5e7, 0.5),
             image : image
         });
 
-        var labels = new Cesium.LabelCollection();
+        var labels = scene.primitives.add(new Cesium.LabelCollection());
         labels.add({
             position : Cesium.Cartesian3.fromDegrees(-75.10, 39.57),
             text     : 'Label on top of scaling billboard',
@@ -119,17 +114,14 @@ function offsetByDistance() {
             pixelOffset : new Cesium.Cartesian2(0.0, -image.height),
             pixelOffsetScaleByDistance : new Cesium.NearFarScalar(1.5e2, 3.0, 1.5e7, 0.5)
         });
-
-        scene.primitives.add(billboards);
-        scene.primitives.add(labels);
     };
     image.src = '../images/facility.gif';
 }
 
 function fadeByDistance() {
     Sandcastle.declare(fadeByDistance);
-    primitives.removeAll();
-    var labels = new Cesium.LabelCollection();
+    scene.primitives.removeAll();
+    var labels = scene.primitives.add(new Cesium.LabelCollection());
     labels.add({
         position : Cesium.Cartesian3.fromDegrees(-73.94, 40.67),
         text     : 'New York',
@@ -140,7 +132,6 @@ function fadeByDistance() {
         text     : 'Atlanta',
         translucencyByDistance : new Cesium.NearFarScalar(1.5e5, 1.0, 1.5e7, 0.0)
     });
-    scene.primitives.add(labels);
 }
 
 Sandcastle.addToolbarMenu([{

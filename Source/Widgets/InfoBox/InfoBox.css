@@ -132,8 +132,15 @@ button.cesium-infoBox-close:active {
     background-color: rgba(84, 84, 84, 0.25);
 }
 
+.cesium-infoBox-defaultTable th {
+    font-weight: normal;
+    padding: 3px;
+    vertical-align: middle;
+    text-align: center;
+}
+
 .cesium-infoBox-defaultTable td {
     padding: 3px;
     vertical-align: middle;
-    text-align: right;
+    text-align: left;
 }

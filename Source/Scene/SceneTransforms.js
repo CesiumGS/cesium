@@ -48,7 +48,7 @@ define([
      * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
      * var scene = widget.scene;
      * var ellipsoid = scene.globe.ellipsoid;
-     * var position = ellipsoid.cartographicToCartesian(new Cesium.Cartographic(0.0, 0.0));
+     * var position = Cesium.Cartesian3.fromDegrees(0.0, 0.0));
      * var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
      * handler.setInputAction(function(movement) {
      *     console.log(Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position));
@@ -72,7 +72,8 @@ define([
         }
 
         // View-projection matrix to transform from world coordinates to clip coordinates
-        var viewProjection = scene.context.uniformState.viewProjection;
+        var camera = scene.camera;
+        var viewProjection = Matrix4.multiply(camera.frustum.projectionMatrix, camera.viewMatrix, viewProjectionScratch);
         Matrix4.multiplyByVector(viewProjection, Cartesian4.fromElements(actualPosition.x, actualPosition.y, actualPosition.z, 1, positionCC), positionCC);
 
         if ((positionCC.z < 0) && (scene.mode !== SceneMode.SCENE2D)) {
@@ -97,7 +98,7 @@ define([
      * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
      * var scene = widget.scene;
      * var ellipsoid = scene.globe.ellipsoid;
-     * var position = ellipsoid.cartographicToCartesian(new Cesium.Cartographic(0.0, 0.0));
+     * var position = Cesium.Cartesian3.fromDegrees(0.0, 0.0));
      * var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
      * handler.setInputAction(function(movement) {
      *     console.log(Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position));
@@ -122,7 +123,8 @@ define([
         }
 
         // View-projection matrix to transform from world coordinates to clip coordinates
-        var viewProjection = scene.context.uniformState.viewProjection;
+        var camera = scene.camera;
+        var viewProjection = Matrix4.multiply(camera.frustum.projectionMatrix, camera.viewMatrix, viewProjectionScratch);
         Matrix4.multiplyByVector(viewProjection, Cartesian4.fromElements(actualPosition.x, actualPosition.y, actualPosition.z, 1, positionCC), positionCC);
 
         if ((positionCC.z < 0) && (scene.mode !== SceneMode.SCENE2D)) {

@@ -56,7 +56,7 @@ define([
      *     flat : true,
      *     translucent : false
      *   })
-     * }));
+     * });
      *
      * // Two rectangles in a primitive, each with a different color
      * var instance = new Cesium.GeometryInstance({

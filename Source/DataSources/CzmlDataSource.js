@@ -1117,7 +1117,7 @@ define([
 
     function processModel(entity, packet, entityCollection, sourceUri) {
         var modelData = packet.model;
-        if (typeof modelData === 'undefined') {
+        if (!defined(modelData)) {
             return;
         }
 
@@ -1405,9 +1405,15 @@ define([
         return false;
     }
 
-    function loadCzml(dataSource, czml, sourceUri) {
+    function loadCzml(dataSource, czml, sourceUri, clear) {
         var entityCollection = dataSource._entityCollection;
         entityCollection.suspendEvents();
+
+        if (clear) {
+            dataSource._version = undefined;
+            dataSource._documentPacket = new DocumentPacket();
+            entityCollection.removeAll();
+        }
 
         CzmlDataSource._processCzml(czml, entityCollection, sourceUri, undefined, dataSource);
 
@@ -1417,7 +1423,7 @@ define([
         if (defined(documentPacket.name) && dataSource._name !== documentPacket.name) {
             dataSource._name = documentPacket.name;
             raiseChangedEvent = true;
-        } else if (defined(sourceUri)) {
+        } else if (!defined(dataSource._name) && defined(sourceUri)) {
             dataSource._name = getFilenameFromUri(sourceUri);
             raiseChangedEvent = true;
         }
@@ -1573,7 +1579,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        loadCzml(this, czml, sourceUri);
+        loadCzml(this, czml, sourceUri, false);
     };
 
     /**
@@ -1589,10 +1595,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._version = undefined;
-        this._documentPacket = new DocumentPacket();
-        this._entityCollection.removeAll();
-        loadCzml(this, czml, sourceUri);
+        loadCzml(this, czml, sourceUri, true);
     };
 
     /**

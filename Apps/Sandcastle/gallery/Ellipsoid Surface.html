@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
-    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Draw rectangles with different ellipsoid surface appearances.">
     <meta name="cesium-sandcastle-labels" content="Appearances">
     <title>Cesium Demo</title>
@@ -29,13 +29,13 @@ function startup(Cesium) {
 //Sandcastle_Begin
 // Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
-var primitives = viewer.scene.primitives;
+var scene = viewer.scene;
 
 // This appearance can be used for any geometry that
 // is parallel to the globe surface.
 
 // Stripe Material
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : new Cesium.GeometryInstance({
         geometry : new Cesium.RectangleGeometry({
             rectangle : Cesium.Rectangle.fromDegrees(-120.0, 30.0, -110.0, 40.0),
@@ -48,7 +48,7 @@ primitives.add(new Cesium.Primitive({
 }));
 
 // Dot Material
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : new Cesium.GeometryInstance({
         geometry : new Cesium.RectangleGeometry({
             rectangle : Cesium.Rectangle.fromDegrees(-110.0, 30.0, -100.0, 40.0),
@@ -61,7 +61,7 @@ primitives.add(new Cesium.Primitive({
 }));
 
 // Checkerboard Material
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : new Cesium.GeometryInstance({
         geometry : new Cesium.RectangleGeometry({
             rectangle : Cesium.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0),
@@ -74,7 +74,7 @@ primitives.add(new Cesium.Primitive({
 }));
 
 // Grid Material    
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : new Cesium.GeometryInstance({
         geometry : new Cesium.RectangleGeometry({
             rectangle : Cesium.Rectangle.fromDegrees(-90.0, 30.0, -80.0, 40.0),

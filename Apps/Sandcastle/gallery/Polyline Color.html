@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
-    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Draw polylines with different color appearances.">
     <meta name="cesium-sandcastle-labels" content="Appearances">
     <title>Cesium Demo</title>
@@ -29,7 +29,7 @@ function startup(Cesium) {
 //Sandcastle_Begin
 // Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
-var primitives = viewer.scene.primitives;
+var scene = viewer.scene;
 
 // Example 1: Draw a polyline with per segment colors
 var positions = [];
@@ -40,7 +40,7 @@ for (var i = 0; i < 12; ++i) {
 }
 // For per segment coloring, supply the colors option with
 // an array of colors for each segment.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : new Cesium.GeometryInstance({
         geometry : new Cesium.PolylineGeometry({
             positions : positions,
@@ -62,7 +62,7 @@ for (i = 0; i < 12; ++i) {
 // For per segment coloring, supply the colors option with
 // an array of colors for each vertex.  Also set the
 // colorsPerVertex option to true.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : new Cesium.GeometryInstance({
         geometry : new Cesium.PolylineGeometry({
             positions : positions,

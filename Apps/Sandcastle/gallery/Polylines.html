@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
-    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Construct and style polylines.">
     <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
@@ -28,8 +28,7 @@ function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
 function createPrimitives(scene) {
-    var primitives = scene.primitives;
-    var polylines = new Cesium.PolylineCollection();
+    var polylines = scene.primitives.add(new Cesium.PolylineCollection());
 
     // A simple polyline with two points.
     var polyline = polylines.add({
@@ -65,7 +64,7 @@ function createPrimitives(scene) {
             -85.0, 40.0
         ]),
         material : Cesium.Material.fromType(Cesium.Material.PolylineGlowType, {
-            innerWidth : 3.0,
+            glowPower : 0.25,
             color : new Cesium.Color(1.0, 0.5, 0.0, 1.0)
         }),
         width : 10.0
@@ -85,11 +84,9 @@ function createPrimitives(scene) {
     });
     Sandcastle.declare(loopPolyline);   // For highlighting on mouseover in Sandcastle.
 
-    primitives.add(polylines);
-
     // Draw a line in a local reference frame
     // The arrow points to the east, i.e. along the local x-axis.
-    var localPolylines = new Cesium.PolylineCollection();
+    var localPolylines = scene.primitives.add(new Cesium.PolylineCollection());
     var center = Cesium.Cartesian3.fromDegrees(-80.0, 35.0);
     localPolylines.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
     
@@ -102,7 +99,6 @@ function createPrimitives(scene) {
         material : Cesium.Material.fromType(Cesium.Material.PolylineArrowType)
     });
     Sandcastle.declare(localPolyline);  // For highlighting on mouseover in Sandcastle.
-    primitives.add(localPolylines);
 }
 
 var viewer = new Cesium.Viewer('cesiumContainer');

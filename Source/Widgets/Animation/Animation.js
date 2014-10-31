@@ -197,7 +197,9 @@ define([
             }
             e.preventDefault();
         } else {
-            widgetForDrag = undefined;
+            if (widget === widgetForDrag) {
+                widgetForDrag = undefined;
+            }
             viewModel.shuttleRingDragging = false;
         }
     }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
-    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Add billboard images, points, and markers to the scene.">
     <meta name="cesium-sandcastle-labels" content="Beginner, Showcases">
     <title>Cesium Demo</title>
@@ -29,7 +29,6 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
-var primitives = scene.primitives;
 
 function addBillboard() {
     Sandcastle.declare(addBillboard);
@@ -327,7 +326,7 @@ Sandcastle.addToolbarMenu([{
 }]);
 
 Sandcastle.reset = function () {
-    primitives.removeAll();
+    scene.primitives.removeAll();
 };
 
 //Sandcastle_End

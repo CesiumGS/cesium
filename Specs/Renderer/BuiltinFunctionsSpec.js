@@ -224,10 +224,39 @@ defineSuite([
         verifyDraw(fs);
     });
 
-    it('has czm_octDecode', function() {
+    it('has czm_octDecode(vec2)', function() {
         var fs =
             'void main() { ' +
-            '  gl_FragColor = vec4(czm_octDecode(vec2(0.0, 0.0)) == vec3(0.0, 0.0, 1.0)); ' +
+            '  gl_FragColor = vec4(all(lessThanEqual(abs(czm_octDecode(vec2(128.0, 128.0)) - vec3(0.0, 0.0, 1.0)), vec3(0.01)))); ' +
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('has czm_octDecode(float)', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(all(lessThanEqual(abs(czm_octDecode(32896.0) - vec3(0.0, 0.0, 1.0)), vec3(0.01)))); ' +
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('has czm_octDecode(vec2, vec3, vec3, vec3)', function() {
+        var fs =
+            'void main() { ' +
+            '  vec3 a, b, c;' +
+            '  czm_octDecode(vec2(8454016.0, 8421631.0), a, b, c);' +
+            '  bool decoded = all(lessThanEqual(abs(a - vec3(1.0, 0.0, 0.0)), vec3(0.01)));' +
+            '  decoded = decoded && all(lessThanEqual(abs(b - vec3(0.0, 1.0, 0.0)), vec3(0.01)));' +
+            '  decoded = decoded && all(lessThanEqual(abs(c - vec3(0.0, 0.0, 1.0)), vec3(0.01)));' +
+            '  gl_FragColor = vec4(decoded);' +
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('has czm_decompressTextureCoordinates', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_decompressTextureCoordinates(8390656.0) == vec2(0.5, 0.5)); ' +
             '}';
         verifyDraw(fs);
     });
@@ -271,6 +300,20 @@ defineSuite([
             '                      czm_signNotZero(vec4(1.0, 1.0, 1.0, 1.0)) == vec4(1.0), ' +
             '                      czm_signNotZero(vec4(-1.0, -1.0, -1.0, -1.0)) == vec4(-1.0), ' +
             '                      czm_signNotZero(vec4(-1.0, 0.0, 1.0, -10.0)) == vec4(-1.0, 1.0, 1.0, -1.0)); ' +
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('has czm_cosineAndSine in all 4 quadrants', function() {
+        var fs =
+            'bool isBounded(float value, float min, float max) { ' +
+            '  return ((value < max) && (value > min)); ' +
+            '}' +
+            'void main() { ' +
+            '  gl_FragColor = vec4(isBounded(czm_cosineAndSine(czm_piOverFour).x, 0.707106, 0.707107) && isBounded(czm_cosineAndSine(czm_piOverFour).y, 0.707106, 0.707107), ' +
+            '                      isBounded(czm_cosineAndSine(czm_pi - czm_piOverFour).x, -0.707107, -0.707106) && isBounded(czm_cosineAndSine(czm_pi - czm_piOverFour).y, 0.707106, 0.707107), ' +
+            '                      isBounded(czm_cosineAndSine(-czm_piOverFour).x, 0.707106, 0.707107) && isBounded(czm_cosineAndSine(-czm_piOverFour).y, -0.707107, -0.707106), ' +
+            '                      isBounded(czm_cosineAndSine(-czm_pi + czm_piOverFour).x, -0.707107, -0.707106) && isBounded(czm_cosineAndSine(-czm_pi + czm_piOverFour).y, -0.707107, -0.707106)); ' +
             '}';
         verifyDraw(fs);
     });

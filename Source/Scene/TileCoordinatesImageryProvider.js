@@ -2,12 +2,14 @@
 define([
         '../Core/Color',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
         '../Core/GeographicTilingScheme'
     ], function(
         Color,
         defaultValue,
+        defined,
         defineProperties,
         Event,
         GeographicTilingScheme) {
@@ -28,21 +30,21 @@ define([
      * @param {Number} [options.tileHeight=256] The height of the tile for level-of-detail selection purposes.
      */
     var TileCoordinatesImageryProvider = function TileCoordinatesImageryProvider(options) {
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        this._tilingScheme = defaultValue(options.tilingScheme, new GeographicTilingScheme());
+        this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new GeographicTilingScheme();
         this._color = defaultValue(options.color, Color.YELLOW);
         this._errorEvent = new Event();
         this._tileWidth = defaultValue(options.tileWidth, 256);
         this._tileHeight = defaultValue(options.tileHeight, 256);
     };
 
-
     defineProperties(TileCoordinatesImageryProvider.prototype, {
         /**
          * Gets the proxy used by this provider.
          * @memberof TileCoordinatesImageryProvider.prototype
          * @type {Proxy}
+         * @readonly
          */
         proxy : {
             get : function() {
@@ -55,6 +57,7 @@ define([
          * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
          * @memberof TileCoordinatesImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         tileWidth : {
             get : function() {
@@ -67,6 +70,7 @@ define([
          * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
          * @memberof TileCoordinatesImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         tileHeight: {
             get : function() {
@@ -79,6 +83,7 @@ define([
          * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
          * @memberof TileCoordinatesImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         maximumLevel : {
             get : function() {
@@ -91,6 +96,7 @@ define([
          * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
          * @memberof TileCoordinatesImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         minimumLevel : {
             get : function() {
@@ -103,6 +109,7 @@ define([
          * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
          * @memberof TileCoordinatesImageryProvider.prototype
          * @type {TilingScheme}
+         * @readonly
          */
         tilingScheme : {
             get : function() {
@@ -115,6 +122,7 @@ define([
          * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
          * @memberof TileCoordinatesImageryProvider.prototype
          * @type {Rectangle}
+         * @readonly
          */
         rectangle : {
             get : function() {
@@ -129,6 +137,7 @@ define([
          * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
          * @memberof TileCoordinatesImageryProvider.prototype
          * @type {TileDiscardPolicy}
+         * @readonly
          */
         tileDiscardPolicy : {
             get : function() {
@@ -142,6 +151,7 @@ define([
          * are passed an instance of {@link TileProviderError}.
          * @memberof TileCoordinatesImageryProvider.prototype
          * @type {Event}
+         * @readonly
          */
         errorEvent : {
             get : function() {
@@ -153,6 +163,7 @@ define([
          * Gets a value indicating whether or not the provider is ready for use.
          * @memberof TileCoordinatesImageryProvider.prototype
          * @type {Boolean}
+         * @readonly
          */
         ready : {
             get : function() {
@@ -165,6 +176,7 @@ define([
          * the source of the imagery.  This function should not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
          * @memberof TileCoordinatesImageryProvider.prototype
          * @type {Credit}
+         * @readonly
          */
         credit : {
             get : function() {
@@ -180,6 +192,7 @@ define([
          * and texture upload time.
          * @memberof TileCoordinatesImageryProvider.prototype
          * @type {Boolean}
+         * @readonly
          */
         hasAlphaChannel : {
             get : function() {
@@ -235,6 +248,24 @@ define([
         context.fillText(label, 124, 124);
 
         return canvas;
+    };
+
+    /**
+     * Picking features is not currently supported by this imagery provider, so this function simply returns
+     * undefined.
+     *
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level.
+     * @param {Number} longitude The longitude at which to pick features.
+     * @param {Number} latitude  The latitude at which to pick features.
+     * @return {Promise} A promise for the picked features that will resolve when the asynchronous
+     *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
+     *                   instances.  The array may be empty if no features are found at the given location.
+     *                   It may also be undefined if picking is not supported.
+     */
+    TileCoordinatesImageryProvider.prototype.pickFeatures = function() {
+        return undefined;
     };
 
     return TileCoordinatesImageryProvider;

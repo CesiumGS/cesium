@@ -11,7 +11,6 @@ define([
         '../Core/GeographicTilingScheme',
         '../Core/loadXML',
         '../Core/Rectangle',
-        '../Core/RuntimeError',
         '../Core/TileProviderError',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/when',
@@ -28,7 +27,6 @@ define([
         GeographicTilingScheme,
         loadXML,
         Rectangle,
-        RuntimeError,
         TileProviderError,
         WebMercatorTilingScheme,
         when,
@@ -252,7 +250,7 @@ define([
             that._tileHeight = defaultValue(options.tileHeight, 256);
             that._minimumLevel = defaultValue(options.minimumLevel, 0);
             that._maximumLevel = defaultValue(options.maximumLevel, 18);
-            that._tilingScheme = defaultValue(options.tilingScheme, new WebMercatorTilingScheme());
+            that._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new WebMercatorTilingScheme();
             that._rectangle = defaultValue(options.rectangle, that._tilingScheme.rectangle);
             that._ready = true;
         }
@@ -283,6 +281,7 @@ define([
          * Gets the URL of the service hosting the imagery.
          * @memberof TileMapServiceImageryProvider.prototype
          * @type {String}
+         * @readonly
          */
         url : {
             get : function() {
@@ -294,6 +293,7 @@ define([
          * Gets the proxy used by this provider.
          * @memberof TileMapServiceImageryProvider.prototype
          * @type {Proxy}
+         * @readonly
          */
         proxy : {
             get : function() {
@@ -306,6 +306,7 @@ define([
          * not be called before {@link TileMapServiceImageryProvider#ready} returns true.
          * @memberof TileMapServiceImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         tileWidth : {
             get : function() {
@@ -324,6 +325,7 @@ define([
          * not be called before {@link TileMapServiceImageryProvider#ready} returns true.
          * @memberof TileMapServiceImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         tileHeight: {
             get : function() {
@@ -342,6 +344,7 @@ define([
          * not be called before {@link TileMapServiceImageryProvider#ready} returns true.
          * @memberof TileMapServiceImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         maximumLevel : {
             get : function() {
@@ -360,6 +363,7 @@ define([
          * not be called before {@link TileMapServiceImageryProvider#ready} returns true.
          * @memberof TileMapServiceImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         minimumLevel : {
             get : function() {
@@ -378,6 +382,7 @@ define([
          * not be called before {@link TileMapServiceImageryProvider#ready} returns true.
          * @memberof TileMapServiceImageryProvider.prototype
          * @type {TilingScheme}
+         * @readonly
          */
         tilingScheme : {
             get : function() {
@@ -396,6 +401,7 @@ define([
          * not be called before {@link TileMapServiceImageryProvider#ready} returns true.
          * @memberof TileMapServiceImageryProvider.prototype
          * @type {Rectangle}
+         * @readonly
          */
         rectangle : {
             get : function() {
@@ -416,6 +422,7 @@ define([
          * not be called before {@link TileMapServiceImageryProvider#ready} returns true.
          * @memberof TileMapServiceImageryProvider.prototype
          * @type {TileDiscardPolicy}
+         * @readonly
          */
         tileDiscardPolicy : {
             get : function() {
@@ -435,6 +442,7 @@ define([
          * are passed an instance of {@link TileProviderError}.
          * @memberof TileMapServiceImageryProvider.prototype
          * @type {Event}
+         * @readonly
          */
         errorEvent : {
             get : function() {
@@ -446,6 +454,7 @@ define([
          * Gets a value indicating whether or not the provider is ready for use.
          * @memberof TileMapServiceImageryProvider.prototype
          * @type {Boolean}
+         * @readonly
          */
         ready : {
             get : function() {
@@ -458,6 +467,7 @@ define([
          * the source of the imagery.  This function should not be called before {@link TileMapServiceImageryProvider#ready} returns true.
          * @memberof TileMapServiceImageryProvider.prototype
          * @type {Credit}
+         * @readonly
          */
         credit : {
             get : function() {
@@ -473,6 +483,7 @@ define([
          * and texture upload time are reduced.
          * @memberof TileMapServiceImageryProvider.prototype
          * @type {Boolean}
+         * @readonly
          */
         hasAlphaChannel : {
             get : function() {
@@ -516,6 +527,24 @@ define([
 
         var url = buildImageUrl(this, x, y, level);
         return ImageryProvider.loadImage(this, url);
+    };
+
+    /**
+     * Picking features is not currently supported by this imagery provider, so this function simply returns
+     * undefined.
+     *
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level.
+     * @param {Number} longitude The longitude at which to pick features.
+     * @param {Number} latitude  The latitude at which to pick features.
+     * @return {Promise} A promise for the picked features that will resolve when the asynchronous
+     *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
+     *                   instances.  The array may be empty if no features are found at the given location.
+     *                   It may also be undefined if picking is not supported.
+     */
+    TileMapServiceImageryProvider.prototype.pickFeatures = function() {
+        return undefined;
     };
 
     return TileMapServiceImageryProvider;

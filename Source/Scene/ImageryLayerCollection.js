@@ -7,6 +7,8 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/Math',
+        '../Core/Rectangle',
+        '../ThirdParty/when',
         './ImageryLayer'
     ], function(
         defaultValue,
@@ -16,6 +18,8 @@ define([
         DeveloperError,
         Event,
         CesiumMath,
+        Rectangle,
+        when,
         ImageryLayer) {
     "use strict";
 
@@ -174,7 +178,7 @@ define([
         destroy = defaultValue(destroy, true);
 
         var layers = this._layers;
-        for ( var i = 0, len = layers.length; i < len; i++) {
+        for (var i = 0, len = layers.length; i < len; i++) {
             var layer = layers[i];
             this.layerRemoved.raiseEvent(layer, i);
 
@@ -327,6 +331,112 @@ define([
         this._update();
 
         this.layerMoved.raiseEvent(layer, 0, index);
+    };
+
+    /**
+     * Asynchronously determines the imagery layer features that are intersected by a pick ray.  The intersected imagery
+     * layer features are found by invoking {@link ImageryProvider#pickFeatures} for each imagery layer tile intersected
+     * by the pick ray.  To compute a pick ray from a location on the screen, use {@link Camera.getPickRay}.
+     *
+     * @param {Ray} ray The ray to test for intersection.
+     * @param {Scene} scene The scene.
+     * @return {Promise|ImageryLayerFeatureInfo[]} A promise that resolves to an array of features intersected by the pick ray.
+     *                                             If it can be quickly determined that no features are intersected (for example,
+     *                                             because no active imagery providers support {@link ImageryProvider#pickFeatures}
+     *                                             or because the pick ray does not intersect the surface), this function will
+     *                                             return undefined.
+     *
+     * @example
+     * var pickRay = viewer.scene.camera.getPickRay(windowPosition);
+     * var featuresPromise = viewer.scene.imageryLayers.pickImageryLayerFeatures(pickRay, viewer.scene);
+     * if (!Cesium.defined(featuresPromise)) {
+     *     console.log('No features picked.');
+     * } else {
+     *     Cesium.when(featuresPromise, function(features) {
+     *         // This function is called asynchronously when the list if picked features is available.
+     *         console.log('Number of features: ' + features.length);
+     *         if (features.length > 0) {
+     *             console.log('First feature name: ' + features[0].name);
+     *             }
+     *         });
+     *     });
+     * }
+     */
+    ImageryLayerCollection.prototype.pickImageryLayerFeatures = function(ray, scene) {
+        // Find the picked location on the globe.
+        var pickedPosition = scene.globe.pick(ray, scene);
+        if (!defined(pickedPosition)) {
+            return undefined;
+        }
+
+        var pickedLocation = scene.globe.ellipsoid.cartesianToCartographic(pickedPosition);
+
+        // Find the terrain tile containing the picked location.
+        var tilesToRender = scene.globe._surface._tilesToRender;
+        var length = tilesToRender.length;
+        var pickedTile;
+
+        for (var textureIndex = 0; !defined(pickedTile) && textureIndex < tilesToRender.length; ++textureIndex) {
+            var tile = tilesToRender[textureIndex];
+            if (Rectangle.contains(tile.rectangle, pickedLocation)) {
+                pickedTile = tile;
+            }
+        }
+
+        if (!defined(pickedTile)) {
+            return undefined;
+        }
+
+        // Pick against all attached imagery tiles containing the pickedLocation.
+        var tileExtent = pickedTile.rectangle;
+        var imageryTiles = pickedTile.data.imagery;
+
+        var promises = [];
+        for (var i = imageryTiles.length - 1; i >= 0; --i) {
+            var terrainImagery = imageryTiles[i];
+            var imagery = terrainImagery.readyImagery;
+            if (!defined(imagery)) {
+                continue;
+            }
+            var provider = imagery.imageryLayer.imageryProvider;
+            if (!defined(provider.pickFeatures)) {
+                continue;
+            }
+
+            var promise = provider.pickFeatures(imagery.x, imagery.y, imagery.level, pickedLocation.longitude, pickedLocation.latitude);
+            if (!defined(promise)) {
+                continue;
+            }
+
+            promises.push(promise);
+        }
+
+        if (promises.length === 0) {
+            return undefined;
+        }
+
+        return when.all(promises, function(results) {
+            var features = [];
+
+            for (var resultIndex = 0; resultIndex < results.length; ++resultIndex) {
+                var result = results[resultIndex];
+
+                if (defined(result) && result.length > 0) {
+                    for (var featureIndex = 0; featureIndex < result.length; ++featureIndex) {
+                        var feature = result[featureIndex];
+
+                        // For features without a position, use the picked location.
+                        if (!defined(feature.position)) {
+                            feature.position = pickedLocation;
+                        }
+
+                        features.push(feature);
+                    }
+                }
+            }
+
+            return features;
+        });
     };
 
     /**

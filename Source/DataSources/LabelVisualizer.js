@@ -48,6 +48,12 @@ define([
     var translucencyByDistance = new NearFarScalar();
     var pixelOffsetScaleByDistance = new NearFarScalar();
 
+    var EntityData = function(entity) {
+        this.entity = entity;
+        this.label = undefined;
+        this.index = undefined;
+    };
+
     /**
      * A {@link Visualizer} which maps the {@link LabelGraphics} instance
      * in {@link Entity#label} to a {@link Label}.
@@ -67,15 +73,13 @@ define([
         }
         //>>includeEnd('debug');
 
-        var labelCollection = new LabelCollection();
-        scene.primitives.add(labelCollection);
         entityCollection.collectionChanged.addEventListener(LabelVisualizer.prototype._onCollectionChanged, this);
 
         this._scene = scene;
         this._unusedIndexes = [];
-        this._labelCollection = labelCollection;
+        this._labelCollection = undefined;
         this._entityCollection = entityCollection;
-        this._entitiesToVisualize = new AssociativeArray();
+        this._items = new AssociativeArray();
 
         this._onCollectionChanged(entityCollection, entityCollection.entities, [], []);
     };
@@ -94,15 +98,14 @@ define([
         }
         //>>includeEnd('debug');
 
-        var entities = this._entitiesToVisualize.values;
+        var items = this._items.values;
         var unusedIndexes = this._unusedIndexes;
-        var labelCollection = this._labelCollection;
-        for (var i = 0, len = entities.length; i < len; i++) {
-            var entity = entities[i];
+        for (var i = 0, len = items.length; i < len; i++) {
+            var item = items[i];
+            var entity = item.entity;
             var labelGraphics = entity._label;
             var text;
-            var label;
-            var labelVisualizerIndex = entity._labelVisualizerIndex;
+            var label = item.label;
             var show = entity.isAvailable(time) && Property.getValueOrDefault(labelGraphics._show, time, true);
 
             if (show) {
@@ -113,23 +116,29 @@ define([
 
             if (!show) {
                 //don't bother creating or updating anything else
-                cleanEntity(entity, labelCollection, unusedIndexes);
+                returnLabel(item, unusedIndexes);
                 continue;
             }
 
-            if (!defined(labelVisualizerIndex)) {
+            if (!defined(label)) {
+                var labelCollection = this._labelCollection;
+                if (!defined(labelCollection)) {
+                    labelCollection = new LabelCollection();
+                    this._labelCollection = labelCollection;
+                    this._scene.primitives.add(labelCollection);
+                }
+
                 var length = unusedIndexes.length;
                 if (length > 0) {
-                    labelVisualizerIndex = unusedIndexes.pop();
-                    label = labelCollection.get(labelVisualizerIndex);
+                    var index = unusedIndexes.pop();
+                    item.index = index;
+                    label = labelCollection.get(index);
                 } else {
-                    labelVisualizerIndex = labelCollection.length;
                     label = labelCollection.add();
+                    item.index = labelCollection.length - 1;
                 }
-                entity._labelVisualizerIndex = labelVisualizerIndex;
                 label.id = entity;
-            } else {
-                label = labelCollection.get(labelVisualizerIndex);
+                item.label = label;
             }
 
             label.show = true;
@@ -164,56 +173,54 @@ define([
      * Removes and destroys all primitives created by this instance.
      */
     LabelVisualizer.prototype.destroy = function() {
-        var entityCollection = this._entityCollection;
-        entityCollection.collectionChanged.removeEventListener(LabelVisualizer.prototype._onCollectionChanged, this);
-
-        var entities = entityCollection.entities;
-        var length = entities.length;
-        for (var i = 0; i < length; i++) {
-            entities[i]._labelVisualizerIndex = undefined;
+        this._entityCollection.collectionChanged.removeEventListener(LabelVisualizer.prototype._onCollectionChanged, this);
+        if (defined(this._labelCollection)) {
+            this._scene.primitives.remove(this._labelCollection);
         }
-        this._scene.primitives.remove(this._labelCollection);
         return destroyObject(this);
     };
 
     LabelVisualizer.prototype._onCollectionChanged = function(entityCollection, added, removed, changed) {
         var i;
         var entity;
-        var labelCollection = this._labelCollection;
         var unusedIndexes = this._unusedIndexes;
-        var entities = this._entitiesToVisualize;
+        var items = this._items;
 
         for (i = added.length - 1; i > -1; i--) {
             entity = added[i];
             if (defined(entity._label) && defined(entity._position)) {
-                entities.set(entity.id, entity);
+                items.set(entity.id, new EntityData(entity));
             }
         }
 
         for (i = changed.length - 1; i > -1; i--) {
             entity = changed[i];
             if (defined(entity._label) && defined(entity._position)) {
-                entities.set(entity.id, entity);
+                if (!items.contains(entity.id)) {
+                    items.set(entity.id, new EntityData(entity));
+                }
             } else {
-                cleanEntity(entity, labelCollection, unusedIndexes);
-                entities.remove(entity.id);
+                returnLabel(items.get(entity.id), unusedIndexes);
+                items.remove(entity.id);
             }
         }
 
         for (i = removed.length - 1; i > -1; i--) {
             entity = removed[i];
-            cleanEntity(entity, labelCollection, unusedIndexes);
-            entities.remove(entity.id);
+            returnLabel(items.get(entity.id), unusedIndexes);
+            items.remove(entity.id);
         }
     };
 
-    function cleanEntity(entity, collection, unusedIndexes) {
-        var labelVisualizerIndex = entity._labelVisualizerIndex;
-        if (defined(labelVisualizerIndex)) {
-            var label = collection.get(labelVisualizerIndex);
-            label.show = false;
-            unusedIndexes.push(labelVisualizerIndex);
-            entity._labelVisualizerIndex = undefined;
+    function returnLabel(item, unusedIndexes) {
+        if (defined(item)) {
+            var label = item.label;
+            if (defined(label)) {
+                unusedIndexes.push(item.index);
+                label.show = false;
+                item.label = undefined;
+                item.index = -1;
+            }
         }
     }
 

@@ -2,7 +2,6 @@
 defineSuite([
         'Core/BoundingRectangle',
         'Core/Color',
-        'Core/FeatureDetection',
         'Core/IndexDatatype',
         'Core/PrimitiveType',
         'Core/WindingOrder',
@@ -14,7 +13,6 @@ defineSuite([
     ], 'Renderer/Draw', function(
         BoundingRectangle,
         Color,
-        FeatureDetection,
         IndexDatatype,
         PrimitiveType,
         WindingOrder,
@@ -360,11 +358,6 @@ defineSuite([
     });
 
     it('draws with blend color', function() {
-        if (FeatureDetection.isInternetExplorer()) {
-            // blendColor is not supported in IE 11.0.8
-            return;
-        }
-
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }';
         sp = context.createShaderProgram(vs, fs);
@@ -548,12 +541,6 @@ defineSuite([
     });
 
     it('draws with depth range', function() {
-        if (FeatureDetection.isInternetExplorer()) {
-            // gl_DepthRange is not supported in IE 11.0.8.
-            // When needed, Cesium will fully workaround this with czm_depthRange.
-            return;
-        }
-
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(gl_DepthRange.near, gl_DepthRange.far, 0.0, 1.0); }';
         sp = context.createShaderProgram(vs, fs);
@@ -646,11 +633,6 @@ defineSuite([
     it('draws with sample coverage', function() {
         if (!context.antialias) {
             // Sample coverage requires antialiasing.
-            return;
-        }
-
-        if (FeatureDetection.isInternetExplorer()) {
-            // sampleCoverage is not supported in IE 11.0.8
             return;
         }
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
-    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Draw a sphere.">
     <meta name="cesium-sandcastle-labels" content="Geometries">
     <title>Cesium Demo</title>
@@ -29,7 +29,7 @@ function startup(Cesium) {
 //Sandcastle_Begin
 // Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
-var primitives = viewer.scene.primitives;
+var scene = viewer.scene;
 
 // Draw a red sphere and position it on the globe surface.
 
@@ -57,7 +57,7 @@ var sphereInstance = new Cesium.GeometryInstance({
     }
 });
 // Add the sphere instance to primitives
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : sphereInstance,
     appearance : new Cesium.PerInstanceColorAppearance({
         translucent : false,

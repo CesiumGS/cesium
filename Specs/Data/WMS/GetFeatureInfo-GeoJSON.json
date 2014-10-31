@@ -1,0 +1,34 @@
+{
+    "type": "FeatureCollection",
+    "features": [{
+        "type": "Feature",
+        "id": "bores.641",
+        "geometry": {
+            "type": "Point",
+            "coordinates": [145.91299, -30.19445]
+        },
+        "geometry_name": "the_geom",
+        "properties": {
+            "OBJECTID": 2956,
+            "FEATTYPE": "Bore",
+            "NAME": "TOP TANK",
+            "FEATREL": "1980-12-31T13:00:00Z",
+            "ATTRREL": "1980-12-31T13:00:00Z",
+            "PLANACC": 100,
+            "SOURCE": "GEOSCIENCE AUSTRALIA",
+            "CREATED": "2006-05-08T14:00:00Z",
+            "RETIRED": null,
+            "PID": 527738,
+            "SYMBOL": 11,
+            "FEATWIDTH": 0,
+            "ORIENTATN": 0,
+            "TEXTNOTE": ""
+        }
+    }],
+    "crs": {
+        "type": "EPSG",
+        "properties": {
+            "code": "4326"
+        }
+    }
+}

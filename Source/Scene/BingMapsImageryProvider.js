@@ -56,6 +56,9 @@ define([
      *        By default, tiles are loaded using the same protocol as the page.
      * @param {String} [options.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps
      *        imagery to load.
+     * @param {String} [options.culture=''] The culture to use when requesting Bing Maps imagery. Not
+     *        all cultures are supported. See {@link http://msdn.microsoft.com/en-us/library/hh441729.aspx}
+     *        for information on the supported cultures.
      * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
      *        is invalid and should be discarded.  If this value is not specified, a default
      *        {@link DiscardMissingTileImagePolicy} is used which requests
@@ -100,6 +103,7 @@ define([
         this._url = options.url;
         this._tileProtocol = options.tileProtocol;
         this._mapStyle = defaultValue(options.mapStyle, BingMapsStyle.AERIAL);
+        this._culture = defaultValue(options.culture, '');
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._proxy = options.proxy;
         this._credit = new Credit('Bing Imagery', BingMapsImageryProvider._logoData, 'http://www.bing.com');
@@ -144,7 +148,7 @@ define([
             that._tileHeight = resource.imageHeight;
             that._maximumLevel = resource.zoomMax - 1;
             that._imageUrlSubdomains = resource.imageUrlSubdomains;
-            that._imageUrlTemplate = resource.imageUrl.replace('{culture}', '');
+            that._imageUrlTemplate = resource.imageUrl.replace('{culture}', that._culture);
 
             var tileProtocol = that._tileProtocol;
             if (!defined(tileProtocol)) {
@@ -212,6 +216,7 @@ define([
          * Gets the name of the BingMaps server url hosting the imagery.
          * @memberof BingMapsImageryProvider.prototype
          * @type {String}
+         * @readonly
          */
         url : {
             get : function() {
@@ -223,6 +228,7 @@ define([
          * Gets the proxy used by this provider.
          * @memberof BingMapsImageryProvider.prototype
          * @type {Proxy}
+         * @readonly
          */
         proxy : {
             get : function() {
@@ -235,6 +241,7 @@ define([
          * Gets the Bing Maps key.
          * @memberof BingMapsImageryProvider.prototype
          * @type {String}
+         * @readonly
          */
         key : {
             get : function() {
@@ -246,6 +253,7 @@ define([
          * Gets the type of Bing Maps imagery to load.
          * @memberof BingMapsImageryProvider.prototype
          * @type {BingMapsStyle}
+         * @readonly
          */
         mapStyle : {
             get : function() {
@@ -254,10 +262,25 @@ define([
         },
 
         /**
+         * The culture to use when requesting Bing Maps imagery. Not
+         * all cultures are supported. See {@link http://msdn.microsoft.com/en-us/library/hh441729.aspx}
+         * for information on the supported cultures.
+         * @memberof BingMapsImageryProvider.prototype
+         * @type {String}
+         * @readonly
+         */
+        culture : {
+            get : function() {
+                return this._culture;
+            }
+        },
+
+        /**
          * Gets the width of each tile, in pixels. This function should
          * not be called before {@link BingMapsImageryProvider#ready} returns true.
          * @memberof BingMapsImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         tileWidth : {
             get : function() {
@@ -276,6 +299,7 @@ define([
          * not be called before {@link BingMapsImageryProvider#ready} returns true.
          * @memberof BingMapsImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         tileHeight: {
             get : function() {
@@ -295,6 +319,7 @@ define([
          * not be called before {@link BingMapsImageryProvider#ready} returns true.
          * @memberof BingMapsImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         maximumLevel : {
             get : function() {
@@ -313,6 +338,7 @@ define([
          * not be called before {@link BingMapsImageryProvider#ready} returns true.
          * @memberof BingMapsImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         minimumLevel : {
             get : function() {
@@ -331,6 +357,7 @@ define([
          * not be called before {@link BingMapsImageryProvider#ready} returns true.
          * @memberof BingMapsImageryProvider.prototype
          * @type {TilingScheme}
+         * @readonly
          */
         tilingScheme : {
             get : function() {
@@ -349,6 +376,7 @@ define([
          * not be called before {@link BingMapsImageryProvider#ready} returns true.
          * @memberof BingMapsImageryProvider.prototype
          * @type {Rectangle}
+         * @readonly
          */
         rectangle : {
             get : function() {
@@ -369,6 +397,7 @@ define([
          * not be called before {@link BingMapsImageryProvider#ready} returns true.
          * @memberof BingMapsImageryProvider.prototype
          * @type {TileDiscardPolicy}
+         * @readonly
          */
         tileDiscardPolicy : {
             get : function() {
@@ -388,6 +417,7 @@ define([
          * are passed an instance of {@link TileProviderError}.
          * @memberof BingMapsImageryProvider.prototype
          * @type {Event}
+         * @readonly
          */
         errorEvent : {
             get : function() {
@@ -399,6 +429,7 @@ define([
          * Gets a value indicating whether or not the provider is ready for use.
          * @memberof BingMapsImageryProvider.prototype
          * @type {Boolean}
+         * @readonly
          */
         ready : {
             get : function() {
@@ -411,6 +442,7 @@ define([
          * the source of the imagery.  This function should not be called before {@link BingMapsImageryProvider#ready} returns true.
          * @memberof BingMapsImageryProvider.prototype
          * @type {Credit}
+         * @readonly
          */
         credit : {
             get : function() {
@@ -426,6 +458,7 @@ define([
          * and texture upload time.
          * @memberof BingMapsImageryProvider.prototype
          * @type {Boolean}
+         * @readonly
          */
         hasAlphaChannel : {
             get : function() {
@@ -478,6 +511,24 @@ define([
 
         var url = buildImageUrl(this, x, y, level);
         return ImageryProvider.loadImage(this, url);
+    };
+
+    /**
+     * Picking features is not currently supported by this imagery provider, so this function simply returns
+     * undefined.
+     *
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level.
+     * @param {Number} longitude The longitude at which to pick features.
+     * @param {Number} latitude  The latitude at which to pick features.
+     * @return {Promise} A promise for the picked features that will resolve when the asynchronous
+     *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
+     *                   instances.  The array may be empty if no features are found at the given location.
+     *                   It may also be undefined if picking is not supported.
+     */
+    BingMapsImageryProvider.prototype.pickFeatures = function() {
+        return undefined;
     };
 
     BingMapsImageryProvider._logoData = 'data:image/png;base64,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';

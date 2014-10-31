@@ -54,7 +54,7 @@ defineSuite([
         var oldLoad = loadWithXhr.load;
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             if (url.indexOf('layer.json') >= 0) {
-                return loadWithXhr.defaultLoad(path, responseType, method, data, headers, deferred);
+                loadWithXhr.defaultLoad(path, responseType, method, data, headers, deferred);
             } else {
                 return oldLoad(url, responseType, method, data, headers, deferred, overrideMimeType);
             }
@@ -64,7 +64,6 @@ defineSuite([
     function returnVertexNormalTileJson() {
         return returnTileJson('Data/CesiumTerrainTileJson/VertexNormals.tile.json');
     }
-
 
     /**
      * Repeatedly calls update until the load queue is empty.  You must wrap any code to follow
@@ -100,6 +99,26 @@ defineSuite([
         });
     });
 
+    it('renders with showWaterEffect set to false', function() {
+        globe.showWaterEffect = false;
+
+        var layerCollection = globe.imageryLayers;
+        layerCollection.removeAll();
+        layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
+
+        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+
+        updateUntilDone(globe);
+
+        runs(function() {
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+            render(context, frameState, globe);
+            expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        });
+    });
+
     it('renders terrain with enableLighting', function() {
         globe.enableLighting = true;
 
@@ -108,7 +127,7 @@ defineSuite([
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            return loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.vertexnormals.terrain', responseType, method, data, headers, deferred);
+            loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.vertexnormals.terrain', responseType, method, data, headers, deferred);
         };
 
         returnVertexNormalTileJson();

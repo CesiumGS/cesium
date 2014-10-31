@@ -12,6 +12,7 @@ define([
         './Event',
         './GeographicTilingScheme',
         './HeightmapTerrainData',
+        './IndexDatatype',
         './loadArrayBuffer',
         './loadJson',
         './QuantizedMeshTerrainData',
@@ -32,6 +33,7 @@ define([
         Event,
         GeographicTilingScheme,
         HeightmapTerrainData,
+        IndexDatatype,
         loadArrayBuffer,
         loadJson,
         QuantizedMeshTerrainData,
@@ -274,11 +276,11 @@ define([
         var boundingSphereElements = cartesian3Elements + 1;
         var cartesian3Length = Float64Array.BYTES_PER_ELEMENT * cartesian3Elements;
         var boundingSphereLength = Float64Array.BYTES_PER_ELEMENT * boundingSphereElements;
-        var vertexElements = 6;
         var encodedVertexElements = 3;
         var encodedVertexLength = Uint16Array.BYTES_PER_ELEMENT * encodedVertexElements;
         var triangleElements = 3;
-        var triangleLength = Uint16Array.BYTES_PER_ELEMENT * triangleElements;
+        var bytesPerIndex = Uint16Array.BYTES_PER_ELEMENT;
+        var triangleLength = bytesPerIndex * triangleElements;
 
         var view = new DataView(buffer);
         var center = new Cartesian3(view.getFloat64(pos, true), view.getFloat64(pos + 8, true), view.getFloat64(pos + 16, true));
@@ -303,8 +305,9 @@ define([
         pos += vertexCount * encodedVertexLength;
 
         if (vertexCount > 64 * 1024) {
-            // More than 64k vertices, so indices are 32-bit.  Not supported right now.
-            throw new RuntimeError('CesiumTerrainProvider currently does not support tiles with more than 65536 vertices.');
+            // More than 64k vertices, so indices are 32-bit.
+            bytesPerIndex = Uint32Array.BYTES_PER_ELEMENT;
+            triangleLength = bytesPerIndex * triangleElements;
         }
 
         // Decode the vertex buffer.
@@ -331,9 +334,14 @@ define([
             heightBuffer[i] = height;
         }
 
+        // skip over any additional padding that was added for 2/4 byte alignment
+        if (pos % bytesPerIndex !== 0) {
+            pos += (bytesPerIndex - (pos % bytesPerIndex));
+        }
+
         var triangleCount = view.getUint32(pos, true);
         pos += Uint32Array.BYTES_PER_ELEMENT;
-        var indices = new Uint16Array(buffer, pos, triangleCount * triangleElements);
+        var indices = IndexDatatype.createTypedArrayFromArrayBuffer(vertexCount, buffer, pos, triangleCount * triangleElements);
         pos += triangleCount * triangleLength;
 
         // High water mark decoding based on decompressIndices_ in webgl-loader's loader.js.
@@ -350,23 +358,23 @@ define([
 
         var westVertexCount = view.getUint32(pos, true);
         pos += Uint32Array.BYTES_PER_ELEMENT;
-        var westIndices = new Uint16Array(buffer, pos, westVertexCount);
-        pos += westVertexCount * Uint16Array.BYTES_PER_ELEMENT;
+        var westIndices = IndexDatatype.createTypedArrayFromArrayBuffer(vertexCount, buffer, pos, westVertexCount);
+        pos += westVertexCount * bytesPerIndex;
 
         var southVertexCount = view.getUint32(pos, true);
         pos += Uint32Array.BYTES_PER_ELEMENT;
-        var southIndices = new Uint16Array(buffer, pos, southVertexCount);
-        pos += southVertexCount * Uint16Array.BYTES_PER_ELEMENT;
+        var southIndices = IndexDatatype.createTypedArrayFromArrayBuffer(vertexCount, buffer, pos, southVertexCount);
+        pos += southVertexCount * bytesPerIndex;
 
         var eastVertexCount = view.getUint32(pos, true);
         pos += Uint32Array.BYTES_PER_ELEMENT;
-        var eastIndices = new Uint16Array(buffer, pos, eastVertexCount);
-        pos += eastVertexCount * Uint16Array.BYTES_PER_ELEMENT;
+        var eastIndices = IndexDatatype.createTypedArrayFromArrayBuffer(vertexCount, buffer, pos, eastVertexCount);
+        pos += eastVertexCount * bytesPerIndex;
 
         var northVertexCount = view.getUint32(pos, true);
         pos += Uint32Array.BYTES_PER_ELEMENT;
-        var northIndices = new Uint16Array(buffer, pos, northVertexCount);
-        pos += northVertexCount * Uint16Array.BYTES_PER_ELEMENT;
+        var northIndices = IndexDatatype.createTypedArrayFromArrayBuffer(vertexCount, buffer, pos, northVertexCount);
+        pos += northVertexCount * bytesPerIndex;
 
         var encodedNormalBuffer;
         while (pos < view.byteLength) {
@@ -635,6 +643,30 @@ define([
 
         return false;
     }
+
+    /**
+     * Determines whether data for a tile is available to be loaded.
+     *
+     * @param {Number} x The X coordinate of the tile for which to request geometry.
+     * @param {Number} y The Y coordinate of the tile for which to request geometry.
+     * @param {Number} level The level of the tile for which to request geometry.
+     * @returns {Boolean} Undefined if not supported, otherwise true or false.
+     */
+    CesiumTerrainProvider.prototype.getTileDataAvailable = function(x, y, level) {
+        var available = this._availableTiles;
+
+        if (!available || available.length === 0) {
+            return undefined;
+        } else {
+            if (level >= available.length) {
+                return false;
+            }
+            var levelAvailable = available[level];
+            var yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
+            var tmsY = (yTiles - y - 1);
+            return isTileInRange(levelAvailable, x, tmsY);
+        }
+    };
 
     return CesiumTerrainProvider;
 });

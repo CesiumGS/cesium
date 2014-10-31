@@ -113,12 +113,6 @@
     cursor: pointer;
 }
 
-.cesium-cesiumInspector-performanceDisplay {
-    position: absolute;
-    right: 10px;
-    top: 50px;
-}
-
 .cesium-cesiumInspector-tileText {
     padding-bottom: 10px;
     border-bottom: 1px solid #aaa;

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
-    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Draw the outline of a box.">
     <meta name="cesium-sandcastle-labels" content="Geometries">
     <title>Cesium Demo</title>
@@ -30,7 +30,6 @@ function startup(Cesium) {
 // Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
-var primitives = scene.primitives;
    
 // Draw the outline of a box.
 
@@ -60,7 +59,7 @@ var boxOutlineInstance = new Cesium.GeometryInstance({
 });
 
 // Add the geometry instance to primitives.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : boxOutlineInstance,
     appearance : new Cesium.PerInstanceColorAppearance({
         flat : true,

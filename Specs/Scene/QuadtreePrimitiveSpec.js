@@ -130,4 +130,34 @@ defineSuite([
         quadtree.update(context, frameState, []);
         expect(calls).toBe(2);
     });
+
+    it('forEachLoadedTile does not enumerate tiles in the START state', function() {
+        var tileProvider = createSpyTileProvider();
+        tileProvider.getReady.andReturn(true);
+        tileProvider.computeTileVisibility.andReturn(Visibility.FULL);
+        tileProvider.computeDistanceToTile.andReturn(1e-15);
+
+        // Load the root tiles.
+        tileProvider.loadTile.andCallFake(function(context, frameState, tile) {
+            tile.state = QuadtreeTileLoadState.DONE;
+            tile.renderable = true;
+        });
+
+        var quadtree = new QuadtreePrimitive({
+            tileProvider : tileProvider
+        });
+
+        quadtree.update(context, frameState, []);
+
+        // Don't load further tiles.
+        tileProvider.loadTile.andCallFake(function(context, frameState, tile) {
+            tile.state = QuadtreeTileLoadState.START;
+        });
+
+        quadtree.update(context, frameState, []);
+
+        quadtree.forEachLoadedTile(function(tile) {
+            expect(tile.state).not.toBe(QuadtreeTileLoadState.START);
+        });
+    });
 });

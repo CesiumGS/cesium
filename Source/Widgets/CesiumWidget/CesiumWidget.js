@@ -63,23 +63,32 @@ define([
             }
 
             if (widget._useDefaultRenderLoop) {
-                var targetFrameRate = widget._targetFrameRate;
-                if (!defined(targetFrameRate)) {
-                    widget.resize();
-                    widget.render();
-                    requestAnimationFrame(render);
-                } else {
-                    var lastFrameTime = widget._lastFrameTime;
-                    var interval = 1000.0 / targetFrameRate;
-                    var now = getTimestamp();
-                    var delta = now - lastFrameTime;
-
-                    if (delta > interval) {
+                try {
+                    var targetFrameRate = widget._targetFrameRate;
+                    if (!defined(targetFrameRate)) {
                         widget.resize();
                         widget.render();
-                        widget._lastFrameTime = now - (delta % interval);
+                        requestAnimationFrame(render);
+                    } else {
+                        var lastFrameTime = widget._lastFrameTime;
+                        var interval = 1000.0 / targetFrameRate;
+                        var now = getTimestamp();
+                        var delta = now - lastFrameTime;
+
+                        if (delta > interval) {
+                            widget.resize();
+                            widget.render();
+                            widget._lastFrameTime = now - (delta % interval);
+                        }
+                        requestAnimationFrame(render);
                     }
-                    requestAnimationFrame(render);
+                } catch (error) {
+                    widget._useDefaultRenderLoop = false;
+                    widget._renderLoopRunning = false;
+                    if (widget._showRenderLoopErrors) {
+                        var title = 'An error occurred while rendering.  Rendering has stopped.';
+                        widget.showErrorPanel(title, undefined, error);
+                    }
                 }
             } else {
                 widget._renderLoopRunning = false;
@@ -138,6 +147,7 @@ define([
      * @param {SkyBox} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      * @param {Boolean} [options.scene3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
+     * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
      * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
      * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
@@ -222,7 +232,7 @@ define([
         this._showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
         this._resolutionScale = 1.0;
         this._forceResize = false;
-        this._clock = defaultValue(options.clock, new Clock());
+        this._clock = defined(options.clock) ? options.clock : new Clock();
         this._lastFrameTime = undefined;
 
         configureCanvasSize(this);
@@ -233,6 +243,7 @@ define([
                 contextOptions : options.contextOptions,
                 creditContainer : creditContainer,
                 mapProjection : options.mapProjection,
+                orderIndependentTranslucency : options.orderIndependentTranslucency,
                 scene3DOnly : defaultValue(options.scene3DOnly, false)
             });
             this._scene = scene;
@@ -310,8 +321,7 @@ define([
                 that._renderLoopRunning = false;
                 if (that._showRenderLoopErrors) {
                     var title = 'An error occurred while rendering.  Rendering has stopped.';
-                    var message = 'This may indicate an incompatibility with your hardware or web browser, or it may indicate a bug in the application.  Visit <a href="http://get.webgl.org">http://get.webgl.org</a> to verify that your web browser and hardware support WebGL.  Consider trying a different web browser or updating your video drivers.  Detailed error information is below:';
-                    that.showErrorPanel(title, message, error);
+                    that.showErrorPanel(title, undefined, error);
                 }
             });
         } catch (error) {
@@ -505,10 +515,12 @@ define([
             window.addEventListener('resize', resizeCallback, false);
         }
 
-        var errorMessage = document.createElement('div');
-        errorMessage.className = 'cesium-widget-errorPanel-message';
-        errorMessage.innerHTML = '<p>' + message + '</p>';
-        errorPanelScroller.appendChild(errorMessage);
+        if (defined(message)) {
+            var errorMessage = document.createElement('div');
+            errorMessage.className = 'cesium-widget-errorPanel-message';
+            errorMessage.innerHTML = '<p>' + message + '</p>';
+            errorPanelScroller.appendChild(errorMessage);
+        }
 
         var errorDetails = '(no error details available)';
         if (defined(error)) {

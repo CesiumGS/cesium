@@ -3,7 +3,6 @@ defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
-        'Core/Cartographic',
         'Core/defaultValue',
         'Core/Ellipsoid',
         'Core/Math',
@@ -30,7 +29,6 @@ defineSuite([
         BoundingSphere,
         Cartesian2,
         Cartesian3,
-        Cartographic,
         defaultValue,
         Ellipsoid,
         CesiumMath,
@@ -279,10 +277,12 @@ defineSuite([
         var polygon = new Polygon();
         polygon.ellipsoid = ellipsoid;
         polygon.granularity = CesiumMath.toRadians(20.0);
-        polygon.positions = [ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-degree, -degree, 0.0)),
-                              ellipsoid.cartographicToCartesian(Cartographic.fromDegrees( degree, -degree, 0.0)),
-                              ellipsoid.cartographicToCartesian(Cartographic.fromDegrees( degree,  degree, 0.0)),
-                              ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-degree,  degree, 0.0))];
+        polygon.positions = Cartesian3.fromDegreesArray([
+            -degree, -degree,
+            degree, -degree,
+            degree,  degree,
+            -degree,  degree
+        ]);
         polygon.asynchronous = false;
         polygon.material.translucent = false;
         return polygon;
@@ -342,7 +342,7 @@ defineSuite([
     it('label occlusion', function() {
         var labels = new LabelCollection();
         labels.add({
-            position : Ellipsoid.WGS84.cartographicToCartesian(new Cartographic.fromDegrees(-75.10, 39.57)),
+            position : Cartesian3.fromDegrees(-75.10, 39.57),
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
@@ -378,7 +378,7 @@ defineSuite([
         var billboards = new BillboardCollection();
         billboards.textureAtlas = atlas;
         billboards.add({
-            position : Ellipsoid.WGS84.cartographicToCartesian(new Cartographic.fromDegrees(-75.10, 39.57)),
+            position : Cartesian3.fromDegrees(-75.10, 39.57),
             image : greenImage
         });
 
@@ -411,9 +411,9 @@ defineSuite([
 
         var polylines = new PolylineCollection();
         polylines.add({
-            positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-                new Cartographic.fromDegrees(-75.10, 39.57),
-                new Cartographic.fromDegrees(-80.12, 25.46)
+            positions : Cartesian3.fromDegreesArray([
+                -75.10, 39.57,
+                -80.12, 25.46
             ]),
             material : material
         });

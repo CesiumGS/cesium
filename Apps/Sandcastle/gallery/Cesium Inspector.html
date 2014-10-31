@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
-    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Use the cesium inspector as a debugging tool for different primitives.">
     <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
@@ -36,7 +36,6 @@ var scene = viewer.scene;
 var globe = scene.globe;
 globe.depthTestAgainstTerrain = true;
 var ellipsoid = globe.ellipsoid;
-var primitives = scene.primitives;
 
 var cesiumTerrainProviderHeightmaps = new Cesium.CesiumTerrainProvider({
     url : '//cesiumjs.org/smallterrain',
@@ -49,7 +48,7 @@ scene.terrainProvider = cesiumTerrainProviderHeightmaps;
 viewer.extend(Cesium.viewerCesiumInspectorMixin);
 
 //Add Primitives   
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : new Cesium.GeometryInstance({
         geometry : Cesium.BoxGeometry.fromDimensions({
             vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
@@ -67,7 +66,7 @@ primitives.add(new Cesium.Primitive({
     })
 }));
        
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : new Cesium.GeometryInstance({
         geometry : new Cesium.RectangleGeometry({
             rectangle : Cesium.Rectangle.fromDegrees(-100.0, 30.0, -93.0, 37.0),
@@ -81,12 +80,11 @@ primitives.add(new Cesium.Primitive({
     appearance : new Cesium.PerInstanceColorAppearance()
 }));
 
-var billboards = new Cesium.BillboardCollection();
+var billboards = scene.primitives.add(new Cesium.BillboardCollection());
 billboards.add({
     position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883, 150000),
     image : '../images/Cesium_Logo_overlay.png'
 });
-scene.primitives.add(billboards);
     
 //Sandcastle_End
     Sandcastle.finishedLoading();

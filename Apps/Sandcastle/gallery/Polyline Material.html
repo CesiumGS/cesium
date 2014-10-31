@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
-    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Draw polylines with different material appearances.">
     <meta name="cesium-sandcastle-labels" content="Appearances">
     <title>Cesium Demo</title>
@@ -28,10 +28,10 @@ function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
-var primitives = viewer.scene.primitives;
+var scene = viewer.scene;
 
 // Polyline Glow
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : new Cesium.GeometryInstance({
         geometry : new Cesium.PolylineGeometry({
             positions : Cesium.Cartesian3.fromDegreesArray([
@@ -48,7 +48,7 @@ primitives.add(new Cesium.Primitive({
 }));
 
 // Polyline Arrow
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : new Cesium.GeometryInstance({
         geometry : new Cesium.PolylineGeometry({
             positions : Cesium.Cartesian3.fromDegreesArray([
@@ -65,7 +65,7 @@ primitives.add(new Cesium.Primitive({
 }));
 
 // Polyline Outline
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : new Cesium.GeometryInstance({
         geometry : new Cesium.PolylineGeometry({
             positions : Cesium.Cartesian3.fromDegreesArray([

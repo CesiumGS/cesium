@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/AttributeCompression',
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -7,11 +8,12 @@ define([
         '../Core/defined',
         '../Core/Ellipsoid',
         '../Core/EllipsoidalOccluder',
+        '../Core/IndexDatatype',
         '../Core/Intersections2D',
         '../Core/Math',
-        '../Core/Oct',
         './createTaskProcessorWorker'
     ], function(
+        AttributeCompression,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -19,9 +21,9 @@ define([
         defined,
         Ellipsoid,
         EllipsoidalOccluder,
+        IndexDatatype,
         Intersections2D,
         CesiumMath,
-        Oct,
         createTaskProcessorWorker) {
     "use strict";
 
@@ -251,7 +253,8 @@ define([
             vertices[start + i] = maxShort * (heightBuffer[i] - minimumHeight) / heightRange;
         }
 
-        var indicesTypedArray = new Uint16Array(indices);
+        var indicesTypedArray = IndexDatatype.createTypedArray(uBuffer.length, indices);
+
         var encodedNormals;
         if (hasVertexNormals) {
             var normalArray = new Uint8Array(normalBuffer);
@@ -388,12 +391,12 @@ define([
         var first = cartesianScratch1[depth];
         var second = cartesianScratch2[depth];
 
-        first = Oct.decode(vertex.first.getNormalX(), vertex.first.getNormalY(), first);
-        second = Oct.decode(vertex.second.getNormalX(), vertex.second.getNormalY(), second);
+        first = AttributeCompression.octDecode(vertex.first.getNormalX(), vertex.first.getNormalY(), first);
+        second = AttributeCompression.octDecode(vertex.second.getNormalX(), vertex.second.getNormalY(), second);
         cartesian3Scratch = Cartesian3.lerp(first, second, vertex.ratio, cartesian3Scratch);
         Cartesian3.normalize(cartesian3Scratch, cartesian3Scratch);
 
-        Oct.encode(cartesian3Scratch, result);
+        AttributeCompression.octEncode(cartesian3Scratch, result);
 
         --depth;
 

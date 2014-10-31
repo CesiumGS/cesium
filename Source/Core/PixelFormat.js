@@ -65,7 +65,6 @@ define([
          *
          * @type {Number}
          * @constant
-         * @default 0x190A
          */
         LUMINANCE_ALPHA : 0x190A,
 

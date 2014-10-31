@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
-    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Draw a wall on the globe surface.">
     <meta name="cesium-sandcastle-labels" content="Geometries">
     <title>Cesium Demo</title>
@@ -29,7 +29,7 @@ function startup(Cesium) {
 //Sandcastle_Begin
 // Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
-var primitives = viewer.scene.primitives;
+var scene = viewer.scene;
 
 // Example 1: Draw a red wall with constant min and max heights
 
@@ -42,7 +42,8 @@ var redWallInstance = new Cesium.GeometryInstance({
             -90.0, 44.0
         ]),
         maximumHeight : 200000.0,
-        minimumHeight : 100000.0
+        minimumHeight : 100000.0,
+        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
     }),
     attributes : {
         color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
@@ -62,7 +63,8 @@ var greenWallInstance = new Cesium.GeometryInstance({
             -107.0, 40.0,
             -107.0, 43.0
         ]),
-        maximumHeight : 100000.0
+        maximumHeight : 100000.0,
+        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
     }),
     attributes : {
         color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.GREEN)
@@ -93,7 +95,8 @@ var blueWallInstance = new Cesium.GeometryInstance({
     geometry : new Cesium.WallGeometry({
         positions : positions,
         maximumHeights: maximumHeights,
-        minimumHeights: minimumHeights
+        minimumHeights: minimumHeights,
+        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
         
     }),
     attributes : {
@@ -102,7 +105,7 @@ var blueWallInstance = new Cesium.GeometryInstance({
 });
 
 // Add all wall instances to primitives.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : [blueWallInstance, redWallInstance, greenWallInstance],
     appearance : new Cesium.PerInstanceColorAppearance({
         translucent : false

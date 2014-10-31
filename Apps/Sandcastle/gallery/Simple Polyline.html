@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
-    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Draw a line on the globe with varying colors.">
     <meta name="cesium-sandcastle-labels" content="Geometries">
     <title>Cesium Demo</title>
@@ -30,7 +30,6 @@ function startup(Cesium) {
 // Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
-var primitives = scene.primitives;
        
 // Example 1: Draw a yellow polyline on the globe surface.
 var yellowPolyline = new Cesium.GeometryInstance({
@@ -81,7 +80,7 @@ var perVertexPolyline = new Cesium.GeometryInstance({
 });
 
 // Add yellow polyline instances to primitives.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : yellowPolyline,
     appearance : new Cesium.PerInstanceColorAppearance({
         flat : true,
@@ -95,7 +94,7 @@ primitives.add(new Cesium.Primitive({
 }));
 
 // Add perSegment and perVertex polyline instances to primitives.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : [perSegmentPolyline, perVertexPolyline],
     appearance : new Cesium.PerInstanceColorAppearance({
         flat : true,

@@ -61,11 +61,19 @@ define([
         }
 
         this._positions = positions;
-        if (this._loop && positions.length > 2 && !Cartesian3.equals(positions[0], positions[positions.length - 1])) {
-            positions.push(Cartesian3.clone(positions[0]));
+        this._actualPositions = PolylinePipeline.removeDuplicates(positions);
+        if (!defined(this._actualPositions)) {
+            this._actualPositions = positions;
         }
 
-        this._length = positions.length;
+        if (this._loop && this._actualPositions.length > 2) {
+            if (this._actualPositions === this._positions) {
+                this._actualPositions = positions.slice();
+            }
+            this._actualPositions.push(Cartesian3.clone(this._actualPositions[0]));
+        }
+
+        this._length = this._actualPositions.length;
         this._id = options.id;
 
         var modelMatrix;
@@ -74,7 +82,7 @@ define([
         }
 
         this._modelMatrix = modelMatrix;
-        this._segments = PolylinePipeline.wrapLongitude(positions, modelMatrix);
+        this._segments = PolylinePipeline.wrapLongitude(this._actualPositions, modelMatrix);
 
         this._actualLength = undefined;
 
@@ -82,7 +90,7 @@ define([
         this._polylineCollection = polylineCollection;
         this._dirty = false;
         this._pickId = undefined;
-        this._boundingVolume = BoundingSphere.fromPoints(this._positions);
+        this._boundingVolume = BoundingSphere.fromPoints(this._actualPositions);
         this._boundingVolumeWC = BoundingSphere.transform(this._boundingVolume, this._modelMatrix);
         this._boundingVolume2D = new BoundingSphere(); // modified in PolylineCollection
     };
@@ -134,10 +142,10 @@ define([
          * @memberof Polyline.prototype
          * @type {Cartesian3[]}
          * @example
-         * polyline.positions = ellipsoid.cartographicArrayToCartesianArray([
-         *     new Cesium.Cartographic(...),
-         *     new Cesium.Cartographic(...),
-         *     new Cesium.Cartographic(...)
+         * polyline.positions = Cesium.Cartesian3.fromDegreesArray([
+         *     0.0, 0.0,
+         *     10.0, 0.0,
+         *     0.0, 20.0
          * ]);
          */
         positions : {
@@ -151,17 +159,26 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                if (this._loop && value.length > 2 && !Cartesian3.equals(value[0], value[value.length - 1])) {
-                    value.push(Cartesian3.clone(value[0]));
+                var positions = PolylinePipeline.removeDuplicates(value);
+                if (!defined(positions)) {
+                    positions = value;
                 }
 
-                if (this._positions.length !== value.length || this._positions.length !== this._length) {
+                if (this._loop && positions.length > 2) {
+                    if (positions === value) {
+                        positions = value.slice();
+                    }
+                    positions.push(Cartesian3.clone(positions[0]));
+                }
+
+                if (this._actualPositions.length !== positions.length || this._actualPositions.length !== this._length) {
                     makeDirty(this, POSITION_SIZE_INDEX);
                 }
 
                 this._positions = value;
-                this._length = value.length;
-                this._boundingVolume = BoundingSphere.fromPoints(this._positions, this._boundingVolume);
+                this._actualPositions = positions;
+                this._length = positions.length;
+                this._boundingVolume = BoundingSphere.fromPoints(this._actualPositions, this._boundingVolume);
                 this._boundingVolumeWC = BoundingSphere.transform(this._boundingVolume, this._modelMatrix, this._boundingVolumeWC);
                 makeDirty(this, POSITION_INDEX);
 
@@ -234,14 +251,21 @@ define([
                 //>>includeEnd('debug');
 
                 if (value !== this._loop) {
-                    var positions = this._positions;
+                    var positions = this._actualPositions;
                     if (value) {
                         if (positions.length > 2 && !Cartesian3.equals(positions[0], positions[positions.length - 1])) {
+                            if (positions.length === this._positions.length) {
+                                this._actualPositions = positions = this._positions.slice();
+                            }
                             positions.push(Cartesian3.clone(positions[0]));
                         }
                     } else {
                         if (positions.length > 2 && Cartesian3.equals(positions[0], positions[positions.length - 1])) {
-                            positions.pop();
+                            if (positions.length - 1 === this._positions.length) {
+                                this._actualPositions = this._positions;
+                            } else {
+                                positions.pop();
+                            }
                         }
                     }
 
@@ -283,7 +307,7 @@ define([
 
         var positionsChanged = this._propertiesChanged[POSITION_INDEX] > 0 || this._propertiesChanged[POSITION_SIZE_INDEX] > 0;
         if (!Matrix4.equals(modelMatrix, this._modelMatrix) || positionsChanged) {
-            this._segments = PolylinePipeline.wrapLongitude(this._positions, modelMatrix);
+            this._segments = PolylinePipeline.wrapLongitude(this._actualPositions, modelMatrix);
             this._boundingVolumeWC = BoundingSphere.transform(this._boundingVolume, modelMatrix, this._boundingVolumeWC);
         }
 

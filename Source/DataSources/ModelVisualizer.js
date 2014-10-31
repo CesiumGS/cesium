@@ -138,7 +138,7 @@ define([
             orientation = Property.getValueOrUndefined(entity._orientation, time, orientation);
             if (!Cartesian3.equals(position, modelData.position) || !Quaternion.equals(orientation, modelData.orientation)) {
                 if (!defined(orientation)) {
-                    Transforms.northEastDownToFixedFrame(position, scene.globe.ellipsoid, model.modelMatrix);
+                    Transforms.eastNorthUpToFixedFrame(position, scene.globe.ellipsoid, model.modelMatrix);
                 } else {
                     Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, model.modelMatrix);
                 }

@@ -1,16 +1,58 @@
 Change Log
 ==========
 
-### 1.01 - 2014-09-01
+### 1.3 - 2014-11-03
+
+* Worked around a shader compilation regression in Firefox 33 and 34 by falling back to a less precise shader on those browsers. [#2197](https://github.com/AnalyticalGraphicsInc/cesium/issues/2197)
+* Added support to the `CesiumTerrainProvider` for terrain tiles with more than 64K vertices, which is common for sub-meter terrain.
+* Added `Primitive.compressVertices`. When true (default), geometry vertices are compressed to save GPU memory.
+* Fixed a bug that caused non-base imagery layers with a limited `rectangle` to be stretched to the edges of imagery tiles. [#416](https://github.com/AnalyticalGraphicsInc/cesium/issues/416)
+* Fixed rendering polylines with duplicate positions. [#898](https://github.com/AnalyticalGraphicsInc/cesium/issues/898)
+* Fixed a bug in `Globe.pick` that caused it to return incorrect results when using terrain data with vertex normals.  The bug manifested itself as strange behavior when navigating around the surface with the mouse as well as incorrect results when using `Camera.viewRectangle`.
+* Fixed a bug in `sampleTerrain` that could cause it to produce undefined heights when sampling for a position very near the edge of a tile.
+* `ReferenceProperty` instances now retain their last value if the entity being referenced is removed from the target collection.  The reference will be automatically reattached if the target is reintroduced. 
+* Added `culture` option to `BingMapsImageryProvider` constructor.
+* Upgraded topojson from 1.6.8 to 1.6.18.
+* Upgraded Knockout from version 3.1.0 to 3.2.0.
+* Upgraded CodeMirror, used by SandCastle, from 2.24 to 4.6.
+
+### 1.2 - 2014-10-01
+
+* Deprecated
+  * Types implementing the `TerrainProvider` interface should now include the new `getTileDataAvailable` function.  The function will be required starting in Cesium 1.4.
+* Fixed model orientations to follow the same Z-up convention used throughout Cesium. There was also an orientation issue fixed in the [online model converter](http://cesiumjs.org/convertmodel.html). If you are having orientation issues after updating, try reconverting your models.
+* Fixed a bug in `Model` where the wrong animations could be used when the model was created from glTF JSON instead of a url to a glTF file.  [#2078](https://github.com/AnalyticalGraphicsInc/cesium/issues/2078)
+* Fixed a bug in `GeoJsonDataSource` which was causing polygons with height values to be drawn onto the surface.
+* Fixed a bug that could cause a crash when quickly adding and removing imagery layers.
+* Eliminated imagery artifacts at some zoom levels due to Mercator reprojection.
+* Added support for the GeoJSON [simplestyle specification](https://github.com/mapbox/simplestyle-spec). ([Sandcastle example](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=GeoJSON%20simplestyle.html))
+* Added `GeoJsonDataSource.fromUrl` to make it easy to add a data source in less code.
+* Added `PinBuilder` class for easy creation of map pins. ([Sandcastle example](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=PinBuilder.html))
+* Added `Color.brighten` and `Color.darken` to make it easy to brighten or darker a color instance.
+* Added a constructor option to `Scene`, `CesiumWidget`, and `Viewer` to disable order independent translucency.
+* Added support for WKID 102113 (equivalent to 102100) to `ArcGisMapServerImageryProvider`.
+* Added `TerrainProvider.getTileDataAvailable` to improve tile loading performance when camera starts near globe.
+* Added `Globe.showWaterEffect` to enable/disable the water effect for supported terrain providers.
+* Added `Globe.baseColor` to set the color of the globe when no imagery is available.
+* Changed default `GeoJSON` Point feature graphics to use `BillboardGraphics` with a blue map pin instead of color `PointGraphics`.
+* Cesium now ships with a version of the [maki icon set](https://www.mapbox.com/maki/) for use with `PinBuilder` and GeoJSON simplestyle support.
+* Cesium now ships with a default web.config file to simplify IIS deployment.
+
+### 1.1 - 2014-09-02
 
 * Added a new imagery provider, `WebMapTileServiceImageryProvider`, for accessing tiles on a WMTS 1.0.0 server.
-* Added `FeatureDetection.supportsWebWorkers`.
+* Added an optional `pickFeatures` function to the `ImageryProvider` interface.  With supporting imagery providers, such as `WebMapServiceImageryProvider`, it can be used to determine the rasterized features under a particular location.
+* Added `ImageryLayerCollection.pickImageryLayerFeatures`.  It determines the rasterized imagery layer features intersected by a given pick ray by querying supporting layers using `ImageryProvider.pickFeatures`.
+* Added `tileWidth`, `tileHeight`, `minimumLevel`, and `tilingScheme` parameters to the `WebMapServiceImageryProvider` constructor.
 * Added `id` property to `Scene` which is a readonly unique identifier associated with each instance.
+* Added `FeatureDetection.supportsWebWorkers`.
 * Greatly improved the performance of time-varying polylines when using DataSources.
+* `viewerEntityMixin` now automatically queries for imagery layer features on click and shows their properties in the `InfoBox` panel.
+* Fixed a bug in terrain and imagery loading that could cause an inconsistent frame rate when moving around the globe, especially on a faster internet connection.
 * Fixed a bug that caused `SceneTransforms.wgs84ToWindowCoordinates` to incorrectly return `undefined` when in 2D.
 * Fixed a bug in `ImageryLayer` that caused layer images to be rendered twice for each terrain tile that existed prior to adding the imagery layer.
-* `loadWithXhr` now works with older browsers, such as Internet Explorer 9.
 * Fixed a bug in `Camera.pickEllipsoid` that caused it to return the back side of the ellipsoid when near the surface.
+* Fixed a bug which prevented `loadWithXhr` from working with older browsers, such as Internet Explorer 9.
 
 ### 1.0 - 2014-08-01
 

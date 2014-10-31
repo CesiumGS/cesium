@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
-    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Draw a circle or extruded circle on the globe surface.">
     <meta name="cesium-sandcastle-labels" content="Geometries">
     <title>Cesium Demo</title>
@@ -29,7 +29,7 @@ function startup(Cesium) {
 //Sandcastle_Begin
 // Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
-var primitives = viewer.scene.primitives;
+var scene = viewer.scene;
        
 // Example 1: Draw a red circle on the globe surface.
 
@@ -49,7 +49,7 @@ var redCircleInstance = new Cesium.GeometryInstance({
     }
 });
 // Add the geometry instance to primitives.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances: [redCircleInstance],
     appearance: new Cesium.PerInstanceColorAppearance({
         closed: true
@@ -75,7 +75,7 @@ var greenCircleInstance = new Cesium.GeometryInstance({
     }
 });
 // Add the geometry instance to primitives.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances: [greenCircleInstance],
     appearance: new Cesium.PerInstanceColorAppearance({
         closed: true
@@ -101,7 +101,7 @@ var blueCircleInstance = new Cesium.GeometryInstance({
     }
 });
 // Add the geometry instance to primitives.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances: blueCircleInstance,
     appearance: new Cesium.PerInstanceColorAppearance({
         closed: true,

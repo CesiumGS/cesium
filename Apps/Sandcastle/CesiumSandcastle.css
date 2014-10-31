@@ -165,6 +165,7 @@ a.linkButton:focus, a.linkButton:hover {
 
 .CodeMirror, .CodeMirror-scroll {
     height: 100%;
+    font-size: 13px;
 }
 
 .highlightToolbarButton {
@@ -190,10 +191,12 @@ a.linkButton:focus, a.linkButton:hover {
     background-color: #9ED3FF !important;
 }
 
-.CodeMirror pre.errorMarker {
+.errorMarker {
+    width: 100%;
+    height: 100%;
     color: #222;
     font-weight: bold;
-    background: #F42;
+    background-color: #F42;
     border-radius: 3px;
 }
 
@@ -201,10 +204,12 @@ a.linkButton:focus, a.linkButton:hover {
     background: rgba(200, 50, 0, 0.2);
 }
 
-.CodeMirror pre.hintMarker {
+.hintMarker {
+    width: 100%;
+    height: 100%;
     color: #222;
     font-weight: bold;
-    background: #FE2;
+    background-color: #FE2;
     border-radius: 3px;
 }
 
@@ -212,10 +217,12 @@ a.linkButton:focus, a.linkButton:hover {
     background: rgba(200, 200, 0, 0.2);
 }
 
-.CodeMirror pre.highlightMarker {
+.highlightMarker {
+    width: 100%;
+    height: 100%;
     color: #222;
     font-weight: bold;
-    background: #2E2;
+    background-color: #2E2;
     border-radius: 3px;
 }
 
@@ -223,10 +230,12 @@ a.linkButton:focus, a.linkButton:hover {
     background: rgba(0, 200, 0, 0.2);
 }
 
-.CodeMirror pre.searchMarker {
+.searchMarker {
+    width: 100%;
+    height: 100%;
     color: #222;
     font-weight: bold;
-    background: #CEF;
+    background-color: #CEF;
     border-radius: 3px;
 }
 

@@ -82,6 +82,7 @@ define([
      * @param {Boolean} [options.navigationHelpButton=true] If set to the false, the navigation help button will not be created.
      * @param {Boolean} [options.navigationInstructionsInitiallyVisible=true] True if the navigation instructions should initially be visible, or false if the should not be shown until the user explicitly clicks the button.
      * @param {Boolean} [options.scene3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
+     * @param {Clock} [options.clock=new Clock()] The clock to use to control current time.
      * @param {ProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
      * @param {ProviderViewModel[]} [options.imageryProviderViewModels=createDefaultImageryProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if options.baseLayerPicker is set to true.
      * @param {ProviderViewModel} [options.selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
@@ -97,6 +98,7 @@ define([
      * @param {Object} [options.contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
+     * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
      * @param {Element|String} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added to the bottom of the widget itself.
      * @param {DataSourceCollection} [options.dataSources=new DataSourceCollection()] The collection of data sources visualized by the widget.  If this parameter is provided,
                                      the instance is assumed to be owned by the caller and will not be destroyed when the viewer is destroyed.
@@ -147,7 +149,6 @@ define([
      *         }
      *     }),
      *     // Show Columbus View map with Web Mercator projection
-     *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
      *     mapProjection : new Cesium.WebMercatorProjection()
      * });
      *
@@ -222,9 +223,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var cesiumWidget = new CesiumWidget(cesiumWidgetContainer, {
             terrainProvider : options.terrainProvider,
             imageryProvider : createBaseLayerPicker ? false : options.imageryProvider,
+            clock : options.clock,
             skyBox : options.skyBox,
             sceneMode : options.sceneMode,
             mapProjection : options.mapProjection,
+            orderIndependentTranslucency : options.orderIndependentTranslucency,
             contextOptions : options.contextOptions,
             useDefaultRenderLoop : options.useDefaultRenderLoop,
             targetFrameRate : options.targetFrameRate,

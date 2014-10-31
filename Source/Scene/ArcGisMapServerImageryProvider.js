@@ -119,7 +119,8 @@ define([
                 that._tileWidth = tileInfo.rows;
                 that._tileHeight = tileInfo.cols;
 
-                if (tileInfo.spatialReference.wkid === 102100) {
+                if (tileInfo.spatialReference.wkid === 102100 ||
+                    tileInfo.spatialReference.wkid === 102113) {
                     that._tilingScheme = new WebMercatorTilingScheme();
                 } else if (data.tileInfo.spatialReference.wkid === 4326) {
                     that._tilingScheme = new GeographicTilingScheme();
@@ -134,7 +135,8 @@ define([
                     var projection = that._tilingScheme.projection;
 
                     if (defined(data.fullExtent.spatialReference) && defined(data.fullExtent.spatialReference.wkid)) {
-                        if (data.fullExtent.spatialReference.wkid === 102100) {
+                        if (data.fullExtent.spatialReference.wkid === 102100 ||
+                            data.fullExtent.spatialReference.wkid === 102113) {
                             projection = new WebMercatorProjection();
                         } else if (data.fullExtent.spatialReference.wkid === 4326) {
                             projection = new GeographicProjection();
@@ -216,6 +218,7 @@ define([
          * Gets the URL of the ArcGIS MapServer.
          * @memberof ArcGisMapServerImageryProvider.prototype
          * @type {String}
+         * @readonly
          */
         url : {
             get : function() {
@@ -227,6 +230,7 @@ define([
          * Gets the proxy used by this provider.
          * @memberof ArcGisMapServerImageryProvider.prototype
          * @type {Proxy}
+         * @readonly
          */
         proxy : {
             get : function() {
@@ -239,6 +243,7 @@ define([
          * not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
          * @memberof ArcGisMapServerImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         tileWidth : {
             get : function() {
@@ -257,6 +262,7 @@ define([
          * not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
          * @memberof ArcGisMapServerImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         tileHeight: {
             get : function() {
@@ -275,6 +281,7 @@ define([
          * not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
          * @memberof ArcGisMapServerImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         maximumLevel : {
             get : function() {
@@ -293,6 +300,7 @@ define([
          * not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
          * @memberof ArcGisMapServerImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         minimumLevel : {
             get : function() {
@@ -311,6 +319,7 @@ define([
          * not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
          * @memberof ArcGisMapServerImageryProvider.prototype
          * @type {TilingScheme}
+         * @readonly
          */
         tilingScheme : {
             get : function() {
@@ -329,6 +338,7 @@ define([
          * not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
          * @memberof ArcGisMapServerImageryProvider.prototype
          * @type {Rectangle}
+         * @readonly
          */
         rectangle : {
             get : function() {
@@ -349,6 +359,7 @@ define([
          * not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
          * @memberof ArcGisMapServerImageryProvider.prototype
          * @type {TileDiscardPolicy}
+         * @readonly
          */
         tileDiscardPolicy : {
             get : function() {
@@ -368,6 +379,7 @@ define([
          * are passed an instance of {@link TileProviderError}.
          * @memberof ArcGisMapServerImageryProvider.prototype
          * @type {Event}
+         * @readonly
          */
         errorEvent : {
             get : function() {
@@ -379,6 +391,7 @@ define([
          * Gets a value indicating whether or not the provider is ready for use.
          * @memberof ArcGisMapServerImageryProvider.prototype
          * @type {Boolean}
+         * @readonly
          */
         ready : {
             get : function() {
@@ -391,6 +404,7 @@ define([
          * the source of the imagery.  This function should not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
          * @memberof ArcGisMapServerImageryProvider.prototype
          * @type {Credit}
+         * @readonly
          */
         credit : {
             get : function() {
@@ -406,6 +420,7 @@ define([
          * @memberof ArcGisMapServerImageryProvider.prototype
          *
          * @type {Boolean}
+         * @readonly
          * @default true
          */
         usingPrecachedTiles : {
@@ -423,6 +438,7 @@ define([
          * @memberof ArcGisMapServerImageryProvider.prototype
          *
          * @type {Boolean}
+         * @readonly
          * @default true
          */
         hasAlphaChannel : {
@@ -470,6 +486,24 @@ define([
 
         var url = buildImageUrl(this, x, y, level);
         return ImageryProvider.loadImage(this, url);
+    };
+
+    /**
+     * Picking features is not currently supported by this imagery provider, so this function simply returns
+     * undefined.
+     *
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level.
+     * @param {Number} longitude The longitude at which to pick features.
+     * @param {Number} latitude  The latitude at which to pick features.
+     * @return {Promise} A promise for the picked features that will resolve when the asynchronous
+     *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
+     *                   instances.  The array may be empty if no features are found at the given location.
+     *                   It may also be undefined if picking is not supported.
+     */
+    ArcGisMapServerImageryProvider.prototype.pickFeatures = function() {
+        return undefined;
     };
 
     return ArcGisMapServerImageryProvider;

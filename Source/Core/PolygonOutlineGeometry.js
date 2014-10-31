@@ -255,14 +255,16 @@ define([
      *
      * // 3. create extruded polygon outline
      * var extrudedPolygon = new Cesium.PolygonOutlineGeometry({
-     *   positions : Cesium.Cartesian3.fromDegreesArray([
-     *     -72.0, 40.0,
-     *     -70.0, 35.0,
-     *     -75.0, 30.0,
-     *     -70.0, 30.0,
-     *     -68.0, 40.0
-     *   ]),
-     *   extrudedHeight: 300000
+     *   polygonHierarchy : { 
+     *     positions : Cesium.Cartesian3.fromDegreesArray([
+     *       -72.0, 40.0,
+     *       -70.0, 35.0,
+     *       -75.0, 30.0,
+     *       -70.0, 30.0,
+     *       -68.0, 40.0
+     *     ]),
+     *     extrudedHeight: 300000
+     *   }
      * });
      * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(extrudedPolygon);
      */
