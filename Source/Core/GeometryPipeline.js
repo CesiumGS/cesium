@@ -2012,10 +2012,8 @@ define([
         var newColors = (defined(colors)) ? Array.prototype.slice.call(colors, 0) : undefined;
         var newIndices = [];
 
-        var duplicateP0 = Cartesian3.equals(Cartesian3.fromArray(newPositions, indices[0] * 3), Cartesian3.fromArray(newPositions, indices[1] * 3));
-
-        var length = newPositions.length;
-        for ( var i = 0; i < length; i += 12) {
+        var length = newPositions.length / 3;
+        for ( var i = 0; i < length; i += 4) {
             var i0 = i;
             var i1 = i + 1;
             var i2 = i + 2;
@@ -2032,7 +2030,7 @@ define([
                 }
 
                 newPositions[i0 * 3 + 1] = p0.y;
-                newPositions[i1 * 3 + 1] = p1.y = duplicateP0 ? p0.y : p1.y;
+                newPositions[i1 * 3 + 1] = p1.y = p0.y;
             }
 
             if (Math.abs(p2.y) < CesiumMath.EPSILON6){
@@ -2080,11 +2078,19 @@ define([
                     newExpandAndWidths.push(ew0.x, ew0.y, ew1.x, ew1.y);
 
                     if (defined(newColors)) {
-                        var c0 = Cartesian4.fromArray(newExpandAndWidths, i0 * 4);
-                        var c1 = Cartesian4.fromArray(newExpandAndWidths, i2 * 4);
+                        var c0 = Cartesian4.fromArray(newColors, i0 * 4);
+                        var c1 = Cartesian4.fromArray(newColors, i2 * 4);
 
                         newColors.push(c0.x, c0.y, c0.z, c0.w, c0.x, c0.y, c0.z, c0.w);
                         newColors.push(c1.x, c1.y, c1.z, c1.w, c1.x, c1.y, c1.z, c1.w);
+                    }
+
+                    if (defined(newTexCoords)) {
+                        var s0 = Cartesian2.fromArray(newTexCoords, i0 * 4);
+                        var s1 = Cartesian2.fromArray(newTexCoords, i2 * 4);
+
+                        newTexCoords.push(s0.x, s0.y, s0.x, s0.y);
+                        newTexCoords.push(s1.x, s1.y, s1.x, s1.y);
                     }
 
                     split = true;
