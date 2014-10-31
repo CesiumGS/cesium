@@ -55,6 +55,9 @@ defineSuite([
                     tilingScheme : tilingScheme,
                     hasWaterMask : function() {
                         return true;
+                    },
+                    getTileDataAvailable : function(x, y, level) {
+                        return undefined;
                     }
             };
 
@@ -67,6 +70,9 @@ defineSuite([
                     tilingScheme : tilingScheme,
                     hasWaterMask : function() {
                         return true;
+                    },
+                    getTileDataAvailable : function(x, y, level) {
+                        return undefined;
                     }
             };
 
@@ -424,6 +430,9 @@ defineSuite([
                     tilingScheme :  realTerrainProvider.tilingScheme,
                     hasWaterMask : function() {
                         return realTerrainProvider.hasWaterMask();
+                    },
+                    getTileDataAvailable : function(x, y, level) {
+                        return undefined;
                     }
             };
 
@@ -461,6 +470,9 @@ defineSuite([
                     tilingScheme : realTerrainProvider.tilingScheme,
                     hasWaterMask : function() {
                         return realTerrainProvider.hasWaterMask();
+                    },
+                    getTileDataAvailable : function(x, y, level) {
+                        return undefined;
                     }
             };
 
