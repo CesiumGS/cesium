@@ -131,11 +131,11 @@ define([
                 var length = unusedIndexes.length;
                 if (length > 0) {
                     var index = unusedIndexes.pop();
-                    label.index = index;
+                    item.index = index;
                     label = labelCollection.get(index);
                 } else {
                     label = labelCollection.add();
-                    label.index = labelCollection.length - 1;
+                    item.index = labelCollection.length - 1;
                 }
                 label.id = entity;
                 item.label = label;

@@ -180,6 +180,38 @@ defineSuite([
         });
     });
 
+    it('Reuses primitives when hiding one and showing another', function() {
+        var time = JulianDate.now();
+        var entityCollection = new EntityCollection();
+        visualizer = new BillboardVisualizer(scene, entityCollection);
+
+        var testObject = entityCollection.getOrCreateEntity('test');
+        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.billboard = new BillboardGraphics();
+        testObject.billboard.image = new ConstantProperty('Data/Images/Blue.png');
+        testObject.billboard.show = new ConstantProperty(true);
+
+        visualizer.update(time);
+
+        var billboardCollection = scene.primitives.get(0);
+        expect(billboardCollection.length).toEqual(1);
+
+        testObject.billboard.show = new ConstantProperty(false);
+
+        visualizer.update(time);
+
+        expect(billboardCollection.length).toEqual(1);
+
+        var testObject2 = entityCollection.getOrCreateEntity('test2');
+        testObject2.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject2.billboard = new BillboardGraphics();
+        testObject2.billboard.image = new ConstantProperty('Data/Images/Blue.png');
+        testObject2.billboard.show = new ConstantProperty(true);
+
+        visualizer.update(time);
+        expect(billboardCollection.length).toEqual(1);
+    });
+
     it('clear hides billboards.', function() {
         var entityCollection = new EntityCollection();
         visualizer = new BillboardVisualizer(scene, entityCollection);
