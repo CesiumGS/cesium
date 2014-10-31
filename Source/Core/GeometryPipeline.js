@@ -1737,97 +1737,9 @@ define([
         return splitTriangleResult;
     }
 
-    var c0Scratch = new Cartesian4();
-    var c1Scratch = new Cartesian4();
-    var c2Scratch = new Cartesian4();
-    var pp0Scratch = new Cartesian3();
-    var pp1Scratch = new Cartesian3();
-    var pp2Scratch = new Cartesian3();
-    var np0Scratch = new Cartesian3();
-    var np1Scratch = new Cartesian3();
-    var np2Scratch = new Cartesian3();
-    var ew0Scratch = new Cartesian2();
-    var ew1Scratch = new Cartesian2();
-    var ew2Scratch = new Cartesian2();
-
-    var v0Scratch = new Cartesian4();
-    var v1Scratch = new Cartesian4();
-    var v2Scratch = new Cartesian4();
-
-    function computeWidePolylineAttributes(i0, i1, i2, dividedTriangle, prevPositions, nextPositions, expandAndWidths, colors) {
-        if (!defined(prevPositions) || !defined(nextPositions) || !defined(expandAndWidths)) {
-            return;
-        }
-
-        var positions = dividedTriangle.positions;
-        var p0 = positions[0];
-        var p1 = positions[1];
-        var p2 = positions[2];
-
-        var pp0 = Cartesian3.fromArray(prevPositions, i0 * 3, pp0Scratch);
-        var pp1 = Cartesian3.fromArray(prevPositions, i1 * 3, pp1Scratch);
-        var pp2 = Cartesian3.fromArray(prevPositions, i2 * 3, pp2Scratch);
-
-        var np0 = Cartesian3.fromArray(nextPositions, i0 * 3, np0Scratch);
-        var np1 = Cartesian3.fromArray(nextPositions, i1 * 3, np1Scratch);
-        var np2 = Cartesian3.fromArray(nextPositions, i2 * 3, np2Scratch);
-
-        var ew0 = Cartesian2.fromArray(expandAndWidths, i0 * 2, ew0Scratch);
-        var ew1 = Cartesian2.fromArray(expandAndWidths, i1 * 2, ew1Scratch);
-        var ew2 = Cartesian2.fromArray(expandAndWidths, i2 * 2, ew2Scratch);
-
-        var c0;
-        var c1;
-        var c2;
-
-        if (defined(colors)) {
-            c0 = Cartesian4.fromArray(colors, i0 * 4, c0Scratch);
-            c1 = Cartesian4.fromArray(colors, i1 * 4, c1Scratch);
-            c2 = Cartesian4.fromArray(colors, i2 * 4, c2Scratch);
-        }
-
-        var oneBehind = dividedTriangle.indices[8] === 5;
-        var eastToWest = dividedTriangle.indices[0] !== (oneBehind ? 0 : 2);
-
-        for (var i = 3; i < positions.length; ++i) {
-            var point = positions[i];
-            var coords = barycentricCoordinates(point, p0, p1, p2);
-
-            if (defined(colors)) {
-                var v0 = Cartesian4.multiplyByScalar(c0, coords.x, v0Scratch);
-                var v1 = Cartesian4.multiplyByScalar(c1, coords.y, v1Scratch);
-                var v2 = Cartesian4.multiplyByScalar(c2, coords.z, v2Scratch);
-
-                Cartesian3.add(v0, v1, v0);
-                Cartesian3.add(v0, v2, v0);
-
-                colors.push(v0.x, v0.y, v0.z, v0.w);
-            }
-        }
-
-        if (oneBehind) {
-            if (eastToWest) {
-                prevPositions.push(p1.x, p1.y, p1.z, p1.x, p1.y, p1.z, p1.x, p1.y, p1.z, p1.x, p1.y, p1.z);
-                nextPositions.push(p0.x, p0.y, p0.z, p0.x, p0.y, p0.z, p0.x, p0.y, p0.z, p0.x, p0.y, p0.z);
-                expandAndWidths.push(ew2.x, ew2.y, ew0.x, ew0.y, ew2.x, ew2.y, ew0.x, ew0.y);
-            } else {
-                prevPositions.push(p0.x, p0.y, p0.z, p0.x, p0.y, p0.z, p0.x, p0.y, p0.z, p0.x, p0.y, p0.z);
-                nextPositions.push(p1.x, p1.y, p1.z, p1.x, p1.y, p1.z, p1.x, p1.y, p1.z, p1.x, p1.y, p1.z);
-                expandAndWidths.push(ew1.x, ew1.y, ew2.x, ew2.y, ew1.x, ew1.y, ew2.x, ew2.y);
-            }
-        } else {
-            if (eastToWest) {
-                prevPositions.push(p0.x, p0.y, p0.z, p0.x, p0.y, p0.z, p0.x, p0.y, p0.z, p0.x, p0.y, p0.z);
-                nextPositions.push(p1.x, p1.y, p1.z, p1.x, p1.y, p1.z, p1.x, p1.y, p1.z, p1.x, p1.y, p1.z);
-                expandAndWidths.push(ew1.x, ew1.y, ew2.x, ew2.y, ew1.x, ew1.y, ew2.x, ew2.y);
-            } else {
-                prevPositions.push(p1.x, p1.y, p1.z, p1.x, p1.y, p1.z, p1.x, p1.y, p1.z, p1.x, p1.y, p1.z);
-                nextPositions.push(p0.x, p0.y, p0.z, p0.x, p0.y, p0.z, p0.x, p0.y, p0.z, p0.x, p0.y, p0.z);
-                expandAndWidths.push(ew2.x, ew2.y, ew0.x, ew0.y, ew2.x, ew2.y, ew0.x, ew0.y);
-            }
-        }
-    }
-
+    var v0Scratch = new Cartesian3();
+    var v1Scratch = new Cartesian3();
+    var v2Scratch = new Cartesian3();
     var u0Scratch = new Cartesian2();
     var u1Scratch = new Cartesian2();
     var u2Scratch = new Cartesian2();
@@ -1938,10 +1850,6 @@ define([
         var binormals = (defined(attributes.binormal)) ? attributes.binormal.values : undefined;
         var tangents = (defined(attributes.tangent)) ? attributes.tangent.values : undefined;
         var texCoords = (defined(attributes.st)) ? attributes.st.values : undefined;
-        var prevPositions = (defined(attributes.prevPosition)) ? attributes.prevPosition.values : undefined;
-        var nextPositions = (defined(attributes.nextPosition)) ? attributes.nextPosition.values : undefined;
-        var expandAndWidths = (defined(attributes.expandAndWidth)) ? attributes.expandAndWidth.values : undefined;
-        var colors = (defined(attributes.color)) ? attributes.color.values : undefined;
         var indices = geometry.indices;
 
         var newPositions = Array.prototype.slice.call(positions, 0);
@@ -1949,10 +1857,6 @@ define([
         var newBinormals = (defined(binormals)) ? Array.prototype.slice.call(binormals, 0) : undefined;
         var newTangents = (defined(tangents)) ? Array.prototype.slice.call(tangents, 0) : undefined;
         var newTexCoords = (defined(texCoords)) ? Array.prototype.slice.call(texCoords, 0) : undefined;
-        var newPrevPositions = (defined(prevPositions)) ? Array.prototype.slice.call(prevPositions, 0) : undefined;
-        var newNextPositions = (defined(nextPositions)) ? Array.prototype.slice.call(nextPositions, 0) : undefined;
-        var newExpandAndWidths = (defined(expandAndWidths)) ? Array.prototype.slice.call(expandAndWidths, 0) : undefined;
-        var newColors = (defined(colors)) ? Array.prototype.slice.call(colors, 0) : undefined;
         var newIndices = [];
 
         var len = indices.length;
@@ -1987,7 +1891,6 @@ define([
                         newPositions.push(position.x, position.y, position.z);
                     }
                     computeTriangleAttributes(i0, i1, i2, result, newNormals, newBinormals, newTangents, newTexCoords);
-                    computeWidePolylineAttributes(i0, i1, i2, result, newPrevPositions, newNextPositions, newExpandAndWidths, newColors);
                 } else {
                     newIndices.push(i0, i1, i2);
                 }
@@ -2014,24 +1917,11 @@ define([
             attributes.st.values = ComponentDatatype.createTypedArray(attributes.st.componentDatatype, newTexCoords);
         }
 
-        if (defined(newPrevPositions)) {
-            attributes.prevPosition.values = ComponentDatatype.createTypedArray(attributes.prevPosition.componentDatatype, newPrevPositions);
-        }
-
-        if (defined(newNextPositions)) {
-            attributes.nextPosition.values = ComponentDatatype.createTypedArray(attributes.nextPosition.componentDatatype, newNextPositions);
-        }
-
-        if (defined(newExpandAndWidths)) {
-            attributes.expandAndWidth.values = ComponentDatatype.createTypedArray(attributes.expandAndWidth.componentDatatype, newExpandAndWidths);
-        }
-        if (defined(newColors)) {
-            attributes.color.values = ComponentDatatype.createTypedArray(attributes.color.componentDatatype, newColors);
-        }
-
         var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
         geometry.indices = IndexDatatype.createTypedArray(numberOfVertices, newIndices);
     }
+
+    var xzPlane = Plane.fromPointNormal(Cartesian3.ZERO, Cartesian3.UNIT_Y);
 
     var offsetScratch = new Cartesian3();
     var offsetPointScratch = new Cartesian3();
@@ -2042,8 +1932,6 @@ define([
 
         var newPositions = Array.prototype.slice.call(positions, 0);
         var newIndices = [];
-
-        var xzPlane = Plane.fromPointNormal(Cartesian3.ZERO, Cartesian3.UNIT_Y);
 
         var length = indices.length;
         for ( var i = 0; i < length; i += 2) {
@@ -2106,6 +1994,134 @@ define([
         geometry.indices = IndexDatatype.createTypedArray(numberOfVertices, newIndices);
     }
 
+    function wrapLongitudePolyline(geometry) {
+        var attributes = geometry.attributes;
+        var positions = attributes.position.values;
+        var texCoords = (defined(attributes.st)) ? attributes.st.values : undefined;
+        var prevPositions = (defined(attributes.prevPosition)) ? attributes.prevPosition.values : undefined;
+        var nextPositions = (defined(attributes.nextPosition)) ? attributes.nextPosition.values : undefined;
+        var expandAndWidths = (defined(attributes.expandAndWidth)) ? attributes.expandAndWidth.values : undefined;
+        var colors = (defined(attributes.color)) ? attributes.color.values : undefined;
+        var indices = geometry.indices;
+
+        var newPositions = Array.prototype.slice.call(positions, 0);
+        var newTexCoords = (defined(texCoords)) ? Array.prototype.slice.call(texCoords, 0) : undefined;
+        var newPrevPositions = (defined(prevPositions)) ? Array.prototype.slice.call(prevPositions, 0) : undefined;
+        var newNextPositions = (defined(nextPositions)) ? Array.prototype.slice.call(nextPositions, 0) : undefined;
+        var newExpandAndWidths = (defined(expandAndWidths)) ? Array.prototype.slice.call(expandAndWidths, 0) : undefined;
+        var newColors = (defined(colors)) ? Array.prototype.slice.call(colors, 0) : undefined;
+        var newIndices = [];
+
+        var duplicateP0 = Cartesian3.equals(Cartesian3.fromArray(newPositions, indices[0] * 3), Cartesian3.fromArray(newPositions, indices[1] * 3));
+
+        var length = newPositions.length;
+        for ( var i = 0; i < length; i += 12) {
+            var i0 = i;
+            var i1 = i + 1;
+            var i2 = i + 2;
+
+            var p0 = Cartesian3.fromArray(newPositions, i0 * 3);
+            var p1 = Cartesian3.fromArray(newPositions, i1 * 3);
+            var p2 = Cartesian3.fromArray(newPositions, i2 * 3);
+
+            if (Math.abs(p0.y) < CesiumMath.EPSILON6){
+                if (p0.y < 0.0) {
+                    p0.y = -CesiumMath.EPSILON6;
+                } else {
+                    p0.y = CesiumMath.EPSILON6;
+                }
+
+                newPositions[i0 * 3 + 1] = p0.y;
+                newPositions[i1 * 3 + 1] = p1.y = duplicateP0 ? p0.y : p1.y;
+            }
+
+            if (Math.abs(p2.y) < CesiumMath.EPSILON6){
+                if (p2.y < 0.0) {
+                    p2.y = -CesiumMath.EPSILON6;
+                } else {
+                    p2.y = CesiumMath.EPSILON6;
+                }
+
+                newPositions[i2 * 3 + 1] = p2.y;
+            }
+
+            var split = false;
+
+            // intersects the IDL if either endpoint is on the negative side of the yz-plane
+            if (p0.x < 0.0 || p2.x < 0.0) {
+                // and intersects the xz-plane
+                var intersection = IntersectionTests.lineSegmentPlane(p0, p1, xzPlane);
+                if (defined(intersection)) {
+                    // move point on the xz-plane slightly away from the plane
+                    var offset = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Y, 5.0 * CesiumMath.EPSILON9, offsetScratch);
+                    if (p0.y < 0.0) {
+                        Cartesian3.negate(offset, offset);
+                    }
+
+                    var offsetPoint = Cartesian3.add(intersection, offset, offsetPointScratch);
+                    newPositions.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                    newPositions.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+
+                    Cartesian3.negate(offset, offset);
+                    Cartesian3.add(intersection, offset, offsetPoint);
+                    newPositions.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                    newPositions.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+
+                    newPrevPositions.push(p0.x, p0.y, p0.z, p0.x, p0.y, p0.z);
+                    newPrevPositions.push(p0.x, p0.y, p0.z, p0.x, p0.y, p0.z);
+
+                    newNextPositions.push(p2.x, p2.y, p2.z, p2.x, p2.y, p2.z);
+                    newNextPositions.push(p2.x, p2.y, p2.z, p2.x, p2.y, p2.z);
+
+                    var ew0 = Cartesian3.fromArray(newExpandAndWidths, i0 * 2);
+                    var ew1 = Cartesian3.fromArray(newExpandAndWidths, i1 * 2);
+
+                    newExpandAndWidths.push(ew0.x, ew0.y, ew1.x, ew1.y);
+                    newExpandAndWidths.push(ew0.x, ew0.y, ew1.x, ew1.y);
+
+                    if (defined(newColors)) {
+                        var c0 = Cartesian4.fromArray(newExpandAndWidths, i0 * 4);
+                        var c1 = Cartesian4.fromArray(newExpandAndWidths, i2 * 4);
+
+                        newColors.push(c0.x, c0.y, c0.z, c0.w, c0.x, c0.y, c0.z, c0.w);
+                        newColors.push(c1.x, c1.y, c1.z, c1.w, c1.x, c1.y, c1.z, c1.w);
+                    }
+
+                    split = true;
+                }
+            }
+
+            if (!split) {
+                newIndices.push(i, i + 2, i + 1);
+                newIndices.push(i + 1, i + 2, i + 3);
+            } else {
+                var index = newPositions.length / 3 - 4;
+
+                newIndices.push(i, index, i + 1);
+                newIndices.push(i + 1, index, index + 1);
+
+                newIndices.push(index, i + 2, index + 1);
+                newIndices.push(index + 1, i + 2, i + 3);
+            }
+        }
+
+        attributes.position.values = new Float64Array(newPositions);
+        attributes.prevPosition.values = ComponentDatatype.createTypedArray(attributes.prevPosition.componentDatatype, newPrevPositions);
+        attributes.nextPosition.values = ComponentDatatype.createTypedArray(attributes.nextPosition.componentDatatype, newNextPositions);
+        attributes.expandAndWidth.values = ComponentDatatype.createTypedArray(attributes.expandAndWidth.componentDatatype, newExpandAndWidths);
+
+        if (defined(newTexCoords)) {
+            attributes.st.values = ComponentDatatype.createTypedArray(attributes.st.componentDatatype, newTexCoords);
+        }
+
+        if (defined(newColors)) {
+            attributes.color.values = ComponentDatatype.createTypedArray(attributes.color.componentDatatype, newColors);
+        }
+
+        var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+        geometry.indices = IndexDatatype.createTypedArray(numberOfVertices, newIndices);
+    }
+
     /**
      * Splits the geometry's primitives, by introducing new vertices and indices,that
      * intersect the International Date Line so that no primitives cross longitude
@@ -2135,7 +2151,11 @@ define([
 
         indexPrimitive(geometry);
         if (geometry.primitiveType === PrimitiveType.TRIANGLES) {
-            wrapLongitudeTriangles(geometry);
+            if (defined(geometry.attributes.prevPosition) || defined(geometry.attributes.nextPosition)) {
+                wrapLongitudePolyline(geometry);
+            } else {
+                wrapLongitudeTriangles(geometry);
+            }
         } else if (geometry.primitiveType === PrimitiveType.LINES) {
             wrapLongitudeLines(geometry);
         }
