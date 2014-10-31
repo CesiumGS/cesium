@@ -461,7 +461,12 @@ define([
                 log = gl.getShaderInfoLog(fragmentShader);
                 console.error(consolePrefix + 'Fragment shader compile log: ' + log);
                 if (defined(debugShaders)) {
-                    console.error(consolePrefix + 'Translated fragment shader source:\n' + debugShaders.getTranslatedShaderSource(fragmentShader));
+                    var fragmentSourceTranslation = debugShaders.getTranslatedShaderSource(fragmentShader);
+                    if (fragmentSourceTranslation !== '') {
+                        console.error(consolePrefix + 'Translated fragment shader source:\n' + fragmentSourceTranslation);
+                    } else {
+                        console.error(consolePrefix + 'Fragment shader translation failed.');
+                    }
                 }
 
                 gl.deleteProgram(program);
@@ -472,7 +477,12 @@ define([
                 log = gl.getShaderInfoLog(vertexShader);
                 console.error(consolePrefix + 'Vertex shader compile log: ' + log);
                 if (defined(debugShaders)) {
-                    console.error(consolePrefix + 'Translated vertex shader source:\n' + debugShaders.getTranslatedShaderSource(vertexShader));
+                    var vertexSourceTranslation = debugShaders.getTranslatedShaderSource(vertexShader);
+                    if (vertexSourceTranslation !== '') {
+                        console.error(consolePrefix + 'Translated vertex shader source:\n' + vertexSourceTranslation);
+                    } else {
+                        console.error(consolePrefix + 'Vertex shader translation failed.');
+                    }
                 }
 
                 gl.deleteProgram(program);
