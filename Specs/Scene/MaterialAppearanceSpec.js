@@ -2,6 +2,7 @@
 defineSuite([
         'Scene/MaterialAppearance',
         'Core/ColorGeometryInstanceAttribute',
+        'Core/defaultValue',
         'Core/GeometryInstance',
         'Core/Rectangle',
         'Core/RectangleGeometry',
@@ -16,6 +17,7 @@ defineSuite([
     ], function(
         MaterialAppearance,
         ColorGeometryInstanceAttribute,
+        defaultValue,
         GeometryInstance,
         Rectangle,
         RectangleGeometry,
@@ -33,24 +35,11 @@ defineSuite([
     var context;
     var frameState;
     var primitive;
+    var rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
 
     beforeAll(function() {
         context = createContext();
         frameState = createFrameState();
-
-        var rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
-        primitive = new Primitive({
-            geometryInstances : new GeometryInstance({
-                geometry : new RectangleGeometry({
-                    vertexFormat : MaterialAppearance.MaterialSupport.ALL.vertexFormat,
-                    rectangle : rectangle
-                }),
-                attributes : {
-                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
-                }
-            }),
-            asynchronous : false
-        });
 
         frameState.camera.viewRectangle(rectangle);
         var us = context.uniformState;
@@ -61,6 +50,22 @@ defineSuite([
         primitive = primitive && primitive.destroy();
         destroyContext(context);
     });
+
+    function createPrimitive(vertexFormat) {
+        vertexFormat = defaultValue(vertexFormat, MaterialAppearance.MaterialSupport.ALL.vertexFormat);
+        primitive = new Primitive({
+            geometryInstances : new GeometryInstance({
+                geometry : new RectangleGeometry({
+                    vertexFormat : vertexFormat,
+                    rectangle : rectangle
+                }),
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
+                }
+            }),
+            asynchronous : false
+        });
+    }
 
     it('constructor', function() {
         var a = new MaterialAppearance();
@@ -79,6 +84,7 @@ defineSuite([
     });
 
     it('renders basic', function() {
+        createPrimitive(MaterialAppearance.MaterialSupport.BASIC.vertexFormat);
         primitive.appearance = new MaterialAppearance({
             materialSupport : MaterialAppearance.MaterialSupport.BASIC,
             translucent : false,
@@ -94,6 +100,7 @@ defineSuite([
     });
 
     it('renders textured', function() {
+        createPrimitive(MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat);
         primitive.appearance = new MaterialAppearance({
             materialSupport : MaterialAppearance.MaterialSupport.TEXTURED,
             translucent : false,
@@ -109,6 +116,7 @@ defineSuite([
     });
 
     it('renders all', function() {
+        createPrimitive(MaterialAppearance.MaterialSupport.ALL.vertexFormat);
         primitive.appearance = new MaterialAppearance({
             materialSupport : MaterialAppearance.MaterialSupport.ALL,
             translucent : false,

@@ -412,7 +412,7 @@ defineSuite([
              rectangle = tilingScheme.tileXYToRectangle(7, 6, 5);
          });
 
-         it('returns undefined if given a position outside the mesh', function() {
+         it('clamps coordinates if given a position outside the mesh', function() {
              var mesh = new QuantizedMeshTerrainData({
                  minimumHeight : 0.0,
                  maximumHeight : 4.0,
@@ -441,7 +441,7 @@ defineSuite([
                  childTileMask : 15
              });
 
-             expect(mesh.interpolateHeight(rectangle, 0.0, 0.0)).toBeUndefined();
+             expect(mesh.interpolateHeight(rectangle, 0.0, 0.0)).toBe(mesh.interpolateHeight(rectangle, rectangle.east, rectangle.south));
          });
 
          it('returns a height interpolated from the correct triangle', function() {

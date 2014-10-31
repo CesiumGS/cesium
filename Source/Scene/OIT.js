@@ -5,9 +5,9 @@ define([
         '../Core/destroyObject',
         '../Core/PixelFormat',
         '../Renderer/ClearCommand',
-        '../Renderer/createShaderSource',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
+        '../Renderer/ShaderSource',
         '../Shaders/AdjustTranslucentFS',
         '../Shaders/CompositeOITFS',
         './BlendEquation',
@@ -18,9 +18,9 @@ define([
         destroyObject,
         PixelFormat,
         ClearCommand,
-        createShaderSource,
         PixelDatatype,
         RenderState,
+        ShaderSource,
         AdjustTranslucentFS,
         CompositeOITFS,
         BlendEquation,
@@ -218,10 +218,12 @@ define([
         var uniformMap;
 
         if (!defined(this._compositeCommand)) {
-            fs = createShaderSource({
-                defines : [this._translucentMRTSupport ? 'MRT' : ''],
+            fs = new ShaderSource({
                 sources : [CompositeOITFS]
             });
+            if (this._translucentMRTSupport) {
+                fs.defines.push('MRT');
+            }
 
             uniformMap = {
                 u_opaque : function() {
@@ -243,7 +245,7 @@ define([
 
         if (!defined(this._adjustTranslucentCommand)) {
             if (this._translucentMRTSupport) {
-                fs = createShaderSource({
+                fs = new ShaderSource({
                     defines : ['MRT'],
                     sources : [AdjustTranslucentFS]
                 });
@@ -263,7 +265,7 @@ define([
                     owner : this
                 });
             } else if (this._translucentMultipassSupport) {
-                fs = createShaderSource({
+                fs = new ShaderSource({
                     sources : [AdjustTranslucentFS]
                 });
 
@@ -312,7 +314,8 @@ define([
     };
 
     var translucentColorBlend = {
-        enabled : true,color : new Color(0.0, 0.0, 0.0, 0.0),
+        enabled : true,
+        color : new Color(0.0, 0.0, 0.0, 0.0),
         equationRgb : BlendEquation.ADD,
         equationAlpha : BlendEquation.ADD,
         functionSourceRgb : BlendFunction.ONE,
@@ -322,7 +325,8 @@ define([
     };
 
     var translucentAlphaBlend = {
-        enabled : true,color : new Color(0.0, 0.0, 0.0, 0.0),
+        enabled : true,
+        color : new Color(0.0, 0.0, 0.0, 0.0),
         equationRgb : BlendEquation.ADD,
         equationAlpha : BlendEquation.ADD,
         functionSourceRgb : BlendFunction.ZERO,
@@ -379,32 +383,37 @@ define([
         var shader = cache[id];
         if (!defined(shader)) {
             var attributeLocations = shaderProgram._attributeLocations;
-            var vs = shaderProgram.vertexShaderSource;
-            var fs = shaderProgram.fragmentShaderSource;
 
-            var renamedFS = fs.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_translucent_main()');
-            renamedFS = renamedFS.replace(/gl_FragColor/g, 'czm_gl_FragColor');
-            renamedFS = renamedFS.replace(/\bdiscard\b/g, 'czm_discard = true');
-            renamedFS = renamedFS.replace(/czm_phong/g, 'czm_translucentPhong');
+            var fs = shaderProgram.fragmentShaderSource.clone();
+
+            fs.sources = fs.sources.map(function(source) {
+                source = source.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_translucent_main()');
+                source = source.replace(/gl_FragColor/g, 'czm_gl_FragColor');
+                source = source.replace(/\bdiscard\b/g, 'czm_discard = true');
+                source = source.replace(/czm_phong/g, 'czm_translucentPhong');
+                return source;
+            });
 
             // Discarding the fragment in main is a workaround for ANGLE D3D9
             // shader compilation errors.
-            var newSourceFS =
-                (source.indexOf('gl_FragData') !== -1 ? '#extension GL_EXT_draw_buffers : enable \n' : '') +
-                'vec4 czm_gl_FragColor;\n' +
-                'bool czm_discard = false;\n' +
-                renamedFS + '\n\n' +
-                'void main()\n' +
-                '{\n' +
-                '    czm_translucent_main();\n' +
-                '    if (czm_discard)\n' +
-                '    {\n' +
-                '        discard;\n' +
-                '    }\n' +
-                source +
-                '}\n';
 
-            shader = context.createShaderProgram(vs, newSourceFS, attributeLocations);
+            fs.sources.splice(0, 0,
+                    (source.indexOf('gl_FragData') !== -1 ? '#extension GL_EXT_draw_buffers : enable \n' : '') +
+                    'vec4 czm_gl_FragColor;\n' +
+                    'bool czm_discard = false;\n');
+
+            fs.sources.push(
+                    'void main()\n' +
+                    '{\n' +
+                    '    czm_translucent_main();\n' +
+                    '    if (czm_discard)\n' +
+                    '    {\n' +
+                    '        discard;\n' +
+                    '    }\n' +
+                    source +
+                    '}\n');
+
+            shader = context.createShaderProgram(shaderProgram.vertexShaderSource, fs, attributeLocations);
             cache[id] = shader;
         }
 

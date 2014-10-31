@@ -24,8 +24,8 @@ define([
         '../Core/Queue',
         '../Core/RuntimeError',
         '../Renderer/BufferUsage',
-        '../Renderer/createShaderSource',
         '../Renderer/DrawCommand',
+        '../Renderer/ShaderSource',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         '../ThirdParty/gltfDefaults',
@@ -63,8 +63,8 @@ define([
         Queue,
         RuntimeError,
         BufferUsage,
-        createShaderSource,
         DrawCommand,
+        ShaderSource,
         TextureMinificationFilter,
         TextureWrap,
         gltfDefaults,
@@ -967,7 +967,7 @@ define([
 
         if (model.allowPicking) {
             // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
-            var pickFS = createShaderSource({
+            var pickFS = new ShaderSource({
                 sources : [fs],
                 pickColorQualifier : 'uniform'
             });

@@ -541,9 +541,17 @@
 			<arg value="optimize=uglify2" />
 			<arg value="pragmas.debug=false" />
 			<arg value="mainConfigFile=../Apps/CesiumViewer/CesiumViewerStartup.js" />
-			<arg value="name=CesiumViewer/CesiumViewerStartup" />
+			<arg value="name=CesiumViewerStartup" />
 			<arg value="out=${relativeCesiumViewerOutputDirectory}/CesiumViewerStartup.js" />
 		</exec>
+
+		<!-- add copyright header -->
+		<copy file="${cesiumViewerOutputDirectory}/CesiumViewerStartup.js" tofile="${cesiumViewerOutputDirectory}/CesiumViewerStartup.js.tmp">
+			<filterchain>
+				<concatfilter prepend="${sourceDirectory}/copyrightHeader.js" />
+			</filterchain>
+		</copy>
+		<move file="${cesiumViewerOutputDirectory}/CesiumViewerStartup.js.tmp" tofile="${cesiumViewerOutputDirectory}/CesiumViewerStartup.js" />
 
 		<exec executable="${nodePath}" dir="${cesiumViewerDirectory}">
 			<arg value="${rjsPath}" />
@@ -565,8 +573,13 @@
 		<copy file="${requirejsPath}/require.min.js" tofile="${cesiumViewerOutputDirectory}/require.js" />
 
 		<!-- Copy the built Cesium assets and workers -->
-		<copy todir="${cesiumViewerOutputDirectory}">
-			<fileset dir="${buildOutputDirectory}" excludes="Cesium.js" />
+		<copy todir="${cesiumViewerOutputDirectory}" includeemptydirs="false">
+			<fileset dir="${buildOutputDirectory}">
+				<include name="Assets/**" />
+				<include name="Workers/**" />
+				<include name="Widgets/**" />
+				<exclude name="Widgets/**/*.css" />
+			</fileset>
 		</copy>
 
 		<!-- Copy web.config -->
@@ -575,8 +588,7 @@
 		<!-- rewrite the paths in the configuration -->
 		<replace dir="${cesiumViewerOutputDirectory}" summary="true">
 			<replacefilter token="../../Source" value="." />
-			<replacefilter token="../Apps/CesiumViewer" value="." />
-			<replacefilter token="../ThirdParty/requirejs-2.1.9" value="." />
+			<replacefilter token="../../ThirdParty/requirejs-2.1.9" value="." />
 			<include name="CesiumViewerStartup.js" />
 		</replace>
 
