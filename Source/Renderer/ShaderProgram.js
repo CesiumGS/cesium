@@ -420,7 +420,9 @@ define([
         }
     });
 
-    function createAndLinkProgram(gl, shader, debugShaders) {
+    var consolePrefix = '[Cesium WebGL] ';
+
+    function createAndLinkProgram(gl, shader) {
         var vsSource = shader._vertexShaderText;
         var fsSource = shader._fragmentShaderText;
 
@@ -452,12 +454,14 @@ define([
 
         var log;
         if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            var debugShaders = shader._debugShaders;
+
             // For performance, only check compile errors if there is a linker error.
             if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
                 log = gl.getShaderInfoLog(fragmentShader);
-                console.error('[GL] Fragment shader compile log: ' + log);
+                console.error(consolePrefix + 'Fragment shader compile log: ' + log);
                 if (defined(debugShaders)) {
-                    console.error('[GL] Translated fragment shader source:\n' + debugShaders.getTranslatedShaderSource(fragmentShader));
+                    console.error(consolePrefix + 'Translated fragment shader source:\n' + debugShaders.getTranslatedShaderSource(fragmentShader));
                 }
 
                 gl.deleteProgram(program);
@@ -466,9 +470,9 @@ define([
 
             if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
                 log = gl.getShaderInfoLog(vertexShader);
-                console.error('[GL] Vertex shader compile log: ' + log);
+                console.error(consolePrefix + 'Vertex shader compile log: ' + log);
                 if (defined(debugShaders)) {
-                    console.error('[GL] Translated vertex shader source:\n' + debugShaders.getTranslatedShaderSource(vertexShader));
+                    console.error(consolePrefix + 'Translated vertex shader source:\n' + debugShaders.getTranslatedShaderSource(vertexShader));
                 }
 
                 gl.deleteProgram(program);
@@ -476,10 +480,10 @@ define([
             }
 
             log = gl.getProgramInfoLog(program);
-            console.error('[GL] Shader program link log: ' + log);
+            console.error(consolePrefix + 'Shader program link log: ' + log);
             if (defined(debugShaders)) {
-                console.error('[GL] Translated vertex shader source:\n' + debugShaders.getTranslatedShaderSource(vertexShader));
-                console.error('[GL] Translated fragment shader source:\n' + debugShaders.getTranslatedShaderSource(fragmentShader));
+                console.error(consolePrefix + 'Translated vertex shader source:\n' + debugShaders.getTranslatedShaderSource(vertexShader));
+                console.error(consolePrefix + 'Translated fragment shader source:\n' + debugShaders.getTranslatedShaderSource(fragmentShader));
             }
 
             gl.deleteProgram(program);
@@ -491,21 +495,21 @@ define([
         if (logShaderCompilation) {
             log = gl.getShaderInfoLog(vertexShader);
             if (defined(log) && (log.length > 0)) {
-                console.log('[GL] Vertex shader compile log: ' + log);
+                console.log(consolePrefix + 'Vertex shader compile log: ' + log);
             }
         }
 
         if (logShaderCompilation) {
             log = gl.getShaderInfoLog(fragmentShader);
             if (defined(log) && (log.length > 0)) {
-                console.log('[GL] Fragment shader compile log: ' + log);
+                console.log(consolePrefix + 'Fragment shader compile log: ' + log);
             }
         }
 
         if (logShaderCompilation) {
             log = gl.getProgramInfoLog(program);
             if (defined(log) && (log.length > 0)) {
-                console.log('[GL] Shader program link log: ' + log);
+                console.log(consolePrefix + 'Shader program link log: ' + log);
             }
         }
 
