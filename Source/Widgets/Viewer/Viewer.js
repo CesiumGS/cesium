@@ -82,6 +82,7 @@ define([
      * @param {Boolean} [options.navigationHelpButton=true] If set to the false, the navigation help button will not be created.
      * @param {Boolean} [options.navigationInstructionsInitiallyVisible=true] True if the navigation instructions should initially be visible, or false if the should not be shown until the user explicitly clicks the button.
      * @param {Boolean} [options.scene3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
+     * @param {Clock} [options.clock=new Clock()] The clock to use to control current time.
      * @param {ProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
      * @param {ProviderViewModel[]} [options.imageryProviderViewModels=createDefaultImageryProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if options.baseLayerPicker is set to true.
      * @param {ProviderViewModel} [options.selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
@@ -222,6 +223,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var cesiumWidget = new CesiumWidget(cesiumWidgetContainer, {
             terrainProvider : options.terrainProvider,
             imageryProvider : createBaseLayerPicker ? false : options.imageryProvider,
+            clock : options.clock,
             skyBox : options.skyBox,
             sceneMode : options.sceneMode,
             mapProjection : options.mapProjection,
