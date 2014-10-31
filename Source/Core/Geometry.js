@@ -2,11 +2,13 @@
 define([
         './defaultValue',
         './defined',
-        './DeveloperError'
+        './DeveloperError',
+        './PrimitiveType'
     ], function(
         defaultValue,
         defined,
-        DeveloperError) {
+        DeveloperError,
+        PrimitiveType) {
     "use strict";
 
     /**
@@ -23,7 +25,7 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {GeometryAttributes} options.attributes Attributes, which make up the geometry's vertices.
-     * @param {PrimitiveType} options.primitiveType The type of primitives in the geometry.
+     * @param {PrimitiveType} [options.primitiveType=PrimitiveType.TRIANGLES] The type of primitives in the geometry.
      * @param {Uint16Array|Uint32Array} [options.indices] Optional index data that determines the primitives in the geometry.
      * @param {BoundingSphere} [options.boundingSphere] An optional bounding sphere that fully enclosed the geometry.
      *
@@ -65,9 +67,6 @@ define([
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options.attributes)) {
             throw new DeveloperError('options.attributes is required.');
-        }
-        if (!defined(options.primitiveType)) {
-            throw new DeveloperError('options.primitiveType is required.');
         }
         //>>includeEnd('debug');
 
@@ -136,7 +135,7 @@ define([
          *
          * @default undefined
          */
-        this.primitiveType = options.primitiveType;
+        this.primitiveType = defaultValue(options.primitiveType, PrimitiveType.TRIANGLES);
 
         /**
          * An optional bounding sphere that fully encloses the geometry.  This is
