@@ -470,6 +470,7 @@
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />
+			<arg value="optimize=uglify2" />
 			<srcfile prefix="cssIn=" />
 			<targetfile prefix="out=" />
 			<identitymapper />

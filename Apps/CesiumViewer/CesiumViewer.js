@@ -7,6 +7,7 @@ define([
         'Cesium/Core/Math',
         'Cesium/Core/queryToObject',
         'Cesium/Core/objectToQuery',
+        'Cesium/Core/Cartesian3',
         'Cesium/DataSources/CzmlDataSource',
         'Cesium/DataSources/GeoJsonDataSource',
         'Cesium/DataSources/KmlDataSource',
@@ -23,6 +24,7 @@ define([
         CesiumMath,
         queryToObject,
         objectToQuery,
+        Cartesian3,
         CzmlDataSource,
         GeoJsonDataSource,
         KmlDataSource,
@@ -87,6 +89,15 @@ define([
     });
 
     var scene = viewer.scene;
+//    scene.camera.flyTo({
+//              'destination': Cartesian3.fromDegrees(7.140908, 46.203627, 3000),
+//              'duration': 0
+//              });
+    scene.camera.lookAt(
+        Cartesian3.fromDegrees(7.140908, 46.203627, 3000),
+        Cartesian3.ZERO,
+        Cartesian3.UNIT_Z);
+
     var context = scene.context;
     if (endUserOptions.debug) {
         context.validateShaderProgram = true;

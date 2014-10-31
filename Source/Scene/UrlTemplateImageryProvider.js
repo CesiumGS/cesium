@@ -176,6 +176,7 @@ define([
         this._tileHeight = defaultValue(options.tileHeight, 256);
         this._minimumLevel = defaultValue(options.minimumLevel, 0);
         this._maximumLevel = options.maximumLevel;
+        this._minimumRetrievingLevel = defaultValue(options.minimumRetrievingLevel, 0);
         this._tilingScheme = defaultValue(options.tilingScheme, new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid }));
         this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
         this._rectangle = Rectangle.intersection(this._rectangle, this._tilingScheme.rectangle);
@@ -432,6 +433,16 @@ define([
         return undefined;
     };
 
+    UrlTemplateImageryProvider.transparentCanvas = (function() {
+      var canvas = document.createElement('canvas');
+      var ctx = canvas.getContext('2d');
+      ctx.width = 256;
+      ctx.height = 256;
+      ctx.fillStyle = 'rgba(255, 0, 0, 0)';
+      ctx.fillRect(0, 0, 255, 255);
+      return canvas;
+    })();
+
     /**
      * Requests the image for a given tile.  This function should
      * not be called before {@link UrlTemplateImageryProvider#ready} returns true.
@@ -445,6 +456,9 @@ define([
      *          Image or a Canvas DOM object.
      */
     UrlTemplateImageryProvider.prototype.requestImage = function(x, y, level) {
+        if (level < this._minimumRetrievingLevel) {
+          return UrlTemplateImageryProvider.transparentCanvas;
+        }
         var url = buildImageUrl(this, x, y, level);
         return ImageryProvider.loadImage(this, url);
     };

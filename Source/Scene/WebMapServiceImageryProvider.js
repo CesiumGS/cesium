@@ -191,6 +191,7 @@ define([
             tileHeight : options.tileHeight,
             minimumLevel : options.minimumLevel,
             maximumLevel : options.maximumLevel,
+            minimumRetrievingLevel : options.minimumRetrievingLevel,
             proxy : options.proxy,
             tileDiscardPolicy : options.tileDiscardPolicy,
             credit : options.credit,
