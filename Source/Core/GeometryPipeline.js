@@ -2048,7 +2048,7 @@ define([
             // intersects the IDL if either endpoint is on the negative side of the yz-plane
             if (p0.x < 0.0 || p2.x < 0.0) {
                 // and intersects the xz-plane
-                var intersection = IntersectionTests.lineSegmentPlane(p0, p1, xzPlane);
+                var intersection = IntersectionTests.lineSegmentPlane(p0, p2, xzPlane);
                 if (defined(intersection)) {
                     // move point on the xz-plane slightly away from the plane
                     var offset = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Y, 5.0 * CesiumMath.EPSILON9, offsetScratch);

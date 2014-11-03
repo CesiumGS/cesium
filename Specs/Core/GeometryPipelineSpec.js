@@ -2396,7 +2396,6 @@ defineSuite([
 
         var positions = geometry.attributes.position.values;
         expect(positions).toEqual([-1.0, CesiumMath.EPSILON6, 0.0, -1.0, 1.0, 2.0]);
-        expect(positions.length).toEqual(2 * 3);
     });
 
     it('wrapLongitude returns the same points if the line doesn\'t cross the international date line', function() {
@@ -2416,7 +2415,6 @@ defineSuite([
 
         var positions = geometry.attributes.position.values;
         expect(positions).toEqual([1.0, 1.0, 0.0, 1.0, 1.0, 2.0]);
-        expect(positions.length).toEqual(2 * 3);
     });
 
     it('wrapLongitude does nothing for points', function() {
@@ -2435,7 +2433,122 @@ defineSuite([
 
         var positions = geometry.attributes.position.values;
         expect(positions).toEqual([1.0, 1.0, 0.0, 1.0, 1.0, 2.0]);
-        expect(positions.length).toEqual(2 * 3);
+    });
+
+    it('wrapLongitude subdivides wide line crossing the international date line', function() {
+        var geometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : new Float64Array([-1.0, -1.0, 0.0, -1.0, -1.0, 0.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0])
+                }),
+                nextPosition : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : new Float64Array([-1.0, 1.0, 2.0, -1.0, 1.0, 2.0, -1.0, 2.0, 3.0, -1.0, 2.0, 3.0])
+                }),
+                prevPosition : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : new Float64Array([-1.0, -2.0, -1.0, -1.0, -2.0, -1.0, -1.0, -1.0, 0.0, -1.0, -1.0, 0.0])
+                }),
+                expandAndWidth : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 2,
+                    values : new Float32Array([-1.0, 5.0, 1.0, 5.0, -1.0, -5.0, 1.0, -5.0])
+                })
+            },
+            indices : new Uint16Array([0, 2, 1, 1, 2, 3]),
+            primitiveType : PrimitiveType.TRIANGLES
+        });
+        geometry = GeometryPipeline.wrapLongitude(geometry);
+
+        var positions = geometry.attributes.position.values;
+        expect(positions.subarray(0, 4 * 3)).toEqual([-1.0, -1.0, 0.0, -1.0, -1.0, 0.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0]);
+        expect(positions.length).toEqual(8 * 3);
+
+        var nextPosition = geometry.attributes.nextPosition.values;
+        expect(nextPosition.subarray(0, 4 * 3)).toEqual([-1.0, 1.0, 2.0, -1.0, 1.0, 2.0, -1.0, 2.0, 3.0, -1.0, 2.0, 3.0]);
+        expect(nextPosition.length).toEqual(8 * 3);
+
+        var prevPosition = geometry.attributes.prevPosition.values;
+        expect(prevPosition.subarray(0, 4 * 3)).toEqual([-1.0, -2.0, -1.0, -1.0, -2.0, -1.0, -1.0, -1.0, 0.0, -1.0, -1.0, 0.0]);
+        expect(prevPosition.length).toEqual(8 * 3);
+
+        var expandAndWidth = geometry.attributes.expandAndWidth.values;
+        expect(expandAndWidth.subarray(0, 4 * 2)).toEqual([-1.0, 5.0, 1.0, 5.0, -1.0, -5.0, 1.0, -5.0]);
+        expect(expandAndWidth.length).toEqual(8 * 2);
+    });
+
+    it('wrapLongitude returns offset wide line that touches the international date line', function() {
+        var geometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : new Float64Array([-1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0])
+                }),
+                nextPosition : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : new Float64Array([-1.0, 1.0, 2.0, -1.0, 1.0, 2.0, -1.0, 2.0, 3.0, -1.0, 2.0, 3.0])
+                }),
+                prevPosition : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : new Float64Array([-1.0, -2.0, -1.0, -1.0, -2.0, -1.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0])
+                }),
+                expandAndWidth : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 2,
+                    values : new Float32Array([-1.0, 5.0, 1.0, 5.0, -1.0, -5.0, 1.0, -5.0])
+                })
+            },
+            indices : new Uint16Array([0, 2, 1, 1, 2, 3]),
+            primitiveType : PrimitiveType.TRIANGLES
+        });
+        geometry = GeometryPipeline.wrapLongitude(geometry);
+
+        expect(geometry.indices).toEqual([0, 2, 1, 1, 2, 3]);
+
+        var positions = geometry.attributes.position.values;
+        expect(positions).toEqual([-1.0, CesiumMath.EPSILON6, 0.0, -1.0, CesiumMath.EPSILON6, 0.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0]);
+    });
+
+    it('wrapLongitude returns the same points if the wide line doesn\'t cross the international date line', function() {
+        var geometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : new Float64Array([-1.0, 1.0, 0.0, -1.0, 1.0, 0.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0])
+                }),
+                nextPosition : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : new Float64Array([-1.0, 1.0, 2.0, -1.0, 1.0, 2.0, -1.0, 2.0, 3.0, -1.0, 2.0, 3.0])
+                }),
+                prevPosition : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : new Float64Array([-1.0, -2.0, -1.0, -1.0, -2.0, -1.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0])
+                }),
+                expandAndWidth : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 2,
+                    values : new Float32Array([-1.0, 5.0, 1.0, 5.0, -1.0, -5.0, 1.0, -5.0])
+                })
+            },
+            indices : new Uint16Array([0, 2, 1, 1, 2, 3]),
+            primitiveType : PrimitiveType.TRIANGLES
+        });
+        geometry = GeometryPipeline.wrapLongitude(geometry);
+
+        expect(geometry.indices).toEqual([0, 2, 1, 1, 2, 3]);
+
+        var positions = geometry.attributes.position.values;
+        expect(positions).toEqual([-1.0, 1.0, 0.0, -1.0, 1.0, 0.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0]);
     });
 
     it('wrapLongitude throws when geometry is undefined', function() {

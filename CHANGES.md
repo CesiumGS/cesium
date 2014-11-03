@@ -10,6 +10,7 @@ Change Log
 * Fixed rendering polylines with duplicate positions. [#898](https://github.com/AnalyticalGraphicsInc/cesium/issues/898)
 * Fixed a bug in `Globe.pick` that caused it to return incorrect results when using terrain data with vertex normals.  The bug manifested itself as strange behavior when navigating around the surface with the mouse as well as incorrect results when using `Camera.viewRectangle`.
 * Fixed a bug in `sampleTerrain` that could cause it to produce undefined heights when sampling for a position very near the edge of a tile.
+* Fixed a bug in `PolylineGeometry` that would cause the geometry to be split across the IDL for 3D only scenes. [#1197](https://github.com/AnalyticalGraphicsInc/cesium/issues/1197)
 * `ReferenceProperty` instances now retain their last value if the entity being referenced is removed from the target collection.  The reference will be automatically reattached if the target is reintroduced. 
 * Added `culture` option to `BingMapsImageryProvider` constructor.
 * Reduced the amount of GPU memory used by billboards and labels.
