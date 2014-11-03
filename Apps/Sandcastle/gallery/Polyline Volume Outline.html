@@ -30,7 +30,6 @@ function startup(Cesium) {
 // Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
-var primitives = scene.primitives;
 
 // Example 1: Draw the outline of an extruded square.
 
@@ -89,7 +88,7 @@ var starOutline = new Cesium.GeometryInstance({
 });
 
 // Add all instances to primitives.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : [boxOutline, starOutline],
     appearance : new Cesium.PerInstanceColorAppearance({
         flat : true,

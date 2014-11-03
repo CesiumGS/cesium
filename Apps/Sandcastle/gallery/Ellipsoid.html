@@ -29,7 +29,7 @@ function startup(Cesium) {
 //Sandcastle_Begin
 // Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
-var primitives = viewer.scene.primitives;
+var scene = viewer.scene;
 
 // Draw a blue ellipsoid and position it on the globe surface.
 
@@ -57,7 +57,7 @@ var ellipsoidInstance = new Cesium.GeometryInstance({
     }
 });
 // Add the geometry instance to primitives.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : ellipsoidInstance,
     appearance : new Cesium.PerInstanceColorAppearance({
         translucent : false,

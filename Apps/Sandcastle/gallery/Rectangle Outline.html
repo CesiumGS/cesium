@@ -30,7 +30,6 @@ function startup(Cesium) {
 // Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
-var primitives = scene.primitives;
 
 // Create the outline of a rectangle.
 
@@ -45,7 +44,7 @@ var instance = new Cesium.GeometryInstance({
 });
 
 // Add the rectangle outline instance to primitives.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : instance,
     appearance : new Cesium.PerInstanceColorAppearance({
         flat : true,

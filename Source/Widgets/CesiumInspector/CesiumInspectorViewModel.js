@@ -56,9 +56,6 @@ define([
 
     var bc = new Color(0.15, 0.15, 0.15, 0.75);
 
-    var performanceContainer = document.createElement('div');
-    performanceContainer.className = 'cesium-cesiumInspector-performanceDisplay';
-
     /**
      * The view model for {@link CesiumInspector}.
      * @alias CesiumInspectorViewModel
@@ -68,20 +65,26 @@ define([
      *
      * @exception {DeveloperError} scene is required.
      */
-    var CesiumInspectorViewModel = function(scene) {
+    var CesiumInspectorViewModel = function(scene, performanceContainer) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required');
         }
 
+        if (!defined(performanceContainer)) {
+            throw new DeveloperError('performanceContainer is required');
+        }
+        //>>includeEnd('debug');
+
         var that = this;
         var canvas = scene.canvas;
-        canvas.parentNode.appendChild(performanceContainer);
         this._scene = scene;
         this._canvas = canvas;
         this._primitive = undefined;
         this._tile = undefined;
         this._modelMatrixPrimitive = undefined;
         this._performanceDisplay = undefined;
+        this._performanceContainer = performanceContainer;
 
         var globe = this._scene.globe;
         globe.depthTestAgainstTerrain = true;
@@ -283,12 +286,12 @@ define([
         this._showPerformance = createCommand(function() {
             if (that.performance) {
                 that._performanceDisplay = new PerformanceDisplay({
-                    container : performanceContainer,
+                    container : that._performanceContainer,
                     backgroundColor : bc,
                     font : '12px arial,sans-serif'
                 });
             } else {
-                performanceContainer.innerHTML = '';
+                that._performanceContainer.innerHTML = '';
             }
             return true;
         });
@@ -318,7 +321,7 @@ define([
                     if (defined(that._modelMatrixPrimitive) && command.owner === that._modelMatrixPrimitive._primitive) {
                         return true;
                     } else if (defined(that._primitive)) {
-                        return command.owner === that._primitive || command.owner === that._primitive._billboardCollection;
+                        return command.owner === that._primitive || command.owner === that._primitive._billboardCollection || command.owner.primitive === that._primitive;
                     }
                     return false;
                 };
@@ -454,6 +457,18 @@ define([
         scene : {
             get : function() {
                 return this._scene;
+            }
+        },
+
+        /**
+         * Gets the container of the PerformanceDisplay
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Element}
+         */
+        performanceContainer : {
+            get : function() {
+                return this._performanceContainer;
             }
         },
 

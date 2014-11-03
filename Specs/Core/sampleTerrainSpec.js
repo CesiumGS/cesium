@@ -3,11 +3,13 @@ defineSuite([
         'Core/sampleTerrain',
         'Core/Cartographic',
         'Core/CesiumTerrainProvider',
+        'Specs/waitsForPromise',
         'ThirdParty/when'
     ], function(
         sampleTerrain,
         Cartographic,
         CesiumTerrainProvider,
+        waitsForPromise,
         when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -134,5 +136,18 @@ defineSuite([
         expect(function() {
             sampleTerrain(terrainProvider, 11, undefined);
         }).toThrowDeveloperError();
+    });
+
+    it('works for a dodgy point right near the edge of a tile', function() {
+        var stkWorldTerrain = new CesiumTerrainProvider({
+            url : 'http://cesiumjs.org/stk-terrain/tilesets/world/tiles'
+        });
+
+        var positions = [new Cartographic(0.33179290856829535, 0.7363107781851078)];
+        var promise = sampleTerrain(stkWorldTerrain, 12, positions);
+
+        waitsForPromise(promise, function() {
+            expect(positions[0].height).toBeDefined();
+        });
     });
 });

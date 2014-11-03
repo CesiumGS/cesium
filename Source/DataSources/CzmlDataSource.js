@@ -1405,9 +1405,15 @@ define([
         return false;
     }
 
-    function loadCzml(dataSource, czml, sourceUri) {
+    function loadCzml(dataSource, czml, sourceUri, clear) {
         var entityCollection = dataSource._entityCollection;
         entityCollection.suspendEvents();
+
+        if (clear) {
+            dataSource._version = undefined;
+            dataSource._documentPacket = new DocumentPacket();
+            entityCollection.removeAll();
+        }
 
         CzmlDataSource._processCzml(czml, entityCollection, sourceUri, undefined, dataSource);
 
@@ -1573,7 +1579,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        loadCzml(this, czml, sourceUri);
+        loadCzml(this, czml, sourceUri, false);
     };
 
     /**
@@ -1589,10 +1595,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._version = undefined;
-        this._documentPacket = new DocumentPacket();
-        this._entityCollection.removeAll();
-        loadCzml(this, czml, sourceUri);
+        loadCzml(this, czml, sourceUri, true);
     };
 
     /**

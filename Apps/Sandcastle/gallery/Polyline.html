@@ -29,11 +29,11 @@ function startup(Cesium) {
 //Sandcastle_Begin
 // Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
-var primitives = viewer.scene.primitives;
+var scene = viewer.scene;
       
 // Example 1: Draw a red polyline on the globe surface
 
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : new Cesium.GeometryInstance({
         geometry : new Cesium.PolylineGeometry({
             positions : Cesium.Cartesian3.fromDegreesArray([
@@ -56,7 +56,7 @@ primitives.add(new Cesium.Primitive({
 // Setting the followSurface option to false will allow
 // you to draw a straight polyline.  Otherwise, it will
 // curve to the globe surface.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : new Cesium.GeometryInstance({
         geometry : new Cesium.PolylineGeometry({
             positions : Cesium.Cartesian3.fromDegreesArrayHeights([

@@ -53,13 +53,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('constructor adds collection to scene.', function() {
-        var entityCollection = new EntityCollection();
-        visualizer = new BillboardVisualizer(scene, entityCollection);
-        var billboardCollection = scene.primitives.get(0);
-        expect(billboardCollection instanceof BillboardCollection).toEqual(true);
-    });
-
     it('update throws if no time specified.', function() {
         var entityCollection = new EntityCollection();
         visualizer = new BillboardVisualizer(scene, entityCollection);
@@ -92,8 +85,7 @@ defineSuite([
         var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         visualizer.update(JulianDate.now());
-        var billboardCollection = scene.primitives.get(0);
-        expect(billboardCollection.length).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
     });
 
     it('object with no position does not create a billboard.', function() {
@@ -106,8 +98,7 @@ defineSuite([
         billboard.image = new ConstantProperty('Data/Images/Blue.png');
 
         visualizer.update(JulianDate.now());
-        var billboardCollection = scene.primitives.get(0);
-        expect(billboardCollection.length).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
     });
 
     it('object with no image does not create a billboard.', function() {
@@ -120,16 +111,12 @@ defineSuite([
         billboard.show = new ConstantProperty(true);
 
         visualizer.update(JulianDate.now());
-        var billboardCollection = scene.primitives.get(0);
-        expect(billboardCollection.length).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
     });
 
     it('A BillboardGraphics causes a Billboard to be created and updated.', function() {
         var entityCollection = new EntityCollection();
         visualizer = new BillboardVisualizer(scene, entityCollection);
-
-        var billboardCollection = scene.primitives.get(0);
-        expect(billboardCollection.length).toEqual(0);
 
         var testObject = entityCollection.getOrCreateEntity('test');
 
@@ -157,6 +144,7 @@ defineSuite([
 
             visualizer.update(time);
 
+            var billboardCollection = scene.primitives.get(0);
             expect(billboardCollection.length).toEqual(1);
 
             bb = billboardCollection.get(0);
@@ -192,12 +180,41 @@ defineSuite([
         });
     });
 
-    it('clear hides billboards.', function() {
+    it('Reuses primitives when hiding one and showing another', function() {
+        var time = JulianDate.now();
         var entityCollection = new EntityCollection();
         visualizer = new BillboardVisualizer(scene, entityCollection);
 
+        var testObject = entityCollection.getOrCreateEntity('test');
+        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.billboard = new BillboardGraphics();
+        testObject.billboard.image = new ConstantProperty('Data/Images/Blue.png');
+        testObject.billboard.show = new ConstantProperty(true);
+
+        visualizer.update(time);
+
         var billboardCollection = scene.primitives.get(0);
-        expect(billboardCollection.length).toEqual(0);
+        expect(billboardCollection.length).toEqual(1);
+
+        testObject.billboard.show = new ConstantProperty(false);
+
+        visualizer.update(time);
+
+        expect(billboardCollection.length).toEqual(1);
+
+        var testObject2 = entityCollection.getOrCreateEntity('test2');
+        testObject2.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject2.billboard = new BillboardGraphics();
+        testObject2.billboard.image = new ConstantProperty('Data/Images/Blue.png');
+        testObject2.billboard.show = new ConstantProperty(true);
+
+        visualizer.update(time);
+        expect(billboardCollection.length).toEqual(1);
+    });
+
+    it('clear hides billboards.', function() {
+        var entityCollection = new EntityCollection();
+        visualizer = new BillboardVisualizer(scene, entityCollection);
 
         var testObject = entityCollection.getOrCreateEntity('test');
 
@@ -208,6 +225,8 @@ defineSuite([
         billboard.show = new ConstantProperty(true);
         billboard.image = new ConstantProperty('Data/Images/Blue.png');
         visualizer.update(time);
+
+        var billboardCollection = scene.primitives.get(0);
         expect(billboardCollection.length).toEqual(1);
         var bb = billboardCollection.get(0);
 
@@ -228,11 +247,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         visualizer = new BillboardVisualizer(scene, entityCollection);
 
-        var billboardCollection = scene.primitives.get(0);
-        expect(billboardCollection.length).toEqual(0);
-
         var testObject = entityCollection.getOrCreateEntity('test');
-
         var time = JulianDate.now();
         var billboard = testObject.billboard = new BillboardGraphics();
 
@@ -240,6 +255,8 @@ defineSuite([
         billboard.show = new ConstantProperty(true);
         billboard.image = new ConstantProperty('Data/Images/Blue.png');
         visualizer.update(time);
+
+        var billboardCollection = scene.primitives.get(0);
         expect(billboardCollection.length).toEqual(1);
         var bb = billboardCollection.get(0);
         expect(bb.id).toEqual(testObject);

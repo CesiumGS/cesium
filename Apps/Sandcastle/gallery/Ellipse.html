@@ -30,7 +30,6 @@ function startup(Cesium) {
 // Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
-var primitives = scene.primitives;
 
 // Example 1: Draw a red ellipse on the globe surface.
 
@@ -96,7 +95,7 @@ var blueEllipseInstance = new Cesium.GeometryInstance({
 });
 
 // Add all ellipse instances to primitives.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : [redEllipseInstance, greenEllipseInstance, blueEllipseInstance],
     appearance : new Cesium.PerInstanceColorAppearance({
         translucent : false,

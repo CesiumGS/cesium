@@ -324,11 +324,19 @@ define([
         this.availability = defaultValue(source.availability, this.availability);
 
         var propertyNames = this._propertyNames;
-        var propertyNamesLength = propertyNames.length;
+        var sourcePropertyNames = source._propertyNames;
+        var propertyNamesLength = sourcePropertyNames.length;
         for (var i = 0; i < propertyNamesLength; i++) {
-            var name = propertyNames[i];
+            var name = sourcePropertyNames[i];
             var targetProperty = this[name];
             var sourceProperty = source[name];
+
+            //Custom properties that are registered on the source entity must also
+            //get registered on this entity.
+            if (!defined(targetProperty) && propertyNames.indexOf(name) === -1) {
+                this.addProperty(name);
+            }
+
             if (defined(sourceProperty)) {
                 if (defined(targetProperty)) {
                     if (defined(targetProperty.merge)) {

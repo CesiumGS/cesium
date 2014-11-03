@@ -324,7 +324,7 @@ define([
 
         this._mode = SceneMode.SCENE3D;
 
-        this._mapProjection = defaultValue(options.mapProjection, new GeographicProjection());
+        this._mapProjection = defined(options.mapProjection) ? options.mapProjection : new GeographicProjection();
 
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
@@ -985,8 +985,12 @@ define([
     function createDebugFragmentShaderProgram(command, scene, shaderProgram) {
         var context = scene.context;
         var sp = defaultValue(shaderProgram, command.shaderProgram);
-        var fragmentShaderSource = sp.fragmentShaderSource;
-        var renamedFS = fragmentShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_Debug_main()');
+        var fs = sp.fragmentShaderSource.clone();
+
+        fs.sources = fs.sources.map(function(source) {
+            source = source.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_Debug_main()');
+            return source;
+        });
 
         var newMain =
             'void main() \n' +
@@ -1012,9 +1016,10 @@ define([
 
         newMain += '}';
 
-        var source = renamedFS + '\n' + newMain;
+        fs.sources.push(newMain);
+
         var attributeLocations = getAttributeLocations(sp);
-        return context.createShaderProgram(sp.vertexShaderSource, source, attributeLocations);
+        return context.createShaderProgram(sp.vertexShaderSource, fs, attributeLocations);
     }
 
     function executeDebugCommand(command, scene, passState, renderState, shaderProgram) {
@@ -1374,9 +1379,10 @@ define([
         if (scene.debugShowFramesPerSecond) {
             if (!defined(scene._performanceDisplay)) {
                 var performanceContainer = document.createElement('div');
+                performanceContainer.className = 'cesium-performanceDisplay';
                 performanceContainer.style.position = 'absolute';
-                performanceContainer.style.top = '10px';
-                performanceContainer.style.left = '10px';
+                performanceContainer.style.top = '50px';
+                performanceContainer.style.right = '10px';
                 var container = scene._canvas.parentNode;
                 container.appendChild(performanceContainer);
                 var performanceDisplay = new PerformanceDisplay({container: performanceContainer});

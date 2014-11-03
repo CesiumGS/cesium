@@ -2,34 +2,29 @@
 defineSuite([
         'Scene/SingleTileImageryProvider',
         'Core/DefaultProxy',
-        'Core/defined',
         'Core/GeographicTilingScheme',
-        'Core/jsonp',
         'Core/loadImage',
         'Core/Rectangle',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
-        'ThirdParty/when'
+        'Specs/waitsForPromise'
     ], function(
         SingleTileImageryProvider,
         DefaultProxy,
-        defined,
         GeographicTilingScheme,
-        jsonp,
         loadImage,
         Rectangle,
         Imagery,
         ImageryLayer,
         ImageryProvider,
         ImageryState,
-        when) {
+        waitsForPromise) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     afterEach(function() {
-        jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
     });
 
@@ -89,37 +84,25 @@ defineSuite([
     it('requests the single image immediately upon construction', function() {
         var imageUrl = 'Data/Images/Red16x16.png';
 
-        var calledCreateImage = false;
-        loadImage.createImage = function(url, crossOrigin, deferred) {
+        spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
             expect(url).toEqual(imageUrl);
-            calledCreateImage = true;
-            return loadImage.defaultCreateImage(url, crossOrigin, deferred);
-        };
+            loadImage.defaultCreateImage(url, crossOrigin, deferred);
+        });
 
         var provider = new SingleTileImageryProvider({
             url : imageUrl
         });
 
-        expect(calledCreateImage).toEqual(true);
+        expect(loadImage.createImage).toHaveBeenCalled();
 
         waitsFor(function() {
             return provider.ready;
         }, 'imagery provider to become ready');
 
-        var tile000Image;
-
         runs(function() {
-            when(provider.requestImage(0, 0, 0), function(image) {
-                tile000Image = image;
-            }, 'requested tile to be loaded');
-        });
-
-        waitsFor(function() {
-            return defined(tile000Image);
-        });
-
-        runs(function() {
-            expect(tile000Image).toBeInstanceOf(Image);
+            waitsForPromise(provider.requestImage(0, 0, 0), function(image) {
+                expect(image).toBeInstanceOf(Image);
+            });
         });
     });
 
@@ -153,25 +136,23 @@ defineSuite([
     });
 
     it('routes requests through a proxy if one is specified', function() {
-        var calledCreateImage = false;
+        var imageUrl = 'Data/Images/Red16x16.png';
 
-        loadImage.createImage = function(url, crossOrigin, deferred) {
+        spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
             expect(url.indexOf(proxy.getURL('Data/Images/Red16x16.png'))).toEqual(0);
-
-            calledCreateImage = true;
-            deferred.resolve();
-            return undefined;
-        };
+            loadImage.defaultCreateImage(url, crossOrigin, deferred);
+        });
 
         var proxy = new DefaultProxy('/proxy/');
         var provider = new SingleTileImageryProvider({
-            url : 'Data/Images/Red16x16.png',
+            url : imageUrl,
             proxy : proxy
         });
 
+        expect(loadImage.createImage).toHaveBeenCalled();
+
         expect(provider).toBeDefined();
         expect(provider.proxy).toEqual(proxy);
-        expect(calledCreateImage).toEqual(true);
     });
 
     it('raises error event when image cannot be loaded', function() {
@@ -191,14 +172,15 @@ defineSuite([
         });
 
         loadImage.createImage = function(url, crossOrigin, deferred) {
-            // Succeed after 2 tries
             if (tries === 2) {
-                // valid URL
-                return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                // Succeed after 2 tries
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            } else {
+                // fail
+                setTimeout(function() {
+                    deferred.reject();
+                }, 1);
             }
-
-            // invalid URL
-            return loadImage.defaultCreateImage(url, crossOrigin, deferred);
         };
 
         waitsFor(function() {
