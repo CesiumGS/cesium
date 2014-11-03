@@ -55,7 +55,8 @@ define([
      *   });
      * }
      */
-    var throttleRequestByServer = function(url, requestFunction) {
+    // THELITTLEG
+    var throttleRequestByServer = function(requestFunction, url, headers) {
         var server = getServer(url);
 
         var activeRequestsForServer = defaultValue(activeRequests[server], 0);
@@ -64,8 +65,8 @@ define([
         }
 
         activeRequests[server] = activeRequestsForServer + 1;
-
-        return when(requestFunction(url), function(result) {
+        // THELITTLEG
+        return when(requestFunction(url, headers), function(result) {
             activeRequests[server]--;
             return result;
         }).otherwise(function(error) {

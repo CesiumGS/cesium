@@ -321,6 +321,8 @@ define([
         this._loadError = undefined;
         this._loadResources = undefined;
 
+        this._failedLoadFunction = defaultValue(options.failedLoadFunction, function(model, type, path){return new RuntimeError('Failed to load external ' + type + ': ' + path)});
+
         this._cesiumAnimationsDirty = false;       // true when the Cesium API, not a glTF animation, changed a node transform
         this._maxDirtyNumber = 0;                  // Used in place of a dirty boolean flag to avoid an extra graph traversal
 
@@ -687,7 +689,9 @@ define([
 
     function getFailedLoadFunction(model, type, path) {
         return function() {
-            model._loadError = new RuntimeError('Failed to load external ' + type + ': ' + path);
+            // THELITTLEG
+            //model._loadError = new RuntimeError('Failed to load external ' + type + ': ' + path);
+            model._loadError = model._failedLoadFunction(model, type, path);
             model._state = ModelState.FAILED;
         };
     }
@@ -2206,7 +2210,7 @@ define([
 
         var justLoaded = false;
 
-        if (this._state === ModelState.FAILED) {
+        if (this._state === ModelState.FAILED && defined(this._loadError)) {
             throw this._loadError;
         }
 

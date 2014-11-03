@@ -259,7 +259,8 @@ define([
 
         throttleRequests = defaultValue(throttleRequests, true);
         if (throttleRequests) {
-            promise = throttleRequestByServer(url, loadImage);
+            // THELITTLEG
+            promise = throttleRequestByServer(loadImage, url);
             if (!defined(promise)) {
                 return undefined;
             }
