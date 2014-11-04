@@ -1405,6 +1405,17 @@ defineSuite([
         runs(function() {
             expect(one.width).toEqual(1);
             expect(one.height).toEqual(4);
+
+            one.image = './Data/Images/Blue10x10.png';
+        });
+
+        waitsFor(function() {
+            return one.ready;
+        });
+
+        runs(function() {
+            expect(one.width).toEqual(10);
+            expect(one.height).toEqual(10);
         });
     });
 
