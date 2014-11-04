@@ -15,6 +15,9 @@ require({
     }, {
         name : 'Source',
         location : '.'
+    }, {
+        name : 'CodeMirror',
+        location : '../ThirdParty/codemirror-4.6'
     }]
 }, [
         'dijit/layout/ContentPane',
@@ -33,6 +36,13 @@ require({
         'dojo/query',
         'Sandcastle/LinkButton',
         'Source/Cesium',
+        'CodeMirror/lib/codemirror',
+        'CodeMirror/addon/hint/show-hint',
+        'CodeMirror/addon/hint/javascript-hint',
+        'CodeMirror/mode/javascript/javascript',
+        'CodeMirror/mode/css/css',
+        'CodeMirror/mode/xml/xml',
+        'CodeMirror/mode/htmlmixed/htmlmixed',
         'dijit/form/Button',
         'dijit/form/DropDownButton',
         'dijit/form/ToggleButton',
@@ -64,7 +74,8 @@ require({
         parser,
         query,
         LinkButton,
-        Cesium) {
+        Cesium,
+        CodeMirror) {
     "use strict";
 
     //In order for CodeMirror auto-complete to work, Cesium needs to be defined as a global.
@@ -247,14 +258,12 @@ require({
         docTimer = window.setTimeout(showDocPopup, 500);
     }
 
-    var abbrDiv = document.createElement('div');
-    var abbrEle = document.createElement('abbr');
-    abbrEle.textContent = '%N%';
-    abbrDiv.appendChild(abbrEle);
-
-    function makeLineLabel(msg) {
-        abbrEle.title = msg;
-        return abbrDiv.innerHTML;
+    function makeLineLabel(msg, className) {
+        var element = document.createElement('abbr');
+        element.className = className;
+        element.innerHTML = '&nbsp;';
+        element.title = msg;
+        return element;
     }
 
     function closeGalleryTooltip() {
@@ -305,23 +314,25 @@ require({
         var len;
         hintTimer = undefined;
         closeGalleryTooltip();
+        jsEditor.clearGutter('hintGutter');
+        jsEditor.clearGutter('highlightGutter');
+        jsEditor.clearGutter('errorGutter');
+        jsEditor.clearGutter('searchGutter');
         while (errorLines.length > 0) {
             line = errorLines.pop();
-            jsEditor.setLineClass(line, null);
-            jsEditor.clearMarker(line);
+            jsEditor.removeLineClass(line, 'text');
         }
         while (highlightLines.length > 0) {
             line = highlightLines.pop();
-            jsEditor.setLineClass(line, null);
-            jsEditor.clearMarker(line);
+            jsEditor.removeLineClass(line, 'text');
         }
         var code = jsEditor.getValue();
         if (searchTerm !== '') {
             var codeLines = code.split('\n');
             for (i = 0, len = codeLines.length; i < len; ++i) {
                 if (searchRegExp.test(codeLines[i])) {
-                    line = jsEditor.setMarker(i, makeLineLabel('Search: ' + searchTerm), 'searchMarker');
-                    jsEditor.setLineClass(line, 'searchLine');
+                    line = jsEditor.setGutterMarker(i, 'searchGutter', makeLineLabel('Search: ' + searchTerm, 'searchMarker'));
+                    jsEditor.addLineClass(line, 'text', 'searchLine');
                     errorLines.push(line);
                 }
             }
@@ -333,8 +344,8 @@ require({
             for (i = 0, len = hints.length; i < len; ++i) {
                 var hint = hints[i];
                 if (hint !== null && defined(hint.reason) && hint.line > 0) {
-                    line = jsEditor.setMarker(scriptLineToEditorLine(hint.line), makeLineLabel(hint.reason), 'hintMarker');
-                    jsEditor.setLineClass(line, 'hintLine');
+                    line = jsEditor.setGutterMarker(scriptLineToEditorLine(hint.line), 'hintGutter', makeLineLabel(hint.reason, 'hintMarker'));
+                    jsEditor.addLineClass(line, 'text', 'hintLine');
                     errorLines.push(line);
                 }
             }
@@ -381,15 +392,15 @@ require({
 
     function highlightLine(lineNum) {
         var line;
+        jsEditor.clearGutter('highlightGutter');
         while (highlightLines.length > 0) {
             line = highlightLines.pop();
-            jsEditor.setLineClass(line, null);
-            jsEditor.clearMarker(line);
+            jsEditor.removeLineClass(line, 'text');
         }
         if (lineNum > 0) {
             lineNum = scriptLineToEditorLine(lineNum);
-            line = jsEditor.setMarker(lineNum, makeLineLabel('highlighted by demo'), 'highlightMarker');
-            jsEditor.setLineClass(line, 'highlightLine');
+            line = jsEditor.setGutterMarker(lineNum, 'highlightGutter', makeLineLabel('highlighted by demo', 'highlightMarker'));
+            jsEditor.addLineClass(line, 'text', 'highlightLine');
             highlightLines.push(line);
             scrollToLine(lineNum);
         }
@@ -439,17 +450,12 @@ require({
         }
     };
 
-    CodeMirror.commands.autocomplete = function(cm) {
-        CodeMirror.simpleHint(cm, CodeMirror.cesiumHint);
-    };
-
     jsEditor = CodeMirror.fromTextArea(document.getElementById('code'), {
         mode : 'javascript',
+        gutters : ['hintGutter', 'errorGutter', 'searchGutter', 'highlightGutter'],
         lineNumbers : true,
         matchBrackets : true,
         indentUnit : 4,
-        onCursorActivity : onCursorActivity,
-        onChange : scheduleHint,
         extraKeys : {
             'Ctrl-Space' : 'autocomplete',
             'F8' : 'runCesium',
@@ -457,6 +463,9 @@ require({
             'Shift-Tab' : 'indentLess'
         }
     });
+
+    jsEditor.on('cursorActivity', onCursorActivity);
+    jsEditor.on('change', scheduleHint);
 
     htmlEditor = CodeMirror.fromTextArea(document.getElementById('htmlBody'), {
         mode : 'text/html',
@@ -645,7 +654,7 @@ require({
         });
 
         var parser = new DOMParser();
-        var doc = parser.parseFromString(demo.code, "text/html");
+        var doc = parser.parseFromString(demo.code, 'text/html');
 
         var script = doc.querySelector('script[id="cesium_sandcastle_script"]');
         if (!script) {
@@ -707,7 +716,7 @@ require({
                 // into the iframe, causing the demo to run there.
                 applyBucket();
                 if (docError) {
-                    appendConsole('consoleError', "Documentation not available.  Please run the 'generateDocumentation' build script to generate Cesium documentation.", true);
+                    appendConsole('consoleError', 'Documentation not available.  Please run the "generateDocumentation" build script to generate Cesium documentation.', true);
                     showGallery();
                 }
                 if (galleryError) {
@@ -729,8 +738,8 @@ require({
                 } else {
                     lineNumber = scriptLineToEditorLine(lineNumber);
                     errorMsg += (lineNumber + 1) + ')';
-                    line = jsEditor.setMarker(lineNumber, makeLineLabel(e.data.error), 'errorMarker');
-                    jsEditor.setLineClass(line, 'errorLine');
+                    line = jsEditor.setGutterMarker(lineNumber, 'errorGutter', makeLineLabel(e.data.error, 'errorMarker'));
+                    jsEditor.addLineClass(line, 'text', 'errorLine');
                     errorLines.push(line);
                     scrollToLine(lineNumber);
                 }
@@ -909,7 +918,7 @@ require({
             demo.code = value;
 
             var parser = new DOMParser();
-            var doc = parser.parseFromString(value, "text/html");
+            var doc = parser.parseFromString(value, 'text/html');
 
             var bucket = doc.body.getAttribute('data-sandcastle-bucket');
             demo.bucket = bucket ? bucket : 'bucket-requirejs.html';
@@ -992,7 +1001,7 @@ require({
         var demoLink = document.createElement('a');
         demoLink.id = demo.name + tabName;
         demoLink.className = 'linkButton';
-        demoLink.href = 'gallery/' + demo.name + '.html';
+        demoLink.href = 'gallery/' + encodeURIComponent(demo.name) + '.html';
         tab.appendChild(demoLink);
 
         demoLink.onclick = function(e) {

@@ -1,8 +1,12 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/GlobeSurfaceTile',
+        'Core/Cartesian3',
         'Core/CesiumTerrainProvider',
         'Core/defined',
+        'Core/Ellipsoid',
+        'Core/GeographicTilingScheme',
+        'Core/Ray',
         'Core/WebMercatorTilingScheme',
         'Scene/ImageryLayerCollection',
         'Scene/QuadtreeTile',
@@ -13,8 +17,12 @@ defineSuite([
         'ThirdParty/when'
     ], function(
         GlobeSurfaceTile,
+        Cartesian3,
         CesiumTerrainProvider,
         defined,
+        Ellipsoid,
+        GeographicTilingScheme,
+        Ray,
         WebMercatorTilingScheme,
         ImageryLayerCollection,
         QuadtreeTile,
@@ -47,6 +55,9 @@ defineSuite([
                     tilingScheme : tilingScheme,
                     hasWaterMask : function() {
                         return true;
+                    },
+                    getTileDataAvailable : function(x, y, level) {
+                        return undefined;
                     }
             };
 
@@ -59,6 +70,9 @@ defineSuite([
                     tilingScheme : tilingScheme,
                     hasWaterMask : function() {
                         return true;
+                    },
+                    getTileDataAvailable : function(x, y, level) {
+                        return undefined;
                     }
             };
 
@@ -416,6 +430,9 @@ defineSuite([
                     tilingScheme :  realTerrainProvider.tilingScheme,
                     hasWaterMask : function() {
                         return realTerrainProvider.hasWaterMask();
+                    },
+                    getTileDataAvailable : function(x, y, level) {
+                        return undefined;
                     }
             };
 
@@ -453,6 +470,9 @@ defineSuite([
                     tilingScheme : realTerrainProvider.tilingScheme,
                     hasWaterMask : function() {
                         return realTerrainProvider.hasWaterMask();
+                    },
+                    getTileDataAvailable : function(x, y, level) {
+                        return undefined;
                     }
             };
 
@@ -474,4 +494,50 @@ defineSuite([
             });
         });
     }, 'WebGL');
+
+    describe('pick', function() {
+        var context;
+
+        beforeAll(function() {
+            context = createContext();
+        });
+
+        afterAll(function() {
+            destroyContext(context);
+        });
+
+        it('gets correct results even when the mesh includes normals', function() {
+            var terrainProvider = new CesiumTerrainProvider({
+                url : '//cesiumjs.org/stk-terrain/tilesets/world/tiles',
+                requestVertexNormals : true
+            });
+
+            var tile = new QuadtreeTile({
+                tilingScheme : new GeographicTilingScheme(),
+                level : 11,
+                x : 3788,
+                y : 1336
+            });
+
+            var imageryLayerCollection = new ImageryLayerCollection();
+
+            waitsFor(function() {
+                if (!terrainProvider.ready) {
+                    return false;
+                }
+
+                GlobeSurfaceTile.processStateMachine(tile, context, terrainProvider, imageryLayerCollection);
+                return tile.state === QuadtreeTileLoadState.DONE;
+            });
+
+            runs(function() {
+                var ray = new Ray(
+                    new Cartesian3(-5052039.459789615, 2561172.040315167, -2936276.999965875),
+                    new Cartesian3(0.5036332963145244, 0.6648033332898124, 0.5517155343926082));
+                var pickResult = tile.data.pick(ray, undefined, true);
+                var cartographic = Ellipsoid.WGS84.cartesianToCartographic(pickResult);
+                expect(cartographic.height).toBeGreaterThan(-500.0);
+            });
+        });
+    });
 });

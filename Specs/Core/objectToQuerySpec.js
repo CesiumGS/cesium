@@ -15,7 +15,7 @@ defineSuite([
         };
 
         var str = objectToQuery(obj);
-        expect(str).toEqual('key1=some+value&key2=a%2Fb');
+        expect(str).toEqual('key1=some%20value&key2=a%2Fb');
     });
 
     it('can encode arrays of data', function() {
@@ -33,7 +33,7 @@ defineSuite([
             key2 : 'a/b',
             key3 : ['x', 'y']
         });
-        expect(str).toEqual('key1=some+value&key2=a%2Fb&key3=x&key3=y');
+        expect(str).toEqual('key1=some%20value&key2=a%2Fb&key3=x&key3=y');
     });
 
     it('can round-trip', function() {

@@ -42,7 +42,8 @@ defineSuite([
         primitive = new Primitive({
             geometryInstances : new GeometryInstance({
                 geometry : new RectangleGeometry({
-                    rectangle : rectangle
+                    rectangle : rectangle,
+                    vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT
                 }),
                 attributes : {
                     color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)

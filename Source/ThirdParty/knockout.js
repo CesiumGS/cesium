@@ -1,6 +1,6 @@
 /*global define*/
 define([
-        './knockout-3.1.0',
+        './knockout-3.2.0',
         './knockout-es5',
         '../Widgets/SvgPathBindingHandler'
     ], function(

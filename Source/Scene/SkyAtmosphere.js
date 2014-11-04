@@ -10,8 +10,8 @@ define([
         '../Core/GeometryPipeline',
         '../Core/VertexFormat',
         '../Renderer/BufferUsage',
-        '../Renderer/createShaderSource',
         '../Renderer/DrawCommand',
+        '../Renderer/ShaderSource',
         '../Shaders/SkyAtmosphereFS',
         '../Shaders/SkyAtmosphereVS',
         './BlendingState',
@@ -28,8 +28,8 @@ define([
         GeometryPipeline,
         VertexFormat,
         BufferUsage,
-        createShaderSource,
         DrawCommand,
+        ShaderSource,
         SkyAtmosphereFS,
         SkyAtmosphereVS,
         BlendingState,
@@ -164,13 +164,13 @@ define([
                 blending : BlendingState.ALPHA_BLEND
             });
 
-            var vs = createShaderSource({
+            var vs = new ShaderSource({
                 defines : ['SKY_FROM_SPACE'],
                 sources : [SkyAtmosphereVS]
             });
             this._spSkyFromSpace = context.createShaderProgram(vs, SkyAtmosphereFS);
 
-            vs = createShaderSource({
+            vs = new ShaderSource({
                 defines : ['SKY_FROM_ATMOSPHERE'],
                 sources : [SkyAtmosphereVS]
             });

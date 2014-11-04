@@ -9,7 +9,6 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/RuntimeError',
-        '../Shaders/Builtin/CzmBuiltins',
         './AutomaticUniforms'
     ], function(
         defined,
@@ -21,7 +20,6 @@ define([
         Matrix3,
         Matrix4,
         RuntimeError,
-        CzmBuiltins,
         AutomaticUniforms) {
     "use strict";
     /*global console*/
@@ -34,7 +32,7 @@ define([
         scratchUniformMatrix3 = new Float32Array(9);
         scratchUniformMatrix4 = new Float32Array(16);
     }
-    function setUniform (uniform) {
+    function setUniform(uniform) {
         var gl = uniform._gl;
         var location = uniform._location;
         switch (uniform._activeUniform.type) {
@@ -340,10 +338,11 @@ define([
     /**
      * @private
      */
-    var ShaderProgram = function(gl, logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations) {
-        this._gl = gl;
-        this._logShaderCompilation = logShaderCompilation;
-        this._attributeLocations = attributeLocations;
+    var ShaderProgram = function(options) {
+        this._gl = options.gl;
+        this._logShaderCompilation = options.logShaderCompilation;
+        this._debugShaders = options.debugShaders;
+        this._attributeLocations = options.attributeLocations;
 
         this._program = undefined;
         this._numberOfVertexAttributes = undefined;
@@ -352,15 +351,17 @@ define([
         this._uniforms = undefined;
         this._automaticUniforms = undefined;
         this._manualUniforms = undefined;
-        this._cachedShader = undefined;  // Used by ShaderCache
+        this._cachedShader = undefined; // Used by ShaderCache
 
         /**
          * @private
          */
         this.maximumTextureUnitIndex = undefined;
 
-        this._vertexShaderSource = vertexShaderSource;
-        this._fragmentShaderSource = fragmentShaderSource;
+        this._vertexShaderSource = options.vertexShaderSource;
+        this._vertexShaderText = options.vertexShaderText;
+        this._fragmentShaderSource = options.fragmentShaderSource;
+        this._fragmentShaderText = options.fragmentShaderText;
 
         /**
          * @private
@@ -370,36 +371,30 @@ define([
 
     defineProperties(ShaderProgram.prototype, {
         /**
-         * GLSL source for the shader program's vertex shader.  This is the version of
-         * the source provided when the shader program was created, not the final
-         * source provided to WebGL, which includes Cesium bulit-ins.
-         *
+         * GLSL source for the shader program's vertex shader.
          * @memberof ShaderProgram.prototype
          *
-         * @type {String}
+         * @type {ShaderSource}
          * @readonly
          */
-        vertexShaderSource: {
+        vertexShaderSource : {
             get : function() {
                 return this._vertexShaderSource;
             }
         },
         /**
-         * GLSL source for the shader program's fragment shader.  This is the version of
-         * the source provided when the shader program was created, not the final
-         * source provided to WebGL, which includes Cesium bulit-ins.
-         *
+         * GLSL source for the shader program's fragment shader.
          * @memberof ShaderProgram.prototype
          *
-         * @type {String}
+         * @type {ShaderSource}
          * @readonly
          */
-        fragmentShaderSource: {
+        fragmentShaderSource : {
             get : function() {
                 return this._fragmentShaderSource;
             }
         },
-        vertexAttributes: {
+        vertexAttributes : {
             get : function() {
                 initialize(this);
                 return this._vertexAttributes;
@@ -411,13 +406,13 @@ define([
                 return this._numberOfVertexAttributes;
             }
         },
-        allUniforms: {
+        allUniforms : {
             get : function() {
                 initialize(this);
                 return this._uniformsByName;
             }
         },
-        manualUniforms: {
+        manualUniforms : {
             get : function() {
                 initialize(this);
                 return this._manualUniforms;
@@ -425,221 +420,11 @@ define([
         }
     });
 
-    /**
-     * For ShaderProgram testing
-     * @private
-     */
-    ShaderProgram._czmBuiltinsAndUniforms = {};
+    var consolePrefix = '[Cesium WebGL] ';
 
-    // combine automatic uniforms and Cesium built-ins
-    for ( var builtinName in CzmBuiltins) {
-        if (CzmBuiltins.hasOwnProperty(builtinName)) {
-            ShaderProgram._czmBuiltinsAndUniforms[builtinName] = CzmBuiltins[builtinName];
-        }
-    }
-    for ( var uniformName in AutomaticUniforms) {
-        if (AutomaticUniforms.hasOwnProperty(uniformName)) {
-            var uniform = AutomaticUniforms[uniformName];
-            if (typeof uniform.getDeclaration === 'function') {
-                ShaderProgram._czmBuiltinsAndUniforms[uniformName] = uniform.getDeclaration(uniformName);
-            }
-        }
-    }
-
-    function extractShaderVersion(source) {
-        // This will fail if the first #version is actually in a comment.
-        var index = source.indexOf('#version');
-        if (index !== -1) {
-            var newLineIndex = source.indexOf('\n', index);
-
-            // We could throw an exception if there is not a new line after
-            // #version, but the GLSL compiler will catch it.
-            if (index !== -1) {
-                // Extract #version directive, including the new line.
-                var version = source.substring(index, newLineIndex + 1);
-
-                // Comment out original #version directive so the line numbers
-                // are not off by one.  There can be only one #version directive
-                // and it must appear at the top of the source, only preceded by
-                // whitespace and comments.
-                var modified = source.substring(0, index) + '//' + source.substring(index);
-
-                return {
-                    version : version,
-                    source : modified
-                };
-            }
-        }
-
-        return {
-            version : '', // defaults to #version 100
-            source : source // no modifications required
-        };
-    }
-
-    function getDependencyNode(name, glslSource, nodes) {
-        var dependencyNode;
-
-        // check if already loaded
-        for (var i = 0; i < nodes.length; ++i) {
-            if (nodes[i].name === name) {
-                dependencyNode = nodes[i];
-            }
-        }
-
-        if (!defined(dependencyNode)) {
-            // strip doc comments so we don't accidentally try to determine a dependency for something found
-            // in a comment
-            var commentBlocks = glslSource.match(/\/\*\*[\s\S]*?\*\//gm);
-            if (defined(commentBlocks) && commentBlocks !== null) {
-                for (i = 0; i < commentBlocks.length; ++i) {
-                    var commentBlock = commentBlocks[i];
-
-                    // preserve the number of lines in the comment block so the line numbers will be correct when debugging shaders
-                    var numberOfLines = commentBlock.match(/\n/gm).length;
-                    var modifiedComment = '';
-                    for (var lineNumber = 0; lineNumber < numberOfLines; ++lineNumber) {
-                        if (lineNumber === 0) {
-                            modifiedComment += '// Comment replaced to prevent problems when determining dependencies on built-in functions\n';
-                        } else {
-                            modifiedComment += '//\n';
-                        }
-                    }
-
-                    glslSource = glslSource.replace(commentBlock, modifiedComment);
-                }
-            }
-
-            // create new node
-            dependencyNode = {
-                name : name,
-                glslSource : glslSource,
-                dependsOn : [],
-                requiredBy : [],
-                evaluated : false
-            };
-            nodes.push(dependencyNode);
-        }
-
-        return dependencyNode;
-    }
-
-    function generateDependencies(currentNode, dependencyNodes) {
-        if (currentNode.evaluated) {
-            return;
-        }
-
-        currentNode.evaluated = true;
-
-        // identify all dependencies that are referenced from this glsl source code
-        var czmMatches = currentNode.glslSource.match(/\bczm_[a-zA-Z0-9_]*/g);
-        if (defined(czmMatches) && czmMatches !== null) {
-            // remove duplicates
-            czmMatches = czmMatches.filter(function(elem, pos) {
-                return czmMatches.indexOf(elem) === pos;
-            });
-
-            czmMatches.forEach(function(element, index, array) {
-                if (element !== currentNode.name && ShaderProgram._czmBuiltinsAndUniforms.hasOwnProperty(element)) {
-                    var referencedNode = getDependencyNode(element, ShaderProgram._czmBuiltinsAndUniforms[element], dependencyNodes);
-                    currentNode.dependsOn.push(referencedNode);
-                    referencedNode.requiredBy.push(currentNode);
-
-                    // recursive call to find any dependencies of the new node
-                    generateDependencies(referencedNode, dependencyNodes);
-                }
-            });
-        }
-    }
-
-    function sortDependencies(dependencyNodes) {
-        var nodesWithoutIncomingEdges = [];
-        var allNodes = [];
-
-        while (dependencyNodes.length > 0) {
-            var node = dependencyNodes.pop();
-            allNodes.push(node);
-
-            if (node.requiredBy.length === 0) {
-                nodesWithoutIncomingEdges.push(node);
-            }
-        }
-
-        while (nodesWithoutIncomingEdges.length > 0) {
-            var currentNode = nodesWithoutIncomingEdges.shift();
-
-            dependencyNodes.push(currentNode);
-
-            for (var i = 0; i < currentNode.dependsOn.length; ++i) {
-                // remove the edge from the graph
-                var referencedNode = currentNode.dependsOn[i];
-                var index = referencedNode.requiredBy.indexOf(currentNode);
-                referencedNode.requiredBy.splice(index, 1);
-
-                // if referenced node has no more incoming edges, add to list
-                if (referencedNode.requiredBy.length === 0) {
-                    nodesWithoutIncomingEdges.push(referencedNode);
-                }
-            }
-        }
-
-        // if there are any nodes left with incoming edges, then there was a circular dependency somewhere in the graph
-        var badNodes = [];
-        for (var j = 0; j < allNodes.length; ++j) {
-            if (allNodes[j].requiredBy.length !== 0) {
-                badNodes.push(allNodes[j]);
-            }
-        }
-        if (badNodes.length !== 0) {
-            var message = 'A circular dependency was found in the following built-in functions/structs/constants: \n';
-            for (j = 0; j < badNodes.length; ++j) {
-                message = message + badNodes[j].name + '\n';
-            }
-            throw new DeveloperError(message);
-        }
-    }
-
-    function getBuiltinsAndAutomaticUniforms(shaderSource) {
-        // generate a dependency graph for builtin functions
-        var dependencyNodes = [];
-        var root = getDependencyNode('main', shaderSource, dependencyNodes);
-        generateDependencies(root, dependencyNodes);
-        sortDependencies(dependencyNodes);
-
-        // Concatenate the source code for the function dependencies.
-        // Iterate in reverse so that dependent items are declared before they are used.
-        var builtinsSource = '';
-        for (var i = dependencyNodes.length - 1; i >= 0; --i) {
-            builtinsSource = builtinsSource + dependencyNodes[i].glslSource + '\n';
-        }
-
-        return builtinsSource.replace(root.glslSource, '');
-    }
-
-    function getFragmentShaderPrecision() {
-        return '#ifdef GL_FRAGMENT_PRECISION_HIGH \n' +
-               '  precision highp float; \n' +
-               '#else \n' +
-               '  precision mediump float; \n' +
-               '#endif \n\n';
-    }
-
-    function createAndLinkProgram(gl, logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations) {
-        var vsSourceVersioned = extractShaderVersion(vertexShaderSource);
-        var fsSourceVersioned = extractShaderVersion(fragmentShaderSource);
-
-        var vsSource =
-                vsSourceVersioned.version +
-                getBuiltinsAndAutomaticUniforms(vsSourceVersioned.source) +
-                '\n#line 0\n' +
-                vsSourceVersioned.source;
-        var fsSource =
-                fsSourceVersioned.version +
-                getFragmentShaderPrecision() +
-                getBuiltinsAndAutomaticUniforms(fsSourceVersioned.source) +
-                '\n#line 0\n' +
-                fsSourceVersioned.source;
-        var log;
+    function createAndLinkProgram(gl, shader) {
+        var vsSource = shader._vertexShaderText;
+        var fsSource = shader._fragmentShaderText;
 
         var vertexShader = gl.createShader(gl.VERTEX_SHADER);
         gl.shaderSource(vertexShader, vsSource);
@@ -656,6 +441,7 @@ define([
         gl.deleteShader(vertexShader);
         gl.deleteShader(fragmentShader);
 
+        var attributeLocations = shader._attributeLocations;
         if (defined(attributeLocations)) {
             for ( var attribute in attributeLocations) {
                 if (attributeLocations.hasOwnProperty(attribute)) {
@@ -666,46 +452,74 @@ define([
 
         gl.linkProgram(program);
 
+        var log;
         if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            var debugShaders = shader._debugShaders;
+
             // For performance, only check compile errors if there is a linker error.
             if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
                 log = gl.getShaderInfoLog(fragmentShader);
+                console.error(consolePrefix + 'Fragment shader compile log: ' + log);
+                if (defined(debugShaders)) {
+                    var fragmentSourceTranslation = debugShaders.getTranslatedShaderSource(fragmentShader);
+                    if (fragmentSourceTranslation !== '') {
+                        console.error(consolePrefix + 'Translated fragment shader source:\n' + fragmentSourceTranslation);
+                    } else {
+                        console.error(consolePrefix + 'Fragment shader translation failed.');
+                    }
+                }
+
                 gl.deleteProgram(program);
-                console.error('[GL] Fragment shader compile log: ' + log);
                 throw new RuntimeError('Fragment shader failed to compile.  Compile log: ' + log);
             }
 
             if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
                 log = gl.getShaderInfoLog(vertexShader);
+                console.error(consolePrefix + 'Vertex shader compile log: ' + log);
+                if (defined(debugShaders)) {
+                    var vertexSourceTranslation = debugShaders.getTranslatedShaderSource(vertexShader);
+                    if (vertexSourceTranslation !== '') {
+                        console.error(consolePrefix + 'Translated vertex shader source:\n' + vertexSourceTranslation);
+                    } else {
+                        console.error(consolePrefix + 'Vertex shader translation failed.');
+                    }
+                }
+
                 gl.deleteProgram(program);
-                console.error('[GL] Vertex shader compile log: ' + log);
                 throw new RuntimeError('Vertex shader failed to compile.  Compile log: ' + log);
             }
 
             log = gl.getProgramInfoLog(program);
+            console.error(consolePrefix + 'Shader program link log: ' + log);
+            if (defined(debugShaders)) {
+                console.error(consolePrefix + 'Translated vertex shader source:\n' + debugShaders.getTranslatedShaderSource(vertexShader));
+                console.error(consolePrefix + 'Translated fragment shader source:\n' + debugShaders.getTranslatedShaderSource(fragmentShader));
+            }
+
             gl.deleteProgram(program);
-            console.error('[GL] Shader program link log: ' + log);
             throw new RuntimeError('Program failed to link.  Link log: ' + log);
         }
+
+        var logShaderCompilation = shader._logShaderCompilation;
 
         if (logShaderCompilation) {
             log = gl.getShaderInfoLog(vertexShader);
             if (defined(log) && (log.length > 0)) {
-                console.log('[GL] Vertex shader compile log: ' + log);
+                console.log(consolePrefix + 'Vertex shader compile log: ' + log);
             }
         }
 
         if (logShaderCompilation) {
             log = gl.getShaderInfoLog(fragmentShader);
             if (defined(log) && (log.length > 0)) {
-                console.log('[GL] Fragment shader compile log: ' + log);
+                console.log(consolePrefix + 'Fragment shader compile log: ' + log);
             }
         }
 
         if (logShaderCompilation) {
             log = gl.getProgramInfoLog(program);
             if (defined(log) && (log.length > 0)) {
-                console.log('[GL] Shader program link log: ' + log);
+                console.log(consolePrefix + 'Shader program link log: ' + log);
             }
         }
 
@@ -799,7 +613,7 @@ define([
                     } else {
                         locations = [];
                         value = [];
-                        for ( var j = 0; j < activeUniform.size; ++j) {
+                        for (var j = 0; j < activeUniform.size; ++j) {
                             loc = gl.getUniformLocation(program, uniformName + '[' + j + ']');
 
                             // Workaround for IE 11.0.9.  See above.
@@ -858,7 +672,7 @@ define([
         }
 
         var gl = shader._gl;
-        var program = createAndLinkProgram(gl, shader._logShaderCompilation, shader.vertexShaderSource, shader.fragmentShaderSource, shader._attributeLocations);
+        var program = createAndLinkProgram(gl, shader, shader._debugShaders);
         var numberOfVertexAttributes = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
         var uniforms = findUniforms(gl, program);
         var partitionedUniforms = partitionUniforms(uniforms.uniformsByName);

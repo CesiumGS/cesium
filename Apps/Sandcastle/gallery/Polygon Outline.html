@@ -30,7 +30,6 @@ function startup(Cesium) {
 // Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
-var primitives = scene.primitives;
 
 // Example 1: Draw the outline of a polygon on the globe surface.
 var positions = Cesium.Cartesian3.fromDegreesArray([
@@ -101,7 +100,7 @@ var perPositionPolygonOutlineInstance = new Cesium.GeometryInstance({
 });
 
 // Add all polyline outlines instances to primitives.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : [polygonOutlineInstance, extrudedPolygonOutlineInstance, perPositionPolygonOutlineInstance],
     appearance : new Cesium.PerInstanceColorAppearance({
         flat : true,

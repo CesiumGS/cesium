@@ -224,10 +224,39 @@ defineSuite([
         verifyDraw(fs);
     });
 
-    it('has czm_octDecode', function() {
+    it('has czm_octDecode(vec2)', function() {
         var fs =
             'void main() { ' +
-            '  gl_FragColor = vec4(czm_octDecode(vec2(0.0, 0.0)) == vec3(0.0, 0.0, 1.0)); ' +
+            '  gl_FragColor = vec4(all(lessThanEqual(abs(czm_octDecode(vec2(128.0, 128.0)) - vec3(0.0, 0.0, 1.0)), vec3(0.01)))); ' +
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('has czm_octDecode(float)', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(all(lessThanEqual(abs(czm_octDecode(32896.0) - vec3(0.0, 0.0, 1.0)), vec3(0.01)))); ' +
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('has czm_octDecode(vec2, vec3, vec3, vec3)', function() {
+        var fs =
+            'void main() { ' +
+            '  vec3 a, b, c;' +
+            '  czm_octDecode(vec2(8454016.0, 8421631.0), a, b, c);' +
+            '  bool decoded = all(lessThanEqual(abs(a - vec3(1.0, 0.0, 0.0)), vec3(0.01)));' +
+            '  decoded = decoded && all(lessThanEqual(abs(b - vec3(0.0, 1.0, 0.0)), vec3(0.01)));' +
+            '  decoded = decoded && all(lessThanEqual(abs(c - vec3(0.0, 0.0, 1.0)), vec3(0.01)));' +
+            '  gl_FragColor = vec4(decoded);' +
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('has czm_decompressTextureCoordinates', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_decompressTextureCoordinates(8390656.0) == vec2(0.5, 0.5)); ' +
             '}';
         verifyDraw(fs);
     });

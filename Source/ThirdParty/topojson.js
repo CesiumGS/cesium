@@ -32,7 +32,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 !function() {
   var topojson = {
-    version: "1.6.8",
+    version: "1.6.18",
     mesh: function(topology) { return object(topology, meshArcs.apply(this, arguments)); },
     meshArcs: meshArcs,
     merge: function(topology) { return object(topology, mergeArcs.apply(this, arguments)); },
@@ -381,16 +381,23 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   function presimplify(topology, triangleArea) {
     var absolute = transformAbsolute(topology.transform),
         relative = transformRelative(topology.transform),
-        heap = minAreaHeap(),
-        maxArea = 0,
-        triangle;
+        heap = minAreaHeap();
 
     if (!triangleArea) triangleArea = cartesianTriangleArea;
 
     topology.arcs.forEach(function(arc) {
-      var triangles = [];
+      var triangles = [],
+          maxArea = 0,
+          triangle;
 
-      arc.forEach(absolute);
+      // To store each point’s effective area, we create a new array rather than
+      // extending the passed-in point to workaround a Chrome/V8 bug (getting
+      // stuck in smi mode). For midpoints, the initial effective area of
+      // Infinity will be computed in the next step.
+      for (var i = 0, n = arc.length, p; i < n; ++i) {
+        p = arc[i];
+        absolute(arc[i] = [p[0], p[1], Infinity], i);
+      }
 
       for (var i = 1, n = arc.length - 1; i < n; ++i) {
         triangle = arc.slice(i - 1, i + 2);
@@ -399,41 +406,36 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         heap.push(triangle);
       }
 
-      // Always keep the arc endpoints!
-      arc[0][2] = arc[n][2] = Infinity;
-
       for (var i = 0, n = triangles.length; i < n; ++i) {
         triangle = triangles[i];
         triangle.previous = triangles[i - 1];
         triangle.next = triangles[i + 1];
       }
-    });
 
-    while (triangle = heap.pop()) {
-      var previous = triangle.previous,
-          next = triangle.next;
+      while (triangle = heap.pop()) {
+        var previous = triangle.previous,
+            next = triangle.next;
 
-      // If the area of the current point is less than that of the previous point
-      // to be eliminated, use the latter's area instead. This ensures that the
-      // current point cannot be eliminated without eliminating previously-
-      // eliminated points.
-      if (triangle[1][2] < maxArea) triangle[1][2] = maxArea;
-      else maxArea = triangle[1][2];
+        // If the area of the current point is less than that of the previous point
+        // to be eliminated, use the latter's area instead. This ensures that the
+        // current point cannot be eliminated without eliminating previously-
+        // eliminated points.
+        if (triangle[1][2] < maxArea) triangle[1][2] = maxArea;
+        else maxArea = triangle[1][2];
 
-      if (previous) {
-        previous.next = next;
-        previous[2] = triangle[2];
-        update(previous);
+        if (previous) {
+          previous.next = next;
+          previous[2] = triangle[2];
+          update(previous);
+        }
+
+        if (next) {
+          next.previous = previous;
+          next[0] = triangle[0];
+          update(next);
+        }
       }
 
-      if (next) {
-        next.previous = previous;
-        next[0] = triangle[0];
-        update(next);
-      }
-    }
-
-    topology.arcs.forEach(function(arc) {
       arc.forEach(relative);
     });
 

@@ -1,16 +1,16 @@
 /*global define*/
 define([
-        'Core/defined',
-        'Core/formatError',
-        'Core/getFilenameFromUri',
-        'Core/queryToObject',
-        'DataSources/CzmlDataSource',
-        'DataSources/GeoJsonDataSource',
-        'Scene/TileMapServiceImageryProvider',
-        'Widgets/Viewer/Viewer',
-        'Widgets/Viewer/viewerCesiumInspectorMixin',
-        'Widgets/Viewer/viewerDragDropMixin',
-        'Widgets/Viewer/viewerEntityMixin',
+        'Cesium/Core/defined',
+        'Cesium/Core/formatError',
+        'Cesium/Core/getFilenameFromUri',
+        'Cesium/Core/queryToObject',
+        'Cesium/DataSources/CzmlDataSource',
+        'Cesium/DataSources/GeoJsonDataSource',
+        'Cesium/Scene/TileMapServiceImageryProvider',
+        'Cesium/Widgets/Viewer/Viewer',
+        'Cesium/Widgets/Viewer/viewerCesiumInspectorMixin',
+        'Cesium/Widgets/Viewer/viewerDragDropMixin',
+        'Cesium/Widgets/Viewer/viewerEntityMixin',
         'domReady!'
     ], function(
         defined,
