@@ -2,6 +2,7 @@
 define([
         '../Core/BoundingSphere',
         '../Core/clone',
+        '../Core/combine',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
@@ -30,6 +31,7 @@ define([
     ], function(
         BoundingSphere,
         clone,
+        combine,
         ComponentDatatype,
         defaultValue,
         defined,
@@ -653,6 +655,12 @@ define([
         return pickColors;
     }
 
+    function getUniformFunction(uniforms, name) {
+        return function() {
+            return uniforms[name];
+        };
+    }
+
     var numberOfCreationWorkers = Math.max(FeatureDetection.hardwareConcurrency - 1, 1);
     var createGeometryTaskProcessors;
     var combineGeometryTaskProcessor = new TaskProcessor('combineGeometry', Number.POSITIVE_INFINITY);
@@ -961,7 +969,21 @@ define([
         var pickCommands = this._pickCommands;
 
         if (createRS || createSP) {
-            var uniforms = (defined(material)) ? material._uniforms : undefined;
+            // Create uniform map by combining uniforms from the appearance and material if either have uniforms.
+            var materialUniformMap = defined(material) ? material._uniforms : undefined;
+            var appearanceUniformMap = {};
+            var appearanceUniforms = appearance.uniforms;
+            if (defined(appearanceUniforms)) {
+                // Convert to uniform map of functions for the renderer
+                for (var name in appearanceUniforms) {
+                    if (appearanceUniforms.hasOwnProperty(name)) {
+                        appearanceUniformMap[name] = getUniformFunction(appearanceUniforms, name);
+                    }
+                }
+            }
+            // TODO: throw exception if there is a name conflict between material and appearance uniforms.  No need to auto rename.
+            var uniforms = combine(appearanceUniformMap, materialUniformMap);
+
             var pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
 
             colorCommands.length = this._va.length * (twoPasses ? 2 : 1);
