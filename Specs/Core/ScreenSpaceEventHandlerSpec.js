@@ -2,6 +2,7 @@
 defineSuite([
         'Core/ScreenSpaceEventHandler',
         'Core/Cartesian2',
+        'Core/clone',
         'Core/combine',
         'Core/defined',
         'Core/KeyboardEventModifier',
@@ -10,6 +11,7 @@ defineSuite([
     ], function(
         ScreenSpaceEventHandler,
         Cartesian2,
+        clone,
         combine,
         defined,
         KeyboardEventModifier,
@@ -21,6 +23,38 @@ defineSuite([
     var usePointerEvents = defined(window.PointerEvent);
     var element;
     var handler;
+
+    function createCloningSpy(name) {
+        var spy = jasmine.createSpy(name);
+
+        var cloningSpy = function() {
+            // deep clone arguments so they are captured correctly by the spy
+            var args = [].slice.apply(arguments).map(function(arg) {
+                return clone(arg, true);
+            });
+
+            spy.apply(this, args);
+        };
+
+        function createPropertyDescriptor(prop) {
+            return {
+                get : function() {
+                    return spy[prop];
+                },
+                set : function(value) {
+                    spy[prop] = value;
+                }
+            };
+        }
+
+        for ( var prop in spy) {
+            if (spy.hasOwnProperty(prop)) {
+                Object.defineProperty(cloningSpy, prop, createPropertyDescriptor(prop));
+            }
+        }
+
+        return cloningSpy;
+    }
 
     beforeEach(function() {
         element = document.createElement('div');
@@ -146,7 +180,7 @@ defineSuite([
 
     describe('handles mouse down', function() {
         function testMouseDownEvent(eventType, modifier, eventOptions) {
-            var action = jasmine.createSpy('action');
+            var action = createCloningSpy('action');
             handler.setInputAction(action, eventType, modifier);
 
             expect(handler.getInputAction(eventType, modifier)).toEqual(action);
@@ -183,7 +217,7 @@ defineSuite([
 
     describe('handles mouse up', function() {
         function testMouseUpEvent(eventType, modifier, eventOptions) {
-            var action = jasmine.createSpy('action');
+            var action = createCloningSpy('action');
             handler.setInputAction(action, eventType, modifier);
 
             expect(handler.getInputAction(eventType, modifier)).toEqual(action);
@@ -251,7 +285,7 @@ defineSuite([
 
     describe('handles mouse click', function() {
         function testMouseClickEvent(eventType, modifier, eventOptions) {
-            var action = jasmine.createSpy('action');
+            var action = createCloningSpy('action');
             handler.setInputAction(action, eventType, modifier);
 
             expect(handler.getInputAction(eventType, modifier)).toEqual(action);
@@ -306,7 +340,7 @@ defineSuite([
 
     describe('handles mouse double click', function() {
         function testMouseDoubleClickEvent(eventType, modifier, eventOptions) {
-            var action = jasmine.createSpy('action');
+            var action = createCloningSpy('action');
             handler.setInputAction(action, eventType, modifier);
 
             expect(handler.getInputAction(eventType, modifier)).toEqual(action);
@@ -343,7 +377,7 @@ defineSuite([
 
     describe('handles mouse move', function() {
         function testMouseMoveEvent(eventType, modifier, eventOptions) {
-            var action = jasmine.createSpy('action');
+            var action = createCloningSpy('action');
             handler.setInputAction(action, eventType, modifier);
 
             expect(handler.getInputAction(eventType, modifier)).toEqual(action);
@@ -389,7 +423,7 @@ defineSuite([
 
             describe('using standard wheel event', function() {
                 function testWheelEvent(eventType, modifier, eventOptions) {
-                    var action = jasmine.createSpy('action');
+                    var action = createCloningSpy('action');
                     handler.setInputAction(action, eventType, modifier);
 
                     expect(handler.getInputAction(eventType, modifier)).toEqual(action);
@@ -427,7 +461,7 @@ defineSuite([
 
             describe('using legacy mousewheel event', function() {
                 function testMouseWheelEvent(eventType, modifier, eventOptions) {
-                    var action = jasmine.createSpy('action');
+                    var action = createCloningSpy('action');
                     handler.setInputAction(action, eventType, modifier);
 
                     expect(handler.getInputAction(eventType, modifier)).toEqual(action);
@@ -465,7 +499,7 @@ defineSuite([
     it('handles touch start', function() {
         var eventType = ScreenSpaceEventType.LEFT_DOWN;
 
-        var action = jasmine.createSpy('action');
+        var action = createCloningSpy('action');
         handler.setInputAction(action, eventType);
 
         expect(handler.getInputAction(eventType)).toEqual(action);
@@ -510,7 +544,7 @@ defineSuite([
     it('handles touch move', function() {
         var eventType = ScreenSpaceEventType.MOUSE_MOVE;
 
-        var action = jasmine.createSpy('action');
+        var action = createCloningSpy('action');
         handler.setInputAction(action, eventType);
 
         expect(handler.getInputAction(eventType)).toEqual(action);
@@ -570,7 +604,7 @@ defineSuite([
     it('handles touch end', function() {
         var eventType = ScreenSpaceEventType.LEFT_UP;
 
-        var action = jasmine.createSpy('action');
+        var action = createCloningSpy('action');
         handler.setInputAction(action, eventType);
 
         expect(handler.getInputAction(eventType)).toEqual(action);
@@ -686,7 +720,7 @@ defineSuite([
     it('handles touch pinch start', function() {
         var eventType = ScreenSpaceEventType.PINCH_START;
 
-        var action = jasmine.createSpy('action');
+        var action = createCloningSpy('action');
         handler.setInputAction(action, eventType);
 
         expect(handler.getInputAction(eventType)).toEqual(action);
@@ -748,7 +782,7 @@ defineSuite([
     it('handles touch pinch move', function() {
         var eventType = ScreenSpaceEventType.PINCH_MOVE;
 
-        var action = jasmine.createSpy('action');
+        var action = createCloningSpy('action');
         handler.setInputAction(action, eventType);
 
         expect(handler.getInputAction(eventType)).toEqual(action);
@@ -816,20 +850,49 @@ defineSuite([
 
         // original delta X: 3
         // original delta Y: 1
-        // new delta X: 11
-        // new delta Y: 9
+        // final delta X: 11
+        // final delta Y: 9
 
-        expect(action.calls.length).toEqual(1);
-        expect(action).toHaveBeenCalledWith({
-            distance : {
-                startPosition : new Cartesian2(0, Math.sqrt(3 * 3 + 1 * 1) * 0.25),
-                endPosition : new Cartesian2(0, Math.sqrt(11 * 11 + 9 * 9) * 0.25)
-            },
-            angleAndHeight : {
-                startPosition : new Cartesian2(Math.atan2(1, 3), (3 + 2) * 0.125),
-                endPosition : new Cartesian2(Math.atan2(9, 11), (11 + 20) * 0.125)
-            }
-        });
+        if (usePointerEvents) {
+            // because every pointer event is separate, one touch moves, then the other.
+            expect(action.calls.length).toEqual(2);
+
+            // intermediate delta X: -6
+            // intermediate delta Y: -8
+            expect(action).toHaveBeenCalledWith({
+                distance : {
+                    startPosition : new Cartesian2(0, Math.sqrt(3 * 3 + 1 * 1) * 0.25),
+                    endPosition : new Cartesian2(0, Math.sqrt(-6 * -6 + -8 * -8) * 0.25)
+                },
+                angleAndHeight : {
+                    startPosition : new Cartesian2(Math.atan2(1, 3), (3 + 2) * 0.125),
+                    endPosition : new Cartesian2(Math.atan2(-8, -6), (3 + 11) * 0.125)
+                }
+            });
+            expect(action).toHaveBeenCalledWith({
+                distance : {
+                    startPosition : new Cartesian2(0, Math.sqrt(-6 * -6 + -8 * -8) * 0.25),
+                    endPosition : new Cartesian2(0, Math.sqrt(11 * 11 + 9 * 9) * 0.25)
+                },
+                angleAndHeight : {
+                    startPosition : new Cartesian2(Math.atan2(-8, -6), (3 + 11) * 0.125),
+                    endPosition : new Cartesian2(Math.atan2(9, 11), (11 + 20) * 0.125)
+                }
+            });
+        } else {
+            // touch events can move both touches simultaneously
+            expect(action.calls.length).toEqual(1);
+            expect(action).toHaveBeenCalledWith({
+                distance : {
+                    startPosition : new Cartesian2(0, Math.sqrt(3 * 3 + 1 * 1) * 0.25),
+                    endPosition : new Cartesian2(0, Math.sqrt(11 * 11 + 9 * 9) * 0.25)
+                },
+                angleAndHeight : {
+                    startPosition : new Cartesian2(Math.atan2(1, 3), (3 + 2) * 0.125),
+                    endPosition : new Cartesian2(Math.atan2(9, 11), (11 + 20) * 0.125)
+                }
+            });
+        }
 
         // should not be fired after removal
         action.reset();
@@ -844,7 +907,7 @@ defineSuite([
     it('handles touch click', function() {
         var eventType = ScreenSpaceEventType.LEFT_CLICK;
 
-        var action = jasmine.createSpy('action');
+        var action = createCloningSpy('action');
         handler.setInputAction(action, eventType);
 
         expect(handler.getInputAction(eventType)).toEqual(action);
