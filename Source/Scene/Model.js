@@ -1378,7 +1378,6 @@ define([
         booleanStates[WebGLRenderingContext.CULL_FACE] = false;
         booleanStates[WebGLRenderingContext.DEPTH_TEST] = false;
         booleanStates[WebGLRenderingContext.POLYGON_OFFSET_FILL] = false;
-        booleanStates[WebGLRenderingContext.SAMPLE_COVERAGE] = false;
         booleanStates[WebGLRenderingContext.SCISSOR_TEST] = false;
 
         var enable = states.enable;
@@ -1418,7 +1417,6 @@ define([
                     var colorMask = defaultValue(statesFunctions.colorMask, [true, true, true, true]);
                     var depthRange = defaultValue(statesFunctions.depthRange, [0.0, 1.0]);
                     var polygonOffset = defaultValue(statesFunctions.polygonOffset, [0.0, 0.0]);
-                    var sampleCoverage = defaultValue(statesFunctions.sampleCoverage, [0.0, 0.0]);
                     var scissor = defaultValue(statesFunctions.scissor, [0.0, 0.0, 0.0, 0.0]);
 
                     rendererRenderStates[name] = context.createRenderState({
@@ -1471,11 +1469,6 @@ define([
                             functionSourceAlpha : blendFuncSeparate[1],
                             functionDestinationRgb : blendFuncSeparate[2],
                             functionDestinationAlpha : blendFuncSeparate[3]
-                        },
-                        sampleCoverage : {
-                            enabled : booleanStates[WebGLRenderingContext.SAMPLE_COVERAGE],
-                            value : sampleCoverage[0],
-                            invert : sampleCoverage[1]
                         }
                     });
                 }

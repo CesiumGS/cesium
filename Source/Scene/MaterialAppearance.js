@@ -202,7 +202,7 @@ define([
          * @type VertexFormat
          * @readonly
          *
-         * @default {@link MaterialAppearance.VERTEX_FORMAT}
+         * @default {@link MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat}
          */
         vertexFormat : {
             get : function() {

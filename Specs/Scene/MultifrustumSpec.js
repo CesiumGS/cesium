@@ -187,16 +187,20 @@ defineSuite([
 
     it('renders primitive in last frustum with debugShowFrustums', function() {
         createBillboards();
-        var color = new Color(1.0, 1.0, 1.0, 0.0);
+        var color = new Color(1.0, 1.0, 1.0, 1.0);
         billboard0.color = color;
         billboard1.color = color;
+
+        spyOn(DrawCommand.prototype, 'execute');
 
         scene.debugShowFrustums = true;
         scene.initializeFrame();
         scene.render();
-        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
-        expect(scene.debugFrustumStatistics.totalCommands).toEqual(3);
-        expect(scene.debugFrustumStatistics.commandsInFrustums).toEqual({ 1 : 1, 2 : 1, 4 : 1});
+
+        expect(DrawCommand.prototype.execute).toHaveBeenCalled();
+        expect(DrawCommand.prototype.execute.mostRecentCall.args.length).toEqual(4);
+        expect(DrawCommand.prototype.execute.mostRecentCall.args[3]).toBeDefined();
+        expect(DrawCommand.prototype.execute.mostRecentCall.args[3].fragmentShaderSource.sources[1]).toContain('czm_Debug_main');
     });
 
     function createPrimitive(bounded, closestFrustum) {

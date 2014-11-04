@@ -89,6 +89,7 @@ define([
             var shaderProgram = new ShaderProgram({
                 gl : context._gl,
                 logShaderCompilation : context.logShaderCompilation,
+                debugShaders : context.debugShaders,
                 vertexShaderSource : vertexShaderSource,
                 vertexShaderText : vertexShaderText,
                 fragmentShaderSource : fragmentShaderSource,
