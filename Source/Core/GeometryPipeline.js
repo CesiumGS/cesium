@@ -2026,8 +2026,8 @@ define([
 
             var p0Dup = Cartesian3.equals(p0, p1);
 
-            if (Math.abs(p0.y) < CesiumMath.EPSILON6){
-                if (p0.y < 0.0) {
+            if (Math.abs(p0.y) < CesiumMath.EPSILON6) {
+                if (p2.y < 0.0) {
                     p0.y = -CesiumMath.EPSILON6;
                 } else {
                     p0.y = CesiumMath.EPSILON6;
@@ -2036,8 +2036,8 @@ define([
                 newPositions[i0 * 3 + 1] = p0.y;
             }
 
-            if (Math.abs(p2.y) < CesiumMath.EPSILON6){
-                if (p2.y < 0.0) {
+            if (Math.abs(p2.y) < CesiumMath.EPSILON6) {
+                if (p0.y < 0.0) {
                     p2.y = -CesiumMath.EPSILON6;
                 } else {
                     p2.y = CesiumMath.EPSILON6;
