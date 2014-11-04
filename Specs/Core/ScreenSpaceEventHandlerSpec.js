@@ -18,6 +18,7 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
+    var usePointerEvents = defined(window.PointerEvent);
     var element;
     var handler;
 
@@ -28,6 +29,11 @@ defineSuite([
         element.style.left = '0';
         document.body.appendChild(element);
         element.disableRootEvents = true;
+
+        if (usePointerEvents) {
+            spyOn(element, 'setPointerCapture');
+        }
+
         handler = new ScreenSpaceEventHandler(element);
     });
 
@@ -108,6 +114,36 @@ defineSuite([
         }
     }
 
+    function simulateMouseDown(element, options) {
+        if (usePointerEvents) {
+            DomEventSimulator.firePointerDown(element, combine(options, {
+                pointerType : 'mouse'
+            }));
+        } else {
+            DomEventSimulator.fireMouseDown(element, options);
+        }
+    }
+
+    function simulateMouseUp(element, options) {
+        if (usePointerEvents) {
+            DomEventSimulator.firePointerUp(element, combine(options, {
+                pointerType : 'mouse'
+            }));
+        } else {
+            DomEventSimulator.fireMouseUp(element, options);
+        }
+    }
+
+    function simulateMouseMove(element, options) {
+        if (usePointerEvents) {
+            DomEventSimulator.firePointerMove(element, combine(options, {
+                pointerType : 'mouse'
+            }));
+        } else {
+            DomEventSimulator.fireMouseMove(element, options);
+        }
+    }
+
     describe('handles mouse down', function() {
         function testMouseDownEvent(eventType, modifier, eventOptions) {
             var action = jasmine.createSpy('action');
@@ -116,7 +152,7 @@ defineSuite([
             expect(handler.getInputAction(eventType, modifier)).toEqual(action);
 
             function simulateInput() {
-                DomEventSimulator.fireMouseDown(element, combine({
+                simulateMouseDown(element, combine({
                     clientX : 1,
                     clientY : 2
                 }, eventOptions));
@@ -154,11 +190,11 @@ defineSuite([
 
             // down, then up
             function simulateInput() {
-                DomEventSimulator.fireMouseDown(element, combine({
+                simulateMouseDown(element, combine({
                     clientX : 1,
                     clientY : 2
                 }, eventOptions));
-                DomEventSimulator.fireMouseUp(element, combine({
+                simulateMouseUp(element, combine({
                     clientX : 1,
                     clientY : 2
                 }, eventOptions));
@@ -175,15 +211,15 @@ defineSuite([
 
             // down, move, then up
             function simulateInput2() {
-                DomEventSimulator.fireMouseDown(element, combine({
+                simulateMouseDown(element, combine({
                     clientX : 1,
                     clientY : 2
                 }, eventOptions));
-                DomEventSimulator.fireMouseMove(element, combine({
+                simulateMouseMove(element, combine({
                     clientX : 10,
                     clientY : 11
                 }, eventOptions));
-                DomEventSimulator.fireMouseUp(element, combine({
+                simulateMouseUp(element, combine({
                     clientX : 10,
                     clientY : 11
                 }, eventOptions));
@@ -222,11 +258,11 @@ defineSuite([
 
             // down, then up
             function simulateInput() {
-                DomEventSimulator.fireMouseDown(element, combine({
+                simulateMouseDown(element, combine({
                     clientX : 1,
                     clientY : 2
                 }, eventOptions));
-                DomEventSimulator.fireMouseUp(element, combine({
+                simulateMouseUp(element, combine({
                     clientX : 1,
                     clientY : 2
                 }, eventOptions));
@@ -241,11 +277,11 @@ defineSuite([
 
             // mouse clicks are not fired if the mouse moves too far away from the down position
             action.reset();
-            DomEventSimulator.fireMouseDown(element, combine({
+            simulateMouseDown(element, combine({
                 clientX : 1,
                 clientY : 2
             }, eventOptions));
-            DomEventSimulator.fireMouseUp(element, combine({
+            simulateMouseUp(element, combine({
                 clientX : 10,
                 clientY : 11
             }, eventOptions));
@@ -313,11 +349,11 @@ defineSuite([
             expect(handler.getInputAction(eventType, modifier)).toEqual(action);
 
             function simulateInput() {
-                DomEventSimulator.fireMouseMove(element, combine({
+                simulateMouseMove(element, combine({
                     clientX : 1,
                     clientY : 2
                 }, eventOptions));
-                DomEventSimulator.fireMouseMove(element, combine({
+                simulateMouseMove(element, combine({
                     clientX : 2,
                     clientY : 3
                 }, eventOptions));
@@ -435,12 +471,23 @@ defineSuite([
         expect(handler.getInputAction(eventType)).toEqual(action);
 
         function simulateInput() {
-            DomEventSimulator.fireTouchStart(element, {
-                touches : [{
-                    clientX : 1,
-                    clientY : 2
-                }]
-            });
+            var touchStartPosition = {
+                clientX : 1,
+                clientY : 2
+            };
+
+            if (usePointerEvents) {
+                DomEventSimulator.firePointerDown(element, combine({
+                    pointerType : 'touch',
+                    pointerId : 1
+                }, touchStartPosition));
+            } else {
+                DomEventSimulator.fireTouchStart(element, {
+                    changedTouches : [combine({
+                        identifier : 0
+                    }, touchStartPosition)]
+                });
+            }
         }
 
         simulateInput();
@@ -470,18 +517,36 @@ defineSuite([
 
         // start, then move
         function simulateInput() {
-            DomEventSimulator.fireTouchStart(element, {
-                touches : [{
-                    clientX : 1,
-                    clientY : 2
-                }]
-            });
-            DomEventSimulator.fireTouchMove(element, {
-                touches : [{
-                    clientX : 10,
-                    clientY : 11
-                }]
-            });
+            var touchStartPosition = {
+                clientX : 1,
+                clientY : 2
+            };
+            var touchMovePosition = {
+                clientX : 10,
+                clientY : 11
+            };
+
+            if (usePointerEvents) {
+                DomEventSimulator.firePointerDown(element, combine({
+                    pointerType : 'touch',
+                    pointerId : 1
+                }, touchStartPosition));
+                DomEventSimulator.firePointerMove(element, combine({
+                    pointerType : 'touch',
+                    pointerId : 1
+                }, touchMovePosition));
+            } else {
+                DomEventSimulator.fireTouchStart(element, {
+                    changedTouches : [combine({
+                        identifier : 0
+                    }, touchStartPosition)]
+                });
+                DomEventSimulator.fireTouchMove(element, {
+                    changedTouches : [combine({
+                        identifier : 0
+                    }, touchMovePosition)]
+                });
+            }
         }
 
         simulateInput();
@@ -512,18 +577,36 @@ defineSuite([
 
         // start, then end
         function simulateInput() {
-            DomEventSimulator.fireTouchStart(element, {
-                touches : [{
-                    clientX : 1,
-                    clientY : 2
-                }]
-            });
-            DomEventSimulator.fireTouchEnd(element, {
-                changedTouches : [{
-                    clientX : 1,
-                    clientY : 2
-                }]
-            });
+            var touchStartPosition = {
+                clientX : 1,
+                clientY : 2
+            };
+            var touchEndPosition = {
+                clientX : 1,
+                clientY : 2
+            };
+
+            if (usePointerEvents) {
+                DomEventSimulator.firePointerDown(element, combine({
+                    pointerType : 'touch',
+                    pointerId : 1
+                }, touchStartPosition));
+                DomEventSimulator.firePointerUp(element, combine({
+                    pointerType : 'touch',
+                    pointerId : 1
+                }, touchEndPosition));
+            } else {
+                DomEventSimulator.fireTouchStart(element, {
+                    changedTouches : [combine({
+                        identifier : 0
+                    }, touchStartPosition)]
+                });
+                DomEventSimulator.fireTouchEnd(element, {
+                    changedTouches : [combine({
+                        identifier : 0
+                    }, touchEndPosition)]
+                });
+            }
         }
 
         simulateInput();
@@ -537,24 +620,49 @@ defineSuite([
 
         // start, move, then end
         function simulateInput2() {
-            DomEventSimulator.fireTouchStart(element, {
-                touches : [{
-                    clientX : 1,
-                    clientY : 2
-                }]
-            });
-            DomEventSimulator.fireTouchMove(element, {
-                touches : [{
-                    clientX : 10,
-                    clientY : 11
-                }]
-            });
-            DomEventSimulator.fireTouchEnd(element, {
-                changedTouches : [{
-                    clientX : 10,
-                    clientY : 11
-                }]
-            });
+            var touchStartPosition = {
+                clientX : 1,
+                clientY : 2
+            };
+            var touchMovePosition = {
+                clientX : 10,
+                clientY : 11
+            };
+            var touchEndPosition = {
+                clientX : 10,
+                clientY : 11
+            };
+
+            if (usePointerEvents) {
+                DomEventSimulator.firePointerDown(element, combine({
+                    pointerType : 'touch',
+                    pointerId : 1
+                }, touchStartPosition));
+                DomEventSimulator.firePointerMove(element, combine({
+                    pointerType : 'touch',
+                    pointerId : 1
+                }, touchMovePosition));
+                DomEventSimulator.firePointerUp(element, combine({
+                    pointerType : 'touch',
+                    pointerId : 1
+                }, touchEndPosition));
+            } else {
+                DomEventSimulator.fireTouchStart(element, {
+                    changedTouches : [combine({
+                        identifier : 0
+                    }, touchStartPosition)]
+                });
+                DomEventSimulator.fireTouchMove(element, {
+                    changedTouches : [combine({
+                        identifier : 0
+                    }, touchMovePosition)]
+                });
+                DomEventSimulator.fireTouchEnd(element, {
+                    changedTouches : [combine({
+                        identifier : 0
+                    }, touchEndPosition)]
+                });
+            }
         }
 
         simulateInput2();
@@ -585,24 +693,38 @@ defineSuite([
 
         // touch 1, then touch 2
         function simulateInput() {
-            DomEventSimulator.fireTouchStart(element, {
-                touches : [{
-                    clientX : 1,
-                    clientY : 2,
-                    identifier : 0
-                }]
-            });
-            DomEventSimulator.fireTouchStart(element, {
-                touches : [{
-                    clientX : 1,
-                    clientY : 2,
-                    identifier : 0
-                }, {
-                    clientX : 3,
-                    clientY : 4,
-                    identifier : 1
-                }]
-            });
+            var touch1StartPosition = {
+                clientX : 1,
+                clientY : 2
+            };
+            var touch2StartPosition = {
+                clientX : 3,
+                clientY : 4
+            };
+
+            if (usePointerEvents) {
+                DomEventSimulator.firePointerDown(element, combine({
+                    pointerType : 'touch',
+                    pointerId : 1
+                }, touch1StartPosition));
+                DomEventSimulator.firePointerDown(element, combine({
+                    pointerType : 'touch',
+                    pointerId : 2
+                }, touch2StartPosition));
+            } else {
+                DomEventSimulator.fireTouchStart(element, {
+                    changedTouches : [combine({
+                        identifier : 0
+                    }, touch1StartPosition)]
+                });
+                DomEventSimulator.fireTouchStart(element, {
+                    changedTouches : [combine({
+                        identifier : 0
+                    }, touch1StartPosition), combine({
+                        identifier : 1
+                    }, touch2StartPosition)]
+                });
+            }
         }
 
         simulateInput();
@@ -633,35 +755,61 @@ defineSuite([
 
         // touch 1, then touch 2, then move
         function simulateInput() {
-            DomEventSimulator.fireTouchStart(element, {
-                touches : [{
-                    clientX : 1,
-                    clientY : 2,
-                    identifier : 0
-                }]
-            });
-            DomEventSimulator.fireTouchStart(element, {
-                touches : [{
-                    clientX : 1,
-                    clientY : 2,
-                    identifier : 0
-                }, {
-                    clientX : 4,
-                    clientY : 3,
-                    identifier : 1
-                }]
-            });
-            DomEventSimulator.fireTouchMove(element, {
-                touches : [{
-                    clientX : 10,
-                    clientY : 11,
-                    identifier : 0
-                }, {
-                    clientX : 21,
-                    clientY : 20,
-                    identifier : 1
-                }]
-            });
+            var touch1StartPosition = {
+                clientX : 1,
+                clientY : 2
+            };
+            var touch2StartPosition = {
+                clientX : 4,
+                clientY : 3
+            };
+            var touch1MovePosition = {
+                clientX : 10,
+                clientY : 11
+            };
+            var touch2MovePosition = {
+                clientX : 21,
+                clientY : 20
+            };
+
+            if (usePointerEvents) {
+                DomEventSimulator.firePointerDown(element, combine({
+                    pointerType : 'touch',
+                    pointerId : 1
+                }, touch1StartPosition));
+                DomEventSimulator.firePointerDown(element, combine({
+                    pointerType : 'touch',
+                    pointerId : 2
+                }, touch2StartPosition));
+                DomEventSimulator.firePointerMove(element, combine({
+                    pointerType : 'touch',
+                    pointerId : 1
+                }, touch1MovePosition));
+                DomEventSimulator.firePointerMove(element, combine({
+                    pointerType : 'touch',
+                    pointerId : 2
+                }, touch2MovePosition));
+            } else {
+                DomEventSimulator.fireTouchStart(element, {
+                    changedTouches : [combine({
+                        identifier : 0
+                    }, touch1StartPosition)]
+                });
+                DomEventSimulator.fireTouchStart(element, {
+                    changedTouches : [combine({
+                        identifier : 0
+                    }, touch1StartPosition), combine({
+                        identifier : 1
+                    }, touch2StartPosition)]
+                });
+                DomEventSimulator.fireTouchMove(element, {
+                    changedTouches : [combine({
+                        identifier : 0
+                    }, touch1MovePosition), combine({
+                        identifier : 1
+                    }, touch2MovePosition)]
+                });
+            }
         }
 
         simulateInput();
@@ -703,20 +851,36 @@ defineSuite([
 
         // start, then end
         function simulateInput() {
-            DomEventSimulator.fireTouchStart(element, {
-                touches : [{
-                    clientX : 1,
-                    clientY : 2,
-                    identifier : 0
-                }]
-            });
-            DomEventSimulator.fireTouchEnd(element, {
-                changedTouches : [{
-                    clientX : 1,
-                    clientY : 2,
-                    identifier : 0
-                }]
-            });
+            var touchStartPosition = {
+                clientX : 1,
+                clientY : 2
+            };
+            var touchEndPosition = {
+                clientX : 1,
+                clientY : 2
+            };
+
+            if (usePointerEvents) {
+                DomEventSimulator.firePointerDown(element, combine({
+                    pointerType : 'touch',
+                    pointerId : 1
+                }, touchStartPosition));
+                DomEventSimulator.firePointerUp(element, combine({
+                    pointerType : 'touch',
+                    pointerId : 1
+                }, touchEndPosition));
+            } else {
+                DomEventSimulator.fireTouchStart(element, {
+                    changedTouches : [combine({
+                        identifier : 0
+                    }, touchStartPosition)]
+                });
+                DomEventSimulator.fireTouchEnd(element, {
+                    changedTouches : [combine({
+                        identifier : 0
+                    }, touchEndPosition)]
+                });
+            }
         }
 
         simulateInput();

@@ -135,6 +135,40 @@ define([
         return event;
     }
 
+    function createPointerEvent(type, options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var canBubble = defaultValue(options.canBubble, true);
+        var cancelable = defaultValue(options.cancelable, true);
+        var view = defaultValue(options.view, window);
+        var detail = defaultValue(options.detail, 0);
+        var screenX = defaultValue(options.screenX, 0);
+        var screenY = defaultValue(options.screenY, 0);
+        var clientX = defaultValue(options.clientX, 0);
+        var clientY = defaultValue(options.clientY, 0);
+        var ctrlKey = defaultValue(options.ctrlKey, false);
+        var altKey = defaultValue(options.altKey, false);
+        var shiftKey = defaultValue(options.shiftKey, false);
+        var metaKey = defaultValue(options.metaKey, false);
+        var button = defaultValue(options.button, 0);
+        var relatedTarget = defaultValue(options.relatedTarget, null);
+        var offsetX = defaultValue(options.offsetX, 0);
+        var offsetY = defaultValue(options.offsetY, 0);
+        var width = defaultValue(options.width, 0);
+        var height = defaultValue(options.height, 0);
+        var pressure = defaultValue(options.pressure, 0);
+        var rotation = defaultValue(options.rotation, 0);
+        var tiltX = defaultValue(options.tiltX, 0);
+        var tiltY = defaultValue(options.tiltY, 0);
+        var pointerId = defaultValue(options.pointerId, 1);
+        var pointerType = defaultValue(options.pointerType, 0);
+        var hwTimestamp = defaultValue(options.hwTimestamp, 0);
+        var isPrimary = defaultValue(options.isPrimary, 0);
+
+        var event = document.createEvent('PointerEvent');
+        event.initPointerEvent(type, canBubble, cancelable, view, detail, screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, button, relatedTarget, offsetX, offsetY, width, height, pressure, rotation, tiltX, tiltY, pointerId, pointerType, hwTimestamp, isPrimary);
+        return event;
+    }
+
     var DomEventSimulator = {
         fireMouseDown : function(element, options) {
             element.dispatchEvent(createMouseEvent('mousedown', options));
@@ -165,6 +199,15 @@ define([
         },
         fireTouchEnd : function(element, options) {
             element.dispatchEvent(createTouchEvent('touchend', options));
+        },
+        firePointerDown : function(element, options) {
+            element.dispatchEvent(createPointerEvent('pointerdown', options));
+        },
+        firePointerUp : function(element, options) {
+            element.dispatchEvent(createPointerEvent('pointerup', options));
+        },
+        firePointerMove : function(element, options) {
+            element.dispatchEvent(createPointerEvent('pointermove', options));
         },
         fireMockEvent : function(eventHandler, event) {
             eventHandler.call(window, event);
