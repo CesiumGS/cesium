@@ -14,6 +14,7 @@ defineSuite([
         'Core/Geometry',
         'Core/GeometryAttribute',
         'Core/GeometryInstance',
+        'Core/GeometryType',
         'Core/Math',
         'Core/Matrix4',
         'Core/PrimitiveType',
@@ -34,6 +35,7 @@ defineSuite([
         Geometry,
         GeometryAttribute,
         GeometryInstance,
+        GeometryType,
         CesiumMath,
         Matrix4,
         PrimitiveType,
@@ -2460,7 +2462,8 @@ defineSuite([
                 })
             },
             indices : new Uint16Array([0, 2, 1, 1, 2, 3]),
-            primitiveType : PrimitiveType.TRIANGLES
+            primitiveType : PrimitiveType.TRIANGLES,
+            geometryType : GeometryType.POLYLINES
         });
         geometry = GeometryPipeline.wrapLongitude(geometry);
 
@@ -2506,7 +2509,8 @@ defineSuite([
                 })
             },
             indices : new Uint16Array([0, 2, 1, 1, 2, 3]),
-            primitiveType : PrimitiveType.TRIANGLES
+            primitiveType : PrimitiveType.TRIANGLES,
+            geometryType : GeometryType.POLYLINES
         });
         geometry = GeometryPipeline.wrapLongitude(geometry);
 
@@ -2541,7 +2545,8 @@ defineSuite([
                 })
             },
             indices : new Uint16Array([0, 2, 1, 1, 2, 3]),
-            primitiveType : PrimitiveType.TRIANGLES
+            primitiveType : PrimitiveType.TRIANGLES,
+            geometryType : GeometryType.POLYLINES
         });
         geometry = GeometryPipeline.wrapLongitude(geometry);
 
