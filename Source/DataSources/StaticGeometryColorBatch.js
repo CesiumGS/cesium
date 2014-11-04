@@ -140,13 +140,17 @@ define([
     /**
      * @private
      */
-    var StaticGeometryColorBatch = function(primitives, appearanceType, closed) {
-        this._solidBatch = new Batch(primitives, false, appearanceType, closed);
-        this._translucentBatch = new Batch(primitives, true, appearanceType, closed);
+    var StaticGeometryColorBatch = function(primitives, AppearanceType, closed) {
+        this._solidBatch = new Batch(primitives, false, AppearanceType, closed);
+        this._translucentBatch = new Batch(primitives, true, AppearanceType, closed);
+
+        //Translucency does not affect vertex format,
+        //so just grab the one from the solid appearance
+        this._vertexFormat = this._solidBatch.appearance.vertexFormat;
     };
 
     StaticGeometryColorBatch.prototype.add = function(time, updater) {
-        var instance = updater.createFillGeometryInstance(time, this._solidBatch.appearance.vertexFormat);
+        var instance = updater.createFillGeometryInstance(time, this._vertexFormat);
         if (instance.attributes.color.value[3] === 255) {
             this._solidBatch.add(updater, instance);
         } else {
@@ -163,37 +167,40 @@ define([
     StaticGeometryColorBatch.prototype.update = function(time) {
         var i;
         var updater;
+        var solidBatch = this._solidBatch;
+        var translucentBatch = this._translucentBatch;
+        var vertexFormat = this._vertexFormat;
 
         //Perform initial update
-        var isUpdated = this._solidBatch.update(time);
-        isUpdated = this._translucentBatch.update(time) && isUpdated;
+        var isUpdated = solidBatch.update(time);
+        isUpdated = translucentBatch.update(time) && isUpdated;
 
         //If any items swapped between solid/translucent, we need to
         //move them between batches
-        var itemsToRemove = this._solidBatch.itemsToRemove;
+        var itemsToRemove = solidBatch.itemsToRemove;
         var solidsToMoveLength = itemsToRemove.length;
         if (solidsToMoveLength > 0) {
             for (i = 0; i < solidsToMoveLength; i++) {
                 updater = itemsToRemove[i];
-                this._solidBatch.remove(updater);
-                this._translucentBatch.add(updater, updater.createFillGeometryInstance(time));
+                solidBatch.remove(updater);
+                translucentBatch.add(updater, updater.createFillGeometryInstance(time, vertexFormat));
             }
         }
 
-        itemsToRemove = this._translucentBatch.itemsToRemove;
+        itemsToRemove = translucentBatch.itemsToRemove;
         var translucentToMoveLength = itemsToRemove.length;
         if (translucentToMoveLength > 0) {
             for (i = 0; i < translucentToMoveLength; i++) {
                 updater = itemsToRemove[i];
-                this._translucentBatch.remove(updater);
-                this._solidBatch.add(updater, updater.createFillGeometryInstance(time));
+                translucentBatch.remove(updater);
+                solidBatch.add(updater, updater.createFillGeometryInstance(time, vertexFormat));
             }
         }
 
         //If we moved anything around, we need to re-build the primitive
         if (solidsToMoveLength > 0 || translucentToMoveLength > 0) {
-            isUpdated = this._solidBatch.update(time) && isUpdated;
-            isUpdated = this._translucentBatch.update(time) && isUpdated;
+            isUpdated = solidBatch.update(time) && isUpdated;
+            isUpdated = translucentBatch.update(time) && isUpdated;
         }
 
         return isUpdated;
