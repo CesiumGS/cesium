@@ -56,7 +56,6 @@ define([
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
-    var defaultOutlineWidth = new ConstantProperty(1);
 
     var positionScratch;
     var orientationScratch;
@@ -104,7 +103,7 @@ define([
         this._hasConstantOutline = true;
         this._showOutlineProperty = undefined;
         this._outlineColorProperty = undefined;
-        this._outlineWidthProperty = undefined;
+        this._outlineWidth = undefined;
         this._options = new GeometryOptions(entity);
         this._onEntityPropertyChanged(entity, 'ellipsoid', entity.ellipsoid, undefined);
     };
@@ -220,15 +219,16 @@ define([
             }
         },
         /**
-         * Gets the width property for the geometry outline.
+         * Gets the constant with of the geometry outline, in pixels.
+         * This value is only valid if isDynamic is false.
          * @memberof EllipsoidGeometryUpdater.prototype
          *
-         * @type {Property}
+         * @type {Number}
          * @readonly
          */
-        outlineWidthProperty : {
+        outlineWidth : {
             get : function() {
-                return this._outlineWidthProperty;
+                return this._outlineWidth;
             }
         },
         /**
@@ -459,12 +459,12 @@ define([
         this._showProperty = defaultValue(show, defaultShow);
         this._showOutlineProperty = defaultValue(ellipsoid.outline, defaultOutline);
         this._outlineColorProperty = outlineEnabled ? defaultValue(ellipsoid.outlineColor, defaultOutlineColor) : undefined;
-        this._outlineWidthProperty = outlineEnabled ? defaultValue(ellipsoid.outlineWidth, defaultOutlineWidth) : undefined;
         this._fillEnabled = fillEnabled;
         this._outlineEnabled = outlineEnabled;
 
         var stackPartitions = ellipsoid.stackPartitions;
         var slicePartitions = ellipsoid.slicePartitions;
+        var outlineWidth = ellipsoid.outlineWidth;
         var subdivisions = ellipsoid.subdivisions;
 
         if (!position.isConstant || //
@@ -472,6 +472,7 @@ define([
             !radii.isConstant || //
             !Property.isConstant(stackPartitions) || //
             !Property.isConstant(slicePartitions) || //
+            !Property.isConstant(outlineWidth) || //
             !Property.isConstant(subdivisions)) {
             if (!this._dynamic) {
                 this._dynamic = true;
@@ -484,6 +485,7 @@ define([
             options.stackPartitions = defined(stackPartitions) ? stackPartitions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.slicePartitions = defined(slicePartitions) ? slicePartitions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.subdivisions = defined(subdivisions) ? subdivisions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            this._outlineWidth = defined(outlineWidth) ? outlineWidth.getValue(Iso8601.MINIMUM_VALUE) : 1.0;
             this._dynamic = false;
             this._geometryChanged.raiseEvent(this);
         }
@@ -527,6 +529,7 @@ define([
         this._attributes = undefined;
         this._outlineAttributes = undefined;
         this._lastSceneMode = undefined;
+        this._lastOutlineWidth = undefined;
     };
 
     DynamicGeometryUpdater.prototype.update = function(time) {
@@ -563,9 +566,11 @@ define([
         var stackPartitionsProperty = ellipsoid.stackPartitions;
         var slicePartitionsProperty = ellipsoid.slicePartitions;
         var subdivisionsProperty = ellipsoid.subdivisions;
+        var outlineWidthProperty = ellipsoid.outlineWidth;
         var stackPartitions = defined(stackPartitionsProperty) ? stackPartitionsProperty.getValue(time) : undefined;
         var slicePartitions = defined(slicePartitionsProperty) ? slicePartitionsProperty.getValue(time) : undefined;
         var subdivisions = defined(subdivisionsProperty) ? subdivisionsProperty.getValue(time) : undefined;
+        var outlineWidth = defined(outlineWidthProperty) ? outlineWidthProperty.getValue(time) : 1.0;
 
         var options = this._options;
 
@@ -586,10 +591,14 @@ define([
 
         //We only rebuild the primitive if something other than the radii has changed
         //For the radii, we use unit sphere and then deform it with a scale matrix.
-        var rebuildPrimitives = !in3D || this._lastSceneMode !== sceneMode || !defined(this._primitive) || options.stackPartitions !== stackPartitions || options.slicePartitions !== slicePartitions || options.subdivisions !== subdivisions;
+        var rebuildPrimitives = !in3D || this._lastSceneMode !== sceneMode || !defined(this._primitive) || //
+                                options.stackPartitions !== stackPartitions || options.slicePartitions !== slicePartitions || //
+                                options.subdivisions !== subdivisions || this._lastOutlineWidth !== outlineWidth;
+
         if (rebuildPrimitives) {
             this._removePrimitives();
             this._lastSceneMode = sceneMode;
+            this._lastOutlineWidth = outlineWidth;
 
             options.stackPartitions = stackPartitions;
             options.slicePartitions = slicePartitions;
@@ -632,7 +641,13 @@ define([
                 }),
                 appearance : new PerInstanceColorAppearance({
                     flat : true,
-                    translucent : outlineColor.alpha !== 1.0
+                    translucent : outlineColor.alpha !== 1.0,
+                    renderState : {
+                        depthTest : {
+                            enabled : true
+                        },
+                        lineWidth : this._geometryUpdater._scene.context.putLineWidthInValidRange(outlineWidth)
+                    }
                 }),
                 asynchronous : false
             });

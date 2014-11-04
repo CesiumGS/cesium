@@ -497,21 +497,6 @@ define([
         },
 
         /**
-         * The minimum aliased line width, in pixels, supported by this WebGL implementation.  It will be at most one.
-         * @memberof Scene.prototype
-         *
-         * @type {Number}
-         * @readonly
-         *
-         * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>ALIASED_LINE_WIDTH_RANGE</code>.
-         */
-        minimumAliasedLineWidth : {
-            get :  function() {
-                return this._aliasedLineWidthRange[0];
-            }
-        },
-
-        /**
          * The maximum aliased line width, in pixels, supported by this WebGL implementation.  It will be at least one.
          * @memberof Scene.prototype
          *

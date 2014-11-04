@@ -48,7 +48,6 @@ define([
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
-    var defaultOutlineWidth = new ConstantProperty(1);
 
     var GeometryOptions = function(entity) {
         this.id = entity;
@@ -71,15 +70,20 @@ define([
      * @constructor
      *
      * @param {Entity} entity The entity containing the geometry to be visualized.
+     * @param {Scene} scene The scene where visualization is taking place.
      */
-    var EllipseGeometryUpdater = function(entity) {
+    var EllipseGeometryUpdater = function(entity, scene) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(entity)) {
             throw new DeveloperError('entity is required');
         }
+        if (!defined(scene)) {
+            throw new DeveloperError('scene is required');
+        }
         //>>includeEnd('debug');
 
         this._entity = entity;
+        this._scene = scene;
         this._entitySubscription = entity.definitionChanged.addEventListener(EllipseGeometryUpdater.prototype._onEntityPropertyChanged, this);
         this._fillEnabled = false;
         this._isClosed = false;
@@ -91,7 +95,7 @@ define([
         this._hasConstantOutline = true;
         this._showOutlineProperty = undefined;
         this._outlineColorProperty = undefined;
-        this._outlineWidthProperty = undefined;
+        this._outlineWidth = undefined;
         this._options = new GeometryOptions(entity);
         this._onEntityPropertyChanged(entity, 'ellipse', entity.ellipse, undefined);
     };
@@ -207,15 +211,16 @@ define([
             }
         },
         /**
-         * Gets the width property for the geometry outline.
+         * Gets the constant with of the geometry outline, in pixels.
+         * This value is only valid if isDynamic is false.
          * @memberof EllipseGeometryUpdater.prototype
          *
-         * @type {Property}
+         * @type {Number}
          * @readonly
          */
-        outlineWidthProperty : {
+        outlineWidth : {
             get : function() {
-                return this._outlineWidthProperty;
+                return this._outlineWidth;
             }
         },
         /**
@@ -438,13 +443,13 @@ define([
         this._showProperty = defaultValue(show, defaultShow);
         this._showOutlineProperty = defaultValue(ellipse.outline, defaultOutline);
         this._outlineColorProperty = outlineEnabled ? defaultValue(ellipse.outlineColor, defaultOutlineColor) : undefined;
-        this._outlineWidthProperty = outlineEnabled ? defaultValue(ellipse.outlineWidth, defaultOutlineWidth) : undefined;
 
         var rotation = ellipse.rotation;
         var height = ellipse.height;
         var extrudedHeight = ellipse.extrudedHeight;
         var granularity = ellipse.granularity;
         var stRotation = ellipse.stRotation;
+        var outlineWidth = ellipse.outlineWidth;
         var numberOfVerticalLines = ellipse.numberOfVerticalLines;
 
         this._isClosed = defined(extrudedHeight);
@@ -459,6 +464,7 @@ define([
             !Property.isConstant(extrudedHeight) || //
             !Property.isConstant(granularity) || //
             !Property.isConstant(stRotation) || //
+            !Property.isConstant(outlineWidth) || //
             !Property.isConstant(numberOfVerticalLines)) {
             if (!this._dynamic) {
                 this._dynamic = true;
@@ -476,6 +482,7 @@ define([
             options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.stRotation = defined(stRotation) ? stRotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.numberOfVerticalLines = defined(numberOfVerticalLines) ? numberOfVerticalLines.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            this._outlineWidth = defined(outlineWidth) ? outlineWidth.getValue(Iso8601.MINIMUM_VALUE) : 1.0;
             this._dynamic = false;
             this._geometryChanged.raiseEvent(this);
         }
@@ -586,6 +593,8 @@ define([
             options.numberOfVerticalLines = defined(numberOfVerticalLines) ? numberOfVerticalLines.getValue(time) : undefined;
 
             var outlineColor = defined(ellipse.outlineColor) ? ellipse.outlineColor.getValue(time) : Color.BLACK;
+            var outlineWidth = defined(ellipse.outlineWidth) ? ellipse.outlineWidth.getValue(time) : 1.0;
+
             this._outlinePrimitive = new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
@@ -596,7 +605,13 @@ define([
                 }),
                 appearance : new PerInstanceColorAppearance({
                     flat : true,
-                    translucent : outlineColor.alpha !== 1.0
+                    translucent : outlineColor.alpha !== 1.0,
+                    renderState : {
+                        depthTest : {
+                            enabled : true
+                        },
+                        lineWidth : geometryUpdater._scene.context.putLineWidthInValidRange(outlineWidth)
+                    }
                 }),
                 asynchronous : false
             });

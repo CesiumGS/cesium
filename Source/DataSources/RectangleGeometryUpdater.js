@@ -48,7 +48,6 @@ define([
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
-    var defaultOutlineWidth = new ConstantProperty(1);
 
     var GeometryOptions = function(entity) {
         this.id = entity;
@@ -70,15 +69,20 @@ define([
      * @constructor
      *
      * @param {Entity} entity The entity containing the geometry to be visualized.
+     * @param {Scene} scene The scene where visualization is taking place.
      */
-    var RectangleGeometryUpdater = function(entity) {
+    var RectangleGeometryUpdater = function(entity, scene) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(entity)) {
             throw new DeveloperError('entity is required');
         }
+        if (!defined(scene)) {
+            throw new DeveloperError('scene is required');
+        }
         //>>includeEnd('debug');
 
         this._entity = entity;
+        this._scene = scene;
         this._entitySubscription = entity.definitionChanged.addEventListener(RectangleGeometryUpdater.prototype._onEntityPropertyChanged, this);
         this._fillEnabled = false;
         this._isClosed = false;
@@ -90,7 +94,7 @@ define([
         this._hasConstantOutline = true;
         this._showOutlineProperty = undefined;
         this._outlineColorProperty = undefined;
-        this._outlineWidthProperty = undefined;
+        this._outlineWidth = undefined;
         this._options = new GeometryOptions(entity);
         this._onEntityPropertyChanged(entity, 'rectangle', entity.rectangle, undefined);
     };
@@ -206,15 +210,16 @@ define([
             }
         },
         /**
-         * Gets the width property for the geometry outline.
+         * Gets the constant with of the geometry outline, in pixels.
+         * This value is only valid if isDynamic is false.
          * @memberof RectangleGeometryUpdater.prototype
          *
-         * @type {Property}
+         * @type {Number}
          * @readonly
          */
-        outlineWidthProperty : {
+        outlineWidth : {
             get : function() {
-                return this._outlineWidthProperty;
+                return this._outlineWidth;
             }
         },
         /**
@@ -441,6 +446,7 @@ define([
         var granularity = rectangle.granularity;
         var stRotation = rectangle.stRotation;
         var rotation = rectangle.rotation;
+        var outlineWidth = rectangle.outlineWidth;
         var closeBottom = rectangle.closeBottom;
         var closeTop = rectangle.closeTop;
 
@@ -453,6 +459,7 @@ define([
             !Property.isConstant(granularity) || //
             !Property.isConstant(stRotation) || //
             !Property.isConstant(rotation) || //
+            !Property.isConstant(outlineWidth) || //
             !Property.isConstant(closeBottom) || //
             !Property.isConstant(closeTop)) {
             if (!this._dynamic) {
@@ -471,6 +478,7 @@ define([
             options.closeBottom = defined(closeBottom) ? closeBottom.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.closeTop = defined(closeTop) ? closeTop.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             this._isClosed = defined(extrudedHeight) && defined(options.closeTop) && defined(options.closeBottom) && options.closeTop && options.closeBottom;
+            this._outlineWidth = defined(outlineWidth) ? outlineWidth.getValue(Iso8601.MINIMUM_VALUE) : 1.0;
             this._dynamic = false;
             this._geometryChanged.raiseEvent(this);
         }
@@ -580,6 +588,8 @@ define([
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
 
             var outlineColor = defined(rectangle.outlineColor) ? rectangle.outlineColor.getValue(time) : Color.BLACK;
+            var outlineWidth = defined(rectangle.outlineWidth) ? rectangle.outlineWidth.getValue(time) : 1.0;
+
             this._outlinePrimitive = new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
@@ -590,7 +600,13 @@ define([
                 }),
                 appearance : new PerInstanceColorAppearance({
                     flat : true,
-                    translucent : outlineColor.alpha !== 1.0
+                    translucent : outlineColor.alpha !== 1.0,
+                    renderState : {
+                        depthTest : {
+                            enabled : true
+                        },
+                        lineWidth : geometryUpdater._scene.context.putLineWidthInValidRange(outlineWidth)
+                    }
                 }),
                 asynchronous : false
             });
