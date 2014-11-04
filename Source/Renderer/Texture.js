@@ -303,7 +303,7 @@ define([
         if (yOffset < 0) {
             throw new DeveloperError('yOffset must be greater than or equal to zero.');
         }
-        if (xOffset +  source.width > this._width) {
+        if (xOffset + source.width > this._width) {
             throw new DeveloperError('xOffset + source.width must be less than or equal to width.');
         }
         if (yOffset + source.height > this._height) {
@@ -321,7 +321,7 @@ define([
         gl.bindTexture(target, this._texture);
 
         if (source.arrayBufferView) {
-            gl.texSubImage2D(target, 0, xOffset, yOffset,  source.width, source.height, this._pixelFormat, this._pixelDatatype, source.arrayBufferView);
+            gl.texSubImage2D(target, 0, xOffset, yOffset, source.width, source.height, this._pixelFormat, this._pixelDatatype, source.arrayBufferView);
         } else {
             gl.texSubImage2D(target, 0, xOffset, yOffset, this._pixelFormat, this._pixelDatatype, source);
         }
