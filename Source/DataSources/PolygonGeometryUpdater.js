@@ -465,7 +465,7 @@ define([
             }
         } else {
             var options = this._options;
-            options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.VERTEX_FORMAT;
+            options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
             options.polygonHierarchy.positions = positions.getValue(Iso8601.MINIMUM_VALUE, options.polygonHierarchy.positions);
             options.height = defined(height) ? height.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;

@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.4 - 2014-12-01
+
+* Added `modelMatrix` option to `Primitive` constructor.
+
 ### 1.3 - 2014-11-03
 
 * Worked around a shader compilation regression in Firefox 33 and 34 by falling back to a less precise shader on those browsers. [#2197](https://github.com/AnalyticalGraphicsInc/cesium/issues/2197)

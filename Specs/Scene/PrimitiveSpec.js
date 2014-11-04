@@ -127,11 +127,43 @@ defineSuite([
         expect(primitive.show).toEqual(true);
         expect(primitive.vertexCacheOptimize).toEqual(false);
         expect(primitive.interleave).toEqual(false);
+        expect(primitive.compressVertices).toEqual(true);
         expect(primitive.releaseGeometryInstances).toEqual(true);
         expect(primitive.allowPicking).toEqual(true);
         expect(primitive.asynchronous).toEqual(true);
         expect(primitive.debugShowBoundingVolume).toEqual(false);
-        expect(primitive.compressVertices).toEqual(true);
+    });
+
+    it('Constructs with options', function() {
+        var geometryInstances = {};
+        var appearance = {};
+        var modelMatrix = Matrix4.fromUniformScale(5.0);
+
+        var primitive = new Primitive({
+            geometryInstances : geometryInstances,
+            appearance : appearance,
+            modelMatrix : modelMatrix,
+            show : false,
+            vertexCacheOptimize : true,
+            interleave : true,
+            compressVertices : false,
+            releaseGeometryInstances : false,
+            allowPicking : false,
+            asynchronous : false,
+            debugShowBoundingVolume : true
+        });
+
+        expect(primitive.geometryInstances).toEqual(geometryInstances);
+        expect(primitive.appearance).toEqual(appearance);
+        expect(primitive.modelMatrix).toEqual(modelMatrix);
+        expect(primitive.show).toEqual(false);
+        expect(primitive.vertexCacheOptimize).toEqual(true);
+        expect(primitive.interleave).toEqual(true);
+        expect(primitive.compressVertices).toEqual(false);
+        expect(primitive.releaseGeometryInstances).toEqual(false);
+        expect(primitive.allowPicking).toEqual(false);
+        expect(primitive.asynchronous).toEqual(false);
+        expect(primitive.debugShowBoundingVolume).toEqual(true);
     });
 
     it('releases geometry instances when releaseGeometryInstances is true', function() {
