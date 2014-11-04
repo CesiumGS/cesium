@@ -16,8 +16,8 @@ define([
         '../Core/Math',
         '../Core/Matrix4',
         '../Renderer/BufferUsage',
-        '../Renderer/createShaderSource',
         '../Renderer/DrawCommand',
+        '../Renderer/ShaderSource',
         '../Shaders/PolylineCommon',
         '../Shaders/PolylineFS',
         '../Shaders/PolylineVS',
@@ -43,8 +43,8 @@ define([
         CesiumMath,
         Matrix4,
         BufferUsage,
-        createShaderSource,
         DrawCommand,
+        ShaderSource,
         PolylineCommon,
         PolylineFS,
         PolylineVS,
@@ -1028,11 +1028,18 @@ define([
             return;
         }
 
-        var vsSource = createShaderSource({ sources : [PolylineCommon, PolylineVS] });
-        var fsSource = createShaderSource({ sources : [this.material.shaderSource, PolylineFS] });
-        var fsPick = createShaderSource({ sources : [fsSource], pickColorQualifier : 'varying' });
-        this.shaderProgram = context.createShaderProgram(vsSource, fsSource, attributeLocations);
-        this.pickShaderProgram = context.createShaderProgram(vsSource, fsPick, attributeLocations);
+        var vs = new ShaderSource({
+            sources : [PolylineCommon, PolylineVS]
+        });
+        var fs = new ShaderSource({
+            sources : [this.material.shaderSource, PolylineFS]
+        });
+        var fsPick = new ShaderSource({
+            sources : fs.sources,
+            pickColorQualifier : 'varying'
+        });
+        this.shaderProgram = context.createShaderProgram(vs, fs, attributeLocations);
+        this.pickShaderProgram = context.createShaderProgram(vs, fsPick, attributeLocations);
     };
 
     function intersectsIDL(polyline) {

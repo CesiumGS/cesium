@@ -15,35 +15,49 @@ define([
         Property) {
     "use strict";
 
-    function resolve(that) {
-        var targetProperty = that._targetProperty;
-        if (!defined(targetProperty)) {
-            var targetEntity = that._targetEntity;
+    function resolveEntity(that) {
+        var entityIsResolved = true;
+        if (that._resolveEntity) {
+            var targetEntity = that._targetCollection.getById(that._targetId);
 
-            if (!defined(targetEntity)) {
-                var targetCollection = that._targetCollection;
-
-                targetEntity = targetCollection.getById(that._targetId);
-                if (!defined(targetEntity)) {
-                    throw new RuntimeError('target entity "' + that._targetId + '" could not be resolved.');
-                }
+            if (defined(targetEntity)) {
                 targetEntity.definitionChanged.addEventListener(ReferenceProperty.prototype._onTargetEntityDefinitionChanged, that);
                 that._targetEntity = targetEntity;
+                that._resolveEntity = false;
+            } else {
+                //The property has become detached.  It has a valid value but is not currently resolved to an entity in the collection
+                targetEntity = that._targetEntity;
+                entityIsResolved = false;
             }
+
+            if (!defined(targetEntity)) {
+                throw new RuntimeError('target entity "' + that._targetId + '" could not be resolved.');
+            }
+        }
+        return entityIsResolved;
+    }
+
+    function resolve(that) {
+        var targetProperty = that._targetProperty;
+
+        if (that._resolveProperty) {
+            var entityIsResolved = resolveEntity(that);
 
             var names = that._targetPropertyNames;
-
-            targetProperty = targetEntity;
+            targetProperty = that._targetEntity;
             var length = names.length;
-            for (var i = 0; i < length; i++) {
+            for (var i = 0; i < length && defined(targetProperty); i++) {
                 targetProperty = targetProperty[names[i]];
-                if (!defined(targetProperty)) {
-                    throw new RuntimeError('targetProperty "' + names[i] + '" could not be resolved.');
-                }
             }
 
-            that._targetProperty = targetProperty;
+            if (defined(targetProperty)) {
+                that._targetProperty = targetProperty;
+                that._resolveProperty = !entityIsResolved;
+            } else if (!defined(that._targetProperty)) {
+                throw new RuntimeError('targetProperty "' + that._targetId + '.' + names.join('.') + '" could not be resolved.');
+            }
         }
+
         return targetProperty;
     }
 
@@ -114,6 +128,8 @@ define([
         this._targetProperty = undefined;
         this._targetEntity = undefined;
         this._definitionChanged = new Event();
+        this._resolveEntity = true;
+        this._resolveProperty = true;
 
         targetCollection.collectionChanged.addEventListener(ReferenceProperty.prototype._onCollectionChanged, this);
     };
@@ -321,7 +337,7 @@ define([
 
     ReferenceProperty.prototype._onTargetEntityDefinitionChanged = function(targetEntity, name, value, oldValue) {
         if (this._targetPropertyNames[0] === name) {
-            this._targetProperty = undefined;
+            this._resolveProperty = true;
             this._definitionChanged.raiseEvent(this);
         }
     };
@@ -331,9 +347,16 @@ define([
         if (defined(targetEntity)) {
             if (removed.indexOf(targetEntity) !== -1) {
                 targetEntity.definitionChanged.removeEventListener(ReferenceProperty.prototype._onTargetEntityDefinitionChanged, this);
-                this._targetProperty = undefined;
-                this._targetEntity = undefined;
-                this._definitionChanged.raiseEvent(this);
+                this._resolveEntity = true;
+                this._resolveProperty = true;
+            } else if (this._resolveEntity) {
+                //If targetEntity is defined but resolveEntity is true, then the entity is detached
+                //and any change to the collection needs to incur an attempt to resolve in order to re-attach.
+                //without this if block, a reference that becomes re-attached will not signal definitionChanged
+                resolve(this);
+                if (!this._resolveEntity) {
+                    this._definitionChanged.raiseEvent(this);
+                }
             }
         }
     };

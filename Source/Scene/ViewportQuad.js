@@ -5,7 +5,7 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Renderer/createShaderSource',
+        '../Renderer/ShaderSource',
         '../Shaders/ViewportQuadFS',
         './BlendingState',
         './Material',
@@ -16,7 +16,7 @@ define([
         defined,
         destroyObject,
         DeveloperError,
-        createShaderSource,
+        ShaderSource,
         ViewportQuadFS,
         BlendingState,
         Material,
@@ -133,8 +133,10 @@ define([
                     this._overlayCommand.shaderProgram.destroy();
                 }
 
-                var fsSource = createShaderSource({ sources : [this._material.shaderSource, ViewportQuadFS] });
-                this._overlayCommand = context.createViewportQuadCommand(fsSource, {
+                var fs = new ShaderSource({
+                    sources : [this._material.shaderSource, ViewportQuadFS]
+                });
+                this._overlayCommand = context.createViewportQuadCommand(fs, {
                     renderState : this._rs,
                     uniformMap : this._material._uniforms,
                     owner : this

@@ -19,8 +19,8 @@ define([
         '../Core/subdivideArray',
         '../Core/TaskProcessor',
         '../Renderer/BufferUsage',
-        '../Renderer/createShaderSource',
         '../Renderer/DrawCommand',
+        '../Renderer/ShaderSource',
         '../ThirdParty/when',
         './CullFace',
         './Pass',
@@ -47,8 +47,8 @@ define([
         subdivideArray,
         TaskProcessor,
         BufferUsage,
-        createShaderSource,
         DrawCommand,
+        ShaderSource,
         when,
         CullFace,
         Pass,
@@ -503,7 +503,7 @@ define([
             }
         }
 
-        return createShaderSource({ sources : [forwardDecl, attributes, vertexShaderSource, computeFunctions] });
+        return [forwardDecl, attributes, vertexShaderSource, computeFunctions].join('\n');
     }
 
     function createPickVertexShaderSource(vertexShaderSource) {
@@ -543,47 +543,51 @@ define([
         }
 
         var containsNormal = vertexShaderSource.search(/attribute\s+vec3\s+normal;/g) !== -1;
-        if (!containsNormal) {
+        var containsSt = vertexShaderSource.search(/attribute\s+vec2\s+st;/g) !== -1;
+        if (!containsNormal && !containsSt) {
             return vertexShaderSource;
         }
 
-        var containsSt = vertexShaderSource.search(/attribute\s+vec2\s+st;/g) !== -1;
         var containsTangent = vertexShaderSource.search(/attribute\s+vec3\s+tangent;/g) !== -1;
         var containsBinormal = vertexShaderSource.search(/attribute\s+vec3\s+binormal;/g) !== -1;
 
-        var numComponents = 1;
-        numComponents += containsSt ? 2 : 0;
+        var numComponents = containsSt && containsNormal ? 2.0 : 1.0;
         numComponents += containsTangent || containsBinormal ? 1 : 0;
 
         var type = (numComponents > 1) ? 'vec' + numComponents : 'float';
 
-        var attributeName = containsSt ? 'stCompressedNormals' : 'compressedNormals';
+        var attributeName = 'compressedAttributes';
         var attributeDecl = 'attribute ' + type + ' ' + attributeName + ';';
 
-        var globalDecl = 'vec3 normal;\n';
+        var globalDecl = '';
         var decode = '';
 
         if (containsSt) {
             globalDecl += 'vec2 st;\n';
-            decode += '    st = ' + attributeName + '.xy;\n';
+            var stComponent = numComponents > 1 ? attributeName + '.x' : attributeName;
+            decode += '    st = czm_decompressTextureCoordinates(' + stComponent + ');\n';
         }
 
-        if (containsTangent && containsBinormal) {
+        if (containsNormal && containsTangent && containsBinormal) {
             globalDecl +=
+                'vec3 normal;\n' +
                 'vec3 tangent;\n' +
                 'vec3 binormal;\n';
-            decode += '    czm_octDecode(' + attributeName + '.' + (containsSt ? 'zw' : 'xy') + ', normal, tangent, binormal);\n';
+            decode += '    czm_octDecode(' + attributeName + '.' + (containsSt ? 'yz' : 'xy') + ', normal, tangent, binormal);\n';
         } else {
-            decode += '    normal = czm_octDecode(' + attributeName + (numComponents > 1 ? '.' + (containsSt ? 'z' : 'x') : '') + ');\n';
+            if (containsNormal) {
+                globalDecl += 'vec3 normal;\n';
+                decode += '    normal = czm_octDecode(' + attributeName + (numComponents > 1 ? '.' + (containsSt ? 'y' : 'x') : '') + ');\n';
+            }
 
             if (containsTangent) {
                 globalDecl += 'vec3 tangent;\n';
-                decode += '    tangent = czm_octDecode(' + attributeName + '.' + (containsSt ? 'w' : 'y') + ');\n';
+                decode += '    tangent = czm_octDecode(' + attributeName + '.' + (containsSt && containsNormal ? 'z' : 'y') + ');\n';
             }
 
             if (containsBinormal) {
                 globalDecl += 'vec3 binormal;\n';
-                decode += '    binormal = czm_octDecode(' + attributeName + '.' + (containsSt ? 'w' : 'y') + ');\n';
+                decode += '    binormal = czm_octDecode(' + attributeName + '.' + (containsSt && containsNormal ? 'z' : 'y') + ');\n';
             }
         }
 
@@ -600,7 +604,7 @@ define([
             '    czm_non_compressed_main(); \n' +
             '}';
 
-        return createShaderSource({ sources : [attributeDecl, globalDecl, modifiedVS, compressedMain] });
+        return [attributeDecl, globalDecl, modifiedVS, compressedMain].join('\n');
     }
 
     function validateShaderMatching(shaderProgram, attributeLocations) {
@@ -940,7 +944,10 @@ define([
             validateShaderMatching(this._sp, attributeLocations);
 
             if (allowPicking) {
-                var pickFS = createShaderSource({ sources : [fs], pickColorQualifier : 'varying' });
+                var pickFS = new ShaderSource({
+                    sources : [fs],
+                    pickColorQualifier : 'varying'
+                });
                 this._pickSP = context.replaceShaderProgram(this._pickSP, createPickVertexShaderSource(vs), pickFS, attributeLocations);
             } else {
                 this._pickSP = context.createShaderProgram(vs, fs, attributeLocations);

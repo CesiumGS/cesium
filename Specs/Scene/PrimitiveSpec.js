@@ -705,7 +705,8 @@ defineSuite([
             appearance : new MaterialAppearance({
                 materialSupport : MaterialAppearance.MaterialSupport.ALL
             }),
-            asynchronous : false
+            asynchronous : false,
+            compressVertices : false
         });
 
         expect(function() {
