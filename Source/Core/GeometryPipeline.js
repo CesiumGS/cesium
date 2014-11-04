@@ -1996,6 +1996,19 @@ define([
         geometry.indices = IndexDatatype.createTypedArray(numberOfVertices, newIndices);
     }
 
+    var cartesian2Scratch0 = new Cartesian2();
+    var cartesian2Scratch1 = new Cartesian2();
+
+    var cartesian3Scratch0 = new Cartesian3();
+    var cartesian3Scratch1 = new Cartesian3();
+    var cartesian3Scratch2 = new Cartesian3();
+    var cartesian3Scratch3 = new Cartesian3();
+    var cartesian3Scratch4 = new Cartesian3();
+
+    var cartesian4Scratch0 = new Cartesian4();
+    var cartesian4Scratch1 = new Cartesian4();
+
+
     function wrapLongitudePolyline(geometry) {
         var attributes = geometry.attributes;
         var positions = attributes.position.values;
@@ -2020,9 +2033,9 @@ define([
             var i1 = i + 1;
             var i2 = i + 2;
 
-            var p0 = Cartesian3.fromArray(newPositions, i0 * 3);
-            var p1 = Cartesian3.fromArray(newPositions, i1 * 3);
-            var p2 = Cartesian3.fromArray(newPositions, i2 * 3);
+            var p0 = Cartesian3.fromArray(newPositions, i0 * 3, cartesian3Scratch0);
+            var p1 = Cartesian3.fromArray(newPositions, i1 * 3, cartesian3Scratch1);
+            var p2 = Cartesian3.fromArray(newPositions, i2 * 3, cartesian3Scratch2);
 
             var p0Dup = Cartesian3.equals(p0, p1);
 
@@ -2053,15 +2066,15 @@ define([
             // intersects the IDL if either endpoint is on the negative side of the yz-plane
             if (p0.x < 0.0 || p2.x < 0.0) {
                 // and intersects the xz-plane
-                var intersection = IntersectionTests.lineSegmentPlane(p0, p2, xzPlane);
+                var intersection = IntersectionTests.lineSegmentPlane(p0, p2, xzPlane, cartesian3Scratch1);
                 if (defined(intersection)) {
                     // move point on the xz-plane slightly away from the plane
-                    var offset = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Y, 5.0 * CesiumMath.EPSILON9, offsetScratch);
+                    var offset = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Y, 5.0 * CesiumMath.EPSILON9, cartesian3Scratch3);
                     if (p0.y < 0.0) {
                         Cartesian3.negate(offset, offset);
                     }
 
-                    var offsetPoint = Cartesian3.add(intersection, offset, offsetPointScratch);
+                    var offsetPoint = Cartesian3.add(intersection, offset, cartesian3Scratch4);
                     newPositions.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
                     newPositions.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
 
@@ -2082,12 +2095,12 @@ define([
                     newExpandAndWidths.push(-1, -width, 1, -width);
                     newExpandAndWidths.push(-1,  width, 1,  width);
 
-                    var t = Cartesian3.magnitudeSquared(Cartesian3.subtract(intersection, p0, new Cartesian3()));
-                    t /= Cartesian3.magnitudeSquared(Cartesian3.subtract(p2, p0, new Cartesian3()));
+                    var t = Cartesian3.magnitudeSquared(Cartesian3.subtract(intersection, p0, cartesian3Scratch3));
+                    t /= Cartesian3.magnitudeSquared(Cartesian3.subtract(p2, p0, cartesian3Scratch3));
 
                     if (defined(newColors)) {
-                        var c0 = Cartesian4.fromArray(newColors, i0 * 4);
-                        var c2 = Cartesian4.fromArray(newColors, i2 * 4);
+                        var c0 = Cartesian4.fromArray(newColors, i0 * 4, cartesian4Scratch0);
+                        var c2 = Cartesian4.fromArray(newColors, i2 * 4, cartesian4Scratch0);
 
                         var r = CesiumMath.lerp(c0.x, c2.x, t);
                         var g = CesiumMath.lerp(c0.y, c2.y, t);
@@ -2101,8 +2114,8 @@ define([
                     }
 
                     if (defined(newTexCoords)) {
-                        var s0 = Cartesian2.fromArray(newTexCoords, i0 * 2);
-                        var s3 = Cartesian2.fromArray(newTexCoords, (i + 3) * 2);
+                        var s0 = Cartesian2.fromArray(newTexCoords, i0 * 2, cartesian2Scratch0);
+                        var s3 = Cartesian2.fromArray(newTexCoords, (i + 3) * 2, cartesian2Scratch1);
 
                         var sx = CesiumMath.lerp(s0.x, s3.x, t);
 
