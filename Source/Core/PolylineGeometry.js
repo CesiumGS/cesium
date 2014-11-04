@@ -11,6 +11,7 @@ define([
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './GeometryType',
         './IndexDatatype',
         './Math',
         './PolylinePipeline',
@@ -28,6 +29,7 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        GeometryType,
         IndexDatatype,
         CesiumMath,
         PolylinePipeline,
@@ -346,7 +348,8 @@ define([
             attributes : attributes,
             indices : indices,
             primitiveType : PrimitiveType.TRIANGLES,
-            boundingSphere : BoundingSphere.fromPoints(positions)
+            boundingSphere : BoundingSphere.fromPoints(positions),
+            geometryType : GeometryType.POLYLINES
         });
     };
 

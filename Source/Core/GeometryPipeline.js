@@ -15,6 +15,7 @@ define([
         './GeographicProjection',
         './Geometry',
         './GeometryAttribute',
+        './GeometryType',
         './IndexDatatype',
         './Intersect',
         './IntersectionTests',
@@ -40,6 +41,7 @@ define([
         GeographicProjection,
         Geometry,
         GeometryAttribute,
+        GeometryType,
         IndexDatatype,
         Intersect,
         IntersectionTests,
@@ -2013,7 +2015,7 @@ define([
         var newIndices = [];
 
         var length = newPositions.length / 3;
-        for ( var i = 0; i < length; i += 4) {
+        for (var i = 0; i < length; i += 4) {
             var i0 = i;
             var i1 = i + 1;
             var i2 = i + 2;
@@ -2021,6 +2023,8 @@ define([
             var p0 = Cartesian3.fromArray(newPositions, i0 * 3);
             var p1 = Cartesian3.fromArray(newPositions, i1 * 3);
             var p2 = Cartesian3.fromArray(newPositions, i2 * 3);
+
+            var p0Dup = Cartesian3.equals(p0, p1);
 
             if (Math.abs(p0.y) < CesiumMath.EPSILON6){
                 if (p0.y < 0.0) {
@@ -2030,7 +2034,6 @@ define([
                 }
 
                 newPositions[i0 * 3 + 1] = p0.y;
-                newPositions[i1 * 3 + 1] = p1.y = p0.y;
             }
 
             if (Math.abs(p2.y) < CesiumMath.EPSILON6){
@@ -2042,6 +2045,8 @@ define([
 
                 newPositions[i2 * 3 + 1] = p2.y;
             }
+
+            newPositions[i1 * 3 + 1] = p1.y = p0Dup ? p0.y : p2.y;
 
             var split = false;
 
@@ -2071,11 +2076,11 @@ define([
                     newNextPositions.push(p2.x, p2.y, p2.z, p2.x, p2.y, p2.z);
                     newNextPositions.push(p2.x, p2.y, p2.z, p2.x, p2.y, p2.z);
 
-                    var ew0 = Cartesian3.fromArray(newExpandAndWidths, i0 * 2);
-                    var ew1 = Cartesian3.fromArray(newExpandAndWidths, i1 * 2);
+                    var ew0 = Cartesian2.fromArray(newExpandAndWidths, i0 * 2);
 
-                    newExpandAndWidths.push(ew0.x, ew0.y, ew1.x, ew1.y);
-                    newExpandAndWidths.push(ew0.x, ew0.y, ew1.x, ew1.y);
+                    var width = Math.abs(ew0.y);
+                    newExpandAndWidths.push(-1, -width, 1, -width);
+                    newExpandAndWidths.push(-1,  width, 1,  width);
 
                     if (defined(newColors)) {
                         var c0 = Cartesian4.fromArray(newColors, i0 * 4);
@@ -2106,8 +2111,8 @@ define([
                 newIndices.push(i, index, i + 1);
                 newIndices.push(i + 1, index, index + 1);
 
-                newIndices.push(index, i + 2, index + 1);
-                newIndices.push(index + 1, i + 2, i + 3);
+                newIndices.push(index + 2, i + 2, index + 3);
+                newIndices.push(index + 3, i + 2, i + 3);
             }
         }
 
@@ -2155,15 +2160,25 @@ define([
             }
         }
 
-        indexPrimitive(geometry);
-        if (geometry.primitiveType === PrimitiveType.TRIANGLES) {
-            if (defined(geometry.attributes.prevPosition) || defined(geometry.attributes.nextPosition)) {
+        if (geometry.geometryType !== GeometryType.NONE) {
+            switch (geometry.geometryType) {
+            case GeometryType.POLYLINES:
                 wrapLongitudePolyline(geometry);
-            } else {
+                break;
+            case GeometryType.TRIANGLES:
                 wrapLongitudeTriangles(geometry);
+                break;
+            case GeometryType.LINES:
+                wrapLongitudeLines(geometry);
+                break;
             }
-        } else if (geometry.primitiveType === PrimitiveType.LINES) {
-            wrapLongitudeLines(geometry);
+        } else {
+            indexPrimitive(geometry);
+            if (geometry.primitiveType === PrimitiveType.TRIANGLES) {
+                wrapLongitudeTriangles(geometry);
+            } else if (geometry.primitiveType === PrimitiveType.LINES) {
+                wrapLongitudeLines(geometry);
+            }
         }
 
         return geometry;
