@@ -84,8 +84,9 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances - or a single geometry instance - to render.
      * @param {Appearance} [options.appearance] The appearance used to render the primitive.
-     * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
+     * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the primitive (all geometry instances) from model to world coordinates.
      * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
+     * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
      * @param {Boolean} [options.compressVertices=true] When <code>true</code>, the geometry vertices are compressed, which will save memory.
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
@@ -211,7 +212,7 @@ define([
          * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
          * p.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
          */
-        this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
+        this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = new Matrix4();
 
         /**
