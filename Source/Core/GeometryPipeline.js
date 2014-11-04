@@ -2082,20 +2082,34 @@ define([
                     newExpandAndWidths.push(-1, -width, 1, -width);
                     newExpandAndWidths.push(-1,  width, 1,  width);
 
+                    var t = Cartesian3.magnitudeSquared(Cartesian3.subtract(intersection, p0, new Cartesian3()));
+                    t /= Cartesian3.magnitudeSquared(Cartesian3.subtract(p2, p0, new Cartesian3()));
+
                     if (defined(newColors)) {
                         var c0 = Cartesian4.fromArray(newColors, i0 * 4);
-                        var c1 = Cartesian4.fromArray(newColors, i2 * 4);
+                        var c2 = Cartesian4.fromArray(newColors, i2 * 4);
 
-                        newColors.push(c0.x, c0.y, c0.z, c0.w, c0.x, c0.y, c0.z, c0.w);
-                        newColors.push(c1.x, c1.y, c1.z, c1.w, c1.x, c1.y, c1.z, c1.w);
+                        var r = CesiumMath.lerp(c0.x, c2.x, t);
+                        var g = CesiumMath.lerp(c0.y, c2.y, t);
+                        var b = CesiumMath.lerp(c0.z, c2.z, t);
+                        var a = CesiumMath.lerp(c0.w, c2.w, t);
+
+                        newColors.push(r, g, b, a);
+                        newColors.push(r, g, b, a);
+                        newColors.push(r, g, b, a);
+                        newColors.push(r, g, b, a);
                     }
 
                     if (defined(newTexCoords)) {
-                        var s0 = Cartesian2.fromArray(newTexCoords, i0 * 4);
-                        var s1 = Cartesian2.fromArray(newTexCoords, i2 * 4);
+                        var s0 = Cartesian2.fromArray(newTexCoords, i0 * 2);
+                        var s3 = Cartesian2.fromArray(newTexCoords, (i + 3) * 2);
 
-                        newTexCoords.push(s0.x, s0.y, s0.x, s0.y);
-                        newTexCoords.push(s1.x, s1.y, s1.x, s1.y);
+                        var sx = CesiumMath.lerp(s0.x, s3.x, t);
+
+                        newTexCoords.push(sx, s0.y);
+                        newTexCoords.push(sx, s3.y);
+                        newTexCoords.push(sx, s0.y);
+                        newTexCoords.push(sx, s3.y);
                     }
 
                     split = true;
