@@ -496,7 +496,7 @@ define([
          * Gets or sets the default size of the map pin created for each point, in pixels.
          * @memberof GeoJsonDataSource
          * @type {Number}
-         * @defaulr 48
+         * @default 48
          */
         markerSize : {
             get : function() {
