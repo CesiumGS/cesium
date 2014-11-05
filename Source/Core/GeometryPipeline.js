@@ -2008,7 +2008,6 @@ define([
     var cartesian4Scratch0 = new Cartesian4();
     var cartesian4Scratch1 = new Cartesian4();
 
-
     function wrapLongitudePolyline(geometry) {
         var attributes = geometry.attributes;
         var positions = attributes.position.values;
