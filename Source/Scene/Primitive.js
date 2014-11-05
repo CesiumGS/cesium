@@ -93,6 +93,7 @@ define([
      * @param {Boolean} [options.compressVertices=true] When <code>true</code>, the geometry vertices are compressed, which will save memory.
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
+     * @param {Boolean} [options.cull=true] When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands based on their bounding volume.  Set this to <code>false</code> for a small performance when if you are manually culling the primitive.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      *
@@ -233,6 +234,17 @@ define([
         this._allowPicking = defaultValue(options.allowPicking, true);
         this._asynchronous = defaultValue(options.asynchronous, true);
         this._compressVertices = defaultValue(options.compressVertices, true);
+
+        /**
+         * When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands
+         * based on their bounding volume.  Set this to <code>false</code> for a small performance when
+         * if you are manually culling the primitive.
+         *
+         * @type {Boolean}
+         *
+         * @default true
+         */
+        this.cull = defaultValue(options.cull, true);
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -1107,6 +1119,7 @@ define([
             for (i = 0; i < length; ++i) {
                 colorCommands[i].modelMatrix = modelMatrix;
                 colorCommands[i].boundingVolume = boundingSphere;
+                colorCommands[i].cull = this.cull;
                 colorCommands[i].debugShowBoundingVolume = this.debugShowBoundingVolume;
 
                 commandList.push(colorCommands[i]);
@@ -1118,6 +1131,7 @@ define([
             for (i = 0; i < length; ++i) {
                 pickCommands[i].modelMatrix = modelMatrix;
                 pickCommands[i].boundingVolume = boundingSphere;
+                pickCommands[i].cull = this.cull;
 
                 commandList.push(pickCommands[i]);
             }

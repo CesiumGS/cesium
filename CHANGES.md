@@ -3,7 +3,7 @@ Change Log
 
 ### 1.4 - 2014-12-01
 
-* Added `modelMatrix` option to `Primitive` constructor.
+* Added `modelMatrix` and `cull` options to `Primitive` constructor.
 * The `translation` parameter to `Matrix4.fromRotationTranslation` now defaults to `Cartesian3.ZERO`.
 
 ### 1.3 - 2014-11-03

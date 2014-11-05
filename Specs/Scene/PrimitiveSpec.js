@@ -130,6 +130,7 @@ defineSuite([
         expect(primitive.compressVertices).toEqual(true);
         expect(primitive.releaseGeometryInstances).toEqual(true);
         expect(primitive.allowPicking).toEqual(true);
+        expect(primitive.cull).toEqual(true);
         expect(primitive.asynchronous).toEqual(true);
         expect(primitive.debugShowBoundingVolume).toEqual(false);
     });
@@ -149,6 +150,7 @@ defineSuite([
             compressVertices : false,
             releaseGeometryInstances : false,
             allowPicking : false,
+            cull : false,
             asynchronous : false,
             debugShowBoundingVolume : true
         });
@@ -162,6 +164,7 @@ defineSuite([
         expect(primitive.compressVertices).toEqual(false);
         expect(primitive.releaseGeometryInstances).toEqual(false);
         expect(primitive.allowPicking).toEqual(false);
+        expect(primitive.cull).toEqual(false);
         expect(primitive.asynchronous).toEqual(false);
         expect(primitive.debugShowBoundingVolume).toEqual(true);
     });
@@ -688,6 +691,21 @@ defineSuite([
 
         var pickObject = pick(context, frameState, primitive);
         expect(pickObject).not.toBeDefined();
+
+        primitive = primitive && primitive.destroy();
+    });
+
+    it('does not cull when cull is false', function() {
+        var primitive = new Primitive({
+            geometryInstances : rectangleInstance1,
+            appearance : new PerInstanceColorAppearance(),
+            asynchronous : false,
+            cull : false
+        });
+
+        var commands = [];
+        primitive.update(context, frameState, commands);
+        expect(commands[0].cull).toEqual(false);
 
         primitive = primitive && primitive.destroy();
     });
