@@ -2335,7 +2335,7 @@ define([
             westGeometry.indices = IndexDatatype.createTypedArray(numberOfVertices, westGeometry.indices);
 
             if (defined(instance.geometry.boundingSphere)) {
-                westGeometry.boundingSpheres = BoundingSphere.fromVertices(westGeometry.attributes.position.values);
+                westGeometry.boundingSphere = BoundingSphere.fromVertices(westGeometry.attributes.position.values);
             }
         } else {
             westGeometry = undefined;
@@ -2360,7 +2360,7 @@ define([
             eastGeometry.indices = IndexDatatype.createTypedArray(numberOfVertices, eastGeometry.indices);
 
             if (defined(instance.geometry.boundingSphere)) {
-                eastGeometry.boundingSpheres = BoundingSphere.fromVertices(eastGeometry.attributes.position.values);
+                eastGeometry.boundingSphere = BoundingSphere.fromVertices(eastGeometry.attributes.position.values);
             }
         } else {
             eastGeometry = undefined;

@@ -252,10 +252,11 @@ define([
         this._error = undefined;
         this._numberOfInstances = 0;
 
-        this._boundingSphere = undefined;
-        this._boundingSphereWC = undefined;
-        this._boundingSphereCV = undefined;
-        this._boundingSphere2D = undefined;
+        this._boundingSpheres = [];
+        this._boundingSphereWC = [];
+        this._boundingSphereCV = [];
+        this._boundingSphere2D = [];
+        this._boundingSphereMorph = [];
         this._perInstanceAttributeLocations = undefined;
         this._instanceIds = [];
         this._lastPerInstanceAttributeIndex = 0;
@@ -819,8 +820,6 @@ define([
             geometries = this._geometries;
             var vaAttributes = this._vaAttributes;
 
-            this._boundingSphere = BoundingSphere.clone(geometries[0].boundingSphere);
-
             var va = [];
             length = geometries.length;
             for (i = 0; i < length; ++i) {
@@ -841,6 +840,12 @@ define([
                     interleave : this._interleave,
                     vertexArrayAttributes : attributes
                 }));
+
+                this._boundingSpheres.push(geometry.boundingSphere);
+                this._boundingSphereWC.push(new BoundingSphere());
+                this._boundingSphereCV.push(new BoundingSphere());
+                this._boundingSphere2D.push(new BoundingSphere());
+                this._boundingSphereMorph.push(new BoundingSphere());
             }
 
             this._va = va;
@@ -1060,23 +1065,30 @@ define([
 
         if (!Matrix4.equals(modelMatrix, this._modelMatrix)) {
             Matrix4.clone(modelMatrix, this._modelMatrix);
-            //this._boundingSphereWC = BoundingSphere.transform(this._boundingSphere, modelMatrix, this._boundingSphereWC);
-            if (!scene3DOnly && defined(this._boundingSphere)) {
-                this._boundingSphereCV = BoundingSphere.projectTo2D(this._boundingSphereWC, projection, this._boundingSphereCV);
-                this._boundingSphere2D = BoundingSphere.clone(this._boundingSphereCV, this._boundingSphere2D);
-                this._boundingSphere2D.center.x = 0.0;
+            length = this._boundingSpheres.length;
+            for (i = 0; i < length; ++i) {
+                var boundingSphere = this._boundingSpheres[i];
+                if (defined(boundingSphere)) {
+                    this._boundingSphereWC[i] = BoundingSphere.transform(boundingSphere, modelMatrix, this._boundingSphereWC[i]);
+                    if (!scene3DOnly) {
+                        this._boundingSphereCV[i] = BoundingSphere.projectTo2D(this._boundingSphereWC[i], projection, this._boundingSphereCV[i]);
+                        this._boundingSphere2D[i] = BoundingSphere.clone(this._boundingSphereCV[i], this._boundingSphere2D[i]);
+                        this._boundingSphere2D[i].center.x = 0.0;
+                        this._boundingSphereMorph[i] = BoundingSphere.union(this._boundingSphereWC[i], this._boundingSphereCV[i]);
+                    }
+                }
             }
         }
 
-        var boundingSphere;
+        var boundingSpheres;
         if (frameState.mode === SceneMode.SCENE3D) {
-            boundingSphere = this._boundingSphereWC;
+            boundingSpheres = this._boundingSphereWC;
         } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
-            boundingSphere = this._boundingSphereCV;
+            boundingSpheres = this._boundingSphereCV;
         } else if (frameState.mode === SceneMode.SCENE2D && defined(this._boundingSphere2D)) {
-            boundingSphere = this._boundingSphere2D;
-        } else if (defined(this._boundingSphereWC) && defined(this._boundingSphereCV)) {
-            boundingSphere = BoundingSphere.union(this._boundingSphereWC, this._boundingSphereCV);
+            boundingSpheres = this._boundingSphere2D;
+        } else if (defined(this._boundingSphereMorph)) {
+            boundingSpheres = this._boundingSphereMorph;
         }
 
         var passes = frameState.passes;
@@ -1084,7 +1096,7 @@ define([
             length = colorCommands.length;
             for (i = 0; i < length; ++i) {
                 colorCommands[i].modelMatrix = modelMatrix;
-                colorCommands[i].boundingVolume = boundingSphere;
+                colorCommands[i].boundingVolume = boundingSpheres[i];
                 colorCommands[i].debugShowBoundingVolume = this.debugShowBoundingVolume;
 
                 commandList.push(colorCommands[i]);
@@ -1095,7 +1107,7 @@ define([
             length = pickCommands.length;
             for (i = 0; i < length; ++i) {
                 pickCommands[i].modelMatrix = modelMatrix;
-                pickCommands[i].boundingVolume = boundingSphere;
+                pickCommands[i].boundingVolume = boundingSpheres[i];
 
                 commandList.push(pickCommands[i]);
             }
