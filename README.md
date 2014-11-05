@@ -33,6 +33,7 @@ We appreciate attribution by including the Cesium logo and link in your app.
 ### Demos ###
 
 <p align="center">
+<a href="http://cesiumjs.org/demos/GPlates.html"><img src="http://cesiumjs.org/demos/images/GPlates.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/ign.html"><img src="http://cesiumjs.org/demos/images/ign.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/atovisualizer.html"><img src="http://cesiumjs.org/demos/images/atovisualizer.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/sunshine.html"><img src="http://cesiumjs.org/demos/images/sunshine.jpg" height="150" /></a>&nbsp;
