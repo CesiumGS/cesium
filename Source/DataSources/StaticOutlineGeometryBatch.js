@@ -157,7 +157,7 @@ define([
 
     StaticOutlineGeometryBatch.prototype.add = function(time, updater) {
         var instance = updater.createOutlineGeometryInstance(time);
-        var width = this._scene.context.putLineWidthInValidRange(updater.outlineWidth);
+        var width = this._scene.clampLineWidth(updater.outlineWidth);
         var batches;
         var batch;
         if (instance.attributes.color.value[3] === 255) {

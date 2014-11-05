@@ -2334,10 +2334,6 @@ define([
         return new PickId(this._pickObjects, key, Color.fromRgba(key));
     };
 
-    Context.prototype.putLineWidthInValidRange = function(width) {
-        return Math.max(this.minimumAliasedLineWidth, Math.min(width, this.maximumAliasedLineWidth));
-    };
-
     Context.prototype.isDestroyed = function() {
         return false;
     };

@@ -646,7 +646,7 @@ define([
                         depthTest : {
                             enabled : true
                         },
-                        lineWidth : this._geometryUpdater._scene.context.putLineWidthInValidRange(outlineWidth)
+                        lineWidth : this._geometryUpdater._scene.clampLineWidth(outlineWidth)
                     }
                 }),
                 asynchronous : false
