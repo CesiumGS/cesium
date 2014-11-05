@@ -68,6 +68,8 @@ Sandcastle.addToolbarButton('Custom Graphics', function() {
             
             //Set the polygon material to our random color.
             entity.polygon.material = Cesium.ColorMaterialProperty.fromColor(color);
+            //Outline each polygon in black.
+            entity.polygon.outlineColor = new Cesium.ConstantProperty(Cesium.Color.BLACK);
 
             //Extrude the polygon based on the state's population.  Each entity
             //stores the properties for the GeoJSON feature it was created from

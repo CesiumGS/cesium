@@ -47,19 +47,33 @@ define([
         PolylineGraphics) {
     "use strict";
 
+    function defaultCrsFunction(coordinates) {
+        return Cartesian3.fromDegrees(coordinates[0], coordinates[1], coordinates[2]);
+    }
+
+    var crsNames = {
+        'urn:ogc:def:crs:OGC:1.3:CRS84' : defaultCrsFunction,
+        'EPSG:4326' : defaultCrsFunction
+    };
+
+    var crsLinkHrefs = {};
+    var crsLinkTypes = {};
+    var defaultMarkerSize = 48;
+    var defaultMarkerSymbol;
+    var defaultMarkerColor = Color.ROYALBLUE;
+    var defaultStroke = Color.YELLOW;
+    var defaultStrokeWidth = 2;
+    var defaultFill = Color.fromBytes(255, 255, 0, 100);
+
+    var defaultStrokeWidthProperty = new ConstantProperty(defaultStrokeWidth);
+    var defaultStrokeMaterialProperty = ColorMaterialProperty.fromColor(defaultStroke);
+    var defaultFillMaterialProperty = ColorMaterialProperty.fromColor(defaultFill);
+
     var sizes = {
         small : 24,
         medium : 48,
         large : 64
     };
-
-    var defaultPolylineMaterial = ColorMaterialProperty.fromColor(Color.YELLOW);
-    var defaultPolylineWidth = new ConstantProperty(2);
-
-    var defaultPolygonMaterial = ColorMaterialProperty.fromColor(Color.fromBytes(255, 255, 0, 100));
-    var defaultPolygonOutline = new ConstantProperty(true);
-    var defaultPolygonOutlineColor = Color.BLACK;
-    var defaultPolygonOutlineColorProperty = new ConstantProperty(defaultPolygonOutlineColor);
 
     var simpleStyleIdentifiers = ['title', 'description', //
     'marker-size', 'marker-symbol', 'marker-color', 'stroke', //
@@ -207,8 +221,8 @@ define([
 
     function createPoint(dataSource, geoJson, crsFunction, coordinates) {
         var symbol;
-        var color = Color.ROYALBLUE;
-        var size = sizes.medium;
+        var color = defaultMarkerColor;
+        var size = defaultMarkerSize;
 
         var properties = geoJson.properties;
         if (defined(properties)) {
@@ -218,7 +232,7 @@ define([
             }
 
             size = defaultValue(sizes[properties['marker-size']], size);
-            symbol = properties['marker-symbol'];
+            symbol = defaultValue(properties['marker-symbol'], defaultMarkerSymbol);
         }
 
         var canvasOrPromise;
@@ -255,8 +269,8 @@ define([
     }
 
     function createLineString(dataSource, geoJson, crsFunction, coordinates) {
-        var material = defaultPolylineMaterial;
-        var widthProperty = defaultPolylineWidth;
+        var material = defaultStrokeMaterialProperty;
+        var widthProperty = defaultStrokeWidthProperty;
 
         var properties = geoJson.properties;
         if (defined(properties)) {
@@ -303,9 +317,9 @@ define([
     }
 
     function createPolygon(dataSource, geoJson, crsFunction, coordinates) {
-        var outlineColorProperty = defaultPolygonOutlineColorProperty;
-        var material = defaultPolygonMaterial;
-        var widthProperty = defaultPolylineWidth;
+        var outlineColorProperty = defaultStrokeMaterialProperty.color;
+        var material = defaultFillMaterialProperty;
+        var widthProperty = defaultStrokeWidthProperty;
 
         var properties = geoJson.properties;
         if (defined(properties)) {
@@ -322,7 +336,7 @@ define([
             var opacity = properties['stroke-opacity'];
             if (defined(opacity) && opacity !== 1.0) {
                 if (!defined(color)) {
-                    color = defaultPolygonOutlineColor.clone();
+                    color = defaultStrokeMaterialProperty.color.clone();
                 }
                 color.alpha = opacity;
             }
@@ -350,7 +364,7 @@ define([
         }
 
         var polygon = new PolygonGraphics();
-        polygon.outline = defaultPolygonOutline;
+        polygon.outline = new ConstantProperty(true);
         polygon.outlineColor = outlineColorProperty;
         polygon.outlineWidth = widthProperty;
         polygon.material = material;
@@ -468,6 +482,140 @@ define([
         result.loadUrl(url);
         return result;
     };
+
+    defineProperties(GeoJsonDataSource, {
+        /**
+         * Gets or sets the default size of the map pin created for each point, in pixels.
+         * @memberof GeoJsonDataSource
+         * @type {Number}
+         * @defaulr 48
+         */
+        markerSize : {
+            get : function() {
+                return defaultMarkerSize;
+            },
+            set : function(value) {
+                defaultMarkerSize = value;
+            }
+        },
+        /**
+         * Gets or sets the default symbol of the map pin created for each point.
+         * This can be any valid {@link http://mapbox.com/maki/|Maki} identifier, any single character,
+         * or blank if no symbol is to be used.
+         * @memberof GeoJsonDataSource
+         * @type {String}
+         */
+        markerSymbol : {
+            get : function() {
+                return defaultMarkerSymbol;
+            },
+            set : function(value) {
+                defaultMarkerSymbol = value;
+            }
+        },
+        /**
+         * Gets or sets the default color of the map pin created for each point.
+         * @memberof GeoJsonDataSource
+         * @type {Color}
+         * @default Color.ROYALBLUE
+         */
+        markerColor : {
+            get : function() {
+                return defaultMarkerColor;
+            },
+            set : function(value) {
+                defaultMarkerColor = value;
+            }
+        },
+        /**
+         * Gets or sets the default color of polylines and polygon outlines.
+         * @memberof GeoJsonDataSource
+         * @type {Color}
+         * @default Color.BLACK
+         */
+        stroke : {
+            get : function() {
+                return defaultStroke;
+            },
+            set : function(value) {
+                defaultStroke = value;
+                defaultStrokeMaterialProperty.color.setValue(value);
+            }
+        },
+        /**
+         * Gets or sets the default width of polylines and polygon outlines.
+         * @memberof GeoJsonDataSource
+         * @type {Number}
+         * @default 2.0
+         */
+        strokeWidth : {
+            get : function() {
+                return defaultStrokeWidth;
+            },
+            set : function(value) {
+                defaultStrokeWidth = value;
+                defaultStrokeWidthProperty.setValue(value);
+            }
+        },
+        /**
+         * Gets or sets the default fill color for polygon.
+         * @memberof GeoJsonDataSource
+         * @type {Color}
+         * @default Color.YELLOW
+         */
+        fill : {
+            get : function() {
+                return defaultFill;
+            },
+            set : function(value) {
+                defaultFill = value;
+                defaultFillMaterialProperty = ColorMaterialProperty.fromColor(defaultFill);
+            }
+        },
+
+        /**
+         * Gets an object that maps the name of a crs to a callback function which takes a GeoJSON coordinate
+         * and transforms it into a WGS84 Earth-fixed Cartesian.  Older versions of GeoJSON which
+         * supported the EPSG type can be added to this list as well, by specifying the complete EPSG name,
+         * for example 'EPSG:4326'.
+         * @memberof GeoJsonDataSource
+         * @type {Object}
+         */
+        crsNames : {
+            get : function() {
+                return crsNames;
+            }
+        },
+
+        /**
+         * Gets an object that maps the href property of a crs link to a callback function
+         * which takes the crs properties object and returns a Promise that resolves
+         * to a function that takes a GeoJSON coordinate and transforms it into a WGS84 Earth-fixed Cartesian.
+         * Items in this object take precedence over those defined in <code>crsLinkHrefs</code>, assuming
+         * the link has a type specified.
+         * @memberof GeoJsonDataSource
+         * @type {Object}
+         */
+        crsLinkHrefs : {
+            get : function() {
+                return crsLinkHrefs;
+            }
+        },
+
+        /**
+         * Gets an object that maps the type property of a crs link to a callback function
+         * which takes the crs properties object and returns a Promise that resolves
+         * to a function that takes a GeoJSON coordinate and transforms it into a WGS84 Earth-fixed Cartesian.
+         * Items in <code>crsLinkHrefs</code> take precedence over this object.
+         * @memberof GeoJsonDataSource
+         * @type {Object}
+         */
+        crsLinkTypes : {
+            get : function() {
+                return crsLinkTypes;
+            }
+        }
+    });
 
     defineProperties(GeoJsonDataSource.prototype, {
         /**
@@ -616,14 +764,14 @@ define([
 
             var properties = crs.properties;
             if (crs.type === 'name') {
-                crsFunction = GeoJsonDataSource.crsNames[properties.name];
+                crsFunction = crsNames[properties.name];
                 if (!defined(crsFunction)) {
                     throw new RuntimeError('Unknown crs name: ' + properties.name);
                 }
             } else if (crs.type === 'link') {
-                var handler = GeoJsonDataSource.crsLinkHrefs[properties.href];
+                var handler = crsLinkHrefs[properties.href];
                 if (!defined(handler)) {
-                    handler = GeoJsonDataSource.crsLinkTypes[properties.type];
+                    handler = crsLinkTypes[properties.type];
                 }
 
                 if (!defined(handler)) {
@@ -632,7 +780,7 @@ define([
 
                 crsFunction = handler(properties);
             } else if (crs.type === 'EPSG') {
-                crsFunction = GeoJsonDataSource.crsNames['EPSG:' + properties.code];
+                crsFunction = crsNames['EPSG:' + properties.code];
                 if (!defined(crsFunction)) {
                     throw new RuntimeError('Unknown crs EPSG code: ' + properties.code);
                 }
@@ -659,44 +807,6 @@ define([
             return when.reject(error);
         });
     };
-
-    function defaultCrsFunction(coordinates) {
-        return Cartesian3.fromDegrees(coordinates[0], coordinates[1], coordinates[2]);
-    }
-
-    /**
-     * An object that maps the name of a crs to a callback function which takes a GeoJSON coordinate
-     * and transforms it into a WGS84 Earth-fixed Cartesian.  Older versions of GeoJSON which
-     * supported the EPSG type can be added to this list as well, by specifying the complete EPSG name,
-     * for example 'EPSG:4326'.
-     * @memberof GeoJsonDataSource
-     * @type {Object}
-     */
-    GeoJsonDataSource.crsNames = {
-        'urn:ogc:def:crs:OGC:1.3:CRS84' : defaultCrsFunction,
-        'EPSG:4326' : defaultCrsFunction
-    };
-
-    /**
-     * An object that maps the href property of a crs link to a callback function
-     * which takes the crs properties object and returns a Promise that resolves
-     * to a function that takes a GeoJSON coordinate and transforms it into a WGS84 Earth-fixed Cartesian.
-     * Items in this object take precedence over those defined in <code>crsLinkHrefs</code>, assuming
-     * the link has a type specified.
-     * @memberof GeoJsonDataSource
-     * @type {Object}
-     */
-    GeoJsonDataSource.crsLinkHrefs = {};
-
-    /**
-     * An object that maps the type property of a crs link to a callback function
-     * which takes the crs properties object and returns a Promise that resolves
-     * to a function that takes a GeoJSON coordinate and transforms it into a WGS84 Earth-fixed Cartesian.
-     * Items in <code>crsLinkHrefs</code> take precedence over this object.
-     * @memberof GeoJsonDataSource
-     * @type {Object}
-     */
-    GeoJsonDataSource.crsLinkTypes = {};
 
     return GeoJsonDataSource;
 });
