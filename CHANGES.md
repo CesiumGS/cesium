@@ -3,6 +3,9 @@ Change Log
 
 ### 1.4 - 2014-12-01
 
+* Added geometry outline width support to the `DataSource` layer.  This is exposed via the new `outlineWidth` property on `EllipseGraphics`, `EllipsoidGraphics`, `PolygonGraphics`, `RectangleGraphics`, and `WallGraphics`.
+* Added `outlineWidth` support to CZML geometry packets.
+* Added `stroke-width` support to the GeoJSON simple-style implementation.
 * Added `modelMatrix` option to `Primitive` constructor.
 
 ### 1.3 - 2014-11-03
