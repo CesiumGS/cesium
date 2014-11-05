@@ -16,8 +16,8 @@ define([
         '../Core/Math',
         '../Core/Matrix4',
         '../Renderer/BufferUsage',
-        '../Renderer/createShaderSource',
         '../Renderer/DrawCommand',
+        '../Renderer/ShaderSource',
         '../Shaders/PolylineCommon',
         '../Shaders/PolylineFS',
         '../Shaders/PolylineVS',
@@ -43,8 +43,8 @@ define([
         CesiumMath,
         Matrix4,
         BufferUsage,
-        createShaderSource,
         DrawCommand,
+        ShaderSource,
         PolylineCommon,
         PolylineFS,
         PolylineVS,
@@ -921,7 +921,7 @@ define([
         var length = polylines.length;
         for ( var i = 0; i < length; ++i) {
             var p = polylines[i];
-            if (p.positions.length > 1) {
+            if (p._actualPositions.length > 1) {
                 p.update();
                 var material = p.material;
                 var value = polylineBuckets[material.type];
@@ -1028,11 +1028,18 @@ define([
             return;
         }
 
-        var vsSource = createShaderSource({ sources : [PolylineCommon, PolylineVS] });
-        var fsSource = createShaderSource({ sources : [this.material.shaderSource, PolylineFS] });
-        var fsPick = createShaderSource({ sources : [fsSource], pickColorQualifier : 'varying' });
-        this.shaderProgram = context.createShaderProgram(vsSource, fsSource, attributeLocations);
-        this.pickShaderProgram = context.createShaderProgram(vsSource, fsPick, attributeLocations);
+        var vs = new ShaderSource({
+            sources : [PolylineCommon, PolylineVS]
+        });
+        var fs = new ShaderSource({
+            sources : [this.material.shaderSource, PolylineFS]
+        });
+        var fsPick = new ShaderSource({
+            sources : fs.sources,
+            pickColorQualifier : 'varying'
+        });
+        this.shaderProgram = context.createShaderProgram(vs, fs, attributeLocations);
+        this.pickShaderProgram = context.createShaderProgram(vs, fsPick, attributeLocations);
     };
 
     function intersectsIDL(polyline) {
@@ -1043,7 +1050,7 @@ define([
     PolylineBucket.prototype.getPolylinePositionsLength = function(polyline) {
         var length;
         if (this.mode === SceneMode.SCENE3D || !intersectsIDL(polyline)) {
-            length = polyline.positions.length;
+            length = polyline._actualPositions.length;
             return length * 4.0 - 4.0;
         }
 
@@ -1251,7 +1258,7 @@ define([
             var segments;
             if (this.mode === SceneMode.SCENE3D) {
                 segments = scratchSegmentLengths;
-                var positionsLength = polyline.positions.length;
+                var positionsLength = polyline._actualPositions.length;
                 if (positionsLength > 0) {
                     segments[0] = positionsLength;
                 } else {
@@ -1338,7 +1345,7 @@ define([
     var scratchLengths = new Array(1);
     var pscratch = new Cartesian3();
     PolylineBucket.prototype.getSegments = function(polyline, projection) {
-        var positions = polyline.positions;
+        var positions = polyline._actualPositions;
 
         if (this.mode === SceneMode.SCENE3D) {
             scratchLengths[0] = positions.length;

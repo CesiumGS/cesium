@@ -232,7 +232,7 @@ define([
         this._showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
         this._resolutionScale = 1.0;
         this._forceResize = false;
-        this._clock = defaultValue(options.clock, new Clock());
+        this._clock = defined(options.clock) ? options.clock : new Clock();
         this._lastFrameTime = undefined;
 
         configureCanvasSize(this);

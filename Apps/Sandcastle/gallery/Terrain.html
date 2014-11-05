@@ -132,23 +132,14 @@ Sandcastle.addToolbarButton('San Francisco Bay', function() {
 }, 'zoomButtons');
 
 var terrainSamplePositions;
-var billboards;
-var labels;
+var billboards = scene.primitives.add(new Cesium.BillboardCollection());
+var labels = scene.primitives.add(new Cesium.LabelCollection());
 
 function sampleTerrainSuccess() {
     var ellipsoid = Cesium.Ellipsoid.WGS84;
 
-    if (typeof billboards === 'undefined') {
-        billboards = new Cesium.BillboardCollection();
-    } else {
-        billboards.removeAll();
-    }
-
-    if (typeof labels === 'undefined') {
-        labels = new Cesium.LabelCollection();
-    } else {
-        labels.removeAll();
-    }
+    billboards.removeAll();
+    labels.removeAll();
 
     for( var i = 0; i < terrainSamplePositions.length; ++i ){
         var position = terrainSamplePositions[i];
@@ -168,10 +159,7 @@ function sampleTerrainSuccess() {
             fillColor : new Cesium.Color(1,0,0),
             outlineColor : Cesium.Color.WHITE
         });
-
     }
-    scene.primitives.add(billboards);
-    scene.primitives.add(labels);
 }
 
 Sandcastle.addToolbarButton('Sample Everest Terrain', function() {

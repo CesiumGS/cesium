@@ -24,8 +24,8 @@ define([
         '../Core/Queue',
         '../Core/RuntimeError',
         '../Renderer/BufferUsage',
-        '../Renderer/createShaderSource',
         '../Renderer/DrawCommand',
+        '../Renderer/ShaderSource',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         '../ThirdParty/gltfDefaults',
@@ -63,8 +63,8 @@ define([
         Queue,
         RuntimeError,
         BufferUsage,
-        createShaderSource,
         DrawCommand,
+        ShaderSource,
         TextureMinificationFilter,
         TextureWrap,
         gltfDefaults,
@@ -297,6 +297,7 @@ define([
          * @default false
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
+        this._debugShowBoudingVolume = this.debugShowBoundingVolume;
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -966,7 +967,7 @@ define([
 
         if (model.allowPicking) {
             // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
-            var pickFS = createShaderSource({
+            var pickFS = new ShaderSource({
                 sources : [fs],
                 pickColorQualifier : 'uniform'
             });
@@ -1377,7 +1378,6 @@ define([
         booleanStates[WebGLRenderingContext.CULL_FACE] = false;
         booleanStates[WebGLRenderingContext.DEPTH_TEST] = false;
         booleanStates[WebGLRenderingContext.POLYGON_OFFSET_FILL] = false;
-        booleanStates[WebGLRenderingContext.SAMPLE_COVERAGE] = false;
         booleanStates[WebGLRenderingContext.SCISSOR_TEST] = false;
 
         var enable = states.enable;
@@ -1417,7 +1417,6 @@ define([
                     var colorMask = defaultValue(statesFunctions.colorMask, [true, true, true, true]);
                     var depthRange = defaultValue(statesFunctions.depthRange, [0.0, 1.0]);
                     var polygonOffset = defaultValue(statesFunctions.polygonOffset, [0.0, 0.0]);
-                    var sampleCoverage = defaultValue(statesFunctions.sampleCoverage, [0.0, 0.0]);
                     var scissor = defaultValue(statesFunctions.scissor, [0.0, 0.0, 0.0, 0.0]);
 
                     rendererRenderStates[name] = context.createRenderState({
@@ -1470,11 +1469,6 @@ define([
                             functionSourceAlpha : blendFuncSeparate[1],
                             functionDestinationRgb : blendFuncSeparate[2],
                             functionDestinationAlpha : blendFuncSeparate[3]
-                        },
-                        sampleCoverage : {
-                            enabled : booleanStates[WebGLRenderingContext.SAMPLE_COVERAGE],
-                            value : sampleCoverage[0],
-                            invert : sampleCoverage[1]
                         }
                     });
                 }
@@ -2163,7 +2157,7 @@ define([
     var scratchPosition = new Cartesian3();
 
     function getScale(model, context, frameState) {
-        var scale = model._scale;
+        var scale = model.scale;
 
         if (model.minimumPixelSize !== 0.0) {
             // Compute size of bounding sphere in pixels
@@ -2277,9 +2271,9 @@ define([
 
         // We don't check show at the top of the function since we
         // want to be able to progressively load models when they are not shown,
-        // and then have them visibile immediately when show is set to true.
+        // and then have them visible immediately when show is set to true.
         if (show) {
-// PERFORMANCE_IDEA: This is terriable
+// PERFORMANCE_IDEA: This is terrible
             var passes = frameState.passes;
             var i;
             var length;
@@ -2290,7 +2284,15 @@ define([
                 for (i = 0; i < length; ++i) {
                     commandList.push(commands[i]);
                 }
+
+                if (this.debugShowBoundingVolume !== this._debugShowBoundingVolume) {
+                    this._debugShowBoundingVolume = this.debugShowBoundingVolume;
+                    for (i = 0; i < commands.length; i++) {
+                        commands[i].debugShowBoundingVolume = this.debugShowBoundingVolume;
+                    }
+                }
             }
+
             if (passes.pick) {
                 commands = this._pickCommands;
                 length = commands.length;

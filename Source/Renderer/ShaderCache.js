@@ -2,11 +2,13 @@
 define([
         '../Core/defined',
         '../Core/destroyObject',
-        './ShaderProgram'
+        './ShaderProgram',
+        './ShaderSource'
     ], function(
         defined,
         destroyObject,
-        ShaderProgram) {
+        ShaderProgram,
+        ShaderSource) {
     "use strict";
 
     /**
@@ -27,16 +29,15 @@ define([
      * </p>
      *
      * @param {ShaderProgram} shaderProgram The shader program that is being reassigned.  This can be <code>undefined</code>.
-     * @param {String} vertexShaderSource The GLSL source for the vertex shader.
-     * @param {String} fragmentShaderSource The GLSL source for the fragment shader.
+     * @param {String|ShaderSource} vertexShaderSource The GLSL source for the vertex shader.
+     * @param {String|ShaderSource} fragmentShaderSource The GLSL source for the fragment shader.
      * @param {Object} attributeLocations Indices for the attribute inputs to the vertex shader.
      * @returns {ShaderProgram} The cached or newly created shader program.
      *
      * @see ShaderCache#getShaderProgram
      *
      * @example
-     * this._shaderProgram = context.shaderCache.replaceShaderProgram(
-     *     this._shaderProgram, vs, fs, attributeLocations);
+     * this._shaderProgram = context.shaderCache.replaceShaderProgram(this._shaderProgram, vs, fs, attributeLocations);
      */
     ShaderCache.prototype.replaceShaderProgram = function(shaderProgram, vertexShaderSource, fragmentShaderSource, attributeLocations) {
         if (defined(shaderProgram)) {
@@ -46,8 +47,36 @@ define([
         return this.getShaderProgram(vertexShaderSource, fragmentShaderSource, attributeLocations);
     };
 
+    /**
+     * Returns a shader program from the cache, or creates and caches a new shader program,
+     * given the GLSL vertex and fragment shader source and attribute locations.
+     *
+     * @param {String|ShaderSource} vertexShaderSource The GLSL source for the vertex shader.
+     * @param {String|ShaderSource} fragmentShaderSource The GLSL source for the fragment shader.
+     * @param {Object} attributeLocations Indices for the attribute inputs to the vertex shader.
+     *
+     * @returns {ShaderProgram} The cached or newly created shader program.
+     */
     ShaderCache.prototype.getShaderProgram = function(vertexShaderSource, fragmentShaderSource, attributeLocations) {
-        var keyword = vertexShaderSource + fragmentShaderSource + JSON.stringify(attributeLocations);
+        // convert shaders which are provided as strings into ShaderSource objects
+        // because ShaderSource handles all the automatic including of built-in functions, etc.
+
+        if (typeof vertexShaderSource === 'string') {
+            vertexShaderSource = new ShaderSource({
+                sources : [vertexShaderSource]
+            });
+        }
+
+        if (typeof fragmentShaderSource === 'string') {
+            fragmentShaderSource = new ShaderSource({
+                sources : [fragmentShaderSource]
+            });
+        }
+
+        var vertexShaderText = vertexShaderSource.createCombinedVertexShader();
+        var fragmentShaderText = fragmentShaderSource.createCombinedFragmentShader();
+
+        var keyword = vertexShaderText + fragmentShaderText + JSON.stringify(attributeLocations);
         var cachedShader;
 
         if (this._shaders[keyword]) {
@@ -57,17 +86,26 @@ define([
             delete this._shadersToRelease[keyword];
         } else {
             var context = this._context;
-            var sp = new ShaderProgram(context._gl, context.logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations);
+            var shaderProgram = new ShaderProgram({
+                gl : context._gl,
+                logShaderCompilation : context.logShaderCompilation,
+                debugShaders : context.debugShaders,
+                vertexShaderSource : vertexShaderSource,
+                vertexShaderText : vertexShaderText,
+                fragmentShaderSource : fragmentShaderSource,
+                fragmentShaderText : fragmentShaderText,
+                attributeLocations : attributeLocations
+            });
 
             cachedShader = {
                 cache : this,
-                shaderProgram : sp,
+                shaderProgram : shaderProgram,
                 keyword : keyword,
                 count : 0
             };
 
             // A shader can't be in more than one cache.
-            sp._cachedShader = cachedShader;
+            shaderProgram._cachedShader = cachedShader;
             this._shaders[keyword] = cachedShader;
         }
 

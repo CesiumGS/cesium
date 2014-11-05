@@ -44,14 +44,6 @@ defineSuite([
         expect(geometry.boundingSphere).toBe(boundingSphere);
     });
 
-    it('constructor thows without primitiveType', function() {
-        expect(function() {
-            return new Geometry({
-                attributes : {}
-            });
-        }).toThrowDeveloperError();
-    });
-
     it('constructor throws without attributes', function() {
         expect(function() {
             return new Geometry({

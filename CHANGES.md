@@ -1,6 +1,22 @@
 Change Log
 ==========
 
+### 1.3 - 2014-11-03
+
+* Worked around a shader compilation regression in Firefox 33 and 34 by falling back to a less precise shader on those browsers. [#2197](https://github.com/AnalyticalGraphicsInc/cesium/issues/2197)
+* Added support to the `CesiumTerrainProvider` for terrain tiles with more than 64K vertices, which is common for sub-meter terrain.
+* Added `Primitive.compressVertices`. When true (default), geometry vertices are compressed to save GPU memory.
+* Added `culture` option to `BingMapsImageryProvider` constructor.
+* Reduced the amount of GPU memory used by billboards and labels.
+* Fixed a bug that caused non-base imagery layers with a limited `rectangle` to be stretched to the edges of imagery tiles. [#416](https://github.com/AnalyticalGraphicsInc/cesium/issues/416)
+* Fixed rendering polylines with duplicate positions. [#898](https://github.com/AnalyticalGraphicsInc/cesium/issues/898)
+* Fixed a bug in `Globe.pick` that caused it to return incorrect results when using terrain data with vertex normals.  The bug manifested itself as strange behavior when navigating around the surface with the mouse as well as incorrect results when using `Camera.viewRectangle`.
+* Fixed a bug in `sampleTerrain` that could cause it to produce undefined heights when sampling for a position very near the edge of a tile.
+* `ReferenceProperty` instances now retain their last value if the entity being referenced is removed from the target collection.  The reference will be automatically reattached if the target is reintroduced. 
+* Upgraded topojson from 1.6.8 to 1.6.18.
+* Upgraded Knockout from version 3.1.0 to 3.2.0.
+* Upgraded CodeMirror, used by SandCastle, from 2.24 to 4.6.
+
 ### 1.2 - 2014-10-01
 
 * Deprecated

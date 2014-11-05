@@ -22,6 +22,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Dan Yankowsky](https://github.com/balefrost)
    * [Michael Dunkel](https://github.com/mdunkel)
    * [Pat Mahoney](https://github.com/PatMahoney)
+   * [Francesco Linsalata](https://github.com/flinsalata) 
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
    * [Kevin Ring](https://github.com/kring)

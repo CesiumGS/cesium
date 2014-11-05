@@ -172,6 +172,7 @@ define([
         var scene3DOnly = parameters.scene3DOnly;
         var allowPicking = parameters.allowPicking;
         var vertexCacheOptimize = parameters.vertexCacheOptimize;
+        var compressVertices = parameters.compressVertices;
         var modelMatrix = parameters.modelMatrix;
 
         var i;
@@ -238,6 +239,11 @@ define([
                     GeometryPipeline.encodeAttribute(geometry, name, name + '3DHigh', name + '3DLow');
                 }
             }
+        }
+
+        // oct encode and pack normals, compress texture coordinates
+        if (compressVertices) {
+            GeometryPipeline.compressVertices(geometry);
         }
 
         if (!uintIndexSupport) {
@@ -836,6 +842,7 @@ define([
             scene3DOnly : parameters.scene3DOnly,
             allowPicking : parameters.allowPicking,
             vertexCacheOptimize : parameters.vertexCacheOptimize,
+            compressVertices : parameters.compressVertices,
             modelMatrix : parameters.modelMatrix
         };
     };
@@ -870,6 +877,7 @@ define([
             scene3DOnly : packedParameters.scene3DOnly,
             allowPicking : packedParameters.allowPicking,
             vertexCacheOptimize : packedParameters.vertexCacheOptimize,
+            compressVertices : packedParameters.compressVertices,
             modelMatrix : Matrix4.clone(packedParameters.modelMatrix)
         };
     };
