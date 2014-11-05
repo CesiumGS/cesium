@@ -232,6 +232,11 @@ defineSuite([
         arcs : [[[0, 0], [1, 0], [0, 1], [-1, 0], [0, -1]], [[0, 0], [1, 0], [0, 1]], [[1, 1], [-1, 0], [0, -1]], [[1, 1]], [[0, 0]]]
     };
 
+    var mixedGeometries = {
+        type : 'GeometryCollection',
+        geometries : [lineString, polygon, point]
+    };
+
     it('default constructor has expected values', function() {
         var dataSource = new GeoJsonDataSource();
         expect(dataSource.changedEvent).toBeInstanceOf(Event);
@@ -459,12 +464,37 @@ defineSuite([
         });
     });
 
-    it('Can set default graphics', function() {
-        var mixedGeometries = {
-                type : 'GeometryCollection',
-                geometries : [lineString, polygon, point]
-            };
+    it('Can provide base styling options', function() {
+        var options = {
+            markerSize : 10,
+            markerSymbol : 'bus',
+            markerColor : Color.GREEN,
+            stroke : Color.ORANGE,
+            strokeWidth : 8,
+            fill : Color.RED
+        };
 
+        var dataSource = new GeoJsonDataSource();
+        waitsForPromise(dataSource.load(mixedGeometries, options), function() {
+            var entityCollection = dataSource.entities;
+            var entities = entityCollection.entities;
+
+            var entity = entities[0];
+            expect(entity.polyline.material.color.getValue()).toEqual(options.stroke);
+            expect(entity.polyline.width.getValue()).toEqual(options.strokeWidth);
+
+            entity = entities[1];
+            expect(entity.polygon.material.color.getValue()).toEqual(options.fill);
+            expect(entity.polygon.outlineColor.getValue()).toEqual(options.stroke);
+            expect(entity.polygon.outlineWidth.getValue()).toEqual(options.strokeWidth);
+
+            entity = entities[2];
+            var expectedImage = dataSource._pinBuilder.fromMakiIconId(options.markerSymbol, options.markerColor, options.markerSize).toDataURL();
+            expect(entity.billboard.image.getValue()).toEqual(expectedImage);
+        });
+    });
+
+    it('Can set default graphics', function() {
         GeoJsonDataSource.markerSize = 10;
         GeoJsonDataSource.markerSymbol = 'bus';
         GeoJsonDataSource.markerColor = Color.GREEN;
@@ -486,9 +516,9 @@ defineSuite([
             expect(entity.polygon.outlineColor.getValue()).toEqual(GeoJsonDataSource.stroke);
             expect(entity.polygon.outlineWidth.getValue()).toEqual(GeoJsonDataSource.strokeWidth);
 
-            //entity = entities[2];
-            //expect(entity.billboard.width.getValue()).toEqual(GeoJsonDataSource.markerSize);
-            //expect(entity.billboard.height.getValue()).toEqual(GeoJsonDataSource.markerSize);
+            entity = entities[2];
+            var expectedImage = dataSource._pinBuilder.fromMakiIconId(GeoJsonDataSource.markerSymbol, GeoJsonDataSource.markerColor, GeoJsonDataSource.markerSize).toDataURL();
+            expect(entity.billboard.image.getValue()).toEqual(expectedImage);
         });
     });
 
