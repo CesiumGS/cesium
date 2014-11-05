@@ -11,6 +11,7 @@ define([
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './GeometryType',
         './IndexDatatype',
         './Math',
         './PolylinePipeline',
@@ -28,6 +29,7 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        GeometryType,
         IndexDatatype,
         CesiumMath,
         PolylinePipeline,
@@ -199,15 +201,7 @@ define([
             positions = polylineGeometry._positions;
         }
 
-        var segments = PolylinePipeline.wrapLongitude(positions);
-        positions = segments.positions;
-        var lengths = segments.lengths;
-
-        var size = 0;
-        var length = lengths.length;
-        for (i = 0; i < length; ++i) {
-            size += lengths[i] * 4.0 - 4.0;
-        }
+        var size = positions.length * 4.0 - 4.0;
 
         var finalPositions = new Float64Array(size * 3);
         var prevPositions = new Float64Array(size * 3);
@@ -249,31 +243,21 @@ define([
 
             Cartesian3.clone(position, scratchNextPosition);
 
-            segmentLength = lengths[segmentIndex];
-            if (j === count + segmentLength) {
-                count += segmentLength;
-                ++segmentIndex;
-            }
-
-            var segmentStart = j - count === 0;
-            var segmentEnd = j === count + lengths[segmentIndex] - 1;
-
-            var startK = segmentStart ? 2 : 0;
-            var endK = segmentEnd ? 2 : 4;
-
             var color0, color1;
             if (defined(finalColors)) {
-                var colorSegmentIndex = j - segmentIndex;
-                if (!segmentStart && !perVertex) {
-                    color0 = colors[colorSegmentIndex - 1];
+                if (j !== 0 && !perVertex) {
+                    color0 = colors[j - 1];
                 } else {
-                    color0 = colors[colorSegmentIndex];
+                    color0 = colors[j];
                 }
 
-                if (!segmentEnd) {
-                    color1 = colors[colorSegmentIndex];
+                if (j !== positionsLength - 1) {
+                    color1 = colors[j];
                 }
             }
+
+            var startK = j === 0 ? 2 : 0;
+            var endK = j === positionsLength - 1 ? 2 : 4;
 
             for (k = startK; k < endK; ++k) {
                 Cartesian3.pack(scratchPosition, finalPositions, positionIndex);
@@ -344,30 +328,28 @@ define([
             });
         }
 
-        length = lengths.length;
-        var indices = IndexDatatype.createTypedArray(size, positions.length * 6 - length * 6);
+        var indices = IndexDatatype.createTypedArray(size, positions.length * 6 - 6);
         var index = 0;
         var indicesIndex = 0;
-        for (i = 0; i < length; ++i) {
-            segmentLength = lengths[i] - 1.0;
-            for (j = 0; j < segmentLength; ++j) {
-                indices[indicesIndex++] = index;
-                indices[indicesIndex++] = index + 2;
-                indices[indicesIndex++] = index + 1;
+        var length = positions.length - 1.0;
+        for (j = 0; j < length; ++j) {
+            indices[indicesIndex++] = index;
+            indices[indicesIndex++] = index + 2;
+            indices[indicesIndex++] = index + 1;
 
-                indices[indicesIndex++] = index + 1;
-                indices[indicesIndex++] = index + 2;
-                indices[indicesIndex++] = index + 3;
+            indices[indicesIndex++] = index + 1;
+            indices[indicesIndex++] = index + 2;
+            indices[indicesIndex++] = index + 3;
 
-                index += 4;
-            }
+            index += 4;
         }
 
         return new Geometry({
             attributes : attributes,
             indices : indices,
             primitiveType : PrimitiveType.TRIANGLES,
-            boundingSphere : BoundingSphere.fromPoints(positions)
+            boundingSphere : BoundingSphere.fromPoints(positions),
+            geometryType : GeometryType.POLYLINES
         });
     };
 

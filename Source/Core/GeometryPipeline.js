@@ -15,6 +15,7 @@ define([
         './GeographicProjection',
         './Geometry',
         './GeometryAttribute',
+        './GeometryType',
         './IndexDatatype',
         './Intersect',
         './IntersectionTests',
@@ -40,6 +41,7 @@ define([
         GeographicProjection,
         Geometry,
         GeometryAttribute,
+        GeometryType,
         IndexDatatype,
         Intersect,
         IntersectionTests,
@@ -1737,13 +1739,14 @@ define([
         return splitTriangleResult;
     }
 
-    var u0Scratch = new Cartesian2();
-    var u1Scratch = new Cartesian2();
-    var u2Scratch = new Cartesian2();
     var v0Scratch = new Cartesian3();
     var v1Scratch = new Cartesian3();
     var v2Scratch = new Cartesian3();
+    var u0Scratch = new Cartesian2();
+    var u1Scratch = new Cartesian2();
+    var u2Scratch = new Cartesian2();
     var computeScratch = new Cartesian3();
+
     function computeTriangleAttributes(i0, i1, i2, dividedTriangle, normals, binormals, tangents, texCoords) {
         if (!defined(normals) && !defined(binormals) && !defined(tangents) && !defined(texCoords)) {
             return;
@@ -1920,6 +1923,8 @@ define([
         geometry.indices = IndexDatatype.createTypedArray(numberOfVertices, newIndices);
     }
 
+    var xzPlane = Plane.fromPointNormal(Cartesian3.ZERO, Cartesian3.UNIT_Y);
+
     var offsetScratch = new Cartesian3();
     var offsetPointScratch = new Cartesian3();
     function wrapLongitudeLines(geometry) {
@@ -1929,8 +1934,6 @@ define([
 
         var newPositions = Array.prototype.slice.call(positions, 0);
         var newIndices = [];
-
-        var xzPlane = Plane.fromPointNormal(Cartesian3.ZERO, Cartesian3.UNIT_Y);
 
         var length = indices.length;
         for ( var i = 0; i < length; i += 2) {
@@ -1993,6 +1996,169 @@ define([
         geometry.indices = IndexDatatype.createTypedArray(numberOfVertices, newIndices);
     }
 
+    var cartesian2Scratch0 = new Cartesian2();
+    var cartesian2Scratch1 = new Cartesian2();
+
+    var cartesian3Scratch0 = new Cartesian3();
+    var cartesian3Scratch1 = new Cartesian3();
+    var cartesian3Scratch2 = new Cartesian3();
+    var cartesian3Scratch3 = new Cartesian3();
+    var cartesian3Scratch4 = new Cartesian3();
+
+    var cartesian4Scratch0 = new Cartesian4();
+    var cartesian4Scratch1 = new Cartesian4();
+
+    function wrapLongitudePolyline(geometry) {
+        var attributes = geometry.attributes;
+        var positions = attributes.position.values;
+        var texCoords = (defined(attributes.st)) ? attributes.st.values : undefined;
+        var prevPositions = (defined(attributes.prevPosition)) ? attributes.prevPosition.values : undefined;
+        var nextPositions = (defined(attributes.nextPosition)) ? attributes.nextPosition.values : undefined;
+        var expandAndWidths = (defined(attributes.expandAndWidth)) ? attributes.expandAndWidth.values : undefined;
+        var colors = (defined(attributes.color)) ? attributes.color.values : undefined;
+        var indices = geometry.indices;
+
+        var newPositions = Array.prototype.slice.call(positions, 0);
+        var newTexCoords = (defined(texCoords)) ? Array.prototype.slice.call(texCoords, 0) : undefined;
+        var newPrevPositions = (defined(prevPositions)) ? Array.prototype.slice.call(prevPositions, 0) : undefined;
+        var newNextPositions = (defined(nextPositions)) ? Array.prototype.slice.call(nextPositions, 0) : undefined;
+        var newExpandAndWidths = (defined(expandAndWidths)) ? Array.prototype.slice.call(expandAndWidths, 0) : undefined;
+        var newColors = (defined(colors)) ? Array.prototype.slice.call(colors, 0) : undefined;
+        var newIndices = [];
+
+        var length = newPositions.length / 3;
+        for (var i = 0; i < length; i += 4) {
+            var i0 = i;
+            var i1 = i + 1;
+            var i2 = i + 2;
+
+            var p0 = Cartesian3.fromArray(newPositions, i0 * 3, cartesian3Scratch0);
+            var p1 = Cartesian3.fromArray(newPositions, i1 * 3, cartesian3Scratch1);
+            var p2 = Cartesian3.fromArray(newPositions, i2 * 3, cartesian3Scratch2);
+
+            var p0Dup = Cartesian3.equals(p0, p1);
+
+            if (Math.abs(p0.y) < CesiumMath.EPSILON6) {
+                if (p2.y < 0.0) {
+                    p0.y = -CesiumMath.EPSILON6;
+                } else {
+                    p0.y = CesiumMath.EPSILON6;
+                }
+
+                newPositions[i0 * 3 + 1] = p0.y;
+            }
+
+            if (Math.abs(p2.y) < CesiumMath.EPSILON6) {
+                if (p0.y < 0.0) {
+                    p2.y = -CesiumMath.EPSILON6;
+                } else {
+                    p2.y = CesiumMath.EPSILON6;
+                }
+
+                newPositions[i2 * 3 + 1] = p2.y;
+            }
+
+            newPositions[i1 * 3 + 1] = p1.y = p0Dup ? p0.y : p2.y;
+
+            var split = false;
+
+            // intersects the IDL if either endpoint is on the negative side of the yz-plane
+            if (p0.x < 0.0 || p2.x < 0.0) {
+                // and intersects the xz-plane
+                var intersection = IntersectionTests.lineSegmentPlane(p0, p2, xzPlane, cartesian3Scratch1);
+                if (defined(intersection)) {
+                    // move point on the xz-plane slightly away from the plane
+                    var offset = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Y, 5.0 * CesiumMath.EPSILON9, cartesian3Scratch3);
+                    if (p0.y < 0.0) {
+                        Cartesian3.negate(offset, offset);
+                    }
+
+                    var offsetPoint = Cartesian3.add(intersection, offset, cartesian3Scratch4);
+                    newPositions.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                    newPositions.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+
+                    Cartesian3.negate(offset, offset);
+                    Cartesian3.add(intersection, offset, offsetPoint);
+                    newPositions.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                    newPositions.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+
+                    newPrevPositions.push(p0.x, p0.y, p0.z, p0.x, p0.y, p0.z);
+                    newPrevPositions.push(p0.x, p0.y, p0.z, p0.x, p0.y, p0.z);
+
+                    newNextPositions.push(p2.x, p2.y, p2.z, p2.x, p2.y, p2.z);
+                    newNextPositions.push(p2.x, p2.y, p2.z, p2.x, p2.y, p2.z);
+
+                    var ew0 = Cartesian2.fromArray(newExpandAndWidths, i0 * 2);
+
+                    var width = Math.abs(ew0.y);
+                    newExpandAndWidths.push(-1, -width, 1, -width);
+                    newExpandAndWidths.push(-1,  width, 1,  width);
+
+                    var t = Cartesian3.magnitudeSquared(Cartesian3.subtract(intersection, p0, cartesian3Scratch3));
+                    t /= Cartesian3.magnitudeSquared(Cartesian3.subtract(p2, p0, cartesian3Scratch3));
+
+                    if (defined(newColors)) {
+                        var c0 = Cartesian4.fromArray(newColors, i0 * 4, cartesian4Scratch0);
+                        var c2 = Cartesian4.fromArray(newColors, i2 * 4, cartesian4Scratch0);
+
+                        var r = CesiumMath.lerp(c0.x, c2.x, t);
+                        var g = CesiumMath.lerp(c0.y, c2.y, t);
+                        var b = CesiumMath.lerp(c0.z, c2.z, t);
+                        var a = CesiumMath.lerp(c0.w, c2.w, t);
+
+                        newColors.push(r, g, b, a);
+                        newColors.push(r, g, b, a);
+                        newColors.push(r, g, b, a);
+                        newColors.push(r, g, b, a);
+                    }
+
+                    if (defined(newTexCoords)) {
+                        var s0 = Cartesian2.fromArray(newTexCoords, i0 * 2, cartesian2Scratch0);
+                        var s3 = Cartesian2.fromArray(newTexCoords, (i + 3) * 2, cartesian2Scratch1);
+
+                        var sx = CesiumMath.lerp(s0.x, s3.x, t);
+
+                        newTexCoords.push(sx, s0.y);
+                        newTexCoords.push(sx, s3.y);
+                        newTexCoords.push(sx, s0.y);
+                        newTexCoords.push(sx, s3.y);
+                    }
+
+                    split = true;
+                }
+            }
+
+            if (!split) {
+                newIndices.push(i, i + 2, i + 1);
+                newIndices.push(i + 1, i + 2, i + 3);
+            } else {
+                var index = newPositions.length / 3 - 4;
+
+                newIndices.push(i, index, i + 1);
+                newIndices.push(i + 1, index, index + 1);
+
+                newIndices.push(index + 2, i + 2, index + 3);
+                newIndices.push(index + 3, i + 2, i + 3);
+            }
+        }
+
+        attributes.position.values = new Float64Array(newPositions);
+        attributes.prevPosition.values = ComponentDatatype.createTypedArray(attributes.prevPosition.componentDatatype, newPrevPositions);
+        attributes.nextPosition.values = ComponentDatatype.createTypedArray(attributes.nextPosition.componentDatatype, newNextPositions);
+        attributes.expandAndWidth.values = ComponentDatatype.createTypedArray(attributes.expandAndWidth.componentDatatype, newExpandAndWidths);
+
+        if (defined(newTexCoords)) {
+            attributes.st.values = ComponentDatatype.createTypedArray(attributes.st.componentDatatype, newTexCoords);
+        }
+
+        if (defined(newColors)) {
+            attributes.color.values = ComponentDatatype.createTypedArray(attributes.color.componentDatatype, newColors);
+        }
+
+        var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+        geometry.indices = IndexDatatype.createTypedArray(numberOfVertices, newIndices);
+    }
+
     /**
      * Splits the geometry's primitives, by introducing new vertices and indices,that
      * intersect the International Date Line so that no primitives cross longitude
@@ -2020,11 +2186,25 @@ define([
             }
         }
 
-        indexPrimitive(geometry);
-        if (geometry.primitiveType === PrimitiveType.TRIANGLES) {
-            wrapLongitudeTriangles(geometry);
-        } else if (geometry.primitiveType === PrimitiveType.LINES) {
-            wrapLongitudeLines(geometry);
+        if (geometry.geometryType !== GeometryType.NONE) {
+            switch (geometry.geometryType) {
+            case GeometryType.POLYLINES:
+                wrapLongitudePolyline(geometry);
+                break;
+            case GeometryType.TRIANGLES:
+                wrapLongitudeTriangles(geometry);
+                break;
+            case GeometryType.LINES:
+                wrapLongitudeLines(geometry);
+                break;
+            }
+        } else {
+            indexPrimitive(geometry);
+            if (geometry.primitiveType === PrimitiveType.TRIANGLES) {
+                wrapLongitudeTriangles(geometry);
+            } else if (geometry.primitiveType === PrimitiveType.LINES) {
+                wrapLongitudeLines(geometry);
+            }
         }
 
         return geometry;
