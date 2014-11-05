@@ -65,35 +65,44 @@ define([
         }
     }
 
+    function addGeometryPickColor(geometry, pickColor) {
+        var attributes = geometry.attributes;
+        var positionAttr = attributes.position;
+        var numberOfComponents = 4 * (positionAttr.values.length / positionAttr.componentsPerAttribute);
+
+        attributes.pickColor = new GeometryAttribute({
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+            componentsPerAttribute : 4,
+            normalize : true,
+            values : new Uint8Array(numberOfComponents)
+        });
+
+        var red = Color.floatToByte(pickColor.red);
+        var green = Color.floatToByte(pickColor.green);
+        var blue = Color.floatToByte(pickColor.blue);
+        var alpha = Color.floatToByte(pickColor.alpha);
+        var values = attributes.pickColor.values;
+
+        for (var j = 0; j < numberOfComponents; j += 4) {
+            values[j] = red;
+            values[j + 1] = green;
+            values[j + 2] = blue;
+            values[j + 3] = alpha;
+        }
+    }
+
     function addPickColorAttribute(instances, pickIds) {
         var length = instances.length;
 
         for (var i = 0; i < length; ++i) {
             var instance = instances[i];
-            var geometry = instance.geometry;
-            var attributes = geometry.attributes;
-            var positionAttr = attributes.position;
-            var numberOfComponents = 4 * (positionAttr.values.length / positionAttr.componentsPerAttribute);
-
-            attributes.pickColor = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                componentsPerAttribute : 4,
-                normalize : true,
-                values : new Uint8Array(numberOfComponents)
-            });
-
             var pickColor = pickIds[i];
-            var red = Color.floatToByte(pickColor.red);
-            var green = Color.floatToByte(pickColor.green);
-            var blue = Color.floatToByte(pickColor.blue);
-            var alpha = Color.floatToByte(pickColor.alpha);
-            var values = attributes.pickColor.values;
 
-            for (var j = 0; j < numberOfComponents; j += 4) {
-                values[j] = red;
-                values[j + 1] = green;
-                values[j + 2] = blue;
-                values[j + 3] = alpha;
+            if (defined(instance.geometry)) {
+                addGeometryPickColor(instance.geometry, pickColor);
+            } else {
+                addGeometryPickColor(instance.westHemisphereGeometry, pickColor);
+                addGeometryPickColor(instance.eastHemisphereGeometry, pickColor);
             }
         }
     }
@@ -133,33 +142,42 @@ define([
         return attributesInAllInstances;
     }
 
+    function addPerInstanceAttributesToGeometry(instanceAttributes, geometry, names) {
+        var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+
+        var namesLength = names.length;
+        for (var j = 0; j < namesLength; ++j) {
+            var name = names[j];
+            var attribute = instanceAttributes[name];
+            var componentDatatype = attribute.componentDatatype;
+            var value = attribute.value;
+            var componentsPerAttribute = value.length;
+
+            var buffer = ComponentDatatype.createTypedArray(componentDatatype, numberOfVertices * componentsPerAttribute);
+            for (var k = 0; k < numberOfVertices; ++k) {
+                buffer.set(value, k * componentsPerAttribute);
+            }
+
+            geometry.attributes[name] = new GeometryAttribute({
+                componentDatatype : componentDatatype,
+                componentsPerAttribute : componentsPerAttribute,
+                normalize : attribute.normalize,
+                values : buffer
+            });
+        }
+    }
+
     function addPerInstanceAttributes(instances, names) {
         var length = instances.length;
         for (var i = 0; i < length; ++i) {
             var instance = instances[i];
             var instanceAttributes = instance.attributes;
-            var geometry = instance.geometry;
-            var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
 
-            var namesLength = names.length;
-            for (var j = 0; j < namesLength; ++j) {
-                var name = names[j];
-                var attribute = instanceAttributes[name];
-                var componentDatatype = attribute.componentDatatype;
-                var value = attribute.value;
-                var componentsPerAttribute = value.length;
-
-                var buffer = ComponentDatatype.createTypedArray(componentDatatype, numberOfVertices * componentsPerAttribute);
-                for (var k = 0; k < numberOfVertices; ++k) {
-                    buffer.set(value, k * componentsPerAttribute);
-                }
-
-                geometry.attributes[name] = new GeometryAttribute({
-                    componentDatatype : componentDatatype,
-                    componentsPerAttribute : componentsPerAttribute,
-                    normalize : attribute.normalize,
-                    values : buffer
-                });
+            if (defined(instance.geometry)) {
+                addPerInstanceAttributesToGeometry(instanceAttributes, instance.geometry, names);
+            } else {
+                addPerInstanceAttributesToGeometry(instanceAttributes, instance.westHemisphereGeometry, names);
+                addPerInstanceAttributesToGeometry(instanceAttributes, instance.eastHemisphereGeometry, names);
             }
         }
     }
@@ -176,6 +194,7 @@ define([
         var modelMatrix = parameters.modelMatrix;
 
         var i;
+        var geometry;
         var length = instances.length;
         var primitiveType = instances[0].geometry.primitiveType;
 
@@ -193,7 +212,7 @@ define([
         // Clip to IDL
         if (!scene3DOnly) {
             for (i = 0; i < length; ++i) {
-                GeometryPipeline.wrapLongitude(instances[i].geometry);
+                GeometryPipeline.wrapLongitude(instances[i]);
             }
         }
 
@@ -209,50 +228,70 @@ define([
         // Optimize for vertex shader caches
         if (vertexCacheOptimize) {
             for (i = 0; i < length; ++i) {
-                GeometryPipeline.reorderForPostVertexCache(instances[i].geometry);
-                GeometryPipeline.reorderForPreVertexCache(instances[i].geometry);
+                var instance = instances[i];
+                if (defined(instance.geometry)) {
+                    GeometryPipeline.reorderForPostVertexCache(instance.geometry);
+                    GeometryPipeline.reorderForPreVertexCache(instance.geometry);
+                } else {
+                    GeometryPipeline.reorderForPostVertexCache(instance.westHemisphereGeometry);
+                    GeometryPipeline.reorderForPreVertexCache(instance.westHemisphereGeometry);
+
+                    GeometryPipeline.reorderForPostVertexCache(instance.eastHemisphereGeometry);
+                    GeometryPipeline.reorderForPreVertexCache(instance.eastHemisphereGeometry);
+                }
             }
         }
 
         // Combine into single geometry for better rendering performance.
-        var geometry = GeometryPipeline.combine(instances);
+        var geometries = GeometryPipeline.combine(instances);
 
-        // Split positions for GPU RTE
-        var attributes = geometry.attributes;
-        var name;
-        if (!scene3DOnly) {
-            for (name in attributes) {
-                if (attributes.hasOwnProperty(name) && attributes[name].componentDatatype === ComponentDatatype.DOUBLE) {
-                    var name3D = name + '3D';
-                    var name2D = name + '2D';
+        length = geometries.length;
+        for (i = 0; i < length; ++i) {
+            geometry = geometries[i];
 
-                    // Compute 2D positions
-                    GeometryPipeline.projectTo2D(geometry, name, name3D, name2D, projection);
+            // Split positions for GPU RTE
+            var attributes = geometry.attributes;
+            var name;
+            if (!scene3DOnly) {
+                for (name in attributes) {
+                    if (attributes.hasOwnProperty(name) && attributes[name].componentDatatype === ComponentDatatype.DOUBLE) {
+                        var name3D = name + '3D';
+                        var name2D = name + '2D';
 
-                    GeometryPipeline.encodeAttribute(geometry, name3D, name3D + 'High', name3D + 'Low');
-                    GeometryPipeline.encodeAttribute(geometry, name2D, name2D + 'High', name2D + 'Low');
+                        // Compute 2D positions
+                        GeometryPipeline.projectTo2D(geometry, name, name3D, name2D, projection);
+
+                        GeometryPipeline.encodeAttribute(geometry, name3D, name3D + 'High', name3D + 'Low');
+                        GeometryPipeline.encodeAttribute(geometry, name2D, name2D + 'High', name2D + 'Low');
+                    }
+                }
+            } else {
+                for (name in attributes) {
+                    if (attributes.hasOwnProperty(name) && attributes[name].componentDatatype === ComponentDatatype.DOUBLE) {
+                        GeometryPipeline.encodeAttribute(geometry, name, name + '3DHigh', name + '3DLow');
+                    }
                 }
             }
-        } else {
-            for (name in attributes) {
-                if (attributes.hasOwnProperty(name) && attributes[name].componentDatatype === ComponentDatatype.DOUBLE) {
-                    GeometryPipeline.encodeAttribute(geometry, name, name + '3DHigh', name + '3DLow');
-                }
-            }
-        }
 
-        // oct encode and pack normals, compress texture coordinates
-        if (compressVertices) {
-            GeometryPipeline.compressVertices(geometry);
+            // oct encode and pack normals, compress texture coordinates
+            if (compressVertices) {
+                GeometryPipeline.compressVertices(geometry);
+            }
         }
 
         if (!uintIndexSupport) {
             // Break into multiple geometries to fit within unsigned short indices if needed
-            return GeometryPipeline.fitToUnsignedShortIndices(geometry);
+            var splitGeometries = [];
+            length = geometries.length;
+            for (i = 0; i < length; ++i) {
+                geometry = geometries[i];
+                splitGeometries = splitGeometries.concat(GeometryPipeline.fitToUnsignedShortIndices(geometry));
+            }
+
+            geometries = splitGeometries;
         }
 
-        // Unsigned int indices are supported.  No need to break into multiple geometries.
-        return [geometry];
+        return geometries;
     }
 
     function createPerInstanceVAAttributes(geometry, attributeLocations, names) {
@@ -380,7 +419,9 @@ define([
             perInstanceAttributes.push(createPerInstanceVAAttributes(geometry, attributeLocations, perInstanceAttributeNames));
         }
 
-        var indices = computePerInstanceAttributeLocations(instances, perInstanceAttributes, attributeLocations);
+        // TODO: Fix per-instance attributes
+        //var indices = computePerInstanceAttributeLocations(instances, perInstanceAttributes, attributeLocations);
+        var indices = [];
 
         return {
             geometries : geometries,

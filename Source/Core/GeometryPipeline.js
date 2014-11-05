@@ -823,12 +823,12 @@ define([
         return instance;
     };
 
-    function findAttributesInAllGeometries(instances) {
+    function findAttributesInAllGeometries(instances, propertyName) {
         var length = instances.length;
 
         var attributesInAllGeometries = {};
 
-        var attributes0 = instances[0].geometry.attributes;
+        var attributes0 = instances[0][propertyName].attributes;
         var name;
 
         for (name in attributes0) {
@@ -842,7 +842,7 @@ define([
 
                 // Does this same attribute exist in all geometries?
                 for (var i = 1; i < length; ++i) {
-                    var otherAttribute = instances[i].geometry.attributes[name];
+                    var otherAttribute = instances[i][propertyName].attributes[name];
 
                     if ((!defined(otherAttribute)) ||
                         (attribute.componentDatatype !== otherAttribute.componentDatatype) ||
@@ -871,6 +871,125 @@ define([
     }
 
     var tempScratch = new Cartesian3();
+
+    function combineGeometries(instances, propertyName) {
+        var length = instances.length;
+
+        var name;
+        var i;
+        var j;
+        var k;
+
+        var m = instances[0].modelMatrix;
+        var haveIndices = (defined(instances[0][propertyName].indices));
+        var primitiveType = instances[0][propertyName].primitiveType;
+
+        //>>includeStart('debug', pragmas.debug);
+        for (i = 1; i < length; ++i) {
+            if (!Matrix4.equals(instances[i].modelMatrix, m)) {
+                throw new DeveloperError('All instances must have the same modelMatrix.');
+            }
+            if ((defined(instances[i][propertyName].indices)) !== haveIndices) {
+                throw new DeveloperError('All instance geometries must have an indices or not have one.');
+            }
+            if (instances[i][propertyName].primitiveType !== primitiveType) {
+                throw new DeveloperError('All instance geometries must have the same primitiveType.');
+            }
+        }
+        //>>includeEnd('debug');
+
+        // Find subset of attributes in all geometries
+        var attributes = findAttributesInAllGeometries(instances, propertyName);
+        var values;
+        var sourceValues;
+        var sourceValuesLength;
+
+        // Combine attributes from each geometry into a single typed array
+        for (name in attributes) {
+            if (attributes.hasOwnProperty(name)) {
+                values = attributes[name].values;
+
+                k = 0;
+                for (i = 0; i < length; ++i) {
+                    sourceValues = instances[i][propertyName].attributes[name].values;
+                    sourceValuesLength = sourceValues.length;
+
+                    for (j = 0; j < sourceValuesLength; ++j) {
+                        values[k++] = sourceValues[j];
+                    }
+                }
+            }
+        }
+
+        // Combine index lists
+        var indices;
+
+        if (haveIndices) {
+            var numberOfIndices = 0;
+            for (i = 0; i < length; ++i) {
+                numberOfIndices += instances[i][propertyName].indices.length;
+            }
+
+            var numberOfVertices = Geometry.computeNumberOfVertices(new Geometry({
+                attributes : attributes,
+                primitiveType : PrimitiveType.POINTS
+            }));
+            var destIndices = IndexDatatype.createTypedArray(numberOfVertices, numberOfIndices);
+
+            var destOffset = 0;
+            var offset = 0;
+
+            for (i = 0; i < length; ++i) {
+                var sourceIndices = instances[i][propertyName].indices;
+                var sourceIndicesLen = sourceIndices.length;
+
+                for (k = 0; k < sourceIndicesLen; ++k) {
+                    destIndices[destOffset++] = offset + sourceIndices[k];
+                }
+
+                offset += Geometry.computeNumberOfVertices(instances[i][propertyName]);
+            }
+
+            indices = destIndices;
+        }
+
+        // Create bounding sphere that includes all instances
+        var center = new Cartesian3();
+        var radius = 0.0;
+        var bs;
+
+        for (i = 0; i < length; ++i) {
+            bs = instances[i][propertyName].boundingSphere;
+            if (!defined(bs)) {
+                // If any geometries have an undefined bounding sphere, then so does the combined geometry
+                center = undefined;
+                break;
+            }
+
+            Cartesian3.add(bs.center, center, center);
+        }
+
+        if (defined(center)) {
+            Cartesian3.divideByScalar(center, length, center);
+
+            for (i = 0; i < length; ++i) {
+                bs = instances[i][propertyName].boundingSphere;
+                var tempRadius = Cartesian3.magnitude(Cartesian3.subtract(bs.center, center, tempScratch)) + bs.radius;
+
+                if (tempRadius > radius) {
+                    radius = tempRadius;
+                }
+            }
+        }
+
+        return new Geometry({
+            attributes : attributes,
+            indices : indices,
+            primitiveType : primitiveType,
+            boundingSphere : (defined(center)) ? new BoundingSphere(center, radius) : undefined
+        });
+    }
+
     /**
      * Combines geometry from several {@link GeometryInstance} objects into one geometry.
      * This concatenates the attributes, concatenates and adjusts the indices, and creates
@@ -905,121 +1024,29 @@ define([
         }
         //>>includeEnd('debug');
 
+        var instanceGeometry = [];
+        var instanceSplitGeometry = [];
         var length = instances.length;
-
-        var name;
-        var i;
-        var j;
-        var k;
-
-        var m = instances[0].modelMatrix;
-        var haveIndices = (defined(instances[0].geometry.indices));
-        var primitiveType = instances[0].geometry.primitiveType;
-
-        //>>includeStart('debug', pragmas.debug);
-        for (i = 1; i < length; ++i) {
-            if (!Matrix4.equals(instances[i].modelMatrix, m)) {
-                throw new DeveloperError('All instances must have the same modelMatrix.');
-            }
-            if ((defined(instances[i].geometry.indices)) !== haveIndices) {
-                throw new DeveloperError('All instance geometries must have an indices or not have one.');
-            }
-            if (instances[i].geometry.primitiveType !== primitiveType) {
-                throw new DeveloperError('All instance geometries must have the same primitiveType.');
-            }
-        }
-        //>>includeEnd('debug');
-
-        // Find subset of attributes in all geometries
-        var attributes = findAttributesInAllGeometries(instances);
-        var values;
-        var sourceValues;
-        var sourceValuesLength;
-
-        // Combine attributes from each geometry into a single typed array
-        for (name in attributes) {
-            if (attributes.hasOwnProperty(name)) {
-                values = attributes[name].values;
-
-                k = 0;
-                for (i = 0; i < length; ++i) {
-                    sourceValues = instances[i].geometry.attributes[name].values;
-                    sourceValuesLength = sourceValues.length;
-
-                    for (j = 0; j < sourceValuesLength; ++j) {
-                        values[k++] = sourceValues[j];
-                    }
-                }
+        for (var i = 0; i < length; ++i) {
+            var instance = instances[i];
+            if (defined(instance.geometry)) {
+                instanceGeometry.push(instance);
+            } else {
+                instanceSplitGeometry.push(instance);
             }
         }
 
-        // Combine index lists
-        var indices;
-
-        if (haveIndices) {
-            var numberOfIndices = 0;
-            for (i = 0; i < length; ++i) {
-                numberOfIndices += instances[i].geometry.indices.length;
-            }
-
-            var numberOfVertices = Geometry.computeNumberOfVertices(new Geometry({
-                attributes : attributes,
-                primitiveType : PrimitiveType.POINTS
-            }));
-            var destIndices = IndexDatatype.createTypedArray(numberOfVertices, numberOfIndices);
-
-            var destOffset = 0;
-            var offset = 0;
-
-            for (i = 0; i < length; ++i) {
-                var sourceIndices = instances[i].geometry.indices;
-                var sourceIndicesLen = sourceIndices.length;
-
-                for (k = 0; k < sourceIndicesLen; ++k) {
-                    destIndices[destOffset++] = offset + sourceIndices[k];
-                }
-
-                offset += Geometry.computeNumberOfVertices(instances[i].geometry);
-            }
-
-            indices = destIndices;
+        var geometries = [];
+        if (instanceGeometry.length > 0) {
+            geometries.push(combineGeometries(instances, 'geometry'));
         }
 
-        // Create bounding sphere that includes all instances
-        var center = new Cartesian3();
-        var radius = 0.0;
-        var bs;
-
-        for (i = 0; i < length; ++i) {
-            bs = instances[i].geometry.boundingSphere;
-            if (!defined(bs)) {
-                // If any geometries have an undefined bounding sphere, then so does the combined geometry
-                center = undefined;
-                break;
-            }
-
-            Cartesian3.add(bs.center, center, center);
+        if (instanceSplitGeometry.length > 0) {
+            geometries.push(combineGeometries(instances, 'westHemisphereGeometry'));
+            geometries.push(combineGeometries(instances, 'eastHemisphereGeometry'));
         }
 
-        if (defined(center)) {
-            Cartesian3.divideByScalar(center, length, center);
-
-            for (i = 0; i < length; ++i) {
-                bs = instances[i].geometry.boundingSphere;
-                var tempRadius = Cartesian3.magnitude(Cartesian3.subtract(bs.center, center, tempScratch)) + bs.radius;
-
-                if (tempRadius > radius) {
-                    radius = tempRadius;
-                }
-            }
-        }
-
-        return new Geometry({
-            attributes : attributes,
-            indices : indices,
-            primitiveType : primitiveType,
-            boundingSphere : (defined(center)) ? new BoundingSphere(center, radius) : undefined
-        });
+        return geometries;
     };
 
     var normal = new Cartesian3();
@@ -1845,7 +1872,8 @@ define([
         }
     }
 
-    function wrapLongitudeTriangles(geometry) {
+    function wrapLongitudeTriangles(instance) {
+        var geometry = instance.geometry;
         var attributes = geometry.attributes;
         var positions = attributes.position.values;
         var normals = (defined(attributes.normal)) ? attributes.normal.values : undefined;
@@ -1927,7 +1955,9 @@ define([
 
     var offsetScratch = new Cartesian3();
     var offsetPointScratch = new Cartesian3();
-    function wrapLongitudeLines(geometry) {
+
+    function wrapLongitudeLines(instance) {
+        var geometry = instance.geometry;
         var attributes = geometry.attributes;
         var positions = attributes.position.values;
         var indices = geometry.indices;
@@ -2004,181 +2034,369 @@ define([
     var cartesian3Scratch2 = new Cartesian3();
     var cartesian3Scratch3 = new Cartesian3();
     var cartesian3Scratch4 = new Cartesian3();
+    var cartesian3Scratch5 = new Cartesian3();
+    var cartesian3Scratch6 = new Cartesian3();
 
     var cartesian4Scratch0 = new Cartesian4();
     var cartesian4Scratch1 = new Cartesian4();
 
-
-    function wrapLongitudePolyline(geometry) {
+    function wrapLongitudePolyline(instance) {
+        var geometry = instance.geometry;
         var attributes = geometry.attributes;
         var positions = attributes.position.values;
-        var texCoords = (defined(attributes.st)) ? attributes.st.values : undefined;
-        var prevPositions = (defined(attributes.prevPosition)) ? attributes.prevPosition.values : undefined;
-        var nextPositions = (defined(attributes.nextPosition)) ? attributes.nextPosition.values : undefined;
-        var expandAndWidths = (defined(attributes.expandAndWidth)) ? attributes.expandAndWidth.values : undefined;
-        var colors = (defined(attributes.color)) ? attributes.color.values : undefined;
+        var prevPositions = attributes.prevPosition.values;
+        var nextPositions = attributes.nextPosition.values;
+        var expandAndWidths = attributes.expandAndWidth.values;
         var indices = geometry.indices;
 
-        var newPositions = Array.prototype.slice.call(positions, 0);
-        var newTexCoords = (defined(texCoords)) ? Array.prototype.slice.call(texCoords, 0) : undefined;
-        var newPrevPositions = (defined(prevPositions)) ? Array.prototype.slice.call(prevPositions, 0) : undefined;
-        var newNextPositions = (defined(nextPositions)) ? Array.prototype.slice.call(nextPositions, 0) : undefined;
-        var newExpandAndWidths = (defined(expandAndWidths)) ? Array.prototype.slice.call(expandAndWidths, 0) : undefined;
-        var newColors = (defined(colors)) ? Array.prototype.slice.call(colors, 0) : undefined;
-        var newIndices = [];
+        var texCoords = (defined(attributes.st)) ? attributes.st.values : undefined;
+        var colors = (defined(attributes.color)) ? attributes.color.values : undefined;
 
-        var length = newPositions.length / 3;
-        for (var i = 0; i < length; i += 4) {
+        var eastGeometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : attributes.position.componentDatatype,
+                    componentsPerAttribute : attributes.position.componentsPerAttribute,
+                    normalize : attributes.position.normalize,
+                    values : []
+                }),
+                prevPosition : new GeometryAttribute({
+                    componentDatatype : attributes.prevPosition.componentDatatype,
+                    componentsPerAttribute : attributes.prevPosition.componentsPerAttribute,
+                    normalize : attributes.prevPosition.normalize,
+                    values : []
+                }),
+                nextPosition : new GeometryAttribute({
+                    componentDatatype : attributes.nextPosition.componentDatatype,
+                    componentsPerAttribute : attributes.nextPosition.componentsPerAttribute,
+                    normalize : attributes.nextPosition.normalize,
+                    values : []
+                }),
+                expandAndWidth : new GeometryAttribute({
+                    componentDatatype : attributes.expandAndWidth.componentDatatype,
+                    componentsPerAttribute : attributes.expandAndWidth.componentsPerAttribute,
+                    normalize : attributes.expandAndWidth.normalize,
+                    values : []
+                })
+            },
+            indices : [],
+            primitiveType : geometry.primitiveType
+        });
+
+        var westGeometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : attributes.position.componentDatatype,
+                    componentsPerAttribute : attributes.position.componentsPerAttribute,
+                    normalize : attributes.position.normalize,
+                    values : []
+                }),
+                prevPosition : new GeometryAttribute({
+                    componentDatatype : attributes.prevPosition.componentDatatype,
+                    componentsPerAttribute : attributes.prevPosition.componentsPerAttribute,
+                    normalize : attributes.prevPosition.normalize,
+                    values : []
+                }),
+                nextPosition : new GeometryAttribute({
+                    componentDatatype : attributes.nextPosition.componentDatatype,
+                    componentsPerAttribute : attributes.nextPosition.componentsPerAttribute,
+                    normalize : attributes.nextPosition.normalize,
+                    values : []
+                }),
+                expandAndWidth : new GeometryAttribute({
+                    componentDatatype : attributes.expandAndWidth.componentDatatype,
+                    componentsPerAttribute : attributes.expandAndWidth.componentsPerAttribute,
+                    normalize : attributes.expandAndWidth.normalize,
+                    values : []
+                })
+            },
+            indices : [],
+            primitiveType : geometry.primitiveType
+        });
+
+        if (defined(texCoords)) {
+            eastGeometry.attributes.st = new GeometryAttribute({
+                componentDatatype : attributes.st.componentDatatype,
+                componentsPerAttribute : attributes.st.componentsPerAttribute,
+                normalize : attributes.st.normalize,
+                values : []
+            });
+            westGeometry.attributes.st = new GeometryAttribute({
+                componentDatatype : attributes.st.componentDatatype,
+                componentsPerAttribute : attributes.st.componentsPerAttribute,
+                normalize : attributes.st.normalize,
+                values : []
+            });
+        }
+
+        if (defined(colors)) {
+            eastGeometry.attributes.color = new GeometryAttribute({
+                componentDatatype : attributes.color.componentDatatype,
+                componentsPerAttribute : attributes.color.componentsPerAttribute,
+                normalize : attributes.color.normalize,
+                values : []
+            });
+            westGeometry.attributes.color = new GeometryAttribute({
+                componentDatatype : attributes.color.componentDatatype,
+                componentsPerAttribute : attributes.color.componentsPerAttribute,
+                normalize : attributes.color.normalize,
+                values : []
+            });
+        }
+
+        var i;
+        var j;
+        var index;
+
+        var length = positions.length / 3;
+        for (i = 0; i < length; i += 4) {
             var i0 = i;
             var i1 = i + 1;
             var i2 = i + 2;
+            var i3 = i + 3;
 
-            var p0 = Cartesian3.fromArray(newPositions, i0 * 3, cartesian3Scratch0);
-            var p1 = Cartesian3.fromArray(newPositions, i1 * 3, cartesian3Scratch1);
-            var p2 = Cartesian3.fromArray(newPositions, i2 * 3, cartesian3Scratch2);
-
-            var p0Dup = Cartesian3.equals(p0, p1);
+            var p0 = Cartesian3.fromArray(positions, i0 * 3, cartesian3Scratch0);
+            var p1 = Cartesian3.fromArray(positions, i1 * 3, cartesian3Scratch1);
+            var p2 = Cartesian3.fromArray(positions, i2 * 3, cartesian3Scratch2);
+            var p3 = Cartesian3.fromArray(positions, i3 * 3, cartesian3Scratch3);
 
             if (Math.abs(p0.y) < CesiumMath.EPSILON6) {
-                if (p2.y < 0.0) {
-                    p0.y = -CesiumMath.EPSILON6;
-                } else {
-                    p0.y = CesiumMath.EPSILON6;
-                }
-
-                newPositions[i0 * 3 + 1] = p0.y;
+                p0.y = CesiumMath.EPSILON6 * (p2.y < 0.0 ? -1.0 : 1.0);
+                p1.y = p0.y;
             }
 
             if (Math.abs(p2.y) < CesiumMath.EPSILON6) {
-                if (p0.y < 0.0) {
-                    p2.y = -CesiumMath.EPSILON6;
-                } else {
-                    p2.y = CesiumMath.EPSILON6;
-                }
-
-                newPositions[i2 * 3 + 1] = p2.y;
+                p2.y = CesiumMath.EPSILON6 * (p0.y < 0.0 ? -1.0 : 1.0);
+                p3.y = p2.y;
             }
-
-            newPositions[i1 * 3 + 1] = p1.y = p0Dup ? p0.y : p2.y;
 
             var split = false;
-
-            // intersects the IDL if either endpoint is on the negative side of the yz-plane
-            if (p0.x < 0.0 || p2.x < 0.0) {
-                // and intersects the xz-plane
-                var intersection = IntersectionTests.lineSegmentPlane(p0, p2, xzPlane, cartesian3Scratch1);
-                if (defined(intersection)) {
-                    // move point on the xz-plane slightly away from the plane
-                    var offset = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Y, 5.0 * CesiumMath.EPSILON9, cartesian3Scratch3);
-                    if (p0.y < 0.0) {
-                        Cartesian3.negate(offset, offset);
-                    }
-
-                    var offsetPoint = Cartesian3.add(intersection, offset, cartesian3Scratch4);
-                    newPositions.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
-                    newPositions.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
-
+            var p0Attributes = eastGeometry.attributes;
+            var p0Indices = eastGeometry.indices;
+            var p2Attributes = westGeometry.attributes;
+            var p2Indices = westGeometry.indices;
+            var intersection = IntersectionTests.lineSegmentPlane(p0, p2, xzPlane, cartesian3Scratch4);
+            if (defined(intersection)) {
+                // move point on the xz-plane slightly away from the plane
+                var offset = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Y, 5.0 * CesiumMath.EPSILON9, cartesian3Scratch5);
+                if (p0.y < 0.0) {
                     Cartesian3.negate(offset, offset);
-                    Cartesian3.add(intersection, offset, offsetPoint);
-                    newPositions.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
-                    newPositions.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
-
-                    newPrevPositions.push(p0.x, p0.y, p0.z, p0.x, p0.y, p0.z);
-                    newPrevPositions.push(p0.x, p0.y, p0.z, p0.x, p0.y, p0.z);
-
-                    newNextPositions.push(p2.x, p2.y, p2.z, p2.x, p2.y, p2.z);
-                    newNextPositions.push(p2.x, p2.y, p2.z, p2.x, p2.y, p2.z);
-
-                    var ew0 = Cartesian2.fromArray(newExpandAndWidths, i0 * 2);
-
-                    var width = Math.abs(ew0.y);
-                    newExpandAndWidths.push(-1, -width, 1, -width);
-                    newExpandAndWidths.push(-1,  width, 1,  width);
-
-                    var t = Cartesian3.magnitudeSquared(Cartesian3.subtract(intersection, p0, cartesian3Scratch3));
-                    t /= Cartesian3.magnitudeSquared(Cartesian3.subtract(p2, p0, cartesian3Scratch3));
-
-                    if (defined(newColors)) {
-                        var c0 = Cartesian4.fromArray(newColors, i0 * 4, cartesian4Scratch0);
-                        var c2 = Cartesian4.fromArray(newColors, i2 * 4, cartesian4Scratch0);
-
-                        var r = CesiumMath.lerp(c0.x, c2.x, t);
-                        var g = CesiumMath.lerp(c0.y, c2.y, t);
-                        var b = CesiumMath.lerp(c0.z, c2.z, t);
-                        var a = CesiumMath.lerp(c0.w, c2.w, t);
-
-                        newColors.push(r, g, b, a);
-                        newColors.push(r, g, b, a);
-                        newColors.push(r, g, b, a);
-                        newColors.push(r, g, b, a);
-                    }
-
-                    if (defined(newTexCoords)) {
-                        var s0 = Cartesian2.fromArray(newTexCoords, i0 * 2, cartesian2Scratch0);
-                        var s3 = Cartesian2.fromArray(newTexCoords, (i + 3) * 2, cartesian2Scratch1);
-
-                        var sx = CesiumMath.lerp(s0.x, s3.x, t);
-
-                        newTexCoords.push(sx, s0.y);
-                        newTexCoords.push(sx, s3.y);
-                        newTexCoords.push(sx, s0.y);
-                        newTexCoords.push(sx, s3.y);
-                    }
-
-                    split = true;
+                    p0Attributes = westGeometry.attributes;
+                    p0Indices = westGeometry.indices;
+                    p2Attributes = eastGeometry.attributes;
+                    p2Indices = eastGeometry.indices;
                 }
-            }
 
-            if (!split) {
-                newIndices.push(i, i + 2, i + 1);
-                newIndices.push(i + 1, i + 2, i + 3);
+                var offsetPoint = Cartesian3.add(intersection, offset, cartesian3Scratch6);
+                p0Attributes.position.values.push(p0.x, p0.y, p0.z, p1.x, p1.y, p1.z);
+                p0Attributes.position.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                p0Attributes.position.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+
+                Cartesian3.negate(offset, offset);
+                Cartesian3.add(intersection, offset, offsetPoint);
+                p2Attributes.position.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                p2Attributes.position.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                p2Attributes.position.values.push(p2.x, p2.y, p2.z, p3.x, p3.y, p3.z);
+
+                for (j = i0 * 3; j < 2 * 3; ++j) {
+                    p0Attributes.prevPosition.values.push(prevPositions[j]);
+                }
+                p0Attributes.prevPosition.values.push(p0.x, p0.y, p0.z, p0.x, p0.y, p0.z);
+                p2Attributes.prevPosition.values.push(p0.x, p0.y, p0.z, p0.x, p0.y, p0.z);
+                for (j = i2 * 3; j < 2 * 3; ++j) {
+                    p2Attributes.prevPosition.values.push(prevPositions[j]);
+                }
+
+                for (j = i0 * 3; j < 2 * 3; ++j) {
+                    p0Attributes.nextPosition.values.push(nextPositions[j]);
+                }
+                p0Attributes.nextPosition.values.push(p2.x, p2.y, p2.z, p2.x, p2.y, p2.z);
+                p2Attributes.nextPosition.values.push(p2.x, p2.y, p2.z, p2.x, p2.y, p2.z);
+                for (j = i2 * 3; j < 2 * 3; ++j) {
+                    p2Attributes.nextPosition.values.push(nextPositions[j]);
+                }
+
+                var ew0 = Cartesian2.fromArray(expandAndWidths, i0 * 2, cartesian2Scratch0);
+                var width = Math.abs(ew0.y);
+
+                p0Attributes.expandAndWidth.values.push(-1,  width, 1,  width);
+                p0Attributes.expandAndWidth.values.push(-1, -width, 1, -width);
+                p2Attributes.expandAndWidth.values.push(-1,  width, 1,  width);
+                p2Attributes.expandAndWidth.values.push(-1, -width, 1, -width);
+
+                var t = Cartesian3.magnitudeSquared(Cartesian3.subtract(intersection, p0, cartesian3Scratch3));
+                t /= Cartesian3.magnitudeSquared(Cartesian3.subtract(p2, p0, cartesian3Scratch3));
+
+                if (defined(colors)) {
+                    var c0 = Cartesian4.fromArray(colors, i0 * 4, cartesian4Scratch0);
+                    var c2 = Cartesian4.fromArray(colors, i2 * 4, cartesian4Scratch0);
+
+                    var r = CesiumMath.lerp(c0.x, c2.x, t);
+                    var g = CesiumMath.lerp(c0.y, c2.y, t);
+                    var b = CesiumMath.lerp(c0.z, c2.z, t);
+                    var a = CesiumMath.lerp(c0.w, c2.w, t);
+
+                    for (j = i0 * 4; j < 2 * 4; ++j) {
+                        p0Attributes.color.values.push(colors[j]);
+                    }
+                    p0Attributes.color.values.push(r, g, b, a);
+                    p0Attributes.color.values.push(r, g, b, a);
+                    p2Attributes.color.values.push(r, g, b, a);
+                    p2Attributes.color.values.push(r, g, b, a);
+                    for (j = i2 * 4; j < 2 * 4; ++j) {
+                        p2Attributes.color.values.push(colors[j]);
+                    }
+                }
+
+                if (defined(texCoords)) {
+                    var s0 = Cartesian2.fromArray(texCoords, i0 * 2, cartesian2Scratch0);
+                    var s3 = Cartesian2.fromArray(texCoords, (i + 3) * 2, cartesian2Scratch1);
+
+                    var sx = CesiumMath.lerp(s0.x, s3.x, t);
+
+                    for (j = i0 * 2; j < 2 * 2; ++j) {
+                        p0Attributes.st.values.push(texCoords[j]);
+                    }
+                    p0Attributes.st.values.push(sx, s0.y);
+                    p0Attributes.st.values.push(sx, s3.y);
+                    p2Attributes.st.values.push(sx, s0.y);
+                    p2Attributes.st.values.push(sx, s3.y);
+                    for (j = i0 * 2; j < 2 * 2; ++j) {
+                        p2Attributes.st.values.push(texCoords[j]);
+                    }
+                }
+
+                index = p0Attributes.position.values.length / 3 - 4;
+                p0Indices.push(index, index + 2, index + 1);
+                p0Indices.push(index + 1, index + 2, index + 3);
+
+                index = p2Attributes.position.values.length / 3 - 4;
+                p2Indices.push(index, index + 2, index + 1);
+                p2Indices.push(index + 1, index + 2, index + 3);
             } else {
-                var index = newPositions.length / 3 - 4;
+                var currentAttributes;
+                var currentIndices;
 
-                newIndices.push(i, index, i + 1);
-                newIndices.push(i + 1, index, index + 1);
+                if (p0.y < 0.0) {
+                    currentAttributes = westGeometry.attributes;
+                    currentIndices = westGeometry.indices;
+                } else {
+                    currentAttributes = eastGeometry.attributes;
+                    currentIndices = eastGeometry.indices;
+                }
 
-                newIndices.push(index + 2, i + 2, index + 3);
-                newIndices.push(index + 3, i + 2, i + 3);
+                currentAttributes.position.values.push(p0.x, p0.y, p0.z);
+                currentAttributes.position.values.push(p1.x, p1.y, p1.z);
+                currentAttributes.position.values.push(p2.x, p2.y, p2.z);
+                currentAttributes.position.values.push(p3.x, p3.y, p3.z);
+
+                for (j = i * 3; j < i * 3 + 4 * 3; ++j) {
+                    currentAttributes.prevPosition.values.push(prevPositions[j]);
+                    currentAttributes.nextPosition.values.push(nextPositions[j]);
+                }
+
+                for (j = i * 2; j < i * 2 + 4 * 2; ++j) {
+                    currentAttributes.expandAndWidth.values.push(expandAndWidths[j]);
+                    if (defined(texCoords)) {
+                        currentAttributes.st.values.push(texCoords[j]);
+                    }
+                }
+
+                if (defined(colors)) {
+                    for (j = i * 4; j < i * 4 + 4 * 4; ++j) {
+                        currentAttributes.color.values.push(colors[j]);
+                    }
+                }
+
+                index = currentAttributes.position.values.length / 3 - 4;
+                currentIndices.push(index, index + 2, index + 1);
+                currentIndices.push(index + 1, index + 2, index + 3);
             }
         }
 
-        attributes.position.values = new Float64Array(newPositions);
-        attributes.prevPosition.values = ComponentDatatype.createTypedArray(attributes.prevPosition.componentDatatype, newPrevPositions);
-        attributes.nextPosition.values = ComponentDatatype.createTypedArray(attributes.nextPosition.componentDatatype, newNextPositions);
-        attributes.expandAndWidth.values = ComponentDatatype.createTypedArray(attributes.expandAndWidth.componentDatatype, newExpandAndWidths);
+        var numberOfVertices;
 
-        if (defined(newTexCoords)) {
-            attributes.st.values = ComponentDatatype.createTypedArray(attributes.st.componentDatatype, newTexCoords);
+        if (westGeometry.attributes.position.values.length > 0) {
+            attributes = westGeometry.attributes;
+            attributes.position.values = new Float64Array(attributes.position.values);
+            attributes.prevPosition.values = ComponentDatatype.createTypedArray(attributes.prevPosition.componentDatatype, attributes.prevPosition.values);
+            attributes.nextPosition.values = ComponentDatatype.createTypedArray(attributes.nextPosition.componentDatatype, attributes.nextPosition.values);
+            attributes.expandAndWidth.values = ComponentDatatype.createTypedArray(attributes.expandAndWidth.componentDatatype, attributes.expandAndWidth.values);
+
+            if (defined(texCoords)) {
+                attributes.st.values = ComponentDatatype.createTypedArray(attributes.st.componentDatatype, attributes.st.values);
+            }
+
+            if (defined(colors)) {
+                attributes.color.values = ComponentDatatype.createTypedArray(attributes.color.componentDatatype, attributes.color.values);
+            }
+
+            numberOfVertices = Geometry.computeNumberOfVertices(westGeometry);
+            westGeometry.indices = IndexDatatype.createTypedArray(numberOfVertices, westGeometry.indices);
+
+            if (defined(instance.geometry.boundingSphere)) {
+                westGeometry.boundingSpheres = BoundingSphere.fromVertices(westGeometry.attributes.position.values);
+            }
+        } else {
+            westGeometry = undefined;
         }
 
-        if (defined(newColors)) {
-            attributes.color.values = ComponentDatatype.createTypedArray(attributes.color.componentDatatype, newColors);
+        if (eastGeometry.attributes.position.values.length > 0) {
+            attributes = eastGeometry.attributes;
+            attributes.position.values = new Float64Array(attributes.position.values);
+            attributes.prevPosition.values = ComponentDatatype.createTypedArray(attributes.prevPosition.componentDatatype, attributes.prevPosition.values);
+            attributes.nextPosition.values = ComponentDatatype.createTypedArray(attributes.nextPosition.componentDatatype, attributes.nextPosition.values);
+            attributes.expandAndWidth.values = ComponentDatatype.createTypedArray(attributes.expandAndWidth.componentDatatype, attributes.expandAndWidth.values);
+
+            if (defined(texCoords)) {
+                attributes.st.values = ComponentDatatype.createTypedArray(attributes.st.componentDatatype, attributes.st.values);
+            }
+
+            if (defined(colors)) {
+                attributes.color.values = ComponentDatatype.createTypedArray(attributes.color.componentDatatype, attributes.color.values);
+            }
+
+            numberOfVertices = Geometry.computeNumberOfVertices(eastGeometry);
+            eastGeometry.indices = IndexDatatype.createTypedArray(numberOfVertices, eastGeometry.indices);
+
+            if (defined(instance.geometry.boundingSphere)) {
+                eastGeometry.boundingSpheres = BoundingSphere.fromVertices(eastGeometry.attributes.position.values);
+            }
+        } else {
+            eastGeometry = undefined;
         }
 
-        var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
-        geometry.indices = IndexDatatype.createTypedArray(numberOfVertices, newIndices);
+        if (defined(eastGeometry) && !defined(westGeometry)) {
+            instance.geometry = eastGeometry;
+        } else if (!defined(eastGeometry) && defined(westGeometry)) {
+            instance.geometry = westGeometry;
+        } else {
+            instance.westHemisphereGeometry = westGeometry;
+            instance.eastHemisphereGeometry = eastGeometry;
+            instance.geometry = undefined;
+        }
     }
 
     /**
-     * Splits the geometry's primitives, by introducing new vertices and indices,that
+     * Splits the instances's geometry, by introducing new vertices and indices,that
      * intersect the International Date Line so that no primitives cross longitude
      * -180/180 degrees.  This is not required for 3D drawing, but is required for
      * correcting drawing in 2D and Columbus view.
      *
-     * @param {Geometry} geometry The geometry to modify.
-     * @returns {Geometry} The modified <code>geometry</code> argument, with it's primitives split at the International Date Line.
+     * @param {GeometryInstance} instance The instance to modify.
+     * @returns {GeometryInstance} The modified <code>instance</code> argument, with it's geometry split at the International Date Line.
      *
      * @example
-     * geometry = Cesium.GeometryPipeline.wrapLongitude(geometry);
+     * instance = Cesium.GeometryPipeline.wrapLongitude(instance);
      */
-    GeometryPipeline.wrapLongitude = function(geometry) {
+    GeometryPipeline.wrapLongitude = function(instance) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(geometry)) {
-            throw new DeveloperError('geometry is required.');
+        if (!defined(instance)) {
+            throw new DeveloperError('instance is required.');
         }
         //>>includeEnd('debug');
 
+        var geometry = instance.geometry;
         var boundingSphere = geometry.boundingSphere;
         if (defined(boundingSphere)) {
             var minX = boundingSphere.center.x - boundingSphere.radius;
@@ -2190,25 +2408,25 @@ define([
         if (geometry.geometryType !== GeometryType.NONE) {
             switch (geometry.geometryType) {
             case GeometryType.POLYLINES:
-                wrapLongitudePolyline(geometry);
+                wrapLongitudePolyline(instance);
                 break;
             case GeometryType.TRIANGLES:
-                wrapLongitudeTriangles(geometry);
+                wrapLongitudeTriangles(instance);
                 break;
             case GeometryType.LINES:
-                wrapLongitudeLines(geometry);
+                wrapLongitudeLines(instance);
                 break;
             }
         } else {
             indexPrimitive(geometry);
             if (geometry.primitiveType === PrimitiveType.TRIANGLES) {
-                wrapLongitudeTriangles(geometry);
+                wrapLongitudeTriangles(instance);
             } else if (geometry.primitiveType === PrimitiveType.LINES) {
-                wrapLongitudeLines(geometry);
+                wrapLongitudeLines(instance);
             }
         }
 
-        return geometry;
+        return instance;
     };
 
     return GeometryPipeline;
