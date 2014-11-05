@@ -79,6 +79,7 @@ defineSuite([
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
+        expect(updater.outlineWidth).toBe(1.0);
         expect(updater.isDynamic).toBe(false);
         expect(updater.isOutlineVisible(time)).toBe(false);
         expect(updater.isFilled(time)).toBe(false);
@@ -118,6 +119,7 @@ defineSuite([
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
+        expect(updater.outlineWidth).toBe(1.0);
         expect(updater.isDynamic).toBe(false);
     });
 
@@ -137,6 +139,14 @@ defineSuite([
         expect(updater.isClosed).toBe(false);
         entity.rectangle.closeTop = new ConstantProperty(true);
         expect(updater.isClosed).toBe(true);
+    });
+
+    it('A time-varying outlineWidth causes geometry to be dynamic', function() {
+        var entity = createBasicRectangle();
+        var updater = new RectangleGeometryUpdater(entity, scene);
+        entity.rectangle.outlineWidth = new SampledProperty(Number);
+        entity.rectangle.outlineWidth.addSample(time, 1);
+        expect(updater.isDynamic).toBe(true);
     });
 
     it('A time-varying coordinates causes geometry to be dynamic', function() {
@@ -290,6 +300,13 @@ defineSuite([
             closeTop : false,
             closeBottom : true
         });
+    });
+
+    it('Correctly exposes outlineWidth', function() {
+        var entity = createBasicRectangle();
+        entity.rectangle.outlineWidth = new ConstantProperty(8);
+        var updater = new RectangleGeometryUpdater(entity, scene);
+        expect(updater.outlineWidth).toBe(8);
     });
 
     it('Attributes have expected values at creation time', function() {

@@ -82,6 +82,7 @@ defineSuite([
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
+        expect(updater.outlineWidth).toBe(1.0);
         expect(updater.isDynamic).toBe(false);
         expect(updater.isOutlineVisible(time)).toBe(false);
         expect(updater.isFilled(time)).toBe(false);
@@ -121,6 +122,7 @@ defineSuite([
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
+        expect(updater.outlineWidth).toBe(1.0);
         expect(updater.isDynamic).toBe(false);
     });
 
@@ -136,6 +138,14 @@ defineSuite([
         var updater = new PolygonGeometryUpdater(entity, scene);
         entity.polygon.extrudedHeight = new ConstantProperty(1000);
         expect(updater.isClosed).toBe(true);
+    });
+
+    it('A time-varying outlineWidth causes geometry to be dynamic', function() {
+        var entity = createBasicPolygon();
+        var updater = new PolygonGeometryUpdater(entity, scene);
+        entity.polygon.outlineWidth = new SampledProperty(Number);
+        entity.polygon.outlineWidth.addSample(time, 1);
+        expect(updater.isDynamic).toBe(true);
     });
 
     it('A time-varying positions causes geometry to be dynamic', function() {
@@ -273,6 +283,13 @@ defineSuite([
             outlineColor : Color.BLUE,
             perPositionHeight : false
         });
+    });
+
+    it('Correctly exposes outlineWidth', function() {
+        var entity = createBasicPolygon();
+        entity.polygon.outlineWidth = new ConstantProperty(8);
+        var updater = new PolygonGeometryUpdater(entity, scene);
+        expect(updater.outlineWidth).toBe(8);
     });
 
     it('Attributes have expected values at creation time', function() {

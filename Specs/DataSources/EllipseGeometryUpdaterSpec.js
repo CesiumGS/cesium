@@ -80,6 +80,7 @@ defineSuite([
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
+        expect(updater.outlineWidth).toBe(1.0);
         expect(updater.isDynamic).toBe(false);
         expect(updater.isOutlineVisible(time)).toBe(false);
         expect(updater.isFilled(time)).toBe(false);
@@ -139,6 +140,7 @@ defineSuite([
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
+        expect(updater.outlineWidth).toBe(1.0);
         expect(updater.isDynamic).toBe(false);
     });
 
@@ -154,6 +156,14 @@ defineSuite([
         var updater = new EllipseGeometryUpdater(entity, scene);
         entity.ellipse.extrudedHeight = new ConstantProperty(1000);
         expect(updater.isClosed).toBe(true);
+    });
+
+    it('A time-varying outline width causes geometry to be dynamic', function() {
+        var entity = createBasicEllipse();
+        var updater = new EllipseGeometryUpdater(entity, scene);
+        entity.ellipse.outlineWidth = new SampledProperty(Number);
+        entity.ellipse.outlineWidth.addSample(time, 1);
+        expect(updater.isDynamic).toBe(true);
     });
 
     it('A time-varying position causes geometry to be dynamic', function() {
@@ -329,6 +339,13 @@ defineSuite([
             outlineColor : Color.BLUE,
             numberOfVerticalLines : 15
         });
+    });
+
+    it('Correctly exposes outlineWidth', function() {
+        var entity = createBasicEllipse();
+        entity.ellipse.outlineWidth = new ConstantProperty(8);
+        var updater = new EllipseGeometryUpdater(entity, scene);
+        expect(updater.outlineWidth).toBe(8);
     });
 
     it('Attributes have expected values at creation time', function() {

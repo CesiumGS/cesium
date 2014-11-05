@@ -86,6 +86,7 @@ defineSuite([
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
+        expect(updater.outlineWidth).toBe(1.0);
         expect(updater.isDynamic).toBe(false);
         expect(updater.isOutlineVisible(time)).toBe(false);
         expect(updater.isFilled(time)).toBe(false);
@@ -125,6 +126,7 @@ defineSuite([
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
+        expect(updater.outlineWidth).toBe(1.0);
         expect(updater.isDynamic).toBe(false);
     });
 
@@ -133,6 +135,14 @@ defineSuite([
         var updater = new WallGeometryUpdater(entity, scene);
         entity.wall.material = new GridMaterialProperty(Color.BLUE);
         expect(updater.fillMaterialProperty).toBe(entity.wall.material);
+    });
+
+    it('A time-varying outlineWidth causes geometry to be dynamic', function() {
+        var entity = createBasicWall();
+        var updater = new WallGeometryUpdater(entity, scene);
+        entity.wall.outlineWidth = new SampledProperty(Number);
+        entity.wall.outlineWidth.addSample(time, 1);
+        expect(updater.isDynamic).toBe(true);
     });
 
     it('A time-varying positions causes geometry to be dynamic', function() {
@@ -253,6 +263,13 @@ defineSuite([
             outline : true,
             outlineColor : Color.BLUE
         });
+    });
+
+    it('Correctly exposes outlineWidth', function() {
+        var entity = createBasicWall();
+        entity.wall.outlineWidth = new ConstantProperty(8);
+        var updater = new WallGeometryUpdater(entity, scene);
+        expect(updater.outlineWidth).toBe(8);
     });
 
     it('Attributes have expected values at creation time', function() {
