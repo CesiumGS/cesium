@@ -437,7 +437,7 @@ define([
             var geometry = items[i];
             var attributes = geometry.attributes;
 
-            count += 3 + BoundingSphere.packedLength + (defined(geometry.indices) ? geometry.indices.length : 0);
+            count += 4 + BoundingSphere.packedLength + (defined(geometry.indices) ? geometry.indices.length : 0);
 
             for ( var property in attributes) {
                 if (attributes.hasOwnProperty(property) && defined(attributes[property])) {
@@ -465,6 +465,7 @@ define([
             var geometry = items[i];
 
             packedData[count++] = geometry.primitiveType;
+            packedData[count++] = geometry.geometryType;
 
             BoundingSphere.pack(geometry.boundingSphere, packedData, count);
             count += BoundingSphere.packedLength;
@@ -525,6 +526,7 @@ define([
         var packedGeometryIndex = 1;
         while (packedGeometryIndex < packedGeometry.length) {
             var primitiveType = packedGeometry[packedGeometryIndex++];
+            var geometryType = packedGeometry[packedGeometryIndex++];
 
             var boundingSphere = BoundingSphere.unpack(packedGeometry, packedGeometryIndex);
             packedGeometryIndex += BoundingSphere.packedLength;
@@ -567,6 +569,7 @@ define([
 
             result[resultIndex++] = new Geometry({
                 primitiveType : primitiveType,
+                geometryType : geometryType,
                 boundingSphere : boundingSphere,
                 indices : indices,
                 attributes : attributes

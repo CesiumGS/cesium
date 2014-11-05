@@ -5,6 +5,7 @@ Change Log
 
 * Added `modelMatrix` option to `Primitive` constructor.
 * Added support for touch events on Internet Explorer 11 using the [Pointer Events API](http://www.w3.org/TR/pointerevents/).
+* Fixed a bug in `PolylineGeometry` that would cause the geometry to be split across the IDL for 3D only scenes. [#1197](https://github.com/AnalyticalGraphicsInc/cesium/issues/1197)
 
 ### 1.3 - 2014-11-03
 
