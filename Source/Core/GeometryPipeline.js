@@ -1793,6 +1793,32 @@ define([
         return geometry;
     }
 
+    function copyGeometryForSplit(geometry) {
+        var attributes = geometry.attributes;
+        var copiedAttributes = {};
+
+        for (var property in attributes) {
+            if (attributes.hasOwnProperty(property) &&
+                    defined(attributes[property]) &&
+                    defined(attributes[property].values)) {
+
+                var attribute = attributes[property];
+                copiedAttributes[property] = new GeometryAttribute({
+                    componentDatatype : attribute.componentDatatype,
+                    componentsPerAttribute : attribute.componentsPerAttribute,
+                    normalize : attribute.normalize,
+                    values : []
+                });
+            }
+        }
+
+        return new Geometry({
+            attributes : copiedAttributes,
+            indices : [],
+            primitiveType : geometry.primitiveType
+        });
+    }
+
     function updateInstanceAfterSplit(instance, westGeometry, eastGeometry) {
         var computeBoundingSphere = defined(instance.geometry.boundingSphere);
 
@@ -1929,91 +1955,8 @@ define([
         var texCoords = (defined(attributes.st)) ? attributes.st.values : undefined;
         var indices = geometry.indices;
 
-        var eastGeometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : attributes.position.componentDatatype,
-                    componentsPerAttribute : attributes.position.componentsPerAttribute,
-                    normalize : attributes.position.normalize,
-                    values : []
-                })
-            },
-            indices : [],
-            primitiveType : geometry.primitiveType
-        });
-
-        var westGeometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : attributes.position.componentDatatype,
-                    componentsPerAttribute : attributes.position.componentsPerAttribute,
-                    normalize : attributes.position.normalize,
-                    values : []
-                })
-            },
-            indices : [],
-            primitiveType : geometry.primitiveType
-        });
-
-        if (defined(texCoords)) {
-            eastGeometry.attributes.st = new GeometryAttribute({
-                componentDatatype : attributes.st.componentDatatype,
-                componentsPerAttribute : attributes.st.componentsPerAttribute,
-                normalize : attributes.st.normalize,
-                values : []
-            });
-            westGeometry.attributes.st = new GeometryAttribute({
-                componentDatatype : attributes.st.componentDatatype,
-                componentsPerAttribute : attributes.st.componentsPerAttribute,
-                normalize : attributes.st.normalize,
-                values : []
-            });
-        }
-
-        if (defined(normals)) {
-            eastGeometry.attributes.normal = new GeometryAttribute({
-                componentDatatype : attributes.normal.componentDatatype,
-                componentsPerAttribute : attributes.normal.componentsPerAttribute,
-                normalize : attributes.normal.normalize,
-                values : []
-            });
-            westGeometry.attributes.normal = new GeometryAttribute({
-                componentDatatype : attributes.normal.componentDatatype,
-                componentsPerAttribute : attributes.normal.componentsPerAttribute,
-                normalize : attributes.normal.normalize,
-                values : []
-            });
-        }
-
-        if (defined(binormals)) {
-            eastGeometry.attributes.binormal = new GeometryAttribute({
-                componentDatatype : attributes.binormal.componentDatatype,
-                componentsPerAttribute : attributes.binormal.componentsPerAttribute,
-                normalize : attributes.binormal.normalize,
-                values : []
-            });
-            westGeometry.attributes.binormal = new GeometryAttribute({
-                componentDatatype : attributes.binormal.componentDatatype,
-                componentsPerAttribute : attributes.binormal.componentsPerAttribute,
-                normalize : attributes.binormal.normalize,
-                values : []
-            });
-        }
-
-        if (defined(tangents)) {
-            eastGeometry.attributes.tangent = new GeometryAttribute({
-                componentDatatype : attributes.tangent.componentDatatype,
-                componentsPerAttribute : attributes.tangent.componentsPerAttribute,
-                normalize : attributes.tangent.normalize,
-                values : []
-            });
-            westGeometry.attributes.tangent = new GeometryAttribute({
-                componentDatatype : attributes.tangent.componentDatatype,
-                componentsPerAttribute : attributes.tangent.componentsPerAttribute,
-                normalize : attributes.tangent.normalize,
-                values : []
-            });
-        }
+        var eastGeometry = copyGeometryForSplit(geometry);
+        var westGeometry = copyGeometryForSplit(geometry);
 
         var currentAttributes;
         var currentIndices;
@@ -2107,31 +2050,8 @@ define([
         var positions = attributes.position.values;
         var indices = geometry.indices;
 
-        var eastGeometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : attributes.position.componentDatatype,
-                    componentsPerAttribute : attributes.position.componentsPerAttribute,
-                    normalize : attributes.position.normalize,
-                    values : []
-                })
-            },
-            indices : [],
-            primitiveType : geometry.primitiveType
-        });
-
-        var westGeometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : attributes.position.componentDatatype,
-                    componentsPerAttribute : attributes.position.componentsPerAttribute,
-                    normalize : attributes.position.normalize,
-                    values : []
-                })
-            },
-            indices : [],
-            primitiveType : geometry.primitiveType
-        });
+        var eastGeometry = copyGeometryForSplit(geometry);
+        var westGeometry = copyGeometryForSplit(geometry);
 
         var index;
         var length = indices.length;
@@ -2240,97 +2160,8 @@ define([
         var texCoords = (defined(attributes.st)) ? attributes.st.values : undefined;
         var colors = (defined(attributes.color)) ? attributes.color.values : undefined;
 
-        var eastGeometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : attributes.position.componentDatatype,
-                    componentsPerAttribute : attributes.position.componentsPerAttribute,
-                    normalize : attributes.position.normalize,
-                    values : []
-                }),
-                prevPosition : new GeometryAttribute({
-                    componentDatatype : attributes.prevPosition.componentDatatype,
-                    componentsPerAttribute : attributes.prevPosition.componentsPerAttribute,
-                    normalize : attributes.prevPosition.normalize,
-                    values : []
-                }),
-                nextPosition : new GeometryAttribute({
-                    componentDatatype : attributes.nextPosition.componentDatatype,
-                    componentsPerAttribute : attributes.nextPosition.componentsPerAttribute,
-                    normalize : attributes.nextPosition.normalize,
-                    values : []
-                }),
-                expandAndWidth : new GeometryAttribute({
-                    componentDatatype : attributes.expandAndWidth.componentDatatype,
-                    componentsPerAttribute : attributes.expandAndWidth.componentsPerAttribute,
-                    normalize : attributes.expandAndWidth.normalize,
-                    values : []
-                })
-            },
-            indices : [],
-            primitiveType : geometry.primitiveType
-        });
-
-        var westGeometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : attributes.position.componentDatatype,
-                    componentsPerAttribute : attributes.position.componentsPerAttribute,
-                    normalize : attributes.position.normalize,
-                    values : []
-                }),
-                prevPosition : new GeometryAttribute({
-                    componentDatatype : attributes.prevPosition.componentDatatype,
-                    componentsPerAttribute : attributes.prevPosition.componentsPerAttribute,
-                    normalize : attributes.prevPosition.normalize,
-                    values : []
-                }),
-                nextPosition : new GeometryAttribute({
-                    componentDatatype : attributes.nextPosition.componentDatatype,
-                    componentsPerAttribute : attributes.nextPosition.componentsPerAttribute,
-                    normalize : attributes.nextPosition.normalize,
-                    values : []
-                }),
-                expandAndWidth : new GeometryAttribute({
-                    componentDatatype : attributes.expandAndWidth.componentDatatype,
-                    componentsPerAttribute : attributes.expandAndWidth.componentsPerAttribute,
-                    normalize : attributes.expandAndWidth.normalize,
-                    values : []
-                })
-            },
-            indices : [],
-            primitiveType : geometry.primitiveType
-        });
-
-        if (defined(texCoords)) {
-            eastGeometry.attributes.st = new GeometryAttribute({
-                componentDatatype : attributes.st.componentDatatype,
-                componentsPerAttribute : attributes.st.componentsPerAttribute,
-                normalize : attributes.st.normalize,
-                values : []
-            });
-            westGeometry.attributes.st = new GeometryAttribute({
-                componentDatatype : attributes.st.componentDatatype,
-                componentsPerAttribute : attributes.st.componentsPerAttribute,
-                normalize : attributes.st.normalize,
-                values : []
-            });
-        }
-
-        if (defined(colors)) {
-            eastGeometry.attributes.color = new GeometryAttribute({
-                componentDatatype : attributes.color.componentDatatype,
-                componentsPerAttribute : attributes.color.componentsPerAttribute,
-                normalize : attributes.color.normalize,
-                values : []
-            });
-            westGeometry.attributes.color = new GeometryAttribute({
-                componentDatatype : attributes.color.componentDatatype,
-                componentsPerAttribute : attributes.color.componentsPerAttribute,
-                normalize : attributes.color.normalize,
-                values : []
-            });
-        }
+        var eastGeometry = copyGeometryForSplit(geometry);
+        var westGeometry = copyGeometryForSplit(geometry);
 
         var i;
         var j;
