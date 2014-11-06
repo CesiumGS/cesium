@@ -65,15 +65,20 @@ define([
      * @constructor
      *
      * @param {Entity} entity The entity containing the geometry to be visualized.
+     * @param {Scene} scene The scene where visualization is taking place.
      */
-    var WallGeometryUpdater = function(entity) {
+    var WallGeometryUpdater = function(entity, scene) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(entity)) {
             throw new DeveloperError('entity is required');
         }
+        if (!defined(scene)) {
+            throw new DeveloperError('scene is required');
+        }
         //>>includeEnd('debug');
 
         this._entity = entity;
+        this._scene = scene;
         this._entitySubscription = entity.definitionChanged.addEventListener(WallGeometryUpdater.prototype._onEntityPropertyChanged, this);
         this._fillEnabled = false;
         this._dynamic = false;
@@ -84,6 +89,7 @@ define([
         this._hasConstantOutline = true;
         this._showOutlineProperty = undefined;
         this._outlineColorProperty = undefined;
+        this._outlineWidth = 1.0;
         this._options = new GeometryOptions(entity);
         this._onEntityPropertyChanged(entity, 'wall', entity.wall, undefined);
     };
@@ -196,6 +202,19 @@ define([
         outlineColorProperty : {
             get : function() {
                 return this._outlineColorProperty;
+            }
+        },
+        /**
+         * Gets the constant with of the geometry outline, in pixels.
+         * This value is only valid if isDynamic is false.
+         * @memberof WallGeometryUpdater.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        outlineWidth : {
+            get : function() {
+                return this._outlineWidth;
             }
         },
         /**
@@ -419,6 +438,7 @@ define([
 
         var minimumHeights = wall.minimumHeights;
         var maximumHeights = wall.maximumHeights;
+        var outlineWidth = wall.outlineWidth;
         var granularity = wall.granularity;
 
         this._fillEnabled = fillEnabled;
@@ -427,6 +447,7 @@ define([
         if (!positions.isConstant || //
             !Property.isConstant(minimumHeights) || //
             !Property.isConstant(maximumHeights) || //
+            !Property.isConstant(outlineWidth) || //
             !Property.isConstant(granularity)) {
             if (!this._dynamic) {
                 this._dynamic = true;
@@ -439,6 +460,7 @@ define([
             options.minimumHeights = defined(minimumHeights) ? minimumHeights.getValue(Iso8601.MINIMUM_VALUE, options.minimumHeights) : undefined;
             options.maximumHeights = defined(maximumHeights) ? maximumHeights.getValue(Iso8601.MINIMUM_VALUE, options.maximumHeights) : undefined;
             options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            this._outlineWidth = defined(outlineWidth) ? outlineWidth.getValue(Iso8601.MINIMUM_VALUE) : 1.0;
             this._dynamic = false;
             this._geometryChanged.raiseEvent(this);
         }
@@ -539,6 +561,9 @@ define([
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
 
             var outlineColor = defined(wall.outlineColor) ? wall.outlineColor.getValue(time) : Color.BLACK;
+            var outlineWidth = defined(wall.outlineWidth) ? wall.outlineWidth.getValue(time) : 1.0;
+            var translucent = outlineColor.alpha !== 1.0;
+
             this._outlinePrimitive = new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
@@ -549,7 +574,13 @@ define([
                 }),
                 appearance : new PerInstanceColorAppearance({
                     flat : true,
-                    translucent : outlineColor.alpha !== 1.0
+                    translucent : translucent,
+                    renderState : {
+                        depthTest : {
+                            enabled : !translucent
+                        },
+                        lineWidth : geometryUpdater._scene.clampLineWidth(outlineWidth)
+                    }
                 }),
                 asynchronous : false
             });

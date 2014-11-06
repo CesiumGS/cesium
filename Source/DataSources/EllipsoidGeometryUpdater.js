@@ -103,6 +103,7 @@ define([
         this._hasConstantOutline = true;
         this._showOutlineProperty = undefined;
         this._outlineColorProperty = undefined;
+        this._outlineWidth = 1.0;
         this._options = new GeometryOptions(entity);
         this._onEntityPropertyChanged(entity, 'ellipsoid', entity.ellipsoid, undefined);
     };
@@ -215,6 +216,19 @@ define([
         outlineColorProperty : {
             get : function() {
                 return this._outlineColorProperty;
+            }
+        },
+        /**
+         * Gets the constant with of the geometry outline, in pixels.
+         * This value is only valid if isDynamic is false.
+         * @memberof EllipsoidGeometryUpdater.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        outlineWidth : {
+            get : function() {
+                return this._outlineWidth;
             }
         },
         /**
@@ -450,6 +464,7 @@ define([
 
         var stackPartitions = ellipsoid.stackPartitions;
         var slicePartitions = ellipsoid.slicePartitions;
+        var outlineWidth = ellipsoid.outlineWidth;
         var subdivisions = ellipsoid.subdivisions;
 
         if (!position.isConstant || //
@@ -457,6 +472,7 @@ define([
             !radii.isConstant || //
             !Property.isConstant(stackPartitions) || //
             !Property.isConstant(slicePartitions) || //
+            !Property.isConstant(outlineWidth) || //
             !Property.isConstant(subdivisions)) {
             if (!this._dynamic) {
                 this._dynamic = true;
@@ -469,6 +485,7 @@ define([
             options.stackPartitions = defined(stackPartitions) ? stackPartitions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.slicePartitions = defined(slicePartitions) ? slicePartitions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.subdivisions = defined(subdivisions) ? subdivisions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            this._outlineWidth = defined(outlineWidth) ? outlineWidth.getValue(Iso8601.MINIMUM_VALUE) : 1.0;
             this._dynamic = false;
             this._geometryChanged.raiseEvent(this);
         }
@@ -512,6 +529,7 @@ define([
         this._attributes = undefined;
         this._outlineAttributes = undefined;
         this._lastSceneMode = undefined;
+        this._lastOutlineWidth = undefined;
     };
 
     DynamicGeometryUpdater.prototype.update = function(time) {
@@ -548,9 +566,11 @@ define([
         var stackPartitionsProperty = ellipsoid.stackPartitions;
         var slicePartitionsProperty = ellipsoid.slicePartitions;
         var subdivisionsProperty = ellipsoid.subdivisions;
+        var outlineWidthProperty = ellipsoid.outlineWidth;
         var stackPartitions = defined(stackPartitionsProperty) ? stackPartitionsProperty.getValue(time) : undefined;
         var slicePartitions = defined(slicePartitionsProperty) ? slicePartitionsProperty.getValue(time) : undefined;
         var subdivisions = defined(subdivisionsProperty) ? subdivisionsProperty.getValue(time) : undefined;
+        var outlineWidth = defined(outlineWidthProperty) ? outlineWidthProperty.getValue(time) : 1.0;
 
         var options = this._options;
 
@@ -571,10 +591,14 @@ define([
 
         //We only rebuild the primitive if something other than the radii has changed
         //For the radii, we use unit sphere and then deform it with a scale matrix.
-        var rebuildPrimitives = !in3D || this._lastSceneMode !== sceneMode || !defined(this._primitive) || options.stackPartitions !== stackPartitions || options.slicePartitions !== slicePartitions || options.subdivisions !== subdivisions;
+        var rebuildPrimitives = !in3D || this._lastSceneMode !== sceneMode || !defined(this._primitive) || //
+                                options.stackPartitions !== stackPartitions || options.slicePartitions !== slicePartitions || //
+                                options.subdivisions !== subdivisions || this._lastOutlineWidth !== outlineWidth;
+
         if (rebuildPrimitives) {
             this._removePrimitives();
             this._lastSceneMode = sceneMode;
+            this._lastOutlineWidth = outlineWidth;
 
             options.stackPartitions = stackPartitions;
             options.slicePartitions = slicePartitions;
@@ -605,6 +629,7 @@ define([
             this._primitives.add(this._primitive);
 
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
+            var translucent = outlineColor.alpha !== 1.0;
             this._outlinePrimitive = new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
@@ -617,7 +642,13 @@ define([
                 }),
                 appearance : new PerInstanceColorAppearance({
                     flat : true,
-                    translucent : outlineColor.alpha !== 1.0
+                    translucent : translucent,
+                    renderState : {
+                        depthTest : {
+                            enabled : !translucent
+                        },
+                        lineWidth : this._geometryUpdater._scene.clampLineWidth(outlineWidth)
+                    }
                 }),
                 asynchronous : false
             });

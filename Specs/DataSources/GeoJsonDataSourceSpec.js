@@ -429,6 +429,7 @@ defineSuite([
             expect(object.polygon.perPositionHeight).toBeUndefined();
             expect(object.polygon.material.color.getValue(time)).toEqual(Color.fromBytes(255, 255, 0, 100));
             expect(object.polygon.outline.getValue(time)).toEqual(true);
+            expect(object.polygon.outlineWidth.getValue(time)).toEqual(2);
             expect(object.polygon.outlineColor.getValue(time)).toEqual(Color.BLACK);
         });
     });
@@ -448,6 +449,7 @@ defineSuite([
             expect(object.polygon.perPositionHeight.getValue(time)).toBe(true);
             expect(object.polygon.material.color.getValue(time)).toEqual(Color.fromBytes(255, 255, 0, 100));
             expect(object.polygon.outline.getValue(time)).toEqual(true);
+            expect(object.polygon.outlineWidth.getValue(time)).toEqual(2);
             expect(object.polygon.outlineColor.getValue(time)).toEqual(Color.BLACK);
         });
     });
@@ -669,6 +671,7 @@ defineSuite([
 
             expect(entity.polygon.material.color.getValue(time)).toEqual(expectedFill);
             expect(entity.polygon.outline.getValue(time)).toEqual(true);
+            expect(entity.polygon.outlineWidth.getValue(time)).toEqual(5);
             expect(entity.polygon.outlineColor.getValue(time)).toEqual(expectedOutlineColor);
         });
     });

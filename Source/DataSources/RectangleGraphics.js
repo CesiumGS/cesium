@@ -42,6 +42,12 @@ define([
         this._closeTopSubscription = undefined;
         this._closeBottom = undefined;
         this._closeBottomSubscription = undefined;
+        this._outline = undefined;
+        this._outlineSubscription = undefined;
+        this._outlineColor = undefined;
+        this._outlineColorSubscription = undefined;
+        this._outlineWidth = undefined;
+        this._outlineWidthSubscription = undefined;
         this._definitionChanged = new Event();
     };
 
@@ -143,6 +149,13 @@ define([
         outlineColor : createPropertyDescriptor('outlineColor'),
 
         /**
+         * Gets or sets the Number {@link Property} specifying the width of the outline.
+         * @memberof EllipseGraphics.prototype
+         * @type {Property}
+         */
+        outlineWidth : createPropertyDescriptor('outlineWidth'),
+
+        /**
          * Gets or sets the Boolean {@link Property} specifying whether an extruded rectangle should have a closed top.
          * @memberof RectangleGraphics.prototype
          * @type {Property}
@@ -178,6 +191,7 @@ define([
         result.fill = this.fill;
         result.outline = this.outline;
         result.outlineColor = this.outlineColor;
+        result.outlineWidth = this.outlineWidth;
         result.closeTop = this.closeTop;
         result.closeBottom = this.closeBottom;
         return result;
@@ -207,6 +221,7 @@ define([
         this.fill = defaultValue(this.fill, source.fill);
         this.outline = defaultValue(this.outline, source.outline);
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
+        this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
         this.closeTop = defaultValue(this.closeTop, source.closeTop);
         this.closeBottom = defaultValue(this.closeBottom, source.closeBottom);
     };
