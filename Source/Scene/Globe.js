@@ -909,14 +909,6 @@ define([
 
             var shaderDefines = [];
 
-            if (hasWaterMask) {
-                shaderDefines.push('SHOW_REFLECTIVE_OCEAN');
-
-                if (defined(this._oceanNormalMap)) {
-                    shaderDefines.push('SHOW_OCEAN_WAVES');
-                }
-            }
-
             if (enableLighting) {
                 if (hasVertexNormals) {
                     shaderDefines.push('ENABLE_VERTEX_LIGHTING');
@@ -988,6 +980,7 @@ define([
             tileProvider.lightingFadeOutDistance = this.lightingFadeOutDistance;
             tileProvider.lightingFadeInDistance = this.lightingFadeInDistance;
             tileProvider.zoomedOutOceanSpecularIntensity = this._zoomedOutOceanSpecularIntensity;
+            tileProvider.hasWaterMask = this._hasWaterMask;
             tileProvider.oceanNormalMap = this._oceanNormalMap;
 
             surface.update(context, frameState, commandList);
