@@ -200,7 +200,6 @@ define([
          */
         this.oceanNormalMapUrl = buildModuleUrl('Assets/Textures/waterNormalsSmall.jpg');
         this._oceanNormalMapUrl = undefined;
-        this._oceanNormalMapChanged = false;
 
         /**
          * True if primitives such as billboards, polylines, labels, etc. should be depth-tested
@@ -273,7 +272,6 @@ define([
 
         this._oceanNormalMap = undefined;
         this._zoomedOutOceanSpecularIntensity = 0.5;
-        this._hasWaterMask = false;
         this._hasVertexNormals = false;
         this._lightingFadeDistance = new Cartesian2(this.lightingFadeOutDistance, this.lightingFadeInDistance);
 
@@ -845,19 +843,22 @@ define([
             var oceanNormalMapUrl = this.oceanNormalMapUrl;
             this._oceanNormalMapUrl = oceanNormalMapUrl;
 
-            var that = this;
-            when(loadImage(oceanNormalMapUrl), function(image) {
-                if (oceanNormalMapUrl !== that.oceanNormalMapUrl) {
-                    // url changed while we were loading
-                    return;
-                }
+            if (defined(oceanNormalMapUrl)) {
+                var that = this;
+                when(loadImage(oceanNormalMapUrl), function(image) {
+                    if (oceanNormalMapUrl !== that.oceanNormalMapUrl) {
+                        // url changed while we were loading
+                        return;
+                    }
 
-                that._oceanNormalMap = that._oceanNormalMap && that._oceanNormalMap.destroy();
-                that._oceanNormalMap = context.createTexture2D({
-                    source : image
+                    that._oceanNormalMap = that._oceanNormalMap && that._oceanNormalMap.destroy();
+                    that._oceanNormalMap = context.createTexture2D({
+                        source : image
+                    });
                 });
-                that._oceanNormalMapChanged = true;
-            });
+            } else {
+                this._oceanNormalMap = this._oceanNormalMap && this._oceanNormalMap.destroy();
+            }
         }
 
         // Initial compile or re-compile if uber-shader parameters changed
@@ -867,8 +868,6 @@ define([
         if (!defined(northPoleCommand.shaderProgram) ||
             !defined(southPoleCommand.shaderProgram) ||
             modeChanged ||
-            this._oceanNormalMapChanged ||
-            this._hasWaterMask !== hasWaterMask ||
             this._hasVertexNormals !== hasVertexNormals ||
             this._enableLighting !== enableLighting) {
 
@@ -943,10 +942,8 @@ define([
             northPoleCommand.shaderProgram = poleShaderProgram;
             southPoleCommand.shaderProgram = poleShaderProgram;
 
-            this._hasWaterMask = hasWaterMask;
             this._hasVertexNormals = hasVertexNormals;
             this._enableLighting = enableLighting;
-            this._oceanNormalMapChanged = false;
         }
 
         this._occluder.cameraPosition = frameState.camera.positionWC;
@@ -980,7 +977,7 @@ define([
             tileProvider.lightingFadeOutDistance = this.lightingFadeOutDistance;
             tileProvider.lightingFadeInDistance = this.lightingFadeInDistance;
             tileProvider.zoomedOutOceanSpecularIntensity = this._zoomedOutOceanSpecularIntensity;
-            tileProvider.hasWaterMask = this._hasWaterMask;
+            tileProvider.hasWaterMask = hasWaterMask;
             tileProvider.oceanNormalMap = this._oceanNormalMap;
 
             surface.update(context, frameState, commandList);
