@@ -69,15 +69,20 @@ define([
      * @constructor
      *
      * @param {Entity} entity The entity containing the geometry to be visualized.
+     * @param {Scene} scene The scene where visualization is taking place.
      */
-    var PolygonGeometryUpdater = function(entity) {
+    var PolygonGeometryUpdater = function(entity, scene) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(entity)) {
             throw new DeveloperError('entity is required');
         }
+        if (!defined(scene)) {
+            throw new DeveloperError('scene is required');
+        }
         //>>includeEnd('debug');
 
         this._entity = entity;
+        this._scene = scene;
         this._entitySubscription = entity.definitionChanged.addEventListener(PolygonGeometryUpdater.prototype._onEntityPropertyChanged, this);
         this._fillEnabled = false;
         this._isClosed = false;
@@ -89,6 +94,7 @@ define([
         this._hasConstantOutline = true;
         this._showOutlineProperty = undefined;
         this._outlineColorProperty = undefined;
+        this._outlineWidth = 1.0;
         this._options = new GeometryOptions(entity);
         this._onEntityPropertyChanged(entity, 'polygon', entity.polygon, undefined);
     };
@@ -201,6 +207,19 @@ define([
         outlineColorProperty : {
             get : function() {
                 return this._outlineColorProperty;
+            }
+        },
+        /**
+         * Gets the constant with of the geometry outline, in pixels.
+         * This value is only valid if isDynamic is false.
+         * @memberof PolygonGeometryUpdater.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        outlineWidth : {
+            get : function() {
+                return this._outlineWidth;
             }
         },
         /**
@@ -426,6 +445,7 @@ define([
         var extrudedHeight = polygon.extrudedHeight;
         var granularity = polygon.granularity;
         var stRotation = polygon.stRotation;
+        var outlineWidth = polygon.outlineWidth;
         var perPositionHeight = polygon.perPositionHeight;
 
         this._isClosed = defined(extrudedHeight);
@@ -437,6 +457,7 @@ define([
             !Property.isConstant(extrudedHeight) || //
             !Property.isConstant(granularity) || //
             !Property.isConstant(stRotation) || //
+            !Property.isConstant(outlineWidth) || //
             !Property.isConstant(perPositionHeight)) {
             if (!this._dynamic) {
                 this._dynamic = true;
@@ -451,6 +472,7 @@ define([
             options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.stRotation = defined(stRotation) ? stRotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.perPositionHeight = defined(perPositionHeight) ? perPositionHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            this._outlineWidth = defined(outlineWidth) ? outlineWidth.getValue(Iso8601.MINIMUM_VALUE) : 1.0;
             this._dynamic = false;
             this._geometryChanged.raiseEvent(this);
         }
@@ -556,6 +578,9 @@ define([
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
 
             var outlineColor = defined(polygon.outlineColor) ? polygon.outlineColor.getValue(time) : Color.BLACK;
+            var outlineWidth = defined(polygon.outlineWidth) ? polygon.outlineWidth.getValue(time) : 1.0;
+            var translucent = outlineColor.alpha !== 1.0;
+
             this._outlinePrimitive = new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
@@ -566,7 +591,13 @@ define([
                 }),
                 appearance : new PerInstanceColorAppearance({
                     flat : true,
-                    translucent : outlineColor.alpha !== 1.0
+                    translucent : translucent,
+                    renderState : {
+                        depthTest : {
+                            enabled : !translucent
+                        },
+                        lineWidth : geometryUpdater._scene.clampLineWidth(outlineWidth)
+                    }
                 }),
                 asynchronous : false
             });

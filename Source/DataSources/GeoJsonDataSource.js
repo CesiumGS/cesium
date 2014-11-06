@@ -305,9 +305,15 @@ define([
     function createPolygon(dataSource, geoJson, crsFunction, coordinates) {
         var outlineColorProperty = defaultPolygonOutlineColorProperty;
         var material = defaultPolygonMaterial;
+        var widthProperty = defaultPolylineWidth;
 
         var properties = geoJson.properties;
         if (defined(properties)) {
+            var width = properties['stroke-width'];
+            if (defined(width)) {
+                widthProperty = new ConstantProperty(width);
+            }
+
             var color;
             var stroke = properties.stroke;
             if (defined(stroke)) {
@@ -346,6 +352,7 @@ define([
         var polygon = new PolygonGraphics();
         polygon.outline = defaultPolygonOutline;
         polygon.outlineColor = outlineColorProperty;
+        polygon.outlineWidth = widthProperty;
         polygon.material = material;
         polygon.positions = new ConstantProperty(coordinatesArrayToCartesianArray(coordinates, crsFunction));
         if (coordinates.length > 0 && coordinates[0].length > 2) {
