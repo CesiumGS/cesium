@@ -1962,68 +1962,149 @@ define([
         var positions = attributes.position.values;
         var indices = geometry.indices;
 
-        var newPositions = Array.prototype.slice.call(positions, 0);
-        var newIndices = [];
+        var eastGeometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : attributes.position.componentDatatype,
+                    componentsPerAttribute : attributes.position.componentsPerAttribute,
+                    normalize : attributes.position.normalize,
+                    values : []
+                })
+            },
+            indices : [],
+            primitiveType : geometry.primitiveType
+        });
 
+        var westGeometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : attributes.position.componentDatatype,
+                    componentsPerAttribute : attributes.position.componentsPerAttribute,
+                    normalize : attributes.position.normalize,
+                    values : []
+                })
+            },
+            indices : [],
+            primitiveType : geometry.primitiveType
+        });
+
+        var index;
         var length = indices.length;
+
         for ( var i = 0; i < length; i += 2) {
             var i0 = indices[i];
             var i1 = indices[i + 1];
 
-            var prev = Cartesian3.fromArray(positions, i0 * 3);
-            var cur = Cartesian3.fromArray(positions, i1 * 3);
+            var p0 = Cartesian3.fromArray(positions, i0 * 3);
+            var p1 = Cartesian3.fromArray(positions, i1 * 3);
 
-            if (Math.abs(prev.y) < CesiumMath.EPSILON6){
-                if (prev.y < 0.0) {
-                    prev.y = -CesiumMath.EPSILON6;
+            if (Math.abs(p0.y) < CesiumMath.EPSILON6){
+                if (p0.y < 0.0) {
+                    p0.y = -CesiumMath.EPSILON6;
                 } else {
-                    prev.y = CesiumMath.EPSILON6;
+                    p0.y = CesiumMath.EPSILON6;
                 }
-
-                newPositions[i0 * 3 + 1] = prev.y;
             }
 
-            if (Math.abs(cur.y) < CesiumMath.EPSILON6){
-                if (cur.y < 0.0) {
-                    cur.y = -CesiumMath.EPSILON6;
+            if (Math.abs(p1.y) < CesiumMath.EPSILON6){
+                if (p1.y < 0.0) {
+                    p1.y = -CesiumMath.EPSILON6;
                 } else {
-                    cur.y = CesiumMath.EPSILON6;
+                    p1.y = CesiumMath.EPSILON6;
                 }
-
-                newPositions[i1 * 3 + 1] = cur.y;
             }
 
-            newIndices.push(i0);
+            var p0Attributes = eastGeometry.attributes;
+            var p0Indices = eastGeometry.indices;
+            var p1Attributes = westGeometry.attributes;
+            var p1Indices = westGeometry.indices;
 
-            // intersects the IDL if either endpoint is on the negative side of the yz-plane
-            if (prev.x < 0.0 || cur.x < 0.0) {
-                // and intersects the xz-plane
-                var intersection = IntersectionTests.lineSegmentPlane(prev, cur, xzPlane);
-                if (defined(intersection)) {
-                    // move point on the xz-plane slightly away from the plane
-                    var offset = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Y, 5.0 * CesiumMath.EPSILON9, offsetScratch);
-                    if (prev.y < 0.0) {
-                        Cartesian3.negate(offset, offset);
-                    }
-
-                    var index = newPositions.length / 3;
-                    newIndices.push(index, index + 1);
-
-                    var offsetPoint = Cartesian3.add(intersection, offset, offsetPointScratch);
-                    newPositions.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
-
+            var intersection = IntersectionTests.lineSegmentPlane(p0, p1, xzPlane);
+            if (defined(intersection)) {
+                // move point on the xz-plane slightly away from the plane
+                var offset = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Y, 5.0 * CesiumMath.EPSILON9, offsetScratch);
+                if (p0.y < 0.0) {
                     Cartesian3.negate(offset, offset);
-                    Cartesian3.add(intersection, offset, offsetPoint);
-                    newPositions.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
-                }
-            }
 
-            newIndices.push(i1);
+                    p0Attributes = westGeometry.attributes;
+                    p0Indices = westGeometry.indices;
+                    p1Attributes = eastGeometry.attributes;
+                    p1Indices = eastGeometry.indices;
+                }
+
+                var offsetPoint = Cartesian3.add(intersection, offset, offsetPointScratch);
+                p0Attributes.position.values.push(p0.x, p0.y, p0.z);
+                p0Attributes.position.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+
+                Cartesian3.negate(offset, offset);
+                Cartesian3.add(intersection, offset, offsetPoint);
+                p1Attributes.position.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                p1Attributes.position.values.push(p1.x, p1.y, p1.z);
+
+                index = p0Attributes.position.values.length / 3 - 2;
+                p0Indices.push(index, index + 1);
+
+                index = p1Attributes.position.values.length / 3 - 2;
+                p1Indices.push(index, index + 1);
+            } else {
+                var currentAttributes;
+                var currentIndices;
+
+                if (p0.y < 0.0) {
+                    currentAttributes = westGeometry.attributes;
+                    currentIndices = westGeometry.indices;
+                } else {
+                    currentAttributes = eastGeometry.attributes;
+                    currentIndices = eastGeometry.indices;
+                }
+
+                currentAttributes.position.values.push(p0.x, p0.y, p0.z);
+                currentAttributes.position.values.push(p1.x, p1.y, p1.z);
+
+                index = currentAttributes.position.values.length / 3 - 2;
+                currentIndices.push(index, index + 1);
+            }
         }
 
-        geometry.attributes.position.values = new Float64Array(newPositions);
-        var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
-        geometry.indices = IndexDatatype.createTypedArray(numberOfVertices, newIndices);
+        var numberOfVertices;
+
+        if (westGeometry.attributes.position.values.length > 0) {
+            attributes = westGeometry.attributes;
+            attributes.position.values = new Float64Array(attributes.position.values);
+
+            numberOfVertices = Geometry.computeNumberOfVertices(westGeometry);
+            westGeometry.indices = IndexDatatype.createTypedArray(numberOfVertices, westGeometry.indices);
+
+            if (defined(instance.geometry.boundingSphere)) {
+                westGeometry.boundingSphere = BoundingSphere.fromVertices(westGeometry.attributes.position.values);
+            }
+        } else {
+            westGeometry = undefined;
+        }
+
+        if (eastGeometry.attributes.position.values.length > 0) {
+            attributes = eastGeometry.attributes;
+            attributes.position.values = new Float64Array(attributes.position.values);
+
+            numberOfVertices = Geometry.computeNumberOfVertices(eastGeometry);
+            eastGeometry.indices = IndexDatatype.createTypedArray(numberOfVertices, eastGeometry.indices);
+
+            if (defined(instance.geometry.boundingSphere)) {
+                eastGeometry.boundingSphere = BoundingSphere.fromVertices(eastGeometry.attributes.position.values);
+            }
+        } else {
+            eastGeometry = undefined;
+        }
+
+        if (defined(eastGeometry) && !defined(westGeometry)) {
+            instance.geometry = eastGeometry;
+        } else if (!defined(eastGeometry) && defined(westGeometry)) {
+            instance.geometry = westGeometry;
+        } else {
+            instance.westHemisphereGeometry = westGeometry;
+            instance.eastHemisphereGeometry = eastGeometry;
+            instance.geometry = undefined;
+        }
     }
 
     var cartesian2Scratch0 = new Cartesian2();
@@ -2170,11 +2251,11 @@ define([
                 p3.y = p2.y;
             }
 
-            var split = false;
             var p0Attributes = eastGeometry.attributes;
             var p0Indices = eastGeometry.indices;
             var p2Attributes = westGeometry.attributes;
             var p2Indices = westGeometry.indices;
+
             var intersection = IntersectionTests.lineSegmentPlane(p0, p2, xzPlane, cartesian3Scratch4);
             if (defined(intersection)) {
                 // move point on the xz-plane slightly away from the plane
