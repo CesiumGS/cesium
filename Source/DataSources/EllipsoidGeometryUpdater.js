@@ -629,6 +629,7 @@ define([
             this._primitives.add(this._primitive);
 
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
+            var translucent = outlineColor.alpha !== 1.0;
             this._outlinePrimitive = new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
@@ -641,10 +642,10 @@ define([
                 }),
                 appearance : new PerInstanceColorAppearance({
                     flat : true,
-                    translucent : outlineColor.alpha !== 1.0,
+                    translucent : translucent,
                     renderState : {
                         depthTest : {
-                            enabled : true
+                            enabled : !translucent
                         },
                         lineWidth : this._geometryUpdater._scene.clampLineWidth(outlineWidth)
                     }
