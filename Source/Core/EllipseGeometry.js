@@ -560,8 +560,8 @@ define([
 
         return {
             boundingSphere : boundingSphere,
-            attributes : geo.attributes,
-            indices : geo.indices
+            attributes : geo[0].attributes,
+            indices : geo[0].indices
         };
     }
 

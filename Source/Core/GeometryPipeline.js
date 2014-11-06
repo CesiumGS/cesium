@@ -1753,14 +1753,14 @@ define([
         positions[0] = p0;
         positions[1] = p1;
         positions[2] = p2;
-        splitTriangleResult.length = 3;
+        positions.length = 3;
 
         if (numBehind === 1 || numBehind === 2) {
             positions[3] = u1;
             positions[4] = u2;
             positions[5] = q1;
             positions[6] = q2;
-            splitTriangleResult.length = 7;
+            positions.length = 7;
         }
 
         return splitTriangleResult;
@@ -1774,12 +1774,14 @@ define([
     var u2Scratch = new Cartesian2();
     var computeScratch = new Cartesian3();
 
-    function computeTriangleAttributes(i0, i1, i2, dividedTriangle, normals, binormals, tangents, texCoords) {
+    function computeTriangleAttributes(i0, i1, i2, dividedTriangle, startIndex, normals, binormals, tangents, texCoords, currentAttributes) {
         if (!defined(normals) && !defined(binormals) && !defined(tangents) && !defined(texCoords)) {
             return;
         }
 
         var positions = dividedTriangle.positions;
+        var indices = dividedTriangle.indices;
+
         var p0 = positions[0];
         var p1 = positions[1];
         var p2 = positions[2];
@@ -1819,8 +1821,9 @@ define([
             s2 = Cartesian2.fromArray(texCoords, i2 * 2);
         }
 
-        for (var i = 3; i < positions.length; ++i) {
-            var point = positions[i];
+        var endIndex = startIndex + 3;
+        for (var i = startIndex; i < endIndex; ++i) {
+            var point = positions[indices[i]];
             var coords = barycentricCoordinates(point, p0, p1, p2);
 
             if (defined(normals)) {
@@ -1832,7 +1835,7 @@ define([
                 Cartesian3.add(normal, v2, normal);
                 Cartesian3.normalize(normal, normal);
 
-                normals.push(normal.x, normal.y, normal.z);
+                currentAttributes.normal.values.push(normal.x, normal.y, normal.z);
             }
 
             if (defined(binormals)) {
@@ -1844,7 +1847,7 @@ define([
                 Cartesian3.add(binormal, v2, binormal);
                 Cartesian3.normalize(binormal, binormal);
 
-                binormals.push(binormal.x, binormal.y, binormal.z);
+                currentAttributes.binormal.values.push(binormal.x, binormal.y, binormal.z);
             }
 
             if (defined(tangents)) {
@@ -1856,7 +1859,7 @@ define([
                 Cartesian3.add(tangent, v2, tangent);
                 Cartesian3.normalize(tangent, tangent);
 
-                tangents.push(tangent.x, tangent.y, tangent.z);
+                currentAttributes.tangent.values.push(tangent.x, tangent.y, tangent.z);
             }
 
             if (defined(texCoords)) {
@@ -1867,7 +1870,7 @@ define([
                 var texCoord = Cartesian2.add(u0, u1, u0);
                 Cartesian2.add(texCoord, u2, texCoord);
 
-                texCoords.push(texCoord.x, texCoord.y);
+                currentAttributes.st.values.push(texCoord.x, texCoord.y);
             }
         }
     }
@@ -1882,12 +1885,95 @@ define([
         var texCoords = (defined(attributes.st)) ? attributes.st.values : undefined;
         var indices = geometry.indices;
 
-        var newPositions = Array.prototype.slice.call(positions, 0);
-        var newNormals = (defined(normals)) ? Array.prototype.slice.call(normals, 0) : undefined;
-        var newBinormals = (defined(binormals)) ? Array.prototype.slice.call(binormals, 0) : undefined;
-        var newTangents = (defined(tangents)) ? Array.prototype.slice.call(tangents, 0) : undefined;
-        var newTexCoords = (defined(texCoords)) ? Array.prototype.slice.call(texCoords, 0) : undefined;
-        var newIndices = [];
+        var eastGeometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : attributes.position.componentDatatype,
+                    componentsPerAttribute : attributes.position.componentsPerAttribute,
+                    normalize : attributes.position.normalize,
+                    values : []
+                })
+            },
+            indices : [],
+            primitiveType : geometry.primitiveType
+        });
+
+        var westGeometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : attributes.position.componentDatatype,
+                    componentsPerAttribute : attributes.position.componentsPerAttribute,
+                    normalize : attributes.position.normalize,
+                    values : []
+                })
+            },
+            indices : [],
+            primitiveType : geometry.primitiveType
+        });
+
+        if (defined(texCoords)) {
+            eastGeometry.attributes.st = new GeometryAttribute({
+                componentDatatype : attributes.st.componentDatatype,
+                componentsPerAttribute : attributes.st.componentsPerAttribute,
+                normalize : attributes.st.normalize,
+                values : []
+            });
+            westGeometry.attributes.st = new GeometryAttribute({
+                componentDatatype : attributes.st.componentDatatype,
+                componentsPerAttribute : attributes.st.componentsPerAttribute,
+                normalize : attributes.st.normalize,
+                values : []
+            });
+        }
+
+        if (defined(normals)) {
+            eastGeometry.attributes.normal = new GeometryAttribute({
+                componentDatatype : attributes.normal.componentDatatype,
+                componentsPerAttribute : attributes.normal.componentsPerAttribute,
+                normalize : attributes.normal.normalize,
+                values : []
+            });
+            westGeometry.attributes.normal = new GeometryAttribute({
+                componentDatatype : attributes.normal.componentDatatype,
+                componentsPerAttribute : attributes.normal.componentsPerAttribute,
+                normalize : attributes.normal.normalize,
+                values : []
+            });
+        }
+
+        if (defined(binormals)) {
+            eastGeometry.attributes.binormal = new GeometryAttribute({
+                componentDatatype : attributes.binormal.componentDatatype,
+                componentsPerAttribute : attributes.binormal.componentsPerAttribute,
+                normalize : attributes.binormal.normalize,
+                values : []
+            });
+            westGeometry.attributes.binormal = new GeometryAttribute({
+                componentDatatype : attributes.binormal.componentDatatype,
+                componentsPerAttribute : attributes.binormal.componentsPerAttribute,
+                normalize : attributes.binormal.normalize,
+                values : []
+            });
+        }
+
+        if (defined(tangents)) {
+            eastGeometry.attributes.tangent = new GeometryAttribute({
+                componentDatatype : attributes.tangent.componentDatatype,
+                componentsPerAttribute : attributes.tangent.componentsPerAttribute,
+                normalize : attributes.tangent.normalize,
+                values : []
+            });
+            westGeometry.attributes.tangent = new GeometryAttribute({
+                componentDatatype : attributes.tangent.componentDatatype,
+                componentsPerAttribute : attributes.tangent.componentsPerAttribute,
+                normalize : attributes.tangent.normalize,
+                values : []
+            });
+        }
+
+        var currentAttributes;
+        var currentIndices;
+        var index;
 
         var len = indices.length;
         for (var i = 0; i < len; i += 3) {
@@ -1900,55 +1986,140 @@ define([
             var p2 = Cartesian3.fromArray(positions, i2 * 3);
 
             var result = splitTriangle(p0, p1, p2);
-            if (defined(result)) {
-                newPositions[i0 * 3 + 1] = result.positions[0].y;
-                newPositions[i1 * 3 + 1] = result.positions[1].y;
-                newPositions[i2 * 3 + 1] = result.positions[2].y;
+            if (defined(result) && result.length > 3) {
+                var resultPositions = result.positions;
+                var resultIndices = result.indices;
+                var resultLength = resultIndices.length;
 
-                if (result.length > 3) {
-                    var positionsLength = newPositions.length / 3;
-                    for(var j = 0; j < result.indices.length; ++j) {
-                        var index = result.indices[j];
-                        if (index < 3) {
-                            newIndices.push(indices[i + index]);
-                        } else {
-                            newIndices.push(index - 3 + positionsLength);
-                        }
+                for (var j = 0; j < resultLength; j += 3) {
+                    p0 = resultPositions[resultIndices[j]];
+                    p1 = resultPositions[resultIndices[j + 1]];
+                    p2 = resultPositions[resultIndices[j + 2]];
+
+                    if (p0.y < 0.0) {
+                        currentAttributes = westGeometry.attributes;
+                        currentIndices = westGeometry.indices;
+                    } else {
+                        currentAttributes = eastGeometry.attributes;
+                        currentIndices = eastGeometry.indices;
                     }
 
-                    for (var k = 3; k < result.positions.length; ++k) {
-                        var position = result.positions[k];
-                        newPositions.push(position.x, position.y, position.z);
-                    }
-                    computeTriangleAttributes(i0, i1, i2, result, newNormals, newBinormals, newTangents, newTexCoords);
-                } else {
-                    newIndices.push(i0, i1, i2);
+                    currentAttributes.position.values.push(p0.x, p0.y, p0.z);
+                    currentAttributes.position.values.push(p1.x, p1.y, p1.z);
+                    currentAttributes.position.values.push(p2.x, p2.y, p2.z);
+
+                    index = currentAttributes.position.values.length / 3 - 3;
+                    currentIndices.push(index, index + 1, index + 2);
+
+                    computeTriangleAttributes(i0, i1, i2, result, j, normals, binormals, tangents, texCoords, currentAttributes);
                 }
             } else {
-                newIndices.push(i0, i1, i2);
+                if (defined(result)) {
+                    p0 = result.positions[0];
+                    p1 = result.positions[1];
+                    p2 = result.positions[2];
+                } else {
+                    result = splitTriangleResult;
+
+                    result.positions[0] = p0;
+                    result.positions[1] = p1;
+                    result.positions[2] = p2;
+                }
+
+                result.indices[0] = 0;
+                result.indices[1] = 1;
+                result.indices[2] = 2;
+
+                if (p0.y < 0.0) {
+                    currentAttributes = westGeometry.attributes;
+                    currentIndices = westGeometry.indices;
+                } else {
+                    currentAttributes = eastGeometry.attributes;
+                    currentIndices = eastGeometry.indices;
+                }
+
+                currentAttributes.position.values.push(p0.x, p0.y, p0.z);
+                currentAttributes.position.values.push(p1.x, p1.y, p1.z);
+                currentAttributes.position.values.push(p2.x, p2.y, p2.z);
+
+                index = currentAttributes.position.values.length / 3 - 3;
+                currentIndices.push(index, index + 1, index + 2);
+
+                computeTriangleAttributes(i0, i1, i2, result, 0, normals, binormals, tangents, texCoords, currentAttributes);
             }
         }
 
-        geometry.attributes.position.values = new Float64Array(newPositions);
+        var numberOfVertices;
 
-        if (defined(newNormals)) {
-            attributes.normal.values = ComponentDatatype.createTypedArray(attributes.normal.componentDatatype, newNormals);
+        if (westGeometry.attributes.position.values.length > 0) {
+            attributes = westGeometry.attributes;
+            attributes.position.values = new Float64Array(attributes.position.values);
+
+            if (defined(texCoords)) {
+                attributes.st.values = ComponentDatatype.createTypedArray(attributes.st.componentDatatype, attributes.st.values);
+            }
+
+            if (defined(normals)) {
+                attributes.normal.values = ComponentDatatype.createTypedArray(attributes.normal.componentDatatype, attributes.normal.values);
+            }
+
+            if (defined(binormals)) {
+                attributes.binormals.values = ComponentDatatype.createTypedArray(attributes.binormals.componentDatatype, attributes.binormals.values);
+            }
+
+            if (defined(tangents)) {
+                attributes.tangents.values = ComponentDatatype.createTypedArray(attributes.tangents.componentDatatype, attributes.tangents.values);
+            }
+
+            numberOfVertices = Geometry.computeNumberOfVertices(westGeometry);
+            westGeometry.indices = IndexDatatype.createTypedArray(numberOfVertices, westGeometry.indices);
+
+            if (defined(instance.geometry.boundingSphere)) {
+                westGeometry.boundingSphere = BoundingSphere.fromVertices(westGeometry.attributes.position.values);
+            }
+        } else {
+            westGeometry = undefined;
         }
 
-        if (defined(newBinormals)) {
-            attributes.binormal.values = ComponentDatatype.createTypedArray(attributes.binormal.componentDatatype, newBinormals);
+        if (eastGeometry.attributes.position.values.length > 0) {
+            attributes = eastGeometry.attributes;
+            attributes.position.values = new Float64Array(attributes.position.values);
+
+            if (defined(texCoords)) {
+                attributes.st.values = ComponentDatatype.createTypedArray(attributes.st.componentDatatype, attributes.st.values);
+            }
+
+            if (defined(normals)) {
+                attributes.normal.values = ComponentDatatype.createTypedArray(attributes.normal.componentDatatype, attributes.normal.values);
+            }
+
+            if (defined(binormals)) {
+                attributes.binormals.values = ComponentDatatype.createTypedArray(attributes.binormals.componentDatatype, attributes.binormals.values);
+            }
+
+            if (defined(tangents)) {
+                attributes.tangents.values = ComponentDatatype.createTypedArray(attributes.tangents.componentDatatype, attributes.tangents.values);
+            }
+
+            numberOfVertices = Geometry.computeNumberOfVertices(eastGeometry);
+            eastGeometry.indices = IndexDatatype.createTypedArray(numberOfVertices, eastGeometry.indices);
+
+            if (defined(instance.geometry.boundingSphere)) {
+                eastGeometry.boundingSphere = BoundingSphere.fromVertices(eastGeometry.attributes.position.values);
+            }
+        } else {
+            eastGeometry = undefined;
         }
 
-        if (defined(newTangents)) {
-            attributes.tangent.values = ComponentDatatype.createTypedArray(attributes.tangent.componentDatatype, newTangents);
+        if (defined(eastGeometry) && !defined(westGeometry)) {
+            instance.geometry = eastGeometry;
+        } else if (!defined(eastGeometry) && defined(westGeometry)) {
+            instance.geometry = westGeometry;
+        } else {
+            instance.westHemisphereGeometry = westGeometry;
+            instance.eastHemisphereGeometry = eastGeometry;
+            instance.geometry = undefined;
         }
-
-        if (defined(newTexCoords)) {
-            attributes.st.values = ComponentDatatype.createTypedArray(attributes.st.componentDatatype, newTexCoords);
-        }
-
-        var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
-        geometry.indices = IndexDatatype.createTypedArray(numberOfVertices, newIndices);
     }
 
     var xzPlane = Plane.fromPointNormal(Cartesian3.ZERO, Cartesian3.UNIT_Y);

@@ -255,7 +255,7 @@ define([
      *
      * // 3. create extruded polygon outline
      * var extrudedPolygon = new Cesium.PolygonOutlineGeometry({
-     *   polygonHierarchy : { 
+     *   polygonHierarchy : {
      *     positions : Cesium.Cartesian3.fromDegreesArray([
      *       -72.0, 40.0,
      *       -70.0, 35.0,
@@ -420,7 +420,7 @@ define([
             }
         }
 
-        geometry = GeometryPipeline.combine(geometries);
+        geometry = GeometryPipeline.combine(geometries)[0];
         var boundingSphere = BoundingSphere.fromVertices(geometry.attributes.position.values);
 
         return new Geometry({

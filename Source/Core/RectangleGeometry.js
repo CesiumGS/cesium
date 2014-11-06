@@ -495,7 +495,7 @@ define([
             })
         ]);
 
-        return geo;
+        return geo[0];
     }
 
     /**

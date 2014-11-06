@@ -552,7 +552,7 @@ define([
      *       -68.0, 40.0
      *     ]),
      *     extrudedHeight: 300000
-     *   } 
+     *   }
      * });
      * var geometry = Cesium.PolygonGeometry.createGeometry(extrudedPolygon);
      */
@@ -755,7 +755,7 @@ define([
             }
         }
 
-        geometry = GeometryPipeline.combine(geometries);
+        geometry = GeometryPipeline.combine(geometries)[0];
         geometry.attributes.position.values = new Float64Array(geometry.attributes.position.values);
         geometry.indices = IndexDatatype.createTypedArray(geometry.attributes.position.values.length / 3, geometry.indices);
 
