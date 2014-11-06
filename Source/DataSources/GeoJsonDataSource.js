@@ -476,12 +476,12 @@ define([
      *
      * @param {Object} url The url to be processed.
      * @param {Object} [options] An object with the following properties:
-     * @param {Number} [options.markerSize] The default size of the map pin created for each point, in pixels.
-     * @param {String} [options.markerSymbol] The default symbol of the map pin created for each point.
-     * @param {Color} [options.markerColor] The default color of the map pin created for each point.
-     * @param {Color} [options.stroke] The default color of polylines and polygon outlines.
-     * @param {Number} [options.strokeWidth] The default width of polylines and polygon outlines.
-     * @param {Color} [options.fill] The default color for polygon interiors.
+     * @param {Number} [options.markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
+     * @param {String} [options.markerSymbol=GeoJsonDataSource.markerSymbol] The default symbol of the map pin created for each point.
+     * @param {Color} [options.markerColor=GeoJsonDataSource.markerColor] The default color of the map pin created for each point.
+     * @param {Color} [options.stroke=GeoJsonDataSource.stroke] The default color of polylines and polygon outlines.
+     * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
+     * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
      *
      * @returns {GeoJsonDataSource} A new instance set to load the specified url.
      */
@@ -702,12 +702,12 @@ define([
      *
      * @param {Object} url The url to be processed.
      * @param {Object} [options] An object with the following properties:
-     * @param {Number} [options.markerSize] The default size of the map pin created for each point, in pixels.
-     * @param {String} [options.markerSymbol] The default symbol of the map pin created for each point.
-     * @param {Color} [options.markerColor] The default color of the map pin created for each point.
-     * @param {Color} [options.stroke] The default color of polylines and polygon outlines.
-     * @param {Number} [options.strokeWidth] The default width of polylines and polygon outlines.
-     * @param {Color} [options.fill] The default color for polygon interiors.
+     * @param {Number} [options.markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
+     * @param {String} [options.markerSymbol=GeoJsonDataSource.markerSymbol] The default symbol of the map pin created for each point.
+     * @param {Color} [options.markerColor=GeoJsonDataSource.markerColor] The default color of the map pin created for each point.
+     * @param {Color} [options.stroke=GeoJsonDataSource.stroke] The default color of polylines and polygon outlines.
+     * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
+     * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
      *
      * @returns {Promise} a promise that will resolve when the GeoJSON is loaded.
      */
@@ -736,12 +736,12 @@ define([
      * @param {Object} geoJson The object to be processed.
      * @param {Object} [options] An object with the following properties:
      * @param {String} [options.sourceUri] The base URI of any relative links in the geoJson object.
-     * @param {Number} [options.markerSize] The default size of the map pin created for each point, in pixels.
-     * @param {String} [options.markerSymbol] The default symbol of the map pin created for each point.
-     * @param {Color} [options.markerColor] The default color of the map pin created for each point.
-     * @param {Color} [options.stroke] The default color of polylines and polygon outlines.
-     * @param {Number} [options.strokeWidth] The default width of polylines and polygon outlines.
-     * @param {Color} [options.fill] The default color for polygon interiors.
+     * @param {Number} [options.markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
+     * @param {String} [options.markerSymbol=GeoJsonDataSource.markerSymbol] The default symbol of the map pin created for each point.
+     * @param {Color} [options.markerColor=GeoJsonDataSource.markerColor] The default color of the map pin created for each point.
+     * @param {Color} [options.stroke=GeoJsonDataSource.stroke] The default color of polylines and polygon outlines.
+     * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
+     * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
      * @returns {Promise} a promise that will resolve when the GeoJSON is loaded.
      *
      * @exception {DeveloperError} Unsupported GeoJSON object type.
