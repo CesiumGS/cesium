@@ -562,6 +562,7 @@ define([
 
             var outlineColor = defined(wall.outlineColor) ? wall.outlineColor.getValue(time) : Color.BLACK;
             var outlineWidth = defined(wall.outlineWidth) ? wall.outlineWidth.getValue(time) : 1.0;
+            var translucent = outlineColor.alpha !== 1.0;
 
             this._outlinePrimitive = new Primitive({
                 geometryInstances : new GeometryInstance({
@@ -573,10 +574,10 @@ define([
                 }),
                 appearance : new PerInstanceColorAppearance({
                     flat : true,
-                    translucent : outlineColor.alpha !== 1.0,
+                    translucent : translucent,
                     renderState : {
                         depthTest : {
-                            enabled : true
+                            enabled : !translucent
                         },
                         lineWidth : geometryUpdater._scene.clampLineWidth(outlineWidth)
                     }

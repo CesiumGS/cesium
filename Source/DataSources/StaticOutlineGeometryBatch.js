@@ -75,7 +75,7 @@ define([
                         translucent : this.translucent,
                         renderState : {
                             depthTest : {
-                                enabled : true
+                                enabled : !this.translucent
                             },
                             lineWidth : this.width
                         }
