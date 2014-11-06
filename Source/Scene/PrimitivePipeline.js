@@ -260,6 +260,9 @@ define([
 
                         // Compute 2D positions
                         GeometryPipeline.projectTo2D(geometry, name, name3D, name2D, projection);
+                        if (defined(geometry.boundingSphere)) {
+                            geometry.boundingSphereCV = BoundingSphere.fromVertices(geometry.attributes[name2D].values);
+                        }
 
                         GeometryPipeline.encodeAttribute(geometry, name3D, name3D + 'High', name3D + 'Low');
                         GeometryPipeline.encodeAttribute(geometry, name2D, name2D + 'High', name2D + 'Low');
@@ -478,7 +481,7 @@ define([
             var geometry = items[i];
             var attributes = geometry.attributes;
 
-            count += 4 + BoundingSphere.packedLength + (defined(geometry.indices) ? geometry.indices.length : 0);
+            count += 6 + 2 * BoundingSphere.packedLength + (defined(geometry.indices) ? geometry.indices.length : 0);
 
             for ( var property in attributes) {
                 if (attributes.hasOwnProperty(property) && defined(attributes[property])) {
@@ -508,7 +511,20 @@ define([
             packedData[count++] = geometry.primitiveType;
             packedData[count++] = geometry.geometryType;
 
-            BoundingSphere.pack(geometry.boundingSphere, packedData, count);
+            var validBoundingSphere = defined(geometry.boundingSphere);
+            packedData[count++] = validBoundingSphere;
+            if (validBoundingSphere) {
+                BoundingSphere.pack(geometry.boundingSphere, packedData, count);
+            }
+
+            count += BoundingSphere.packedLength;
+
+            var validBoundingSphereCV = defined(geometry.boundingSphereCV);
+            packedData[count++] = validBoundingSphereCV;
+            if (validBoundingSphereCV) {
+                BoundingSphere.pack(geometry.boundingSphereCV, packedData, count);
+            }
+
             count += BoundingSphere.packedLength;
 
             var attributes = geometry.attributes;
@@ -569,7 +585,21 @@ define([
             var primitiveType = packedGeometry[packedGeometryIndex++];
             var geometryType = packedGeometry[packedGeometryIndex++];
 
-            var boundingSphere = BoundingSphere.unpack(packedGeometry, packedGeometryIndex);
+            var boundingSphere;
+            var boundingSphereCV;
+
+            var validBoundingSphere = packedGeometry[packedGeometryIndex++];
+            if (validBoundingSphere) {
+                boundingSphere = BoundingSphere.unpack(packedGeometry, packedGeometryIndex);
+            }
+
+            packedGeometryIndex += BoundingSphere.packedLength;
+
+            var validBoundingSphereCV = packedGeometry[packedGeometryIndex++];
+            if (validBoundingSphereCV) {
+                boundingSphereCV = BoundingSphere.unpack(packedGeometry, packedGeometryIndex);
+            }
+
             packedGeometryIndex += BoundingSphere.packedLength;
 
             var length;

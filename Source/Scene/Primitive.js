@@ -843,7 +843,7 @@ define([
 
                 this._boundingSpheres.push(geometry.boundingSphere);
                 this._boundingSphereWC.push(new BoundingSphere());
-                this._boundingSphereCV.push(new BoundingSphere());
+                this._boundingSphereCV.push(geometry.boundingSphereCV);
                 this._boundingSphere2D.push(new BoundingSphere());
                 this._boundingSphereMorph.push(new BoundingSphere());
             }
@@ -1071,7 +1071,7 @@ define([
                 if (defined(boundingSphere)) {
                     this._boundingSphereWC[i] = BoundingSphere.transform(boundingSphere, modelMatrix, this._boundingSphereWC[i]);
                     if (!scene3DOnly) {
-                        this._boundingSphereCV[i] = BoundingSphere.projectTo2D(this._boundingSphereWC[i], projection, this._boundingSphereCV[i]);
+                        // TODO transform cv bounding sphere
                         this._boundingSphere2D[i] = BoundingSphere.clone(this._boundingSphereCV[i], this._boundingSphere2D[i]);
                         this._boundingSphere2D[i].center.x = 0.0;
                         this._boundingSphereMorph[i] = BoundingSphere.union(this._boundingSphereWC[i], this._boundingSphereCV[i]);
