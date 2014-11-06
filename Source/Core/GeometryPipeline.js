@@ -1766,6 +1766,50 @@ define([
         return splitTriangleResult;
     }
 
+    function updateGeometryAfterSplit(geometry, computeBoundingSphere) {
+        var attributes = geometry.attributes;
+
+        if (attributes.position.values.length === 0) {
+            return undefined;
+        }
+
+        for (var property in attributes) {
+            if (attributes.hasOwnProperty(property) &&
+                    defined(attributes[property]) &&
+                    defined(attributes[property].values)) {
+
+                var attribute = attributes[property];
+                attribute.values = ComponentDatatype.createTypedArray(attribute.componentDatatype, attribute.values);
+            }
+        }
+
+        var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+        geometry.indices = IndexDatatype.createTypedArray(numberOfVertices, geometry.indices);
+
+        if (computeBoundingSphere) {
+            geometry.boundingSphere = BoundingSphere.fromVertices(attributes.position.values);
+        }
+
+        return geometry;
+    }
+
+    function updateInstanceAfterSplit(instance, westGeometry, eastGeometry) {
+        var computeBoundingSphere = defined(instance.geometry.boundingSphere);
+
+        westGeometry = updateGeometryAfterSplit(westGeometry, computeBoundingSphere);
+        eastGeometry = updateGeometryAfterSplit(eastGeometry, computeBoundingSphere);
+
+        if (defined(eastGeometry) && !defined(westGeometry)) {
+            instance.geometry = eastGeometry;
+        } else if (!defined(eastGeometry) && defined(westGeometry)) {
+            instance.geometry = westGeometry;
+        } else {
+            instance.westHemisphereGeometry = westGeometry;
+            instance.eastHemisphereGeometry = eastGeometry;
+            instance.geometry = undefined;
+        }
+    }
+
     var v0Scratch = new Cartesian3();
     var v1Scratch = new Cartesian3();
     var v2Scratch = new Cartesian3();
@@ -2049,77 +2093,7 @@ define([
             }
         }
 
-        var numberOfVertices;
-
-        if (westGeometry.attributes.position.values.length > 0) {
-            attributes = westGeometry.attributes;
-            attributes.position.values = new Float64Array(attributes.position.values);
-
-            if (defined(texCoords)) {
-                attributes.st.values = ComponentDatatype.createTypedArray(attributes.st.componentDatatype, attributes.st.values);
-            }
-
-            if (defined(normals)) {
-                attributes.normal.values = ComponentDatatype.createTypedArray(attributes.normal.componentDatatype, attributes.normal.values);
-            }
-
-            if (defined(binormals)) {
-                attributes.binormals.values = ComponentDatatype.createTypedArray(attributes.binormals.componentDatatype, attributes.binormals.values);
-            }
-
-            if (defined(tangents)) {
-                attributes.tangents.values = ComponentDatatype.createTypedArray(attributes.tangents.componentDatatype, attributes.tangents.values);
-            }
-
-            numberOfVertices = Geometry.computeNumberOfVertices(westGeometry);
-            westGeometry.indices = IndexDatatype.createTypedArray(numberOfVertices, westGeometry.indices);
-
-            if (defined(instance.geometry.boundingSphere)) {
-                westGeometry.boundingSphere = BoundingSphere.fromVertices(westGeometry.attributes.position.values);
-            }
-        } else {
-            westGeometry = undefined;
-        }
-
-        if (eastGeometry.attributes.position.values.length > 0) {
-            attributes = eastGeometry.attributes;
-            attributes.position.values = new Float64Array(attributes.position.values);
-
-            if (defined(texCoords)) {
-                attributes.st.values = ComponentDatatype.createTypedArray(attributes.st.componentDatatype, attributes.st.values);
-            }
-
-            if (defined(normals)) {
-                attributes.normal.values = ComponentDatatype.createTypedArray(attributes.normal.componentDatatype, attributes.normal.values);
-            }
-
-            if (defined(binormals)) {
-                attributes.binormals.values = ComponentDatatype.createTypedArray(attributes.binormals.componentDatatype, attributes.binormals.values);
-            }
-
-            if (defined(tangents)) {
-                attributes.tangents.values = ComponentDatatype.createTypedArray(attributes.tangents.componentDatatype, attributes.tangents.values);
-            }
-
-            numberOfVertices = Geometry.computeNumberOfVertices(eastGeometry);
-            eastGeometry.indices = IndexDatatype.createTypedArray(numberOfVertices, eastGeometry.indices);
-
-            if (defined(instance.geometry.boundingSphere)) {
-                eastGeometry.boundingSphere = BoundingSphere.fromVertices(eastGeometry.attributes.position.values);
-            }
-        } else {
-            eastGeometry = undefined;
-        }
-
-        if (defined(eastGeometry) && !defined(westGeometry)) {
-            instance.geometry = eastGeometry;
-        } else if (!defined(eastGeometry) && defined(westGeometry)) {
-            instance.geometry = westGeometry;
-        } else {
-            instance.westHemisphereGeometry = westGeometry;
-            instance.eastHemisphereGeometry = eastGeometry;
-            instance.geometry = undefined;
-        }
+        updateInstanceAfterSplit(instance, westGeometry, eastGeometry);
     }
 
     var xzPlane = Plane.fromPointNormal(Cartesian3.ZERO, Cartesian3.UNIT_Y);
@@ -2237,45 +2211,7 @@ define([
             }
         }
 
-        var numberOfVertices;
-
-        if (westGeometry.attributes.position.values.length > 0) {
-            attributes = westGeometry.attributes;
-            attributes.position.values = new Float64Array(attributes.position.values);
-
-            numberOfVertices = Geometry.computeNumberOfVertices(westGeometry);
-            westGeometry.indices = IndexDatatype.createTypedArray(numberOfVertices, westGeometry.indices);
-
-            if (defined(instance.geometry.boundingSphere)) {
-                westGeometry.boundingSphere = BoundingSphere.fromVertices(westGeometry.attributes.position.values);
-            }
-        } else {
-            westGeometry = undefined;
-        }
-
-        if (eastGeometry.attributes.position.values.length > 0) {
-            attributes = eastGeometry.attributes;
-            attributes.position.values = new Float64Array(attributes.position.values);
-
-            numberOfVertices = Geometry.computeNumberOfVertices(eastGeometry);
-            eastGeometry.indices = IndexDatatype.createTypedArray(numberOfVertices, eastGeometry.indices);
-
-            if (defined(instance.geometry.boundingSphere)) {
-                eastGeometry.boundingSphere = BoundingSphere.fromVertices(eastGeometry.attributes.position.values);
-            }
-        } else {
-            eastGeometry = undefined;
-        }
-
-        if (defined(eastGeometry) && !defined(westGeometry)) {
-            instance.geometry = eastGeometry;
-        } else if (!defined(eastGeometry) && defined(westGeometry)) {
-            instance.geometry = westGeometry;
-        } else {
-            instance.westHemisphereGeometry = westGeometry;
-            instance.eastHemisphereGeometry = eastGeometry;
-            instance.geometry = undefined;
-        }
+        updateInstanceAfterSplit(instance, westGeometry, eastGeometry);
     }
 
     var cartesian2Scratch0 = new Cartesian2();
@@ -2566,67 +2502,7 @@ define([
             }
         }
 
-        var numberOfVertices;
-
-        if (westGeometry.attributes.position.values.length > 0) {
-            attributes = westGeometry.attributes;
-            attributes.position.values = new Float64Array(attributes.position.values);
-            attributes.prevPosition.values = ComponentDatatype.createTypedArray(attributes.prevPosition.componentDatatype, attributes.prevPosition.values);
-            attributes.nextPosition.values = ComponentDatatype.createTypedArray(attributes.nextPosition.componentDatatype, attributes.nextPosition.values);
-            attributes.expandAndWidth.values = ComponentDatatype.createTypedArray(attributes.expandAndWidth.componentDatatype, attributes.expandAndWidth.values);
-
-            if (defined(texCoords)) {
-                attributes.st.values = ComponentDatatype.createTypedArray(attributes.st.componentDatatype, attributes.st.values);
-            }
-
-            if (defined(colors)) {
-                attributes.color.values = ComponentDatatype.createTypedArray(attributes.color.componentDatatype, attributes.color.values);
-            }
-
-            numberOfVertices = Geometry.computeNumberOfVertices(westGeometry);
-            westGeometry.indices = IndexDatatype.createTypedArray(numberOfVertices, westGeometry.indices);
-
-            if (defined(instance.geometry.boundingSphere)) {
-                westGeometry.boundingSphere = BoundingSphere.fromVertices(westGeometry.attributes.position.values);
-            }
-        } else {
-            westGeometry = undefined;
-        }
-
-        if (eastGeometry.attributes.position.values.length > 0) {
-            attributes = eastGeometry.attributes;
-            attributes.position.values = new Float64Array(attributes.position.values);
-            attributes.prevPosition.values = ComponentDatatype.createTypedArray(attributes.prevPosition.componentDatatype, attributes.prevPosition.values);
-            attributes.nextPosition.values = ComponentDatatype.createTypedArray(attributes.nextPosition.componentDatatype, attributes.nextPosition.values);
-            attributes.expandAndWidth.values = ComponentDatatype.createTypedArray(attributes.expandAndWidth.componentDatatype, attributes.expandAndWidth.values);
-
-            if (defined(texCoords)) {
-                attributes.st.values = ComponentDatatype.createTypedArray(attributes.st.componentDatatype, attributes.st.values);
-            }
-
-            if (defined(colors)) {
-                attributes.color.values = ComponentDatatype.createTypedArray(attributes.color.componentDatatype, attributes.color.values);
-            }
-
-            numberOfVertices = Geometry.computeNumberOfVertices(eastGeometry);
-            eastGeometry.indices = IndexDatatype.createTypedArray(numberOfVertices, eastGeometry.indices);
-
-            if (defined(instance.geometry.boundingSphere)) {
-                eastGeometry.boundingSphere = BoundingSphere.fromVertices(eastGeometry.attributes.position.values);
-            }
-        } else {
-            eastGeometry = undefined;
-        }
-
-        if (defined(eastGeometry) && !defined(westGeometry)) {
-            instance.geometry = eastGeometry;
-        } else if (!defined(eastGeometry) && defined(westGeometry)) {
-            instance.geometry = westGeometry;
-        } else {
-            instance.westHemisphereGeometry = westGeometry;
-            instance.eastHemisphereGeometry = eastGeometry;
-            instance.geometry = undefined;
-        }
+        updateInstanceAfterSplit(instance, westGeometry, eastGeometry);
     }
 
     /**
