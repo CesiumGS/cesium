@@ -862,9 +862,17 @@ define([
                     vertexArrayAttributes : attributes
                 }));
 
-                this._boundingSpheres.push(geometry.boundingSphere);
+                var center = geometry.boundingSphereCV.center;
+                var x = center.x;
+                var y = center.y;
+                var z = center.z;
+                center.x = z;
+                center.y = x;
+                center.z = y;
+
+                this._boundingSpheres.push(BoundingSphere.clone(geometry.boundingSphere));
                 this._boundingSphereWC.push(new BoundingSphere());
-                this._boundingSphereCV.push(geometry.boundingSphereCV);
+                this._boundingSphereCV.push(BoundingSphere.clone(geometry.boundingSphereCV));
                 this._boundingSphere2D.push(new BoundingSphere());
                 this._boundingSphereMorph.push(new BoundingSphere());
             }

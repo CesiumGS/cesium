@@ -511,7 +511,7 @@ define([
             packedData[count++] = geometry.primitiveType;
             packedData[count++] = geometry.geometryType;
 
-            var validBoundingSphere = defined(geometry.boundingSphere);
+            var validBoundingSphere = defined(geometry.boundingSphere) ? 1.0 : 0.0;
             packedData[count++] = validBoundingSphere;
             if (validBoundingSphere) {
                 BoundingSphere.pack(geometry.boundingSphere, packedData, count);
@@ -519,7 +519,7 @@ define([
 
             count += BoundingSphere.packedLength;
 
-            var validBoundingSphereCV = defined(geometry.boundingSphereCV);
+            var validBoundingSphereCV = defined(geometry.boundingSphereCV) ? 1.0 : 0.0;
             packedData[count++] = validBoundingSphereCV;
             if (validBoundingSphereCV) {
                 BoundingSphere.pack(geometry.boundingSphereCV, packedData, count);
@@ -588,14 +588,14 @@ define([
             var boundingSphere;
             var boundingSphereCV;
 
-            var validBoundingSphere = packedGeometry[packedGeometryIndex++];
+            var validBoundingSphere = packedGeometry[packedGeometryIndex++] === 1.0;
             if (validBoundingSphere) {
                 boundingSphere = BoundingSphere.unpack(packedGeometry, packedGeometryIndex);
             }
 
             packedGeometryIndex += BoundingSphere.packedLength;
 
-            var validBoundingSphereCV = packedGeometry[packedGeometryIndex++];
+            var validBoundingSphereCV = packedGeometry[packedGeometryIndex++] === 1.0;
             if (validBoundingSphereCV) {
                 boundingSphereCV = BoundingSphere.unpack(packedGeometry, packedGeometryIndex);
             }
