@@ -10,8 +10,10 @@ defineSuite(['DataSources/KmlDataSource',
              'Core/Ellipsoid',
              'Core/Event',
              'Core/JulianDate',
+             'Core/loadBlob',
              'Core/Math',
-             'Core/RuntimeError'
+             'Core/RuntimeError',
+             'Specs/waitsForPromise'
          ], function(
             KmlDataSource,
             ConstantProperty,
@@ -24,8 +26,10 @@ defineSuite(['DataSources/KmlDataSource',
             Ellipsoid,
             Event,
             JulianDate,
+            loadBlob,
             CesiumMath,
-            RuntimeError) {
+            RuntimeError,
+            waitsForPromise) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -911,6 +915,43 @@ defineSuite(['DataSources/KmlDataSource',
         }).toThrowDeveloperError();
     });
 
+    it('loadKmz throws with undefined blob', function() {
+        var dataSource = new KmlDataSource();
+        expect(function() {
+            dataSource.loadKmz(undefined);
+        }).toThrowDeveloperError();
+    });
+
+    xit('loadKmz rejects loading non-KMZ file', function() {
+        var dataSource = new KmlDataSource();
+        waitsForPromise(loadBlob('Data/Images/Blue.png'), function(blob) {
+            waitsForPromise.toReject(dataSource.loadKmz(blob));
+        });
+    });
+
+    it('loadKmz rejects KMZ file with no KML contained', function() {
+        var dataSource = new KmlDataSource();
+        waitsForPromise(loadBlob('Data/KML/empty.zip'), function(blob) {
+            waitsForPromise.toReject(dataSource.loadKmz(blob));
+        });
+    });
+
+    it('loadUrl works with a KML file', function() {
+        var dataSource = new KmlDataSource();
+        waitsForPromise(dataSource.loadUrl('Data/KML/simple.kml'), function(source) {
+            expect(source).toBe(dataSource);
+            expect(source.entities.entities.length).toEqual(1);
+        });
+    });
+
+    it('loadUrl works with a KMZ file', function() {
+        var dataSource = new KmlDataSource();
+        waitsForPromise(dataSource.loadUrl('Data/KML/simple.kmz'), function(source) {
+            expect(source).toBe(dataSource);
+            expect(source.entities.entities.length).toEqual(1);
+        });
+    });
+
     it('loadUrl throws with undefined Url', function() {
         var dataSource = new KmlDataSource();
         expect(function() {
@@ -918,15 +959,18 @@ defineSuite(['DataSources/KmlDataSource',
         }).toThrowDeveloperError();
     });
 
-    it('loadUrl raises error with invalid url', function() {
+    it('loadUrl rejects loading nonexistent file', function() {
         var dataSource = new KmlDataSource();
-        var thrown = false;
-        dataSource.errorEvent.addEventListener(function() {
-            thrown = true;
-        });
-        dataSource.loadUrl('invalid.kml');
-        waitsFor(function() {
-            return thrown;
-        });
+        waitsForPromise.toReject(dataSource.loadUrl('//test.invalid/invalid.kml'));
+    });
+
+    it('loadUrl rejects loading non-KML file', function() {
+        var dataSource = new KmlDataSource();
+        waitsForPromise.toReject(dataSource.loadUrl('Data/Images/Blue.png'));
+    });
+
+    it('loadUrl rejects KMZ file with no KML contained', function() {
+        var dataSource = new KmlDataSource();
+        waitsForPromise.toReject(dataSource.loadUrl('Data/KML/empty.zip'));
     });
 });

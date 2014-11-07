@@ -31,6 +31,7 @@ define(['../Core/createGuid',
         '../Scene/LabelStyle',
         '../Scene/VerticalOrigin',
         './CompositeEntityCollection',
+        './DataSource',
         './DataSourceClock',
         './Entity',
         './EntityCollection',
@@ -78,6 +79,7 @@ define(['../Core/createGuid',
         LabelStyle,
         VerticalOrigin,
         CompositeEntityCollection,
+        DataSource,
         DataSourceClock,
         Entity,
         EntityCollection,
@@ -94,8 +96,60 @@ define(['../Core/createGuid',
         zip) {
     "use strict";
 
+    var parser = new DOMParser();
     var scratchCartographic = new Cartographic();
     var scratchCartesian = new Cartesian3();
+
+    function isZipFile(blob) {
+        if (blob.size < 4) {
+            return false;
+        }
+
+        var magicBlob = blob.slice(0, 4);
+        var deferred = when.defer();
+        var reader = new FileReader();
+        reader.addEventListener('load', function() {
+            deferred.resolve(new DataView(reader.result).getUint32(0, false) === 0x504b0304);
+        });
+        reader.addEventListener('error', function() {
+            deferred.reject(new RuntimeError('Error reading blob.'));
+        });
+        reader.readAsArrayBuffer(magicBlob);
+        return deferred;
+    }
+
+    var readBlob = {
+        asText : function(blob) {
+            var deferred = when.defer();
+            var reader = new FileReader();
+            reader.addEventListener('load', function() {
+                deferred.resolve(reader.result);
+            });
+            reader.addEventListener('error', function() {
+                deferred.reject(new RuntimeError('Error reading blob as text.'));
+            });
+            reader.readAsText(blob);
+            return deferred;
+        }
+    };
+
+    function loadXmlFromZip(reader, entry, uriResolver, deferred) {
+        entry.getData(new zip.TextWriter(), function(xmlString) {
+            uriResolver.kml = parser.parseFromString(xmlString, 'application/xml');
+            deferred.resolve();
+        }, function(current, total) {
+            // onprogress callback
+        });
+    }
+
+    function loadDataUriFromZip(reader, entry, uriResolver, deferred) {
+        entry.getData(new zip.Data64URIWriter(), function(dataUri) {
+            uriResolver[entry.filename] = dataUri;
+            deferred.resolve();
+        }, function(current, total) {
+            // onprogress callback, currently unutilized.
+        });
+    }
 
     function proxyUrl(url, proxy) {
         if (defined(proxy)) {
@@ -819,8 +873,6 @@ define(['../Core/createGuid',
     }
 
     function loadKml(dataSource, kml, sourceUri, uriResolver) {
-        dataSource._isLoading = true;
-        dataSource._isLoadingEvent.raiseEvent(dataSource, true);
         var name;
         var document = kml.getElementsByTagName('Document');
         if (document.length > 0) {
@@ -834,58 +886,60 @@ define(['../Core/createGuid',
                 }
             }
         }
+
         if (!defined(name) && defined(sourceUri)) {
             name = getFilenameFromUri(sourceUri);
         }
-        dataSource._name = name;
-
-        var entityCollection = dataSource._entityCollection;
-        entityCollection.suspendEvents();
-        var styleCollection = new EntityCollection();
+        if (dataSource._name !== name) {
+            dataSource._name = name;
+            dataSource._changed.raiseEvent(dataSource);
+        }
 
         //Since KML external styles can be asynchonous, we start off
         //my loading all styles first, before doing anything else.
+        var styleCollection = new EntityCollection();
         return when.all(processStyles(dataSource, kml, styleCollection, sourceUri, false, uriResolver), function() {
+            var entityCollection = dataSource._entityCollection;
             iterateNodes(dataSource, kml, undefined, entityCollection, styleCollection, sourceUri, uriResolver);
-            entityCollection.resumeEvents();
-            dataSource._isLoading = false;
-            dataSource._isLoadingEvent.raiseEvent(dataSource, false);
-            dataSource._changed.raiseEvent(dataSource);
+
+            var availability = entityCollection.computeAvailability();
+            if (availability.equals(Iso8601.MAXIMUM_INTERVAL)) {
+                if (defined(dataSource._clock)) {
+                    dataSource._clock = undefined;
+                    dataSource._changed.raiseEvent(dataSource);
+                }
+            } else {
+                var clock = new DataSourceClock();
+                clock.startTime = availability.start;
+                clock.stopTime = availability.stop;
+                clock.currentTime = availability.start;
+                clock.clockRange = ClockRange.LOOP_STOP;
+                clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+                clock.multiplier = Math.min(Math.max(JulianDate.secondsDifference(availability.stop, availability.start) / 60, 60), 50000000);
+                if (!defined(dataSource._clock) || !(dataSource._clock.equals(clock))) {
+                    dataSource._clock = clock;
+                    dataSource._changed.raiseEvent(dataSource);
+                }
+            }
+
+            DataSource.setLoading(dataSource, false);
+            return dataSource;
         });
     }
 
-    function loadXmlFromZip(reader, entry, uriResolver, deferred) {
-        entry.getData(new zip.TextWriter(), function(xmlString) {
-            var parser = new DOMParser();
-            uriResolver.kml = parser.parseFromString(xmlString, 'text/xml');
-            deferred.resolve();
-        }, function(current, total) {
-            // onprogress callback
-        });
-    }
-
-    function loadDataUriFromZip(reader, entry, uriResolver, deferred) {
-        entry.getData(new zip.Data64URIWriter(), function(dataUri) {
-            uriResolver[entry.filename] = dataUri;
-            deferred.resolve();
-        }, function(current, total) {
-            // onprogress callback, currently unutilized.
-        });
-    }
-
-    function loadKmz(dataSource, blob, sourceUri, deferred) {
-        var uriResolver = {};
+    function loadKmz(dataSource, blob, sourceUri) {
+        var deferred = when.defer();
         zip.createReader(new zip.BlobReader(blob), function(reader) {
             reader.getEntries(function(entries) {
                 var promises = [];
                 var foundKML = false;
+                var uriResolver = {};
                 for (var i = 0; i < entries.length; i++) {
                     var entry = entries[i];
                     if (!entry.directory) {
                         var innerDefer = when.defer();
                         promises.push(innerDefer.promise);
-                        var filename = entry.filename.toLowerCase();
-                        if (!foundKML && endsWith(filename, '.kml')) {
+                        if (!foundKML && /\.kml$/i.test(entry.filename)) {
                             //Only the first KML file found in the zip is used.
                             //https://developers.google.com/kml/documentation/kmzarchives
                             foundKML = true;
@@ -895,22 +949,20 @@ define(['../Core/createGuid',
                         }
                     }
                 }
-
-                when.all(promises, function() {
-                    loadKml(dataSource, uriResolver.kml, sourceUri, uriResolver);
+                when.all(promises).then(function() {
                     reader.close();
-                    deferred.resolve(dataSource);
-                });
+                    if (!defined(uriResolver.kml)) {
+                        deferred.reject(new RuntimeError('KMZ file does not contain a KML document.'));
+                        return;
+                    }
+                    return loadKml(dataSource, uriResolver.kml, sourceUri, uriResolver).then(deferred.resolve);
+                }).otherwise(deferred.reject);
             });
-        }, function(error) {
-            deferred.reject(error);
+        }, function(e) {
+            deferred.reject(e);
         });
-    }
 
-    function endsWith(str, suffix) {
-        var strLength = str.length;
-        var suffixLength = suffix.length;
-        return (suffixLength < strLength) && (str.indexOf(suffix, strLength - suffixLength) !== -1);
+        return deferred;
     }
 
     /**
@@ -924,7 +976,7 @@ define(['../Core/createGuid',
     var KmlDataSource = function(proxy) {
         this._changed = new Event();
         this._error = new Event();
-        this._isLoadingEvent = new Event();
+        this._loading = new Event();
         this._clock = undefined;
         this._entityCollection = new EntityCollection();
         this._name = undefined;
@@ -952,18 +1004,7 @@ define(['../Core/createGuid',
          */
         clock : {
             get : function() {
-                var availability = this._entityCollection.computeAvailability();
-                if (availability.equals(Iso8601.MAXIMUM_INTERVAL)) {
-                    return undefined;
-                }
-                var clock = new DataSourceClock();
-                clock.startTime = availability.start;
-                clock.stopTime = availability.stop;
-                clock.currentTime = availability.start;
-                clock.clockRange = ClockRange.LOOP_STOP;
-                clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-                clock.multiplier = Math.min(Math.max(JulianDate.secondsDifference(availability.stop, availability.start) / 60, 60), 50000000);
-                return clock;
+                return this._clock;
             }
         },
         /**
@@ -1013,7 +1054,7 @@ define(['../Core/createGuid',
          */
         loadingEvent : {
             get : function() {
-                return this._isLoadingEvent;
+                return this._loading;
             }
         }
     });
@@ -1031,8 +1072,13 @@ define(['../Core/createGuid',
             throw new DeveloperError('kml is required.');
         }
 
-        this._entityCollection.removeAll();
-        return loadKml(this, kml, sourceUrl);
+        DataSource.setLoading(this, true);
+        var that = this;
+        return when(loadKml(this, kml, sourceUrl, undefined)).otherwise(function(error) {
+            DataSource.setLoading(that, false);
+            that._error.raiseEvent(that, error);
+            return when.reject(error);
+        });
     };
 
     /**
@@ -1048,9 +1094,13 @@ define(['../Core/createGuid',
             throw new DeveloperError('kmz is required.');
         }
 
-        var deferred = when.defer();
-        loadKmz(this, kmz, sourceUrl, deferred);
-        return deferred.promise;
+        DataSource.setLoading(this, true);
+        var that = this;
+        return when(loadKmz(this, kmz, sourceUrl)).otherwise(function(error) {
+            DataSource.setLoading(that, false);
+            that._error.raiseEvent(that, error);
+            return when.reject(error);
+        });
     };
 
     /**
@@ -1065,34 +1115,23 @@ define(['../Core/createGuid',
             throw new DeveloperError('url is required.');
         }
 
+        DataSource.setLoading(this, true);
         var that = this;
-        return when(loadBlob(proxyUrl(url, this._proxy)), function(blob) {
-            var deferred = when.defer();
-
-            //Get the blob "magic number" to determine if it's a zip or KML
-            var slice = blob.slice(0, 4);
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                var buffer = reader.result;
-                var view = new DataView(buffer);
-
-                //If it's a zip file, treat it as a KMZ
-                if (view.getUint32(0, false) === 0x504b0304) {
-                    return loadKmz(that, blob, url, deferred);
+        return when(loadBlob(proxyUrl(url, this._proxy))).then(function(blob) {
+            return isZipFile(blob).then(function(isZip) {
+                if (isZip) {
+                    return loadKmz(that, blob, url);
                 }
-
-                //Else, read it as an XML file.
-                reader = new FileReader();
-                reader.addEventListener("loadend", function() {
-                    var parser = new DOMParser();
-                    that.load(parser.parseFromString(reader.result, 'text/xml'), url);
-                    deferred.resolve();
+                return when(readBlob.asText(blob)).then(function(text) {
+                    var kml = parser.parseFromString(text, 'application/xml');
+                    if (kml.body !== null) {
+                        throw new RuntimeError(kml.body.innerText);
+                    }
+                    return loadKml(that, kml, url, undefined);
                 });
-                reader.readAsText(blob);
-            };
-            reader.readAsArrayBuffer(slice);
-            return deferred;
-        }, function(error) {
+            });
+        }).otherwise(function(error) {
+            DataSource.setLoading(that, false);
             that._error.raiseEvent(that, error);
             return when.reject(error);
         });
