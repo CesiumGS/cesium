@@ -4,12 +4,14 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Color',
         'Core/Ellipsoid',
+        'Core/Math',
         'Core/VertexFormat'
     ], function(
         PolylineGeometry,
         Cartesian3,
         Color,
         Ellipsoid,
+        CesiumMath,
         VertexFormat) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -106,5 +108,23 @@ defineSuite([
 
         var numVertices = (positions.length * 4 - 4);
         expect(line.attributes.color.values.length).toEqual(numVertices * 4);
+    });
+
+    it('removes duplicates withing epsilon6', function() {
+        var positions = [
+            new Cartesian3(1.0, 0.0, 0.0),
+            new Cartesian3(1.0, 0.0, 0.0),
+            new Cartesian3(1.0 + CesiumMath.EPSILON7, 0.0, 0.0),
+            new Cartesian3(0.0, 1.0, 0.0),
+            new Cartesian3(0.0, 0.0, 1.0)];
+        var line = PolylineGeometry.createGeometry(new PolylineGeometry({
+            positions : positions,
+            width : 10.0,
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            followSurface : false
+        }));
+
+        var numVertices = ((positions.length - 2) * 4 - 4);
+        expect(line.attributes.position.values.length).toEqual(numVertices * 3);
     });
 });

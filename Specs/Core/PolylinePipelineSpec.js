@@ -70,6 +70,18 @@ defineSuite([
         expect(noDuplicates).toEqual(expectedPositions);
     });
 
+    it('removeDuplicates to remove positions within epsilon 6', function() {
+        var positions = [
+            new Cartesian3(1.0, 1.0, 1.0),
+            new Cartesian3(1.0, 2.0, 3.0),
+            new Cartesian3(1.0, 2.0, 3.0 + CesiumMath.EPSILON7)];
+        var expectedPositions = [
+            new Cartesian3(1.0, 1.0, 1.0),
+            new Cartesian3(1.0, 2.0, 3.0)];
+        var noDuplicates = PolylinePipeline.removeDuplicates(positions);
+        expect(noDuplicates).toEqual(expectedPositions);
+    });
+
     it('removeDuplicates throws without positions', function() {
         expect(function() {
             PolylinePipeline.removeDuplicates();

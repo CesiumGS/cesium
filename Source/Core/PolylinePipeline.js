@@ -239,9 +239,7 @@ define([
             return undefined;
         }
 
-        var cleanedPositions = [];
-        cleanedPositions.push(positions[0]);
-
+        var cleanedPositions = positions.slice(0, i);
         for (; i < length; ++i) {
             v0 = positions[i - 1];
             v1 = positions[i];
