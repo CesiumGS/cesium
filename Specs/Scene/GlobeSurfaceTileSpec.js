@@ -49,31 +49,31 @@ defineSuite([
             context = createContext();
 
             alwaysDeferTerrainProvider = {
-                    requestTileGeometry : function(x, y, level) {
-                        return undefined;
-                    },
-                    tilingScheme : tilingScheme,
-                    hasWaterMask : function() {
-                        return true;
-                    },
-                    getTileDataAvailable : function(x, y, level) {
-                        return undefined;
-                    }
+                requestTileGeometry : function(x, y, level) {
+                    return undefined;
+                },
+                tilingScheme : tilingScheme,
+                hasWaterMask : function() {
+                    return true;
+                },
+                getTileDataAvailable : function(x, y, level) {
+                    return undefined;
+                }
             };
 
             alwaysFailTerrainProvider = {
-                    requestTileGeometry : function(x, y, level) {
-                        var deferred = when.defer();
-                        deferred.reject();
-                        return deferred.promise;
-                    },
-                    tilingScheme : tilingScheme,
-                    hasWaterMask : function() {
-                        return true;
-                    },
-                    getTileDataAvailable : function(x, y, level) {
-                        return undefined;
-                    }
+                requestTileGeometry : function(x, y, level) {
+                    var deferred = when.defer();
+                    deferred.reject();
+                    return deferred.promise;
+                },
+                tilingScheme : tilingScheme,
+                hasWaterMask : function() {
+                    return true;
+                },
+                getTileDataAvailable : function(x, y, level) {
+                    return undefined;
+                }
             };
 
             realTerrainProvider = new CesiumTerrainProvider({
@@ -285,9 +285,9 @@ defineSuite([
             var referenceCount;
 
             runs(function() {
-               expect(childTile.data.waterMaskTexture).toBeDefined();
-               childWaterMaskTexture = childTile.data.waterMaskTexture;
-               referenceCount = childWaterMaskTexture.referenceCount;
+                expect(childTile.data.waterMaskTexture).toBeDefined();
+                childWaterMaskTexture = childTile.data.waterMaskTexture;
+                referenceCount = childWaterMaskTexture.referenceCount;
             });
 
             waitsFor(function() {
@@ -416,24 +416,24 @@ defineSuite([
 
         it('uses shared water mask texture for tiles that are entirely water', function() {
             var allWaterTerrainProvider = {
-                    requestTileGeometry : function(x, y, level) {
-                        var real = realTerrainProvider.requestTileGeometry(x, y, level);
-                        if (!defined(real)) {
-                            return real;
-                        }
-
-                        return when(real, function(terrainData) {
-                            terrainData._waterMask = new Uint8Array([255]);
-                            return terrainData;
-                        });
-                    },
-                    tilingScheme :  realTerrainProvider.tilingScheme,
-                    hasWaterMask : function() {
-                        return realTerrainProvider.hasWaterMask();
-                    },
-                    getTileDataAvailable : function(x, y, level) {
-                        return undefined;
+                requestTileGeometry : function(x, y, level) {
+                    var real = realTerrainProvider.requestTileGeometry(x, y, level);
+                    if (!defined(real)) {
+                        return real;
                     }
+
+                    return when(real, function(terrainData) {
+                        terrainData._waterMask = new Uint8Array([255]);
+                        return terrainData;
+                    });
+                },
+                tilingScheme : realTerrainProvider.tilingScheme,
+                hasWaterMask : function() {
+                    return realTerrainProvider.hasWaterMask();
+                },
+                getTileDataAvailable : function(x, y, level) {
+                    return undefined;
+                }
             };
 
             waitsFor(function() {
@@ -454,26 +454,26 @@ defineSuite([
             });
         });
 
-        it('uses shared water mask texture for tiles that are entirely land', function() {
+        it('uses undefined water mask texture for tiles that are entirely land', function() {
             var allLandTerrainProvider = {
-                    requestTileGeometry : function(x, y, level) {
-                        var real = realTerrainProvider.requestTileGeometry(x, y, level);
-                        if (!defined(real)) {
-                            return real;
-                        }
-
-                        return when(real, function(terrainData) {
-                            terrainData._waterMask = new Uint8Array([0]);
-                            return terrainData;
-                        });
-                    },
-                    tilingScheme : realTerrainProvider.tilingScheme,
-                    hasWaterMask : function() {
-                        return realTerrainProvider.hasWaterMask();
-                    },
-                    getTileDataAvailable : function(x, y, level) {
-                        return undefined;
+                requestTileGeometry : function(x, y, level) {
+                    var real = realTerrainProvider.requestTileGeometry(x, y, level);
+                    if (!defined(real)) {
+                        return real;
                     }
+
+                    return when(real, function(terrainData) {
+                        terrainData._waterMask = new Uint8Array([0]);
+                        return terrainData;
+                    });
+                },
+                tilingScheme : realTerrainProvider.tilingScheme,
+                hasWaterMask : function() {
+                    return realTerrainProvider.hasWaterMask();
+                },
+                getTileDataAvailable : function(x, y, level) {
+                    return undefined;
+                }
             };
 
             waitsFor(function() {
@@ -489,8 +489,7 @@ defineSuite([
             }, 'child tile to be ready');
 
             runs(function() {
-                expect(childTile.data.waterMaskTexture).toBeDefined();
-                expect(childTile.data.waterMaskTexture).toBe(rootTile.data.waterMaskTexture);
+                expect(childTile.data.waterMaskTexture).toBeUndefined();
             });
         });
     }, 'WebGL');

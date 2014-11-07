@@ -148,9 +148,7 @@ defineSuite([
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
 
-        scene.initializeFrame();
-        scene.render();
-        var pixels = scene.context.readPixels();
+        var pixels = scene.renderForSpecs();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
