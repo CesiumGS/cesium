@@ -20,6 +20,7 @@ define([
         './ColorMaterialProperty',
         './ConstantPositionProperty',
         './ConstantProperty',
+        './DataSource',
         './EntityCollection',
         './PolygonGraphics',
         './PolylineGraphics'
@@ -44,6 +45,7 @@ define([
         ColorMaterialProperty,
         ConstantPositionProperty,
         ConstantProperty,
+        DataSource,
         EntityCollection,
         PolygonGraphics,
         PolylineGraphics) {
@@ -424,18 +426,6 @@ define([
         Topology : processTopology
     };
 
-    function setLoading(dataSource, isLoading) {
-        if (dataSource._isLoading !== isLoading) {
-            if (isLoading) {
-                dataSource._entityCollection.suspendEvents();
-            } else {
-                dataSource._entityCollection.resumeEvents();
-            }
-            dataSource._isLoading = isLoading;
-            dataSource._loading.raiseEvent(dataSource, isLoading);
-        }
-    }
-
     /**
      * A {@link DataSource} which processes both
      * {@link http://www.geojson.org/|GeoJSON} and {@link https://github.com/mbostock/topojson|TopoJSON} data.
@@ -718,13 +708,13 @@ define([
         }
         //>>includeEnd('debug');
 
-        setLoading(this, true);
+        DataSource.setLoading(this, true);
 
         var that = this;
         return when(loadJson(url), function(geoJson) {
             return load(that, geoJson, url, options);
         }).otherwise(function(error) {
-            setLoading(that, false);
+            DataSource.setLoading(that, false);
             that._error.raiseEvent(that, error);
             return when.reject(error);
         });
@@ -834,7 +824,7 @@ define([
             }
         }
 
-        setLoading(that, true);
+        DataSource.setLoading(that, true);
 
         return when(crsFunction, function(crsFunction) {
             that._entityCollection.removeAll();
@@ -842,11 +832,10 @@ define([
 
             return when.all(that._promises, function() {
                 that._promises.length = 0;
-                setLoading(that, false);
-                that._changed.raiseEvent(that);
+                DataSource.setLoading(that, false);
             });
         }).otherwise(function(error) {
-            setLoading(that, false);
+            DataSource.setLoading(that, false);
             that._error.raiseEvent(that, error);
             return when.reject(error);
         });
