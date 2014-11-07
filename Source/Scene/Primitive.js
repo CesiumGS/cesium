@@ -685,7 +685,8 @@ define([
      * list the exceptions that may be propagated when the scene is rendered:
      * </p>
      *
-     * @exception {DeveloperError} All instance geometries must have the same primitiveType..
+     * @exception {DeveloperError} All instance geometries must have the same primitiveType.
+     * @exception {DeveloperError} Appearance and material have a uniform with the same name.
      */
     Primitive.prototype.update = function(context, frameState, commandList) {
         if (((!defined(this.geometryInstances)) && (this._va.length === 0)) ||
@@ -989,11 +990,15 @@ define([
                 // Convert to uniform map of functions for the renderer
                 for (var name in appearanceUniforms) {
                     if (appearanceUniforms.hasOwnProperty(name)) {
+                        if (defined(materialUniformMap) && defined(materialUniformMap[name])) {
+                            // Later, we could rename uniforms behind-the-scenes if needed.
+                            throw new DeveloperError('Appearance and material have a uniform with the same name: + ' + name);
+                        }
+
                         appearanceUniformMap[name] = getUniformFunction(appearanceUniforms, name);
                     }
                 }
             }
-            // TODO: throw exception if there is a name conflict between material and appearance uniforms.  No need to auto rename.
             var uniforms = combine(appearanceUniformMap, materialUniformMap);
 
             var pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
