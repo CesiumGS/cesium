@@ -1634,12 +1634,43 @@ define([
         return geometry;
     }
 
-    function offsetPointFromXZPlane(p, isBehind) {
-        if (Math.abs(p.y) < CesiumMath.EPSILON11){
-            if (isBehind) {
-                p.y = -CesiumMath.EPSILON11;
+    function offsetTriangleFromXZPlane(p0, p1, p2) {
+        if (p0.y !== 0.0 && p1.y !== 0.0 && p2.y !== 0.0) {
+            offsetPointFromXZPlane(p0, p0.y < 0.0);
+            offsetPointFromXZPlane(p1, p1.y < 0.0);
+            offsetPointFromXZPlane(p2, p2.y < 0.0);
+            return;
+        }
+
+        var p0y = Math.abs(p0.y);
+        var p1y = Math.abs(p1.y);
+        var p2y = Math.abs(p2.y);
+
+        var sign;
+        if (p0y > p1y) {
+            if (p0y > p2y) {
+                sign = CesiumMath.sign(p0.y);
             } else {
-                p.y = CesiumMath.EPSILON11;
+                sign = CesiumMath.sign(p2.y);
+            }
+        } else if (p1y > p2y) {
+            sign = CesiumMath.sign(p1.y);
+        } else {
+            sign = CesiumMath.sign(p2.y);
+        }
+
+        var isBehind = sign < 0.0;
+        offsetPointFromXZPlane(p0, isBehind);
+        offsetPointFromXZPlane(p1, isBehind);
+        offsetPointFromXZPlane(p2, isBehind);
+    }
+
+    function offsetPointFromXZPlane(p, isBehind) {
+        if (Math.abs(p.y) < CesiumMath.EPSILON6){
+            if (isBehind) {
+                p.y = -CesiumMath.EPSILON6;
+            } else {
+                p.y = CesiumMath.EPSILON6;
             }
         }
     }
@@ -1670,13 +1701,11 @@ define([
             return undefined;
         }
 
+        offsetTriangleFromXZPlane(p0, p1, p2);
+
         var p0Behind = p0.y < 0.0;
         var p1Behind = p1.y < 0.0;
         var p2Behind = p2.y < 0.0;
-
-        offsetPointFromXZPlane(p0, p0Behind);
-        offsetPointFromXZPlane(p1, p1Behind);
-        offsetPointFromXZPlane(p2, p2Behind);
 
         var numBehind = 0;
         numBehind += p0Behind ? 1 : 0;

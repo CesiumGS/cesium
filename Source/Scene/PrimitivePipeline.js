@@ -260,8 +260,8 @@ define([
 
                         // Compute 2D positions
                         GeometryPipeline.projectTo2D(geometry, name, name3D, name2D, projection);
-                        if (defined(geometry.boundingSphere)) {
-                            geometry.boundingSphereCV = BoundingSphere.fromVertices(geometry.attributes[name2D].values);
+                        if (defined(geometry.boundingSphere) && name === 'position') {
+                            geometry.boundingSphereCV = BoundingSphere.fromVertices(geometry.attributes.position2D.values);
                         }
 
                         GeometryPipeline.encodeAttribute(geometry, name3D, name3D + 'High', name3D + 'Low');

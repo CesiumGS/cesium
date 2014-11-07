@@ -1135,7 +1135,7 @@ define([
             length = colorCommands.length;
             for (i = 0; i < length; ++i) {
                 colorCommands[i].modelMatrix = modelMatrix;
-                colorCommands[i].boundingVolume = boundingSphere[i];
+                colorCommands[i].boundingVolume = boundingSpheres[i];
                 colorCommands[i].cull = this.cull;
                 colorCommands[i].debugShowBoundingVolume = this.debugShowBoundingVolume;
 
@@ -1147,7 +1147,7 @@ define([
             length = pickCommands.length;
             for (i = 0; i < length; ++i) {
                 pickCommands[i].modelMatrix = modelMatrix;
-                pickCommands[i].boundingVolume = boundingSphere[i];
+                pickCommands[i].boundingVolume = boundingSpheres[i];
                 pickCommands[i].cull = this.cull;
 
                 commandList.push(pickCommands[i]);
