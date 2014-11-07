@@ -33,44 +33,17 @@ define([
         this._shaders = {};
     };
 
-    function getShaderKey(textureCount, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha) {
-        var key = '';
-        key += textureCount;
-
-        if (applyBrightness) {
-            key += '_brightness';
-        }
-
-        if (applyContrast) {
-            key += '_contrast';
-        }
-
-        if (applyHue) {
-            key += '_hue';
-        }
-
-        if (applySaturation) {
-            key += '_saturation';
-        }
-
-        if (applyGamma) {
-            key += '_gamma';
-        }
-
-        if (applyAlpha) {
-            key += '_alpha';
-        }
-
-        return key;
+    function getShaderKey(textureCount, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves) {
+        return '' + textureCount + (+applyBrightness) + (+applyContrast) + (+applyHue) + (+applySaturation) + (+applyGamma) + (+applyAlpha) + (+showReflectiveOcean) + (+showOceanWaves);
     }
 
-    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(context, textureCount, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha) {
-        var key = getShaderKey(textureCount, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha);
+    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(context, textureCount, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves) {
+        var key = getShaderKey(textureCount, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves);
         var shader = this._shaders[key];
         if (!defined(shader)) {
-            var vs = this.baseVertexShaderSource;
-
+            var vs = this.baseVertexShaderSource.clone();
             var fs = this.baseFragmentShaderSource.clone();
+
             fs.defines.push('TEXTURE_UNITS ' + textureCount);
 
             if (applyBrightness) {
@@ -90,6 +63,13 @@ define([
             }
             if (applyAlpha) {
                 fs.defines.push('APPLY_ALPHA');
+            }
+            if (showReflectiveOcean) {
+                fs.defines.push('SHOW_REFLECTIVE_OCEAN');
+                vs.defines.push('SHOW_REFLECTIVE_OCEAN');
+            }
+            if (showOceanWaves) {
+                fs.defines.push('SHOW_OCEAN_WAVES');
             }
 
             var computeDayColor = '\

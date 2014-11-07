@@ -811,7 +811,12 @@ defineSuite([
             ellipse : {
                 semiMajorAxis : 10,
                 semiMinorAxis : 20,
-                rotation : 1.0
+                rotation : 1.0,
+                outline : true,
+                outlineColor : {
+                    rgbaf : [0.2, 0.2, 0.2, 0.2]
+                },
+                outlineWidth : 6
             }
         };
 
@@ -823,6 +828,9 @@ defineSuite([
         expect(entity.ellipse.semiMajorAxis.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ellipsePacket.ellipse.semiMajorAxis);
         expect(entity.ellipse.semiMinorAxis.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ellipsePacket.ellipse.semiMinorAxis);
         expect(entity.ellipse.rotation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ellipsePacket.ellipse.rotation);
+        expect(entity.ellipse.outline.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.ellipse.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(entity.ellipse.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
     });
 
     it('CZML adds data for constrained ellipse.', function() {
@@ -869,7 +877,12 @@ defineSuite([
                             rgbaf : [0.1, 0.1, 0.1, 0.1]
                         }
                     }
-                }
+                },
+                outline : true,
+                outlineColor : {
+                    rgbaf : [0.2, 0.2, 0.2, 0.2]
+                },
+                outlineWidth : 6
             }
         };
 
@@ -881,6 +894,9 @@ defineSuite([
         expect(entity.ellipsoid.radii.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedRadii);
         expect(entity.ellipsoid.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ellipsoidPacket.ellipsoid.show);
         expect(entity.ellipsoid.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(entity.ellipsoid.outline.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.ellipsoid.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(entity.ellipsoid.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
     });
 
     it('CZML adds data for constrained ellipsoid.', function() {
@@ -1390,7 +1406,12 @@ defineSuite([
                 extrudedHeight : 2,
                 granularity : 3,
                 stRotation : 4,
-                show : true
+                show : true,
+                outline : true,
+                outlineColor : {
+                    rgbaf : [0.2, 0.2, 0.2, 0.2]
+                },
+                outlineWidth : 6
             }
         };
 
@@ -1405,6 +1426,9 @@ defineSuite([
         expect(entity.polygon.extrudedHeight.getValue(Iso8601.MINIMUM_VALUE)).toEqual(2);
         expect(entity.polygon.granularity.getValue(Iso8601.MINIMUM_VALUE)).toEqual(3);
         expect(entity.polygon.stRotation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(4);
+        expect(entity.polygon.outline.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.polygon.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(entity.polygon.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
     });
 
     it('CZML adds data for constrained polygon.', function() {
@@ -1718,7 +1742,12 @@ defineSuite([
                 stRotation : 5,
                 closeBottom : true,
                 closeTop : false,
-                show : true
+                show : true,
+                outline : true,
+                outlineColor : {
+                    rgbaf : [0.2, 0.2, 0.2, 0.2]
+                },
+                outlineWidth : 6
             }
         };
 
@@ -1739,6 +1768,9 @@ defineSuite([
         expect(entity.rectangle.stRotation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.stRotation);
         expect(entity.rectangle.closeBottom.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.closeBottom);
         expect(entity.rectangle.closeTop.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.closeTop);
+        expect(entity.rectangle.outline.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.rectangle.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(entity.rectangle.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
     });
 
     it('CZML adds data for rectangle in degrees.', function() {
@@ -1773,7 +1805,12 @@ defineSuite([
                 maximumHeights : {
                     array : [4, 5, 6]
                 },
-                show : true
+                show : true,
+                outline : true,
+                outlineColor : {
+                    rgbaf : [0.2, 0.2, 0.2, 0.2]
+                },
+                outlineWidth : 6
             }
         };
 
@@ -1789,6 +1826,9 @@ defineSuite([
         expect(entity.wall.granularity.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.granularity);
         expect(entity.wall.minimumHeights.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.minimumHeights.array);
         expect(entity.wall.maximumHeights.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.maximumHeights.array);
+        expect(entity.wall.outline.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.wall.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(entity.wall.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
     });
 
     it('Can use constant reference properties', function() {

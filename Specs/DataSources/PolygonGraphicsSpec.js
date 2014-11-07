@@ -25,6 +25,11 @@ defineSuite([
         source.extrudedHeight = new ConstantProperty();
         source.granularity = new ConstantProperty();
         source.stRotation = new ConstantProperty();
+        source.fill = new ConstantProperty();
+        source.outline = new ConstantProperty();
+        source.outlineColor = new ConstantProperty();
+        source.outlineWidth = new ConstantProperty();
+        source.perPositionHeight = new ConstantProperty();
 
         var target = new PolygonGraphics();
         target.merge(source);
@@ -36,17 +41,15 @@ defineSuite([
         expect(target.extrudedHeight).toBe(source.extrudedHeight);
         expect(target.granularity).toBe(source.granularity);
         expect(target.stRotation).toBe(source.stRotation);
+        expect(target.fill).toBe(source.fill);
+        expect(target.outline).toBe(source.outline);
+        expect(target.outlineColor).toBe(source.outlineColor);
+        expect(target.outlineWidth).toBe(source.outlineWidth);
+        expect(target.perPositionHeight).toBe(source.perPositionHeight);
     });
 
     it('merge does not assign assigned properties', function() {
         var source = new PolygonGraphics();
-        source.material = new ColorMaterialProperty();
-        source.positions = new ConstantProperty();
-        source.show = new ConstantProperty();
-        source.height = new ConstantProperty();
-        source.extrudedHeight = new ConstantProperty();
-        source.granularity = new ConstantProperty();
-        source.stRotation = new ConstantProperty();
 
         var material = new ColorMaterialProperty();
         var positions = new ConstantProperty();
@@ -55,6 +58,11 @@ defineSuite([
         var extrudedHeight = new ConstantProperty();
         var granularity = new ConstantProperty();
         var stRotation = new ConstantProperty();
+        var fill = new ConstantProperty();
+        var outline = new ConstantProperty();
+        var outlineColor = new ConstantProperty();
+        var outlineWidth = new ConstantProperty();
+        var perPositionHeight = new ConstantProperty();
 
         var target = new PolygonGraphics();
         target.material = material;
@@ -64,6 +72,11 @@ defineSuite([
         target.extrudedHeight = extrudedHeight;
         target.granularity = granularity;
         target.stRotation = stRotation;
+        target.fill = fill;
+        target.outline = outline;
+        target.outlineColor = outlineColor;
+        target.outlineWidth = outlineWidth;
+        target.perPositionHeight = perPositionHeight;
 
         target.merge(source);
 
@@ -74,17 +87,27 @@ defineSuite([
         expect(target.extrudedHeight).toBe(extrudedHeight);
         expect(target.granularity).toBe(granularity);
         expect(target.stRotation).toBe(stRotation);
+        expect(target.fill).toBe(fill);
+        expect(target.outline).toBe(outline);
+        expect(target.outlineColor).toBe(outlineColor);
+        expect(target.outlineWidth).toBe(outlineWidth);
+        expect(target.perPositionHeight).toBe(perPositionHeight);
     });
 
     it('clone works', function() {
         var source = new PolygonGraphics();
         source.material = new ColorMaterialProperty();
         source.positions = new ConstantProperty();
-        source.show = new ConstantProperty(true);
-        source.height = new ConstantProperty(1);
-        source.extrudedHeight = new ConstantProperty(2);
-        source.granularity = new ConstantProperty(3);
-        source.stRotation = new ConstantProperty(4);
+        source.show = new ConstantProperty();
+        source.height = new ConstantProperty();
+        source.extrudedHeight = new ConstantProperty();
+        source.granularity = new ConstantProperty();
+        source.stRotation = new ConstantProperty();
+        source.fill = new ConstantProperty();
+        source.outline = new ConstantProperty();
+        source.outlineColor = new ConstantProperty();
+        source.outlineWidth = new ConstantProperty();
+        source.perPositionHeight = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -94,6 +117,11 @@ defineSuite([
         expect(result.extrudedHeight).toBe(source.extrudedHeight);
         expect(result.granularity).toBe(source.granularity);
         expect(result.stRotation).toBe(source.stRotation);
+        expect(result.fill).toBe(source.fill);
+        expect(result.outline).toBe(source.outline);
+        expect(result.outlineColor).toBe(source.outlineColor);
+        expect(result.outlineWidth).toBe(source.outlineWidth);
+        expect(result.perPositionHeight).toBe(source.perPositionHeight);
     });
 
     it('merge throws if source undefined', function() {
@@ -112,5 +140,10 @@ defineSuite([
         testDefinitionChanged(property, 'extrudedHeight', 4, 3);
         testDefinitionChanged(property, 'granularity', 1, 2);
         testDefinitionChanged(property, 'stRotation', 5, 6);
+        testDefinitionChanged(property, 'fill', false, true);
+        testDefinitionChanged(property, 'outline', true, false);
+        testDefinitionChanged(property, 'outlineColor', Color.RED, Color.BLUE);
+        testDefinitionChanged(property, 'outlineWidth', 2, 3);
+        testDefinitionChanged(property, 'perPositionHeight', false, true);
     });
 });

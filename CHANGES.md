@@ -3,6 +3,9 @@ Change Log
 
 ### 1.4 - 2014-12-01
 
+* Added geometry outline width support to the `DataSource` layer.  This is exposed via the new `outlineWidth` property on `EllipseGraphics`, `EllipsoidGraphics`, `PolygonGraphics`, `RectangleGraphics`, and `WallGraphics`.
+* Added `outlineWidth` support to CZML geometry packets.
+* Added `stroke-width` support to the GeoJSON simple-style implementation.
 * Added `modelMatrix` option to `Primitive` constructor.
 * Fixed a bug in `PolylineGeometry` that would cause the geometry to be split across the IDL for 3D only scenes. [#1197](https://github.com/AnalyticalGraphicsInc/cesium/issues/1197)
 * Improve point visualization performance for all DataSources.
