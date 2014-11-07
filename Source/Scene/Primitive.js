@@ -2,6 +2,7 @@
 define([
         '../Core/BoundingSphere',
         '../Core/clone',
+        '../Core/combine',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
@@ -30,6 +31,7 @@ define([
     ], function(
         BoundingSphere,
         clone,
+        combine,
         ComponentDatatype,
         defaultValue,
         defined,
@@ -84,13 +86,14 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances - or a single geometry instance - to render.
      * @param {Appearance} [options.appearance] The appearance used to render the primitive.
+     * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the primitive (all geometry instances) from model to world coordinates.
      * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
-     * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
      * @param {Boolean} [options.compressVertices=true] When <code>true</code>, the geometry vertices are compressed, which will save memory.
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
+     * @param {Boolean} [options.cull=true] When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands based on their bounding volume.  Set this to <code>false</code> for a small performance gain if you are manually culling the primitive.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      *
@@ -231,6 +234,17 @@ define([
         this._allowPicking = defaultValue(options.allowPicking, true);
         this._asynchronous = defaultValue(options.asynchronous, true);
         this._compressVertices = defaultValue(options.compressVertices, true);
+
+        /**
+         * When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands
+         * based on their bounding volume.  Set this to <code>false</code> for a small performance gain
+         * if you are manually culling the primitive.
+         *
+         * @type {Boolean}
+         *
+         * @default true
+         */
+        this.cull = defaultValue(options.cull, true);
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -653,6 +667,12 @@ define([
         return pickColors;
     }
 
+    function getUniformFunction(uniforms, name) {
+        return function() {
+            return uniforms[name];
+        };
+    }
+
     var numberOfCreationWorkers = Math.max(FeatureDetection.hardwareConcurrency - 1, 1);
     var createGeometryTaskProcessors;
     var combineGeometryTaskProcessor = new TaskProcessor('combineGeometry', Number.POSITIVE_INFINITY);
@@ -665,7 +685,8 @@ define([
      * list the exceptions that may be propagated when the scene is rendered:
      * </p>
      *
-     * @exception {DeveloperError} All instance geometries must have the same primitiveType..
+     * @exception {DeveloperError} All instance geometries must have the same primitiveType.
+     * @exception {DeveloperError} Appearance and material have a uniform with the same name.
      */
     Primitive.prototype.update = function(context, frameState, commandList) {
         if (((!defined(this.geometryInstances)) && (this._va.length === 0)) ||
@@ -961,7 +982,25 @@ define([
         var pickCommands = this._pickCommands;
 
         if (createRS || createSP) {
-            var uniforms = (defined(material)) ? material._uniforms : undefined;
+            // Create uniform map by combining uniforms from the appearance and material if either have uniforms.
+            var materialUniformMap = defined(material) ? material._uniforms : undefined;
+            var appearanceUniformMap = {};
+            var appearanceUniforms = appearance.uniforms;
+            if (defined(appearanceUniforms)) {
+                // Convert to uniform map of functions for the renderer
+                for (var name in appearanceUniforms) {
+                    if (appearanceUniforms.hasOwnProperty(name)) {
+                        if (defined(materialUniformMap) && defined(materialUniformMap[name])) {
+                            // Later, we could rename uniforms behind-the-scenes if needed.
+                            throw new DeveloperError('Appearance and material have a uniform with the same name: ' + name);
+                        }
+
+                        appearanceUniformMap[name] = getUniformFunction(appearanceUniforms, name);
+                    }
+                }
+            }
+            var uniforms = combine(appearanceUniformMap, materialUniformMap);
+
             var pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
 
             colorCommands.length = this._va.length * (twoPasses ? 2 : 1);
@@ -1085,6 +1124,7 @@ define([
             for (i = 0; i < length; ++i) {
                 colorCommands[i].modelMatrix = modelMatrix;
                 colorCommands[i].boundingVolume = boundingSphere;
+                colorCommands[i].cull = this.cull;
                 colorCommands[i].debugShowBoundingVolume = this.debugShowBoundingVolume;
 
                 commandList.push(colorCommands[i]);
@@ -1096,6 +1136,7 @@ define([
             for (i = 0; i < length; ++i) {
                 pickCommands[i].modelMatrix = modelMatrix;
                 pickCommands[i].boundingVolume = boundingSphere;
+                pickCommands[i].cull = this.cull;
 
                 commandList.push(pickCommands[i]);
             }

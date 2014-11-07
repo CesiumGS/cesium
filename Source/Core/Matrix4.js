@@ -289,7 +289,7 @@ define([
      * and a Cartesian3 representing the translation.
      *
      * @param {Matrix3} rotation The upper left portion of the matrix representing the rotation.
-     * @param {Cartesian3} translation The upper right portion of the matrix representing the translation.
+     * @param {Cartesian3} [translation=Cartesian3.ZERO] The upper right portion of the matrix representing the translation.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
      */
@@ -298,10 +298,9 @@ define([
         if (!defined(rotation)) {
             throw new DeveloperError('rotation is required.');
         }
-        if (!defined(translation)) {
-            throw new DeveloperError('translation is required.');
-        }
         //>>includeEnd('debug');
+
+        translation = defaultValue(translation, Cartesian3.ZERO);
 
         if (!defined(result)) {
             return new Matrix4(rotation[0], rotation[3], rotation[6], translation.x,
@@ -420,6 +419,12 @@ define([
      * @see Matrix4.multiplyByTranslation
      */
     Matrix4.fromTranslation = function(translation, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(translation)) {
+            throw new DeveloperError('translation is required.');
+        }
+        //>>includeEnd('debug');
+
         return Matrix4.fromRotationTranslation(Matrix3.IDENTITY, translation, result);
     };
 

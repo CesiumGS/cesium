@@ -2,6 +2,7 @@
 define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
+        './appendForwardSlash',
         './BoundingSphere',
         './Cartesian3',
         './Credit',
@@ -23,6 +24,7 @@ define([
     ], function(
         Uri,
         when,
+        appendForwardSlash,
         BoundingSphere,
         Cartesian3,
         Credit,
@@ -90,10 +92,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._url = options.url;
-        if (this._url.length === 0 || this._url[this._url.length - 1] !== '/') {
-            this._url = this._url + '/';
-        }
+        this._url = appendForwardSlash(options.url);
         this._proxy = options.proxy;
 
         this._tilingScheme = new GeographicTilingScheme({
