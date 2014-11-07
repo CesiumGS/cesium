@@ -195,6 +195,8 @@ define([
         };
     };
 
+    var removeDuplicatesEpsilon = CesiumMath.EPSILON6;
+
     /**
      * Removes adjacent duplicate positions in an array of positions.
      *
@@ -228,7 +230,7 @@ define([
         for (i = 1; i < length; ++i) {
             v0 = positions[i - 1];
             v1 = positions[i];
-            if (Cartesian3.equals(v0, v1)) {
+            if (Cartesian3.equalsEpsilon(v0, v1, removeDuplicatesEpsilon)) {
                 break;
             }
         }
@@ -243,7 +245,7 @@ define([
         for (; i < length; ++i) {
             v0 = positions[i - 1];
             v1 = positions[i];
-            if (!Cartesian3.equals(v0, v1)) {
+            if (!Cartesian3.equalsEpsilon(v0, v1, removeDuplicatesEpsilon)) {
                 cleanedPositions.push(Cartesian3.clone(v1));
             }
         }

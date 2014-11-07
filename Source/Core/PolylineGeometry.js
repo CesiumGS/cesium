@@ -165,7 +165,11 @@ define([
         var p1;
         var c0;
         var c1;
-        var positions = polylineGeometry._positions;
+
+        var positions = PolylinePipeline.removeDuplicates(polylineGeometry._positions);
+        if (!defined(positions)) {
+            positions = polylineGeometry._positions;
+        }
 
         if (followSurface) {
             var heights = PolylinePipeline.extractHeights(positions, ellipsoid);
@@ -197,8 +201,6 @@ define([
                 ellipsoid: ellipsoid,
                 height: heights
             });
-        } else {
-            positions = polylineGeometry._positions;
         }
 
         var size = positions.length * 4.0 - 4.0;
