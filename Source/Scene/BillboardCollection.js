@@ -776,8 +776,8 @@ define([
             width = imageRectangle.width;
         }
 
-        var dimensions = billboardCollection._textureAtlas.texture.dimensions;
-        var imageWidth = Math.ceil(defaultValue(billboard.width, dimensions.x * width) * 0.5);
+        var textureWidth = billboardCollection._textureAtlas.texture.width;
+        var imageWidth = Math.ceil(defaultValue(billboard.width, textureWidth * width) * 0.5);
         billboardCollection._maxSize = Math.max(billboardCollection._maxSize, imageWidth);
 
         var compressed0 = CesiumMath.clamp(imageWidth, 0.0, LEFT_SHIFT16);

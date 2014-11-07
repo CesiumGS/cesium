@@ -503,7 +503,7 @@ define([
          * @type {Number}
          * @readonly
          *
-         * @see {@link http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml|glGet} with <code>ALIASED_LINE_WIDTH_RANGE</code>.
+         * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>ALIASED_LINE_WIDTH_RANGE</code>.
          */
         maximumAliasedLineWidth : {
             get : function() {
@@ -632,7 +632,6 @@ define([
          * @memberof Scene.prototype
          *
          * @type {TerrainProvider}
-         * @readonly
          */
         terrainProvider : {
             get : function() {
@@ -690,6 +689,7 @@ define([
         /**
          * @memberof Scene.prototype
          * @private
+         * @readonly
          */
         context : {
             get : function() {
@@ -725,6 +725,7 @@ define([
          * Gets whether or not the scene is optimized for 3D only viewing.
          * @memberof Scene.prototype
          * @type {Boolean}
+         * @readonly
          */
         scene3DOnly : {
             get : function() {
@@ -738,6 +739,7 @@ define([
          * other factors that could prevent OIT from functioning on a given system configuration.
          * @memberof Scene.prototype
          * @type {Boolean}
+         * @readonly
          */
         orderIndependentTranslucency : {
             get : function() {
@@ -749,6 +751,7 @@ define([
          * Gets the unique identifier for this scene.
          * @memberof Scene.prototype
          * @type {String}
+         * @readonly
          */
         id : {
             get : function() {
@@ -1415,6 +1418,14 @@ define([
                 throw error;
             }
         }
+    };
+
+    /**
+     * @private
+     */
+    Scene.prototype.clampLineWidth = function(width) {
+        var context = this._context;
+        return Math.max(context.minimumAliasedLineWidth, Math.min(width, context.maximumAliasedLineWidth));
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();

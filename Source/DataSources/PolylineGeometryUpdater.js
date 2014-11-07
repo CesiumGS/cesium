@@ -67,7 +67,7 @@ define([
      * @constructor
      *
      * @param {Entity} entity The entity containing the geometry to be visualized.
-     * @param {Scene} scene The scene in which the geometry will be visualized.
+     * @param {Scene} scene The scene where visualization is taking place.
      */
     var PolylineGeometryUpdater = function(entity, scene) {
         //>>includeStart('debug', pragmas.debug);

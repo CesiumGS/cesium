@@ -222,6 +222,49 @@ defineSuite([
         expect(material.uniforms.glowPower).toEqual(testObject.path.material.glowPower.getValue(updateTime));
     });
 
+    it('Reuses primitives when hiding one and showing another', function() {
+        var times = [new JulianDate(0, 0), new JulianDate(1, 0)];
+        var time = new JulianDate(0.5, 0);
+        var positions = [new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112)];
+
+        var entityCollection = new EntityCollection();
+        visualizer = new PathVisualizer(scene, entityCollection);
+
+        var position = new SampledPositionProperty();
+        position.addSamples(times, positions);
+
+        var testObject = entityCollection.getOrCreateEntity('test');
+        testObject.position = position;
+        testObject.path = new PathGraphics();
+        testObject.path.show = new ConstantProperty(true);
+        testObject.path.leadTime = new ConstantProperty(25);
+        testObject.path.trailTime = new ConstantProperty(10);
+
+        visualizer.update(time);
+
+        var polylineCollection = scene.primitives.get(0);
+        expect(polylineCollection.length).toEqual(1);
+
+        testObject.path.show = new ConstantProperty(false);
+
+        visualizer.update(time);
+
+        expect(polylineCollection.length).toEqual(1);
+
+        position = new SampledPositionProperty();
+        position.addSamples(times, positions);
+
+        var testObject2 = entityCollection.getOrCreateEntity('test2');
+        testObject2.position = position;
+        testObject2.path = new PathGraphics();
+        testObject2.path.show = new ConstantProperty(true);
+        testObject2.path.leadTime = new ConstantProperty(25);
+        testObject2.path.trailTime = new ConstantProperty(10);
+
+        visualizer.update(time);
+        expect(polylineCollection.length).toEqual(1);
+    });
+
     it('clear hides primitives.', function() {
         var times = [new JulianDate(0, 0), new JulianDate(1, 0)];
         var updateTime = new JulianDate(0.5, 0);
