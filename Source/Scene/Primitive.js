@@ -93,7 +93,7 @@ define([
      * @param {Boolean} [options.compressVertices=true] When <code>true</code>, the geometry vertices are compressed, which will save memory.
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
-     * @param {Boolean} [options.cull=true] When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands based on their bounding volume.  Set this to <code>false</code> for a small performance when if you are manually culling the primitive.
+     * @param {Boolean} [options.cull=true] When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands based on their bounding volume.  Set this to <code>false</code> for a small performance gain if you are manually culling the primitive.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      *
@@ -237,7 +237,7 @@ define([
 
         /**
          * When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands
-         * based on their bounding volume.  Set this to <code>false</code> for a small performance when
+         * based on their bounding volume.  Set this to <code>false</code> for a small performance gain
          * if you are manually culling the primitive.
          *
          * @type {Boolean}
@@ -992,7 +992,7 @@ define([
                     if (appearanceUniforms.hasOwnProperty(name)) {
                         if (defined(materialUniformMap) && defined(materialUniformMap[name])) {
                             // Later, we could rename uniforms behind-the-scenes if needed.
-                            throw new DeveloperError('Appearance and material have a uniform with the same name: + ' + name);
+                            throw new DeveloperError('Appearance and material have a uniform with the same name: ' + name);
                         }
 
                         appearanceUniformMap[name] = getUniformFunction(appearanceUniforms, name);
