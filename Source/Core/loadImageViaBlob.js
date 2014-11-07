@@ -36,7 +36,7 @@ define([
      * Cesium.loadImageViaBlob('some/image/url.png').then(function(image) {
      *     var blob = image.blob;
      *     // use the loaded image or XHR
-     * }.otherwise(function(error) {
+     * }).otherwise(function(error) {
      *     // an error occurred
      * });
      *

@@ -973,12 +973,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('fromRotationTranslation throws without translation parameter', function() {
-        expect(function() {
-            Matrix4.fromRotationTranslation(new Matrix4(), undefined);
-        }).toThrowDeveloperError();
-    });
-
     it('fromTranslationQuaternionRotationScale throws without translation parameter', function() {
         expect(function() {
             Matrix4.fromTranslationQuaternionRotationScale(undefined, new Quaternion(), new Cartesian3());
