@@ -1875,22 +1875,15 @@ define([
     var u2Scratch = new Cartesian2();
     var computeScratch = new Cartesian3();
 
-    function computeTriangleAttributes(i0, i1, i2, dividedTriangle, startIndex, normals, binormals, tangents, texCoords, currentAttributes) {
+    function computeTriangleAttributes(i0, i1, i2, point, positions, normals, binormals, tangents, texCoords, currentAttributes, insertedIndex) {
         if (!defined(normals) && !defined(binormals) && !defined(tangents) && !defined(texCoords)) {
             return;
         }
 
-        var positions = dividedTriangle.positions;
-        var indices = dividedTriangle.indices;
+        var p0 = Cartesian3.fromArray(positions, i0 * 3);
+        var p1 = Cartesian3.fromArray(positions, i1 * 3);
+        var p2 = Cartesian3.fromArray(positions, i2 * 3);
 
-        var p0 = positions[0];
-        var p1 = positions[1];
-        var p2 = positions[2];
-
-        var n0, n1, n2;
-        var b0, b1, b2;
-        var t0, t1, t2;
-        var s0, s1, s2;
         var v0 = v0Scratch;
         var v1 = v1Scratch;
         var v2 = v2Scratch;
@@ -1898,82 +1891,93 @@ define([
         var u1 = u1Scratch;
         var u2 = u2Scratch;
 
+        var coords = barycentricCoordinates(point, p0, p1, p2);
+
         if (defined(normals)) {
-            n0 = Cartesian3.fromArray(normals, i0 * 3);
-            n1 = Cartesian3.fromArray(normals, i1 * 3);
-            n2 = Cartesian3.fromArray(normals, i2 * 3);
+            var n0 = Cartesian3.fromArray(normals, i0 * 3);
+            var n1 = Cartesian3.fromArray(normals, i1 * 3);
+            var n2 = Cartesian3.fromArray(normals, i2 * 3);
+
+            v0 = Cartesian3.multiplyByScalar(n0, coords.x, v0);
+            v1 = Cartesian3.multiplyByScalar(n1, coords.y, v1);
+            v2 = Cartesian3.multiplyByScalar(n2, coords.z, v2);
+
+            var normal = Cartesian3.add(v0, v1, computeScratch);
+            Cartesian3.add(normal, v2, normal);
+            Cartesian3.normalize(normal, normal);
+
+            Cartesian3.pack(normal, currentAttributes.normal.values, insertedIndex * 3);
         }
 
         if (defined(binormals)) {
-            b0 = Cartesian3.fromArray(binormals, i0 * 3);
-            b1 = Cartesian3.fromArray(binormals, i1 * 3);
-            b2 = Cartesian3.fromArray(binormals, i2 * 3);
+            var b0 = Cartesian3.fromArray(binormals, i0 * 3);
+            var b1 = Cartesian3.fromArray(binormals, i1 * 3);
+            var b2 = Cartesian3.fromArray(binormals, i2 * 3);
+
+            v0 = Cartesian3.multiplyByScalar(b0, coords.x, v0);
+            v1 = Cartesian3.multiplyByScalar(b1, coords.y, v1);
+            v2 = Cartesian3.multiplyByScalar(b2, coords.z, v2);
+
+            var binormal = Cartesian3.add(v0, v1, computeScratch);
+            Cartesian3.add(binormal, v2, binormal);
+            Cartesian3.normalize(binormal, binormal);
+
+            Cartesian3.pack(binormal, currentAttributes.binormal.values, insertedIndex * 3);
         }
 
         if (defined(tangents)) {
-            t0 = Cartesian3.fromArray(tangents, i0 * 3);
-            t1 = Cartesian3.fromArray(tangents, i1 * 3);
-            t2 = Cartesian3.fromArray(tangents, i2 * 3);
+            var t0 = Cartesian3.fromArray(tangents, i0 * 3);
+            var t1 = Cartesian3.fromArray(tangents, i1 * 3);
+            var t2 = Cartesian3.fromArray(tangents, i2 * 3);
+
+            v0 = Cartesian3.multiplyByScalar(t0, coords.x, v0);
+            v1 = Cartesian3.multiplyByScalar(t1, coords.y, v1);
+            v2 = Cartesian3.multiplyByScalar(t2, coords.z, v2);
+
+            var tangent = Cartesian3.add(v0, v1, computeScratch);
+            Cartesian3.add(tangent, v2, tangent);
+            Cartesian3.normalize(tangent, tangent);
+
+            Cartesian3.pack(tangent, currentAttributes.tangent.values, insertedIndex * 3);
         }
 
         if (defined(texCoords)) {
-            s0 = Cartesian2.fromArray(texCoords, i0 * 2);
-            s1 = Cartesian2.fromArray(texCoords, i1 * 2);
-            s2 = Cartesian2.fromArray(texCoords, i2 * 2);
+            var s0 = Cartesian2.fromArray(texCoords, i0 * 2);
+            var s1 = Cartesian2.fromArray(texCoords, i1 * 2);
+            var s2 = Cartesian2.fromArray(texCoords, i2 * 2);
+
+            u0 = Cartesian2.multiplyByScalar(s0, coords.x, u0);
+            u1 = Cartesian2.multiplyByScalar(s1, coords.y, u1);
+            u2 = Cartesian2.multiplyByScalar(s2, coords.z, u2);
+
+            var texCoord = Cartesian2.add(u0, u1, u0);
+            Cartesian2.add(texCoord, u2, texCoord);
+
+            Cartesian2.pack(texCoord, currentAttributes.st.values, insertedIndex * 2);
+        }
+    }
+
+    function insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, currentIndex, point) {
+        var insertIndex = currentAttributes.position.values.length / 3;
+
+        if (currentIndex !== -1) {
+            var prevIndex = indices[currentIndex];
+            var newIndex = currentIndexMap[prevIndex];
+
+            if (newIndex === -1) {
+                currentIndexMap[prevIndex] = insertIndex;
+                currentAttributes.position.values.push(point.x, point.y, point.z);
+                currentIndices.push(insertIndex);
+                return insertIndex;
+            }
+
+            currentIndices.push(newIndex);
+            return newIndex;
         }
 
-        var endIndex = startIndex + 3;
-        for (var i = startIndex; i < endIndex; ++i) {
-            var point = positions[indices[i]];
-            var coords = barycentricCoordinates(point, p0, p1, p2);
-
-            if (defined(normals)) {
-                v0 = Cartesian3.multiplyByScalar(n0, coords.x, v0);
-                v1 = Cartesian3.multiplyByScalar(n1, coords.y, v1);
-                v2 = Cartesian3.multiplyByScalar(n2, coords.z, v2);
-
-                var normal = Cartesian3.add(v0, v1, computeScratch);
-                Cartesian3.add(normal, v2, normal);
-                Cartesian3.normalize(normal, normal);
-
-                currentAttributes.normal.values.push(normal.x, normal.y, normal.z);
-            }
-
-            if (defined(binormals)) {
-                v0 = Cartesian3.multiplyByScalar(b0, coords.x, v0);
-                v1 = Cartesian3.multiplyByScalar(b1, coords.y, v1);
-                v2 = Cartesian3.multiplyByScalar(b2, coords.z, v2);
-
-                var binormal = Cartesian3.add(v0, v1, computeScratch);
-                Cartesian3.add(binormal, v2, binormal);
-                Cartesian3.normalize(binormal, binormal);
-
-                currentAttributes.binormal.values.push(binormal.x, binormal.y, binormal.z);
-            }
-
-            if (defined(tangents)) {
-                v0 = Cartesian3.multiplyByScalar(t0, coords.x, v0);
-                v1 = Cartesian3.multiplyByScalar(t1, coords.y, v1);
-                v2 = Cartesian3.multiplyByScalar(t2, coords.z, v2);
-
-                var tangent = Cartesian3.add(v0, v1, computeScratch);
-                Cartesian3.add(tangent, v2, tangent);
-                Cartesian3.normalize(tangent, tangent);
-
-                currentAttributes.tangent.values.push(tangent.x, tangent.y, tangent.z);
-            }
-
-            if (defined(texCoords)) {
-                u0 = Cartesian2.multiplyByScalar(s0, coords.x, u0);
-                u1 = Cartesian2.multiplyByScalar(s1, coords.y, u1);
-                u2 = Cartesian2.multiplyByScalar(s2, coords.z, u2);
-
-                var texCoord = Cartesian2.add(u0, u1, u0);
-                Cartesian2.add(texCoord, u2, texCoord);
-
-                currentAttributes.st.values.push(texCoord.x, texCoord.y);
-            }
-        }
+        currentAttributes.position.values.push(point.x, point.y, point.z);
+        currentIndices.push(insertIndex);
+        return insertIndex;
     }
 
     function wrapLongitudeTriangles(instance) {
@@ -1991,10 +1995,23 @@ define([
 
         var currentAttributes;
         var currentIndices;
-        var index;
+        var currentIndexMap;
+        var insertedIndex;
+        var i;
+
+        var westGeometryIndexMap = [];
+        westGeometryIndexMap.length = positions.length / 3;
+
+        var eastGeometryIndexMap = [];
+        eastGeometryIndexMap.length = positions.length / 3;
+
+        for (i = 0; i < westGeometryIndexMap.length; ++i) {
+            westGeometryIndexMap[i] = -1;
+            eastGeometryIndexMap[i] = -1;
+        }
 
         var len = indices.length;
-        for (var i = 0; i < len; i += 3) {
+        for (i = 0; i < len; i += 3) {
             var i0 = indices[i];
             var i1 = indices[i + 1];
             var i2 = indices[i + 2];
@@ -2009,61 +2026,48 @@ define([
                 var resultIndices = result.indices;
                 var resultLength = resultIndices.length;
 
-                for (var j = 0; j < resultLength; j += 3) {
-                    p0 = resultPositions[resultIndices[j]];
-                    p1 = resultPositions[resultIndices[j + 1]];
-                    p2 = resultPositions[resultIndices[j + 2]];
+                for (var j = 0; j < resultLength; ++j) {
+                    var resultIndex = resultIndices[j];
+                    var point = resultPositions[resultIndex];
 
-                    if (p0.y < 0.0) {
+                    if (point.y < 0.0) {
                         currentAttributes = westGeometry.attributes;
                         currentIndices = westGeometry.indices;
+                        currentIndexMap = westGeometryIndexMap;
                     } else {
                         currentAttributes = eastGeometry.attributes;
                         currentIndices = eastGeometry.indices;
+                        currentIndexMap = eastGeometryIndexMap;
                     }
 
-                    currentAttributes.position.values.push(p0.x, p0.y, p0.z);
-                    currentAttributes.position.values.push(p1.x, p1.y, p1.z);
-                    currentAttributes.position.values.push(p2.x, p2.y, p2.z);
-
-                    index = currentAttributes.position.values.length / 3 - 3;
-                    currentIndices.push(index, index + 1, index + 2);
-
-                    computeTriangleAttributes(i0, i1, i2, result, j, normals, binormals, tangents, texCoords, currentAttributes);
+                    insertedIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, resultIndex < 3 ? i + resultIndex : -1, point);
+                    computeTriangleAttributes(i0, i1, i2, point, positions, normals, binormals, tangents, texCoords, currentAttributes, insertedIndex);
                 }
             } else {
                 if (defined(result)) {
                     p0 = result.positions[0];
                     p1 = result.positions[1];
                     p2 = result.positions[2];
-                } else {
-                    result = splitTriangleResult;
-
-                    result.positions[0] = p0;
-                    result.positions[1] = p1;
-                    result.positions[2] = p2;
                 }
-
-                result.indices[0] = 0;
-                result.indices[1] = 1;
-                result.indices[2] = 2;
 
                 if (p0.y < 0.0) {
                     currentAttributes = westGeometry.attributes;
                     currentIndices = westGeometry.indices;
+                    currentIndexMap = westGeometryIndexMap;
                 } else {
                     currentAttributes = eastGeometry.attributes;
                     currentIndices = eastGeometry.indices;
+                    currentIndexMap = eastGeometryIndexMap;
                 }
 
-                currentAttributes.position.values.push(p0.x, p0.y, p0.z);
-                currentAttributes.position.values.push(p1.x, p1.y, p1.z);
-                currentAttributes.position.values.push(p2.x, p2.y, p2.z);
+                insertedIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, i, p0);
+                computeTriangleAttributes(i0, i1, i2, p0, positions, normals, binormals, tangents, texCoords, currentAttributes, insertedIndex);
 
-                index = currentAttributes.position.values.length / 3 - 3;
-                currentIndices.push(index, index + 1, index + 2);
+                insertedIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, i + 1, p1);
+                computeTriangleAttributes(i0, i1, i2, p1, positions, normals, binormals, tangents, texCoords, currentAttributes, insertedIndex);
 
-                computeTriangleAttributes(i0, i1, i2, result, 0, normals, binormals, tangents, texCoords, currentAttributes);
+                insertedIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, i + 2, p2);
+                computeTriangleAttributes(i0, i1, i2, p2, positions, normals, binormals, tangents, texCoords, currentAttributes, insertedIndex);
             }
         }
 
