@@ -1,35 +1,38 @@
 /*global defineSuite*/
-defineSuite(['DataSources/KmlDataSource',
-             'DataSources/ConstantProperty',
-             'DataSources/ColorMaterialProperty',
-             'Core/Cartesian3',
-             'Core/DeveloperError',
-             'Core/loadXML',
-             'Core/Cartographic',
-             'Core/Color',
-             'Core/Ellipsoid',
-             'Core/Event',
-             'Core/JulianDate',
-             'Core/loadBlob',
-             'Core/Math',
-             'Core/RuntimeError',
-             'Specs/waitsForPromise'
-         ], function(
-            KmlDataSource,
-            ConstantProperty,
-            ColorMaterialProperty,
-            Cartesian3,
-            DeveloperError,
-            loadXML,
-            Cartographic,
-            Color,
-            Ellipsoid,
-            Event,
-            JulianDate,
-            loadBlob,
-            CesiumMath,
-            RuntimeError,
-            waitsForPromise) {
+defineSuite([
+        'DataSources/KmlDataSource',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/Color',
+        'Core/DeveloperError',
+        'Core/Ellipsoid',
+        'Core/Event',
+        'Core/JulianDate',
+        'Core/loadBlob',
+        'Core/loadXML',
+        'Core/Math',
+        'Core/RuntimeError',
+        'DataSources/ColorMaterialProperty',
+        'DataSources/ConstantProperty',
+        'DataSources/EntityCollection',
+        'Specs/waitsForPromise'
+    ], function(
+        KmlDataSource,
+        Cartesian3,
+        Cartographic,
+        Color,
+        DeveloperError,
+        Ellipsoid,
+        Event,
+        JulianDate,
+        loadBlob,
+        loadXML,
+        CesiumMath,
+        RuntimeError,
+        ColorMaterialProperty,
+        ConstantProperty,
+        EntityCollection,
+        waitsForPromise) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -37,11 +40,86 @@ defineSuite(['DataSources/KmlDataSource',
 
     it('default constructor has expected values', function() {
         var dataSource = new KmlDataSource();
+        expect(dataSource.name).toBeUndefined();
+        expect(dataSource.clock).toBeUndefined();
+        expect(dataSource.entities).toBeInstanceOf(EntityCollection);
+        expect(dataSource.changedEvent).toBeInstanceOf(Event);
+        expect(dataSource.isLoading).toBe(false);
         expect(dataSource.changedEvent).toBeInstanceOf(Event);
         expect(dataSource.errorEvent).toBeInstanceOf(Event);
-        expect(dataSource.clock).toBeUndefined();
-        expect(dataSource.entities.entities.length).toEqual(0);
+        expect(dataSource.loadingEvent).toBeInstanceOf(Event);
     });
+
+    it('load throws with undefined KML', function() {
+        var dataSource = new KmlDataSource();
+        expect(function() {
+            dataSource.load(undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('loadKmz throws with undefined blob', function() {
+        var dataSource = new KmlDataSource();
+        expect(function() {
+            dataSource.loadKmz(undefined);
+        }).toThrowDeveloperError();
+    });
+
+    xit('loadKmz rejects loading non-KMZ file', function() {
+        var dataSource = new KmlDataSource();
+        waitsForPromise(loadBlob('Data/Images/Blue.png'), function(blob) {
+            waitsForPromise.toReject(dataSource.loadKmz(blob));
+        });
+    });
+
+    it('loadKmz rejects KMZ file with no KML contained', function() {
+        var dataSource = new KmlDataSource();
+        waitsForPromise(loadBlob('Data/KML/empty.zip'), function(blob) {
+            waitsForPromise.toReject(dataSource.loadKmz(blob));
+        });
+    });
+
+    it('loadUrl works with a KML file', function() {
+        var dataSource = new KmlDataSource();
+        waitsForPromise(dataSource.loadUrl('Data/KML/simple.kml'), function(source) {
+            expect(source).toBe(dataSource);
+            expect(source.entities.entities.length).toEqual(1);
+        });
+    });
+
+    it('loadUrl works with a KMZ file', function() {
+        var dataSource = new KmlDataSource();
+        waitsForPromise(dataSource.loadUrl('Data/KML/simple.kmz'), function(source) {
+            expect(source).toBe(dataSource);
+            expect(source.entities.entities.length).toEqual(1);
+        });
+    });
+
+    it('loadUrl throws with undefined Url', function() {
+        var dataSource = new KmlDataSource();
+        expect(function() {
+            dataSource.loadUrl(undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('loadUrl rejects loading nonexistent file', function() {
+        var dataSource = new KmlDataSource();
+        waitsForPromise.toReject(dataSource.loadUrl('//test.invalid/invalid.kml'));
+    });
+
+    it('loadUrl rejects loading non-KML file', function() {
+        var dataSource = new KmlDataSource();
+        waitsForPromise.toReject(dataSource.loadUrl('Data/Images/Blue.png'));
+    });
+
+    it('loadUrl rejects KMZ file with no KML contained', function() {
+        var dataSource = new KmlDataSource();
+        waitsForPromise.toReject(dataSource.loadUrl('Data/KML/empty.zip'));
+    });
+
+/*
+ * Tests below this comment need to be reevaluated.
+ *
+ */
 
     it('loads shared styles', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
@@ -590,7 +668,7 @@ defineSuite(['DataSources/KmlDataSource',
         expect(objects.length).toEqual(1);
         expect(objects[0].label.scale.getValue()).toEqual(scale.getValue());
         expect(objects[0].label.fillColor).toEqual(color);
-        expect(objects[0].billboard.image.getValue()).toEqual("http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png");
+        expect(objects[0].billboard.image.getValue()).toEqual(dataSource._pinBuilder.fromColor(Color.YELLOW, 64).toDataURL());
     });
 
     it('handles empty LabelStyle element', function() {
@@ -614,7 +692,7 @@ defineSuite(['DataSources/KmlDataSource',
         var label = objects[0].label;
         expect(label.fillColor).toEqual(new ConstantProperty(new Color(1, 1, 1, 1)));
         expect(label.scale.getValue()).toEqual(1.0);
-        expect(objects[0].billboard.image.getValue()).toEqual("http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png");
+        expect(objects[0].billboard.image.getValue()).toEqual(dataSource._pinBuilder.fromColor(Color.YELLOW, 64).toDataURL());
     });
 
     it('handles LineStyle', function() {
@@ -906,71 +984,5 @@ defineSuite(['DataSources/KmlDataSource',
         expect(entity.availability).toBeDefined();
         expect(entity.availability.start).toEqual(beginDate);
         expect(entity.availability.stop).toEqual(endDate);
-    });
-
-    it('load throws with undefined KML', function() {
-        var dataSource = new KmlDataSource();
-        expect(function() {
-            dataSource.load(undefined);
-        }).toThrowDeveloperError();
-    });
-
-    it('loadKmz throws with undefined blob', function() {
-        var dataSource = new KmlDataSource();
-        expect(function() {
-            dataSource.loadKmz(undefined);
-        }).toThrowDeveloperError();
-    });
-
-    xit('loadKmz rejects loading non-KMZ file', function() {
-        var dataSource = new KmlDataSource();
-        waitsForPromise(loadBlob('Data/Images/Blue.png'), function(blob) {
-            waitsForPromise.toReject(dataSource.loadKmz(blob));
-        });
-    });
-
-    it('loadKmz rejects KMZ file with no KML contained', function() {
-        var dataSource = new KmlDataSource();
-        waitsForPromise(loadBlob('Data/KML/empty.zip'), function(blob) {
-            waitsForPromise.toReject(dataSource.loadKmz(blob));
-        });
-    });
-
-    it('loadUrl works with a KML file', function() {
-        var dataSource = new KmlDataSource();
-        waitsForPromise(dataSource.loadUrl('Data/KML/simple.kml'), function(source) {
-            expect(source).toBe(dataSource);
-            expect(source.entities.entities.length).toEqual(1);
-        });
-    });
-
-    it('loadUrl works with a KMZ file', function() {
-        var dataSource = new KmlDataSource();
-        waitsForPromise(dataSource.loadUrl('Data/KML/simple.kmz'), function(source) {
-            expect(source).toBe(dataSource);
-            expect(source.entities.entities.length).toEqual(1);
-        });
-    });
-
-    it('loadUrl throws with undefined Url', function() {
-        var dataSource = new KmlDataSource();
-        expect(function() {
-            dataSource.loadUrl(undefined);
-        }).toThrowDeveloperError();
-    });
-
-    it('loadUrl rejects loading nonexistent file', function() {
-        var dataSource = new KmlDataSource();
-        waitsForPromise.toReject(dataSource.loadUrl('//test.invalid/invalid.kml'));
-    });
-
-    it('loadUrl rejects loading non-KML file', function() {
-        var dataSource = new KmlDataSource();
-        waitsForPromise.toReject(dataSource.loadUrl('Data/Images/Blue.png'));
-    });
-
-    it('loadUrl rejects KMZ file with no KML contained', function() {
-        var dataSource = new KmlDataSource();
-        waitsForPromise.toReject(dataSource.loadUrl('Data/KML/empty.zip'));
     });
 });
