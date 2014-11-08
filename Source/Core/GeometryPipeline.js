@@ -1634,6 +1634,16 @@ define([
         return geometry;
     }
 
+    function offsetPointFromXZPlane(p, isBehind) {
+        if (Math.abs(p.y) < CesiumMath.EPSILON6){
+            if (isBehind) {
+                p.y = -CesiumMath.EPSILON6;
+            } else {
+                p.y = CesiumMath.EPSILON6;
+            }
+        }
+    }
+
     function offsetTriangleFromXZPlane(p0, p1, p2) {
         if (p0.y !== 0.0 && p1.y !== 0.0 && p2.y !== 0.0) {
             offsetPointFromXZPlane(p0, p0.y < 0.0);
@@ -1663,16 +1673,6 @@ define([
         offsetPointFromXZPlane(p0, isBehind);
         offsetPointFromXZPlane(p1, isBehind);
         offsetPointFromXZPlane(p2, isBehind);
-    }
-
-    function offsetPointFromXZPlane(p, isBehind) {
-        if (Math.abs(p.y) < CesiumMath.EPSILON6){
-            if (isBehind) {
-                p.y = -CesiumMath.EPSILON6;
-            } else {
-                p.y = CesiumMath.EPSILON6;
-            }
-        }
     }
 
     var c3 = new Cartesian3();
@@ -1867,91 +1867,83 @@ define([
         }
     }
 
-    var v0Scratch = new Cartesian3();
-    var v1Scratch = new Cartesian3();
-    var v2Scratch = new Cartesian3();
-    var u0Scratch = new Cartesian2();
-    var u1Scratch = new Cartesian2();
-    var u2Scratch = new Cartesian2();
-    var computeScratch = new Cartesian3();
+    var p0Scratch = new Cartesian3();
+    var p1Scratch = new Cartesian3();
+    var p2Scratch = new Cartesian3();
+    var barycentricScratch = new Cartesian3();
+    var s0Scratch = new Cartesian2();
+    var s1Scratch = new Cartesian2();
+    var s2Scratch = new Cartesian2();
 
     function computeTriangleAttributes(i0, i1, i2, point, positions, normals, binormals, tangents, texCoords, currentAttributes, insertedIndex) {
         if (!defined(normals) && !defined(binormals) && !defined(tangents) && !defined(texCoords)) {
             return;
         }
 
-        var p0 = Cartesian3.fromArray(positions, i0 * 3);
-        var p1 = Cartesian3.fromArray(positions, i1 * 3);
-        var p2 = Cartesian3.fromArray(positions, i2 * 3);
-
-        var v0 = v0Scratch;
-        var v1 = v1Scratch;
-        var v2 = v2Scratch;
-        var u0 = u0Scratch;
-        var u1 = u1Scratch;
-        var u2 = u2Scratch;
-
-        var coords = barycentricCoordinates(point, p0, p1, p2);
+        var p0 = Cartesian3.fromArray(positions, i0 * 3, p0Scratch);
+        var p1 = Cartesian3.fromArray(positions, i1 * 3, p1Scratch);
+        var p2 = Cartesian3.fromArray(positions, i2 * 3, p2Scratch);
+        var coords = barycentricCoordinates(point, p0, p1, p2, barycentricScratch);
 
         if (defined(normals)) {
-            var n0 = Cartesian3.fromArray(normals, i0 * 3);
-            var n1 = Cartesian3.fromArray(normals, i1 * 3);
-            var n2 = Cartesian3.fromArray(normals, i2 * 3);
+            var n0 = Cartesian3.fromArray(normals, i0 * 3, p0Scratch);
+            var n1 = Cartesian3.fromArray(normals, i1 * 3, p1Scratch);
+            var n2 = Cartesian3.fromArray(normals, i2 * 3, p2Scratch);
 
-            v0 = Cartesian3.multiplyByScalar(n0, coords.x, v0);
-            v1 = Cartesian3.multiplyByScalar(n1, coords.y, v1);
-            v2 = Cartesian3.multiplyByScalar(n2, coords.z, v2);
+            Cartesian3.multiplyByScalar(n0, coords.x, n0);
+            Cartesian3.multiplyByScalar(n1, coords.y, n1);
+            Cartesian3.multiplyByScalar(n2, coords.z, n2);
 
-            var normal = Cartesian3.add(v0, v1, computeScratch);
-            Cartesian3.add(normal, v2, normal);
+            var normal = Cartesian3.add(n0, n1, n0);
+            Cartesian3.add(normal, n2, normal);
             Cartesian3.normalize(normal, normal);
 
             Cartesian3.pack(normal, currentAttributes.normal.values, insertedIndex * 3);
         }
 
         if (defined(binormals)) {
-            var b0 = Cartesian3.fromArray(binormals, i0 * 3);
-            var b1 = Cartesian3.fromArray(binormals, i1 * 3);
-            var b2 = Cartesian3.fromArray(binormals, i2 * 3);
+            var b0 = Cartesian3.fromArray(binormals, i0 * 3, p0Scratch);
+            var b1 = Cartesian3.fromArray(binormals, i1 * 3, p1Scratch);
+            var b2 = Cartesian3.fromArray(binormals, i2 * 3, p2Scratch);
 
-            v0 = Cartesian3.multiplyByScalar(b0, coords.x, v0);
-            v1 = Cartesian3.multiplyByScalar(b1, coords.y, v1);
-            v2 = Cartesian3.multiplyByScalar(b2, coords.z, v2);
+            Cartesian3.multiplyByScalar(b0, coords.x, b0);
+            Cartesian3.multiplyByScalar(b1, coords.y, b1);
+            Cartesian3.multiplyByScalar(b2, coords.z, b2);
 
-            var binormal = Cartesian3.add(v0, v1, computeScratch);
-            Cartesian3.add(binormal, v2, binormal);
+            var binormal = Cartesian3.add(b0, b1, b0);
+            Cartesian3.add(binormal, b2, binormal);
             Cartesian3.normalize(binormal, binormal);
 
             Cartesian3.pack(binormal, currentAttributes.binormal.values, insertedIndex * 3);
         }
 
         if (defined(tangents)) {
-            var t0 = Cartesian3.fromArray(tangents, i0 * 3);
-            var t1 = Cartesian3.fromArray(tangents, i1 * 3);
-            var t2 = Cartesian3.fromArray(tangents, i2 * 3);
+            var t0 = Cartesian3.fromArray(tangents, i0 * 3, p0Scratch);
+            var t1 = Cartesian3.fromArray(tangents, i1 * 3, p1Scratch);
+            var t2 = Cartesian3.fromArray(tangents, i2 * 3, p2Scratch);
 
-            v0 = Cartesian3.multiplyByScalar(t0, coords.x, v0);
-            v1 = Cartesian3.multiplyByScalar(t1, coords.y, v1);
-            v2 = Cartesian3.multiplyByScalar(t2, coords.z, v2);
+            Cartesian3.multiplyByScalar(t0, coords.x, t0);
+            Cartesian3.multiplyByScalar(t1, coords.y, t1);
+            Cartesian3.multiplyByScalar(t2, coords.z, t2);
 
-            var tangent = Cartesian3.add(v0, v1, computeScratch);
-            Cartesian3.add(tangent, v2, tangent);
+            var tangent = Cartesian3.add(t0, t1, t0);
+            Cartesian3.add(tangent, t2, tangent);
             Cartesian3.normalize(tangent, tangent);
 
             Cartesian3.pack(tangent, currentAttributes.tangent.values, insertedIndex * 3);
         }
 
         if (defined(texCoords)) {
-            var s0 = Cartesian2.fromArray(texCoords, i0 * 2);
-            var s1 = Cartesian2.fromArray(texCoords, i1 * 2);
-            var s2 = Cartesian2.fromArray(texCoords, i2 * 2);
+            var s0 = Cartesian2.fromArray(texCoords, i0 * 2, s0Scratch);
+            var s1 = Cartesian2.fromArray(texCoords, i1 * 2, s1Scratch);
+            var s2 = Cartesian2.fromArray(texCoords, i2 * 2, s2Scratch);
 
-            u0 = Cartesian2.multiplyByScalar(s0, coords.x, u0);
-            u1 = Cartesian2.multiplyByScalar(s1, coords.y, u1);
-            u2 = Cartesian2.multiplyByScalar(s2, coords.z, u2);
+            Cartesian2.multiplyByScalar(s0, coords.x, s0);
+            Cartesian2.multiplyByScalar(s1, coords.y, s1);
+            Cartesian2.multiplyByScalar(s2, coords.z, s2);
 
-            var texCoord = Cartesian2.add(u0, u1, u0);
-            Cartesian2.add(texCoord, u2, texCoord);
+            var texCoord = Cartesian2.add(s0, s1, s0);
+            Cartesian2.add(texCoord, s2, texCoord);
 
             Cartesian2.pack(texCoord, currentAttributes.st.values, insertedIndex * 2);
         }
@@ -2095,8 +2087,8 @@ define([
             var i0 = indices[i];
             var i1 = indices[i + 1];
 
-            var p0 = Cartesian3.fromArray(positions, i0 * 3);
-            var p1 = Cartesian3.fromArray(positions, i1 * 3);
+            var p0 = Cartesian3.fromArray(positions, i0 * 3, p0Scratch);
+            var p1 = Cartesian3.fromArray(positions, i1 * 3, p1Scratch);
 
             if (Math.abs(p0.y) < CesiumMath.EPSILON6){
                 if (p0.y < 0.0) {
@@ -2119,7 +2111,7 @@ define([
             var p1Attributes = westGeometry.attributes;
             var p1Indices = westGeometry.indices;
 
-            var intersection = IntersectionTests.lineSegmentPlane(p0, p1, xzPlane);
+            var intersection = IntersectionTests.lineSegmentPlane(p0, p1, xzPlane, p2Scratch);
             if (defined(intersection)) {
                 // move point on the xz-plane slightly away from the plane
                 var offset = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Y, 5.0 * CesiumMath.EPSILON9, offsetScratch);
