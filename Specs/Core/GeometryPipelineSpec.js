@@ -960,7 +960,7 @@ defineSuite([
             })
         });
 
-        var combined = GeometryPipeline.combine([instance]);
+        var combined = GeometryPipeline.combine([instance])[0];
         expect(combined).toEqual(instance.geometry);
     });
 
@@ -990,7 +990,7 @@ defineSuite([
             })
         });
 
-        var combined = GeometryPipeline.combine([instance, anotherInstance]);
+        var combined = GeometryPipeline.combine([instance, anotherInstance])[0];
         expect(combined).toEqual(new Geometry({
             attributes : {
                 position : new GeometryAttribute({
@@ -1051,7 +1051,7 @@ defineSuite([
             })
         });
 
-        var combined = GeometryPipeline.combine([instance, anotherInstance]);
+        var combined = GeometryPipeline.combine([instance, anotherInstance])[0];
         expect(combined).toEqual(new Geometry({
             attributes : {
                 position : new GeometryAttribute({
@@ -1110,7 +1110,7 @@ defineSuite([
             })
         });
 
-        var combined = GeometryPipeline.combine([instance, anotherInstance]);
+        var combined = GeometryPipeline.combine([instance, anotherInstance])[0];
         var expected = BoundingSphere.union(instance.geometry.boundingSphere, anotherInstance.geometry.boundingSphere);
         expect(combined.boundingSphere).toEqual(expected);
     });
@@ -1782,279 +1782,311 @@ defineSuite([
     });
 
     it('wrapLongitude provides indices for an un-indexed triangle list', function() {
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : new Float64Array([
-                                    0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0,
-                                    8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0])
-                })
-            },
-            primitiveType : PrimitiveType.TRIANGLES
+        var instance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        values : new Float64Array([
+                                        0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0,
+                                        8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0])
+                    })
+                },
+                primitiveType : PrimitiveType.TRIANGLES
+            })
         });
 
-        GeometryPipeline.wrapLongitude(geometry);
-        expect(geometry.indices).toEqual([0, 1, 2, 3, 4, 5]);
+        GeometryPipeline.wrapLongitude(instance);
+        expect(instance.geometry.indices).toEqual([0, 1, 2, 3, 4, 5]);
     });
 
     it('wrapLongitude returns unchanged geometry if indices are already defined for an un-indexed triangle list', function() {
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : new Float64Array([
-                                    0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0,
-                                    8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0])
-                })
-            },
-            primitiveType : PrimitiveType.TRIANGLES,
-            indices : new Uint16Array([0, 1, 2, 3, 4, 5])
+        var instance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        values : new Float64Array([
+                                        0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0,
+                                        8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0])
+                    })
+                },
+                primitiveType : PrimitiveType.TRIANGLES,
+                indices : new Uint16Array([0, 1, 2, 3, 4, 5])
+            })
         });
 
-        GeometryPipeline.wrapLongitude(geometry);
-        expect(geometry.indices).toEqual([0, 1, 2, 3, 4, 5]);
+        GeometryPipeline.wrapLongitude(instance);
+        expect(instance.geometry.indices).toEqual([0, 1, 2, 3, 4, 5]);
     });
 
     it('wrapLongitude throws when primitive type is TRIANGLES and number of vertices is less than 3', function() {
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : new Float64Array([0.0, 1.0, 2.0])
-                })
-            },
-            primitiveType : PrimitiveType.TRIANGLES
+        var instance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        values : new Float64Array([0.0, 1.0, 2.0])
+                    })
+                },
+                primitiveType : PrimitiveType.TRIANGLES
+            })
         });
 
         expect(function() {
-            GeometryPipeline.wrapLongitude(geometry);
+            GeometryPipeline.wrapLongitude(instance);
         }).toThrowDeveloperError();
     });
 
     it('wrapLongitude throws when primitive type is TRIANGLES and number of vertices is not a multiple of 3', function() {
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : new Float64Array([
-                                    0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0,
-                                    8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0])
-                })
-            },
-            primitiveType : PrimitiveType.TRIANGLES
+        var instance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        values : new Float64Array([
+                                        0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0,
+                                        8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0])
+                    })
+                },
+                primitiveType : PrimitiveType.TRIANGLES
+            })
         });
 
         expect(function() {
-            GeometryPipeline.wrapLongitude(geometry);
+            GeometryPipeline.wrapLongitude(instance);
         }).toThrowDeveloperError();
     });
 
     it('wrapLongitude creates indexed triangles for a triangle fan', function() {
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : new Float64Array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 8.0, 7.0, 6.0])
-                })
-            },
-            primitiveType : PrimitiveType.TRIANGLE_FAN
+        var instance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        values : new Float64Array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 8.0, 7.0, 6.0])
+                    })
+                },
+                primitiveType : PrimitiveType.TRIANGLE_FAN
+            })
         });
 
-        GeometryPipeline.wrapLongitude(geometry);
-        expect(geometry.primitiveType).toEqual(PrimitiveType.TRIANGLES);
-        expect(geometry.indices).toEqual([1, 0, 2, 2, 0, 3]);
+        GeometryPipeline.wrapLongitude(instance);
+        expect(instance.geometry.primitiveType).toEqual(PrimitiveType.TRIANGLES);
+        expect(instance.geometry.indices).toEqual([1, 0, 2, 2, 0, 3]);
     });
 
     it('wrapLongitude throws when primitive type is TRIANGLE_FAN and number of vertices is less than 3', function() {
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : new Float64Array([0.0, 1.0, 2.0])
-                })
-            },
-            primitiveType : PrimitiveType.TRIANGLE_FAN
+        var instance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        values : new Float64Array([0.0, 1.0, 2.0])
+                    })
+                },
+                primitiveType : PrimitiveType.TRIANGLE_FAN
+            })
         });
 
         expect(function() {
-            GeometryPipeline.wrapLongitude(geometry);
+            GeometryPipeline.wrapLongitude(instance);
         }).toThrowDeveloperError();
     });
 
     it('wrapLongitude creates indexd triangles for triangle strips', function() {
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : new Float64Array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0,
-                                               8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0])
-                })
-            },
-            primitiveType : PrimitiveType.TRIANGLE_STRIP
+        var instance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        values : new Float64Array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0,
+                                                   8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0])
+                    })
+                },
+                primitiveType : PrimitiveType.TRIANGLE_STRIP
+            })
         });
 
-        GeometryPipeline.wrapLongitude(geometry);
-        expect(geometry.primitiveType).toEqual(PrimitiveType.TRIANGLES);
-        expect(geometry.indices).toEqual([0, 1, 2, 0, 2, 3, 3, 2, 4, 3, 4, 5]);
+        GeometryPipeline.wrapLongitude(instance);
+        expect(instance.geometry.primitiveType).toEqual(PrimitiveType.TRIANGLES);
+        expect(instance.geometry.indices).toEqual([0, 1, 2, 0, 2, 3, 3, 2, 4, 3, 4, 5]);
     });
 
     it('wrapLongitude throws when the primitive type is TRIANGLE_STRIP and number of vertices is less than 3', function() {
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : new Float64Array([0.0, 1.0, 2.0])
-                })
-            },
-            primitiveType : PrimitiveType.TRIANGLE_STRIP
+        var instance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        values : new Float64Array([0.0, 1.0, 2.0])
+                    })
+                },
+                primitiveType : PrimitiveType.TRIANGLE_STRIP
+            })
         });
 
         expect(function() {
-            GeometryPipeline.wrapLongitude(geometry);
+            GeometryPipeline.wrapLongitude(instance);
         }).toThrowDeveloperError();
     });
 
     it('wrapLongitude creates indexed lines', function() {
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : new Float64Array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 8.0, 7.0, 6.0])
-                })
-            },
-            primitiveType : PrimitiveType.LINES
+        var instance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        values : new Float64Array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 8.0, 7.0, 6.0])
+                    })
+                },
+                primitiveType : PrimitiveType.LINES
+            })
         });
 
-        GeometryPipeline.wrapLongitude(geometry);
-        expect(geometry.indices).toEqual([0, 1, 2, 3]);
+        GeometryPipeline.wrapLongitude(instance);
+        expect(instance.geometry.indices).toEqual([0, 1, 2, 3]);
     });
 
     it('wrapLongitude returns lines unchanged if indices are provided', function() {
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : new Float64Array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 8.0, 7.0, 6.0])
-                })
-            },
-            primitiveType : PrimitiveType.LINES,
-            indices : new Uint16Array([0, 1, 2, 3])
+        var instance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        values : new Float64Array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 8.0, 7.0, 6.0])
+                    })
+                },
+                primitiveType : PrimitiveType.LINES,
+                indices : new Uint16Array([0, 1, 2, 3])
+            })
         });
 
-        GeometryPipeline.wrapLongitude(geometry);
-        expect(geometry.indices).toEqual([0, 1, 2, 3]);
+        GeometryPipeline.wrapLongitude(instance);
+        expect(instance.geometry.indices).toEqual([0, 1, 2, 3]);
     });
 
     it('wrapLongitude throws when primitive type is LINES and number of vertices is less than 2', function() {
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : new Float64Array([0.0, 1.0, 2.0])
-                })
-            },
-            primitiveType : PrimitiveType.LINES
+        var instance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        values : new Float64Array([0.0, 1.0, 2.0])
+                    })
+                },
+                primitiveType : PrimitiveType.LINES
+            })
         });
 
         expect(function() {
-            GeometryPipeline.wrapLongitude(geometry);
+            GeometryPipeline.wrapLongitude(instance);
         }).toThrowDeveloperError();
     });
 
     it('wrapLongitude throws when primitive type is LINES and number of vertices is not a multiple 2', function() {
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : new Float64Array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
-                })
-            },
-            primitiveType : PrimitiveType.LINES
+        var instance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        values : new Float64Array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
+                    })
+                },
+                primitiveType : PrimitiveType.LINES
+            })
         });
 
         expect(function() {
-            GeometryPipeline.wrapLongitude(geometry);
+            GeometryPipeline.wrapLongitude(instance);
         }).toThrowDeveloperError();
     });
 
     it('wrapLongitude creates indexed lines from line strip', function() {
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : new Float64Array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 8.0, 7.0, 6.0])
-                })
-            },
-            primitiveType : PrimitiveType.LINE_STRIP
+        var instance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        values : new Float64Array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 8.0, 7.0, 6.0])
+                    })
+                },
+                primitiveType : PrimitiveType.LINE_STRIP
+            })
         });
 
-        GeometryPipeline.wrapLongitude(geometry);
-        expect(geometry.primitiveType).toEqual(PrimitiveType.LINES);
-        expect(geometry.indices).toEqual([0, 1, 1, 2, 2, 3]);
+        GeometryPipeline.wrapLongitude(instance);
+        expect(instance.geometry.primitiveType).toEqual(PrimitiveType.LINES);
+        expect(instance.geometry.indices).toEqual([0, 1, 1, 2, 2, 3]);
     });
 
     it('wrapLongitude throws when primitive type is LINE_STRIP and number of vertices is less than 2', function() {
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : new Float64Array([0.0, 1.0, 2.0])
-                })
-            },
-            primitiveType : PrimitiveType.LINE_STRIP
+        var instance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        values : new Float64Array([0.0, 1.0, 2.0])
+                    })
+                },
+                primitiveType : PrimitiveType.LINE_STRIP
+            })
         });
 
         expect(function() {
-            GeometryPipeline.wrapLongitude(geometry);
+            GeometryPipeline.wrapLongitude(instance);
         }).toThrowDeveloperError();
     });
 
     it('wrapLongitude creates indexed lines from line loops', function() {
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : new Float64Array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 8.0, 7.0, 6.0])
-                })
-            },
-            primitiveType : PrimitiveType.LINE_LOOP
+        var instance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        values : new Float64Array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 8.0, 7.0, 6.0])
+                    })
+                },
+                primitiveType : PrimitiveType.LINE_LOOP
+            })
         });
 
-        GeometryPipeline.wrapLongitude(geometry);
-        expect(geometry.primitiveType).toEqual(PrimitiveType.LINES);
-        expect(geometry.indices).toEqual([0, 1, 1, 2, 2, 3, 3, 0]);
+        GeometryPipeline.wrapLongitude(instance);
+        expect(instance.geometry.primitiveType).toEqual(PrimitiveType.LINES);
+        expect(instance.geometry.indices).toEqual([0, 1, 1, 2, 2, 3, 3, 0]);
     });
 
     it('wrapLongitude throws when the primitive type is LINE_LOOP and number of vertices is less than 2', function() {
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : new Float64Array([0.0, 1.0, 2.0])
-                })
-            },
-            primitiveType : PrimitiveType.LINE_LOOP
+        var instance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        values : new Float64Array([0.0, 1.0, 2.0])
+                    })
+                },
+                primitiveType : PrimitiveType.LINE_LOOP
+            })
         });
 
         expect(function() {
-            GeometryPipeline.wrapLongitude(geometry);
+            GeometryPipeline.wrapLongitude(instance);
         }).toThrowDeveloperError();
     });
 
