@@ -1142,8 +1142,9 @@ define([
         if (passes.render) {
             length = colorCommands.length;
             for (i = 0; i < length; ++i) {
+                var sphereIndex = translucent ? Math.floor(i / 2) : i;
                 colorCommands[i].modelMatrix = modelMatrix;
-                colorCommands[i].boundingVolume = boundingSpheres[i];
+                colorCommands[i].boundingVolume = boundingSpheres[sphereIndex];
                 colorCommands[i].cull = this.cull;
                 colorCommands[i].debugShowBoundingVolume = this.debugShowBoundingVolume;
 
