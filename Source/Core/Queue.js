@@ -1,5 +1,10 @@
 /*global define*/
-define(function() {
+define([
+        '../Core/defaultValue',
+        '../Core/defineProperties'
+    ], function(
+        defaultValue,
+        defineProperties) {
     "use strict";
 
     /**
@@ -8,15 +13,34 @@ define(function() {
      * @alias Queue
      * @constructor
      */
-    var Queue = function() {
-        this._array = [];
-        this._offset = 0;
+    var Queue = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
-         * The length of the queue.
+         * DOC_TBA
          */
-        this.length = 0;
+        this.compact = defaultValue(options.compact, false);
+
+        this._array = [];
+        this._offset = 0;
+        this._length = 0;
     };
+
+    defineProperties(Queue.prototype, {
+        /**
+         * The length of the queue.
+         *
+         * @memberof Queue.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        length : {
+            get : function() {
+                return this._length;
+            }
+        }
+    });
 
     /**
      * Enqueues the specified item.
@@ -25,14 +49,14 @@ define(function() {
      */
     Queue.prototype.enqueue = function(item) {
         this._array.push(item);
-        this.length++;
+        this._length++;
     };
 
     /**
      * Dequeues an item.  Returns undefined if the queue is empty.
      */
     Queue.prototype.dequeue = function() {
-        if (this.length === 0) {
+        if (this._length === 0) {
             return undefined;
         }
 
@@ -42,14 +66,14 @@ define(function() {
         array[offset] = undefined;
 
         offset++;
-        if (offset > 10 && offset * 2 > array.length) {
+        if (this._compact && offset > 10 && offset * 2 > array.length) {
             //compact array
             this._array = array.slice(offset);
             offset = 0;
         }
 
         this._offset = offset;
-        this.length--;
+        this._length--;
 
         return item;
     };
@@ -67,7 +91,7 @@ define(function() {
      * Remove all items from the queue.
      */
     Queue.prototype.clear = function() {
-        this._array.length = this._offset = this.length = 0;
+        this._array.length = this._offset = this._length = 0;
     };
 
     /**
