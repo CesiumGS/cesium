@@ -980,19 +980,14 @@ define([
     }
 
     var scratchDrawingBufferDimensions = new Cartesian2();
-    var scratchToCenter = new Cartesian3();
-    var scratchProj = new Cartesian3();
+
     function updateBoundingVolume(collection, context, frameState, boundingVolume) {
         var camera = frameState.camera;
-        var frustum = camera.frustum;
-
-        var toCenter = Cartesian3.subtract(camera.positionWC, boundingVolume.center, scratchToCenter);
-        var proj = Cartesian3.multiplyByScalar(camera.directionWC, Cartesian3.dot(toCenter, camera.directionWC), scratchProj);
-        var distance = Math.max(0.0, Cartesian3.magnitude(proj) - boundingVolume.radius);
+        var distance = camera.distanceToBoundingSphere(boundingVolume);
 
         scratchDrawingBufferDimensions.x = context.drawingBufferWidth;
         scratchDrawingBufferDimensions.y = context.drawingBufferHeight;
-        var pixelSize = frustum.getPixelSize(scratchDrawingBufferDimensions, distance);
+        var pixelSize = camera.frustum.getPixelSize(scratchDrawingBufferDimensions, distance);
         var pixelScale = Math.max(pixelSize.x, pixelSize.y);
 
         var size = pixelScale * collection._maxScale * collection._maxSize * 2.0;
