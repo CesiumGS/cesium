@@ -1,27 +1,9 @@
 /*global define*/
 define([
-        '../ThirdParty/Uri',
-        '../ThirdParty/when',
-        './defaultValue'
+        './RequestsByServer'
     ], function(
-        Uri,
-        when,
-        defaultValue) {
+        RequestsByServer) {
     "use strict";
-
-    var maximumRequestsPerServer = 6;
-    var activeRequests = {};
-
-    var pageUri = new Uri(document.location.href);
-    function getServer(url) {
-        var uri = new Uri(url).resolve(pageUri);
-        uri.normalize();
-        var server = uri.authority;
-        if (!/:/.test(server)) {
-            server = server + ':' + (uri.scheme === 'https' ? '443' : '80');
-        }
-        return server;
-    }
 
     /**
      * Because browsers throttle the number of parallel requests allowed to each server,
@@ -56,22 +38,7 @@ define([
      * }
      */
     var throttleRequestByServer = function(url, requestFunction) {
-        var server = getServer(url);
-
-        var activeRequestsForServer = defaultValue(activeRequests[server], 0);
-        if (activeRequestsForServer >= maximumRequestsPerServer) {
-            return undefined;
-        }
-
-        activeRequests[server] = activeRequestsForServer + 1;
-
-        return when(requestFunction(url), function(result) {
-            activeRequests[server]--;
-            return result;
-        }).otherwise(function(error) {
-            activeRequests[server]--;
-            return when.reject(error);
-        });
+        return RequestsByServer.throttleRequest(url, requestFunction);
     };
 
     /**
