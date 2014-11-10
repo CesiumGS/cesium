@@ -2317,7 +2317,7 @@ define([
                     p0Attributes.st.values.push(sx, s3.y);
                     p2Attributes.st.values.push(sx, s0.y);
                     p2Attributes.st.values.push(sx, s3.y);
-                    for (j = i2 * 2; j < i2 * 4 + 2 * 2; ++j) {
+                    for (j = i2 * 2; j < i2 * 2 + 2 * 2; ++j) {
                         p2Attributes.st.values.push(texCoords[j]);
                     }
                 }

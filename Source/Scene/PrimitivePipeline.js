@@ -422,7 +422,6 @@ define([
             perInstanceAttributes.push(createPerInstanceVAAttributes(geometry, attributeLocations, perInstanceAttributeNames));
         }
 
-        // TODO: Fix per-instance attributes
         //var indices = computePerInstanceAttributeLocations(instances, perInstanceAttributes, attributeLocations);
         var indices = [];
 

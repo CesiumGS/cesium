@@ -862,19 +862,22 @@ define([
                     vertexArrayAttributes : attributes
                 }));
 
-                var center = geometry.boundingSphereCV.center;
-                var x = center.x;
-                var y = center.y;
-                var z = center.z;
-                center.x = z;
-                center.y = x;
-                center.z = y;
-
                 this._boundingSpheres.push(BoundingSphere.clone(geometry.boundingSphere));
                 this._boundingSphereWC.push(new BoundingSphere());
-                this._boundingSphereCV.push(BoundingSphere.clone(geometry.boundingSphereCV));
-                this._boundingSphere2D.push(new BoundingSphere());
-                this._boundingSphereMorph.push(new BoundingSphere());
+
+                if (!scene3DOnly) {
+                    var center = geometry.boundingSphereCV.center;
+                    var x = center.x;
+                    var y = center.y;
+                    var z = center.z;
+                    center.x = z;
+                    center.y = x;
+                    center.z = y;
+
+                    this._boundingSphereCV.push(BoundingSphere.clone(geometry.boundingSphereCV));
+                    this._boundingSphere2D.push(new BoundingSphere());
+                    this._boundingSphereMorph.push(new BoundingSphere());
+                }
             }
 
             this._va = va;
@@ -1118,7 +1121,6 @@ define([
                 if (defined(boundingSphere)) {
                     this._boundingSphereWC[i] = BoundingSphere.transform(boundingSphere, modelMatrix, this._boundingSphereWC[i]);
                     if (!scene3DOnly) {
-                        // TODO transform cv bounding sphere
                         this._boundingSphere2D[i] = BoundingSphere.clone(this._boundingSphereCV[i], this._boundingSphere2D[i]);
                         this._boundingSphere2D[i].center.x = 0.0;
                         this._boundingSphereMorph[i] = BoundingSphere.union(this._boundingSphereWC[i], this._boundingSphereCV[i]);
