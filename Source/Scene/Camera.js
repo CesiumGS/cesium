@@ -1881,7 +1881,9 @@ define([
     var scratchProj = new Cartesian3();
 
     /**
-     * DOC_TBA
+     * DOC_TBA.
+     *
+     * Distance from camera to front of the bounding sphere.  Clamped to the near plane.
      *
      * @param {BoundingSphere} boundingSphere The bounding sphere in world coordinates.
      */

@@ -2134,6 +2134,7 @@ define([
     }
 
     var scratchDrawingBufferDimensions = new Cartesian2();
+    var scratchPixelSize = new Cartesian2();
     var scratchBoundingSphere = new BoundingSphere();
 
     function scaleInPixels(positionWC, radius, context, frameState) {
@@ -2144,7 +2145,7 @@ define([
 
         scratchDrawingBufferDimensions.x = context.drawingBufferWidth;
         scratchDrawingBufferDimensions.y = context.drawingBufferHeight;
-        var pixelSize = camera.frustum.getPixelSize(scratchDrawingBufferDimensions, distance);
+        var pixelSize = camera.frustum.getPixelSize(scratchDrawingBufferDimensions, distance, scratchPixelSize);
         var pixelScale = Math.max(pixelSize.x, pixelSize.y);
 
         return pixelScale;
