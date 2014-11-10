@@ -462,7 +462,7 @@ define([
 
         throttleRequests = defaultValue(throttleRequests, true);
         if (throttleRequests) {
-            promise = throttleRequestByServer(url, tileLoader);
+            promise = throttleRequestByServer(tileLoader, url);
             if (!defined(promise)) {
                 return undefined;
             }
