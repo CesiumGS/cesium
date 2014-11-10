@@ -326,6 +326,68 @@ define([
         return vaAttributes;
     }
 
+    function computePerInstanceAttributeLocationsForGeometry(instanceIndex, geometry, instanceAttributes, names, attributeLocations, vertexArrays, indices, offsets, vaIndices) {
+        var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+
+        var namesLength = names.length;
+        for (var j = 0; j < namesLength; ++j) {
+            var name = names[j];
+            var index = attributeLocations[name];
+
+            var tempVertexCount = numberOfVertices;
+            while (tempVertexCount > 0) {
+                var vaIndex = defaultValue(vaIndices[name], 0);
+                var va = vertexArrays[vaIndex];
+                var vaLength = va.length;
+
+                var attribute;
+                for (var k = 0; k < vaLength; ++k) {
+                    attribute = va[k];
+                    if (attribute.index === index) {
+                        break;
+                    }
+                }
+
+                if (!defined(indices[instanceIndex])) {
+                    indices[instanceIndex] = {};
+                }
+
+                if (!defined(indices[instanceIndex][name])) {
+                    indices[instanceIndex][name] = {
+                        dirty : false,
+                        value : instanceAttributes[name].value,
+                        indices : []
+                    };
+                }
+
+                var size = attribute.values.length / attribute.componentsPerAttribute;
+                var offset = defaultValue(offsets[name], 0);
+
+                var count;
+                if (offset + tempVertexCount < size) {
+                    count = tempVertexCount;
+                    indices[instanceIndex][name].indices.push({
+                        attribute : attribute,
+                        offset : offset,
+                        count : count
+                    });
+                    offsets[name] = offset + tempVertexCount;
+                } else {
+                    count = size - offset;
+                    indices[instanceIndex][name].indices.push({
+                        attribute : attribute,
+                        offset : offset,
+                        count : count
+                    });
+                    offsets[name] = 0;
+                    vaIndices[name] = vaIndex + 1;
+                }
+
+                tempVertexCount -= count;
+            }
+        }
+    }
+
     function computePerInstanceAttributeLocations(instances, vertexArrays, attributeLocations) {
         var indices = [];
 
@@ -336,64 +398,13 @@ define([
 
         for (var i = 0; i < length; ++i) {
             var instance = instances[i];
-            var numberOfVertices = Geometry.computeNumberOfVertices(instance.geometry);
+            var attributes = instance.attributes;
 
-            var namesLength = names.length;
-            for (var j = 0; j < namesLength; ++j) {
-                var name = names[j];
-                var index = attributeLocations[name];
-
-                var tempVertexCount = numberOfVertices;
-                while (tempVertexCount > 0) {
-                    var vaIndex = defaultValue(vaIndices[name], 0);
-                    var va = vertexArrays[vaIndex];
-                    var vaLength = va.length;
-
-                    var attribute;
-                    for (var k = 0; k < vaLength; ++k) {
-                        attribute = va[k];
-                        if (attribute.index === index) {
-                            break;
-                        }
-                    }
-
-                    if (!defined(indices[i])) {
-                        indices[i] = {};
-                    }
-
-                    if (!defined(indices[i][name])) {
-                        indices[i][name] = {
-                            dirty : false,
-                            value : instance.attributes[name].value,
-                            indices : []
-                        };
-                    }
-
-                    var size = attribute.values.length / attribute.componentsPerAttribute;
-                    var offset = defaultValue(offsets[name], 0);
-
-                    var count;
-                    if (offset + tempVertexCount < size) {
-                        count = tempVertexCount;
-                        indices[i][name].indices.push({
-                            attribute : attribute,
-                            offset : offset,
-                            count : count
-                        });
-                        offsets[name] = offset + tempVertexCount;
-                    } else {
-                        count = size - offset;
-                        indices[i][name].indices.push({
-                            attribute : attribute,
-                            offset : offset,
-                            count : count
-                        });
-                        offsets[name] = 0;
-                        vaIndices[name] = vaIndex + 1;
-                    }
-
-                    tempVertexCount -= count;
-                }
+            if (defined(instance.geometry)) {
+                computePerInstanceAttributeLocationsForGeometry(i, instance.geometry, attributes, names, attributeLocations, vertexArrays, indices, offsets, vaIndices);
+            } else {
+                computePerInstanceAttributeLocationsForGeometry(i, instance.westHemisphereGeometry, attributes, names, attributeLocations, vertexArrays, indices, offsets, vaIndices);
+                computePerInstanceAttributeLocationsForGeometry(i, instance.eastHemisphereGeometry, attributes, names, attributeLocations, vertexArrays, indices, offsets, vaIndices);
             }
         }
 
@@ -422,8 +433,7 @@ define([
             perInstanceAttributes.push(createPerInstanceVAAttributes(geometry, attributeLocations, perInstanceAttributeNames));
         }
 
-        //var indices = computePerInstanceAttributeLocations(instances, perInstanceAttributes, attributeLocations);
-        var indices = [];
+        var indices = computePerInstanceAttributeLocations(instances, perInstanceAttributes, attributeLocations);
 
         return {
             geometries : geometries,
