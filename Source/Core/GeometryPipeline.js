@@ -2013,7 +2013,7 @@ define([
             var p2 = Cartesian3.fromArray(positions, i2 * 3);
 
             var result = splitTriangle(p0, p1, p2);
-            if (defined(result) && result.length > 3) {
+            if (defined(result) && result.positions.length > 3) {
                 var resultPositions = result.positions;
                 var resultIndices = result.indices;
                 var resultLength = resultIndices.length;
@@ -2080,10 +2080,22 @@ define([
         var eastGeometry = copyGeometryForSplit(geometry);
         var westGeometry = copyGeometryForSplit(geometry);
 
+        var i;
         var index;
         var length = indices.length;
 
-        for ( var i = 0; i < length; i += 2) {
+        var westGeometryIndexMap = [];
+        westGeometryIndexMap.length = positions.length / 3;
+
+        var eastGeometryIndexMap = [];
+        eastGeometryIndexMap.length = positions.length / 3;
+
+        for (i = 0; i < westGeometryIndexMap.length; ++i) {
+            westGeometryIndexMap[i] = -1;
+            eastGeometryIndexMap[i] = -1;
+        }
+
+        for (i = 0; i < length; i += 2) {
             var i0 = indices[i];
             var i1 = indices[i + 1];
 
@@ -2108,8 +2120,10 @@ define([
 
             var p0Attributes = eastGeometry.attributes;
             var p0Indices = eastGeometry.indices;
+            var p0IndexMap = eastGeometryIndexMap;
             var p1Attributes = westGeometry.attributes;
             var p1Indices = westGeometry.indices;
+            var p1IndexMap = westGeometryIndexMap;
 
             var intersection = IntersectionTests.lineSegmentPlane(p0, p1, xzPlane, p2Scratch);
             if (defined(intersection)) {
@@ -2120,41 +2134,37 @@ define([
 
                     p0Attributes = westGeometry.attributes;
                     p0Indices = westGeometry.indices;
+                    p0IndexMap = westGeometryIndexMap;
                     p1Attributes = eastGeometry.attributes;
                     p1Indices = eastGeometry.indices;
+                    p1IndexMap = eastGeometryIndexMap;
                 }
 
                 var offsetPoint = Cartesian3.add(intersection, offset, offsetPointScratch);
-                p0Attributes.position.values.push(p0.x, p0.y, p0.z);
-                p0Attributes.position.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                insertSplitPoint(p0Attributes, p0Indices, p0IndexMap, indices, i, p0);
+                insertSplitPoint(p0Attributes, p0Indices, p0IndexMap, indices, -1, offsetPoint);
 
                 Cartesian3.negate(offset, offset);
                 Cartesian3.add(intersection, offset, offsetPoint);
-                p1Attributes.position.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
-                p1Attributes.position.values.push(p1.x, p1.y, p1.z);
-
-                index = p0Attributes.position.values.length / 3 - 2;
-                p0Indices.push(index, index + 1);
-
-                index = p1Attributes.position.values.length / 3 - 2;
-                p1Indices.push(index, index + 1);
+                insertSplitPoint(p1Attributes, p1Indices, p1IndexMap, indices, -1, offsetPoint);
+                insertSplitPoint(p1Attributes, p1Indices, p1IndexMap, indices, i + 1, p1);
             } else {
                 var currentAttributes;
                 var currentIndices;
+                var currentIndexMap;
 
                 if (p0.y < 0.0) {
                     currentAttributes = westGeometry.attributes;
                     currentIndices = westGeometry.indices;
+                    currentIndexMap = westGeometryIndexMap;
                 } else {
                     currentAttributes = eastGeometry.attributes;
                     currentIndices = eastGeometry.indices;
+                    currentIndexMap = eastGeometryIndexMap;
                 }
 
-                currentAttributes.position.values.push(p0.x, p0.y, p0.z);
-                currentAttributes.position.values.push(p1.x, p1.y, p1.z);
-
-                index = currentAttributes.position.values.length / 3 - 2;
-                currentIndices.push(index, index + 1);
+                insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, i, p0);
+                insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, i + 1, p1);
             }
         }
 
@@ -2244,21 +2254,21 @@ define([
                 p2Attributes.position.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
                 p2Attributes.position.values.push(p2.x, p2.y, p2.z, p3.x, p3.y, p3.z);
 
-                for (j = i0 * 3; j < 2 * 3; ++j) {
+                for (j = i0 * 3; j < i0 * 3 + 2 * 3; ++j) {
                     p0Attributes.prevPosition.values.push(prevPositions[j]);
                 }
                 p0Attributes.prevPosition.values.push(p0.x, p0.y, p0.z, p0.x, p0.y, p0.z);
                 p2Attributes.prevPosition.values.push(p0.x, p0.y, p0.z, p0.x, p0.y, p0.z);
-                for (j = i2 * 3; j < 2 * 3; ++j) {
+                for (j = i2 * 3; j < i2 * 3 + 2 * 3; ++j) {
                     p2Attributes.prevPosition.values.push(prevPositions[j]);
                 }
 
-                for (j = i0 * 3; j < 2 * 3; ++j) {
+                for (j = i0 * 3; j < i0 * 3 + 2 * 3; ++j) {
                     p0Attributes.nextPosition.values.push(nextPositions[j]);
                 }
                 p0Attributes.nextPosition.values.push(p2.x, p2.y, p2.z, p2.x, p2.y, p2.z);
                 p2Attributes.nextPosition.values.push(p2.x, p2.y, p2.z, p2.x, p2.y, p2.z);
-                for (j = i2 * 3; j < 2 * 3; ++j) {
+                for (j = i2 * 3; j < i2 * 3 + 2 * 3; ++j) {
                     p2Attributes.nextPosition.values.push(nextPositions[j]);
                 }
 
@@ -2282,14 +2292,14 @@ define([
                     var b = CesiumMath.lerp(c0.z, c2.z, t);
                     var a = CesiumMath.lerp(c0.w, c2.w, t);
 
-                    for (j = i0 * 4; j < 2 * 4; ++j) {
+                    for (j = i0 * 4; j < i0 * 4 + 2 * 4; ++j) {
                         p0Attributes.color.values.push(colors[j]);
                     }
                     p0Attributes.color.values.push(r, g, b, a);
                     p0Attributes.color.values.push(r, g, b, a);
                     p2Attributes.color.values.push(r, g, b, a);
                     p2Attributes.color.values.push(r, g, b, a);
-                    for (j = i2 * 4; j < 2 * 4; ++j) {
+                    for (j = i2 * 4; j < i2 * 4 + 2 * 4; ++j) {
                         p2Attributes.color.values.push(colors[j]);
                     }
                 }
@@ -2300,14 +2310,14 @@ define([
 
                     var sx = CesiumMath.lerp(s0.x, s3.x, t);
 
-                    for (j = i0 * 2; j < 2 * 2; ++j) {
+                    for (j = i0 * 2; j < i0 * 2 + 2 * 2; ++j) {
                         p0Attributes.st.values.push(texCoords[j]);
                     }
                     p0Attributes.st.values.push(sx, s0.y);
                     p0Attributes.st.values.push(sx, s3.y);
                     p2Attributes.st.values.push(sx, s0.y);
                     p2Attributes.st.values.push(sx, s3.y);
-                    for (j = i0 * 2; j < 2 * 2; ++j) {
+                    for (j = i2 * 2; j < i2 * 4 + 2 * 2; ++j) {
                         p2Attributes.st.values.push(texCoords[j]);
                     }
                 }
