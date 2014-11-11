@@ -195,7 +195,7 @@ define([
         };
     };
 
-    var removeDuplicatesEpsilon = CesiumMath.EPSILON6;
+    var removeDuplicatesEpsilon = CesiumMath.EPSILON4;
 
     /**
      * Removes adjacent duplicate positions in an array of positions.
