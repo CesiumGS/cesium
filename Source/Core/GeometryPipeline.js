@@ -10,6 +10,7 @@ define([
         './ComponentDatatype',
         './defaultValue',
         './defined',
+        './deprecationWarning',
         './DeveloperError',
         './EncodedCartesian3',
         './GeographicProjection',
@@ -37,6 +38,7 @@ define([
         ComponentDatatype,
         defaultValue,
         defined,
+        deprecationWarning,
         DeveloperError,
         EncodedCartesian3,
         GeographicProjection,
@@ -1085,7 +1087,9 @@ define([
      * var geometry = Cesium.GeometryPipeline.combine(instances);
      */
     GeometryPipeline.combine = function(instances) {
-      //>>includeStart('debug', pragmas.debug);
+        deprecationWarning('GeometryPipeline.combine', 'GeometryPipeline.combine was deprecated in Cesium 1.4. It will be removed in Cesium 1.7. Use GeometryPipeline.combineInstances.');
+
+        //>>includeStart('debug', pragmas.debug);
         if ((!defined(instances)) || (instances.length < 1)) {
             throw new DeveloperError('instances is required and must have length greater than zero.');
         }
@@ -2509,6 +2513,8 @@ define([
      * geometry = Cesium.GeometryPipeline.wrapLongitude(geometry);
      */
     GeometryPipeline.wrapLongitude = function(geometry) {
+        deprecationWarning('GeometryPipeline.wrapLongitude', 'GeometryPipeline.wrapLongitude was deprecated in Cesium 1.4. It will be removed in Cesium 1.7. Use GeometryPipeline.splitLongitude.');
+
         //>>includeStart('debug', pragmas.debug);
         if (!defined(geometry)) {
             throw new DeveloperError('geometry is required.');
@@ -2531,7 +2537,7 @@ define([
         delete instance.eastHemisphereGeometry;
         delete instance.westHemisphereGeometry;
 
-        return GeometryPipeline.combine(instances)[0].geometry;
+        return GeometryPipeline.combine(instances);
     };
 
     return GeometryPipeline;
