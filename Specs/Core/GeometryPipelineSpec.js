@@ -946,7 +946,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('combine combines one geometry', function() {
+    it('combineInstances combines one geometry', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -960,11 +960,11 @@ defineSuite([
             })
         });
 
-        var combined = GeometryPipeline.combine([instance])[0];
+        var combined = GeometryPipeline.combineInstances([instance])[0];
         expect(combined).toEqual(instance.geometry);
     });
 
-    it('combine combines several geometries without indicess', function() {
+    it('combineInstances combines several geometries without indicess', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -990,7 +990,7 @@ defineSuite([
             })
         });
 
-        var combined = GeometryPipeline.combine([instance, anotherInstance])[0];
+        var combined = GeometryPipeline.combineInstances([instance, anotherInstance])[0];
         expect(combined).toEqual(new Geometry({
             attributes : {
                 position : new GeometryAttribute({
@@ -1006,7 +1006,7 @@ defineSuite([
         }));
     });
 
-    it('combine combines several geometries with indicess', function() {
+    it('combineInstances combines several geometries with indicess', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -1051,7 +1051,7 @@ defineSuite([
             })
         });
 
-        var combined = GeometryPipeline.combine([instance, anotherInstance])[0];
+        var combined = GeometryPipeline.combineInstances([instance, anotherInstance])[0];
         expect(combined).toEqual(new Geometry({
             attributes : {
                 position : new GeometryAttribute({
@@ -1072,7 +1072,7 @@ defineSuite([
         }));
     });
 
-    it('combine combines bounding spheres', function() {
+    it('combineInstances combines bounding spheres', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -1110,24 +1110,24 @@ defineSuite([
             })
         });
 
-        var combined = GeometryPipeline.combine([instance, anotherInstance])[0];
+        var combined = GeometryPipeline.combineInstances([instance, anotherInstance])[0];
         var expected = BoundingSphere.union(instance.geometry.boundingSphere, anotherInstance.geometry.boundingSphere);
         expect(combined.boundingSphere).toEqual(expected);
     });
 
-    it('combine throws without instances', function() {
+    it('combineInstances throws without instances', function() {
         expect(function() {
-            GeometryPipeline.combine();
+            GeometryPipeline.combineInstances();
         }).toThrowDeveloperError();
     });
 
-    it('combine throws when instances.length is zero', function() {
+    it('combineInstances throws when instances.length is zero', function() {
         expect(function() {
-            GeometryPipeline.combine([]);
+            GeometryPipeline.combineInstances([]);
         }).toThrowDeveloperError();
     });
 
-    it('combine throws when instances.modelMatrix do not match', function() {
+    it('combineInstances throws when instances.modelMatrix do not match', function() {
         var instance0 = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -1157,11 +1157,11 @@ defineSuite([
         });
 
         expect(function() {
-            GeometryPipeline.combine([instance0, instance1]);
+            GeometryPipeline.combineInstances([instance0, instance1]);
         }).toThrowDeveloperError();
     });
 
-    it('combine throws when instance geometries do not all have or not have an indices', function() {
+    it('combineInstances throws when instance geometries do not all have or not have an indices', function() {
         var instance0 = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -1190,11 +1190,11 @@ defineSuite([
         });
 
         expect(function() {
-            GeometryPipeline.combine([instance0, instance1]);
+            GeometryPipeline.combineInstances([instance0, instance1]);
         }).toThrowDeveloperError();
     });
 
-    it('combine throws when instance geometries do not all have the same primitive type', function() {
+    it('combineInstances throws when instance geometries do not all have the same primitive type', function() {
         var instance0 = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -1222,7 +1222,7 @@ defineSuite([
         });
 
         expect(function() {
-            GeometryPipeline.combine([instance0, instance1]);
+            GeometryPipeline.combineInstances([instance0, instance1]);
         }).toThrowDeveloperError();
     });
 
@@ -1781,7 +1781,7 @@ defineSuite([
         }
     });
 
-    it('wrapLongitude provides indices for an un-indexed triangle list', function() {
+    it('splitLongitude provides indices for an un-indexed triangle list', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -1797,11 +1797,11 @@ defineSuite([
             })
         });
 
-        GeometryPipeline.wrapLongitude(instance);
+        GeometryPipeline.splitLongitude(instance);
         expect(instance.geometry.indices).toEqual([0, 1, 2, 3, 4, 5]);
     });
 
-    it('wrapLongitude returns unchanged geometry if indices are already defined for an un-indexed triangle list', function() {
+    it('splitLongitude returns unchanged geometry if indices are already defined for an un-indexed triangle list', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -1818,11 +1818,11 @@ defineSuite([
             })
         });
 
-        GeometryPipeline.wrapLongitude(instance);
+        GeometryPipeline.splitLongitude(instance);
         expect(instance.geometry.indices).toEqual([0, 1, 2, 3, 4, 5]);
     });
 
-    it('wrapLongitude throws when primitive type is TRIANGLES and number of vertices is less than 3', function() {
+    it('splitLongitude throws when primitive type is TRIANGLES and number of vertices is less than 3', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -1837,11 +1837,11 @@ defineSuite([
         });
 
         expect(function() {
-            GeometryPipeline.wrapLongitude(instance);
+            GeometryPipeline.splitLongitude(instance);
         }).toThrowDeveloperError();
     });
 
-    it('wrapLongitude throws when primitive type is TRIANGLES and number of vertices is not a multiple of 3', function() {
+    it('splitLongitude throws when primitive type is TRIANGLES and number of vertices is not a multiple of 3', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -1858,11 +1858,11 @@ defineSuite([
         });
 
         expect(function() {
-            GeometryPipeline.wrapLongitude(instance);
+            GeometryPipeline.splitLongitude(instance);
         }).toThrowDeveloperError();
     });
 
-    it('wrapLongitude creates indexed triangles for a triangle fan', function() {
+    it('splitLongitude creates indexed triangles for a triangle fan', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -1876,12 +1876,12 @@ defineSuite([
             })
         });
 
-        GeometryPipeline.wrapLongitude(instance);
+        GeometryPipeline.splitLongitude(instance);
         expect(instance.geometry.primitiveType).toEqual(PrimitiveType.TRIANGLES);
         expect(instance.geometry.indices).toEqual([0, 1, 2, 2, 1, 3]);
     });
 
-    it('wrapLongitude throws when primitive type is TRIANGLE_FAN and number of vertices is less than 3', function() {
+    it('splitLongitude throws when primitive type is TRIANGLE_FAN and number of vertices is less than 3', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -1896,11 +1896,11 @@ defineSuite([
         });
 
         expect(function() {
-            GeometryPipeline.wrapLongitude(instance);
+            GeometryPipeline.splitLongitude(instance);
         }).toThrowDeveloperError();
     });
 
-    it('wrapLongitude creates indexd triangles for triangle strips', function() {
+    it('splitLongitude creates indexd triangles for triangle strips', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -1915,12 +1915,12 @@ defineSuite([
             })
         });
 
-        GeometryPipeline.wrapLongitude(instance);
+        GeometryPipeline.splitLongitude(instance);
         expect(instance.geometry.primitiveType).toEqual(PrimitiveType.TRIANGLES);
         expect(instance.geometry.indices).toEqual([0, 1, 2, 0, 2, 3, 3, 2, 4, 3, 4, 5]);
     });
 
-    it('wrapLongitude throws when the primitive type is TRIANGLE_STRIP and number of vertices is less than 3', function() {
+    it('splitLongitude throws when the primitive type is TRIANGLE_STRIP and number of vertices is less than 3', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -1935,11 +1935,11 @@ defineSuite([
         });
 
         expect(function() {
-            GeometryPipeline.wrapLongitude(instance);
+            GeometryPipeline.splitLongitude(instance);
         }).toThrowDeveloperError();
     });
 
-    it('wrapLongitude creates indexed lines', function() {
+    it('splitLongitude creates indexed lines', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -1953,11 +1953,11 @@ defineSuite([
             })
         });
 
-        GeometryPipeline.wrapLongitude(instance);
+        GeometryPipeline.splitLongitude(instance);
         expect(instance.geometry.indices).toEqual([0, 1, 2, 3]);
     });
 
-    it('wrapLongitude returns lines unchanged if indices are provided', function() {
+    it('splitLongitude returns lines unchanged if indices are provided', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -1972,11 +1972,11 @@ defineSuite([
             })
         });
 
-        GeometryPipeline.wrapLongitude(instance);
+        GeometryPipeline.splitLongitude(instance);
         expect(instance.geometry.indices).toEqual([0, 1, 2, 3]);
     });
 
-    it('wrapLongitude throws when primitive type is LINES and number of vertices is less than 2', function() {
+    it('splitLongitude throws when primitive type is LINES and number of vertices is less than 2', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -1991,11 +1991,11 @@ defineSuite([
         });
 
         expect(function() {
-            GeometryPipeline.wrapLongitude(instance);
+            GeometryPipeline.splitLongitude(instance);
         }).toThrowDeveloperError();
     });
 
-    it('wrapLongitude throws when primitive type is LINES and number of vertices is not a multiple 2', function() {
+    it('splitLongitude throws when primitive type is LINES and number of vertices is not a multiple 2', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -2010,11 +2010,11 @@ defineSuite([
         });
 
         expect(function() {
-            GeometryPipeline.wrapLongitude(instance);
+            GeometryPipeline.splitLongitude(instance);
         }).toThrowDeveloperError();
     });
 
-    it('wrapLongitude creates indexed lines from line strip', function() {
+    it('splitLongitude creates indexed lines from line strip', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -2028,12 +2028,12 @@ defineSuite([
             })
         });
 
-        GeometryPipeline.wrapLongitude(instance);
+        GeometryPipeline.splitLongitude(instance);
         expect(instance.geometry.primitiveType).toEqual(PrimitiveType.LINES);
         expect(instance.geometry.indices).toEqual([0, 1, 1, 2, 2, 3]);
     });
 
-    it('wrapLongitude throws when primitive type is LINE_STRIP and number of vertices is less than 2', function() {
+    it('splitLongitude throws when primitive type is LINE_STRIP and number of vertices is less than 2', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -2048,11 +2048,11 @@ defineSuite([
         });
 
         expect(function() {
-            GeometryPipeline.wrapLongitude(instance);
+            GeometryPipeline.splitLongitude(instance);
         }).toThrowDeveloperError();
     });
 
-    it('wrapLongitude creates indexed lines from line loops', function() {
+    it('splitLongitude creates indexed lines from line loops', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -2066,12 +2066,12 @@ defineSuite([
             })
         });
 
-        GeometryPipeline.wrapLongitude(instance);
+        GeometryPipeline.splitLongitude(instance);
         expect(instance.geometry.primitiveType).toEqual(PrimitiveType.LINES);
         expect(instance.geometry.indices).toEqual([0, 1, 1, 2, 2, 3, 3, 0]);
     });
 
-    it('wrapLongitude throws when the primitive type is LINE_LOOP and number of vertices is less than 2', function() {
+    it('splitLongitude throws when the primitive type is LINE_LOOP and number of vertices is less than 2', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -2086,11 +2086,11 @@ defineSuite([
         });
 
         expect(function() {
-            GeometryPipeline.wrapLongitude(instance);
+            GeometryPipeline.splitLongitude(instance);
         }).toThrowDeveloperError();
     });
 
-    it('wrapLongitude subdivides triangle crossing the international date line, p0 behind', function() {
+    it('splitLongitude subdivides triangle crossing the international date line, p0 behind', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -2104,7 +2104,7 @@ defineSuite([
                 primitiveType : PrimitiveType.TRIANGLES
             })
         });
-        GeometryPipeline.wrapLongitude(instance);
+        GeometryPipeline.splitLongitude(instance);
         expect(instance.geometry).not.toBeDefined();
 
         expect(instance.westHemisphereGeometry).toBeDefined();
@@ -2120,7 +2120,7 @@ defineSuite([
         expect(instance.eastHemisphereGeometry.attributes.position.values.length).toEqual(5 * 3);
     });
 
-    it('wrapLongitude subdivides triangle crossing the international date line, p1 behind', function() {
+    it('splitLongitude subdivides triangle crossing the international date line, p1 behind', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -2134,7 +2134,7 @@ defineSuite([
                 primitiveType : PrimitiveType.TRIANGLES
             })
         });
-        GeometryPipeline.wrapLongitude(instance);
+        GeometryPipeline.splitLongitude(instance);
         expect(instance.geometry).not.toBeDefined();
 
         expect(instance.westHemisphereGeometry).toBeDefined();
@@ -2150,7 +2150,7 @@ defineSuite([
         expect(instance.eastHemisphereGeometry.attributes.position.values.length).toEqual(5 * 3);
     });
 
-    it('wrapLongitude subdivides triangle crossing the international date line, p2 behind', function() {
+    it('splitLongitude subdivides triangle crossing the international date line, p2 behind', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -2164,7 +2164,7 @@ defineSuite([
                 primitiveType : PrimitiveType.TRIANGLES
             })
         });
-        GeometryPipeline.wrapLongitude(instance);
+        GeometryPipeline.splitLongitude(instance);
         expect(instance.geometry).not.toBeDefined();
 
         expect(instance.westHemisphereGeometry).toBeDefined();
@@ -2180,7 +2180,7 @@ defineSuite([
         expect(instance.eastHemisphereGeometry.attributes.position.values.length).toEqual(5 * 3);
     });
 
-    it('wrapLongitude subdivides triangle crossing the international date line, p0 ahead', function() {
+    it('splitLongitude subdivides triangle crossing the international date line, p0 ahead', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -2194,7 +2194,7 @@ defineSuite([
                 primitiveType : PrimitiveType.TRIANGLES
             })
         });
-        GeometryPipeline.wrapLongitude(instance);
+        GeometryPipeline.splitLongitude(instance);
         expect(instance.geometry).not.toBeDefined();
 
         expect(instance.westHemisphereGeometry).toBeDefined();
@@ -2210,7 +2210,7 @@ defineSuite([
         expect(instance.eastHemisphereGeometry.attributes.position.values.length).toEqual(3 * 3);
     });
 
-    it('wrapLongitude subdivides triangle crossing the international date line, p1 ahead', function() {
+    it('splitLongitude subdivides triangle crossing the international date line, p1 ahead', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -2224,7 +2224,7 @@ defineSuite([
                 primitiveType : PrimitiveType.TRIANGLES
             })
         });
-        GeometryPipeline.wrapLongitude(instance);
+        GeometryPipeline.splitLongitude(instance);
         expect(instance.geometry).not.toBeDefined();
 
         expect(instance.westHemisphereGeometry).toBeDefined();
@@ -2240,7 +2240,7 @@ defineSuite([
         expect(instance.eastHemisphereGeometry.attributes.position.values.length).toEqual(3 * 3);
     });
 
-    it('wrapLongitude subdivides triangle crossing the international date line, p2 ahead', function() {
+    it('splitLongitude subdivides triangle crossing the international date line, p2 ahead', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -2254,7 +2254,7 @@ defineSuite([
                 primitiveType : PrimitiveType.TRIANGLES
             })
         });
-        GeometryPipeline.wrapLongitude(instance);
+        GeometryPipeline.splitLongitude(instance);
         expect(instance.geometry).not.toBeDefined();
 
         expect(instance.westHemisphereGeometry).toBeDefined();
@@ -2270,7 +2270,7 @@ defineSuite([
         expect(instance.eastHemisphereGeometry.attributes.position.values.length).toEqual(3 * 3);
     });
 
-    it('wrapLongitude returns offset triangle that touches the international date line', function() {
+    it('splitLongitude returns offset triangle that touches the international date line', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -2284,7 +2284,7 @@ defineSuite([
                 primitiveType : PrimitiveType.TRIANGLES
             })
         });
-        GeometryPipeline.wrapLongitude(instance);
+        GeometryPipeline.splitLongitude(instance);
         var geometry = instance.geometry;
 
         expect(geometry.indices).toEqual([0, 1, 2]);
@@ -2294,7 +2294,7 @@ defineSuite([
         expect(positions.length).toEqual(3 * 3);
     });
 
-    it('wrapLongitude returns the same points if the triangle doesn\'t cross the international date line, behind', function() {
+    it('splitLongitude returns the same points if the triangle doesn\'t cross the international date line, behind', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -2308,7 +2308,7 @@ defineSuite([
                 primitiveType : PrimitiveType.TRIANGLES
             })
         });
-        GeometryPipeline.wrapLongitude(instance);
+        GeometryPipeline.splitLongitude(instance);
         var geometry = instance.geometry;
 
         expect(geometry.indices).toEqual([0, 1, 2]);
@@ -2318,7 +2318,7 @@ defineSuite([
         expect(positions.length).toEqual(3 * 3);
     });
 
-    it('wrapLongitude returns the same points if the triangle doesn\'t cross the international date line, ahead', function() {
+    it('splitLongitude returns the same points if the triangle doesn\'t cross the international date line, ahead', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -2332,7 +2332,7 @@ defineSuite([
                 primitiveType : PrimitiveType.TRIANGLES
             })
         });
-        GeometryPipeline.wrapLongitude(instance);
+        GeometryPipeline.splitLongitude(instance);
         var geometry = instance.geometry;
 
         expect(geometry.indices).toEqual([0, 1, 2]);
@@ -2342,7 +2342,7 @@ defineSuite([
         expect(positions.length).toEqual(3 * 3);
     });
 
-    it('wrapLongitude returns the same points if the triangle doesn\'t cross the international date line, positive x', function() {
+    it('splitLongitude returns the same points if the triangle doesn\'t cross the international date line, positive x', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -2356,7 +2356,7 @@ defineSuite([
                 primitiveType : PrimitiveType.TRIANGLES
             })
         });
-        GeometryPipeline.wrapLongitude(instance);
+        GeometryPipeline.splitLongitude(instance);
         var geometry = instance.geometry;
 
         expect(geometry.indices).toEqual([0, 1, 2]);
@@ -2366,7 +2366,7 @@ defineSuite([
         expect(positions.length).toEqual(3 * 3);
     });
 
-    it('wrapLongitude computes all attributes for a triangle crossing the international date line', function() {
+    it('splitLongitude computes all attributes for a triangle crossing the international date line', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -2400,7 +2400,7 @@ defineSuite([
                 primitiveType : PrimitiveType.TRIANGLES
             })
         });
-        GeometryPipeline.wrapLongitude(instance);
+        GeometryPipeline.splitLongitude(instance);
         expect(instance.geometry).not.toBeDefined();
 
         expect(instance.westHemisphereGeometry).toBeDefined();
@@ -2432,7 +2432,7 @@ defineSuite([
         expect(instance.eastHemisphereGeometry.attributes.st.values.length).toEqual(5 * 2);
     });
 
-    it('wrapLongitude subdivides line crossing the international date line', function() {
+    it('splitLongitude subdivides line crossing the international date line', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -2446,7 +2446,7 @@ defineSuite([
                 primitiveType : PrimitiveType.LINES
             })
         });
-        GeometryPipeline.wrapLongitude(instance);
+        GeometryPipeline.splitLongitude(instance);
         expect(instance.geometry).not.toBeDefined();
 
         expect(instance.westHemisphereGeometry).toBeDefined();
@@ -2462,7 +2462,7 @@ defineSuite([
         expect(instance.eastHemisphereGeometry.attributes.position.values.length).toEqual(2 * 3);
     });
 
-    it('wrapLongitude returns offset line that touches the international date line', function() {
+    it('splitLongitude returns offset line that touches the international date line', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -2476,7 +2476,7 @@ defineSuite([
                 primitiveType : PrimitiveType.LINES
             })
         });
-        GeometryPipeline.wrapLongitude(instance);
+        GeometryPipeline.splitLongitude(instance);
         var geometry = instance.geometry;
 
         expect(geometry.indices).toEqual([0, 1]);
@@ -2485,7 +2485,7 @@ defineSuite([
         expect(positions).toEqual([-1.0, CesiumMath.EPSILON6, 0.0, -1.0, 1.0, 2.0]);
     });
 
-    it('wrapLongitude returns the same points if the line doesn\'t cross the international date line', function() {
+    it('splitLongitude returns the same points if the line doesn\'t cross the international date line', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -2499,7 +2499,7 @@ defineSuite([
                 primitiveType : PrimitiveType.LINES
             })
         });
-        GeometryPipeline.wrapLongitude(instance);
+        GeometryPipeline.splitLongitude(instance);
         var geometry = instance.geometry;
 
         expect(geometry.indices).toEqual([0, 1]);
@@ -2508,7 +2508,7 @@ defineSuite([
         expect(positions).toEqual([1.0, 1.0, 0.0, 1.0, 1.0, 2.0]);
     });
 
-    it('wrapLongitude does nothing for points', function() {
+    it('splitLongitude does nothing for points', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -2521,7 +2521,7 @@ defineSuite([
                 primitiveType : PrimitiveType.POINTS
             })
         });
-        GeometryPipeline.wrapLongitude(instance);
+        GeometryPipeline.splitLongitude(instance);
         var geometry = instance.geometry;
 
         expect(geometry.indices).not.toBeDefined();
@@ -2530,7 +2530,7 @@ defineSuite([
         expect(positions).toEqual([1.0, 1.0, 0.0, 1.0, 1.0, 2.0]);
     });
 
-    it('wrapLongitude subdivides wide line crossing the international date line', function() {
+    it('splitLongitude subdivides wide line crossing the international date line', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -2560,7 +2560,7 @@ defineSuite([
                 geometryType : GeometryType.POLYLINES
             })
         });
-        GeometryPipeline.wrapLongitude(instance);
+        GeometryPipeline.splitLongitude(instance);
         expect(instance.geometry).not.toBeDefined();
 
         expect(instance.westHemisphereGeometry).toBeDefined();
@@ -2588,7 +2588,7 @@ defineSuite([
         expect(instance.eastHemisphereGeometry.attributes.expandAndWidth.values.length).toEqual(4 * 2);
     });
 
-    it('wrapLongitude returns offset wide line that touches the international date line', function() {
+    it('splitLongitude returns offset wide line that touches the international date line', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -2618,7 +2618,7 @@ defineSuite([
                 geometryType : GeometryType.POLYLINES
             })
         });
-        GeometryPipeline.wrapLongitude(instance);
+        GeometryPipeline.splitLongitude(instance);
         var geometry = instance.geometry;
 
         expect(geometry.indices).toEqual([0, 2, 1, 1, 2, 3]);
@@ -2627,7 +2627,7 @@ defineSuite([
         expect(positions).toEqual([-1.0, CesiumMath.EPSILON6, 0.0, -1.0, CesiumMath.EPSILON6, 0.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0]);
     });
 
-    it('wrapLongitude returns the same points if the wide line doesn\'t cross the international date line', function() {
+    it('splitLongitude returns the same points if the wide line doesn\'t cross the international date line', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -2657,7 +2657,7 @@ defineSuite([
                 geometryType : GeometryType.POLYLINES
             })
         });
-        GeometryPipeline.wrapLongitude(instance);
+        GeometryPipeline.splitLongitude(instance);
         var geometry = instance.geometry;
 
         expect(geometry.indices).toEqual([0, 2, 1, 1, 2, 3]);
@@ -2666,9 +2666,9 @@ defineSuite([
         expect(positions).toEqual([-1.0, 1.0, 0.0, -1.0, 1.0, 0.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0]);
     });
 
-    it('wrapLongitude throws when geometry is undefined', function() {
+    it('splitLongitude throws when geometry is undefined', function() {
         expect(function() {
-            return GeometryPipeline.wrapLongitude();
+            return GeometryPipeline.splitLongitude();
         }).toThrowDeveloperError();
     });
 });

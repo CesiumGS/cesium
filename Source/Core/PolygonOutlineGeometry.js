@@ -420,7 +420,7 @@ define([
             }
         }
 
-        geometry = GeometryPipeline.combine(geometries)[0];
+        geometry = GeometryPipeline.combineInstances(geometries)[0];
         var boundingSphere = BoundingSphere.fromVertices(geometry.attributes.position.values);
 
         return new Geometry({

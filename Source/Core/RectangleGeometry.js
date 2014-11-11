@@ -486,7 +486,7 @@ define([
 
         geo.indices = wallIndices;
 
-        geo = GeometryPipeline.combine([
+        geo = GeometryPipeline.combineInstances([
             new GeometryInstance({
                 geometry : topBottomGeo
             }),

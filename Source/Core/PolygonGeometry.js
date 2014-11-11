@@ -755,7 +755,7 @@ define([
             }
         }
 
-        geometry = GeometryPipeline.combine(geometries)[0];
+        geometry = GeometryPipeline.combineInstances(geometries)[0];
         geometry.attributes.position.values = new Float64Array(geometry.attributes.position.values);
         geometry.indices = IndexDatatype.createTypedArray(geometry.attributes.position.values.length / 3, geometry.indices);
 

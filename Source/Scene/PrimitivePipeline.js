@@ -212,7 +212,7 @@ define([
         // Clip to IDL
         if (!scene3DOnly) {
             for (i = 0; i < length; ++i) {
-                GeometryPipeline.wrapLongitude(instances[i]);
+                GeometryPipeline.splitLongitude(instances[i]);
             }
         }
 
@@ -243,7 +243,7 @@ define([
         }
 
         // Combine into single geometry for better rendering performance.
-        var geometries = GeometryPipeline.combine(instances);
+        var geometries = GeometryPipeline.combineInstances(instances);
 
         length = geometries.length;
         for (i = 0; i < length; ++i) {
