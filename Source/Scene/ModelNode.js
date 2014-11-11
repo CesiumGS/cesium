@@ -27,7 +27,7 @@ define([
      * var node = model.getNode('LOD3sp');
      * node.matrix = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
      */
-    var ModelNode = function(model, node, runtimeNode, id) {
+    var ModelNode = function(model, node, runtimeNode, id, matrix) {
         this._model = model;
         this._runtimeNode = runtimeNode;
         this._name = node.name;
@@ -38,7 +38,7 @@ define([
          */
         this.useMatrix = false;
 
-        this._matrix = Matrix4.clone(defaultValue(node.matrix, Matrix4.IDENTITY));
+        this._matrix = Matrix4.clone(matrix);
     };
 
     defineProperties(ModelNode.prototype, {
