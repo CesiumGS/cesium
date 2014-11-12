@@ -14,6 +14,7 @@ Change Log
 * Added `modelMatrix` and `cull` options to `Primitive` constructor.
 * The `translation` parameter to `Matrix4.fromRotationTranslation` now defaults to `Cartesian3.ZERO`.
 * Improved point visualization performance for all DataSources.
+* Fixed `ModelNode.matrix` when a node is targeted for animation.
 
 ### 1.3 - 2014-11-03
 
