@@ -7,6 +7,7 @@ define([
         '../Core/ClockStep',
         '../Core/Color',
         '../Core/createGuid',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
@@ -53,6 +54,7 @@ define([
         ClockStep,
         Color,
         createGuid,
+        defaultValue,
         defined,
         defineProperties,
         DeveloperError,
@@ -131,8 +133,8 @@ define([
     };
 
     function loadXmlFromZip(reader, entry, uriResolver, deferred) {
-        entry.getData(new zip.TextWriter(), function(xmlString) {
-            uriResolver.kml = parser.parseFromString(xmlString, 'application/xml');
+        entry.getData(new zip.TextWriter(), function(text) {
+            uriResolver.kml = parser.parseFromString(text, 'application/xml');
             deferred.resolve();
         }, function(current, total) {
             // onprogress callback
@@ -196,23 +198,72 @@ define([
         return result;
     }
 
-    function getNode(node, tagName) {
-        return node.getElementsByTagName(tagName)[0];
+    var namespaces = {
+        kml : ['http://www.opengis.net/kml/2.2', 'http://earth.google.com/kml/2.2'],
+        gx : ['http://www.google.com/kml/ext/2.2'],
+        atom : ['http://www.w3.org/2005/Atom']
+    };
+
+    function queryFirstNode(node, tagName, namespace) {
+        var childNodes = node.childNodes;
+        var length = childNodes.length;
+        for (var q = 0; q < length; q++) {
+            var child = childNodes[q];
+            if (child.localName === tagName && namespace.indexOf(child.namespaceURI) !== -1) {
+                return child;
+            }
+        }
+        return undefined;
     }
 
-    function getNumericValue(node, tagName) {
-        var element = node.getElementsByTagName(tagName)[0];
-        return defined(element) && /\S/.test(element.textContent) ? parseFloat(element.textContent) : undefined;
+    function queryNodes(node, tagName, namespace) {
+        var result = [];
+        var childNodes = node.childNodes;
+        var length = childNodes.length;
+        for (var q = 0; q < length; q++) {
+            var child = childNodes[q];
+            if (child.localName === tagName && namespace.indexOf(child.namespaceURI) !== -1) {
+                result.push(child);
+            }
+        }
+        return result;
     }
 
-    function getStringValue(node, tagName) {
-        var element = node.getElementsByTagName(tagName)[0];
-        return defined(element) && /\S/.test(element.textContent) ? element.textContent : undefined;
+    function queryNumericValue(node, tagName, namespace) {
+        var childNodes = node.childNodes;
+        var length = childNodes.length;
+        for (var q = 0; q < length; q++) {
+            var child = childNodes[q];
+            if (child.localName === tagName && namespace.indexOf(child.namespaceURI) !== -1) {
+                var result = parseFloat(child.textContent);
+                return !isNaN(result) ? result : undefined;
+            }
+        }
+        return undefined;
     }
 
-    function getBooleanValue(node, tagName) {
-        var element = node.getElementsByTagName(tagName)[0];
-        return defined(element) && /\S/.test(element.textContent) ? element.textContent === '1' : undefined;
+    function queryStringValue(node, tagName, namespace) {
+        var childNodes = node.childNodes;
+        var length = childNodes.length;
+        for (var q = 0; q < length; q++) {
+            var child = childNodes[q];
+            if (child.localName === tagName && namespace.indexOf(child.namespaceURI) !== -1) {
+                return child.textContent;
+            }
+        }
+        return undefined;
+    }
+
+    function queryBooleanValue(node, tagName, namespace) {
+        var childNodes = node.childNodes;
+        var length = childNodes.length;
+        for (var q = 0; q < length; q++) {
+            var child = childNodes[q];
+            if (child.localName === tagName && namespace.indexOf(child.namespaceURI) !== -1) {
+                return child.textContent === '1';
+            }
+        }
+        return undefined;
     }
 
     function resolveHref(href, dataSource, sourceUri, uriResolver) {
@@ -233,52 +284,46 @@ define([
         return href;
     }
 
-    function getColorValue(node, tagName) {
-        var red, green, blue, alpha;
-        var element = node.getElementsByTagName(tagName)[0];
-        var colorModeNode = node.getElementsByTagName('colorMode')[0];
-        var value = defined(element) ? element.textContent : undefined;
-        if (!defined(value) || /\s/.test(value)) {
-            return undefined;
+    function queryColorValue(node, tagName, namespace) {
+        var colorString = queryStringValue(node, tagName, namespace);
+        if (!defined(colorString)) {
+            return;
         }
-        var colorMode = defined(colorModeNode) ? colorModeNode.textContent : undefined;
-        if (colorMode === 'random') {
-            var options = {};
-            alpha = parseInt(value.substring(0, 2), 16) / 255.0;
-            blue = parseInt(value.substring(2, 4), 16) / 255.0;
-            green = parseInt(value.substring(4, 6), 16) / 255.0;
-            red = parseInt(value.substring(6, 8), 16) / 255.0;
-            if (red > 0) {
-                options.maximumRed = red;
-            } else {
-                options.red = 0;
-            }
-            if (green > 0) {
-                options.maximumGreen = green;
-            } else {
-                options.green = 0;
-            }
-            if (blue > 0) {
-                options.maximumBlue = blue;
-            } else {
-                options.blue = 0;
-            }
-            options.alpha = alpha;
-            return Color.fromRandom(options);
+
+        var alpha = parseInt(colorString.substring(0, 2), 16) / 255.0;
+        var blue = parseInt(colorString.substring(2, 4), 16) / 255.0;
+        var green = parseInt(colorString.substring(4, 6), 16) / 255.0;
+        var red = parseInt(colorString.substring(6, 8), 16) / 255.0;
+
+        if (queryStringValue(node, 'colorMode', namespace) !== 'random') {
+            return new Color(red, green, blue, alpha);
         }
-        //normal mode as default
-        alpha = parseInt(value.substring(0, 2), 16) / 255.0;
-        blue = parseInt(value.substring(2, 4), 16) / 255.0;
-        green = parseInt(value.substring(4, 6), 16) / 255.0;
-        red = parseInt(value.substring(6, 8), 16) / 255.0;
-        return new Color(red, green, blue, alpha);
+
+        var options = {};
+        if (red > 0) {
+            options.maximumRed = red;
+        } else {
+            options.red = 0;
+        }
+        if (green > 0) {
+            options.maximumGreen = green;
+        } else {
+            options.green = 0;
+        }
+        if (blue > 0) {
+            options.maximumBlue = blue;
+        } else {
+            options.blue = 0;
+        }
+        options.alpha = alpha;
+        return Color.fromRandom(options);
     }
 
     function processPoint(dataSource, entity, kml, node) {
         //TODO extrude, altitudeMode, gx:altitudeMode
         var el = node.getElementsByTagName('coordinates');
 
-        var cartesian3 = readCoordinate(el[0], getStringValue(node, 'altitudeMode'));
+        var cartesian3 = readCoordinate(el[0], queryStringValue(node, 'altitudeMode', namespaces.kml));
         entity.position = new ConstantPositionProperty(cartesian3);
     }
 
@@ -323,12 +368,11 @@ define([
             entity.polygon = new PolygonGraphics();
         }
 
-        var altitudeMode = getStringValue(node, 'altitudeMode');
+        var altitudeMode = queryStringValue(node, 'altitudeMode', namespaces.kml);
         var perPositionHeight = defined(altitudeMode) && (altitudeMode !== 'clampToGround') && (altitudeMode !== 'clampToSeaFloor');
         entity.polygon.perPositionHeight = new ConstantProperty(perPositionHeight);
 
-        var extrude = getBooleanValue(node, 'extrude');
-        if (defined(extrude) && extrude) {
+        if (defaultValue(queryBooleanValue(node, 'extrude', namespaces.kml), false)) {
             entity.polygon.extrudedHeight = new ConstantProperty(0);
         }
 
@@ -342,10 +386,10 @@ define([
 
     function processGxTrack(dataSource, entity, kml, node) {
         //TODO altitudeMode, gx:angles
-        var altitudeMode = getStringValue(node, 'altitudeMode');
-        var coordsEl = node.getElementsByTagName('coord');
+        var altitudeMode = queryStringValue(node, 'altitudeMode', namespaces.kml);
+        var coordsEl = queryNodes(node, 'coord', namespaces.gx);
         var coordinates = new Array(coordsEl.length);
-        var timesEl = node.getElementsByTagName('when');
+        var timesEl = queryNodes(node, 'when', namespaces.kml);
         var times = new Array(timesEl.length);
         for (var i = 0; i < times.length; i++) {
             coordinates[i] = readCoordinate(coordsEl[i], altitudeMode);
@@ -440,8 +484,6 @@ define([
         Polygon : processPolygon,
         'gx:Track' : processGxTrack,
         'gx:MultiTrack' : processGxMultiTrack,
-        'Track' : processGxTrack,
-        'MultiTrack' : processGxMultiTrack,
         MultiGeometry : processMultiGeometry
     };
 
@@ -460,9 +502,11 @@ define([
             if (node.nodeName === 'IconStyle') {
                 //Map style to billboard properties
                 //TODO heading, hotSpot
-                var scale = getNumericValue(node, 'scale');
-                var color = getColorValue(node, 'color');
-                var icon = resolveHref(getStringValue(node, 'href'), dataSource, sourceUri, uriResolver);
+                var scale = queryNumericValue(node, 'scale', namespaces.kml);
+                var color = queryColorValue(node, 'color', namespaces.kml);
+                var iconNode = queryFirstNode(node, 'Icon', namespaces.kml);
+                var href = defined(iconNode) ? queryStringValue(iconNode, 'href', namespaces.kml) : undefined;
+                var icon = defined(href) ? resolveHref(href, dataSource, sourceUri, uriResolver) : undefined;
 
                 var billboard = entity.billboard;
                 if (!defined(billboard)) {
@@ -481,8 +525,8 @@ define([
             } else if (node.nodeName === 'LabelStyle') {
                 //Map style to label properties
                 var label = defined(entity.label) ? entity.label : new LabelGraphics();
-                var labelScale = getNumericValue(node, 'scale');
-                var labelColor = getColorValue(node, 'color');
+                var labelScale = queryNumericValue(node, 'scale', namespaces.kml);
+                var labelColor = queryColorValue(node, 'color', namespaces.kml);
 
                 label.translucencyByDistance = new ConstantProperty(new NearFarScalar(1500000, 1.0, 3400000, 0.0));
                 label.scale = defined(labelScale) ? new ConstantProperty(labelScale) : new ConstantProperty(1.0);
@@ -497,34 +541,35 @@ define([
                 //Map style to line properties
                 //TODO PhysicalWidth, labelVisibility
                 var polyline = defined(entity.polyline) ? entity.polyline : new PolylineGraphics();
-                var lineColor = getColorValue(node, 'color');
-                var lineWidth = getNumericValue(node, 'width');
-                var lineOuterColor = getColorValue(node, 'outerColor');
-                var lineOuterWidth = getNumericValue(node, 'outerWidth');
-                if (defined(lineOuterWidth) && (lineOuterWidth < 0 || lineOuterWidth > 1.0)) {
-                    throw new RuntimeError('gx:outerWidth must be a value between 0 and 1.0');
-                }
+                var lineColor = queryColorValue(node, 'color', namespaces.kml);
+                var lineWidth = queryNumericValue(node, 'width', namespaces.kml);
+//                var outerColorString = queryStringValue(node, 'outerColor', namespace.gx);
+//                var lineOuterColor = Color.fromCssColorString(outerColorString);
+//                var lineOuterWidth = queryNumericValue(node, 'outerWidth', namespace.gx);
+//                if (defined(lineOuterWidth) && (lineOuterWidth < 0 || lineOuterWidth > 1.0)) {
+//                    throw new RuntimeError('gx:outerWidth must be a value between 0 and 1.0');
+//                }
 
                 polyline.width = defined(lineWidth) ? new ConstantProperty(Math.max(lineWidth, 1.0)) : new ConstantProperty(1.0);
                 material = new PolylineOutlineMaterialProperty();
                 material.color = defined(lineColor) ? new ConstantProperty(lineColor) : new ConstantProperty(new Color(1, 1, 1, 1));
-                material.outlineColor = defined(lineOuterColor) ? new ConstantProperty(lineOuterColor) : new ConstantProperty(new Color(0, 0, 0, 1));
-                material.outlineWidth = defined(lineOuterWidth) ? new ConstantProperty(lineOuterWidth) : new ConstantProperty(0);
+//                material.outlineColor = defined(lineOuterColor) ? new ConstantProperty(lineOuterColor) : new ConstantProperty(new Color(0, 0, 0, 1));
+//                material.outlineWidth = defined(lineOuterWidth) ? new ConstantProperty(lineOuterWidth) : new ConstantProperty(0);
                 polyline.material = material;
                 entity.polyline = polyline;
             } else if (node.nodeName === 'PolyStyle') {
                 entity.polygon = defined(entity.polygon) ? entity.polygon : new PolygonGraphics();
-                var polygonColor = getColorValue(node, 'color');
+                var polygonColor = queryColorValue(node, 'color', namespaces.kml);
                 polygonColor = defined(polygonColor) ? polygonColor : new Color(1, 1, 1, 1);
                 material = new ColorMaterialProperty();
                 material.color = new ConstantProperty(polygonColor);
                 entity.polygon.material = material;
 
-                var fill = getBooleanValue(node, 'fill');
+                var fill = queryBooleanValue(node, 'fill', namespaces.kml);
                 if (defined(fill)) {
                     entity.polygon.fill = new ConstantProperty(fill);
                 }
-                var outline = getBooleanValue(node, 'outline');
+                var outline = queryBooleanValue(node, 'outline', namespaces.kml);
                 if (defined(outline)) {
                     entity.polygon.outline = new ConstantProperty(outline);
                 }
@@ -698,23 +743,29 @@ define([
     }
 
     function processDocument(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var childNodes = node.childNodes;
-        var length = childNodes.length;
-        for (var i = 0; i < length; i++) {
-            iterateNodes(dataSource, childNodes[i], parent, entityCollection, styleCollection, sourceUri, uriResolver);
+        var featureTypeNames = Object.keys(featureTypes);
+        var featureTypeNamesLength = featureTypeNames.length;
+
+        for (var i = 0; i < featureTypeNamesLength; i++) {
+            var featureName = featureTypeNames[i];
+            var processFeatureNode = featureTypes[featureName];
+
+            var childNodes = node.childNodes;
+            var length = childNodes.length;
+            for (var q = 0; q < length; q++) {
+                var child = childNodes[q];
+                if (child.localName === featureName && namespaces.kml.indexOf(child.namespaceURI) !== -1) {
+                    processFeatureNode(dataSource, parent, child, entityCollection, styleCollection, sourceUri, uriResolver);
+                }
+            }
         }
     }
 
     function processFolder(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
         parent = new Entity(createId(node));
-        parent.name = getStringValue(node, 'name');
+        parent.name = queryStringValue(node, 'name', namespaces.kml);
         entityCollection.add(parent);
-
-        var childNodes = node.childNodes;
-        var length = childNodes.length;
-        for (var i = 0; i < length; i++) {
-            iterateNodes(dataSource, childNodes[i], parent, entityCollection, styleCollection, sourceUri, uriResolver);
-        }
+        processDocument(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
     }
 
     function processPlacemark(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver) {
@@ -727,7 +778,7 @@ define([
 
         var styleEntity = processInlineStyles(dataSource, placemark, styleCollection, sourceUri, uriResolver);
 
-        var name = getStringValue(placemark, 'name');
+        var name = queryStringValue(placemark, 'name', namespaces.kml);
         if (defined(name)) {
             if (!defined(entity.label)) {
                 entity.label = new LabelGraphics();
@@ -743,7 +794,7 @@ define([
 
         var foundGeometry = false;
         var nodes = placemark.childNodes;
-        var visibility = getBooleanValue(placemark, 'visibility');
+        var visibility = queryBooleanValue(placemark, 'visibility', namespaces.kml);
         entity.uiShow = defined(visibility) ? visibility : true;
 
         for (var i = 0, len = nodes.length; i < len; i++) {
@@ -790,28 +841,28 @@ define([
 
         var styleEntity = processInlineStyles(dataSource, groundOverlay, styleCollection, sourceUri, uriResolver);
 
-        entity.name = getStringValue(groundOverlay, 'name');
+        entity.name = queryStringValue(groundOverlay, 'name', namespaces.kml);
         var nodes = groundOverlay.childNodes;
 
-        var timeSpan = getNode(groundOverlay, 'TimeSpan');
+        var timeSpan = queryFirstNode(groundOverlay, 'TimeSpan', namespaces.kml);
         if (defined(timeSpan)) {
             entity.availability = processTimeSpan(timeSpan);
         }
 
-        var description = getStringValue(groundOverlay, 'description');
+        var description = queryStringValue(groundOverlay, 'description', namespaces.kml);
         entity.description = defined(description) ? new ConstantProperty(description) : undefined;
 
-        var visibility = getBooleanValue(groundOverlay, 'visibility');
+        var visibility = queryBooleanValue(groundOverlay, 'visibility', namespaces.kml);
         entity.uiShow = defined(visibility) ? visibility : true;
 
-        var latLonBox = getNode(groundOverlay, 'LatLonBox');
+        var latLonBox = queryFirstNode(groundOverlay, 'LatLonBox', namespaces.kml);
         if (defined(latLonBox)) {
             //TODO: Apparently values beyond the global extent are valid
-            //and should wrap around.
-            var west = Math.max(-180, Math.min(180, getNumericValue(latLonBox, 'west')));
-            var south = Math.max(-90, Math.min(90, getNumericValue(latLonBox, 'south')));
-            var east = Math.max(-180, Math.min(180, getNumericValue(latLonBox, 'east')));
-            var north = Math.max(-90, Math.min(90, getNumericValue(latLonBox, 'north')));
+            //and should wrap around; which we currently don't handle.
+            var west = Math.max(-180, Math.min(180, queryNumericValue(latLonBox, 'west', namespaces.kml)));
+            var south = Math.max(-90, Math.min(90, queryNumericValue(latLonBox, 'south', namespaces.kml)));
+            var east = Math.max(-180, Math.min(180, queryNumericValue(latLonBox, 'east', namespaces.kml)));
+            var north = Math.max(-90, Math.min(90, queryNumericValue(latLonBox, 'north', namespaces.kml)));
 
             var cb = Ellipsoid.WGS84;
 
@@ -822,32 +873,34 @@ define([
             }
             var extent = Rectangle.fromDegrees(west, south, east, north);
             rectangle.coordinates = new ConstantProperty(extent);
-            entity.position = new ConstantPositionProperty(Ellipsoid.WGS84.cartographicToCartesian(Rectangle.getCenter(extent, scratchCartesian), scratchCartographic));
+            entity.position = new ConstantPositionProperty(Ellipsoid.WGS84.cartographicToCartesian(
+                    Rectangle.center(extent, scratchCartesian), scratchCartographic));
 
             var material;
-            var href = getStringValue(groundOverlay, 'href');
+            var iconNode = queryFirstNode(groundOverlay, 'Icon', namespaces.kml);
+            var href = defined(iconNode) ? queryStringValue(iconNode, 'href', namespaces.kml) : undefined;
             if (defined(href)) {
                 var icon = resolveHref(href, dataSource, sourceUri, uriResolver);
                 material = new ImageMaterialProperty();
                 material.image = new ConstantProperty(icon);
             } else {
-                var color = getColorValue(groundOverlay, 'color');
+                var color = queryColorValue(groundOverlay, 'color', namespaces.kml);
                 if (defined(color)) {
                     material = ColorMaterialProperty.fromColor(color);
                 }
             }
             rectangle.material = material;
 
-            var rotation = getNumericValue(latLonBox, 'rotation');
+            var rotation = queryNumericValue(latLonBox, 'rotation', namespaces.kml);
             if (defined(rotation)) {
                 rectangle.rotation = new ConstantProperty(CesiumMath.toRadians(rotation));
             }
 
-            var altitudeMode = getStringValue(groundOverlay, 'altitudeMode');
+            var altitudeMode = queryStringValue(groundOverlay, 'altitudeMode', namespaces.kml);
             if (defined(altitudeMode)) {
                 if (altitudeMode === 'absolute') {
                     //TODO absolute means relative to sea level, not the ellipsoid.
-                    var altitude = getNumericValue(groundOverlay, 'altitude');
+                    var altitude = queryNumericValue(groundOverlay, 'altitude', namespaces.kml);
                     rectangle.height = new ConstantProperty(defined(altitude) ? altitude : 0);
                 } else if (altitudeMode === 'clampToGround') {
                     //TODO conform to terrain.
@@ -876,6 +929,9 @@ define([
 
     function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver) {
         var featureProocessor = featureTypes[node.nodeName];
+        if (!defined(featureProocessor)) {
+            featureProocessor = featureTypes[node.nodeName];
+        }
         if (defined(featureProocessor)) {
             featureProocessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         } else {
@@ -883,37 +939,13 @@ define([
         }
     }
 
-    function iterateNodes(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var featureProocessor = featureTypes[node.nodeName];
-        if (defined(featureProocessor)) {
-            featureProocessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
-        } else {
-            var childNodes = node.childNodes;
-            var length = childNodes.length;
-            for (var i = 0; i < length; i++) {
-                iterateNodes(dataSource, childNodes[i], parent, entityCollection, styleCollection, sourceUri, uriResolver);
-            }
-        }
-    }
-
     function loadKml(dataSource, kml, sourceUri, uriResolver) {
-        var name;
-        var document = kml.getElementsByTagName('Document');
-        if (document.length > 0) {
-            var childNodes = document[0].childNodes;
-            var length = childNodes.length;
-            for (var i = 0; i < length; i++) {
-                var node = childNodes[i];
-                if (node.nodeName === 'name') {
-                    name = node.textContent;
-                    break;
-                }
-            }
-        }
-
+        var docElement = queryFirstNode(kml.documentElement, 'Document', namespaces.kml);
+        var name = docElement ? queryStringValue(docElement, 'name', namespaces.kml) : undefined;
         if (!defined(name) && defined(sourceUri)) {
             name = getFilenameFromUri(sourceUri);
         }
+
         if (dataSource._name !== name) {
             dataSource._name = name;
             dataSource._changed.raiseEvent(dataSource);
@@ -1086,18 +1118,18 @@ define([
      * Asynchronously loads the provided KML document, replacing any existing data.
      *
      * @param {Document} kml The parsed KML document to be processed.
-     * @param {string} sourceUrl The url of the document which is used for resolving relative links and other KML features.
+     * @param {string} sourceUri The url of the document which is used for resolving relative links and other KML features.
      *
      * @returns {Promise} a promise that will resolve when the KML is processed.
      */
-    KmlDataSource.prototype.load = function(kml, sourceUrl) {
+    KmlDataSource.prototype.load = function(kml, sourceUri) {
         if (!defined(kml)) {
             throw new DeveloperError('kml is required.');
         }
 
         DataSource.setLoading(this, true);
         var that = this;
-        return when(loadKml(this, kml, sourceUrl, undefined)).otherwise(function(error) {
+        return when(loadKml(this, kml, sourceUri, undefined)).otherwise(function(error) {
             DataSource.setLoading(that, false);
             that._error.raiseEvent(that, error);
             return when.reject(error);
@@ -1108,18 +1140,18 @@ define([
      * Asynchronously loads the provided KMZ Blob, replacing any existing data.
      *
      * @param {Blob} kmz The KMZ document to be processed.
-     * @param {string} sourceUrl The url of the document which is used for resolving relative links and other KML features.
+     * @param {string} sourceUri The url of the document which is used for resolving relative links and other KML features.
      *
      * @returns {Promise} a promise that will resolve when the KMZ is processed.
      */
-    KmlDataSource.prototype.loadKmz = function(kmz, sourceUrl) {
+    KmlDataSource.prototype.loadKmz = function(kmz, sourceUri) {
         if (!defined(kmz)) {
             throw new DeveloperError('kmz is required.');
         }
 
         DataSource.setLoading(this, true);
         var that = this;
-        return when(loadKmz(this, kmz, sourceUrl)).otherwise(function(error) {
+        return when(loadKmz(this, kmz, sourceUri)).otherwise(function(error) {
             DataSource.setLoading(that, false);
             that._error.raiseEvent(that, error);
             return when.reject(error);
@@ -1147,7 +1179,9 @@ define([
                 }
                 return when(readBlob.asText(blob)).then(function(text) {
                     var kml = parser.parseFromString(text, 'application/xml');
-                    if (kml.body !== null) {
+                    //There's no official way to validate if the parse was successful.
+                    //The following if check seems to detect the error on all supported browsers.
+                    if ((defined(kml.body) && kml.body !== null) || kml.documentElement.tagName === 'parsererror') {
                         throw new RuntimeError(kml.body.innerText);
                     }
                     return loadKml(that, kml, url, undefined);
