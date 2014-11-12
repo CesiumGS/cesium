@@ -48,7 +48,14 @@ define([
         case gl.FLOAT_VEC3:
             return function() {
                 var v = uniform.value;
-                gl.uniform3f(location, v.x, v.y, v.z);
+
+                if (defined(v.red)) {
+                    gl.uniform3f(location, v.red, v.green, v.blue);
+                } else if (defined(v.x)) {
+                    gl.uniform3f(location, v.x, v.y, v.z);
+                } else {
+                    throw new DeveloperError('Invalid vec3 value for uniform "' + uniform._activeUniform.name + '".');
+                }
             };
         case gl.FLOAT_VEC4:
             return function() {
@@ -175,7 +182,14 @@ define([
                 var length = value.length;
                 for (var i = 0; i < length; ++i) {
                     var v = value[i];
-                    gl.uniform3f(locations[i], v.x, v.y, v.z);
+
+                    if (defined(v.red)) {
+                        gl.uniform3f(locations[i], v.red, v.green, v.blue);
+                    } else if (defined(v.x)) {
+                        gl.uniform3f(locations[i], v.x, v.y, v.z);
+                    } else {
+                        throw new DeveloperError('Invalid vec3 value.');
+                    }
                 }
             };
         case gl.FLOAT_VEC4:

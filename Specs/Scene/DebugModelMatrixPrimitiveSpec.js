@@ -30,10 +30,6 @@ defineSuite([
         destroyScene(scene);
     });
 
-    beforeEach(function() {
-        scene.initializeFrame();
-    });
-
     afterEach(function() {
         scene.primitives.removeAll();
     });
@@ -66,21 +62,18 @@ defineSuite([
 
     it('renders', function() {
         var p = scene.primitives.add(new DebugModelMatrixPrimitive());
-        scene.render();
-        expect(scene.context.readPixels()).not.toEqual([0, 0, 0, 255]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         // Update and render again
         p.length = 100.0;
-        scene.render();
-        expect(scene.context.readPixels()).not.toEqual([0, 0, 0, 255]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('does not render when show is false', function() {
         scene.primitives.add(new DebugModelMatrixPrimitive({
             show : false
         }));
-        scene.render();
-        expect(scene.context.readPixels()).toEqual([0, 0, 0, 255]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
     });
 
     it('is picked', function() {
