@@ -5,7 +5,7 @@ Change Log
 
 * Deprecated
     * The `sourceUri` parameter to `GeoJsonDatasource.load` has been deprecated and will be removed in Cesium 1.6 on February 3, 2015 ([#2257](https://github.com/AnalyticalGraphicsInc/cesium/issues/2257)).  Use `options.sourceUri` instead.
-    * `GeometryPipeline.wrapLongitude` was deprecated in Cesium 1.4. It will be removed in Cesium 1.5. Use `GeometryPipeline.splitLongitude`. ([#2272](https://github.com/AnalyticalGraphicsInc/cesium/issues/2272))
+    * `GeometryPipeline.wrapLongitude` was deprecated in Cesium 1.4. It will be removed in Cesium 1.5 on January 2, 2015. Use `GeometryPipeline.splitLongitude`. ([#2272](https://github.com/AnalyticalGraphicsInc/cesium/issues/2272))
     * `GeometryPipeline.combine` was deprecated in Cesium 1.4. It will be removed in Cesium 1.5. Use `GeometryPipeline.combineInstances`.
 * Added geometry outline width support to the `DataSource` layer.  This is exposed via the new `outlineWidth` property on `EllipseGraphics`, `EllipsoidGraphics`, `PolygonGraphics`, `RectangleGraphics`, and `WallGraphics`.
 * Added `outlineWidth` support to CZML geometry packets.
