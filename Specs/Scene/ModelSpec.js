@@ -905,7 +905,6 @@ defineSuite([
 
                 expect(node.matrix).not.toEqual(previousMatrix);
                 previousMatrix = Matrix4.clone(node.matrix);
-                console.log(node.matrix);
             }
 
             expect(animations.remove(a)).toEqual(true);
