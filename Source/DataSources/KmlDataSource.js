@@ -321,42 +321,39 @@ define([
 
     function processPoint(dataSource, entity, kml, node) {
         //TODO extrude, altitudeMode, gx:altitudeMode
-        var el = node.getElementsByTagName('coordinates');
-
-        var cartesian3 = readCoordinate(el[0], queryStringValue(node, 'altitudeMode', namespaces.kml));
+        var coordinatesNode = queryFirstNode(node, 'coordinates', namespaces.kml);
+        var cartesian3 = readCoordinate(coordinatesNode, queryStringValue(node, 'altitudeMode', namespaces.kml));
         entity.position = new ConstantPositionProperty(cartesian3);
     }
 
     function processLineString(dataSource, entity, kml, node) {
-        //TODO gx:altitudeOffset, extrude, tessellate, altitudeMode, gx:altitudeMode, gx:drawOrder
-        var el = node.getElementsByTagName('coordinates');
-        var coordinates = readCoordinates(el[0]);
-
-        if (!defined(entity.polyline)) {
-            entity.polyline = new PolylineGraphics();
+        var coordinatesNode = queryFirstNode(node, 'coordinates', namespaces.kml);
+        if (defined(coordinatesNode)) {
+            var coordinates = readCoordinates(coordinatesNode);
+            if (defined(coordinates)) {
+                if (!defined(entity.polyline)) {
+                    entity.polyline = new PolylineGraphics();
+                }
+                entity.polyline.positions = new ConstantProperty(coordinates);
+            }
         }
-        entity.polyline.positions = new ConstantProperty(coordinates);
     }
 
     function processLinearRing(dataSource, entity, kml, node) {
-        //TODO gx:altitudeOffset, extrude, tessellate, altitudeMode, altitudeModeEnum
-        var el = node.getElementsByTagName('coordinates');
-        var coordinates = readCoordinates(el[0]);
+        var coordinatesNode = queryFirstNode(node, 'coordinates', namespaces.kml);
+        if (defined(coordinatesNode)) {
+            var coordinates = readCoordinates(coordinatesNode);
+            if (defined(coordinates)) {
+                coordinates = PolygonPipeline.removeDuplicates(coordinates);
 
-        //This should be a warning instead of an error.
-        //if (!Cartesian3.equals(coordinates[0], coordinates[coordinates.length - 1])) {
-        //    throw new RuntimeError('The first and last coordinate tuples must be the same.');
-        //}
-
-        //TODO Should we be doing this here?  If we don't, it can trigger exceptions later on, should it?
-        coordinates = PolygonPipeline.removeDuplicates(coordinates);
-
-        if (coordinates.length > 3) {
-            if (defined(entity.polyline)) {
-                entity.polyline.positions = new ConstantProperty(coordinates);
-            }
-            if (defined(entity.polygon)) {
-                entity.polygon.positions = new ConstantProperty(coordinates);
+                if (coordinates.length > 3) {
+                    if (defined(entity.polyline)) {
+                        entity.polyline.positions = new ConstantProperty(coordinates);
+                    }
+                    if (defined(entity.polygon)) {
+                        entity.polygon.positions = new ConstantProperty(coordinates);
+                    }
+                }
             }
         }
     }
@@ -376,10 +373,10 @@ define([
             entity.polygon.extrudedHeight = new ConstantProperty(0);
         }
 
-        var el = node.getElementsByTagName('outerBoundaryIs');
+        var outerNodes = queryNodes(node, 'outerBoundaryIs', namespaces.kml);
         var positions;
-        for (var j = 0; j < el.length; j++) {
-            processLinearRing(dataSource, entity, kml, el[j]);
+        for (var j = 0; j < outerNodes.length; j++) {
+            processLinearRing(dataSource, entity, kml, queryFirstNode(outerNodes[j], 'LinearRing', namespaces.kml));
             break;
         }
     }
@@ -443,10 +440,10 @@ define([
     function processTimeSpan(node) {
         var result;
 
-        var beginNode = node.getElementsByTagName('begin')[0];
+        var beginNode = queryFirstNode(node, 'begin', namespaces.kml);
         var beginDate = defined(beginNode) ? JulianDate.fromIso8601(beginNode.textContent) : undefined;
 
-        var endNode = node.getElementsByTagName('end')[0];
+        var endNode = queryFirstNode(node, 'end', namespaces.kml);
         var endDate = defined(endNode) ? JulianDate.fromIso8601(endNode.textContent) : undefined;
 
         if (defined(beginDate) && defined(endDate)) {
@@ -631,17 +628,17 @@ define([
     //Processes and merges any inline styles for the provided node into the provided entity.
     function processInlineStyles(dataSource, placeMark, styleCollection, sourceUri, uriResolver) {
         var result = new Entity();
-        var inlineStyles = placeMark.getElementsByTagName('Style');
+        var inlineStyles = queryNodes(placeMark, 'Style', namespaces.kml);
         var inlineStylesLength = inlineStyles.length;
         if (inlineStylesLength > 0) {
             //Google earth seems to always use the last inline style only.
-            processStyle(dataSource, inlineStyles.item(inlineStylesLength - 1), result, sourceUri, uriResolver);
+            processStyle(dataSource, inlineStyles[inlineStylesLength - 1], result, sourceUri, uriResolver);
         }
 
-        var externalStyles = placeMark.getElementsByTagName('styleUrl');
-        if (externalStyles.length > 0) {
-            //Google earth seems to always use the first external style only.
-            var styleEntity = styleCollection.getById(externalStyles.item(0).textContent);
+        //Google earth seems to always use the first external style only.
+        var externalStyle = queryFirstNode(placeMark, 'styleUrl', namespaces.kml);
+        if (defined(externalStyle)) {
+            var styleEntity = styleCollection.getById(externalStyle.textContent);
             if (typeof styleEntity !== 'undefined') {
                 result.merge(styleEntity);
             }
@@ -665,10 +662,10 @@ define([
         var id;
         var styleEntity;
 
-        var styleNodes = kml.getElementsByTagName('Style');
+        var styleNodes = queryNodes(kml.documentElement.firstElementChild, 'Style', namespaces.kml);
         var styleNodesLength = styleNodes.length;
         for (i = 0; i < styleNodesLength; i++) {
-            var node = styleNodes.item(i);
+            var node = styleNodes[i];
             var attributes = node.attributes;
             id = defined(attributes.id) ? attributes.id.value : undefined;
             if (defined(id)) {
@@ -684,10 +681,10 @@ define([
             }
         }
 
-        var styleMaps = kml.getElementsByTagName('StyleMap');
+        var styleMaps = queryNodes(kml.documentElement.firstElementChild, 'StyleMap', namespaces.kml);
         var styleMapsLength = styleMaps.length;
         for (i = 0; i < styleMapsLength; i++) {
-            var styleMap = styleMaps.item(i);
+            var styleMap = styleMaps[i];
             id = defined(styleMap.attributes.id) ? styleMap.attributes.id.value : undefined;
             if (defined(id)) {
                 var pairs = styleMap.childNodes;
@@ -696,16 +693,15 @@ define([
                     if (pair.nodeName !== 'Pair') {
                         continue;
                     }
-                    var key = pair.getElementsByTagName('key')[0];
-                    if (defined(key) && key.textContent === 'normal') {
-                        var styleUrl = pair.getElementsByTagName('styleUrl')[0];
+                    if (queryStringValue(pair, 'key', namespaces.kml) === 'normal') {
+                        var styleUrl = queryStringValue(pair, 'styleUrl', namespaces.kml);
                         id = '#' + id;
                         if (isExternal && defined(sourceUri)) {
                             id = sourceUri + id;
                         }
                         if (!defined(styleCollection.getById(id))) {
                             styleEntity = styleCollection.getOrCreateEntity(id);
-                            var base = styleCollection.getOrCreateEntity(styleUrl.textContent);
+                            var base = styleCollection.getOrCreateEntity(styleUrl);
                             if (defined(base)) {
                                 styleEntity.merge(base);
                             }
