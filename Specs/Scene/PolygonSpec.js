@@ -430,7 +430,12 @@ defineSuite([
         var boundingVolume = commandList[0].boundingVolume;
         frameState.mode = mode;
 
-        var sphere = BoundingSphere.projectTo2D(BoundingSphere.fromPoints(polygon.positions));
+        var projectedPositions = [];
+        for (var i = 0; i < positions.length; ++i) {
+            projectedPositions.push(projection.project(ellipsoid.cartesianToCartographic(positions[i])));
+        }
+
+        var sphere = BoundingSphere.fromPoints(projectedPositions);
         sphere.center.x = (testMode === SceneMode.SCENE2D) ? 0.0 : sphere.center.x;
         expect(boundingVolume.center).toEqualEpsilon(sphere.center, CesiumMath.EPSILON2);
         expect(boundingVolume.radius).toEqualEpsilon(sphere.radius, CesiumMath.EPSILON2);
