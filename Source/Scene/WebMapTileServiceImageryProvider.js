@@ -44,7 +44,7 @@ define([
      * @param {String} options.layer The layer name for WMTS requests.
      * @param {String} options.style The style name for WMTS requests.
      * @param {String} options.tileMatrixSetID The identifier of the TileMatrixSet to use for WMTS requests.
-     * @param {Array} options.tileMatrixLabels A list of identifiers in the TileMatrix to use for WMTS requests, one per TileMatrix level.
+     * @param {Array} [options.tileMatrixLabels] A list of identifiers in the TileMatrix to use for WMTS requests, one per TileMatrix level.
      * @param {Number} [options.tileWidth=256] The tile width in pixels.
      * @param {Number} [options.tileHeight=256] The tile height in pixels.
      * @param {TilingScheme} [options.tilingScheme] The tiling scheme corresponding to the organization of the tiles in the TileMatrixSet.
