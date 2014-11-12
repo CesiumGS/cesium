@@ -237,6 +237,7 @@ defineSuite([
 
         runs(function() {
             expect(scene.context.createRenderState).toHaveBeenCalledWith(rs);
+            primitives.remove(model);
         });
     });
 
@@ -876,30 +877,40 @@ defineSuite([
     });
 
     it('Animates and renders', function() {
-        var node = animBoxesModel.getNode('Geometry-mesh020Node');
-        var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
-        var animations = animBoxesModel.activeAnimations;
-        var a = animations.add({
-            name : 'animation_1',
-            startTime : time
+        var m = loadModel(animBoxesUrl, {
+            scale : 2.0
         });
 
-        console.log(node.matrix);
+        runs(function() {
+            var node = m.getNode('inner_box');
+            var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
+            var animations = m.activeAnimations;
+            var a = animations.add({
+                name : 'animation_1',
+                startTime : time
+            });
 
-        animBoxesModel.zoomTo();
+            expect(node.matrix).toEqual(Matrix4.IDENTITY);
+            var previousMatrix = Matrix4.clone(node.matrix);
 
-        for (var i = 0; i < 4; ++i) {
-            var t = JulianDate.addSeconds(time, i, new JulianDate());
-            expect(scene.renderForSpecs(t)).toEqual([0, 0, 0, 255]);
+            m.zoomTo();
 
-            animBoxesModel.show = true;
-            expect(scene.renderForSpecs(t)).not.toEqual([0, 0, 0, 255]);
-            animBoxesModel.show = false;
+            for (var i = 1; i < 4; ++i) {
+                var t = JulianDate.addSeconds(time, i, new JulianDate());
+                expect(scene.renderForSpecs(t)).toEqual([0, 0, 0, 255]);
 
-            console.log(node.matrix);
-        }
+                m.show = true;
+                expect(scene.renderForSpecs(t)).not.toEqual([0, 0, 0, 255]);
+                m.show = false;
 
-        expect(animations.remove(a)).toEqual(true);
+                expect(node.matrix).not.toEqual(previousMatrix);
+                previousMatrix = Matrix4.clone(node.matrix);
+                console.log(node.matrix);
+            }
+
+            expect(animations.remove(a)).toEqual(true);
+            primitives.remove(m);
+        });
     });
 
     ///////////////////////////////////////////////////////////////////////////

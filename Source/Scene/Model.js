@@ -1993,6 +1993,8 @@ define([
             Matrix4.clone(node.matrix, result);
         } else {
             Matrix4.fromTranslationQuaternionRotationScale(node.translation, node.rotation, node.scale, result);
+            // Keep matrix returned by the node in-sync if the node is targeted by an animation.  Only TRS nodes can be targeted.
+            publicNode.setMatrix(result);
         }
     }
 

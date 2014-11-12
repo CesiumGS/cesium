@@ -100,8 +100,16 @@ define([
                 this._runtimeNode.dirtyNumber = model._maxDirtyNumber;
             }
         }
-
     });
+
+    /**
+     * @private
+     */
+    ModelNode.prototype.setMatrix = function(matrix) {
+        // Update matrix but do not set the dirty flag since this is used internally
+        // to keep the matrix in-sync during a glTF animation.
+        Matrix4.clone(matrix, this._matrix);
+    };
 
     return ModelNode;
 });
