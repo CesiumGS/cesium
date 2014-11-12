@@ -143,7 +143,7 @@ define([
         queryOptions = combine(defaultParameters, queryOptions);
 
         labels = imageryProvider._tileMatrixLabels;
-        queryOptions.tilematrix = (!!labels) ? labels[level] : level;
+        queryOptions.tilematrix = defined(labels) ? labels[level] : level;
         queryOptions.layer = imageryProvider._layer;
         queryOptions.style = imageryProvider._style;
         queryOptions.tilerow = row;
