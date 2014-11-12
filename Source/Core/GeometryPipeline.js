@@ -1087,7 +1087,7 @@ define([
      * var geometry = Cesium.GeometryPipeline.combine(instances);
      */
     GeometryPipeline.combine = function(instances) {
-        deprecationWarning('GeometryPipeline.combine', 'GeometryPipeline.combine was deprecated in Cesium 1.4. It will be removed in Cesium 1.7. Use GeometryPipeline.combineInstances.');
+        deprecationWarning('GeometryPipeline.combine', 'GeometryPipeline.combine was deprecated in Cesium 1.4. It will be removed in Cesium 1.5. Use GeometryPipeline.combineInstances.');
 
         //>>includeStart('debug', pragmas.debug);
         if ((!defined(instances)) || (instances.length < 1)) {
@@ -2513,7 +2513,7 @@ define([
      * geometry = Cesium.GeometryPipeline.wrapLongitude(geometry);
      */
     GeometryPipeline.wrapLongitude = function(geometry) {
-        deprecationWarning('GeometryPipeline.wrapLongitude', 'GeometryPipeline.wrapLongitude was deprecated in Cesium 1.4. It will be removed in Cesium 1.7. Use GeometryPipeline.splitLongitude.');
+        deprecationWarning('GeometryPipeline.wrapLongitude', 'GeometryPipeline.wrapLongitude was deprecated in Cesium 1.4. It will be removed in Cesium 1.5. Use GeometryPipeline.splitLongitude.');
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(geometry)) {
