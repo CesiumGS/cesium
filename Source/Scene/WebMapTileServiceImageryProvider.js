@@ -44,6 +44,7 @@ define([
      * @param {String} options.layer The layer name for WMTS requests.
      * @param {String} options.style The style name for WMTS requests.
      * @param {String} options.tileMatrixSetID The identifier of the TileMatrixSet to use for WMTS requests.
+     * @param {Array} options.tileMatrixLabels A list of identifiers in the TileMatrix to use for WMTS requests, one per TileMatrix level.
      * @param {Number} [options.tileWidth=256] The tile width in pixels.
      * @param {Number} [options.tileHeight=256] The tile height in pixels.
      * @param {TilingScheme} [options.tilingScheme] The tiling scheme corresponding to the organization of the tiles in the TileMatrixSet.
@@ -67,6 +68,7 @@ define([
      *     style : 'default',
      *     format : 'image/jpeg',
      *     tileMatrixSetID : 'default028mm',
+     *     // tileMatrixLabels : ['default028mm:0', 'default028mm:1', 'default028mm:2' ...],
      *     maximumLevel: 19,
      *     credit : new Cesium.Credit('U. S. Geological Survey')
      * });
@@ -92,6 +94,7 @@ define([
         this._layer = options.layer;
         this._style = options.style;
         this._tileMatrixSetID = options.tileMatrixSetID;
+        this._tileMatrixLabels = options.tileMatrixLabels;
         this._format = defaultValue(options.format, 'image/jpeg');
         this._proxy = options.proxy;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
@@ -135,10 +138,14 @@ define([
     function buildImageUrl(imageryProvider, col, row, level) {
         var uri = new Uri(imageryProvider._url);
         var queryOptions = queryToObject(defaultValue(uri.query, ''));
+        var labels;
 
         queryOptions = combine(defaultParameters, queryOptions);
 
-        queryOptions.tilematrix = level;
+        //queryOptions.tilematrix = level; //orig
+        //queryOptions.tilematrix = imageryProvider._tileMatrixSetID + ":" + level; //worksforme
+        labels = imageryProvider._tileMatrixLabels;
+        queryOptions.tilematrix = (!!labels) ? labels[level] : level; //patch
         queryOptions.layer = imageryProvider._layer;
         queryOptions.style = imageryProvider._style;
         queryOptions.tilerow = row;
