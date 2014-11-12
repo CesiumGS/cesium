@@ -49,5 +49,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Kevin Ring](https://github.com/kring)
 * [M.Eng. René Schwarz](https://github.com/DigNative)
 * [Gilles Cébélieu (IGN France)](https://github.com/gcebelieu)
+* [Guillaume Beraudo](https://github.com/gberaudo)
 
 Also see [our contributors page](http://cesiumjs.org/contributors.html) for more information.
