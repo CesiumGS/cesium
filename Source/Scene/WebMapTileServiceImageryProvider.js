@@ -142,10 +142,8 @@ define([
 
         queryOptions = combine(defaultParameters, queryOptions);
 
-        //queryOptions.tilematrix = level; //orig
-        //queryOptions.tilematrix = imageryProvider._tileMatrixSetID + ":" + level; //worksforme
         labels = imageryProvider._tileMatrixLabels;
-        queryOptions.tilematrix = (!!labels) ? labels[level] : level; //patch
+        queryOptions.tilematrix = (!!labels) ? labels[level] : level; 
         queryOptions.layer = imageryProvider._layer;
         queryOptions.style = imageryProvider._style;
         queryOptions.tilerow = row;
