@@ -364,7 +364,7 @@ defineSuite([
     });
 
     it('getMesh returns undefined when mesh does not exist', function() {
-        expect(duckModel.getNode('name-of-mesh-that-does-not-exist')).not.toBeDefined();
+        expect(duckModel.getMesh('name-of-mesh-that-does-not-exist')).not.toBeDefined();
     });
 
     it('getMesh returns returns a mesh', function() {
@@ -389,7 +389,7 @@ defineSuite([
     });
 
     it('getMaterial returns undefined when mesh does not exist', function() {
-        expect(duckModel.getNode('name-of-material-that-does-not-exist')).not.toBeDefined();
+        expect(duckModel.getMaterial('name-of-material-that-does-not-exist')).not.toBeDefined();
     });
 
     it('getMaterial returns returns a material', function() {
@@ -877,14 +877,14 @@ defineSuite([
 
     it('Animates and renders', function() {
         var node = animBoxesModel.getNode('Geometry-mesh020Node');
-        var matrix;
-
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
             name : 'animation_1',
             startTime : time
         });
+
+        console.log(node.matrix);
 
         animBoxesModel.zoomTo();
 
@@ -895,6 +895,8 @@ defineSuite([
             animBoxesModel.show = true;
             expect(scene.renderForSpecs(t)).not.toEqual([0, 0, 0, 255]);
             animBoxesModel.show = false;
+
+            console.log(node.matrix);
         }
 
         expect(animations.remove(a)).toEqual(true);
