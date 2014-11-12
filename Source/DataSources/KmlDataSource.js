@@ -199,7 +199,7 @@ define([
     }
 
     var namespaces = {
-        kml : ['http://www.opengis.net/kml/2.2', 'http://earth.google.com/kml/2.2'],
+        kml : [null, undefined, 'http://www.opengis.net/kml/2.2', 'http://earth.google.com/kml/2.2', 'http://earth.google.com/kml/2.1', 'http://earth.google.com/kml/2.0'],
         gx : ['http://www.google.com/kml/ext/2.2'],
         atom : ['http://www.w3.org/2005/Atom']
     };
@@ -662,7 +662,7 @@ define([
         var id;
         var styleEntity;
 
-        var styleNodes = queryNodes(kml.documentElement.firstElementChild, 'Style', namespaces.kml);
+        var styleNodes = kml.getElementsByTagName('Style');
         var styleNodesLength = styleNodes.length;
         for (i = 0; i < styleNodesLength; i++) {
             var node = styleNodes[i];
@@ -681,7 +681,7 @@ define([
             }
         }
 
-        var styleMaps = queryNodes(kml.documentElement.firstElementChild, 'StyleMap', namespaces.kml);
+        var styleMaps = kml.getElementsByTagName('StyleMap');
         var styleMapsLength = styleMaps.length;
         for (i = 0; i < styleMapsLength; i++) {
             var styleMap = styleMaps[i];
