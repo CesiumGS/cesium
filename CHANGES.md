@@ -16,6 +16,9 @@ Change Log
 * Added `modelMatrix` and `cull` options to `Primitive` constructor.
 * The `translation` parameter to `Matrix4.fromRotationTranslation` now defaults to `Cartesian3.ZERO`.
 * Improved point visualization performance for all DataSources.
+* Improved GeoJSON performance when loading a large number of points.
+* `ConstantProperty` now accepts `HTMLElement` instances as valid values.
+* `BillboardGraphics.image` and 'ImageMaterialProperty.image' now accept `Property` instances that represent an `Image` or `Canvas` in addition to a url.
 
 ### 1.3 - 2014-11-03
 
