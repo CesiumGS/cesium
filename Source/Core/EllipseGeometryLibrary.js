@@ -104,9 +104,7 @@ define([
         var semiMajorAxis = options.semiMajorAxis;
         var rotation = options.rotation;
         var center = options.center;
-        var granularity = options.granularity;
-
-        var MAX_ANOMALY_LIMIT = 2.31;
+        var granularity = options.granularity * 16.0;
 
         var aSqr = semiMinorAxis * semiMinorAxis;
         var bSqr = semiMajorAxis * semiMajorAxis;
@@ -121,7 +119,7 @@ define([
 
         // The number of points in the first quadrant
         var numPts = 1 + Math.ceil(CesiumMath.PI_OVER_TWO / granularity);
-        var deltaTheta = MAX_ANOMALY_LIMIT / (numPts - 1);
+        var deltaTheta = CesiumMath.PI_OVER_TWO / (numPts - 1);
 
         // If the number of points were three, the ellipse
         // would be tessellated like below:

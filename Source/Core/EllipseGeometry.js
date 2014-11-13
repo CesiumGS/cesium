@@ -607,7 +607,7 @@ define([
         var center = options.center;
         var semiMajorAxis = options.semiMajorAxis;
         var semiMinorAxis = options.semiMinorAxis;
-        var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+        var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE * 0.5);
         var height = defaultValue(options.height, 0.0);
         var extrudedHeight = options.extrudedHeight;
         var extrude = (defined(extrudedHeight) && !CesiumMath.equalsEpsilon(height, extrudedHeight, 1.0));
