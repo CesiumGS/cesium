@@ -116,6 +116,18 @@ defineSuite([
         waitsForPromise.toReject(dataSource.loadUrl('Data/KML/empty.zip'));
     });
 
+    it('fromUrl works', function() {
+        var dataSource = KmlDataSource.fromUrl('Data/KML/simple.kml');
+
+        waitsFor(function() {
+            return !dataSource.isLoading;
+        });
+
+        runs(function() {
+            expect(dataSource.entities.entities.length).toEqual(1);
+        });
+    });
+
     it('sets DataSource name from Document', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <kml xmlns="http://www.opengis.net/kml/2.2">\

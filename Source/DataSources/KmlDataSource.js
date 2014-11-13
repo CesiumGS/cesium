@@ -1036,6 +1036,19 @@ define([
         this._pinBuilder = new PinBuilder();
     };
 
+    /**
+     * Creates a new instance and asynchronously loads the KML or KMZ file at the provided url.
+     *
+     * @param {string} url The url to be processed.
+     *
+     * @returns {KmlDataSource} A new instance set to load the specified url.
+     */
+    KmlDataSource.fromUrl = function(url) {
+        var result = new KmlDataSource();
+        result.loadUrl(url);
+        return result;
+    };
+
     defineProperties(KmlDataSource.prototype, {
         /**
          * Gets a human-readable name for this instance.
@@ -1158,7 +1171,7 @@ define([
     /**
      * Asynchronously loads the KML or KMZ file at the provided url, replacing any existing data.
      *
-     * @param {Object} url The url to be processed.
+     * @param {String} url The url to be processed.
      *
      * @returns {Promise} a promise that will resolve when the KMZ is processed.
      */
