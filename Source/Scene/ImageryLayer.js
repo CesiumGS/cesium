@@ -757,6 +757,9 @@ define([
         u_oneOverMercatorHeight : function() {
             return this.oneOverMercatorHeight;
         },
+        u_webMercatorY : function() {
+            return this.webMercatorY;
+        },
 
         textureDimensions : new Cartesian2(),
         texture : undefined,
@@ -764,7 +767,8 @@ define([
         southLatitude : 0,
         southMercatorYHigh : 0,
         southMercatorYLow : 0,
-        oneOverMercatorHeight : 0
+        oneOverMercatorHeight : 0,
+        webMercatorY : new Float32Array(64)
     };
 
     var float32ArrayScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(1) : undefined;
@@ -799,8 +803,7 @@ define([
             // leading to all kinds of smearing artifacts.  Current browsers (Chrome 26 for example)
             // do not correctly report the available fragment shader precision, so we can't have different
             // paths for devices with or without high precision fragment shaders, even if we want to.
-
-            var positions = new Array(256 * 256 * 2);
+            var positions = new Float32Array(256 * 256 * 2);
             var index = 0;
             for (var j = 0; j < 256; ++j) {
                 var y = j / 255.0;
@@ -879,7 +882,8 @@ define([
 
         sinLatitude = Math.sin(rectangle.north);
         var northMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
-        uniformMap.oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
+        var oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
+        uniformMap.oneOverMercatorHeight = oneOverMercatorHeight;
 
         var outputTexture = context.createTexture2D({
             width : width,
@@ -903,6 +907,20 @@ define([
             colorTextures : [outputTexture]
         });
         reproject.framebuffer.destroyAttachments = false;
+
+        var south = rectangle.south;
+        var north = rectangle.north;
+
+        var webMercatorY = uniformMap.webMercatorY;
+
+        var webMercatorYIndex = 0;
+        for (var j = 0; j < 64; ++j) {
+            var y = j / 63.0;
+            var latitude = CesiumMath.lerp(south, north, y);
+            var sinLatitude = Math.sin(latitude);
+            var mercatorY = 0.5 * Math.log((1.0 + sinLatitude) / (1.0 - sinLatitude));
+            webMercatorY[j] = (mercatorY - southMercatorY) * oneOverMercatorHeight;
+        }
 
         var command = new ClearCommand({
             color : Color.BLACK,
