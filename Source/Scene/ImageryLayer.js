@@ -757,8 +757,8 @@ define([
         u_oneOverMercatorHeight : function() {
             return this.oneOverMercatorHeight;
         },
-        u_webMercatorY : function() {
-            return this.webMercatorY;
+        u_webMercatorT : function() {
+            return this.webMercatorT;
         },
 
         textureDimensions : new Cartesian2(),
@@ -768,7 +768,7 @@ define([
         southMercatorYHigh : 0,
         southMercatorYLow : 0,
         oneOverMercatorHeight : 0,
-        webMercatorY : new Float32Array(64)
+        webMercatorT : new Float32Array(64)
     };
 
     var float32ArrayScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(1) : undefined;
@@ -856,8 +856,7 @@ define([
                 wrapS : TextureWrap.CLAMP_TO_EDGE,
                 wrapT : TextureWrap.CLAMP_TO_EDGE,
                 minificationFilter : TextureMinificationFilter.LINEAR,
-                magnificationFilter : TextureMagnificationFilter.LINEAR,
-                maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(imageryLayer._maximumAnisotropy, maximumSupportedAnisotropy))
+                magnificationFilter : TextureMagnificationFilter.LINEAR
             });
         }
 
@@ -874,15 +873,15 @@ define([
         uniformMap.southLatitude = rectangle.south;
 
         var sinLatitude = Math.sin(rectangle.south);
-        var southMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
+        var southMercatorT = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
 
-        float32ArrayScratch[0] = southMercatorY;
+        float32ArrayScratch[0] = southMercatorT;
         uniformMap.southMercatorYHigh = float32ArrayScratch[0];
-        uniformMap.southMercatorYLow = southMercatorY - float32ArrayScratch[0];
+        uniformMap.southMercatorYLow = southMercatorT - float32ArrayScratch[0];
 
         sinLatitude = Math.sin(rectangle.north);
-        var northMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
-        var oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
+        var northMercatorT = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
+        var oneOverMercatorHeight = 1.0 / (northMercatorT - southMercatorT);
         uniformMap.oneOverMercatorHeight = oneOverMercatorHeight;
 
         var outputTexture = context.createTexture2D({
@@ -911,14 +910,14 @@ define([
         var south = rectangle.south;
         var north = rectangle.north;
 
-        var webMercatorY = uniformMap.webMercatorY;
+        var webMercatorT = uniformMap.webMercatorT;
 
-        for (var webMercatorYIndex = 0; webMercatorYIndex < 64; ++webMercatorYIndex) {
-            var fraction = webMercatorYIndex / 63.0;
+        for (var webMercatorTIndex = 0; webMercatorTIndex < 64; ++webMercatorTIndex) {
+            var fraction = webMercatorTIndex / 63.0;
             var latitude = CesiumMath.lerp(south, north, fraction);
             sinLatitude = Math.sin(latitude);
-            var mercatorY = 0.5 * Math.log((1.0 + sinLatitude) / (1.0 - sinLatitude));
-            webMercatorY[webMercatorYIndex] = (mercatorY - southMercatorY) * oneOverMercatorHeight;
+            var mercatorT = 0.5 * Math.log((1.0 + sinLatitude) / (1.0 - sinLatitude));
+            webMercatorT[webMercatorTIndex] = (mercatorT - southMercatorT) * oneOverMercatorHeight;
         }
 
         var command = new ClearCommand({
