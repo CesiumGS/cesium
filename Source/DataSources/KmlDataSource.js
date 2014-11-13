@@ -218,6 +218,19 @@ define([
 
     function queryNodes(node, tagName, namespace) {
         var result = [];
+        var childNodes = node.getElementsByTagName(tagName);
+        var length = childNodes.length;
+        for (var q = 0; q < length; q++) {
+            var child = childNodes[q];
+            if (child.localName === tagName && namespace.indexOf(child.namespaceURI) !== -1) {
+                result.push(child);
+            }
+        }
+        return result;
+    }
+
+    function queryChildNodes(node, tagName, namespace) {
+        var result = [];
         var childNodes = node.childNodes;
         var length = childNodes.length;
         for (var q = 0; q < length; q++) {
@@ -230,38 +243,26 @@ define([
     }
 
     function queryNumericValue(node, tagName, namespace) {
-        var childNodes = node.childNodes;
-        var length = childNodes.length;
-        for (var q = 0; q < length; q++) {
-            var child = childNodes[q];
-            if (child.localName === tagName && namespace.indexOf(child.namespaceURI) !== -1) {
-                var result = parseFloat(child.textContent);
-                return !isNaN(result) ? result : undefined;
-            }
+        var resultNode = queryFirstNode(node, tagName, namespace);
+        if (defined(resultNode)) {
+            var result = parseFloat(resultNode.textContent);
+            return !isNaN(result) ? result : undefined;
         }
         return undefined;
     }
 
     function queryStringValue(node, tagName, namespace) {
-        var childNodes = node.childNodes;
-        var length = childNodes.length;
-        for (var q = 0; q < length; q++) {
-            var child = childNodes[q];
-            if (child.localName === tagName && namespace.indexOf(child.namespaceURI) !== -1) {
-                return child.textContent;
-            }
+        var result = queryFirstNode(node, tagName, namespace);
+        if (defined(result)) {
+            return result.textContent;
         }
         return undefined;
     }
 
     function queryBooleanValue(node, tagName, namespace) {
-        var childNodes = node.childNodes;
-        var length = childNodes.length;
-        for (var q = 0; q < length; q++) {
-            var child = childNodes[q];
-            if (child.localName === tagName && namespace.indexOf(child.namespaceURI) !== -1) {
-                return child.textContent === '1';
-            }
+        var result = queryFirstNode(node, tagName, namespace);
+        if (defined(result)) {
+            return result.textContent === '1';
         }
         return undefined;
     }
@@ -284,6 +285,7 @@ define([
         return href;
     }
 
+    var colorOptions = {};
     function queryColorValue(node, tagName, namespace) {
         var colorString = queryStringValue(node, tagName, namespace);
         if (!defined(colorString)) {
@@ -299,24 +301,23 @@ define([
             return new Color(red, green, blue, alpha);
         }
 
-        var options = {};
         if (red > 0) {
-            options.maximumRed = red;
+            colorOptions.maximumRed = red;
         } else {
-            options.red = 0;
+            colorOptions.red = 0;
         }
         if (green > 0) {
-            options.maximumGreen = green;
+            colorOptions.maximumGreen = green;
         } else {
-            options.green = 0;
+            colorOptions.green = 0;
         }
         if (blue > 0) {
-            options.maximumBlue = blue;
+            colorOptions.maximumBlue = blue;
         } else {
-            options.blue = 0;
+            colorOptions.blue = 0;
         }
-        options.alpha = alpha;
-        return Color.fromRandom(options);
+        colorOptions.alpha = alpha;
+        return Color.fromRandom(colorOptions);
     }
 
     function processPoint(dataSource, entity, kml, node) {
@@ -373,7 +374,7 @@ define([
             entity.polygon.extrudedHeight = new ConstantProperty(0);
         }
 
-        var outerNodes = queryNodes(node, 'outerBoundaryIs', namespaces.kml);
+        var outerNodes = queryChildNodes(node, 'outerBoundaryIs', namespaces.kml);
         var positions;
         for (var j = 0; j < outerNodes.length; j++) {
             processLinearRing(dataSource, entity, kml, queryFirstNode(outerNodes[j], 'LinearRing', namespaces.kml));
@@ -384,13 +385,14 @@ define([
     function processGxTrack(dataSource, entity, kml, node) {
         //TODO altitudeMode, gx:angles
         var altitudeMode = queryStringValue(node, 'altitudeMode', namespaces.kml);
-        var coordsEl = queryNodes(node, 'coord', namespaces.gx);
-        var coordinates = new Array(coordsEl.length);
-        var timesEl = queryNodes(node, 'when', namespaces.kml);
-        var times = new Array(timesEl.length);
+        var coordNodes = queryChildNodes(node, 'coord', namespaces.gx);
+        var timeNodes = queryChildNodes(node, 'when', namespaces.kml);
+
+        var coordinates = new Array(coordNodes.length);
+        var times = new Array(timeNodes.length);
         for (var i = 0; i < times.length; i++) {
-            coordinates[i] = readCoordinate(coordsEl[i], altitudeMode);
-            times[i] = JulianDate.fromIso8601(timesEl[i].textContent);
+            coordinates[i] = readCoordinate(coordNodes[i], altitudeMode);
+            times[i] = JulianDate.fromIso8601(timeNodes[i].textContent);
         }
         var property = new SampledPositionProperty();
         property.addSamples(times, coordinates);
@@ -398,23 +400,21 @@ define([
     }
 
     function processGxMultiTrack(dataSource, entity, kml, node, entityCollection) {
-        //TODO gx:interpolate, altitudeMode
+        var altitudeMode = queryStringValue(node, 'altitudeMode', namespaces.gx);
+        if (!defined(altitudeMode)) {
+            altitudeMode = queryStringValue(node, 'altitudeMode', namespaces.kml);
+        }
+        var interpolate = queryBooleanValue(node, 'interpolate', namespaces.kml);
 
-        var childNodes = node.childNodes;
-        for (var i = 0, len = childNodes.length; i < len; i++) {
-            var childNode = childNodes.item(i);
-            var childNodeName = childNode.nodeName;
+        var trackNodes = queryChildNodes(node, 'Track', namespaces.gx);
+        for (var i = 0, len = trackNodes.length; i < len; i++) {
+            var trackNode = trackNodes[i];
+            var trackNodeId = createId(trackNode);
+            var trackEntity = entityCollection.getOrCreateEntity(trackNodeId);
+            trackEntity.parent = entity;
 
-            if (geometryTypes.hasOwnProperty(childNodeName)) {
-                var childNodeId = createId(childNode);
-                var childEntity = entityCollection.getOrCreateEntity(childNodeId);
-                childEntity.parent = entity;
-
-                mergeStyles(childNodeName, entity, childEntity);
-
-                var geometryHandler = geometryTypes[childNodeName];
-                geometryHandler(dataSource, childEntity, kml, childNode, entityCollection);
-            }
+            mergeStyles(trackNode.localName, entity, trackEntity);
+            processGxTrack(dataSource, trackEntity, kml, trackNode, entityCollection);
         }
     }
 
@@ -479,8 +479,8 @@ define([
         LineString : processLineString,
         LinearRing : processLinearRing,
         Polygon : processPolygon,
-        'gx:Track' : processGxTrack,
-        'gx:MultiTrack' : processGxMultiTrack,
+        Track : processGxTrack,
+        MultiTrack : processGxMultiTrack,
         MultiGeometry : processMultiGeometry
     };
 
@@ -610,11 +610,11 @@ define([
             }
             targetEntity.polyline = undefined;
             break;
-        case 'gx:Track':
+        case 'Track':
             targetEntity.polygon = undefined;
             targetEntity.polyline = undefined;
             break;
-        case 'gx:MultiTrack':
+        case 'MultiTrack':
             targetEntity.polygon = undefined;
             targetEntity.polyline = undefined;
             break;
@@ -628,7 +628,7 @@ define([
     //Processes and merges any inline styles for the provided node into the provided entity.
     function processInlineStyles(dataSource, placeMark, styleCollection, sourceUri, uriResolver) {
         var result = new Entity();
-        var inlineStyles = queryNodes(placeMark, 'Style', namespaces.kml);
+        var inlineStyles = queryChildNodes(placeMark, 'Style', namespaces.kml);
         var inlineStylesLength = inlineStyles.length;
         if (inlineStylesLength > 0) {
             //Google earth seems to always use the last inline style only.
@@ -662,7 +662,7 @@ define([
         var id;
         var styleEntity;
 
-        var styleNodes = kml.getElementsByTagName('Style');
+        var styleNodes = queryNodes(kml, 'Style', namespaces.kml);
         var styleNodesLength = styleNodes.length;
         for (i = 0; i < styleNodesLength; i++) {
             var node = styleNodes[i];
@@ -681,7 +681,7 @@ define([
             }
         }
 
-        var styleMaps = kml.getElementsByTagName('StyleMap');
+        var styleMaps = queryNodes(kml, 'StyleMap', namespaces.kml);
         var styleMapsLength = styleMaps.length;
         for (i = 0; i < styleMapsLength; i++) {
             var styleMap = styleMaps[i];
@@ -795,7 +795,7 @@ define([
 
         for (var i = 0, len = nodes.length; i < len; i++) {
             var node = nodes.item(i);
-            var nodeName = node.nodeName;
+            var nodeName = node.localName;
             if (nodeName === 'TimeSpan') {
                 entity.availability = processTimeSpan(node);
             } else if (nodeName === 'description') {
@@ -806,6 +806,7 @@ define([
                 geometryTypes[nodeName](dataSource, entity, placemark, node, entityCollection);
             }
         }
+
         if (!foundGeometry) {
             mergeStyles(undefined, styleEntity, entity);
         }
