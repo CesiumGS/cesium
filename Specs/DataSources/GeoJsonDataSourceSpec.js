@@ -490,7 +490,7 @@ defineSuite([
 
             entity = entities[2];
             var expectedImage = dataSource._pinBuilder.fromMakiIconId(options.markerSymbol, options.markerColor, options.markerSize).toDataURL();
-            expect(entity.billboard.image.getValue()).toEqual(expectedImage);
+            expect(entity.billboard.image.getValue().toDataURL()).toEqual(expectedImage);
         });
     });
 
@@ -518,7 +518,7 @@ defineSuite([
 
             entity = entities[2];
             var expectedImage = dataSource._pinBuilder.fromMakiIconId(GeoJsonDataSource.markerSymbol, GeoJsonDataSource.markerColor, GeoJsonDataSource.markerSize).toDataURL();
-            expect(entity.billboard.image.getValue()).toEqual(expectedImage);
+            expect(entity.billboard.image.getValue().toDataURL()).toEqual(expectedImage);
         });
     });
 

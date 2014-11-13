@@ -2,6 +2,7 @@
 define([
         './buildModuleUrl',
         './Color',
+        './createGuid',
         './defined',
         './DeveloperError',
         './loadImage',
@@ -9,6 +10,7 @@ define([
     ], function(
         buildModuleUrl,
         Color,
+        createGuid,
         defined,
         DeveloperError,
         loadImage,
@@ -207,6 +209,7 @@ define([
         }
 
         var canvas = document.createElement('canvas');
+        canvas.id = createGuid();
         canvas.width = size;
         canvas.height = size;
 
