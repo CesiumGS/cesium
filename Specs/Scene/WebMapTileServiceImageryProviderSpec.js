@@ -6,12 +6,14 @@ defineSuite([
         'Core/defined',
         'Core/GeographicTilingScheme',
         'Core/loadImage',
+        'Core/queryToObject',
         'Core/WebMercatorTilingScheme',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
-        'Specs/waitsForPromise'
+        'Specs/waitsForPromise',
+        'ThirdParty/Uri'
     ], function(
         WebMapTileServiceImageryProvider,
         Credit,
@@ -19,12 +21,14 @@ defineSuite([
         defined,
         GeographicTilingScheme,
         loadImage,
+        queryToObject,
         WebMercatorTilingScheme,
         Imagery,
         ImageryLayer,
         ImageryProvider,
         ImageryState,
-        waitsForPromise) {
+        waitsForPromise,
+        Uri) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -34,6 +38,57 @@ defineSuite([
 
     it('conforms to ImageryProvider interface', function() {
         expect(WebMapTileServiceImageryProvider).toConformToInterface(ImageryProvider);
+    });
+
+    it('generates expected tile urls', function() {
+        var options = {
+            url : 'http://wmts.invalid',
+            format : 'image/png',
+            layer : 'someLayer',
+            style : 'someStyle',
+            tileMatrixSetID : 'someTMS',
+            tileMatrixLabels : ['first', 'second', 'third']
+        };
+
+        var provider = new WebMapTileServiceImageryProvider(options);
+
+        var loadImageSpy = spyOn(ImageryProvider, 'loadImage');
+
+        var tilecol = 12;
+        var tilerow = 5;
+        var level = 1;
+        provider.requestImage(tilecol, tilerow, level);
+        var uri = new Uri(ImageryProvider.loadImage.mostRecentCall.args[1]);
+        var queryObject = queryToObject(uri.query);
+
+        expect(queryObject.request).toEqual('GetTile');
+        expect(queryObject.service).toEqual('WMTS');
+        expect(queryObject.version).toEqual('1.0.0');
+        expect(queryObject.format).toEqual(options.format);
+        expect(queryObject.layer).toEqual(options.layer);
+        expect(queryObject.style).toEqual(options.style);
+        expect(parseInt(queryObject.tilecol, 10)).toEqual(tilecol);
+        expect(queryObject.tilematrixset).toEqual(options.tileMatrixSetID);
+        expect(queryObject.tilematrix).toEqual(options.tileMatrixLabels[level]);
+        expect(parseInt(queryObject.tilerow, 10)).toEqual(tilerow);
+
+        tilecol = 1;
+        tilerow = 3;
+        level = 2;
+        provider.requestImage(tilecol, tilerow, level);
+        uri = new Uri(ImageryProvider.loadImage.mostRecentCall.args[1]);
+        queryObject = queryToObject(uri.query);
+
+        expect(queryObject.request).toEqual('GetTile');
+        expect(queryObject.service).toEqual('WMTS');
+        expect(queryObject.version).toEqual('1.0.0');
+        expect(queryObject.format).toEqual(options.format);
+        expect(queryObject.layer).toEqual(options.layer);
+        expect(queryObject.style).toEqual(options.style);
+        expect(parseInt(queryObject.tilecol, 10)).toEqual(tilecol);
+        expect(queryObject.tilematrixset).toEqual(options.tileMatrixSetID);
+        expect(queryObject.tilematrix).toEqual(options.tileMatrixLabels[level]);
+        expect(parseInt(queryObject.tilerow, 10)).toEqual(tilerow);
     });
 
     it('requires the url to be specified', function() {
@@ -50,7 +105,7 @@ defineSuite([
     it('requires the layer to be specified', function() {
         function createWithoutLayer() {
             return new WebMapTileServiceImageryProvider({
-                url : 'made/up/wmts/server',
+                url : 'http://wmts.invalid',
                 style : 'someStyle',
                 tileMatrixSetID : 'someTMS'
             });
@@ -62,7 +117,7 @@ defineSuite([
         function createWithoutStyle() {
             return new WebMapTileServiceImageryProvider({
                 layer : 'someLayer',
-                url : 'made/up/wmts/server',
+                url : 'http://wmts.invalid',
                 tileMatrixSetID : 'someTMS'
             });
         }
@@ -74,7 +129,7 @@ defineSuite([
             return new WebMapTileServiceImageryProvider({
                 layer : 'someLayer',
                 style : 'someStyle',
-                url : 'made/up/wmts/server'
+                url : 'http://wmts.invalid'
             });
         }
         expect(createWithoutTMS).toThrowDeveloperError();
@@ -85,7 +140,7 @@ defineSuite([
         var provider = new WebMapTileServiceImageryProvider({
             layer : 'someLayer',
             style : 'someStyle',
-            url : 'made/up/wmts/server',
+            url : 'http://wmts.invalid',
             tileMatrixSetID : 'someTMS'
         });
         expect(provider.format).toEqual('image/jpeg');
@@ -107,7 +162,7 @@ defineSuite([
         var provider = new WebMapTileServiceImageryProvider({
             layer : 'someLayer',
             style : 'someStyle',
-            url : 'made/up/wmts/server',
+            url : 'http://wmts.invalid',
             tileMatrixSetID : 'someTMS',
             format : 'someFormat',
             tileWidth : 512,
@@ -135,13 +190,13 @@ defineSuite([
         var provider1 = new WebMapTileServiceImageryProvider({
             layer : 'someLayer',
             style : 'someStyle',
-            url : 'made/up/wmts/server',
+            url : 'http://wmts.invalid',
             tileMatrixSetID : 'someTMS'
         });
         var provider2 = new WebMapTileServiceImageryProvider({
             layer : 'someLayer',
             style : 'someStyle',
-            url : 'made/up/wmts/server?',
+            url : 'http://wmts.invalid?',
             tileMatrixSetID : 'someTMS'
         });
 
@@ -169,7 +224,7 @@ defineSuite([
         var provider = new WebMapTileServiceImageryProvider({
             layer : 'someLayer',
             style : 'someStyle',
-            url : 'made/up/wmts/server',
+            url : 'http://wmts.invalid',
             tileMatrixSetID : 'someTMS'
         });
 
@@ -195,7 +250,7 @@ defineSuite([
         var provider = new WebMapTileServiceImageryProvider({
             layer : 'someLayer',
             style : 'someStyle',
-            url : 'made/up/wmts/server',
+            url : 'http://wmts.invalid',
             tileMatrixSetID : 'someTMS',
             proxy : proxy
         });
@@ -206,7 +261,7 @@ defineSuite([
 
         runs(function() {
             spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
-                expect(url.indexOf(proxy.getURL('made/up/wmts/server'))).toEqual(0);
+                expect(url.indexOf(proxy.getURL('http://wmts.invalid'))).toEqual(0);
 
                 // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -223,7 +278,7 @@ defineSuite([
         var provider = new WebMapTileServiceImageryProvider({
             layer : 'someLayer',
             style : 'someStyle',
-            url : 'made/up/wmts/server',
+            url : 'http://wmts.invalid',
             tileMatrixSetID : 'someTMS'
         });
 
