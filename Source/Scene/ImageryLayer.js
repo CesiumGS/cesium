@@ -913,13 +913,12 @@ define([
 
         var webMercatorY = uniformMap.webMercatorY;
 
-        var webMercatorYIndex = 0;
-        for (var j = 0; j < 64; ++j) {
-            var y = j / 63.0;
-            var latitude = CesiumMath.lerp(south, north, y);
-            var sinLatitude = Math.sin(latitude);
+        for (var webMercatorYIndex = 0; webMercatorYIndex < 64; ++webMercatorYIndex) {
+            var fraction = webMercatorYIndex / 63.0;
+            var latitude = CesiumMath.lerp(south, north, fraction);
+            sinLatitude = Math.sin(latitude);
             var mercatorY = 0.5 * Math.log((1.0 + sinLatitude) / (1.0 - sinLatitude));
-            webMercatorY[j] = (mercatorY - southMercatorY) * oneOverMercatorHeight;
+            webMercatorY[webMercatorYIndex] = (mercatorY - southMercatorY) * oneOverMercatorHeight;
         }
 
         var command = new ClearCommand({
