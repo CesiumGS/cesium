@@ -21,6 +21,7 @@ define([
         './ConstantPositionProperty',
         './ConstantProperty',
         './EntityCollection',
+        './CallbackProperty',
         './PolygonGraphics',
         './PolylineGraphics'
     ], function(
@@ -45,6 +46,7 @@ define([
         ConstantPositionProperty,
         ConstantProperty,
         EntityCollection,
+        CallbackProperty,
         PolygonGraphics,
         PolylineGraphics) {
     "use strict";
@@ -100,6 +102,16 @@ define([
         }
         html += '</tbody></table>';
         return html;
+    }
+
+    function createDescriptionCallback(properties, nameProperty) {
+        var description;
+        return function(time, result) {
+            if (!defined(description)) {
+                description = describe(properties, nameProperty);
+            }
+            return description;
+        };
     }
 
     //GeoJSON specifies only the Feature object has a usable id property
@@ -167,9 +179,10 @@ define([
 
             var description = properties.description;
             if (!defined(description)) {
-                description = describe(properties, nameProperty);
+                entity.description = new CallbackProperty(createDescriptionCallback(properties, nameProperty), true);
+            } else {
+                entity.description = new ConstantProperty(description);
             }
-            entity.description = new ConstantProperty(description);
         }
         return entity;
     }

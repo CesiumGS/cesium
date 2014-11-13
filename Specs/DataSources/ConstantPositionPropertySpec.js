@@ -81,7 +81,7 @@ defineSuite([
         expect(expected).toEqual(PositionProperty.convertToReferenceFrame(time, value, ReferenceFrame.INERTIAL, ReferenceFrame.FIXED));
     });
 
-    it('setValue rasies definitionChanged event', function() {
+    it('setValue raises definitionChanged event', function() {
         var property = new ConstantPositionProperty();
         var listener = jasmine.createSpy('listener');
         property.definitionChanged.addEventListener(listener);
