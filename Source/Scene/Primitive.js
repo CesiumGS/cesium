@@ -265,6 +265,7 @@ define([
         this._vaAttributes = undefined;
         this._error = undefined;
         this._numberOfInstances = 0;
+        this._validModelMatrix = false;
 
         this._boundingSpheres = [];
         this._boundingSphereWC = [];
@@ -788,6 +789,7 @@ define([
                         that._perInstanceAttributeLocations = result.perInstanceAttributeLocations;
                         that._state = PrimitiveState.COMBINED;
                         that.modelMatrix = Matrix4.clone(result.modelMatrix, that.modelMatrix);
+                        that._validModelMatrix = !Matrix4.equals(that.modelMatrix, Matrix4.IDENTITY);
                     }, function(error) {
                         that._error = error;
                         that._state = PrimitiveState.FAILED;
@@ -832,6 +834,8 @@ define([
                 this._vaAttributes = result.vaAttributes;
                 this._perInstanceAttributeLocations = result.vaAttributeLocations;
                 this._state = PrimitiveState.COMBINED;
+                this.modelMatrix = Matrix4.clone(result.modelMatrix, this.modelMatrix);
+                this._validModelMatrix = !Matrix4.equals(this.modelMatrix, Matrix4.IDENTITY);
             }
         }
 
@@ -1107,7 +1111,7 @@ define([
         }
 
         var modelMatrix;
-        if (this._numberOfInstances > 1 || frameState.mode !== SceneMode.SCENE3D) {
+        if ((this._numberOfInstances > 1 && !this._validModelMatrix) || frameState.mode !== SceneMode.SCENE3D) {
             modelMatrix = Matrix4.IDENTITY;
         } else {
             modelMatrix = this.modelMatrix;
@@ -1144,7 +1148,7 @@ define([
         if (passes.render) {
             length = colorCommands.length;
             for (i = 0; i < length; ++i) {
-                var sphereIndex = translucent ? Math.floor(i / 2) : i;
+                var sphereIndex = twoPasses ? Math.floor(i / 2) : i;
                 colorCommands[i].modelMatrix = modelMatrix;
                 colorCommands[i].boundingVolume = boundingSpheres[sphereIndex];
                 colorCommands[i].cull = this.cull;
