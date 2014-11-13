@@ -251,7 +251,7 @@ define([
         dataSource._promises.push(when(canvasOrPromise, function(canvas) {
             var billboard = new BillboardGraphics();
             billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
-            billboard.image = new ConstantProperty(canvas, true);
+            billboard.image = new ConstantProperty(canvas);
 
             var entity = createObject(geoJson, dataSource._entityCollection);
             entity.billboard = billboard;

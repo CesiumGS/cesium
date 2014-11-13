@@ -27,12 +27,9 @@ define([
      * @exception {DeveloperError} value.clone is a required function.
      * @exception {DeveloperError} value.equals is a required function.
      */
-    var ConstantProperty = function(value, returnByReference) {
-        returnByReference = defaultValue(returnByReference, false);
-
+    var ConstantProperty = function(value) {
         this._value = undefined;
         this._simple = true;
-        this._returnByReference = returnByReference;
         this._definitionChanged = new Event();
         this.setValue(value);
     };
@@ -73,7 +70,7 @@ define([
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
      */
     ConstantProperty.prototype.getValue = function(time, result) {
-        return this._simple || this._returnByReference ? this._value : this._value.clone(result);
+        return this._simple ? this._value : this._value.clone(result);
     };
 
     /**
@@ -87,9 +84,9 @@ define([
      */
     ConstantProperty.prototype.setValue = function(value) {
         var oldValue = this._value;
-        var simple = this._simple || this._returnByReference;
+        var simple = this._simple;
         if ((simple && oldValue !== value) || (!simple && !oldValue.equals(value))) {
-            simple = this._returnByReference || typeof value !== 'object' || isArray(value);
+            simple = typeof value !== 'object' || value instanceof HTMLElement || isArray(value);
 
             //>>includeStart('debug', pragmas.debug);
             if (!simple) {
@@ -118,7 +115,7 @@ define([
     ConstantProperty.prototype.equals = function(other) {
         return this === other || //
                (other instanceof ConstantProperty && //
-                (((this._simple || this._returnByReference) && (this._value === other._value)) || //
+                ((this._simple && (this._value === other._value)) || //
                 (!this._simple && this._value.equals(other._value))));
     };
 
