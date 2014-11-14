@@ -320,122 +320,23 @@ define([
         return Color.fromRandom(colorOptions);
     }
 
-    function processPoint(dataSource, entity, kml, node) {
-        //TODO extrude, altitudeMode, gx:altitudeMode
-        var coordinatesNode = queryFirstNode(node, 'coordinates', namespaces.kml);
-        var cartesian3 = readCoordinate(coordinatesNode, queryStringValue(node, 'altitudeMode', namespaces.kml));
-        entity.position = new ConstantPositionProperty(cartesian3);
-    }
-
-    function processLineString(dataSource, entity, kml, node) {
-        var coordinatesNode = queryFirstNode(node, 'coordinates', namespaces.kml);
-        if (defined(coordinatesNode)) {
-            var coordinates = readCoordinates(coordinatesNode);
-            if (defined(coordinates)) {
-                if (!defined(entity.polyline)) {
-                    entity.polyline = new PolylineGraphics();
-                }
-                entity.polyline.positions = new ConstantProperty(coordinates);
-            }
-        }
-    }
-
-    function processLinearRing(dataSource, entity, kml, node) {
-        var coordinatesNode = queryFirstNode(node, 'coordinates', namespaces.kml);
-        if (defined(coordinatesNode)) {
-            var coordinates = readCoordinates(coordinatesNode);
-            if (defined(coordinates)) {
-                coordinates = PolygonPipeline.removeDuplicates(coordinates);
-
-                if (coordinates.length > 3) {
-                    if (defined(entity.polyline)) {
-                        entity.polyline.positions = new ConstantProperty(coordinates);
-                    }
-                    if (defined(entity.polygon)) {
-                        entity.polygon.positions = new ConstantProperty(coordinates);
-                    }
-                }
-            }
-        }
-    }
-
-    function processPolygon(dataSource, entity, kml, node) {
-        //TODO innerBoundaryIS, tessellate, altitudeMode
-
-        if (!defined(entity.polygon)) {
-            entity.polygon = new PolygonGraphics();
-        }
-
-        var altitudeMode = queryStringValue(node, 'altitudeMode', namespaces.kml);
-        var perPositionHeight = defined(altitudeMode) && (altitudeMode !== 'clampToGround') && (altitudeMode !== 'clampToSeaFloor');
-        entity.polygon.perPositionHeight = new ConstantProperty(perPositionHeight);
-
-        if (defaultValue(queryBooleanValue(node, 'extrude', namespaces.kml), false)) {
-            entity.polygon.extrudedHeight = new ConstantProperty(0);
-        }
-
-        var outerNodes = queryChildNodes(node, 'outerBoundaryIs', namespaces.kml);
-        var positions;
-        for (var j = 0; j < outerNodes.length; j++) {
-            processLinearRing(dataSource, entity, kml, queryFirstNode(outerNodes[j], 'LinearRing', namespaces.kml));
-            break;
-        }
-    }
-
-    function processGxTrack(dataSource, entity, kml, node) {
-        //TODO altitudeMode, gx:angles
-        var altitudeMode = queryStringValue(node, 'altitudeMode', namespaces.kml);
-        var coordNodes = queryChildNodes(node, 'coord', namespaces.gx);
-        var timeNodes = queryChildNodes(node, 'when', namespaces.kml);
-
-        var coordinates = new Array(coordNodes.length);
-        var times = new Array(timeNodes.length);
-        for (var i = 0; i < times.length; i++) {
-            coordinates[i] = readCoordinate(coordNodes[i], altitudeMode);
-            times[i] = JulianDate.fromIso8601(timeNodes[i].textContent);
-        }
-        var property = new SampledPositionProperty();
-        property.addSamples(times, coordinates);
-        entity.position = property;
-    }
-
-    function processGxMultiTrack(dataSource, entity, kml, node, entityCollection) {
-        var altitudeMode = queryStringValue(node, 'altitudeMode', namespaces.gx);
-        if (!defined(altitudeMode)) {
-            altitudeMode = queryStringValue(node, 'altitudeMode', namespaces.kml);
-        }
-        var interpolate = queryBooleanValue(node, 'interpolate', namespaces.kml);
-
-        var trackNodes = queryChildNodes(node, 'Track', namespaces.gx);
-        for (var i = 0, len = trackNodes.length; i < len; i++) {
-            var trackNode = trackNodes[i];
-            var trackNodeId = createId(trackNode);
-            var trackEntity = entityCollection.getOrCreateEntity(trackNodeId);
-            trackEntity.parent = entity;
-
-            mergeStyles(trackNode.localName, entity, trackEntity);
-            processGxTrack(dataSource, trackEntity, kml, trackNode, entityCollection);
-        }
-    }
-
-    function processMultiGeometry(dataSource, entity, kml, node, entityCollection) {
-        var childNodes = node.childNodes;
-        for (var i = 0, len = childNodes.length; i < len; i++) {
-            var childNode = childNodes.item(i);
-            var childNodeName = childNode.nodeName;
-
-            if (geometryTypes.hasOwnProperty(childNodeName)) {
-                var childNodeId = createId(childNode);
-                var childEntity = entityCollection.getOrCreateEntity(childNodeId);
-                childEntity.parent = entity;
-
-                mergeStyles(childNodeName, entity, childEntity);
-
-                var geometryHandler = geometryTypes[childNodeName];
-                geometryHandler(dataSource, childEntity, kml, childNode, entityCollection);
-            }
-        }
-    }
+//    function processGxMultiTrack(dataSource, entity, kml, node, entityCollection) {
+//        var altitudeMode = queryStringValue(node, 'altitudeMode', namespaces.gx);
+//        if (!defined(altitudeMode)) {
+//            altitudeMode = queryStringValue(node, 'altitudeMode', namespaces.kml);
+//        }
+//        var interpolate = queryBooleanValue(node, 'interpolate', namespaces.kml);
+//
+//        var trackNodes = queryChildNodes(node, 'Track', namespaces.gx);
+//        for (var i = 0, len = trackNodes.length; i < len; i++) {
+//            var trackNode = trackNodes[i];
+//            var trackNodeId = createId(trackNode);
+//            var trackEntity = entityCollection.getOrCreateEntity(trackNodeId);
+//            trackEntity.parent = entity;
+//
+//            processGxTrack(dataSource, trackEntity, kml, trackNode, entityCollection);
+//        }
+//    }
 
     function processTimeSpan(node) {
         var result;
@@ -474,25 +375,28 @@ define([
         return result;
     }
 
-    var geometryTypes = {
-        Point : processPoint,
-        LineString : processLineString,
-        LinearRing : processLinearRing,
-        Polygon : processPolygon,
-        Track : processGxTrack,
-        MultiTrack : processGxMultiTrack,
-        MultiGeometry : processMultiGeometry
-    };
-
-    function createDefaultBillboard() {
+    function createDefaultBillboard(dataSource) {
         var billboard = new BillboardGraphics();
         billboard.width = new ConstantProperty(32);
         billboard.height = new ConstantProperty(32);
         billboard.scaleByDistance = new ConstantProperty(new NearFarScalar(2414016, 1.0, 1.6093e+7, 0.1));
+        billboard.image = new ConstantProperty(dataSource._pinBuilder.fromColor(Color.YELLOW, 64).toDataURL());
         return billboard;
     }
 
-    function processStyle(dataSource, styleNode, entity, sourceUri, uriResolver) {
+    function createDefaultLabel() {
+        var label = new LabelGraphics();
+        label.translucencyByDistance = new ConstantProperty(new NearFarScalar(1500000, 1.0, 3400000, 0.0));
+        label.scale = new ConstantProperty(1.0);
+        label.fillColor = new ConstantProperty(Color.WHITE);
+        label.pixelOffset = new ConstantProperty(new Cartesian2(0, -16));
+        label.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
+        label.font = new ConstantProperty('16pt Arial');
+        label.style = new ConstantProperty(LabelStyle.FILL_AND_OUTLINE);
+        return label;
+    }
+
+    function applyStyle(dataSource, styleNode, targetEntity, sourceUri, uriResolver) {
         for (var i = 0, len = styleNode.childNodes.length; i < len; i++) {
             var node = styleNode.childNodes.item(i);
             var material;
@@ -505,10 +409,10 @@ define([
                 var href = defined(iconNode) ? queryStringValue(iconNode, 'href', namespaces.kml) : undefined;
                 var icon = defined(href) ? resolveHref(href, dataSource, sourceUri, uriResolver) : undefined;
 
-                var billboard = entity.billboard;
+                var billboard = targetEntity.billboard;
                 if (!defined(billboard)) {
-                    billboard = createDefaultBillboard();
-                    entity.billboard = billboard;
+                    billboard = createDefaultBillboard(dataSource);
+                    targetEntity.billboard = billboard;
                 }
                 if (defined(icon)) {
                     billboard.image = new ConstantProperty(icon);
@@ -521,23 +425,24 @@ define([
                 }
             } else if (node.nodeName === 'LabelStyle') {
                 //Map style to label properties
-                var label = defined(entity.label) ? entity.label : new LabelGraphics();
+                var label = defined(targetEntity.label) ? targetEntity.label : new LabelGraphics();
                 var labelScale = queryNumericValue(node, 'scale', namespaces.kml);
                 var labelColor = queryColorValue(node, 'color', namespaces.kml);
 
                 label.translucencyByDistance = new ConstantProperty(new NearFarScalar(1500000, 1.0, 3400000, 0.0));
-                label.scale = defined(labelScale) ? new ConstantProperty(labelScale) : new ConstantProperty(1.0);
-                label.fillColor = defined(labelColor) ? new ConstantProperty(labelColor) : new ConstantProperty(new Color(1, 1, 1, 1));
-                label.text = defined(entity.name) ? new ConstantProperty(entity.name) : undefined;
+                label.scale = defined(labelScale) ? new ConstantProperty(labelScale * 0.25) : new ConstantProperty(4.0);
+                label.fillColor = defined(labelColor) ? new ConstantProperty(labelColor) : new ConstantProperty(Color.WHITE);
+                label.text = defined(targetEntity.name) ? new ConstantProperty(targetEntity.name) : undefined;
                 label.pixelOffset = new ConstantProperty(new Cartesian2(0, -16));
                 label.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
-                label.font = new ConstantProperty('16pt Arial');
+                label.font = new ConstantProperty('64pt Arial');
+                label.outlineWidth  = new ConstantProperty(4);
                 label.style = new ConstantProperty(LabelStyle.FILL_AND_OUTLINE);
-                entity.label = label;
+                targetEntity.label = label;
             } else if (node.nodeName === 'LineStyle') {
                 //Map style to line properties
                 //TODO PhysicalWidth, labelVisibility
-                var polyline = defined(entity.polyline) ? entity.polyline : new PolylineGraphics();
+                var polyline = defined(targetEntity.polyline) ? targetEntity.polyline : new PolylineGraphics();
                 var lineColor = queryColorValue(node, 'color', namespaces.kml);
                 var lineWidth = queryNumericValue(node, 'width', namespaces.kml);
 //                var outerColorString = queryStringValue(node, 'outerColor', namespace.gx);
@@ -549,79 +454,28 @@ define([
 
                 polyline.width = defined(lineWidth) ? new ConstantProperty(Math.max(lineWidth, 1.0)) : new ConstantProperty(1.0);
                 material = new PolylineOutlineMaterialProperty();
-                material.color = defined(lineColor) ? new ConstantProperty(lineColor) : new ConstantProperty(new Color(1, 1, 1, 1));
+                material.color = defined(lineColor) ? new ConstantProperty(lineColor) : new ConstantProperty(Color.WHITE);
 //                material.outlineColor = defined(lineOuterColor) ? new ConstantProperty(lineOuterColor) : new ConstantProperty(new Color(0, 0, 0, 1));
-//                material.outlineWidth = defined(lineOuterWidth) ? new ConstantProperty(lineOuterWidth) : new ConstantProperty(0);
+                material.outlineWidth = new ConstantProperty(0);//defined(lineOuterWidth) ? new ConstantProperty(lineOuterWidth) : new ConstantProperty(0);
                 polyline.material = material;
-                entity.polyline = polyline;
+                targetEntity.polyline = polyline;
             } else if (node.nodeName === 'PolyStyle') {
-                entity.polygon = defined(entity.polygon) ? entity.polygon : new PolygonGraphics();
+                targetEntity.polygon = defined(targetEntity.polygon) ? targetEntity.polygon : new PolygonGraphics();
                 var polygonColor = queryColorValue(node, 'color', namespaces.kml);
-                polygonColor = defined(polygonColor) ? polygonColor : new Color(1, 1, 1, 1);
+                polygonColor = defined(polygonColor) ? polygonColor : Color.WHITE;
                 material = new ColorMaterialProperty();
                 material.color = new ConstantProperty(polygonColor);
-                entity.polygon.material = material;
+                targetEntity.polygon.material = material;
 
                 var fill = queryBooleanValue(node, 'fill', namespaces.kml);
                 if (defined(fill)) {
-                    entity.polygon.fill = new ConstantProperty(fill);
+                    targetEntity.polygon.fill = new ConstantProperty(fill);
                 }
                 var outline = queryBooleanValue(node, 'outline', namespaces.kml);
                 if (defined(outline)) {
-                    entity.polygon.outline = new ConstantProperty(outline);
+                    targetEntity.polygon.outline = new ConstantProperty(outline);
                 }
             }
-        }
-    }
-
-    function mergeStyles(geometryType, styleEntity, targetEntity) {
-        targetEntity.merge(styleEntity);
-
-        //If a shared style has multiple styles, for example PolyStyle and
-        //and LineStyle, an Entity can end up with styles it shouldn't have.
-        //After we merge, remove any such styles.
-        switch (geometryType) {
-        case 'Point':
-            targetEntity.path = undefined;
-            targetEntity.polygon = undefined;
-            targetEntity.polyline = undefined;
-            break;
-        case 'LineString':
-        case 'LinearRing':
-            targetEntity.billboard = undefined;
-            targetEntity.label = undefined;
-            targetEntity.path = undefined;
-            targetEntity.point = undefined;
-            targetEntity.polygon = undefined;
-            break;
-        case 'Polygon':
-            targetEntity.billboard = undefined;
-            targetEntity.label = undefined;
-            targetEntity.path = undefined;
-            targetEntity.point = undefined;
-            if (defined(targetEntity.polyline)) {
-                if (!defined(targetEntity.polygon)) {
-                    targetEntity.polygon = new PolygonGraphics();
-                }
-                targetEntity.polygon.outline = defined(targetEntity.polyline.show) ? targetEntity.polyline.show : new ConstantProperty(true);
-                if (defined(targetEntity.polyline.material)) {
-                    targetEntity.polygon.outlineColor = targetEntity.polyline.material.color;
-                }
-            }
-            targetEntity.polyline = undefined;
-            break;
-        case 'Track':
-            targetEntity.polygon = undefined;
-            targetEntity.polyline = undefined;
-            break;
-        case 'MultiTrack':
-            targetEntity.polygon = undefined;
-            targetEntity.polyline = undefined;
-            break;
-        case 'MultiGeometry':
-            break;
-        default:
-            break;
         }
     }
 
@@ -632,7 +486,7 @@ define([
         var inlineStylesLength = inlineStyles.length;
         if (inlineStylesLength > 0) {
             //Google earth seems to always use the last inline style only.
-            processStyle(dataSource, inlineStyles[inlineStylesLength - 1], result, sourceUri, uriResolver);
+            applyStyle(dataSource, inlineStyles[inlineStylesLength - 1], result, sourceUri, uriResolver);
         }
 
         //Google earth seems to always use the first external style only.
@@ -676,7 +530,7 @@ define([
                 if (!defined(styleCollection.getById(id))) {
                     styleEntity = new Entity(id);
                     styleCollection.add(styleEntity);
-                    processStyle(dataSource, node, styleEntity, sourceUri, uriResolver);
+                    applyStyle(dataSource, node, styleEntity, sourceUri, uriResolver);
                 }
             }
         }
@@ -764,62 +618,144 @@ define([
         processDocument(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
     }
 
+    function processGeometry(dataSource, geometryNode, entity, styleEntity){
+        var coordinatesNode;
+        var coordinates;
+        var altitudeMode;
+        var geometryType = geometryNode.localName;
+
+        switch (geometryType) {
+        case 'Point':
+            coordinatesNode = queryFirstNode(geometryNode, 'coordinates', namespaces.kml);
+            if (defined(coordinatesNode)) {
+                var position = readCoordinate(coordinatesNode, queryStringValue(geometryNode, 'altitudeMode', namespaces.kml));
+                if (defined(position)) {
+                    entity.position = new ConstantPositionProperty(position);
+                }
+            }
+            entity.billboard = styleEntity.billboard;
+            break;
+        case 'LineString':
+        case 'LinearRing': {
+            var polyline = defined(styleEntity.polyline) ? styleEntity.polyline.clone() : new PolylineGraphics();
+            entity.polyline = polyline;
+            coordinatesNode = queryFirstNode(geometryNode, 'coordinates', namespaces.kml);
+            if (defined(coordinatesNode)) {
+                coordinates = readCoordinates(coordinatesNode);
+                if (defined(coordinates)) {
+                    polyline.positions = new ConstantProperty(coordinates);
+                }
+            }
+        }
+            break;
+        case 'Polygon': {
+            var polygon = defined(styleEntity.polygon) ? styleEntity.polygon.clone() : new PolygonGraphics();
+            polygon.outline = new ConstantProperty(true);
+            polygon.outlineColor = defined(styleEntity.polyline) ? styleEntity.polyline.material.color : undefined;
+            polygon.outlineWidth = defined(styleEntity.polyline) ? styleEntity.polyline.width : undefined;
+            entity.polygon = polygon;
+
+            altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
+            if (defined(altitudeMode) && (altitudeMode !== 'clampToGround') && (altitudeMode !== 'clampToSeaFloor')) {
+                polygon.perPositionHeight = new ConstantProperty(true);
+            }
+
+            if (defaultValue(queryBooleanValue(geometryNode, 'extrude', namespaces.kml), false)) {
+                polygon.extrudedHeight = new ConstantProperty(0);
+            }
+
+            var outerNodes = queryChildNodes(geometryNode, 'outerBoundaryIs', namespaces.kml);
+            var positions;
+            for (var j = 0; j < outerNodes.length; j++) {
+                var linearRingNode = queryFirstNode(outerNodes[j], 'LinearRing', namespaces.kml);
+                coordinatesNode = queryFirstNode(linearRingNode, 'coordinates', namespaces.kml);
+                if (defined(coordinatesNode)) {
+                    coordinates = readCoordinates(coordinatesNode);
+                    if (defined(coordinates)) {
+                        polygon.positions = new ConstantProperty(coordinates);
+                    }
+                }
+                break;
+            }
+        }
+            break;
+        case 'Track': {
+            altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
+            var coordNodes = queryChildNodes(geometryNode, 'coord', namespaces.gx);
+            var timeNodes = queryChildNodes(geometryNode, 'when', namespaces.kml);
+
+            coordinates = new Array(coordNodes.length);
+            var times = new Array(timeNodes.length);
+            for (var i = 0; i < times.length; i++) {
+                coordinates[i] = readCoordinate(coordNodes[i], altitudeMode);
+                times[i] = JulianDate.fromIso8601(timeNodes[i].textContent);
+            }
+            var property = new SampledPositionProperty();
+            property.addSamples(times, coordinates);
+            entity.position = property;
+        }
+            break;
+        case 'MultiTrack':
+            break;
+        case 'MultiGeometry':
+            processMultiGeometry(dataSource, geometryNode, entity, styleEntity);
+            break;
+        default:
+            return false;
+        }
+        return true;
+    }
+
+    var geometryTypes = {
+        Point : true,
+        LineString : true,
+        LinearRing : true,
+        Polygon : true,
+        Track : true,
+        MultiTrack : true,
+        MultiGeometry : true
+    };
+
+    function processMultiGeometry(dataSource, geometryNode, entity, styleEntity) {
+        var childNodes = geometryNode.childNodes;
+        for (var i = 0, len = childNodes.length; i < len; i++) {
+            var childNode = childNodes.item(i);
+            var geometryType = childNode.localName;
+            if (defined(geometryTypes[geometryType])) {
+                var childNodeId = createId(childNode);
+                var childEntity = dataSource._entityCollection.getOrCreateEntity(childNodeId);
+                childEntity.parent = entity;
+                childEntity.availability = entity.availability;
+                childEntity.label = entity.label;
+                processGeometry(dataSource, childNode, childEntity, styleEntity);
+            }
+        }
+    }
+
     function processPlacemark(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver) {
         var id = createId(placemark.id);
+        var name = queryStringValue(placemark, 'name', namespaces.kml);
+        var description = queryStringValue(placemark, 'description', namespaces.kml);
+        var visibility = queryBooleanValue(placemark, 'visibility', namespaces.kml);
+        var timeSpanNode = queryFirstNode(placemark, 'TimeSpan', namespaces.kml);
+
         var entity = entityCollection.getOrCreateEntity(id);
-
-        if (defined(parent)) {
-            entity.parent = parent;
-        }
-
+        entity.name = name;
+        entity.parent = parent;
+        //entity.uiShow = defaultValue(visibility, true);
+        entity.availability = defined(timeSpanNode) ? processTimeSpan(timeSpanNode) : undefined;
+        entity.description = defined(description) ? new ConstantProperty(description) : undefined;
         var styleEntity = processInlineStyles(dataSource, placemark, styleCollection, sourceUri, uriResolver);
 
-        var name = queryStringValue(placemark, 'name', namespaces.kml);
         if (defined(name)) {
-            if (!defined(entity.label)) {
-                entity.label = new LabelGraphics();
-                entity.label.font = new ConstantProperty('16pt Arial');
-                entity.label.style = new ConstantProperty(LabelStyle.FILL_AND_OUTLINE);
-                entity.label.pixelOffset = new ConstantProperty(new Cartesian2(0, -16));
-                entity.label.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
-                entity.label.translucencyByDistance = new ConstantProperty(new NearFarScalar(1500000, 1.0, 3400000, 0.0));
-            }
+            entity.label = styleEntity.label ? styleEntity.label.clone() : createDefaultLabel();
             entity.label.text = new ConstantProperty(name);
-            entity.name = name;
         }
 
-        var foundGeometry = false;
-        var nodes = placemark.childNodes;
-        var visibility = queryBooleanValue(placemark, 'visibility', namespaces.kml);
-        entity.uiShow = defined(visibility) ? visibility : true;
-
-        for (var i = 0, len = nodes.length; i < len; i++) {
-            var node = nodes.item(i);
-            var nodeName = node.localName;
-            if (nodeName === 'TimeSpan') {
-                entity.availability = processTimeSpan(node);
-            } else if (nodeName === 'description') {
-                entity.description = new ConstantProperty(node.textContent);
-            } else if (geometryTypes.hasOwnProperty(nodeName)) {
-                foundGeometry = true;
-                mergeStyles(nodeName, styleEntity, entity);
-                geometryTypes[nodeName](dataSource, entity, placemark, node, entityCollection);
-            }
-        }
-
-        if (!foundGeometry) {
-            mergeStyles(undefined, styleEntity, entity);
-        }
-
-        var billboard = entity.billboard;
-        var label = entity.label;
-        if (defined(billboard) || defined(label)) {
-            if (!defined(billboard)) {
-                billboard = new BillboardGraphics();
-                entity.billboard = billboard;
-            }
-            if (!defined(billboard.image)) {
-                billboard.image = new ConstantProperty(dataSource._pinBuilder.fromColor(Color.YELLOW, 64).toDataURL());
+        var childNodes = placemark.childNodes;
+        for (var i = 0, len = childNodes.length; i < len; i++) {
+            if(processGeometry(dataSource, childNodes.item(i), entity, styleEntity)){
+                break;
             }
         }
     }
@@ -906,8 +842,6 @@ define([
                 }
             }
         }
-
-        mergeStyles('GroundOverlay', styleEntity, entity);
     }
 
     function processUnsupported(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
