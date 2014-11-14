@@ -645,9 +645,6 @@ define([
                     flat : true,
                     translucent : translucent,
                     renderState : {
-                        depthTest : {
-                            enabled : !translucent
-                        },
                         lineWidth : this._geometryUpdater._scene.clampLineWidth(outlineWidth)
                     }
                 }),
