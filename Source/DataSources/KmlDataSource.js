@@ -320,24 +320,6 @@ define([
         return Color.fromRandom(colorOptions);
     }
 
-//    function processGxMultiTrack(dataSource, entity, kml, node, entityCollection) {
-//        var altitudeMode = queryStringValue(node, 'altitudeMode', namespaces.gx);
-//        if (!defined(altitudeMode)) {
-//            altitudeMode = queryStringValue(node, 'altitudeMode', namespaces.kml);
-//        }
-//        var interpolate = queryBooleanValue(node, 'interpolate', namespaces.kml);
-//
-//        var trackNodes = queryChildNodes(node, 'Track', namespaces.gx);
-//        for (var i = 0, len = trackNodes.length; i < len; i++) {
-//            var trackNode = trackNodes[i];
-//            var trackNodeId = createId(trackNode);
-//            var trackEntity = entityCollection.getOrCreateEntity(trackNodeId);
-//            trackEntity.parent = entity;
-//
-//            processGxTrack(dataSource, trackEntity, kml, trackNode, entityCollection);
-//        }
-//    }
-
     function processTimeSpan(node) {
         var result;
 
@@ -380,7 +362,6 @@ define([
         billboard.width = new ConstantProperty(32);
         billboard.height = new ConstantProperty(32);
         billboard.scaleByDistance = new ConstantProperty(new NearFarScalar(2414016, 1.0, 1.6093e+7, 0.1));
-        billboard.image = new ConstantProperty(dataSource._pinBuilder.fromColor(Color.YELLOW, 64).toDataURL());
         return billboard;
     }
 
@@ -430,13 +411,12 @@ define([
                 var labelColor = queryColorValue(node, 'color', namespaces.kml);
 
                 label.translucencyByDistance = new ConstantProperty(new NearFarScalar(1500000, 1.0, 3400000, 0.0));
-                label.scale = defined(labelScale) ? new ConstantProperty(labelScale * 0.25) : new ConstantProperty(4.0);
+                label.scale = defined(labelScale) ? new ConstantProperty(labelScale) : new ConstantProperty(1.0);
                 label.fillColor = defined(labelColor) ? new ConstantProperty(labelColor) : new ConstantProperty(Color.WHITE);
                 label.text = defined(targetEntity.name) ? new ConstantProperty(targetEntity.name) : undefined;
                 label.pixelOffset = new ConstantProperty(new Cartesian2(0, -16));
                 label.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
                 label.font = new ConstantProperty('64pt Arial');
-                label.outlineWidth  = new ConstantProperty(4);
                 label.style = new ConstantProperty(LabelStyle.FILL_AND_OUTLINE);
                 targetEntity.label = label;
             } else if (node.nodeName === 'LineStyle') {
@@ -480,7 +460,7 @@ define([
     }
 
     //Processes and merges any inline styles for the provided node into the provided entity.
-    function processInlineStyles(dataSource, placeMark, styleCollection, sourceUri, uriResolver) {
+    function computeFinalStyle(entity, dataSource, placeMark, styleCollection, sourceUri, uriResolver) {
         var result = new Entity();
         var inlineStyles = queryChildNodes(placeMark, 'Style', namespaces.kml);
         var inlineStylesLength = inlineStyles.length;
@@ -497,6 +477,20 @@ define([
                 result.merge(styleEntity);
             }
         }
+
+        if (!defined(result.billboard)) {
+            result.billboard = createDefaultBillboard();
+        }
+
+        if (!defined(result.billboard.image)) {
+            result.billboard.image = new ConstantProperty(dataSource._pinBuilder.fromColor(Color.YELLOW, 64).toDataURL());
+        }
+
+        if (defined(entity.name)) {
+            entity.label = result.label ? result.label.clone() : createDefaultLabel();
+            entity.label.text = new ConstantProperty(entity.name);
+        }
+
         return result;
     }
 
@@ -592,6 +586,128 @@ define([
         return promises;
     }
 
+    function processPoint(dataSource, geometryNode, entity, styleEntity) {
+        var coordinatesNode = queryFirstNode(geometryNode, 'coordinates', namespaces.kml);
+        if (defined(coordinatesNode)) {
+            var position = readCoordinate(coordinatesNode, queryStringValue(geometryNode, 'altitudeMode', namespaces.kml));
+            if (defined(position)) {
+                entity.position = new ConstantPositionProperty(position);
+            }
+        }
+        entity.billboard = styleEntity.billboard;
+    }
+
+    function processLineStringOrLinearRing(dataSource, geometryNode, entity, styleEntity) {
+        var polyline = defined(styleEntity.polyline) ? styleEntity.polyline.clone() : new PolylineGraphics();
+        entity.polyline = polyline;
+        var coordinatesNode = queryFirstNode(geometryNode, 'coordinates', namespaces.kml);
+        if (defined(coordinatesNode)) {
+            var coordinates = readCoordinates(coordinatesNode);
+            if (defined(coordinates)) {
+                polyline.positions = new ConstantProperty(coordinates);
+            }
+        }
+    }
+
+    function processPolygon(dataSource, geometryNode, entity, styleEntity) {
+        var polygon = defined(styleEntity.polygon) ? styleEntity.polygon.clone() : new PolygonGraphics();
+        polygon.outline = new ConstantProperty(true);
+        polygon.outlineColor = defined(styleEntity.polyline) ? styleEntity.polyline.material.color : new ConstantProperty(Color.WHITE);
+        polygon.outlineWidth = defined(styleEntity.polyline) ? styleEntity.polyline.width : undefined;
+        entity.polygon = polygon;
+
+        var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
+        if (defined(altitudeMode) && (altitudeMode !== 'clampToGround') && (altitudeMode !== 'clampToSeaFloor')) {
+            polygon.perPositionHeight = new ConstantProperty(true);
+        }
+
+        if (defaultValue(queryBooleanValue(geometryNode, 'extrude', namespaces.kml), false)) {
+            polygon.extrudedHeight = new ConstantProperty(0);
+        }
+
+        var outerNodes = queryChildNodes(geometryNode, 'outerBoundaryIs', namespaces.kml);
+        var positions;
+        for (var j = 0; j < outerNodes.length; j++) {
+            var linearRingNode = queryFirstNode(outerNodes[j], 'LinearRing', namespaces.kml);
+            var coordinatesNode = queryFirstNode(linearRingNode, 'coordinates', namespaces.kml);
+            if (defined(coordinatesNode)) {
+                var coordinates = readCoordinates(coordinatesNode);
+                if (defined(coordinates)) {
+                    polygon.positions = new ConstantProperty(coordinates);
+                }
+            }
+            break;
+        }
+    }
+
+    function processTrack(dataSource, geometryNode, entity, styleEntity) {
+        var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
+        var coordNodes = queryChildNodes(geometryNode, 'coord', namespaces.gx);
+        var timeNodes = queryChildNodes(geometryNode, 'when', namespaces.kml);
+
+        var coordinates = new Array(coordNodes.length);
+        var times = new Array(timeNodes.length);
+        for (var i = 0; i < times.length; i++) {
+            coordinates[i] = readCoordinate(coordNodes[i], altitudeMode);
+            times[i] = JulianDate.fromIso8601(timeNodes[i].textContent);
+        }
+        var property = new SampledPositionProperty();
+        property.addSamples(times, coordinates);
+        entity.position = property;
+        entity.billboard = styleEntity.billboard;
+    }
+
+    function processMultiTrack(dataSource, geometryNode, entity, styleEntity) {
+        var trackNodes = queryChildNodes(geometryNode, 'Track', namespaces.gx);
+        for (var i = 0, len = trackNodes.length; i < len; i++) {
+            var trackNode = trackNodes[i];
+            var trackEntity = dataSource._entityCollection.getOrCreateEntity(createId(trackNode));
+            trackEntity.parent = entity;
+
+            var altitudeMode = queryStringValue(trackNode, 'altitudeMode', namespaces.kml);
+            var coordNodes = queryChildNodes(trackNode, 'coord', namespaces.gx);
+            var timeNodes = queryChildNodes(trackNode, 'when', namespaces.kml);
+
+            var coordinates = new Array(coordNodes.length);
+            var times = new Array(timeNodes.length);
+            for (var x = 0; x < times.length; x++) {
+                coordinates[x] = readCoordinate(coordNodes[x], altitudeMode);
+                times[x] = JulianDate.fromIso8601(timeNodes[x].textContent);
+            }
+            var property = new SampledPositionProperty();
+            property.addSamples(times, coordinates);
+            trackEntity.position = property;
+            trackEntity.billboard = styleEntity.billboard;
+        }
+    }
+
+    function processMultiGeometry(dataSource, geometryNode, entity, styleEntity) {
+        var childNodes = geometryNode.childNodes;
+        for (var i = 0, len = childNodes.length; i < len; i++) {
+            var childNode = childNodes.item(i);
+            var geometryProcessor = geometryTypes[childNode.localName];
+            if (defined(geometryProcessor)) {
+                var childNodeId = createId(childNode);
+                var childEntity = dataSource._entityCollection.getOrCreateEntity(childNodeId);
+                childEntity.parent = entity;
+                childEntity.availability = entity.availability;
+                childEntity.label = entity.label;
+                childEntity.description = entity.description;
+                geometryProcessor(dataSource, childNode, childEntity, styleEntity);
+            }
+        }
+    }
+
+    var geometryTypes = {
+        Point : processPoint,
+        LineString : processLineStringOrLinearRing,
+        LinearRing : processLineStringOrLinearRing,
+        Polygon : processPolygon,
+        Track : processTrack,
+        MultiTrack : processMultiTrack,
+        MultiGeometry : processMultiGeometry
+    };
+
     function processDocument(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
         var featureTypeNames = Object.keys(featureTypes);
         var featureTypeNamesLength = featureTypeNames.length;
@@ -618,120 +734,6 @@ define([
         processDocument(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
     }
 
-    function processGeometry(dataSource, geometryNode, entity, styleEntity){
-        var coordinatesNode;
-        var coordinates;
-        var altitudeMode;
-        var geometryType = geometryNode.localName;
-
-        switch (geometryType) {
-        case 'Point':
-            coordinatesNode = queryFirstNode(geometryNode, 'coordinates', namespaces.kml);
-            if (defined(coordinatesNode)) {
-                var position = readCoordinate(coordinatesNode, queryStringValue(geometryNode, 'altitudeMode', namespaces.kml));
-                if (defined(position)) {
-                    entity.position = new ConstantPositionProperty(position);
-                }
-            }
-            entity.billboard = styleEntity.billboard;
-            break;
-        case 'LineString':
-        case 'LinearRing': {
-            var polyline = defined(styleEntity.polyline) ? styleEntity.polyline.clone() : new PolylineGraphics();
-            entity.polyline = polyline;
-            coordinatesNode = queryFirstNode(geometryNode, 'coordinates', namespaces.kml);
-            if (defined(coordinatesNode)) {
-                coordinates = readCoordinates(coordinatesNode);
-                if (defined(coordinates)) {
-                    polyline.positions = new ConstantProperty(coordinates);
-                }
-            }
-        }
-            break;
-        case 'Polygon': {
-            var polygon = defined(styleEntity.polygon) ? styleEntity.polygon.clone() : new PolygonGraphics();
-            polygon.outline = new ConstantProperty(true);
-            polygon.outlineColor = defined(styleEntity.polyline) ? styleEntity.polyline.material.color : undefined;
-            polygon.outlineWidth = defined(styleEntity.polyline) ? styleEntity.polyline.width : undefined;
-            entity.polygon = polygon;
-
-            altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
-            if (defined(altitudeMode) && (altitudeMode !== 'clampToGround') && (altitudeMode !== 'clampToSeaFloor')) {
-                polygon.perPositionHeight = new ConstantProperty(true);
-            }
-
-            if (defaultValue(queryBooleanValue(geometryNode, 'extrude', namespaces.kml), false)) {
-                polygon.extrudedHeight = new ConstantProperty(0);
-            }
-
-            var outerNodes = queryChildNodes(geometryNode, 'outerBoundaryIs', namespaces.kml);
-            var positions;
-            for (var j = 0; j < outerNodes.length; j++) {
-                var linearRingNode = queryFirstNode(outerNodes[j], 'LinearRing', namespaces.kml);
-                coordinatesNode = queryFirstNode(linearRingNode, 'coordinates', namespaces.kml);
-                if (defined(coordinatesNode)) {
-                    coordinates = readCoordinates(coordinatesNode);
-                    if (defined(coordinates)) {
-                        polygon.positions = new ConstantProperty(coordinates);
-                    }
-                }
-                break;
-            }
-        }
-            break;
-        case 'Track': {
-            altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
-            var coordNodes = queryChildNodes(geometryNode, 'coord', namespaces.gx);
-            var timeNodes = queryChildNodes(geometryNode, 'when', namespaces.kml);
-
-            coordinates = new Array(coordNodes.length);
-            var times = new Array(timeNodes.length);
-            for (var i = 0; i < times.length; i++) {
-                coordinates[i] = readCoordinate(coordNodes[i], altitudeMode);
-                times[i] = JulianDate.fromIso8601(timeNodes[i].textContent);
-            }
-            var property = new SampledPositionProperty();
-            property.addSamples(times, coordinates);
-            entity.position = property;
-        }
-            break;
-        case 'MultiTrack':
-            break;
-        case 'MultiGeometry':
-            processMultiGeometry(dataSource, geometryNode, entity, styleEntity);
-            break;
-        default:
-            return false;
-        }
-        return true;
-    }
-
-    var geometryTypes = {
-        Point : true,
-        LineString : true,
-        LinearRing : true,
-        Polygon : true,
-        Track : true,
-        MultiTrack : true,
-        MultiGeometry : true
-    };
-
-    function processMultiGeometry(dataSource, geometryNode, entity, styleEntity) {
-        var childNodes = geometryNode.childNodes;
-        for (var i = 0, len = childNodes.length; i < len; i++) {
-            var childNode = childNodes.item(i);
-            var geometryType = childNode.localName;
-            if (defined(geometryTypes[geometryType])) {
-                var childNodeId = createId(childNode);
-                var childEntity = dataSource._entityCollection.getOrCreateEntity(childNodeId);
-                childEntity.parent = entity;
-                childEntity.availability = entity.availability;
-                childEntity.label = entity.label;
-                processGeometry(dataSource, childNode, childEntity, styleEntity);
-            }
-        }
-    }
-
     function processPlacemark(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver) {
         var id = createId(placemark.id);
         var name = queryStringValue(placemark, 'name', namespaces.kml);
@@ -745,18 +747,20 @@ define([
         //entity.uiShow = defaultValue(visibility, true);
         entity.availability = defined(timeSpanNode) ? processTimeSpan(timeSpanNode) : undefined;
         entity.description = defined(description) ? new ConstantProperty(description) : undefined;
-        var styleEntity = processInlineStyles(dataSource, placemark, styleCollection, sourceUri, uriResolver);
+        var styleEntity = computeFinalStyle(entity, dataSource, placemark, styleCollection, sourceUri, uriResolver);
 
-        if (defined(name)) {
-            entity.label = styleEntity.label ? styleEntity.label.clone() : createDefaultLabel();
-            entity.label.text = new ConstantProperty(name);
-        }
-
+        var hasGeometry = false;
         var childNodes = placemark.childNodes;
-        for (var i = 0, len = childNodes.length; i < len; i++) {
-            if(processGeometry(dataSource, childNodes.item(i), entity, styleEntity)){
-                break;
+        for (var i = 0, len = childNodes.length; i < len && !hasGeometry; i++) {
+            var childNode = childNodes.item(i);
+            var geometryProcessor = geometryTypes[childNode.localName];
+            if (defined(geometryProcessor)) {
+                geometryProcessor(dataSource, childNode, entity, styleEntity);
+                hasGeometry = true;
             }
+        }
+        if (!hasGeometry) {
+            entity.merge(styleEntity);
         }
     }
 
@@ -772,7 +776,7 @@ define([
             entity.parent = parent;
         }
 
-        var styleEntity = processInlineStyles(dataSource, groundOverlay, styleCollection, sourceUri, uriResolver);
+        var styleEntity = computeFinalStyle(entity, dataSource, groundOverlay, styleCollection, sourceUri, uriResolver);
 
         entity.name = queryStringValue(groundOverlay, 'name', namespaces.kml);
         var nodes = groundOverlay.childNodes;

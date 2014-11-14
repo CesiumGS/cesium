@@ -452,7 +452,8 @@ defineSuite([
             </Placemark>\
             </kml>';
 
-        var coordinates = [Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-123, 38, 0)),
+        var coordinates = [Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-122, 37, 0)),
+                           Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-123, 38, 0)),
                            Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-124, 39, 0)),
                            Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-125, 40, 0)),
                            Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-122, 37, 0))];
@@ -709,7 +710,6 @@ defineSuite([
         expect(entities.length).toEqual(1);
         expect(entities[0].label.scale.getValue()).toEqual(scale.getValue());
         expect(entities[0].label.fillColor).toEqual(color);
-        expect(entities[0].billboard.image.getValue()).toEqual(dataSource._pinBuilder.fromColor(Color.YELLOW, 64).toDataURL());
     });
 
     it('handles empty LabelStyle element', function() {
@@ -733,7 +733,6 @@ defineSuite([
         var label = entities[0].label;
         expect(label.fillColor).toEqual(new ConstantProperty(new Color(1, 1, 1, 1)));
         expect(label.scale.getValue()).toEqual(1.0);
-        expect(entities[0].billboard.image.getValue()).toEqual(dataSource._pinBuilder.fromColor(Color.YELLOW, 64).toDataURL());
     });
 
     it('handles LineStyle', function() {
