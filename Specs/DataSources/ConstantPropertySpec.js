@@ -27,7 +27,7 @@ defineSuite([
         expect(result).toEqual(value);
     });
 
-    it('setValue rasies definitionChanged event', function() {
+    it('setValue raises definitionChanged event', function() {
         var property = new ConstantProperty();
         var listener = jasmine.createSpy('listener');
         property.definitionChanged.addEventListener(listener);
