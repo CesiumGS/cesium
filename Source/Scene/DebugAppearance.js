@@ -122,7 +122,7 @@ define([
 
         this._vertexShaderSource = defaultValue(options.vertexShaderSource, vs);
         this._fragmentShaderSource = defaultValue(options.fragmentShaderSource, fs);
-        this._renderState = defaultValue(options.renderState, Appearance.getDefaultRenderState(false, false));
+        this._renderState = Appearance.getDefaultRenderState(false, false, options.renderState);
         this._closed = defaultValue(options.closed, false);
 
         // Non-derived members
