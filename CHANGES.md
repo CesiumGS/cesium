@@ -19,6 +19,7 @@ Change Log
 * The `translation` parameter to `Matrix4.fromRotationTranslation` now defaults to `Cartesian3.ZERO`.
 * Improved point visualization performance for all DataSources.
 * Fixed `ModelNode.matrix` when a node is targeted for animation.
+* Fixed a problem that could lead to extremely poor performance on lower-end GPUs like the Intel HD 3000.
 
 ### 1.3 - 2014-11-03
 
