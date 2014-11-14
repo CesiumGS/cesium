@@ -64,9 +64,6 @@ scene.primitives.add(new Cesium.Primitive({
     appearance : new Cesium.PerInstanceColorAppearance({
         flat : true,
         renderState : {
-            depthTest : {
-                enabled : true
-            },
             lineWidth : Math.min(2.0, scene.maximumAliasedLineWidth)
         }
     })

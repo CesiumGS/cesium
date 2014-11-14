@@ -317,9 +317,7 @@ defineSuite([
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3(), new Cartesian3());
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
 
-        scene.initializeFrame();
-        scene.render();
-        var pixels = scene.context.readPixels();
+        var pixels = scene.renderForSpecs();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
@@ -432,7 +430,12 @@ defineSuite([
         var boundingVolume = commandList[0].boundingVolume;
         frameState.mode = mode;
 
-        var sphere = BoundingSphere.projectTo2D(BoundingSphere.fromPoints(polygon.positions));
+        var projectedPositions = [];
+        for (var i = 0; i < positions.length; ++i) {
+            projectedPositions.push(projection.project(ellipsoid.cartesianToCartographic(positions[i])));
+        }
+
+        var sphere = BoundingSphere.fromPoints(projectedPositions);
         sphere.center.x = (testMode === SceneMode.SCENE2D) ? 0.0 : sphere.center.x;
         expect(boundingVolume.center).toEqualEpsilon(sphere.center, CesiumMath.EPSILON2);
         expect(boundingVolume.radius).toEqualEpsilon(sphere.radius, CesiumMath.EPSILON2);

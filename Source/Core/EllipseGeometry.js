@@ -549,7 +549,7 @@ define([
             primitiveType : PrimitiveType.TRIANGLES
         });
 
-        var geo = GeometryPipeline.combine([
+        var geo = GeometryPipeline.combineInstances([
             new GeometryInstance({
                 geometry : topBottomGeo
             }),
@@ -560,8 +560,8 @@ define([
 
         return {
             boundingSphere : boundingSphere,
-            attributes : geo.attributes,
-            indices : geo.indices
+            attributes : geo[0].attributes,
+            indices : geo[0].indices
         };
     }
 

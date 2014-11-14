@@ -74,9 +74,6 @@ define([
                         flat : true,
                         translucent : this.translucent,
                         renderState : {
-                            depthTest : {
-                                enabled : !this.translucent
-                            },
                             lineWidth : this.width
                         }
                     })

@@ -5,6 +5,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/combine',
+        '../Core/clone',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -44,6 +45,7 @@ define([
         Cartesian3,
         Cartesian4,
         combine,
+        clone,
         defaultValue,
         defined,
         defineProperties,
@@ -80,7 +82,7 @@ define([
     "use strict";
     /*global WebGLRenderingContext*/
 
-    var yUpToZUp = Matrix4.fromRotationTranslation(Matrix3.fromRotationX(CesiumMath.PI_OVER_TWO), Cartesian3.ZERO);
+    var yUpToZUp = Matrix4.fromRotationTranslation(Matrix3.fromRotationX(CesiumMath.PI_OVER_TWO));
 
     var ModelState = {
         NEEDS_LOAD : 0,
@@ -476,7 +478,7 @@ define([
      * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyToRender} event is fired.
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.url The url to the glTF .json file.
+     * @param {String} options.url The url to the .gltf file.
      * @param {Object} [options.headers] HTTP headers to send with the request.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
@@ -531,15 +533,12 @@ define([
             basePath = url.substring(0, i + 1);
         }
 
+        options = clone(options);
+        options.basePath = basePath;
         var model = new Model(options);
 
         loadText(url, options.headers).then(function(data) {
             model._gltf = gltfDefaults(JSON.parse(data));
-            model._basePath = basePath;
-
-            var docUri = new Uri(document.location.href);
-            var modelUri = new Uri(model._basePath);
-            model._baseUri = modelUri.resolve(docUri);
         }).otherwise(getFailedLoadFunction(model, 'gltf', url));
 
         return model;
@@ -602,24 +601,6 @@ define([
     Model.prototype.getMaterial = function(name) {
         return getRuntime(this, 'materialsByName', name);
     };
-
-    var nodeAxisScratch = new Cartesian3();
-    var nodeTranslationScratch = new Cartesian3();
-    var nodeQuaternionScratch = new Quaternion();
-    var nodeScaleScratch = new Cartesian3();
-
-    function getTransform(node) {
-        if (defined(node.matrix)) {
-            return Matrix4.fromArray(node.matrix);
-        }
-
-        var axis = Cartesian3.fromArray(node.rotation, 0, nodeAxisScratch);
-
-        return Matrix4.fromTranslationQuaternionRotationScale(
-            Cartesian3.fromArray(node.translation, 0, nodeTranslationScratch),
-            Quaternion.fromAxisAngle(axis, node.rotation[3], nodeQuaternionScratch),
-            Cartesian3.fromArray(node.scale, 0 , nodeScaleScratch));
-    }
 
     var aMinScratch = new Cartesian3();
     var aMaxScratch = new Cartesian3();
@@ -778,6 +759,24 @@ define([
         }
     }
 
+    var nodeAxisScratch = new Cartesian3();
+    var nodeTranslationScratch = new Cartesian3();
+    var nodeQuaternionScratch = new Quaternion();
+    var nodeScaleScratch = new Cartesian3();
+
+    function getTransform(node) {
+        if (defined(node.matrix)) {
+            return Matrix4.fromArray(node.matrix);
+        }
+
+        var axis = Cartesian3.fromArray(node.rotation, 0, nodeAxisScratch);
+
+        return Matrix4.fromTranslationQuaternionRotationScale(
+            Cartesian3.fromArray(node.translation, 0, nodeTranslationScratch),
+            Quaternion.fromAxisAngle(axis, node.rotation[3], nodeQuaternionScratch),
+            Cartesian3.fromArray(node.scale, 0 , nodeScaleScratch));
+    }
+
     function parseNodes(model) {
         var runtimeNodes = {};
         var runtimeNodesByName = {};
@@ -821,7 +820,7 @@ define([
                     // Publicly-accessible ModelNode instance to modify animation targets
                     publicNode : undefined
                 };
-                runtimeNode.publicNode = new ModelNode(model, node, runtimeNode, name);
+                runtimeNode.publicNode = new ModelNode(model, node, runtimeNode, name, getTransform(node));
 
                 runtimeNodes[name] = runtimeNode;
                 runtimeNodesByName[node.name] = runtimeNode;
@@ -1994,6 +1993,8 @@ define([
             Matrix4.clone(node.matrix, result);
         } else {
             Matrix4.fromTranslationQuaternionRotationScale(node.translation, node.rotation, node.scale, result);
+            // Keep matrix returned by the node in-sync if the node is targeted by an animation.  Only TRS nodes can be targeted.
+            publicNode.setMatrix(result);
         }
     }
 

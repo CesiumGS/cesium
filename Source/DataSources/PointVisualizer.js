@@ -34,10 +34,10 @@ define([
     var EntityData = function(entity) {
         this.entity = entity;
         this.billboard = undefined;
-        this.visualizerColor = undefined;
-        this.visualizerOutlineColor = undefined;
-        this.visualizerPixelSize = undefined;
-        this.visualizerOutlineWidth = undefined;
+        this.color = undefined;
+        this.outlineColor = undefined;
+        this.pixelSize = undefined;
+        this.outlineWidth = undefined;
     };
 
     /**
@@ -99,8 +99,10 @@ define([
                 continue;
             }
 
+            var init = false;
             var needRedraw = false;
             if (!defined(billboard)) {
+                init = true;
                 var billboardCollection = this._billboardCollection;
                 if (!defined(billboardCollection)) {
                     billboardCollection = new BillboardCollection();
@@ -117,10 +119,6 @@ define([
 
                 billboard.id = entity;
                 billboard.image = undefined;
-                item.color = Color.clone(Color.WHITE, item.color);
-                item.outlineColor = Color.clone(Color.BLACK, item.outlineColor);
-                item.outlineWidth = 0;
-                item.pixelSize = 1;
                 item.billboard = billboard;
                 needRedraw = true;
             }
@@ -129,30 +127,42 @@ define([
             billboard.position = position;
             billboard.scaleByDistance = Property.getValueOrUndefined(pointGraphics._scaleByDistance, time, scaleByDistance);
 
-            var newColor = Property.getValueOrDefault(pointGraphics._color, time, defaultColor, color);
-            var newOutlineColor = Property.getValueOrDefault(pointGraphics._outlineColor, time, defaultOutlineColor, outlineColor);
-            var newOutlineWidth = Property.getValueOrDefault(pointGraphics._outlineWidth, time, defaultOutlineWidth);
-            var newPixelSize = Property.getValueOrDefault(pointGraphics._pixelSize, time, defaultPixelSize);
+            var colorProperty = pointGraphics._color;
+            var outlineColorProperty = pointGraphics._outlineColor;
 
-            needRedraw = needRedraw || //
-                         newOutlineWidth !== item.outlineWidth || //
-                         newPixelSize !== item.pixelSize || //
-                         !Color.equals(newColor, item.color) || //
-                         !Color.equals(newOutlineColor, item.outlineColor);
+            var newColor = init || !Property.isConstant(colorProperty) ? Property.getValueOrDefault(colorProperty, time, defaultColor, color) : item.color;
+            var newOutlineColor = init || !Property.isConstant(outlineColorProperty) ? Property.getValueOrDefault(outlineColorProperty, time, defaultOutlineColor, outlineColor) : item.outlineColor;
+            var newOutlineWidth = Math.round(Property.getValueOrDefault(pointGraphics._outlineWidth, time, defaultOutlineWidth));
+            var newPixelSize = Math.max(1, Math.round(Property.getValueOrDefault(pointGraphics._pixelSize, time, defaultPixelSize)));
+
+            if (newOutlineWidth > 0) {
+                billboard.scale = 1.0;
+                needRedraw = needRedraw || //
+                             newOutlineWidth !== item.outlineWidth || //
+                             newPixelSize !== item.pixelSize || //
+                             !Color.equals(newColor, item.color) || //
+                             !Color.equals(newOutlineColor, item.outlineColor);
+            } else {
+                billboard.scale = newPixelSize / 50.0;
+                newPixelSize = 50.0;
+                needRedraw = needRedraw || //
+                             newOutlineWidth !== item.outlineWidth || //
+                             !Color.equals(newColor, item.color) || //
+                             !Color.equals(newOutlineColor, item.outlineColor);
+            }
 
             if (needRedraw) {
                 item.color = Color.clone(newColor, item.color);
-                item.cotlineColor = Color.clone(newOutlineColor, item.outlineColor);
+                item.outlineColor = Color.clone(newOutlineColor, item.outlineColor);
                 item.pixelSize = newPixelSize;
                 item.outlineWidth = newOutlineWidth;
 
                 var centerAlpha = newColor.alpha;
                 var cssColor = newColor.toCssColorString();
                 var cssOutlineColor = newOutlineColor.toCssColorString();
-                var cssOutlineWidth = newOutlineWidth;
-                var textureId = JSON.stringify([cssColor, newPixelSize, cssOutlineColor, cssOutlineWidth]);
+                var textureId = JSON.stringify([cssColor, newPixelSize, cssOutlineColor, newOutlineWidth]);
 
-                billboard.setImage(textureId, createCallback(centerAlpha, cssColor, cssOutlineColor, cssOutlineWidth, newPixelSize));
+                billboard.setImage(textureId, createCallback(centerAlpha, cssColor, cssOutlineColor, newOutlineWidth, newPixelSize));
             }
         }
         return true;
@@ -222,7 +232,7 @@ define([
         }
     }
 
-    function createCallback(centerAlpha, cssColor, cssOutlineColor, cssOutlineWidth, newPixelSize){
+    function createCallback(centerAlpha, cssColor, cssOutlineColor, cssOutlineWidth, newPixelSize) {
         return function(id) {
             var canvas = document.createElement('canvas');
 

@@ -88,7 +88,7 @@ define([
 
         this._vertexShaderSource = defaultValue(options.vertexShaderSource, defaultVertexShaderSource);
         this._fragmentShaderSource = defaultValue(options.fragmentShaderSource, defaultFragmentShaderSource);
-        this._renderState = defaultValue(options.renderState, Appearance.getDefaultRenderState(translucent, closed));
+        this._renderState = Appearance.getDefaultRenderState(translucent, closed, options.renderState);
         this._closed = closed;
 
         // Non-derived members
