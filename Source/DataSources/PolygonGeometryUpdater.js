@@ -356,13 +356,14 @@ define([
 
         var entity = this._entity;
         var isAvailable = entity.isAvailable(time);
+        var outlineColor = Property.getValueOrDefault(this._outlineColorProperty, time, Color.BLACK);
 
         return new GeometryInstance({
             id : entity,
             geometry : new PolygonOutlineGeometry(this._options),
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
-                color : ColorGeometryInstanceAttribute.fromColor(isAvailable ? this._outlineColorProperty.getValue(time) : Color.BLACK)
+                color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
             }
         });
     };
@@ -593,9 +594,6 @@ define([
                     flat : true,
                     translucent : translucent,
                     renderState : {
-                        depthTest : {
-                            enabled : !translucent
-                        },
                         lineWidth : geometryUpdater._scene.clampLineWidth(outlineWidth)
                     }
                 }),
