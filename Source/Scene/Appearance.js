@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/clone',
+        '../Core/combine',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -8,6 +9,7 @@ define([
         './CullFace'
     ], function(
         clone,
+        combine,
         defaultValue,
         defined,
         defineProperties,
@@ -183,7 +185,7 @@ define([
     /**
      * @private
      */
-    Appearance.getDefaultRenderState = function(translucent, closed) {
+    Appearance.getDefaultRenderState = function(translucent, closed, existing) {
         var rs = {
             depthTest : {
                 enabled : true
@@ -200,6 +202,10 @@ define([
                 enabled : true,
                 face : CullFace.BACK
             };
+        }
+
+        if (defined(existing)) {
+            rs = combine(existing, rs, true);
         }
 
         return rs;

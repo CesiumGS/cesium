@@ -85,7 +85,7 @@ define([
 
         this._vertexShaderSource = defaultValue(options.vertexShaderSource, EllipsoidSurfaceAppearanceVS);
         this._fragmentShaderSource = defaultValue(options.fragmentShaderSource, EllipsoidSurfaceAppearanceFS);
-        this._renderState = defaultValue(options.renderState, Appearance.getDefaultRenderState(translucent, !aboveGround));
+        this._renderState = Appearance.getDefaultRenderState(translucent, !aboveGround, options.renderState);
         this._closed = false;
 
         // Non-derived members
