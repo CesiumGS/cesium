@@ -120,13 +120,8 @@ define([
 
         this._errorEvent = new Event();
 
-        this._ready = true;
-
         var credit = options.credit;
-        if (typeof credit === 'string') {
-            credit = new Credit(credit);
-        }
-        this._credit = credit;
+        this._credit = typeof credit === 'string' ? new Credit(credit) : credit;
     };
 
     var defaultParameters = freezeObject({
@@ -197,12 +192,6 @@ define([
          */
         tileWidth : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('tileWidth must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
                 return this._tileWidth;
             }
         },
@@ -216,12 +205,6 @@ define([
          */
         tileHeight : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('tileHeight must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
                 return this._tileHeight;
             }
         },
@@ -235,12 +218,6 @@ define([
          */
         maximumLevel : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('maximumLevel must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
                 return this._maximumLevel;
             }
         },
@@ -254,12 +231,6 @@ define([
          */
         minimumLevel : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('minimumLevel must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
                 return this._minimumLevel;
             }
         },
@@ -273,12 +244,6 @@ define([
          */
         tilingScheme : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('tilingScheme must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
                 return this._tilingScheme;
             }
         },
@@ -292,12 +257,6 @@ define([
          */
         rectangle : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('rectangle must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
                 return this._rectangle;
             }
         },
@@ -313,12 +272,6 @@ define([
          */
         tileDiscardPolicy : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('tileDiscardPolicy must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
                 return this._tileDiscardPolicy;
             }
         },
@@ -356,9 +309,7 @@ define([
          * @readonly
          */
         ready : {
-            get : function() {
-                return this._ready;
-            }
+            value: true
         },
 
         /**
@@ -420,12 +371,6 @@ define([
      * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
     WebMapTileServiceImageryProvider.prototype.requestImage = function(x, y, level) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
         var url = buildImageUrl(this, x, y, level);
         return ImageryProvider.loadImage(this, url);
     };
