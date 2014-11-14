@@ -616,6 +616,64 @@ define([
         doRequest();
     };
 
+    var red128 = new Uint8Array(3 * 128 * 128);
+
+    var i;
+    for (i = 0; i < 128 * 128; ++i) {
+        red128[i * 3] = 255;
+        red128[i * 3 + 1] = 0;
+        red128[i * 3 + 2] = 0;
+    }
+
+    var red64 = new Uint8Array(3 * 64 * 64);
+    for (i = 0; i < 64 * 64; ++i) {
+        red64[i * 3] = 255;
+        red64[i * 3 + 1] = 0;
+        red64[i * 3 + 2] = 0;
+    }
+
+    var red32 = new Uint8Array(3 * 32 * 32);
+    for (i = 0; i < 32 * 32; ++i) {
+        red32[i * 3] = 255;
+        red32[i * 3 + 1] = 0;
+        red32[i * 3 + 2] = 0;
+    }
+
+    var red16 = new Uint8Array(3 * 16 * 16);
+    for (i = 0; i < 16 * 16; ++i) {
+        red16[i * 3] = 255;
+        red16[i * 3 + 1] = 0;
+        red16[i * 3 + 2] = 0;
+    }
+
+    var red8 = new Uint8Array(3 * 8 * 8);
+    for (i = 0; i < 8 * 8; ++i) {
+        red8[i * 3] = 255;
+        red8[i * 3 + 1] = 0;
+        red8[i * 3 + 2] = 0;
+    }
+
+    var red4 = new Uint8Array(3 * 4 * 4);
+    for (i = 0; i < 4 * 4; ++i) {
+        red4[i * 3] = 255;
+        red4[i * 3 + 1] = 0;
+        red4[i * 3 + 2] = 0;
+    }
+
+    var red2 = new Uint8Array(3 * 2 * 2);
+    for (i = 0; i < 2 * 2; ++i) {
+        red2[i * 3] = 255;
+        red2[i * 3 + 1] = 0;
+        red2[i * 3 + 2] = 0;
+    }
+
+    var red1 = new Uint8Array(3 * 1 * 1);
+    for (i = 0; i < 1 * 1; ++i) {
+        red1[i * 3] = 255;
+        red1[i * 3 + 1] = 0;
+        red1[i * 3 + 2] = 0;
+    }
+
     /**
      * Create a WebGL texture for a given {@link Imagery} instance.
      *
@@ -652,6 +710,56 @@ define([
             source : imagery.image,
             pixelFormat : imageryProvider.hasAlphaChannel ? PixelFormat.RGBA : PixelFormat.RGB
         });
+
+        /*texture.generateMipmap(MipmapHint.NICEST);
+
+        texture.copyFrom({
+            width: 128,
+            height: 128,
+            arrayBufferView: red128
+        }, 0, 0, 1);
+
+        texture.copyFrom({
+            width: 64,
+            height: 64,
+            arrayBufferView: red64
+        }, 0, 0, 2);
+
+        texture.copyFrom({
+            width: 32,
+            height: 32,
+            arrayBufferView: red32
+        }, 0, 0, 3);
+
+        texture.copyFrom({
+            width: 16,
+            height: 16,
+            arrayBufferView: red16
+        }, 0, 0, 4);
+
+        texture.copyFrom({
+            width: 8,
+            height: 8,
+            arrayBufferView: red8
+        }, 0, 0, 5);
+
+        texture.copyFrom({
+            width: 4,
+            height: 4,
+            arrayBufferView: red4
+        }, 0, 0, 6);
+
+        texture.copyFrom({
+            width: 2,
+            height: 2,
+            arrayBufferView: red2
+        }, 0, 0, 7);
+
+        texture.copyFrom({
+            width: 1,
+            height: 1,
+            arrayBufferView: red1
+        }, 0, 0, 8);*/
 
         imagery.texture = texture;
         imagery.image = undefined;
@@ -695,7 +803,47 @@ define([
                     maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(this._maximumAnisotropy, maximumSupportedAnisotropy))
                 });
             }
+
             texture.generateMipmap(MipmapHint.NICEST);
+
+            var level = 0;
+            var width = 256;
+            var height = 256;
+            var sourceX = 0;
+            var sourceY = 0;
+            var ancestorImagery = imagery;
+
+            do {
+                ++level;
+                width >>= 1;
+                height >>= 1;
+                sourceX >>= 1;
+                sourceY >>= 1;
+
+                var current = ancestorImagery;
+                var next = ancestorImagery.parent;
+                if (!defined(next)) {
+                    break;
+                }
+
+                var isWest = current.x === next.x * 2;
+                var isSouth = current.y !== next.y * 2;
+
+                if (!isWest) {
+                    sourceX += width;
+                }
+
+                if (!isSouth) {
+                    sourceY += height;
+                }
+                
+                if (defined(next.texture)) {
+                    texture.copyFromTexture(next.texture, 0, 0, sourceX, sourceY, width, height, level);
+                }
+
+                ancestorImagery = next;
+            } while (defined(ancestorImagery) && width >= 1);
+            
             texture.sampler = mipmapSampler;
         } else {
             var nonMipmapSampler = context.cache.imageryLayer_nonMipmapSampler;
@@ -893,7 +1041,7 @@ define([
         // to the texture via the FBO, and calling generateMipmap later,
         // will result in the texture appearing blank.  I can't pretend to
         // understand exactly why this is.
-        outputTexture.generateMipmap(MipmapHint.NICEST);
+        //outputTexture.generateMipmap(MipmapHint.NICEST);
 
         if (defined(reproject.framebuffer)) {
             reproject.framebuffer.destroy();

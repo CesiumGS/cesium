@@ -286,9 +286,10 @@ define([
      *   arrayBufferView : new Uint8Array([255, 0, 0, 255])
      * });
      */
-    Texture.prototype.copyFrom = function(source, xOffset, yOffset) {
+    Texture.prototype.copyFrom = function(source, xOffset, yOffset, targetMipmapLevel) {
         xOffset = defaultValue(xOffset, 0);
         yOffset = defaultValue(yOffset, 0);
+        targetMipmapLevel = defaultValue(targetMipmapLevel, 0);
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
@@ -315,15 +316,20 @@ define([
         var target = this._textureTarget;
 
         // TODO: gl.pixelStorei(gl._UNPACK_ALIGNMENT, 4);
+        gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
         gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, this._preMultiplyAlpha);
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, this._flipY);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(target, this._texture);
 
         if (source.arrayBufferView) {
-            gl.texSubImage2D(target, 0, xOffset, yOffset, source.width, source.height, this._pixelFormat, this._pixelDatatype, source.arrayBufferView);
+            if (xOffset === 0 && yOffset === 0) {
+                gl.texImage2D(target, targetMipmapLevel, this._pixelFormat, source.width, source.height, 0, this._pixelFormat, this._pixelDatatype, source.arrayBufferView)
+            } else {
+                gl.texSubImage2D(target, targetMipmapLevel, xOffset, yOffset, source.width, source.height, this._pixelFormat, this._pixelDatatype, source.arrayBufferView);
+            }
         } else {
-            gl.texSubImage2D(target, 0, xOffset, yOffset, this._pixelFormat, this._pixelDatatype, source);
+            gl.texSubImage2D(target, targetMipmapLevel, xOffset, yOffset, this._pixelFormat, this._pixelDatatype, source);
         }
 
         gl.bindTexture(target, null);
@@ -347,13 +353,14 @@ define([
      * @exception {DeveloperError} xOffset + width must be less than or equal to width.
      * @exception {DeveloperError} yOffset + height must be less than or equal to height.
      */
-    Texture.prototype.copyFromFramebuffer = function(xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height) {
+    Texture.prototype.copyFromFramebuffer = function(xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height, targetMipmapLevel) {
         xOffset = defaultValue(xOffset, 0);
         yOffset = defaultValue(yOffset, 0);
         framebufferXOffset = defaultValue(framebufferXOffset, 0);
         framebufferYOffset = defaultValue(framebufferYOffset, 0);
         width = defaultValue(width, this._width);
         height = defaultValue(height, this._height);
+        targetMipmapLevel = defaultValue(targetMipmapLevel, 0);
 
         //>>includeStart('debug', pragmas.debug);
         if (PixelFormat.isDepthFormat(this._pixelFormat)) {
@@ -387,8 +394,28 @@ define([
 
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(target, this._texture);
-        gl.copyTexSubImage2D(target, 0, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height);
+
+        if (xOffset === 0 && yOffset === 0) {
+            gl.copyTexImage2D(target, targetMipmapLevel, this._pixelFormat, framebufferXOffset, framebufferYOffset, width, height, 0);
+        } else {
+            gl.copyTexSubImage2D(target, targetMipmapLevel, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height);
+        }
+
         gl.bindTexture(target, null);
+    };
+
+    Texture.prototype.copyFromTexture = function(sourceTexture, destinationXOffset, destinationYOffset, sourceXOffset, sourceYOffset, width, height, targetMipmapLevel) {
+        var context = this._context;
+        var framebuffer = context.createFramebuffer({
+            colorTextures : [sourceTexture]
+        });
+        framebuffer.destroyAttachments = false;
+
+        framebuffer._bind();
+        this.copyFromFramebuffer(destinationXOffset, destinationYOffset, sourceXOffset, sourceYOffset, width, height, targetMipmapLevel);
+        framebuffer._unBind();
+
+        framebuffer.destroy();
     };
 
     /**
