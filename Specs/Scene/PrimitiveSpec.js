@@ -412,7 +412,38 @@ defineSuite([
         primitive = primitive && primitive.destroy();
     });
 
-    it('does not update model matrix for more than one instance in 3D', function() {
+    it('updates model matrix for more than one instance in 3D with equal model matrices in 3D only scene', function() {
+        frameState.scene3DOnly = true;
+
+        var modelMatrix = Matrix4.fromUniformScale(2.0);
+        rectangleInstance1.modelMatrix = modelMatrix;
+        rectangleInstance2.modelMatrix = modelMatrix;
+
+        var primitive = new Primitive({
+            geometryInstances : [rectangleInstance1, rectangleInstance2],
+            appearance : new PerInstanceColorAppearance(),
+            asynchronous : false
+        });
+
+        var commands = [];
+        primitive.update(context, frameState, commands);
+        expect(commands.length).toEqual(1);
+        expect(commands[0].modelMatrix).toEqual(modelMatrix);
+
+        modelMatrix = Matrix4.fromUniformScale(10.0);
+        primitive.modelMatrix = modelMatrix;
+
+        commands.length = 0;
+        primitive.update(context, frameState, commands);
+        expect(commands.length).toEqual(1);
+        expect(commands[0].modelMatrix).toEqual(modelMatrix);
+
+        primitive = primitive && primitive.destroy();
+
+        frameState.scene3DOnly = false;
+    });
+
+    it('does not update model matrix for more than one instance in 3D with different model matrices', function() {
         var primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
