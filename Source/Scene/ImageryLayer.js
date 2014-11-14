@@ -742,32 +742,12 @@ define([
         u_texture : function() {
             return this.texture;
         },
-        u_northLatitude : function() {
-            return this.northLatitude;
-        },
-        u_southLatitude : function() {
-            return this.southLatitude;
-        },
-        u_southMercatorYLow : function() {
-            return this.southMercatorYLow;
-        },
-        u_southMercatorYHigh : function() {
-            return this.southMercatorYHigh;
-        },
-        u_oneOverMercatorHeight : function() {
-            return this.oneOverMercatorHeight;
-        },
         u_webMercatorT : function() {
             return this.webMercatorT;
         },
 
         textureDimensions : new Cartesian2(),
         texture : undefined,
-        northLatitude : 0,
-        southLatitude : 0,
-        southMercatorYHigh : 0,
-        southMercatorYLow : 0,
-        oneOverMercatorHeight : 0,
         webMercatorT : new Float32Array(64)
     };
 
@@ -840,15 +820,6 @@ define([
                 sources : [ReprojectWebMercatorVS]
             });
 
-            // Firefox 33-34 has a regression that prevents the CORDIC implementation from compiling
-            // https://github.com/AnalyticalGraphicsInc/cesium/issues/2197
-            if (FeatureDetection.isFirefox()) {
-                var firefoxVersion = FeatureDetection.firefoxVersion();
-                if (firefoxVersion[0] >= 33 && firefoxVersion[0] <= 34) {
-                    vs.defines.push('DISABLE_CORDIC');
-                }
-            }
-
             reproject.shaderProgram = context.createShaderProgram(vs, ReprojectWebMercatorFS, reprojectAttribInds);
 
             var maximumSupportedAnisotropy = context.maximumTextureFilterAnisotropy;
@@ -869,20 +840,12 @@ define([
         uniformMap.textureDimensions.y = height;
         uniformMap.texture = texture;
 
-        uniformMap.northLatitude = rectangle.north;
-        uniformMap.southLatitude = rectangle.south;
-
         var sinLatitude = Math.sin(rectangle.south);
         var southMercatorT = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
-
-        float32ArrayScratch[0] = southMercatorT;
-        uniformMap.southMercatorYHigh = float32ArrayScratch[0];
-        uniformMap.southMercatorYLow = southMercatorT - float32ArrayScratch[0];
 
         sinLatitude = Math.sin(rectangle.north);
         var northMercatorT = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
         var oneOverMercatorHeight = 1.0 / (northMercatorT - southMercatorT);
-        uniformMap.oneOverMercatorHeight = oneOverMercatorHeight;
 
         var outputTexture = context.createTexture2D({
             width : width,
