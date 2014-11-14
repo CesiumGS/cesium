@@ -42,12 +42,14 @@ define([
         './CompositeProperty',
         './ConstantPositionProperty',
         './ConstantProperty',
+        './createPropertyDescriptor',
         './DataSourceClock',
         './EllipseGraphics',
         './EllipsoidGraphics',
         './EntityCollection',
         './GridMaterialProperty',
         './ImageMaterialProperty',
+        './ImageryLayerGraphics',
         './LabelGraphics',
         './ModelGraphics',
         './PathGraphics',
@@ -57,6 +59,7 @@ define([
         './PolylineGraphics',
         './PolylineOutlineMaterialProperty',
         './PositionPropertyArray',
+        './PropertyBagProperty',
         './RectangleGraphics',
         './ReferenceProperty',
         './SampledPositionProperty',
@@ -65,7 +68,8 @@ define([
         './StripeOrientation',
         './TimeIntervalCollectionPositionProperty',
         './TimeIntervalCollectionProperty',
-        './WallGraphics'
+        './WallGraphics',
+        './WebMapServiceProperty'
     ], function(
         Cartesian2,
         Cartesian3,
@@ -109,12 +113,14 @@ define([
         CompositeProperty,
         ConstantPositionProperty,
         ConstantProperty,
+        createPropertyDescriptor,
         DataSourceClock,
         EllipseGraphics,
         EllipsoidGraphics,
         EntityCollection,
         GridMaterialProperty,
         ImageMaterialProperty,
+        ImageryLayerGraphics,
         LabelGraphics,
         ModelGraphics,
         PathGraphics,
@@ -124,6 +130,7 @@ define([
         PolylineGraphics,
         PolylineOutlineMaterialProperty,
         PositionPropertyArray,
+        PropertyBagProperty,
         RectangleGraphics,
         ReferenceProperty,
         SampledPositionProperty,
@@ -132,7 +139,8 @@ define([
         StripeOrientation,
         TimeIntervalCollectionPositionProperty,
         TimeIntervalCollectionProperty,
-        WallGraphics) {
+        WallGraphics,
+        WebMapServiceProperty) {
     "use strict";
 
     var currentId;
@@ -1085,6 +1093,209 @@ define([
         processPacketData(Number, ellipsoid, 'outlineWidth', ellipsoidData.outlineWidth, interval, sourceUri, entityCollection);
     }
 
+    function processImageryLayer(entity, packet, entityCollection, sourceUri) {
+        var imageryLayerData = packet.imageryLayer;
+        if (!defined(imageryLayerData)) {
+            return;
+        }
+
+        var interval;
+        var intervalString = imageryLayerData.interval;
+        if (defined(intervalString)) {
+            iso8601Scratch.iso8601 = intervalString;
+            interval = TimeInterval.fromIso8601(iso8601Scratch);
+        }
+
+        var imageryLayer = entity.imageryLayer;
+        if (!defined(imageryLayer)) {
+            entity.imageryLayer = imageryLayer = new ImageryLayerGraphics();
+        }
+
+        processPacketData(Boolean, imageryLayer, 'show', imageryLayerData.show, interval, sourceUri, entityCollection);
+        processPacketData(Number, imageryLayer, 'zIndex', imageryLayerData.zIndex, interval, sourceUri, entityCollection);
+        processPacketData(Number, imageryLayer, 'alpha', imageryLayerData.alpha, interval, sourceUri, entityCollection);
+        processPacketData(Number, imageryLayer, 'brightness', imageryLayerData.brightness, interval, sourceUri, entityCollection);
+        processPacketData(Number, imageryLayer, 'contrast', imageryLayerData.contrast, interval, sourceUri, entityCollection);
+        processPacketData(Number, imageryLayer, 'hue', imageryLayerData.hue, interval, sourceUri, entityCollection);
+        processPacketData(Number, imageryLayer, 'saturation', imageryLayerData.saturation, interval, sourceUri, entityCollection);
+        processPacketData(Number, imageryLayer, 'gamma', imageryLayerData.gamma, interval, sourceUri, entityCollection);
+        processPacketData(Rectangle, imageryLayer, 'rectangle', imageryLayerData.rectangle, interval, sourceUri, entityCollection);
+
+        var packetData;
+
+        if (defined(imageryLayerData.webMapService)) {
+            processImageryProviderPacketData(processWebMapServiceProperty, imageryLayer, 'imageryProvider', imageryLayerData.webMapService, interval, sourceUri, entityCollection);
+        }
+
+        // TODO: add support for more imagery providers, and ideally make it possible for end users
+        //       to add them as well.
+    }
+
+    function processImageryProviderPacketData(processImageryProviderFunction, object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection) {
+        if (isArray(packetData)) {
+            for (var i = 0, len = packetData.length; i < len; i++) {
+                processImageryProviderProperty(processImageryProviderFunction, object, propertyName, packetData[i], constrainedInterval, sourceUri, entityCollection);
+            }
+        } else {
+            processImageryProviderProperty(processImageryProviderFunction, object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection);
+        }
+    }
+
+    function processImageryProviderProperty(processImageryProviderFunction, object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection) {
+        var combinedInterval;
+        var packetInterval = packetData.interval;
+        if (defined(packetInterval)) {
+            iso8601Scratch.iso8601 = packetInterval;
+            combinedInterval = TimeInterval.fromIso8601(iso8601Scratch);
+            if (defined(constrainedInterval)) {
+                combinedInterval = TimeInterval.intersect(combinedInterval, constrainedInterval, scratchTimeInterval);
+            }
+        } else if (defined(constrainedInterval)) {
+            combinedInterval = constrainedInterval;
+        }
+
+        var property = object[propertyName];
+        var existingImageryProvider;
+        var existingInterval;
+
+        if (defined(combinedInterval)) {
+            if (!(property instanceof CompositeProperty)) {
+                property = new CompositeProperty();
+                object[propertyName] = property;
+            }
+            //See if we already have data at that interval.
+            var thisIntervals = property.intervals;
+            existingInterval = thisIntervals.findInterval({
+                start : combinedInterval.start,
+                stop : combinedInterval.stop
+            });
+            if (defined(existingInterval)) {
+                //We have an interval, but we need to make sure the
+                //new data is the same type of imagery provider as the old data.
+                existingImageryProvider = existingInterval.data;
+            } else {
+                //If not, create it.
+                existingInterval = combinedInterval.clone();
+                thisIntervals.addInterval(existingInterval);
+            }
+        } else {
+            existingImageryProvider = property;
+        }
+
+        existingImageryProvider = processImageryProviderFunction(object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection, existingImageryProvider);
+
+        if (defined(existingInterval)) {
+            existingInterval.data = existingImageryProvider;
+        } else {
+            object[propertyName] = existingImageryProvider;
+        }
+    }
+
+    function processWebMapServiceProperty(object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection, existingImageryProvider) {
+        if (!(existingImageryProvider instanceof WebMapServiceProperty)) {
+            existingImageryProvider = new WebMapServiceProperty();
+        }
+
+        processPacketData(String, existingImageryProvider, 'url', packetData.url, constrainedInterval, sourceUri, entityCollection);
+        processPacketData(String, existingImageryProvider, 'layers', packetData.layers, constrainedInterval, sourceUri, entityCollection);
+        processPropertyBagData(existingImageryProvider, 'parameters', packetData.parameters, constrainedInterval, sourceUri, entityCollection);
+
+        return existingImageryProvider;
+    }
+
+    function processPropertyBagData(object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection) {
+        if (!defined(packetData)) {
+            return;
+        }
+
+        if (isArray(packetData)) {
+            for (var i = 0, len = packetData.length; i < len; i++) {
+                processPropertyBagProperty(object, propertyName, packetData[i], constrainedInterval, sourceUri, entityCollection);
+            }
+        } else {
+            processPropertyBagProperty(object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection);
+        }
+    }
+
+    function processPropertyBagProperty(object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection) {
+        // Handle explicit primitive types within the property bag.
+        if (defined(packetData.number)) {
+            processPacketData(Number, object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection);
+            return;
+        } else if (defined(packetData.string)) {
+            processPacketData(String, object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection);
+            return;
+        } else if (defined(packetData['boolean'])) {
+            processPacketData(Boolean, object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection);
+            return;
+        }
+
+        var combinedInterval;
+        var packetInterval = packetData.interval;
+        if (defined(packetInterval)) {
+            iso8601Scratch.iso8601 = packetInterval;
+            combinedInterval = TimeInterval.fromIso8601(iso8601Scratch);
+            if (defined(constrainedInterval)) {
+                combinedInterval = TimeInterval.intersect(combinedInterval, constrainedInterval, scratchTimeInterval);
+            }
+        } else if (defined(constrainedInterval)) {
+            combinedInterval = constrainedInterval;
+        }
+
+        var property = object[propertyName];
+        var existingData;
+        var existingInterval;
+
+        if (defined(combinedInterval)) {
+            if (!(property instanceof CompositeProperty)) {
+                property = new CompositeProperty();
+                object[propertyName] = property;
+            }
+            //See if we already have data at that interval.
+            var thisIntervals = property.intervals;
+            existingInterval = thisIntervals.findInterval({
+                start : combinedInterval.start,
+                stop : combinedInterval.stop
+            });
+            if (defined(existingInterval)) {
+                //We have an interval.
+                existingData = existingInterval.data;
+            } else {
+                //If not, create it.
+                existingInterval = combinedInterval.clone();
+                thisIntervals.addInterval(existingInterval);
+            }
+        } else {
+            existingData = property;
+        }
+
+        if (!defined(existingData)) {
+            existingData = new PropertyBagProperty();
+        }
+
+        for (var subProperty in packetData) {
+            if (packetData.hasOwnProperty(subProperty)) {
+                var propertyValue = packetData[subProperty];
+
+                existingData.addProperty(subProperty);
+
+                if (typeof propertyValue === 'object') {
+                    // This is an array or object literal, so treat it as an interval or array of intervals.
+                    processPropertyBagData(existingData, subProperty, propertyValue, combinedInterval, sourceUri, entityCollection);
+                } else if (defined(propertyValue) && propertyValue !== null) {
+                    // This is a primitive property.
+                    processPacketData(propertyValue.constructor, existingData, subProperty, packetData[subProperty], combinedInterval, sourceUri, entityCollection);
+                }
+            }
+        }
+
+        if (defined(existingInterval)) {
+            existingInterval.data = existingData;
+        } else {
+            object[propertyName] = existingData;
+        }
+    }
+
     function processLabel(entity, packet, entityCollection, sourceUri) {
         var labelData = packet.label;
         if (!defined(labelData)) {
@@ -1556,6 +1767,7 @@ define([
     processBillboard, //
     processEllipse, //
     processEllipsoid, //
+    processImageryLayer, //
     processLabel, //
     processModel, //
     processName, //
