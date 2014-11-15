@@ -217,6 +217,8 @@ define([
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
+      this._color = Color.clone(defaultValue(options.color, Color.WHITE));
+
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
@@ -253,6 +255,9 @@ define([
         this._uniforms = {
             u_atlas : function() {
                 return that._textureAtlas.texture;
+            },
+            u_color : function() {
+              return that._color;
             }
         };
     };
@@ -271,6 +276,12 @@ define([
                 return this._billboards.length;
             }
         },
+
+      color: {
+        set: function (color) {
+          this._color = color;
+        }
+      },
 
         /**
          * Gets or sets the textureAtlas.
@@ -805,7 +816,7 @@ define([
     function writeCompressedAttrib2(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = billboard._index * 4;
 
-        var color = billboard.color;
+        var color = billboardCollection._color;
         var pickColor = billboard.getPickId(context).color;
 
         var height = 0;
