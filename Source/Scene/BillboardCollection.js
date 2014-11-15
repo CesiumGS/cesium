@@ -263,7 +263,7 @@ define([
                 return that._textureAtlas.texture;
             },
             u_color : function() {
-              return that._color;
+                return that._color;
             }
         };
     };
@@ -838,7 +838,7 @@ define([
     function writeCompressedAttrib2(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = billboard._index * 4;
 
-        var color = billboardCollection._color;
+        var color = billboard.color;
         var pickColor = billboard.getPickId(context).color;
 
         var height = 0;
