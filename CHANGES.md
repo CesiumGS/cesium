@@ -12,13 +12,15 @@ Change Log
 * Added `stroke-width` support to the GeoJSON simple-style implementation.
 * Added support for touch events on Internet Explorer 11 using the [Pointer Events API](http://www.w3.org/TR/pointerevents/).
 * Added the ability to specify global GeoJSON default styling.  See the [documentation](http://cesiumjs.org/Cesium/Build/Documentation/GeoJsonDataSource.html) for details.
+* Added `CallbackProperty` to support lazy property evaluation as well as make custom properties easier to create.
 * Added an options parameter to `GeoJsonDataSource.load`, `GeoJsonDataSource.loadUrl`, and `GeoJsonDataSource.fromUrl` to allow for basic per-instance styling. [Sandcastle example](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=GeoJSON%20and%20TopoJSON.html&label=Showcases).
+* Added `tileMatrixLabels` option to `WebMapTileServiceImageryProvider`.
 * Fixed a bug in `PolylineGeometry` that would cause the geometry to be split across the IDL for 3D only scenes. [#1197](https://github.com/AnalyticalGraphicsInc/cesium/issues/1197)
 * Added `modelMatrix` and `cull` options to `Primitive` constructor.
 * The `translation` parameter to `Matrix4.fromRotationTranslation` now defaults to `Cartesian3.ZERO`.
 * Improved point visualization performance for all DataSources.
 * Fixed `ModelNode.matrix` when a node is targeted for animation.
-* Improved GeoJSON performance when loading a large number of points.
+* Improved GeoJSON load performance.
 * `ConstantProperty` now accepts `HTMLElement` instances as valid values.
 * `BillboardGraphics.image` and 'ImageMaterialProperty.image' now accept `Property` instances that represent an `Image` or `Canvas` in addition to a url.
 

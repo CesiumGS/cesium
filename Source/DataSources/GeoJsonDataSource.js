@@ -20,7 +20,9 @@ define([
         './ColorMaterialProperty',
         './ConstantPositionProperty',
         './ConstantProperty',
+        './DataSource',
         './EntityCollection',
+        './CallbackProperty',
         './PolygonGraphics',
         './PolylineGraphics'
     ], function(
@@ -44,7 +46,9 @@ define([
         ColorMaterialProperty,
         ConstantPositionProperty,
         ConstantProperty,
+        DataSource,
         EntityCollection,
+        CallbackProperty,
         PolygonGraphics,
         PolylineGraphics) {
     "use strict";
@@ -100,6 +104,16 @@ define([
         }
         html += '</tbody></table>';
         return html;
+    }
+
+    function createDescriptionCallback(properties, nameProperty) {
+        var description;
+        return function(time, result) {
+            if (!defined(description)) {
+                description = describe(properties, nameProperty);
+            }
+            return description;
+        };
     }
 
     //GeoJSON specifies only the Feature object has a usable id property
@@ -167,9 +181,10 @@ define([
 
             var description = properties.description;
             if (!defined(description)) {
-                description = describe(properties, nameProperty);
+                entity.description = new CallbackProperty(createDescriptionCallback(properties, nameProperty), true);
+            } else {
+                entity.description = new ConstantProperty(description);
             }
-            entity.description = new ConstantProperty(description);
         }
         return entity;
     }
@@ -423,18 +438,6 @@ define([
         Polygon : processPolygon,
         Topology : processTopology
     };
-
-    function setLoading(dataSource, isLoading) {
-        if (dataSource._isLoading !== isLoading) {
-            if (isLoading) {
-                dataSource._entityCollection.suspendEvents();
-            } else {
-                dataSource._entityCollection.resumeEvents();
-            }
-            dataSource._isLoading = isLoading;
-            dataSource._loading.raiseEvent(dataSource, isLoading);
-        }
-    }
 
     /**
      * A {@link DataSource} which processes both
@@ -718,13 +721,13 @@ define([
         }
         //>>includeEnd('debug');
 
-        setLoading(this, true);
+        DataSource.setLoading(this, true);
 
         var that = this;
         return when(loadJson(url), function(geoJson) {
             return load(that, geoJson, url, options);
         }).otherwise(function(error) {
-            setLoading(that, false);
+            DataSource.setLoading(that, false);
             that._error.raiseEvent(that, error);
             return when.reject(error);
         });
@@ -834,7 +837,7 @@ define([
             }
         }
 
-        setLoading(that, true);
+        DataSource.setLoading(that, true);
 
         return when(crsFunction, function(crsFunction) {
             that._entityCollection.removeAll();
@@ -842,11 +845,10 @@ define([
 
             return when.all(that._promises, function() {
                 that._promises.length = 0;
-                setLoading(that, false);
-                that._changed.raiseEvent(that);
+                DataSource.setLoading(that, false);
             });
         }).otherwise(function(error) {
-            setLoading(that, false);
+            DataSource.setLoading(that, false);
             that._error.raiseEvent(that, error);
             return when.reject(error);
         });
