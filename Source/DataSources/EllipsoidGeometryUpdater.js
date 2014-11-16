@@ -372,6 +372,7 @@ define([
         positionScratch = entity.position.getValue(Iso8601.MINIMUM_VALUE, positionScratch);
         orientationScratch = entity.orientation.getValue(Iso8601.MINIMUM_VALUE, orientationScratch);
         matrix3Scratch = Matrix3.fromQuaternion(orientationScratch, matrix3Scratch);
+        var outlineColor = Property.getValueOrDefault(this._outlineColorProperty, time, Color.BLACK);
 
         return new GeometryInstance({
             id : entity,
@@ -379,7 +380,7 @@ define([
             modelMatrix : Matrix4.fromRotationTranslation(matrix3Scratch, positionScratch),
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
-                color : ColorGeometryInstanceAttribute.fromColor(isAvailable ? this._outlineColorProperty.getValue(time) : Color.BLACK)
+                color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
             }
         });
     };
@@ -644,9 +645,6 @@ define([
                     flat : true,
                     translucent : translucent,
                     renderState : {
-                        depthTest : {
-                            enabled : !translucent
-                        },
                         lineWidth : this._geometryUpdater._scene.clampLineWidth(outlineWidth)
                     }
                 }),
