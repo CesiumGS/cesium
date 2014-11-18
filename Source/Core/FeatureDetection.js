@@ -21,10 +21,10 @@ define([
     var chromeVersionResult;
     function isChrome() {
         if (!defined(isChromeResult)) {
+            isChromeResult = false;
+
             var fields = (/ Chrome\/([\.0-9]+)/).exec(navigator.userAgent);
-            if (fields === null) {
-                isChromeResult = false;
-            } else {
+            if (fields !== null) {
                 isChromeResult = true;
                 chromeVersionResult = extractVersion(fields[1]);
             }
@@ -41,14 +41,12 @@ define([
     var safariVersionResult;
     function isSafari() {
         if (!defined(isSafariResult)) {
+            isSafariResult = false;
+
             // Chrome contains Safari in the user agent too
-            if (isChrome() || !(/ Safari\/[\.0-9]+/).test(navigator.userAgent)) {
-                isSafariResult = false;
-            } else {
+            if (!isChrome() && (/ Safari\/[\.0-9]+/).test(navigator.userAgent)) {
                 var fields = (/ Version\/([\.0-9]+)/).exec(navigator.userAgent);
-                if (fields === null) {
-                    isSafariResult = false;
-                } else {
+                if (fields !== null) {
                     isSafariResult = true;
                     safariVersionResult = extractVersion(fields[1]);
                 }
@@ -66,10 +64,10 @@ define([
     var webkitVersionResult;
     function isWebkit() {
         if (!defined(isWebkitResult)) {
+            isWebkitResult = false;
+
             var fields = (/ AppleWebKit\/([\.0-9]+)(\+?)/).exec(navigator.userAgent);
-            if (fields === null) {
-                isWebkitResult = false;
-            } else {
+            if (fields !== null) {
                 isWebkitResult = true;
                 webkitVersionResult = extractVersion(fields[1]);
                 webkitVersionResult.isNightly = !!fields[2];
@@ -87,6 +85,8 @@ define([
     var internetExplorerVersionResult;
     function isInternetExplorer() {
         if (!defined(isInternetExplorerResult)) {
+            isInternetExplorerResult = false;
+
             var fields;
             if (navigator.appName === 'Microsoft Internet Explorer') {
                 fields = /MSIE ([0-9]{1,}[\.0-9]{0,})/.exec(navigator.userAgent);
@@ -100,8 +100,6 @@ define([
                     isInternetExplorerResult = true;
                     internetExplorerVersionResult = extractVersion(fields[1]);
                 }
-            } else {
-                isInternetExplorerResult = false;
             }
         }
         return isInternetExplorerResult;
@@ -109,6 +107,25 @@ define([
 
     function internetExplorerVersion() {
         return isInternetExplorer() && internetExplorerVersionResult;
+    }
+
+    var isFirefoxResult;
+    var firefoxVersionResult;
+    function isFirefox() {
+        if (!defined(isFirefoxResult)) {
+            isFirefoxResult = false;
+
+            var fields = /Firefox\/([\.0-9]+)/.exec(navigator.userAgent);
+            if (fields !== null) {
+                isFirefoxResult = true;
+                firefoxVersionResult = extractVersion(fields[1]);
+            }
+        }
+        return isFirefoxResult;
+    }
+
+    function firefoxVersion() {
+        return isFirefox() && firefoxVersionResult;
     }
 
     /**
@@ -127,6 +144,8 @@ define([
         webkitVersion : webkitVersion,
         isInternetExplorer : isInternetExplorer,
         internetExplorerVersion : internetExplorerVersion,
+        isFirefox : isFirefox,
+        firefoxVersion : firefoxVersion,
         hardwareConcurrency : defaultValue(navigator.hardwareConcurrency, 3)
     };
 

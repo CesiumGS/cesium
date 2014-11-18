@@ -289,7 +289,8 @@ define([
                     that._minimumHeight,
                     that._maximumHeight,
                     that._boundingSphere,
-                    that._horizonOcclusionPoint);
+                    that._horizonOcclusionPoint,
+                    defined(that._encodedNormals) ? 7 : 6);
         });
     };
 
@@ -409,14 +410,13 @@ define([
      * @param {Rectangle} rectangle The rectangle covered by this terrain data.
      * @param {Number} longitude The longitude in radians.
      * @param {Number} latitude The latitude in radians.
-     * @returns {Number} The terrain height at the specified position.  If the position
-     *          is outside the rectangle, this method will extrapolate the height, which is likely to be wildly
-     *          incorrect for positions far outside the rectangle.
+     * @returns {Number} The terrain height at the specified position.  The position is clamped to
+     *          the rectangle, so expect incorrect results for positions far outside the rectangle.
      */
     QuantizedMeshTerrainData.prototype.interpolateHeight = function(rectangle, longitude, latitude) {
-        var u = (longitude - rectangle.west) / (rectangle.east - rectangle.west);
+        var u = CesiumMath.clamp((longitude - rectangle.west) / (rectangle.east - rectangle.west), 0.0, 1.0);
         u *= maxShort;
-        var v = (latitude - rectangle.south) / (rectangle.north - rectangle.south);
+        var v = CesiumMath.clamp((latitude - rectangle.south) / (rectangle.north - rectangle.south), 0.0, 1.0);
         v *= maxShort;
 
         var uBuffer = this._uValues;

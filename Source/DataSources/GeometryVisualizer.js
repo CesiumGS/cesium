@@ -124,7 +124,7 @@ define([
         this._removedObjects = new AssociativeArray();
         this._changedObjects = new AssociativeArray();
 
-        this._outlineBatch = new StaticOutlineGeometryBatch(primitives);
+        this._outlineBatch = new StaticOutlineGeometryBatch(primitives, scene);
         this._closedColorBatch = new StaticGeometryColorBatch(primitives, type.perInstanceColorAppearanceType, true);
         this._closedMaterialBatch = new StaticGeometryPerMaterialBatch(primitives, type.materialAppearanceType, true);
         this._openColorBatch = new StaticGeometryColorBatch(primitives, type.perInstanceColorAppearanceType, false);
@@ -198,12 +198,12 @@ define([
         removedObjects.removeAll();
         changedObjects.removeAll();
 
-        var isUpdated = this._outlineBatch.update(time);
-        isUpdated = this._closedColorBatch.update(time) && isUpdated;
+        var isUpdated = this._closedColorBatch.update(time);
         isUpdated = this._closedMaterialBatch.update(time) && isUpdated;
         isUpdated = this._openColorBatch.update(time) && isUpdated;
         isUpdated = this._openMaterialBatch.update(time) && isUpdated;
         isUpdated = this._dynamicBatch.update(time) && isUpdated;
+        isUpdated = this._outlineBatch.update(time) && isUpdated;
         return isUpdated;
     };
 

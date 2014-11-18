@@ -170,8 +170,8 @@ define([
         }
     });
 
-    function getPosition(tile, scene, vertices, index, result) {
-        Cartesian3.unpack(vertices, index * 6, result);
+    function getPosition(tile, scene, vertices, stride, index, result) {
+        Cartesian3.unpack(vertices, index * stride, result);
         Cartesian3.add(tile.center, result, result);
 
         if (defined(scene) && scene.mode !== SceneMode.SCENE3D) {
@@ -202,6 +202,7 @@ define([
         }
 
         var vertices = mesh.vertices;
+        var stride = mesh.stride;
         var indices = mesh.indices;
 
         var length = indices.length;
@@ -210,9 +211,9 @@ define([
             var i1 = indices[i + 1];
             var i2 = indices[i + 2];
 
-            var v0 = getPosition(this, scene, vertices, i0, scratchV0);
-            var v1 = getPosition(this, scene, vertices, i1, scratchV1);
-            var v2 = getPosition(this, scene, vertices, i2, scratchV2);
+            var v0 = getPosition(this, scene, vertices, stride, i0, scratchV0);
+            var v1 = getPosition(this, scene, vertices, stride, i1, scratchV1);
+            var v2 = getPosition(this, scene, vertices, stride, i2, scratchV2);
 
             var intersection = IntersectionTests.rayTriangle(ray, v0, v1, v2, cullBackFaces, scratchResult);
             if (defined(intersection)) {
@@ -447,20 +448,7 @@ define([
 
                     // If there's a water mask included in the terrain data, create a
                     // texture for it.
-                    var waterMask = surfaceTile.terrainData.waterMask;
-                    if (defined(waterMask)) {
-                        if (defined(surfaceTile.waterMaskTexture)) {
-                            --surfaceTile.waterMaskTexture.referenceCount;
-                            if (surfaceTile.waterMaskTexture.referenceCount === 0) {
-                                surfaceTile.waterMaskTexture.destroy();
-                            }
-                        }
-                        surfaceTile.waterMaskTexture = createWaterMaskTexture(context, waterMask);
-                        surfaceTile.waterMaskTranslationAndScale.x = 0.0;
-                        surfaceTile.waterMaskTranslationAndScale.y = 0.0;
-                        surfaceTile.waterMaskTranslationAndScale.z = 1.0;
-                        surfaceTile.waterMaskTranslationAndScale.w = 1.0;
-                    }
+                    createWaterMaskTextureIfNeeded(context, surfaceTile);
 
                     propagateNewLoadedDataToChildren(tile);
                 }
@@ -621,7 +609,6 @@ define([
     }
 
     function isDataAvailable(tile, terrainProvider) {
-
         if (defined(terrainProvider.getTileDataAvailable)) {
             var tileDataAvailable = terrainProvider.getTileDataAvailable(tile.x, tile.y, tile.level);
             if (defined(tileDataAvailable)) {
@@ -646,81 +633,90 @@ define([
         return parent.data.terrainData.isChildAvailable(parent.x, parent.y, tile.x, tile.y);
     }
 
-    function createWaterMaskTexture(context, waterMask) {
-        var result;
+    function getContextWaterMaskData(context) {
+        var data = context.cache.tile_waterMaskData;
 
-        var waterMaskData = context.cache.tile_waterMaskData;
-        if (!defined(waterMaskData)) {
-            waterMaskData = context.cache.tile_waterMaskData = {
-                    allWaterTexture : undefined,
-                    allLandTexture : undefined,
-                    sampler : undefined,
-                    destroy : function() {
-                        if (defined(this.allWaterTexture)) {
-                            this.allWaterTexture.destroy();
-                        }
-                        if (defined(this.allLandTexture)) {
-                            this.allLandTexture.destroy();
-                        }
-                    }
-            };
-        }
-
-        var waterMaskSize = Math.sqrt(waterMask.length);
-        if (waterMaskSize === 1 && (waterMask[0] === 0 || waterMask[0] === 255)) {
-            // Tile is entirely land or entirely water.
-            if (!defined(waterMaskData.allWaterTexture)) {
-                waterMaskData.allWaterTexture = context.createTexture2D({
-                    pixelFormat : PixelFormat.LUMINANCE,
-                    pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-                    source : {
-                        arrayBufferView : new Uint8Array([255]),
-                        width : 1,
-                        height : 1
-                    }
-                });
-                waterMaskData.allWaterTexture.referenceCount = 1;
-
-                waterMaskData.allLandTexture = context.createTexture2D({
-                    pixelFormat : PixelFormat.LUMINANCE,
-                    pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-                    source : {
-                        arrayBufferView : new Uint8Array([0]),
-                        width : 1,
-                        height : 1
-                    }
-                });
-                waterMaskData.allLandTexture.referenceCount = 1;
-            }
-
-            result = waterMask[0] === 0 ? waterMaskData.allLandTexture : waterMaskData.allWaterTexture;
-        } else {
-            result = context.createTexture2D({
+        if (!defined(data)) {
+            var allWaterTexture = context.createTexture2D({
                 pixelFormat : PixelFormat.LUMINANCE,
                 pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
                 source : {
-                    width : waterMaskSize,
-                    height : waterMaskSize,
+                    arrayBufferView : new Uint8Array([255]),
+                    width : 1,
+                    height : 1
+                }
+            });
+            allWaterTexture.referenceCount = 1;
+
+            var sampler = context.createSampler({
+                wrapS : TextureWrap.CLAMP_TO_EDGE,
+                wrapT : TextureWrap.CLAMP_TO_EDGE,
+                minificationFilter : TextureMinificationFilter.LINEAR,
+                magnificationFilter : TextureMagnificationFilter.LINEAR
+            });
+
+            data = {
+                allWaterTexture : allWaterTexture,
+                sampler : sampler,
+                destroy : function() {
+                    this.allWaterTexture.destroy();
+                }
+            };
+
+            context.cache.tile_waterMaskData = data;
+        }
+
+        return data;
+    }
+
+    function createWaterMaskTextureIfNeeded(context, surfaceTile) {
+        var previousTexture = surfaceTile.waterMaskTexture;
+        if (defined(previousTexture)) {
+            --previousTexture.referenceCount;
+            if (previousTexture.referenceCount === 0) {
+                previousTexture.destroy();
+            }
+            surfaceTile.waterMaskTexture = undefined;
+        }
+
+        var waterMask = surfaceTile.terrainData.waterMask;
+        if (!defined(waterMask)) {
+            return;
+        }
+
+        var waterMaskData = getContextWaterMaskData(context);
+        var texture;
+
+        var waterMaskLength = waterMask.length;
+        if (waterMaskLength === 1) {
+            // Length 1 means the tile is entirely land or entirely water.
+            // A value of 0 indicates entirely land, a value of 1 indicates entirely water.
+            if (waterMask[0] !== 0) {
+                texture = waterMaskData.allWaterTexture;
+            } else {
+                // Leave the texture undefined if the tile is entirely land.
+                return;
+            }
+        } else {
+            var textureSize = Math.sqrt(waterMaskLength);
+            texture = context.createTexture2D({
+                pixelFormat : PixelFormat.LUMINANCE,
+                pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                source : {
+                    width : textureSize,
+                    height : textureSize,
                     arrayBufferView : waterMask
                 }
             });
 
-            result.referenceCount = 0;
-
-            if (!defined(waterMaskData.sampler)) {
-                waterMaskData.sampler = context.createSampler({
-                    wrapS : TextureWrap.CLAMP_TO_EDGE,
-                    wrapT : TextureWrap.CLAMP_TO_EDGE,
-                    minificationFilter : TextureMinificationFilter.LINEAR,
-                    magnificationFilter : TextureMagnificationFilter.LINEAR
-                });
-            }
-
-            result.sampler = waterMaskData.sampler;
+            texture.referenceCount = 0;
+            texture.sampler = waterMaskData.sampler;
         }
 
-        ++result.referenceCount;
-        return result;
+        ++texture.referenceCount;
+        surfaceTile.waterMaskTexture = texture;
+
+        Cartesian4.fromElements(0.0, 0.0, 1.0, 1.0, surfaceTile.waterMaskTranslationAndScale);
     }
 
     function upsampleWaterMask(tile) {

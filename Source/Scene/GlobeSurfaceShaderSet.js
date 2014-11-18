@@ -16,8 +16,8 @@ define([
      * @private
      */
     function GlobeSurfaceShaderSet() {
-        this.baseVertexShaderString = undefined;
-        this.baseFragmentShaderString = undefined;
+        this.baseVertexShaderSource = undefined;
+        this.baseFragmentShaderSource = undefined;
         this._attributeLocations = terrainAttributeLocations;
         this._shaders = {};
     }
@@ -33,74 +33,72 @@ define([
         this._shaders = {};
     };
 
-    function getShaderKey(textureCount, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha) {
-        var key = '';
-        key += textureCount;
-
-        if (applyBrightness) {
-            key += '_brightness';
-        }
-
-        if (applyContrast) {
-            key += '_contrast';
-        }
-
-        if (applyHue) {
-            key += '_hue';
-        }
-
-        if (applySaturation) {
-            key += '_saturation';
-        }
-
-        if (applyGamma) {
-            key += '_gamma';
-        }
-
-        if (applyAlpha) {
-            key += '_alpha';
-        }
-
-        return key;
+    function getShaderKey(textureCount, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves) {
+        return '' + textureCount + (+applyBrightness) + (+applyContrast) + (+applyHue) + (+applySaturation) + (+applyGamma) + (+applyAlpha) + (+showReflectiveOcean) + (+showOceanWaves);
     }
 
-    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(context, textureCount, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha) {
-        var key = getShaderKey(textureCount, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha);
+    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(context, textureCount, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves) {
+        var key = getShaderKey(textureCount, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves);
         var shader = this._shaders[key];
         if (!defined(shader)) {
-            var vs = this.baseVertexShaderString;
-            var fs =
-                (applyBrightness ? '#define APPLY_BRIGHTNESS\n' : '') +
-                (applyContrast ? '#define APPLY_CONTRAST\n' : '') +
-                (applyHue ? '#define APPLY_HUE\n' : '') +
-                (applySaturation ? '#define APPLY_SATURATION\n' : '') +
-                (applyGamma ? '#define APPLY_GAMMA\n' : '') +
-                (applyAlpha ? '#define APPLY_ALPHA\n' : '') +
-                '#define TEXTURE_UNITS ' + textureCount + '\n' +
-                this.baseFragmentShaderString + '\n' +
-                'vec4 computeDayColor(vec4 initialColor, vec2 textureCoordinates)\n' +
-                '{\n' +
-                '    vec4 color = initialColor;\n';
+            var vs = this.baseVertexShaderSource.clone();
+            var fs = this.baseFragmentShaderSource.clone();
 
-            for (var i = 0; i < textureCount; ++i) {
-                fs +=
-                    'color = sampleAndBlend(\n' +
-                    '   color,\n' +
-                    '   u_dayTextures[' + i + '],\n' +
-                    '   textureCoordinates,\n' +
-                    '   u_dayTextureTexCoordsRectangle[' + i + '],\n' +
-                    '   u_dayTextureTranslationAndScale[' + i + '],\n' +
-                    (applyAlpha ?      '   u_dayTextureAlpha[' + i + '],\n' : '1.0,\n') +
-                    (applyBrightness ? '   u_dayTextureBrightness[' + i + '],\n' : '0.0,\n') +
-                    (applyContrast ?   '   u_dayTextureContrast[' + i + '],\n' : '0.0,\n') +
-                    (applyHue ?        '   u_dayTextureHue[' + i + '],\n' : '0.0,\n') +
-                    (applySaturation ? '   u_dayTextureSaturation[' + i + '],\n' : '0.0,\n') +
-                    (applyGamma ?      '   u_dayTextureOneOverGamma[' + i + ']);\n' : '0.0);\n') ;
+            fs.defines.push('TEXTURE_UNITS ' + textureCount);
+
+            if (applyBrightness) {
+                fs.defines.push('APPLY_BRIGHTNESS');
+            }
+            if (applyContrast) {
+                fs.defines.push('APPLY_CONTRAST');
+            }
+            if (applyHue) {
+                fs.defines.push('APPLY_HUE');
+            }
+            if (applySaturation) {
+                fs.defines.push('APPLY_SATURATION');
+            }
+            if (applyGamma) {
+                fs.defines.push('APPLY_GAMMA');
+            }
+            if (applyAlpha) {
+                fs.defines.push('APPLY_ALPHA');
+            }
+            if (showReflectiveOcean) {
+                fs.defines.push('SHOW_REFLECTIVE_OCEAN');
+                vs.defines.push('SHOW_REFLECTIVE_OCEAN');
+            }
+            if (showOceanWaves) {
+                fs.defines.push('SHOW_OCEAN_WAVES');
             }
 
-            fs +=
-                '    return color;\n' +
-                '}';
+            var computeDayColor = '\
+vec4 computeDayColor(vec4 initialColor, vec2 textureCoordinates)\n\
+{\n\
+    vec4 color = initialColor;\n';
+
+            for (var i = 0; i < textureCount; ++i) {
+                computeDayColor += '\
+    color = sampleAndBlend(\n\
+        color,\n\
+        u_dayTextures[' + i + '],\n\
+        textureCoordinates,\n\
+        u_dayTextureTexCoordsRectangle[' + i + '],\n\
+        u_dayTextureTranslationAndScale[' + i + '],\n\
+        ' + (applyAlpha ? 'u_dayTextureAlpha[' + i + ']' : '1.0') + ',\n\
+        ' + (applyBrightness ? 'u_dayTextureBrightness[' + i + ']' : '0.0') + ',\n\
+        ' + (applyContrast ? 'u_dayTextureContrast[' + i + ']' : '0.0') + ',\n\
+        ' + (applyHue ? 'u_dayTextureHue[' + i + ']' : '0.0') + ',\n\
+        ' + (applySaturation ? 'u_dayTextureSaturation[' + i + ']' : '0.0') + ',\n\
+        ' + (applyGamma ? 'u_dayTextureOneOverGamma[' + i + ']' : '0.0') + '\n\
+    );\n';
+            }
+
+            computeDayColor += '\
+    return color;\n\
+}';
+
+            fs.sources.push(computeDayColor);
 
             shader = context.createShaderProgram(vs, fs, this._attributeLocations);
             this._shaders[key] = shader;

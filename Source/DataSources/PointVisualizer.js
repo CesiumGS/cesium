@@ -31,6 +31,15 @@ define([
     var outlineColor = new Color();
     var scaleByDistance = new NearFarScalar();
 
+    var EntityData = function(entity) {
+        this.entity = entity;
+        this.billboard = undefined;
+        this.color = undefined;
+        this.outlineColor = undefined;
+        this.pixelSize = undefined;
+        this.outlineWidth = undefined;
+    };
+
     /**
      * A {@link Visualizer} which maps {@link Entity#point} to a {@link Billboard}.
      * @alias PointVisualizer
@@ -49,16 +58,13 @@ define([
         }
         //>>includeEnd('debug');
 
-        var billboardCollection = new BillboardCollection();
-        scene.primitives.add(billboardCollection);
         entityCollection.collectionChanged.addEventListener(PointVisualizer.prototype._onCollectionChanged, this);
 
         this._scene = scene;
         this._unusedIndexes = [];
         this._entityCollection = entityCollection;
-        this._billboardCollection = billboardCollection;
-        this._entitiesToVisualize = new AssociativeArray();
-
+        this._billboardCollection = undefined;
+        this._items = new AssociativeArray();
         this._onCollectionChanged(entityCollection, entityCollection.entities, [], []);
     };
 
@@ -76,74 +82,87 @@ define([
         }
         //>>includeEnd('debug');
 
-        var entities = this._entitiesToVisualize.values;
-        var billboardCollection = this._billboardCollection;
+        var items = this._items.values;
         var unusedIndexes = this._unusedIndexes;
-        for (var i = 0, len = entities.length; i < len; i++) {
-            var entity = entities[i];
+        for (var i = 0, len = items.length; i < len; i++) {
+            var item = items[i];
+            var entity = item.entity;
             var pointGraphics = entity._point;
-            var billboard;
-            var pointVisualizerIndex = entity._pointVisualizerIndex;
+            var billboard = item.billboard;
             var show = entity.isAvailable(time) && Property.getValueOrDefault(pointGraphics._show, time, true);
             if (show) {
                 position = Property.getValueOrUndefined(entity._position, time, position);
                 show = defined(position);
             }
             if (!show) {
-                cleanEntity(entity, billboardCollection, unusedIndexes);
+                returnBillboard(item, unusedIndexes);
                 continue;
             }
 
+            var init = false;
             var needRedraw = false;
-            if (!defined(pointVisualizerIndex)) {
+            if (!defined(billboard)) {
+                init = true;
+                var billboardCollection = this._billboardCollection;
+                if (!defined(billboardCollection)) {
+                    billboardCollection = new BillboardCollection();
+                    this._billboardCollection = billboardCollection;
+                    this._scene.primitives.add(billboardCollection);
+                }
+
                 var length = unusedIndexes.length;
                 if (length > 0) {
-                    pointVisualizerIndex = unusedIndexes.pop();
-                    billboard = billboardCollection.get(pointVisualizerIndex);
+                    billboard = billboardCollection.get(unusedIndexes.pop());
                 } else {
-                    pointVisualizerIndex = billboardCollection.length;
                     billboard = billboardCollection.add();
                 }
-                entity._pointVisualizerIndex = pointVisualizerIndex;
-                billboard.id = entity;
 
-                billboard._visualizerColor = Color.clone(Color.WHITE, billboard._visualizerColor);
-                billboard._visualizerOutlineColor = Color.clone(Color.BLACK, billboard._visualizerOutlineColor);
-                billboard._visualizerOutlineWidth = 0;
-                billboard._visualizerPixelSize = 1;
+                billboard.id = entity;
+                billboard.image = undefined;
+                item.billboard = billboard;
                 needRedraw = true;
-            } else {
-                billboard = billboardCollection.get(pointVisualizerIndex);
             }
 
             billboard.show = true;
             billboard.position = position;
             billboard.scaleByDistance = Property.getValueOrUndefined(pointGraphics._scaleByDistance, time, scaleByDistance);
 
-            var newColor = Property.getValueOrDefault(pointGraphics._color, time, defaultColor, color);
-            var newOutlineColor = Property.getValueOrDefault(pointGraphics._outlineColor, time, defaultOutlineColor, outlineColor);
-            var newOutlineWidth = Property.getValueOrDefault(pointGraphics._outlineWidth, time, defaultOutlineWidth);
-            var newPixelSize = Property.getValueOrDefault(pointGraphics._pixelSize, time, defaultPixelSize);
+            var colorProperty = pointGraphics._color;
+            var outlineColorProperty = pointGraphics._outlineColor;
 
-            needRedraw = needRedraw || //
-            newOutlineWidth !== billboard._visualizerOutlineWidth || //
-            newPixelSize !== billboard._visualizerPixelSize || //
-            !Color.equals(newColor, billboard._visualizerColor) || //
-            !Color.equals(newOutlineColor, billboard._visualizerOutlineColor);
+            var newColor = init || !Property.isConstant(colorProperty) ? Property.getValueOrDefault(colorProperty, time, defaultColor, color) : item.color;
+            var newOutlineColor = init || !Property.isConstant(outlineColorProperty) ? Property.getValueOrDefault(outlineColorProperty, time, defaultOutlineColor, outlineColor) : item.outlineColor;
+            var newOutlineWidth = Math.round(Property.getValueOrDefault(pointGraphics._outlineWidth, time, defaultOutlineWidth));
+            var newPixelSize = Math.max(1, Math.round(Property.getValueOrDefault(pointGraphics._pixelSize, time, defaultPixelSize)));
+
+            if (newOutlineWidth > 0) {
+                billboard.scale = 1.0;
+                needRedraw = needRedraw || //
+                             newOutlineWidth !== item.outlineWidth || //
+                             newPixelSize !== item.pixelSize || //
+                             !Color.equals(newColor, item.color) || //
+                             !Color.equals(newOutlineColor, item.outlineColor);
+            } else {
+                billboard.scale = newPixelSize / 50.0;
+                newPixelSize = 50.0;
+                needRedraw = needRedraw || //
+                             newOutlineWidth !== item.outlineWidth || //
+                             !Color.equals(newColor, item.color) || //
+                             !Color.equals(newOutlineColor, item.outlineColor);
+            }
 
             if (needRedraw) {
-                billboard._visualizerColor = Color.clone(newColor, billboard._visualizerColor);
-                billboard._visualizerOutlineColor = Color.clone(newOutlineColor, billboard._visualizerOutlineColor);
-                billboard._visualizerPixelSize = newPixelSize;
-                billboard._visualizerOutlineWidth = newOutlineWidth;
+                item.color = Color.clone(newColor, item.color);
+                item.outlineColor = Color.clone(newOutlineColor, item.outlineColor);
+                item.pixelSize = newPixelSize;
+                item.outlineWidth = newOutlineWidth;
 
                 var centerAlpha = newColor.alpha;
                 var cssColor = newColor.toCssColorString();
                 var cssOutlineColor = newOutlineColor.toCssColorString();
-                var cssOutlineWidth = newOutlineWidth;
-                var textureId = JSON.stringify([cssColor, newPixelSize, cssOutlineColor, cssOutlineWidth]);
+                var textureId = JSON.stringify([cssColor, newPixelSize, cssOutlineColor, newOutlineWidth]);
 
-                billboard.setImage(textureId, createCallback(centerAlpha, cssColor, cssOutlineColor, cssOutlineWidth, newPixelSize));
+                billboard.setImage(textureId, createCallback(centerAlpha, cssColor, cssOutlineColor, newOutlineWidth, newPixelSize));
             }
         }
         return true;
@@ -162,57 +181,58 @@ define([
      * Removes and destroys all primitives created by this instance.
      */
     PointVisualizer.prototype.destroy = function() {
-        var entities = this._entitiesToVisualize.values;
-        for (var i = entities.length - 1; i > -1; i--) {
-            entities[i]._pointVisualizerIndex = undefined;
-        }
         this._entityCollection.collectionChanged.removeEventListener(PointVisualizer.prototype._onCollectionChanged, this);
-        this._scene.primitives.remove(this._billboardCollection);
+        if (defined(this._billboardCollection)) {
+            this._scene.primitives.remove(this._billboardCollection);
+        }
         return destroyObject(this);
     };
 
     PointVisualizer.prototype._onCollectionChanged = function(entityCollection, added, removed, changed) {
         var i;
         var entity;
-        var billboardCollection = this._billboardCollection;
         var unusedIndexes = this._unusedIndexes;
-        var entities = this._entitiesToVisualize;
+        var items = this._items;
 
         for (i = added.length - 1; i > -1; i--) {
             entity = added[i];
             if (defined(entity._point) && defined(entity._position)) {
-                entities.set(entity.id, entity);
+                items.set(entity.id, new EntityData(entity));
             }
         }
 
         for (i = changed.length - 1; i > -1; i--) {
             entity = changed[i];
             if (defined(entity._point) && defined(entity._position)) {
-                entities.set(entity.id, entity);
+                if (!items.contains(entity.id)) {
+                    items.set(entity.id, new EntityData(entity));
+                }
             } else {
-                cleanEntity(entity, billboardCollection, unusedIndexes);
-                entities.remove(entity.id);
+                returnBillboard(items.get(entity.id), unusedIndexes);
+                items.remove(entity.id);
             }
         }
 
         for (i = removed.length - 1; i > -1; i--) {
             entity = removed[i];
-            cleanEntity(entity, billboardCollection, unusedIndexes);
-            entities.remove(entity.id);
+            returnBillboard(items.get(entity.id), unusedIndexes);
+            items.remove(entity.id);
         }
     };
 
-    function cleanEntity(entity, collection, unusedIndexes) {
-        var pointVisualizerIndex = entity._pointVisualizerIndex;
-        if (defined(pointVisualizerIndex)) {
-            var billboard = collection.get(pointVisualizerIndex);
-            billboard.show = false;
-            entity._pointVisualizerIndex = undefined;
-            unusedIndexes.push(pointVisualizerIndex);
+    function returnBillboard(item, unusedIndexes) {
+        if (defined(item)) {
+            var billboard = item.billboard;
+            if (defined(billboard)) {
+                item.billboard = undefined;
+                billboard.show = false;
+                billboard.image = undefined;
+                unusedIndexes.push(billboard._index);
+            }
         }
     }
 
-    function createCallback(centerAlpha, cssColor, cssOutlineColor, cssOutlineWidth, newPixelSize){
+    function createCallback(centerAlpha, cssColor, cssOutlineColor, cssOutlineWidth, newPixelSize) {
         return function(id) {
             var canvas = document.createElement('canvas');
 

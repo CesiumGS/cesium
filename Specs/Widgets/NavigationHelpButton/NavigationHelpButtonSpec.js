@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
         'Widgets/NavigationHelpButton/NavigationHelpButton',
-        'Specs/EventHelper'
+        'Specs/DomEventSimulator'
     ], function(
         NavigationHelpButton,
-        EventHelper) {
+        DomEventSimulator) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -52,11 +52,11 @@ defineSuite([
         });
 
         widget.viewModel.showInstructions = true;
-        EventHelper.fireMouseDown(document.body);
+        DomEventSimulator.fireMouseDown(document.body);
         expect(widget.viewModel.showInstructions).toEqual(false);
 
         widget.viewModel.showInstructions = true;
-        EventHelper.fireMouseDown(container.firstChild);
+        DomEventSimulator.fireMouseDown(container.firstChild);
         expect(widget.viewModel.showInstructions).toEqual(true);
 
         widget.destroy();
@@ -73,11 +73,11 @@ defineSuite([
         });
 
         widget.viewModel.showInstructions = true;
-        EventHelper.fireTouchStart(document.body);
+        DomEventSimulator.fireTouchStart(document.body);
         expect(widget.viewModel.showInstructions).toEqual(false);
 
         widget.viewModel.showInstructions = true;
-        EventHelper.fireTouchStart(container.firstChild);
+        DomEventSimulator.fireTouchStart(container.firstChild);
         expect(widget.viewModel.showInstructions).toEqual(true);
 
         widget.destroy();

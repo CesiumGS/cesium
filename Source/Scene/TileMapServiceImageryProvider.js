@@ -281,6 +281,7 @@ define([
          * Gets the URL of the service hosting the imagery.
          * @memberof TileMapServiceImageryProvider.prototype
          * @type {String}
+         * @readonly
          */
         url : {
             get : function() {
@@ -292,6 +293,7 @@ define([
          * Gets the proxy used by this provider.
          * @memberof TileMapServiceImageryProvider.prototype
          * @type {Proxy}
+         * @readonly
          */
         proxy : {
             get : function() {
@@ -304,6 +306,7 @@ define([
          * not be called before {@link TileMapServiceImageryProvider#ready} returns true.
          * @memberof TileMapServiceImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         tileWidth : {
             get : function() {
@@ -322,6 +325,7 @@ define([
          * not be called before {@link TileMapServiceImageryProvider#ready} returns true.
          * @memberof TileMapServiceImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         tileHeight: {
             get : function() {
@@ -340,6 +344,7 @@ define([
          * not be called before {@link TileMapServiceImageryProvider#ready} returns true.
          * @memberof TileMapServiceImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         maximumLevel : {
             get : function() {
@@ -358,6 +363,7 @@ define([
          * not be called before {@link TileMapServiceImageryProvider#ready} returns true.
          * @memberof TileMapServiceImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         minimumLevel : {
             get : function() {
@@ -376,6 +382,7 @@ define([
          * not be called before {@link TileMapServiceImageryProvider#ready} returns true.
          * @memberof TileMapServiceImageryProvider.prototype
          * @type {TilingScheme}
+         * @readonly
          */
         tilingScheme : {
             get : function() {
@@ -394,6 +401,7 @@ define([
          * not be called before {@link TileMapServiceImageryProvider#ready} returns true.
          * @memberof TileMapServiceImageryProvider.prototype
          * @type {Rectangle}
+         * @readonly
          */
         rectangle : {
             get : function() {
@@ -414,6 +422,7 @@ define([
          * not be called before {@link TileMapServiceImageryProvider#ready} returns true.
          * @memberof TileMapServiceImageryProvider.prototype
          * @type {TileDiscardPolicy}
+         * @readonly
          */
         tileDiscardPolicy : {
             get : function() {
@@ -433,6 +442,7 @@ define([
          * are passed an instance of {@link TileProviderError}.
          * @memberof TileMapServiceImageryProvider.prototype
          * @type {Event}
+         * @readonly
          */
         errorEvent : {
             get : function() {
@@ -444,6 +454,7 @@ define([
          * Gets a value indicating whether or not the provider is ready for use.
          * @memberof TileMapServiceImageryProvider.prototype
          * @type {Boolean}
+         * @readonly
          */
         ready : {
             get : function() {
@@ -456,6 +467,7 @@ define([
          * the source of the imagery.  This function should not be called before {@link TileMapServiceImageryProvider#ready} returns true.
          * @memberof TileMapServiceImageryProvider.prototype
          * @type {Credit}
+         * @readonly
          */
         credit : {
             get : function() {
@@ -471,6 +483,7 @@ define([
          * and texture upload time are reduced.
          * @memberof TileMapServiceImageryProvider.prototype
          * @type {Boolean}
+         * @readonly
          */
         hasAlphaChannel : {
             get : function() {

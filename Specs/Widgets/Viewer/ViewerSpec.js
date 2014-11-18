@@ -10,7 +10,7 @@ defineSuite([
         'DataSources/DataSourceCollection',
         'DataSources/DataSourceDisplay',
         'Scene/SceneMode',
-        'Specs/EventHelper',
+        'Specs/DomEventSimulator',
         'Specs/MockDataSource',
         'Widgets/Animation/Animation',
         'Widgets/BaseLayerPicker/BaseLayerPicker',
@@ -32,7 +32,7 @@ defineSuite([
         DataSourceCollection,
         DataSourceDisplay,
         SceneMode,
-        EventHelper,
+        DomEventSimulator,
         MockDataSource,
         Animation,
         BaseLayerPicker,
@@ -641,7 +641,7 @@ defineSuite([
             expect(found).toBe(true);
 
             // click the OK button to dismiss the panel
-            EventHelper.fireClick(viewer._element.querySelector('.cesium-button'));
+            DomEventSimulator.fireClick(viewer._element.querySelector('.cesium-button'));
 
             expect(viewer._element.querySelector('.cesium-widget-errorPanel')).toBeNull();
         });

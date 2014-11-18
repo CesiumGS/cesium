@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/AttributeCompression',
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -10,9 +11,9 @@ define([
         '../Core/IndexDatatype',
         '../Core/Intersections2D',
         '../Core/Math',
-        '../Core/Oct',
         './createTaskProcessorWorker'
     ], function(
+        AttributeCompression,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -23,7 +24,6 @@ define([
         IndexDatatype,
         Intersections2D,
         CesiumMath,
-        Oct,
         createTaskProcessorWorker) {
     "use strict";
 
@@ -391,12 +391,12 @@ define([
         var first = cartesianScratch1[depth];
         var second = cartesianScratch2[depth];
 
-        first = Oct.decode(vertex.first.getNormalX(), vertex.first.getNormalY(), first);
-        second = Oct.decode(vertex.second.getNormalX(), vertex.second.getNormalY(), second);
+        first = AttributeCompression.octDecode(vertex.first.getNormalX(), vertex.first.getNormalY(), first);
+        second = AttributeCompression.octDecode(vertex.second.getNormalX(), vertex.second.getNormalY(), second);
         cartesian3Scratch = Cartesian3.lerp(first, second, vertex.ratio, cartesian3Scratch);
         Cartesian3.normalize(cartesian3Scratch, cartesian3Scratch);
 
-        Oct.encode(cartesian3Scratch, result);
+        AttributeCompression.octEncode(cartesian3Scratch, result);
 
         --depth;
 

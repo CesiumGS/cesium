@@ -92,6 +92,7 @@ define([
 
         this.lightingFadeOutDistance = 6500000.0;
         this.lightingFadeInDistance = 9000000.0;
+        this.hasWaterMask = false;
         this.oceanNormalMap = undefined;
         this.zoomedOutOceanSpecularIntensity = 0.5;
 
@@ -800,10 +801,16 @@ define([
         var viewMatrix = frameState.camera.viewMatrix;
 
         var maxTextures = context.maximumTextureImageUnits;
-        if (defined(tileProvider.oceanNormalMap)) {
+
+        var waterMaskTexture = surfaceTile.waterMaskTexture;
+        var showReflectiveOcean = tileProvider.hasWaterMask && defined(waterMaskTexture);
+        var oceanNormalMap = tileProvider.oceanNormalMap;
+        var showOceanWaves = showReflectiveOcean && defined(oceanNormalMap);
+
+        if (showReflectiveOcean) {
             --maxTextures;
         }
-        if (defined(surfaceTile.waterMaskTexture)) {
+        if (showOceanWaves) {
             --maxTextures;
         }
 
@@ -903,7 +910,7 @@ define([
             command.debugShowBoundingVolume = (tile === tileProvider._debug.boundingSphereTile);
 
             Cartesian4.clone(initialColor, uniformMap.initialColor);
-            uniformMap.oceanNormalMap = tileProvider.oceanNormalMap;
+            uniformMap.oceanNormalMap = oceanNormalMap;
             uniformMap.lightingFadeDistance.x = tileProvider.lightingFadeOutDistance;
             uniformMap.lightingFadeDistance.y = tileProvider.lightingFadeInDistance;
             uniformMap.zoomedOutOceanSpecularIntensity = tileProvider.zoomedOutOceanSpecularIntensity;
@@ -976,10 +983,10 @@ define([
             // trim texture array to the used length so we don't end up using old textures
             // which might get destroyed eventually
             uniformMap.dayTextures.length = numberOfDayTextures;
-            uniformMap.waterMask = surfaceTile.waterMaskTexture;
+            uniformMap.waterMask = waterMaskTexture;
             Cartesian4.clone(surfaceTile.waterMaskTranslationAndScale, uniformMap.waterMaskTranslationAndScale);
 
-            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(context, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha);
+            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(context, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves);
             command.renderState = renderState;
             command.primitiveType = PrimitiveType.TRIANGLES;
             command.vertexArray = surfaceTile.vertexArray;

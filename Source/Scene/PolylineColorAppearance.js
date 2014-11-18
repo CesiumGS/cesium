@@ -3,7 +3,6 @@ define([
         '../Core/defaultValue',
         '../Core/defineProperties',
         '../Core/VertexFormat',
-        '../Renderer/createShaderSource',
         '../Shaders/Appearances/PerInstanceFlatColorAppearanceFS',
         '../Shaders/Appearances/PolylineColorAppearanceVS',
         '../Shaders/PolylineCommon',
@@ -12,12 +11,14 @@ define([
         defaultValue,
         defineProperties,
         VertexFormat,
-        createShaderSource,
         PerInstanceFlatColorAppearanceFS,
         PolylineColorAppearanceVS,
         PolylineCommon,
         Appearance) {
     "use strict";
+
+    var defaultVertexShaderSource = PolylineCommon + '\n' + PolylineColorAppearanceVS;
+    var defaultFragmentShaderSource = PerInstanceFlatColorAppearanceFS;
 
     /**
      * An appearance for {@link GeometryInstance} instances with color attributes and {@link PolylineGeometry}.
@@ -61,8 +62,6 @@ define([
 
         var translucent = defaultValue(options.translucent, true);
         var closed = false;
-        var vs = createShaderSource({ sources : [PolylineCommon, PolylineColorAppearanceVS] });
-        var fs = PerInstanceFlatColorAppearanceFS;
         var vertexFormat = PolylineColorAppearance.VERTEX_FORMAT;
 
         /**
@@ -85,9 +84,9 @@ define([
          */
         this.translucent = translucent;
 
-        this._vertexShaderSource = defaultValue(options.vertexShaderSource, vs);
-        this._fragmentShaderSource = defaultValue(options.fragmentShaderSource, fs);
-        this._renderState = defaultValue(options.renderState, Appearance.getDefaultRenderState(translucent, closed));
+        this._vertexShaderSource = defaultValue(options.vertexShaderSource, defaultVertexShaderSource);
+        this._fragmentShaderSource = defaultValue(options.fragmentShaderSource, defaultFragmentShaderSource);
+        this._renderState = Appearance.getDefaultRenderState(translucent, closed, options.renderState);
         this._closed = closed;
 
         // Non-derived members

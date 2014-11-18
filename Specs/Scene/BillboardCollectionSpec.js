@@ -414,7 +414,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-
     it('set a removed billboard property', function() {
         var b = billboards.add();
         billboards.remove(b);
@@ -932,7 +931,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
     });
 
-    it('renders using billboard custum width property', function() {
+    it('renders using billboard custom width property', function() {
         var b = billboards.add({
             position : Cartesian3.ZERO,
             image : greenImage
@@ -952,7 +951,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
     });
 
-    it('renders using billboard custum height property', function() {
+    it('renders using billboard custom height property', function() {
         var b = billboards.add({
             position : Cartesian3.ZERO,
             image : greenImage
@@ -1389,6 +1388,37 @@ defineSuite([
         });
     });
 
+    it('sets billboard width and height based on loaded image width and height', function() {
+        render(context, frameState, billboards);
+
+        var one = billboards.add({
+            image : './Data/Images/Green1x4.png'
+        });
+
+        expect(one.width).toBeUndefined();
+        expect(one.height).toBeUndefined();
+
+        waitsFor(function() {
+            return one.ready;
+        });
+
+        runs(function() {
+            expect(one.width).toEqual(1);
+            expect(one.height).toEqual(4);
+
+            one.image = './Data/Images/Blue10x10.png';
+        });
+
+        waitsFor(function() {
+            return one.ready;
+        });
+
+        runs(function() {
+            expect(one.width).toEqual(10);
+            expect(one.height).toEqual(10);
+        });
+    });
+
     it('does not cancel image load when a billboard is set to the same URL repeatedly', function() {
         render(context, frameState, billboards);
 
@@ -1526,6 +1556,27 @@ defineSuite([
         });
     });
 
+    it('sets billboard width and height based on subregion width and height', function() {
+        render(context, frameState, billboards);
+
+        var one = billboards.add({
+            image : './Data/Images/Red16x16.png',
+            imageSubRegion : new BoundingRectangle(0.0, 0.0, 1.0, 2.0)
+        });
+
+        expect(one.width).toBeUndefined();
+        expect(one.height).toBeUndefined();
+
+        waitsFor(function() {
+            return one.ready;
+        });
+
+        runs(function() {
+            expect(one.width).toEqual(1);
+            expect(one.height).toEqual(2);
+        });
+    });
+
     it('can change image while an image is loading', function() {
         render(context, frameState, billboards);
 
@@ -1616,5 +1667,4 @@ defineSuite([
             });
         }
     });
-
 }, 'WebGL');

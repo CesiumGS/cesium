@@ -4,7 +4,6 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/VertexFormat',
-        '../Renderer/createShaderSource',
         '../Shaders/Appearances/PolylineMaterialAppearanceVS',
         '../Shaders/PolylineCommon',
         '../Shaders/PolylineFS',
@@ -15,13 +14,15 @@ define([
         defined,
         defineProperties,
         VertexFormat,
-        createShaderSource,
         PolylineMaterialAppearanceVS,
         PolylineCommon,
         PolylineFS,
         Appearance,
         Material) {
     "use strict";
+
+    var defaultVertexShaderSource = PolylineCommon + '\n' + PolylineMaterialAppearanceVS;
+    var defaultFragmentShaderSource = PolylineFS;
 
     /**
      * An appearance for {@link PolylineGeometry} that supports shading with materials.
@@ -61,8 +62,6 @@ define([
 
         var translucent = defaultValue(options.translucent, true);
         var closed = false;
-        var vs = createShaderSource({ sources : [PolylineCommon, PolylineMaterialAppearanceVS] });
-        var fs = PolylineFS;
         var vertexFormat = PolylineMaterialAppearance.VERTEX_FORMAT;
 
         /**
@@ -87,9 +86,9 @@ define([
          */
         this.translucent = translucent;
 
-        this._vertexShaderSource = defaultValue(options.vertexShaderSource, vs);
-        this._fragmentShaderSource = defaultValue(options.fragmentShaderSource, fs);
-        this._renderState = defaultValue(options.renderState, Appearance.getDefaultRenderState(translucent, closed));
+        this._vertexShaderSource = defaultValue(options.vertexShaderSource, defaultVertexShaderSource);
+        this._fragmentShaderSource = defaultValue(options.fragmentShaderSource, defaultFragmentShaderSource);
+        this._renderState = Appearance.getDefaultRenderState(translucent, closed, options.renderState);
         this._closed = closed;
 
         // Non-derived members
