@@ -70,7 +70,7 @@ defineSuite([
         expect(noDuplicates).toEqual(expectedPositions);
     });
 
-    it('removeDuplicates to remove positions within epsilon 6', function() {
+    it('removeDuplicates to remove positions within absolute epsilon 7', function() {
         var positions = [
             new Cartesian3(1.0, 1.0, 1.0),
             new Cartesian3(1.0, 2.0, 3.0),
@@ -78,6 +78,18 @@ defineSuite([
         var expectedPositions = [
             new Cartesian3(1.0, 1.0, 1.0),
             new Cartesian3(1.0, 2.0, 3.0)];
+        var noDuplicates = PolylinePipeline.removeDuplicates(positions);
+        expect(noDuplicates).toEqual(expectedPositions);
+    });
+
+    it('removeDuplicates to remove positions within relative epsilon 7', function() {
+        var positions = [
+            new Cartesian3(0.0, 0.0, 1000000.0),
+            new Cartesian3(0.0, 0.0, 3000000.0),
+            new Cartesian3(0.0, 0.0, 3000000.2)];
+        var expectedPositions = [
+            new Cartesian3(0.0, 0.0, 1000000.0),
+            new Cartesian3(0.0, 0.0, 3000000.0)];
         var noDuplicates = PolylinePipeline.removeDuplicates(positions);
         expect(noDuplicates).toEqual(expectedPositions);
     });
