@@ -631,12 +631,12 @@ define([
 
     /**
      * Compares the provided Cartesians componentwise and returns
-     * <code>true</code> if they are within the provided epsilon,
+     * <code>true</code> if they pass an absolute tolerance test,
      * <code>false</code> otherwise.
      *
      * @param {Cartesian2} [left] The first Cartesian.
      * @param {Cartesian2} [right] The second Cartesian.
-     * @param {Number} epsilon The epsilon to use for equality testing.
+     * @param {Number} epsilon The epsilon tolerance to use for equality testing.
      * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
      */
     Cartesian2.equalsEpsilon = function(left, right, epsilon) {
@@ -651,6 +651,58 @@ define([
                 (defined(right)) &&
                 (Math.abs(left.x - right.x) <= epsilon) &&
                 (Math.abs(left.y - right.y) <= epsilon));
+    };
+
+    /**
+     * Compares the provided Cartesians componentwise and returns
+     * <code>true</code> if they pass a relative tolerance test,
+     * <code>false</code> otherwise.
+     *
+     * @param {Cartesian2} [left] The first Cartesian.
+     * @param {Cartesian2} [right] The second Cartesian.
+     * @param {Number} epsilon The epsilon tolerance to use for equality testing.
+     * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
+     */
+    Cartesian2.equalsEpsilonRelative = function(left, right, epsilon) {
+        //>>includeStart('debug', pragmas.debug);
+        if (typeof epsilon !== 'number') {
+            throw new DeveloperError('epsilon is required and must be a number.');
+        }
+        //>>includeEnd('debug');
+
+        return (left === right) ||
+               ((defined(left)) &&
+                (defined(right)) &&
+                (Math.abs(left.x - right.x) <= epsilon * Math.max(Math.abs(left.x), Math.abs(right.x))) &&
+                (Math.abs(left.y - right.y) <= epsilon * Math.max(Math.abs(left.y), Math.abs(right.y))));
+    };
+
+    /**
+     * Compares the provided Cartesians componentwise and returns
+     * <code>true</code> if they pass an absolute or relative tolerance test,
+     * <code>false</code> otherwise.
+     *
+     * @param {Cartesian2} [left] The first Cartesian.
+     * @param {Cartesian2} [right] The second Cartesian.
+     * @param {Number} relativeEpsilon The relative epsilon tolerance to use for equality testing.
+     * @param {Number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
+     * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
+     */
+    Cartesian2.equalsEpsilonRelativeAndAbsolute = function(left, right, relativeEpsilon, absoluteEpsilon) {
+        //>>includeStart('debug', pragmas.debug);
+        if (typeof relativeEpsilon !== 'number') {
+            throw new DeveloperError('relativeEpsilon is required and must be a number.');
+        }
+        //>>includeEnd('debug');
+
+        absoluteEpsilon = defaultValue(absoluteEpsilon, relativeEpsilon);
+        return (left === right) ||
+               ((defined(left)) &&
+                (defined(right)) &&
+                (((Math.abs(left.x - right.x) <= absoluteEpsilon) &&
+                  (Math.abs(left.y - right.y) <= absoluteEpsilon)) ||
+                 ((Math.abs(left.x - right.x) <= relativeEpsilon * Math.max(Math.abs(left.x), Math.abs(right.x))) &&
+                  (Math.abs(left.y - right.y) <= relativeEpsilon * Math.max(Math.abs(left.y), Math.abs(right.y))))));
     };
 
     /**

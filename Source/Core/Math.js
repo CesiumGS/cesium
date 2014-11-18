@@ -3,11 +3,13 @@ define([
         '../ThirdParty/mersenne-twister',
         './defaultValue',
         './defined',
+        './deprecationWarning',
         './DeveloperError'
     ], function(
         MersenneTwister,
         defaultValue,
         defined,
+        deprecationWarning,
         DeveloperError) {
     "use strict";
 
@@ -512,8 +514,9 @@ define([
     };
 
     /**
-     * Determines if two values are equal within the provided epsilon.  This is useful
-     * to avoid problems due to roundoff error when comparing floating-point values directly.
+     * Determines if two values are equal using an absolute tolerance test. This is useful
+     * to avoid problems due to roundoff error when comparing floating-point values directly and the values
+     * being compared are close to zero.
      *
      * @param {Number} left The first value to compare.
      * @param {Number} right The other value to compare.
@@ -529,13 +532,79 @@ define([
         if (!defined(left)) {
             throw new DeveloperError('left is required.');
         }
-
         if (!defined(right)) {
             throw new DeveloperError('right is required.');
         }
         //>>includeEnd('debug');
-        epsilon = defaultValue(epsilon, 0.0);
+        if (!defined(epsilon)) {
+            deprecationWarning('Math.equalsEpsilon', 'The epsilon parameter to Math.equalsEpsilon will be required in 1.6.');
+            epsilon = 0.0;
+        }
         return Math.abs(left - right) <= epsilon;
+    };
+
+    /**
+     * Determines if two values are equal using a relative tolerance test. This is useful
+     * to avoid problems due to roundoff error when comparing floating-point values directly and the values
+     * being compared are larger in magnitude.
+     *
+     * @param {Number} left The first value to compare.
+     * @param {Number} right The other value to compare.
+     * @param {Number} [epsilon=0.0] The maximum inclusive delta between <code>left</code> and <code>right</code> where they will be considered equal.
+     * @returns {Boolean} <code>true</code> if the values are equal within the epsilon; otherwise, <code>false</code>.
+     *
+     * @example
+     * var b = Cesium.Math.equalsEpsilonRelative(3699175.1634344, 3699175.2, Cesium.Math.EPSILON7); // true
+     * var b = Cesium.Math.equalsEpsilonRelative(3699175.1634344, 3699175.2, Cesium.Math.EPSILON9); // false
+     */
+    CesiumMath.equalsEpsilonRelative = function(left, right, epsilon) {
+        //>>includeStart('debug', pragma.debug);
+        if (!defined(left)) {
+            throw new DeveloperError('left is required.');
+        }
+        if (!defined(right)) {
+            throw new DeveloperError('right is required.');
+        }
+        if (!defined(epsilon)) {
+            throw new DeveloperError('epsilon is required.');
+        }
+        //>>includeEnd('debug');
+        return Math.abs(left - right) <= epsilon * Math.max(Math.abs(left), Math.abs(right));
+    };
+
+    /**
+     * Determines if two values are equal using an absolute or relative tolerance test. This is useful
+     * to avoid problems due to roundoff error when comparing floating-point values directly. The values are
+     * first compared using an absolute tolerance test. If that fails, a relative tolerance test is performed.
+     * Use this test if you are unsure of the magnitudes of left and right.
+     *
+     * @param {Number} left The first value to compare.
+     * @param {Number} right The other value to compare.
+     * @param {Number} relativeEpsilon The maximum inclusive delta between <code>left</code> and <code>right</code> for the relative tolerance test.
+     * @param {Number} [absoluteEpsilon=relativeEpsilon] The maximum inclusive delta between <code>left</code> and <code>right</code> for the absolute tolerance test.
+     * @returns {Boolean} <code>true</code> if the values are equal within the epsilon; otherwise, <code>false</code>.
+     *
+     * @example
+     * var b = Cesium.Math.equalsEpsilon(0.0, 0.01, Cesium.Math.EPSILON2); // true
+     * var b = Cesium.Math.equalsEpsilon(0.0, 0.1, Cesium.Math.EPSILON2);  // false
+     * var b = Cesium.Math.equalsEpsilonRelative(3699175.1634344, 3699175.2, Cesium.Math.EPSILON7); // true
+     * var b = Cesium.Math.equalsEpsilonRelative(3699175.1634344, 3699175.2, Cesium.Math.EPSILON9); // false
+     */
+    CesiumMath.equalsEpsilonRelativeAndAbsolute = function(left, right, relativeEpsilon, absoluteEpsilon) {
+        //>>includeStart('debug', pragma.debug);
+        if (!defined(left)) {
+            throw new DeveloperError('left is required.');
+        }
+        if (!defined(right)) {
+            throw new DeveloperError('right is required.');
+        }
+        if (!defined(relativeEpsilon)) {
+            throw new DeveloperError('epsilon is required.');
+        }
+        //>>includeEnd('debug');
+        absoluteEpsilon = defaultValue(absoluteEpsilon, relativeEpsilon);
+        var absDiff = Math.abs(left - right);
+        return absDiff <= absoluteEpsilon || absDiff <= relativeEpsilon * Math.max(Math.abs(left), Math.abs(right));
     };
 
     var factorials = [1];
