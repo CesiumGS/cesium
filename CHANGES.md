@@ -21,6 +21,7 @@ Change Log
 * Improved point visualization performance for all DataSources.
 * Fixed `ModelNode.matrix` when a node is targeted for animation.
 * Improved GeoJSON loading performance.
+* Clamp of `Camera.tilt` to [-pi / 2, pi / 2] instead of [0, pi / 2].
 
 ### 1.3 - 2014-11-03
 
