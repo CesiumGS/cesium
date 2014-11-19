@@ -10,6 +10,7 @@ Change Log
 * Added geometry outline width support to the `DataSource` layer.  This is exposed via the new `outlineWidth` property on `EllipseGraphics`, `EllipsoidGraphics`, `PolygonGraphics`, `RectangleGraphics`, and `WallGraphics`.
 * Added `outlineWidth` support to CZML geometry packets.
 * Added `stroke-width` support to the GeoJSON simple-style implementation.
+* Added `Camera.roll`.
 * Added support for touch events on Internet Explorer 11 using the [Pointer Events API](http://www.w3.org/TR/pointerevents/).
 * Added the ability to specify global GeoJSON default styling.  See the [documentation](http://cesiumjs.org/Cesium/Build/Documentation/GeoJsonDataSource.html) for details.
 * Added `CallbackProperty` to support lazy property evaluation as well as make custom properties easier to create.
@@ -22,7 +23,6 @@ Change Log
 * Fixed `ModelNode.matrix` when a node is targeted for animation.
 * Improved GeoJSON loading performance.
 * Clamp of `Camera.tilt` to [-pi / 2, pi / 2] instead of [0, pi / 2].
-* Add `Camera.roll`.
 
 ### 1.3 - 2014-11-03
 
