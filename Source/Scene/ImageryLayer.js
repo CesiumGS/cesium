@@ -831,7 +831,7 @@ define([
                 },
                 {
                     index : reprojectAttributeIndices.webMercatorT,
-                    vertexBuffer : context.createVertexBuffer(64 * 2 * 4, BufferUsage.DYNAMIC_DRAW),
+                    vertexBuffer : context.createVertexBuffer(64 * 2 * 4, BufferUsage.STREAM_DRAW),
                     componentsPerAttribute : 1
                 }
             ], indexBuffer);
