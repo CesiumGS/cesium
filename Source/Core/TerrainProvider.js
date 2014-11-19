@@ -120,8 +120,8 @@ define([
 
             var index = 0;
             var indicesIndex = 0;
-            for ( var i = 0; i < height - 1; ++i) {
-                for ( var j = 0; j < width - 1; ++j) {
+            for (var j = 0; j < height - 1; ++j) {
+                for (var i = 0; i < width - 1; ++i) {
                     var upperLeft = index;
                     var lowerLeft = upperLeft + width;
                     var lowerRight = lowerLeft + 1;

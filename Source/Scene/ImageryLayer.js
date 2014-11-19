@@ -11,8 +11,7 @@ define([
         '../Core/destroyObject',
         '../Core/FeatureDetection',
         '../Core/GeographicTilingScheme',
-        '../Core/Geometry',
-        '../Core/GeometryAttribute',
+        '../Core/IndexDatatype',
         '../Core/Math',
         '../Core/PixelFormat',
         '../Core/PrimitiveType',
@@ -45,8 +44,7 @@ define([
         destroyObject,
         FeatureDetection,
         GeographicTilingScheme,
-        Geometry,
-        GeometryAttribute,
+        IndexDatatype,
         CesiumMath,
         PixelFormat,
         PrimitiveType,
@@ -742,18 +740,49 @@ define([
         u_texture : function() {
             return this.texture;
         },
-        u_webMercatorT : function() {
-            return this.webMercatorT;
-        },
 
         textureDimensions : new Cartesian2(),
-        texture : undefined,
-        webMercatorT : new Float32Array(64)
+        texture : undefined
     };
 
-    var float32ArrayScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(1) : undefined;
+    var float32ArrayScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(2 * 64) : undefined;
 
     function reprojectToGeographic(imageryLayer, context, texture, rectangle) {
+        // This function has gone through a number of iterations, because GPUs are awesome.
+        //
+        // Originally, we had a very simple vertex shader and computed the Web Mercator texture coordinates
+        // per-fragment in the fragment shader.  That worked well, except on mobile devices, because
+        // fragment shaders have limited precision on many mobile devices.  The result was smearing artifacts
+        // at medium zoom levels because different geographic texture coordinates would be reprojected to Web
+        // Mercator as the same value.
+        //
+        // Our solution was to reproject to Web Mercator in the vertex shader instead of the fragment shader.
+        // This required far more vertex data.  With fragment shader reprojection, we only needed a single quad.
+        // But to achieve the same precision with vertex shader reprojection, we needed a vertex for each
+        // output pixel.  So we used a grid of 256x256 vertices, because most of our imagery
+        // tiles are 256x256.  Fortunately the grid could be created and uploaded to the GPU just once and
+        // re-used for all reprojections, so the performance was virtually unchanged from our original fragment
+        // shader approach.  See https://github.com/AnalyticalGraphicsInc/cesium/pull/714.
+        //
+        // Over a year later, we noticed (https://github.com/AnalyticalGraphicsInc/cesium/issues/2110)
+        // that our reprojection code was creating a rare but severe artifact on some GPUs (Intel HD 4600
+        // for one).  The problem was that the GLSL sin function on these GPUs had a discontinuity at fine scales in
+        // a few places.
+        //
+        // We solved this by implementing a more reliable sin function based on the CORDIC algorithm
+        // (https://github.com/AnalyticalGraphicsInc/cesium/pull/2111).  Even though this was a fair
+        // amount of code to be executing per vertex, the performance seemed to be pretty good on most GPUs.
+        // Unfortunately, on some GPUs, the performance was absolutely terrible
+        // (https://github.com/AnalyticalGraphicsInc/cesium/issues/2258).
+        //
+        // So that brings us to our current solution, the one you see here.  Effectively, we compute the Web
+        // Mercator texture coordinates on the CPU and store the T coordinate with each vertex (the S coordinate
+        // is the same in Geographic and Web Mercator).  To make this faster, we reduced our reprojection mesh
+        // to be only 2 vertices wide and 64 vertices high.  We should have reduced the width to 2 sooner,
+        // because the extra vertices weren't buying us anything.  The height of 64 means we are technically
+        // doing a slightly less accurate reprojection than we were before, but we can't see the difference
+        // so it's worth the 4x speedup.
+
         var reproject = context.cache.imageryLayer_reproject;
 
         if (!defined(reproject)) {
@@ -776,53 +805,43 @@ define([
                 }
             };
 
-            // We need a vertex array with close to one vertex per output texel because we're doing
-            // the reprojection by computing texture coordinates in the vertex shader.
-            // If we computed Web Mercator texture coordinate per-fragment instead, we could get away with only
-            // four vertices.  Problem is: fragment shaders have limited precision on many mobile devices,
-            // leading to all kinds of smearing artifacts.  Current browsers (Chrome 26 for example)
-            // do not correctly report the available fragment shader precision, so we can't have different
-            // paths for devices with or without high precision fragment shaders, even if we want to.
-            var positions = new Float32Array(64 * 64 * 2);
+            var positions = new Float32Array(2 * 64 * 2);
             var index = 0;
             for (var j = 0; j < 64; ++j) {
                 var y = j / 63.0;
-                for (var i = 0; i < 64; ++i) {
-                    var x = i / 63.0;
-                    positions[index++] = x;
-                    positions[index++] = y;
-                }
+                positions[index++] = 0.0;
+                positions[index++] = y;
+                positions[index++] = 1.0;
+                positions[index++] = y;
             }
 
-            var reprojectGeometry = new Geometry({
-                attributes : {
-                    position : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.FLOAT,
-                        componentsPerAttribute : 2,
-                        values : positions
-                    })
-                },
-                indices : TerrainProvider.getRegularGridIndices(64, 64),
-                primitiveType : PrimitiveType.TRIANGLES
-            });
-
-            var reprojectAttribInds = {
-                position : 0
+            var reprojectAttributeIndices = {
+                position : 0,
+                webMercatorT : 1
             };
 
-            reproject.vertexArray = context.createVertexArrayFromGeometry({
-                geometry : reprojectGeometry,
-                attributeLocations : reprojectAttribInds,
-                bufferUsage : BufferUsage.STATIC_DRAW
-            });
+            var indices = TerrainProvider.getRegularGridIndices(2, 64);
+            var indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+
+            reproject.vertexArray = context.createVertexArray([
+                {
+                    index : reprojectAttributeIndices.position,
+                    vertexBuffer : context.createVertexBuffer(positions, BufferUsage.STATIC_DRAW),
+                    componentsPerAttribute : 2
+                },
+                {
+                    index : reprojectAttributeIndices.webMercatorT,
+                    vertexBuffer : context.createVertexBuffer(64 * 2 * 4, BufferUsage.DYNAMIC_DRAW),
+                    componentsPerAttribute : 1
+                }
+            ], indexBuffer);
 
             var vs = new ShaderSource({
                 sources : [ReprojectWebMercatorVS]
             });
 
-            reproject.shaderProgram = context.createShaderProgram(vs, ReprojectWebMercatorFS, reprojectAttribInds);
+            reproject.shaderProgram = context.createShaderProgram(vs, ReprojectWebMercatorFS, reprojectAttributeIndices);
 
-            var maximumSupportedAnisotropy = context.maximumTextureFilterAnisotropy;
             reproject.sampler = context.createSampler({
                 wrapS : TextureWrap.CLAMP_TO_EDGE,
                 wrapT : TextureWrap.CLAMP_TO_EDGE,
@@ -841,11 +860,11 @@ define([
         uniformMap.texture = texture;
 
         var sinLatitude = Math.sin(rectangle.south);
-        var southMercatorT = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
+        var southMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
 
         sinLatitude = Math.sin(rectangle.north);
-        var northMercatorT = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
-        var oneOverMercatorHeight = 1.0 / (northMercatorT - southMercatorT);
+        var northMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
+        var oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
 
         var outputTexture = context.createTexture2D({
             width : width,
@@ -873,15 +892,20 @@ define([
         var south = rectangle.south;
         var north = rectangle.north;
 
-        var webMercatorT = uniformMap.webMercatorT;
+        var webMercatorT = float32ArrayScratch;
 
+        var outputIndex = 0;
         for (var webMercatorTIndex = 0; webMercatorTIndex < 64; ++webMercatorTIndex) {
             var fraction = webMercatorTIndex / 63.0;
             var latitude = CesiumMath.lerp(south, north, fraction);
             sinLatitude = Math.sin(latitude);
-            var mercatorT = 0.5 * Math.log((1.0 + sinLatitude) / (1.0 - sinLatitude));
-            webMercatorT[webMercatorTIndex] = (mercatorT - southMercatorT) * oneOverMercatorHeight;
+            var mercatorY = 0.5 * Math.log((1.0 + sinLatitude) / (1.0 - sinLatitude));
+            var mercatorFraction = (mercatorY - southMercatorY) * oneOverMercatorHeight;
+            webMercatorT[outputIndex++] = mercatorFraction;
+            webMercatorT[outputIndex++] = mercatorFraction;
         }
+
+        reproject.vertexArray.getAttribute(1).vertexBuffer.copyFromArrayView(webMercatorT);
 
         var command = new ClearCommand({
             color : Color.BLACK,
