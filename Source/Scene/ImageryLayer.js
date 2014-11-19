@@ -783,12 +783,12 @@ define([
             // leading to all kinds of smearing artifacts.  Current browsers (Chrome 26 for example)
             // do not correctly report the available fragment shader precision, so we can't have different
             // paths for devices with or without high precision fragment shaders, even if we want to.
-            var positions = new Float32Array(256 * 256 * 2);
+            var positions = new Float32Array(64 * 64 * 2);
             var index = 0;
-            for (var j = 0; j < 256; ++j) {
-                var y = j / 255.0;
-                for (var i = 0; i < 256; ++i) {
-                    var x = i / 255.0;
+            for (var j = 0; j < 64; ++j) {
+                var y = j / 63.0;
+                for (var i = 0; i < 64; ++i) {
+                    var x = i / 63.0;
                     positions[index++] = x;
                     positions[index++] = y;
                 }
@@ -802,7 +802,7 @@ define([
                         values : positions
                     })
                 },
-                indices : TerrainProvider.getRegularGridIndices(256, 256),
+                indices : TerrainProvider.getRegularGridIndices(64, 64),
                 primitiveType : PrimitiveType.TRIANGLES
             });
 
