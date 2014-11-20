@@ -248,7 +248,7 @@ define([
                 Accept : 'application/vnd.quantized-mesh,application/octet-stream;q=0.9,*/*;q=0.01'
             };
         } else {
-            var extensions = extensionsList.join(':');
+            var extensions = extensionsList.join('-');
             return {
                 Accept : 'application/vnd.quantized-mesh;extensions=' + extensions + ',application/octet-stream;q=0.9,*/*;q=0.01'
             };
