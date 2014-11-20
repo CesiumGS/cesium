@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../ThirdParty/when',
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -24,6 +25,7 @@ define([
         '../Core/Quaternion',
         '../Core/Queue',
         '../Core/RuntimeError',
+        '../Core/throttleRequestByServer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/ShaderSource',
@@ -40,6 +42,7 @@ define([
         './Pass',
         './SceneMode'
     ], function(
+        when,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -64,6 +67,7 @@ define([
         Quaternion,
         Queue,
         RuntimeError,
+        throttleRequestByServer,
         BufferUsage,
         DrawCommand,
         ShaderSource,
@@ -531,21 +535,48 @@ define([
         //>>includeEnd('debug');
 
         var url = options.url;
+
+        var model = new Model(options);
+
+        model.loadGltf(url, options);
+
+        return model;
+    };
+
+    Model.prototype.loadGltf = function(url, options) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(options) || !defined(url)) {
+            throw new DeveloperError('options.url is required');
+        }
+        //>>includeEnd('debug');
         var basePath = '';
         var i = url.lastIndexOf('/');
         if (i !== -1) {
             basePath = url.substring(0, i + 1);
         }
 
-        options = clone(options);
-        options.basePath = basePath;
-        var model = new Model(options);
+        this._basePath = basePath;
+        var docUri = new Uri(document.location.href);
+        var modelUri = new Uri(this._basePath);
+        this._baseUri = modelUri.resolve(docUri);
 
-        loadText(url, options.headers).then(function(data) {
-            model._gltf = gltfDefaults(JSON.parse(data));
-        }).otherwise(getFailedLoadFunction(model, 'gltf', url));
+        var promise;
 
-        return model;
+        var throttleRequests = defaultValue(options.throttleRequests, true);
+        if (throttleRequests) {
+            promise = throttleRequestByServer(loadText, url, options.headers);
+            if (!defined(promise)) {
+                return undefined;
+            }
+        } else {
+            promise = loadText(url, options.headers);
+        }
+
+        var that = this;
+
+        return when(promise, function(data) {
+            that._gltf = gltfDefaults(JSON.parse(data));
+        }).otherwise(getFailedLoadFunction(that, 'gltf', url));
     };
 
     function getRuntime(model, runtimeName, name) {
@@ -744,9 +775,14 @@ define([
             if (shaders.hasOwnProperty(name)) {
                 ++model._loadResources.pendingShaderLoads;
                 var shader = shaders[name];
-                var uri = new Uri(shader.uri);
-                var shaderPath = uri.resolve(model._baseUri).toString();
-                loadText(shaderPath).then(shaderLoad(model, name)).otherwise(getFailedLoadFunction(model, 'shader', shaderPath));
+                var shaderSource;
+                if (model.shaderOverride && (shaderSource = model.shaderOverride(shader, name, model.gltf))){
+                    shaderLoad(model, name)(shaderSource);
+                }else {
+                    var uri = new Uri(shader.uri);
+                    var shaderPath = uri.resolve(model._baseUri).toString();
+                    loadText(shaderPath).then(shaderLoad(model, name)).otherwise(getFailedLoadFunction(model, 'shader', shaderPath));
+                }
             }
         }
     }
