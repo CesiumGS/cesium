@@ -590,7 +590,7 @@ define([
      * var b = Cesium.Math.equalsEpsilonRelative(3699175.1634344, 3699175.2, Cesium.Math.EPSILON7); // true
      * var b = Cesium.Math.equalsEpsilonRelative(3699175.1634344, 3699175.2, Cesium.Math.EPSILON9); // false
      */
-    CesiumMath.equalsEpsilonRelativeAndAbsolute = function(left, right, relativeEpsilon, absoluteEpsilon) {
+    CesiumMath.equalsEpsilonRelativeOrAbsolute = function(left, right, relativeEpsilon, absoluteEpsilon) {
         //>>includeStart('debug', pragma.debug);
         if (!defined(left)) {
             throw new DeveloperError('left is required.');

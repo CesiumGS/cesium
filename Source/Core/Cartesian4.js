@@ -738,7 +738,7 @@ define([
      * @param {Number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
      * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
      */
-    Cartesian4.equalsEpsilonRelativeAndAbsolute = function(left, right, relativeEpsilon, absoluteEpsilon) {
+    Cartesian4.equalsEpsilonRelativeOrAbsolute = function(left, right, relativeEpsilon, absoluteEpsilon) {
         //>>includeStart('debug', pragmas.debug);
         if (typeof relativeEpsilon !== 'number') {
             throw new DeveloperError('relativeEpsilon is required and must be a number.');
@@ -747,16 +747,12 @@ define([
 
         absoluteEpsilon = defaultValue(absoluteEpsilon, relativeEpsilon);
         return (left === right) ||
-               ((defined(left)) &&
-                (defined(right)) &&
-                (((Math.abs(left.x - right.x) <= absoluteEpsilon) &&
-                  (Math.abs(left.y - right.y) <= absoluteEpsilon) &&
-                  (Math.abs(left.z - right.z) <= absoluteEpsilon) &&
-                  (Math.abs(left.w - right.w) <= absoluteEpsilon)) ||
-                 ((Math.abs(left.x - right.x) <= relativeEpsilon * Math.max(Math.abs(left.x), Math.abs(right.x))) &&
-                  (Math.abs(left.y - right.y) <= relativeEpsilon * Math.max(Math.abs(left.y), Math.abs(right.y))) &&
-                  (Math.abs(left.z - right.z) <= relativeEpsilon * Math.max(Math.abs(left.z), Math.abs(right.z))) &&
-                  (Math.abs(left.w - right.w) <= relativeEpsilon * Math.max(Math.abs(left.w), Math.abs(right.w))))));
+               (defined(left) &&
+                defined(right) &&
+                Math.abs(left.x - right.x) <= Math.max(absoluteEpsilon, relativeEpsilon * Math.max(Math.abs(left.x), Math.abs(right.x))) &&
+                Math.abs(left.y - right.y) <= Math.max(absoluteEpsilon, relativeEpsilon * Math.max(Math.abs(left.y), Math.abs(right.y))) &&
+                Math.abs(left.z - right.z) <= Math.max(absoluteEpsilon, relativeEpsilon * Math.max(Math.abs(left.z), Math.abs(right.z))) &&
+                Math.abs(left.w - right.w) <= Math.max(absoluteEpsilon, relativeEpsilon * Math.max(Math.abs(left.w), Math.abs(right.w))));
     };
 
     /**
