@@ -1696,20 +1696,23 @@ define([
         if ((this._modelResources._state === ModelState.NEEDS_LOAD) && defined(this._modelResources.gltf)) {
             this._modelResources.startLoading();
         }
-
-        if (this._modelResources._state === ModelState.LOADED && defined(this._modelResources.gltf) && !defined(this._boundingSphere)) {
-            this._boundingSphere = computeBoundingSphere(this._modelResources.gltf);
-            this._initialRadius = this._boundingSphere.radius;
-        }
-        
+       
         this._modelResources.update(context, frameState);
         
         if (!this._ready && this._modelResources._state === ModelState.LOADED)
         {
             var model = this;
+            
             frameState.afterRender.push(function() {
             
             	initModel(model, context);
+                
+                if (defined(model._modelResources.gltf) && !defined(model._boundingSphere)) {
+                    model._boundingSphere = computeBoundingSphere(model._modelResources.gltf);
+                    model._initialRadius = model._boundingSphere.radius;
+                }
+                
+                
                 model._ready = true;
                 model.readyToRender.raiseEvent(model);
             });
