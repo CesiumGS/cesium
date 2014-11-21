@@ -20,7 +20,8 @@ Change Log
 * The `translation` parameter to `Matrix4.fromRotationTranslation` now defaults to `Cartesian3.ZERO`.
 * Improved point visualization performance for all DataSources.
 * Fixed `ModelNode.matrix` when a node is targeted for animation.
-* Improved GeoJSON load performance.
+* Improved GeoJSON loading performance.
+* Clamp of `Camera.tilt` to [-pi / 2, pi / 2] instead of [0, pi / 2].
 * `ConstantProperty` now accepts `HTMLElement` instances as valid values.
 * `BillboardGraphics.image` and 'ImageMaterialProperty.image' now accept `Property` instances that represent an `Image` or `Canvas` in addition to a url.
 
