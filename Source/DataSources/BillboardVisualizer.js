@@ -134,7 +134,13 @@ define([
             }
 
             billboard.show = show;
-            billboard.image = textureValue;
+
+            if (textureValue instanceof HTMLCanvasElement && textureValue.id !== '') {
+                billboard.setImage(textureValue.id, textureValue);
+            } else {
+                billboard.image = textureValue;
+            }
+
             billboard.position = position;
             billboard.color = Property.getValueOrDefault(billboardGraphics._color, time, defaultColor, color);
             billboard.eyeOffset = Property.getValueOrDefault(billboardGraphics._eyeOffset, time, defaultEyeOffset, eyeOffset);

@@ -726,8 +726,6 @@ define([
                     this.setImage(value, value);
                 } else if (defined(value.src)) {
                     this.setImage(value.src, value);
-                } else if (value instanceof HTMLCanvasElement) {
-                    this.setImage(value.id, value);
                 } else {
                     this.setImage(createGuid(), value);
                 }
