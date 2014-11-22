@@ -708,7 +708,7 @@ define([
         },
 
         /**
-         * Gets or sets the camera tilt in radians
+         * Gets or sets the camera tilt in radians.
          * @memberof Camera.prototype
          *
          * @type {Number}
@@ -733,9 +733,8 @@ define([
                 //>>includeEnd('debug');
 
                 if (this._mode === SceneMode.COLUMBUS_VIEW || this._mode === SceneMode.SCENE3D) {
-                    angle = CesiumMath.clamp(angle, 0.0, CesiumMath.PI_OVER_TWO);
+                    angle = CesiumMath.clamp(angle, -CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO);
                     angle = angle - this.tilt;
-
                     this.look(this.right, angle);
                 }
             }
