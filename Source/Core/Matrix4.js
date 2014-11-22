@@ -1533,40 +1533,51 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Multiplies a transformation matrix (with a bottom row of <code>[0.0, 0.0, 0.0, 1.0]</code>)
+     * by a 3x3 rotation matrix.  This is an optimization
+     * for <code>Matrix4.multiply(m, Matrix4.fromRotationTranslation(rotation), m);</code> with less allocations and arithmetic operations.
+     *
+     * @param {Matrix4} matrix The matrix on the left-hand side.
+     * @param {Matrix3} rotation The 3x3 rotation matrix on the right-hand side.
+     * @param {Matrix4} result The object onto which to store the result.
+     * @returns {Matrix4} The modified result parameter.
+     *
+     * @example
+     * // Instead of Cesium.Matrix4.multiply(m, Cesium.Matrix4.fromRotationTranslation(rotation), m);
+     * Cesium.Matrix4.multiplyByMatrix3(m, rotation, m);
      */
-    Matrix4.multiplyByMatrix3 = function(left, right, result) {
+    Matrix4.multiplyByMatrix3 = function(matrix, rotation, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required');
+        if (!defined(matrix)) {
+            throw new DeveloperError('matrix is required');
         }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required');
+        if (!defined(rotation)) {
+            throw new DeveloperError('rotation is required');
         }
         if (!defined(result)) {
             throw new DeveloperError('result is required,');
         }
         //>>includeEnd('debug');
 
-        var left0 = left[0];
-        var left1 = left[1];
-        var left2 = left[2];
-        var left4 = left[4];
-        var left5 = left[5];
-        var left6 = left[6];
-        var left8 = left[8];
-        var left9 = left[9];
-        var left10 = left[10];
+        var left0 = matrix[0];
+        var left1 = matrix[1];
+        var left2 = matrix[2];
+        var left4 = matrix[4];
+        var left5 = matrix[5];
+        var left6 = matrix[6];
+        var left8 = matrix[8];
+        var left9 = matrix[9];
+        var left10 = matrix[10];
 
-        var right0 = right[0];
-        var right1 = right[1];
-        var right2 = right[2];
-        var right4 = right[3];
-        var right5 = right[4];
-        var right6 = right[5];
-        var right8 = right[6];
-        var right9 = right[7];
-        var right10 = right[8];
+        var right0 = rotation[0];
+        var right1 = rotation[1];
+        var right2 = rotation[2];
+        var right4 = rotation[3];
+        var right5 = rotation[4];
+        var right6 = rotation[5];
+        var right8 = rotation[6];
+        var right9 = rotation[7];
+        var right10 = rotation[8];
 
         var column0Row0 = left0 * right0 + left4 * right1 + left8 * right2;
         var column0Row1 = left1 * right0 + left5 * right1 + left9 * right2;
@@ -1592,10 +1603,10 @@ define([
         result[9] = column2Row1;
         result[10] = column2Row2;
         result[11] = 0.0;
-        result[12] = left[12];
-        result[13] = left[13];
-        result[14] = left[14];
-        result[15] = left[15];
+        result[12] = matrix[12];
+        result[13] = matrix[13];
+        result[14] = matrix[14];
+        result[15] = matrix[15];
         return result;
     };
 
@@ -1608,8 +1619,6 @@ define([
      * @param {Cartesian3} translation The translation on the right-hand side.
      * @param {Matrix4} result The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter.
-     *
-     * @see Matrix4.fromTranslation
      *
      * @example
      * // Instead of Cesium.Matrix4.multiply(m, Cesium.Matrix4.fromTranslation(position), m);

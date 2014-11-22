@@ -1542,13 +1542,13 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('multiplyByMatrix3 throws without right parameter', function() {
+    it('multiplyByMatrix3 throws without matrix parameter', function() {
         expect(function() {
             Matrix4.multiplyByMatrix3(new Matrix4());
         }).toThrowDeveloperError();
     });
 
-    it('multiplyByMatrix3 throws without result parameter', function() {
+    it('multiplyByMatrix3 throws without rotation parameter', function() {
         expect(function() {
             Matrix4.multiplyByMatrix3(new Matrix4(), new Matrix3());
         }).toThrowDeveloperError();
