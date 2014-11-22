@@ -42,6 +42,7 @@ define([
         './CompositeProperty',
         './ConstantPositionProperty',
         './ConstantProperty',
+        './DataSource',
         './DataSourceClock',
         './EllipseGraphics',
         './EllipsoidGraphics',
@@ -109,6 +110,7 @@ define([
         CompositeProperty,
         ConstantPositionProperty,
         ConstantProperty,
+        DataSource,
         DataSourceClock,
         EllipseGraphics,
         EllipsoidGraphics,
@@ -1411,8 +1413,8 @@ define([
     }
 
     function loadCzml(dataSource, czml, sourceUri, clear) {
+        DataSource.setLoading(dataSource, true);
         var entityCollection = dataSource._entityCollection;
-        entityCollection.suspendEvents();
 
         if (clear) {
             dataSource._version = undefined;
@@ -1433,16 +1435,9 @@ define([
             raiseChangedEvent = true;
         }
 
-        entityCollection.resumeEvents();
+        DataSource.setLoading(dataSource, false);
         if (raiseChangedEvent) {
             dataSource._changed.raiseEvent(dataSource);
-        }
-    }
-
-    function setLoading(dataSource, isLoading) {
-        if (dataSource._isLoading !== isLoading) {
-            dataSource._isLoading = isLoading;
-            dataSource._loading.raiseEvent(dataSource, isLoading);
         }
     }
 
@@ -1616,14 +1611,13 @@ define([
         }
         //>>includeEnd('debug');
 
-        setLoading(this, true);
+        DataSource.setLoading(this, true);
 
         var dataSource = this;
         return when(loadJson(url), function(czml) {
-            dataSource.process(czml, url);
-            setLoading(dataSource, false);
+            loadCzml(dataSource, czml, url, false);
         }).otherwise(function(error) {
-            setLoading(dataSource, false);
+            DataSource.setLoading(dataSource, false);
             dataSource._error.raiseEvent(dataSource, error);
             return when.reject(error);
         });
@@ -1642,14 +1636,13 @@ define([
         }
         //>>includeEnd('debug');
 
-        setLoading(this, true);
+        DataSource.setLoading(this, true);
 
         var dataSource = this;
         return when(loadJson(url), function(czml) {
-            dataSource.load(czml, url);
-            setLoading(dataSource, false);
+            loadCzml(dataSource, czml, url, true);
         }).otherwise(function(error) {
-            setLoading(dataSource, false);
+            DataSource.setLoading(dataSource, false);
             dataSource._error.raiseEvent(dataSource, error);
             return when.reject(error);
         });
