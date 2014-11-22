@@ -311,6 +311,29 @@ define([
     };
 
     /**
+     * Computes the squared distance between two points.  Comparing squared distances
+     * using this function is more efficient than comparing distances using {@link Cartesian2#distance}.
+     *
+     * @param {Cartesian2} left The first point to compute the distance from.
+     * @param {Cartesian2} right The second point to compute the distance to.
+     * @returns {Number} The distance between two points.
+     *
+     * @example
+     * // Returns 4.0, not 2.0
+     * var d = Cesium.Cartesian2.distance(new Cesium.Cartesian2(1.0, 0.0), new Cesium.Cartesian2(3.0, 0.0));
+     */
+    Cartesian2.distanceSquared = function(left, right) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(left) || !defined(right)) {
+            throw new DeveloperError('left and right are required.');
+        }
+        //>>includeEnd('debug');
+
+        Cartesian2.subtract(left, right, distanceScratch);
+        return Cartesian2.magnitudeSquared(distanceScratch);
+    };
+
+    /**
      * Computes the normalized form of the supplied Cartesian.
      *
      * @param {Cartesian2} cartesian The Cartesian to be normalized.
