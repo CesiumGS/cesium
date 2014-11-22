@@ -5,10 +5,12 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Quaternion',
         '../Core/Transforms',
+        '../Scene/DistanceDisplayCondition',
         '../Scene/Model',
         '../Scene/ModelAnimationLoop',
         './Property'
@@ -18,10 +20,12 @@ define([
         defined,
         destroyObject,
         DeveloperError,
+        CesiumMath,
         Matrix3,
         Matrix4,
         Quaternion,
         Transforms,
+        DistanceDisplayCondition,
         Model,
         ModelAnimationLoop,
         Property) {
@@ -114,7 +118,9 @@ define([
                     delete modelHash[entity.id];
                 }
                 model = Model.fromGltf({
-                    url : uri
+                    url : uri,
+                    displayCondition : new DistanceDisplayCondition(0, 1000.0),
+                    loadOnlyIfDisplayCondition : true
                 });
 
                 model.readyToRender.addEventListener(readyToRender, this);
@@ -138,9 +144,11 @@ define([
             orientation = Property.getValueOrUndefined(entity._orientation, time, orientation);
             if (!Cartesian3.equals(position, modelData.position) || !Quaternion.equals(orientation, modelData.orientation)) {
                 if (!defined(orientation)) {
-                    Transforms.eastNorthUpToFixedFrame(position, scene.globe.ellipsoid, model.modelMatrix);
+//                    Transforms.eastNorthUpToFixedFrame(position, scene.globe.ellipsoid, model.modelMatrix);
+                    Transforms.northEastDownToFixedFrame(position, scene.globe.ellipsoid, model.modelMatrix);
+                    Matrix4.multiplyByMatrix3(model.modelMatrix, Matrix3.fromRotationZ(CesiumMath.toRadians(90.0)), model.modelMatrix);
                 } else {
-                    Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, model.modelMatrix);
+//                    Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, model.modelMatrix);
                 }
                 modelData.position = Cartesian3.clone(position, modelData.position);
                 modelData.orientation = Quaternion.clone(orientation, modelData.orientation);
