@@ -289,7 +289,7 @@ define([
     var distanceScratch = new Cartesian2();
 
     /**
-     * Computes the distance between two points
+     * Computes the distance between two points.
      *
      * @param {Cartesian2} left The first point to compute the distance from.
      * @param {Cartesian2} right The second point to compute the distance to.

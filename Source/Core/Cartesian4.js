@@ -323,7 +323,7 @@ define([
     var distanceScratch = new Cartesian4();
 
     /**
-     * Computes the 4-space distance between two points
+     * Computes the 4-space distance between two points.
      *
      * @param {Cartesian4} left The first point to compute the distance from.
      * @param {Cartesian4} right The second point to compute the distance to.
@@ -331,7 +331,9 @@ define([
      *
      * @example
      * // Returns 1.0
-     * var d = Cesium.Cartesian4.distance(new Cesium.Cartesian4(1.0, 0.0, 0.0, 0.0), new Cesium.Cartesian4(2.0, 0.0, 0.0, 0.0));
+     * var d = Cesium.Cartesian4.distance(
+     *   new Cesium.Cartesian4(1.0, 0.0, 0.0, 0.0),
+     *   new Cesium.Cartesian4(2.0, 0.0, 0.0, 0.0));
      */
     Cartesian4.distance = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
