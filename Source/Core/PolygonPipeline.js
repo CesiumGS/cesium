@@ -731,20 +731,20 @@ define([
         }
 
         // Search for clean cut
-        var cutFound = false;
         var tries = 0;
-        while (!cutFound) {
-            // Make sure we don't go into an endless loop
-            var maxTries = nodeArray.length * 10;
-            if (tries > maxTries) {
-                // Hopefully that part of the polygon isn't important
-                return [];
-            }
-            tries++;
+        var maxTries = nodeArray.length * 10;
 
+        var cutFound = false;
+        var exceptionOccurred = false;
+        var exceptionVertexIndex;
+
+        var index1;
+        var index2;
+
+        while (!cutFound && tries++ < maxTries) {
             // Generate random indices
-            var index1 = getRandomIndex(nodeArray.length);
-            var index2 = index1 + 1;
+            index1 = getRandomIndex(nodeArray.length);
+            index2 = index1 + 1;
             while (Math.abs(index1 - index2) < 2 || Math.abs(index1 - index2) > nodeArray.length - 2) {
                 index2 = getRandomIndex(nodeArray.length);
             }
@@ -755,24 +755,34 @@ define([
                 index1 = index2;
                 index2 = index;
             }
+
             try {
                 // Check for a clean cut
-                if (cleanCut(index1, index2, nodeArray)) {
-                    // Divide polygon
-                    var nodeArray2 = nodeArray.splice(index1, (index2 - index1 + 1), nodeArray[index1], nodeArray[index2]);
-
-                    // Chop up resulting polygons
-                    return randomChop(nodeArray).concat(randomChop(nodeArray2));
-                }
+                cutFound = cleanCut(index1, index2, nodeArray);
             } catch (exception) {
-                // Eliminate superfluous vertex and start over
-                if (exception.hasOwnProperty("vertexIndex")) {
-                    nodeArray.splice(exception.vertexIndex, 1);
-                    return randomChop(nodeArray);
+                if (!defined(exception.vertexIndex)) {
+                    throw exception;
                 }
-                throw exception;
+
+                cutFound = true;
+                exceptionOccurred = true;
+                exceptionVertexIndex = exception.vertexIndex;
             }
         }
+
+        if (!cutFound) {
+            return [];
+        } else if (exceptionOccurred) {
+            // Eliminate superfluous vertex and start over
+            nodeArray.splice(exceptionVertexIndex, 1);
+            return randomChop(nodeArray);
+        }
+
+        // Divide polygon
+        var nodeArray2 = nodeArray.splice(index1, (index2 - index1 + 1), nodeArray[index1], nodeArray[index2]);
+
+        // Chop up resulting polygons
+        return randomChop(nodeArray).concat(randomChop(nodeArray2));
     }
 
     var scaleToGeodeticHeightN = new Cartesian3();
