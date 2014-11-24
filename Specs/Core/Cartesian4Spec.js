@@ -402,6 +402,23 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('distanceSquared', function() {
+        var distanceSquared = Cartesian4.distanceSquared(new Cartesian4(1.0, 0.0, 0.0, 0.0), new Cartesian4(3.0, 0.0, 0.0, 0.0));
+        expect(distanceSquared).toEqual(4.0);
+    });
+
+    it('distanceSquared throws without left', function() {
+        expect(function() {
+            Cartesian4.distanceSquared();
+        }).toThrowDeveloperError();
+    });
+
+    it('distanceSquared throws without right', function() {
+        expect(function() {
+            Cartesian4.distanceSquared(Cartesian4.UNIT_X);
+        }).toThrowDeveloperError();
+    });
+
     it('normalize works with a result parameter', function() {
         var cartesian = new Cartesian4(2.0, 0.0, 0.0, 0.0);
         var expectedResult = new Cartesian4(1.0, 0.0, 0.0, 0.0);
