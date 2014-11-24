@@ -186,6 +186,12 @@ define([
                 that._credit = new Credit(data.attribution);
             }
 
+            // The vertex normals defined in the 'octvertexnormals' extension is identical to the original
+            // contents of the original 'vertexnormals' extension.  'vertexnormals' extension is now
+            // deprecated, as the extensionLength for this extension was incorrectly using big endian.
+            // We maintain backwards compatibility with the legacy 'vertexnormal' implementation
+            // by setting the _littleEndianExtensionSize to false. Always prefer 'octvertexnormals'
+            // over 'vertexnormals' if both extensions are supported by the server.
             if (defined(data.extensions) && data.extensions.indexOf('octvertexnormals') !== -1) {
                 that._hasVertexNormals = true;
             } else if (defined(data.extensions) && data.extensions.indexOf('vertexnormals') !== -1) {
