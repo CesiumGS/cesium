@@ -49,7 +49,7 @@ defineSuite([
         var m = CircleOutlineGeometry.createGeometry(new CircleOutlineGeometry({
             ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
-            granularity : 0.05,
+            granularity : 0.1,
             radius : 1.0
         }));
 
@@ -62,7 +62,7 @@ defineSuite([
         var m = CircleOutlineGeometry.createGeometry(new CircleOutlineGeometry({
             ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
-            granularity : 0.05,
+            granularity : 0.1,
             radius : 1.0,
             extrudedHeight : 10000
         }));
@@ -75,7 +75,7 @@ defineSuite([
         var m = CircleOutlineGeometry.createGeometry(new CircleOutlineGeometry({
             ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
-            granularity : 0.05,
+            granularity : 0.1,
             radius : 1.0,
             extrudedHeight : 10000,
             numberOfVerticalLines : 0

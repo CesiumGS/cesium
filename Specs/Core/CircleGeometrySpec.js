@@ -54,7 +54,7 @@ defineSuite([
             vertexFormat : VertexFormat.POSITION_ONLY,
             ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
-            granularity : 0.05,
+            granularity : 0.1,
             radius : 1.0
         }));
 
@@ -68,7 +68,7 @@ defineSuite([
             vertexFormat : VertexFormat.ALL,
             ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
-            granularity : 0.05,
+            granularity : 0.1,
             radius : 1.0
         }));
 
@@ -85,7 +85,7 @@ defineSuite([
             vertexFormat : VertexFormat.POSITION_ONLY,
             ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
-            granularity : 0.05,
+            granularity : 0.1,
             radius : 1.0,
             extrudedHeight: 10000
         }));
@@ -99,7 +99,7 @@ defineSuite([
             vertexFormat : VertexFormat.ALL,
             ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
-            granularity : 0.05,
+            granularity : 0.1,
             radius : 1.0,
             extrudedHeight: 10000
         }));
@@ -117,7 +117,7 @@ defineSuite([
             vertexFormat : VertexFormat.POSITION_AND_ST,
             ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
-            granularity : 0.05,
+            granularity : 0.1,
             radius : 1.0,
             stRotation : CesiumMath.PI_OVER_TWO
         }));

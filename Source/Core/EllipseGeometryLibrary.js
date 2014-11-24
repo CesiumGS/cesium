@@ -104,7 +104,12 @@ define([
         var semiMajorAxis = options.semiMajorAxis;
         var rotation = options.rotation;
         var center = options.center;
-        var granularity = options.granularity * 16.0;
+
+        // Computing the arc-length of the ellipse is too expensive to be practical. Estimating it using the
+        // arc length of the sphere is too inaccurate and creates sharp edges when either the semi-major or
+        // semi-minor axis is much bigger than the other. Instead, scale the angle delta to make
+        // the distance along the ellipse boundary more closely match the granularity.
+        var granularity = options.granularity * 8.0;
 
         var aSqr = semiMinorAxis * semiMinorAxis;
         var bSqr = semiMajorAxis * semiMajorAxis;

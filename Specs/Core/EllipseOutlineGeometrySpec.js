@@ -72,7 +72,7 @@ defineSuite([
         var m = EllipseOutlineGeometry.createGeometry(new EllipseOutlineGeometry({
             ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
-            granularity : 0.05,
+            granularity : 0.1,
             semiMajorAxis : 1.0,
             semiMinorAxis : 1.0
         }));
@@ -86,7 +86,7 @@ defineSuite([
         var m = EllipseOutlineGeometry.createGeometry(new EllipseOutlineGeometry({
             ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
-            granularity : 0.05,
+            granularity : 0.1,
             semiMajorAxis : 1.0,
             semiMinorAxis : 1.0,
             extrudedHeight : 50000
@@ -100,7 +100,7 @@ defineSuite([
         var m = EllipseOutlineGeometry.createGeometry(new EllipseOutlineGeometry({
             ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
-            granularity : 0.05,
+            granularity : 0.1,
             semiMajorAxis : 1.0,
             semiMinorAxis : 1.0,
             extrudedHeight : 50000,
