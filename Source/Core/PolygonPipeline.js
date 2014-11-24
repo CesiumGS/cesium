@@ -348,20 +348,42 @@ define([
     }
     var rseed = 0;
 
+    var INTERNAL = -1;
+    var EXTERNAL = -2;
+
+    var CLEAN_CUT = -1;
+    var INVALID_CUT = -2;
+
     /**
      * Determine whether a cut between two polygon vertices is clean.
      *
      * @param {Number} a1i Index of first vertex.
      * @param {Number} a2i Index of second vertex.
      * @param {Array} pArray Array of <code>{ position, index }</code> objects representing the polygon.
-     * @returns {Boolean} If true, a cut from the first vertex to the second is internal and does not cross any other sides.
+     * @returns {Number} If CLEAN_CUT, a cut from the first vertex to the second is internal and does not cross any other sides.
+     * If INVALID_CUT, then the vertices were valid but a cut could not be made. If the value is greater than or equal to zero,
+     * then the value is the index of an invalid vertex.
      *
      * @private
      */
     function cleanCut(a1i, a2i, pArray) {
-        return (internalCut(a1i, a2i, pArray) && internalCut(a2i, a1i, pArray)) &&
+        var internalCut12 = internalCut(a1i, a2i, pArray);
+        if (internalCut12 >= 0) {
+            return internalCut12;
+        }
+
+        var internalCut21 = internalCut(a2i, a1i, pArray);
+        if (internalCut21 >= 0) {
+            return internalCut21;
+        }
+
+        if (internalCut12 === INTERNAL && internalCut21 === INTERNAL &&
                 !intersectsSide(pArray[a1i].position, pArray[a2i].position, pArray) &&
-                !Cartesian2.equals(pArray[a1i].position, pArray[a2i].position);
+                !Cartesian2.equals(pArray[a1i].position, pArray[a2i].position)) {
+            return CLEAN_CUT;
+        }
+
+        return INVALID_CUT;
     }
 
     /**
@@ -371,47 +393,56 @@ define([
      * @param {Number} a1i Index of first vertex.
      * @param {Number} a2i Index of second vertex.
      * @param {Array} pArray Array of <code>{ position, index }</code> objects representing the polygon.
-     * @returns {Boolean} If true, the cut formed between the two vertices is internal to the angle at vertex 1
+     * @returns {Number} If INTERNAL, the cut formed between the two vertices is internal to the angle at vertex 1.
+     * If EXTERNAL, then the cut formed between the two vertices is external to the angle at vertex 1. If the value
+     * is greater than or equal to zero, then the value is the index of an invalid vertex.
      *
      * @private
      */
-    var BEFORE = -1;
-    var AFTER = 1;
     var s1Scratch = new Cartesian3();
     var s2Scratch = new Cartesian3();
     var cutScratch = new Cartesian3();
     function internalCut(a1i, a2i, pArray) {
         // Make sure vertex is valid
-        validateVertex(a1i, pArray);
+        if (!validateVertex(a1i, pArray)) {
+            return a1i;
+        }
 
         // Get the nodes from the array
         var a1 = pArray[a1i];
         var a2 = pArray[a2i];
 
         // Define side and cut vectors
-        var before = getNextVertex(a1i, pArray, BEFORE);
-        var after = getNextVertex(a1i, pArray, AFTER);
+        var before = CesiumMath.mod(a1i - 1, pArray.length);
+        if (!validateVertex(before, pArray)) {
+            return before;
+        }
+
+        var after = CesiumMath.mod(a1i + 1, pArray.length);
+        if (!validateVertex(after, pArray)) {
+            return after;
+        }
 
         var s1 = Cartesian2.subtract(pArray[before].position, a1.position, s1Scratch);
         var s2 = Cartesian2.subtract(pArray[after].position, a1.position, s2Scratch);
         var cut = Cartesian2.subtract(a2.position, a1.position, cutScratch);
 
         if (isParallel(s1, cut)) { // Cut is parallel to s1
-            return isInternalToParallelSide(s1, cut);
+            return isInternalToParallelSide(s1, cut) ? INTERNAL : EXTERNAL;
         } else if (isParallel(s2, cut)) { // Cut is parallel to s2
-            return isInternalToParallelSide(s2, cut);
+            return isInternalToParallelSide(s2, cut) ? INTERNAL : EXTERNAL;
         } else if (angleLessThan180(s1, s2)) { // Angle at point is less than 180
             if (isInsideSmallAngle(s1, s2, cut)) { // Cut is in-between sides
-                return true;
+                return INTERNAL;
             }
 
-            return false;
+            return EXTERNAL;
         } else if (angleGreaterThan180(s1, s2)) { // Angle at point is greater than 180
             if (isInsideBigAngle(s1, s2, cut)) { // Cut is in-between sides
-                return false;
+                return EXTERNAL;
             }
 
-            return true;
+            return INTERNAL;
         }
     }
 
@@ -471,30 +502,6 @@ define([
     }
 
     /**
-     * Provides next vertex in some direction and also validates that vertex.
-     *
-     * @param {Number} index Index of original vertex.
-     * @param {Number} pArray Array of vertices.
-     * @param {Number} direction Direction of traversal.
-     * @returns {Number} Index of vertex.
-     *
-     * @private
-     */
-    function getNextVertex(index, pArray, direction) {
-        var next = index + direction;
-        if (next < 0) {
-            next = pArray.length - 1;
-        }
-        if (next === pArray.length) {
-            next = 0;
-        }
-
-        validateVertex(next, pArray);
-
-        return next;
-    }
-
-    /**
      * Checks to make sure vertex is not superfluous.
      *
      * @param {Number} index Index of vertex.
@@ -520,10 +527,10 @@ define([
         var s2 = Cartesian2.subtract(pArray[after].position, pArray[index].position, vvScratch2);
 
         if (isParallel(s1, s2)) {
-            var e = new DeveloperError("Superfluous vertex found.");
-            e.vertexIndex = index;
-            throw e;
+            return false;
         }
+
+        return true;
     }
 
     /**
@@ -734,14 +741,11 @@ define([
         var tries = 0;
         var maxTries = nodeArray.length * 10;
 
-        var cutFound = false;
-        var exceptionOccurred = false;
-        var exceptionVertexIndex;
-
+        var cutResult = INVALID_CUT;
         var index1;
         var index2;
 
-        while (!cutFound && tries++ < maxTries) {
+        while (cutResult < CLEAN_CUT && tries++ < maxTries) {
             // Generate random indices
             index1 = getRandomIndex(nodeArray.length);
             index2 = index1 + 1;
@@ -756,33 +760,23 @@ define([
                 index2 = index;
             }
 
-            try {
-                // Check for a clean cut
-                cutFound = cleanCut(index1, index2, nodeArray);
-            } catch (exception) {
-                if (!defined(exception.vertexIndex)) {
-                    throw exception;
-                }
-
-                cutFound = true;
-                exceptionOccurred = true;
-                exceptionVertexIndex = exception.vertexIndex;
-            }
+            cutResult = cleanCut(index1, index2, nodeArray);
         }
 
-        if (!cutFound) {
-            return [];
-        } else if (exceptionOccurred) {
+        if (cutResult === CLEAN_CUT) {
+            // Divide polygon
+            var nodeArray2 = nodeArray.splice(index1, (index2 - index1 + 1), nodeArray[index1], nodeArray[index2]);
+
+            // Chop up resulting polygons
+            return randomChop(nodeArray).concat(randomChop(nodeArray2));
+        } else if (cutResult >= 0) {
             // Eliminate superfluous vertex and start over
-            nodeArray.splice(exceptionVertexIndex, 1);
+            nodeArray.splice(cutResult, 1);
             return randomChop(nodeArray);
         }
 
-        // Divide polygon
-        var nodeArray2 = nodeArray.splice(index1, (index2 - index1 + 1), nodeArray[index1], nodeArray[index2]);
-
-        // Chop up resulting polygons
-        return randomChop(nodeArray).concat(randomChop(nodeArray2));
+        // No clean cut could be found
+        return [];
     }
 
     var scaleToGeodeticHeightN = new Cartesian3();
