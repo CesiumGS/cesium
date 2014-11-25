@@ -348,102 +348,49 @@ define([
     }
     var rseed = 0;
 
-    var INTERNAL = -1;
-    var EXTERNAL = -2;
+    function indexedEdgeCrossZ(p0Index, p1Index, vertexIndex, array) {
+        var p0 = array[p0Index].position;
+        var p1 = array[p1Index].position;
+        var v = array[vertexIndex].position;
 
-    var CLEAN_CUT = -1;
-    var INVALID_CUT = -2;
+        var vx = v.x;
+        var vy = v.y;
 
-    /**
-     * Determine whether a cut between two polygon vertices is clean.
-     *
-     * @param {Number} a1i Index of first vertex.
-     * @param {Number} a2i Index of second vertex.
-     * @param {Array} pArray Array of <code>{ position, index }</code> objects representing the polygon.
-     * @returns {Number} If CLEAN_CUT, a cut from the first vertex to the second is internal and does not cross any other sides.
-     * If INVALID_CUT, then the vertices were valid but a cut could not be made. If the value is greater than or equal to zero,
-     * then the value is the index of an invalid vertex.
-     *
-     * @private
-     */
-    function cleanCut(a1i, a2i, pArray) {
-        var internalCut12 = internalCut(a1i, a2i, pArray);
-        if (internalCut12 >= 0) {
-            return internalCut12;
-        }
+        // (p0 - v).cross(p1 - v).z
+        var leftX = p0.x - vx;
+        var leftY = p0.y - vy;
+        var rightX = p1.x - vx;
+        var rightY = p1.y - vy;
 
-        var internalCut21 = internalCut(a2i, a1i, pArray);
-        if (internalCut21 >= 0) {
-            return internalCut21;
-        }
+        return leftX * rightY - leftY * rightX;
+    }
 
-        if (internalCut12 === INTERNAL && internalCut21 === INTERNAL &&
-                !intersectsSide(pArray[a1i].position, pArray[a2i].position, pArray) &&
-                !Cartesian2.equals(pArray[a1i].position, pArray[a2i].position)) {
-            return CLEAN_CUT;
-        }
-
-        return INVALID_CUT;
+    function crossZ(p0, p1) {
+        // p0.cross(p1).z
+        return p0.x * p1.y - p0.y * p1.x;
     }
 
     /**
-     * Determine whether the cut formed between the two vertices is internal
-     * to the angle formed by the sides connecting at the first vertex.
+     * Checks to make sure vertex is not superfluous.
      *
-     * @param {Number} a1i Index of first vertex.
-     * @param {Number} a2i Index of second vertex.
-     * @param {Array} pArray Array of <code>{ position, index }</code> objects representing the polygon.
-     * @returns {Number} If INTERNAL, the cut formed between the two vertices is internal to the angle at vertex 1.
-     * If EXTERNAL, then the cut formed between the two vertices is external to the angle at vertex 1. If the value
-     * is greater than or equal to zero, then the value is the index of an invalid vertex.
+     * @param {Number} index Index of vertex.
+     * @param {Number} pArray Array of vertices.
+     *
+     * @exception {DeveloperError} Superfluous vertex found.
      *
      * @private
      */
-    var s1Scratch = new Cartesian3();
-    var s2Scratch = new Cartesian3();
-    var cutScratch = new Cartesian3();
-    function internalCut(a1i, a2i, pArray) {
-        // Make sure vertex is valid
-        if (!validateVertex(a1i, pArray)) {
-            return a1i;
-        }
-
-        // Get the nodes from the array
-        var a1Position = pArray[a1i].position;
-        var a2Position = pArray[a2i].position;
+    function validateVertex(index, pArray) {
         var length = pArray.length;
+        var before = CesiumMath.mod(index - 1, length);
+        var after = CesiumMath.mod(index + 1, length);
 
-        // Define side and cut vectors
-        var before = CesiumMath.mod(a1i - 1, length);
-        if (!validateVertex(before, pArray)) {
-            return before;
+        // check if adjacent edges are parallel
+        if (indexedEdgeCrossZ(before, after, index, pArray) === 0.0) {
+            return false;
         }
 
-        var after = CesiumMath.mod(a1i + 1, length);
-        if (!validateVertex(after, pArray)) {
-            return after;
-        }
-
-
-        var s1 = Cartesian2.subtract(pArray[before].position, a1Position, s1Scratch);
-        var s2 = Cartesian2.subtract(pArray[after].position, a1Position, s2Scratch);
-        var cut = Cartesian2.subtract(a2Position, a1Position, cutScratch);
-
-        var leftEdgeCutZ = crossZ(s1, cut);
-        var rightEdgeCutZ = crossZ(s2, cut);
-
-        if (leftEdgeCutZ === 0.0) { // cut is parallel to (a1i - 1, a1i) edge
-            return isInternalToParallelSide(s1, cut) ? INTERNAL : EXTERNAL;
-        } else if (rightEdgeCutZ === 0.0) { // cut is parallel to (a1i + 1, a1i) edge
-            return isInternalToParallelSide(s2, cut) ? INTERNAL : EXTERNAL;
-        } else {
-            var z = crossZ(s1, s2);
-            if (z < 0.0) { // angle at a1i is less than 180 degrees
-                return leftEdgeCutZ < 0.0 && rightEdgeCutZ > 0.0 ? INTERNAL : EXTERNAL; // Cut is in-between sides
-            } else if (z > 0.0) { // angle at a1i is greater than 180 degrees
-                return leftEdgeCutZ > 0.0 && rightEdgeCutZ < 0.0 ? EXTERNAL : INTERNAL; // Cut is in-between sides
-            }
-        }
+        return true;
     }
 
     /**
@@ -501,49 +448,82 @@ define([
         return Cartesian2.magnitude(cut) < Cartesian2.magnitude(side);
     }
 
+    var INTERNAL = -1;
+    var EXTERNAL = -2;
+
     /**
-     * Checks to make sure vertex is not superfluous.
+     * Determine whether the cut formed between the two vertices is internal
+     * to the angle formed by the sides connecting at the first vertex.
      *
-     * @param {Number} index Index of vertex.
-     * @param {Number} pArray Array of vertices.
-     *
-     * @exception {DeveloperError} Superfluous vertex found.
+     * @param {Number} a1i Index of first vertex.
+     * @param {Number} a2i Index of second vertex.
+     * @param {Array} pArray Array of <code>{ position, index }</code> objects representing the polygon.
+     * @returns {Number} If INTERNAL, the cut formed between the two vertices is internal to the angle at vertex 1.
+     * If EXTERNAL, then the cut formed between the two vertices is external to the angle at vertex 1. If the value
+     * is greater than or equal to zero, then the value is the index of an invalid vertex.
      *
      * @private
      */
-    function validateVertex(index, pArray) {
-        var length = pArray.length;
-        var before = CesiumMath.mod(index - 1, length);
-        var after = CesiumMath.mod(index + 1, length);
-
-        // check if adjacent edges are parallel
-        if (indexedEdgeCrossZ(before, after, index, pArray) === 0.0) {
-            return false;
+    var s1Scratch = new Cartesian3();
+    var s2Scratch = new Cartesian3();
+    var cutScratch = new Cartesian3();
+    function internalCut(a1i, a2i, pArray) {
+        // Make sure vertex is valid
+        if (!validateVertex(a1i, pArray)) {
+            return a1i;
         }
 
-        return true;
+        // Get the nodes from the array
+        var a1Position = pArray[a1i].position;
+        var a2Position = pArray[a2i].position;
+        var length = pArray.length;
+
+        // Define side and cut vectors
+        var before = CesiumMath.mod(a1i - 1, length);
+        if (!validateVertex(before, pArray)) {
+            return before;
+        }
+
+        var after = CesiumMath.mod(a1i + 1, length);
+        if (!validateVertex(after, pArray)) {
+            return after;
+        }
+
+        var s1 = Cartesian2.subtract(pArray[before].position, a1Position, s1Scratch);
+        var s2 = Cartesian2.subtract(pArray[after].position, a1Position, s2Scratch);
+        var cut = Cartesian2.subtract(a2Position, a1Position, cutScratch);
+
+        var leftEdgeCutZ = crossZ(s1, cut);
+        var rightEdgeCutZ = crossZ(s2, cut);
+
+        if (leftEdgeCutZ === 0.0) { // cut is parallel to (a1i - 1, a1i) edge
+            return isInternalToParallelSide(s1, cut) ? INTERNAL : EXTERNAL;
+        } else if (rightEdgeCutZ === 0.0) { // cut is parallel to (a1i + 1, a1i) edge
+            return isInternalToParallelSide(s2, cut) ? INTERNAL : EXTERNAL;
+        } else {
+            var z = crossZ(s1, s2);
+            if (z < 0.0) { // angle at a1i is less than 180 degrees
+                return leftEdgeCutZ < 0.0 && rightEdgeCutZ > 0.0 ? INTERNAL : EXTERNAL; // Cut is in-between sides
+            } else if (z > 0.0) { // angle at a1i is greater than 180 degrees
+                return leftEdgeCutZ > 0.0 && rightEdgeCutZ < 0.0 ? EXTERNAL : INTERNAL; // Cut is in-between sides
+            }
+        }
     }
 
-    function indexedEdgeCrossZ(p0Index, p1Index, vertexIndex, array) {
-        var p0 = array[p0Index].position;
-        var p1 = array[p1Index].position;
-        var v = array[vertexIndex].position;
-
-        var vx = v.x;
-        var vy = v.y;
-
-        // (p0 - v).cross(p1 - v).z
-        var leftX = p0.x - vx;
-        var leftY = p0.y - vy;
-        var rightX = p1.x - vx;
-        var rightY = p1.y - vy;
-
-        return leftX * rightY - leftY * rightX;
-    }
-
-    function crossZ(p0, p1) {
-        // p0.cross(p1).z
-        return p0.x * p1.y - p0.y * p1.x;
+    /**
+     * Determine whether number is between n1 and n2.
+     * Do not include number === n1 or number === n2.
+     * Do include n1 === n2 === number.
+     *
+     * @param {Number} number The number tested.
+     * @param {Number} n1 First bound.
+     * @param {Number} n2 Secound bound.
+     * @returns {Boolean} number is between n1 and n2.
+     *
+     * @private
+     */
+    function isBetween(number, n1, n2) {
+        return ((number > n1 || number > n2) && (number < n1 || number < n2)) || (n1 === n2 && n1 === number);
     }
 
     /**
@@ -610,25 +590,44 @@ define([
         return false;
     }
 
-    function triangleInLine(pArray) {
-        // Get two sides. If they're parallel, so is the last.
-        return indexedEdgeCrossZ(1, 2, 0, pArray) === 0.0;
-    }
+    var CLEAN_CUT = -1;
+    var INVALID_CUT = -2;
 
     /**
-     * Determine whether number is between n1 and n2.
-     * Do not include number === n1 or number === n2.
-     * Do include n1 === n2 === number.
+     * Determine whether a cut between two polygon vertices is clean.
      *
-     * @param {Number} number The number tested.
-     * @param {Number} n1 First bound.
-     * @param {Number} n2 Secound bound.
-     * @returns {Boolean} number is between n1 and n2.
+     * @param {Number} a1i Index of first vertex.
+     * @param {Number} a2i Index of second vertex.
+     * @param {Array} pArray Array of <code>{ position, index }</code> objects representing the polygon.
+     * @returns {Number} If CLEAN_CUT, a cut from the first vertex to the second is internal and does not cross any other sides.
+     * If INVALID_CUT, then the vertices were valid but a cut could not be made. If the value is greater than or equal to zero,
+     * then the value is the index of an invalid vertex.
      *
      * @private
      */
-    function isBetween(number, n1, n2) {
-        return ((number > n1 || number > n2) && (number < n1 || number < n2)) || (n1 === n2 && n1 === number);
+    function cleanCut(a1i, a2i, pArray) {
+        var internalCut12 = internalCut(a1i, a2i, pArray);
+        if (internalCut12 >= 0) {
+            return internalCut12;
+        }
+
+        var internalCut21 = internalCut(a2i, a1i, pArray);
+        if (internalCut21 >= 0) {
+            return internalCut21;
+        }
+
+        if (internalCut12 === INTERNAL && internalCut21 === INTERNAL &&
+                !intersectsSide(pArray[a1i].position, pArray[a2i].position, pArray) &&
+                !Cartesian2.equals(pArray[a1i].position, pArray[a2i].position)) {
+            return CLEAN_CUT;
+        }
+
+        return INVALID_CUT;
+    }
+
+    function triangleInLine(pArray) {
+        // Get two sides. If they're parallel, so is the last.
+        return indexedEdgeCrossZ(1, 2, 0, pArray) === 0.0;
     }
 
     /**
