@@ -409,40 +409,40 @@ define([
         }
 
         // Get the nodes from the array
-        var a1 = pArray[a1i];
-        var a2 = pArray[a2i];
+        var a1Position = pArray[a1i].position;
+        var a2Position = pArray[a2i].position;
+        var length = pArray.length;
 
         // Define side and cut vectors
-        var before = CesiumMath.mod(a1i - 1, pArray.length);
+        var before = CesiumMath.mod(a1i - 1, length);
         if (!validateVertex(before, pArray)) {
             return before;
         }
 
-        var after = CesiumMath.mod(a1i + 1, pArray.length);
+        var after = CesiumMath.mod(a1i + 1, length);
         if (!validateVertex(after, pArray)) {
             return after;
         }
 
-        var s1 = Cartesian2.subtract(pArray[before].position, a1.position, s1Scratch);
-        var s2 = Cartesian2.subtract(pArray[after].position, a1.position, s2Scratch);
-        var cut = Cartesian2.subtract(a2.position, a1.position, cutScratch);
 
-        if (isParallel(s1, cut)) { // Cut is parallel to s1
+        var s1 = Cartesian2.subtract(pArray[before].position, a1Position, s1Scratch);
+        var s2 = Cartesian2.subtract(pArray[after].position, a1Position, s2Scratch);
+        var cut = Cartesian2.subtract(a2Position, a1Position, cutScratch);
+
+        var leftEdgeCutZ = crossZ(s1, cut);
+        var rightEdgeCutZ = crossZ(s2, cut);
+
+        if (leftEdgeCutZ === 0.0) { // cut is parallel to (a1i - 1, a1i) edge
             return isInternalToParallelSide(s1, cut) ? INTERNAL : EXTERNAL;
-        } else if (isParallel(s2, cut)) { // Cut is parallel to s2
+        } else if (rightEdgeCutZ === 0.0) { // cut is parallel to (a1i + 1, a1i) edge
             return isInternalToParallelSide(s2, cut) ? INTERNAL : EXTERNAL;
-        } else if (angleLessThan180(s1, s2)) { // Angle at point is less than 180
-            if (isInsideSmallAngle(s1, s2, cut)) { // Cut is in-between sides
-                return INTERNAL;
+        } else {
+            var z = crossZ(s1, s2);
+            if (z < 0.0) { // angle at a1i is less than 180 degrees
+                return leftEdgeCutZ < 0.0 && rightEdgeCutZ > 0.0 ? INTERNAL : EXTERNAL; // Cut is in-between sides
+            } else if (z > 0.0) { // angle at a1i is greater than 180 degrees
+                return leftEdgeCutZ > 0.0 && rightEdgeCutZ < 0.0 ? EXTERNAL : INTERNAL; // Cut is in-between sides
             }
-
-            return EXTERNAL;
-        } else if (angleGreaterThan180(s1, s2)) { // Angle at point is greater than 180
-            if (isInsideBigAngle(s1, s2, cut)) { // Cut is in-between sides
-                return EXTERNAL;
-            }
-
-            return INTERNAL;
         }
     }
 
@@ -511,106 +511,39 @@ define([
      *
      * @private
      */
-    var vvScratch1 = new Cartesian3();
-    var vvScratch2 = new Cartesian3();
     function validateVertex(index, pArray) {
-        var before = index - 1;
-        var after = index + 1;
-        if (before < 0) {
-            before = pArray.length - 1;
-        }
-        if (after === pArray.length) {
-            after = 0;
-        }
+        var length = pArray.length;
+        var before = CesiumMath.mod(index - 1, length);
+        var after = CesiumMath.mod(index + 1, length);
 
-        var s1 = Cartesian2.subtract(pArray[before].position, pArray[index].position, vvScratch1);
-        var s2 = Cartesian2.subtract(pArray[after].position, pArray[index].position, vvScratch2);
-
-        if (isParallel(s1, s2)) {
+        // check if adjacent edges are parallel
+        if (indexedEdgeCrossZ(before, after, index, pArray) === 0.0) {
             return false;
         }
 
         return true;
     }
 
-    /**
-     * Determine whether s1 and s2 are parallel.
-     *
-     * @param {Cartesian3} s1
-     * @param {Cartesian3} s2
-     * @returns {Boolean}
-     *
-     * @private
-     */
-    var parallelScratch = new Cartesian3();
-    function isParallel(s1, s2) {
-        return Cartesian3.cross(s1, s2, parallelScratch).z === 0.0;
+    function indexedEdgeCrossZ(p0Index, p1Index, vertexIndex, array) {
+        var p0 = array[p0Index].position;
+        var p1 = array[p1Index].position;
+        var v = array[vertexIndex].position;
+
+        var vx = v.x;
+        var vy = v.y;
+
+        // (p0 - v).cross(p1 - v).z
+        var leftX = p0.x - vx;
+        var leftY = p0.y - vy;
+        var rightX = p1.x - vx;
+        var rightY = p1.y - vy;
+
+        return leftX * rightY - leftY * rightX;
     }
 
-    /**
-     * Assuming s1 is to the left of s2, determine whether
-     * the angle between them is less than 180 degrees.
-     *
-     * @param {Cartesian3} s1
-     * @param {Cartesian3} s2
-     * @returns {Boolean}
-     *
-     * @private
-     */
-    var lessThanScratch = new Cartesian3();
-    function angleLessThan180(s1, s2) {
-        return Cartesian3.cross(s1, s2, lessThanScratch).z < 0.0;
-    }
-
-    /**
-     * Assuming s1 is to the left of s2, determine whether
-     * the angle between them is greater than 180 degrees.
-     *
-     * @param {Cartesian3} s1
-     * @param {Cartesian3} s2
-     * @returns {Boolean}
-     *
-     * @private
-     */
-    var greaterThanScratch = new Cartesian3();
-    function angleGreaterThan180(s1, s2) {
-        return Cartesian3.cross(s1, s2, greaterThanScratch).z > 0.0;
-    }
-
-    /**
-     * Determines whether s3 is inside the greater-than-180-degree angle
-     * between s1 and s2.
-     *
-     * Important: s1 must be to the left of s2.
-     *
-     * @param {Cartesian3} s1
-     * @param {Cartesian3} s2
-     * @param {Cartesian3} s3
-     * @returns {Boolean}
-     *
-     * @private
-     */
-    var insideBigAngleScratch = new Cartesian3();
-    function isInsideBigAngle(s1, s2, s3) {
-        return (Cartesian3.cross(s1, s3, insideBigAngleScratch).z > 0.0) && (Cartesian3.cross(s3, s2, insideBigAngleScratch).z > 0.0);
-    }
-
-    /**
-     * Determines whether s3 is inside the less-than-180-degree angle
-     * between s1 and s2.
-     *
-     * Important: s1 must be to the left of s2.
-     *
-     * @param {Cartesian3} s1
-     * @param {Cartesian3} s2
-     * @param {Cartesian3} s3
-     * @returns {Boolean}
-     *
-     * @private
-     */
-    var insideSmallAngleScratch = new Cartesian3();
-    function isInsideSmallAngle(s1, s2, s3) {
-        return (Cartesian3.cross(s1, s3, insideSmallAngleScratch).z < 0.0) && (Cartesian3.cross(s3, s2, insideSmallAngleScratch).z < 0.0);
+    function crossZ(p0, p1) {
+        // p0.cross(p1).z
+        return p0.x * p1.y - p0.y * p1.x;
     }
 
     /**
@@ -677,19 +610,9 @@ define([
         return false;
     }
 
-    var side1Scratch = new Cartesian3();
-    var side2Scratch = new Cartesian3();
     function triangleInLine(pArray) {
-        // Get two sides
-        var v1 = pArray[0].position;
-        var v2 = pArray[1].position;
-        var v3 = pArray[2].position;
-
-        var side1 = Cartesian2.subtract(v2, v1, side1Scratch);
-        var side2 = Cartesian2.subtract(v3, v1, side2Scratch);
-
-        // If they're parallel, so is the last
-        return isParallel(side1, side2);
+        // Get two sides. If they're parallel, so is the last.
+        return indexedEdgeCrossZ(1, 2, 0, pArray) === 0.0;
     }
 
     /**
