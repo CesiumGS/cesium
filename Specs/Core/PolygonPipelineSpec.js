@@ -219,6 +219,7 @@ defineSuite([
 
         expect(indices).toEqual([ 0, 1, 7, 1, 2, 7, 2, 3, 7, 3, 6, 7, 3, 5, 6, 3, 4, 5 ]);
     });
+
     it('triangulates an even more complicated concave', function() {
         var positions = [new Cartesian2(0,0), new Cartesian2(1,0), new Cartesian2(1, -1), new Cartesian2(2, -1.4),
                     new Cartesian2(40, 2), new Cartesian2(10, 5), new Cartesian2(30, 10), new Cartesian2(25, 20),

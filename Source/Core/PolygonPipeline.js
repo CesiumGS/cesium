@@ -445,7 +445,7 @@ define([
      * @private
      */
     function isInternalToParallelSide(side, cut) {
-        return Cartesian2.magnitude(cut) < Cartesian2.magnitude(side);
+        return Cartesian2.magnitudeSquared(cut) < Cartesian2.magnitudeSquared(side);
     }
 
     var INTERNAL = -1;
@@ -537,35 +537,45 @@ define([
      * @private
      */
     var intersectionScratch = new Cartesian2();
+
     function intersectsSide(a1, a2, pArray) {
-        for ( var i = 0; i < pArray.length; i++) {
+        var axDiff = a2.x - a1.x;
+        var aVertical = Math.abs(axDiff) < CesiumMath.EPSILON15;
+
+        var slopeA;
+        if (!aVertical){
+            slopeA = (a2.y - a1.y) / axDiff;
+        }
+
+        var length = pArray.length;
+        for (var i = 0; i < length; i++) {
             var b1 = pArray[i].position;
-            var b2;
-            if (i < pArray.length - 1) {
-                b2 = pArray[i + 1].position;
-            } else {
-                b2 = pArray[0].position;
-            }
+            var b2 = pArray[CesiumMath.mod(i + 1, length)].position;
 
             // If there's a duplicate point, there's no intersection here.
             if (Cartesian2.equals(a1, b1) || Cartesian2.equals(a2, b2) || Cartesian2.equals(a1, b2) || Cartesian2.equals(a2, b1)) {
                 continue;
             }
 
-            // Slopes (NaN means vertical)
-            var slopeA = (a2.y - a1.y) / (a2.x - a1.x);
-            var slopeB = (b2.y - b1.y) / (b2.x - b1.x);
+            // Slopes
+            var bxDiff = b2.x - b1.x;
+            var bVertical = Math.abs(bxDiff) < CesiumMath.EPSILON15;
+
+            var slopeB;
+            if (!bVertical){
+                slopeB = (b2.y - b1.y) / bxDiff;
+            }
 
             // If parallel, no intersection
-            if (slopeA === slopeB || (isNaN(slopeA) && isNaN(slopeB))) {
+            if (slopeA === slopeB || (aVertical && bVertical)) {
                 continue;
             }
 
             // Calculate intersection point
             var intX;
-            if (isNaN(slopeA)) {
+            if (aVertical) {
                 intX = a1.x;
-            } else if (isNaN(slopeB)) {
+            } else if (bVertical) {
                 intX = b1.x;
             } else {
                 intX = (a1.y - b1.y - slopeA * a1.x + slopeB * b1.x) / (slopeB - slopeA);
