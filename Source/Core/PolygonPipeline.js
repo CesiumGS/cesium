@@ -526,6 +526,25 @@ define([
         return ((number > n1 || number > n2) && (number < n1 || number < n2)) || (n1 === n2 && n1 === number);
     }
 
+    var sqrEpsilon = CesiumMath.EPSILON14;
+    var eScratch = new Cartesian2();
+
+    function linesIntersection(p0, d0, p1, d1) {
+        var e = Cartesian2.subtract(p1, p0, eScratch);
+        var cross = d0.x * d1.y - d0.y * d1.x;
+        var sqrCross = cross * cross;
+        var sqrLen0 = Cartesian2.magnitudeSquared(d0);
+        var sqrLen1 = Cartesian2.magnitudeSquared(d1);
+        if (sqrCross > sqrEpsilon * sqrLen0 * sqrLen1) {
+            // lines of the segments are not parallel
+            var s = (e.x * d1.y - e.y * d1.x) / cross;
+            return Cartesian2.add(p0, Cartesian2.multiplyByScalar(d0, s, eScratch), eScratch);
+        }
+
+        // lines of the segments are parallel (they cannot be the same line)
+        return undefined;
+    }
+
     /**
      * Determine whether this segment intersects any other polygon sides.
      *
@@ -537,15 +556,11 @@ define([
      * @private
      */
     var intersectionScratch = new Cartesian2();
+    var aDirectionScratch = new Cartesian2();
+    var bDirectionScratch = new Cartesian2();
 
     function intersectsSide(a1, a2, pArray) {
-        var axDiff = a2.x - a1.x;
-        var aVertical = Math.abs(axDiff) < CesiumMath.EPSILON15;
-
-        var slopeA;
-        if (!aVertical){
-            slopeA = (a2.y - a1.y) / axDiff;
-        }
+        var aDirection = Cartesian2.subtract(a2, a1, aDirectionScratch);
 
         var length = pArray.length;
         for (var i = 0; i < length; i++) {
@@ -557,32 +572,11 @@ define([
                 continue;
             }
 
-            // Slopes
-            var bxDiff = b2.x - b1.x;
-            var bVertical = Math.abs(bxDiff) < CesiumMath.EPSILON15;
-
-            var slopeB;
-            if (!bVertical){
-                slopeB = (b2.y - b1.y) / bxDiff;
-            }
-
-            // If parallel, no intersection
-            if (slopeA === slopeB || (aVertical && bVertical)) {
+            var bDirection = Cartesian2.subtract(b2, b1, bDirectionScratch);
+            var intersection = linesIntersection(a1, aDirection, b1, bDirection);
+            if (!defined(intersection)) {
                 continue;
             }
-
-            // Calculate intersection point
-            var intX;
-            if (aVertical) {
-                intX = a1.x;
-            } else if (bVertical) {
-                intX = b1.x;
-            } else {
-                intX = (a1.y - b1.y - slopeA * a1.x + slopeB * b1.x) / (slopeB - slopeA);
-            }
-            var intY = slopeA * intX + a1.y - slopeA * a1.x;
-
-            var intersection = Cartesian2.fromElements(intX, intY, intersectionScratch);
 
             // If intersection is on an endpoint, count no intersection
             if (Cartesian2.equals(intersection, a1) || Cartesian2.equals(intersection, a2) || Cartesian2.equals(intersection, b1) || Cartesian2.equals(intersection, b2)) {
@@ -590,6 +584,8 @@ define([
             }
 
             // Is intersection point between segments?
+            var intX = intersection.x;
+            var intY = intersection.y;
             var intersects = isBetween(intX, a1.x, a2.x) && isBetween(intY, a1.y, a2.y) && isBetween(intX, b1.x, b2.x) && isBetween(intY, b1.y, b2.y);
 
             // If intersecting, the cut is not clean
