@@ -1110,7 +1110,9 @@ define([
             if (attributes.hasOwnProperty(name)) {
                 var parameter = parameters[attributes[name]];
 
-                attributeLocations[parameter.semantic] = programAttributeLocations[name].index;
+                if (defined(programAttributeLocations[name])) {
+                    attributeLocations[parameter.semantic] = programAttributeLocations[name].index;
+                }
             }
         }
 
