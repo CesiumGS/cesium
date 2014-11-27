@@ -949,7 +949,7 @@ defineSuite([
         riggedFigureModel.show = false;
     });
 
-    it('should load a model where WebGL is optimizing out a shader variable (linux)', function() {
+    it('should load a model where WebGL shader optimizer removes an attribute (linux)', function() {
         var url = './Data/Models/test-shader-optimize.gltf';
         var m = loadModel(url);
     });
