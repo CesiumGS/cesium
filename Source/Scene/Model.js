@@ -1699,7 +1699,6 @@ define([
                 var pass = technique.passes[technique.pass];
                 var instanceProgram = pass.instanceProgram;
                 var uniforms = instanceProgram.uniforms;
-                var activeUniforms = model._rendererResources.programs[instanceProgram.program].allUniforms;
 
                 var uniformMap = {};
                 var uniformValues = {};
