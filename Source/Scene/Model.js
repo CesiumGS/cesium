@@ -1106,13 +1106,11 @@ define([
         var attributes = instanceProgram.attributes;
         var programAttributeLocations = model._rendererResources.programs[instanceProgram.program].vertexAttributes;
 
-        for (var name in attributes) {
-            if (attributes.hasOwnProperty(name)) {
-                var parameter = parameters[attributes[name]];
-
-                if (defined(programAttributeLocations[name])) {
-                    attributeLocations[parameter.semantic] = programAttributeLocations[name].index;
-                }
+        // Note: WebGL shader compiler may have optimized and removed some attributes from programAttributeLocations
+        for (var location in programAttributeLocations){
+            if (programAttributeLocations.hasOwnProperty(location)) {
+                var parameter = parameters[attributes[location]];
+                attributeLocations[parameter.semantic] = programAttributeLocations[location].index;
             }
         }
 
