@@ -179,6 +179,14 @@ define([
          */
         this.constrainedAxis = undefined;
         /**
+         * If set together with {@link constrainedAxis}, the camera will
+         * not be able to rotate past this angle to the constrained axis,
+         * in either direction.
+         * @type {number}
+         * @default undefined
+         */
+        this.constrainedAxisAngle = undefined;
+        /**
          * The factor multiplied by the the map size used to determine where to clamp the camera position
          * when translating across the surface. The default is 1.5. Only valid for 2D and Columbus view.
          * @type {Number}
@@ -1376,12 +1384,20 @@ define([
                 if (angle > 0 && angle > angleToAxis) {
                     angle = angleToAxis - CesiumMath.EPSILON4;
                 }
+                if (defined(camera.constrainedAxisAngle)) {
+                  var constrainedAxisAngle = camera.constrainedAxisAngle;
+                  var angleToConstrainedAngle = angleToAxis - constrainedAxisAngle;
+                  if (angle < 0 && angle < angleToConstrainedAngle) {
+                    angle = angleToConstrainedAngle + CesiumMath.EPSILON4;
+                  }
+                }
 
                 dot = Cartesian3.dot(p, Cartesian3.negate(constrainedAxis, rotateVertScratchNegate));
                 angleToAxis = CesiumMath.acosClamped(dot);
                 if (angle < 0 && -angle > angleToAxis) {
                     angle = -angleToAxis + CesiumMath.EPSILON4;
                 }
+                // FIXME: handle south hemisphere
 
                 var tangent = Cartesian3.cross(constrainedAxis, p, rotateVertScratchTan);
                 camera.rotate(tangent, angle);
