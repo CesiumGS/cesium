@@ -26,6 +26,7 @@ Change Log
 * Fixed an issue that could lead to poor performance on lower-end GPUs like the Intel HD 3000.
 * Added `distanceSquared` to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
 * Added `Matrix4.multiplyByMatrix3`.
+* Fixed a bug in `Model` where the WebGL shader optimizer in Linux was causing mesh loading to fail.
 
 ### 1.3 - 2014-11-03
 
