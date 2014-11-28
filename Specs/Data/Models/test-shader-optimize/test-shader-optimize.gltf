@@ -70,20 +70,20 @@
     },
     "bufferViews": {
         "bufferView_29": {
-            "buffer": "repro",
+            "buffer": "test-shader-optimize",
             "byteLength": 20,
             "byteOffset": 0,
             "target": 34963
         },
         "bufferView_30": {
-            "buffer": "repro",
+            "buffer": "test-shader-optimize",
             "byteLength": 288,
             "byteOffset": 20,
             "target": 34962
         }
     },
     "buffers": {
-        "repro": {
+        "test-shader-optimize": {
             "byteLength": 308,
             "type": "arraybuffer",
             "uri": "data:application/octet-stream;base64,AAABAAIAAwAEAAUABgAHAAgAAAAqAMq/Ctezv+OqEj4qAMq/NNe1vwSrCj4AAMy/NNe1v+OqEj4qAMq/Ctezv+OqEj4AAMy/NNe1v+OqEj4AAMy/Ctezv/OqHj4qAMq/CtezvwSrGj4qAMq/Ctezv+OqEj4AAMy/Ctezv/OqHj7iBdG+4gXRPvIFUb/iBdG+4gXRPvIFUb/iBdG+4gXRPvIFUb8DtgO/A7YDP02dL78DtgO/A7YDP02dL78DtgO/A7YDP02dL78AAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAABnD7Q7Az5/P+HwAjw7338/bhIDOjvffz9nD7Q7Az5/P24SAzo7338/bhIDOsucfj9nD7Q7y5x+P2cPtDsDPn8/bhIDOsucfj8="
@@ -180,8 +180,8 @@
                 "a_position",
                 "a_texcoord0"
             ],
-            "fragmentShader": "repro0FS",
-            "vertexShader": "repro0VS"
+            "fragmentShader": "test-shader-optimize0FS",
+            "vertexShader": "test-shader-optimize0VS"
         }
     },
     "samplers": {
@@ -201,11 +201,11 @@
         }
     },
     "shaders": {
-        "repro0FS": {
+        "test-shader-optimize0FS": {
             "type": 35632,
             "uri": "data:text/plain;base64,cHJlY2lzaW9uIGhpZ2hwIGZsb2F0Owp2YXJ5aW5nIHZlYzMgdl9ub3JtYWw7CnZhcnlpbmcgdmVjMiB2X3RleGNvb3JkMDsKdW5pZm9ybSBzYW1wbGVyMkQgdV9lbWlzc2lvbjsKdm9pZCBtYWluKHZvaWQpIHsKdmVjMyBub3JtYWwgPSBub3JtYWxpemUodl9ub3JtYWwpOwppZiAoZ2xfRnJvbnRGYWNpbmcgPT0gZmFsc2UpIG5vcm1hbCA9IC1ub3JtYWw7CnZlYzQgY29sb3IgPSB2ZWM0KDAuLCAwLiwgMC4sIDAuKTsKdmVjNCBkaWZmdXNlID0gdmVjNCgwLiwgMC4sIDAuLCAxLik7CnZlYzQgZW1pc3Npb247CmVtaXNzaW9uID0gdGV4dHVyZTJEKHVfZW1pc3Npb24sIHZfdGV4Y29vcmQwKTsKZGlmZnVzZS54eXogKj0gbWF4KGRvdChub3JtYWwsdmVjMygwLiwwLiwxLikpLCAwLik7CmNvbG9yLnh5eiArPSBkaWZmdXNlLnh5ejsKY29sb3IueHl6ICs9IGVtaXNzaW9uLnh5ejsKY29sb3IgPSB2ZWM0KGNvbG9yLnJnYiAqIGRpZmZ1c2UuYSwgZGlmZnVzZS5hKTsKZ2xfRnJhZ0NvbG9yID0gY29sb3I7Cn0K"
         },
-        "repro0VS": {
+        "test-shader-optimize0VS": {
             "type": 35633,
             "uri": "data:text/plain;base64,cHJlY2lzaW9uIGhpZ2hwIGZsb2F0OwphdHRyaWJ1dGUgdmVjMyBhX3Bvc2l0aW9uOwphdHRyaWJ1dGUgdmVjMyBhX25vcm1hbDsKdmFyeWluZyB2ZWMzIHZfbm9ybWFsOwp1bmlmb3JtIG1hdDMgdV9ub3JtYWxNYXRyaXg7CnVuaWZvcm0gbWF0NCB1X21vZGVsVmlld01hdHJpeDsKdW5pZm9ybSBtYXQ0IHVfcHJvamVjdGlvbk1hdHJpeDsKYXR0cmlidXRlIHZlYzIgYV90ZXhjb29yZDA7CnZhcnlpbmcgdmVjMiB2X3RleGNvb3JkMDsKdm9pZCBtYWluKHZvaWQpIHsKdmVjNCBwb3MgPSB1X21vZGVsVmlld01hdHJpeCAqIHZlYzQoYV9wb3NpdGlvbiwxLjApOwp2X25vcm1hbCA9IHVfbm9ybWFsTWF0cml4ICogYV9ub3JtYWw7CnZfdGV4Y29vcmQwID0gYV90ZXhjb29yZDA7CmdsX1Bvc2l0aW9uID0gdV9wcm9qZWN0aW9uTWF0cml4ICogcG9zOwp9Cg=="
         }
