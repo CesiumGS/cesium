@@ -948,4 +948,10 @@ defineSuite([
         animations.removeAll();
         riggedFigureModel.show = false;
     });
+
+    it('should load a model where WebGL shader optimizer removes an attribute (linux)', function() {
+        var url = './Data/Models/test-shader-optimize/test-shader-optimize.gltf';
+        var m = loadModel(url);
+    });
+
 }, 'WebGL');
