@@ -7,7 +7,7 @@
         "{z}/{x}/{y}.terrain?v={version}"
     ],
     "extensions" : [
-        "vertexnormals",
+        "octvertexnormals",
         "watermask"
     ],
     "available" : [
