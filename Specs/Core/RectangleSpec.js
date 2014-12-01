@@ -96,7 +96,7 @@ defineSuite([
         var rectangle = new Rectangle(west, south, east, north);
         var returnedResult = rectangle.clone();
         expect(returnedResult).toEqual(rectangle);
-        expect(returnedResult).toNotBe(rectangle);
+        expect(returnedResult).not.toBe(rectangle);
     });
 
     it('clone works with a result parameter.', function() {
@@ -104,7 +104,7 @@ defineSuite([
         var result = new Rectangle();
         var returnedResult = rectangle.clone(result);
         expect(returnedResult).toEqual(rectangle);
-        expect(returnedResult).toNotBe(rectangle);
+        expect(returnedResult).not.toBe(rectangle);
         expect(returnedResult).toBe(result);
     });
 

@@ -556,7 +556,7 @@ defineSuite([
 
         s.render();
 
-        expect(spyListener.callCount).toBe(1);
+        expect(spyListener.calls.count()).toBe(1);
 
         destroyScene(s);
     });
@@ -569,7 +569,7 @@ defineSuite([
 
         s.render();
 
-        expect(spyListener.callCount).toBe(1);
+        expect(spyListener.calls.count()).toBe(1);
 
         destroyScene(s);
     });

@@ -95,7 +95,7 @@ defineSuite([
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
             render(context, frameState, globe);
-            expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
         });
     });
 
@@ -115,7 +115,7 @@ defineSuite([
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
             render(context, frameState, globe);
-            expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
         });
     });
 
@@ -152,7 +152,7 @@ defineSuite([
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
             render(context, frameState, globe);
-            expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
         });
     });
 }, 'WebGL');

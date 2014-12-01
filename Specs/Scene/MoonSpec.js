@@ -65,7 +65,7 @@ defineSuite([
         var camera = scene.camera;
         lookAtMoon(camera, date);
 
-        expect(scene.renderForSpecs()).toNotEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('does not render when show is false', function() {

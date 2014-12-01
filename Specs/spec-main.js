@@ -40,6 +40,12 @@ require.config({
         });
     };
 
+    window.runs = function() {
+    };
+
+    window.waitsFor = function() {
+    };
+
     /**
      * Since this is being run in a browser and the results should populate to an HTML page, require the HTML-specific Jasmine code, injecting the same reference.
      */
@@ -134,7 +140,7 @@ require.config({
      *
      * Load the modules via AMD, and then run all of the loaded specs. This includes initializing the `HtmlReporter` instance and then executing the loaded Jasmine environment.
      */
-    var modules = ['Specs/addDefaultMatchers', 'Specs/equalsMethodEqualityTester'].concat(specs);
+    var modules = ['Specs/addDefaultMatchers-2.1', 'Specs/equalsMethodEqualityTester-2.1'].concat(specs);
     require(modules, function(addDefaultMatchers, equalsMethodEqualityTester) {
         htmlReporter.initialize();
 

@@ -39,7 +39,7 @@ defineSuite([
                 });
             }
         };
-        spyOn(window, 'FileReader').andReturn(fakeFileReader);
+        spyOn(window, 'FileReader').and.returnValue(fakeFileReader);
     });
 
     afterEach(function() {

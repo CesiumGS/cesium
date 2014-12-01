@@ -190,7 +190,7 @@ defineSuite([
 
         tweens.removeAll();
         expect(tweens.length).toEqual(0);
-        expect(cancel.calls.length).toEqual(2);
+        expect(cancel.calls.count()).toEqual(2);
     });
 
     it('contains() throws without an index', function() {

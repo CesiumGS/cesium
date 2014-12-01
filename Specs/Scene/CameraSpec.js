@@ -1552,7 +1552,7 @@ defineSuite([
     });
 
     it('flyTo uses CameraFlightPath', function() {
-        spyOn(CameraFlightPath, 'createTween').andReturn({
+        spyOn(CameraFlightPath, 'createTween').and.returnValue({
             startObject : {},
             stopObject: {},
             duration : 0.0
@@ -1567,7 +1567,7 @@ defineSuite([
     });
 
     it('flyToRectangle uses createTweenRectangle', function() {
-        spyOn(CameraFlightPath, 'createTweenRectangle').andReturn({
+        spyOn(CameraFlightPath, 'createTweenRectangle').and.returnValue({
             startObject : {},
             stopObject: {},
             duration : 0.0

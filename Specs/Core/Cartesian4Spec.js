@@ -83,7 +83,7 @@ defineSuite([
     it('clone without a result parameter', function() {
         var cartesian = new Cartesian4(1.0, 2.0, 3.0, 4.0);
         var result = Cartesian4.clone(cartesian, new Cartesian4());
-        expect(cartesian).toNotBe(result);
+        expect(cartesian).not.toBe(result);
         expect(cartesian).toEqual(result);
     });
 
@@ -91,7 +91,7 @@ defineSuite([
         var cartesian = new Cartesian4(1.0, 2.0, 3.0, 4.0);
         var result = new Cartesian4();
         var returnedResult = Cartesian4.clone(cartesian, result);
-        expect(cartesian).toNotBe(result);
+        expect(cartesian).not.toBe(result);
         expect(result).toBe(returnedResult);
         expect(cartesian).toEqual(result);
     });

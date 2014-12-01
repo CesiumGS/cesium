@@ -84,7 +84,7 @@ defineSuite([
     it('requests the single image immediately upon construction', function() {
         var imageUrl = 'Data/Images/Red16x16.png';
 
-        spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+        spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
             expect(url).toEqual(imageUrl);
             loadImage.defaultCreateImage(url, crossOrigin, deferred);
         });
@@ -138,7 +138,7 @@ defineSuite([
     it('routes requests through a proxy if one is specified', function() {
         var imageUrl = 'Data/Images/Red16x16.png';
 
-        spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+        spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
             expect(url.indexOf(proxy.getURL('Data/Images/Red16x16.png'))).toEqual(0);
             loadImage.defaultCreateImage(url, crossOrigin, deferred);
         });

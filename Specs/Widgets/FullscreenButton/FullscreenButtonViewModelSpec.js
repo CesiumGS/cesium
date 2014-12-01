@@ -34,7 +34,7 @@ defineSuite([
     it('can get and set fullscreenElement', function() {
         var testElement = document.createElement('span');
         var viewModel = new FullscreenButtonViewModel();
-        expect(viewModel.fullscreenElement).toNotBe(testElement);
+        expect(viewModel.fullscreenElement).not.toBe(testElement);
         viewModel.fullscreenElement = testElement;
         expect(viewModel.fullscreenElement).toBe(testElement);
     });

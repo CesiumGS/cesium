@@ -50,7 +50,7 @@ defineSuite([
         var julianDate = JulianDate.now();
         var returnedResult = julianDate.clone();
         expect(returnedResult).toEqual(julianDate);
-        expect(returnedResult).toNotBe(julianDate);
+        expect(returnedResult).not.toBe(julianDate);
     });
 
     it('clone works with result parameter', function() {
@@ -58,7 +58,7 @@ defineSuite([
         var result = JulianDate.now();
         var returnedResult = julianDate.clone(result);
         expect(returnedResult).toBe(result);
-        expect(returnedResult).toNotBe(julianDate);
+        expect(returnedResult).not.toBe(julianDate);
         expect(returnedResult).toEqual(julianDate);
     });
 

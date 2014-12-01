@@ -98,6 +98,6 @@ defineSuite([
         listener.reset();
 
         property.color = property.color;
-        expect(listener.callCount).toEqual(0);
+        expect(listener.calls.count()).toEqual(0);
     });
 });

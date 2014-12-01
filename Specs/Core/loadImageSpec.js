@@ -52,7 +52,7 @@ defineSuite([
 
     it('sets the crossOrigin property for cross-origin images', function() {
         var fakeImage = {};
-        var imageConstructorSpy = spyOn(window, 'Image').andReturn(fakeImage);
+        var imageConstructorSpy = spyOn(window, 'Image').and.returnValue(fakeImage);
 
         loadImage('http://example.invalid/someImage.png');
         expect(imageConstructorSpy).toHaveBeenCalled();
@@ -61,7 +61,7 @@ defineSuite([
 
     it('does not set the crossOrigin property for cross-origin images when allowCrossOrigin is false', function() {
         var fakeImage = {};
-        var imageConstructorSpy = spyOn(window, 'Image').andReturn(fakeImage);
+        var imageConstructorSpy = spyOn(window, 'Image').and.returnValue(fakeImage);
 
         loadImage('http://example.invalid/someImage.png', false);
         expect(imageConstructorSpy).toHaveBeenCalled();
@@ -70,7 +70,7 @@ defineSuite([
 
     it('does not set the crossOrigin property for non-cross-origin images', function() {
         var fakeImage = {};
-        var imageConstructorSpy = spyOn(window, 'Image').andReturn(fakeImage);
+        var imageConstructorSpy = spyOn(window, 'Image').and.returnValue(fakeImage);
 
         loadImage('./someImage.png', false);
         expect(imageConstructorSpy).toHaveBeenCalled();
@@ -79,7 +79,7 @@ defineSuite([
 
     it('does not set the crossOrigin property for data URIs', function() {
         var fakeImage = {};
-        var imageConstructorSpy = spyOn(window, 'Image').andReturn(fakeImage);
+        var imageConstructorSpy = spyOn(window, 'Image').and.returnValue(fakeImage);
 
         loadImage(dataUri);
         expect(imageConstructorSpy).toHaveBeenCalled();
@@ -88,7 +88,7 @@ defineSuite([
 
     it('resolves the promise when the image loads', function() {
         var fakeImage = {};
-        spyOn(window, 'Image').andReturn(fakeImage);
+        spyOn(window, 'Image').and.returnValue(fakeImage);
 
         var success = false;
         var failure = false;
@@ -113,7 +113,7 @@ defineSuite([
 
     it('rejects the promise when the image errors', function() {
         var fakeImage = {};
-        spyOn(window, 'Image').andReturn(fakeImage);
+        spyOn(window, 'Image').and.returnValue(fakeImage);
 
         var success = false;
         var failure = false;

@@ -34,7 +34,7 @@ defineSuite([
             }
         };
 
-        spyOn(window, 'XMLHttpRequest').andReturn(fakeXHR);
+        spyOn(window, 'XMLHttpRequest').and.returnValue(fakeXHR);
     });
 
     it('throws with no url', function() {
@@ -60,7 +60,7 @@ defineSuite([
         });
 
         expect(fakeXHR.open).toHaveBeenCalledWith('GET', testUrl, true);
-        expect(fakeXHR.setRequestHeader.callCount).toEqual(2);
+        expect(fakeXHR.setRequestHeader.calls.count()).toEqual(2);
         expect(fakeXHR.setRequestHeader).toHaveBeenCalledWith('Accept', 'application/json');
         expect(fakeXHR.setRequestHeader).toHaveBeenCalledWith('Cache-Control', 'no-cache');
         expect(fakeXHR.send).toHaveBeenCalled();

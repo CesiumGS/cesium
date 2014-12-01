@@ -164,62 +164,62 @@ defineSuite([
         var oldValue = property.color;
         property.color = new ConstantProperty(Color.WHITE);
         expect(listener).toHaveBeenCalledWith(property, 'color', property.color, oldValue);
-        listener.reset();
+        listener.calls.reset();
 
         property.color.setValue(Color.BLACK);
         expect(listener).toHaveBeenCalledWith(property, 'color', property.color, property.color);
-        listener.reset();
+        listener.calls.reset();
 
         property.color = property.color;
-        expect(listener.callCount).toEqual(0);
-        listener.reset();
+        expect(listener.calls.count()).toEqual(0);
+        listener.calls.reset();
 
         oldValue = property.cellAlpha;
         property.cellAlpha = new ConstantProperty(0.0);
         expect(listener).toHaveBeenCalledWith(property, 'cellAlpha', property.cellAlpha, oldValue);
-        listener.reset();
+        listener.calls.reset();
 
         property.cellAlpha.setValue(1.0);
         expect(listener).toHaveBeenCalledWith(property, 'cellAlpha', property.cellAlpha, property.cellAlpha);
-        listener.reset();
+        listener.calls.reset();
 
         property.cellAlpha = property.cellAlpha;
-        expect(listener.callCount).toEqual(0);
-        listener.reset();
+        expect(listener.calls.count()).toEqual(0);
+        listener.calls.reset();
 
         oldValue = property.lineCount;
         property.lineCount = new ConstantProperty(5.0);
         expect(listener).toHaveBeenCalledWith(property, 'lineCount', property.lineCount, oldValue);
-        listener.reset();
+        listener.calls.reset();
 
         property.lineCount.setValue(10.0);
         expect(listener).toHaveBeenCalledWith(property, 'lineCount', property.lineCount, property.lineCount);
-        listener.reset();
+        listener.calls.reset();
 
         property.lineCount = property.lineCount;
-        expect(listener.callCount).toEqual(0);
-        listener.reset();
+        expect(listener.calls.count()).toEqual(0);
+        listener.calls.reset();
 
         oldValue = property.lineThickness;
         property.lineThickness = new ConstantProperty(5.0);
         expect(listener).toHaveBeenCalledWith(property, 'lineThickness', property.lineThickness, oldValue);
-        listener.reset();
+        listener.calls.reset();
 
         property.lineThickness.setValue(10.0);
         expect(listener).toHaveBeenCalledWith(property, 'lineThickness', property.lineThickness, property.lineThickness);
-        listener.reset();
+        listener.calls.reset();
 
         oldValue = property.lineOffset;
         property.lineOffset = new ConstantProperty(5.0);
         expect(listener).toHaveBeenCalledWith(property, 'lineOffset', property.lineOffset, oldValue);
-        listener.reset();
+        listener.calls.reset();
 
         property.lineOffset.setValue(10.0);
         expect(listener).toHaveBeenCalledWith(property, 'lineOffset', property.lineOffset, property.lineOffset);
-        listener.reset();
+        listener.calls.reset();
 
         property.lineOffset = property.lineOffset;
-        expect(listener.callCount).toEqual(0);
+        expect(listener.calls.count()).toEqual(0);
     });
 
     it('isConstant is only true when all properties are constant or undefined', function() {

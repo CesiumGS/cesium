@@ -1507,7 +1507,7 @@ defineSuite([
     });
 
     it('can create a billboard using another billboard image', function() {
-        var createImage = jasmine.createSpy('createImage').andReturn(greenImage);
+        var createImage = jasmine.createSpy('createImage').and.returnValue(greenImage);
 
         var one = billboards.add({
             image : createImage
@@ -1515,7 +1515,7 @@ defineSuite([
 
         render(context, frameState, billboards);
 
-        expect(createImage.callCount).toEqual(1);
+        expect(createImage.calls.count()).toEqual(1);
 
         var two = billboards.add({
             image : one.image
@@ -1524,7 +1524,7 @@ defineSuite([
         render(context, frameState, billboards);
 
         expect(two.image).toEqual(one.image);
-        expect(createImage.callCount).toEqual(1);
+        expect(createImage.calls.count()).toEqual(1);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);

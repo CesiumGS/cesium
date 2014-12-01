@@ -107,7 +107,7 @@ defineSuite([
     it('clone without a result parameter', function() {
         var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
         var result = quaternion.clone();
-        expect(quaternion).toNotBe(result);
+        expect(quaternion).not.toBe(result);
         expect(quaternion).toEqual(result);
     });
 
@@ -115,7 +115,7 @@ defineSuite([
         var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
         var result = new Quaternion();
         var returnedResult = quaternion.clone(result);
-        expect(quaternion).toNotBe(result);
+        expect(quaternion).not.toBe(result);
         expect(result).toBe(returnedResult);
         expect(quaternion).toEqual(result);
     });

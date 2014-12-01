@@ -97,7 +97,7 @@ defineSuite([
         }, 'imagery provider to become ready');
 
         runs(function() {
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var uri = new Uri(url);
                 var params = queryToObject(uri.query);
                 expect(params.something).toEqual('foo');
@@ -121,7 +121,7 @@ defineSuite([
         }, 'imagery provider to become ready');
 
         runs(function() {
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var questionMarkCount = url.match(/\?/g).length;
                 expect(questionMarkCount).toEqual(1);
             });
@@ -143,7 +143,7 @@ defineSuite([
         }, 'imagery provider to become ready');
 
         runs(function() {
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var questionMarkCount = url.match(/\?/g).length;
                 expect(questionMarkCount).toEqual(1);
 
@@ -167,7 +167,7 @@ defineSuite([
         }, 'imagery provider to become ready');
 
         runs(function() {
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var questionMarkCount = url.match(/\?/g).length;
                 expect(questionMarkCount).toEqual(1);
 
@@ -202,7 +202,7 @@ defineSuite([
             expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
             expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
 
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
@@ -236,7 +236,7 @@ defineSuite([
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
 
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var uri = new Uri(url);
                 var params = queryToObject(uri.query);
 
@@ -269,7 +269,7 @@ defineSuite([
         }, 'imagery provider to become ready');
 
         runs(function() {
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var uri = new Uri(url);
                 var params = queryToObject(uri.query);
 
@@ -313,7 +313,7 @@ defineSuite([
         runs(function() {
             expect(provider.proxy).toEqual(proxy);
 
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 expect(url.indexOf(proxy.getURL('made/up/wms/server'))).toEqual(0);
 
                 // Just return any old image.

@@ -12,7 +12,7 @@ defineSuite([
     var spyFunctionReturnValue = 5;
 
     beforeEach(function() {
-        spyFunction = jasmine.createSpy('spyFunction').andReturn(spyFunctionReturnValue);
+        spyFunction = jasmine.createSpy('spyFunction').and.returnValue(spyFunctionReturnValue);
     });
 
     it('works with default value of canExecute', function() {
@@ -65,13 +65,13 @@ defineSuite([
 
         expect(command(myArg)).toBe(spyFunctionReturnValue);
 
-        expect(beforeExecuteSpy.calls.length).toEqual(1);
+        expect(beforeExecuteSpy.calls.count()).toEqual(1);
         expect(beforeExecuteSpy).toHaveBeenCalledWith({
             cancel : false,
             args : [myArg]
         });
 
-        expect(afterExecuteSpy.calls.length).toEqual(1);
+        expect(afterExecuteSpy.calls.count()).toEqual(1);
         expect(afterExecuteSpy).toHaveBeenCalledWith(spyFunctionReturnValue);
     });
 
@@ -79,7 +79,7 @@ defineSuite([
         var command = createCommand(spyFunction);
         var myArg = {};
 
-        var beforeExecuteSpy = jasmine.createSpy('beforeExecute').andCallFake(function(info) {
+        var beforeExecuteSpy = jasmine.createSpy('beforeExecute').and.callFake(function(info) {
             info.cancel = true;
         });
         command.beforeExecute.addEventListener(beforeExecuteSpy);
@@ -89,7 +89,7 @@ defineSuite([
 
         expect(command(myArg)).toBeUndefined();
 
-        expect(beforeExecuteSpy.calls.length).toEqual(1);
+        expect(beforeExecuteSpy.calls.count()).toEqual(1);
         expect(afterExecuteSpy).not.toHaveBeenCalled();
     });
 });

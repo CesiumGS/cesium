@@ -102,7 +102,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         render(context, frameState, ellipsoid);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('renders with a custom modelMatrix', function() {

@@ -43,7 +43,7 @@ defineSuite([
         it('requests the missing image url', function() {
             var missingImageUrl = 'http://some.host.invalid/missingImage.png';
 
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 if (/^blob:/.test(url)) {
                     // load blob url normally
                     loadImage.defaultCreateImage(url, crossOrigin, deferred);

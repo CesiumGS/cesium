@@ -122,7 +122,7 @@ defineSuite([
                 url : baseUrl
             });
 
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var uri = new Uri(url);
                 var params = queryToObject(uri.query);
 
@@ -148,7 +148,7 @@ defineSuite([
                 token : 'foofoofoo'
             });
 
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var uri = new Uri(url);
                 var params = queryToObject(uri.query);
 
@@ -174,7 +174,7 @@ defineSuite([
                 proxy : new DefaultProxy('/proxy/')
             });
 
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var uri = new Uri(url);
                 var params = queryToObject(uri.query);
 
@@ -201,7 +201,7 @@ defineSuite([
                 url : baseUrl
             });
 
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var uri = new Uri(url);
                 expect(uri.path).toMatch(/exportImage$/);
 

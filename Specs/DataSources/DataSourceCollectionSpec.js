@@ -65,7 +65,7 @@ defineSuite([
         var removeCalled = 0;
         collection.dataSourceRemoved.addEventListener(function(sender, dataSource) {
             expect(sender).toBe(collection);
-            expect(sources.indexOf(dataSource)).toNotEqual(-1);
+            expect(sources.indexOf(dataSource)).not.toEqual(-1);
             removeCalled++;
         });
 
@@ -85,7 +85,7 @@ defineSuite([
         var removeCalled = 0;
         collection.dataSourceRemoved.addEventListener(function(sender, dataSource) {
             expect(sender).toBe(collection);
-            expect(sources.indexOf(dataSource)).toNotEqual(-1);
+            expect(sources.indexOf(dataSource)).not.toEqual(-1);
             removeCalled++;
         });
 

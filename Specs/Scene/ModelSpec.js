@@ -174,7 +174,7 @@ defineSuite([
             gltf : duckModel.gltf
         }));
 
-        spyOn(scene.context, 'createRenderState').andCallThrough();
+        spyOn(scene.context, 'createRenderState').and.callThrough();
 
         waitsFor(function() {
             // Render scene to progressively load the model
@@ -554,7 +554,7 @@ defineSuite([
         animations.animationAdded.addEventListener(spyAdd);
         var a = animations.addAll();
         expect(animations.length).toEqual(2);
-        expect(spyAdd.calls.length).toEqual(2);
+        expect(spyAdd.calls.count()).toEqual(2);
         expect(spyAdd.calls[0].args[0]).toBe(animBoxesModel);
         expect(spyAdd.calls[0].args[1]).toBe(a[0]);
         expect(spyAdd.calls[1].args[0]).toBe(animBoxesModel);
@@ -570,7 +570,7 @@ defineSuite([
         animations.animationRemoved.addEventListener(spyRemove);
         animations.removeAll();
         expect(animations.length).toEqual(0);
-        expect(spyRemove.calls.length).toEqual(2);
+        expect(spyRemove.calls.count()).toEqual(2);
         expect(spyRemove.calls[0].args[0]).toBe(animBoxesModel);
         expect(spyRemove.calls[0].args[1]).toBe(a[0]);
         expect(spyRemove.calls[1].args[0]).toBe(animBoxesModel);
@@ -701,7 +701,7 @@ defineSuite([
         runs(function() {
             expect(spyStart).toHaveBeenCalledWith(animBoxesModel, a);
 
-            expect(spyUpdate.calls.length).toEqual(4);
+            expect(spyUpdate.calls.count()).toEqual(4);
             expect(spyUpdate.calls[0].args[0]).toBe(animBoxesModel);
             expect(spyUpdate.calls[0].args[1]).toBe(a);
             expect(spyUpdate.calls[0].args[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
@@ -732,7 +732,7 @@ defineSuite([
         scene.renderForSpecs(time); // Does not fire start
         scene.renderForSpecs(JulianDate.addSeconds(time, 1.0, new JulianDate()));
 
-        expect(spyStart.calls.length).toEqual(1);
+        expect(spyStart.calls.count()).toEqual(1);
 
         expect(animations.remove(a)).toEqual(true);
         animBoxesModel.show = false;
@@ -757,7 +757,7 @@ defineSuite([
         scene.renderForSpecs(JulianDate.addSeconds(time, 1.0, new JulianDate()));
         scene.renderForSpecs(JulianDate.addSeconds(time, 2.0, new JulianDate())); // Does not fire update
 
-        expect(spyUpdate.calls.length).toEqual(2);
+        expect(spyUpdate.calls.count()).toEqual(2);
         expect(spyUpdate.calls[0].args[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
         expect(spyUpdate.calls[1].args[2]).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
         expect(animations.remove(a)).toEqual(true);
@@ -781,7 +781,7 @@ defineSuite([
         scene.renderForSpecs(JulianDate.addSeconds(time, 1.0, new JulianDate()));
         scene.renderForSpecs(JulianDate.addSeconds(time, 2.0, new JulianDate()));
 
-        expect(spyUpdate.calls.length).toEqual(3);
+        expect(spyUpdate.calls.count()).toEqual(3);
         expect(spyUpdate.calls[0].args[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
         expect(spyUpdate.calls[1].args[2]).toEqualEpsilon(1.5, CesiumMath.EPSILON14);
         expect(spyUpdate.calls[2].args[2]).toEqualEpsilon(3.0, CesiumMath.EPSILON14);
@@ -807,7 +807,7 @@ defineSuite([
         scene.renderForSpecs(JulianDate.addSeconds(time, 2.0, new JulianDate()));
         scene.renderForSpecs(JulianDate.addSeconds(time, 3.0, new JulianDate()));
 
-        expect(spyUpdate.calls.length).toEqual(4);
+        expect(spyUpdate.calls.count()).toEqual(4);
         expect(spyUpdate.calls[0].args[2]).toEqualEpsilon(3.708, CesiumMath.EPSILON3);
         expect(spyUpdate.calls[1].args[2]).toEqualEpsilon(2.708, CesiumMath.EPSILON3);
         expect(spyUpdate.calls[2].args[2]).toEqualEpsilon(1.708, CesiumMath.EPSILON3);
@@ -833,7 +833,7 @@ defineSuite([
             scene.renderForSpecs(JulianDate.addSeconds(time, i, new JulianDate()));
         }
 
-        expect(spyUpdate.calls.length).toEqual(8);
+        expect(spyUpdate.calls.count()).toEqual(8);
         expect(spyUpdate.calls[0].args[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON3);
         expect(spyUpdate.calls[1].args[2]).toEqualEpsilon(1.0, CesiumMath.EPSILON3);
         expect(spyUpdate.calls[2].args[2]).toEqualEpsilon(2.0, CesiumMath.EPSILON3);
@@ -863,7 +863,7 @@ defineSuite([
             scene.renderForSpecs(JulianDate.addSeconds(time, i, new JulianDate()));
         }
 
-        expect(spyUpdate.calls.length).toEqual(8);
+        expect(spyUpdate.calls.count()).toEqual(8);
         expect(spyUpdate.calls[0].args[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON3);
         expect(spyUpdate.calls[1].args[2]).toEqualEpsilon(1.0, CesiumMath.EPSILON3);
         expect(spyUpdate.calls[2].args[2]).toEqualEpsilon(2.0, CesiumMath.EPSILON3);

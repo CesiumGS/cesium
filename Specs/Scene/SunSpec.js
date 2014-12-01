@@ -39,7 +39,7 @@ defineSuite([
         var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition, new Cartesian3()), 1e8, new Cartesian3());
         camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
-        expect(scene.renderForSpecs()).toNotEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('draws in Columbus view', function() {
@@ -55,7 +55,7 @@ defineSuite([
         var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition, new Cartesian3()), 1e8, new Cartesian3());
         camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
-        expect(scene.renderForSpecs()).toNotEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('does not render when show is false', function() {
@@ -150,7 +150,7 @@ defineSuite([
         var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition, new Cartesian3()), 1e8, new Cartesian3());
         camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
-        expect(scene.renderForSpecs()).toNotEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('isDestroyed', function() {

@@ -225,13 +225,13 @@ defineSuite([
 
         property.intervals.addInterval(interval);
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
 
         property.intervals.removeInterval(interval);
         expect(listener).toHaveBeenCalledWith(property);
 
         property.intervals.addInterval(interval);
-        listener.reset();
+        listener.calls.reset();
         property.intervals.removeAll();
         expect(listener).toHaveBeenCalledWith(property);
     });

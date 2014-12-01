@@ -1666,7 +1666,7 @@ defineSuite([
         dataSource.entities.collectionChanged.addEventListener(spy);
         dataSource.load(packets);
 
-        expect(spy.callCount).toEqual(1);
+        expect(spy.calls.count()).toEqual(1);
     });
 
     it('CZML materials work with composite interval', function() {

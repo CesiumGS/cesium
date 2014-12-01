@@ -128,23 +128,23 @@ defineSuite([
 
         property.intervals.addInterval(interval1);
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
 
         property.intervals.addInterval(interval2);
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
 
         property.intervals.removeInterval(interval2);
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
 
         interval1.data.color.setValue(Color.BLUE);
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
 
         property.intervals.removeAll();
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
     });
 
     it('does not raise definitionChanged for an overwritten interval', function() {
@@ -166,11 +166,11 @@ defineSuite([
 
         property.intervals.addInterval(interval1);
         property.intervals.addInterval(interval2);
-        expect(listener.callCount).toBe(2);
+        expect(listener.calls.count()).toBe(2);
 
         //interval2 overwrites interval1, so callCount should not increase.
         interval1.data.color.setValue(Color.BLUE);
-        expect(listener.callCount).toBe(2);
+        expect(listener.calls.count()).toBe(2);
     });
 
     it('getValue throws with no time parameter', function() {

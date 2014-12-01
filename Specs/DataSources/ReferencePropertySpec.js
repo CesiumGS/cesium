@@ -85,14 +85,14 @@ defineSuite([
         expect(listener).toHaveBeenCalledWith(property);
         expect(property.isConstant).toEqual(true);
         expect(property.getValue(time)).toEqual(6);
-        listener.reset();
+        listener.calls.reset();
 
         //Assignment of new leaf property to existing target is reflected in reference.
         testObject.billboard.scale = new ConstantProperty(7);
         expect(listener).toHaveBeenCalledWith(property);
         expect(property.isConstant).toEqual(true);
         expect(property.getValue(time)).toEqual(7);
-        listener.reset();
+        listener.calls.reset();
 
         //Assignment of non-leaf property to existing target is reflected in reference.
         testObject.billboard = new BillboardGraphics();
@@ -100,7 +100,7 @@ defineSuite([
         expect(listener).toHaveBeenCalledWith(property);
         expect(property.isConstant).toEqual(true);
         expect(property.getValue(time)).toEqual(8);
-        listener.reset();
+        listener.calls.reset();
 
         //Removing an object should cause the reference to be severed but maintain last value
         collection.remove(testObject);

@@ -205,14 +205,14 @@ defineSuite([
         }, 'imagery providers to become ready');
 
         runs(function() {
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             waitsForPromise(provider1.requestImage(0, 0, 0), function(image) {
                 waitsForPromise(provider2.requestImage(0, 0, 0), function(image) {
-                    expect(loadImage.createImage.calls.length).toEqual(2);
+                    expect(loadImage.createImage.calls.count()).toEqual(2);
                     //expect the two image URLs to be the same between the two providers
                     expect(loadImage.createImage.calls[1].args[0]).toEqual(loadImage.createImage.calls[0].args[0]);
                 });
@@ -233,7 +233,7 @@ defineSuite([
         }, 'imagery provider to become ready');
 
         runs(function() {
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
@@ -260,7 +260,7 @@ defineSuite([
         }, 'imagery provider to become ready');
 
         runs(function() {
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 expect(url.indexOf(proxy.getURL('http://wmts.invalid'))).toEqual(0);
 
                 // Just return any old image.

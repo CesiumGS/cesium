@@ -60,7 +60,7 @@ defineSuite([
         }, 'imagery provider to become ready');
 
         runs(function() {
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 expect(url).not.toContain('//');
 
                 // Just return any old image.
@@ -84,7 +84,7 @@ defineSuite([
         }, 'imagery provider to become ready');
 
         runs(function() {
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 expect(url).toContain('made/up/osm/server/');
 
                 // Just return any old image.
@@ -116,7 +116,7 @@ defineSuite([
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
 
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
@@ -157,7 +157,7 @@ defineSuite([
         runs(function() {
             expect(provider.proxy).toEqual(proxy);
 
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 expect(url.indexOf(proxy.getURL('made/up/osm/server'))).toEqual(0);
 
                 // Just return any old image.
@@ -190,7 +190,7 @@ defineSuite([
             expect(provider.rectangle).toEqual(rectangle);
             expect(provider.tileDiscardPolicy).toBeUndefined();
 
-            spyOn(loadImage, 'createImage').andCallFake(function(url, crossOrigin, deferred) {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 expect(url).toContain('/0/0/0');
 
                 // Just return any old image.

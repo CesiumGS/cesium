@@ -52,7 +52,7 @@ defineSuite([
 
     it('resolves the promise when the image loads', function() {
         var fakeImage = {};
-        spyOn(window, 'Image').andReturn(fakeImage);
+        spyOn(window, 'Image').and.returnValue(fakeImage);
 
         var success = false;
         var failure = false;
@@ -77,7 +77,7 @@ defineSuite([
 
     it('rejects the promise when the image errors', function() {
         var fakeImage = {};
-        spyOn(window, 'Image').andReturn(fakeImage);
+        spyOn(window, 'Image').and.returnValue(fakeImage);
 
         var success = false;
         var failure = false;

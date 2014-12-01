@@ -90,7 +90,7 @@ defineSuite([
         expect(viewer.trackedEntity).toBe(entity);
 
         //Needed to avoid actually creating a flight when we issue the home command.
-        spyOn(CameraFlightPath, 'createTween').andReturn({
+        spyOn(CameraFlightPath, 'createTween').and.returnValue({
             startObject : {},
             stopObject: {},
             duration : 0.0

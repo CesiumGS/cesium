@@ -77,7 +77,7 @@ defineSuite([
     it('clone without a result parameter', function() {
         var box = new AxisAlignedBoundingBox(Cartesian3.UNIT_Y, Cartesian3.UNIT_X);
         var result = box.clone();
-        expect(box).toNotBe(result);
+        expect(box).not.toBe(result);
         expect(box).toEqual(result);
     });
 
@@ -86,7 +86,7 @@ defineSuite([
         var result = new AxisAlignedBoundingBox(Cartesian3.ZERO, Cartesian3.UNIT_Z);
         var returnedResult = box.clone(result);
         expect(result).toBe(returnedResult);
-        expect(box).toNotBe(result);
+        expect(box).not.toBe(result);
         expect(box).toEqual(result);
     });
 

@@ -94,7 +94,7 @@ defineSuite([
         var listener = jasmine.createSpy('listener');
         property.definitionChanged.addEventListener(listener);
         property.setValue(new Cartesian3(0, 0, 0));
-        expect(listener.callCount).toBe(0);
+        expect(listener.calls.count()).toBe(0);
     });
 
     it('setValue raises definitionChanged when referenceFrame changes', function() {

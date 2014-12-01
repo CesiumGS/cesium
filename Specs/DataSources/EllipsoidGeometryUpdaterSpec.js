@@ -401,23 +401,23 @@ defineSuite([
         updater.geometryChanged.addEventListener(listener);
 
         entity.position = new ConstantPositionProperty(Cartesian3.UNIT_Z);
-        expect(listener.callCount).toEqual(1);
+        expect(listener.calls.count()).toEqual(1);
 
         entity.ellipsoid.radii = new ConstantProperty(new Cartesian3(1, 2, 3));
-        expect(listener.callCount).toEqual(2);
+        expect(listener.calls.count()).toEqual(2);
 
         entity.availability = new TimeIntervalCollection();
-        expect(listener.callCount).toEqual(3);
+        expect(listener.calls.count()).toEqual(3);
 
         entity.ellipsoid.radii = undefined;
-        expect(listener.callCount).toEqual(4);
+        expect(listener.calls.count()).toEqual(4);
 
         //Modifying an unrelated property should not have any effect.
         entity.viewFrom = new ConstantProperty(Cartesian3.UNIT_X);
-        expect(listener.callCount).toEqual(4);
+        expect(listener.calls.count()).toEqual(4);
 
         entity.ellipsoid.radii = new SampledProperty(Cartesian3);
-        expect(listener.callCount).toEqual(5);
+        expect(listener.calls.count()).toEqual(5);
     });
 
     it('createFillGeometryInstance throws if object is not filled', function() {

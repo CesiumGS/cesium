@@ -968,12 +968,12 @@ void main() {\n\
         var promise = atlas.addImage(greenImage.src, greenImage);
         waitsForPromise(promise, function(index) {
             var guid2 = atlas.guid;
-            expect(guid1).toNotEqual(guid2);
+            expect(guid1).not.toEqual(guid2);
 
             promise = atlas.addSubRegion(greenImage.src, new BoundingRectangle(0.0, 0.0, 0.5, 0.5));
             waitsForPromise(promise, function(index) {
                 var guid3 = atlas.guid;
-                expect(guid2).toNotEqual(guid3);
+                expect(guid2).not.toEqual(guid3);
             });
         });
     });
