@@ -43,7 +43,7 @@ defineSuite([
     it('can pack and unpack geometry without indices', function() {
         var attributes = new GeometryAttributes();
         attributes.position = new GeometryAttribute({
-            componentDatatype : ComponentDatatype.DOUBLE,
+            componentDatatype : ComponentDatatype.FLOAT,
             componentsPerAttribute : 3,
             values : new Float32Array([1, 2, 3, 4, 5, 6])
         });

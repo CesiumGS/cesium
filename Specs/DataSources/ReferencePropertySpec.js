@@ -108,7 +108,7 @@ defineSuite([
         expect(listener).not.toHaveBeenCalledWith();
         expect(property.isConstant).toEqual(true);
         expect(property.getValue(time)).toEqual(8);
-        listener.reset();
+        listener.calls.reset();
 
         //adding a new object should re-wire the reference.
         var testObject2 = new Entity('testId');

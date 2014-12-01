@@ -91,11 +91,11 @@ defineSuite([
         var oldValue = property.color;
         property.color = new ConstantProperty(Color.WHITE);
         expect(listener).toHaveBeenCalledWith(property, 'color', property.color, oldValue);
-        listener.reset();
+        listener.calls.reset();
 
         property.color.setValue(Color.BLACK);
         expect(listener).toHaveBeenCalledWith(property, 'color', property.color, property.color);
-        listener.reset();
+        listener.calls.reset();
 
         property.color = property.color;
         expect(listener.calls.count()).toEqual(0);
