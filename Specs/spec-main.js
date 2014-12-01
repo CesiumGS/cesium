@@ -132,11 +132,15 @@ require.config({
     /**
      * ## Execution
      *
-     * Replace the browser window's `onload`, ensure it's called, and then run all of the loaded specs. This includes initializing the `HtmlReporter` instance and then executing the loaded Jasmine environment. All of this will happen after all of the specs are loaded.
+     * Load the modules via AMD, and then run all of the loaded specs. This includes initializing the `HtmlReporter` instance and then executing the loaded Jasmine environment.
      */
     var modules = ['Specs/addDefaultMatchers', 'Specs/equalsMethodEqualityTester'].concat(specs);
     require(modules, function(addDefaultMatchers, equalsMethodEqualityTester) {
         htmlReporter.initialize();
+
+        env.beforeEach(function() { addDefaultMatchers(true).call(env); });
+        env.beforeEach(function() { env.addCustomEqualityTester(equalsMethodEqualityTester); });
+
         env.execute();
     });
 
