@@ -42,8 +42,15 @@ defineSuite([
     });
 
     it('constructor throws if no scene is passed.', function() {
+        var entityCollection = new EntityCollection();
         expect(function() {
-            return new PointVisualizer();
+            return new PointVisualizer(undefined, entityCollection);
+        }).toThrowDeveloperError();
+    });
+
+    it('constructor throws if no entityCollection is passed.', function() {
+        expect(function() {
+            return new PointVisualizer(scene, undefined);
         }).toThrowDeveloperError();
     });
 
@@ -139,6 +146,36 @@ defineSuite([
         point.show = new ConstantProperty(false);
         visualizer.update(time);
         expect(bb.show).toEqual(testObject.point.show.getValue(time));
+    });
+
+    it('Reuses primitives when hiding one and showing another', function() {
+        var time = JulianDate.now();
+        var entityCollection = new EntityCollection();
+        visualizer = new PointVisualizer(scene, entityCollection);
+
+        var testObject = entityCollection.getOrCreateEntity('test');
+        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.point = new PointGraphics();
+        testObject.point.show = new ConstantProperty(true);
+
+        visualizer.update(time);
+
+        var billboardCollection = scene.primitives.get(0);
+        expect(billboardCollection.length).toEqual(1);
+
+        testObject.point.show = new ConstantProperty(false);
+
+        visualizer.update(time);
+
+        expect(billboardCollection.length).toEqual(1);
+
+        var testObject2 = entityCollection.getOrCreateEntity('test2');
+        testObject2.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject2.point = new PointGraphics();
+        testObject2.point.show = new ConstantProperty(true);
+
+        visualizer.update(time);
+        expect(billboardCollection.length).toEqual(1);
     });
 
     it('clear hides billboards.', function() {

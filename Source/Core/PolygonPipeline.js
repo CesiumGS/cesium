@@ -963,7 +963,7 @@ define([
                     edge = Math.min(triangle.i0, triangle.i1).toString() + ' ' + Math.max(triangle.i0, triangle.i1).toString();
 
                     i = edges[edge];
-                    if (!i) {
+                    if (!defined(i)) {
                         mid = Cartesian3.add(v0, v1, new Cartesian3());
                         Cartesian3.multiplyByScalar(mid, 0.5, mid);
                         subdividedPositions.push(mid);
@@ -985,7 +985,7 @@ define([
                     edge = Math.min(triangle.i1, triangle.i2).toString() + ' ' + Math.max(triangle.i1, triangle.i2).toString();
 
                     i = edges[edge];
-                    if (!i) {
+                    if (!defined(i)) {
                         mid = Cartesian3.add(v1, v2, new Cartesian3());
                         Cartesian3.multiplyByScalar(mid, 0.5, mid);
                         subdividedPositions.push(mid);
@@ -1007,7 +1007,7 @@ define([
                     edge = Math.min(triangle.i2, triangle.i0).toString() + ' ' + Math.max(triangle.i2, triangle.i0).toString();
 
                     i = edges[edge];
-                    if (!i) {
+                    if (!defined(i)) {
                         mid = Cartesian3.add(v2, v0, new Cartesian3());
                         Cartesian3.multiplyByScalar(mid, 0.5, mid);
                         subdividedPositions.push(mid);

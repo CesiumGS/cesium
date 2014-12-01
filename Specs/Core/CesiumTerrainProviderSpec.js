@@ -59,6 +59,10 @@ defineSuite([
         return returnTileJson('Data/CesiumTerrainTileJson/VertexNormals.tile.json');
     }
 
+    function returnOctVertexNormalTileJson() {
+        return returnTileJson('Data/CesiumTerrainTileJson/OctVertexNormals.tile.json');
+    }
+
     function returnWaterMaskTileJson() {
         return returnTileJson('Data/CesiumTerrainTileJson/WaterMask.tile.json');
     }
@@ -187,7 +191,7 @@ defineSuite([
     });
 
     it('has vertex normals', function() {
-        returnVertexNormalTileJson();
+        returnOctVertexNormalTileJson();
 
         var provider = new CesiumTerrainProvider({
             url : 'made/up/url',
@@ -205,7 +209,7 @@ defineSuite([
     });
 
     it('does not request vertex normals', function() {
-        returnVertexNormalTileJson();
+        returnOctVertexNormalTileJson();
 
         var provider = new CesiumTerrainProvider({
             url : 'made/up/url',
@@ -491,6 +495,44 @@ defineSuite([
             });
         });
 
+        it('provides QuantizedMeshTerrainData with OctVertexNormals', function() {
+            var baseUrl = 'made/up/url';
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.octvertexnormals.terrain', responseType, method, data, headers, deferred);
+            };
+
+            returnOctVertexNormalTileJson();
+
+            var terrainProvider = new CesiumTerrainProvider({
+                url : baseUrl,
+                requestVertexNormals : true
+            });
+
+            waitsFor(function() {
+                return terrainProvider.ready;
+            });
+
+            var loadedData;
+
+            runs(function() {
+                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
+
+                when(promise, function(terrainData) {
+                    loadedData = terrainData;
+                });
+            });
+
+            waitsFor(function() {
+                return defined(loadedData);
+            }, 'request to complete');
+
+            runs(function() {
+                expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
+                expect(loadedData._encodedNormals).toBeDefined();
+            });
+        });
+
         it('provides QuantizedMeshTerrainData with VertexNormals and unknown extensions', function() {
             var baseUrl = 'made/up/url';
 
@@ -506,6 +548,44 @@ defineSuite([
             });
         });
 
+        it('provides QuantizedMeshTerrainData with OctVertexNormals and unknown extensions', function() {
+            var baseUrl = 'made/up/url';
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.octvertexnormals.unknownext.terrain', responseType, method, data, headers, deferred);
+            };
+
+            returnOctVertexNormalTileJson();
+
+            var terrainProvider = new CesiumTerrainProvider({
+                url : baseUrl,
+                requestVertexNormals : true
+            });
+
+            waitsFor(function() {
+                return terrainProvider.ready;
+            });
+
+            var loadedData;
+
+            runs(function() {
+                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
+
+                when(promise, function(terrainData) {
+                    loadedData = terrainData;
+                });
+            });
+
+            waitsFor(function() {
+                return defined(loadedData);
+            }, 'request to complete');
+
+            runs(function() {
+                expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
+                expect(loadedData._encodedNormals).toBeDefined();
+            });
+        });
+
         it('provides QuantizedMeshTerrainData with unknown extension', function() {
             var baseUrl = 'made/up/url';
 
@@ -513,7 +593,7 @@ defineSuite([
                 loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.unknownext.terrain', responseType, method, data, headers, deferred);
             };
 
-            returnVertexNormalTileJson();
+            returnOctVertexNormalTileJson();
 
             waitForTile(0, 0, 0, true, false, function(loadedData) {
                 expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);

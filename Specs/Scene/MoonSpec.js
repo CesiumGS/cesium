@@ -59,16 +59,13 @@ defineSuite([
 
     it('draws in 3D', function() {
         scene.moon = new Moon();
-        scene.initializeFrame();
-        scene.render();
+        scene.renderForSpecs();
 
         var date = scene.frameState.time;
         var camera = scene.camera;
         lookAtMoon(camera, date);
 
-        scene.initializeFrame();
-        scene.render();
-        expect(scene.context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toNotEqual([0, 0, 0, 0]);
     });
 
     it('does not render when show is false', function() {

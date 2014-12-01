@@ -123,6 +123,7 @@ define([
          * Gets the URL of the single, top-level imagery tile.
          * @memberof SingleTileImageryProvider.prototype
          * @type {String}
+         * @readonly
          */
         url : {
             get : function() {
@@ -134,6 +135,7 @@ define([
          * Gets the proxy used by this provider.
          * @memberof SingleTileImageryProvider.prototype
          * @type {Proxy}
+         * @readonly
          */
         proxy : {
             get : function() {
@@ -146,6 +148,7 @@ define([
          * not be called before {@link SingleTileImageryProvider#ready} returns true.
          * @memberof SingleTileImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         tileWidth : {
             get : function() {
@@ -164,6 +167,7 @@ define([
          * not be called before {@link SingleTileImageryProvider#ready} returns true.
          * @memberof SingleTileImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         tileHeight: {
             get : function() {
@@ -182,6 +186,7 @@ define([
          * not be called before {@link SingleTileImageryProvider#ready} returns true.
          * @memberof SingleTileImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         maximumLevel : {
             get : function() {
@@ -200,6 +205,7 @@ define([
          * not be called before {@link SingleTileImageryProvider#ready} returns true.
          * @memberof SingleTileImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         minimumLevel : {
             get : function() {
@@ -218,6 +224,7 @@ define([
          * not be called before {@link SingleTileImageryProvider#ready} returns true.
          * @memberof SingleTileImageryProvider.prototype
          * @type {TilingScheme}
+         * @readonly
          */
         tilingScheme : {
             get : function() {
@@ -236,6 +243,7 @@ define([
          * not be called before {@link SingleTileImageryProvider#ready} returns true.
          * @memberof SingleTileImageryProvider.prototype
          * @type {Rectangle}
+         * @readonly
          */
         rectangle : {
             get : function() {
@@ -250,6 +258,7 @@ define([
          * not be called before {@link SingleTileImageryProvider#ready} returns true.
          * @memberof SingleTileImageryProvider.prototype
          * @type {TileDiscardPolicy}
+         * @readonly
          */
         tileDiscardPolicy : {
             get : function() {
@@ -269,6 +278,7 @@ define([
          * are passed an instance of {@link TileProviderError}.
          * @memberof SingleTileImageryProvider.prototype
          * @type {Event}
+         * @readonly
          */
         errorEvent : {
             get : function() {
@@ -280,6 +290,7 @@ define([
          * Gets a value indicating whether or not the provider is ready for use.
          * @memberof SingleTileImageryProvider.prototype
          * @type {Boolean}
+         * @readonly
          */
         ready : {
             get : function() {
@@ -292,6 +303,7 @@ define([
          * the source of the imagery.  This function should not be called before {@link SingleTileImageryProvider#ready} returns true.
          * @memberof SingleTileImageryProvider.prototype
          * @type {Credit}
+         * @readonly
          */
         credit : {
             get : function() {
@@ -307,6 +319,7 @@ define([
          * and texture upload time are reduced.
          * @memberof SingleTileImageryProvider.prototype
          * @type {Boolean}
+         * @readonly
          */
         hasAlphaChannel : {
             get : function() {

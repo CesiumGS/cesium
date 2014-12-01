@@ -344,10 +344,10 @@ define([
         if (!show) {
             //don't bother creating or updating anything else
             if (defined(polyline)) {
-                this._unusedIndexes.push(polyline.index);
+                this._unusedIndexes.push(item.index);
                 item.polyline = undefined;
                 polyline.show = false;
-                polyline.index = undefined;
+                item.index = undefined;
             }
             return;
         }
@@ -378,10 +378,10 @@ define([
     PolylineUpdater.prototype.removeObject = function(item) {
         var polyline = item.polyline;
         if (defined(polyline)) {
-            this._unusedIndexes.push(polyline.index);
+            this._unusedIndexes.push(item.index);
             item.polyline = undefined;
             polyline.show = false;
-            polyline.index = undefined;
+            item.index = undefined;
         }
     };
 

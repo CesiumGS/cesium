@@ -203,6 +203,38 @@ defineSuite([
         visualizer.update(time);
     });
 
+    it('Reuses primitives when hiding one and showing another', function() {
+        var time = JulianDate.now();
+        var entityCollection = new EntityCollection();
+        visualizer = new LabelVisualizer(scene, entityCollection);
+
+        var testObject = entityCollection.getOrCreateEntity('test');
+        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.label = new LabelGraphics();
+        testObject.label.text = new ConstantProperty('a');
+        testObject.label.show = new ConstantProperty(true);
+
+        visualizer.update(time);
+
+        var labelCollection = scene.primitives.get(0);
+        expect(labelCollection.length).toEqual(1);
+
+        testObject.label.show = new ConstantProperty(false);
+
+        visualizer.update(time);
+
+        expect(labelCollection.length).toEqual(1);
+
+        var testObject2 = entityCollection.getOrCreateEntity('test2');
+        testObject2.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject2.label = new LabelGraphics();
+        testObject2.label.text = new ConstantProperty('b');
+        testObject2.label.show = new ConstantProperty(true);
+
+        visualizer.update(time);
+        expect(labelCollection.length).toEqual(1);
+    });
+
     it('clear hides labels.', function() {
         var entityCollection = new EntityCollection();
         visualizer = new LabelVisualizer(scene, entityCollection);

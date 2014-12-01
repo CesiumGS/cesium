@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        './defined'
+        './defined',
+        './getTimestamp'
     ], function(
-        defined) {
+        defined,
+        getTimestamp) {
     "use strict";
 
     var implementation = window.requestAnimationFrame;
@@ -21,13 +23,14 @@ define([
 
         // build an implementation based on setTimeout
         if (!defined(implementation)) {
+            var msPerFrame = 1000.0 / 60.0;
             var lastFrameTime = 0;
             implementation = function(callback) {
-                var currentTime = Date.now();
+                var currentTime = getTimestamp();
 
                 // schedule the callback to target 60fps, 16.7ms per frame,
                 // accounting for the time taken by the callback
-                var delay = Math.max(16 - (currentTime - lastFrameTime), 0);
+                var delay = Math.max(msPerFrame - (currentTime - lastFrameTime), 0);
                 lastFrameTime = currentTime + delay;
 
                 return setTimeout(function() {
