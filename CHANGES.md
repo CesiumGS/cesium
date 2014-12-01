@@ -22,7 +22,6 @@ Change Log
 * Added `modelMatrix` and `cull` options to `Primitive` constructor.
 * The `translation` parameter to `Matrix4.fromRotationTranslation` now defaults to `Cartesian3.ZERO`.
 * Fixed `ModelNode.matrix` when a node is targeted for animation.
-* Clamp of `Camera.tilt` to [-pi / 2, pi / 2] instead of [0, pi / 2].
 * `Camera.tilt` now clamps to [-pi / 2, pi / 2] instead of [0, pi / 2].
 * Fixed an issue that could lead to poor performance on lower-end GPUs like the Intel HD 3000.
 * Added `distanceSquared` to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
