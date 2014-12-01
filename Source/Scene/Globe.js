@@ -916,15 +916,6 @@ define([
                 }
             }
 
-            // Firefox 33-34 has a regression that prevents the CORDIC implementation from compiling
-            // https://github.com/AnalyticalGraphicsInc/cesium/issues/2197
-            if (FeatureDetection.isFirefox()) {
-                var firefoxVersion = FeatureDetection.firefoxVersion();
-                if (firefoxVersion[0] >= 33 && firefoxVersion[0] <= 34) {
-                    shaderDefines.push('DISABLE_CORDIC');
-                }
-            }
-
             surfaceShaderSet.baseVertexShaderSource = new ShaderSource({
                 defines : shaderDefines,
                 sources : [GlobeVS, getPositionMode, get2DYPositionFraction]

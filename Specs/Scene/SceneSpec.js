@@ -508,7 +508,9 @@ defineSuite([
     });
 
     it('raises renderError when render throws', function() {
-        var s = createScene();
+        var s = createScene({
+            rethrowRenderErrors : false
+        });
 
         var spyListener = jasmine.createSpy('listener');
         s.renderError.addEventListener(spyListener);
