@@ -7,7 +7,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/IntersectionTests',
         '../Core/PixelFormat',
         '../Core/Rectangle',
@@ -28,7 +27,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         IntersectionTests,
         PixelFormat,
         Rectangle,
@@ -609,13 +607,9 @@ define([
     }
 
     function isDataAvailable(tile, terrainProvider) {
-        if (defined(terrainProvider.getTileDataAvailable)) {
-            var tileDataAvailable = terrainProvider.getTileDataAvailable(tile.x, tile.y, tile.level);
-            if (defined(tileDataAvailable)) {
-                return tileDataAvailable;
-            }
-        } else {
-            deprecationWarning('TerrainProvider.getTileDataAvailable', 'TerrainProviders must now implement the getTileDataAvailable function.');
+        var tileDataAvailable = terrainProvider.getTileDataAvailable(tile.x, tile.y, tile.level);
+        if (defined(tileDataAvailable)) {
+            return tileDataAvailable;
         }
 
         var parent = tile.parent;

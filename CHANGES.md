@@ -3,6 +3,8 @@ Change Log
 
 ### 1.4 - 2014-12-01
 
+* Breaking changes
+  * Types implementing `TerrainProvider` are now required to implement the `getTileDataAvailable` function.  Backwards compatibility for this was deprecated in Cesium 1.2.
 * Deprecated
     * The `sourceUri` parameter to `GeoJsonDatasource.load` was deprecated and will be removed in Cesium 1.6 on February 3, 2015 ([#2257](https://github.com/AnalyticalGraphicsInc/cesium/issues/2257)).  Use `options.sourceUri` instead.
     * `GeometryPipeline.wrapLongitude` was deprecated. It will be removed in Cesium 1.5 on January 2, 2015. Use `GeometryPipeline.splitLongitude`. ([#2272](https://github.com/AnalyticalGraphicsInc/cesium/issues/2272))
