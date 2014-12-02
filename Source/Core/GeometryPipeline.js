@@ -1046,12 +1046,12 @@ define([
 
         var geometries = [];
         if (instanceGeometry.length > 0) {
-            geometries.push(combineGeometries(instances, 'geometry'));
+            geometries.push(combineGeometries(instanceGeometry, 'geometry'));
         }
 
         if (instanceSplitGeometry.length > 0) {
-            geometries.push(combineGeometries(instances, 'westHemisphereGeometry'));
-            geometries.push(combineGeometries(instances, 'eastHemisphereGeometry'));
+            geometries.push(combineGeometries(instanceSplitGeometry, 'westHemisphereGeometry'));
+            geometries.push(combineGeometries(instanceSplitGeometry, 'eastHemisphereGeometry'));
         }
 
         return geometries;
@@ -2470,7 +2470,7 @@ define([
         if (defined(boundingSphere)) {
             var minX = boundingSphere.center.x - boundingSphere.radius;
             if (minX > 0 || BoundingSphere.intersect(boundingSphere, Cartesian4.UNIT_Y) !== Intersect.INTERSECTING) {
-                return geometry;
+                return instance;
             }
         }
 
