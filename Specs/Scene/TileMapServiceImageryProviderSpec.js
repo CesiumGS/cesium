@@ -17,7 +17,8 @@ defineSuite([
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
-        'Specs/waitsForPromise'
+        'Specs/waitsForPromise',
+        'ThirdParty/when'
     ], function(
         TileMapServiceImageryProvider,
         Cartesian2,
@@ -36,7 +37,8 @@ defineSuite([
         ImageryLayer,
         ImageryProvider,
         ImageryState,
-        waitsForPromise) {
+        waitsForPromise,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -163,7 +165,25 @@ defineSuite([
         expect(providerWithCredit.credit).toBeDefined();
     });
 
-    it('routes requests through a proxy if one is specified', function() {
+    it('routes resource request through a proxy if one is specified', function() {
+        var proxy = new DefaultProxy('/proxy/');
+        var requestMetadata = when.defer();
+        spyOn(loadWithXhr, 'load').andCallFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            requestMetadata.resolve(url);
+            deferred.reject(); //since the TMS server doesn't exist (and doesn't need too) we can just reject here.
+        });
+
+        var provider = new TileMapServiceImageryProvider({
+            url : 'made/up/tms/server',
+            proxy : proxy
+        });
+
+        waitsForPromise(requestMetadata, function(url) {
+            expect(url.indexOf(proxy.getURL('made/up/tms/server'))).toEqual(0);
+        });
+    });
+
+    it('routes tile requests through a proxy if one is specified', function() {
         var proxy = new DefaultProxy('/proxy/');
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server',
