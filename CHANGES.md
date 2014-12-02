@@ -1,6 +1,15 @@
 Change Log
 ==========
 
+### 1.5 - 2015-01-05
+
+* Breaking changes
+  *
+* Deprecated
+  *
+* `ConstantProperty` now accepts `HTMLElement` instances as valid values.
+* `BillboardGraphics.image` and 'ImageMaterialProperty.image' now accept `Property` instances that represent an `Image` or `Canvas` in addition to a url.
+
 ### 1.4 - 2014-12-01
 
 * Breaking changes
@@ -29,8 +38,6 @@ Change Log
 * Added `distanceSquared` to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
 * Added `Matrix4.multiplyByMatrix3`.
 * Fixed a bug in `Model` where the WebGL shader optimizer in Linux was causing mesh loading to fail.
-* `ConstantProperty` now accepts `HTMLElement` instances as valid values.
-* `BillboardGraphics.image` and 'ImageMaterialProperty.image' now accept `Property` instances that represent an `Image` or `Canvas` in addition to a url.
 
 ### 1.3 - 2014-11-03
 
