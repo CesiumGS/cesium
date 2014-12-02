@@ -3,6 +3,8 @@ Change Log
 
 ### 1.4 - 2014-12-01
 
+* Breaking changes
+  * Types implementing `TerrainProvider` are now required to implement the `getTileDataAvailable` function.  Backwards compatibility for this was deprecated in Cesium 1.2.
 * Deprecated
     * The `sourceUri` parameter to `GeoJsonDatasource.load` was deprecated and will be removed in Cesium 1.6 on February 3, 2015 ([#2257](https://github.com/AnalyticalGraphicsInc/cesium/issues/2257)).  Use `options.sourceUri` instead.
     * `GeometryPipeline.wrapLongitude` was deprecated. It will be removed in Cesium 1.5 on January 2, 2015. Use `GeometryPipeline.splitLongitude`. ([#2272](https://github.com/AnalyticalGraphicsInc/cesium/issues/2272))
@@ -16,6 +18,7 @@ Change Log
 * Added an options parameter to `GeoJsonDataSource.load`, `GeoJsonDataSource.loadUrl`, and `GeoJsonDataSource.fromUrl` to allow for basic per-instance styling. [Sandcastle example](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=GeoJSON%20and%20TopoJSON.html&label=Showcases).
 * Improved GeoJSON loading performance.
 * Improved point visualization performance for all DataSources.
+* Improved the performance and memory usage of `EllipseGeometry`, `EllipseOutlineGeometry`, `CircleGeometry`, and `CircleOutlineGeometry`.
 * Added `tileMatrixLabels` option to `WebMapTileServiceImageryProvider`.
 * Fixed a bug in `PolylineGeometry` that would cause the geometry to be split across the IDL for 3D only scenes. [#1197](https://github.com/AnalyticalGraphicsInc/cesium/issues/1197)
 * Added `modelMatrix` and `cull` options to `Primitive` constructor.
@@ -25,6 +28,7 @@ Change Log
 * Fixed an issue that could lead to poor performance on lower-end GPUs like the Intel HD 3000.
 * Added `distanceSquared` to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
 * Added `Matrix4.multiplyByMatrix3`.
+* Fixed a bug in `Model` where the WebGL shader optimizer in Linux was causing mesh loading to fail.
 
 ### 1.3 - 2014-11-03
 
