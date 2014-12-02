@@ -3,11 +3,13 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
+        './GeometryType',
         './PrimitiveType'
     ], function(
         defaultValue,
         defined,
         DeveloperError,
+        GeometryType,
         PrimitiveType) {
     "use strict";
 
@@ -146,6 +148,16 @@ define([
          * @default undefined
          */
         this.boundingSphere = options.boundingSphere;
+
+        /**
+         * @private
+         */
+        this.geometryType = defaultValue(options.geometryType, GeometryType.NONE);
+
+        /**
+         * @private
+         */
+        this.boundingSphereCV = undefined;
     };
 
     /**

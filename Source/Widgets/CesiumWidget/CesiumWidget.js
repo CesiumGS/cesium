@@ -11,7 +11,6 @@ define([
         '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
         '../../Core/formatError',
-        '../../Core/getTimestamp',
         '../../Core/requestAnimationFrame',
         '../../Core/ScreenSpaceEventHandler',
         '../../Scene/BingMapsImageryProvider',
@@ -35,7 +34,6 @@ define([
         DeveloperError,
         Ellipsoid,
         formatError,
-        getTimestamp,
         requestAnimationFrame,
         ScreenSpaceEventHandler,
         BingMapsImageryProvider,
@@ -55,9 +53,9 @@ define([
 
     function startRenderLoop(widget) {
         widget._renderLoopRunning = true;
-        widget._lastFrameTime = getTimestamp();
 
-        function render() {
+        var lastFrameTime = 0;
+        function render(frameTime) {
             if (widget.isDestroyed()) {
                 return;
             }
@@ -70,15 +68,13 @@ define([
                         widget.render();
                         requestAnimationFrame(render);
                     } else {
-                        var lastFrameTime = widget._lastFrameTime;
                         var interval = 1000.0 / targetFrameRate;
-                        var now = getTimestamp();
-                        var delta = now - lastFrameTime;
+                        var delta = frameTime - lastFrameTime;
 
                         if (delta > interval) {
                             widget.resize();
                             widget.render();
-                            widget._lastFrameTime = now - (delta % interval);
+                            lastFrameTime = frameTime - (delta % interval);
                         }
                         requestAnimationFrame(render);
                     }
@@ -235,7 +231,6 @@ define([
         this._resolutionScale = 1.0;
         this._forceResize = false;
         this._clock = defined(options.clock) ? options.clock : new Clock();
-        this._lastFrameTime = undefined;
 
         configureCanvasSize(this);
 

@@ -112,6 +112,8 @@ define([
         this._imageId = undefined;
         this._image = undefined;
         this._imageSubRegion = undefined;
+        this._imageWidth = undefined;
+        this._imageHeight = undefined;
 
         var image = options.image;
         var imageId = options.imageId;
@@ -627,7 +629,7 @@ define([
          */
         width : {
             get : function() {
-                return this._width;
+                return defaultValue(this._width, this._imageWidth);
             },
             set : function(value) {
                 if (this._width !== value) {
@@ -644,7 +646,7 @@ define([
          */
         height : {
             get : function() {
-                return this._height;
+                return defaultValue(this._height, this._imageHeight);
             },
             set : function(value) {
                 if (this._height !== value) {
@@ -787,6 +789,12 @@ define([
                 // another load occurred before this one finished, ignore the index
                 return;
             }
+
+            // fill in imageWidth and imageHeight
+            var textureCoordinates = atlas.textureCoordinates[index];
+            that._imageWidth = atlas.texture.width * textureCoordinates.width;
+            that._imageHeight = atlas.texture.height * textureCoordinates.height;
+
             that._imageIndex = index;
             that._ready = true;
             that._image = undefined;

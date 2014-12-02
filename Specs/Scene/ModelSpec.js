@@ -95,7 +95,7 @@ defineSuite([
             // Render scene to progressively load the model
             scene.renderForSpecs();
             return model.ready;
-        }, url + ' readyToRender', 10000);
+        }, url + ' ready', 10000);
 
         return model;
     }
@@ -237,6 +237,7 @@ defineSuite([
 
         runs(function() {
             expect(scene.context.createRenderState).toHaveBeenCalledWith(rs);
+            primitives.remove(model);
         });
     });
 
@@ -364,7 +365,7 @@ defineSuite([
     });
 
     it('getMesh returns undefined when mesh does not exist', function() {
-        expect(duckModel.getNode('name-of-mesh-that-does-not-exist')).not.toBeDefined();
+        expect(duckModel.getMesh('name-of-mesh-that-does-not-exist')).not.toBeDefined();
     });
 
     it('getMesh returns returns a mesh', function() {
@@ -389,7 +390,7 @@ defineSuite([
     });
 
     it('getMaterial returns undefined when mesh does not exist', function() {
-        expect(duckModel.getNode('name-of-material-that-does-not-exist')).not.toBeDefined();
+        expect(duckModel.getMaterial('name-of-material-that-does-not-exist')).not.toBeDefined();
     });
 
     it('getMaterial returns returns a material', function() {
@@ -876,28 +877,39 @@ defineSuite([
     });
 
     it('Animates and renders', function() {
-        var node = animBoxesModel.getNode('Geometry-mesh020Node');
-        var matrix;
-
-        var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
-        var animations = animBoxesModel.activeAnimations;
-        var a = animations.add({
-            name : 'animation_1',
-            startTime : time
+        var m = loadModel(animBoxesUrl, {
+            scale : 2.0
         });
 
-        animBoxesModel.zoomTo();
+        runs(function() {
+            var node = m.getNode('inner_box');
+            var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
+            var animations = m.activeAnimations;
+            var a = animations.add({
+                name : 'animation_1',
+                startTime : time
+            });
 
-        for (var i = 0; i < 4; ++i) {
-            var t = JulianDate.addSeconds(time, i, new JulianDate());
-            expect(scene.renderForSpecs(t)).toEqual([0, 0, 0, 255]);
+            expect(node.matrix).toEqual(Matrix4.IDENTITY);
+            var previousMatrix = Matrix4.clone(node.matrix);
 
-            animBoxesModel.show = true;
-            expect(scene.renderForSpecs(t)).not.toEqual([0, 0, 0, 255]);
-            animBoxesModel.show = false;
-        }
+            m.zoomTo();
 
-        expect(animations.remove(a)).toEqual(true);
+            for (var i = 1; i < 4; ++i) {
+                var t = JulianDate.addSeconds(time, i, new JulianDate());
+                expect(scene.renderForSpecs(t)).toEqual([0, 0, 0, 255]);
+
+                m.show = true;
+                expect(scene.renderForSpecs(t)).not.toEqual([0, 0, 0, 255]);
+                m.show = false;
+
+                expect(node.matrix).not.toEqual(previousMatrix);
+                previousMatrix = Matrix4.clone(node.matrix);
+            }
+
+            expect(animations.remove(a)).toEqual(true);
+            primitives.remove(m);
+        });
     });
 
     ///////////////////////////////////////////////////////////////////////////
@@ -936,4 +948,10 @@ defineSuite([
         animations.removeAll();
         riggedFigureModel.show = false;
     });
+
+    it('should load a model where WebGL shader optimizer removes an attribute (linux)', function() {
+        var url = './Data/Models/test-shader-optimize/test-shader-optimize.gltf';
+        var m = loadModel(url);
+    });
+
 }, 'WebGL');

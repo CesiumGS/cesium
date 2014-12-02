@@ -42,8 +42,15 @@ defineSuite([
     });
 
     it('constructor throws if no scene is passed.', function() {
+        var entityCollection = new EntityCollection();
         expect(function() {
-            return new PointVisualizer();
+            return new PointVisualizer(undefined, entityCollection);
+        }).toThrowDeveloperError();
+    });
+
+    it('constructor throws if no entityCollection is passed.', function() {
+        expect(function() {
+            return new PointVisualizer(scene, undefined);
         }).toThrowDeveloperError();
     });
 
