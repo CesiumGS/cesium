@@ -190,7 +190,7 @@ void main()
 #ifdef EYE_DISTANCE_SCALING
     scale *= czm_nearFarScalar(scaleByDistance, lengthSq);
     // push vertex behind near plane for clipping
-    if (scale == 0.0)
+    if (scale == 0.0 || int(mod(float(int(positionLow)), 6.0)) != 0)
     {
         positionEC.xyz = vec3(0.0);
     }
