@@ -17,6 +17,7 @@ defineSuite([
         'Core/GeometryType',
         'Core/Math',
         'Core/Matrix4',
+        'Core/PolygonGeometry',
         'Core/PrimitiveType',
         'Core/Tipsify',
         'Core/VertexFormat'
@@ -38,6 +39,7 @@ defineSuite([
         GeometryType,
         CesiumMath,
         Matrix4,
+        PolygonGeometry,
         PrimitiveType,
         Tipsify,
         VertexFormat) {
@@ -1072,6 +1074,38 @@ defineSuite([
         }));
     });
 
+    it('combineInstances with geometry that is and is not split by the IDL', function() {
+        var instances = [
+            GeometryPipeline.splitLongitude(new GeometryInstance({
+                geometry : PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
+                    positions : Cartesian3.fromDegreesArray([
+                        179.0, 1.0,
+                        179.0, -1.0,
+                        -179.0, -1.0,
+                        -179.0, 1.0
+                    ]),
+                    vertexFormat : VertexFormat.POSITION_ONLY,
+                    granularity : 2.0 * CesiumMath.RADIANS_PER_DEGREE
+                }))
+            })),
+            new GeometryInstance({
+                geometry : PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
+                    positions : Cartesian3.fromDegreesArray([
+                        -1.0, 1.0,
+                        -1.0, -1.0,
+                        1.0, -1.0,
+                        1.0, 1.0
+                    ]),
+                    vertexFormat : VertexFormat.POSITION_ONLY,
+                    granularity : 2.0 * CesiumMath.RADIANS_PER_DEGREE
+                }))
+            })
+        ];
+
+        var combinedInstances = GeometryPipeline.combineInstances(instances);
+        expect(combinedInstances.length).toEqual(3);
+    });
+
     it('combineInstances combines bounding spheres', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
@@ -1845,6 +1879,24 @@ defineSuite([
             expect(tangent).toEqualEpsilon(Cartesian3.fromArray(originalTangents, i / 2 * 3), CesiumMath.EPSILON2);
             expect(binormal).toEqualEpsilon(Cartesian3.fromArray(originalBinormals, i / 2 * 3), CesiumMath.EPSILON2);
         }
+    });
+
+    it('splitLongitude does nothing for geometry not split by the IDL', function() {
+        var instance = new GeometryInstance({
+            geometry : PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
+                positions : Cartesian3.fromDegreesArray([
+                    -1.0, 1.0,
+                    -1.0, -1.0,
+                    1.0, -1.0,
+                    1.0, 1.0
+                ]),
+                vertexFormat : VertexFormat.POSITION_ONLY,
+                granularity : 2.0 * CesiumMath.RADIANS_PER_DEGREE
+            }))
+        });
+
+        var splitInstance = GeometryPipeline.splitLongitude(instance);
+        expect(splitInstance).toBe(instance);
     });
 
     it('splitLongitude provides indices for an un-indexed triangle list', function() {
