@@ -43,6 +43,8 @@ define([
             return scene.context.readPixels();
         };
 
+        scene.rethrowRenderErrors = defaultValue(options.rethrowRenderErrors, true);
+
         return scene;
     }
 

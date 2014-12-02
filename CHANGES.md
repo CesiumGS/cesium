@@ -3,18 +3,33 @@ Change Log
 
 ### 1.4 - 2014-12-01
 
+* Breaking changes
+  * Types implementing `TerrainProvider` are now required to implement the `getTileDataAvailable` function.  Backwards compatibility for this was deprecated in Cesium 1.2.
 * Deprecated
-    * The `sourceUri` parameter to `GeoJsonDatasource.load` has been deprecated and will be removed in Cesium 1.6 on February 3, 2015 ([#2257](https://github.com/AnalyticalGraphicsInc/cesium/issues/2257)).  Use `options.sourceUri` instead.
+    * The `sourceUri` parameter to `GeoJsonDatasource.load` was deprecated and will be removed in Cesium 1.6 on February 3, 2015 ([#2257](https://github.com/AnalyticalGraphicsInc/cesium/issues/2257)).  Use `options.sourceUri` instead.
+    * `GeometryPipeline.wrapLongitude` was deprecated. It will be removed in Cesium 1.5 on January 2, 2015. Use `GeometryPipeline.splitLongitude`. ([#2272](https://github.com/AnalyticalGraphicsInc/cesium/issues/2272))
+    * `GeometryPipeline.combine` was deprecated. It will be removed in Cesium 1.5. Use `GeometryPipeline.combineInstances`.
+* Added support for touch events on Internet Explorer 11 using the [Pointer Events API](http://www.w3.org/TR/pointerevents/).
 * Added geometry outline width support to the `DataSource` layer.  This is exposed via the new `outlineWidth` property on `EllipseGraphics`, `EllipsoidGraphics`, `PolygonGraphics`, `RectangleGraphics`, and `WallGraphics`.
 * Added `outlineWidth` support to CZML geometry packets.
 * Added `stroke-width` support to the GeoJSON simple-style implementation.
 * Added the ability to specify global GeoJSON default styling.  See the [documentation](http://cesiumjs.org/Cesium/Build/Documentation/GeoJsonDataSource.html) for details.
+* Added `CallbackProperty` to support lazy property evaluation as well as make custom properties easier to create.
 * Added an options parameter to `GeoJsonDataSource.load`, `GeoJsonDataSource.loadUrl`, and `GeoJsonDataSource.fromUrl` to allow for basic per-instance styling. [Sandcastle example](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=GeoJSON%20and%20TopoJSON.html&label=Showcases).
+* Improved GeoJSON loading performance.
+* Improved point visualization performance for all DataSources.
+* Improved the performance and memory usage of `EllipseGeometry`, `EllipseOutlineGeometry`, `CircleGeometry`, and `CircleOutlineGeometry`.
+* Added `tileMatrixLabels` option to `WebMapTileServiceImageryProvider`.
 * Fixed a bug in `PolylineGeometry` that would cause the geometry to be split across the IDL for 3D only scenes. [#1197](https://github.com/AnalyticalGraphicsInc/cesium/issues/1197)
 * Fixed a bug in `PolylineGeometry` that would cause gaps in the line. [#2136](https://github.com/AnalyticalGraphicsInc/cesium/issues/2136)
 * Added `modelMatrix` and `cull` options to `Primitive` constructor.
 * The `translation` parameter to `Matrix4.fromRotationTranslation` now defaults to `Cartesian3.ZERO`.
-* Improved point visualization performance for all DataSources.
+* Fixed `ModelNode.matrix` when a node is targeted for animation.
+* `Camera.tilt` now clamps to [-pi / 2, pi / 2] instead of [0, pi / 2].
+* Fixed an issue that could lead to poor performance on lower-end GPUs like the Intel HD 3000.
+* Added `distanceSquared` to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
+* Added `Matrix4.multiplyByMatrix3`.
+* Fixed a bug in `Model` where the WebGL shader optimizer in Linux was causing mesh loading to fail.
 
 ### 1.3 - 2014-11-03
 
@@ -27,7 +42,7 @@ Change Log
 * Fixed rendering polylines with duplicate positions. [#898](https://github.com/AnalyticalGraphicsInc/cesium/issues/898)
 * Fixed a bug in `Globe.pick` that caused it to return incorrect results when using terrain data with vertex normals.  The bug manifested itself as strange behavior when navigating around the surface with the mouse as well as incorrect results when using `Camera.viewRectangle`.
 * Fixed a bug in `sampleTerrain` that could cause it to produce undefined heights when sampling for a position very near the edge of a tile.
-* `ReferenceProperty` instances now retain their last value if the entity being referenced is removed from the target collection.  The reference will be automatically reattached if the target is reintroduced. 
+* `ReferenceProperty` instances now retain their last value if the entity being referenced is removed from the target collection.  The reference will be automatically reattached if the target is reintroduced.
 * Upgraded topojson from 1.6.8 to 1.6.18.
 * Upgraded Knockout from version 3.1.0 to 3.2.0.
 * Upgraded CodeMirror, used by SandCastle, from 2.24 to 4.6.

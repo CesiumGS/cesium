@@ -602,24 +602,6 @@ define([
         return getRuntime(this, 'materialsByName', name);
     };
 
-    var nodeAxisScratch = new Cartesian3();
-    var nodeTranslationScratch = new Cartesian3();
-    var nodeQuaternionScratch = new Quaternion();
-    var nodeScaleScratch = new Cartesian3();
-
-    function getTransform(node) {
-        if (defined(node.matrix)) {
-            return Matrix4.fromArray(node.matrix);
-        }
-
-        var axis = Cartesian3.fromArray(node.rotation, 0, nodeAxisScratch);
-
-        return Matrix4.fromTranslationQuaternionRotationScale(
-            Cartesian3.fromArray(node.translation, 0, nodeTranslationScratch),
-            Quaternion.fromAxisAngle(axis, node.rotation[3], nodeQuaternionScratch),
-            Cartesian3.fromArray(node.scale, 0 , nodeScaleScratch));
-    }
-
     var aMinScratch = new Cartesian3();
     var aMaxScratch = new Cartesian3();
 
@@ -777,6 +759,24 @@ define([
         }
     }
 
+    var nodeAxisScratch = new Cartesian3();
+    var nodeTranslationScratch = new Cartesian3();
+    var nodeQuaternionScratch = new Quaternion();
+    var nodeScaleScratch = new Cartesian3();
+
+    function getTransform(node) {
+        if (defined(node.matrix)) {
+            return Matrix4.fromArray(node.matrix);
+        }
+
+        var axis = Cartesian3.fromArray(node.rotation, 0, nodeAxisScratch);
+
+        return Matrix4.fromTranslationQuaternionRotationScale(
+            Cartesian3.fromArray(node.translation, 0, nodeTranslationScratch),
+            Quaternion.fromAxisAngle(axis, node.rotation[3], nodeQuaternionScratch),
+            Cartesian3.fromArray(node.scale, 0 , nodeScaleScratch));
+    }
+
     function parseNodes(model) {
         var runtimeNodes = {};
         var runtimeNodesByName = {};
@@ -820,7 +820,7 @@ define([
                     // Publicly-accessible ModelNode instance to modify animation targets
                     publicNode : undefined
                 };
-                runtimeNode.publicNode = new ModelNode(model, node, runtimeNode, name);
+                runtimeNode.publicNode = new ModelNode(model, node, runtimeNode, name, getTransform(node));
 
                 runtimeNodes[name] = runtimeNode;
                 runtimeNodesByName[node.name] = runtimeNode;
@@ -1106,11 +1106,11 @@ define([
         var attributes = instanceProgram.attributes;
         var programAttributeLocations = model._rendererResources.programs[instanceProgram.program].vertexAttributes;
 
-        for (var name in attributes) {
-            if (attributes.hasOwnProperty(name)) {
-                var parameter = parameters[attributes[name]];
-
-                attributeLocations[parameter.semantic] = programAttributeLocations[name].index;
+        // Note: WebGL shader compiler may have optimized and removed some attributes from programAttributeLocations
+        for (var location in programAttributeLocations){
+            if (programAttributeLocations.hasOwnProperty(location)) {
+                var parameter = parameters[attributes[location]];
+                attributeLocations[parameter.semantic] = programAttributeLocations[location].index;
             }
         }
 
@@ -1697,7 +1697,6 @@ define([
                 var pass = technique.passes[technique.pass];
                 var instanceProgram = pass.instanceProgram;
                 var uniforms = instanceProgram.uniforms;
-                var activeUniforms = model._rendererResources.programs[instanceProgram.program].allUniforms;
 
                 var uniformMap = {};
                 var uniformValues = {};
@@ -1993,6 +1992,8 @@ define([
             Matrix4.clone(node.matrix, result);
         } else {
             Matrix4.fromTranslationQuaternionRotationScale(node.translation, node.rotation, node.scale, result);
+            // Keep matrix returned by the node in-sync if the node is targeted by an animation.  Only TRS nodes can be targeted.
+            publicNode.setMatrix(result);
         }
     }
 

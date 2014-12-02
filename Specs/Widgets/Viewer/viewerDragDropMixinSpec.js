@@ -3,13 +3,13 @@ defineSuite([
         'Widgets/Viewer/viewerDragDropMixin',
         'Core/defined',
         'Core/TimeInterval',
-        'Specs/EventHelper',
+        'Specs/DomEventSimulator',
         'Widgets/Viewer/Viewer'
     ], function(
         viewerDragDropMixin,
         defined,
         TimeInterval,
-        EventHelper,
+        DomEventSimulator,
         Viewer) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -122,7 +122,7 @@ defineSuite([
         viewer = new Viewer(container);
         viewer.extend(viewerDragDropMixin);
 
-        EventHelper.fireMockEvent(viewer._handleDrop, mockEvent);
+        DomEventSimulator.fireMockEvent(viewer._handleDrop, mockEvent);
 
         waitsFor(function() {
             return viewer.dataSources.length === 1;
@@ -159,7 +159,7 @@ defineSuite([
         viewer = new Viewer(container);
         viewer.extend(viewerDragDropMixin);
 
-        EventHelper.fireMockEvent(viewer._handleDrop, mockEvent);
+        DomEventSimulator.fireMockEvent(viewer._handleDrop, mockEvent);
 
         waitsFor(function() {
             return viewer.dataSources.length === 2;
@@ -199,7 +199,7 @@ defineSuite([
         viewer = new Viewer(container);
         viewer.extend(viewerDragDropMixin);
 
-        EventHelper.fireMockEvent(viewer._handleDrop, mockEvent);
+        DomEventSimulator.fireMockEvent(viewer._handleDrop, mockEvent);
 
         waitsFor(function() {
             return viewer.dataSources.length === 2;
@@ -218,7 +218,7 @@ defineSuite([
             expect(source1.clock.stopTime).toEqual(interval.stop);
 
             viewer.clearOnDrop = false;
-            EventHelper.fireMockEvent(viewer._handleDrop, mockEvent);
+            DomEventSimulator.fireMockEvent(viewer._handleDrop, mockEvent);
         });
 
         waitsFor(function() {
@@ -237,7 +237,7 @@ defineSuite([
             expect(source4.entities.getById('test2')).toBeDefined();
 
             viewer.clearOnDrop = true;
-            EventHelper.fireMockEvent(viewer._handleDrop, mockEvent);
+            DomEventSimulator.fireMockEvent(viewer._handleDrop, mockEvent);
         });
 
         waitsFor(function() {
@@ -278,7 +278,7 @@ defineSuite([
         var spyListener = jasmine.createSpy('listener');
 
         viewer.dropError.addEventListener(spyListener);
-        EventHelper.fireMockEvent(viewer._handleDrop, mockEvent);
+        DomEventSimulator.fireMockEvent(viewer._handleDrop, mockEvent);
 
         waitsFor(function() {
             return spyListener.wasCalled;
@@ -311,7 +311,7 @@ defineSuite([
         var spyListener = jasmine.createSpy('listener');
 
         viewer.dropError.addEventListener(spyListener);
-        EventHelper.fireMockEvent(viewer._handleDrop, mockEvent);
+        DomEventSimulator.fireMockEvent(viewer._handleDrop, mockEvent);
 
         waitsFor(function() {
             return spyListener.wasCalled;

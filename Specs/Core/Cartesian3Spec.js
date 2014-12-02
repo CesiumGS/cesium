@@ -311,6 +311,23 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('distanceSquared', function() {
+        var distanceSquared = Cartesian3.distanceSquared(new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(3.0, 0.0, 0.0));
+        expect(distanceSquared).toEqual(4.0);
+    });
+
+    it('distanceSquared throws without left', function() {
+        expect(function() {
+            Cartesian3.distanceSquared();
+        }).toThrowDeveloperError();
+    });
+
+    it('distanceSquared throws without right', function() {
+        expect(function() {
+            Cartesian3.distanceSquared(Cartesian3.UNIT_X);
+        }).toThrowDeveloperError();
+    });
+
     it('normalize works with a result parameter', function() {
         var cartesian = new Cartesian3(2.0, 0.0, 0.0);
         var expectedResult = new Cartesian3(1.0, 0.0, 0.0);
