@@ -15,7 +15,7 @@
  */ 
 float czm_latitudeToWebMercatorFraction(float latitude, float southMercatorYLow, float southMercatorYHigh, float oneOverMercatorHeight)
 {
-    float sinLatitude = czm_cosineAndSine(latitude).y;
+    float sinLatitude = sin(latitude);
     float mercatorY = 0.5 * log((1.0 + sinLatitude) / (1.0 - sinLatitude));
     
     // mercatorY - southMercatorY in simulated double precision.

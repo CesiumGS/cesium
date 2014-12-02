@@ -30,7 +30,6 @@ function startup(Cesium) {
 // Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
-var primitives = scene.primitives;
 
 // Example 1: Draw the outline of a corridor on the globe surface.
 // Create the corridor outline geometry.
@@ -72,14 +71,11 @@ var extrudedCorridorOutline = new Cesium.GeometryInstance({
 });
 
 // Add both corridor outline instances to primitives
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : [corridorOutline, extrudedCorridorOutline],
     appearance : new Cesium.PerInstanceColorAppearance({
         flat : true,
         renderState : {
-            depthTest : {
-                enabled : true
-            },
             lineWidth : Math.min(2.0, scene.maximumAliasedLineWidth)
         }
     })

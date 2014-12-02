@@ -30,8 +30,7 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer', {timeline : false, animation : false});
 
 var pinBuilder = new Cesium.PinBuilder();
-var billboardCollection = new Cesium.BillboardCollection();
-viewer.scene.primitives.add(billboardCollection);
+var billboardCollection = viewer.scene.primitives.add(new Cesium.BillboardCollection());
 
 //Create a blank, solid colored pin.
 billboardCollection.add({
@@ -40,7 +39,7 @@ billboardCollection.add({
     position : Cesium.Cartesian3.fromDegrees(-75.170726, 39.9208667, 0)
 });
     
-//Create a black pin labeled with a quesiton mark.
+//Create a black pin labeled with a question mark.
 billboardCollection.add({
     image : pinBuilder.fromText('?', Cesium.Color.BLACK, 48),
     verticalOrigin : Cesium.VerticalOrigin.BOTTOM,

@@ -39,7 +39,7 @@ define([
      * @example
      * Cesium.loadJson('http://someUrl.com/someJson.txt').then(function(jsonData) {
      *     // Do something with the JSON object
-     * }.otherwise(function(error) {
+     * }).otherwise(function(error) {
      *     // an error occurred
      * });
      */

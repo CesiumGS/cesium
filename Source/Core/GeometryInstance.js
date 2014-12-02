@@ -113,6 +113,15 @@ define([
          * @default undefined
          */
         this.attributes = defaultValue(options.attributes, {});
+
+        /**
+         * @private
+         */
+        this.westHemisphereGeometry = undefined;
+        /**
+         * @private
+         */
+        this.eastHemisphereGeometry = undefined;
     };
 
     return GeometryInstance;

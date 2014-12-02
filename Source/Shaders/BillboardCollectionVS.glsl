@@ -1,20 +1,11 @@
-attribute vec3 positionHigh;
-attribute vec3 positionLow;
-attribute vec2 direction;                       // in screen space
-attribute vec4 textureCoordinatesAndImageSize;  // size in normalized texture coordinates
-attribute vec3 originAndShow;                   // show is 0.0 (false) or 1.0 (true)
-attribute vec4 pixelOffsetAndTranslate;         // x,y, translateX, translateY
-attribute vec4 eyeOffsetAndScale;               // eye offset in meters
-attribute vec4 rotationAndAlignedAxis;
-attribute vec4 scaleByDistance;                 // near, nearScale, far, farScale
-attribute vec4 translucencyByDistance;          // near, nearTrans, far, farTrans
-attribute vec4 pixelOffsetScaleByDistance;      // near, nearScale, far, farScale
-
-#ifdef RENDER_FOR_PICK
-attribute vec4 pickColor;
-#else
-attribute vec4 color;
-#endif
+attribute vec4 positionHighAndScale;
+attribute vec4 positionLowAndRotation;   
+attribute vec4 compressedAttribute0;        // pixel offset, translate, horizontal origin, vertical origin, show, texture coordinates, direction
+attribute vec4 compressedAttribute1;        // aligned axis, translucency by distance, image width
+attribute vec4 compressedAttribute2;        // image height, color, pick color, 2 bytes free
+attribute vec3 eyeOffset;                   // eye offset in meters
+attribute vec4 scaleByDistance;             // near, nearScale, far, farScale
+attribute vec4 pixelOffsetScaleByDistance;  // near, nearScale, far, farScale
 
 varying vec2 v_textureCoordinates;
 
@@ -38,19 +29,116 @@ float getNearFarScalar(vec4 nearFarScalar, float cameraDistSq)
     return mix(valueAtMin, valueAtMax, t);
 }
 
+const float UPPER_BOUND = 32768.0;
+
+const float SHIFT_LEFT16 = 65536.0;
+const float SHIFT_LEFT8 = 256.0;
+const float SHIFT_LEFT7 = 128.0;
+const float SHIFT_LEFT5 = 32.0;
+const float SHIFT_LEFT3 = 8.0;
+const float SHIFT_LEFT2 = 4.0;
+const float SHIFT_LEFT1 = 2.0;
+
+const float SHIFT_RIGHT8 = 1.0 / 256.0;
+const float SHIFT_RIGHT7 = 1.0 / 128.0;
+const float SHIFT_RIGHT5 = 1.0 / 32.0;
+const float SHIFT_RIGHT3 = 1.0 / 8.0;
+const float SHIFT_RIGHT2 = 1.0 / 4.0;
+const float SHIFT_RIGHT1 = 1.0 / 2.0;
+
 void main() 
 {
     // Modifying this shader may also require modifications to Billboard._computeScreenSpacePosition
     
     // unpack attributes
-    vec3 eyeOffset = eyeOffsetAndScale.xyz;
-    float scale = eyeOffsetAndScale.w;
-    vec2 textureCoordinates = textureCoordinatesAndImageSize.xy;
-    vec2 imageSize = textureCoordinatesAndImageSize.zw;
-    vec2 origin = originAndShow.xy;
-    float show = originAndShow.z;
-    vec2 pixelOffset = pixelOffsetAndTranslate.xy;
-    vec2 translate = pixelOffsetAndTranslate.zw;
+    vec3 positionHigh = positionHighAndScale.xyz;
+    vec3 positionLow = positionLowAndRotation.xyz;
+    float scale = positionHighAndScale.w;
+    
+#if defined(ROTATION) || defined(ALIGNED_AXIS)
+    float rotation = positionLowAndRotation.w;
+#endif
+
+    float compressed = compressedAttribute0.x;
+    
+    vec2 pixelOffset;
+    pixelOffset.x = floor(compressed * SHIFT_RIGHT7);
+    compressed -= pixelOffset.x * SHIFT_LEFT7;
+    pixelOffset.x -= UPPER_BOUND;
+    
+    vec2 origin;
+    origin.x = floor(compressed * SHIFT_RIGHT5);
+    compressed -= origin.x * SHIFT_LEFT5;
+    
+    origin.y = floor(compressed * SHIFT_RIGHT3);
+    compressed -= origin.y * SHIFT_LEFT3;
+    
+    origin -= vec2(1.0);
+    
+    float show = floor(compressed * SHIFT_RIGHT2);
+    compressed -= show * SHIFT_LEFT2;
+    
+    vec2 direction;
+    direction.x = floor(compressed * SHIFT_RIGHT1);
+    direction.y = compressed - direction.x * SHIFT_LEFT1;
+    
+    float temp = compressedAttribute0.y  * SHIFT_RIGHT8;
+    pixelOffset.y = -(floor(temp) - UPPER_BOUND);
+    
+    vec2 translate;
+    translate.y = (temp - floor(temp)) * SHIFT_LEFT16;
+    
+    temp = compressedAttribute0.z * SHIFT_RIGHT8;
+    translate.x = floor(temp) - UPPER_BOUND;
+    
+    translate.y += (temp - floor(temp)) * SHIFT_LEFT8;
+    translate.y -= UPPER_BOUND;
+    
+    vec2 textureCoordinates = czm_decompressTextureCoordinates(compressedAttribute0.w);
+    
+    temp = compressedAttribute1.x * SHIFT_RIGHT8;
+    
+    vec2 imageSize = vec2(floor(temp), compressedAttribute2.w);
+    
+#ifdef EYE_DISTANCE_TRANSLUCENCY
+    vec4 translucencyByDistance;
+    translucencyByDistance.x = compressedAttribute1.z;
+    translucencyByDistance.z = compressedAttribute1.w;
+    
+    translucencyByDistance.y = ((temp - floor(temp)) * SHIFT_LEFT8) / 255.0;
+    
+    temp = compressedAttribute1.y * SHIFT_RIGHT8;
+    translucencyByDistance.w = ((temp - floor(temp)) * SHIFT_LEFT8) / 255.0;
+#endif
+
+#ifdef ALIGNED_AXIS
+    vec3 alignedAxis = czm_octDecode(floor(compressedAttribute1.y * SHIFT_RIGHT8));
+#else
+    vec3 alignedAxis = vec3(0.0);
+#endif
+    
+#ifdef RENDER_FOR_PICK
+    temp = compressedAttribute2.y;
+#else
+    temp = compressedAttribute2.x;
+#endif
+
+    vec4 color;
+    temp = temp * SHIFT_RIGHT8;
+    color.b = (temp - floor(temp)) * SHIFT_LEFT8;
+    temp = floor(temp) * SHIFT_RIGHT8;
+    color.g = (temp - floor(temp)) * SHIFT_LEFT8;
+    color.r = floor(temp);
+    
+    temp = compressedAttribute2.z * SHIFT_RIGHT8;
+    
+#ifdef RENDER_FOR_PICK
+    color.a = (temp - floor(temp)) * SHIFT_LEFT8;
+    vec4 pickColor = color / 255.0;
+#else
+    color.a = floor(temp);
+    color /= 255.0;
+#endif
     
     ///////////////////////////////////////////////////////////////////////////
     
@@ -106,11 +194,8 @@ void main()
     
     positionWC.xy += (origin * abs(halfSize));
     
-#ifdef ROTATION
-    float rotation = rotationAndAlignedAxis.x;
-    vec3 alignedAxis = rotationAndAlignedAxis.yzw;
-    
-    if (!all(equal(rotationAndAlignedAxis, vec4(0.0))))
+#if defined(ROTATION) || defined(ALIGNED_AXIS)
+    if (!all(equal(alignedAxis, vec3(0.0))) || rotation != 0.0)
     {
         float angle = rotation;
         if (!all(equal(alignedAxis, vec3(0.0))))

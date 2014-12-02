@@ -3,12 +3,14 @@ define([
         '../Core/defaultValue',
         '../Core/defineProperties',
         '../Core/Event',
+        '../Core/JulianDate',
         './ModelAnimationLoop',
         './ModelAnimationState'
     ], function(
         defaultValue,
         defineProperties,
         Event,
+        JulianDate,
         ModelAnimationLoop,
         ModelAnimationState) {
     "use strict";
@@ -30,7 +32,7 @@ define([
      */
     var ModelAnimation = function(options, model, runtimeAnimation) {
         this._name = options.name;
-        this._startTime = options.startTime;
+        this._startTime = JulianDate.clone(options.startTime);
         this._delay = defaultValue(options.delay, 0.0); // in seconds
         this._stopTime = options.stopTime;
 
@@ -103,7 +105,9 @@ define([
 
         this._state = ModelAnimationState.STOPPED;
         this._runtimeAnimation = runtimeAnimation;
-        this._startTime = undefined;
+
+        // Set during animation update
+        this._computedStartTime = undefined;
         this._duration = undefined;
 
         // To avoid allocations in ModelAnimationCollection.update

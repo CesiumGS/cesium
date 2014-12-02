@@ -242,6 +242,12 @@ define([
 
         var position = positionScratch;
         var st = stScratch;
+
+        var minX = Number.MAX_VALUE;
+        var minY = Number.MAX_VALUE;
+        var maxX = Number.MIN_VALUE;
+        var maxY = Number.MIN_VALUE;
+
         for (var row = 0; row < height; ++row) {
             for (var col = 0; col < width; ++col) {
                 RectangleGeometryLibrary.computePosition(options, row, col, position, st);
@@ -253,7 +259,19 @@ define([
                 if (vertexFormat.st) {
                     textureCoordinates[stIndex++] = st.x;
                     textureCoordinates[stIndex++] = st.y;
+
+                    minX = Math.min(minX, st.x);
+                    minY = Math.min(minY, st.y);
+                    maxX = Math.max(maxX, st.x);
+                    maxY = Math.max(maxY, st.y);
                 }
+            }
+        }
+
+        if (vertexFormat.st && (minX < 0.0 || minY < 0.0 || maxX > 1.0 || maxY > 1.0)) {
+            for (var k = 0; k < textureCoordinates.length; k += 2) {
+                textureCoordinates[k] = (textureCoordinates[k] - minX) / (maxX - minX);
+                textureCoordinates[k + 1] = (textureCoordinates[k + 1] - minY) / (maxY - minY);
             }
         }
 
@@ -468,7 +486,7 @@ define([
 
         geo.indices = wallIndices;
 
-        geo = GeometryPipeline.combine([
+        geo = GeometryPipeline.combineInstances([
             new GeometryInstance({
                 geometry : topBottomGeo
             }),
@@ -477,7 +495,7 @@ define([
             })
         ]);
 
-        return geo;
+        return geo[0];
     }
 
     /**

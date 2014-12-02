@@ -1,16 +1,22 @@
 /*global define*/
 define([
+        '../Core/AttributeCompression',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/defined',
         '../Core/Ellipsoid',
+        '../Core/IndexDatatype',
         '../Core/Math',
         './createTaskProcessorWorker'
     ], function(
+        AttributeCompression,
+        Cartesian2,
         Cartesian3,
         Cartographic,
         defined,
         Ellipsoid,
+        IndexDatatype,
         CesiumMath,
         createTaskProcessorWorker) {
     "use strict";
@@ -23,11 +29,11 @@ define([
     var hIndex = 3;
     var uIndex = 4;
     var vIndex = 5;
-    var nxIndex = 6;
-    var nyIndex = 7;
+    var nIndex = 6;
 
     var cartesian3Scratch = new Cartesian3();
     var cartographicScratch = new Cartographic();
+    var toPack = new Cartesian2();
 
     function createVerticesFromQuantizedTerrainMesh(parameters, transferableObjects) {
         var quantizedVertices = parameters.quantizedVertices;
@@ -54,7 +60,7 @@ define([
 
         var vertexStride = 6;
         if (hasVertexNormals) {
-            vertexStride += 2;
+            vertexStride += 1;
         }
 
         var vertexBuffer = new Float32Array(quantizedVertexCount * vertexStride + edgeVertexCount * vertexStride);
@@ -77,13 +83,15 @@ define([
             vertexBuffer[bufferIndex + uIndex] = u;
             vertexBuffer[bufferIndex + vIndex] = v;
             if (hasVertexNormals) {
-                vertexBuffer[bufferIndex + nxIndex] = octEncodedNormals[n];
-                vertexBuffer[bufferIndex + nyIndex] = octEncodedNormals[n + 1];
+                toPack.x = octEncodedNormals[n];
+                toPack.y = octEncodedNormals[n + 1];
+                vertexBuffer[bufferIndex + nIndex] = AttributeCompression.octPackFloat(toPack);
             }
         }
 
         var edgeTriangleCount = Math.max(0, (edgeVertexCount - 4) * 2);
-        var indexBuffer = new Uint16Array(parameters.indices.length + edgeTriangleCount * 3);
+        var indexBufferLength = parameters.indices.length + edgeTriangleCount * 3;
+        var indexBuffer = IndexDatatype.createTypedArray(quantizedVertexCount + edgeVertexCount, indexBufferLength);
         indexBuffer.set(parameters.indices, 0);
 
         // Add skirts.
@@ -110,7 +118,7 @@ define([
         var start, end, increment;
         var vertexStride = 6;
         if (hasVertexNormals) {
-            vertexStride += 2;
+            vertexStride += 1;
         }
         if (isWestOrNorthEdge) {
             start = edgeVertices.length - 1;
@@ -147,8 +155,7 @@ define([
             vertexBuffer[vertexBufferIndex++] = u;
             vertexBuffer[vertexBufferIndex++] = v;
             if (hasVertexNormals) {
-                vertexBuffer[vertexBufferIndex++] = vertexBuffer[offset + nxIndex];
-                vertexBuffer[vertexBufferIndex++] = vertexBuffer[offset + nyIndex];
+                vertexBuffer[vertexBufferIndex++] = vertexBuffer[offset + nIndex];
             }
 
             if (previousIndex !== -1) {

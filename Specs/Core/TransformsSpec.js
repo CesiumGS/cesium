@@ -220,7 +220,7 @@ defineSuite([
         expect(det).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
 
         // rotation matrix inverses are equal to its transpose
-        var t4 = Matrix4.fromRotationTranslation(t, Cartesian3.ZERO);
+        var t4 = Matrix4.fromRotationTranslation(t);
         expect(Matrix4.inverse(t4, new Matrix4())).toEqualEpsilon(Matrix4.inverseTransformation(t4, new Matrix4()), CesiumMath.EPSILON14);
 
         time = JulianDate.addHours(time, 23.93447, new JulianDate()); // add one sidereal day
@@ -244,7 +244,7 @@ defineSuite([
         expect(det).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
 
         // rotation matrix inverses are equal to its transpose
-        var t4 = Matrix4.fromRotationTranslation(t, Cartesian3.ZERO);
+        var t4 = Matrix4.fromRotationTranslation(t);
         expect(Matrix4.inverse(t4, new Matrix4())).toEqualEpsilon(Matrix4.inverseTransformation(t4, new Matrix4()), CesiumMath.EPSILON14);
 
         time = JulianDate.addHours(time, 23.93447, new JulianDate()); // add one sidereal day
@@ -329,7 +329,7 @@ defineSuite([
                     expect(det).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
 
                     // rotation matrix inverses are equal to its transpose
-                    var t4 = Matrix4.fromRotationTranslation(t, Cartesian3.ZERO);
+                    var t4 = Matrix4.fromRotationTranslation(t);
                     expect(Matrix4.inverse(t4, new Matrix4())).toEqualEpsilon(Matrix4.inverseTransformation(t4, new Matrix4()), CesiumMath.EPSILON14);
 
                     var expectedMtx = Matrix3.fromQuaternion(Quaternion.conjugate(componentsData[i].icrfToFixedQuaternion, new Quaternion()));
@@ -362,7 +362,7 @@ defineSuite([
                 expect(det).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
 
                 // rotation matrix inverses are equal to its transpose
-                var t4 = Matrix4.fromRotationTranslation(t, Cartesian3.ZERO);
+                var t4 = Matrix4.fromRotationTranslation(t);
                 expect(Matrix4.inverse(t4, new Matrix4())).toEqualEpsilon(Matrix4.inverseTransformation(t4, new Matrix4()), CesiumMath.EPSILON14);
 
                 time = JulianDate.addHours(time, 23.93447, new JulianDate()); // add one sidereal day

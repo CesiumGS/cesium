@@ -17,14 +17,14 @@ define([
      * @alias VertexFormat
      * @constructor
      *
-     * @see Geometry#attributes
-     *
      * @example
      * // Create a vertex format with position and 2D texture coordinate attributes.
      * var format = new Cesium.VertexFormat({
      *   position : true,
      *   st : true
      * });
+     *
+     * @see Geometry#attributes
      */
     var VertexFormat = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -88,6 +88,18 @@ define([
          * @default false
          */
         this.tangent = defaultValue(options.tangent, false);
+
+        /**
+         * When <code>true</code>, the vertex has an RGB color attribute.
+         * <p>
+         * 8-bit unsigned byte.  3 components per attribute.
+         * </p>
+         *
+         * @type Boolean
+         *
+         * @default false
+         */
+        this.color = defaultValue(options.color, false);
     };
 
     /**
@@ -151,7 +163,21 @@ define([
     }));
 
     /**
-     * An immutable vertex format with all well-known attributes: position, normal, st, binormal, and tangent.
+     * An immutable vertex format with position and color attributes.
+     *
+     * @type {VertexFormat}
+     * @constant
+     *
+     * @see VertexFormat#position
+     * @see VertexFormat#color
+     */
+    VertexFormat.POSITION_AND_COLOR = freezeObject(new VertexFormat({
+        position : true,
+        color : true
+    }));
+
+    /**
+     * An immutable vertex format with well-known attributes: position, normal, st, binormal, and tangent.
      *
      * @type {VertexFormat}
      * @constant

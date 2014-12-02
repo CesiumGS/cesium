@@ -24,7 +24,7 @@ define([
         '../Core/Queue',
         '../Core/RuntimeError',
         '../Renderer/BufferUsage',
-        '../Renderer/createShaderSource',
+        '../Renderer/ShaderSource',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         '../ThirdParty/gltfDefaults',
@@ -62,7 +62,7 @@ define([
         Queue,
         RuntimeError,
         BufferUsage,
-        createShaderSource,
+        ShaderSource,
         TextureMinificationFilter,
         TextureWrap,
         gltfDefaults,
@@ -444,10 +444,10 @@ define([
         modelResources._rendererResources.programs[name] = context.createShaderProgram(vs, fs, attributeLocations);
 
 		// PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
-		var pickFS = createShaderSource({
-			sources : [fs],
-			pickColorQualifier : 'uniform'
-		});
+		var pickFS = new ShaderSource({
+                sources : [fs],
+                pickColorQualifier : 'uniform'
+        });
 		modelResources._rendererResources.pickPrograms[name] = context.createShaderProgram(vs, pickFS, attributeLocations);
     }
 
@@ -473,7 +473,7 @@ define([
             }
         }
     }
-
+    
     function createSamplers(modelResources, context) {
         var loadResources = modelResources._loadResources;
 
@@ -497,6 +497,7 @@ define([
         }
     }
 
+        
     function createTexture(gltfTexture, modelResources, context) {
         var textures = modelResources.gltf.textures;
         var texture = textures[gltfTexture.name];
@@ -548,6 +549,7 @@ define([
         modelResources._rendererResources.textures[gltfTexture.name] = tx;
     }
 
+    
     function createTextures(modelResources, context) {
         var loadResources = modelResources._loadResources;
         var gltfTexture;
@@ -567,6 +569,7 @@ define([
         }
     }
 
+
     function getAttributeLocations(modelResources, primitive) {
         var gltf = modelResources.gltf;
         var programs = gltf.programs;
@@ -583,19 +586,16 @@ define([
         var attributes = instanceProgram.attributes;
         var programAttributeLocations = modelResources._rendererResources.programs[instanceProgram.program].vertexAttributes;
 
-        for (var name in attributes) {
-            if (attributes.hasOwnProperty(name)) {
-                var parameter = parameters[attributes[name]];
-
-                attributeLocations[parameter.semantic] = programAttributeLocations[name].index;
+        // Note: WebGL shader compiler may have optimized and removed some attributes from programAttributeLocations
+        for (var location in programAttributeLocations){
+            if (programAttributeLocations.hasOwnProperty(location)) {
+                var parameter = parameters[attributes[location]];
+                attributeLocations[parameter.semantic] = programAttributeLocations[location].index;
             }
         }
 
         return attributeLocations;
     }
-
-
-
 
     function createVertexArrays(modelResources, context) {
         var loadResources = modelResources._loadResources;
@@ -667,9 +667,8 @@ define([
         booleanStates[WebGLRenderingContext.CULL_FACE] = false;
         booleanStates[WebGLRenderingContext.DEPTH_TEST] = false;
         booleanStates[WebGLRenderingContext.POLYGON_OFFSET_FILL] = false;
-        booleanStates[WebGLRenderingContext.SAMPLE_COVERAGE] = false;
         booleanStates[WebGLRenderingContext.SCISSOR_TEST] = false;
-
+        
         var enable = states.enable;
         var length = enable.length;
         var i;
@@ -679,7 +678,7 @@ define([
 
         return booleanStates;
     }
-
+    
     function createRenderStates(modelResources, context) {
         var loadResources = modelResources._loadResources;
 

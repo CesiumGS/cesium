@@ -93,6 +93,26 @@ defineSuite([
         expect(entity.availability).toBe(interval2);
     });
 
+    it('merge works with custom properties.', function() {
+        var propertyName = 'customProperty';
+        var value = 'fizzbuzz';
+
+        var source = new Entity('source');
+        source.addProperty(propertyName);
+        source[propertyName] = value;
+
+        var listener = jasmine.createSpy('listener');
+
+        var target = new Entity('target');
+
+        //Merging should actually call addProperty for the customProperty.
+        spyOn(target, 'addProperty').andCallThrough();
+        target.merge(source);
+
+        expect(target.addProperty).toHaveBeenCalledWith(propertyName);
+        expect(target[propertyName]).toEqual(source[propertyName]);
+    });
+
     it('merge throws with undefined source', function() {
         var entity = new Entity();
         expect(function() {

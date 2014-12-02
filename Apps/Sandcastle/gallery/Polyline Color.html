@@ -29,7 +29,7 @@ function startup(Cesium) {
 //Sandcastle_Begin
 // Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
-var primitives = viewer.scene.primitives;
+var scene = viewer.scene;
 
 // Example 1: Draw a polyline with per segment colors
 var positions = [];
@@ -40,7 +40,7 @@ for (var i = 0; i < 12; ++i) {
 }
 // For per segment coloring, supply the colors option with
 // an array of colors for each segment.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : new Cesium.GeometryInstance({
         geometry : new Cesium.PolylineGeometry({
             positions : positions,
@@ -62,7 +62,7 @@ for (i = 0; i < 12; ++i) {
 // For per segment coloring, supply the colors option with
 // an array of colors for each vertex.  Also set the
 // colorsPerVertex option to true.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : new Cesium.GeometryInstance({
         geometry : new Cesium.PolylineGeometry({
             positions : positions,
