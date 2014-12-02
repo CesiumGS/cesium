@@ -61,7 +61,7 @@ define([
             }
         } else {
             // Leave geometry in local coordinate system; auto update model-matrix.
-            Matrix4.clone(instances[0].modelMatrix, primitiveModelMatrix);
+            Matrix4.multiplyTransformation(primitiveModelMatrix, instances[0].modelMatrix, primitiveModelMatrix);
         }
     }
 
@@ -388,22 +388,37 @@ define([
         }
     }
 
-    function computePerInstanceAttributeLocations(instances, vertexArrays, attributeLocations) {
+    function computePerInstanceAttributeLocations(instances, vertexArrays, attributeLocations, names) {
         var indices = [];
 
-        var names = getCommonPerInstanceAttributeNames(instances);
         var length = instances.length;
         var offsets = {};
         var vaIndices = {};
 
-        for (var i = 0; i < length; ++i) {
-            var instance = instances[i];
-            var attributes = instance.attributes;
+        var i;
+        var instance;
+        var attributes;
 
+        for (i = 0; i < length; ++i) {
+            instance = instances[i];
+            attributes = instance.attributes;
             if (defined(instance.geometry)) {
                 computePerInstanceAttributeLocationsForGeometry(i, instance.geometry, attributes, names, attributeLocations, vertexArrays, indices, offsets, vaIndices);
-            } else {
+            }
+        }
+
+        for (i = 0; i < length; ++i) {
+            instance = instances[i];
+            attributes = instance.attributes;
+            if (defined(instance.westHemisphereGeometry)) {
                 computePerInstanceAttributeLocationsForGeometry(i, instance.westHemisphereGeometry, attributes, names, attributeLocations, vertexArrays, indices, offsets, vaIndices);
+            }
+        }
+
+        for (i = 0; i < length; ++i) {
+            instance = instances[i];
+            attributes = instance.attributes;
+            if (defined(instance.eastHemisphereGeometry)) {
                 computePerInstanceAttributeLocationsForGeometry(i, instance.eastHemisphereGeometry, attributes, names, attributeLocations, vertexArrays, indices, offsets, vaIndices);
             }
         }
@@ -433,7 +448,7 @@ define([
             perInstanceAttributes.push(createPerInstanceVAAttributes(geometry, attributeLocations, perInstanceAttributeNames));
         }
 
-        var indices = computePerInstanceAttributeLocations(instances, perInstanceAttributes, attributeLocations);
+        var indices = computePerInstanceAttributeLocations(instances, perInstanceAttributes, attributeLocations, perInstanceAttributeNames);
 
         return {
             geometries : geometries,
