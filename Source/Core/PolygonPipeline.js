@@ -329,24 +329,14 @@ define([
         return newPolygonVertices;
     }
 
-    /**
-     * Use seeded pseudo-random number to be testable.
-     *
-     * @param {Number} length
-     * @returns {Number} Random integer from 0 to <code>length - 1</code>
-     *
-     * @private
-     */
     function getRandomIndex(length) {
-        var random = '0.' + Math.sin(rseed).toString().substr(5);
-        rseed += 0.2;
+        var random = CesiumMath.nextRandomNumber();
         var i = Math.floor(random * length);
         if (i === length) {
             i--;
         }
         return i;
     }
-    var rseed = 0;
 
     function indexedEdgeCrossZ(p0Index, p1Index, vertexIndex, array) {
         var p0 = array[p0Index].position;
@@ -812,15 +802,6 @@ define([
 
         // Recursive chop
         return randomChop(nodeArray);
-    };
-
-    /**
-     * This function is used for predictable testing.
-     *
-     * @private
-     */
-    PolygonPipeline.resetSeed = function(seed) {
-        rseed = defaultValue(seed, 0);
     };
 
     /**
