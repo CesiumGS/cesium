@@ -10,6 +10,7 @@
  [jasmine-gem]: http://github.com/pivotal/jasmine-gem
  */
 require.config({
+    //waitSeconds: 0
     baseUrl : '../Source',
     paths : {
         'Specs' : '../Specs'
@@ -32,7 +33,7 @@ require.config({
             name = deps[0];
         }
 
-        require(deps, function() {
+        define(deps, function() {
             var args = arguments;
             describe(name, function() {
                 suite.apply(null, args);
