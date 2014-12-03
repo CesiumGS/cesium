@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Model',
-        'Scene/ModelResourceCache',        
+        'Scene/ModelResourceCache',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
@@ -45,7 +45,7 @@ defineSuite([
     var customDuckModel;
     var separateDuckModel;
     var cachedDuckModel;
-    var anotherCachedDuckModel;    
+    var anotherCachedDuckModel;
     var cesiumAirModel;
     var animBoxesModel;
     var riggedFigureModel;
