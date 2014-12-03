@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.5 - 2015-01-05
+
+* Improved polygon triangulation performance.
+
 ### 1.4 - 2014-12-01
 
 * Breaking changes
