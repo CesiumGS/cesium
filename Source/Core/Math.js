@@ -512,6 +512,25 @@ define([
     };
 
     /**
+     * The modulo operation that also works for negative dividends.
+     *
+     * @param {Number} m The dividend.
+     * @param {Number} n The divisor.
+     * @returns {Number} The remainder.
+     */
+    CesiumMath.mod = function(m, n) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(m)) {
+            throw new DeveloperError('m is required.');
+        }
+        if (!defined(n)) {
+            throw new DeveloperError('n is required.');
+        }
+        //>>includeEnd('debug');
+        return ((m % n) + n) % n;
+    };
+
+    /**
      * Determines if two values are equal within the provided epsilon.  This is useful
      * to avoid problems due to roundoff error when comparing floating-point values directly.
      *
