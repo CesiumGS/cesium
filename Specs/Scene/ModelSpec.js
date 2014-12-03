@@ -235,6 +235,8 @@ defineSuite([
             }
         };
 
+        var partialKey = JSON.stringify(rs);
+        
         runs(function() {
             expect(scene.context.createRenderState).toHaveBeenCalledWith(rs);
             primitives.remove(model);

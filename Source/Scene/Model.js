@@ -687,14 +687,14 @@ define([
         return pixelScale;
     }
 
-
-    function parseNodes(model) {
+ function parseNodes(model) {
+        var modelResources = model._modelResources;
         var runtimeNodes = {};
         var runtimeNodesByName = {};
         var skinnedNodes = [];
 
-        var skinnedNodesNames = model._loadResources.skinnedNodesNames;
-        var nodes = model.gltf.nodes;
+        var skinnedNodesNames = model.skinnedNodesNames;
+        var nodes = modelResources.gltf.nodes;
 
         for (var name in nodes) {
             if (nodes.hasOwnProperty(name)) {
@@ -733,7 +733,6 @@ define([
                 };
                 runtimeNode.publicNode = new ModelNode(model, node, runtimeNode, name, getTransform(node));
 
-                
                 runtimeNodes[name] = runtimeNode;
                 runtimeNodesByName[node.name] = runtimeNode;
 
@@ -743,6 +742,53 @@ define([
                 }
             }
         }
+
+        model._runtime.nodes = runtimeNodes;
+        model._runtime.nodesByName = runtimeNodesByName;
+        model._runtime.skinnedNodes = skinnedNodes;
+    }
+
+    function parseMaterials(model) {
+        var modelResources = model._modelResources;
+        var runtimeMaterials = {};
+        var runtimeMaterialsById = {};
+        var materials = modelResources.gltf.materials;
+        var rendererUniformMaps = model._uniformMaps;
+
+        for (var name in materials) {
+            if (materials.hasOwnProperty(name)) {
+                // Allocated now so ModelMaterial can keep a reference to it.
+                rendererUniformMaps[name] = {
+                    uniformMap : undefined,
+                    values : undefined,
+                    jointMatrixUniformName : undefined
+                };
+
+                var material = materials[name];
+                var modelMaterial = new ModelMaterial(model, material, name);
+                runtimeMaterials[material.name] = modelMaterial;
+                runtimeMaterialsById[name] = modelMaterial;
+            }
+        }
+
+        model._runtime.materialsByName = runtimeMaterials;
+        model._runtime.materialsById = runtimeMaterialsById;
+    }
+
+    function parseMeshes(model) {
+        var modelResources = model._modelResources;
+        var runtimeMeshes = {};
+        var runtimeMaterialsById = model._runtime.materialsById;
+        var meshes = modelResources.gltf.meshes;
+
+        for (var name in meshes) {
+            if (meshes.hasOwnProperty(name)) {
+                var mesh = meshes[name];
+                runtimeMeshes[mesh.name] = new ModelMesh(mesh, runtimeMaterialsById, name);
+            }
+        }
+
+        model._runtime.meshesByName = runtimeMeshes;
     }
         
 
@@ -784,10 +830,11 @@ define([
             Matrix4.clone(node.matrix, result);
         } else {
             Matrix4.fromTranslationQuaternionRotationScale(node.translation, node.rotation, node.scale, result);
+            // Keep matrix returned by the node in-sync if the node is targeted by an animation.  Only TRS nodes can be targeted.
+            publicNode.setMatrix(result);
         }
     }
-
-
+    
     var scratchNodeStack = [];
 
     function updateNodeHierarchyModelMatrix(model, modelTransformChanged) {
@@ -1275,48 +1322,6 @@ define([
     }
 
 
-    function parseMaterials(model) {
-        var modelResources = model._modelResources;
-        var runtimeMaterials = {};
-        var runtimeMaterialsById = {};
-        var materials = modelResources.gltf.materials;
-        var rendererUniformMaps = model._uniformMaps;
-
-        for (var name in materials) {
-            if (materials.hasOwnProperty(name)) {
-                // Allocated now so ModelMaterial can keep a reference to it.
-                rendererUniformMaps[name] = {
-                    uniformMap : undefined,
-                    values : undefined,
-                    jointMatrixUniformName : undefined
-                };
-
-                var material = materials[name];
-                var modelMaterial = new ModelMaterial(model, material, name);
-                runtimeMaterials[material.name] = modelMaterial;
-                runtimeMaterialsById[name] = modelMaterial;
-            }
-        }
-
-        model._runtime.materialsByName = runtimeMaterials;
-        model._runtime.materialsById = runtimeMaterialsById;
-    }
-
-    function parseMeshes(model) {
-        var modelResources = model._modelResources;
-        var runtimeMeshes = {};
-        var runtimeMaterialsById = model._runtime.materialsById;
-        var meshes = modelResources.gltf.meshes;
-
-        for (var name in meshes) {
-            if (meshes.hasOwnProperty(name)) {
-                var mesh = meshes[name];
-                runtimeMeshes[mesh.name] = new ModelMesh(mesh, runtimeMaterialsById, name);
-            }
-        }
-
-        model._runtime.meshesByName = runtimeMeshes;
-    }
 
     function parse(model) {
         parseMaterials(model);
