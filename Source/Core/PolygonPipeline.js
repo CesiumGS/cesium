@@ -807,6 +807,9 @@ define([
     var subdivisionV0Scratch = new Cartesian3();
     var subdivisionV1Scratch = new Cartesian3();
     var subdivisionV2Scratch = new Cartesian3();
+    var subdivisionS0Scratch = new Cartesian3();
+    var subdivisionS1Scratch = new Cartesian3();
+    var subdivisionS2Scratch = new Cartesian3();
     var subdivisionMidScratch = new Cartesian3();
 
     /**
@@ -865,6 +868,11 @@ define([
         // Used to make sure shared edges are not split more than once.
         var edges = {};
 
+        // TODO: Add ellipsoid parameter. Properly deprecate.
+        var radius = 6378137.0;
+        var minDistance = 2.0 * radius * Math.sin(granularity * 0.5);
+        var minDistanceSqrd = minDistance * minDistance;
+
         while (triangles.length > 0) {
             var i2 = triangles.pop();
             var i1 = triangles.pop();
@@ -874,15 +882,19 @@ define([
             var v1 = Cartesian3.fromArray(subdividedPositions, i1 * 3, subdivisionV1Scratch);
             var v2 = Cartesian3.fromArray(subdividedPositions, i2 * 3, subdivisionV2Scratch);
 
-            var g0 = Cartesian3.angleBetween(v0, v1);
-            var g1 = Cartesian3.angleBetween(v1, v2);
-            var g2 = Cartesian3.angleBetween(v2, v0);
+            var s0 = Cartesian3.multiplyByScalar(Cartesian3.normalize(v0, subdivisionS0Scratch), radius, subdivisionS0Scratch);
+            var s1 = Cartesian3.multiplyByScalar(Cartesian3.normalize(v1, subdivisionS1Scratch), radius, subdivisionS1Scratch);
+            var s2 = Cartesian3.multiplyByScalar(Cartesian3.normalize(v2, subdivisionS2Scratch), radius, subdivisionS2Scratch);
+
+            var g0 = Cartesian3.magnitudeSquared(Cartesian3.subtract(s0, s1, subdivisionMidScratch));
+            var g1 = Cartesian3.magnitudeSquared(Cartesian3.subtract(s1, s2, subdivisionMidScratch));
+            var g2 = Cartesian3.magnitudeSquared(Cartesian3.subtract(s2, s0, subdivisionMidScratch));
 
             var max = Math.max(g0, g1, g2);
             var edge;
             var mid;
 
-            if (max > granularity) {
+            if (max > minDistanceSqrd) {
                 if (g0 === max) {
                     edge = Math.min(i0, i1) + ' ' + Math.max(i0, i1);
 
