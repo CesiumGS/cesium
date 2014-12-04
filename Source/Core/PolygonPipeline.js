@@ -850,11 +850,7 @@ define([
         //>>includeEnd('debug');
 
         // triangles that need (or might need) to be subdivided.
-        var indicesLength = indices.length;
-        var triangles = new Array(indicesLength);
-        for ( var j = 0; j < indicesLength; ++j) {
-            triangles[j] = indices[j];
-        }
+        var triangles = indices.slice(0);
 
         // New positions due to edge splits are appended to the positions list.
         var i;
@@ -898,6 +894,8 @@ define([
             var edge;
             var mid;
 
+            // if the max length squared of a triangle edge is greater than the chord length of squared
+            // of the granularity, subdivide the triangle
             if (max > minDistanceSqrd) {
                 if (g0 === max) {
                     edge = Math.min(i0, i1) + ' ' + Math.max(i0, i1);
