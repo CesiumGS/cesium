@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Place a yellow sphere at the Sun's location">
+    <meta name="cesium-sandcastle-labels" content="Tutorials">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    "use strict";
+//Sandcastle_Begin
+var solarRadiusInMeters = 6.955e8;
+
+var viewer = new Cesium.Viewer('cesiumContainer');
+
+viewer.scene.camera.frustum.far = 1e12;            //Move the far wall of the viewing frustum.
+
+var scene = viewer.scene;
+scene.skyBox.show = false;                        // Turn off the sky box
+scene.sun.show = false;                           // Don't show the default Sun
+
+// Turn on sun lighting of the globe.
+scene.globe.enableLighting = true;
+
+// Create a Yellow rim-lit material.
+var material = Cesium.Material.fromType(Cesium.Material.RimLightingType);
+material.uniforms.color = Cesium.Color.YELLOW;
+
+// Create Sun graphics primitive.
+var sunEllipsoid = scene.primitives.add(new Cesium.EllipsoidPrimitive({
+    center: new Cesium.Cartesian3(),  // For now, place the Sun at the origin.
+    radii: new Cesium.Cartesian3(solarRadiusInMeters, solarRadiusInMeters, solarRadiusInMeters),
+    material: material
+}));
+
+// Allocate "new" variables outside of the render loop when possible, to reduce garbage collection.
+var sunPosition = new Cesium.Cartesian3();
+var icrfToFixedScratch = new Cesium.Matrix3();
+var sunModelMatrixScratch = new Cesium.Matrix4();
+
+// Update the camera and the Sun with each animation frame.
+function icrf(scene, time) {
+    if (scene.mode !== Cesium.SceneMode.SCENE3D) {
+        return;
+    }
+
+    var icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(time, icrfToFixedScratch);
+    if (Cesium.defined(icrfToFixed)) {
+        // Update the camera with the new ICRF rotation
+        scene.camera.transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed);
+
+        // Compute Sun position in Inertial.
+        Cesium.Simon1994PlanetaryPositions.computeSunPositionInEarthInertialFrame(time, sunPosition);
+
+        // Transform Sun position from Inertial to Fixed.
+        Cesium.Matrix3.multiplyByVector(icrfToFixed, sunPosition, sunPosition);
+
+        // Update the Sun's modelMatrix to move it from the origin to its new position for this animation frame.
+        sunEllipsoid.modelMatrix = Cesium.Matrix4.fromRotationTranslation(Cesium.Matrix3.IDENTITY, sunPosition, sunModelMatrixScratch);
+    }
+}
+scene.preRender.addEventListener(icrf);
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>
