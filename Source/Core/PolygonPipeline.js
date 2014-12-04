@@ -704,6 +704,7 @@ define([
      * @private
      */
     var PolygonPipeline = {};
+
     /**
      * Cleans up a simple polygon by removing duplicate adjacent positions and making
      * the first position not equal the last position.
@@ -773,7 +774,7 @@ define([
     };
 
     /**
-     * Triangulate a polygon
+     * Triangulate a polygon.
      *
      * @param {Cartesian2[]} positions - Cartesian2 array containing the vertices of the polygon
      * @returns {Number[]} - Index array representing triangles that fill the polygon
@@ -815,6 +816,7 @@ define([
     /**
      * Subdivides positions and raises points to the surface of the ellipsoid.
      *
+     * @param {Ellipsoid} ellipsoid The ellipsoid the polygon in on.
      * @param {Cartesian3[]} positions An array of {@link Cartesian3} positions of the polygon.
      * @param {Number[]} indices An array of indices that determines the triangles in the polygon.
      * @param {Number} [granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
@@ -823,10 +825,13 @@ define([
      * @exception {DeveloperError} The number of indices must be divisable by three.
      * @exception {DeveloperError} Granularity must be greater than zero.
      */
-    PolygonPipeline.computeSubdivision = function(positions, indices, granularity) {
+    PolygonPipeline.computeSubdivision = function(ellipsoid, positions, indices, granularity) {
         granularity = defaultValue(granularity, CesiumMath.RADIANS_PER_DEGREE);
 
         //>>includeStart('debug', pragmas.debug);
+        if (!defined(ellipsoid)) {
+            throw new DeveloperError('ellipsoid is required.');
+        }
         if (!defined(positions)) {
             throw new DeveloperError('positions is required.');
         }
@@ -868,8 +873,7 @@ define([
         // Used to make sure shared edges are not split more than once.
         var edges = {};
 
-        // TODO: Add ellipsoid parameter. Properly deprecate.
-        var radius = 6378137.0;
+        var radius = ellipsoid.maximumRadius;
         var minDistance = 2.0 * radius * Math.sin(granularity * 0.5);
         var minDistanceSqrd = minDistance * minDistance;
 

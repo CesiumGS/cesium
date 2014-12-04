@@ -295,33 +295,39 @@ defineSuite([
 
     ///////////////////////////////////////////////////////////////////////
 
-    it('computeSubdivision throws without positions', function() {
+    it('computeSubdivision throws without ellipsoid', function() {
         expect(function() {
             PolygonPipeline.computeSubdivision();
         }).toThrowDeveloperError();
     });
 
+    it('computeSubdivision throws without positions', function() {
+        expect(function() {
+            PolygonPipeline.computeSubdivision(Ellipsoid.WGS84);
+        }).toThrowDeveloperError();
+    });
+
     it('computeSubdivision throws without indices', function() {
         expect(function() {
-            PolygonPipeline.computeSubdivision([]);
+            PolygonPipeline.computeSubdivision(Ellipsoid.WGS84, []);
         }).toThrowDeveloperError();
     });
 
     it('computeSubdivision throws with less than 3 indices', function() {
         expect(function() {
-            PolygonPipeline.computeSubdivision([], [1, 2]);
+            PolygonPipeline.computeSubdivision(Ellipsoid.WGS84, [], [1, 2]);
         }).toThrowDeveloperError();
     });
 
     it('computeSubdivision throws without a multiple of 3 indices', function() {
         expect(function() {
-            PolygonPipeline.computeSubdivision([], [1, 2, 3, 4]);
+            PolygonPipeline.computeSubdivision(Ellipsoid.WGS84, [], [1, 2, 3, 4]);
         }).toThrowDeveloperError();
     });
 
     it('computeSubdivision throws with negative granularity', function() {
         expect(function() {
-            PolygonPipeline.computeSubdivision([], [1, 2, 3], -1.0);
+            PolygonPipeline.computeSubdivision(Ellipsoid.WGS84, [], [1, 2, 3], -1.0);
         }).toThrowDeveloperError();
     });
 
@@ -332,7 +338,7 @@ defineSuite([
                          new Cartesian3(90.0, 0.0, 0.0)
                         ];
         var indices = [0, 1, 2];
-        var subdivision = PolygonPipeline.computeSubdivision(positions, indices, 60.0);
+        var subdivision = PolygonPipeline.computeSubdivision(Ellipsoid.WGS84, positions, indices, 60.0);
 
         expect(subdivision.attributes.position.values[0]).toEqual(0.0);
         expect(subdivision.attributes.position.values[1]).toEqual(0.0);
