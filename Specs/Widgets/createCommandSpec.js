@@ -1,10 +1,12 @@
 /*global defineSuite*/
 defineSuite([
         'Widgets/createCommand',
-        'ThirdParty/knockout'
+        'ThirdParty/knockout',
+        'Specs/getArguments'
     ], function(
         createCommand,
-        knockout) {
+        knockout,
+        getArguments) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -68,7 +70,7 @@ defineSuite([
         expect(beforeExecuteSpy.calls.count()).toEqual(1);
         expect(beforeExecuteSpy).toHaveBeenCalledWith({
             cancel : false,
-            args : [myArg]
+            args : getArguments(myArg)
         });
 
         expect(afterExecuteSpy.calls.count()).toEqual(1);
