@@ -704,6 +704,7 @@ define([
      * @private
      */
     var PolygonPipeline = {};
+
     /**
      * Cleans up a simple polygon by removing duplicate adjacent positions and making
      * the first position not equal the last position.
@@ -773,7 +774,7 @@ define([
     };
 
     /**
-     * Triangulate a polygon
+     * Triangulate a polygon.
      *
      * @param {Cartesian2[]} positions - Cartesian2 array containing the vertices of the polygon
      * @returns {Number[]} - Index array representing triangles that fill the polygon
@@ -804,9 +805,18 @@ define([
         return randomChop(nodeArray);
     };
 
+    var subdivisionV0Scratch = new Cartesian3();
+    var subdivisionV1Scratch = new Cartesian3();
+    var subdivisionV2Scratch = new Cartesian3();
+    var subdivisionS0Scratch = new Cartesian3();
+    var subdivisionS1Scratch = new Cartesian3();
+    var subdivisionS2Scratch = new Cartesian3();
+    var subdivisionMidScratch = new Cartesian3();
+
     /**
      * Subdivides positions and raises points to the surface of the ellipsoid.
      *
+     * @param {Ellipsoid} ellipsoid The ellipsoid the polygon in on.
      * @param {Cartesian3[]} positions An array of {@link Cartesian3} positions of the polygon.
      * @param {Number[]} indices An array of indices that determines the triangles in the polygon.
      * @param {Number} [granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
@@ -815,10 +825,13 @@ define([
      * @exception {DeveloperError} The number of indices must be divisable by three.
      * @exception {DeveloperError} Granularity must be greater than zero.
      */
-    PolygonPipeline.computeSubdivision = function(positions, indices, granularity) {
+    PolygonPipeline.computeSubdivision = function(ellipsoid, positions, indices, granularity) {
         granularity = defaultValue(granularity, CesiumMath.RADIANS_PER_DEGREE);
 
         //>>includeStart('debug', pragmas.debug);
+        if (!defined(ellipsoid)) {
+            throw new DeveloperError('ellipsoid is required.');
+        }
         if (!defined(positions)) {
             throw new DeveloperError('positions is required.');
         }
@@ -836,127 +849,102 @@ define([
         }
         //>>includeEnd('debug');
 
-        // Use a queue for triangles that need (or might need) to be subdivided.
-        var triangles = new Queue();
-
-        var indicesLength = indices.length;
-        for ( var j = 0; j < indicesLength; j += 3) {
-            triangles.enqueue({
-                i0 : indices[j],
-                i1 : indices[j + 1],
-                i2 : indices[j + 2]
-            });
-        }
+        // triangles that need (or might need) to be subdivided.
+        var triangles = indices.slice(0);
 
         // New positions due to edge splits are appended to the positions list.
-        var subdividedPositions = positions.slice(0); // shallow copy!
+        var i;
+        var length = positions.length;
+        var subdividedPositions = new Array(length * 3);
+        var q = 0;
+        for (i = 0; i < length; i++) {
+            var item = positions[i];
+            subdividedPositions[q++] = item.x;
+            subdividedPositions[q++] = item.y;
+            subdividedPositions[q++] = item.z;
+        }
+
         var subdividedIndices = [];
 
         // Used to make sure shared edges are not split more than once.
         var edges = {};
 
-        var i;
+        var radius = ellipsoid.maximumRadius;
+        var minDistance = 2.0 * radius * Math.sin(granularity * 0.5);
+        var minDistanceSqrd = minDistance * minDistance;
+
         while (triangles.length > 0) {
-            var triangle = triangles.dequeue();
+            var i2 = triangles.pop();
+            var i1 = triangles.pop();
+            var i0 = triangles.pop();
 
-            var v0 = subdividedPositions[triangle.i0];
-            var v1 = subdividedPositions[triangle.i1];
-            var v2 = subdividedPositions[triangle.i2];
+            var v0 = Cartesian3.fromArray(subdividedPositions, i0 * 3, subdivisionV0Scratch);
+            var v1 = Cartesian3.fromArray(subdividedPositions, i1 * 3, subdivisionV1Scratch);
+            var v2 = Cartesian3.fromArray(subdividedPositions, i2 * 3, subdivisionV2Scratch);
 
-            var g0 = Cartesian3.angleBetween(v0, v1);
-            var g1 = Cartesian3.angleBetween(v1, v2);
-            var g2 = Cartesian3.angleBetween(v2, v0);
+            var s0 = Cartesian3.multiplyByScalar(Cartesian3.normalize(v0, subdivisionS0Scratch), radius, subdivisionS0Scratch);
+            var s1 = Cartesian3.multiplyByScalar(Cartesian3.normalize(v1, subdivisionS1Scratch), radius, subdivisionS1Scratch);
+            var s2 = Cartesian3.multiplyByScalar(Cartesian3.normalize(v2, subdivisionS2Scratch), radius, subdivisionS2Scratch);
 
-            var max = Math.max(g0, Math.max(g1, g2));
+            var g0 = Cartesian3.magnitudeSquared(Cartesian3.subtract(s0, s1, subdivisionMidScratch));
+            var g1 = Cartesian3.magnitudeSquared(Cartesian3.subtract(s1, s2, subdivisionMidScratch));
+            var g2 = Cartesian3.magnitudeSquared(Cartesian3.subtract(s2, s0, subdivisionMidScratch));
+
+            var max = Math.max(g0, g1, g2);
             var edge;
             var mid;
 
-            if (max > granularity) {
+            // if the max length squared of a triangle edge is greater than the chord length of squared
+            // of the granularity, subdivide the triangle
+            if (max > minDistanceSqrd) {
                 if (g0 === max) {
-                    edge = Math.min(triangle.i0, triangle.i1).toString() + ' ' + Math.max(triangle.i0, triangle.i1).toString();
+                    edge = Math.min(i0, i1) + ' ' + Math.max(i0, i1);
 
                     i = edges[edge];
                     if (!defined(i)) {
-                        mid = Cartesian3.add(v0, v1, new Cartesian3());
+                        mid = Cartesian3.add(v0, v1, subdivisionMidScratch);
                         Cartesian3.multiplyByScalar(mid, 0.5, mid);
-                        subdividedPositions.push(mid);
-                        i = subdividedPositions.length - 1;
+                        subdividedPositions.push(mid.x, mid.y, mid.z);
+                        i = subdividedPositions.length / 3 - 1;
                         edges[edge] = i;
                     }
 
-                    triangles.enqueue({
-                        i0 : triangle.i0,
-                        i1 : i,
-                        i2 : triangle.i2
-                    });
-                    triangles.enqueue({
-                        i0 : i,
-                        i1 : triangle.i1,
-                        i2 : triangle.i2
-                    });
+                    triangles.push(i0, i, i2);
+                    triangles.push(i, i1, i2);
                 } else if (g1 === max) {
-                    edge = Math.min(triangle.i1, triangle.i2).toString() + ' ' + Math.max(triangle.i1, triangle.i2).toString();
+                    edge = Math.min(i1, i2) + ' ' + Math.max(i1, i2);
 
                     i = edges[edge];
                     if (!defined(i)) {
-                        mid = Cartesian3.add(v1, v2, new Cartesian3());
+                        mid = Cartesian3.add(v1, v2, subdivisionMidScratch);
                         Cartesian3.multiplyByScalar(mid, 0.5, mid);
-                        subdividedPositions.push(mid);
-                        i = subdividedPositions.length - 1;
+                        subdividedPositions.push(mid.x, mid.y, mid.z);
+                        i = subdividedPositions.length / 3 - 1;
                         edges[edge] = i;
                     }
 
-                    triangles.enqueue({
-                        i0 : triangle.i1,
-                        i1 : i,
-                        i2 : triangle.i0
-                    });
-                    triangles.enqueue({
-                        i0 : i,
-                        i1 : triangle.i2,
-                        i2 : triangle.i0
-                    });
+                    triangles.push(i1, i, i0);
+                    triangles.push(i, i2, i0);
                 } else if (g2 === max) {
-                    edge = Math.min(triangle.i2, triangle.i0).toString() + ' ' + Math.max(triangle.i2, triangle.i0).toString();
+                    edge = Math.min(i2, i0) + ' ' + Math.max(i2, i0);
 
                     i = edges[edge];
                     if (!defined(i)) {
-                        mid = Cartesian3.add(v2, v0, new Cartesian3());
+                        mid = Cartesian3.add(v2, v0, subdivisionMidScratch);
                         Cartesian3.multiplyByScalar(mid, 0.5, mid);
-                        subdividedPositions.push(mid);
-                        i = subdividedPositions.length - 1;
+                        subdividedPositions.push(mid.x, mid.y, mid.z);
+                        i = subdividedPositions.length / 3 - 1;
                         edges[edge] = i;
                     }
 
-                    triangles.enqueue({
-                        i0 : triangle.i2,
-                        i1 : i,
-                        i2 : triangle.i1
-                    });
-                    triangles.enqueue({
-                        i0 : i,
-                        i1 : triangle.i0,
-                        i2 : triangle.i1
-                    });
+                    triangles.push(i2, i, i1);
+                    triangles.push(i, i0, i1);
                 }
             } else {
-                subdividedIndices.push(triangle.i0);
-                subdividedIndices.push(triangle.i1);
-                subdividedIndices.push(triangle.i2);
+                subdividedIndices.push(i0);
+                subdividedIndices.push(i1);
+                subdividedIndices.push(i2);
             }
-        }
-
-        // PERFORMANCE_IDEA Rather that waste time re-iterating the entire set of positions
-        // here, all of the above code can be refactored to flatten as values are added
-        // Removing the need for this for loop.
-        var length = subdividedPositions.length;
-        var flattenedPositions = new Array(length * 3);
-        var q = 0;
-        for (i = 0; i < length; i++) {
-            var item = subdividedPositions[i];
-            flattenedPositions[q++] = item.x;
-            flattenedPositions[q++] = item.y;
-            flattenedPositions[q++] = item.z;
         }
 
         return new Geometry({
@@ -964,7 +952,7 @@ define([
                 position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.DOUBLE,
                     componentsPerAttribute : 3,
-                    values : flattenedPositions
+                    values : subdividedPositions
                 })
             },
             indices : subdividedIndices,
