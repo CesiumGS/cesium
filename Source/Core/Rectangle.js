@@ -3,6 +3,7 @@ define([
         './Cartographic',
         './defaultValue',
         './defined',
+        './defineProperties',
         './DeveloperError',
         './Ellipsoid',
         './freezeObject',
@@ -11,6 +12,7 @@ define([
         Cartographic,
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         Ellipsoid,
         freezeObject,
@@ -62,6 +64,53 @@ define([
          * @default 0.0
          */
         this.north = defaultValue(north, 0.0);
+    };
+
+    defineProperties(Rectangle.prototype, {
+        /**
+         * Gets the width of the rectangle in radians.
+         * @memberof Rectangle.prototype
+         * @type {Number}
+         */
+        width : {
+            get : function() {
+                return Rectangle.computeWidth(this);
+            }
+        },
+
+        /**
+         * Gets the height of the rectangle in radians.
+         * @memberof Rectangle.prototype
+         * @type {Number}
+         */
+        height : {
+            get : function() {
+                return Rectangle.computeHeight(this);
+            }
+        }
+    });
+
+    Rectangle.computeWidth = function(rectangle) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(rectangle)) {
+            throw new DeveloperError('rectangle is required.');
+        }
+        //>>includeEnd('debug');
+        var east = rectangle.east;
+        var west = rectangle.west;
+        if (east < west) {
+            east += CesiumMath.TWO_PI;
+        }
+        return east - west;
+    };
+
+    Rectangle.computeHeight = function(rectangle) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(rectangle)) {
+            throw new DeveloperError('rectangle is required.');
+        }
+        //>>includeEnd('debug');
+        return rectangle.north - rectangle.south;
     };
 
     /**

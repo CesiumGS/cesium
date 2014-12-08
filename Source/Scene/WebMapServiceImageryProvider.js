@@ -475,8 +475,8 @@ define([
             projected = this._tilingScheme.projection.project(cartographic, cartesian3Scratch);
         }
 
-        var i = (this._tileWidth * (projected.x - rectangle.west) / (rectangle.east - rectangle.west)) | 0;
-        var j = (this._tileHeight * (rectangle.north - projected.y) / (rectangle.north - rectangle.south)) | 0;
+        var i = (this._tileWidth * (projected.x - rectangle.west) / rectangle.width) | 0;
+        var j = (this._tileHeight * (rectangle.north - projected.y) / rectangle.height) | 0;
 
         var url;
 
