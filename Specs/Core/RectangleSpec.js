@@ -373,6 +373,30 @@ defineSuite([
         expect(result).toBe(returnedResult);
     });
 
+    it('intersectWith works across the IDL (1)', function() {
+        var rectangle1 = Rectangle.fromDegrees(170.0, -10.0, -170.0, 10.0);
+        var rectangle2 = Rectangle.fromDegrees(-175.0, 5.0, -160.0, 15.0);
+        var expected = Rectangle.fromDegrees(-175.0, 5.0, -170.0, 10.0);
+        expect(Rectangle.intersectWith(rectangle1, rectangle2)).toEqual(expected);
+        expect(Rectangle.intersectWith(rectangle2, rectangle1)).toEqual(expected);
+    });
+
+    it('intersectWith works across the IDL (2)', function() {
+        var rectangle1 = Rectangle.fromDegrees(170.0, -10.0, -170.0, 10.0);
+        var rectangle2 = Rectangle.fromDegrees(160.0, 5.0, 175.0, 15.0);
+        var expected = Rectangle.fromDegrees(170.0, 5.0, 175.0, 10.0);
+        expect(Rectangle.intersectWith(rectangle1, rectangle2)).toEqual(expected);
+        expect(Rectangle.intersectWith(rectangle2, rectangle1)).toEqual(expected);
+    });
+
+    it('intersectWith works across the IDL (3)', function() {
+        var rectangle1 = Rectangle.fromDegrees(170.0, -10.0, -170.0, 10.0);
+        var rectangle2 = Rectangle.fromDegrees(175.0, 5.0, -175.0, 15.0);
+        var expected = Rectangle.fromDegrees(175.0, 5.0, -175.0, 10.0);
+        expect(Rectangle.intersectWith(rectangle1, rectangle2)).toEqual(expected);
+        expect(Rectangle.intersectWith(rectangle2, rectangle1)).toEqual(expected);
+    });
+
     it('contains works', function() {
         var rectangle = new Rectangle(west, south, east, north);
         expect(Rectangle.contains(rectangle, new Cartographic(west, south))).toEqual(true);

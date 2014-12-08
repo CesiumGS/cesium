@@ -472,9 +472,28 @@ define([
         }
         //>>includeEnd('debug');
 
-        var west = Math.max(rectangle.west, otherRectangle.west);
+        var rectangleEast = rectangle.east;
+        var rectangleWest = rectangle.west;
+
+        var otherRectangleEast = otherRectangle.east;
+        var otherRectangleWest = otherRectangle.west;
+
+        if (rectangleEast < rectangleWest && otherRectangleEast > 0.0) {
+            rectangleEast += CesiumMath.TWO_PI;
+        } else if (otherRectangleEast < otherRectangleWest && rectangleEast > 0.0) {
+            otherRectangleEast += CesiumMath.TWO_PI;
+        }
+
+        if (rectangleEast < rectangleWest && otherRectangleWest < 0.0) {
+            otherRectangleWest += CesiumMath.TWO_PI;
+        } else if (otherRectangleEast < otherRectangleWest && rectangleWest < 0.0) {
+            rectangleWest += CesiumMath.TWO_PI;
+        }
+
+        var west = CesiumMath.negativePiToPi(Math.max(rectangleWest, otherRectangleWest));
+        var east = CesiumMath.negativePiToPi(Math.min(rectangleEast, otherRectangleEast));
+
         var south = Math.max(rectangle.south, otherRectangle.south);
-        var east = Math.min(rectangle.east, otherRectangle.east);
         var north = Math.min(rectangle.north, otherRectangle.north);
         if (!defined(result)) {
             return new Rectangle(west, south, east, north);
