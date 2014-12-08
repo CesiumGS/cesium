@@ -594,8 +594,8 @@ define([
                 longitude += CesiumMath.TWO_PI;
             }
         }
-        return longitude >= west &&
-               longitude <= east &&
+        return (longitude > west || CesiumMath.equalsEpsilon(longitude, west, CesiumMath.EPSILON14)) &&
+               (longitude < east || CesiumMath.equalsEpsilon(longitude, east, CesiumMath.EPSILON14)) &&
                latitude >= rectangle.south &&
                latitude <= rectangle.north;
     };
