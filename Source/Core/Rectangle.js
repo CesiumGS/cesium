@@ -439,17 +439,19 @@ define([
         var east = rectangle.east;
         var west = rectangle.west;
 
-        var longitude = (west + east) * 0.5;
         if (east < west) {
-            longitude = CesiumMath.negativePiToPi(longitude + CesiumMath.PI);
+            east += CesiumMath.TWO_PI;
         }
 
+        var longitude = CesiumMath.negativePiToPi((west + east) * 0.5);
+        var latitude = (rectangle.south + rectangle.north) * 0.5;
+
         if (!defined(result)) {
-            return new Cartographic(longitude, (rectangle.south + rectangle.north) * 0.5);
+            return new Cartographic(longitude, latitude);
         }
 
         result.longitude = longitude;
-        result.latitude = (rectangle.south + rectangle.north) * 0.5;
+        result.latitude = latitude;
         result.height = 0.0;
         return result;
     };
@@ -460,7 +462,7 @@ define([
      * @param {Rectangle} rectangle On rectangle to find an intersection
      * @param {Rectangle} otherRectangle Another rectangle to find an intersection
      * @param {Rectangle} [result] The object onto which to store the result.
-     * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
+     * @returns {Rectangle|undefined} The modified result parameter, a new Rectangle instance if none was provided or undefined if there is no intersection.
      */
     Rectangle.intersectWith = function(rectangle, otherRectangle, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -493,8 +495,17 @@ define([
         var west = CesiumMath.negativePiToPi(Math.max(rectangleWest, otherRectangleWest));
         var east = CesiumMath.negativePiToPi(Math.min(rectangleEast, otherRectangleEast));
 
+        if ((rectangle.west < rectangle.east || otherRectangle.west < otherRectangle.east) && east <= west) {
+            return undefined;
+        }
+
         var south = Math.max(rectangle.south, otherRectangle.south);
         var north = Math.min(rectangle.north, otherRectangle.north);
+
+        if (south >= north) {
+            return undefined;
+        }
+
         if (!defined(result)) {
             return new Rectangle(west, south, east, north);
         }
@@ -522,27 +533,22 @@ define([
         }
         //>>includeEnd('debug');
 
-        return cartographic.longitude >= rectangle.west &&
-               cartographic.longitude <= rectangle.east &&
-               cartographic.latitude >= rectangle.south &&
-               cartographic.latitude <= rectangle.north;
-    };
+        var longitude = cartographic.longitude;
+        var latitude = cartographic.latitude;
 
-    /**
-     * Determines if the rectangle is empty, i.e., if <code>west >= east</code>
-     * or <code>south >= north</code>.
-     *
-     * @param {Rectangle} rectangle The rectangle
-     * @returns {Boolean} True if the rectangle is empty; otherwise, false.
-     */
-    Rectangle.isEmpty = function(rectangle) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(rectangle)) {
-            throw new DeveloperError('rectangle is required');
+        var west = rectangle.west;
+        var east = rectangle.east;
+
+        if (east < west) {
+            east += CesiumMath.TWO_PI;
+            if (longitude < 0.0) {
+                longitude += CesiumMath.TWO_PI;
+            }
         }
-        //>>includeEnd('debug');
-
-        return rectangle.west >= rectangle.east || rectangle.south >= rectangle.north;
+        return longitude >= west &&
+               longitude <= east &&
+               latitude >= rectangle.south &&
+               latitude <= rectangle.north;
     };
 
     var subsampleLlaScratch = new Cartographic();

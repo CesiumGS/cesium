@@ -320,7 +320,7 @@ defineSuite([
     it('center works without a result parameter', function() {
         var rectangle = new Rectangle(west, south, east, north);
         var returnedResult = Rectangle.center(rectangle);
-        expect(returnedResult).toEqual(center);
+        expect(returnedResult).toEqualEpsilon(center, CesiumMath.EPSILON11);
     });
 
     it('center works with a result parameter', function() {
@@ -328,13 +328,13 @@ defineSuite([
         var result = new Cartographic();
         var returnedResult = Rectangle.center(rectangle, result);
         expect(result).toBe(returnedResult);
-        expect(returnedResult).toEqual(center);
+        expect(returnedResult).toEqualEpsilon(center, CesiumMath.EPSILON11);
     });
 
     it('center works across IDL', function() {
         var rectangle = Rectangle.fromDegrees(170, 0, -170, 0);
         var returnedResult = Rectangle.center(rectangle);
-        expect(returnedResult).toEqualEpsilon(Cartographic.fromDegrees(-180, 0), CesiumMath.EPSILON11);
+        expect(returnedResult).toEqualEpsilon(Cartographic.fromDegrees(180, 0), CesiumMath.EPSILON11);
 
         rectangle = Rectangle.fromDegrees(160, 0, -170, 0);
         returnedResult = Rectangle.center(rectangle);
@@ -397,6 +397,79 @@ defineSuite([
         expect(Rectangle.intersectWith(rectangle2, rectangle1)).toEqual(expected);
     });
 
+    it('intersectWith returns undefined for a point', function() {
+        var rectangle1 = new Rectangle(west, south, east, north);
+        var rectangle2 = new Rectangle(east, north, east + 0.1, north + 0.1);
+        expect(Rectangle.intersectWith(rectangle1, rectangle2)).not.toBeDefined();
+        expect(Rectangle.intersectWith(rectangle2, rectangle1)).not.toBeDefined();
+    });
+
+    it('intersectWith returns undefined for a east-west line (1)', function() {
+        var rectangle1 = new Rectangle(west, south, east, north);
+        var rectangle2 = new Rectangle(west, north, east, north + 0.1);
+        expect(Rectangle.intersectWith(rectangle1, rectangle2)).not.toBeDefined();
+        expect(Rectangle.intersectWith(rectangle2, rectangle1)).not.toBeDefined();
+    });
+
+    it('intersectWith returns undefined for a east-west line (2)', function() {
+        var rectangle1 = new Rectangle(west, south, east, north);
+        var rectangle2 = new Rectangle(west, south + 0.1, east, south);
+        expect(Rectangle.intersectWith(rectangle1, rectangle2)).not.toBeDefined();
+        expect(Rectangle.intersectWith(rectangle2, rectangle1)).not.toBeDefined();
+    });
+
+    it('intersectWith returns undefined for a north-south line (1)', function() {
+        var rectangle1 = new Rectangle(west, south, east, north);
+        var rectangle2 = new Rectangle(east, south, east + 0.1, north);
+        expect(Rectangle.intersectWith(rectangle1, rectangle2)).not.toBeDefined();
+        expect(Rectangle.intersectWith(rectangle2, rectangle1)).not.toBeDefined();
+    });
+
+    it('intersectWith returns undefined for a north-south line (2)', function() {
+        var rectangle1 = new Rectangle(west, south, east, north);
+        var rectangle2 = new Rectangle(west - 0.1, south, west, north);
+        expect(Rectangle.intersectWith(rectangle1, rectangle2)).not.toBeDefined();
+        expect(Rectangle.intersectWith(rectangle2, rectangle1)).not.toBeDefined();
+    });
+
+    it('intersectWith returns undefined for a north-south line (3)', function() {
+        var west = CesiumMath.toRadians(170.0);
+        var south = CesiumMath.toRadians(-10.0);
+        var east = CesiumMath.toRadians(-170.0);
+        var north = CesiumMath.toRadians(10.0);
+
+        var rectangle1 = new Rectangle(west, south, east, north);
+        var rectangle2 = new Rectangle(east, south, east + 0.1, north);
+        expect(Rectangle.intersectWith(rectangle1, rectangle2)).not.toBeDefined();
+        expect(Rectangle.intersectWith(rectangle2, rectangle1)).not.toBeDefined();
+    });
+
+    it('intersectWith returns undefined for a north-south line (4)', function() {
+        var west = CesiumMath.toRadians(170.0);
+        var south = CesiumMath.toRadians(-10.0);
+        var east = CesiumMath.toRadians(-170.0);
+        var north = CesiumMath.toRadians(10.0);
+
+        var rectangle1 = new Rectangle(west, south, east, north);
+        var rectangle2 = new Rectangle(west - 0.1, south, west, north);
+        expect(Rectangle.intersectWith(rectangle1, rectangle2)).not.toBeDefined();
+        expect(Rectangle.intersectWith(rectangle2, rectangle1)).not.toBeDefined();
+    });
+
+    it('intersectWith returns undefined if north-south direction is degenerate', function() {
+        var rectangle1 = new Rectangle(west, south, east, north);
+        var rectangle2 = new Rectangle(west, north + 0.1, east, north + 0.2);
+        expect(Rectangle.intersectWith(rectangle1, rectangle2)).not.toBeDefined();
+        expect(Rectangle.intersectWith(rectangle2, rectangle1)).not.toBeDefined();
+    });
+
+    it('intersectWith returns undefined if east-west direction is degenerate', function() {
+        var rectangle1 = new Rectangle(west, south, east, north);
+        var rectangle2 = new Rectangle(east + 0.1, south, east + 0.2, north);
+        expect(Rectangle.intersectWith(rectangle1, rectangle2)).not.toBeDefined();
+        expect(Rectangle.intersectWith(rectangle2, rectangle1)).not.toBeDefined();
+    });
+
     it('contains works', function() {
         var rectangle = new Rectangle(west, south, east, north);
         expect(Rectangle.contains(rectangle, new Cartographic(west, south))).toEqual(true);
@@ -410,40 +483,22 @@ defineSuite([
         expect(Rectangle.contains(rectangle, new Cartographic(east + 0.1, north))).toEqual(false);
     });
 
-    it('isEmpty reports a non-empty rectangle', function() {
-        var rectangle = new Rectangle(1.0, 1.0, 2.0, 2.0);
-        expect(Rectangle.isEmpty(rectangle)).toEqual(false);
-    });
+    it('contains works with rectangle across the IDL', function() {
+        var west = CesiumMath.toRadians(170.0);
+        var south = CesiumMath.toRadians(-10.0);
+        var east = CesiumMath.toRadians(-170.0);
+        var north = CesiumMath.toRadians(10.0);
 
-    it('isEmpty reports true for a point', function() {
-        var rectangle = new Rectangle(2.0, 2.0, 2.0, 2.0);
-        expect(Rectangle.isEmpty(rectangle)).toEqual(true);
-    });
-
-    it('isEmpty reports true for a north-south line', function() {
-        var rectangle = new Rectangle(2.0, 2.0, 2.0, 2.1);
-        expect(Rectangle.isEmpty(rectangle)).toEqual(true);
-    });
-
-    it('isEmpty reports true for an east-west line', function() {
-        var rectangle = new Rectangle(2.0, 2.0, 2.1, 2.0);
-        expect(Rectangle.isEmpty(rectangle)).toEqual(true);
-    });
-
-    it('isEmpty reports true if north-south direction is degenerate', function() {
-        var rectangle = new Rectangle(1.0, 1.1, 2.0, 1.0);
-        expect(Rectangle.isEmpty(rectangle)).toEqual(true);
-    });
-
-    it('isEmpty reports true if east-west direction is degenerate', function() {
-        var rectangle = new Rectangle(1.1, 1.0, 1.0, 2.0);
-        expect(Rectangle.isEmpty(rectangle)).toEqual(true);
-    });
-
-    it('isEmpty throws with no rectangle', function() {
-        expect(function() {
-            Rectangle.isEmpty();
-        }).toThrowDeveloperError();
+        var rectangle = new Rectangle(west, south, east, north);
+        expect(Rectangle.contains(rectangle, new Cartographic(west, south))).toEqual(true);
+        expect(Rectangle.contains(rectangle, new Cartographic(west, north))).toEqual(true);
+        expect(Rectangle.contains(rectangle, new Cartographic(east, south))).toEqual(true);
+        expect(Rectangle.contains(rectangle, new Cartographic(east, north))).toEqual(true);
+        expect(Rectangle.contains(rectangle, Rectangle.center(rectangle))).toEqual(true);
+        expect(Rectangle.contains(rectangle, new Cartographic(west - 0.1, south))).toEqual(false);
+        expect(Rectangle.contains(rectangle, new Cartographic(west, north + 0.1))).toEqual(false);
+        expect(Rectangle.contains(rectangle, new Cartographic(east, south - 0.1))).toEqual(false);
+        expect(Rectangle.contains(rectangle, new Cartographic(east + 0.1, north))).toEqual(false);
     });
 
     it('subsample works south of the equator', function() {

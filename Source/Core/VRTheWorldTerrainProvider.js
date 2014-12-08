@@ -310,7 +310,7 @@ define([
             var testRectangle = rectangle.rectangle;
 
             var intersection = Rectangle.intersectWith(testRectangle, parentRectangle, rectangleScratch);
-            if (!Rectangle.isEmpty(intersection)) {
+            if (defined(intersection)) {
                 // Parent tile is inside this rectangle, so at least one child is, too.
                 if (isTileInRectangle(tilingScheme, testRectangle, x * 2, y * 2, level + 1)) {
                     childMask |= 4; // northwest
@@ -332,7 +332,7 @@ define([
 
     function isTileInRectangle(tilingScheme, rectangle, x, y, level) {
         var tileRectangle = tilingScheme.tileXYToRectangle(x, y, level);
-        return !Rectangle.isEmpty(Rectangle.intersectWith(tileRectangle, rectangle, rectangleScratch));
+        return defined(Rectangle.intersectWith(tileRectangle, rectangle, rectangleScratch));
     }
 
     /**

@@ -631,7 +631,7 @@ define([
                 var area = coverageAreas[areaIndex];
                 if (level >= area.zoomMin && level <= area.zoomMax) {
                     var intersection = Rectangle.intersectWith(rectangle, area.bbox, intersectionScratch);
-                    if (!Rectangle.isEmpty(intersection)) {
+                    if (defined(intersection)) {
                         included = true;
                     }
                 }
