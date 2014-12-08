@@ -90,6 +90,11 @@ define([
         }
     });
 
+    /**
+     * Computes the width of a rectangle in radians.
+     * @param {Rectangle} rectangle The rectangle to compute the width of.
+     * @returns {Number} The width.
+     */
     Rectangle.computeWidth = function(rectangle) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(rectangle)) {
@@ -104,6 +109,11 @@ define([
         return east - west;
     };
 
+    /**
+     * Computes the height of a rectangle in radians.
+     * @param {Rectangle} rectangle The rectangle to compute the height of.
+     * @returns {Number} The height.
+     */
     Rectangle.computeHeight = function(rectangle) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(rectangle)) {

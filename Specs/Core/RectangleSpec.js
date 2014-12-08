@@ -36,6 +36,24 @@ defineSuite([
         expect(rectangle.north).toEqual(north);
     });
 
+    it('computeWidth', function() {
+        var rectangle = new Rectangle(west, south, east, north);
+        var expected = east - west;
+        expect(Rectangle.computeWidth(rectangle)).toEqual(expected);
+        expect(rectangle.width).toEqual(expected);
+
+        rectangle = new Rectangle(2.0, -1.0, -2.0, 1.0);
+        expected = rectangle.east - rectangle.west + CesiumMath.TWO_PI;
+        expect(rectangle.width).toEqual(expected);
+    });
+
+    it('computeHeight', function() {
+        var rectangle = new Rectangle(west, south, east, north);
+        var expected = north - south;
+        expect(Rectangle.computeHeight(rectangle)).toEqual(expected);
+        expect(rectangle.height).toEqual(expected);
+    });
+
     it('fromDegrees produces expected values.', function() {
         var west = -10.0;
         var south = -20.0;
