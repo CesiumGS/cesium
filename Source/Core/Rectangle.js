@@ -3,6 +3,8 @@ define([
         './Cartographic',
         './defaultValue',
         './defined',
+        './defineProperties',
+        './deprecationWarning',
         './DeveloperError',
         './Ellipsoid',
         './freezeObject',
@@ -11,6 +13,8 @@ define([
         Cartographic,
         defaultValue,
         defined,
+        defineProperties,
+        deprecationWarning,
         DeveloperError,
         Ellipsoid,
         freezeObject,
@@ -62,6 +66,63 @@ define([
          * @default 0.0
          */
         this.north = defaultValue(north, 0.0);
+    };
+
+    defineProperties(Rectangle.prototype, {
+        /**
+         * Gets the width of the rectangle in radians.
+         * @memberof Rectangle.prototype
+         * @type {Number}
+         */
+        width : {
+            get : function() {
+                return Rectangle.computeWidth(this);
+            }
+        },
+
+        /**
+         * Gets the height of the rectangle in radians.
+         * @memberof Rectangle.prototype
+         * @type {Number}
+         */
+        height : {
+            get : function() {
+                return Rectangle.computeHeight(this);
+            }
+        }
+    });
+
+    /**
+     * Computes the width of a rectangle in radians.
+     * @param {Rectangle} rectangle The rectangle to compute the width of.
+     * @returns {Number} The width.
+     */
+    Rectangle.computeWidth = function(rectangle) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(rectangle)) {
+            throw new DeveloperError('rectangle is required.');
+        }
+        //>>includeEnd('debug');
+        var east = rectangle.east;
+        var west = rectangle.west;
+        if (east < west) {
+            east += CesiumMath.TWO_PI;
+        }
+        return east - west;
+    };
+
+    /**
+     * Computes the height of a rectangle in radians.
+     * @param {Rectangle} rectangle The rectangle to compute the height of.
+     * @returns {Number} The height.
+     */
+    Rectangle.computeHeight = function(rectangle) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(rectangle)) {
+            throw new DeveloperError('rectangle is required.');
+        }
+        //>>includeEnd('debug');
+        return rectangle.north - rectangle.south;
     };
 
     /**
@@ -439,17 +500,19 @@ define([
         var east = rectangle.east;
         var west = rectangle.west;
 
-        var longitude = (west + east) * 0.5;
         if (east < west) {
-            longitude = CesiumMath.negativePiToPi(longitude + CesiumMath.PI);
+            east += CesiumMath.TWO_PI;
         }
 
+        var longitude = CesiumMath.negativePiToPi((west + east) * 0.5);
+        var latitude = (rectangle.south + rectangle.north) * 0.5;
+
         if (!defined(result)) {
-            return new Cartographic(longitude, (rectangle.south + rectangle.north) * 0.5);
+            return new Cartographic(longitude, latitude);
         }
 
         result.longitude = longitude;
-        result.latitude = (rectangle.south + rectangle.north) * 0.5;
+        result.latitude = latitude;
         result.height = 0.0;
         return result;
     };
@@ -460,9 +523,73 @@ define([
      * @param {Rectangle} rectangle On rectangle to find an intersection
      * @param {Rectangle} otherRectangle Another rectangle to find an intersection
      * @param {Rectangle} [result] The object onto which to store the result.
+     * @returns {Rectangle|undefined} The modified result parameter, a new Rectangle instance if none was provided or undefined if there is no intersection.
+     */
+    Rectangle.intersection = function(rectangle, otherRectangle, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(rectangle)) {
+            throw new DeveloperError('rectangle is required');
+        }
+        if (!defined(otherRectangle)) {
+            throw new DeveloperError('otherRectangle is required.');
+        }
+        //>>includeEnd('debug');
+
+        var rectangleEast = rectangle.east;
+        var rectangleWest = rectangle.west;
+
+        var otherRectangleEast = otherRectangle.east;
+        var otherRectangleWest = otherRectangle.west;
+
+        if (rectangleEast < rectangleWest && otherRectangleEast > 0.0) {
+            rectangleEast += CesiumMath.TWO_PI;
+        } else if (otherRectangleEast < otherRectangleWest && rectangleEast > 0.0) {
+            otherRectangleEast += CesiumMath.TWO_PI;
+        }
+
+        if (rectangleEast < rectangleWest && otherRectangleWest < 0.0) {
+            otherRectangleWest += CesiumMath.TWO_PI;
+        } else if (otherRectangleEast < otherRectangleWest && rectangleWest < 0.0) {
+            rectangleWest += CesiumMath.TWO_PI;
+        }
+
+        var west = CesiumMath.negativePiToPi(Math.max(rectangleWest, otherRectangleWest));
+        var east = CesiumMath.negativePiToPi(Math.min(rectangleEast, otherRectangleEast));
+
+        if ((rectangle.west < rectangle.east || otherRectangle.west < otherRectangle.east) && east <= west) {
+            return undefined;
+        }
+
+        var south = Math.max(rectangle.south, otherRectangle.south);
+        var north = Math.min(rectangle.north, otherRectangle.north);
+
+        if (south >= north) {
+            return undefined;
+        }
+
+        if (!defined(result)) {
+            return new Rectangle(west, south, east, north);
+        }
+        result.west = west;
+        result.south = south;
+        result.east = east;
+        result.north = north;
+        return result;
+    };
+
+    /**
+     * Computes the intersection of two rectangles
+     *
+     * @deprecated
+     *
+     * @param {Rectangle} rectangle On rectangle to find an intersection
+     * @param {Rectangle} otherRectangle Another rectangle to find an intersection
+     * @param {Rectangle} [result] The object onto which to store the result.
      * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
      */
     Rectangle.intersectWith = function(rectangle, otherRectangle, result) {
+        deprecationWarning('Rectangle.intersectWith', 'Rectangle.intersectWith was deprecated in Cesium 1.5. It will be removed in Cesium 1.6. Use Rectangle.intersection.');
+
         //>>includeStart('debug', pragmas.debug);
         if (!defined(rectangle)) {
             throw new DeveloperError('rectangle is required');
@@ -487,6 +614,27 @@ define([
     };
 
     /**
+     * Determines if the rectangle is empty, i.e., if <code>west >= east</code>
+     * or <code>south >= north</code>.
+     *
+     * @deprecated
+     *
+     * @param {Rectangle} rectangle The rectangle
+     * @returns {Boolean} True if the rectangle is empty; otherwise, false.
+     */
+    Rectangle.isEmpty = function(rectangle) {
+        deprecationWarning('Rectangle.isEmpty', 'Rectangle.isEmpty was deprecated in Cesium 1.5. It will be removed in Cesium 1.6.');
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(rectangle)) {
+            throw new DeveloperError('rectangle is required');
+        }
+        //>>includeEnd('debug');
+
+        return rectangle.west >= rectangle.east || rectangle.south >= rectangle.north;
+    };
+
+    /**
      * Returns true if the cartographic is on or inside the rectangle, false otherwise.
      *
      * @param {Rectangle} rectangle The rectangle
@@ -503,27 +651,22 @@ define([
         }
         //>>includeEnd('debug');
 
-        return cartographic.longitude >= rectangle.west &&
-               cartographic.longitude <= rectangle.east &&
-               cartographic.latitude >= rectangle.south &&
-               cartographic.latitude <= rectangle.north;
-    };
+        var longitude = cartographic.longitude;
+        var latitude = cartographic.latitude;
 
-    /**
-     * Determines if the rectangle is empty, i.e., if <code>west >= east</code>
-     * or <code>south >= north</code>.
-     *
-     * @param {Rectangle} rectangle The rectangle
-     * @returns {Boolean} True if the rectangle is empty; otherwise, false.
-     */
-    Rectangle.isEmpty = function(rectangle) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(rectangle)) {
-            throw new DeveloperError('rectangle is required');
+        var west = rectangle.west;
+        var east = rectangle.east;
+
+        if (east < west) {
+            east += CesiumMath.TWO_PI;
+            if (longitude < 0.0) {
+                longitude += CesiumMath.TWO_PI;
+            }
         }
-        //>>includeEnd('debug');
-
-        return rectangle.west >= rectangle.east || rectangle.south >= rectangle.north;
+        return (longitude > west || CesiumMath.equalsEpsilon(longitude, west, CesiumMath.EPSILON14)) &&
+               (longitude < east || CesiumMath.equalsEpsilon(longitude, east, CesiumMath.EPSILON14)) &&
+               latitude >= rectangle.south &&
+               latitude <= rectangle.north;
     };
 
     var subsampleLlaScratch = new Cartographic();
@@ -587,9 +730,8 @@ define([
         }
 
         for ( var i = 1; i < 8; ++i) {
-            var temp = -Math.PI + i * CesiumMath.PI_OVER_TWO;
-            if (west < temp && temp < east) {
-                lla.longitude = temp;
+            lla.longitude = -Math.PI + i * CesiumMath.PI_OVER_TWO;
+            if (Rectangle.contains(rectangle, lla)) {
                 result[length] = ellipsoid.cartographicToCartesian(lla, result[length]);
                 length++;
             }
