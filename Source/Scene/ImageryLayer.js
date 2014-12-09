@@ -389,6 +389,7 @@ define([
 
             var baseImageryRectangle = imageryBounds;
             var baseTerrainRectangle = tile.rectangle;
+            rectangle = tileImageryBoundsScratch;
 
             if (baseTerrainRectangle.south >= baseImageryRectangle.north) {
                 rectangle.north = rectangle.south = baseImageryRectangle.north;
