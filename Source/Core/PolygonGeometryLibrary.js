@@ -27,19 +27,31 @@ define([
     /**
      * @private
      */
-    PolygonGeometryLibrary.subdivideLine = function(p0, p1, granularity) {
-        var length = Cartesian3.distance(p0, p1);
+    PolygonGeometryLibrary.subdivideLineCount = function(p0, p1, granularity) {
         var angleBetween = Cartesian3.angleBetween(p0, p1);
         var n = angleBetween / granularity;
         var countDivide = Math.ceil(Math.log(n) / Math.log(2));
         if (countDivide < 1) {
             countDivide = 0;
         }
-        var numVertices = Math.pow(2, countDivide);
+        return Math.pow(2, countDivide);
+    };
 
+    /**
+     * @private
+     */
+    PolygonGeometryLibrary.subdivideLine = function(p0, p1, granularity, result) {
+        var numVertices = PolygonGeometryLibrary.subdivideLineCount(p0, p1, granularity);
+        var length = Cartesian3.distance(p0, p1);
         var distanceBetweenVertices = length / numVertices;
 
-        var positions = new Array(numVertices * 3);
+        if (!defined(result)) {
+            result = [];
+        }
+
+        var positions = result;
+        positions.length = numVertices * 3;
+
         var index = 0;
         positions[index++] = p0.x;
         positions[index++] = p0.y;
