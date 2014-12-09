@@ -151,7 +151,7 @@ define([
         this._rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
         this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new GeographicTilingScheme();
 
-        this._rectangle = Rectangle.intersectWith(this._rectangle, this._tilingScheme.rectangle);
+        this._rectangle = Rectangle.intersection(this._rectangle, this._tilingScheme.rectangle);
 
         var credit = options.credit;
         if (typeof credit === 'string') {

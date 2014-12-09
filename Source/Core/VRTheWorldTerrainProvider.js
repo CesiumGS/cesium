@@ -309,7 +309,7 @@ define([
 
             var testRectangle = rectangle.rectangle;
 
-            var intersection = Rectangle.intersectWith(testRectangle, parentRectangle, rectangleScratch);
+            var intersection = Rectangle.intersection(testRectangle, parentRectangle, rectangleScratch);
             if (defined(intersection)) {
                 // Parent tile is inside this rectangle, so at least one child is, too.
                 if (isTileInRectangle(tilingScheme, testRectangle, x * 2, y * 2, level + 1)) {
@@ -332,7 +332,7 @@ define([
 
     function isTileInRectangle(tilingScheme, rectangle, x, y, level) {
         var tileRectangle = tilingScheme.tileXYToRectangle(x, y, level);
-        return defined(Rectangle.intersectWith(tileRectangle, rectangle, rectangleScratch));
+        return defined(Rectangle.intersection(tileRectangle, rectangle, rectangleScratch));
     }
 
     /**

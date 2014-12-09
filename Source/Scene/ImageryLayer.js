@@ -376,8 +376,8 @@ define([
         // the geometry tile.  The ImageryProvider and ImageryLayer both have the
         // opportunity to constrain the rectangle.  The imagery TilingScheme's rectangle
         // always fully contains the ImageryProvider's rectangle.
-        var imageryBounds = Rectangle.intersectWith(imageryProvider.rectangle, this._rectangle, imageryBoundsScratch);
-        var rectangle = Rectangle.intersectWith(tile.rectangle, imageryBounds, tileImageryBoundsScratch);
+        var imageryBounds = Rectangle.intersection(imageryProvider.rectangle, this._rectangle, imageryBoundsScratch);
+        var rectangle = Rectangle.intersection(tile.rectangle, imageryBounds, tileImageryBoundsScratch);
 
         if (!defined(rectangle)) {
             // There is no overlap between this terrain tile and this imagery
@@ -466,7 +466,7 @@ define([
 
         var terrainRectangle = tile.rectangle;
         var imageryRectangle = imageryTilingScheme.tileXYToRectangle(northwestTileCoordinates.x, northwestTileCoordinates.y, imageryLevel);
-        var clippedImageryRectangle = Rectangle.intersectWith(imageryRectangle, imageryBounds, clippedRectangleScratch);
+        var clippedImageryRectangle = Rectangle.intersection(imageryRectangle, imageryBounds, clippedRectangleScratch);
 
         var minU;
         var maxU = 0.0;
@@ -491,7 +491,7 @@ define([
             minU = maxU;
 
             imageryRectangle = imageryTilingScheme.tileXYToRectangle(i, northwestTileCoordinates.y, imageryLevel);
-            clippedImageryRectangle = Rectangle.intersectWith(imageryRectangle, imageryBounds, clippedRectangleScratch);
+            clippedImageryRectangle = Rectangle.intersection(imageryRectangle, imageryBounds, clippedRectangleScratch);
 
             maxU = Math.min(1.0, (clippedImageryRectangle.east - terrainRectangle.west) / terrainRectangle.width);
 
@@ -509,7 +509,7 @@ define([
                 maxV = minV;
 
                 imageryRectangle = imageryTilingScheme.tileXYToRectangle(i, j, imageryLevel);
-                clippedImageryRectangle = Rectangle.intersectWith(imageryRectangle, imageryBounds, clippedRectangleScratch);
+                clippedImageryRectangle = Rectangle.intersection(imageryRectangle, imageryBounds, clippedRectangleScratch);
                 minV = Math.max(0.0, (clippedImageryRectangle.south - terrainRectangle.south) / terrainRectangle.height);
 
                 // If this is the southern-most imagery tile mapped to this terrain tile,

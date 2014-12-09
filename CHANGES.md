@@ -3,6 +3,9 @@ Change Log
 
 ### 1.5 - 2015-01-05
 
+* Deprecated
+  * `Rectangle.intersectWith` was deprecated in Cesium 1.5. It will be removed in Cesium 1.6. Use `Rectangle.intersection`.
+  * `Rectangle.isEmpty` was deprecated in Cesium 1.5. It will be removed in Cesium 1.6.
 * Improved polygon loading performance.
 * Added `Math.mod` which computes `m % n` but also works when `m` is negative.
 * Fixed imagery providers whose rectangle crosses the IDL. Added `Rectangle.computeWidth`, `Rectangle.computeHeight`, `Rectangle.width`, and `Rectangle.height`. [#2195](https://github.com/AnalyticalGraphicsInc/cesium/issues/2195)
