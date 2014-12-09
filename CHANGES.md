@@ -3,10 +3,8 @@ Change Log
 
 ### 1.5 - 2015-01-05
 
-* Breaking changes
-  *
-* Deprecated
-  *
+* Improved polygon loading performance.
+* Added `Math.mod` which computes `m % n` but also works when `m` is negative.
 * Fixed a bug in `PolylineGeometry` that would cause gaps in the line. [#2136](https://github.com/AnalyticalGraphicsInc/cesium/issues/2136)
 
 ### 1.4 - 2014-12-01

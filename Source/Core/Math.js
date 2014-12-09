@@ -480,19 +480,7 @@ define([
             throw new DeveloperError('x is required.');
         }
         //>>includeEnd('debug');
-        var epsilon10 = CesiumMath.EPSILON10;
-        var pi = CesiumMath.PI;
-        var two_pi = CesiumMath.TWO_PI;
-        while (x < -(pi + epsilon10)) {
-            x += two_pi;
-        }
-        if (x < -pi) {
-            return -pi;
-        }
-        while (x > pi + epsilon10) {
-            x -= two_pi;
-        }
-        return x > pi ? pi : x;
+        return CesiumMath.zeroToTwoPi(x + CesiumMath.PI) - CesiumMath.PI;
     };
 
     /**
@@ -507,10 +495,26 @@ define([
             throw new DeveloperError('x is required.');
         }
         //>>includeEnd('debug');
-        var value = x % CesiumMath.TWO_PI;
-        // We do a second modules here if we add 2Pi to ensure that we don't have any numerical issues with very
-        // small negative values.
-        return (value < 0.0) ? (value + CesiumMath.TWO_PI) % CesiumMath.TWO_PI : value;
+        return CesiumMath.mod(x, CesiumMath.TWO_PI);
+    };
+
+    /**
+     * The modulo operation that also works for negative dividends.
+     *
+     * @param {Number} m The dividend.
+     * @param {Number} n The divisor.
+     * @returns {Number} The remainder.
+     */
+    CesiumMath.mod = function(m, n) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(m)) {
+            throw new DeveloperError('m is required.');
+        }
+        if (!defined(n)) {
+            throw new DeveloperError('n is required.');
+        }
+        //>>includeEnd('debug');
+        return ((m % n) + n) % n;
     };
 
     /**
