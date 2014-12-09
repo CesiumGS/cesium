@@ -72,13 +72,13 @@ defineSuite([
         var m = EllipseOutlineGeometry.createGeometry(new EllipseOutlineGeometry({
             ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
-            granularity : 0.75,
+            granularity : 0.1,
             semiMajorAxis : 1.0,
             semiMinorAxis : 1.0
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 10);
-        expect(m.indices.length).toEqual(2 * 10);
+        expect(m.attributes.position.values.length).toEqual(3 * 6);
+        expect(m.indices.length).toEqual(2 * 6);
         expect(m.boundingSphere.radius).toEqual(1);
     });
 
@@ -86,28 +86,28 @@ defineSuite([
         var m = EllipseOutlineGeometry.createGeometry(new EllipseOutlineGeometry({
             ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
-            granularity : 0.75,
+            granularity : 0.1,
             semiMajorAxis : 1.0,
             semiMinorAxis : 1.0,
             extrudedHeight : 50000
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 10 * 2);
-        expect(m.indices.length).toEqual(2 * 10 * 2 + (16 *2));
+        expect(m.attributes.position.values.length).toEqual(3 * 6 * 2);
+        expect(m.indices.length).toEqual(2 * 6 * 2 + 16 * 2);
     });
 
     it('computes positions extruded, no lines drawn between top and bottom', function() {
         var m = EllipseOutlineGeometry.createGeometry(new EllipseOutlineGeometry({
             ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
-            granularity : 0.75,
+            granularity : 0.1,
             semiMajorAxis : 1.0,
             semiMinorAxis : 1.0,
             extrudedHeight : 50000,
             numberOfVerticalLines : 0
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 10 * 2);
-        expect(m.indices.length).toEqual(2 * 10 * 2);
+        expect(m.attributes.position.values.length).toEqual(3 * 6 * 2);
+        expect(m.indices.length).toEqual(2 * 6 * 2);
     });
 });
