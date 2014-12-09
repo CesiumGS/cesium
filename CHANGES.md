@@ -4,7 +4,7 @@ Change Log
 ### 1.5 - 2015-01-05
 
 * Deprecated
-  * `Rectangle.intersectWith` was deprecated in Cesium 1.5. It will be removed in Cesium 1.6. Use `Rectangle.intersection`.
+  * `Rectangle.intersectWith` was deprecated in Cesium 1.5. It will be removed in Cesium 1.6. Use `Rectangle.intersection`, which is the same but returns `undefined` when two rectangles do not intersect.
   * `Rectangle.isEmpty` was deprecated in Cesium 1.5. It will be removed in Cesium 1.6.
 * Improved polygon loading performance.
 * Added `Math.mod` which computes `m % n` but also works when `m` is negative.
