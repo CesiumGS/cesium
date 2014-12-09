@@ -6,7 +6,8 @@ define([
         './DeveloperError',
         './Ellipsoid',
         './freezeObject',
-        './Math'
+        './Math',
+        './Rectangle'
     ], function(
         Cartesian3,
         defaultValue,
@@ -14,7 +15,8 @@ define([
         DeveloperError,
         Ellipsoid,
         freezeObject,
-        CesiumMath) {
+        CesiumMath,
+        Rectangle) {
     "use strict";
 
     /**
@@ -186,8 +188,8 @@ define([
         var elementMultiplier = defaultValue(structure.elementMultiplier, HeightmapTessellator.DEFAULT_STRUCTURE.elementMultiplier);
         var isBigEndian = defaultValue(structure.isBigEndian, HeightmapTessellator.DEFAULT_STRUCTURE.isBigEndian);
 
-        var granularityX = (nativeRectangle.east - nativeRectangle.west) / (width - 1);
-        var granularityY = (nativeRectangle.north - nativeRectangle.south) / (height - 1);
+        var granularityX = Rectangle.computeWidth(nativeRectangle) / (width - 1);
+        var granularityY = Rectangle.computeHeight(nativeRectangle) / (height - 1);
 
         var radiiSquared = ellipsoid.radiiSquared;
         var radiiSquaredX = radiiSquared.x;

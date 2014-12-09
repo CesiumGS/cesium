@@ -151,7 +151,7 @@ define([
         this._rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
         this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new GeographicTilingScheme();
 
-        this._rectangle = Rectangle.intersectWith(this._rectangle, this._tilingScheme.rectangle);
+        this._rectangle = Rectangle.intersection(this._rectangle, this._tilingScheme.rectangle);
 
         var credit = options.credit;
         if (typeof credit === 'string') {
@@ -475,8 +475,8 @@ define([
             projected = this._tilingScheme.projection.project(cartographic, cartesian3Scratch);
         }
 
-        var i = (this._tileWidth * (projected.x - rectangle.west) / (rectangle.east - rectangle.west)) | 0;
-        var j = (this._tileHeight * (rectangle.north - projected.y) / (rectangle.north - rectangle.south)) | 0;
+        var i = (this._tileWidth * (projected.x - rectangle.west) / rectangle.width) | 0;
+        var j = (this._tileHeight * (rectangle.north - projected.y) / rectangle.height) | 0;
 
         var url;
 

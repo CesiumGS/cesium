@@ -180,6 +180,15 @@ define([
         var ellipsoid = Ellipsoid.clone(parameters.ellipsoid);
         var rectangle = parameters.childRectangle;
 
+        var north = rectangle.north;
+        var south = rectangle.south;
+        var east = rectangle.east;
+        var west = rectangle.west;
+
+        if (east < west) {
+            east += CesiumMath.TWO_PI;
+        }
+
         for (i = 0; i < uBuffer.length; ++i) {
             u = uBuffer[i];
             if (u <= minU) {
@@ -217,8 +226,8 @@ define([
 
             heightBuffer[i] = height;
 
-            cartographicScratch.longitude = CesiumMath.lerp(rectangle.west, rectangle.east, u);
-            cartographicScratch.latitude = CesiumMath.lerp(rectangle.south, rectangle.north, v);
+            cartographicScratch.longitude = CesiumMath.lerp(west, east, u);
+            cartographicScratch.latitude = CesiumMath.lerp(south, north, v);
             cartographicScratch.height = height;
 
             ellipsoid.cartographicToCartesian(cartographicScratch, cartesian3Scratch);
