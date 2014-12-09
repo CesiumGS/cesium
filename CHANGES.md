@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.5 - 2015-01-05
+
+* Improved polygon loading performance.
+* Added `Math.mod` which computes `m % n` but also works when `m` is negative.
+
 ### 1.4 - 2014-12-01
 
 * Breaking changes

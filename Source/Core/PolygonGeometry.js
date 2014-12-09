@@ -109,7 +109,7 @@ define([
 
         var geo;
         if (!perPositionHeight) {
-            geo = PolygonPipeline.computeSubdivision(positions, indices, granularity);
+            geo = PolygonPipeline.computeSubdivision(ellipsoid, positions, indices, granularity);
         } else {
             var length = positions.length;
             var flattenedPositions = new Array(length * 3);
