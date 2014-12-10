@@ -43,7 +43,7 @@ define([
     var createGeometryFromPositionsPositions = [];
     var createGeometryFromPositionsSubdivided = [];
 
-    function createGeometryFromPositions(ellipsoid, positions, granularity, perPositionHeight) {
+    function createGeometryFromPositions(ellipsoid, positions, minDistanceSqrd, perPositionHeight) {
         var cleanedPositions = PolygonPipeline.removeDuplicates(positions);
 
         //>>includeStart('debug', pragmas.debug);
@@ -70,11 +70,11 @@ define([
         if (!perPositionHeight) {
             var numVertices = 0;
             for (i = 0; i < length; i++) {
-                numVertices += PolygonGeometryLibrary.subdivideLineCount(cleanedPositions[i], cleanedPositions[(i + 1) % length], granularity);
+                numVertices += PolygonGeometryLibrary.subdivideLineCount(cleanedPositions[i], cleanedPositions[(i + 1) % length], minDistanceSqrd);
             }
             subdividedPositions = new Float64Array(numVertices * 3);
             for (i = 0; i < length; i++) {
-                var tempPositions = PolygonGeometryLibrary.subdivideLine(cleanedPositions[i], cleanedPositions[(i + 1) % length], granularity, createGeometryFromPositionsSubdivided);
+                var tempPositions = PolygonGeometryLibrary.subdivideLine(cleanedPositions[i], cleanedPositions[(i + 1) % length], minDistanceSqrd, createGeometryFromPositionsSubdivided);
                 var tempPositionsLength = tempPositions.length;
                 for (var j = 0; j < tempPositionsLength; ++j) {
                     subdividedPositions[index++] = tempPositions[j];
@@ -120,7 +120,7 @@ define([
         });
     }
 
-    function createGeometryFromPositionsExtruded(ellipsoid, positions, granularity, perPositionHeight) {
+    function createGeometryFromPositionsExtruded(ellipsoid, positions, minDistanceSqrd, perPositionHeight) {
         var cleanedPositions = PolygonPipeline.removeDuplicates(positions);
 
         //>>includeStart('debug', pragmas.debug);
@@ -148,13 +148,13 @@ define([
         if (!perPositionHeight) {
             var numVertices = 0;
             for (i = 0; i < length; i++) {
-                numVertices += PolygonGeometryLibrary.subdivideLineCount(cleanedPositions[i], cleanedPositions[(i + 1) % length], granularity);
+                numVertices += PolygonGeometryLibrary.subdivideLineCount(cleanedPositions[i], cleanedPositions[(i + 1) % length], minDistanceSqrd);
             }
 
             subdividedPositions = new Float64Array(numVertices * 3 * 2);
             for (i = 0; i < length; ++i) {
                 corners[i] = index / 3;
-                var tempPositions = PolygonGeometryLibrary.subdivideLine(cleanedPositions[i], cleanedPositions[(i + 1) % length], granularity, createGeometryFromPositionsSubdivided);
+                var tempPositions = PolygonGeometryLibrary.subdivideLine(cleanedPositions[i], cleanedPositions[(i + 1) % length], minDistanceSqrd, createGeometryFromPositionsSubdivided);
                 var tempPositionsLength = tempPositions.length;
                 for (var j = 0; j < tempPositionsLength; ++j) {
                     subdividedPositions[index++] = tempPositions[j];
@@ -432,15 +432,19 @@ define([
         var geometry;
         var geometries = [];
 
+        var radius = ellipsoid.maximumRadius;
+        var minDistance = 2.0 * radius * Math.sin(granularity * 0.5);
+        var minDistanceSqrd = minDistance * minDistance;
+
         if (extrude) {
             for (i = 0; i < polygons.length; i++) {
-                geometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, perPositionHeight);
+                geometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], minDistanceSqrd, perPositionHeight);
                 geometry.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(geometry.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
                 geometries.push(geometry);
             }
         } else {
             for (i = 0; i < polygons.length; i++) {
-                geometry = createGeometryFromPositions(ellipsoid, polygons[i], granularity, perPositionHeight);
+                geometry = createGeometryFromPositions(ellipsoid, polygons[i], minDistanceSqrd, perPositionHeight);
                 geometry.geometry = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry, height, ellipsoid, !perPositionHeight);
                 geometries.push(geometry);
             }
