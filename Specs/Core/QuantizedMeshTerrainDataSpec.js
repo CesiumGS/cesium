@@ -35,7 +35,7 @@ defineSuite([
              v *= 32767;
              v |= 0;
              for (var i = 0; i < uBuffer.length; ++i) {
-                 if (Math.abs(uBuffer[i] - u) <= 2 && Math.abs(vBuffer[i] - v) <= 2) {
+                 if (Math.abs(uBuffer[i] - u) <= 1 && Math.abs(vBuffer[i] - v) <= 1) {
                      return i;
                  }
              }

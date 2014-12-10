@@ -48,10 +48,10 @@ define([
         var isEastChild = parameters.isEastChild;
         var isNorthChild = parameters.isNorthChild;
 
-        var minU = isEastChild ? midUV : 0.0;
-        var maxU = isEastChild ? 1.0 : midUV;
-        var minV = isNorthChild ? midUV : 0.0;
-        var maxV = isNorthChild ? 1.0 : midUV;
+        var minU = isEastChild ? halfMaxShort : 0;
+        var maxU = isEastChild ? maxShort : halfMaxShort;
+        var minV = isNorthChild ? halfMaxShort : 0;
+        var maxV = isNorthChild ? maxShort : halfMaxShort;
 
         var uBuffer = uScratch;
         var vBuffer = vScratch;
@@ -88,8 +88,8 @@ define([
                 (isNorthChild && v >= halfMaxShort || !isNorthChild && v <= halfMaxShort)) {
 
                 vertexMap[i] = vertexCount;
-                uBuffer.push(u / maxShort);
-                vBuffer.push(v / maxShort);
+                uBuffer.push(u);
+                vBuffer.push(v);
                 heightBuffer.push(parentHeightBuffer[i]);
                 if (hasVertexNormals) {
                     normalBuffer.push(parentNormalBuffer[n]);
@@ -118,16 +118,16 @@ define([
             var i1 = parentIndices[i + 1];
             var i2 = parentIndices[i + 2];
 
-            var u0 = parentUBuffer[i0] / maxShort;
-            var u1 = parentUBuffer[i1] / maxShort;
-            var u2 = parentUBuffer[i2] / maxShort;
+            var u0 = parentUBuffer[i0];
+            var u1 = parentUBuffer[i1];
+            var u2 = parentUBuffer[i2];
 
             triangleVertices[0].initializeIndexed(parentUBuffer, parentVBuffer, parentHeightBuffer, parentNormalBuffer, i0);
             triangleVertices[1].initializeIndexed(parentUBuffer, parentVBuffer, parentHeightBuffer, parentNormalBuffer, i1);
             triangleVertices[2].initializeIndexed(parentUBuffer, parentVBuffer, parentHeightBuffer, parentNormalBuffer, i2);
 
             // Clip triangle on the east-west boundary.
-            var clipped = Intersections2D.clipTriangleAtAxisAlignedThreshold(midUV, isEastChild, u0, u1, u2, clipScratch);
+            var clipped = Intersections2D.clipTriangleAtAxisAlignedThreshold(halfMaxShort, isEastChild, u0, u1, u2, clipScratch);
 
             // Get the first clipped triangle, if any.
             clippedIndex = 0;
@@ -148,7 +148,7 @@ define([
             clippedIndex = clippedTriangleVertices[2].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
 
             // Clip the triangle against the North-south boundary.
-            clipped2 = Intersections2D.clipTriangleAtAxisAlignedThreshold(midUV, isNorthChild, clippedTriangleVertices[0].getV(), clippedTriangleVertices[1].getV(), clippedTriangleVertices[2].getV(), clipScratch2);
+            clipped2 = Intersections2D.clipTriangleAtAxisAlignedThreshold(halfMaxShort, isNorthChild, clippedTriangleVertices[0].getV(), clippedTriangleVertices[1].getV(), clippedTriangleVertices[2].getV(), clipScratch2);
             addClippedPolygon(uBuffer, vBuffer, heightBuffer, normalBuffer, indices, vertexMap, clipped2, clippedTriangleVertices, hasVertexNormals);
 
             // If there's another vertex in the original clipped result,
@@ -157,13 +157,13 @@ define([
                 clippedTriangleVertices[2].clone(clippedTriangleVertices[1]);
                 clippedTriangleVertices[2].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
 
-                clipped2 = Intersections2D.clipTriangleAtAxisAlignedThreshold(midUV, isNorthChild, clippedTriangleVertices[0].getV(), clippedTriangleVertices[1].getV(), clippedTriangleVertices[2].getV(), clipScratch2);
+                clipped2 = Intersections2D.clipTriangleAtAxisAlignedThreshold(halfMaxShort, isNorthChild, clippedTriangleVertices[0].getV(), clippedTriangleVertices[1].getV(), clippedTriangleVertices[2].getV(), clipScratch2);
                 addClippedPolygon(uBuffer, vBuffer, heightBuffer, normalBuffer, indices, vertexMap, clipped2, clippedTriangleVertices, hasVertexNormals);
             }
         }
 
-        var uOffset = isEastChild ? -1.0 : 0.0;
-        var vOffset = isNorthChild ? -1.0 : 0.0;
+        var uOffset = isEastChild ? -maxShort : 0;
+        var vOffset = isNorthChild ? -maxShort : 0;
 
         var parentMinimumHeight = parameters.minimumHeight;
         var parentMaximumHeight = parameters.maximumHeight;
@@ -186,12 +186,12 @@ define([
             u = uBuffer[i];
             if (u <= minU) {
                 westIndices.push(i);
-                u = 0.0;
+                u = 0;
             } else if (u >= maxU) {
                 eastIndices.push(i);
-                u = 1.0;
+                u = maxShort;
             } else {
-                u = u * 2.0 + uOffset;
+                u = Math.max(0, (Math.round(u) * 2.0 + uOffset)) | 0;
             }
 
             uBuffer[i] = u;
@@ -199,12 +199,12 @@ define([
             v = vBuffer[i];
             if (v <= minV) {
                 southIndices.push(i);
-                v = 0.0;
+                v = 0;
             } else if (v >= maxV) {
                 northIndices.push(i);
-                v = 1.0;
+                v = maxShort;
             } else {
-                v = v * 2.0 + vOffset;
+                v = Math.max(0, (Math.round(v) * 2.0 + vOffset)) | 0;
             }
 
             vBuffer[i] = v;
@@ -219,8 +219,8 @@ define([
 
             heightBuffer[i] = height;
 
-            cartographicScratch.longitude = CesiumMath.lerp(rectangle.west, rectangle.east, u);
-            cartographicScratch.latitude = CesiumMath.lerp(rectangle.south, rectangle.north, v);
+            cartographicScratch.longitude = CesiumMath.lerp(rectangle.west, rectangle.east, u / maxShort);
+            cartographicScratch.latitude = CesiumMath.lerp(rectangle.south, rectangle.north, v / maxShort);
             cartographicScratch.height = height;
 
             ellipsoid.cartographicToCartesian(cartographicScratch, cartesian3Scratch);
@@ -240,13 +240,13 @@ define([
         var vertices = new Uint16Array(uBuffer.length + vBuffer.length + heightBuffer.length);
 
         for (i = 0; i < uBuffer.length; ++i) {
-            vertices[i] = uBuffer[i] * maxShort;
+            vertices[i] = uBuffer[i];
         }
 
         var start = uBuffer.length;
 
         for (i = 0; i < vBuffer.length; ++i) {
-            vertices[start + i] = vBuffer[i] * maxShort;
+            vertices[start + i] = vBuffer[i];
         }
 
         start += vBuffer.length;
@@ -369,14 +369,14 @@ define([
 
     Vertex.prototype.getU = function() {
         if (defined(this.index)) {
-            return this.uBuffer[this.index] / maxShort;
+            return this.uBuffer[this.index];
         }
         return CesiumMath.lerp(this.first.getU(), this.second.getU(), this.ratio);
     };
 
     Vertex.prototype.getV = function() {
         if (defined(this.index)) {
-            return this.vBuffer[this.index] / maxShort;
+            return this.vBuffer[this.index];
         }
         return CesiumMath.lerp(this.first.getV(), this.second.getV(), this.ratio);
     };
