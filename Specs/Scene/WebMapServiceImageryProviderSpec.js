@@ -7,6 +7,7 @@ defineSuite([
         'Core/GeographicTilingScheme',
         'Core/loadImage',
         'Core/loadWithXhr',
+        'Core/Math',
         'Core/queryToObject',
         'Core/Rectangle',
         'Core/WebMercatorTilingScheme',
@@ -26,6 +27,7 @@ defineSuite([
         GeographicTilingScheme,
         loadImage,
         loadWithXhr,
+        CesiumMath,
         queryToObject,
         Rectangle,
         WebMercatorTilingScheme,
@@ -344,7 +346,7 @@ defineSuite([
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toBeUndefined();
             expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
-            expect(provider.rectangle).toEqual(rectangle);
+            expect(provider.rectangle).toEqualEpsilon(rectangle, CesiumMath.EPSILON14);
             expect(provider.tileDiscardPolicy).toBeUndefined();
         });
     });
