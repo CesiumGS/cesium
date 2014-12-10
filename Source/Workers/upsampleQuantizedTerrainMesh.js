@@ -28,7 +28,8 @@ define([
     "use strict";
 
     var maxShort = 32767;
-    var epsilon = 1.0 / 32767.0;
+    var halfMaxShort = (maxShort / 2) | 0;
+    var midUV = halfMaxShort / maxShort;
 
     var clipScratch = [];
     var clipScratch2 = [];
@@ -47,10 +48,10 @@ define([
         var isEastChild = parameters.isEastChild;
         var isNorthChild = parameters.isNorthChild;
 
-        var minU = isEastChild ? 0.5 : 0.0;
-        var maxU = isEastChild ? 1.0 : 0.5;
-        var minV = isNorthChild ? 0.5 : 0.0;
-        var maxV = isNorthChild ? 1.0 : 0.5;
+        var minU = isEastChild ? midUV : 0.0;
+        var maxU = isEastChild ? 1.0 : midUV;
+        var minV = isNorthChild ? midUV : 0.0;
+        var maxV = isNorthChild ? 1.0 : midUV;
 
         var uBuffer = uScratch;
         var vBuffer = vScratch;
@@ -81,14 +82,14 @@ define([
 
         var i, n, u, v;
         for (i = 0, n = 0; i < quantizedVertexCount; ++i, n += 2) {
-            u = parentUBuffer[i] / maxShort;
-            v = parentVBuffer[i] / maxShort;
-            if ((isEastChild && CesiumMath.greaterOrEqual(u, 0.5, epsilon) || !isEastChild && CesiumMath.lessOrEqual(u, 0.5)) &&
-                (isNorthChild && CesiumMath.greaterOrEqual(v, 0.5, epsilon) || !isNorthChild && CesiumMath.lessOrEqual(v, 0.5))) {
+            u = parentUBuffer[i];
+            v = parentVBuffer[i];
+            if ((isEastChild && u >= halfMaxShort || !isEastChild && u <= halfMaxShort) &&
+                (isNorthChild && v >= halfMaxShort || !isNorthChild && v <= halfMaxShort)) {
 
                 vertexMap[i] = vertexCount;
-                uBuffer.push(u);
-                vBuffer.push(v);
+                uBuffer.push(u / maxShort);
+                vBuffer.push(v / maxShort);
                 heightBuffer.push(parentHeightBuffer[i]);
                 if (hasVertexNormals) {
                     normalBuffer.push(parentNormalBuffer[n]);
@@ -126,7 +127,7 @@ define([
             triangleVertices[2].initializeIndexed(parentUBuffer, parentVBuffer, parentHeightBuffer, parentNormalBuffer, i2);
 
             // Clip triangle on the east-west boundary.
-            var clipped = Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, isEastChild, u0, u1, u2, clipScratch);
+            var clipped = Intersections2D.clipTriangleAtAxisAlignedThreshold(midUV, isEastChild, u0, u1, u2, clipScratch);
 
             // Get the first clipped triangle, if any.
             clippedIndex = 0;
@@ -147,7 +148,7 @@ define([
             clippedIndex = clippedTriangleVertices[2].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
 
             // Clip the triangle against the North-south boundary.
-            clipped2 = Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, isNorthChild, clippedTriangleVertices[0].getV(), clippedTriangleVertices[1].getV(), clippedTriangleVertices[2].getV(), clipScratch2);
+            clipped2 = Intersections2D.clipTriangleAtAxisAlignedThreshold(midUV, isNorthChild, clippedTriangleVertices[0].getV(), clippedTriangleVertices[1].getV(), clippedTriangleVertices[2].getV(), clipScratch2);
             addClippedPolygon(uBuffer, vBuffer, heightBuffer, normalBuffer, indices, vertexMap, clipped2, clippedTriangleVertices, hasVertexNormals);
 
             // If there's another vertex in the original clipped result,
@@ -156,7 +157,7 @@ define([
                 clippedTriangleVertices[2].clone(clippedTriangleVertices[1]);
                 clippedTriangleVertices[2].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
 
-                clipped2 = Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, isNorthChild, clippedTriangleVertices[0].getV(), clippedTriangleVertices[1].getV(), clippedTriangleVertices[2].getV(), clipScratch2);
+                clipped2 = Intersections2D.clipTriangleAtAxisAlignedThreshold(midUV, isNorthChild, clippedTriangleVertices[0].getV(), clippedTriangleVertices[1].getV(), clippedTriangleVertices[2].getV(), clipScratch2);
                 addClippedPolygon(uBuffer, vBuffer, heightBuffer, normalBuffer, indices, vertexMap, clipped2, clippedTriangleVertices, hasVertexNormals);
             }
         }
@@ -183,10 +184,10 @@ define([
 
         for (i = 0; i < uBuffer.length; ++i) {
             u = uBuffer[i];
-            if (CesiumMath.lessOrEqual(u, minU, epsilon)) {
+            if (u <= minU) {
                 westIndices.push(i);
                 u = 0.0;
-            } else if (CesiumMath.greaterOrEqual(u, maxU, epsilon)) {
+            } else if (u >= maxU) {
                 eastIndices.push(i);
                 u = 1.0;
             } else {
@@ -196,10 +197,10 @@ define([
             uBuffer[i] = u;
 
             v = vBuffer[i];
-            if (CesiumMath.lessOrEqual(v, minV, epsilon)) {
+            if (v <= minV) {
                 southIndices.push(i);
                 v = 0.0;
-            } else if (CesiumMath.greaterOrEqual(v, maxV, epsilon)) {
+            } else if (v >= maxV) {
                 northIndices.push(i);
                 v = 1.0;
             } else {

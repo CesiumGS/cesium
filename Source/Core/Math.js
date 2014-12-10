@@ -538,60 +538,6 @@ define([
         return Math.abs(left - right) <= epsilon;
     };
 
-    /**
-     * Determines if a value is greater than another value, within a given tolerance.
-     *
-     * @param {Number} left The first value to compare.
-     * @param {Number} right The other value to compare.
-     * @param {Number} [epsilon=0.0] The maximum inclusive delta between <code>left</code> and <code>right</code> where they will be considered equal.
-     * @returns {Boolean} <code>true</code> if <code>left</code> is greater than or equal to <code>right</code> within the epsilon; otherwise, <code>false</code>.
-     *
-     * @example
-     * var b = Cesium.Math.greaterOrEqual(Cesium.Math.EPSILON2, 0.0, Cesium.Math.EPSILON2); // true
-     * var b = Cesium.Math.greaterOrEqual(Cesium.Math.EPSILON2, 0.0, Cesium.Math.EPSILON3);  // false
-     */
-    CesiumMath.greaterOrEqual = function(left, right, epsilon) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required.');
-        }
-
-        if (!defined(right)) {
-            throw new DeveloperError('right is required.');
-        }
-        //>>includeEnd('debug');
-        epsilon = defaultValue(epsilon, 0.0);
-        return left >= right - epsilon;
-    };
-
-    /**
-     * Determines if a value is less than another value, within a given tolerance.
-     *
-     * @param {Number} left The first value to compare.
-     * @param {Number} right The other value to compare.
-     * @param {Number} [epsilon=0.0] The maximum inclusive delta between <code>left</code> and <code>right</code> where they will be considered equal.
-     * @returns {Boolean} <code>true</code> if <code>left</code> is less than or equal to <code>right</code> within the epsilon; otherwise, <code>false</code>.
-     *
-     * @example
-     * var b = Cesium.Math.lessOrEqual(Cesium.Math.EPSILON2, 0.0, Cesium.Math.EPSILON2); // true
-     * var b = Cesium.Math.lessOrEqual(Cesium.Math.EPSILON2, 0.0, Cesium.Math.EPSILON3);  // false
-     */
-    CesiumMath.lessOrEqual = function(left, right, epsilon) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required.');
-        }
-
-        if (!defined(right)) {
-            throw new DeveloperError('right is required.');
-        }
-        //>>includeEnd('debug');
-        epsilon = defaultValue(epsilon, 0.0);
-        return left <= right + epsilon;
-    };
-
-
-
     var factorials = [1];
 
     /**
