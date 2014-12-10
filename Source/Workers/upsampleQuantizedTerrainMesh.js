@@ -182,6 +182,15 @@ define([
         var ellipsoid = Ellipsoid.clone(parameters.ellipsoid);
         var rectangle = parameters.childRectangle;
 
+        var north = rectangle.north;
+        var south = rectangle.south;
+        var east = rectangle.east;
+        var west = rectangle.west;
+
+        if (east < west) {
+            east += CesiumMath.TWO_PI;
+        }
+
         for (i = 0; i < uBuffer.length; ++i) {
             u = uBuffer[i];
             if (u <= minU) {

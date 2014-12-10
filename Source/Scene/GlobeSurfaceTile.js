@@ -733,11 +733,11 @@ define([
         // Compute the water mask translation and scale
         var sourceTileRectangle = sourceTile.rectangle;
         var tileRectangle = tile.rectangle;
-        var tileWidth = tileRectangle.east - tileRectangle.west;
-        var tileHeight = tileRectangle.north - tileRectangle.south;
+        var tileWidth = tileRectangle.width;
+        var tileHeight = tileRectangle.height;
 
-        var scaleX = tileWidth / (sourceTileRectangle.east - sourceTileRectangle.west);
-        var scaleY = tileHeight / (sourceTileRectangle.north - sourceTileRectangle.south);
+        var scaleX = tileWidth / sourceTileRectangle.width;
+        var scaleY = tileHeight / sourceTileRectangle.height;
         surfaceTile.waterMaskTranslationAndScale.x = scaleX * (tileRectangle.west - sourceTileRectangle.west) / tileWidth;
         surfaceTile.waterMaskTranslationAndScale.y = scaleY * (tileRectangle.south - sourceTileRectangle.south) / tileHeight;
         surfaceTile.waterMaskTranslationAndScale.z = scaleX;
