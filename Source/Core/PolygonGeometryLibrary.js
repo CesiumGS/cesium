@@ -27,9 +27,9 @@ define([
     /**
      * @private
      */
-    PolygonGeometryLibrary.subdivideLineCount = function(p0, p1, minDistanceSqrd) {
-        var distanceSqrd = Cartesian3.magnitudeSquared(Cartesian3.subtract(p1, p0, distanceScratch));
-        var n = distanceSqrd / minDistanceSqrd;
+    PolygonGeometryLibrary.subdivideLineCount = function(p0, p1, minDistance) {
+        var distance = Cartesian3.distance(p0, p1);
+        var n = distance / minDistance;
         var countDivide = Math.ceil(Math.log(n) / Math.log(2));
         if (countDivide < 1) {
             countDivide = 0;
@@ -40,8 +40,8 @@ define([
     /**
      * @private
      */
-    PolygonGeometryLibrary.subdivideLine = function(p0, p1, minDistanceSqrd, result) {
-        var numVertices = PolygonGeometryLibrary.subdivideLineCount(p0, p1, minDistanceSqrd);
+    PolygonGeometryLibrary.subdivideLine = function(p0, p1, minDistance, result) {
+        var numVertices = PolygonGeometryLibrary.subdivideLineCount(p0, p1, minDistance);
         var length = Cartesian3.distance(p0, p1);
         var distanceBetweenVertices = length / numVertices;
 

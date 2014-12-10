@@ -342,12 +342,11 @@ define([
         if (!perPositionHeight) {
             var radius = ellipsoid.maximumRadius;
             var minDistance = 2.0 * radius * Math.sin(granularity * 0.5);
-            var minDistanceSqrd = minDistance * minDistance;
 
             for (i = 0; i < length; i++) {
                 p1 = positions[i];
                 p2 = positions[(i + 1) % length];
-                subdividedEdge = PolygonGeometryLibrary.subdivideLine(p1, p2, minDistanceSqrd);
+                subdividedEdge = PolygonGeometryLibrary.subdivideLine(p1, p2, minDistance);
                 subdividedEdge.push(p2.x, p2.y, p2.z);
                 edgePositions = edgePositions.concat(subdividedEdge);
             }
