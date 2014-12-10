@@ -414,9 +414,9 @@ define([
      *          the rectangle, so expect incorrect results for positions far outside the rectangle.
      */
     QuantizedMeshTerrainData.prototype.interpolateHeight = function(rectangle, longitude, latitude) {
-        var u = CesiumMath.clamp((longitude - rectangle.west) / (rectangle.east - rectangle.west), 0.0, 1.0);
+        var u = CesiumMath.clamp((longitude - rectangle.west) / rectangle.width, 0.0, 1.0);
         u *= maxShort;
-        var v = CesiumMath.clamp((latitude - rectangle.south) / (rectangle.north - rectangle.south), 0.0, 1.0);
+        var v = CesiumMath.clamp((latitude - rectangle.south) / rectangle.height, 0.0, 1.0);
         v *= maxShort;
 
         var uBuffer = this._uValues;

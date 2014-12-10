@@ -519,7 +519,6 @@ define([
      * @exception {DeveloperError} <code>options.rectangle.east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
      * @exception {DeveloperError} <code>options.rectangle.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
      * @exception {DeveloperError} <code>options.rectangle.north</code> must be greater than <code>options.rectangle.south</code>.
-     * @exception {DeveloperError} <code>options.rectangle.east</code> must be greater than <code>options.rectangle.west</code>.
      *
      * @see RectangleGeometry#createGeometry
      *
@@ -616,8 +615,8 @@ define([
             Matrix3.clone(Matrix3.IDENTITY, tangentRotationMatrix);
         }
 
-        options.lonScalar = 1.0 / (rectangle.east - rectangle.west);
-        options.latScalar = 1.0 / (rectangle.north - rectangle.south);
+        options.lonScalar = 1.0 / rectangle.width;
+        options.latScalar = 1.0 / rectangle.height;
         options.vertexFormat = vertexFormat;
         options.textureMatrix = textureMatrix;
         options.tangentRotationMatrix = tangentRotationMatrix;

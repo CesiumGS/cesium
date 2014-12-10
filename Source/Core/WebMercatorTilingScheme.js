@@ -219,10 +219,7 @@ define([
      */
     WebMercatorTilingScheme.prototype.positionToTileXY = function(position, level, result) {
         var rectangle = this._rectangle;
-        if (position.latitude > rectangle.north ||
-            position.latitude < rectangle.south ||
-            position.longitude < rectangle.west ||
-            position.longitude > rectangle.east) {
+        if (!Rectangle.contains(rectangle, position)) {
             // outside the bounds of the tiling scheme
             return undefined;
         }
