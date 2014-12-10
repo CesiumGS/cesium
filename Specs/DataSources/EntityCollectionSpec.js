@@ -332,8 +332,12 @@ defineSuite([
 
     it('add throws for Entity with same id', function() {
         var entityCollection = new EntityCollection();
-        var entity = new Entity('1');
-        var entity2 = new Entity('1');
+        var entity = new Entity({
+            id : '1'
+        });
+        var entity2 = new Entity({
+            id : '1'
+        });
         entityCollection.add(entity);
 
         expect(function() {

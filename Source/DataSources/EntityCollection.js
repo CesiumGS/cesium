@@ -25,6 +25,10 @@ define([
         Entity) {
     "use strict";
 
+    var entityOptionsScratch = {
+        id : undefined
+    };
+
     function fireChangedEvent(collection) {
         if (collection._suspendCount === 0) {
             var added = collection._addedEntities;
@@ -202,6 +206,7 @@ define([
         entity.definitionChanged.addEventListener(EntityCollection.prototype._onEntityDefinitionChanged, this);
 
         fireChangedEvent(this);
+        return entity;
     };
 
     /**
@@ -295,6 +300,7 @@ define([
         return this._entities.get(id);
     };
 
+
     /**
      * Gets an entity with the specified id or creates it and adds it to the collection if it does not exist.
      *
@@ -310,7 +316,8 @@ define([
 
         var entity = this._entities.get(id);
         if (!defined(entity)) {
-            entity = new Entity(id);
+            entityOptionsScratch.id = id;
+            entity = new Entity(entityOptionsScratch);
             this.add(entity);
         }
         return entity;

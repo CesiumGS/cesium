@@ -282,7 +282,7 @@ WebGLGlobeDataSource.prototype.load = function(data) {
             //WebGL Globe only contains lines, so that's the only graphics we create.
             var polyline = new Cesium.PolylineGraphics();
             polyline.show = new Cesium.ConstantProperty(show);
-            polyline.material = Cesium.ColorMaterialProperty.fromColor(color);
+            polyline.material = new Cesium.ColorMaterialProperty(color);
             polyline.width = new Cesium.ConstantProperty(2);
             polyline.followSurface = new Cesium.ConstantProperty(false);
             polyline.positions = new Cesium.ConstantProperty([surfacePosition, heightPosition]);

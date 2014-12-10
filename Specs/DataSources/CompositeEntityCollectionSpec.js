@@ -432,7 +432,9 @@ defineSuite([
         expect(compositeObject.orientation).toBe(entity2.orientation);
 
         //Add a lower-priority object with position and viewFrom.
-        var entity3 = new Entity(entity2.id);
+        var entity3 = new Entity({
+            id : entity2.id
+        });
         collection3.add(entity3);
         entity3.position = new CompositePositionProperty();
         entity3.viewFrom = new CompositeProperty();
@@ -445,7 +447,9 @@ defineSuite([
         expect(compositeObject.viewFrom).toBe(entity3.viewFrom);
 
         //Add a higher priority object with position
-        var entity1 = new Entity(entity2.id);
+        var entity1 = new Entity({
+            id : entity2.id
+        });
         collection1.add(entity1);
         entity1.position = new CompositePositionProperty();
 
@@ -460,17 +464,23 @@ defineSuite([
     it('sub-property compositing works', function() {
         var id = 'test';
         var collection1 = new EntityCollection();
-        var entity1 = new Entity(id);
+        var entity1 = new Entity({
+            id : id
+        });
         entity1.billboard = new BillboardGraphics();
         collection1.add(entity1);
 
         var collection2 = new EntityCollection();
-        var entity2 = new Entity(id);
+        var entity2 = new Entity({
+            id : id
+        });
         entity2.billboard = new BillboardGraphics();
         collection2.add(entity2);
 
         var collection3 = new EntityCollection();
-        var entity3 = new Entity(id);
+        var entity3 = new Entity({
+            id : id
+        });
         entity3.billboard = new BillboardGraphics();
         collection3.add(entity3);
 
@@ -568,14 +578,18 @@ defineSuite([
 
         // the entity in collection1 has show === true
         var collection1 = new EntityCollection();
-        var entity1 = new Entity(id);
+        var entity1 = new Entity({
+            id : id
+        });
         entity1.billboard = new BillboardGraphics();
         entity1.billboard.show = new ConstantProperty(true);
         collection1.add(entity1);
 
         // the entity in collection1 has show === false
         var collection2 = new EntityCollection();
-        var entity2 = new Entity(id);
+        var entity2 = new Entity({
+            id : id
+        });
         entity2.billboard = new BillboardGraphics();
         entity2.billboard.show = new ConstantProperty(false);
         collection2.add(entity2);
@@ -619,11 +633,15 @@ defineSuite([
     it('suspend events suspends recompositing', function() {
         var id = 'test';
         var collection1 = new EntityCollection();
-        var entity1 = new Entity(id);
+        var entity1 = new Entity({
+            id : id
+        });
         collection1.add(entity1);
 
         var collection2 = new EntityCollection();
-        var entity2 = new Entity(id);
+        var entity2 = new Entity({
+            id : id
+        });
         collection2.add(entity2);
         //Add collections in reverse order to lower numbers of priority
         var composite = new CompositeEntityCollection();
@@ -648,11 +666,15 @@ defineSuite([
     it('prevents names from colliding between property events and object events', function() {
         var id = 'test';
         var collection1 = new EntityCollection();
-        var entity1 = new Entity(id);
+        var entity1 = new Entity({
+            id : id
+        });
         collection1.add(entity1);
 
         var collection2 = new EntityCollection();
-        var entity2 = new Entity(id);
+        var entity2 = new Entity({
+            id : id
+        });
         collection2.add(entity2);
 
         //Add collections in reverse order to lower numbers of priority
@@ -669,7 +691,9 @@ defineSuite([
         expect(compositeObject.billboard.show).toBe(entity1.billboard.show);
 
         // Add a new object
-        var newObject = new Entity(id + 'billboard');
+        var newObject = new Entity({
+            id : id + 'billboard'
+        });
         collection1.add(newObject);
 
         // Replace the billboard on the original object

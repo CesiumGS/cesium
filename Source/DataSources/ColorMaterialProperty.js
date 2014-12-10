@@ -3,26 +3,28 @@ define([
         '../Core/Color',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         './ConstantProperty',
-        './createPropertyDescriptor',
-        './Property'
+        './Property',
+        './PropertyHelper'
     ], function(
         Color,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         ConstantProperty,
-        createPropertyDescriptor,
-        Property) {
+        Property,
+        PropertyHelper) {
     "use strict";
 
     /**
      * A {@link MaterialProperty} that maps to solid color {@link Material} uniforms.
      *
-     * @param {Property} [color] The {@link Color} property to be used.
+     * @param {Color|Property} [color] The {@link Color} to be used.
      *
      * @alias ColorMaterialProperty
      * @constructor
@@ -41,12 +43,14 @@ define([
      * @returns {ColorMaterialProperty} A new instance configured to represent the provided color.
      */
     ColorMaterialProperty.fromColor = function(color) {
+        deprecationWarning('ColorMaterialProperty.fromColor', 'ColorMaterialProperty.fromColor was deprecated in Cesium 1.5.  It will be removed in 1.7.  Use "new ColorMaterialProperty(color)" instead.');
+
         //>>includeStart('debug', pragmas.debug);
         if (!defined(color)) {
             throw new DeveloperError('color is required');
         }
         //>>includeEnd('debug');
-        return new ColorMaterialProperty(new ConstantProperty(color));
+        return new ColorMaterialProperty(color);
     };
 
     defineProperties(ColorMaterialProperty.prototype, {
@@ -82,7 +86,7 @@ define([
          * @memberof ColorMaterialProperty.prototype
          * @type {Property}
          */
-        color : createPropertyDescriptor('color')
+        color : PropertyHelper.createPropertyDescriptor('color')
     });
 
     /**

@@ -5,14 +5,14 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createPropertyDescriptor'
+        './PropertyHelper'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createPropertyDescriptor) {
+        PropertyHelper) {
     "use strict";
 
     /**
@@ -21,7 +21,7 @@ define([
      * @alias BillboardGraphics
      * @constructor
      */
-    var BillboardGraphics = function() {
+    var BillboardGraphics = function(options) {
         this._image = undefined;
         this._imageSubscription = undefined;
         this._width = undefined;
@@ -53,6 +53,8 @@ define([
         this._pixelOffsetScaleByDistance = undefined;
         this._pixelOffsetScaleByDistanceSubscription = undefined;
         this._definitionChanged = new Event();
+
+        this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     };
 
     defineProperties(BillboardGraphics.prototype, {
@@ -74,70 +76,70 @@ define([
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        image : createPropertyDescriptor('image'),
+        image : PropertyHelper.createPropertyDescriptor('image'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the billboard's scale.
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        scale : createPropertyDescriptor('scale'),
+        scale : PropertyHelper.createPropertyDescriptor('scale'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the billboard's rotation.
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        rotation : createPropertyDescriptor('rotation'),
+        rotation : PropertyHelper.createPropertyDescriptor('rotation'),
 
         /**
          * Gets or sets the {@link Cartesian3} {@link Property} specifying the billboard rotation's aligned axis.
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        alignedAxis : createPropertyDescriptor('alignedAxis'),
+        alignedAxis : PropertyHelper.createPropertyDescriptor('alignedAxis'),
 
         /**
          * Gets or sets the {@link HorizontalOrigin} {@link Property} specifying the billboard's horizontal origin.
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        horizontalOrigin : createPropertyDescriptor('horizontalOrigin'),
+        horizontalOrigin : PropertyHelper.createPropertyDescriptor('horizontalOrigin'),
 
         /**
          * Gets or sets the {@link VerticalOrigin} {@link Property} specifying the billboard's vertical origin.
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        verticalOrigin : createPropertyDescriptor('verticalOrigin'),
+        verticalOrigin : PropertyHelper.createPropertyDescriptor('verticalOrigin'),
 
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the billboard's color.
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        color : createPropertyDescriptor('color'),
+        color : PropertyHelper.createPropertyDescriptor('color'),
 
         /**
          * Gets or sets the {@link Cartesian3} {@link Property} specifying the billboard's eye offset.
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        eyeOffset : createPropertyDescriptor('eyeOffset'),
+        eyeOffset : PropertyHelper.createPropertyDescriptor('eyeOffset'),
 
         /**
          * Gets or sets the {@link Cartesian2} {@link Property} specifying the billboard's pixel offset.
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        pixelOffset : createPropertyDescriptor('pixelOffset'),
+        pixelOffset : PropertyHelper.createPropertyDescriptor('pixelOffset'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the billboard's visibility.
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        show : createPropertyDescriptor('show'),
+        show : PropertyHelper.createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the billboard's width in pixels.
@@ -145,7 +147,7 @@ define([
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        width : createPropertyDescriptor('width'),
+        width : PropertyHelper.createPropertyDescriptor('width'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the billboard's height in pixels.
@@ -153,7 +155,7 @@ define([
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        height : createPropertyDescriptor('height'),
+        height : PropertyHelper.createPropertyDescriptor('height'),
 
         /**
          * Gets or sets the {@link NearFarScalar} {@link Property} used to scale billboards based on distance.
@@ -161,7 +163,7 @@ define([
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        scaleByDistance : createPropertyDescriptor('scaleByDistance'),
+        scaleByDistance : PropertyHelper.createPropertyDescriptor('scaleByDistance'),
 
         /**
          * Gets or sets the {@link NearFarScalar} {@link Property} used to set translucency based on distance.
@@ -169,7 +171,7 @@ define([
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        translucencyByDistance : createPropertyDescriptor('translucencyByDistance'),
+        translucencyByDistance : PropertyHelper.createPropertyDescriptor('translucencyByDistance'),
 
         /**
          * Gets or sets the {@link NearFarScalar} {@link Property} used to set pixel offset scaling based on distance.
@@ -177,7 +179,7 @@ define([
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        pixelOffsetScaleByDistance : createPropertyDescriptor('pixelOffsetScaleByDistance')
+        pixelOffsetScaleByDistance : PropertyHelper.createPropertyDescriptor('pixelOffsetScaleByDistance')
     });
 
     /**

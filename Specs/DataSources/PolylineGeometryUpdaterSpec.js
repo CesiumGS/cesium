@@ -114,7 +114,7 @@ defineSuite([
 
         expect(updater.isClosed).toBe(false);
         expect(updater.fillEnabled).toBe(true);
-        expect(updater.fillMaterialProperty).toEqual(ColorMaterialProperty.fromColor(Color.WHITE));
+        expect(updater.fillMaterialProperty).toEqual(new ColorMaterialProperty(Color.WHITE));
         expect(updater.outlineEnabled).toBe(false);
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
@@ -208,7 +208,7 @@ defineSuite([
     it('Creates expected per-color geometry', function() {
         validateGeometryInstance({
             show : true,
-            material : ColorMaterialProperty.fromColor(Color.RED),
+            material : new ColorMaterialProperty(Color.RED),
             width : 3,
             followSurface : false,
             granularity : 1.0
@@ -278,7 +278,7 @@ defineSuite([
         polyline.show = new ConstantProperty(true);
         polyline.width = width;
         polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0, 0, 0), Cartesian3.fromDegrees(0, 1, 0)]);
-        polyline.material = ColorMaterialProperty.fromColor(Color.RED);
+        polyline.material = new ColorMaterialProperty(Color.RED);
         polyline.followSurface = new ConstantProperty(false);
         polyline.granularity = new ConstantProperty(0.001);
 

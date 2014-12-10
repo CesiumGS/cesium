@@ -17,6 +17,9 @@ define([
         EntityCollection) {
     "use strict";
 
+    var entityOptionsScratch = {
+        id : undefined
+    };
     var entityIdScratch = new Array(2);
 
     function clean(entity) {
@@ -89,7 +92,8 @@ define([
                 if (!defined(compositeEntity)) {
                     compositeEntity = composite.getById(entity.id);
                     if (!defined(compositeEntity)) {
-                        compositeEntity = new Entity(entity.id);
+                        entityOptionsScratch.id = entity.id;
+                        compositeEntity = new Entity(entityOptionsScratch);
                     } else {
                         clean(compositeEntity);
                     }
@@ -483,7 +487,8 @@ define([
                     if (!defined(compositeEntity)) {
                         compositeEntity = composite.getById(addedId);
                         if (!defined(compositeEntity)) {
-                            compositeEntity = new Entity(addedId);
+                            entityOptionsScratch.id = addedId;
+                            compositeEntity = new Entity(entityOptionsScratch);
                             composite.add(compositeEntity);
                         } else {
                             clean(compositeEntity);

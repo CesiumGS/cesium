@@ -17,12 +17,12 @@ define([
         '../ThirdParty/topojson',
         '../ThirdParty/when',
         './BillboardGraphics',
+        './CallbackProperty',
         './ColorMaterialProperty',
         './ConstantPositionProperty',
         './ConstantProperty',
         './DataSource',
         './EntityCollection',
-        './CallbackProperty',
         './PolygonGraphics',
         './PolylineGraphics'
     ], function(
@@ -43,12 +43,12 @@ define([
         topojson,
         when,
         BillboardGraphics,
+        CallbackProperty,
         ColorMaterialProperty,
         ConstantPositionProperty,
         ConstantProperty,
         DataSource,
         EntityCollection,
-        CallbackProperty,
         PolygonGraphics,
         PolylineGraphics) {
     "use strict";
@@ -72,8 +72,8 @@ define([
     var defaultFill = Color.fromBytes(255, 255, 0, 100);
 
     var defaultStrokeWidthProperty = new ConstantProperty(defaultStrokeWidth);
-    var defaultStrokeMaterialProperty = ColorMaterialProperty.fromColor(defaultStroke);
-    var defaultFillMaterialProperty = ColorMaterialProperty.fromColor(defaultFill);
+    var defaultStrokeMaterialProperty = new ColorMaterialProperty(defaultStroke);
+    var defaultFillMaterialProperty = new ColorMaterialProperty(defaultFill);
 
     var sizes = {
         small : 24,
@@ -309,7 +309,7 @@ define([
                 color.alpha = opacity;
             }
             if (defined(color)) {
-                material = ColorMaterialProperty.fromColor(color);
+                material = new ColorMaterialProperty(color);
             }
         }
 
@@ -376,7 +376,7 @@ define([
                 fillColor.alpha = opacity;
             }
             if (defined(fillColor)) {
-                material = ColorMaterialProperty.fromColor(fillColor);
+                material = new ColorMaterialProperty(fillColor);
             }
         }
 
@@ -580,7 +580,7 @@ define([
             },
             set : function(value) {
                 defaultFill = value;
-                defaultFillMaterialProperty = ColorMaterialProperty.fromColor(defaultFill);
+                defaultFillMaterialProperty = new ColorMaterialProperty(defaultFill);
             }
         },
 
@@ -780,8 +780,8 @@ define([
             markerSymbol : defaultValue(options.markerSymbol, defaultMarkerSymbol),
             markerColor : defaultValue(options.markerColor, defaultMarkerColor),
             strokeWidthProperty : new ConstantProperty(defaultValue(options.strokeWidth, defaultStrokeWidth)),
-            strokeMaterialProperty : ColorMaterialProperty.fromColor(defaultValue(options.stroke, defaultStroke)),
-            fillMaterialProperty : ColorMaterialProperty.fromColor(defaultValue(options.fill, defaultFill))
+            strokeMaterialProperty : new ColorMaterialProperty(defaultValue(options.stroke, defaultStroke)),
+            fillMaterialProperty : new ColorMaterialProperty(defaultValue(options.fill, defaultFill))
         };
 
         var name;

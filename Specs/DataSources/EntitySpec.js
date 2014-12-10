@@ -15,17 +15,19 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('constructor sets id.', function() {
-        var entity = new Entity('someId');
+        var entity = new Entity({
+            id : 'someId'
+        });
         expect(entity.id).toEqual('someId');
     });
 
     it('isAvailable is always true if no availability defined.', function() {
-        var entity = new Entity('someId');
+        var entity = new Entity();
         expect(entity.isAvailable(JulianDate.now())).toEqual(true);
     });
 
     it('isAvailable throw if no time specified.', function() {
-        var entity = new Entity('someId');
+        var entity = new Entity();
         expect(function() {
             entity.isAvailable();
         }).toThrowDeveloperError();
@@ -97,13 +99,17 @@ defineSuite([
         var propertyName = 'customProperty';
         var value = 'fizzbuzz';
 
-        var source = new Entity('source');
+        var source = new Entity({
+            id : 'source'
+        });
         source.addProperty(propertyName);
         source[propertyName] = value;
 
         var listener = jasmine.createSpy('listener');
 
-        var target = new Entity('target');
+        var target = new Entity({
+            id : 'target'
+        });
 
         //Merging should actually call addProperty for the customProperty.
         spyOn(target, 'addProperty').andCallThrough();

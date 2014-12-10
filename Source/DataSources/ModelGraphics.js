@@ -5,14 +5,14 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createPropertyDescriptor'
+        './PropertyHelper'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createPropertyDescriptor) {
+        PropertyHelper) {
     "use strict";
 
     /**
@@ -21,7 +21,7 @@ define([
      * @alias ModelGraphics
      * @constructor
      */
-    var ModelGraphics = function() {
+    var ModelGraphics = function(options) {
         this._show = undefined;
         this._showSubscription = undefined;
         this._scale = undefined;
@@ -31,6 +31,8 @@ define([
         this._uri = undefined;
         this._uriSubscription = undefined;
         this._definitionChanged = new Event();
+
+        this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     };
 
     defineProperties(ModelGraphics.prototype, {
@@ -52,25 +54,25 @@ define([
          * @memberof ModelGraphics.prototype
          * @type {Property}
          */
-        show : createPropertyDescriptor('show'),
+        show : PropertyHelper.createPropertyDescriptor('show'),
         /**
          * Gets or sets the Number {@link Property} specifying the model's scale.
          * @memberof ModelGraphics.prototype
          * @type {Property}
          */
-        scale : createPropertyDescriptor('scale'),
+        scale : PropertyHelper.createPropertyDescriptor('scale'),
         /**
          * Gets or sets the Number {@link Property} specifying the model's approximate minimum pixel size regardless of zoom.
          * @memberof ModelGraphics.prototype
          * @type {Property}
          */
-        minimumPixelSize : createPropertyDescriptor('minimumPixelSize'),
+        minimumPixelSize : PropertyHelper.createPropertyDescriptor('minimumPixelSize'),
         /**
          * Gets or sets the string {@link Property} specifying the model's uri.
          * @memberof ModelGraphics.prototype
          * @type {Property}
          */
-        uri : createPropertyDescriptor('uri')
+        uri : PropertyHelper.createPropertyDescriptor('uri')
     });
 
     /**

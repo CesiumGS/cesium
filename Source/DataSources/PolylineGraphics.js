@@ -5,14 +5,14 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createPropertyDescriptor'
+        './PropertyHelper'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createPropertyDescriptor) {
+        PropertyHelper) {
     "use strict";
 
     /**
@@ -20,7 +20,7 @@ define([
      * @alias PolylineGraphics
      * @constructor
      */
-    var PolylineGraphics = function() {
+    var PolylineGraphics = function(options) {
         this._show = undefined;
         this._showSubscription = undefined;
         this._material = undefined;
@@ -35,6 +35,8 @@ define([
         this._width = undefined;
         this._widthSubscription = undefined;
         this._definitionChanged = new Event();
+
+        this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     };
 
     defineProperties(PolylineGraphics.prototype, {
@@ -56,28 +58,28 @@ define([
          * @memberof PolylineGraphics.prototype
          * @type {Property}
          */
-        show : createPropertyDescriptor('show'),
+        show : PropertyHelper.createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the polyline.
          * @memberof PolylineGraphics.prototype
          * @type {MaterialProperty}
          */
-        material : createPropertyDescriptor('material'),
+        material : PropertyHelper.createMaterialPropertyDescriptor('material'),
 
         /**
          * Gets or sets the vertex positions.
          * @memberof PolylineGraphics.prototype
          * @type {Property}
          */
-        positions : createPropertyDescriptor('positions'),
+        positions : PropertyHelper.createPropertyDescriptor('positions'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the line's width.
          * @memberof PolylineGraphics.prototype
          * @type {Property}
          */
-        width : createPropertyDescriptor('width'),
+        width : PropertyHelper.createPropertyDescriptor('width'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying whether or not the
@@ -85,7 +87,7 @@ define([
          * @memberof PolylineGraphics.prototype
          * @type {Property}
          */
-        followSurface : createPropertyDescriptor('followSurface'),
+        followSurface : PropertyHelper.createPropertyDescriptor('followSurface'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the granularity
@@ -93,7 +95,7 @@ define([
          * @memberof PolylineGraphics.prototype
          * @type {Property}
          */
-        granularity : createPropertyDescriptor('granularity')
+        granularity : PropertyHelper.createPropertyDescriptor('granularity')
     });
 
     /**

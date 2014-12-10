@@ -5,14 +5,14 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createPropertyDescriptor'
+        './PropertyHelper'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createPropertyDescriptor) {
+        PropertyHelper) {
     "use strict";
 
     /**
@@ -21,7 +21,7 @@ define([
      * @alias EllipseGraphics
      * @constructor
      */
-    var EllipseGraphics = function() {
+    var EllipseGraphics = function(options) {
         this._semiMajorAxis = undefined;
         this._semiMajorAxisSubscription = undefined;
         this._semiMinorAxis = undefined;
@@ -49,6 +49,8 @@ define([
         this._numberOfVerticalLines = undefined;
         this._numberOfVerticalLinesSubscription = undefined;
         this._definitionChanged = new Event();
+
+        this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     };
 
     defineProperties(EllipseGraphics.prototype, {
@@ -70,35 +72,35 @@ define([
          * @memberof EllipseGraphics.prototype
          * @type {Property}
          */
-        semiMajorAxis : createPropertyDescriptor('semiMajorAxis'),
+        semiMajorAxis : PropertyHelper.createPropertyDescriptor('semiMajorAxis'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the ellipse's semi-minor-axis.
          * @memberof EllipseGraphics.prototype
          * @type {Property}
          */
-        semiMinorAxis : createPropertyDescriptor('semiMinorAxis'),
+        semiMinorAxis : PropertyHelper.createPropertyDescriptor('semiMinorAxis'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the ellipse's rotation.
          * @memberof EllipseGraphics.prototype
          * @type {Property}
          */
-        rotation : createPropertyDescriptor('rotation'),
+        rotation : PropertyHelper.createPropertyDescriptor('rotation'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the polygon's visibility.
          * @memberof EllipseGraphics.prototype
          * @type {Property}
          */
-        show : createPropertyDescriptor('show'),
+        show : PropertyHelper.createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the polygon.
          * @memberof EllipseGraphics.prototype
          * @type {MaterialProperty}
          */
-        material : createPropertyDescriptor('material'),
+        material : PropertyHelper.createMaterialPropertyDescriptor('material'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the height of the polygon.
@@ -106,7 +108,7 @@ define([
          * @memberof EllipseGraphics.prototype
          * @type {Property}
          */
-        height : createPropertyDescriptor('height'),
+        height : PropertyHelper.createPropertyDescriptor('height'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the extruded height of the polygon.
@@ -115,7 +117,7 @@ define([
          * @memberof EllipseGraphics.prototype
          * @type {Property}
          */
-        extrudedHeight : createPropertyDescriptor('extrudedHeight'),
+        extrudedHeight : PropertyHelper.createPropertyDescriptor('extrudedHeight'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the sampling distance, in radians,
@@ -123,7 +125,7 @@ define([
          * @memberof EllipseGraphics.prototype
          * @type {Property}
          */
-        granularity : createPropertyDescriptor('granularity'),
+        granularity : PropertyHelper.createPropertyDescriptor('granularity'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the rotation of the texture coordinates,
@@ -131,35 +133,35 @@ define([
          * @memberof EllipseGraphics.prototype
          * @type {Property}
          */
-        stRotation : createPropertyDescriptor('stRotation'),
+        stRotation : PropertyHelper.createPropertyDescriptor('stRotation'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the ellipse should be filled.
          * @memberof EllipseGraphics.prototype
          * @type {Property}
          */
-        fill : createPropertyDescriptor('fill'),
+        fill : PropertyHelper.createPropertyDescriptor('fill'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the ellipse should be outlined.
          * @memberof EllipseGraphics.prototype
          * @type {Property}
          */
-        outline : createPropertyDescriptor('outline'),
+        outline : PropertyHelper.createPropertyDescriptor('outline'),
 
         /**
          * Gets or sets the Color {@link Property} specifying the color of the outline.
          * @memberof EllipseGraphics.prototype
          * @type {Property}
          */
-        outlineColor : createPropertyDescriptor('outlineColor'),
+        outlineColor : PropertyHelper.createPropertyDescriptor('outlineColor'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the width of the outline.
          * @memberof EllipseGraphics.prototype
          * @type {Property}
          */
-        outlineWidth : createPropertyDescriptor('outlineWidth'),
+        outlineWidth : PropertyHelper.createPropertyDescriptor('outlineWidth'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the number of vertical lines
@@ -167,7 +169,7 @@ define([
          * @memberof EllipseGraphics.prototype
          * @type {Property}
          */
-        numberOfVerticalLines : createPropertyDescriptor('numberOfVerticalLines')
+        numberOfVerticalLines : PropertyHelper.createPropertyDescriptor('numberOfVerticalLines')
     });
 
     /**

@@ -5,22 +5,22 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createPropertyDescriptor'
+        './PropertyHelper'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createPropertyDescriptor) {
+        PropertyHelper) {
     "use strict";
 
     /**
-     * An optionally time-dynamic billboard.
+     * An optionally time-dynamic point.
      * @alias PointGraphics
      * @constructor
      */
-    var PointGraphics = function() {
+    var PointGraphics = function(options) {
         this._color = undefined;
         this._colorSubscription = undefined;
         this._pixelSize = undefined;
@@ -34,6 +34,8 @@ define([
         this._scaleByDistance = undefined;
         this._scaleByDistanceSubscription = undefined;
         this._definitionChanged = new Event();
+
+        this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     };
 
     defineProperties(PointGraphics.prototype, {
@@ -55,35 +57,35 @@ define([
          * @memberof PointGraphics.prototype
          * @type {Property}
          */
-        color : createPropertyDescriptor('color'),
+        color : PropertyHelper.createPropertyDescriptor('color'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the point's size in pixels.
          * @memberof PointGraphics.prototype
          * @type {Property}
          */
-        pixelSize : createPropertyDescriptor('pixelSize'),
+        pixelSize : PropertyHelper.createPropertyDescriptor('pixelSize'),
 
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the the point's outline color.
          * @memberof PointGraphics.prototype
          * @type {Property}
          */
-        outlineColor : createPropertyDescriptor('outlineColor'),
+        outlineColor : PropertyHelper.createPropertyDescriptor('outlineColor'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the point's outline width.
          * @memberof PointGraphics.prototype
          * @type {Property}
          */
-        outlineWidth : createPropertyDescriptor('outlineWidth'),
+        outlineWidth : PropertyHelper.createPropertyDescriptor('outlineWidth'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the point's visibility.
          * @memberof PointGraphics.prototype
          * @type {Property}
          */
-        show : createPropertyDescriptor('show'),
+        show : PropertyHelper.createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link NearFarScalar} {@link Property} used to scale billboards based on distance.
@@ -91,7 +93,7 @@ define([
          * @memberof PointGraphics.prototype
          * @type {Property}
          */
-        scaleByDistance : createPropertyDescriptor('scaleByDistance')
+        scaleByDistance : PropertyHelper.createPropertyDescriptor('scaleByDistance')
     });
 
     /**

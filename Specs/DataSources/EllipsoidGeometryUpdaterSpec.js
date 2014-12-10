@@ -123,7 +123,7 @@ defineSuite([
         var updater = new EllipsoidGeometryUpdater(entity, scene);
 
         expect(updater.fillEnabled).toBe(true);
-        expect(updater.fillMaterialProperty).toEqual(ColorMaterialProperty.fromColor(Color.WHITE));
+        expect(updater.fillMaterialProperty).toEqual(new ColorMaterialProperty(Color.WHITE));
         expect(updater.outlineEnabled).toBe(false);
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
@@ -248,7 +248,7 @@ defineSuite([
             orientation : Quaternion.IDENTITY,
             radii : new Cartesian3(1, 2, 3),
             show : true,
-            material : ColorMaterialProperty.fromColor(Color.RED),
+            material : new ColorMaterialProperty(Color.RED),
             fill : true,
             outline : true,
             outlineColor : Color.BLUE,

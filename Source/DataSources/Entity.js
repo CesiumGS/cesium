@@ -4,17 +4,19 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createPropertyDescriptor'
+        './PropertyHelper'
     ], function(
         createGuid,
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
-        createPropertyDescriptor) {
+        PropertyHelper) {
     "use strict";
 
     /**
@@ -29,7 +31,16 @@ define([
      * @see Property
      * @see EntityCollection
      */
-    var Entity = function(id) {
+    var Entity = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        var id = options.id;
+        if (typeof options === 'string') {
+            deprecationWarning('Entity', 'The Entity constructor taking a string was deprecated in Cesium 1.5.  It will be removed in 1.7.  Use "new Entity({ id : \'id\'})" instead.');
+            id = options;
+            options = defaultValue.EMPTY_OBJECT;
+        }
+
         if (!defined(id)) {
             id = createGuid();
         }
@@ -73,6 +84,8 @@ define([
         this._viewFromSubscription = undefined;
         this._wall = undefined;
         this._wallSubscription = undefined;
+
+        this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     };
 
     defineProperties(Entity.prototype, {
@@ -85,7 +98,7 @@ define([
          * @memberof Entity.prototype
          * @type {TimeIntervalCollection}
          */
-        availability : createPropertyDescriptor('availability'),
+        availability : PropertyHelper.createRawPropertyDescriptor('availability'),
         /**
          * Gets the unique ID associated with this object.
          * @memberof Entity.prototype
@@ -132,7 +145,7 @@ define([
          * @memberof Entity.prototype
          * @type {Entity}
          */
-        parent : createPropertyDescriptor('parent'),
+        parent : PropertyHelper.createRawPropertyDescriptor('parent'),
         /**
          * Gets the names of all properties registed on this instance.
          * @memberof Entity.prototype
@@ -148,92 +161,92 @@ define([
          * @memberof Entity.prototype
          * @type {BillboardGraphics}
          */
-        billboard : createPropertyDescriptor('billboard'),
+        billboard : PropertyHelper.createRawPropertyDescriptor('billboard'),
         /**
          * Gets or sets the description.
          * @memberof Entity.prototype
          * @type {Property}
          */
-        description : createPropertyDescriptor('description'),
+        description : PropertyHelper.createPropertyDescriptor('description'),
         /**
          * Gets or sets the ellipse.
          * @memberof Entity.prototype
          * @type {EllipseGraphics}
          */
-        ellipse : createPropertyDescriptor('ellipse'),
+        ellipse : PropertyHelper.createRawPropertyDescriptor('ellipse'),
         /**
          * Gets or sets the ellipsoid.
          * @memberof Entity.prototype
          * @type {EllipsoidGraphics}
          */
-        ellipsoid : createPropertyDescriptor('ellipsoid'),
+        ellipsoid : PropertyHelper.createRawPropertyDescriptor('ellipsoid'),
         /**
          * Gets or sets the label.
          * @memberof Entity.prototype
          * @type {LabelGraphics}
          */
-        label : createPropertyDescriptor('label'),
+        label : PropertyHelper.createRawPropertyDescriptor('label'),
         /**
          * Gets or sets the model.
          * @memberof Entity.prototype
          * @type {LabelGraphics}
          */
-        model : createPropertyDescriptor('model'),
+        model : PropertyHelper.createRawPropertyDescriptor('model'),
         /**
          * Gets or sets the orientation.
          * @memberof Entity.prototype
          * @type {Property}
          */
-        orientation : createPropertyDescriptor('orientation'),
+        orientation : PropertyHelper.createRawPropertyDescriptor('orientation'),
         /**
          * Gets or sets the path.
          * @memberof Entity.prototype
          * @type {PathGraphics}
          */
-        path : createPropertyDescriptor('path'),
+        path : PropertyHelper.createRawPropertyDescriptor('path'),
         /**
          * Gets or sets the point graphic.
          * @memberof Entity.prototype
          * @type {PointGraphics}
          */
-        point : createPropertyDescriptor('point'),
+        point : PropertyHelper.createRawPropertyDescriptor('point'),
         /**
          * Gets or sets the polygon.
          * @memberof Entity.prototype
          * @type {PolygonGraphics}
          */
-        polygon : createPropertyDescriptor('polygon'),
+        polygon : PropertyHelper.createRawPropertyDescriptor('polygon'),
         /**
          * Gets or sets the polyline.
          * @memberof Entity.prototype
          * @type {PolylineGraphics}
          */
-        polyline : createPropertyDescriptor('polyline'),
+        polyline : PropertyHelper.createRawPropertyDescriptor('polyline'),
         /**
          * Gets or sets the position.
          * @memberof Entity.prototype
          * @type {PositionProperty}
          */
-        position : createPropertyDescriptor('position'),
+        position : PropertyHelper.createPositionPropertyDescriptor('position'),
         /**
          * Gets or sets the rectangle.
          * @memberof Entity.prototype
          * @type {RectangleGraphics}
          */
-        rectangle : createPropertyDescriptor('rectangle'),
+        rectangle : PropertyHelper.createRawPropertyDescriptor('rectangle'),
         /**
          * Gets or sets the suggested initial offset for viewing this object
          * with the camera.  The offset is defined in the east-north-up reference frame.
          * @memberof Entity.prototype
          * @type {Cartesian3}
          */
-        viewFrom : createPropertyDescriptor('viewFrom'),
+        viewFrom : PropertyHelper.createPropertyDescriptor('viewFrom'),
         /**
          * Gets or sets the wall.
          * @memberof Entity.prototype
          * @type {WallGraphics}
          */
-        wall : createPropertyDescriptor('wall')
+        wall : PropertyHelper.createRawPropertyDescriptor('wall')
     });
 
     /**
@@ -279,7 +292,7 @@ define([
         //>>includeEnd('debug');
 
         propertyNames.push(propertyName);
-        Object.defineProperty(this, propertyName, createPropertyDescriptor(propertyName, true));
+        Object.defineProperty(this, propertyName, PropertyHelper.createRawPropertyDescriptor(propertyName, true));
     };
 
     /**
@@ -324,7 +337,7 @@ define([
         this.availability = defaultValue(source.availability, this.availability);
 
         var propertyNames = this._propertyNames;
-        var sourcePropertyNames = source._propertyNames;
+        var sourcePropertyNames = defined(source._propertyNames) ? source._propertyNames : Object.keys(source);
         var propertyNamesLength = sourcePropertyNames.length;
         for (var i = 0; i < propertyNamesLength; i++) {
             var name = sourcePropertyNames[i];

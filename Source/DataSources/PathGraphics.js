@@ -5,14 +5,14 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createPropertyDescriptor'
+        './PropertyHelper'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createPropertyDescriptor) {
+        PropertyHelper) {
     "use strict";
 
     /**
@@ -20,7 +20,7 @@ define([
      * @alias PathGraphics
      * @constructor
      */
-    var PathGraphics = function() {
+    var PathGraphics = function(options) {
         this._material = undefined;
         this._materialSubscription = undefined;
         this._show = undefined;
@@ -33,8 +33,9 @@ define([
         this._leadTimeSubscription = undefined;
         this._trailTime = undefined;
         this._trailTimeSubscription = undefined;
-
         this._definitionChanged = new Event();
+
+        this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     };
 
     defineProperties(PathGraphics.prototype, {
@@ -56,42 +57,42 @@ define([
          * @memberof PathGraphics.prototype
          * @type {MaterialProperty}
          */
-        material : createPropertyDescriptor('material'),
+        material : PropertyHelper.createMaterialPropertyDescriptor('material'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the path's visibility.
          * @memberof PathGraphics.prototype
          * @type {Property}
          */
-        show : createPropertyDescriptor('show'),
+        show : PropertyHelper.createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the path's width.
          * @memberof PathGraphics.prototype
          * @type {Property}
          */
-        width : createPropertyDescriptor('width'),
+        width : PropertyHelper.createPropertyDescriptor('width'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the maximum step size, in seconds, to take when sampling the position.
          * @memberof PathGraphics.prototype
          * @type {Property}
          */
-        resolution : createPropertyDescriptor('resolution'),
+        resolution : PropertyHelper.createPropertyDescriptor('resolution'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the number of seconds in front of the object to show.
          * @memberof PathGraphics.prototype
          * @type {Property}
          */
-        leadTime : createPropertyDescriptor('leadTime'),
+        leadTime : PropertyHelper.createPropertyDescriptor('leadTime'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the number of seconds behind the object to show.
          * @memberof PathGraphics.prototype
          * @type {Property}
          */
-        trailTime : createPropertyDescriptor('trailTime')
+        trailTime : PropertyHelper.createPropertyDescriptor('trailTime')
     });
 
     /**

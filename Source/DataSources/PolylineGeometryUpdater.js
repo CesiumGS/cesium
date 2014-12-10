@@ -48,7 +48,7 @@ define([
     //We use this object to create one polyline collection per-scene.
     var polylineCollections = {};
 
-    var defaultMaterial = ColorMaterialProperty.fromColor(Color.WHITE);
+    var defaultMaterial = new ColorMaterialProperty(Color.WHITE);
     var defaultShow = new ConstantProperty(true);
 
     var GeometryOptions = function(entity) {

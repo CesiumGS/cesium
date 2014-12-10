@@ -5,16 +5,16 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
-        './createPropertyDescriptor',
-        './Property'
+        './Property',
+        './PropertyHelper'
     ], function(
         Cartesian2,
         Color,
         defined,
         defineProperties,
         Event,
-        createPropertyDescriptor,
-        Property) {
+        Property,
+        PropertyHelper) {
     "use strict";
 
     var defaultColor = Color.WHITE;
@@ -85,31 +85,31 @@ define([
          * @memberof GridMaterialProperty.prototype
          * @type {Property}
          */
-        color : createPropertyDescriptor('color'),
+        color : PropertyHelper.createPropertyDescriptor('color'),
         /**
          * Gets or sets the numeric property which determines the grid cells alpha value, when combined with the color alpha.
          * @memberof GridMaterialProperty.prototype
          * @type {Property}
          */
-        cellAlpha : createPropertyDescriptor('cellAlpha'),
+        cellAlpha : PropertyHelper.createPropertyDescriptor('cellAlpha'),
         /**
          * Gets or sets the {@link Cartesian2} property which determines the number of rows and columns in the grid.
          * @memberof GridMaterialProperty.prototype
          * @type {Property}
          */
-        lineCount : createPropertyDescriptor('lineCount'),
+        lineCount : PropertyHelper.createPropertyDescriptor('lineCount'),
         /**
          * Gets or sets the {@link Cartesian2} property which determines the thickness of rows and columns in the grid.
          * @memberof GridMaterialProperty.prototype
          * @type {Property}
          */
-        lineThickness : createPropertyDescriptor('lineThickness'),
+        lineThickness : PropertyHelper.createPropertyDescriptor('lineThickness'),
         /**
          * Gets or sets the {@link Cartesian2} property which determines the offset of rows and columns in the grid.
          * @memberof GridMaterialProperty.prototype
          * @type {Property}
          */
-        lineOffset : createPropertyDescriptor('lineOffset')
+        lineOffset : PropertyHelper.createPropertyDescriptor('lineOffset')
     });
 
     /**

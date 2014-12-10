@@ -330,7 +330,9 @@ define([
         }
 
         // Imagery layer feature picking is asynchronous, so put up a message while loading.
-        var loadingMessage = new Entity('Loading...');
+        var loadingMessage = new Entity({
+            id : 'Loading...'
+        });
         loadingMessage.description = {
             getValue : function() {
                 return 'Loading feature information...';
@@ -350,13 +352,10 @@ define([
 
             // Select the first feature.
             var feature = features[0];
-
-            var entity = new Entity(feature.name);
-            entity.description = {
-                getValue : function() {
-                    return feature.description;
-                }
-            };
+            var entity = new Entity({
+                id : feature.name,
+                description : feature.description
+            });
 
             if (defined(feature.position)) {
                 var ecfPosition = viewer.scene.globe.ellipsoid.cartographicToCartesian(feature.position, cartesian3Scratch);
@@ -370,13 +369,6 @@ define([
                 return;
             }
 
-            var entity = new Entity('None');
-            entity.description = {
-                getValue : function() {
-                    return 'No features found.';
-                }
-            };
-
             viewer.selectedEntity = createNoFeaturesEntity();
         });
 
@@ -384,13 +376,10 @@ define([
     }
 
     function createNoFeaturesEntity() {
-        var entity = new Entity('None');
-        entity.description = {
-            getValue : function() {
-                return 'No features found.';
-            }
-        };
-        return entity;
+        return new Entity({
+            id : 'None',
+            description : 'No features found.'
+        });
     }
 
     return viewerEntityMixin;

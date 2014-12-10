@@ -5,14 +5,14 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createPropertyDescriptor'
+        './PropertyHelper'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createPropertyDescriptor) {
+        PropertyHelper) {
     "use strict";
 
     /**
@@ -21,7 +21,7 @@ define([
      * @alias WallGraphics
      * @constructor
      */
-    var WallGraphics = function() {
+    var WallGraphics = function(options) {
         this._show = undefined;
         this._showSubscription = undefined;
         this._material = undefined;
@@ -41,6 +41,8 @@ define([
         this._outlineWidth = undefined;
         this._outlineWidthSubscription = undefined;
         this._definitionChanged = new Event();
+
+        this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     };
 
     defineProperties(WallGraphics.prototype, {
@@ -62,21 +64,21 @@ define([
          * @memberof WallGraphics.prototype
          * @type {Property}
          */
-        show : createPropertyDescriptor('show'),
+        show : PropertyHelper.createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the wall.
          * @memberof WallGraphics.prototype
          * @type {MaterialProperty}
          */
-        material : createPropertyDescriptor('material'),
+        material : PropertyHelper.createMaterialPropertyDescriptor('material'),
 
         /**
          * Gets or sets the vertex positions.
          * @memberof WallGraphics.prototype
          * @type {Property}
          */
-        positions : createPropertyDescriptor('positions'),
+        positions : PropertyHelper.createPropertyDescriptor('positions'),
 
         /**
          * Gets or sets the Array {@link Property} specifying the bottom heights of the wall.
@@ -86,7 +88,7 @@ define([
          * @memberof WallGraphics.prototype
          * @type {Property}
          */
-        minimumHeights : createPropertyDescriptor('minimumHeights'),
+        minimumHeights : PropertyHelper.createPropertyDescriptor('minimumHeights'),
 
         /**
          * Gets or sets the Array {@link Property} specifying the top heights along the wall.
@@ -95,7 +97,7 @@ define([
          * @memberof WallGraphics.prototype
          * @type {Property}
          */
-        maximumHeights : createPropertyDescriptor('maximumHeights'),
+        maximumHeights : PropertyHelper.createPropertyDescriptor('maximumHeights'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the sampling distance, in radians,
@@ -103,35 +105,35 @@ define([
          * @memberof WallGraphics.prototype
          * @type {Property}
          */
-        granularity : createPropertyDescriptor('granularity'),
+        granularity : PropertyHelper.createPropertyDescriptor('granularity'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the wall should be filled.
          * @memberof WallGraphics.prototype
          * @type {Property}
          */
-        fill : createPropertyDescriptor('fill'),
+        fill : PropertyHelper.createPropertyDescriptor('fill'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the wall should be outlined.
          * @memberof WallGraphics.prototype
          * @type {Property}
          */
-        outline : createPropertyDescriptor('outline'),
+        outline : PropertyHelper.createPropertyDescriptor('outline'),
 
         /**
          * Gets or sets the Color {@link Property} specifying whether the color of the outline.
          * @memberof WallGraphics.prototype
          * @type {Property}
          */
-        outlineColor : createPropertyDescriptor('outlineColor'),
+        outlineColor : PropertyHelper.createPropertyDescriptor('outlineColor'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the width of the outline.
          * @memberof WallGraphics.prototype
          * @type {Property}
          */
-        outlineWidth : createPropertyDescriptor('outlineWidth')
+        outlineWidth : PropertyHelper.createPropertyDescriptor('outlineWidth')
     });
 
     /**
