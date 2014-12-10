@@ -493,7 +493,11 @@ define([
             throw new DeveloperError('x is required.');
         }
         //>>includeEnd('debug');
-        return CesiumMath.mod(x, CesiumMath.TWO_PI);
+        var mod = CesiumMath.mod(x, CesiumMath.TWO_PI);
+        if (mod === 0.0 && x !== 0.0) {
+            return CesiumMath.sign(x) * CesiumMath.TWO_PI;
+        }
+        return mod;
     };
 
     /**

@@ -175,11 +175,11 @@ define([
         var xTiles = this.getNumberOfXTilesAtLevel(level);
         var yTiles = this.getNumberOfYTilesAtLevel(level);
 
-        var xTileWidth = (rectangle.east - rectangle.west) / xTiles;
+        var xTileWidth = rectangle.width / xTiles;
         var west = x * xTileWidth + rectangle.west;
         var east = (x + 1) * xTileWidth + rectangle.west;
 
-        var yTileHeight = (rectangle.north - rectangle.south) / yTiles;
+        var yTileHeight = rectangle.height / yTiles;
         var north = rectangle.north - y * yTileHeight;
         var south = rectangle.north - (y + 1) * yTileHeight;
 
@@ -207,10 +207,7 @@ define([
      */
     GeographicTilingScheme.prototype.positionToTileXY = function(position, level, result) {
         var rectangle = this._rectangle;
-        if (position.latitude > rectangle.north ||
-            position.latitude < rectangle.south ||
-            position.longitude < rectangle.west ||
-            position.longitude > rectangle.east) {
+        if (!Rectangle.contains(rectangle, position)) {
             // outside the bounds of the tiling scheme
             return undefined;
         }
@@ -218,10 +215,15 @@ define([
         var xTiles = this.getNumberOfXTilesAtLevel(level);
         var yTiles = this.getNumberOfYTilesAtLevel(level);
 
-        var xTileWidth = (rectangle.east - rectangle.west) / xTiles;
-        var yTileHeight = (rectangle.north - rectangle.south) / yTiles;
+        var xTileWidth = rectangle.width / xTiles;
+        var yTileHeight = rectangle.height / yTiles;
 
-        var xTileCoordinate = (position.longitude - rectangle.west) / xTileWidth | 0;
+        var longitude = position.longitude;
+        if (rectangle.east < rectangle.west) {
+            longitude += CesiumMath.TWO_PI;
+        }
+
+        var xTileCoordinate = (longitude - rectangle.west) / xTileWidth | 0;
         if (xTileCoordinate >= xTiles) {
             xTileCoordinate = xTiles - 1;
         }
