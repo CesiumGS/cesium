@@ -192,7 +192,7 @@ define([
         }
 
         for (i = 0; i < uBuffer.length; ++i) {
-            u = uBuffer[i];
+            u = Math.round(uBuffer[i]);
             if (u <= minU) {
                 westIndices.push(i);
                 u = 0;
@@ -200,12 +200,12 @@ define([
                 eastIndices.push(i);
                 u = maxShort;
             } else {
-                u = Math.max(0, (Math.round(u) * 2.0 + uOffset)) | 0;
+                u = (u * 2.0 + uOffset) | 0;
             }
 
             uBuffer[i] = u;
 
-            v = vBuffer[i];
+            v = Math.round(vBuffer[i]);
             if (v <= minV) {
                 southIndices.push(i);
                 v = 0;
@@ -213,7 +213,7 @@ define([
                 northIndices.push(i);
                 v = maxShort;
             } else {
-                v = Math.max(0, (Math.round(v) * 2.0 + vOffset)) | 0;
+                v = (v * 2.0 + vOffset) | 0;
             }
 
             vBuffer[i] = v;
