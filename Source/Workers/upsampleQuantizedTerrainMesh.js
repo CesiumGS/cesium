@@ -28,6 +28,7 @@ define([
     "use strict";
 
     var maxShort = 32767;
+    var epsilon = 1.0 / 32767.0;
 
     var clipScratch = [];
     var clipScratch2 = [];
@@ -82,8 +83,8 @@ define([
         for (i = 0, n = 0; i < quantizedVertexCount; ++i, n += 2) {
             u = parentUBuffer[i] / maxShort;
             v = parentVBuffer[i] / maxShort;
-            if ((isEastChild && u >= 0.5 || !isEastChild && u <= 0.5) &&
-                (isNorthChild && v >= 0.5 || !isNorthChild && v <= 0.5)) {
+            if ((isEastChild && CesiumMath.greaterOrEqual(u, 0.5, epsilon) || !isEastChild && CesiumMath.lessOrEqual(u, 0.5)) &&
+                (isNorthChild && CesiumMath.greaterOrEqual(v, 0.5, epsilon) || !isNorthChild && CesiumMath.lessOrEqual(v, 0.5))) {
 
                 vertexMap[i] = vertexCount;
                 uBuffer.push(u);
@@ -182,10 +183,10 @@ define([
 
         for (i = 0; i < uBuffer.length; ++i) {
             u = uBuffer[i];
-            if (u <= minU) {
+            if (CesiumMath.lessOrEqual(u, minU, epsilon)) {
                 westIndices.push(i);
                 u = 0.0;
-            } else if (u >= maxU) {
+            } else if (CesiumMath.greaterOrEqual(u, maxU, epsilon)) {
                 eastIndices.push(i);
                 u = 1.0;
             } else {
@@ -195,10 +196,10 @@ define([
             uBuffer[i] = u;
 
             v = vBuffer[i];
-            if (v <= minV) {
+            if (CesiumMath.lessOrEqual(v, minV, epsilon)) {
                 southIndices.push(i);
                 v = 0.0;
-            } else if (v >= maxV) {
+            } else if (CesiumMath.greaterOrEqual(v, maxV, epsilon)) {
                 northIndices.push(i);
                 v = 1.0;
             } else {
