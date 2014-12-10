@@ -369,6 +369,10 @@ defineSuite([
                  expect(extra).not.toBe(-1);
                  var v40 = findVertexWithCoordinates(uBuffer, vBuffer, horizontalIntercept(0.0, 0.0, 0.5, 0.75) * 2.0, 0.0);
                  expect(v40).not.toBe(-1);
+                 expect(upsampleResults[0]._westIndices.length).toBe(2);
+                 expect(upsampleResults[0]._eastIndices.length).toBe(3);
+                 expect(upsampleResults[0]._northIndices.length).toBe(2);
+                 expect(upsampleResults[0]._southIndices.length).toBe(3);
 
                  // northeast
                  uBuffer = upsampleResults[1]._uValues;
@@ -377,6 +381,10 @@ defineSuite([
                  expect(extra).not.toBe(-1);
                  var v42 = findVertexWithCoordinates(uBuffer, vBuffer, horizontalIntercept(1.0, 0.0, 0.5, 0.75) * 0.5, 0.0);
                  expect(v42).not.toBe(-1);
+                 expect(upsampleResults[1]._westIndices.length).toBe(3);
+                 expect(upsampleResults[1]._eastIndices.length).toBe(2);
+                 expect(upsampleResults[1]._northIndices.length).toBe(2);
+                 expect(upsampleResults[1]._southIndices.length).toBe(3);
              });
          });
      });
