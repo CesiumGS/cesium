@@ -8,6 +8,7 @@ Change Log
 * Deprecated
   *
 * Improved polygon loading performance.
+* Improved GeoJSON loading performance.
 * `ConstantProperty` now accepts `HTMLElement` instances as valid values.
 * `BillboardGraphics.image` and 'ImageMaterialProperty.image' now accept `Property` instances that represent an `Image` or `Canvas` in addition to a url.
 * Added `Math.mod` which computes `m % n` but also works when `m` is negative.
