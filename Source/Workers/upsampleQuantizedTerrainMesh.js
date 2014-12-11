@@ -29,7 +29,6 @@ define([
 
     var maxShort = 32767;
     var halfMaxShort = (maxShort / 2) | 0;
-    var midUV = halfMaxShort / maxShort;
 
     var clipScratch = [];
     var clipScratch2 = [];
@@ -200,7 +199,7 @@ define([
                 eastIndices.push(i);
                 u = maxShort;
             } else {
-                u = (u * 2.0 + uOffset) | 0;
+                u = u * 2 + uOffset;
             }
 
             uBuffer[i] = u;
@@ -213,7 +212,7 @@ define([
                 northIndices.push(i);
                 v = maxShort;
             } else {
-                v = (v * 2.0 + vOffset) | 0;
+                v = v * 2 + vOffset;
             }
 
             vBuffer[i] = v;
@@ -228,8 +227,8 @@ define([
 
             heightBuffer[i] = height;
 
-            cartographicScratch.longitude = CesiumMath.lerp(rectangle.west, rectangle.east, u / maxShort);
-            cartographicScratch.latitude = CesiumMath.lerp(rectangle.south, rectangle.north, v / maxShort);
+            cartographicScratch.longitude = CesiumMath.lerp(west, east, u / maxShort);
+            cartographicScratch.latitude = CesiumMath.lerp(south, north, v / maxShort);
             cartographicScratch.height = height;
 
             ellipsoid.cartographicToCartesian(cartographicScratch, cartesian3Scratch);

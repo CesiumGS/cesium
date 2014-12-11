@@ -327,16 +327,7 @@ defineSuite([
              var nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
              var nePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
 
-             var upsampleResults;
-             when.all([nwPromise, nePromise], function(results) {
-                 upsampleResults = results;
-             });
-
-             waitsFor(function() {
-                 return defined(upsampleResults);
-             });
-
-             runs(function() {
+             waitsForPromise(when.all([nwPromise, nePromise]), function(upsampleResults) {
                  expect(upsampleResults.length).toBe(2);
                  var uBuffer, vBuffer;
                  for (var i = 0; i < upsampleResults.length; i++) {
