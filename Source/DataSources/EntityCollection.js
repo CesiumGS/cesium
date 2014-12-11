@@ -191,6 +191,10 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (!(entity instanceof Entity)) {
+            entity = new Entity(entity);
+        }
+
         var id = entity.id;
         var entities = this._entities;
         if (entities.contains(id)) {

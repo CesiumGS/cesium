@@ -50,6 +50,10 @@ define([
         };
     }
 
+    function createRawProperty(value) {
+        return value;
+    }
+
     function createConstantProperty(value) {
         return new ConstantProperty(value);
     }
@@ -58,16 +62,25 @@ define([
         return new ConstantProperty(value);
     }
 
-    function createPropertyDescriptor(name, configurable) {
-        return createProperty(name, '_' + name, '_' + name + 'Subscription', defaultValue(configurable, false), createConstantProperty);
-    }
-
-    function createPositionPropertyDescriptor(name, configurable) {
-        return createProperty(name, '_' + name, '_' + name + 'Subscription', defaultValue(configurable, false), createConstantPositionProperty);
+    function createPropertyDescriptor(name, configurable, createPropertyCallback) {
+        return createProperty(name, '_' + name, '_' + name + 'Subscription', defaultValue(configurable, false), defaultValue(createPropertyCallback, createConstantProperty));
     }
 
     function createRawPropertyDescriptor(name, configurable) {
-        return createProperty(name, '_' + name, '_' + name + 'Subscription', defaultValue(configurable, false), undefined);
+        return createPropertyDescriptor(name, configurable, createRawProperty);
+    }
+
+    function createPositionPropertyDescriptor(name) {
+        return createPropertyDescriptor(name, undefined, createConstantPositionProperty);
+    }
+
+    function createPropertyTypeDescriptor(name, Type) {
+        return createPropertyDescriptor(name, undefined, function(value) {
+            if (value instanceof Type) {
+                return value;
+            }
+            return new Type(value);
+        });
     }
 
     //This file currently has a circular dependency with material property instances.
@@ -95,7 +108,7 @@ define([
     }
 
     function createMaterialPropertyDescriptor(name, configurable) {
-        return createProperty(name, '_' + name, '_' + name + 'Subscription', defaultValue(configurable, false), createMaterialProperty);
+        return createPropertyDescriptor(name, configurable, createMaterialProperty);
     }
 
     /**
@@ -105,7 +118,8 @@ define([
         createRawPropertyDescriptor : createRawPropertyDescriptor,
         createPropertyDescriptor : createPropertyDescriptor,
         createPositionPropertyDescriptor : createPositionPropertyDescriptor,
-        createMaterialPropertyDescriptor : createMaterialPropertyDescriptor
+        createMaterialPropertyDescriptor : createMaterialPropertyDescriptor,
+        createPropertyTypeDescriptor : createPropertyTypeDescriptor
     };
 
     return PropertyHelper;

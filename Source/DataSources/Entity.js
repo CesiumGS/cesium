@@ -7,6 +7,17 @@ define([
         '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
+        './BillboardGraphics',
+        './EllipseGraphics',
+        './EllipsoidGraphics',
+        './LabelGraphics',
+        './ModelGraphics',
+        './PathGraphics',
+        './PointGraphics',
+        './PolygonGraphics',
+        './PolylineGraphics',
+        './RectangleGraphics',
+        './WallGraphics',
         './PropertyHelper'
     ], function(
         createGuid,
@@ -16,6 +27,17 @@ define([
         deprecationWarning,
         DeveloperError,
         Event,
+        BillboardGraphics,
+        EllipseGraphics,
+        EllipsoidGraphics,
+        LabelGraphics,
+        ModelGraphics,
+        PathGraphics,
+        PointGraphics,
+        PolygonGraphics,
+        PolylineGraphics,
+        RectangleGraphics,
+        WallGraphics,
         PropertyHelper) {
     "use strict";
 
@@ -147,7 +169,7 @@ define([
          */
         parent : PropertyHelper.createRawPropertyDescriptor('parent'),
         /**
-         * Gets the names of all properties registed on this instance.
+         * Gets the names of all properties registered on this instance.
          * @memberof Entity.prototype
          * @type {Event}
          */
@@ -161,7 +183,7 @@ define([
          * @memberof Entity.prototype
          * @type {BillboardGraphics}
          */
-        billboard : PropertyHelper.createRawPropertyDescriptor('billboard'),
+        billboard : PropertyHelper.createPropertyTypeDescriptor('billboard', BillboardGraphics),
         /**
          * Gets or sets the description.
          * @memberof Entity.prototype
@@ -173,25 +195,25 @@ define([
          * @memberof Entity.prototype
          * @type {EllipseGraphics}
          */
-        ellipse : PropertyHelper.createRawPropertyDescriptor('ellipse'),
+        ellipse : PropertyHelper.createPropertyTypeDescriptor('ellipse', EllipseGraphics),
         /**
          * Gets or sets the ellipsoid.
          * @memberof Entity.prototype
          * @type {EllipsoidGraphics}
          */
-        ellipsoid : PropertyHelper.createRawPropertyDescriptor('ellipsoid'),
+        ellipsoid : PropertyHelper.createPropertyTypeDescriptor('ellipsoid', EllipsoidGraphics),
         /**
          * Gets or sets the label.
          * @memberof Entity.prototype
          * @type {LabelGraphics}
          */
-        label : PropertyHelper.createRawPropertyDescriptor('label'),
+        label : PropertyHelper.createPropertyTypeDescriptor('label', LabelGraphics),
         /**
          * Gets or sets the model.
          * @memberof Entity.prototype
          * @type {LabelGraphics}
          */
-        model : PropertyHelper.createRawPropertyDescriptor('model'),
+        model : PropertyHelper.createPropertyTypeDescriptor('model', ModelGraphics),
         /**
          * Gets or sets the orientation.
          * @memberof Entity.prototype
@@ -203,25 +225,25 @@ define([
          * @memberof Entity.prototype
          * @type {PathGraphics}
          */
-        path : PropertyHelper.createRawPropertyDescriptor('path'),
+        path : PropertyHelper.createPropertyTypeDescriptor('path', PathGraphics),
         /**
          * Gets or sets the point graphic.
          * @memberof Entity.prototype
          * @type {PointGraphics}
          */
-        point : PropertyHelper.createRawPropertyDescriptor('point'),
+        point : PropertyHelper.createPropertyTypeDescriptor('point', PointGraphics),
         /**
          * Gets or sets the polygon.
          * @memberof Entity.prototype
          * @type {PolygonGraphics}
          */
-        polygon : PropertyHelper.createRawPropertyDescriptor('polygon'),
+        polygon : PropertyHelper.createPropertyTypeDescriptor('polygon', PolygonGraphics),
         /**
          * Gets or sets the polyline.
          * @memberof Entity.prototype
          * @type {PolylineGraphics}
          */
-        polyline : PropertyHelper.createRawPropertyDescriptor('polyline'),
+        polyline : PropertyHelper.createPropertyTypeDescriptor('polyline', PolylineGraphics),
         /**
          * Gets or sets the position.
          * @memberof Entity.prototype
@@ -233,7 +255,7 @@ define([
          * @memberof Entity.prototype
          * @type {RectangleGraphics}
          */
-        rectangle : PropertyHelper.createRawPropertyDescriptor('rectangle'),
+        rectangle : PropertyHelper.createPropertyTypeDescriptor('rectangle', RectangleGraphics),
         /**
          * Gets or sets the suggested initial offset for viewing this object
          * with the camera.  The offset is defined in the east-north-up reference frame.
@@ -246,7 +268,7 @@ define([
          * @memberof Entity.prototype
          * @type {WallGraphics}
          */
-        wall : PropertyHelper.createRawPropertyDescriptor('wall')
+        wall : PropertyHelper.createPropertyTypeDescriptor('wall', WallGraphics)
     });
 
     /**
