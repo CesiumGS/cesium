@@ -198,57 +198,15 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('equalsEpsilon throws for undefined relativeEpsilon', function() {
+        expect(function() {
+            CesiumMath.equalsEpsilon(1.0, 5.0, undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('equalsEpsilon throws for undefined', function() {
         expect(function() {
             CesiumMath.equalsEpsilon();
-        }).toThrowDeveloperError();
-    });
-
-    it('equalsEpsilonRelative throws for undefined left', function() {
-        expect(function() {
-            CesiumMath.equalsEpsilonRelative(undefined, 5.0, CesiumMath.EPSILON16);
-        }).toThrowDeveloperError();
-    });
-
-    it('equalsEpsilonRelative throws for undefined right', function() {
-        expect(function() {
-            CesiumMath.equalsEpsilonRelative(1.0, undefined, CesiumMath.EPSILON16);
-        }).toThrowDeveloperError();
-    });
-
-    it('equalsEpsilonRelative throws for undefined epsilon', function() {
-        expect(function() {
-            CesiumMath.equalsEpsilonRelative(1.0, 5.0, undefined);
-        }).toThrowDeveloperError();
-    });
-
-    it('equalsEpsilonRelative throws for undefined', function() {
-        expect(function() {
-            CesiumMath.equalsEpsilonRelative();
-        }).toThrowDeveloperError();
-    });
-
-    it('equalsEpsilonRelativeOrAbsolute throws for undefined left', function() {
-        expect(function() {
-            CesiumMath.equalsEpsilonRelativeOrAbsolute(undefined, 5.0, CesiumMath.EPSILON16);
-        }).toThrowDeveloperError();
-    });
-
-    it('equalsEpsilonRelativeOrAbsolute throws for undefined right', function() {
-        expect(function() {
-            CesiumMath.equalsEpsilonRelativeOrAbsolute(1.0, undefined, CesiumMath.EPSILON16);
-        }).toThrowDeveloperError();
-    });
-
-    it('equalsEpsilonRelativeOrAbsolute throws for undefined relativeEpsilon', function() {
-        expect(function() {
-            CesiumMath.equalsEpsilonRelativeOrAbsolute(1.0, 5.0, undefined);
-        }).toThrowDeveloperError();
-    });
-
-    it('equalsEpsilonRelativeOrAbsolute throws for undefined', function() {
-        expect(function() {
-            CesiumMath.equalsEpsilonRelativeOrAbsolute();
         }).toThrowDeveloperError();
     });
 

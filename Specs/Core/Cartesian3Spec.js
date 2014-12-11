@@ -595,45 +595,20 @@ defineSuite([
         expect(Cartesian3.equalsEpsilon(cartesian, new Cartesian3(2.0, 2.0, 3.0), 1.0)).toEqual(true);
         expect(Cartesian3.equalsEpsilon(cartesian, new Cartesian3(1.0, 3.0, 3.0), 1.0)).toEqual(true);
         expect(Cartesian3.equalsEpsilon(cartesian, new Cartesian3(1.0, 2.0, 4.0), 1.0)).toEqual(true);
-        expect(Cartesian3.equalsEpsilon(cartesian, new Cartesian3(2.0, 2.0, 3.0), 0.99999)).toEqual(false);
-        expect(Cartesian3.equalsEpsilon(cartesian, new Cartesian3(1.0, 3.0, 3.0), 0.99999)).toEqual(false);
-        expect(Cartesian3.equalsEpsilon(cartesian, new Cartesian3(1.0, 2.0, 4.0), 0.99999)).toEqual(false);
+        expect(Cartesian3.equalsEpsilon(cartesian, new Cartesian3(2.0, 2.0, 3.0), CesiumMath.EPSILON6)).toEqual(false);
+        expect(Cartesian3.equalsEpsilon(cartesian, new Cartesian3(1.0, 3.0, 3.0), CesiumMath.EPSILON6)).toEqual(false);
+        expect(Cartesian3.equalsEpsilon(cartesian, new Cartesian3(1.0, 2.0, 4.0), CesiumMath.EPSILON6)).toEqual(false);
         expect(Cartesian3.equalsEpsilon(cartesian, undefined, 1)).toEqual(false);
-    });
-
-    it('equalsEpsilonRelative', function() {
-        var cartesian = new Cartesian3(3000000.0, 4000000.0, 5000000.0);
-        expect(Cartesian3.equalsEpsilonRelative(cartesian, new Cartesian3(3000000.0, 4000000.0, 5000000.0), 0.0)).toEqual(true);
-        expect(Cartesian3.equalsEpsilonRelative(cartesian, new Cartesian3(3000000.2, 4000000.0, 5000000.0), CesiumMath.EPSILON7)).toEqual(true);
-        expect(Cartesian3.equalsEpsilonRelative(cartesian, new Cartesian3(3000000.0, 4000000.2, 5000000.0), CesiumMath.EPSILON7)).toEqual(true);
-        expect(Cartesian3.equalsEpsilonRelative(cartesian, new Cartesian3(3000000.0, 4000000.0, 5000000.2), CesiumMath.EPSILON7)).toEqual(true);
-        expect(Cartesian3.equalsEpsilonRelative(cartesian, new Cartesian3(3000000.2, 4000000.2, 5000000.2), CesiumMath.EPSILON7)).toEqual(true);
-        expect(Cartesian3.equalsEpsilonRelative(cartesian, new Cartesian3(3000000.2, 4000000.2, 5000000.2), CesiumMath.EPSILON9)).toEqual(false);
-        expect(Cartesian3.equalsEpsilonRelative(undefined, cartesian, 1)).toEqual(false);
-        expect(Cartesian3.equalsEpsilonRelative(cartesian, undefined, 1)).toEqual(false);
-    });
-
-    it('equalsEpsilonRelativeOrAbsolute', function() {
-        var cartesian = new Cartesian3(1.0, 2.0, 3.0);
-        expect(Cartesian3.equalsEpsilonRelativeOrAbsolute(cartesian, new Cartesian3(1.0, 2.0, 3.0), 0.0)).toEqual(true);
-        expect(Cartesian3.equalsEpsilonRelativeOrAbsolute(cartesian, new Cartesian3(1.0, 2.0, 3.0), 1.0)).toEqual(true);
-        expect(Cartesian3.equalsEpsilonRelativeOrAbsolute(cartesian, new Cartesian3(2.0, 2.0, 3.0), 1.0)).toEqual(true);
-        expect(Cartesian3.equalsEpsilonRelativeOrAbsolute(cartesian, new Cartesian3(1.0, 3.0, 3.0), 1.0)).toEqual(true);
-        expect(Cartesian3.equalsEpsilonRelativeOrAbsolute(cartesian, new Cartesian3(1.0, 2.0, 4.0), 1.0)).toEqual(true);
-        expect(Cartesian3.equalsEpsilonRelativeOrAbsolute(cartesian, new Cartesian3(2.0, 2.0, 3.0), CesiumMath.EPSILON6)).toEqual(false);
-        expect(Cartesian3.equalsEpsilonRelativeOrAbsolute(cartesian, new Cartesian3(1.0, 3.0, 3.0), CesiumMath.EPSILON6)).toEqual(false);
-        expect(Cartesian3.equalsEpsilonRelativeOrAbsolute(cartesian, new Cartesian3(1.0, 2.0, 4.0), CesiumMath.EPSILON6)).toEqual(false);
-        expect(Cartesian3.equalsEpsilonRelativeOrAbsolute(cartesian, undefined, 1)).toEqual(false);
 
         cartesian = new Cartesian3(3000000.0, 4000000.0, 5000000.0);
-        expect(Cartesian3.equalsEpsilonRelativeOrAbsolute(cartesian, new Cartesian3(3000000.0, 4000000.0, 5000000.0), 0.0)).toEqual(true);
-        expect(Cartesian3.equalsEpsilonRelativeOrAbsolute(cartesian, new Cartesian3(3000000.2, 4000000.0, 5000000.0), CesiumMath.EPSILON7)).toEqual(true);
-        expect(Cartesian3.equalsEpsilonRelativeOrAbsolute(cartesian, new Cartesian3(3000000.0, 4000000.2, 5000000.0), CesiumMath.EPSILON7)).toEqual(true);
-        expect(Cartesian3.equalsEpsilonRelativeOrAbsolute(cartesian, new Cartesian3(3000000.0, 4000000.0, 5000000.2), CesiumMath.EPSILON7)).toEqual(true);
-        expect(Cartesian3.equalsEpsilonRelativeOrAbsolute(cartesian, new Cartesian3(3000000.2, 4000000.2, 5000000.2), CesiumMath.EPSILON7)).toEqual(true);
-        expect(Cartesian3.equalsEpsilonRelativeOrAbsolute(cartesian, new Cartesian3(3000000.2, 4000000.2, 5000000.2), CesiumMath.EPSILON9)).toEqual(false);
-        expect(Cartesian3.equalsEpsilonRelativeOrAbsolute(undefined, cartesian, 1)).toEqual(false);
-        expect(Cartesian3.equalsEpsilonRelativeOrAbsolute(cartesian, undefined, 1)).toEqual(false);
+        expect(Cartesian3.equalsEpsilon(cartesian, new Cartesian3(3000000.0, 4000000.0, 5000000.0), 0.0)).toEqual(true);
+        expect(Cartesian3.equalsEpsilon(cartesian, new Cartesian3(3000000.2, 4000000.0, 5000000.0), CesiumMath.EPSILON7)).toEqual(true);
+        expect(Cartesian3.equalsEpsilon(cartesian, new Cartesian3(3000000.0, 4000000.2, 5000000.0), CesiumMath.EPSILON7)).toEqual(true);
+        expect(Cartesian3.equalsEpsilon(cartesian, new Cartesian3(3000000.0, 4000000.0, 5000000.2), CesiumMath.EPSILON7)).toEqual(true);
+        expect(Cartesian3.equalsEpsilon(cartesian, new Cartesian3(3000000.2, 4000000.2, 5000000.2), CesiumMath.EPSILON7)).toEqual(true);
+        expect(Cartesian3.equalsEpsilon(cartesian, new Cartesian3(3000000.2, 4000000.2, 5000000.2), CesiumMath.EPSILON9)).toEqual(false);
+        expect(Cartesian3.equalsEpsilon(undefined, cartesian, 1)).toEqual(false);
+        expect(Cartesian3.equalsEpsilon(cartesian, undefined, 1)).toEqual(false);
     });
 
     it('toString', function() {
