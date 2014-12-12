@@ -9,6 +9,7 @@ Change Log
   * `Rectangle.intersectWith` was deprecated in Cesium 1.5. It will be removed in Cesium 1.6. Use `Rectangle.intersection`, which is the same but returns `undefined` when two rectangles do not intersect.
   * `Rectangle.isEmpty` was deprecated in Cesium 1.5. It will be removed in Cesium 1.6.
 * Improved polygon loading performance.
+* Fixed upsampleQuantizedTerrainMesh rounding errors that had occasionally led to missing terrain skirt geometry in upsampled tiles.
 * Improved GeoJSON loading performance.
 * `ConstantProperty` now accepts `HTMLElement` instances as valid values.
 * `BillboardGraphics.image` and 'ImageMaterialProperty.image' now accept `Property` instances that represent an `Image` or `Canvas` in addition to a url.
