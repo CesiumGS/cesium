@@ -4,8 +4,9 @@ Change Log
 ### 1.5 - 2015-01-05
 
 * Deprecated
-  * `Rectangle.intersectWith` was deprecated in Cesium 1.5. It will be removed in Cesium 1.6. Use `Rectangle.intersection`, which is the same but returns `undefined` when two rectangles do not intersect.
-  * `Rectangle.isEmpty` was deprecated in Cesium 1.5. It will be removed in Cesium 1.6.
+  * `Rectangle.intersectWith` was deprecated. It will be removed in Cesium 1.6. Use `Rectangle.intersection`, which is the same but returns `undefined` when two rectangles do not intersect.
+  * `Rectangle.isEmpty` was deprecated. It will be removed in Cesium 1.6.
+  * `viewerEntityMixin` was deprecated. It will be removed in Cesium 1.6. It's functionality has been made directly part of the `Viewer` widget.
 * Improved polygon loading performance.
 * Fixed upsampleQuantizedTerrainMesh rounding errors that had occasionally led to missing terrain skirt geometry in upsampled tiles.
 * Added `Math.mod` which computes `m % n` but also works when `m` is negative.

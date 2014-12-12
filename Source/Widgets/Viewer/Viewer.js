@@ -1,14 +1,21 @@
 /*global define*/
 define([
+        '../../Core/Cartesian3',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/EventHelper',
+        '../../Core/ScreenSpaceEventType',
+        '../../DataSources/ConstantPositionProperty',
         '../../DataSources/DataSourceCollection',
         '../../DataSources/DataSourceDisplay',
+        '../../DataSources/Entity',
+        '../../DataSources/EntityView',
+        '../../Scene/SceneMode',
         '../../ThirdParty/knockout',
+        '../../ThirdParty/when',
         '../Animation/Animation',
         '../Animation/AnimationViewModel',
         '../BaseLayerPicker/BaseLayerPicker',
@@ -27,15 +34,22 @@ define([
         '../subscribeAndEvaluate',
         '../Timeline/Timeline'
     ], function(
+        Cartesian3,
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
         EventHelper,
+        ScreenSpaceEventType,
+        ConstantPositionProperty,
         DataSourceCollection,
         DataSourceDisplay,
+        Entity,
+        EntityView,
+        SceneMode,
         knockout,
+        when,
         Animation,
         AnimationViewModel,
         BaseLayerPicker,
@@ -59,6 +73,80 @@ define([
         var clock = e.clock;
         clock.currentTime = e.timeJulian;
         clock.shouldAnimate = false;
+    }
+
+    var cartesian3Scratch = new Cartesian3();
+
+    function pickImageryLayerFeature(viewer, windowPosition) {
+        var scene = viewer.scene;
+        var pickRay = scene.camera.getPickRay(windowPosition);
+        var imageryLayerFeaturePromise = scene.imageryLayers.pickImageryLayerFeatures(pickRay, scene);
+        if (!defined(imageryLayerFeaturePromise)) {
+            return;
+        }
+
+        // Imagery layer feature picking is asynchronous, so put up a message while loading.
+        var loadingMessage = new Entity('Loading...');
+        loadingMessage.description = {
+            getValue : function() {
+                return 'Loading feature information...';
+            }
+        };
+
+        when(imageryLayerFeaturePromise, function(features) {
+            // Has this async pick been superseded by a later one?
+            if (viewer.selectedEntity !== loadingMessage) {
+                return;
+            }
+
+            if (!defined(features) || features.length === 0) {
+                viewer.selectedEntity = createNoFeaturesEntity();
+                return;
+            }
+
+            // Select the first feature.
+            var feature = features[0];
+
+            var entity = new Entity(feature.name);
+            entity.description = {
+                getValue : function() {
+                    return feature.description;
+                }
+            };
+
+            if (defined(feature.position)) {
+                var ecfPosition = viewer.scene.globe.ellipsoid.cartographicToCartesian(feature.position, cartesian3Scratch);
+                entity.position = new ConstantPositionProperty(ecfPosition);
+            }
+
+            viewer.selectedEntity = entity;
+        }, function() {
+            // Has this async pick been superseded by a later one?
+            if (viewer.selectedEntity !== loadingMessage) {
+                return;
+            }
+
+            var entity = new Entity('None');
+            entity.description = {
+                getValue : function() {
+                    return 'No features found.';
+                }
+            };
+
+            viewer.selectedEntity = createNoFeaturesEntity();
+        });
+
+        return loadingMessage;
+    }
+
+    function createNoFeaturesEntity() {
+        var entity = new Entity('None');
+        entity.description = {
+            getValue : function() {
+                return 'No features found.';
+            }
+        };
+        return entity;
     }
 
     /**
@@ -154,9 +242,6 @@ define([
      *
      * //Add basic drag and drop functionality
      * viewer.extend(Cesium.viewerDragDropMixin);
-     *
-     * //Allow users to zoom and follow objects loaded from CZML by clicking on it.
-     * viewer.extend(Cesium.viewerEntityMixin);
      *
      * //Show a pop-up alert if we encounter an error when processing a dropped file
      * viewer.dropError.addEventListener(function(dropHandler, name, error) {
@@ -489,6 +574,204 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         cesiumWidget.scene.preRender.addEventListener(function(scene, time) {
             resizeViewer(that);
         });
+
+        var viewer = this;
+
+        var infoBoxViewModel = defined(infoBox) ? infoBox.viewModel : undefined;
+
+        var selectionIndicatorViewModel = defined(selectionIndicator) ? selectionIndicator.viewModel : undefined;
+
+        var enableInfoOrSelection = defined(infoBox) || defined(selectionIndicator);
+
+        var entityView;
+
+        function trackSelectedEntity() {
+            viewer.trackedEntity = viewer.selectedEntity;
+        }
+
+        function clearTrackedObject() {
+            viewer.trackedEntity = undefined;
+        }
+
+        function clearSelectedEntity() {
+            viewer.selectedEntity = undefined;
+        }
+
+        function clearObjects() {
+            viewer.trackedEntity = undefined;
+            viewer.selectedEntity = undefined;
+        }
+
+        if (defined(infoBoxViewModel)) {
+            eventHelper.add(infoBoxViewModel.cameraClicked, trackSelectedEntity);
+            eventHelper.add(infoBoxViewModel.closeClicked, clearSelectedEntity);
+        }
+
+        // Subscribe to onTick so that we can update the view each update.
+        function onTick(clock) {
+            var time = clock.currentTime;
+            if (defined(entityView)) {
+                entityView.update(time);
+            }
+
+            var selectedEntity = viewer.selectedEntity;
+            var showSelection = defined(selectedEntity) && enableInfoOrSelection;
+            if (showSelection) {
+                var oldPosition = defined(selectionIndicatorViewModel) ? selectionIndicatorViewModel.position : undefined;
+                var position;
+                var enableCamera = false;
+
+
+                if (selectedEntity.isAvailable(time)) {
+                    if (defined(selectedEntity.position)) {
+                        position = selectedEntity.position.getValue(time, oldPosition);
+                        enableCamera = defined(position) && (viewer.trackedEntity !== viewer.selectedEntity);
+                    }
+                    // else "position" is undefined and "enableCamera" is false.
+                }
+                // else "position" is undefined and "enableCamera" is false.
+
+                if (defined(selectionIndicatorViewModel)) {
+                    selectionIndicatorViewModel.position = position;
+                }
+
+                if (defined(infoBoxViewModel)) {
+                    infoBoxViewModel.enableCamera = enableCamera;
+                    infoBoxViewModel.isCameraTracking = (viewer.trackedEntity === viewer.selectedEntity);
+
+                    if (defined(selectedEntity.description)) {
+                        infoBoxViewModel.descriptionRawHtml = defaultValue(selectedEntity.description.getValue(time), '');
+                    } else {
+                        infoBoxViewModel.descriptionRawHtml = '';
+                    }
+                }
+            }
+
+            if (defined(selectionIndicatorViewModel)) {
+                selectionIndicatorViewModel.showSelection = showSelection;
+                selectionIndicatorViewModel.update();
+            }
+
+            if (defined(infoBoxViewModel)) {
+                infoBoxViewModel.showInfo = showSelection;
+            }
+        }
+        eventHelper.add(viewer.clock.onTick, onTick);
+
+        function pickEntity(e) {
+            var picked = viewer.scene.pick(e.position);
+            if (defined(picked)) {
+                var id = defaultValue(picked.id, picked.primitive.id);
+                if (id instanceof Entity) {
+                    return id;
+                }
+            }
+
+            // No regular entity picked.  Try picking features from imagery layers.
+            return pickImageryLayerFeature(viewer, e.position);
+        }
+
+        function trackObject(entity) {
+            if (defined(entity) && defined(entity.position)) {
+                viewer.trackedEntity = entity;
+            }
+        }
+
+        function pickAndTrackObject(e) {
+            var entity = pickEntity(e);
+            if (defined(entity)) {
+                trackObject(entity);
+            }
+        }
+
+        function pickAndSelectObject(e) {
+            viewer.selectedEntity = pickEntity(e);
+        }
+
+        // Subscribe to the home button beforeExecute event if it exists,
+        // so that we can clear the trackedEntity.
+        if (defined(viewer.homeButton)) {
+            eventHelper.add(viewer.homeButton.viewModel.command.beforeExecute, clearTrackedObject);
+        }
+
+        // Subscribe to the geocoder search if it exists, so that we can
+        // clear the trackedEntity when it is clicked.
+        if (defined(viewer.geocoder)) {
+            eventHelper.add(viewer.geocoder.viewModel.search.beforeExecute, clearObjects);
+        }
+
+        // We need to subscribe to the data sources and collections so that we can clear the
+        // tracked object when it is removed from the scene.
+        // Subscribe to current data sources
+        var dataSources = viewer.dataSources;
+        var dataSourceLength = dataSources.length;
+        for (var i = 0; i < dataSourceLength; i++) {
+            this._dataSourceAdded(dataSources, dataSources.get(i));
+        }
+
+        // Hook up events so that we can subscribe to future sources.
+        eventHelper.add(viewer.dataSources.dataSourceAdded, Viewer.prototype._dataSourceAdded, this);
+        eventHelper.add(viewer.dataSources.dataSourceRemoved, Viewer.prototype._dataSourceRemoved, this);
+
+        // Subscribe to left clicks and zoom to the picked object.
+        viewer.screenSpaceEventHandler.setInputAction(pickAndSelectObject, ScreenSpaceEventType.LEFT_CLICK);
+        viewer.screenSpaceEventHandler.setInputAction(pickAndTrackObject, ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+
+        /**
+         * Gets or sets the Entity instance currently being tracked by the camera.
+         * @memberof viewerEntityMixin.prototype
+         * @type {Entity}
+         */
+        viewer.trackedEntity = undefined;
+
+        /**
+         * Gets or sets the object instance for which to display a selection indicator.
+         * @memberof viewerEntityMixin.prototype
+         * @type {Entity}
+         */
+        viewer.selectedEntity = undefined;
+
+        knockout.track(viewer, ['trackedEntity', 'selectedEntity']);
+
+        var knockoutSubscriptions = [];
+
+        knockoutSubscriptions.push(subscribeAndEvaluate(viewer, 'trackedEntity', function(value) {
+            var scene = viewer.scene;
+            var sceneMode = scene.mode;
+            var isTracking = defined(value);
+
+            if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
+                scene.screenSpaceCameraController.enableTranslate = !isTracking;
+            }
+
+            if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE3D) {
+                scene.screenSpaceCameraController.enableTilt = !isTracking;
+            }
+
+            if (isTracking && defined(value.position)) {
+                entityView = new EntityView(value, scene, viewer.scene.globe.ellipsoid);
+            } else {
+                entityView = undefined;
+            }
+        }));
+
+        knockoutSubscriptions.push(subscribeAndEvaluate(viewer, 'selectedEntity', function(value) {
+            if (defined(value)) {
+                if (defined(infoBoxViewModel)) {
+                    infoBoxViewModel.titleText = defined(value.name) ? value.name : value.id;
+                }
+
+                if (defined(selectionIndicatorViewModel)) {
+                    selectionIndicatorViewModel.animateAppear();
+                }
+            } else {
+                // Leave the info text in place here, it is needed during the exit animation.
+                if (defined(selectionIndicatorViewModel)) {
+                    selectionIndicatorViewModel.animateDepart();
+                }
+            }
+        }));
+
     };
 
     defineProperties(Viewer.prototype, {
@@ -846,6 +1129,17 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      */
     Viewer.prototype.destroy = function() {
         var i;
+
+        this.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
+        this.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+
+        // Unsubscribe from data sources
+        var dataSources = this.dataSources;
+        var dataSourceLength = dataSources.length;
+        for (i = 0; i < dataSourceLength; i++) {
+            this._dataSourceRemoved(dataSources, dataSources.get(i));
+        }
+
         var numSubscriptions = this._knockoutSubscriptions.length;
         for (i = 0; i < numSubscriptions; i++) {
             this._knockoutSubscriptions[i].dispose();
@@ -986,6 +1280,41 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         viewer._lastWidth = width;
         viewer._lastHeight = height;
     }
+
+    Viewer.prototype._dataSourceAdded = function(dataSourceCollection, dataSource) {
+        var entityCollection = dataSource.entities;
+        entityCollection.collectionChanged.addEventListener(Viewer.prototype._onEntityCollectionChanged, this);
+    };
+
+    Viewer.prototype._dataSourceRemoved = function(dataSourceCollection, dataSource) {
+        var entityCollection = dataSource.entities;
+        entityCollection.collectionChanged.removeEventListener(Viewer.prototype._onEntityCollectionChanged, this);
+
+        if (defined(this.trackedEntity)) {
+            if (entityCollection.getById(this.trackedEntity.id) === this.trackedEntity) {
+                this.homeButton.viewModel.command();
+            }
+        }
+
+        if (defined(this.selectedEntity)) {
+            if (entityCollection.getById(this.selectedEntity.id) === this.selectedEntity) {
+                this.selectedEntity = undefined;
+            }
+        }
+    };
+
+    Viewer.prototype._onEntityCollectionChanged = function(collection, added, removed) {
+        var length = removed.length;
+        for (var i = 0; i < length; i++) {
+            var removedObject = removed[i];
+            if (this.trackedEntity === removedObject) {
+                this.homeButton.viewModel.command();
+            }
+            if (this.selectedEntity === removedObject) {
+                this.selectedEntity = undefined;
+            }
+        }
+    };
 
     /**
      * A function that augments a Viewer instance with additional functionality.

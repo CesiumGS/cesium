@@ -63,7 +63,6 @@ define([
     }
 
     viewer.extend(viewerDragDropMixin);
-    viewer.extend(viewerEntityMixin);
     if (endUserOptions.inspector) {
         viewer.extend(viewerCesiumInspectorMixin);
     }
