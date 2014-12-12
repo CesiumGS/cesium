@@ -65,30 +65,33 @@ define([
 
         context2D.lineWidth = strokeWidth;
         var dimensions = measureText(context2D, text, stroke, fill);
+        dimensions.computedWidth = dimensions.bounds.maxx - dimensions.bounds.minx;
         canvas.dimensions = dimensions;
 
         document.body.removeChild(canvas);
         canvas.style.visibility = '';
 
         var baseline = dimensions.height - dimensions.ascent;
-        canvas.width = dimensions.width;
+        canvas.width = dimensions.computedWidth;
         canvas.height = dimensions.height;
         var y = canvas.height - baseline;
 
         // font must be explicitly set again after changing width and height
         context2D.font = font;
+        var minX = dimensions.bounds.minx;
 
         if (stroke) {
             var strokeColor = defaultValue(options.strokeColor, Color.BLACK);
             context2D.strokeStyle = strokeColor.toCssColorString();
+            context2D.lineJoin = 'round';
             context2D.lineWidth = strokeWidth;
-            context2D.strokeText(text, 0, y);
+            context2D.strokeText(text, -minX, y);
         }
 
         if (fill) {
             var fillColor = defaultValue(options.fillColor, Color.WHITE);
             context2D.fillStyle = fillColor.toCssColorString();
-            context2D.fillText(text, 0, y);
+            context2D.fillText(text, -minX, y);
         }
 
         return canvas;

@@ -251,7 +251,7 @@
           255,0,0,255
         ]
       },
-      "font":"21pt Lucida Console",
+      "font":"11pt Lucida Console",
       "horizontalOrigin":"LEFT",
       "outlineColor":{
         "rgba":[
@@ -259,7 +259,6 @@
         ]
       },
       "outlineWidth":2,
-      "scale":0.5,
       "show":true,
       "style":"FILL_AND_OUTLINE",
       "text":"Pennsylvania",
@@ -332,7 +331,7 @@
           0,255,255,255
         ]
       },
-      "font":"21pt Lucida Console",
+      "font":"11pt Lucida Console",
       "horizontalOrigin":"LEFT",
       "outlineColor":{
         "rgba":[
@@ -345,7 +344,6 @@
           12,0
         ]
       },
-      "scale":0.5,
       "show":true,
       "style":"FILL_AND_OUTLINE",
       "text":"AGI",
@@ -385,7 +383,7 @@
           0,255,0,255
         ]
       },
-      "font":"21pt Lucida Console",
+      "font":"11pt Lucida Console",
       "horizontalOrigin":"LEFT",
       "outlineColor":{
         "rgba":[
@@ -398,7 +396,6 @@
           12,0
         ]
       },
-      "scale":0.5,
       "show":true,
       "style":"FILL_AND_OUTLINE",
       "text":"Geoeye 1",
@@ -1374,7 +1371,7 @@
           255,0,255,255
         ]
       },
-      "font":"21pt Lucida Console",
+      "font":"11pt Lucida Console",
       "horizontalOrigin":"LEFT",
       "outlineColor":{
         "rgba":[
@@ -1387,7 +1384,6 @@
           12,0
         ]
       },
-      "scale":0.5,
       "show":true,
       "style":"FILL_AND_OUTLINE",
       "text":"ISS",
@@ -2026,7 +2022,7 @@
           255,255,0,255
         ]
       },
-      "font":"21pt Lucida Console",
+      "font":"11pt Lucida Console",
       "horizontalOrigin":"LEFT",
       "outlineColor":{
         "rgba":[
@@ -2039,7 +2035,6 @@
           6,-4
         ]
       },
-      "scale":0.5,
       "show":true,
       "style":"FILL_AND_OUTLINE",
       "text":"Molniya 1-92",
