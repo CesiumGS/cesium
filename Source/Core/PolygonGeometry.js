@@ -333,6 +333,7 @@ define([
 
     function computeWallIndices(positions, ellipsoid, granularity, perPositionHeight){
         var edgePositions;
+        var topEdgeLength;
         var i;
         var p1;
         var p2;
@@ -349,7 +350,7 @@ define([
                 numVertices += PolygonGeometryLibrary.subdivideLineCount(positions[i], positions[(i + 1) % length], minDistance);
             }
 
-            var topEdgeLength = (numVertices + length) * 3;
+            topEdgeLength = (numVertices + length) * 3;
             edgePositions = new Array(topEdgeLength * 2);
             for (i = 0; i < length; i++) {
                 p1 = positions[i];
@@ -375,13 +376,24 @@ define([
                 ++index;
             }
         } else {
-            edgePositions = [];
+            topEdgeLength = length * 3 * 2;
+            edgePositions = new Array(topEdgeLength * 2);
             for (i = 0; i < length; i++) {
                 p1 = positions[i];
                 p2 = positions[(i + 1) % length];
-                edgePositions.push(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
+                edgePositions[index] = edgePositions[index + topEdgeLength] = p1.x;
+                ++index;
+                edgePositions[index] = edgePositions[index + topEdgeLength] = p1.y;
+                ++index;
+                edgePositions[index] = edgePositions[index + topEdgeLength] = p1.z;
+                ++index;
+                edgePositions[index] = edgePositions[index + topEdgeLength] = p2.x;
+                ++index;
+                edgePositions[index] = edgePositions[index + topEdgeLength] = p2.y;
+                ++index;
+                edgePositions[index] = edgePositions[index + topEdgeLength] = p2.z;
+                ++index;
             }
-            edgePositions = edgePositions.concat(edgePositions);
         }
 
         length = edgePositions.length;
