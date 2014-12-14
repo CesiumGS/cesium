@@ -161,6 +161,20 @@ define([
 
     var gltfCache = {};
 
+    function getAnimationIds(cachedGltf) {
+        var animationIds = [];
+        if (defined(cachedGltf.gltf)) {
+            var animations = cachedGltf.gltf.animations;
+            for (var name in animations) {
+                if (animations.hasOwnProperty(name)) {
+                    animationIds.push(name);
+                }
+            }
+        }
+
+        return animationIds;
+    }
+
     ///////////////////////////////////////////////////////////////////////////
 
     /**
@@ -192,6 +206,7 @@ define([
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {String} [options.cacheKey] DOC_TBA
+     * @param {String} [options.releaseGltfJSON=false] DOC_TBA
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      *
@@ -204,7 +219,11 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._cacheKey = options.cacheKey;
-        this._cachedGltf = new CachedGltf(options.gltf);
+        this._cachedGltf = undefined;
+        this._releaseGltfJSON = defaultValue(options.releaseGltfJSON, false);
+        this._animationIds = undefined;
+        setCachedGltf(this, new CachedGltf(options.gltf));
+
         this._basePath = defaultValue(options.basePath, '');
 
         var docUri = new Uri(document.location.href);
@@ -378,10 +397,19 @@ define([
         this._pickIds = [];
     };
 
+    function setCachedGltf(model, cachedGltf) {
+        model._cachedGltf = cachedGltf;
+        model._animationIds = getAnimationIds(cachedGltf);
+    }
+
     defineProperties(Model.prototype, {
         /**
          * The object for the glTF JSON, including properties with default values omitted
          * from the JSON provided to this model.
+         * <p>
+         * This is <code>undefined</code> when {@link Model#releaseGltfJSON} is <code>undefined</code>
+         * since the glTF JSON was unloaded to save memory.
+         * </p>
          *
          * @memberof Model.prototype
          *
@@ -392,7 +420,23 @@ define([
          */
         gltf : {
             get : function() {
-                return this._cachedGltf.gltf;
+                return !this.releaseGltfJSON ? this._cachedGltf.gltf : undefined;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default false
+         */
+        releaseGltfJSON : {
+            get : function() {
+                return this._releaseGltfJSON;
             }
         },
 
@@ -514,6 +558,7 @@ define([
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {String} [options.cacheKey] DOC_TBA
+     * @param {String} [options.releaseGltfJSON] DOC_TBA
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @returns {Model} The newly created model.
@@ -577,12 +622,12 @@ define([
         var cachedGltf = gltfCache[cacheKey];
         if (defined(cachedGltf)) {
             ++cachedGltf.count;
-            model._cachedGltf = cachedGltf;
+            setCachedGltf(model, cachedGltf);
         } else {
             loadText(url, options.headers).then(function(data) {
                 cachedGltf = new CachedGltf(JSON.parse(data));
                 cachedGltf.count = 1;
-                model._cachedGltf = cachedGltf;
+                setCachedGltf(model, cachedGltf);
                 gltfCache[cacheKey] = cachedGltf;
             }).otherwise(getFailedLoadFunction(model, 'gltf', url));
         }
@@ -2228,6 +2273,13 @@ define([
         return scale;
     }
 
+    function releaseCachedGltf(model) {
+        if (defined(model._cacheKey) && (--model._cachedGltf.count === 0)) {
+            delete gltfCache[model._cacheKey];
+        }
+        model._cachedGltf = undefined;
+    }
+
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -2265,6 +2317,11 @@ define([
             if (loadResources.finishedPendingLoads() && loadResources.finishedResourceCreation()) {
                 this._state = ModelState.LOADED;
                 this._loadResources = undefined;  // Clear CPU memory since WebGL resources were created.
+
+                if (this.releaseGltfJSON) {
+                    releaseCachedGltf(this);
+                }
+
                 justLoaded = true;
             }
         }
@@ -2412,11 +2469,10 @@ define([
             pickIds[i].destroy();
         }
 
+// TODO: function to invalidate whole cache or one url
 // TODO: x number of frames/seconds later to avoid ping ponging.  Use a generic system to schedule it?
-// TODO: only destroy inside render loop,
-        if (defined(this._cacheKey) && (--this._cachedGltf.count === 0)) {
-            delete gltfCache[this._cacheKey];
-        }
+// TODO: only destroy inside render loop?
+        releaseCachedGltf(this);
 
         return destroyObject(this);
     };
