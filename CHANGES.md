@@ -12,7 +12,7 @@ Change Log
 * Fixed upsampleQuantizedTerrainMesh rounding errors that had occasionally led to missing terrain skirt geometry in upsampled tiles.
 * Improved GeoJSON loading performance.
 * `ConstantProperty` now accepts `HTMLElement` instances as valid values.
-* `BillboardGraphics.image` and 'ImageMaterialProperty.image' now accept `Property` instances that represent an `Image` or `Canvas` in addition to a url.
+* `BillboardGraphics.image` and `ImageMaterialProperty.image` now accept `Property` instances that represent an `Image` or `Canvas` in addition to a url.
 * Added `Math.mod` which computes `m % n` but also works when `m` is negative.
 * Fixed imagery providers whose rectangle crosses the IDL. Added `Rectangle.computeWidth`, `Rectangle.computeHeight`, `Rectangle.width`, and `Rectangle.height`. [#2195](https://github.com/AnalyticalGraphicsInc/cesium/issues/2195)
 
