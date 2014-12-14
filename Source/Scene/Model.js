@@ -380,6 +380,7 @@ define([
             materialsByName : undefined,  // Indexed with the name property in the material
             materialsById : undefined     // Indexed with the material's property name
         };
+
         this._rendererResources = {
             buffers : {},
             vertexArrays : {},
@@ -389,8 +390,10 @@ define([
 
             samplers : {},
             renderStates : {},
-            uniformMaps : {}
+            uniformMaps : {}    // Not cached since it can be targeted by glTF animation
         };
+        this._cachedRendererResources = undefined;
+        this._loadRendererResourcesFromCache = false;
 
         this._renderCommands = [];
         this._pickCommands = [];
@@ -979,11 +982,14 @@ define([
     }
 
     function parse(model) {
-        parseBuffers(model);
-        parseBufferViews(model);
-        parseShaders(model);
-        parsePrograms(model);
-        parseTextures(model);
+        if (!model._loadRendererResourcesFromCache) {
+            parseBuffers(model);
+            parseBufferViews(model);
+            parseShaders(model);
+            parsePrograms(model);
+            parseTextures(model);
+        }
+
         parseMaterials(model);
         parseMeshes(model);
         parseNodes(model);
@@ -2066,15 +2072,38 @@ define([
     }
 
     function createResources(model, context) {
-        createBuffers(model, context);      // using glTF bufferViews
-        createPrograms(model, context);
-        createSamplers(model, context);
-        createTextures(model, context);
+        if (model._loadRendererResourcesFromCache) {
+            var resources = model._rendererResources;
+            var cachedResources = model._cachedRendererResources;
+
+            resources.buffers = cachedResources.buffers;
+            resources.vertexArrays = cachedResources.vertexArrays;
+            resources.programs = cachedResources.programs;
+            resources.pickPrograms = cachedResources.pickPrograms;
+            resources.textures = cachedResources.textures;
+            resources.samplers = cachedResources.samplers;
+            resources.renderStates = cachedResources.renderStates;
+        } else {
+debugger;
+
+            createBuffers(model, context);      // using glTF bufferViews
+            createPrograms(model, context);
+            createSamplers(model, context);
+            createTextures(model, context);
+        }
 
         createSkins(model);
         createRuntimeAnimations(model);
-        createVertexArrays(model, context); // using glTF meshes
-        createRenderStates(model, context); // using glTF materials/techniques/passes/states
+
+        if (!model._loadRendererResourcesFromCache) {
+            createVertexArrays(model, context); // using glTF meshes
+            createRenderStates(model, context); // using glTF materials/techniques/passes/states
+
+            // Long-term, we might not cache render states if they could change
+            // due to an animation, e.g., a uniform going from opaque to transparent.
+            // Could use copy-on-write if it is worth it.  Probably overkill.
+        }
+
         createUniformMaps(model, context);  // using glTF materials/techniques/passes/instanceProgram
         createRuntimeNodes(model, context); // using glTF scene
     }
@@ -2289,6 +2318,51 @@ define([
         model._cachedGltf = undefined;
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+
+    var CachedRendererResources = function(context, cacheKey) {
+        this.buffers = undefined;
+        this.vertexArrays = undefined;
+        this.programs = undefined;
+        this.pickPrograms = undefined;
+        this.textures = undefined;
+        this.samplers = undefined;
+        this.renderStates = undefined;
+        this.ready = false;
+
+        this.context = context;
+        this.cacheKey = cacheKey;
+        this.count = 0;
+    };
+
+    function destroy(property) {
+        for (var name in property) {
+            if (property.hasOwnProperty(name)) {
+                property[name].destroy();
+            }
+        }
+    }
+
+    function destroyCachedRendererResources(resources) {
+        destroy(resources.buffers);
+        destroy(resources.vertexArrays);
+        destroy(resources.programs);
+        destroy(resources.pickPrograms);
+        destroy(resources.textures);
+    }
+
+    CachedRendererResources.prototype.release = function() {
+        if (--this.count === 0) {
+            delete this.context.cache.modelRendererResourceCache[this.cacheKey];
+            destroyCachedRendererResources(this);
+            return destroyObject(this);
+        }
+
+        return undefined;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -2305,9 +2379,38 @@ define([
         }
 
         if ((this._state === ModelState.NEEDS_LOAD) && defined(this.gltf)) {
+            // Use renderer resources from cache instead of loading/creating them?
+            var cacheKey = this.cacheKey;
+            if (defined(cacheKey)) {
+                var modelCaches = context.cache.modelRendererResourceCache;
+                if (!defined(modelCaches)) {
+                    modelCaches = {};
+                    context.cache.modelRendererResourceCache = modelCaches;
+                }
+
+                var cachedRendererResources = modelCaches[this.cacheKey];
+                if (defined(cachedRendererResources)) {
+                    if (!cachedRendererResources.ready) {
+                        // Cached resources for the model are not loaded yet.  We'll
+                        // try again every frame until they are.
+                        return;
+                    }
+
+                    ++cachedRendererResources.count;
+                    this._loadRendererResourcesFromCache = true;
+                } else {
+                    cachedRendererResources = new CachedRendererResources(context, cacheKey);
+                    cachedRendererResources.count = 1;
+                    modelCaches[this.cacheKey] = cachedRendererResources;
+                }
+                this._cachedRendererResources = cachedRendererResources;
+            }
+
             this._state = ModelState.LOADING;
+
             this._boundingSphere = computeBoundingSphere(this.gltf);
             this._initialRadius = this._boundingSphere.radius;
+
             this._loadResources = new LoadResources();
             parse(this);
         }
@@ -2326,6 +2429,18 @@ define([
             if (loadResources.finishedPendingLoads() && loadResources.finishedResourceCreation()) {
                 this._state = ModelState.LOADED;
                 this._loadResources = undefined;  // Clear CPU memory since WebGL resources were created.
+
+                var resources = this._rendererResources;
+                var cachedResources = this._cachedRendererResources;
+
+                cachedResources.buffers = resources.buffers;
+                cachedResources.vertexArrays = resources.vertexArrays;
+                cachedResources.programs = resources.programs;
+                cachedResources.pickPrograms = resources.pickPrograms;
+                cachedResources.textures = resources.textures;
+                cachedResources.samplers = resources.samplers;
+                cachedResources.renderStates = resources.renderStates;
+                cachedResources.ready = true;
 
                 if (this.releaseGltfJson) {
                     releaseCachedGltf(this);
@@ -2429,22 +2544,6 @@ define([
         return false;
     };
 
-    function destroy(property) {
-        for (var name in property) {
-            if (property.hasOwnProperty(name)) {
-                property[name].destroy();
-            }
-        }
-    }
-
-    function release(property) {
-        for (var name in property) {
-            if (property.hasOwnProperty(name)) {
-                property[name].destroy();
-            }
-        }
-    }
-
     /**
      * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
      * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
@@ -2463,14 +2562,9 @@ define([
      * model = model && model.destroy();
      */
     Model.prototype.destroy = function() {
-        var resources = this._rendererResources;
-        destroy(resources.buffers);
-        destroy(resources.vertexArrays);
-        release(resources.programs);
-        release(resources.pickPrograms);
-        destroy(resources.textures);
-        resources = undefined;
+debugger;
         this._rendererResources = undefined;
+        this._cachedRendererResources = this._cachedRendererResources.release();
 
         var pickIds = this._pickIds;
         var length = pickIds.length;
@@ -2478,11 +2572,6 @@ define([
             pickIds[i].destroy();
         }
 
-// TODO: when using 'new Model', auto compute cacheKey as SHA-1?  Needed per context though
-// TODO: ref count cached animations
-// TODO: function to invalidate whole cache or one url
-// TODO: x number of frames/seconds later to avoid ping ponging.  Use a generic system to schedule it?
-// TODO: only destroy inside render loop?
         releaseCachedGltf(this);
 
         return destroyObject(this);
@@ -2490,3 +2579,11 @@ define([
 
     return Model;
 });
+
+//TODO: cache skins
+//TODO: when using 'new Model', auto compute cacheKey as SHA-1?  Needed per context though
+//TODO: ref count cached animations
+//TODO: function to invalidate whole cache or one url
+//TODO: x number of frames/seconds later to avoid ping ponging.  Use a generic system to schedule it?
+//TODO: only destroy inside render loop?
+//TODO: add unit tests
