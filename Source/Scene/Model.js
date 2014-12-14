@@ -206,7 +206,7 @@ define([
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {String} [options.cacheKey] DOC_TBA
-     * @param {String} [options.releaseGltfJSON=false] DOC_TBA
+     * @param {String} [options.releaseGltfJson=false] DOC_TBA
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      *
@@ -220,7 +220,7 @@ define([
 
         this._cacheKey = options.cacheKey;
         this._cachedGltf = undefined;
-        this._releaseGltfJSON = defaultValue(options.releaseGltfJSON, false);
+        this._releaseGltfJson = defaultValue(options.releaseGltfJson, false);
         this._animationIds = undefined;
         setCachedGltf(this, new CachedGltf(options.gltf));
 
@@ -407,7 +407,7 @@ define([
          * The object for the glTF JSON, including properties with default values omitted
          * from the JSON provided to this model.
          * <p>
-         * This is <code>undefined</code> when {@link Model#releaseGltfJSON} is <code>undefined</code>
+         * This is <code>undefined</code> when {@link Model#releaseGltfJson} is <code>undefined</code>
          * since the glTF JSON was unloaded to save memory.
          * </p>
          *
@@ -420,7 +420,7 @@ define([
          */
         gltf : {
             get : function() {
-                return !this.releaseGltfJSON ? this._cachedGltf.gltf : undefined;
+                return !this.releaseGltfJson ? this._cachedGltf.gltf : undefined;
             }
         },
 
@@ -434,9 +434,9 @@ define([
          *
          * @default false
          */
-        releaseGltfJSON : {
+        releaseGltfJson : {
             get : function() {
-                return this._releaseGltfJSON;
+                return this._releaseGltfJson;
             }
         },
 
@@ -558,7 +558,7 @@ define([
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {String} [options.cacheKey] DOC_TBA
-     * @param {String} [options.releaseGltfJSON] DOC_TBA
+     * @param {String} [options.releaseGltfJson] DOC_TBA
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @returns {Model} The newly created model.
@@ -2318,7 +2318,7 @@ define([
                 this._state = ModelState.LOADED;
                 this._loadResources = undefined;  // Clear CPU memory since WebGL resources were created.
 
-                if (this.releaseGltfJSON) {
+                if (this.releaseGltfJson) {
                     releaseCachedGltf(this);
                 }
 
