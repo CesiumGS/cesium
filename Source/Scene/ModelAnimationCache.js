@@ -36,7 +36,7 @@ define([
         var byteOffset = bufferView.byteOffset + accessor.byteOffset;
         var byteLength = accessor.count * getModelAccessor(accessor).componentsPerAttribute;
 
-        return model.basePath + buffer.path + ':' + byteOffset + ':' + byteLength;
+        return model.cacheKey + '//' + buffer.path + '/' + byteOffset + '/' + byteLength;
     }
 
     var axisScratch = new Cartesian3();
@@ -78,7 +78,7 @@ define([
             }
             // GLTF_SPEC: Support more parameter types when glTF supports targeting materials. https://github.com/KhronosGroup/glTF/issues/142
 
-            if (model.basePath !== '') {
+            if (defined(model.cacheKey)) {
                 // Only cache when we can create a unique id
                 cachedAnimationParameters[key] = values;
             }
@@ -91,7 +91,7 @@ define([
     };
 
     function getAnimationSplineKey(model, animationName, samplerName) {
-        return model.basePath + ':' + animationName + ':' + samplerName;
+        return model.cacheKey + '//' + animationName + '/' + samplerName;
     }
 
  // GLTF_SPEC: https://github.com/KhronosGroup/glTF/issues/185
@@ -138,7 +138,7 @@ define([
                 // GLTF_SPEC: Support new interpolators. https://github.com/KhronosGroup/glTF/issues/156
             }
 
-            if (model.basePath !== '') {
+            if (defined(model.cacheKey)) {
                 // Only cache when we can create a unique id
                 cachedAnimationSplines[key] = spline;
             }

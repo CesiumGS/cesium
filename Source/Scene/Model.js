@@ -441,6 +441,15 @@ define([
         },
 
         /**
+         * @private
+         */
+        cacheKey : {
+            get : function() {
+                return this._cacheKey;
+            }
+        },
+
+        /**
          * The base path that paths in the glTF JSON are relative to.  The base
          * path is the same path as the path containing the .json file
          * minus the .json file, when binary, image, and shader files are
@@ -2469,6 +2478,8 @@ define([
             pickIds[i].destroy();
         }
 
+// TODO: when using 'new Model', auto compute cacheKey as SHA-1?  Needed per context though
+// TODO: ref count cached animations
 // TODO: function to invalidate whole cache or one url
 // TODO: x number of frames/seconds later to avoid ping ponging.  Use a generic system to schedule it?
 // TODO: only destroy inside render loop?
