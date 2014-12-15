@@ -373,14 +373,15 @@ define([
         var northSkirtHeight = isNorthChild ? this._northSkirtHeight : (shortestSkirt * 0.5);
 
         return when(upsamplePromise, function(result) {
-            var indicesTypedArray = IndexDatatype.createTypedArray(result.vertices.length / 3, result.indices);
+            var quantizedVertices = new Uint16Array(result.vertices);
+            var indicesTypedArray = IndexDatatype.createTypedArray(quantizedVertices.length / 3, result.indices);
             var encodedNormals;
             if (defined(result.encodedNormals)) {
                 encodedNormals = new Uint8Array(result.encodedNormals);
             }
 
             return new QuantizedMeshTerrainData({
-                quantizedVertices : new Uint16Array(result.vertices),
+                quantizedVertices : quantizedVertices,
                 indices : indicesTypedArray,
                 encodedNormals : encodedNormals,
                 minimumHeight : result.minimumHeight,
