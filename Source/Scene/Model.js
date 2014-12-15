@@ -205,8 +205,6 @@ define([
      * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
-     * @param {String} [options.cacheKey] DOC_TBA
-     * @param {String} [options.releaseGltfJson=false] DOC_TBA
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      *
@@ -428,7 +426,12 @@ define([
         },
 
         /**
-         * DOC_TBA
+         * When <code>true</code>, the glTF JSON is not stored with the model once the model is
+         * loaded (when {@link Model#ready} is <code>true</code>).  This saves memory when
+         * geometry, textures, and animations are embedded in the .gltf file, which is the
+         * default for the {@link http://cesiumjs.org/convertmodel.html|Cesium model converter}.
+         * This is especially useful for cases like 3D buildings, where each .gltf model is unique
+         * and caching the glTF JSON is not effective.
          *
          * @memberof Model.prototype
          *
@@ -436,6 +439,8 @@ define([
          * @readonly
          *
          * @default false
+         *
+         * @private
          */
         releaseGltfJson : {
             get : function() {
@@ -444,6 +449,19 @@ define([
         },
 
         /**
+         * The key identifying this model in the model cache for glTF JSON, renderer resources, and animations.
+         * Caching saves memory and improves loading speed when several models with the same url are created.
+         * <p>
+         * This key is automatically created when the model is created with {@link Model.fromGltf}.  If the model
+         * is created directly from glTF JSON using the {@link Model} constructor, this key can be manually
+         * provided; otherwise, the model will not be changed.
+         * </p>
+         *
+         * @memberof Model.prototype
+         *
+         * @type {String}
+         * @readonly
+         *
          * @private
          */
         cacheKey : {
@@ -569,8 +587,6 @@ define([
      * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
-     * @param {String} [options.cacheKey] DOC_TBA
-     * @param {String} [options.releaseGltfJson] DOC_TBA
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @returns {Model} The newly created model.
