@@ -877,11 +877,6 @@ define([
     }
 
     var tempScratch = new Cartesian3();
-    var centerScratch = new Cartesian3();
-    var geometryScratch = new Geometry({
-        attributes : {},
-        primitiveType : PrimitiveType.POINTS
-    });
 
     function combineGeometries(instances, propertyName) {
         var length = instances.length;
@@ -932,10 +927,41 @@ define([
             }
         }
 
-        // Create bounding sphere that includes all instances and combine index lists
-        var center = centerScratch;
+        // Combine index lists
+        var indices;
+
+        if (haveIndices) {
+            var numberOfIndices = 0;
+            for (i = 0; i < length; ++i) {
+                numberOfIndices += instances[i][propertyName].indices.length;
+            }
+
+            var numberOfVertices = Geometry.computeNumberOfVertices(new Geometry({
+                attributes : attributes,
+                primitiveType : PrimitiveType.POINTS
+            }));
+            var destIndices = IndexDatatype.createTypedArray(numberOfVertices, numberOfIndices);
+
+            var destOffset = 0;
+            var offset = 0;
+
+            for (i = 0; i < length; ++i) {
+                var sourceIndices = instances[i][propertyName].indices;
+                var sourceIndicesLen = sourceIndices.length;
+
+                for (k = 0; k < sourceIndicesLen; ++k) {
+                    destIndices[destOffset++] = offset + sourceIndices[k];
+                }
+
+                offset += Geometry.computeNumberOfVertices(instances[i][propertyName]);
+            }
+
+            indices = destIndices;
+        }
+
+        // Create bounding sphere that includes all instances
+        var center = new Cartesian3();
         var radius = 0.0;
-        var numberOfIndices = 0;
         var bs;
 
         for (i = 0; i < length; ++i) {
@@ -943,60 +969,28 @@ define([
             if (!defined(bs)) {
                 // If any geometries have an undefined bounding sphere, then so does the combined geometry
                 center = undefined;
+                break;
             }
 
-            if (defined(center)) {
-                Cartesian3.add(bs.center, center, center);
-            }
-
-            if (haveIndices) {
-                numberOfIndices += instances[i][propertyName].indices.length;
-            }
-        }
-
-        var numberOfVertices;
-        var destIndices;
-        var destOffset = 0;
-        var offset = 0;
-
-        if (haveIndices) {
-            var geometry = geometryScratch;
-            geometry.attributes = attributes;
-            numberOfVertices = Geometry.computeNumberOfVertices(geometry);
-            destIndices = IndexDatatype.createTypedArray(numberOfVertices, numberOfIndices);
+            Cartesian3.add(bs.center, center, center);
         }
 
         if (defined(center)) {
             Cartesian3.divideByScalar(center, length, center);
-        }
 
-        if (defined(center) || haveIndices) {
             for (i = 0; i < length; ++i) {
-                if (defined(center)) {
-                    bs = instances[i][propertyName].boundingSphere;
-                    var tempRadius = Cartesian3.magnitude(Cartesian3.subtract(bs.center, center, tempScratch)) + bs.radius;
+                bs = instances[i][propertyName].boundingSphere;
+                var tempRadius = Cartesian3.magnitude(Cartesian3.subtract(bs.center, center, tempScratch)) + bs.radius;
 
-                    if (tempRadius > radius) {
-                        radius = tempRadius;
-                    }
-                }
-
-                if (haveIndices) {
-                    var sourceIndices = instances[i][propertyName].indices;
-                    var sourceIndicesLen = sourceIndices.length;
-
-                    for (k = 0; k < sourceIndicesLen; ++k) {
-                        destIndices[destOffset++] = offset + sourceIndices[k];
-                    }
-
-                    offset += Geometry.computeNumberOfVertices(instances[i][propertyName]);
+                if (tempRadius > radius) {
+                    radius = tempRadius;
                 }
             }
         }
 
         return new Geometry({
             attributes : attributes,
-            indices : haveIndices ? destIndices : undefined,
+            indices : indices,
             primitiveType : primitiveType,
             boundingSphere : (defined(center)) ? new BoundingSphere(center, radius) : undefined
         });
