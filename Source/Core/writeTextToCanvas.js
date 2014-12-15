@@ -13,6 +13,8 @@ define([
         DeveloperError) {
     "use strict";
 
+    var imageSmoothingEnabledName;
+
     /**
      * Writes the given text into a new canvas.  The canvas will be sized to fit the text.
      * If text is blank, returns undefined.
@@ -52,9 +54,23 @@ define([
         canvas.style.font = font;
 
         var context2D = canvas.getContext('2d');
+
+        if (!defined(imageSmoothingEnabledName)) {
+            if (defined(context2D.imageSmoothingEnabled)) {
+                imageSmoothingEnabledName = 'imageSmoothingEnabled';
+            } else if (defined(context2D.mozImageSmoothingEnabled)) {
+                imageSmoothingEnabledName = 'mozImageSmoothingEnabled';
+            } else if (defined(context2D.webkitImageSmoothingEnabled)) {
+                imageSmoothingEnabledName = 'webkitImageSmoothingEnabled';
+            } else if (defined(context2D.msImageSmoothingEnabled)) {
+                imageSmoothingEnabledName = 'msImageSmoothingEnabled';
+            }
+        }
+
         context2D.font = font;
         context2D.lineJoin = 'round';
         context2D.lineWidth = strokeWidth;
+        context2D[imageSmoothingEnabledName] = false;
 
         // textBaseline needs to be set before the measureText call. It won't work otherwise.
         // It's magic.
@@ -81,6 +97,7 @@ define([
         context2D.font = font;
         context2D.lineJoin = 'round';
         context2D.lineWidth = strokeWidth;
+        context2D[imageSmoothingEnabledName] = false;
 
         if (stroke) {
             var strokeColor = defaultValue(options.strokeColor, Color.BLACK);
