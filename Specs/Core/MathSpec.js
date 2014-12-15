@@ -190,7 +190,7 @@ defineSuite([
         expect(CesiumMath.equalsEpsilon(1.0, 1.0, 0.0)).toEqual(true);
         expect(CesiumMath.equalsEpsilon(1.0, 1.0, 1.0)).toEqual(true);
         expect(CesiumMath.equalsEpsilon(1.0, 1.0 + CesiumMath.EPSILON7, CesiumMath.EPSILON7)).toEqual(true);
-        expect(CesiumMath.equalsEpsilon(1.0, 1.0 + CesiumMath.EPAILON7, CesiumMath.EPSILON9)).toEqual(false);
+        expect(CesiumMath.equalsEpsilon(1.0, 1.0 + CesiumMath.EPSILON7, CesiumMath.EPSILON9)).toEqual(false);
 
         expect(CesiumMath.equalsEpsilon(3000000.0, 3000000.0, 0.0)).toEqual(true);
         expect(CesiumMath.equalsEpsilon(3000000.0, 3000000.0, CesiumMath.EPSILON7)).toEqual(true);
