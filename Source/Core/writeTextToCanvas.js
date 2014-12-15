@@ -66,7 +66,7 @@ define([
         document.body.appendChild(canvas);
 
         var dimensions = measureText(context2D, text, stroke, fill);
-        dimensions.computedWidth = dimensions.bounds.maxx - dimensions.bounds.minx;
+        dimensions.computedWidth = Math.max(dimensions.width, dimensions.bounds.maxx - dimensions.bounds.minx);
         canvas.dimensions = dimensions;
 
         document.body.removeChild(canvas);
@@ -82,17 +82,16 @@ define([
         context2D.lineJoin = 'round';
         context2D.lineWidth = strokeWidth;
 
-        var minX = dimensions.bounds.minx;
         if (stroke) {
             var strokeColor = defaultValue(options.strokeColor, Color.BLACK);
             context2D.strokeStyle = strokeColor.toCssColorString();
-            context2D.strokeText(text, -minX, y);
+            context2D.strokeText(text, 0, y);
         }
 
         if (fill) {
             var fillColor = defaultValue(options.fillColor, Color.WHITE);
             context2D.fillStyle = fillColor.toCssColorString();
-            context2D.fillText(text, -minX, y);
+            context2D.fillText(text, 0, y);
         }
 
         return canvas;
