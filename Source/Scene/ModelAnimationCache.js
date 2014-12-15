@@ -36,7 +36,8 @@ define([
         var byteOffset = bufferView.byteOffset + accessor.byteOffset;
         var byteLength = accessor.count * getModelAccessor(accessor).componentsPerAttribute;
 
-        return model.cacheKey + '//' + buffer.path + '/' + byteOffset + '/' + byteLength;
+        // buffer.path will be undefined when animations are embedded.
+        return model.cacheKey + '//' + defaultValue(buffer.path, '') + '/' + byteOffset + '/' + byteLength;
     }
 
     var axisScratch = new Cartesian3();
