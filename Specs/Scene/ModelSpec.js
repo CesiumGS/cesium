@@ -87,7 +87,9 @@ defineSuite([
             scale : options.scale,
             minimumPixelSize : options.minimumPixelSize,
             id : url,        // for picking tests
-            asynchronous : options.asynchronous
+            asynchronous : options.asynchronous,
+            releaseGltfJson : options.releaseGltfJson,
+            cacheKey : options.cacheKey
         }));
         addZoomTo(model);
 
@@ -98,6 +100,14 @@ defineSuite([
         }, url + ' ready', 10000);
 
         return model;
+    }
+
+    function verifyRender(model) {
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        model.show = true;
+        model.zoomTo();
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        model.show = false;
     }
 
     it('loads duck', function() {
@@ -130,17 +140,14 @@ defineSuite([
        expect(duckModel.activeAnimations).toBeDefined();
        expect(duckModel.ready).toEqual(true);
        expect(duckModel.asynchronous).toEqual(true);
+       expect(duckModel.releaseGltfJson).toEqual(false);
+       expect(duckModel.cacheKey).toEndWith('Data/Models/duck/duck.gltf');
        expect(duckModel.debugShowBoundingVolume).toEqual(false);
        expect(duckModel.debugWireframe).toEqual(false);
     });
 
     it('renders', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-
-        duckModel.show = true;
-        duckModel.zoomTo();
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
-        duckModel.show = false;
+        verifyRender(duckModel);
     });
 
     it('renders from glTF', function() {
@@ -159,12 +166,7 @@ defineSuite([
         }, 'ready', 10000);
 
         runs(function() {
-            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-
-            model.show = true;
-            model.zoomTo();
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
-            primitives.remove(model);
+            verifyRender(model);
         });
     });
 
@@ -242,11 +244,8 @@ defineSuite([
     });
 
     it('renders bounding volume', function() {
-        duckModel.show = true;
         duckModel.debugShowBoundingVolume = true;
-        duckModel.zoomTo();
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
-        duckModel.show = false;
+        verifyRender(duckModel);
         duckModel.debugShowBoundingVolume = false;
     });
 
@@ -340,11 +339,7 @@ defineSuite([
         node.matrix = Matrix4.fromUniformScale(1.01, new Matrix4());
         expect(duckModel._cesiumAnimationsDirty).toEqual(true);
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-        duckModel.show = true;
-        duckModel.zoomTo();
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
-        duckModel.show = false;
+        verifyRender(duckModel);
 
         expect(duckModel._cesiumAnimationsDirty).toEqual(false);
 
@@ -539,11 +534,7 @@ defineSuite([
     });
 
     it('renders animBoxes without animation', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-        animBoxesModel.show = true;
-        animBoxesModel.zoomTo();
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
-        animBoxesModel.show = false;
+        verifyRender(animBoxesModel);
     });
 
     it('adds and removes all animations', function() {
@@ -919,12 +910,7 @@ defineSuite([
     });
 
     it('renders riggedFigure without animation', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-
-        riggedFigureModel.show = true;
-        riggedFigureModel.zoomTo();
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
-        riggedFigureModel.show = false;
+        verifyRender(riggedFigureModel);
     });
 
     it('renders riggedFigure with animation (skinning)', function() {
@@ -952,6 +938,43 @@ defineSuite([
     it('should load a model where WebGL shader optimizer removes an attribute (linux)', function() {
         var url = './Data/Models/test-shader-optimize/test-shader-optimize.gltf';
         var m = loadModel(url);
+    });
+
+    it('releaseGltfJson releases glTFJSON when constructed with fromGltf', function() {
+        var m = loadModel(duckUrl, {
+            releaseGltfJson : true
+        });
+
+        runs(function() {
+            expect(m.releaseGltfJson).toEqual(true);
+            expect(m.gltf).not.toBeDefined();
+
+            verifyRender(m);
+        });
+    });
+
+    it('releaseGltfJson releases glTFJSON when constructed with Model constructor function', function() {
+        var m = primitives.add(new Model({
+            gltf : duckModel.gltf,
+            modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
+            show : false,
+            releaseGltfJson : true,
+            asynchronous : true
+        }));
+        addZoomTo(m);
+
+        waitsFor(function() {
+            // Render scene to progressively load the model
+            scene.renderForSpecs();
+            return m.ready;
+        }, 'ready', 10000);
+
+        runs(function() {
+            expect(m.releaseGltfJson).toEqual(true);
+            expect(m.gltf).not.toBeDefined();
+
+            verifyRender(m);
+        });
     });
 
 }, 'WebGL');

@@ -407,10 +407,6 @@ define([
         /**
          * The object for the glTF JSON, including properties with default values omitted
          * from the JSON provided to this model.
-         * <p>
-         * This is <code>undefined</code> when {@link Model#releaseGltfJson} is <code>undefined</code>
-         * since the glTF JSON was unloaded to save memory.
-         * </p>
          *
          * @memberof Model.prototype
          *
@@ -421,7 +417,7 @@ define([
          */
         gltf : {
             get : function() {
-                return !this.releaseGltfJson ? this._cachedGltf.gltf : undefined;
+                return defined(this._cachedGltf) ? this._cachedGltf.gltf : undefined;
             }
         },
 
@@ -2100,8 +2096,6 @@ define([
             resources.samplers = cachedResources.samplers;
             resources.renderStates = cachedResources.renderStates;
         } else {
-debugger;
-
             createBuffers(model, context);      // using glTF bufferViews
             createPrograms(model, context);
             createSamplers(model, context);
@@ -2328,7 +2322,7 @@ debugger;
     }
 
     function releaseCachedGltf(model) {
-        if (defined(model._cacheKey) && (--model._cachedGltf.count === 0)) {
+        if (defined(model._cacheKey) && defined(model._cachedGltf) && (--model._cachedGltf.count === 0)) {
             delete gltfCache[model._cacheKey];
         }
         model._cachedGltf = undefined;
@@ -2369,7 +2363,10 @@ debugger;
 
     CachedRendererResources.prototype.release = function() {
         if (--this.count === 0) {
-            delete this.context.cache.modelRendererResourceCache[this.cacheKey];
+            if (defined(this.cacheKey)) {
+                // Remove if this was cached
+                delete this.context.cache.modelRendererResourceCache[this.cacheKey];
+            }
             destroyCachedRendererResources(this);
             return destroyObject(this);
         }
@@ -2396,15 +2393,13 @@ debugger;
 
         if ((this._state === ModelState.NEEDS_LOAD) && defined(this.gltf)) {
             // Use renderer resources from cache instead of loading/creating them?
+            var cachedRendererResources;
             var cacheKey = this.cacheKey;
             if (defined(cacheKey)) {
+                context.cache.modelRendererResourceCache = defaultValue(context.cache.modelRendererResourceCache, {});
                 var modelCaches = context.cache.modelRendererResourceCache;
-                if (!defined(modelCaches)) {
-                    modelCaches = {};
-                    context.cache.modelRendererResourceCache = modelCaches;
-                }
 
-                var cachedRendererResources = modelCaches[this.cacheKey];
+                cachedRendererResources = modelCaches[this.cacheKey];
                 if (defined(cachedRendererResources)) {
                     if (!cachedRendererResources.ready) {
                         // Cached resources for the model are not loaded yet.  We'll
@@ -2419,6 +2414,10 @@ debugger;
                     cachedRendererResources.count = 1;
                     modelCaches[this.cacheKey] = cachedRendererResources;
                 }
+                this._cachedRendererResources = cachedRendererResources;
+            } else {
+                cachedRendererResources = new CachedRendererResources(context);
+                cachedRendererResources.count = 1;
                 this._cachedRendererResources = cachedRendererResources;
             }
 
@@ -2578,9 +2577,8 @@ debugger;
      * model = model && model.destroy();
      */
     Model.prototype.destroy = function() {
-debugger;
         this._rendererResources = undefined;
-        this._cachedRendererResources = this._cachedRendererResources.release();
+        this._cachedRendererResources = this._cachedRendererResources && this._cachedRendererResources.release();
 
         var pickIds = this._pickIds;
         var length = pickIds.length;
@@ -2597,9 +2595,7 @@ debugger;
 });
 
 //TODO: cache skins
-//TODO: when using 'new Model', auto compute cacheKey as SHA-1?  Needed per context though
 //TODO: ref count cached animations
 //TODO: function to invalidate whole cache or one url
 //TODO: x number of frames/seconds later to avoid ping ponging.  Use a generic system to schedule it?
 //TODO: only destroy inside render loop?
-//TODO: add unit tests
