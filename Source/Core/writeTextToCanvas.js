@@ -61,7 +61,7 @@ define([
 
         var stroke = defaultValue(options.stroke, false);
         var fill = defaultValue(options.fill, true);
-        var strokeWidth = defaultValue(options.strokeWidth, 1) * 2;
+        var strokeWidth = defaultValue(options.strokeWidth, 1);
 
         context2D.lineWidth = strokeWidth;
         var dimensions = measureText(context2D, text, stroke, fill);
