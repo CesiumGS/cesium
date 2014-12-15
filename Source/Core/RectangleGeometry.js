@@ -166,7 +166,7 @@ define([
         var binormal = binormalScratch;
         var tangent = tangentScratch;
         var normal = normalScratch;
-        for (var i = 0; i < length; i += 6) {
+        for (var i = 0; i < length - 6; i += 6) {
             var p = Cartesian3.fromArray(positions, i, positionScratch);
 
             if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
@@ -466,7 +466,7 @@ define([
         var upperRight;
         length = wallPositions.length / 3;
         var index = 0;
-        for (i = 0; i < length - 1; i+=2) {
+        for (i = 0; i < length - 3; i+=2) {
             upperLeft = i;
             upperRight = upperLeft + 2;
             var p1 = Cartesian3.fromArray(wallPositions, upperLeft * 3, v1Scratch);

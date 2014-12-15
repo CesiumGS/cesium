@@ -128,7 +128,7 @@ defineSuite([
         expect(line.attributes.position.values.length).toEqual(numVertices * 3);
     });
 
-    it('removes duplicates within absolute epsilon 7', function() {
+    it('removes duplicates within relative epsilon 7', function() {
         var positions = [
             new Cartesian3(3000000.0, 0.0, 0.0),
             new Cartesian3(3000000.0, 0.0, 0.0),

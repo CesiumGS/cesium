@@ -3,12 +3,14 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
-        './freezeObject'
+        './freezeObject',
+        './Math'
     ], function(
         defaultValue,
         defined,
         DeveloperError,
-        freezeObject) {
+        freezeObject,
+        CesiumMath) {
     "use strict";
 
     /**
@@ -714,20 +716,13 @@ define([
      * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
      */
     Cartesian4.equalsEpsilon = function(left, right, relativeEpsilon, absoluteEpsilon) {
-        //>>includeStart('debug', pragmas.debug);
-        if (typeof relativeEpsilon !== 'number') {
-            throw new DeveloperError('relativeEpsilon is required and must be a number.');
-        }
-        //>>includeEnd('debug');
-
-        absoluteEpsilon = defaultValue(absoluteEpsilon, relativeEpsilon);
         return (left === right) ||
                (defined(left) &&
                 defined(right) &&
-                Math.abs(left.x - right.x) <= Math.max(absoluteEpsilon, relativeEpsilon * Math.max(Math.abs(left.x), Math.abs(right.x))) &&
-                Math.abs(left.y - right.y) <= Math.max(absoluteEpsilon, relativeEpsilon * Math.max(Math.abs(left.y), Math.abs(right.y))) &&
-                Math.abs(left.z - right.z) <= Math.max(absoluteEpsilon, relativeEpsilon * Math.max(Math.abs(left.z), Math.abs(right.z))) &&
-                Math.abs(left.w - right.w) <= Math.max(absoluteEpsilon, relativeEpsilon * Math.max(Math.abs(left.w), Math.abs(right.w))));
+                CesiumMath.equalsEpsilon(left.x, right.x, relativeEpsilon, absoluteEpsilon) &&
+                CesiumMath.equalsEpsilon(left.y, right.y, relativeEpsilon, absoluteEpsilon) &&
+                CesiumMath.equalsEpsilon(left.z, right.z, relativeEpsilon, absoluteEpsilon) &&
+                CesiumMath.equalsEpsilon(left.w, right.w, relativeEpsilon, absoluteEpsilon));
     };
 
     /**

@@ -3,13 +3,11 @@ define([
         '../ThirdParty/mersenne-twister',
         './defaultValue',
         './defined',
-        './deprecationWarning',
         './DeveloperError'
     ], function(
         MersenneTwister,
         defaultValue,
         defined,
-        deprecationWarning,
         DeveloperError) {
     "use strict";
 
@@ -534,13 +532,13 @@ define([
      * @returns {Boolean} <code>true</code> if the values are equal within the epsilon; otherwise, <code>false</code>.
      *
      * @example
-     * var b = Cesium.Math.equalsEpsilon(0.0, 0.01, Cesium.Math.EPSILON2); // true
+     * var a = Cesium.Math.equalsEpsilon(0.0, 0.01, Cesium.Math.EPSILON2); // true
      * var b = Cesium.Math.equalsEpsilon(0.0, 0.1, Cesium.Math.EPSILON2);  // false
-     * var b = Cesium.Math.equalsEpsilonRelative(3699175.1634344, 3699175.2, Cesium.Math.EPSILON7); // true
-     * var b = Cesium.Math.equalsEpsilonRelative(3699175.1634344, 3699175.2, Cesium.Math.EPSILON9); // false
+     * var c = Cesium.Math.equalsEpsilon(3699175.1634344, 3699175.2, Cesium.Math.EPSILON7); // true
+     * var d = Cesium.Math.equalsEpsilon(3699175.1634344, 3699175.2, Cesium.Math.EPSILON9); // false
      */
     CesiumMath.equalsEpsilon = function(left, right, relativeEpsilon, absoluteEpsilon) {
-        //>>includeStart('debug', pragma.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(left)) {
             throw new DeveloperError('left is required.');
         }
@@ -548,7 +546,7 @@ define([
             throw new DeveloperError('right is required.');
         }
         if (!defined(relativeEpsilon)) {
-            throw new DeveloperError('epsilon is required.');
+            throw new DeveloperError('relativeEpsilon is required.');
         }
         //>>includeEnd('debug');
         absoluteEpsilon = defaultValue(absoluteEpsilon, relativeEpsilon);

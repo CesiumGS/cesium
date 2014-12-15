@@ -664,18 +664,11 @@ define([
      * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
      */
     Cartesian2.equalsEpsilon = function(left, right, relativeEpsilon, absoluteEpsilon) {
-        //>>includeStart('debug', pragmas.debug);
-        if (typeof relativeEpsilon !== 'number') {
-            throw new DeveloperError('relativeEpsilon is required and must be a number.');
-        }
-        //>>includeEnd('debug');
-
-        absoluteEpsilon = defaultValue(absoluteEpsilon, relativeEpsilon);
         return (left === right) ||
                (defined(left) &&
                 defined(right) &&
-                Math.abs(left.x - right.x) <= Math.max(absoluteEpsilon, relativeEpsilon * Math.max(Math.abs(left.x), Math.abs(right.x))) &&
-                Math.abs(left.y - right.y) <= Math.max(absoluteEpsilon, relativeEpsilon * Math.max(Math.abs(left.y), Math.abs(right.y))));
+                CesiumMath.equalsEpsilon(left.x, right.x, relativeEpsilon, absoluteEpsilon) &&
+                CesiumMath.equalsEpsilon(left.y, right.y, relativeEpsilon, absoluteEpsilon));
     };
 
     /**
