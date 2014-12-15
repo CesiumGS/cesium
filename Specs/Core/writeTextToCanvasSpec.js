@@ -74,7 +74,7 @@ defineSuite([
             return colorChangeCount;
         }
 
-        var canvas1 = writeTextToCanvas('I', {
+        var canvas1 = writeTextToCanvas('T', {
             font : '90px "Open Sans"',
             fill : true,
             fillColor : Color.RED,
@@ -84,7 +84,7 @@ defineSuite([
         // canvas1 is filled, so there should only be two "edges"
         expect(getColorChangeCount(canvas1)).toEqual(2);
 
-        var canvas2 = writeTextToCanvas('I', {
+        var canvas2 = writeTextToCanvas('T', {
             font : '90px "Open Sans"',
             fill : false,
             stroke : true,
