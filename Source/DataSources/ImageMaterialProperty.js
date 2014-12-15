@@ -59,7 +59,7 @@ define([
             }
         },
         /**
-         * Gets or sets the string property which is the url of the desired image.
+         * Gets or sets the Image, URL, or Canvas {@link Property} specifying the material's texture.
          * @memberof ImageMaterialProperty.prototype
          * @type {Property}
          */
