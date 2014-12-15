@@ -141,7 +141,7 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     // glTF JSON can be big given embedded geometry, textures, and animations, so we
-    // cache it across all models using the same url/guid.  This also reduces the
+    // cache it across all models using the same url/cache-key.  This also reduces the
     // slight overhead in assigning defaults to missing values.
     //
     // Note that this is a global cache, compared to renderer resources, which
@@ -475,7 +475,7 @@ define([
          * The key identifying this model in the model cache for glTF JSON, renderer resources, and animations.
          * Caching saves memory and improves loading speed when several models with the same url are created.
          * <p>
-         * This key is automatically created when the model is created with {@link Model.fromGltf}.  If the model
+         * This key is automatically generated when the model is created with {@link Model.fromGltf}.  If the model
          * is created directly from glTF JSON using the {@link Model} constructor, this key can be manually
          * provided; otherwise, the model will not be changed.
          * </p>
