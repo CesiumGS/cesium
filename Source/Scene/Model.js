@@ -406,7 +406,8 @@ define([
             materialsById : undefined     // Indexed with the material's property name
         };
 
-        this._rendererResources = {
+        this._uniformMaps = {};       // Not cached since it can be targeted by glTF animation
+        this._rendererResources = {   // Cached between models with the same url/cache-key
             buffers : {},
             vertexArrays : {},
             programs : {},
@@ -414,8 +415,7 @@ define([
             textures : {},
 
             samplers : {},
-            renderStates : {},
-            uniformMaps : {}    // Not cached since it can be targeted by glTF animation
+            renderStates : {}
         };
         this._cachedRendererResources = undefined;
         this._loadRendererResourcesFromCache = false;
@@ -1009,12 +1009,12 @@ define([
         var runtimeMaterials = {};
         var runtimeMaterialsById = {};
         var materials = model.gltf.materials;
-        var rendererUniformMaps = model._rendererResources.uniformMaps;
+        var uniformMaps = model._uniformMaps;
 
         for (var name in materials) {
             if (materials.hasOwnProperty(name)) {
                 // Allocated now so ModelMaterial can keep a reference to it.
-                rendererUniformMaps[name] = {
+                uniformMaps[name] = {
                     uniformMap : undefined,
                     values : undefined,
                     jointMatrixUniformName : undefined
@@ -1376,6 +1376,7 @@ define([
                 var componentType = accessor.componentType;
                 var type = accessor.type;
                 var count = accessor.count;
+                // PERFORMANCE_IDEA: These could be cached just like animations in createRuntimeAnimations()
                 var typedArray = getModelAccessor(accessor).createArrayBufferView(buffers[bufferView.buffer], bufferView.byteOffset + accessor.byteOffset, count);
                 var matrices =  new Array(count);
 
@@ -1856,7 +1857,7 @@ define([
         var materials = gltf.materials;
         var techniques = gltf.techniques;
         var programs = gltf.programs;
-        var rendererUniformMaps = model._rendererResources.uniformMaps;
+        var uniformMaps = model._uniformMaps;
 
         for (var materialName in materials) {
             if (materials.hasOwnProperty(materialName)) {
@@ -1913,7 +1914,7 @@ define([
                     }
                 }
 
-                var u = rendererUniformMaps[materialName];
+                var u = uniformMaps[materialName];
                 u.uniformMap = uniformMap;                          // uniform name -> function for the renderer
                 u.values = uniformValues;                           // material parameter name -> ModelMaterial for modifying the parameter at runtime
                 u.jointMatrixUniformName = jointMatrixUniformName;
@@ -1947,7 +1948,7 @@ define([
         var rendererPrograms = resources.programs;
         var rendererPickPrograms = resources.pickPrograms;
         var rendererRenderStates = resources.renderStates;
-        var rendererUniformMaps = resources.uniformMaps;
+        var uniformMaps = model._uniformMaps;
 
         var gltf = model.gltf;
         var accessors = gltf.accessors;
@@ -1987,7 +1988,7 @@ define([
                 var count = ix.count;
                 var offset = (ix.byteOffset / IndexDatatype.getSizeInBytes(ix.componentType));  // glTF has offset in bytes.  Cesium has offsets in indices
 
-                var um = rendererUniformMaps[primitive.material];
+                var um = uniformMaps[primitive.material];
                 var uniformMap = um.uniformMap;
                 if (defined(um.jointMatrixUniformName)) {
                     var jointUniformMap = {};
@@ -2647,7 +2648,6 @@ define([
     return Model;
 });
 
-//TODO: cache skins
 //TODO: ref count cached animations
 //TODO: function to invalidate whole cache or one url
 //TODO: x number of frames/seconds later to avoid ping ponging.  Use a generic system to schedule it?
