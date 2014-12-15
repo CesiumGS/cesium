@@ -329,7 +329,7 @@ define([
         return geometry;
     }
 
-    function computeWallIndices(positions, granularity, perPositionHeight){
+    function computeWallIndices(positions, ellipsoid, granularity, perPositionHeight){
         var edgePositions = [];
         var subdividedEdge;
         var edgeIndex;
@@ -340,10 +340,13 @@ define([
         var p1;
         var p2;
         if (!perPositionHeight) {
+            var radius = ellipsoid.maximumRadius;
+            var minDistance = 2.0 * radius * Math.sin(granularity * 0.5);
+
             for (i = 0; i < length; i++) {
                 p1 = positions[i];
                 p2 = positions[(i + 1) % length];
-                subdividedEdge = PolygonGeometryLibrary.subdivideLine(p1, p2, granularity);
+                subdividedEdge = PolygonGeometryLibrary.subdivideLine(p1, p2, minDistance);
                 subdividedEdge.push(p2.x, p2.y, p2.z);
                 edgePositions = edgePositions.concat(subdividedEdge);
             }
@@ -442,7 +445,7 @@ define([
             outerRing.reverse();
         }
 
-        var wallGeo = computeWallIndices(outerRing, granularity, perPositionHeight);
+        var wallGeo = computeWallIndices(outerRing, ellipsoid, granularity, perPositionHeight);
         geos.walls.push(new GeometryInstance({
             geometry : wallGeo
         }));
@@ -459,7 +462,7 @@ define([
                 hole.reverse();
             }
 
-            wallGeo = computeWallIndices(hole, granularity);
+            wallGeo = computeWallIndices(hole, ellipsoid, granularity);
             geos.walls.push(new GeometryInstance({
                 geometry : wallGeo
             }));
