@@ -29,10 +29,6 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
-// Adding the viewerEntityMixin enables automatic display
-// of WMS feature information on click.
-viewer.extend(Cesium.viewerEntityMixin);
-
 // Add a WMS imagery layer
 var imageryLayers = viewer.scene.imageryLayers;
 imageryLayers.addImageryProvider(new Cesium.WebMapServiceImageryProvider({
