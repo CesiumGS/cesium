@@ -530,7 +530,10 @@ define([
         this._attributes = undefined;
         this._outlineAttributes = undefined;
         this._lastSceneMode = undefined;
+        this._lastShow = undefined;
+        this._lastOutlineShow = undefined;
         this._lastOutlineWidth = undefined;
+        this._lastOutlineColor = undefined;
     };
 
     DynamicGeometryUpdater.prototype.update = function(time) {
@@ -650,6 +653,10 @@ define([
                 }),
                 asynchronous : false
             });
+
+            this._lastShow = showFill;
+            this._lastOutlineShow = showOutline;
+            this._lastOutlineColor = Color.clone(outlineColor, this._lastOutlineColor);
             this._primitives.add(this._outlinePrimitive);
         } else if (this._primitive.ready) {
             //Update attributes only.
@@ -662,17 +669,28 @@ define([
                 attributes = primitive.getGeometryInstanceAttributes(entity);
                 this._attributes = attributes;
             }
-            attributes.show = ShowGeometryInstanceAttribute.toValue(showFill, attributes.show);
+            if (showFill !== this._lastShow) {
+                attributes.show = ShowGeometryInstanceAttribute.toValue(showFill, attributes.show);
+                this._lastShow = showFill;
+            }
 
             var outlinePrimitive = this._outlinePrimitive;
-
             var outlineAttributes = this._outlineAttributes;
+
             if (!defined(outlineAttributes)) {
                 outlineAttributes = outlinePrimitive.getGeometryInstanceAttributes(entity);
                 this._outlineAttributes = outlineAttributes;
             }
-            outlineAttributes.show = ShowGeometryInstanceAttribute.toValue(showOutline, outlineAttributes.show);
-            outlineAttributes.color = ColorGeometryInstanceAttribute.toValue(outlineColor, outlineAttributes.color);
+
+            if (showOutline !== this._lastOutlineShow) {
+                outlineAttributes.show = ShowGeometryInstanceAttribute.toValue(showOutline, outlineAttributes.show);
+                this._lastOutlineShow = showOutline;
+            }
+
+            if (!Color.equals(outlineColor, this._lastOutlineColor)) {
+                outlineAttributes.color = ColorGeometryInstanceAttribute.toValue(outlineColor, outlineAttributes.color);
+                Color.clone(outlineColor, this._lastOutlineColor);
+            }
         }
 
         if (in3D) {
