@@ -146,13 +146,19 @@ define([
     //
     // Note that this is a global cache, compared to renderer resources, which
     // are cached per context.
-    var CachedGltf = function(gltf) {
-        this._gltf = gltfDefaults(gltf);
+    var CachedGltf = function(options) {
+        this._gltf = gltfDefaults(options.gltf);
+        this.ready = options.ready;
+        this.modelsToLoad = [];
         this.count = 0;
     };
 
     defineProperties(CachedGltf.prototype, {
         gltf : {
+            set : function(value) {
+                this._gltf = gltfDefaults(value);
+            },
+
             get : function() {
                 return this._gltf;
             }
@@ -163,7 +169,7 @@ define([
 
     function getAnimationIds(cachedGltf) {
         var animationIds = [];
-        if (defined(cachedGltf.gltf)) {
+        if (defined(cachedGltf) && defined(cachedGltf.gltf)) {
             var animations = cachedGltf.gltf.animations;
             for (var name in animations) {
                 if (animations.hasOwnProperty(name)) {
@@ -216,11 +222,32 @@ define([
     var Model = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        this._cacheKey = options.cacheKey;
+        var cacheKey = options.cacheKey;
+        this._cacheKey = cacheKey;
         this._cachedGltf = undefined;
         this._releaseGltfJson = defaultValue(options.releaseGltfJson, false);
         this._animationIds = undefined;
-        setCachedGltf(this, new CachedGltf(options.gltf));
+
+        var cachedGltf;
+        if (defined(cacheKey) && defined(gltfCache[cacheKey]) && gltfCache[cacheKey].ready) {
+            // glTF JSON is in cache and ready
+            cachedGltf = gltfCache[cacheKey];
+            ++cachedGltf.count;
+        } else {
+            // glTF was explicitly provided, e.g., when a user uses the Model constructor directly
+            if (defined(options.gltf)) {
+                cachedGltf = new CachedGltf({
+                    gltf : options.gltf,
+                    ready : true
+                });
+                cachedGltf.count = 1;
+
+                if (defined(cacheKey)) {
+                    gltfCache[cacheKey] = cachedGltf;
+                }
+            }
+        }
+        setCachedGltf(this, cachedGltf);
 
         this._basePath = defaultValue(options.basePath, '');
 
@@ -644,20 +671,46 @@ define([
         var model = new Model(options);
 
         var cachedGltf = gltfCache[cacheKey];
-        if (defined(cachedGltf)) {
-            ++cachedGltf.count;
+        if (!defined(cachedGltf)) {
+            cachedGltf = new CachedGltf({
+                ready : false
+            });
+            cachedGltf.count = 1;
+            cachedGltf.modelsToLoad.push(model);
             setCachedGltf(model, cachedGltf);
-        } else {
+            gltfCache[cacheKey] = cachedGltf;
+
             loadText(url, options.headers).then(function(data) {
-                cachedGltf = new CachedGltf(JSON.parse(data));
-                cachedGltf.count = 1;
-                setCachedGltf(model, cachedGltf);
-                gltfCache[cacheKey] = cachedGltf;
+                cachedGltf.gltf = JSON.parse(data);
+                var models = cachedGltf.modelsToLoad;
+                var length = models.length;
+                for (var i = 0; i < length; ++i) {
+                    var m = models[i];
+                    if (!m.isDestroyed()) {
+                        setCachedGltf(m, cachedGltf);
+                    }
+                }
+                cachedGltf.modelsToLoad = undefined;
+                cachedGltf.ready = true;
             }).otherwise(getFailedLoadFunction(model, 'gltf', url));
+
+        } else if (!cachedGltf.ready) {
+            // Cache hit but the loadText() request is still pending
+            ++cachedGltf.count;
+            cachedGltf.modelsToLoad.push(model);
         }
+        // else if the cached glTF is defined and ready, the
+        // model constructor will pick it up using the cache key.
 
         return model;
     };
+
+    /**
+     * For the unit tests to verify model caching.
+     *
+     * @private
+     */
+    Model._gltfCache = gltfCache;
 
     function getRuntime(model, runtimeName, name) {
         //>>includeStart('debug', pragmas.debug);
