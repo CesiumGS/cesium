@@ -42,13 +42,19 @@ define([
 
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var font = defaultValue(options.font, '10px sans-serif');
+        var stroke = defaultValue(options.stroke, false);
+        var fill = defaultValue(options.fill, true);
+        var strokeWidth = defaultValue(options.strokeWidth, 1);
 
         var canvas = document.createElement('canvas');
-        canvas.width = canvas.height = 1;
+        canvas.width = 1;
+        canvas.height = 1;
         canvas.style.font = font;
 
         var context2D = canvas.getContext('2d');
         context2D.font = font;
+        context2D.lineJoin = 'round';
+        context2D.lineWidth = strokeWidth;
 
         // textBaseline needs to be set before the measureText call. It won't work otherwise.
         // It's magic.
@@ -59,11 +65,6 @@ define([
         canvas.style.visibility = 'hidden';
         document.body.appendChild(canvas);
 
-        var stroke = defaultValue(options.stroke, false);
-        var fill = defaultValue(options.fill, true);
-        var strokeWidth = defaultValue(options.strokeWidth, 1);
-
-        context2D.lineWidth = strokeWidth;
         var dimensions = measureText(context2D, text, stroke, fill);
         dimensions.computedWidth = dimensions.bounds.maxx - dimensions.bounds.minx;
         canvas.dimensions = dimensions;
@@ -76,15 +77,15 @@ define([
         canvas.height = dimensions.height;
         var y = canvas.height - baseline;
 
-        // font must be explicitly set again after changing width and height
+        // Properties must be explicitly set again after changing width and height
         context2D.font = font;
-        var minX = dimensions.bounds.minx;
+        context2D.lineJoin = 'round';
+        context2D.lineWidth = strokeWidth;
 
+        var minX = dimensions.bounds.minx;
         if (stroke) {
             var strokeColor = defaultValue(options.strokeColor, Color.BLACK);
             context2D.strokeStyle = strokeColor.toCssColorString();
-            context2D.lineJoin = 'round';
-            context2D.lineWidth = strokeWidth;
             context2D.strokeText(text, -minX, y);
         }
 
