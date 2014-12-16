@@ -174,9 +174,11 @@ define([
             positions = polylineGeometry._positions;
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (positions.length < 2) {
             throw new DeveloperError('At least two unique positions are required.');
         }
+        //>>includeEnd('debug');
 
         if (followSurface) {
             var heights = PolylinePipeline.extractHeights(positions, ellipsoid);
