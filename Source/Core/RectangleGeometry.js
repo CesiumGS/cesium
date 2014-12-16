@@ -170,9 +170,9 @@ define([
             var p = Cartesian3.fromArray(positions, i, positionScratch);
 
             if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
-                var p1 = Cartesian3.fromArray(positions, i + 6, v1Scratch);
+                var p1 = Cartesian3.fromArray(positions, (i + 6) % length, v1Scratch);
                 if (recomputeNormal) {
-                    var p2 = Cartesian3.fromArray(positions, i + 3, v2Scratch);
+                    var p2 = Cartesian3.fromArray(positions, (i + 3) % length, v2Scratch);
                     Cartesian3.subtract(p1, p, p1);
                     Cartesian3.subtract(p2, p, p2);
                     normal = Cartesian3.normalize(Cartesian3.cross(p2, p1, normal), normal);
@@ -468,14 +468,14 @@ define([
         var index = 0;
         for (i = 0; i < length - 1; i+=2) {
             upperLeft = i;
-            upperRight = upperLeft + 2;
+            upperRight = (upperLeft + 2) % length;
             var p1 = Cartesian3.fromArray(wallPositions, upperLeft * 3, v1Scratch);
             var p2 = Cartesian3.fromArray(wallPositions, upperRight * 3, v2Scratch);
             if (Cartesian3.equalsEpsilon(p1, p2, CesiumMath.EPSILON10)) {
                 continue;
             }
-            lowerLeft = upperLeft + 1;
-            lowerRight = lowerLeft + 2;
+            lowerLeft = (upperLeft + 1) % length;
+            lowerRight = (lowerLeft + 2) % length;
             wallIndices[index++] = upperLeft;
             wallIndices[index++] = lowerLeft;
             wallIndices[index++] = upperRight;
