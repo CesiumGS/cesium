@@ -186,6 +186,18 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('equalsEpsilon', function() {
+        expect(CesiumMath.equalsEpsilon(1.0, 1.0, 0.0)).toEqual(true);
+        expect(CesiumMath.equalsEpsilon(1.0, 1.0, 1.0)).toEqual(true);
+        expect(CesiumMath.equalsEpsilon(1.0, 1.0 + CesiumMath.EPSILON7, CesiumMath.EPSILON7)).toEqual(true);
+        expect(CesiumMath.equalsEpsilon(1.0, 1.0 + CesiumMath.EPSILON7, CesiumMath.EPSILON9)).toEqual(false);
+
+        expect(CesiumMath.equalsEpsilon(3000000.0, 3000000.0, 0.0)).toEqual(true);
+        expect(CesiumMath.equalsEpsilon(3000000.0, 3000000.0, CesiumMath.EPSILON7)).toEqual(true);
+        expect(CesiumMath.equalsEpsilon(3000000.0, 3000000.2, CesiumMath.EPSILON7)).toEqual(true);
+        expect(CesiumMath.equalsEpsilon(3000000.0, 3000000.2, CesiumMath.EPSILON9)).toEqual(false);
+    });
+
     it('equalsEpsilon throws for undefined left', function() {
         expect(function() {
             CesiumMath.equalsEpsilon(undefined, 5.0, CesiumMath.EPSILON16);
@@ -195,6 +207,12 @@ defineSuite([
     it('equalsEpsilon throws for undefined right', function() {
         expect(function() {
             CesiumMath.equalsEpsilon(1.0, undefined, CesiumMath.EPSILON16);
+        }).toThrowDeveloperError();
+    });
+
+    it('equalsEpsilon throws for undefined relativeEpsilon', function() {
+        expect(function() {
+            CesiumMath.equalsEpsilon(1.0, 5.0, undefined);
         }).toThrowDeveloperError();
     });
 
