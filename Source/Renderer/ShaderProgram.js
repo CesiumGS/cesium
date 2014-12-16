@@ -5,6 +5,10 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
+        '../Core/Cartesian2',
+        '../Core/Cartesian3',
+        '../Core/Cartesian4',
+        '../Core/Color',
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
@@ -16,6 +20,10 @@ define([
         destroyObject,
         DeveloperError,
         FeatureDetection,
+        Cartesian2,
+        Cartesian3,
+        Cartesian4,
+        Color,
         Matrix2,
         Matrix3,
         Matrix4,
@@ -38,21 +46,36 @@ define([
         switch (uniform._activeUniform.type) {
         case gl.FLOAT:
             return function() {
-                gl.uniform1f(location, uniform.value);
+                if (uniform.value !== uniform._value) {
+                    uniform._value = uniform.value;
+                    gl.uniform1f(location, uniform.value);
+                }
             };
         case gl.FLOAT_VEC2:
             return function() {
                 var v = uniform.value;
-                gl.uniform2f(location, v.x, v.y);
+// TODO: static/dynamic flag for u_dayTextureTranslationAndScale, etc.  Also base on uniform semantics.
+// TODO: fast equals?
+// TODO: fast clone?
+                if (!Cartesian2.equals(v, uniform._value)) {
+                    uniform._value = Cartesian2.clone(v, uniform._value);
+                    gl.uniform2f(location, v.x, v.y);
+                }
             };
         case gl.FLOAT_VEC3:
             return function() {
                 var v = uniform.value;
 
                 if (defined(v.red)) {
-                    gl.uniform3f(location, v.red, v.green, v.blue);
+                    if (!Color.equals(v, uniform._value)) {
+                        uniform._value = Color.clone(v, uniform._value);
+                        gl.uniform3f(location, v.red, v.green, v.blue);
+                    }
                 } else if (defined(v.x)) {
-                    gl.uniform3f(location, v.x, v.y, v.z);
+                    if (!Cartesian3.equals(v, uniform._value)) {
+                        uniform._value = Cartesian3.clone(v, uniform._value);
+                        gl.uniform3f(location, v.x, v.y, v.z);
+                    }
                 } else {
                     throw new DeveloperError('Invalid vec3 value for uniform "' + uniform._activeUniform.name + '".');
                 }
@@ -62,9 +85,15 @@ define([
                 var v = uniform.value;
 
                 if (defined(v.red)) {
-                    gl.uniform4f(location, v.red, v.green, v.blue, v.alpha);
+                    if (!Color.equals(v, uniform._value)) {
+                        uniform._value = Color.clone(v, uniform._value);
+                        gl.uniform4f(location, v.red, v.green, v.blue, v.alpha);
+                    }
                 } else if (defined(v.x)) {
-                    gl.uniform4f(location, v.x, v.y, v.z, v.w);
+                    if (!Cartesian4.equals(v, uniform._value)) {
+                        uniform._value = Cartesian4.clone(v, uniform._value);
+                        gl.uniform4f(location, v.x, v.y, v.z, v.w);
+                    }
                 } else {
                     throw new DeveloperError('Invalid vec4 value for uniform "' + uniform._activeUniform.name + '".');
                 }
@@ -118,8 +147,9 @@ define([
     /**
      * @private
      */
-    var Uniform = function(gl, activeUniform, uniformName, location, value) {
-        this.value = value;
+    var Uniform = function(gl, activeUniform, uniformName, location) {
+        this.value = undefined;
+        this._value = undefined;
 
         this._gl = gl;
         this._activeUniform = activeUniform;
@@ -162,31 +192,49 @@ define([
         case gl.FLOAT:
             return function() {
                 var value = uniformArray.value;
+                var _value = uniformArray._value;
                 var length = value.length;
                 for (var i = 0; i < length; ++i) {
-                    gl.uniform1f(locations[i], value[i]);
+                    var v = value[i];
+
+                    if (v !== _value[i]) {
+                        _value[i] = v;
+                        gl.uniform1f(locations[i], v);
+                    }
                 }
             };
         case gl.FLOAT_VEC2:
             return function() {
                 var value = uniformArray.value;
+                var _value = uniformArray._value;
                 var length = value.length;
                 for (var i = 0; i < length; ++i) {
                     var v = value[i];
-                    gl.uniform2f(locations[i], v.x, v.y);
+
+                    if (!Cartesian2.equals(v, _value[i])) {
+                        _value[i] = Cartesian2.clone(v, _value[i]);
+                        gl.uniform2f(locations[i], v.x, v.y);
+                    }
                 }
             };
         case gl.FLOAT_VEC3:
             return function() {
                 var value = uniformArray.value;
+                var _value = uniformArray._value;
                 var length = value.length;
                 for (var i = 0; i < length; ++i) {
                     var v = value[i];
 
                     if (defined(v.red)) {
-                        gl.uniform3f(locations[i], v.red, v.green, v.blue);
+                        if (!Color.equals(v, _value[i])) {
+                            _value[i] = Color.clone(v, _value[i]);
+                            gl.uniform3f(locations[i], v.red, v.green, v.blue);
+                        }
                     } else if (defined(v.x)) {
-                        gl.uniform3f(locations[i], v.x, v.y, v.z);
+                        if (!Cartesian3.equals(v, _value[i])) {
+                            _value[i] = Cartesian3.clone(v, _value[i]);
+                            gl.uniform3f(locations[i], v.x, v.y, v.z);
+                        }
                     } else {
                         throw new DeveloperError('Invalid vec3 value.');
                     }
@@ -195,14 +243,21 @@ define([
         case gl.FLOAT_VEC4:
             return function() {
                 var value = uniformArray.value;
+                var _value = uniformArray._value;
                 var length = value.length;
                 for (var i = 0; i < length; ++i) {
                     var v = value[i];
 
                     if (defined(v.red)) {
-                        gl.uniform4f(locations[i], v.red, v.green, v.blue, v.alpha);
+                        if (!Color.equals(v, _value[i])) {
+                            _value[i] = Color.clone(v, _value[i]);
+                            gl.uniform4f(locations[i], v.red, v.green, v.blue, v.alpha);
+                        }
                     } else if (defined(v.x)) {
-                        gl.uniform4f(locations[i], v.x, v.y, v.z, v.w);
+                        if (!Cartesian4.equals(v, _value[i])) {
+                            _value[i] = Cartesian4.clone(v, _value[i]);
+                            gl.uniform4f(locations[i], v.x, v.y, v.z, v.w);
+                        }
                     } else {
                         throw new DeveloperError('Invalid vec4 value.');
                     }
@@ -291,11 +346,12 @@ define([
     /**
      * @private
      */
-    var UniformArray = function(gl, activeUniform, uniformName, locations, value) {
+    var UniformArray = function(gl, activeUniform, uniformName, locations) {
         this._gl = gl;
         this._activeUniform = activeUniform;
         this._uniformName = uniformName;
-        this.value = value;
+        this.value = new Array(locations.length);
+        this._value = new Array(locations.length);
         this._locations = locations;
 
         /**
@@ -578,8 +634,7 @@ define([
                     // if the uniform is not active (e.g., it is optimized out).  Looks like
                     // getActiveUniform() above returns uniforms that are not actually active.
                     if (location !== null) {
-                        var uniformValue = gl.getUniform(program, location);
-                        var uniform = new Uniform(gl, activeUniform, uniformName, location, uniformValue);
+                        var uniform = new Uniform(gl, activeUniform, uniformName, location);
 
                         uniformsByName[uniformName] = uniform;
                         uniforms.push(uniform);
@@ -626,17 +681,15 @@ define([
                         }
                     } else {
                         locations = [];
-                        value = [];
                         for (var j = 0; j < activeUniform.size; ++j) {
                             loc = gl.getUniformLocation(program, uniformName + '[' + j + ']');
 
                             // Workaround for IE 11.0.9.  See above.
                             if (loc !== null) {
                                 locations.push(loc);
-                                value.push(gl.getUniform(program, loc));
                             }
                         }
-                        uniformArray = new UniformArray(gl, activeUniform, uniformName, locations, value);
+                        uniformArray = new UniformArray(gl, activeUniform, uniformName, locations);
 
                         uniformsByName[uniformName] = uniformArray;
                         uniforms.push(uniformArray);
