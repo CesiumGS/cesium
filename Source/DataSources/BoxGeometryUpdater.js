@@ -79,7 +79,6 @@ define([
         this._scene = scene;
         this._entitySubscription = entity.definitionChanged.addEventListener(BoxGeometryUpdater.prototype._onEntityPropertyChanged, this);
         this._fillEnabled = false;
-        this._isClosed = false;
         this._dynamic = false;
         this._outlineEnabled = false;
         this._geometryChanged = new Event();
@@ -239,9 +238,7 @@ define([
          * @readonly
          */
         isClosed : {
-            get : function() {
-                return this._isClosed;
-            }
+            value : true
         },
         /**
          * Gets an event that is raised whenever the public properties
@@ -439,7 +436,6 @@ define([
 
         var outlineWidth = box.outlineWidth;
 
-        this._isClosed = true;
         this._fillEnabled = fillEnabled;
         this._outlineEnabled = outlineEnabled;
 
@@ -524,8 +520,8 @@ define([
         var minimumCorner = box.minimumCorner;
         var maximumCorner = box.maximumCorner;
 
-        options.minimumCorner = minimumCorner.getValue(Iso8601.MINIMUM_VALUE, options.minimumCorner);
-        options.maximumCorner = maximumCorner.getValue(Iso8601.MINIMUM_VALUE, options.maximumCorner);
+        options.minimumCorner = minimumCorner.getValue(time, options.minimumCorner);
+        options.maximumCorner = maximumCorner.getValue(time, options.maximumCorner);
 
         if (!defined(box.fill) || box.fill.getValue(time)) {
 
