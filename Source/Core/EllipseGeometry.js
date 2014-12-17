@@ -610,7 +610,7 @@ define([
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         var height = defaultValue(options.height, 0.0);
         var extrudedHeight = options.extrudedHeight;
-        var extrude = (defined(extrudedHeight) && !CesiumMath.equalsEpsilon(height, extrudedHeight, 1.0));
+        var extrude = (defined(extrudedHeight) && Math.abs(height - extrudedHeight) > 1.0);
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(center)) {

@@ -212,7 +212,9 @@ define([
                     dataSource.load(JSON.parse(evt.target.result), fileName);
                 } else if (/\.geojson$/i.test(fileName) || /\.json$/i.test(fileName) || /\.topojson$/i.test(fileName)) {
                     dataSource = new GeoJsonDataSource(fileName);
-                    loadPromise = dataSource.load(JSON.parse(evt.target.result), fileName);
+                    loadPromise = dataSource.load(JSON.parse(evt.target.result), {
+                        sourceUri : fileName
+                    });
                 } else if (/\.kml$/i.test(fileName)) {
                     dataSource = new KmlDataSource();
                     var parser = new DOMParser();

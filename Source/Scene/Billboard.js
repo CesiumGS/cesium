@@ -697,7 +697,7 @@ define([
          * </p>
          * <p>
          * This property can be set to a loaded Image, a URL which will be loaded as an Image automatically,
-         * or another billboard's image property (from the same billboard collection).
+         * a canvas, or another billboard's image property (from the same billboard collection).
          * </p>
          *
          * @memberof Billboard.prototype
