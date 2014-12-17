@@ -736,6 +736,11 @@ define([
      *          whichever is closer, if the value is outside the range.
      */
     CesiumMath.acosClamped = function(value) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required.');
+        }
+        //>>includeEnd('debug');
         return Math.acos(CesiumMath.clamp(value, -1.0, 1.0));
     };
 
@@ -748,6 +753,11 @@ define([
      *          whichever is closer, if the value is outside the range.
      */
     CesiumMath.asinClamped = function(value) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required.');
+        }
+        //>>includeEnd('debug');
         return Math.asin(CesiumMath.clamp(value, -1.0, 1.0));
     };
 
@@ -759,6 +769,14 @@ define([
      * @returns {Number} The chord length.
      */
     CesiumMath.chordLength = function(angle, radius) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(angle)) {
+            throw new DeveloperError('angle is required.');
+        }
+        if (!defined(radius)) {
+            throw new DeveloperError('radius is required.');
+        }
+        //>>includeEnd('debug');
         return 2.0 * radius * Math.sin(angle * 0.5);
     };
 

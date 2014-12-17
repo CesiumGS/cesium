@@ -350,6 +350,12 @@ defineSuite([
         expect(CesiumMath.acosClamped(1.01)).toBe(Math.acos(1.0));
     });
 
+    it('acosClamped throws without value', function() {
+        expect(function() {
+            CesiumMath.acosClamped();
+        }).toThrowDeveloperError();
+    });
+
     it('asinClamped returns asin for normal values', function() {
         expect(CesiumMath.asinClamped(0.5)).toBe(Math.asin(0.5));
         expect(CesiumMath.asinClamped(0.123)).toBe(Math.asin(0.123));
@@ -361,5 +367,31 @@ defineSuite([
     it('asinClamped returns asin of clamped value when value is outside the valid range', function() {
         expect(CesiumMath.asinClamped(-1.01)).toBe(Math.asin(-1.0));
         expect(CesiumMath.asinClamped(1.01)).toBe(Math.asin(1.0));
+    });
+
+    it('asinClamped throws without value', function() {
+        expect(function() {
+            CesiumMath.asinClamped();
+        }).toThrowDeveloperError();
+    });
+
+    it('chordLength finds the chord length', function() {
+        expect(CesiumMath.chordLength(CesiumMath.PI_OVER_THREE, 1.0)).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+        expect(CesiumMath.chordLength(CesiumMath.PI_OVER_THREE, 5.0)).toEqualEpsilon(5.0, CesiumMath.EPSILON14);
+        expect(CesiumMath.chordLength(2.0 * CesiumMath.PI_OVER_THREE, 1.0)).toEqualEpsilon(Math.sqrt(3.0), CesiumMath.EPSILON14);
+        expect(CesiumMath.chordLength(2.0 * CesiumMath.PI_OVER_THREE, 5.0)).toEqualEpsilon(5.0 * Math.sqrt(3.0), CesiumMath.EPSILON14);
+        expect(CesiumMath.chordLength(CesiumMath.PI, 10.0)).toEqualEpsilon(2.0 * 10.0, CesiumMath.EPSILON14);
+    });
+
+    it('chordLength throws without angle', function() {
+        expect(function() {
+            CesiumMath.chordLength(undefined, 1.0);
+        }).toThrowDeveloperError();
+    });
+
+    it('chordLength throws without radius', function() {
+        expect(function() {
+            CesiumMath.chordLength(0.0, undefined);
+        }).toThrowDeveloperError();
     });
 });

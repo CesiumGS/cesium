@@ -316,6 +316,8 @@ define([
             offset = generateCartesianArc(p0, p1, minDistance, ellipsoid, h0, h1, newPositions, offset);
         }
 
+        subdivideHeightsScratchArray.length = 0;
+
         var lastPoint = positions[length - 1];
         var carto = ellipsoid.cartesianToCartographic(lastPoint, carto1);
         carto.height = hasHeightArray ? height[length - 1] : height;
