@@ -21,6 +21,7 @@ define([
         '../Core/Math',
         '../Core/NearFarScalar',
         '../Core/PinBuilder',
+        '../Core/PolylinePipeline',
         '../Core/PolygonPipeline',
         '../Core/Rectangle',
         '../Core/RuntimeError',
@@ -68,6 +69,7 @@ define([
         CesiumMath,
         NearFarScalar,
         PinBuilder,
+        PolylinePipeline,
         PolygonPipeline,
         Rectangle,
         RuntimeError,
@@ -372,7 +374,7 @@ define([
         label.fillColor = new ConstantProperty(Color.WHITE);
         label.pixelOffset = new ConstantProperty(new Cartesian2(0, -16));
         label.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
-        label.font = new ConstantProperty('16pt Arial');
+        label.font = new ConstantProperty('16pt sans-serif');
         label.style = new ConstantProperty(LabelStyle.FILL_AND_OUTLINE);
         return label;
     }
@@ -416,7 +418,7 @@ define([
                 label.text = defined(targetEntity.name) ? new ConstantProperty(targetEntity.name) : undefined;
                 label.pixelOffset = new ConstantProperty(new Cartesian2(0, -16));
                 label.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
-                label.font = new ConstantProperty('64pt Arial');
+                label.font = new ConstantProperty('16pt sans-serif');
                 label.style = new ConstantProperty(LabelStyle.FILL_AND_OUTLINE);
                 targetEntity.label = label;
             } else if (node.nodeName === 'LineStyle') {
@@ -604,7 +606,10 @@ define([
         if (defined(coordinatesNode)) {
             var coordinates = readCoordinates(coordinatesNode);
             if (defined(coordinates)) {
-                polyline.positions = new ConstantProperty(coordinates);
+                coordinates = defaultValue(PolylinePipeline.removeDuplicates(coordinates), coordinates);
+                if (coordinates.length > 1) {
+                    polyline.positions = new ConstantProperty(coordinates);
+                }
             }
         }
     }
