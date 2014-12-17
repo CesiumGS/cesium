@@ -147,6 +147,9 @@ define([
      *
      * @param {PolylineGeometry} polylineGeometry A description of the polyline.
      * @returns {Geometry} The computed vertices and indices.
+     *
+     * @exception {DeveloperError} At least two unique positions are required.
+     *
      */
     PolylineGeometry.createGeometry = function(polylineGeometry) {
         var width = polylineGeometry._width;
@@ -172,6 +175,12 @@ define([
         if (!defined(positions)) {
             positions = polylineGeometry._positions;
         }
+
+        //>>includeStart('debug', pragmas.debug);
+        if (positions.length < 2) {
+            throw new DeveloperError('At least two unique positions are required.');
+        }
+        //>>includeEnd('debug');
 
         if (followSurface) {
             var heights = PolylinePipeline.extractHeights(positions, ellipsoid);
