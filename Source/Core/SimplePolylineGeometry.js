@@ -33,8 +33,8 @@ define([
         PrimitiveType) {
     "use strict";
 
-    function interpolateColors(p0, p1, color0, color1, granularity, array, offset) {
-        var numPoints = PolylinePipeline.numberOfPoints(p0, p1, granularity);
+    function interpolateColors(p0, p1, color0, color1, minDistance, array, offset) {
+        var numPoints = PolylinePipeline.numberOfPoints(p0, p1, minDistance);
         var i;
 
         var r0 = color0.red;
@@ -147,6 +147,8 @@ define([
         var granularity = simplePolylineGeometry._granularity;
         var ellipsoid = simplePolylineGeometry._ellipsoid;
 
+        var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
+
         var perSegmentColors = defined(colors) && !perVertex;
 
         var i;
@@ -169,7 +171,7 @@ define([
                     p0 = positions[i];
                     p1 = positions[i+1];
 
-                    l += PolylinePipeline.numberOfPoints(p0, p1, granularity);
+                    l += PolylinePipeline.numberOfPoints(p0, p1, minDistance);
                     l++;
                 }
 
@@ -186,7 +188,7 @@ define([
 
                     var pos = PolylinePipeline.generateArc({
                         positions : scratchArray1,
-                        granularity : granularity,
+                        minDistance : minDistance,
                         ellipsoid: ellipsoid,
                         height: scratchArray2
                     });
@@ -208,7 +210,7 @@ define([
             } else {
                 positionValues = new Float64Array(PolylinePipeline.generateArc({
                     positions: positions,
-                    granularity: granularity,
+                    minDistance: minDistance,
                     ellipsoid: ellipsoid,
                     height: heights
                 }));
@@ -221,7 +223,7 @@ define([
                         p1 = positions[i+1];
                         c0 = colors[i];
                         c1 = colors[i+1];
-                        offset = interpolateColors(p0, p1, c0, c1, granularity, colorValues, offset);
+                        offset = interpolateColors(p0, p1, c0, c1, minDistance, colorValues, offset);
                     }
                     colorValues[offset++] = Color.floatToByte(c1.red);
                     colorValues[offset++] = Color.floatToByte(c1.green);

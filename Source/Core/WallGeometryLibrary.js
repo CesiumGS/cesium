@@ -135,14 +135,19 @@ define([
         var length = wallPositions.length;
         var topPositions;
         var bottomPositions;
-        var generateArcOptions;
+
+        var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
+
+        var generateArcOptions = generateArcOptionsScratch;
+        generateArcOptions.minDistance = minDistance;
+        generateArcOptions.ellipsoid = ellipsoid;
 
         if (duplicateCorners) {
             var count = 0;
             var i;
 
             for (i = 0; i < length - 1; i++) {
-                count += PolylinePipeline.numberOfPoints(wallPositions[i], wallPositions[i+1], granularity) + 1;
+                count += PolylinePipeline.numberOfPoints(wallPositions[i], wallPositions[i+1], minDistance) + 1;
             }
 
             topPositions = new Float64Array(count * 3);
@@ -150,11 +155,8 @@ define([
 
             var generateArcPositions = positionsArrayScratch;
             var generateArcHeights = heightsArrayScratch;
-            generateArcOptions = generateArcOptionsScratch;
             generateArcOptions.positions = generateArcPositions;
             generateArcOptions.height = generateArcHeights;
-            generateArcOptions.granularity = granularity;
-            generateArcOptions.ellipsoid = ellipsoid;
 
             var offset = 0;
             for (i = 0; i < length - 1; i++) {
@@ -175,11 +177,7 @@ define([
                 offset += pos.length;
             }
         } else {
-            generateArcOptions = generateArcOptionsScratch;
             generateArcOptions.positions = wallPositions;
-            generateArcOptions.granularity = granularity;
-            generateArcOptions.ellipsoid = ellipsoid;
-
             generateArcOptions.height = maximumHeights;
             topPositions = new Float64Array(PolylinePipeline.generateArc(generateArcOptions));
 

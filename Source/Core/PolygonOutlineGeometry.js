@@ -431,9 +431,7 @@ define([
 
         var geometry;
         var geometries = [];
-
-        var radius = ellipsoid.maximumRadius;
-        var minDistance = 2.0 * radius * Math.sin(granularity * 0.5);
+        var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
 
         if (extrude) {
             for (i = 0; i < polygons.length; i++) {
