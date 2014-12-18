@@ -76,7 +76,7 @@ define([
         material : createPropertyDescriptor('material'),
 
         /**
-         * Gets or sets the vertex positions.
+         * Gets or sets the positions.
          * @memberof CorridorGraphics.prototype
          * @type {Property}
          */
@@ -144,7 +144,7 @@ define([
         outlineWidth : createPropertyDescriptor('outlineWidth'),
 
         /**
-         * Gets or sets the Boolean {@link Property} specifying whether the corridor uses per-position heights.
+         * Gets or sets the {@link CornerType} {@link Property} specifying how corners are triangulated.
          * @memberof CorridorGraphics.prototype
          * @type {Property}
          */
