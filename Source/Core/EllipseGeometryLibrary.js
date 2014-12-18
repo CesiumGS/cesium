@@ -59,25 +59,24 @@ define([
         var size = (extrude) ? positions.length / 3 * 2 : positions.length / 3;
 
         var finalPositions = new Float64Array(size * 3);
-        var normal = scratchNormal;
 
         var length = positions.length;
         var bottomOffset = (extrude) ? length : 0;
         for (var i = 0; i < length; i += 3) {
             var i1 = i + 1;
             var i2 = i + 2;
-            var position = Cartesian3.fromArray(positions, i, scratchCartesian1);
-            var extrudedPosition;
 
-            position = ellipsoid.scaleToGeodeticSurface(position, position);
-            extrudedPosition = Cartesian3.clone(position, scratchCartesian2);
-            normal = ellipsoid.geodeticSurfaceNormal(position, normal);
+            var position = Cartesian3.fromArray(positions, i, scratchCartesian1);
+            ellipsoid.scaleToGeodeticSurface(position, position);
+
+            var extrudedPosition = Cartesian3.clone(position, scratchCartesian2);
+            var normal = ellipsoid.geodeticSurfaceNormal(position, scratchNormal);
             var scaledNormal = Cartesian3.multiplyByScalar(normal, height, scratchCartesian3);
-            position = Cartesian3.add(position, scaledNormal, position);
+            Cartesian3.add(position, scaledNormal, position);
 
             if (extrude) {
-                scaledNormal = Cartesian3.multiplyByScalar(normal, extrudedHeight, scaledNormal);
-                extrudedPosition = Cartesian3.add(extrudedPosition, scaledNormal, extrudedPosition);
+                Cartesian3.multiplyByScalar(normal, extrudedHeight, scaledNormal);
+                Cartesian3.add(extrudedPosition, scaledNormal, extrudedPosition);
 
                 finalPositions[i + bottomOffset] = extrudedPosition.x;
                 finalPositions[i1 + bottomOffset] = extrudedPosition.y;
@@ -125,6 +124,10 @@ define([
         // The number of points in the first quadrant
         var numPts = 1 + Math.ceil(CesiumMath.PI_OVER_TWO / granularity);
         var deltaTheta = CesiumMath.PI_OVER_TWO / (numPts - 1);
+        var theta = CesiumMath.PI_OVER_TWO - numPts * deltaTheta;
+        if (theta < 0.0) {
+            numPts -= Math.ceil(Math.abs(theta) / deltaTheta);
+        }
 
         // If the number of points were three, the ellipse
         // would be tessellated like below:
@@ -142,8 +145,7 @@ define([
         //         *---*
         // Notice each vertical column contains an even number of positions.
         // The sum of the first n even numbers is n * (n + 1). Double it for the number of points
-        // for the whole ellipse. Note: this is just an estimate and may actually be less depending
-        // on the number of iterations before the angle reaches pi/2.
+        // for the whole ellipse.
         var size = 2 * numPts * (numPts + 1);
         var positions = (addFillPositions) ? new Array(size * 3) : undefined;
         var positionIndex = 0;
@@ -160,8 +162,8 @@ define([
         var interiorPosition;
 
         // Compute points in the 'northern' half of the ellipse
-        var theta = CesiumMath.PI_OVER_TWO;
-        for (i = 0; i < numPts && theta > 0; ++i) {
+        theta = CesiumMath.PI_OVER_TWO;
+        for (i = 0; i < numPts; ++i) {
             position = pointOnEllipsoid(theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, position);
             reflectedPosition = pointOnEllipsoid(Math.PI - theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, reflectedPosition);
 
@@ -193,9 +195,6 @@ define([
 
             theta = CesiumMath.PI_OVER_TWO - (i + 1) * deltaTheta;
         }
-
-        // Set numPts if theta reached zero
-        numPts = i;
 
         // Compute points in the 'southern' half of the ellipse
         for (i = numPts; i > 0; --i) {
@@ -233,11 +232,6 @@ define([
 
         var r = {};
         if (addFillPositions) {
-            // The original length may have been an over-estimate
-            if (positions.length !== positionIndex) {
-                size = positionIndex / 3;
-                positions.length = positionIndex;
-            }
             r.positions = positions;
             r.numPts = numPts;
         }
