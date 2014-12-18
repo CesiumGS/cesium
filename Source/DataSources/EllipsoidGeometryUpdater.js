@@ -57,10 +57,11 @@ define([
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
 
-    var positionScratch;
-    var orientationScratch;
-    var radiiScratch;
-    var matrix3Scratch;
+    var positionScratch = new Cartesian3();
+    var orientationScratch = new Cartesian3();
+    var radiiScratch = new Cartesian3();
+    var matrix3Scratch = new Cartesian3();
+    var scratchColor = new Color();
     var unitSphere = new Cartesian3(1, 1, 1);
 
     var GeometryOptions = function(entity) {
@@ -335,9 +336,9 @@ define([
             };
         }
 
-        positionScratch = entity.position.getValue(Iso8601.MINIMUM_VALUE, positionScratch);
-        orientationScratch = entity.orientation.getValue(Iso8601.MINIMUM_VALUE, orientationScratch);
-        matrix3Scratch = Matrix3.fromQuaternion(orientationScratch, matrix3Scratch);
+        entity.position.getValue(Iso8601.MINIMUM_VALUE, positionScratch);
+        entity.orientation.getValue(Iso8601.MINIMUM_VALUE, orientationScratch);
+        Matrix3.fromQuaternion(orientationScratch, matrix3Scratch);
 
         return new GeometryInstance({
             id : entity,
@@ -369,9 +370,9 @@ define([
         var entity = this._entity;
         var isAvailable = entity.isAvailable(time);
 
-        positionScratch = entity.position.getValue(Iso8601.MINIMUM_VALUE, positionScratch);
-        orientationScratch = entity.orientation.getValue(Iso8601.MINIMUM_VALUE, orientationScratch);
-        matrix3Scratch = Matrix3.fromQuaternion(orientationScratch, matrix3Scratch);
+        entity.position.getValue(Iso8601.MINIMUM_VALUE, positionScratch);
+        entity.orientation.getValue(Iso8601.MINIMUM_VALUE, orientationScratch);
+        Matrix3.fromQuaternion(orientationScratch, matrix3Scratch);
         var outlineColor = Property.getValueOrDefault(this._outlineColorProperty, time, Color.BLACK);
 
         return new GeometryInstance({
@@ -545,9 +546,21 @@ define([
 
         var entity = this._entity;
         var ellipsoid = entity.ellipsoid;
-        var show = ellipsoid.show;
+        if (!entity.isAvailable(time) || !Property.getValueOrDefault(ellipsoid.show, time, true)) {
+            if (defined(this._primitive)) {
+                this._primitive.show = false;
+            }
 
-        if (!entity.isAvailable(time) || (defined(show) && !show.getValue(time))) {
+            if (defined(this._outlinePrimitive)) {
+                this._outlinePrimitive.show = false;
+            }
+            return;
+        }
+
+        var position = Property.getValueOrUndefined(entity.position, time, positionScratch);
+        var orientation = Property.getValueOrUndefined(entity.orientation, time, orientationScratch);
+        var radii = Property.getValueOrUndefined(ellipsoid.radii, time, radiiScratch);
+        if (!defined(position) || !defined(orientation) || !defined(radii)) {
             if (defined(this._primitive)) {
                 this._primitive.show = false;
             }
@@ -560,39 +573,27 @@ define([
 
         //Compute attributes and material.
         var appearance;
-        var showFill = !defined(ellipsoid.fill) || ellipsoid.fill.getValue(time);
-        var showOutline = defined(ellipsoid.outline) && ellipsoid.outline.getValue(time);
-        var outlineColor = defined(ellipsoid.outlineColor) ? ellipsoid.outlineColor.getValue(time) : Color.BLACK;
+        var showFill = Property.getValueOrDefault(ellipsoid.fill, time, true);
+        var showOutline = Property.getValueOrDefault(ellipsoid.outline, time, false);
+        var outlineColor = Property.getValueOrClonedDefault(ellipsoid.outlineColor, time, Color.BLACK, scratchColor);
         var material = MaterialProperty.getValue(time, defaultValue(ellipsoid.material, defaultMaterial), this._material);
         this._material = material;
 
         // Check properties that could trigger a primitive rebuild.
-        var stackPartitionsProperty = ellipsoid.stackPartitions;
-        var slicePartitionsProperty = ellipsoid.slicePartitions;
-        var subdivisionsProperty = ellipsoid.subdivisions;
-        var outlineWidthProperty = ellipsoid.outlineWidth;
-        var stackPartitions = defined(stackPartitionsProperty) ? stackPartitionsProperty.getValue(time) : undefined;
-        var slicePartitions = defined(slicePartitionsProperty) ? slicePartitionsProperty.getValue(time) : undefined;
-        var subdivisions = defined(subdivisionsProperty) ? subdivisionsProperty.getValue(time) : undefined;
-        var outlineWidth = defined(outlineWidthProperty) ? outlineWidthProperty.getValue(time) : 1.0;
-
-        var options = this._options;
+        var stackPartitions = Property.getValueOrUndefined(ellipsoid.stackPartitions, time);
+        var slicePartitions = Property.getValueOrUndefined(ellipsoid.slicePartitions, time);
+        var subdivisions = Property.getValueOrUndefined(ellipsoid.subdivisions, time);
+        var outlineWidth = Property.getValueOrUndefined(ellipsoid.outlineWidth, time);
 
         //In 3D we use a fast path by modifying Primitive.modelMatrix instead of regenerating the primitive every frame.
-        //Once #1486 is fixed, we can use the fast path in all cases.
         var sceneMode = this._scene.mode;
         var in3D = sceneMode === SceneMode.SCENE3D;
 
         var modelMatrix = this._modelMatrix;
-        var positionProperty = entity.position;
-        var orientationProperty = entity.orientation;
-        var radiiProperty = ellipsoid.radii;
-        positionScratch = positionProperty.getValue(time, positionScratch);
-        orientationScratch = orientationProperty.getValue(time, orientationScratch);
-        matrix3Scratch = Matrix3.fromQuaternion(orientationScratch, matrix3Scratch);
-        radiiScratch = radiiProperty.getValue(time, radiiScratch);
-        modelMatrix = Matrix4.fromRotationTranslation(matrix3Scratch, positionScratch, modelMatrix);
+        matrix3Scratch = Matrix3.fromQuaternion(orientation, matrix3Scratch);
+        modelMatrix = Matrix4.fromRotationTranslation(matrix3Scratch, position, modelMatrix);
 
+        var options = this._options;
         //We only rebuild the primitive if something other than the radii has changed
         //For the radii, we use unit sphere and then deform it with a scale matrix.
         var rebuildPrimitives = !in3D || this._lastSceneMode !== sceneMode || !defined(this._primitive) || //
@@ -600,17 +601,17 @@ define([
                                 options.subdivisions !== subdivisions || this._lastOutlineWidth !== outlineWidth;
 
         if (rebuildPrimitives) {
-            this._removePrimitives();
+            var primitives = this._primitives;
+            primitives.removeAndDestroy(this._primitive);
+            primitives.removeAndDestroy(this._outlinePrimitive);
             this._lastSceneMode = sceneMode;
             this._lastOutlineWidth = outlineWidth;
 
             options.stackPartitions = stackPartitions;
             options.slicePartitions = slicePartitions;
             options.subdivisions = subdivisions;
-            options.radii = in3D ? unitSphere : radiiScratch;
+            options.radii = in3D ? unitSphere : radii;
 
-            this._material = material;
-            material = this._material;
             appearance = new MaterialAppearance({
                 material : material,
                 translucent : material.isTranslucent(),
@@ -618,7 +619,7 @@ define([
             });
             options.vertexFormat = appearance.vertexFormat;
 
-            this._primitive = new Primitive({
+            this._primitive = primitives.add(new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
                     geometry : new EllipsoidGeometry(options),
@@ -629,12 +630,11 @@ define([
                 }),
                 appearance : appearance,
                 asynchronous : false
-            });
-            this._primitives.add(this._primitive);
+            }));
 
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
-            var translucent = outlineColor.alpha !== 1.0;
-            this._outlinePrimitive = new Primitive({
+
+            this._outlinePrimitive = primitives.add(new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
                     geometry : new EllipsoidOutlineGeometry(options),
@@ -646,21 +646,25 @@ define([
                 }),
                 appearance : new PerInstanceColorAppearance({
                     flat : true,
-                    translucent : translucent,
+                    translucent : outlineColor.alpha !== 1.0,
                     renderState : {
                         lineWidth : this._geometryUpdater._scene.clampLineWidth(outlineWidth)
                     }
                 }),
                 asynchronous : false
-            });
+            }));
 
             this._lastShow = showFill;
             this._lastOutlineShow = showOutline;
             this._lastOutlineColor = Color.clone(outlineColor, this._lastOutlineColor);
-            this._primitives.add(this._outlinePrimitive);
         } else if (this._primitive.ready) {
             //Update attributes only.
             var primitive = this._primitive;
+            var outlinePrimitive = this._outlinePrimitive;
+
+            primitive.show = true;
+            outlinePrimitive.show = false;
+
             appearance = primitive.appearance;
             appearance.material = material;
 
@@ -674,7 +678,6 @@ define([
                 this._lastShow = showFill;
             }
 
-            var outlinePrimitive = this._outlinePrimitive;
             var outlineAttributes = this._outlineAttributes;
 
             if (!defined(outlineAttributes)) {
@@ -697,11 +700,11 @@ define([
             //Since we are scaling a unit sphere, we can't let any of the values go to zero.
             //Instead we clamp them to a small value.  To the naked eye, this produces the same results
             //that you get passing EllipsoidGeometry a radii with a zero component.
-            radiiScratch.x = Math.max(radiiScratch.x, 0.001);
-            radiiScratch.y = Math.max(radiiScratch.y, 0.001);
-            radiiScratch.z = Math.max(radiiScratch.z, 0.001);
+            radii.x = Math.max(radii.x, 0.001);
+            radii.y = Math.max(radii.y, 0.001);
+            radii.z = Math.max(radii.z, 0.001);
 
-            modelMatrix = Matrix4.multiplyByScale(modelMatrix, radiiScratch, modelMatrix);
+            modelMatrix = Matrix4.multiplyByScale(modelMatrix, radii, modelMatrix);
             this._primitive.modelMatrix = modelMatrix;
             this._outlinePrimitive.modelMatrix = modelMatrix;
         }
@@ -711,18 +714,10 @@ define([
         return false;
     };
 
-    DynamicGeometryUpdater.prototype._removePrimitives = function() {
-        if (defined(this._primitive)) {
-            this._primitives.remove(this._primitive);
-        }
-
-        if (defined(this._outlinePrimitive)) {
-            this._primitives.remove(this._outlinePrimitive);
-        }
-    };
-
     DynamicGeometryUpdater.prototype.destroy = function() {
-        this._removePrimitives();
+        var primitives = this._primitives;
+        primitives.removeAndDestroy(this._primitive);
+        primitives.removeAndDestroy(this._outlinePrimitive);
         destroyObject(this);
     };
 
