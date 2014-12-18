@@ -48,6 +48,7 @@ define([
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
+    var scratchColor = new Color();
 
     var GeometryOptions = function(entity) {
         this.id = entity;
@@ -497,36 +498,31 @@ define([
         }
         //>>includeEnd('debug');
 
+        var primitives = this._primitives;
+        primitives.remove(this._primitive);
+        primitives.remove(this._outlinePrimitive);
+
         var geometryUpdater = this._geometryUpdater;
-
-        if (defined(this._primitive)) {
-            this._primitives.remove(this._primitive);
-        }
-
-        if (defined(this._outlinePrimitive)) {
-            this._primitives.remove(this._outlinePrimitive);
-        }
-
         var entity = geometryUpdater._entity;
         var box = entity.box;
-        var show = box.show;
-
-        if (!entity.isAvailable(time) || (defined(show) && !show.getValue(time))) {
+        if (!entity.isAvailable(time) || !Property.getValueOrDefault(box.show, time, true)) {
             return;
         }
 
         var options = this._options;
+        var minimumCorner = Property.getValueOrUndefined(box.minimumCorner, time, options.minimumCorner);
+        var maximumCorner = Property.getValueOrUndefined(box.maximumCorner, time, options.maximumCorner);
+        if (!defined(minimumCorner) || !defined(maximumCorner)) {
+            return;
+        }
 
-        var minimumCorner = box.minimumCorner;
-        var maximumCorner = box.maximumCorner;
-
-        options.minimumCorner = minimumCorner.getValue(time, options.minimumCorner);
-        options.maximumCorner = maximumCorner.getValue(time, options.maximumCorner);
+        options.minimumCorner = minimumCorner;
+        options.maximumCorner = maximumCorner;
 
         if (!defined(box.fill) || box.fill.getValue(time)) {
+            var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
+            this._material = material;
 
-            this._material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
-            var material = this._material;
             var appearance = new MaterialAppearance({
                 material : material,
                 translucent : material.isTranslucent(),
@@ -534,25 +530,24 @@ define([
             });
             options.vertexFormat = appearance.vertexFormat;
 
-            this._primitive = new Primitive({
+            this._primitive = primitives.add(new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
                     geometry : new BoxGeometry(options)
                 }),
                 appearance : appearance,
                 asynchronous : false
-            });
-            this._primitives.add(this._primitive);
+            }));
         }
 
         if (defined(box.outline) && box.outline.getValue(time)) {
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
 
-            var outlineColor = defined(box.outlineColor) ? box.outlineColor.getValue(time) : Color.BLACK;
-            var outlineWidth = defined(box.outlineWidth) ? box.outlineWidth.getValue(time) : 1.0;
+            var outlineColor = Property.getValueOrClonedDefault(box.outlineColor, time, Color.BLACK, scratchColor);
+            var outlineWidth = Property.getValueOrDefault(box.outlineWidth, 1.0);
             var translucent = outlineColor.alpha !== 1.0;
 
-            this._outlinePrimitive = new Primitive({
+            this._outlinePrimitive = primitives.add(new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
                     geometry : new BoxOutlineGeometry(options),
@@ -568,8 +563,7 @@ define([
                     }
                 }),
                 asynchronous : false
-            });
-            this._primitives.add(this._outlinePrimitive);
+            }));
         }
     };
 
@@ -578,13 +572,9 @@ define([
     };
 
     DynamicGeometryUpdater.prototype.destroy = function() {
-        if (defined(this._primitive)) {
-            this._primitives.remove(this._primitive);
-        }
-
-        if (defined(this._outlinePrimitive)) {
-            this._primitives.remove(this._outlinePrimitive);
-        }
+        var primitives = this._primitives;
+        primitives.remove(this._primitive);
+        primitives.remove(this._outlinePrimitive);
         destroyObject(this);
     };
 
