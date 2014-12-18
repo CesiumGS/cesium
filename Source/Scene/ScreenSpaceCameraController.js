@@ -1183,6 +1183,8 @@ define([
     }
 
     var zoom3DUnitPosition = new Cartesian3();
+    var zoom3DCartographic = new Cartographic();
+
     function zoom3D(controller, startPosition, movement) {
         if (defined(movement.distance)) {
             movement = movement.distance;
@@ -1199,7 +1201,7 @@ define([
         var ray = camera.getPickRay(windowPosition, zoomCVWindowRay);
 
         var intersection;
-        var height = ellipsoid.cartesianToCartographic(camera.position).height;
+        var height = ellipsoid.cartesianToCartographic(camera.position, zoom3DCartographic).height;
         if (defined(controller._globe) && height < controller.minimumPickingTerrainHeight) {
             intersection = controller._globe.pick(ray, scene, zoomCVIntersection);
         }
@@ -1262,12 +1264,14 @@ define([
         }
     }
 
+    var tilt3DOnEllipsoidCartographic = new Cartographic();
+
     function tilt3DOnEllipsoid(controller, startPosition, movement) {
         var ellipsoid = controller._ellipsoid;
         var scene = controller._scene;
         var camera = scene.camera;
         var minHeight = controller.minimumZoomDistance * 0.25;
-        var height = ellipsoid.cartesianToCartographic(camera.positionWC).height;
+        var height = ellipsoid.cartesianToCartographic(camera.positionWC, tilt3DOnEllipsoidCartographic).height;
         if (height - minHeight - 1.0 < CesiumMath.EPSILON3 &&
                 movement.endPosition.y - movement.startPosition.y < 0) {
             return;

@@ -573,6 +573,7 @@ define([
     var sScratch = new Cartesian3();
     var closestScratch = new Cartesian3();
     var surfPointScratch = new Cartographic();
+
     /**
      * Provides the point along the ray which is nearest to the ellipsoid.
      *
@@ -593,8 +594,7 @@ define([
         var position = ray.origin;
         var direction = ray.direction;
 
-        var normal = ellipsoid.geodeticSurfaceNormal(position);
-
+        var normal = ellipsoid.geodeticSurfaceNormal(position, firstAxisScratch);
         if (Cartesian3.dot(direction, normal) >= 0.0) { // The location provided is the closest point in altitude
             return position;
         }
@@ -602,10 +602,10 @@ define([
         var intersects = defined(this.rayEllipsoid(ray, ellipsoid));
 
         // Compute the scaled direction vector.
-        var f = ellipsoid.transformPositionToScaledSpace(direction);
+        var f = ellipsoid.transformPositionToScaledSpace(direction, firstAxisScratch);
 
         // Constructs a basis from the unit scaled direction vector. Construct its rotation and transpose.
-        var firstAxis = Cartesian3.normalize(f, firstAxisScratch);
+        var firstAxis = Cartesian3.normalize(f, f);
         var reference = Cartesian3.mostOrthogonalAxis(f, referenceScratch);
         var secondAxis = Cartesian3.normalize(Cartesian3.cross(reference, firstAxis, secondAxisScratch), secondAxisScratch);
         var thirdAxis  = Cartesian3.normalize(Cartesian3.cross(firstAxis, secondAxis, thirdAxisScratch), thirdAxisScratch);
@@ -667,7 +667,7 @@ define([
             altitude = Cartesian3.magnitude(Cartesian3.subtract(closest, position, referenceScratch)) * Math.sqrt(1.0 - maximumValue * maximumValue);
             altitude = intersects ? -altitude : altitude;
             surfacePoint.height = altitude;
-            return ellipsoid.cartographicToCartesian(surfacePoint);
+            return ellipsoid.cartographicToCartesian(surfacePoint, new Cartesian3());
         }
 
         return undefined;
