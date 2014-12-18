@@ -163,9 +163,11 @@ define([
      * @private
      */
     PrimitiveCollection.prototype.removeAndDestroy = function(primitive) {
-        if (this.remove(primitive) && !this.destroyPrimitives) {
+        var removed = this.remove(primitive);
+        if (removed && !this.destroyPrimitives) {
             primitive.destroy();
         }
+        return removed;
     };
 
     /**
