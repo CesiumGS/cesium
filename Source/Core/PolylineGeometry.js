@@ -37,8 +37,8 @@ define([
         VertexFormat) {
     "use strict";
 
-    function interpolateColors(p0, p1, color0, color1, granularity) {
-        var numPoints = PolylinePipeline.numberOfPoints(p0, p1, granularity);
+    function interpolateColors(p0, p1, color0, color1, minDistance) {
+        var numPoints = PolylinePipeline.numberOfPoints(p0, p1, minDistance);
         var colors = new Array(numPoints);
         var i;
 
@@ -160,6 +160,8 @@ define([
         var granularity = polylineGeometry._granularity;
         var ellipsoid = polylineGeometry._ellipsoid;
 
+        var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
+
         var i;
         var j;
         var k;
@@ -192,9 +194,9 @@ define([
 
                     if (perVertex && i < colors.length) {
                         c1 = colors[i+1];
-                        newColors = newColors.concat(interpolateColors(p0, p1, c0, c1, granularity));
+                        newColors = newColors.concat(interpolateColors(p0, p1, c0, c1, minDistance));
                     } else {
-                        var l = PolylinePipeline.numberOfPoints(p0, p1, granularity);
+                        var l = PolylinePipeline.numberOfPoints(p0, p1, minDistance);
                         for (j = 0; j < l; j++) {
                             newColors.push(Color.clone(c0));
                         }
@@ -206,7 +208,7 @@ define([
 
             positions = PolylinePipeline.generateCartesianArc({
                 positions: positions,
-                granularity: granularity,
+                minDistance: minDistance,
                 ellipsoid: ellipsoid,
                 height: heights
             });
