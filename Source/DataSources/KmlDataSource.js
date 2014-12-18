@@ -695,6 +695,7 @@ define([
                 var childNodeId = createId(childNode);
                 var childEntity = dataSource._entityCollection.getOrCreateEntity(childNodeId);
                 childEntity.parent = entity;
+                childEntity.name = entity.name;
                 childEntity.availability = entity.availability;
                 childEntity.label = entity.label;
                 childEntity.description = entity.description;
