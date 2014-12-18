@@ -65,14 +65,14 @@ define([
         /**
          * Gets or sets the {@link Cartesian3} specifying the box's minimum corner.
          * @memberof BoxGraphics.prototype
-         * @type {Property}
+         * @type {PositionProperty}
          */
         minimumCorner : createPropertyDescriptor('minimumCorner'),
 
         /**
          * Gets or sets the {@link Cartesian3} specifying the box's maximum corner.
          * @memberof BoxGraphics.prototype
-         * @type {Property}
+         * @type {PositionProperty}
          */
         maximumCorner : createPropertyDescriptor('maximumCorner'),
 
