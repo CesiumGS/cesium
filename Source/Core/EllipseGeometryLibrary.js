@@ -152,8 +152,10 @@ define([
         var position = scratchCartesian1;
         var reflectedPosition = scratchCartesian2;
 
-        var outerLeft = (addEdgePositions) ? [] : undefined;
-        var outerRight = (addEdgePositions) ? [] : undefined;
+        var outerPositionsLength = (2 * numPts + 2 * (numPts - 1)) * 3;
+        var outerRightIndex = outerPositionsLength - 1;
+        var outerLeftIndex = 0;
+        var outerPositions = (addEdgePositions) ? new Array(outerPositionsLength) : undefined;
 
         var i;
         var j;
@@ -187,9 +189,13 @@ define([
             }
 
             if (addEdgePositions) {
-                outerRight.unshift(position.x, position.y, position.z);
+                outerPositions[outerRightIndex--] = position.z;
+                outerPositions[outerRightIndex--] = position.y;
+                outerPositions[outerRightIndex--] = position.x;
                 if (i !== 0) {
-                    outerLeft.push(reflectedPosition.x, reflectedPosition.y, reflectedPosition.z);
+                    outerPositions[outerLeftIndex++] = reflectedPosition.x;
+                    outerPositions[outerLeftIndex++] = reflectedPosition.y;
+                    outerPositions[outerLeftIndex++] = reflectedPosition.z;
                 }
             }
 
@@ -223,9 +229,13 @@ define([
             }
 
             if (addEdgePositions) {
-                outerRight.unshift(position.x, position.y, position.z);
+                outerPositions[outerRightIndex--] = position.z;
+                outerPositions[outerRightIndex--] = position.y;
+                outerPositions[outerRightIndex--] = position.x;
                 if (i !== 1) {
-                    outerLeft.push(reflectedPosition.x, reflectedPosition.y, reflectedPosition.z);
+                    outerPositions[outerLeftIndex++] = reflectedPosition.x;
+                    outerPositions[outerLeftIndex++] = reflectedPosition.y;
+                    outerPositions[outerLeftIndex++] = reflectedPosition.z;
                 }
             }
         }
@@ -237,7 +247,7 @@ define([
         }
 
         if (addEdgePositions) {
-            r.outerPositions = outerRight.concat(outerLeft);
+            r.outerPositions = outerPositions;
         }
 
         return r;
