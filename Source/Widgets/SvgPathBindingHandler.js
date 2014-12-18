@@ -58,6 +58,11 @@ define(function() {
                             svg.setAttribute('height', pathHeight);
                             svg.setAttribute('viewBox', '0 0 ' + pathWidth + ' ' + pathHeight);
 
+                            var fillRule = knockout.unwrap(value['fill-rule']);
+                            if (fillRule) {
+                                svg.setAttribute('fill-rule', fillRule);
+                            }
+
                             if (value.css) {
                                 svg.setAttribute('class', svgClassName + ' ' + knockout.unwrap(value.css));
                             }
