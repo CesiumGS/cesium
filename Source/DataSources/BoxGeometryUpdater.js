@@ -519,7 +519,7 @@ define([
         options.minimumCorner = minimumCorner;
         options.maximumCorner = maximumCorner;
 
-        if (!defined(box.fill) || box.fill.getValue(time)) {
+        if (Property.getValueOrDefault(box.fill, time, true)) {
             var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
             this._material = material;
 
@@ -540,7 +540,7 @@ define([
             }));
         }
 
-        if (defined(box.outline) && box.outline.getValue(time)) {
+        if (Property.getValueOrDefault(box.outline, time, true)) {
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
 
             var outlineColor = Property.getValueOrClonedDefault(box.outlineColor, time, Color.BLACK, scratchColor);

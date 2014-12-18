@@ -544,7 +544,7 @@ define([
         options.stRotation = Property.getValueOrUndefined(polygon.stRotation, time);
         options.perPositionHeight = Property.getValueOrUndefined(polygon.perPositionHeight, time);
 
-        if (!defined(polygon.fill) || polygon.fill.getValue(time)) {
+        if (Property.getValueOrDefault(polygon.fill, time, true)) {
             var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
             this._material = material;
 
@@ -565,7 +565,7 @@ define([
             }));
         }
 
-        if (defined(polygon.outline) && polygon.outline.getValue(time)) {
+        if (Property.getValueOrDefault(polygon.outline, time, false)) {
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
 
             var outlineColor = Property.getValueOrClonedDefault(polygon.outlineColor, time, Color.BLACK, scratchColor);
