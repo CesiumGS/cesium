@@ -161,12 +161,14 @@ defineSuite([
         expect(CesiumMath.negativePiToPi((Math.PI / 2) * Math.PI)).toEqualEpsilon((Math.PI / 2) * Math.PI - CesiumMath.TWO_PI, CesiumMath.EPSILON16);
         expect(CesiumMath.negativePiToPi(Math.PI / 0.5)).toEqualEpsilon(0.0, CesiumMath.EPSILON16);
         expect(CesiumMath.negativePiToPi(Math.PI + CesiumMath.EPSILON10)).toEqualEpsilon(-Math.PI, CesiumMath.EPSILON9);
+        expect(CesiumMath.negativePiToPi(Math.PI)).toEqualEpsilon(Math.PI, CesiumMath.EPSILON9);
     });
 
     it('negativePiToPi negative', function() {
         expect(CesiumMath.negativePiToPi(-Math.PI / 0.5)).toEqualEpsilon(0.0, CesiumMath.EPSILON16);
         expect(CesiumMath.negativePiToPi(-(Math.PI / 2) * Math.PI)).toEqualEpsilon(-(Math.PI / 2) * Math.PI + CesiumMath.TWO_PI, CesiumMath.EPSILON16);
         expect(CesiumMath.negativePiToPi(-(Math.PI + CesiumMath.EPSILON10))).toEqualEpsilon(Math.PI, CesiumMath.EPSILON9);
+        expect(CesiumMath.negativePiToPi(-Math.PI)).toEqualEpsilon(-Math.PI, CesiumMath.EPSILON9);
     });
 
     it('negativePiToPi should not change', function() {
@@ -178,6 +180,16 @@ defineSuite([
         expect(function() {
             CesiumMath.negativePiToPi();
         }).toThrowDeveloperError();
+    });
+
+    it('zeroToTwoPi', function() {
+        expect(CesiumMath.zeroToTwoPi(0.0)).toEqual(0.0);
+        expect(CesiumMath.zeroToTwoPi(Math.PI)).toEqual(Math.PI);
+        expect(CesiumMath.zeroToTwoPi(CesiumMath.TWO_PI)).toEqual(CesiumMath.TWO_PI);
+        expect(CesiumMath.zeroToTwoPi(3.0 * Math.PI)).toEqual(Math.PI);
+        expect(CesiumMath.zeroToTwoPi(2.0 * CesiumMath.TWO_PI)).toEqual(CesiumMath.TWO_PI);
+        expect(CesiumMath.zeroToTwoPi(-Math.PI)).toEqual(Math.PI);
+        expect(CesiumMath.zeroToTwoPi(-CesiumMath.TWO_PI)).toEqual(CesiumMath.TWO_PI);
     });
 
     it('zeroToTwoPi throws for undefined', function() {
