@@ -52,12 +52,10 @@ define([
         var length = positions.length / 3;
         var indices = IndexDatatype.createTypedArray(length, length * 2);
         var index = 0;
-        for ( var i = 0; i < length - 1; i++) {
+        for ( var i = 0; i < length; ++i) {
             indices[index++] = i;
-            indices[index++] = i + 1;
+            indices[index++] = (i + 1) % length;
         }
-        indices[index++] = length - 1;
-        indices[index++] = 0;
 
         return {
             boundingSphere : boundingSphere,
@@ -99,22 +97,18 @@ define([
 
         length /= 2;
         var index = 0;
-        for (var i = 0; i < length - 1; i++) {
+        var i;
+        for (i = 0; i < length; ++i) {
             indices[index++] = i;
-            indices[index++] = i + 1;
+            indices[index++] = (i + 1) % length;
             indices[index++] = i + length;
-            indices[index++] = i + length + 1;
+            indices[index++] = ((i + 1) % length) + length;
         }
-
-        indices[index++] = length - 1;
-        indices[index++] = 0;
-        indices[index++] = length + length - 1;
-        indices[index++] = length;
 
         var numSide;
         if (numberOfVerticalLines > 0) {
             var numSideLines = Math.min(numberOfVerticalLines, length);
-            numSide = Math.round(length/numSideLines);
+            numSide = Math.round(length / numSideLines);
         }
 
 
