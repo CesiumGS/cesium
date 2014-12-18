@@ -275,6 +275,12 @@ WebGLGlobeDataSource.prototype.load = function(data) {
             var latitude = coordinates[i];
             var longitude = coordinates[i + 1];
             var height = coordinates[i + 2];
+
+            //Ignore lines of zero height.
+            if(height === 0) {
+                continue;
+            }
+
             var color = Cesium.Color.fromHsl((0.6 - (height * 0.5)), 1.0, 0.5);
             var surfacePosition = Cesium.Cartesian3.fromDegrees(longitude, latitude, 0);
             var heightPosition = Cesium.Cartesian3.fromDegrees(longitude, latitude, height * heightScale);
