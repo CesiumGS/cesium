@@ -638,6 +638,12 @@ define([
         this._polygonHierarchy = polygonHierarchy;
         this._perPositionHeight = perPositionHeight;
         this._workerName = 'createPolygonGeometry';
+
+        /**
+         * The number of elements used to pack the object into an array.
+         * @type {Number}
+         */
+        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + VertexFormat.packedLength + 6;
     };
 
     /**
@@ -689,6 +695,99 @@ define([
             perPositionHeight : options.perPositionHeight
         };
         return new PolygonGeometry(newOptions);
+    };
+
+    /**
+     * Stores the provided instance into the provided array.
+     * @function
+     *
+     * @param {Object} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     */
+    PolygonGeometry.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        PolygonGeometryLibrary.pack(value._polygonHierarchy, array, startingIndex);
+
+        Ellipsoid.pack(value._ellipsoid, array, startingIndex);
+        startingIndex += Ellipsoid.packedLength;
+
+        VertexFormat.pack(value._vertexFormat, array, startingIndex);
+        startingIndex += VertexFormat.packedLength;
+
+        array[startingIndex++] = value._height;
+        array[startingIndex++] = value._extrudedHeight;
+        array[startingIndex++] = value._granularity;
+        array[startingIndex++] = value._stRotation;
+        array[startingIndex++] = value._extrude ? 1.0 : 0.0;
+        array[startingIndex] = value._perPositionHeight ? 1.0 : 0.0;
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {PolygonGeometry} [result] The object into which to store the result.
+     */
+    PolygonGeometry.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        var polygonHierarchy = PolygonGeometryLibrary.unpackPolygonHierarchy(array, startingIndex);
+
+        var ellipsoid = Ellipsoid.unpack(array, startingIndex);
+        startingIndex += Ellipsoid.packedLength;
+
+        var vertexFormat = VertexFormat.unpack(array, startingIndex);
+        startingIndex += VertexFormat.packedLength;
+
+        var height = array[startingIndex++];
+        var extrudedHeight = array[startingIndex++];
+        var granularity = array[startingIndex++];
+        var stRotation = array[startingIndex++];
+        var extrude = array[startingIndex++] === 1.0;
+        var perPositionHeight = array[startingIndex] === 1.0;
+
+        if (!defined(result)) {
+            return new PolygonGeometry({
+                polygonHierarchy : polygonHierarchy,
+                ellipsoid : ellipsoid,
+                vertexFormat : vertexFormat,
+                height : height,
+                extrudedHeight : extrudedHeight,
+                granularity : granularity,
+                stRotation : stRotation,
+                perPositionHeight : perPositionHeight
+            });
+        }
+
+        result._polygonHierarchy = polygonHierarchy;
+        result._ellipsoid = ellipsoid;
+        result._vertexFormat = vertexFormat;
+        result._height = height;
+        result._extrudedHeight = extrudedHeight;
+        result._granularity = granularity;
+        result._stRotation = stRotation;
+        result._extrude = extrude;
+        result._perPositionHeight = perPositionHeight;
+
+        return result;
     };
 
     /**
