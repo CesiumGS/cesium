@@ -639,6 +639,9 @@ define([
      * @returns {Geometry} The computed vertices and indices.
      */
     EllipseGeometry.createGeometry = function(ellipseGeometry) {
+        var center = ellipseGeometry._ellipsoid.cartesianToCartographic(ellipseGeometry._center);
+        ellipseGeometry._height += center.height;
+        ellipseGeometry._center = Cartesian3.fromRadians(center.longitude, center.latitude, 0, ellipseGeometry._ellipsoid, ellipseGeometry._center);
         var options = {
             center : ellipseGeometry._center,
             semiMajorAxis : ellipseGeometry._semiMajorAxis,
