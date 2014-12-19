@@ -1,5 +1,7 @@
 /*global define*/
 define([
+        '../Core/BoxGeometry',
+        '../Core/BoxOutlineGeometry',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
@@ -10,8 +12,6 @@ define([
         '../Core/Event',
         '../Core/GeometryInstance',
         '../Core/Iso8601',
-        '../Core/BoxGeometry',
-        '../Core/BoxOutlineGeometry',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
@@ -21,6 +21,8 @@ define([
         './MaterialProperty',
         './Property'
     ], function(
+        BoxGeometry,
+        BoxOutlineGeometry,
         Color,
         ColorGeometryInstanceAttribute,
         defaultValue,
@@ -31,8 +33,6 @@ define([
         Event,
         GeometryInstance,
         Iso8601,
-        BoxGeometry,
-        BoxOutlineGeometry,
         ShowGeometryInstanceAttribute,
         MaterialAppearance,
         PerInstanceColorAppearance,

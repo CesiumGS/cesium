@@ -19,6 +19,7 @@ defineSuite([
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/PrimitiveCollection',
+        'Specs/createDynamicProperty',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
@@ -41,6 +42,7 @@ defineSuite([
         SampledProperty,
         TimeIntervalCollectionProperty,
         PrimitiveCollection,
+        createDynamicProperty,
         createScene,
         destroyScene) {
     "use strict";
@@ -361,52 +363,58 @@ defineSuite([
     });
 
     it('dynamic updater sets properties', function() {
-        //This test is mostly a smoke screen for now.
-        var time1 = new JulianDate(0, 0);
-        var time2 = new JulianDate(1, 0);
-        var time3 = new JulianDate(2, 0);
+        var corridor = new CorridorGraphics();
+        corridor.positions = createDynamicProperty(Cartesian3.fromRadiansArray([
+            0, 0,
+            1, 0,
+            1, 1,
+            0, 1
+        ]));
+        corridor.show = createDynamicProperty(true);
+        corridor.height = createDynamicProperty(3);
+        corridor.extrudedHeight = createDynamicProperty(2);
+        corridor.outline = createDynamicProperty(true);
+        corridor.fill = createDynamicProperty(true);
+        corridor.width = createDynamicProperty(6);
+        corridor.granularity = createDynamicProperty(2);
+        corridor.cornerType = createDynamicProperty(CornerType.MITERED);
 
-        function makeProperty(value1, value2) {
-            var property = new TimeIntervalCollectionProperty();
-            property.intervals.addInterval(new TimeInterval({
-                start : time1,
-                stop : time2,
-                isStopIncluded : false,
-                data : value1
-            }));
-            property.intervals.addInterval(new TimeInterval({
-                start : time2,
-                stop : time3,
-                isStopIncluded : false,
-                data : value2
-            }));
-            return property;
-        }
-
-        var entity = createBasicCorridor();
-
-        var corridor = entity.corridor;
-        corridor.height = makeProperty(2, 12);
-        corridor.extrudedHeight = makeProperty(1, 11);
-        corridor.outline = makeProperty(true, false);
-        corridor.fill = makeProperty(false, true);
-
-        entity.availability = new TimeIntervalCollection();
-        entity.availability.addInterval(new TimeInterval({
-            start : time1,
-            stop : time3,
-            isStopIncluded : false
-        }));
+        var entity = new Entity();
+        entity.corridor = corridor;
 
         var updater = new CorridorGeometryUpdater(entity, scene);
         var primitives = new PrimitiveCollection();
         var dynamicUpdater = updater.createDynamicUpdater(primitives);
         expect(dynamicUpdater.isDestroyed()).toBe(false);
         expect(primitives.length).toBe(0);
-        dynamicUpdater.update(time1);
-        expect(primitives.length).toBe(1);
-        dynamicUpdater.destroy();
+
+        dynamicUpdater.update(time);
+        expect(primitives.length).toBe(2);
+
+        var options = dynamicUpdater._options;
+        expect(options.id).toEqual(entity);
+        expect(options.positions).toEqual(corridor.positions.getValue());
+        expect(options.height).toEqual(corridor.height.getValue());
+        expect(options.extrudedHeight).toEqual(corridor.extrudedHeight.getValue());
+        expect(options.width).toEqual(corridor.width.getValue());
+        expect(options.granularity).toEqual(corridor.granularity.getValue());
+        expect(options.cornerType).toEqual(corridor.cornerType.getValue());
+
+        //If a dynamic show returns false, the primitive should go away.
+        corridor.show.setValue(false);
+        dynamicUpdater.update(time);
         expect(primitives.length).toBe(0);
+
+        corridor.show.setValue(true);
+        dynamicUpdater.update(time);
+        expect(primitives.length).toBe(2);
+
+        //If a dynamic position returns undefined, the primitive should go away.
+        corridor.positions.setValue(undefined);
+        dynamicUpdater.update(time);
+        expect(primitives.length).toBe(0);
+
+        dynamicUpdater.destroy();
         updater.destroy();
     });
 
