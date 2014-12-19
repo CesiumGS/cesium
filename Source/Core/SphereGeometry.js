@@ -2,10 +2,14 @@
 define([
         './Cartesian3',
         './defaultValue',
+        './defined',
+        './DeveloperError',
         './EllipsoidGeometry'
     ], function(
         Cartesian3,
         defaultValue,
+        defined,
+        DeveloperError,
         EllipsoidGeometry) {
     "use strict";
 
@@ -47,6 +51,57 @@ define([
 
         this._ellipsoidGeometry = new EllipsoidGeometry(ellipsoidOptions);
         this._workerName = 'createSphereGeometry';
+    };
+
+    /**
+     * The number of elements used to pack the object into an array.
+     * @type {Number}
+     */
+    SphereGeometry.packedLength = EllipsoidGeometry.packedLength;
+
+    /**
+     * Stores the provided instance into the provided array.
+     * @function
+     *
+     * @param {Object} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     */
+    SphereGeometry.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+        //>>includeEnd('debug');
+
+        EllipsoidGeometry.pack(value._ellipsoidGeometry, array, startingIndex);
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {SphereGeometry} [result] The object into which to store the result.
+     */
+    SphereGeometry.unpack = function(array, startingIndex, result) {
+        var ellipsoidGeometry = EllipsoidGeometry.unpack(array, startingIndex);
+
+        if (!defined(result)) {
+            return new SphereGeometry({
+                radius : ellipsoidGeometry._radii.x,
+                vertexFormat : ellipsoidGeometry._vertexFormat,
+                stackPartitions : ellipsoidGeometry._stackPartitions,
+                slicePartitions : ellipsoidGeometry._slicePartitions
+            });
+        }
+
+        result._radius = ellipsoidGeometry._radii.x;
+        result._vertexFormat = ellipsoidGeometry._vertexFormat;
+        result._stackPartitions = ellipsoidGeometry._stackPartitions;
+        result._slicePartitions = ellipsoidGeometry._slicePartitions;
+
+        return result;
     };
 
     /**
