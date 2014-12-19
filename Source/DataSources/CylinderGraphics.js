@@ -5,14 +5,14 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createPropertyDescriptor'
+        './PropertyHelper'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createPropertyDescriptor) {
+        PropertyHelper) {
     "use strict";
 
     /**
@@ -65,21 +65,21 @@ define([
          * @memberof CylinderGraphics.prototype
          * @type {Property}
          */
-        length : createPropertyDescriptor('length'),
+        length : PropertyHelper.createPropertyDescriptor('length'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the cylinder's semi-minor-axis.
          * @memberof CylinderGraphics.prototype
          * @type {Property}
          */
-        topRadius : createPropertyDescriptor('topRadius'),
+        topRadius : PropertyHelper.createPropertyDescriptor('topRadius'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the cylinder's bottomRadius.
          * @memberof CylinderGraphics.prototype
          * @type {Property}
          */
-        bottomRadius : createPropertyDescriptor('bottomRadius'),
+        bottomRadius : PropertyHelper.createPropertyDescriptor('bottomRadius'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the number of vertical lines
@@ -87,7 +87,7 @@ define([
          * @memberof CylinderGraphics.prototype
          * @type {Property}
          */
-        numberOfVerticalLines : createPropertyDescriptor('numberOfVerticalLines'),
+        numberOfVerticalLines : PropertyHelper.createPropertyDescriptor('numberOfVerticalLines'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the sampling distance, in radians,
@@ -95,49 +95,49 @@ define([
          * @memberof CylinderGraphics.prototype
          * @type {Property}
          */
-        slices : createPropertyDescriptor('slices'),
+        slices : PropertyHelper.createPropertyDescriptor('slices'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the polygon's visibility.
          * @memberof CylinderGraphics.prototype
          * @type {Property}
          */
-        show : createPropertyDescriptor('show'),
+        show : PropertyHelper.createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the polygon.
          * @memberof CylinderGraphics.prototype
          * @type {MaterialProperty}
          */
-        material : createPropertyDescriptor('material'),
+        material : PropertyHelper.createPropertyDescriptor('material'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the cylinder should be filled.
          * @memberof CylinderGraphics.prototype
          * @type {Property}
          */
-        fill : createPropertyDescriptor('fill'),
+        fill : PropertyHelper.createPropertyDescriptor('fill'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the cylinder should be outlined.
          * @memberof CylinderGraphics.prototype
          * @type {Property}
          */
-        outline : createPropertyDescriptor('outline'),
+        outline : PropertyHelper.createPropertyDescriptor('outline'),
 
         /**
          * Gets or sets the Color {@link Property} specifying the color of the outline.
          * @memberof CylinderGraphics.prototype
          * @type {Property}
          */
-        outlineColor : createPropertyDescriptor('outlineColor'),
+        outlineColor : PropertyHelper.createPropertyDescriptor('outlineColor'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the width of the outline.
          * @memberof CylinderGraphics.prototype
          * @type {Property}
          */
-        outlineWidth : createPropertyDescriptor('outlineWidth')
+        outlineWidth : PropertyHelper.createPropertyDescriptor('outlineWidth')
     });
 
     /**

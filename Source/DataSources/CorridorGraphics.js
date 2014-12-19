@@ -5,14 +5,14 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createPropertyDescriptor'
+        './PropertyHelper'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createPropertyDescriptor) {
+        PropertyHelper) {
     "use strict";
 
     /**
@@ -68,21 +68,21 @@ define([
          * @memberof CorridorGraphics.prototype
          * @type {Property}
          */
-        show : createPropertyDescriptor('show'),
+        show : PropertyHelper.createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the corridor.
          * @memberof CorridorGraphics.prototype
          * @type {MaterialProperty}
          */
-        material : createPropertyDescriptor('material'),
+        material : PropertyHelper.createPropertyDescriptor('material'),
 
         /**
          * Gets or sets the positions.
          * @memberof CorridorGraphics.prototype
          * @type {Property}
          */
-        positions : createPropertyDescriptor('positions'),
+        positions : PropertyHelper.createPropertyDescriptor('positions'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the height of the corridor.
@@ -90,7 +90,7 @@ define([
          * @memberof CorridorGraphics.prototype
          * @type {Property}
          */
-        height : createPropertyDescriptor('height'),
+        height : PropertyHelper.createPropertyDescriptor('height'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the extruded height of the corridor.
@@ -99,7 +99,7 @@ define([
          * @memberof CorridorGraphics.prototype
          * @type {Property}
          */
-        extrudedHeight : createPropertyDescriptor('extrudedHeight'),
+        extrudedHeight : PropertyHelper.createPropertyDescriptor('extrudedHeight'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the sampling distance, in radians,
@@ -107,7 +107,7 @@ define([
          * @memberof CorridorGraphics.prototype
          * @type {Property}
          */
-        granularity : createPropertyDescriptor('granularity'),
+        granularity : PropertyHelper.createPropertyDescriptor('granularity'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the rotation of the texture coordinates,
@@ -115,42 +115,42 @@ define([
          * @memberof CorridorGraphics.prototype
          * @type {Property}
          */
-        width : createPropertyDescriptor('width'),
+        width : PropertyHelper.createPropertyDescriptor('width'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the corridor should be filled.
          * @memberof CorridorGraphics.prototype
          * @type {Property}
          */
-        fill : createPropertyDescriptor('fill'),
+        fill : PropertyHelper.createPropertyDescriptor('fill'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the corridor should be outlined.
          * @memberof CorridorGraphics.prototype
          * @type {Property}
          */
-        outline : createPropertyDescriptor('outline'),
+        outline : PropertyHelper.createPropertyDescriptor('outline'),
 
         /**
          * Gets or sets the Color {@link Property} specifying whether the color of the outline.
          * @memberof CorridorGraphics.prototype
          * @type {Property}
          */
-        outlineColor : createPropertyDescriptor('outlineColor'),
+        outlineColor : PropertyHelper.createPropertyDescriptor('outlineColor'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the width of the outline.
          * @memberof CorridorGraphics.prototype
          * @type {Property}
          */
-        outlineWidth : createPropertyDescriptor('outlineWidth'),
+        outlineWidth : PropertyHelper.createPropertyDescriptor('outlineWidth'),
 
         /**
          * Gets or sets the {@link CornerType} {@link Property} specifying how corners are triangulated.
          * @memberof CorridorGraphics.prototype
          * @type {Property}
          */
-        cornerType : createPropertyDescriptor('cornerType')
+        cornerType : PropertyHelper.createPropertyDescriptor('cornerType')
     });
 
     /**

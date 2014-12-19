@@ -5,14 +5,14 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createPropertyDescriptor'
+        './PropertyHelper'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createPropertyDescriptor) {
+        PropertyHelper) {
     "use strict";
 
     /**
@@ -62,56 +62,56 @@ define([
          * @memberof BoxGraphics.prototype
          * @type {Property}
          */
-        show : createPropertyDescriptor('show'),
+        show : PropertyHelper.createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link Cartesian3} specifying the box's minimum corner.
          * @memberof BoxGraphics.prototype
          * @type {PositionProperty}
          */
-        minimumCorner : createPropertyDescriptor('minimumCorner'),
+        minimumCorner : PropertyHelper.createPropertyDescriptor('minimumCorner'),
 
         /**
          * Gets or sets the {@link Cartesian3} specifying the box's maximum corner.
          * @memberof BoxGraphics.prototype
          * @type {PositionProperty}
          */
-        maximumCorner : createPropertyDescriptor('maximumCorner'),
+        maximumCorner : PropertyHelper.createPropertyDescriptor('maximumCorner'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the box.
          * @memberof BoxGraphics.prototype
          * @type {MaterialProperty}
          */
-        material : createPropertyDescriptor('material'),
+        material : PropertyHelper.createPropertyDescriptor('material'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the box should be filled.
          * @memberof BoxGraphics.prototype
          * @type {Property}
          */
-        fill : createPropertyDescriptor('fill'),
+        fill : PropertyHelper.createPropertyDescriptor('fill'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the box should be outlined.
          * @memberof BoxGraphics.prototype
          * @type {Property}
          */
-        outline : createPropertyDescriptor('outline'),
+        outline : PropertyHelper.createPropertyDescriptor('outline'),
 
         /**
          * Gets or sets the Color {@link Property} specifying whether the color of the outline.
          * @memberof BoxGraphics.prototype
          * @type {Property}
          */
-        outlineColor : createPropertyDescriptor('outlineColor'),
+        outlineColor : PropertyHelper.createPropertyDescriptor('outlineColor'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the width of the outline.
          * @memberof BoxGraphics.prototype
          * @type {Property}
          */
-        outlineWidth : createPropertyDescriptor('outlineWidth')
+        outlineWidth : PropertyHelper.createPropertyDescriptor('outlineWidth')
     });
 
     /**
