@@ -577,6 +577,111 @@ define([
         this._workerName = 'createRectangleGeometry';
     };
 
+    /**
+     * The number of elements used to pack the object into an array.
+     * @type {Number}
+     */
+    RectangleGeometry.packedLength = Rectangle.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 7;
+
+    /**
+     * Stores the provided instance into the provided array.
+     *
+     * @param {BoundingSphere} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     */
+    RectangleGeometry.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        Rectangle.pack(value._rectangle, array, startingIndex);
+        startingIndex += Rectangle.packedLength;
+
+        Ellipsoid.pack(value._ellipsoid, array, startingIndex);
+        startingIndex += Ellipsoid.packedLength;
+
+        VertexFormat.pack(value._vertexFormat, array, startingIndex);
+        startingIndex += VertexFormat.packedLength;
+
+        array[startingIndex++] = value._granularity;
+        array[startingIndex++] = value._surfaceHeight;
+        array[startingIndex++] = value._rotation;
+        array[startingIndex++] = value._stRotation;
+        array[startingIndex++] = value._extrudedHeight;
+        array[startingIndex++] = value._closeTop ? 1.0 : 0.0;
+        array[startingIndex]   = value._closeBottom ? 1.0 : 0.0;
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {RectangleGeometry} [result] The object into which to store the result.
+     */
+    RectangleGeometry.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        var rectangle = Rectangle.unpack(array, startingIndex);
+        startingIndex += Rectangle.packedLength;
+
+        var ellipsoid = Ellipsoid.unpack(array, startingIndex);
+        startingIndex += Ellipsoid.packedLength;
+
+        var vertexFormat = VertexFormat.pack(array, startingIndex);
+        startingIndex += VertexFormat.packedLength;
+
+        var granularity = array[startingIndex++];
+        var surfaceHeight = array[startingIndex++];
+        var rotation = array[startingIndex++];
+        var stRotation = array[startingIndex++];
+        var extrudedHeight = array[startingIndex++];
+        var closeTop = array[startingIndex++] === 1.0;
+        var closeBottom = array[startingIndex] === 1.0;
+
+        if (!defined(result)) {
+            return new RectangleGeometry({
+                rectangle : rectangle,
+                ellipsoid : ellipsoid,
+                vertexFormat : vertexFormat,
+                granularity : granularity,
+                surfaceHeight : surfaceHeight,
+                rotation : rotation,
+                stRotation : stRotation,
+                extrudedHeight : extrudedHeight,
+                closeTop : closeTop,
+                closeBottom : closeBottom
+            });
+        }
+
+        result._rectangle = rectangle;
+        result._ellipsoid = ellipsoid;
+        result._vertexFormat = vertexFormat;
+        result._surfaceHeight = surfaceHeight;
+        result._rotation = rotation;
+        result._stRotation = stRotation;
+        result._extrudedHeight = extrudedHeight;
+        result._closeTop = closeTop;
+        result._closeBottom = closeBottom;
+
+        return result;
+    };
+
     var textureMatrixScratch = new Matrix2();
     var tangentRotationMatrixScratch = new Matrix3();
     var nwScratch = new Cartographic();
