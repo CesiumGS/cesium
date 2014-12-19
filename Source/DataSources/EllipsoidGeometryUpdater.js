@@ -583,7 +583,7 @@ define([
         var stackPartitions = Property.getValueOrUndefined(ellipsoid.stackPartitions, time);
         var slicePartitions = Property.getValueOrUndefined(ellipsoid.slicePartitions, time);
         var subdivisions = Property.getValueOrUndefined(ellipsoid.subdivisions, time);
-        var outlineWidth = Property.getValueOrUndefined(ellipsoid.outlineWidth, time);
+        var outlineWidth = Property.getValueOrDefault(ellipsoid.outlineWidth, time, 1.0);
 
         //In 3D we use a fast path by modifying Primitive.modelMatrix instead of regenerating the primitive every frame.
         var sceneMode = this._scene.mode;
@@ -663,7 +663,7 @@ define([
             var outlinePrimitive = this._outlinePrimitive;
 
             primitive.show = true;
-            outlinePrimitive.show = false;
+            outlinePrimitive.show = true;
 
             appearance = primitive.appearance;
             appearance.material = material;
