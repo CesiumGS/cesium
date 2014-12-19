@@ -6,6 +6,7 @@ define([
         '../Core/DeveloperError',
         '../Core/EventHelper',
         './BillboardVisualizer',
+        './BoxGeometryUpdater',
         './CorridorGeometryUpdater',
         './EllipseGeometryUpdater',
         './EllipsoidGeometryUpdater',
@@ -25,6 +26,7 @@ define([
         DeveloperError,
         EventHelper,
         BillboardVisualizer,
+        BoxGeometryUpdater,
         CorridorGeometryUpdater,
         EllipseGeometryUpdater,
         EllipsoidGeometryUpdater,
@@ -90,6 +92,7 @@ define([
     DataSourceDisplay.defaultVisualizersCallback = function(scene, dataSource) {
         var entities = dataSource.entities;
         return [new BillboardVisualizer(scene, entities),
+                new GeometryVisualizer(BoxGeometryUpdater, scene, entities),
                 new GeometryVisualizer(CorridorGeometryUpdater, scene, entities),
                 new GeometryVisualizer(EllipseGeometryUpdater, scene, entities),
                 new GeometryVisualizer(EllipsoidGeometryUpdater, scene, entities),
