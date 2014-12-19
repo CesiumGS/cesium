@@ -145,4 +145,18 @@ defineSuite([
         var numVertices = ((positions.length - 2) * 4 - 4);
         expect(line.attributes.position.values.length).toEqual(numVertices * 3);
     });
+
+    it('throws without at least 2 unique positions', function() {
+        var position = new Cartesian3(100000.0, -200000.0, 300000.0);
+        var positions = [position, Cartesian3.clone(position)];
+
+        expect(function() {
+            PolylineGeometry.createGeometry(new PolylineGeometry({
+                positions : positions,
+                width : 10.0,
+                vertexFormat : VertexFormat.POSITION_ONLY,
+                followSurface : false
+            }));
+        }).toThrowDeveloperError();
+    });
 });

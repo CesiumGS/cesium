@@ -1,12 +1,16 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/DeveloperError'
+        '../Core/DeveloperError',
+        '../Core/Iso8601'
     ], function(
+        defaultValue,
         defined,
         defineProperties,
-        DeveloperError) {
+        DeveloperError,
+        Iso8601) {
     "use strict";
 
     /**
@@ -111,36 +115,26 @@ define([
      * @private
      */
     Property.getValueOrUndefined = function(property, time, result) {
-        if (defined(property)) {
-            return property.getValue(time, result);
-        }
-        return undefined;
+        return defined(property) ? property.getValue(time, result) : undefined;
     };
 
     /**
      * @private
      */
-    Property.getValueOrDefault = function(property, time, defaultValue, result) {
-        var value;
-        if (defined(property)) {
-            value = property.getValue(time, result);
-        }
-        if (!defined(value)) {
-            value = defaultValue;
-        }
-        return value;
+    Property.getValueOrDefault = function(property, time, valueDefault, result) {
+        return defined(property) ? defaultValue(property.getValue(time, result), valueDefault) : valueDefault;
     };
 
     /**
      * @private
      */
-    Property.getValueOrClonedDefault = function(property, time, defaultValue, result) {
+    Property.getValueOrClonedDefault = function(property, time, valueDefault, result) {
         var value;
         if (defined(property)) {
             value = property.getValue(time, result);
         }
         if (!defined(value)) {
-            value = defaultValue.clone(value);
+            value = valueDefault.clone(value);
         }
         return value;
     };

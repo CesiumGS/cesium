@@ -48,6 +48,7 @@ define([
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
+    var scratchColor = new Color();
 
     var GeometryOptions = function(entity) {
         this.id = entity;
@@ -529,48 +530,39 @@ define([
         }
         //>>includeEnd('debug');
 
+        var primitives = this._primitives;
+        primitives.removeAndDestroy(this._primitive);
+        primitives.removeAndDestroy(this._outlinePrimitive);
+
         var geometryUpdater = this._geometryUpdater;
-
-        if (defined(this._primitive)) {
-            this._primitives.remove(this._primitive);
-        }
-
-        if (defined(this._outlinePrimitive)) {
-            this._primitives.remove(this._outlinePrimitive);
-        }
-
         var entity = geometryUpdater._entity;
         var ellipse = entity.ellipse;
-        var show = ellipse.show;
-
-        if (!entity.isAvailable(time) || (defined(show) && !show.getValue(time))) {
+        if (!entity.isAvailable(time) || !Property.getValueOrDefault(ellipse.show, time, true)) {
             return;
         }
 
         var options = this._options;
+        var center = Property.getValueOrUndefined(entity.position, time, options.center);
+        var semiMajorAxis = Property.getValueOrUndefined(ellipse.semiMajorAxis, time);
+        var semiMinorAxis = Property.getValueOrUndefined(ellipse.semiMinorAxis, time);
+        if (!defined(center) || !defined(semiMajorAxis) || !defined(semiMinorAxis)) {
+            return;
+        }
 
-        var position = entity.position;
-        var semiMajorAxis = ellipse.semiMajorAxis;
-        var semiMinorAxis = ellipse.semiMinorAxis;
-        var rotation = ellipse.rotation;
-        var height = ellipse.height;
-        var extrudedHeight = ellipse.extrudedHeight;
-        var granularity = ellipse.granularity;
-        var stRotation = ellipse.stRotation;
-        var numberOfVerticalLines = ellipse.numberOfVerticalLines;
+        options.center = center;
+        options.semiMajorAxis = semiMajorAxis;
+        options.semiMinorAxis = semiMinorAxis;
+        options.rotation = Property.getValueOrUndefined(ellipse.rotation, time);
+        options.height = Property.getValueOrUndefined(ellipse.height, time);
+        options.extrudedHeight = Property.getValueOrUndefined(ellipse.extrudedHeight, time);
+        options.granularity = Property.getValueOrUndefined(ellipse.granularity, time);
+        options.stRotation = Property.getValueOrUndefined(ellipse.stRotation, time);
+        options.numberOfVerticalLines = Property.getValueOrUndefined(ellipse.numberOfVerticalLines, time);
 
-        options.center = position.getValue(time, options.center);
-        options.semiMajorAxis = semiMajorAxis.getValue(time, options.semiMajorAxis);
-        options.semiMinorAxis = semiMinorAxis.getValue(time, options.semiMinorAxis);
-        options.rotation = defined(rotation) ? rotation.getValue(time, options) : undefined;
-        options.height = defined(height) ? height.getValue(time, options) : undefined;
-        options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(time, options) : undefined;
-        options.granularity = defined(granularity) ? granularity.getValue(time) : undefined;
-        options.stRotation = defined(stRotation) ? stRotation.getValue(time) : undefined;
+        if (Property.getValueOrDefault(ellipse.fill, time, true)) {
+            var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
+            this._material = material;
 
-        if (!defined(ellipse.fill) || ellipse.fill.getValue(time)) {
-            this._material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
-            var material = this._material;
             var appearance = new MaterialAppearance({
                 material : material,
                 translucent : material.isTranslucent(),
@@ -578,26 +570,24 @@ define([
             });
             options.vertexFormat = appearance.vertexFormat;
 
-            this._primitive = new Primitive({
+            this._primitive = primitives.add(new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
                     geometry : new EllipseGeometry(options)
                 }),
                 appearance : appearance,
                 asynchronous : false
-            });
-            this._primitives.add(this._primitive);
+            }));
         }
 
-        if (defined(ellipse.outline) && ellipse.outline.getValue(time)) {
+        if (Property.getValueOrDefault(ellipse.outline, time, false)) {
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
-            options.numberOfVerticalLines = defined(numberOfVerticalLines) ? numberOfVerticalLines.getValue(time) : undefined;
 
-            var outlineColor = defined(ellipse.outlineColor) ? ellipse.outlineColor.getValue(time) : Color.BLACK;
-            var outlineWidth = defined(ellipse.outlineWidth) ? ellipse.outlineWidth.getValue(time) : 1.0;
+            var outlineColor = Property.getValueOrClonedDefault(ellipse.outlineColor, time, Color.BLACK, scratchColor);
+            var outlineWidth = Property.getValueOrDefault(ellipse.outlineWidth, 1.0);
             var translucent = outlineColor.alpha !== 1.0;
 
-            this._outlinePrimitive = new Primitive({
+            this._outlinePrimitive = primitives.add(new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
                     geometry : new EllipseOutlineGeometry(options),
@@ -613,8 +603,7 @@ define([
                     }
                 }),
                 asynchronous : false
-            });
-            this._primitives.add(this._outlinePrimitive);
+            }));
         }
     };
 
@@ -623,13 +612,9 @@ define([
     };
 
     DynamicGeometryUpdater.prototype.destroy = function() {
-        if (defined(this._primitive)) {
-            this._primitives.remove(this._primitive);
-        }
-
-        if (defined(this._outlinePrimitive)) {
-            this._primitives.remove(this._outlinePrimitive);
-        }
+        var primitives = this._primitives;
+        primitives.removeAndDestroy(this._primitive);
+        primitives.removeAndDestroy(this._outlinePrimitive);
         destroyObject(this);
     };
 
