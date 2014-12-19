@@ -111,10 +111,7 @@ define([
             var model = defined(modelData) ? modelData.modelPrimitive : undefined;
             if (!defined(model) || uri !== modelData.uri) {
                 if (defined(model)) {
-                    primitives.remove(model);
-                    if (!model.isDestroyed()) {
-                        model.destroy();
-                    }
+                    primitives.removeAndDestroy(model);
                     delete modelHash[entity.id];
                 }
                 model = Model.fromGltf({
@@ -219,10 +216,7 @@ define([
         if (defined(modelData)) {
             var model = modelData.modelPrimitive;
             model.readyToRender.removeEventListener(readyToRender, visualizer);
-            primitives.remove(model);
-            if (!model.isDestroyed()) {
-                model.destroy();
-            }
+            primitives.removeAndDestroy(model);
             delete modelHash[entity.id];
         }
     }

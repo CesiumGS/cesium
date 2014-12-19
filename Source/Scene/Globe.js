@@ -540,12 +540,23 @@ define([
     var rightScratch = new Cartesian3();
     var upScratch = new Cartesian3();
     var negativeZ = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
+    var cartographicScratch = new Cartographic(0.0, 0.0);
+    var pt1Scratch = new Cartesian3();
+    var pt2Scratch = new Cartesian3();
+
     function computePoleQuad(globe, frameState, maxLat, maxGivenLat, viewProjMatrix, viewportTransformation) {
-        var pt1 = globe._ellipsoid.cartographicToCartesian(new Cartographic(0.0, maxGivenLat));
-        var pt2 = globe._ellipsoid.cartographicToCartesian(new Cartographic(Math.PI, maxGivenLat));
+        cartographicScratch.longitude = 0.0;
+        cartographicScratch.latitude = maxGivenLat;
+        var pt1 = globe._ellipsoid.cartographicToCartesian(cartographicScratch, pt1Scratch);
+
+        cartographicScratch.longitude = Math.PI;
+        var pt2 = globe._ellipsoid.cartographicToCartesian(cartographicScratch, pt2Scratch);
+
         var radius = Cartesian3.magnitude(Cartesian3.subtract(pt1, pt2, rightScratch), rightScratch) * 0.5;
 
-        var center = globe._ellipsoid.cartographicToCartesian(new Cartographic(0.0, maxLat));
+        cartographicScratch.longitude = 0.0;
+        cartographicScratch.latitude = maxLat;
+        var center = globe._ellipsoid.cartographicToCartesian(cartographicScratch, pt1Scratch);
 
         var right;
         var dir = frameState.camera.direction;
