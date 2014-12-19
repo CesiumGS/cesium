@@ -21,7 +21,7 @@ define([
      * @alias BoxGraphics
      * @constructor
      */
-    var BoxGraphics = function() {
+    var BoxGraphics = function(options) {
         this._minimumCorner = undefined;
         this._minimumCornerSubscription = undefined;
         this._maximumCorner = undefined;
@@ -39,6 +39,8 @@ define([
         this._outlineWidth = undefined;
         this._outlineWidthSubscription = undefined;
         this._definitionChanged = new Event();
+
+        this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     };
 
     defineProperties(BoxGraphics.prototype, {

@@ -8,6 +8,9 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         './BillboardGraphics',
+        './BoxGraphics',
+        './CorridorGraphics',
+        './CylinderGraphics',
         './EllipseGraphics',
         './EllipsoidGraphics',
         './LabelGraphics',
@@ -28,6 +31,9 @@ define([
         DeveloperError,
         Event,
         BillboardGraphics,
+        BoxGraphics,
+        CorridorGraphics,
+        CylinderGraphics,
         EllipseGraphics,
         EllipsoidGraphics,
         LabelGraphics,
@@ -195,19 +201,19 @@ define([
          * @memberof Entity.prototype
          * @type {BoxGraphics}
          */
-        box : createPropertyDescriptor('box'),
+        box : PropertyHelper.createPropertyTypeDescriptor('box', BoxGraphics),
         /**
          * Gets or sets the corridor.
          * @memberof Entity.prototype
          * @type {CorridorGraphics}
          */
-        corridor : createPropertyDescriptor('corridor'),
+        corridor : PropertyHelper.createPropertyTypeDescriptor('corridor', CorridorGraphics),
         /**
          * Gets or sets the cylinder.
          * @memberof Entity.prototype
          * @type {CylinderGraphics}
          */
-        cylinder : createPropertyDescriptor('cylinder'),
+        cylinder : PropertyHelper.createPropertyTypeDescriptor('cylinder', CylinderGraphics),
         /**
          * Gets or sets the description.
          * @memberof Entity.prototype

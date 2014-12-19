@@ -21,7 +21,7 @@ define([
      * @alias CylinderGraphics
      * @constructor
      */
-    var CylinderGraphics = function() {
+    var CylinderGraphics = function(options) {
         this._length = undefined;
         this._lengthSubscription = undefined;
         this._topRadius = undefined;
@@ -43,8 +43,9 @@ define([
         this._outlineWidth = undefined;
         this._outlineWidthSubscription = undefined;
         this._definitionChanged = new Event();
-    };
 
+        this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
+    };
     defineProperties(CylinderGraphics.prototype, {
         /**
          * Gets the event that is raised whenever a new property is assigned.

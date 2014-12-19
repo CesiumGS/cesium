@@ -21,7 +21,7 @@ define([
      * @alias CorridorGraphics
      * @constructor
      */
-    var CorridorGraphics = function() {
+    var CorridorGraphics = function(options) {
         this._show = undefined;
         this._showSubscription = undefined;
         this._material = undefined;
@@ -45,6 +45,8 @@ define([
         this._outlineWidth = undefined;
         this._outlineWidthSubscription = undefined;
         this._definitionChanged = new Event();
+
+        this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     };
 
     defineProperties(CorridorGraphics.prototype, {
