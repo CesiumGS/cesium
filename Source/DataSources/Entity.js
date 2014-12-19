@@ -39,9 +39,9 @@ define([
         this._definitionChanged = new Event();
         this._name = undefined;
         this._parent = undefined;
-        this._propertyNames = ['billboard', 'box', 'corridor', 'description', 'ellipse', 'ellipsoid', 'label', 'model', //
-                               'orientation', 'path', 'point', 'polygon', 'polyline', 'position', //
-                               'rectangle', 'viewFrom', 'wall'];
+        this._propertyNames = ['billboard', 'box', 'corridor', 'cylinder', 'description', 'ellipse', //
+                               'ellipsoid', 'label', 'model', 'orientation', 'path', 'point', 'polygon', //
+                               'polyline', 'position', 'rectangle', 'viewFrom', 'wall'];
 
         this._billboard = undefined;
         this._billboardSubscription = undefined;
@@ -49,6 +49,8 @@ define([
         this._boxSubscription = undefined;
         this._corridor = undefined;
         this._corridorSubscription = undefined;
+        this._cylinder = undefined;
+        this._cylinderSubscription = undefined;
         this._description = undefined;
         this._descriptionSubscription = undefined;
         this._ellipse = undefined;
@@ -165,6 +167,12 @@ define([
          * @type {CorridorGraphics}
          */
         corridor : createPropertyDescriptor('corridor'),
+        /**
+         * Gets or sets the cylinder.
+         * @memberof Entity.prototype
+         * @type {CylinderGraphics}
+         */
+        cylinder : createPropertyDescriptor('cylinder'),
         /**
          * Gets or sets the description.
          * @memberof Entity.prototype

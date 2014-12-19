@@ -8,6 +8,7 @@ define([
         './BillboardVisualizer',
         './BoxGeometryUpdater',
         './CorridorGeometryUpdater',
+        './CylinderGeometryUpdater',
         './EllipseGeometryUpdater',
         './EllipsoidGeometryUpdater',
         './GeometryVisualizer',
@@ -28,6 +29,7 @@ define([
         BillboardVisualizer,
         BoxGeometryUpdater,
         CorridorGeometryUpdater,
+        CylinderGeometryUpdater,
         EllipseGeometryUpdater,
         EllipsoidGeometryUpdater,
         GeometryVisualizer,
@@ -93,6 +95,7 @@ define([
         var entities = dataSource.entities;
         return [new BillboardVisualizer(scene, entities),
                 new GeometryVisualizer(BoxGeometryUpdater, scene, entities),
+                new GeometryVisualizer(CylinderGeometryUpdater, scene, entities),
                 new GeometryVisualizer(CorridorGeometryUpdater, scene, entities),
                 new GeometryVisualizer(EllipseGeometryUpdater, scene, entities),
                 new GeometryVisualizer(EllipsoidGeometryUpdater, scene, entities),
