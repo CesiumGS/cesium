@@ -14,11 +14,10 @@ defineSuite([
         'DataSources/Entity',
         'DataSources/GridMaterialProperty',
         'DataSources/BoxGraphics',
-        'DataSources/PropertyArray',
-        'DataSources/SampledPositionProperty',
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/PrimitiveCollection',
+        'Specs/createDynamicProperty',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
@@ -36,11 +35,10 @@ defineSuite([
         Entity,
         GridMaterialProperty,
         BoxGraphics,
-        PropertyArray,
-        SampledPositionProperty,
         SampledProperty,
         TimeIntervalCollectionProperty,
         PrimitiveCollection,
+        createDynamicProperty,
         createScene,
         destroyScene) {
     "use strict";
@@ -134,17 +132,14 @@ defineSuite([
     it('A time-varying outlineWidth causes geometry to be dynamic', function() {
         var entity = createBasicBox();
         var updater = new BoxGeometryUpdater(entity, scene);
-        entity.box.outlineWidth = new SampledProperty(Number);
-        entity.box.outlineWidth.addSample(time, 1);
+        entity.box.outlineWidth = createDynamicProperty();
         expect(updater.isDynamic).toBe(true);
     });
 
     it('A time-varying minimumCorner causes geometry to be dynamic', function() {
         var entity = createBasicBox();
         var updater = new BoxGeometryUpdater(entity, scene);
-        var minimumCorner = new SampledPositionProperty();
-        minimumCorner.addSample(time, new Cartesian3());
-        entity.box.minimumCorner = minimumCorner;
+        entity.box.minimumCorner = createDynamicProperty();
 
         expect(updater.isDynamic).toBe(true);
     });
@@ -152,9 +147,7 @@ defineSuite([
     it('A time-varying maximumCorner causes geometry to be dynamic', function() {
         var entity = createBasicBox();
         var updater = new BoxGeometryUpdater(entity, scene);
-        var maximumCorner = new SampledPositionProperty();
-        maximumCorner.addSample(time, new Cartesian3());
-        entity.box.maximumCorner = maximumCorner;
+        entity.box.maximumCorner = createDynamicProperty();
 
         expect(updater.isDynamic).toBe(true);
     });
@@ -296,52 +289,73 @@ defineSuite([
     });
 
     it('dynamic updater sets properties', function() {
-        //This test is mostly a smoke screen for now.
-        var time1 = new JulianDate(0, 0);
-        var time2 = new JulianDate(1, 0);
-        var time3 = new JulianDate(2, 0);
+        var entity = new Entity();
+        var box = new BoxGraphics();
+        entity.box = box;
 
-        function makeProperty(value1, value2) {
-            var property = new TimeIntervalCollectionProperty();
-            property.intervals.addInterval(new TimeInterval({
-                start : time1,
-                stop : time2,
-                isStopIncluded : false,
-                data : value1
-            }));
-            property.intervals.addInterval(new TimeInterval({
-                start : time2,
-                stop : time3,
-                isStopIncluded : false,
-                data : value2
-            }));
-            return property;
-        }
-
-        var entity = createBasicBox();
-
-        var box = entity.box;
-        box.minimumCorner = makeProperty(Cartesian3.fromDegrees(0, 0, 0), Cartesian3.fromDegrees(1, 1, 1));
-        box.maximumCorner = makeProperty(Cartesian3.fromDegrees(1, 1, 1), Cartesian3.fromDegrees(2, 2, 2));
-        box.outline = makeProperty(true, false);
-        box.fill = makeProperty(false, true);
-
-        entity.availability = new TimeIntervalCollection();
-        entity.availability.addInterval(new TimeInterval({
-            start : time1,
-            stop : time3,
-            isStopIncluded : false
-        }));
+        box.show = createDynamicProperty(true);
+        box.minimumCorner = createDynamicProperty(Cartesian3.fromDegrees(0, 0, 0));
+        box.maximumCorner = createDynamicProperty(Cartesian3.fromDegrees(1, 1, 1));
+        box.outline = createDynamicProperty(true);
+        box.fill = createDynamicProperty(true);
 
         var updater = new BoxGeometryUpdater(entity, scene);
         var primitives = new PrimitiveCollection();
         var dynamicUpdater = updater.createDynamicUpdater(primitives);
-        expect(dynamicUpdater.isDestroyed()).toBe(false);
         expect(primitives.length).toBe(0);
-        dynamicUpdater.update(time1);
+
+        dynamicUpdater.update(JulianDate.now());
+        expect(primitives.length).toBe(2);
+        expect(dynamicUpdater.isDestroyed()).toBe(false);
+
+        expect(dynamicUpdater._options.id).toBe(entity);
+        expect(dynamicUpdater._options.minimumCorner).toEqual(box.minimumCorner.getValue());
+        expect(dynamicUpdater._options.maximumCorner).toEqual(box.maximumCorner.getValue());
+
+        box.show.setValue(false);
+        dynamicUpdater.update(JulianDate.now());
+        expect(primitives.length).toBe(0);
+
+        box.show.setValue(true);
+        box.fill.setValue(false);
+        dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(1);
+
+        box.fill.setValue(true);
+        box.outline.setValue(false);
+        dynamicUpdater.update(JulianDate.now());
+        expect(primitives.length).toBe(1);
+
         dynamicUpdater.destroy();
         expect(primitives.length).toBe(0);
+        updater.destroy();
+    });
+
+    it('dynamic updater does not create primitives when minimumCorner.maximumCorner.getValue() is undefined', function() {
+        var entity = new Entity();
+        var box = new BoxGraphics();
+        entity.box = box;
+
+        box.show = createDynamicProperty(true);
+        box.minimumCorner = createDynamicProperty(undefined);
+        box.maximumCorner = createDynamicProperty(Cartesian3.fromDegrees(1, 1, 1));
+        box.outline = createDynamicProperty(true);
+        box.fill = createDynamicProperty(true);
+
+        var updater = new BoxGeometryUpdater(entity, scene);
+        var primitives = new PrimitiveCollection();
+        var dynamicUpdater = updater.createDynamicUpdater(primitives);
+        dynamicUpdater.update(JulianDate.now());
+        expect(primitives.length).toBe(0);
+
+        box.minimumCorner.setValue(Cartesian3.fromDegrees(0, 0, 0));
+        box.maximumCorner.setValue(undefined);
+        dynamicUpdater.update(JulianDate.now());
+        expect(primitives.length).toBe(0);
+
+        box.maximumCorner.setValue(Cartesian3.fromDegrees(1, 1, 1));
+        dynamicUpdater.update(JulianDate.now());
+        expect(primitives.length).toBe(2);
         updater.destroy();
     });
 
@@ -414,8 +428,7 @@ defineSuite([
 
     it('createDynamicUpdater throws if primitives undefined', function() {
         var entity = createBasicBox();
-        entity.box.minimumCorner = new SampledPositionProperty();
-        entity.box.minimumCorner.addSample(time, new Cartesian3());
+        entity.box.minimumCorner = createDynamicProperty(Cartesian3.ZERO);
         var updater = new BoxGeometryUpdater(entity, scene);
         expect(updater.isDynamic).toBe(true);
         expect(function() {
@@ -425,8 +438,7 @@ defineSuite([
 
     it('dynamicUpdater.update throws if no time specified', function() {
         var entity = createBasicBox();
-        entity.box.minimumCorner = new SampledPositionProperty();
-        entity.box.minimumCorner.addSample(time, new Cartesian3());
+        entity.box.minimumCorner = createDynamicProperty(Cartesian3.ZERO);
         var updater = new BoxGeometryUpdater(entity, scene);
         var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
         expect(function() {
