@@ -1260,72 +1260,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('combine combines several geometries with indicess', function() {
-        var instance = new GeometryInstance({
-            geometry : new Geometry({
-                attributes : {
-                    position : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.FLOAT,
-                        componentsPerAttribute : 3,
-                        values : [
-                            0.0, 0.0, 0.0,
-                            1.0, 1.0, 1.0,
-                            2.0, 2.0, 2.0
-                        ]
-                    }),
-                    normal : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.FLOAT,
-                        componentsPerAttribute : 3,
-                        values : [
-                            0.0, 0.0, 0.0,
-                            1.0, 1.0, 1.0,
-                            2.0, 2.0, 2.0
-                        ]
-                    })
-                },
-                indices : [0, 1, 2],
-                primitiveType : PrimitiveType.TRIANGLES
-            })
-        });
-        var anotherInstance = new GeometryInstance({
-            geometry : new Geometry({
-                attributes : {
-                    position : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.FLOAT,
-                        componentsPerAttribute : 3,
-                        values : [
-                            3.0, 3.0, 3.0,
-                            4.0, 4.0, 4.0,
-                            5.0, 5.0, 5.0
-                        ]
-                    })
-                },
-                indices : [0, 1, 2],
-                primitiveType : PrimitiveType.TRIANGLES
-            })
-        });
-
-        var combined = GeometryPipeline.combine([instance, anotherInstance]);
-        expect(combined).toEqual(new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    values : new Float32Array([
-                        0.0, 0.0, 0.0,
-                        1.0, 1.0, 1.0,
-                        2.0, 2.0, 2.0,
-                        3.0, 3.0, 3.0,
-                        4.0, 4.0, 4.0,
-                        5.0, 5.0, 5.0
-                    ])
-                })
-            },
-            indices : new Uint16Array([0, 1, 2, 3, 4, 5]),
-            primitiveType : PrimitiveType.TRIANGLES
-        }));
-    });
-
     it('computeNormal throws when geometry is undefined', function() {
         expect(function() {
             GeometryPipeline.computeNormal();
@@ -2788,25 +2722,5 @@ defineSuite([
         expect(function() {
             return GeometryPipeline.splitLongitude();
         }).toThrowDeveloperError();
-    });
-
-    it('wrapLongitude subdivides triangle crossing the international date line', function() {
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : new Float64Array([-1.0, -1.0, 0.0, -1.0, 1.0, 2.0, -1.0, 2.0, 2.0])
-                })
-            },
-            indices : new Uint16Array([0, 1, 2]),
-            primitiveType : PrimitiveType.TRIANGLES
-        });
-        geometry = GeometryPipeline.wrapLongitude(geometry);
-
-        expect(geometry.indices).toBeDefined();
-        expect(geometry.indices.length).toEqual(9);
-        expect(geometry.attributes.position).toBeDefined();
-        expect(geometry.attributes.position.values.length).toEqual(3 * 3 + 5 * 3);
     });
 });
