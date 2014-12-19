@@ -552,7 +552,7 @@ define([
         options.closeBottom = Property.getValueOrUndefined(rectangle.closeBottom, time);
         options.closeTop = Property.getValueOrUndefined(rectangle.closeTop, time);
 
-        if (!defined(rectangle.fill) || rectangle.fill.getValue(time)) {
+        if (Property.getValueOrDefault(rectangle.fill, time, true)) {
             var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
             this._material = material;
 
@@ -573,7 +573,7 @@ define([
             }));
         }
 
-        if (defined(rectangle.outline) && rectangle.outline.getValue(time)) {
+        if (Property.getValueOrDefault(rectangle.outline, time, false)) {
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
 
             var outlineColor = Property.getValueOrClonedDefault(rectangle.outlineColor, time, Color.BLACK, scratchColor);

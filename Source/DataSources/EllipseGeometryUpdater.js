@@ -559,7 +559,7 @@ define([
         options.stRotation = Property.getValueOrUndefined(ellipse.stRotation, time);
         options.numberOfVerticalLines = Property.getValueOrUndefined(ellipse.numberOfVerticalLines, time);
 
-        if (!defined(ellipse.fill) || ellipse.fill.getValue(time)) {
+        if (Property.getValueOrDefault(ellipse.fill, time, true)) {
             var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
             this._material = material;
 
