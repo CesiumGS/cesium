@@ -18,6 +18,9 @@ Change Log
 * Added `Math.mod` which computes `m % n` but also works when `m` is negative.
 * Fixed a bug in `PolylineGeometry` that would cause gaps in the line. [#2136](https://github.com/AnalyticalGraphicsInc/cesium/issues/2136)
 * Fixed imagery providers whose rectangle crosses the IDL. Added `Rectangle.computeWidth`, `Rectangle.computeHeight`, `Rectangle.width`, and `Rectangle.height`. [#2195](https://github.com/AnalyticalGraphicsInc/cesium/issues/2195)
+* Added `BoxGraphics` and `Entity.box`.
+* Added `CorridorGraphics` and `Entity.corridor`.
+* Added `CylinderGraphics` and `Entity.cylinder`.
 * Added caching to `Model` to save memory and improve loading speed when several models with the same url are created.
 
 ### 1.4 - 2014-12-01
