@@ -161,12 +161,14 @@ defineSuite([
         expect(CesiumMath.negativePiToPi((Math.PI / 2) * Math.PI)).toEqualEpsilon((Math.PI / 2) * Math.PI - CesiumMath.TWO_PI, CesiumMath.EPSILON16);
         expect(CesiumMath.negativePiToPi(Math.PI / 0.5)).toEqualEpsilon(0.0, CesiumMath.EPSILON16);
         expect(CesiumMath.negativePiToPi(Math.PI + CesiumMath.EPSILON10)).toEqualEpsilon(-Math.PI, CesiumMath.EPSILON9);
+        expect(CesiumMath.negativePiToPi(Math.PI)).toEqualEpsilon(Math.PI, CesiumMath.EPSILON9);
     });
 
     it('negativePiToPi negative', function() {
         expect(CesiumMath.negativePiToPi(-Math.PI / 0.5)).toEqualEpsilon(0.0, CesiumMath.EPSILON16);
         expect(CesiumMath.negativePiToPi(-(Math.PI / 2) * Math.PI)).toEqualEpsilon(-(Math.PI / 2) * Math.PI + CesiumMath.TWO_PI, CesiumMath.EPSILON16);
         expect(CesiumMath.negativePiToPi(-(Math.PI + CesiumMath.EPSILON10))).toEqualEpsilon(Math.PI, CesiumMath.EPSILON9);
+        expect(CesiumMath.negativePiToPi(-Math.PI)).toEqualEpsilon(-Math.PI, CesiumMath.EPSILON9);
     });
 
     it('negativePiToPi should not change', function() {
@@ -178,6 +180,16 @@ defineSuite([
         expect(function() {
             CesiumMath.negativePiToPi();
         }).toThrowDeveloperError();
+    });
+
+    it('zeroToTwoPi', function() {
+        expect(CesiumMath.zeroToTwoPi(0.0)).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
+        expect(CesiumMath.zeroToTwoPi(Math.PI)).toEqualEpsilon(Math.PI, CesiumMath.EPSILON14);
+        expect(CesiumMath.zeroToTwoPi(CesiumMath.TWO_PI)).toEqualEpsilon(CesiumMath.TWO_PI, CesiumMath.EPSILON14);
+        expect(CesiumMath.zeroToTwoPi(3.0 * Math.PI)).toEqualEpsilon(Math.PI, CesiumMath.EPSILON14);
+        expect(CesiumMath.zeroToTwoPi(2.0 * CesiumMath.TWO_PI)).toEqualEpsilon(CesiumMath.TWO_PI, CesiumMath.EPSILON14);
+        expect(CesiumMath.zeroToTwoPi(-Math.PI)).toEqualEpsilon(Math.PI, CesiumMath.EPSILON14);
+        expect(CesiumMath.zeroToTwoPi(-CesiumMath.TWO_PI)).toEqualEpsilon(CesiumMath.TWO_PI, CesiumMath.EPSILON14);
     });
 
     it('zeroToTwoPi throws for undefined', function() {
@@ -350,6 +362,12 @@ defineSuite([
         expect(CesiumMath.acosClamped(1.01)).toBe(Math.acos(1.0));
     });
 
+    it('acosClamped throws without value', function() {
+        expect(function() {
+            CesiumMath.acosClamped();
+        }).toThrowDeveloperError();
+    });
+
     it('asinClamped returns asin for normal values', function() {
         expect(CesiumMath.asinClamped(0.5)).toBe(Math.asin(0.5));
         expect(CesiumMath.asinClamped(0.123)).toBe(Math.asin(0.123));
@@ -361,5 +379,31 @@ defineSuite([
     it('asinClamped returns asin of clamped value when value is outside the valid range', function() {
         expect(CesiumMath.asinClamped(-1.01)).toBe(Math.asin(-1.0));
         expect(CesiumMath.asinClamped(1.01)).toBe(Math.asin(1.0));
+    });
+
+    it('asinClamped throws without value', function() {
+        expect(function() {
+            CesiumMath.asinClamped();
+        }).toThrowDeveloperError();
+    });
+
+    it('chordLength finds the chord length', function() {
+        expect(CesiumMath.chordLength(CesiumMath.PI_OVER_THREE, 1.0)).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+        expect(CesiumMath.chordLength(CesiumMath.PI_OVER_THREE, 5.0)).toEqualEpsilon(5.0, CesiumMath.EPSILON14);
+        expect(CesiumMath.chordLength(2.0 * CesiumMath.PI_OVER_THREE, 1.0)).toEqualEpsilon(Math.sqrt(3.0), CesiumMath.EPSILON14);
+        expect(CesiumMath.chordLength(2.0 * CesiumMath.PI_OVER_THREE, 5.0)).toEqualEpsilon(5.0 * Math.sqrt(3.0), CesiumMath.EPSILON14);
+        expect(CesiumMath.chordLength(CesiumMath.PI, 10.0)).toEqualEpsilon(2.0 * 10.0, CesiumMath.EPSILON14);
+    });
+
+    it('chordLength throws without angle', function() {
+        expect(function() {
+            CesiumMath.chordLength(undefined, 1.0);
+        }).toThrowDeveloperError();
+    });
+
+    it('chordLength throws without radius', function() {
+        expect(function() {
+            CesiumMath.chordLength(0.0, undefined);
+        }).toThrowDeveloperError();
     });
 });

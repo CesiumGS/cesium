@@ -494,8 +494,8 @@ define([
         }
         //>>includeEnd('debug');
         var mod = CesiumMath.mod(x, CesiumMath.TWO_PI);
-        if (mod === 0.0 && x !== 0.0) {
-            return CesiumMath.sign(x) * CesiumMath.TWO_PI;
+        if (Math.abs(mod) < CesiumMath.EPSILON14 && Math.abs(x) > CesiumMath.EPSILON14) {
+            return CesiumMath.TWO_PI;
         }
         return mod;
     };
@@ -679,7 +679,7 @@ define([
      * @param {Number} value The value to constrain.
      * @param {Number} min The minimum value.
      * @param {Number} max The maximum value.
-     * @returns The value clamped so that min <= value <= max.
+     * @returns {Number} The value clamped so that min <= value <= max.
      */
     CesiumMath.clamp = function(value, min, max) {
         //>>includeStart('debug', pragmas.debug);
@@ -718,7 +718,7 @@ define([
      * Generates a random number in the range of [0.0, 1.0)
      * using a Mersenne twister.
      *
-     * @returns A random number in the range of [0.0, 1.0).
+     * @returns {Number} A random number in the range of [0.0, 1.0).
      *
      * @see CesiumMath.setRandomNumberSeed
      * @see {@link http://en.wikipedia.org/wiki/Mersenne_twister|Mersenne twister on Wikipedia}
@@ -731,11 +731,16 @@ define([
      * Computes <code>Math.acos(value)</acode>, but first clamps <code>value</code> to the range [-1.0, 1.0]
      * so that the function will never return NaN.
      *
-     * @param value The value for which to compute acos.
-     * @returns {number} The acos of the value if the value is in the range [-1.0, 1.0], or the acos of -1.0 or 1.0,
+     * @param {Number} value The value for which to compute acos.
+     * @returns {Number} The acos of the value if the value is in the range [-1.0, 1.0], or the acos of -1.0 or 1.0,
      *          whichever is closer, if the value is outside the range.
      */
     CesiumMath.acosClamped = function(value) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required.');
+        }
+        //>>includeEnd('debug');
         return Math.acos(CesiumMath.clamp(value, -1.0, 1.0));
     };
 
@@ -743,12 +748,36 @@ define([
      * Computes <code>Math.asin(value)</acode>, but first clamps <code>value</code> to the range [-1.0, 1.0]
      * so that the function will never return NaN.
      *
-     * @param value The value for which to compute asin.
-     * @returns {number} The asin of the value if the value is in the range [-1.0, 1.0], or the asin of -1.0 or 1.0,
+     * @param {Number} value The value for which to compute asin.
+     * @returns {Number} The asin of the value if the value is in the range [-1.0, 1.0], or the asin of -1.0 or 1.0,
      *          whichever is closer, if the value is outside the range.
      */
     CesiumMath.asinClamped = function(value) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required.');
+        }
+        //>>includeEnd('debug');
         return Math.asin(CesiumMath.clamp(value, -1.0, 1.0));
+    };
+
+    /**
+     * Finds the chord length between two points given the circle's radius and the angle between the points.
+     *
+     * @param {Number} angle The angle between the two points.
+     * @param {Number} radius The radius of the circle.
+     * @returns {Number} The chord length.
+     */
+    CesiumMath.chordLength = function(angle, radius) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(angle)) {
+            throw new DeveloperError('angle is required.');
+        }
+        if (!defined(radius)) {
+            throw new DeveloperError('radius is required.');
+        }
+        //>>includeEnd('debug');
+        return 2.0 * radius * Math.sin(angle * 0.5);
     };
 
     return CesiumMath;

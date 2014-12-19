@@ -246,7 +246,7 @@ define([
 
             if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
                 var nextPosition;
-                var nextTop = new Cartesian3();
+                var nextTop = Cartesian3.clone(Cartesian3.ZERO, scratchCartesian3Position5);
                 var groundPosition = ellipsoid.scaleToGeodeticSurface(Cartesian3.fromArray(topPositions, i3, scratchCartesian3Position2), scratchCartesian3Position2);
                 if (i + 1 < length) {
                     nextPosition = ellipsoid.scaleToGeodeticSurface(Cartesian3.fromArray(topPositions, i3 + 3, scratchCartesian3Position3), scratchCartesian3Position3);
