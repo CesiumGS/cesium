@@ -340,13 +340,112 @@ define([
         //>>includeEnd('debug');
 
         this._positions = positions;
-        this._width = width;
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+        this._width = width;
         this._height = defaultValue(options.height, 0);
         this._extrudedHeight = defaultValue(options.extrudedHeight, this._height);
         this._cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         this._workerName = 'createCorridorOutlineGeometry';
+
+        /**
+         * The number of elements used to pack the object into an array.
+         * @type {Number}
+         */
+        this.packedLength = 1 + positions.length * Cartesian3.packedLength + Ellipsoid.packedLength + 5;
+    };
+
+    /**
+     * Stores the provided instance into the provided array.
+     * @function
+     *
+     * @param {Object} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     */
+    CorridorOutlineGeometry.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        var positions = value._positions;
+        var length = positions.length;
+        array[startingIndex++] = length;
+
+        for (var i = 0; i < length; ++i, startingIndex += Cartesian3.packedLength) {
+            Cartesian3.pack(positions[i], array, startingIndex);
+        }
+
+        Ellipsoid.pack(value._ellipsoid, array, startingIndex);
+        startingIndex += Ellipsoid.packedLength;
+
+        array[startingIndex++] = value._width;
+        array[startingIndex++] = value._height;
+        array[startingIndex++] = value._extrudedHeight;
+        array[startingIndex++] = value._cornerType;
+        array[startingIndex]   = value._granularity;
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {CorridorOutlineGeometry} [result] The object into which to store the result.
+     */
+    CorridorOutlineGeometry.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        var length = array[startingIndex++];
+        var positions = new Array(length);
+
+        for (var i = 0; i < length; ++i, startingIndex += Cartesian3.packedLength) {
+            positions[i] = Cartesian3.unpack(array, startingIndex);
+        }
+
+        var ellipsoid = Ellipsoid.unpack(array, startingIndex);
+        startingIndex += Ellipsoid.packedLength;
+
+        var width = array[startingIndex++];
+        var height = array[startingIndex++];
+        var extrudedHeight = array[startingIndex++];
+        var cornerType = array[startingIndex++];
+        var granularity = array[startingIndex];
+
+        if (!defined(result)) {
+            return new CorridorOutlineGeometry({
+                positions : positions,
+                ellipsoid : ellipsoid,
+                width : width,
+                height : height,
+                extrudedHeight : extrudedHeight,
+                cornerType : cornerType,
+                granularity : granularity
+            });
+        }
+
+        result._positions = positions;
+        result._ellipsoid = ellipsoid;
+        result._width = width;
+        result._height = height;
+        result._extrudedHeight = extrudedHeight;
+        result._cornerType = cornerType;
+        result._granularity = granularity;
+
+        return result;
     };
 
     /**

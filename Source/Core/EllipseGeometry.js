@@ -633,6 +633,116 @@ define([
     };
 
     /**
+     * The number of elements used to pack the object into an array.
+     * @type {Number}
+     */
+    EllipseGeometry.packedLength = Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 8;
+
+    /**
+     * Stores the provided instance into the provided array.
+     * @function
+     *
+     * @param {Object} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     */
+    EllipseGeometry.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        Cartesian3.pack(value._center, array, startingIndex);
+        startingIndex += Cartesian3.packedLength;
+
+        Ellipsoid.pack(value._ellipsoid, array, startingIndex);
+        startingIndex += Ellipsoid.packedLength;
+
+        VertexFormat.pack(value._vertexFormat, array, startingIndex);
+        startingIndex += VertexFormat.packedLength;
+
+        array[startingIndex++] = value._semiMajorAxis;
+        array[startingIndex++] = value._semiMinorAxis;
+        array[startingIndex++] = value._rotation;
+        array[startingIndex++] = value._stRotation;
+        array[startingIndex++] = value._height;
+        array[startingIndex++] = value._granularity;
+        array[startingIndex++] = value._extrudedHeight;
+        array[startingIndex]   = value._extrude ? 1.0 : 0.0;
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {EllipseGeometry} [result] The object into which to store the result.
+     */
+    EllipseGeometry.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        var center = Cartesian3.unpack(array, startingIndex);
+        startingIndex += Cartesian3.packedLength;
+
+        var ellipsoid = Ellipsoid.unpack(array, startingIndex);
+        startingIndex += Ellipsoid.packedLength;
+
+        var vertexFormat = VertexFormat.unpack(array, startingIndex);
+        startingIndex += VertexFormat.packedLength;
+
+        var semiMajorAxis = array[startingIndex++];
+        var semiMinorAxis = array[startingIndex++];
+        var rotation = array[startingIndex++];
+        var stRotation = array[startingIndex++];
+        var height = array[startingIndex++];
+        var granularity = array[startingIndex++];
+        var extrudedHeight = array[startingIndex++];
+        var extrude = array[startingIndex] === 1.0;
+
+        if (!defined(result)) {
+            return new EllipseGeometry({
+                center : center,
+                ellipsoid : ellipsoid,
+                vertexFormat : vertexFormat,
+                semiMajorAxis : semiMajorAxis,
+                semiMinorAxis : semiMinorAxis,
+                rotation : rotation,
+                stRotation : stRotation,
+                height : height,
+                granularity : granularity,
+                extrudedHeight : extrudedHeight,
+                extrude : extrude
+            });
+        }
+
+        result._center = center;
+        result._ellipsoid = ellipsoid;
+        result._vertexFormat = vertexFormat;
+        result._semiMajorAxis = semiMajorAxis;
+        result._semiMinorAxis = semiMinorAxis;
+        result._rotation = rotation;
+        result._stRotation = stRotation;
+        result._height = height;
+        result._granularity = granularity;
+        result._extrudedHeight = extrudedHeight;
+        result._extrude = extrude;
+
+        return result;
+    };
+
+    /**
      * Computes the geometric representation of a ellipse on an ellipsoid, including its vertices, indices, and a bounding sphere.
      *
      * @param {EllipseGeometry} ellipseGeometry A description of the ellipse.

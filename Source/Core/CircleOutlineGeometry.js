@@ -30,6 +30,7 @@ define([
      * @exception {DeveloperError} granularity must be greater than zero.
      *
      * @see CircleOutlineGeometry.createGeometry
+     * @see Packable
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Circle%20Outline.html|Cesium Sandcastle Circle Outline Demo}
      *
@@ -66,6 +67,55 @@ define([
         };
         this._ellipseGeometry = new EllipseOutlineGeometry(ellipseGeometryOptions);
         this._workerName = 'createCircleOutlineGeometry';
+    };
+
+    /**
+     * The number of elements used to pack the object into an array.
+     * @type {Number}
+     */
+    CircleOutlineGeometry.packedLength = EllipseOutlineGeometry.packedLength;
+
+    /**
+     * Stores the provided instance into the provided array.
+     * @function
+     *
+     * @param {Object} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     */
+    CircleOutlineGeometry.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+        //>>includeEnd('debug');
+        EllipseOutlineGeometry.pack(value._ellipseGeometry, array, startingIndex);
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {CircleOutlineGeometry} [result] The object into which to store the result.
+     */
+    CircleOutlineGeometry.unpack = function(array, startingIndex, result) {
+        var ellipseGeometry = EllipseOutlineGeometry.unpack(array, startingIndex);
+
+        if (!defined(result)) {
+            return new CircleOutlineGeometry({
+                center : ellipseGeometry._center,
+                radius : ellipseGeometry._semiMajorAxis,
+                ellipsoid : ellipseGeometry._ellipsoid,
+                height : ellipseGeometry._height,
+                extrudedHeight : ellipseGeometry._extrudedHeight,
+                granularity : ellipseGeometry._granularity,
+                numberOfVerticalLines : ellipseGeometry._numberOfVerticalLines
+            });
+        }
+
+        result._ellipseGeometry = ellipseGeometry;
+        return result;
     };
 
     /**

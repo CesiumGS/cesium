@@ -207,6 +207,108 @@ define([
     };
 
     /**
+     * The number of elements used to pack the object into an array.
+     * @type {Number}
+     */
+    EllipseOutlineGeometry.packedLength = Cartesian3.packedLength + Ellipsoid.packedLength + 8;
+
+    /**
+     * Stores the provided instance into the provided array.
+     * @function
+     *
+     * @param {Object} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     */
+    EllipseOutlineGeometry.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        Cartesian3.pack(value._center, array, startingIndex);
+        startingIndex += Cartesian3.packedLength;
+
+        Ellipsoid.pack(value._ellipsoid, array, startingIndex);
+        startingIndex += Ellipsoid.packedLength;
+
+        array[startingIndex++] = value._semiMajorAxis;
+        array[startingIndex++] = value._semiMinorAxis;
+        array[startingIndex++] = value._rotation;
+        array[startingIndex++] = value._height;
+        array[startingIndex++] = value._granularity;
+        array[startingIndex++] = value._extrudedHeight;
+        array[startingIndex++] = value._extrude ? 1.0 : 0.0;
+        array[startingIndex]   = value._numberOfVerticalLines;
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {EllipseOutlineGeometry} [result] The object into which to store the result.
+     */
+    EllipseOutlineGeometry.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        var center = Cartesian3.unpack(array, startingIndex);
+        startingIndex += Cartesian3.packedLength;
+
+        var ellipsoid = Ellipsoid.unpack(array, startingIndex);
+        startingIndex += Ellipsoid.packedLength;
+
+        var semiMajorAxis = array[startingIndex++];
+        var semiMinorAxis = array[startingIndex++];
+        var rotation = array[startingIndex++];
+        var height = array[startingIndex++];
+        var granularity = array[startingIndex++];
+        var extrudedHeight = array[startingIndex++];
+        var extrude = array[startingIndex++] === 1.0;
+        var numberOfVerticalLines = array[startingIndex];
+
+        if (!defined(result)) {
+            return new EllipseOutlineGeometry({
+                center : center,
+                ellipsoid : ellipsoid,
+                semiMajorAxis : semiMajorAxis,
+                semiMinorAxis : semiMinorAxis,
+                rotation : rotation,
+                height : height,
+                granularity : granularity,
+                extrudedHeight : extrudedHeight,
+                extrude : extrude,
+                numberOfVerticalLines : numberOfVerticalLines
+            });
+        }
+
+        result._center = center;
+        result._ellipsoid = ellipsoid;
+        result._semiMajorAxis = semiMajorAxis;
+        result._semiMinorAxis = semiMinorAxis;
+        result._rotation = rotation;
+        result._height = height;
+        result._granularity = granularity;
+        result._extrudedHeight = extrudedHeight;
+        result._extrude = extrude;
+        result._numberOfVerticalLines = numberOfVerticalLines;
+
+        return result;
+    };
+
+    /**
      * Computes the geometric representation of an outline of an ellipse on an ellipsoid, including its vertices, indices, and a bounding sphere.
      *
      * @param {EllipseOutlineGeometry} ellipseGeometry A description of the ellipse.
