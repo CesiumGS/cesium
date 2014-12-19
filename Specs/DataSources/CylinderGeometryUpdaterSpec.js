@@ -1,19 +1,20 @@
 /*global defineSuite*/
 defineSuite([
-        'DataSources/PolygonGeometryUpdater',
+        'DataSources/CylinderGeometryUpdater',
         'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
         'Core/JulianDate',
+        'Core/Quaternion',
         'Core/ShowGeometryInstanceAttribute',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
         'DataSources/ColorMaterialProperty',
+        'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
+        'DataSources/CylinderGraphics',
         'DataSources/Entity',
         'DataSources/GridMaterialProperty',
-        'DataSources/PolygonGraphics',
-        'DataSources/PropertyArray',
         'DataSources/SampledPositionProperty',
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
@@ -22,20 +23,21 @@ defineSuite([
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
-        PolygonGeometryUpdater,
+        CylinderGeometryUpdater,
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
         JulianDate,
+        Quaternion,
         ShowGeometryInstanceAttribute,
         TimeInterval,
         TimeIntervalCollection,
         ColorMaterialProperty,
+        ConstantPositionProperty,
         ConstantProperty,
+        CylinderGraphics,
         Entity,
         GridMaterialProperty,
-        PolygonGraphics,
-        PropertyArray,
         SampledPositionProperty,
         SampledProperty,
         TimeIntervalCollectionProperty,
@@ -58,26 +60,26 @@ defineSuite([
         destroyScene(scene);
     });
 
-    function createBasicPolygon() {
-        var polygon = new PolygonGraphics();
-        polygon.positions = new ConstantProperty(Cartesian3.fromRadiansArray([
-            0, 0,
-            1, 0,
-            1, 1,
-            0, 1
-        ]));
+    function createBasicCylinder() {
+        var cylinder = new CylinderGraphics();
+        cylinder.length = new ConstantProperty(1000);
+        cylinder.topRadius = new ConstantProperty(1000);
+        cylinder.bottomRadius = new ConstantProperty(1000);
+
         var entity = new Entity();
-        entity.polygon = polygon;
+        entity.position = new ConstantPositionProperty(Cartesian3.ZERO);
+        entity.orientation = new ConstantPositionProperty(Quaternion.IDENTITY);
+        entity.cylinder = cylinder;
         return entity;
     }
 
     it('Constructor sets expected defaults', function() {
         var entity = new Entity();
-        var updater = new PolygonGeometryUpdater(entity, scene);
+        var updater = new CylinderGeometryUpdater(entity, scene);
 
         expect(updater.isDestroyed()).toBe(false);
         expect(updater.entity).toBe(entity);
-        expect(updater.isClosed).toBe(false);
+        expect(updater.isClosed).toBe(true);
         expect(updater.fillEnabled).toBe(false);
         expect(updater.fillMaterialProperty).toBe(undefined);
         expect(updater.outlineEnabled).toBe(false);
@@ -92,10 +94,30 @@ defineSuite([
         expect(updater.isDestroyed()).toBe(true);
     });
 
-    it('No geometry available when polygon is undefined ', function() {
-        var entity = createBasicPolygon();
-        var updater = new PolygonGeometryUpdater(entity, scene);
-        entity.polygon = undefined;
+    it('No geometry available when cylinder is undefined ', function() {
+        var entity = createBasicCylinder();
+        var updater = new CylinderGeometryUpdater(entity, scene);
+        entity.cylinder = undefined;
+
+        expect(updater.fillEnabled).toBe(false);
+        expect(updater.outlineEnabled).toBe(false);
+        expect(updater.isDynamic).toBe(false);
+    });
+
+    it('No geometry available when topRadius is undefined', function() {
+        var entity = createBasicCylinder();
+        var updater = new CylinderGeometryUpdater(entity, scene);
+        entity.cylinder.topRadius = undefined;
+
+        expect(updater.fillEnabled).toBe(false);
+        expect(updater.outlineEnabled).toBe(false);
+        expect(updater.isDynamic).toBe(false);
+    });
+
+    it('No geometry available when bottomRadius is undefined', function() {
+        var entity = createBasicCylinder();
+        var updater = new CylinderGeometryUpdater(entity, scene);
+        entity.cylinder.bottomRadius = undefined;
 
         expect(updater.fillEnabled).toBe(false);
         expect(updater.outlineEnabled).toBe(false);
@@ -103,10 +125,10 @@ defineSuite([
     });
 
     it('No geometry available when not filled or outline.', function() {
-        var entity = createBasicPolygon();
-        var updater = new PolygonGeometryUpdater(entity, scene);
-        entity.polygon.fill = new ConstantProperty(false);
-        entity.polygon.outline = new ConstantProperty(false);
+        var entity = createBasicCylinder();
+        var updater = new CylinderGeometryUpdater(entity, scene);
+        entity.cylinder.fill = new ConstantProperty(false);
+        entity.cylinder.outline = new ConstantProperty(false);
 
         expect(updater.fillEnabled).toBe(false);
         expect(updater.outlineEnabled).toBe(false);
@@ -114,12 +136,12 @@ defineSuite([
     });
 
     it('Values correct when using default graphics', function() {
-        var entity = createBasicPolygon();
-        var updater = new PolygonGeometryUpdater(entity, scene);
+        var entity = createBasicCylinder();
+        var updater = new CylinderGeometryUpdater(entity, scene);
 
-        expect(updater.isClosed).toBe(false);
+        expect(updater.isClosed).toBe(true);
         expect(updater.fillEnabled).toBe(true);
-        expect(updater.fillMaterialProperty).toEqual(new ColorMaterialProperty(Color.WHITE));
+        expect(updater.fillMaterialProperty).toEqual(ColorMaterialProperty.fromColor(Color.WHITE));
         expect(updater.outlineEnabled).toBe(false);
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
@@ -128,100 +150,80 @@ defineSuite([
         expect(updater.isDynamic).toBe(false);
     });
 
-    it('Polygon material is correctly exposed.', function() {
-        var entity = createBasicPolygon();
-        var updater = new PolygonGeometryUpdater(entity, scene);
-        entity.polygon.material = new GridMaterialProperty(Color.BLUE);
-        expect(updater.fillMaterialProperty).toBe(entity.polygon.material);
+    it('Cylinder material is correctly exposed.', function() {
+        var entity = createBasicCylinder();
+        var updater = new CylinderGeometryUpdater(entity, scene);
+        entity.cylinder.material = new GridMaterialProperty(Color.BLUE);
+        expect(updater.fillMaterialProperty).toBe(entity.cylinder.material);
     });
 
-    it('Settings extrudedHeight causes geometry to be closed.', function() {
-        var entity = createBasicPolygon();
-        var updater = new PolygonGeometryUpdater(entity, scene);
-        entity.polygon.extrudedHeight = new ConstantProperty(1000);
-        expect(updater.isClosed).toBe(true);
-    });
-
-    it('A time-varying outlineWidth causes geometry to be dynamic', function() {
-        var entity = createBasicPolygon();
-        var updater = new PolygonGeometryUpdater(entity, scene);
-        entity.polygon.outlineWidth = new SampledProperty(Number);
-        entity.polygon.outlineWidth.addSample(time, 1);
+    it('A time-varying outline width causes geometry to be dynamic', function() {
+        var entity = createBasicCylinder();
+        var updater = new CylinderGeometryUpdater(entity, scene);
+        entity.cylinder.outlineWidth = new SampledProperty(Number);
+        entity.cylinder.outlineWidth.addSample(time, 1);
         expect(updater.isDynamic).toBe(true);
     });
 
-    it('A time-varying positions causes geometry to be dynamic', function() {
-        var entity = createBasicPolygon();
-        var updater = new PolygonGeometryUpdater(entity, scene);
-        var point1 = new SampledPositionProperty();
-        point1.addSample(time, new Cartesian3());
-        var point2 = new SampledPositionProperty();
-        point2.addSample(time, new Cartesian3());
-        var point3 = new SampledPositionProperty();
-        point3.addSample(time, new Cartesian3());
-
-        entity.polygon.positions = new PropertyArray();
-        entity.polygon.positions.setValue([point1, point2, point3]);
+    it('A time-varying position causes geometry to be dynamic', function() {
+        var entity = createBasicCylinder();
+        var updater = new CylinderGeometryUpdater(entity, scene);
+        entity.position = new SampledPositionProperty();
+        entity.position.addSample(time, Cartesian3.ZERO);
         expect(updater.isDynamic).toBe(true);
     });
 
-    it('A time-varying height causes geometry to be dynamic', function() {
-        var entity = createBasicPolygon();
-        var updater = new PolygonGeometryUpdater(entity, scene);
-        entity.polygon.height = new SampledProperty(Number);
-        entity.polygon.height.addSample(time, 1);
+    it('A time-varying bottomRadius causes geometry to be dynamic', function() {
+        var entity = createBasicCylinder();
+        var updater = new CylinderGeometryUpdater(entity, scene);
+        entity.cylinder.bottomRadius = new SampledProperty(Number);
+        entity.cylinder.bottomRadius.addSample(time, 1);
         expect(updater.isDynamic).toBe(true);
     });
 
-    it('A time-varying extrudedHeight causes geometry to be dynamic', function() {
-        var entity = createBasicPolygon();
-        var updater = new PolygonGeometryUpdater(entity, scene);
-        entity.polygon.extrudedHeight = new SampledProperty(Number);
-        entity.polygon.extrudedHeight.addSample(time, 1);
+    it('A time-varying topRadius causes geometry to be dynamic', function() {
+        var entity = createBasicCylinder();
+        var updater = new CylinderGeometryUpdater(entity, scene);
+        entity.cylinder.topRadius = new SampledProperty(Number);
+        entity.cylinder.topRadius.addSample(time, 1);
         expect(updater.isDynamic).toBe(true);
     });
 
-    it('A time-varying granularity causes geometry to be dynamic', function() {
-        var entity = createBasicPolygon();
-        var updater = new PolygonGeometryUpdater(entity, scene);
-        entity.polygon.granularity = new SampledProperty(Number);
-        entity.polygon.granularity.addSample(time, 1);
+    it('A time-varying length causes geometry to be dynamic', function() {
+        var entity = createBasicCylinder();
+        var updater = new CylinderGeometryUpdater(entity, scene);
+        entity.cylinder.length = new SampledProperty(Number);
+        entity.cylinder.length.addSample(time, 1);
         expect(updater.isDynamic).toBe(true);
     });
 
-    it('A time-varying stRotation causes geometry to be dynamic', function() {
-        var entity = createBasicPolygon();
-        var updater = new PolygonGeometryUpdater(entity, scene);
-        entity.polygon.stRotation = new SampledProperty(Number);
-        entity.polygon.stRotation.addSample(time, 1);
-        expect(updater.isDynamic).toBe(true);
-    });
-
-    it('A time-varying perPositionHeight causes geometry to be dynamic', function() {
-        var entity = createBasicPolygon();
-        var updater = new PolygonGeometryUpdater(entity, scene);
-        entity.polygon.perPositionHeight = new SampledProperty(Number);
-        entity.polygon.perPositionHeight.addSample(time, 1);
+    it('A time-varying numberOfVerticalLines causes geometry to be dynamic', function() {
+        var entity = createBasicCylinder();
+        var updater = new CylinderGeometryUpdater(entity, scene);
+        entity.cylinder.numberOfVerticalLines = new SampledProperty(Number);
+        entity.cylinder.numberOfVerticalLines.addSample(time, 1);
         expect(updater.isDynamic).toBe(true);
     });
 
     function validateGeometryInstance(options) {
-        var entity = createBasicPolygon();
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(options.position);
+        entity.orientation = new ConstantProperty(options.orientation);
 
-        var polygon = entity.polygon;
-        polygon.show = new ConstantProperty(options.show);
-        polygon.fill = new ConstantProperty(options.fill);
-        polygon.material = options.material;
-        polygon.outline = new ConstantProperty(options.outline);
-        polygon.outlineColor = new ConstantProperty(options.outlineColor);
-        polygon.perPositionHeight = new ConstantProperty(options.perPositionHeight);
+        var cylinder = new CylinderGraphics();
+        cylinder.show = new ConstantProperty(options.show);
+        cylinder.fill = new ConstantProperty(options.fill);
+        cylinder.material = options.material;
+        cylinder.outline = new ConstantProperty(options.outline);
+        cylinder.outlineColor = new ConstantProperty(options.outlineColor);
+        cylinder.numberOfVerticalLines = new ConstantProperty(options.numberOfVerticalLines);
 
-        polygon.stRotation = new ConstantProperty(options.stRotation);
-        polygon.height = new ConstantProperty(options.height);
-        polygon.extrudedHeight = new ConstantProperty(options.extrudedHeight);
-        polygon.granularity = new ConstantProperty(options.granularity);
+        cylinder.length = new ConstantProperty(options.length);
+        cylinder.topRadius = new ConstantProperty(options.topRadius);
+        cylinder.bottomRadius = new ConstantProperty(options.bottomRadius);
+        entity.cylinder = cylinder;
 
-        var updater = new PolygonGeometryUpdater(entity, scene);
+        var updater = new CylinderGeometryUpdater(entity, scene);
 
         var instance;
         var geometry;
@@ -229,10 +231,9 @@ defineSuite([
         if (options.fill) {
             instance = updater.createFillGeometryInstance(time);
             geometry = instance.geometry;
-            expect(geometry._stRotation).toEqual(options.stRotation);
-            expect(geometry._height).toEqual(options.height);
-            expect(geometry._granularity).toEqual(options.granularity);
-            expect(geometry._extrudedHeight).toEqual(options.extrudedHeight);
+            expect(geometry._topRadius).toEqual(options.topRadius);
+            expect(geometry._bottomRadius).toEqual(options.bottomRadius);
+            expect(geometry._length).toEqual(options.length);
 
             attributes = instance.attributes;
             if (options.material instanceof ColorMaterialProperty) {
@@ -246,10 +247,10 @@ defineSuite([
         if (options.outline) {
             instance = updater.createOutlineGeometryInstance(time);
             geometry = instance.geometry;
-            expect(geometry._height).toEqual(options.height);
-            expect(geometry._granularity).toEqual(options.granularity);
-            expect(geometry._extrudedHeight).toEqual(options.extrudedHeight);
-            expect(geometry._perPositionHeight).toEqual(options.perPositionHeight);
+            expect(geometry._topRadius).toEqual(options.topRadius);
+            expect(geometry._bottomRadius).toEqual(options.bottomRadius);
+            expect(geometry._length).toEqual(options.length);
+            expect(geometry._numberOfVerticalLines).toEqual(options.numberOfVerticalLines);
 
             attributes = instance.attributes;
             expect(attributes.color.value).toEqual(ColorGeometryInstanceAttribute.toValue(options.outlineColor));
@@ -259,38 +260,40 @@ defineSuite([
 
     it('Creates expected per-color geometry', function() {
         validateGeometryInstance({
+            position : new Cartesian3(4, 5, 6),
+            orientation : Quaternion.IDENTITY,
+            length : 1,
+            topRadius : 3,
+            bottomRadius : 2,
             show : true,
-            material : new ColorMaterialProperty(Color.RED),
-            height : 431,
-            extrudedHeight : 123,
-            granularity : 0.97,
-            stRotation : 12,
+            material : ColorMaterialProperty.fromColor(Color.RED),
             fill : true,
             outline : true,
             outlineColor : Color.BLUE,
-            perPositionHeight : true
+            numberOfVerticalLines : 15
         });
     });
 
     it('Creates expected per-material geometry', function() {
         validateGeometryInstance({
+            position : new Cartesian3(4, 5, 6),
+            orientation : Quaternion.IDENTITY,
+            length : 1,
+            topRadius : 3,
+            bottomRadius : 2,
             show : true,
             material : new GridMaterialProperty(),
-            height : 431,
-            extrudedHeight : 123,
-            granularity : 0.97,
-            stRotation : 12,
             fill : true,
             outline : true,
             outlineColor : Color.BLUE,
-            perPositionHeight : false
+            numberOfVerticalLines : 15
         });
     });
 
     it('Correctly exposes outlineWidth', function() {
-        var entity = createBasicPolygon();
-        entity.polygon.outlineWidth = new ConstantProperty(8);
-        var updater = new PolygonGeometryUpdater(entity, scene);
+        var entity = createBasicCylinder();
+        entity.cylinder.outlineWidth = new ConstantProperty(8);
+        var updater = new CylinderGeometryUpdater(entity, scene);
         expect(updater.outlineWidth).toBe(8);
     });
 
@@ -336,13 +339,13 @@ defineSuite([
         outlineColor.addSample(time2, Color.RED);
         outlineColor.addSample(time3, Color.YELLOW);
 
-        var entity = createBasicPolygon();
-        entity.polygon.fill = fill;
-        entity.polygon.material = colorMaterial;
-        entity.polygon.outline = outline;
-        entity.polygon.outlineColor = outlineColor;
+        var entity = createBasicCylinder();
+        entity.cylinder.fill = fill;
+        entity.cylinder.material = colorMaterial;
+        entity.cylinder.outline = outline;
+        entity.cylinder.outlineColor = outlineColor;
 
-        var updater = new PolygonGeometryUpdater(entity, scene);
+        var updater = new CylinderGeometryUpdater(entity, scene);
 
         var instance = updater.createFillGeometryInstance(time2);
         var attributes = instance.attributes;
@@ -356,98 +359,96 @@ defineSuite([
     });
 
     it('dynamic updater sets properties', function() {
-        var polygon = new PolygonGraphics();
-        polygon.positions = createDynamicProperty(Cartesian3.fromRadiansArray([
-            0, 0,
-            1, 0,
-            1, 1,
-            0, 1
-        ]));
-        polygon.show = createDynamicProperty(true);
-        polygon.height = createDynamicProperty(3);
-        polygon.extrudedHeight = createDynamicProperty(2);
-        polygon.outline = createDynamicProperty(true);
-        polygon.fill = createDynamicProperty(true);
-        polygon.perPositionHeight = createDynamicProperty(false);
-        polygon.granularity = createDynamicProperty(2);
-        polygon.stRotation = createDynamicProperty(1);
+        var cylinder = new CylinderGraphics();
+        cylinder.show = createDynamicProperty(true);
+        cylinder.topRadius = createDynamicProperty(2);
+        cylinder.bottomRadius = createDynamicProperty(1);
+        cylinder.length = createDynamicProperty(3);
+        cylinder.outline = createDynamicProperty(true);
+        cylinder.fill = createDynamicProperty(true);
 
         var entity = new Entity();
-        entity.polygon = polygon;
+        entity.position = createDynamicProperty(Cartesian3.UNIT_Z);
+        entity.orientation = createDynamicProperty(Quaternion.IDENTITY);
+        entity.cylinder = cylinder;
 
-        var updater = new PolygonGeometryUpdater(entity, scene);
+        var updater = new CylinderGeometryUpdater(entity, scene);
         var primitives = new PrimitiveCollection();
         var dynamicUpdater = updater.createDynamicUpdater(primitives);
+        expect(primitives.length).toBe(0);
+
+        dynamicUpdater.update(JulianDate.now());
+        expect(primitives.length).toBe(2);
         expect(dynamicUpdater.isDestroyed()).toBe(false);
+
+        expect(dynamicUpdater._options.id).toBe(entity);
+        expect(dynamicUpdater._options.topRadius).toEqual(cylinder.topRadius.getValue());
+        expect(dynamicUpdater._options.bottomRadius).toEqual(cylinder.bottomRadius.getValue());
+
+        cylinder.show.setValue(false);
+        dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(0);
 
-        dynamicUpdater.update(time);
-        expect(primitives.length).toBe(2);
+        cylinder.show.setValue(true);
+        cylinder.fill.setValue(false);
+        dynamicUpdater.update(JulianDate.now());
+        expect(primitives.length).toBe(1);
 
-        var options = dynamicUpdater._options;
-        expect(options.id).toEqual(entity);
-        expect(options.polygonHierarchy.positions).toEqual(polygon.positions.getValue());
-        expect(options.height).toEqual(polygon.height.getValue());
-        expect(options.extrudedHeight).toEqual(polygon.extrudedHeight.getValue());
-        expect(options.perPositionHeight).toEqual(polygon.perPositionHeight.getValue());
-        expect(options.granularity).toEqual(polygon.granularity.getValue());
-        expect(options.stRotation).toEqual(polygon.stRotation.getValue());
+        cylinder.fill.setValue(true);
+        cylinder.outline.setValue(false);
+        dynamicUpdater.update(JulianDate.now());
+        expect(primitives.length).toBe(1);
 
-        //If a dynamic show returns false, the primitive should go away.
-        polygon.show.setValue(false);
-        dynamicUpdater.update(time);
-        expect(primitives.length).toBe(0);
-
-        polygon.show.setValue(true);
-        dynamicUpdater.update(time);
-        expect(primitives.length).toBe(2);
-
-        //If a dynamic position returns undefined, the primitive should go away.
-        polygon.positions.setValue(undefined);
-        dynamicUpdater.update(time);
+        cylinder.length.setValue(undefined);
+        dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(0);
 
         dynamicUpdater.destroy();
+        expect(primitives.length).toBe(0);
         updater.destroy();
     });
 
     it('geometryChanged event is raised when expected', function() {
-        var entity = createBasicPolygon();
-        var updater = new PolygonGeometryUpdater(entity, scene);
+        var entity = createBasicCylinder();
+        var updater = new CylinderGeometryUpdater(entity, scene);
         var listener = jasmine.createSpy('listener');
         updater.geometryChanged.addEventListener(listener);
 
-        entity.polygon.positions = new ConstantProperty([]);
+        entity.position = new ConstantPositionProperty(Cartesian3.UNIT_Z);
         expect(listener.callCount).toEqual(1);
 
-        entity.polygon.height = new ConstantProperty(82);
+        entity.cylinder.topRadius = new ConstantProperty(82);
         expect(listener.callCount).toEqual(2);
 
         entity.availability = new TimeIntervalCollection();
         expect(listener.callCount).toEqual(3);
 
-        entity.polygon.positions = undefined;
+        entity.cylinder.topRadius = undefined;
         expect(listener.callCount).toEqual(4);
 
         //Since there's no valid geometry, changing another property should not raise the event.
-        entity.polygon.height = undefined;
+        entity.cylinder.bottomRadius = undefined;
 
         //Modifying an unrelated property should not have any effect.
         entity.viewFrom = new ConstantProperty(Cartesian3.UNIT_X);
         expect(listener.callCount).toEqual(4);
+
+        entity.cylinder.topRadius = new SampledProperty(Number);
+        entity.cylinder.bottomRadius = new SampledProperty(Number);
+        expect(listener.callCount).toEqual(5);
     });
 
     it('createFillGeometryInstance throws if object is not filled', function() {
         var entity = new Entity();
-        var updater = new PolygonGeometryUpdater(entity, scene);
+        var updater = new CylinderGeometryUpdater(entity, scene);
         expect(function() {
             return updater.createFillGeometryInstance(time);
         }).toThrowDeveloperError();
     });
 
     it('createFillGeometryInstance throws if no time provided', function() {
-        var entity = createBasicPolygon();
-        var updater = new PolygonGeometryUpdater(entity, scene);
+        var entity = createBasicCylinder();
+        var updater = new CylinderGeometryUpdater(entity, scene);
         expect(function() {
             return updater.createFillGeometryInstance(undefined);
         }).toThrowDeveloperError();
@@ -455,34 +456,33 @@ defineSuite([
 
     it('createOutlineGeometryInstance throws if object is not outlined', function() {
         var entity = new Entity();
-        var updater = new PolygonGeometryUpdater(entity, scene);
+        var updater = new CylinderGeometryUpdater(entity, scene);
         expect(function() {
             return updater.createOutlineGeometryInstance(time);
         }).toThrowDeveloperError();
     });
 
     it('createOutlineGeometryInstance throws if no time provided', function() {
-        var entity = createBasicPolygon();
-        entity.polygon.outline = new ConstantProperty(true);
-        var updater = new PolygonGeometryUpdater(entity, scene);
+        var entity = createBasicCylinder();
+        entity.cylinder.outline = new ConstantProperty(true);
+        var updater = new CylinderGeometryUpdater(entity, scene);
         expect(function() {
             return updater.createOutlineGeometryInstance(undefined);
         }).toThrowDeveloperError();
     });
 
     it('createDynamicUpdater throws if not dynamic', function() {
-        var entity = createBasicPolygon();
-        var updater = new PolygonGeometryUpdater(entity, scene);
+        var entity = createBasicCylinder();
+        var updater = new CylinderGeometryUpdater(entity, scene);
         expect(function() {
             return updater.createDynamicUpdater(new PrimitiveCollection());
         }).toThrowDeveloperError();
     });
 
     it('createDynamicUpdater throws if primitives undefined', function() {
-        var entity = createBasicPolygon();
-        entity.polygon.height = new SampledProperty(Number);
-        entity.polygon.height.addSample(time, 4);
-        var updater = new PolygonGeometryUpdater(entity, scene);
+        var entity = createBasicCylinder();
+        entity.cylinder.topRadius = createDynamicProperty(4);
+        var updater = new CylinderGeometryUpdater(entity, scene);
         expect(updater.isDynamic).toBe(true);
         expect(function() {
             return updater.createDynamicUpdater(undefined);
@@ -490,10 +490,9 @@ defineSuite([
     });
 
     it('dynamicUpdater.update throws if no time specified', function() {
-        var entity = createBasicPolygon();
-        entity.polygon.height = new SampledProperty(Number);
-        entity.polygon.height.addSample(time, 4);
-        var updater = new PolygonGeometryUpdater(entity, scene);
+        var entity = createBasicCylinder();
+        entity.cylinder.topRadius = createDynamicProperty(4);
+        var updater = new CylinderGeometryUpdater(entity, scene);
         var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
         expect(function() {
             dynamicUpdater.update(undefined);
@@ -502,14 +501,14 @@ defineSuite([
 
     it('Constructor throws if no Entity supplied', function() {
         expect(function() {
-            return new PolygonGeometryUpdater(undefined, scene);
+            return new CylinderGeometryUpdater(undefined, scene);
         }).toThrowDeveloperError();
     });
 
     it('Constructor throws if no scene supplied', function() {
-        var entity = createBasicPolygon();
+        var entity = createBasicCylinder();
         expect(function() {
-            return new PolygonGeometryUpdater(entity, undefined);
+            return new CylinderGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
     });
 });

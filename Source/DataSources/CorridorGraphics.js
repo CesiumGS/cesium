@@ -5,23 +5,23 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './PropertyHelper'
+        './createPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        PropertyHelper) {
+        createPropertyDescriptor) {
     "use strict";
 
     /**
-     * An optionally time-dynamic polygon.
+     * An optionally time-dynamic corridor.
      *
-     * @alias PolygonGraphics
+     * @alias CorridorGraphics
      * @constructor
      */
-    var PolygonGraphics = function(options) {
+    var CorridorGraphics = function() {
         this._show = undefined;
         this._showSubscription = undefined;
         this._material = undefined;
@@ -34,10 +34,10 @@ define([
         this._extrudedHeightSubscription = undefined;
         this._granularity = undefined;
         this._granularitySubscription = undefined;
-        this._stRotation = undefined;
-        this._stRotationSubscription = undefined;
-        this._perPositionHeight = undefined;
-        this._perPositionHeightSubscription = undefined;
+        this._width = undefined;
+        this._widthSubscription = undefined;
+        this._cornerType = undefined;
+        this._cornerTypeSubscription = undefined;
         this._outline = undefined;
         this._outlineSubscription = undefined;
         this._outlineColor = undefined;
@@ -45,16 +45,12 @@ define([
         this._outlineWidth = undefined;
         this._outlineWidthSubscription = undefined;
         this._definitionChanged = new Event();
-        this._fill = undefined;
-        this._fillSubscription = undefined;
-
-        this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     };
 
-    defineProperties(PolygonGraphics.prototype, {
+    defineProperties(CorridorGraphics.prototype, {
         /**
          * Gets the event that is raised whenever a new property is assigned.
-         * @memberof PolygonGraphics.prototype
+         * @memberof CorridorGraphics.prototype
          *
          * @type {Event}
          * @readonly
@@ -66,104 +62,104 @@ define([
         },
 
         /**
-         * Gets or sets the boolean {@link Property} specifying the polygon's visibility.
-         * @memberof PolygonGraphics.prototype
+         * Gets or sets the boolean {@link Property} specifying the corridor's visibility.
+         * @memberof CorridorGraphics.prototype
          * @type {Property}
          */
-        show : PropertyHelper.createPropertyDescriptor('show'),
+        show : createPropertyDescriptor('show'),
 
         /**
-         * Gets or sets the {@link MaterialProperty} specifying the appearance of the polygon.
-         * @memberof PolygonGraphics.prototype
+         * Gets or sets the {@link MaterialProperty} specifying the appearance of the corridor.
+         * @memberof CorridorGraphics.prototype
          * @type {MaterialProperty}
          */
-        material : PropertyHelper.createMaterialPropertyDescriptor('material'),
+        material : createPropertyDescriptor('material'),
 
         /**
-         * Gets or sets the vertex positions.
-         * @memberof PolygonGraphics.prototype
+         * Gets or sets the positions.
+         * @memberof CorridorGraphics.prototype
          * @type {Property}
          */
-        positions : PropertyHelper.createPropertyDescriptor('positions'),
+        positions : createPropertyDescriptor('positions'),
 
         /**
-         * Gets or sets the Number {@link Property} specifying the height of the polygon.
-         * If undefined, the polygon will be on the surface.
-         * @memberof PolygonGraphics.prototype
+         * Gets or sets the Number {@link Property} specifying the height of the corridor.
+         * If undefined, the corridor will be on the surface.
+         * @memberof CorridorGraphics.prototype
          * @type {Property}
          */
-        height : PropertyHelper.createPropertyDescriptor('height'),
+        height : createPropertyDescriptor('height'),
 
         /**
-         * Gets or sets the Number {@link Property} specifying the extruded height of the polygon.
-         * Setting this property creates a polygon shaped volume starting at height and ending
+         * Gets or sets the Number {@link Property} specifying the extruded height of the corridor.
+         * Setting this property creates a corridor shaped volume starting at height and ending
          * at the extruded height.
-         * @memberof PolygonGraphics.prototype
+         * @memberof CorridorGraphics.prototype
          * @type {Property}
          */
-        extrudedHeight : PropertyHelper.createPropertyDescriptor('extrudedHeight'),
+        extrudedHeight : createPropertyDescriptor('extrudedHeight'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the sampling distance, in radians,
          * between each latitude and longitude point.
-         * @memberof PolygonGraphics.prototype
+         * @memberof CorridorGraphics.prototype
          * @type {Property}
          */
-        granularity : PropertyHelper.createPropertyDescriptor('granularity'),
+        granularity : createPropertyDescriptor('granularity'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the rotation of the texture coordinates,
          * in radians. A positive rotation is counter-clockwise.
-         * @memberof PolygonGraphics.prototype
+         * @memberof CorridorGraphics.prototype
          * @type {Property}
          */
-        stRotation : PropertyHelper.createPropertyDescriptor('stRotation'),
+        width : createPropertyDescriptor('width'),
 
         /**
-         * Gets or sets the Boolean {@link Property} specifying whether the polygon should be filled.
-         * @memberof PolygonGraphics.prototype
+         * Gets or sets the Boolean {@link Property} specifying whether the corridor should be filled.
+         * @memberof CorridorGraphics.prototype
          * @type {Property}
          */
-        fill : PropertyHelper.createPropertyDescriptor('fill'),
+        fill : createPropertyDescriptor('fill'),
 
         /**
-         * Gets or sets the Boolean {@link Property} specifying whether the polygon should be outlined.
-         * @memberof PolygonGraphics.prototype
+         * Gets or sets the Boolean {@link Property} specifying whether the corridor should be outlined.
+         * @memberof CorridorGraphics.prototype
          * @type {Property}
          */
-        outline : PropertyHelper.createPropertyDescriptor('outline'),
+        outline : createPropertyDescriptor('outline'),
 
         /**
          * Gets or sets the Color {@link Property} specifying whether the color of the outline.
-         * @memberof PolygonGraphics.prototype
+         * @memberof CorridorGraphics.prototype
          * @type {Property}
          */
-        outlineColor : PropertyHelper.createPropertyDescriptor('outlineColor'),
+        outlineColor : createPropertyDescriptor('outlineColor'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the width of the outline.
-         * @memberof PolygonGraphics.prototype
+         * @memberof CorridorGraphics.prototype
          * @type {Property}
          */
-        outlineWidth : PropertyHelper.createPropertyDescriptor('outlineWidth'),
+        outlineWidth : createPropertyDescriptor('outlineWidth'),
 
         /**
-         * Gets or sets the Boolean {@link Property} specifying whether the polygon uses per-position heights.
-         * @memberof PolygonGraphics.prototype
+         * Gets or sets the {@link CornerType} {@link Property} specifying how corners are triangulated.
+         * @memberof CorridorGraphics.prototype
          * @type {Property}
          */
-        perPositionHeight : PropertyHelper.createPropertyDescriptor('perPositionHeight')
+        cornerType : createPropertyDescriptor('cornerType')
     });
 
     /**
-     * Duplicates a PolygonGraphics instance.
+     * Duplicates a CorridorGraphics instance.
      *
-     * @param {PolygonGraphics} [result] The object onto which to store the result.
-     * @returns {PolygonGraphics} The modified result parameter or a new instance if one was not provided.
+     * @param {CorridorGraphics} [result] The object onto which to store the result.
+     * @returns {CorridorGraphics} The modified result parameter or a new instance if one was not provided.
      */
-    PolygonGraphics.prototype.clone = function(result) {
+    CorridorGraphics.prototype.clone = function(result) {
         if (!defined(result)) {
-            result = new PolygonGraphics();
+            result = new CorridorGraphics();
         }
         result.show = this.show;
         result.material = this.material;
@@ -171,12 +167,12 @@ define([
         result.height = this.height;
         result.extrudedHeight = this.extrudedHeight;
         result.granularity = this.granularity;
-        result.stRotation = this.stRotation;
+        result.width = this.width;
         result.fill = this.fill;
         result.outline = this.outline;
         result.outlineColor = this.outlineColor;
         result.outlineWidth = this.outlineWidth;
-        result.perPositionHeight = this.perPositionHeight;
+        result.cornerType = this.cornerType;
         return result;
     };
 
@@ -184,9 +180,9 @@ define([
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
      *
-     * @param {PolygonGraphics} source The object to be merged into this object.
+     * @param {CorridorGraphics} source The object to be merged into this object.
      */
-    PolygonGraphics.prototype.merge = function(source) {
+    CorridorGraphics.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
@@ -199,13 +195,13 @@ define([
         this.height = defaultValue(this.height, source.height);
         this.extrudedHeight = defaultValue(this.extrudedHeight, source.extrudedHeight);
         this.granularity = defaultValue(this.granularity, source.granularity);
-        this.stRotation = defaultValue(this.stRotation, source.stRotation);
+        this.width = defaultValue(this.width, source.width);
         this.fill = defaultValue(this.fill, source.fill);
         this.outline = defaultValue(this.outline, source.outline);
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
         this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
-        this.perPositionHeight = defaultValue(this.perPositionHeight, source.perPositionHeight);
+        this.cornerType = defaultValue(this.cornerType, source.cornerType);
     };
 
-    return PolygonGraphics;
+    return CorridorGraphics;
 });
