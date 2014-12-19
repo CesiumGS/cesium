@@ -10,8 +10,8 @@ define([
         '../Core/Event',
         '../Core/GeometryInstance',
         '../Core/Iso8601',
-        '../Core/RectangleGeometry',
-        '../Core/RectangleOutlineGeometry',
+        '../Core/BoxGeometry',
+        '../Core/BoxOutlineGeometry',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
@@ -31,8 +31,8 @@ define([
         Event,
         GeometryInstance,
         Iso8601,
-        RectangleGeometry,
-        RectangleOutlineGeometry,
+        BoxGeometry,
+        BoxOutlineGeometry,
         ShowGeometryInstanceAttribute,
         MaterialAppearance,
         PerInstanceColorAppearance,
@@ -53,26 +53,20 @@ define([
     var GeometryOptions = function(entity) {
         this.id = entity;
         this.vertexFormat = undefined;
-        this.rectangle = undefined;
-        this.closeBottom = undefined;
-        this.closeTop = undefined;
-        this.height = undefined;
-        this.extrudedHeight = undefined;
-        this.granularity = undefined;
-        this.stRotation = undefined;
-        this.rotation = undefined;
+        this.minimumCorner = undefined;
+        this.maximumCorner = undefined;
     };
 
     /**
-     * A {@link GeometryUpdater} for rectangles.
+     * A {@link GeometryUpdater} for boxes.
      * Clients do not normally create this class directly, but instead rely on {@link DataSourceDisplay}.
-     * @alias RectangleGeometryUpdater
+     * @alias BoxGeometryUpdater
      * @constructor
      *
      * @param {Entity} entity The entity containing the geometry to be visualized.
      * @param {Scene} scene The scene where visualization is taking place.
      */
-    var RectangleGeometryUpdater = function(entity, scene) {
+    var BoxGeometryUpdater = function(entity, scene) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(entity)) {
             throw new DeveloperError('entity is required');
@@ -84,9 +78,8 @@ define([
 
         this._entity = entity;
         this._scene = scene;
-        this._entitySubscription = entity.definitionChanged.addEventListener(RectangleGeometryUpdater.prototype._onEntityPropertyChanged, this);
+        this._entitySubscription = entity.definitionChanged.addEventListener(BoxGeometryUpdater.prototype._onEntityPropertyChanged, this);
         this._fillEnabled = false;
-        this._isClosed = false;
         this._dynamic = false;
         this._outlineEnabled = false;
         this._geometryChanged = new Event();
@@ -97,13 +90,13 @@ define([
         this._outlineColorProperty = undefined;
         this._outlineWidth = 1.0;
         this._options = new GeometryOptions(entity);
-        this._onEntityPropertyChanged(entity, 'rectangle', entity.rectangle, undefined);
+        this._onEntityPropertyChanged(entity, 'box', entity.box, undefined);
     };
 
-    defineProperties(RectangleGeometryUpdater, {
+    defineProperties(BoxGeometryUpdater, {
         /**
          * Gets the type of Appearance to use for simple color-based geometry.
-         * @memberof RectangleGeometryUpdater
+         * @memberof BoxGeometryUpdater
          * @type {Appearance}
          */
         perInstanceColorAppearanceType : {
@@ -111,7 +104,7 @@ define([
         },
         /**
          * Gets the type of Appearance to use for material-based geometry.
-         * @memberof RectangleGeometryUpdater
+         * @memberof BoxGeometryUpdater
          * @type {Appearance}
          */
         materialAppearanceType : {
@@ -119,10 +112,10 @@ define([
         }
     });
 
-    defineProperties(RectangleGeometryUpdater.prototype, {
+    defineProperties(BoxGeometryUpdater.prototype, {
         /**
          * Gets the entity associated with this geometry.
-         * @memberof RectangleGeometryUpdater.prototype
+         * @memberof BoxGeometryUpdater.prototype
          *
          * @type {Entity}
          * @readonly
@@ -134,7 +127,7 @@ define([
         },
         /**
          * Gets a value indicating if the geometry has a fill component.
-         * @memberof RectangleGeometryUpdater.prototype
+         * @memberof BoxGeometryUpdater.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -146,7 +139,7 @@ define([
         },
         /**
          * Gets a value indicating if fill visibility varies with simulation time.
-         * @memberof RectangleGeometryUpdater.prototype
+         * @memberof BoxGeometryUpdater.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -161,7 +154,7 @@ define([
         },
         /**
          * Gets the material property used to fill the geometry.
-         * @memberof RectangleGeometryUpdater.prototype
+         * @memberof BoxGeometryUpdater.prototype
          *
          * @type {MaterialProperty}
          * @readonly
@@ -173,7 +166,7 @@ define([
         },
         /**
          * Gets a value indicating if the geometry has an outline component.
-         * @memberof RectangleGeometryUpdater.prototype
+         * @memberof BoxGeometryUpdater.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -185,7 +178,7 @@ define([
         },
         /**
          * Gets a value indicating if the geometry has an outline component.
-         * @memberof RectangleGeometryUpdater.prototype
+         * @memberof BoxGeometryUpdater.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -200,7 +193,7 @@ define([
         },
         /**
          * Gets the {@link Color} property for the geometry outline.
-         * @memberof RectangleGeometryUpdater.prototype
+         * @memberof BoxGeometryUpdater.prototype
          *
          * @type {Property}
          * @readonly
@@ -213,7 +206,7 @@ define([
         /**
          * Gets the constant with of the geometry outline, in pixels.
          * This value is only valid if isDynamic is false.
-         * @memberof RectangleGeometryUpdater.prototype
+         * @memberof BoxGeometryUpdater.prototype
          *
          * @type {Number}
          * @readonly
@@ -227,7 +220,7 @@ define([
          * Gets a value indicating if the geometry is time-varying.
          * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
          * returned by GeometryUpdater#createDynamicUpdater.
-         * @memberof RectangleGeometryUpdater.prototype
+         * @memberof BoxGeometryUpdater.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -240,20 +233,18 @@ define([
         /**
          * Gets a value indicating if the geometry is closed.
          * This property is only valid for static geometry.
-         * @memberof RectangleGeometryUpdater.prototype
+         * @memberof BoxGeometryUpdater.prototype
          *
          * @type {Boolean}
          * @readonly
          */
         isClosed : {
-            get : function() {
-                return this._isClosed;
-            }
+            value : true
         },
         /**
          * Gets an event that is raised whenever the public properties
          * of this updater change.
-         * @memberof RectangleGeometryUpdater.prototype
+         * @memberof BoxGeometryUpdater.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -271,7 +262,7 @@ define([
      * @param {JulianDate} time The time for which to retrieve visibility.
      * @returns {Boolean} true if geometry is outlined at the provided time, false otherwise.
      */
-    RectangleGeometryUpdater.prototype.isOutlineVisible = function(time) {
+    BoxGeometryUpdater.prototype.isOutlineVisible = function(time) {
         var entity = this._entity;
         return this._outlineEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time);
     };
@@ -282,7 +273,7 @@ define([
      * @param {JulianDate} time The time for which to retrieve visibility.
      * @returns {Boolean} true if geometry is filled at the provided time, false otherwise.
      */
-    RectangleGeometryUpdater.prototype.isFilled = function(time) {
+    BoxGeometryUpdater.prototype.isFilled = function(time) {
         var entity = this._entity;
         return this._fillEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._fillProperty.getValue(time);
     };
@@ -295,7 +286,7 @@ define([
      *
      * @exception {DeveloperError} This instance does not represent a filled geometry.
      */
-    RectangleGeometryUpdater.prototype.createFillGeometryInstance = function(time) {
+    BoxGeometryUpdater.prototype.createFillGeometryInstance = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
@@ -331,7 +322,7 @@ define([
 
         return new GeometryInstance({
             id : entity,
-            geometry : new RectangleGeometry(this._options),
+            geometry : new BoxGeometry(this._options),
             attributes : attributes
         });
     };
@@ -344,7 +335,7 @@ define([
      *
      * @exception {DeveloperError} This instance does not represent an outlined geometry.
      */
-    RectangleGeometryUpdater.prototype.createOutlineGeometryInstance = function(time) {
+    BoxGeometryUpdater.prototype.createOutlineGeometryInstance = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
@@ -361,7 +352,7 @@ define([
 
         return new GeometryInstance({
             id : entity,
-            geometry : new RectangleOutlineGeometry(this._options),
+            geometry : new BoxOutlineGeometry(this._options),
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
                 color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
@@ -374,7 +365,7 @@ define([
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
-    RectangleGeometryUpdater.prototype.isDestroyed = function() {
+    BoxGeometryUpdater.prototype.isDestroyed = function() {
         return false;
     };
 
@@ -383,19 +374,19 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
-    RectangleGeometryUpdater.prototype.destroy = function() {
+    BoxGeometryUpdater.prototype.destroy = function() {
         this._entitySubscription();
         destroyObject(this);
     };
 
-    RectangleGeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
-        if (!(propertyName === 'availability' || propertyName === 'rectangle')) {
+    BoxGeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
+        if (!(propertyName === 'availability' || propertyName === 'box')) {
             return;
         }
 
-        var rectangle = this._entity.rectangle;
+        var box = this._entity.box;
 
-        if (!defined(rectangle)) {
+        if (!defined(box)) {
             if (this._fillEnabled || this._outlineEnabled) {
                 this._fillEnabled = false;
                 this._outlineEnabled = false;
@@ -404,10 +395,10 @@ define([
             return;
         }
 
-        var fillProperty = rectangle.fill;
+        var fillProperty = box.fill;
         var fillEnabled = defined(fillProperty) && fillProperty.isConstant ? fillProperty.getValue(Iso8601.MINIMUM_VALUE) : true;
 
-        var outlineProperty = rectangle.outline;
+        var outlineProperty = box.outline;
         var outlineEnabled = defined(outlineProperty);
         if (outlineEnabled && outlineProperty.isConstant) {
             outlineEnabled = outlineProperty.getValue(Iso8601.MINIMUM_VALUE);
@@ -422,11 +413,12 @@ define([
             return;
         }
 
-        var coordinates = rectangle.coordinates;
+        var minimumCorner = box.minimumCorner;
+        var maximumCorner = box.maximumCorner;
 
-        var show = rectangle.show;
-        if ((defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE)) || //
-            (!defined(coordinates))) {
+        var show = box.show;
+        if (!defined(minimumCorner) || !defined(minimumCorner) || //
+            (defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE))) {
             if (this._fillEnabled || this._outlineEnabled) {
                 this._fillEnabled = false;
                 this._outlineEnabled = false;
@@ -435,35 +427,22 @@ define([
             return;
         }
 
-        var material = defaultValue(rectangle.material, defaultMaterial);
+        var material = defaultValue(box.material, defaultMaterial);
         var isColorMaterial = material instanceof ColorMaterialProperty;
         this._materialProperty = material;
         this._fillProperty = defaultValue(fillProperty, defaultFill);
         this._showProperty = defaultValue(show, defaultShow);
-        this._showOutlineProperty = defaultValue(rectangle.outline, defaultOutline);
-        this._outlineColorProperty = outlineEnabled ? defaultValue(rectangle.outlineColor, defaultOutlineColor) : undefined;
+        this._showOutlineProperty = defaultValue(box.outline, defaultOutline);
+        this._outlineColorProperty = outlineEnabled ? defaultValue(box.outlineColor, defaultOutlineColor) : undefined;
 
-        var height = rectangle.height;
-        var extrudedHeight = rectangle.extrudedHeight;
-        var granularity = rectangle.granularity;
-        var stRotation = rectangle.stRotation;
-        var rotation = rectangle.rotation;
-        var outlineWidth = rectangle.outlineWidth;
-        var closeBottom = rectangle.closeBottom;
-        var closeTop = rectangle.closeTop;
+        var outlineWidth = box.outlineWidth;
 
         this._fillEnabled = fillEnabled;
         this._outlineEnabled = outlineEnabled;
 
-        if (!coordinates.isConstant || //
-            !Property.isConstant(height) || //
-            !Property.isConstant(extrudedHeight) || //
-            !Property.isConstant(granularity) || //
-            !Property.isConstant(stRotation) || //
-            !Property.isConstant(rotation) || //
-            !Property.isConstant(outlineWidth) || //
-            !Property.isConstant(closeBottom) || //
-            !Property.isConstant(closeTop)) {
+        if (!minimumCorner.isConstant || //
+            !maximumCorner.isConstant || //
+            !Property.isConstant(outlineWidth)) {
             if (!this._dynamic) {
                 this._dynamic = true;
                 this._geometryChanged.raiseEvent(this);
@@ -471,15 +450,8 @@ define([
         } else {
             var options = this._options;
             options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
-            options.rectangle = coordinates.getValue(Iso8601.MINIMUM_VALUE, options.rectangle);
-            options.height = defined(height) ? height.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.stRotation = defined(stRotation) ? stRotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.rotation = defined(rotation) ? rotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.closeBottom = defined(closeBottom) ? closeBottom.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.closeTop = defined(closeTop) ? closeTop.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            this._isClosed = defined(extrudedHeight) && defined(options.closeTop) && defined(options.closeBottom) && options.closeTop && options.closeBottom;
+            options.minimumCorner = minimumCorner.getValue(Iso8601.MINIMUM_VALUE, options.minimumCorner);
+            options.maximumCorner = maximumCorner.getValue(Iso8601.MINIMUM_VALUE, options.maximumCorner);
             this._outlineWidth = defined(outlineWidth) ? outlineWidth.getValue(Iso8601.MINIMUM_VALUE) : 1.0;
             this._dynamic = false;
             this._geometryChanged.raiseEvent(this);
@@ -494,7 +466,7 @@ define([
      *
      * @exception {DeveloperError} This instance does not represent dynamic geometry.
      */
-    RectangleGeometryUpdater.prototype.createDynamicUpdater = function(primitives) {
+    BoxGeometryUpdater.prototype.createDynamicUpdater = function(primitives) {
         //>>includeStart('debug', pragmas.debug);
         if (!this._dynamic) {
             throw new DeveloperError('This instance does not represent dynamic geometry.');
@@ -532,58 +504,53 @@ define([
 
         var geometryUpdater = this._geometryUpdater;
         var entity = geometryUpdater._entity;
-        var rectangle = entity.rectangle;
-        if (!entity.isAvailable(time) || !Property.getValueOrDefault(rectangle.show, time, true)) {
+        var box = entity.box;
+        if (!entity.isAvailable(time) || !Property.getValueOrDefault(box.show, time, true)) {
             return;
         }
 
         var options = this._options;
-        var coordinates = Property.getValueOrUndefined(rectangle.coordinates, time, options.rectangle);
-        if (!defined(coordinates)) {
+        var minimumCorner = Property.getValueOrUndefined(box.minimumCorner, time, options.minimumCorner);
+        var maximumCorner = Property.getValueOrUndefined(box.maximumCorner, time, options.maximumCorner);
+        if (!defined(minimumCorner) || !defined(maximumCorner)) {
             return;
         }
 
-        options.rectangle = coordinates;
-        options.height = Property.getValueOrUndefined(rectangle.height, time);
-        options.extrudedHeight = Property.getValueOrUndefined(rectangle.extrudedHeight, time);
-        options.granularity = Property.getValueOrUndefined(rectangle.granularity, time);
-        options.stRotation = Property.getValueOrUndefined(rectangle.stRotation, time);
-        options.rotation = Property.getValueOrUndefined(rectangle.rotation, time);
-        options.closeBottom = Property.getValueOrUndefined(rectangle.closeBottom, time);
-        options.closeTop = Property.getValueOrUndefined(rectangle.closeTop, time);
+        options.minimumCorner = minimumCorner;
+        options.maximumCorner = maximumCorner;
 
-        if (Property.getValueOrDefault(rectangle.fill, time, true)) {
+        if (Property.getValueOrDefault(box.fill, time, true)) {
             var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
             this._material = material;
 
             var appearance = new MaterialAppearance({
                 material : material,
                 translucent : material.isTranslucent(),
-                closed : defined(options.extrudedHeight)
+                closed : true
             });
             options.vertexFormat = appearance.vertexFormat;
 
             this._primitive = primitives.add(new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
-                    geometry : new RectangleGeometry(options)
+                    geometry : new BoxGeometry(options)
                 }),
                 appearance : appearance,
                 asynchronous : false
             }));
         }
 
-        if (Property.getValueOrDefault(rectangle.outline, time, false)) {
+        if (Property.getValueOrDefault(box.outline, time, true)) {
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
 
-            var outlineColor = Property.getValueOrClonedDefault(rectangle.outlineColor, time, Color.BLACK, scratchColor);
-            var outlineWidth = Property.getValueOrDefault(rectangle.outlineWidth, 1.0);
+            var outlineColor = Property.getValueOrClonedDefault(box.outlineColor, time, Color.BLACK, scratchColor);
+            var outlineWidth = Property.getValueOrDefault(box.outlineWidth, 1.0);
             var translucent = outlineColor.alpha !== 1.0;
 
             this._outlinePrimitive = primitives.add(new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
-                    geometry : new RectangleOutlineGeometry(options),
+                    geometry : new BoxOutlineGeometry(options),
                     attributes : {
                         color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
                     }
@@ -606,10 +573,10 @@ define([
 
     DynamicGeometryUpdater.prototype.destroy = function() {
         var primitives = this._primitives;
-        primitives.removeAndDestroy(this._primitive);
-        primitives.removeAndDestroy(this._outlinePrimitive);
+        primitives.remove(this._primitive);
+        primitives.remove(this._outlinePrimitive);
         destroyObject(this);
     };
 
-    return RectangleGeometryUpdater;
+    return BoxGeometryUpdater;
 });
