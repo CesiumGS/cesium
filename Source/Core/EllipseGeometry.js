@@ -467,18 +467,14 @@ define([
     }
 
     function computeWallIndices(positions) {
-        var UL;
-        var UR;
-        var LL;
-        var LR;
         var length = positions.length / 3;
         var indices = IndexDatatype.createTypedArray(length, length * 6);
         var index = 0;
-        for ( var i = 0; i < length - 1; i++) {
-            UL = i;
-            LL = i + length;
-            UR = UL + 1;
-            LR = UR + length;
+        for (var i = 0; i < length; i++) {
+            var UL = i;
+            var LL = i + length;
+            var UR = (UL + 1) % length;
+            var LR = UR + length;
             indices[index++] = UL;
             indices[index++] = LL;
             indices[index++] = UR;
@@ -486,17 +482,6 @@ define([
             indices[index++] = LL;
             indices[index++] = LR;
         }
-
-        UL = length - 1;
-        LL = i + length;
-        UR = 0;
-        LR = UR + length;
-        indices[index++] = UL;
-        indices[index++] = LL;
-        indices[index++] = UR;
-        indices[index++] = UR;
-        indices[index++] = LL;
-        indices[index++] = LR;
 
         return indices;
     }
