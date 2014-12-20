@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Model',
+        'Scene/ModelResourceCache',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
@@ -16,6 +17,7 @@ defineSuite([
         'Specs/destroyScene'
     ], function(
         Model,
+        ModelResourceCache,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -42,6 +44,8 @@ defineSuite([
     var duckModel;
     var customDuckModel;
     var separateDuckModel;
+    var cachedDuckModel;
+    var anotherCachedDuckModel;
     var cesiumAirModel;
     var animBoxesModel;
     var riggedFigureModel;
@@ -87,6 +91,7 @@ defineSuite([
             scale : options.scale,
             minimumPixelSize : options.minimumPixelSize,
             id : url,        // for picking tests
+            cache: options.cache,
             asynchronous : options.asynchronous
         }));
         addZoomTo(model);
@@ -492,6 +497,49 @@ defineSuite([
         separateDuckModel.show = false;
     });
 
+    
+    ///////////////////////////////////////////////////////////////////////////
+
+    var testCache = new ModelResourceCache();
+
+    it('loads cached duck', function() {
+        cachedDuckModel = loadModel(duckUrl, {
+            cache : testCache
+        });
+    });
+
+    it('loads second cached duck', function() {
+        anotherCachedDuckModel = loadModel(duckUrl, {
+            cache : testCache
+        });
+    });
+
+    it('renders cachedDuckModel', function() {
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        cachedDuckModel.show = true;
+        cachedDuckModel.zoomTo();
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        cachedDuckModel.show = false;
+    });
+
+    it('renders second cachedDuckModel', function() {
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        anotherCachedDuckModel.show = true;
+        anotherCachedDuckModel.zoomTo();
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        anotherCachedDuckModel.show = false;
+    });
+
+    it('checks ducks are really cached', function() {
+        expect(testCache.getNumberOfCachedModels()).toEqual(1);
+    });
+
+    it('checks ducks share resources', function() {
+        expect(cachedDuckModel.isSharingResources(anotherCachedDuckModel)).toEqual(true);
+    });
+    
     ///////////////////////////////////////////////////////////////////////////
 
     it('loads cesiumAir', function() {

@@ -42,13 +42,14 @@ define([
     var axisScratch = new Cartesian3();
 
     ModelAnimationCache.getAnimationParameterValues = function(model, accessor) {
-        var key = getAnimationParameterKey(model, accessor);
+		var modelResources = model._modelResources;
+        var key = getAnimationParameterKey(modelResources, accessor);
         var values = cachedAnimationParameters[key];
 
         if (!defined(values)) {
             // Cache miss
-            var buffers = model._loadResources.buffers;
-            var gltf = model.gltf;
+            var buffers = modelResources.buffers;
+            var gltf = modelResources.gltf;
             var bufferViews = gltf.bufferViews;
 
             var bufferView = bufferViews[accessor.bufferView];
