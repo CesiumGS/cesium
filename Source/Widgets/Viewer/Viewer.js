@@ -85,7 +85,7 @@ define([
         }
 
         // No regular entity picked.  Try picking features from imagery layers.
-        return viewer._pickImageryLayerFeature(viewer, e.position);
+        return pickImageryLayerFeature(viewer, e.position);
     }
 
     function trackDataSourceClock(timeline, clock, dataSource) {
