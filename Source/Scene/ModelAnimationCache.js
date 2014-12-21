@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/LinearSpline',
         '../Core/Quaternion',
@@ -8,6 +9,7 @@ define([
         './getModelAccessor'
     ], function(
         Cartesian3,
+        defaultValue,
         defined,
         LinearSpline,
         Quaternion,
