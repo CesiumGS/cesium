@@ -1361,9 +1361,7 @@ define([
         loadResources.createSkins = false;
 
         var gltf = model.gltf;
-        var buffers = loadResources.buffers;
         var accessors = gltf.accessors;
-        var bufferViews = gltf.bufferViews;
         var skins = gltf.skins;
         var runtimeSkins = {};
 
@@ -1371,20 +1369,6 @@ define([
             if (skins.hasOwnProperty(name)) {
                 var skin = skins[name];
                 var accessor = accessors[skin.inverseBindMatrices];
-                var bufferView = bufferViews[accessor.bufferView];
-
-                var componentType = accessor.componentType;
-                var type = accessor.type;
-                var count = accessor.count;
-                // PERFORMANCE_IDEA: These could be cached just like animations in createRuntimeAnimations()
-                var typedArray = getModelAccessor(accessor).createArrayBufferView(buffers[bufferView.buffer], bufferView.byteOffset + accessor.byteOffset, count);
-                var matrices =  new Array(count);
-
-                if ((componentType === WebGLRenderingContext.FLOAT) && (type === 'MAT4')) {
-                    for (var i = 0; i < count; ++i) {
-                        matrices[i] = Matrix4.fromArray(typedArray, 16 * i);
-                    }
-                }
 
                 var bindShapeMatrix;
                 if (!Matrix4.equals(skin.bindShapeMatrix, Matrix4.IDENTITY)) {
@@ -1392,7 +1376,7 @@ define([
                 }
 
                 runtimeSkins[name] = {
-                    inverseBindMatrices : matrices,
+                    inverseBindMatrices : ModelAnimationCache.getSkinInverseBindMatrices(model, accessor),
                     bindShapeMatrix : bindShapeMatrix // not used when undefined
                 };
             }
