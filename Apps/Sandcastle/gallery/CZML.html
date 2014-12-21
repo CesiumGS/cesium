@@ -31,7 +31,6 @@ function startup(Cesium) {
 var gallery = '../../SampleData/';
 
 var viewer = new Cesium.Viewer('cesiumContainer');
-viewer.extend(Cesium.viewerEntityMixin);
 
 Sandcastle.addDefaultToolbarButton('Satellites', function() {
     var czmlDataSource = new Cesium.CzmlDataSource();

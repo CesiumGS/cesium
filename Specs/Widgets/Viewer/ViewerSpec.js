@@ -1,14 +1,19 @@
 /*global defineSuite*/
 defineSuite([
         'Widgets/Viewer/Viewer',
+        'Core/Cartesian3',
         'Core/ClockRange',
         'Core/ClockStep',
         'Core/EllipsoidTerrainProvider',
         'Core/JulianDate',
         'Core/WebMercatorProjection',
+        'DataSources/ConstantPositionProperty',
+        'DataSources/ConstantProperty',
         'DataSources/DataSourceClock',
         'DataSources/DataSourceCollection',
         'DataSources/DataSourceDisplay',
+        'DataSources/Entity',
+        'Scene/CameraFlightPath',
         'Scene/SceneMode',
         'Specs/DomEventSimulator',
         'Specs/MockDataSource',
@@ -23,14 +28,19 @@ defineSuite([
         'Widgets/Timeline/Timeline'
     ], function(
         Viewer,
+        Cartesian3,
         ClockRange,
         ClockStep,
         EllipsoidTerrainProvider,
         JulianDate,
         WebMercatorProjection,
+        ConstantPositionProperty,
+        ConstantProperty,
         DataSourceClock,
         DataSourceCollection,
         DataSourceDisplay,
+        Entity,
+        CameraFlightPath,
         SceneMode,
         DomEventSimulator,
         MockDataSource,
@@ -664,5 +674,118 @@ defineSuite([
         runs(function() {
             expect(viewer._element.querySelector('.cesium-widget-errorPanel')).toBeNull();
         });
+    });
+
+    it('can get and set trackedEntity', function() {
+        viewer = new Viewer(container);
+
+        var entity = new Entity();
+        entity.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
+
+        viewer.trackedEntity = entity;
+        expect(viewer.trackedEntity).toBe(entity);
+
+        viewer.trackedEntity = undefined;
+        expect(viewer.trackedEntity).toBeUndefined();
+    });
+
+    it('can get and set selectedEntity', function() {
+        var viewer = new Viewer(container);
+
+        var dataSource = new MockDataSource();
+        viewer.dataSources.add(dataSource);
+
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(new Cartesian3(123456, 123456, 123456));
+
+        dataSource.entities.add(entity);
+
+        viewer.selectedEntity = entity;
+        expect(viewer.selectedEntity).toBe(entity);
+
+        viewer.selectedEntity = undefined;
+        expect(viewer.selectedEntity).toBeUndefined();
+
+        viewer.destroy();
+    });
+
+    it('home button resets tracked object', function() {
+        viewer = new Viewer(container);
+
+        var entity = new Entity();
+        entity.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
+
+        viewer.trackedEntity = entity;
+        expect(viewer.trackedEntity).toBe(entity);
+
+        //Needed to avoid actually creating a flight when we issue the home command.
+        spyOn(CameraFlightPath, 'createTween').andReturn({
+            startObject : {},
+            stopObject: {},
+            duration : 0.0
+        });
+
+        viewer.homeButton.viewModel.command();
+        expect(viewer.trackedEntity).toBeUndefined();
+    });
+
+    it('returns to home when a tracked object is removed', function() {
+        viewer = new Viewer(container);
+
+        //one data source that is added before mixing in
+        var preMixinDataSource = new MockDataSource();
+        viewer.dataSources.add(preMixinDataSource);
+
+        var beforeEntity = new Entity();
+        beforeEntity.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
+        preMixinDataSource.entities.add(beforeEntity);
+
+        //one data source that is added after mixing in
+        var postMixinDataSource = new MockDataSource();
+        viewer.dataSources.add(postMixinDataSource);
+
+        var entity = new Entity();
+        entity.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
+        postMixinDataSource.entities.add(entity);
+
+        viewer.trackedEntity = entity;
+        expect(viewer.trackedEntity).toBe(entity);
+
+        // spy on the home button's command
+        Object.defineProperty(viewer.homeButton.viewModel, 'command', {
+            value : jasmine.createSpy('command')
+        });
+
+        postMixinDataSource.entities.remove(entity);
+
+        expect(viewer.homeButton.viewModel.command).toHaveBeenCalled();
+
+        // reset the spy before removing the other entity
+        viewer.homeButton.viewModel.command.reset();
+
+        viewer.trackedEntity = beforeEntity;
+        preMixinDataSource.entities.remove(beforeEntity);
+
+        expect(viewer.homeButton.viewModel.command).toHaveBeenCalled();
+    });
+
+    it('removes data source listeners when destroyed', function() {
+        viewer = new Viewer(container);
+
+        //one data source that is added before mixing in
+        var preMixinDataSource = new MockDataSource();
+        viewer.dataSources.add(preMixinDataSource);
+
+        //one data source that is added after mixing in
+        var postMixinDataSource = new MockDataSource();
+        viewer.dataSources.add(postMixinDataSource);
+
+        var preMixinListenerCount = preMixinDataSource.entities.collectionChanged._listeners.length;
+        var postMixinListenerCount = postMixinDataSource.entities.collectionChanged._listeners.length;
+
+        viewer = viewer.destroy();
+
+        expect(preMixinDataSource.entities.collectionChanged._listeners.length).not.toEqual(preMixinListenerCount);
+        expect(postMixinDataSource.entities.collectionChanged._listeners.length).not.toEqual(postMixinListenerCount);
     });
 }, 'WebGL');
