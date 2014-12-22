@@ -12,6 +12,7 @@ define([
         '../Core/getFilenameFromUri',
         '../Core/loadJson',
         '../Core/PinBuilder',
+        '../Core/PolygonHierarchy',
         '../Core/RuntimeError',
         '../Scene/VerticalOrigin',
         '../ThirdParty/topojson',
@@ -38,6 +39,7 @@ define([
         getFilenameFromUri,
         loadJson,
         PinBuilder,
+        PolygonHierarchy,
         RuntimeError,
         VerticalOrigin,
         topojson,
@@ -406,18 +408,11 @@ define([
 
         var holes = [];
         for (var i = 1, len = coordinates.length; i < len; i++) {
-            holes.push({
-                positions : coordinatesArrayToCartesianArray(coordinates[i], crsFunction),
-                holes : []
-            });
+            holes.push(new PolygonHierarchy(coordinatesArrayToCartesianArray(coordinates[i], crsFunction)));
         }
 
         var positions = coordinates[0];
-        polygon.positions = new ConstantProperty({
-            positions : coordinatesArrayToCartesianArray(positions, crsFunction),
-            holes : holes
-        });
-
+        polygon.hierarchy = new ConstantProperty(new PolygonHierarchy(coordinatesArrayToCartesianArray(positions, crsFunction), holes));
         if (positions[0].length > 2) {
             polygon.perPositionHeight = new ConstantProperty(true);
         }

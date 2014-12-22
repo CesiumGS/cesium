@@ -5,6 +5,7 @@ defineSuite([
         'Core/Color',
         'Core/Event',
         'Core/JulianDate',
+        'Core/PolygonHierarchy',
         'DataSources/EntityCollection',
         'Specs/waitsForPromise',
         'ThirdParty/when'
@@ -14,6 +15,7 @@ defineSuite([
         Color,
         Event,
         JulianDate,
+        PolygonHierarchy,
         EntityCollection,
         waitsForPromise,
         when) {
@@ -400,10 +402,7 @@ defineSuite([
             var entityCollection = dataSource.entities;
             var entity = entityCollection.entities[0];
             expect(entity.properties).toBe(polygon.properties);
-            expect(entity.polygon.positions.getValue(time)).toEqual({
-                positions : polygonCoordinatesToCartesian(polygon.coordinates[0]),
-                holes : []
-            });
+            expect(entity.polygon.hierarchy.getValue(time)).toEqual(new PolygonHierarchy(polygonCoordinatesToCartesian(polygon.coordinates[0])));
             expect(entity.polygon.perPositionHeight).toBeUndefined();
             expect(entity.polygon.material.color.getValue(time)).toEqual(GeoJsonDataSource.fill);
             expect(entity.polygon.outline.getValue(time)).toEqual(true);
@@ -418,10 +417,7 @@ defineSuite([
             var entityCollection = dataSource.entities;
             var entity = entityCollection.entities[0];
             expect(entity.properties).toBe(polygonWithHeights.properties);
-            expect(entity.polygon.positions.getValue(time)).toEqual({
-                positions : polygonCoordinatesToCartesian(polygonWithHeights.coordinates[0]),
-                holes : []
-            });
+            expect(entity.polygon.hierarchy.getValue(time)).toEqual(new PolygonHierarchy(polygonCoordinatesToCartesian(polygonWithHeights.coordinates[0])));
             expect(entity.polygon.perPositionHeight.getValue(time)).toBe(true);
             expect(entity.polygon.material.color.getValue(time)).toEqual(GeoJsonDataSource.fill);
             expect(entity.polygon.outline.getValue(time)).toEqual(true);
@@ -436,13 +432,7 @@ defineSuite([
             var entityCollection = dataSource.entities;
             var entity = entityCollection.entities[0];
             expect(entity.properties).toBe(polygonWithHoles.properties);
-            expect(entity.polygon.positions.getValue(time)).toEqual({
-                positions : polygonCoordinatesToCartesian(polygonWithHoles.coordinates[0]),
-                holes : [{
-                    positions : polygonCoordinatesToCartesian(polygonWithHoles.coordinates[1]),
-                    holes : []
-                }]
-            });
+            expect(entity.polygon.hierarchy.getValue(time)).toEqual(new PolygonHierarchy(polygonCoordinatesToCartesian(polygonWithHoles.coordinates[0]), [new PolygonHierarchy(polygonCoordinatesToCartesian(polygonWithHoles.coordinates[1]))]));
         });
     });
 
@@ -455,10 +445,7 @@ defineSuite([
             for (var i = 0; i < multiPolygon.coordinates.length; i++) {
                 var entity = entities[i];
                 expect(entity.properties).toBe(multiPolygon.properties);
-                expect(entity.polygon.positions.getValue(time)).toEqual({
-                    positions : positions[i],
-                    holes : []
-                });
+                expect(entity.polygon.hierarchy.getValue(time)).toEqual(new PolygonHierarchy(positions[i]));
             }
         });
     });
@@ -471,7 +458,7 @@ defineSuite([
 
             var polygon = entities[0];
             expect(polygon.properties).toBe(topoJson.objects.polygon.properties);
-            expect(polygon.polygon.positions).toBeDefined();
+            expect(polygon.polygon.hierarchy).toBeDefined();
 
             var lineString = entities[1];
             expect(lineString.properties).toBe(topoJson.objects.lineString.properties);
