@@ -348,6 +348,10 @@ define([
     }
 
     function createPolygon(dataSource, geoJson, crsFunction, coordinates, options) {
+        if (coordinates.length === 0 || coordinates[0].length === 0) {
+            return;
+        }
+
         var outlineColorProperty = options.strokeMaterialProperty.color;
         var material = options.fillMaterialProperty;
         var widthProperty = options.strokeWidthProperty;
@@ -399,8 +403,22 @@ define([
         polygon.outlineColor = outlineColorProperty;
         polygon.outlineWidth = widthProperty;
         polygon.material = material;
-        polygon.positions = new ConstantProperty(coordinatesArrayToCartesianArray(coordinates, crsFunction));
-        if (coordinates.length > 0 && coordinates[0].length > 2) {
+
+        var holes = [];
+        for (var i = 1, len = coordinates.length; i < len; i++) {
+            holes.push({
+                positions : coordinatesArrayToCartesianArray(coordinates[i], crsFunction),
+                holes : []
+            });
+        }
+
+        var positions = coordinates[0];
+        polygon.positions = new ConstantProperty({
+            positions : coordinatesArrayToCartesianArray(positions, crsFunction),
+            holes : holes
+        });
+
+        if (positions[0].length > 2) {
             polygon.perPositionHeight = new ConstantProperty(true);
         }
 
@@ -409,13 +427,13 @@ define([
     }
 
     function processPolygon(dataSource, geoJson, geometry, crsFunction, options) {
-        createPolygon(dataSource, geoJson, crsFunction, geometry.coordinates[0], options);
+        createPolygon(dataSource, geoJson, crsFunction, geometry.coordinates, options);
     }
 
     function processMultiPolygon(dataSource, geoJson, geometry, crsFunction, options) {
         var polygons = geometry.coordinates;
         for (var i = 0; i < polygons.length; i++) {
-            createPolygon(dataSource, geoJson, crsFunction, polygons[i][0], options);
+            createPolygon(dataSource, geoJson, crsFunction, polygons[i], options);
         }
     }
 

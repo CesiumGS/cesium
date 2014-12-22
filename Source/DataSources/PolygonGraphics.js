@@ -78,7 +78,8 @@ define([
         material : createPropertyDescriptor('material'),
 
         /**
-         * Gets or sets the vertex positions.
+         * Gets or sets the positions that define the polygon.  This can be either
+         * a {@link Property} whose value is an array of {@link Cartesian3} instances or a polygon hierarchy.
          * @memberof PolygonGraphics.prototype
          * @type {Property}
          */

@@ -8,6 +8,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/isArray',
         '../Core/GeometryInstance',
         '../Core/Iso8601',
         '../Core/PolygonGeometry',
@@ -29,6 +30,7 @@ define([
         destroyObject,
         DeveloperError,
         Event,
+        isArray,
         GeometryInstance,
         Iso8601,
         PolygonGeometry,
@@ -53,9 +55,7 @@ define([
     var GeometryOptions = function(entity) {
         this.id = entity;
         this.vertexFormat = undefined;
-        this.polygonHierarchy = {
-            positions : undefined
-        };
+        this.polygonHierarchy = undefined;
         this.perPositionHeight = undefined;
         this.height = undefined;
         this.extrudedHeight = undefined;
@@ -468,7 +468,14 @@ define([
         } else {
             var options = this._options;
             options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
-            options.polygonHierarchy.positions = positions.getValue(Iso8601.MINIMUM_VALUE, options.polygonHierarchy.positions);
+            var positionsValue = positions.getValue(Iso8601.MINIMUM_VALUE);
+            if (isArray(positionsValue)) {
+                options.polygonHierarchy = {
+                    positions : positionsValue
+                };
+            } else {
+                options.polygonHierarchy = positionsValue;
+            }
             options.height = defined(height) ? height.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
@@ -511,6 +518,7 @@ define([
         this._outlinePrimitive = undefined;
         this._geometryUpdater = geometryUpdater;
         this._options = new GeometryOptions(geometryUpdater._entity);
+        this._scrach = undefined;
     };
 
     DynamicGeometryUpdater.prototype.update = function(time) {
@@ -532,12 +540,19 @@ define([
         }
 
         var options = this._options;
-        var positions = Property.getValueOrUndefined(polygon.positions, time, options.polygonHierarchy.positions);
+        var positions = Property.getValueOrUndefined(polygon.positions, time, this._scrach);
         if (!defined(positions)) {
             return;
         }
 
-        options.polygonHierarchy.positions = positions;
+        if (isArray(positions)) {
+            options.polygonHierarchy = {
+                positions : positions
+            };
+        } else {
+            options.polygonHierarchy = positions;
+        }
+
         options.height = Property.getValueOrUndefined(polygon.height, time);
         options.extrudedHeight = Property.getValueOrUndefined(polygon.extrudedHeight, time);
         options.granularity = Property.getValueOrUndefined(polygon.granularity, time);
