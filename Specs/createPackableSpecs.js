@@ -1,5 +1,5 @@
 /*global define*/
-define(['Core/clone'], function(clone) {
+define(['Core/defined'], function(defined) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -10,7 +10,8 @@ define(['Core/clone'], function(clone) {
         it('can pack', function() {
             var packedArray = [];
             packable.pack(instance, packedArray);
-            expect(packedArray.length).toEqual(packable.packedLength);
+            var packedLength = defined(packable.packedLength) ? packable.packedLength : instance.packedLength;
+            expect(packedArray.length).toEqual(packedLength);
             expect(packedArray).toEqual(packedInstance);
         });
 
