@@ -45,7 +45,7 @@ define([
         return numComponents;
     };
 
-    PolygonGeometryLibrary.pack = function(polygonHierarchy, array, startingIndex) {
+    PolygonGeometryLibrary.packPolygonHierarchy = function(polygonHierarchy, array, startingIndex) {
         var stack = [polygonHierarchy];
         while (stack.length > 0) {
             var hierarchy = stack.pop();
@@ -73,6 +73,8 @@ define([
                 }
             }
         }
+
+        return startingIndex;
     };
 
     PolygonGeometryLibrary.unpackPolygonHierarchy = function(array, startingIndex) {
@@ -87,12 +89,15 @@ define([
         }
 
         for (var j = 0; j < holesLength; ++j) {
-            holes[i] = PolygonGeometryLibrary.unpackPolygonHierarchy(array, startingIndex);
+            holes[j] = PolygonGeometryLibrary.unpackPolygonHierarchy(array, startingIndex);
+            startingIndex = holes[j].startingIndex;
+            delete holes[j].startingIndex;
         }
 
         return {
             positions : positions,
-            holes : holes
+            holes : holes,
+            startingIndex : startingIndex
         };
     };
 

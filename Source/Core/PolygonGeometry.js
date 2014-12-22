@@ -633,7 +633,7 @@ define([
         this._granularity = granularity;
         this._stRotation = stRotation;
         this._height = height;
-        this._extrudedHeight = extrudedHeight;
+        this._extrudedHeight = defaultValue(extrudedHeight, 0.0);
         this._extrude = extrude;
         this._polygonHierarchy = polygonHierarchy;
         this._perPositionHeight = perPositionHeight;
@@ -717,7 +717,7 @@ define([
 
         startingIndex = defaultValue(startingIndex, 0);
 
-        PolygonGeometryLibrary.pack(value._polygonHierarchy, array, startingIndex);
+        startingIndex = PolygonGeometryLibrary.packPolygonHierarchy(value._polygonHierarchy, array, startingIndex);
 
         Ellipsoid.pack(value._ellipsoid, array, startingIndex);
         startingIndex += Ellipsoid.packedLength;
@@ -750,6 +750,8 @@ define([
         startingIndex = defaultValue(startingIndex, 0);
 
         var polygonHierarchy = PolygonGeometryLibrary.unpackPolygonHierarchy(array, startingIndex);
+        startingIndex = polygonHierarchy.startingIndex;
+        delete polygonHierarchy.startingIndex;
 
         var ellipsoid = Ellipsoid.unpack(array, startingIndex);
         startingIndex += Ellipsoid.packedLength;
