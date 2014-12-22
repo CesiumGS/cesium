@@ -66,6 +66,14 @@ define([
          */
         this.far = 500000000.0;
         this._far = this.far;
+
+        /**
+         * The distance of frustum offset horizontally and vertically.
+         * @type {Number}
+         * @default 0.0
+         */
+        this._xOffset = 0.0;
+        this._yOffset = 0.0;
     };
 
     function update(frustum) {
@@ -105,6 +113,14 @@ define([
             f.left = -f.right;
             f.near = frustum.near;
             f.far = frustum.far;
+
+            // now apply offsets
+            var dx = f.right - f.left;
+            f.left += dx * frustum._xOffset;
+            f.right += dx * frustum._xOffset;
+            var dy = f.top - f.bottom;
+            f.top += dy * frustum._yOffset;
+            f.bottom += dy * frustum._yOffset;
         }
     }
 
@@ -150,6 +166,17 @@ define([
             }
         }
     });
+
+    /**
+     * Sets the offset values to allow for frustum offsetting.
+     *
+     * @param {Number} xOffset The frustum offset in the x direction.
+     * @param {[type]} yOffset The frustum offset in the y direction.
+     */
+    PerspectiveFrustum.prototype.setOffset = function(xOffset, yOffset) {
+      this._xOffset = xOffset;
+      this._yOffset = yOffset;
+    };
 
     /**
      * Creates a culling volume for this frustum.
@@ -228,6 +255,9 @@ define([
         result._fov = undefined;
         result._near = undefined;
         result._far = undefined;
+
+        result._xOffset = this._xOffset;
+        result._yOffset = this._yOffset;
 
         this._offCenterFrustum.clone(result._offCenterFrustum);
 
