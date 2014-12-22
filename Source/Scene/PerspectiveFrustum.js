@@ -171,7 +171,7 @@ define([
      * Sets the offset values to allow for frustum offsetting.
      *
      * @param {Number} xOffset The frustum offset in the x direction.
-     * @param {[type]} yOffset The frustum offset in the y direction.
+     * @param {Number} yOffset The frustum offset in the y direction.
      */
     PerspectiveFrustum.prototype.setOffset = function(xOffset, yOffset) {
       this._xOffset = xOffset;
