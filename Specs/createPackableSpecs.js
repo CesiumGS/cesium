@@ -1,9 +1,12 @@
 /*global define*/
-define(function() {
+define(['Core/clone'], function(clone) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     function createPackableSpecs(packable, instance, packedInstance) {
+        instance = JSON.parse(JSON.stringify(instance));
+        packedInstance = JSON.parse(JSON.stringify(packedInstance));
+
         it('can pack', function() {
             var packedArray = [];
             packable.pack(instance, packedArray);

@@ -200,7 +200,7 @@ define([
         this._rotation = defaultValue(options.rotation, 0.0);
         this._height = height;
         this._granularity = granularity;
-        this._extrudedHeight = extrudedHeight;
+        this._extrudedHeight = defaultValue(extrudedHeight, 0.0);
         this._extrude = extrude;
         this._numberOfVerticalLines = Math.max(defaultValue(options.numberOfVerticalLines, 16), 0);
         this._workerName = 'createEllipseOutlineGeometry';

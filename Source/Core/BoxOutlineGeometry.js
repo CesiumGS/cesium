@@ -132,8 +132,8 @@ define([
 
         startingIndex = defaultValue(startingIndex, 0);
 
-        Cartesian3.pack(value._minimumCorner, array, startingIndex);
-        Cartesian3.pack(value._maximumCorner, array, startingIndex + Cartesian3.packedLength);
+        Cartesian3.pack(value._min, array, startingIndex);
+        Cartesian3.pack(value._max, array, startingIndex + Cartesian3.packedLength);
     };
 
     /**
@@ -162,8 +162,8 @@ define([
             });
         }
 
-        result._minimumCorner = min;
-        result._maximumCorner = max;
+        result._min = min;
+        result._max = max;
 
         return result;
     };

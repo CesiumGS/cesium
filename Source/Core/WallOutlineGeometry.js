@@ -123,7 +123,7 @@ define([
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
-    WallGeometry.pack = function(value, array, startingIndex) {
+    WallOutlineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required');
@@ -176,9 +176,9 @@ define([
      *
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
-     * @param {WallGeometry} [result] The object into which to store the result.
+     * @param {WallOutlineGeometry} [result] The object into which to store the result.
      */
-    WallGeometry.unpack = function(array, startingIndex, result) {
+    WallOutlineGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(array)) {
             throw new DeveloperError('array is required');
@@ -222,7 +222,7 @@ define([
         var granularity = array[startingIndex];
 
         if (!defined(result)) {
-            return new WallGeometry({
+            return new WallOutlineGeometry({
                 positions : positions,
                 minimumHeights : minimumHeights,
                 maximumHeights : maximumHeights,

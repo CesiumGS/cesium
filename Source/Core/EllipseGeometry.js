@@ -627,7 +627,7 @@ define([
         this._height = height;
         this._granularity = granularity;
         this._vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
-        this._extrudedHeight = extrudedHeight;
+        this._extrudedHeight = defaultValue(extrudedHeight, 0.0);
         this._extrude = extrude;
         this._workerName = 'createEllipseGeometry';
     };
