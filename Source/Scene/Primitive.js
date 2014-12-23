@@ -731,10 +731,22 @@ define([
                     for (i = 0; i < length; ++i) {
                         geometry = instances[i].geometry;
                         instanceIds.push(instances[i].id);
-                        subTasks.push({
-                            moduleName : geometry._workerName,
-                            geometry : geometry
-                        });
+                        if (false/*defined(geometry.constructor.pack)*/) {
+                            var packedLength = defined(geometry.constructor.packedLength) ? geometry.constructor.packedLength : geometry.packedLength;
+                            var array = new Float64Array(packedLength);
+                            geometry.constructor.pack(geometry, array);
+
+                            subTasks.push({
+                                moduleName : geometry._workerName,
+                                geometry : array,
+                                transferableObjects : [array.buffer]
+                            });
+                        } else {
+                            subTasks.push({
+                                moduleName : geometry._workerName,
+                                geometry : geometry
+                            });
+                        }
                     }
 
                     if (!defined(createGeometryTaskProcessors)) {
@@ -748,7 +760,7 @@ define([
                     for (i = 0; i < subTasks.length; i++) {
                         promises.push(createGeometryTaskProcessors[i].scheduleTask({
                             subTasks : subTasks[i]
-                        }));
+                        }, subTasks[i].transferableObjects));
                     }
 
                     this._state = PrimitiveState.CREATING;
