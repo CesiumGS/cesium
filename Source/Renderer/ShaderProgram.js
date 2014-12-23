@@ -758,11 +758,13 @@ define([
         var len;
         var i;
 
-        var manualUniforms = this._manualUniforms;
-        len = manualUniforms.length;
-        for (i = 0; i < len; ++i) {
-            var mu = manualUniforms[i];
-            mu.value = uniformMap[mu.name]();
+        if (defined(uniformMap)) {
+            var manualUniforms = this._manualUniforms;
+            len = manualUniforms.length;
+            for (i = 0; i < len; ++i) {
+                var mu = manualUniforms[i];
+                mu.value = uniformMap[mu.name]();
+            }
         }
 
         var automaticUniforms = this._automaticUniforms;
