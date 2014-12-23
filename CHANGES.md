@@ -22,7 +22,7 @@ Change Log
 * Added `BoxGraphics` and `Entity.box`.
 * Added `CorridorGraphics` and `Entity.corridor`.
 * Added `CylinderGraphics` and `Entity.cylinder`.
-* Added the following properties to `Viewer` and `CesiumWidget`: `terrainProvider` and `camera`.  This avoids to need to access `viewer.scene` in many cases.
+* Added the following properties to `Viewer` and `CesiumWidget`: `imageryLayers`, `terrainProvider`, and `camera`.  This avoids the need to access `viewer.scene` in some cases.
 
 ### 1.4 - 2014-12-01
 

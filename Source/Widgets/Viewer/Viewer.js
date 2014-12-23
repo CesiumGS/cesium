@@ -777,6 +777,19 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         },
 
         /**
+         * Gets the collection of image layers that will be rendered on the globe.
+         * @memberof Viewer.prototype
+         *
+         * @type {ImageryLayerCollection}
+         * @readonly
+         */
+        imageryLayers : {
+            get : function() {
+                return this.scene.imageryLayers;
+            }
+        },
+
+        /**
          * The terrain provider providing surface geometry for the globe.
          * @memberof Viewer.prototype
          *

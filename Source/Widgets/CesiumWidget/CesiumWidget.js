@@ -377,6 +377,19 @@ define([
         },
 
         /**
+         * Gets the collection of image layers that will be rendered on the globe.
+         * @memberof Viewer.prototype
+         *
+         * @type {ImageryLayerCollection}
+         * @readonly
+         */
+        imageryLayers : {
+            get : function() {
+                return this._scene.imageryLayers;
+            }
+        },
+
+        /**
          * The terrain provider providing surface geometry for the globe.
          * @memberof CesiumWidget.prototype
          *

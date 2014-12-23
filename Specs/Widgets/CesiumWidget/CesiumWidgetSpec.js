@@ -6,6 +6,7 @@ defineSuite([
         'Core/ScreenSpaceEventHandler',
         'Core/WebMercatorProjection',
         'Scene/Camera',
+        'Scene/ImageryLayerCollection',
         'Scene/Scene',
         'Scene/SceneMode',
         'Scene/SkyBox',
@@ -18,6 +19,7 @@ defineSuite([
         ScreenSpaceEventHandler,
         WebMercatorProjection,
         Camera,
+        ImageryLayerCollection,
         Scene,
         SceneMode,
         SkyBox,
@@ -52,6 +54,7 @@ defineSuite([
         expect(widget.canvas).toBeInstanceOf(HTMLElement);
         expect(widget.creditContainer).toBeInstanceOf(HTMLElement);
         expect(widget.scene).toBeInstanceOf(Scene);
+        expect(widget.imageryLayers).toBeInstanceOf(ImageryLayerCollection);
         expect(widget.terrainProvider).toBeInstanceOf(EllipsoidTerrainProvider);
         expect(widget.camera).toBeInstanceOf(Camera);
         expect(widget.clock).toBeInstanceOf(Clock);

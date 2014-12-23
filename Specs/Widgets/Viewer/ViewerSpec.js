@@ -15,6 +15,7 @@ defineSuite([
         'DataSources/Entity',
         'Scene/Camera',
         'Scene/CameraFlightPath',
+        'Scene/ImageryLayerCollection',
         'Scene/SceneMode',
         'Specs/DomEventSimulator',
         'Specs/MockDataSource',
@@ -43,6 +44,7 @@ defineSuite([
         Entity,
         Camera,
         CameraFlightPath,
+        ImageryLayerCollection,
         SceneMode,
         DomEventSimulator,
         MockDataSource,
@@ -104,6 +106,7 @@ defineSuite([
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        expect(viewer.imageryLayers).toBeInstanceOf(ImageryLayerCollection);
         expect(viewer.terrainProvider).toBeInstanceOf(EllipsoidTerrainProvider);
         expect(viewer.camera).toBeInstanceOf(Camera);
         expect(viewer.dataSourceDisplay).toBeInstanceOf(DataSourceDisplay);
