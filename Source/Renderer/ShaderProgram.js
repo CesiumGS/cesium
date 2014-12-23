@@ -481,12 +481,6 @@ define([
                 initialize(this);
                 return this._uniformsByName;
             }
-        },
-        manualUniforms : {
-            get : function() {
-                initialize(this);
-                return this._manualUniforms;
-            }
         }
     });
 
