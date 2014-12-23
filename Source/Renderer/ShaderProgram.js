@@ -705,7 +705,7 @@ define([
 
     function partitionUniforms(uniforms) {
         var automaticUniforms = [];
-        var manualUniforms = {};
+        var manualUniforms = [];
 
         for ( var uniform in uniforms) {
             if (uniforms.hasOwnProperty(uniform)) {
@@ -716,7 +716,7 @@ define([
                         automaticUniform : automaticUniform
                     });
                 } else {
-                    manualUniforms[uniform] = uniforms[uniform];
+                    manualUniforms.push(uniforms[uniform]);
                 }
             }
         }
@@ -758,21 +758,18 @@ define([
         var len;
         var i;
 
-        var uniforms = this._uniforms;
         var manualUniforms = this._manualUniforms;
-        var automaticUniforms = this._automaticUniforms;
-
-        if (defined(uniformMap)) {
-            for ( var uniform in manualUniforms) {
-                if (manualUniforms.hasOwnProperty(uniform)) {
-                    manualUniforms[uniform].value = uniformMap[uniform]();
-                }
-            }
+        len = manualUniforms.length;
+        for (i = 0; i < len; ++i) {
+            var mu = manualUniforms[i];
+            mu.value = uniformMap[mu.name]();
         }
 
+        var automaticUniforms = this._automaticUniforms;
         len = automaticUniforms.length;
         for (i = 0; i < len; ++i) {
-            automaticUniforms[i].uniform.value = automaticUniforms[i].automaticUniform.getValue(uniformState);
+            var au = automaticUniforms[i];
+            au.uniform.value = au.automaticUniform.getValue(uniformState);
         }
 
         ///////////////////////////////////////////////////////////////////
@@ -781,6 +778,7 @@ define([
         // (which makes the GL calls) is faster than removing this loop and making
         // the GL calls above.  I suspect this is because each GL call pollutes the
         // L2 cache making our JavaScript and the browser/driver ping-pong cache lines.
+        var uniforms = this._uniforms;
         len = uniforms.length;
         for (i = 0; i < len; ++i) {
             uniforms[i]._set();
