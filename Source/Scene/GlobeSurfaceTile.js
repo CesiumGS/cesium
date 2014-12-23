@@ -270,8 +270,10 @@ define([
         this.imagery.length = 0;
 
         this.freeVertexArray();
-// TODO:
-//        this.shaderProgram = this.shaderProgram && this.shaderProgram.destroy();
+
+        if (defined(this.shaderProgram)) {
+            this.shaderProgram = this.shaderProgram.destroy();
+        }
     };
 
     GlobeSurfaceTile.prototype.freeVertexArray = function() {
@@ -280,8 +282,7 @@ define([
         if (defined(this.vertexArray)) {
             indexBuffer = this.vertexArray.indexBuffer;
 
-            this.vertexArray.destroy();
-            this.vertexArray = undefined;
+            this.vertexArray = this.vertexArray.destroy();
 
             if (!indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
                 --indexBuffer.referenceCount;
@@ -294,8 +295,7 @@ define([
         if (defined(this.wireframeVertexArray)) {
             indexBuffer = this.wireframeVertexArray.indexBuffer;
 
-            this.wireframeVertexArray.destroy();
-            this.wireframeVertexArray = undefined;
+            this.wireframeVertexArray = this.wireframeVertexArray.destroy();
 
             if (!indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
                 --indexBuffer.referenceCount;

@@ -22,7 +22,7 @@ define([
     GlobeSurfaceShaderSet.prototype.getShaderProgram = function(context, sceneMode, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves) {
         if (defined(surfaceTile.shaderProgram) &&
             ((surfaceTile.numberOfDayTextures === numberOfDayTextures) &&
-             (surfaceTile.sceneMode === sceneMode) &&
+             (surfaceTile.sceneMode === sceneMode) &&   // Position vertex attributes change
              (surfaceTile.applyBrightness === applyBrightness) &&
              (surfaceTile.applyContrast === applyContrast) &&
              (surfaceTile.applyHue === applyHue) &&
