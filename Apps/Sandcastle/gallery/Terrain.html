@@ -53,7 +53,7 @@ var vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
     credit : 'Terrain data courtesy VT MÄK'
 });
 
-viewer = cesiumTerrainProviderMeshes;
+viewer.terrainProvider = cesiumTerrainProviderMeshes;
 
 Sandcastle.addToolbarMenu([{
     text : 'CesiumTerrainProvider - STK World Terrain meshes',
