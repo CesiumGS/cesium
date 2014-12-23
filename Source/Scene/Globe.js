@@ -351,7 +351,7 @@ define([
      *
      * @example
      * // find intersection of ray through a pixel and the globe
-     * var ray = scene.camera.getPickRay(windowCoordinates);
+     * var ray = viewer.camera.getPickRay(windowCoordinates);
      * var intersection = globe.pick(ray, scene);
      */
     Globe.prototype.pick = function(ray, scene, result) {

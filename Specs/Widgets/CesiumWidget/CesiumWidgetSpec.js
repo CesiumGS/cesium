@@ -5,6 +5,8 @@ defineSuite([
         'Core/EllipsoidTerrainProvider',
         'Core/ScreenSpaceEventHandler',
         'Core/WebMercatorProjection',
+        'Scene/Camera',
+        'Scene/ImageryLayerCollection',
         'Scene/Scene',
         'Scene/SceneMode',
         'Scene/SkyBox',
@@ -16,6 +18,8 @@ defineSuite([
         EllipsoidTerrainProvider,
         ScreenSpaceEventHandler,
         WebMercatorProjection,
+        Camera,
+        ImageryLayerCollection,
         Scene,
         SceneMode,
         SkyBox,
@@ -50,6 +54,9 @@ defineSuite([
         expect(widget.canvas).toBeInstanceOf(HTMLElement);
         expect(widget.creditContainer).toBeInstanceOf(HTMLElement);
         expect(widget.scene).toBeInstanceOf(Scene);
+        expect(widget.imageryLayers).toBeInstanceOf(ImageryLayerCollection);
+        expect(widget.terrainProvider).toBeInstanceOf(EllipsoidTerrainProvider);
+        expect(widget.camera).toBeInstanceOf(Camera);
         expect(widget.clock).toBeInstanceOf(Clock);
         expect(widget.screenSpaceEventHandler).toBeInstanceOf(ScreenSpaceEventHandler);
         widget.render();
@@ -131,7 +138,11 @@ defineSuite([
             terrainProvider : new EllipsoidTerrainProvider()
         };
         widget = new CesiumWidget(container, options);
-        expect(widget.scene.terrainProvider).toBe(options.terrainProvider);
+        expect(widget.terrainProvider).toBe(options.terrainProvider);
+
+        var anotherProvider = new EllipsoidTerrainProvider();
+        widget.terrainProvider = anotherProvider;
+        expect(widget.terrainProvider).toBe(anotherProvider);
     });
 
     it('sets expected options skyBox', function() {

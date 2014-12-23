@@ -777,6 +777,47 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         },
 
         /**
+         * Gets the collection of image layers that will be rendered on the globe.
+         * @memberof Viewer.prototype
+         *
+         * @type {ImageryLayerCollection}
+         * @readonly
+         */
+        imageryLayers : {
+            get : function() {
+                return this.scene.imageryLayers;
+            }
+        },
+
+        /**
+         * The terrain provider providing surface geometry for the globe.
+         * @memberof Viewer.prototype
+         *
+         * @type {TerrainProvider}
+         */
+        terrainProvider : {
+            get : function() {
+                return this.scene.terrainProvider;
+            },
+            set : function(terrainProvider) {
+                this.scene.terrainProvider = terrainProvider;
+            }
+        },
+
+        /**
+         * Gets the camera.
+         * @memberof Viewer.prototype
+         *
+         * @type {Camera}
+         * @readonly
+         */
+        camera : {
+            get : function() {
+                return this.scene.camera;
+            }
+        },
+
+        /**
          * Gets the clock.
          * @memberof Viewer.prototype
          * @type {Clock}

@@ -36,7 +36,7 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 var scene = viewer.scene;
-var canvas = scene.canvas;
+var canvas = viewer.canvas;
 canvas.setAttribute('tabindex', '0'); // needed to put focus on the canvas
 canvas.onclick = function() {
     canvas.focus();
@@ -111,7 +111,7 @@ document.addEventListener('keyup', function(e) {
 }, false);
 
 viewer.clock.onTick.addEventListener(function(clock) {
-    var camera = scene.camera;
+    var camera = viewer.camera;
 
     if (flags.looking) {
         var width = canvas.clientWidth;
