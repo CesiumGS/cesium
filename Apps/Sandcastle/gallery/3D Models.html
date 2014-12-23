@@ -52,7 +52,7 @@ function createModel(url, height) {
         // Zoom to model
         var center = Cesium.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cesium.Cartesian3());
         var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-        var camera = scene.camera;
+        var camera = viewer.camera;
         camera.transform = transform;
         var controller = scene.screenSpaceCameraController;
         var r = 2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);

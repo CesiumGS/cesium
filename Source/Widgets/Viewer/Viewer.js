@@ -778,7 +778,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         /**
          * The terrain provider providing surface geometry for the globe.
-         * @memberof Scene.prototype
+         * @memberof Viewer.prototype
          *
          * @type {TerrainProvider}
          */
@@ -788,6 +788,19 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             },
             set : function(terrainProvider) {
                 this.scene.terrainProvider = terrainProvider;
+            }
+        },
+
+        /**
+         * Gets the camera.
+         * @memberof Viewer.prototype
+         *
+         * @type {Camera}
+         * @readonly
+         */
+        camera : {
+            get : function() {
+                return this.scene.camera;
             }
         },
 

@@ -378,7 +378,7 @@ define([
 
         /**
          * The terrain provider providing surface geometry for the globe.
-         * @memberof Scene.prototype
+         * @memberof CesiumWidget.prototype
          *
          * @type {TerrainProvider}
          */
@@ -388,6 +388,19 @@ define([
             },
             set : function(terrainProvider) {
                 this._scene.terrainProvider = terrainProvider;
+            }
+        },
+
+        /**
+         * Gets the camera.
+         * @memberof CesiumWidget.prototype
+         *
+         * @type {Camera}
+         * @readonly
+         */
+        camera : {
+            get : function() {
+                return this._scene.camera;
             }
         },
 

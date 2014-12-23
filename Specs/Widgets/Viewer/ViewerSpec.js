@@ -13,6 +13,7 @@ defineSuite([
         'DataSources/DataSourceCollection',
         'DataSources/DataSourceDisplay',
         'DataSources/Entity',
+        'Scene/Camera',
         'Scene/CameraFlightPath',
         'Scene/SceneMode',
         'Specs/DomEventSimulator',
@@ -40,6 +41,7 @@ defineSuite([
         DataSourceCollection,
         DataSourceDisplay,
         Entity,
+        Camera,
         CameraFlightPath,
         SceneMode,
         DomEventSimulator,
@@ -102,6 +104,8 @@ defineSuite([
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        expect(viewer.terrainProvider).toBeInstanceOf(EllipsoidTerrainProvider);
+        expect(viewer.camera).toBeInstanceOf(Camera);
         expect(viewer.dataSourceDisplay).toBeInstanceOf(DataSourceDisplay);
         expect(viewer.dataSources).toBeInstanceOf(DataSourceCollection);
         expect(viewer.canvas).toBe(viewer.cesiumWidget.canvas);

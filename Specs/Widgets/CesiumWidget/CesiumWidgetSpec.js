@@ -5,6 +5,7 @@ defineSuite([
         'Core/EllipsoidTerrainProvider',
         'Core/ScreenSpaceEventHandler',
         'Core/WebMercatorProjection',
+        'Scene/Camera',
         'Scene/Scene',
         'Scene/SceneMode',
         'Scene/SkyBox',
@@ -16,6 +17,7 @@ defineSuite([
         EllipsoidTerrainProvider,
         ScreenSpaceEventHandler,
         WebMercatorProjection,
+        Camera,
         Scene,
         SceneMode,
         SkyBox,
@@ -50,6 +52,8 @@ defineSuite([
         expect(widget.canvas).toBeInstanceOf(HTMLElement);
         expect(widget.creditContainer).toBeInstanceOf(HTMLElement);
         expect(widget.scene).toBeInstanceOf(Scene);
+        expect(widget.terrainProvider).toBeInstanceOf(EllipsoidTerrainProvider);
+        expect(widget.camera).toBeInstanceOf(Camera);
         expect(widget.clock).toBeInstanceOf(Clock);
         expect(widget.screenSpaceEventHandler).toBeInstanceOf(ScreenSpaceEventHandler);
         widget.render();
