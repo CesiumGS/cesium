@@ -130,7 +130,7 @@ define([
         this._workerName = 'createSimplePolylineGeometry';
 
         var numComponents = 1 + positions.length * Cartesian3.packedLength;
-        numComponents = 1 + colors.length * Color.packedLength;
+        numComponents += defined(colors) ? 1 + colors.length * Color.packedLength : 1;
 
         /**
          * The number of elements used to pack the object into an array.
@@ -170,7 +170,7 @@ define([
         }
 
         var colors = value._colors;
-        length = colors.length;
+        length = defined(colors) ? colors.length : 0.0;
         array[startingIndex++] = length;
 
         for (i = 0; i < length; ++i, startingIndex += Color.packedLength) {
@@ -211,7 +211,7 @@ define([
         }
 
         length = array[startingIndex++];
-        var colors = new Array(length);
+        var colors = length > 0 ? new Array(length) : undefined;
 
         for (i = 0; i < length; ++i, startingIndex += Color.packedLength) {
             colors[i] = Color.unpack(array, startingIndex);

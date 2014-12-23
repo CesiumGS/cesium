@@ -182,7 +182,7 @@ define([
         VertexFormat.pack(value._vertexFormat, array, startingIndex);
         startingIndex += VertexFormat.packedLength;
 
-        array[startingIndex]   = value._granularity;
+        array[startingIndex] = value._granularity;
     };
 
     /**
