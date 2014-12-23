@@ -761,8 +761,6 @@ define([
     };
 
     ShaderProgram.prototype._setUniforms = function(uniformMap, uniformState, validate) {
-        // TODO: Performance
-
         var len;
         var i;
 
@@ -785,6 +783,10 @@ define([
 
         ///////////////////////////////////////////////////////////////////
 
+        // It appears that assigning the uniform values above and then setting them here
+        // (which makes the GL calls) is faster than removing this loop and making
+        // the GL calls above.  I suspect this is because each GL call pollutes the
+        // L2 cache making our JavaScript and the browser/driver ping-pong cache lines.
         len = uniforms.length;
         for (i = 0; i < len; ++i) {
             uniforms[i]._set();
@@ -796,7 +798,7 @@ define([
 
             gl.validateProgram(program);
             if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)) {
-                throw new DeveloperError('Program validation failed.  Link log: ' + gl.getProgramInfoLog(program));
+                throw new DeveloperError('Program validation failed.  Program info log: ' + gl.getProgramInfoLog(program));
             }
         }
     };
