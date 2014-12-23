@@ -131,6 +131,19 @@ define([
 
         this.pickBoundingSphere = new BoundingSphere();
         this.pickTerrain = undefined;
+
+        // Cached shader program and cache key(s)
+        this.shaderProgram = undefined;
+        this.sceneMode = undefined;
+        this.numberOfDayTextures = 0;
+        this.applyBrightness = false;
+        this.applyContrast = false;
+        this.applyHue = false;
+        this.applySaturation = false;
+        this.applyGamma = false;
+        this.applyAlpha = false;
+        this.showReflectiveOcean = false;
+        this.showOceanWaves = false;
     };
 
     defineProperties(GlobeSurfaceTile.prototype, {
@@ -257,6 +270,8 @@ define([
         this.imagery.length = 0;
 
         this.freeVertexArray();
+// TODO:
+//        this.shaderProgram = this.shaderProgram && this.shaderProgram.destroy();
     };
 
     GlobeSurfaceTile.prototype.freeVertexArray = function() {

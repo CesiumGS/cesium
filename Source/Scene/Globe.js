@@ -937,8 +937,6 @@ define([
                 sources : [GlobeFS]
             });
 
-            surfaceShaderSet.invalidateShaders();
-
             var poleShaderProgram = context.replaceShaderProgram(northPoleCommand.shaderProgram, GlobeVSPole, GlobeFSPole, terrainAttributeLocations);
 
             northPoleCommand.shaderProgram = poleShaderProgram;
@@ -1036,8 +1034,6 @@ define([
     Globe.prototype.destroy = function() {
         this._northPoleCommand.vertexArray = this._northPoleCommand.vertexArray && this._northPoleCommand.vertexArray.destroy();
         this._southPoleCommand.vertexArray = this._southPoleCommand.vertexArray && this._southPoleCommand.vertexArray.destroy();
-
-        this._surfaceShaderSet = this._surfaceShaderSet && this._surfaceShaderSet.destroy();
 
         this._northPoleCommand.shaderProgram = this._northPoleCommand.shaderProgram && this._northPoleCommand.shaderProgram.destroy();
         this._southPoleCommand.shaderProgram = this._northPoleCommand.shaderProgram;
