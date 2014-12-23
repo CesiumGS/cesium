@@ -107,7 +107,6 @@ color = sampleAndBlend(\n\
 
         fs.sources.push(computeDayColor);
 
-// TODO: Surface tile should destroy this.
         var shader = context.createShaderProgram(vs, fs, this._attributeLocations);
         surfaceTile.shaderProgram = shader;
         return shader;
