@@ -2,14 +2,19 @@
 define([
         '../Core/Cartesian3',
         '../Core/CircleGeometry',
+        '../Core/defined',
         '../Core/Ellipsoid'
     ], function(
         Cartesian3,
         CircleGeometry,
+        defined,
         Ellipsoid) {
     "use strict";
 
     function createCircleGeometry(circleGeometry) {
+        if (defined(circleGeometry.buffer)) {
+            circleGeometry = CircleGeometry.unpack(circleGeometry);
+        }
         circleGeometry._ellipseGeometry._center = Cartesian3.clone(circleGeometry._ellipseGeometry._center);
         circleGeometry._ellipseGeometry._ellipsoid = Ellipsoid.clone(circleGeometry._ellipseGeometry._ellipsoid);
         return CircleGeometry.createGeometry(circleGeometry);

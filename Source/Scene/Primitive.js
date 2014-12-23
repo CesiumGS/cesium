@@ -731,7 +731,7 @@ define([
                     for (i = 0; i < length; ++i) {
                         geometry = instances[i].geometry;
                         instanceIds.push(instances[i].id);
-                        if (false/*defined(geometry.constructor.pack)*/) {
+                        if (defined(geometry.constructor.pack)) {
                             var packedLength = defined(geometry.constructor.packedLength) ? geometry.constructor.packedLength : geometry.packedLength;
                             var array = new Float64Array(packedLength);
                             geometry.constructor.pack(geometry, array);
