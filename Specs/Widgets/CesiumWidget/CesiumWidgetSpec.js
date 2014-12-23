@@ -131,7 +131,11 @@ defineSuite([
             terrainProvider : new EllipsoidTerrainProvider()
         };
         widget = new CesiumWidget(container, options);
-        expect(widget.scene.terrainProvider).toBe(options.terrainProvider);
+        expect(widget.terrainProvider).toBe(options.terrainProvider);
+
+        var anotherProvider = new EllipsoidTerrainProvider();
+        widget.terrainProvider = anotherProvider;
+        expect(widget.terrainProvider).toBe(anotherProvider);
     });
 
     it('sets expected options skyBox', function() {

@@ -777,6 +777,21 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         },
 
         /**
+         * The terrain provider providing surface geometry for the globe.
+         * @memberof Scene.prototype
+         *
+         * @type {TerrainProvider}
+         */
+        terrainProvider : {
+            get : function() {
+                return this.scene.terrainProvider;
+            },
+            set : function(terrainProvider) {
+                this.scene.terrainProvider = terrainProvider;
+            }
+        },
+
+        /**
          * Gets the clock.
          * @memberof Viewer.prototype
          * @type {Clock}

@@ -281,6 +281,10 @@ defineSuite([
             terrainProvider : provider
         });
         expect(viewer.scene.terrainProvider).toBe(provider);
+
+        var anotherProvider = new EllipsoidTerrainProvider();
+        viewer.terrainProvider = anotherProvider;
+        expect(viewer.terrainProvider).toBe(anotherProvider);
     });
 
     it('can set fullScreenElement', function() {

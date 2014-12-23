@@ -53,27 +53,27 @@ var vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
     credit : 'Terrain data courtesy VT MÄK'
 });
 
-scene.terrainProvider = cesiumTerrainProviderMeshes;
+viewer = cesiumTerrainProviderMeshes;
 
 Sandcastle.addToolbarMenu([{
     text : 'CesiumTerrainProvider - STK World Terrain meshes',
     onselect : function() {
-        scene.terrainProvider = cesiumTerrainProviderMeshes;
+        viewer.terrainProvider = cesiumTerrainProviderMeshes;
     }
 }, {
     text : 'CesiumTerrainProvider - Small Terrain heightmaps and water mask',
     onselect : function() {
-        scene.terrainProvider = cesiumTerrainProviderHeightmaps;
+        viewer.terrainProvider = cesiumTerrainProviderHeightmaps;
     }
 }, {
     text : 'EllipsoidTerrainProvider',
     onselect : function() {
-        scene.terrainProvider = ellipsoidProvider;
+        viewer.terrainProvider = ellipsoidProvider;
     }
 }, {
     text : 'VRTheWorldTerrainProvider',
     onselect : function() {
-        scene.terrainProvider = vrTheWorldProvider;
+        viewer.terrainProvider = vrTheWorldProvider;
     }
 }], 'terrainMenu');
 

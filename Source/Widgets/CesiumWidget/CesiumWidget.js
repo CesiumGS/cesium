@@ -377,6 +377,21 @@ define([
         },
 
         /**
+         * The terrain provider providing surface geometry for the globe.
+         * @memberof Scene.prototype
+         *
+         * @type {TerrainProvider}
+         */
+        terrainProvider : {
+            get : function() {
+                return this._scene.terrainProvider;
+            },
+            set : function(terrainProvider) {
+                this._scene.terrainProvider = terrainProvider;
+            }
+        },
+
+        /**
          * Gets the clock.
          * @memberof CesiumWidget.prototype
          *
