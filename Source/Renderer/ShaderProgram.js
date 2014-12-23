@@ -768,7 +768,7 @@ define([
         var manualUniforms = this._manualUniforms;
         var automaticUniforms = this._automaticUniforms;
 
-        if (uniformMap) {
+        if (defined(uniformMap)) {
             for ( var uniform in manualUniforms) {
                 if (manualUniforms.hasOwnProperty(uniform)) {
                     manualUniforms[uniform].value = uniformMap[uniform]();
