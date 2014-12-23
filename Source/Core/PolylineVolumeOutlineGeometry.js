@@ -150,7 +150,7 @@ define([
         this._workerName = 'createPolylineVolumeOutlineGeometry';
 
         var numComponents = 1 + positions.length * Cartesian3.packedLength;
-        numComponents = 1 + shape.length * Cartesian2.packedLength;
+        numComponents += 1 + shape.length * Cartesian2.packedLength;
 
         /**
          * The number of elements used to pack the object into an array.
@@ -244,8 +244,8 @@ define([
 
         if (!defined(result)) {
             return new PolylineVolumeOutlineGeometry({
-                positions : positions,
-                shape : shape,
+                polylinePositions : positions,
+                shapePositions : shape,
                 ellipsoid : ellipsoid,
                 cornerType : cornerType,
                 granularity : granularity

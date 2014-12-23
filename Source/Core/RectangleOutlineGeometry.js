@@ -200,7 +200,8 @@ define([
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var surfaceHeight = defaultValue(options.height, 0.0);
-        var rotation = options.rotation;
+        var rotation = defaultValue(options.rotation, 0.0);
+        var extrudedHeight = defaultValue(options.extrudedHeight, surfaceHeight);
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(rectangle)) {
@@ -217,7 +218,7 @@ define([
         this._ellipsoid = ellipsoid;
         this._surfaceHeight = surfaceHeight;
         this._rotation = rotation;
-        this._extrudedHeight = options.extrudedHeight;
+        this._extrudedHeight = extrudedHeight;
         this._workerName = 'createRectangleOutlineGeometry';
     };
 

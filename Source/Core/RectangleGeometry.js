@@ -550,9 +550,12 @@ define([
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var surfaceHeight = defaultValue(options.height, 0.0);
-        var rotation = options.rotation;
-        var stRotation = options.stRotation;
+        var rotation = defaultValue(options.rotation, 0.0);
+        var stRotation = defaultValue(options.stRotation, 0.0);
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+        var extrudedHeight = defaultValue(options.extrudedHeight, surfaceHeight);
+        var closeTop = defaultValue(options.closeTop, true);
+        var closeBottom = defaultValue(options.closeBottom, true);
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(rectangle)) {
@@ -571,9 +574,9 @@ define([
         this._rotation = rotation;
         this._stRotation = stRotation;
         this._vertexFormat = vertexFormat;
-        this._extrudedHeight = options.extrudedHeight;
-        this._closeTop = options.closeTop;
-        this._closeBottom = options.closeBottom;
+        this._extrudedHeight = extrudedHeight;
+        this._closeTop = closeTop;
+        this._closeBottom = closeBottom;
         this._workerName = 'createRectangleGeometry';
     };
 
@@ -643,7 +646,7 @@ define([
         var ellipsoid = Ellipsoid.unpack(array, startingIndex);
         startingIndex += Ellipsoid.packedLength;
 
-        var vertexFormat = VertexFormat.pack(array, startingIndex);
+        var vertexFormat = VertexFormat.unpack(array, startingIndex);
         startingIndex += VertexFormat.packedLength;
 
         var granularity = array[startingIndex++];
