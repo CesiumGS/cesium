@@ -45,12 +45,14 @@ define([
      *     // images is an array containing all the loaded images
      * });
      */
-    var loadImageViaBlob = function(url) {
+
+    // THELITTLEG
+    var loadImageViaBlob = function(url, headers) {
         if (dataUriRegex.test(url)) {
             return loadImage(url);
         }
-
-        return loadBlob(url).then(function(blob) {
+        // THELITTLEG
+        return loadBlob(url, headers).then(function(blob) {
             var blobUrl = window.URL.createObjectURL(blob);
 
             return loadImage(blobUrl, false).then(function(image) {

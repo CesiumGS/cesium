@@ -146,6 +146,8 @@ define([
 
         this._rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
         this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new GeographicTilingScheme();
+        // THELITTLEG
+        this._headers = options.headers;
 
         this._rectangle = Rectangle.intersection(this._rectangle, this._tilingScheme.rectangle);
 
@@ -385,6 +387,13 @@ define([
             get : function() {
                 return true;
             }
+        },
+
+        // THELITTLEG
+        headers : {
+            get: function(){
+                return this._headers;
+            }
         }
     });
 
@@ -480,7 +489,8 @@ define([
             url = buildGetFeatureInfoUrl(this, 'application/json', x, y, level, i, j);
 
             var that = this;
-            return when(loadJson(url), function(json) {
+            // THELITTLEG
+            return when(loadJson(url, this._headers), function(json) {
                 return geoJsonToFeatureInfo(json);
             }, function(e) {
                 // GeoJSON failed, try XML.
@@ -489,15 +499,15 @@ define([
                 }
 
                 url = buildGetFeatureInfoUrl(that, 'text/xml', x, y, level, i, j);
-
-                return when(loadXML(url), function(xml) {
+                // THELITTLEG
+                return when(loadXML(url, this._headers), function(xml) {
                     return xmlToFeatureInfo(xml);
                 });
             });
         } else if (this._getFeatureInfoAsXml) {
             url = buildGetFeatureInfoUrl(this, 'text/xml', x, y, level, i, j);
-
-            return when(loadXML(url), function(xml) {
+            // THELITTLEG
+            return when(loadXML(url, this._headers), function(xml) {
                 return xmlToFeatureInfo(xml);
             });
         } else {

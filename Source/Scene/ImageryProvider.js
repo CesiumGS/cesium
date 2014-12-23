@@ -296,9 +296,11 @@ define([
      */
     ImageryProvider.loadImage = function(imageryProvider, url) {
         if (defined(imageryProvider.tileDiscardPolicy)) {
-            return throttleRequestByServer(url, loadImageViaBlob);
+            // THELITTLEG
+            return throttleRequestByServer(loadImageViaBlob, url, imageryProvider.headers);
         }
-        return throttleRequestByServer(url, loadImage);
+        // THELITTLEG
+        return throttleRequestByServer(loadImage, url);
     };
 
     return ImageryProvider;

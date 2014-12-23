@@ -217,7 +217,8 @@ define([
             url = proxy.getURL(url);
         }
 
-        var promise = throttleRequestByServer(url, loadImage);
+        // THELITTLEG
+        var promise = throttleRequestByServer(loadImage, url);
         if (!defined(promise)) {
             return undefined;
         }

@@ -108,6 +108,9 @@ define([
 
         this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
 
+        // THELITTLEG
+        this._headers = options.headers;
+
         // Check the number of tiles at the minimum level.  If it's more than four,
         // throw an exception, because starting at the higher minimum
         // level will cause too many tiles to be downloaded and rendered.
@@ -338,6 +341,12 @@ define([
         hasAlphaChannel : {
             get : function() {
                 return true;
+            }
+        },
+        // THELITTLEG
+        headers : {
+            get: function(){
+                return this._headers;
             }
         }
     });

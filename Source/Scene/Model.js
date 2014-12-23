@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../ThirdParty/when',
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -24,6 +25,7 @@ define([
         '../Core/Quaternion',
         '../Core/Queue',
         '../Core/RuntimeError',
+        '../Core/throttleRequestByServer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/ShaderSource',
@@ -40,6 +42,7 @@ define([
         './Pass',
         './SceneMode'
     ], function(
+        when,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -64,6 +67,7 @@ define([
         Quaternion,
         Queue,
         RuntimeError,
+        throttleRequestByServer,
         BufferUsage,
         DrawCommand,
         ShaderSource,
@@ -321,6 +325,10 @@ define([
         this._loadError = undefined;
         this._loadResources = undefined;
 
+        //THELITTLEG
+        this._failedLoadFunction = defaultValue(options.failedLoadFunction, function(model, type, path){return new RuntimeError('Failed to load external ' + type + ': ' + path)});
+        this._cache = options.cache;
+
         this._cesiumAnimationsDirty = false;       // true when the Cesium API, not a glTF animation, changed a node transform
         this._maxDirtyNumber = 0;                  // Used in place of a dirty boolean flag to avoid an extra graph traversal
 
@@ -527,21 +535,48 @@ define([
         //>>includeEnd('debug');
 
         var url = options.url;
+
+        var model = new Model(options);
+
+        model.loadGltf(url, options);
+
+        return model;
+    };
+
+    Model.prototype.loadGltf = function(url, options) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(options) || !defined(url)) {
+            throw new DeveloperError('options.url is required');
+        }
+        //>>includeEnd('debug');
         var basePath = '';
         var i = url.lastIndexOf('/');
         if (i !== -1) {
             basePath = url.substring(0, i + 1);
         }
 
-        options = clone(options);
-        options.basePath = basePath;
-        var model = new Model(options);
+        this._basePath = basePath;
+        var docUri = new Uri(document.location.href);
+        var modelUri = new Uri(this._basePath);
+        this._baseUri = modelUri.resolve(docUri);
 
-        loadText(url, options.headers).then(function(data) {
-            model._gltf = gltfDefaults(JSON.parse(data));
-        }).otherwise(getFailedLoadFunction(model, 'gltf', url));
+        var promise;
 
-        return model;
+        var throttleRequests = defaultValue(options.throttleRequests, true);
+        if (throttleRequests) {
+            promise = throttleRequestByServer(loadText, url, options.headers);
+            if (!defined(promise)) {
+                return undefined;
+            }
+        } else {
+            promise = loadText(url, options.headers);
+        }
+
+        var that = this;
+
+        return when(promise, function(data) {
+            that._gltf = gltfDefaults(JSON.parse(data));
+        }).otherwise(getFailedLoadFunction(that, 'gltf', url));
     };
 
     function getRuntime(model, runtimeName, name) {
@@ -614,8 +649,9 @@ define([
 
         var nodeStack = [];
 
+        //THELITTLEG
         var min = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
-        var max = new Cartesian3(Number.MIN_VALUE, Number.MIN_VALUE, Number.MIN_VALUE);
+        var max = new Cartesian3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
 
         for (var i = 0; i < rootNodesLength; ++i) {
             var n = gltfNodes[rootNodes[i]];
@@ -669,7 +705,9 @@ define([
 
     function getFailedLoadFunction(model, type, path) {
         return function() {
-            model._loadError = new RuntimeError('Failed to load external ' + type + ': ' + path);
+            // THELITTLEG
+            //model._loadError = new RuntimeError('Failed to load external ' + type + ': ' + path);
+            model._loadError = model._failedLoadFunction(model, type, path);
             model._state = ModelState.FAILED;
         };
     }
@@ -714,15 +752,22 @@ define([
 
     function parseShaders(model) {
         var shaders = model.gltf.shaders;
+        if (!Cesium.defined(model._shaderParser) || !model._shaderParser(shaders)) {
         for (var name in shaders) {
             if (shaders.hasOwnProperty(name)) {
                 ++model._loadResources.pendingShaderLoads;
                 var shader = shaders[name];
-                var uri = new Uri(shader.uri);
-                var shaderPath = uri.resolve(model._baseUri).toString();
-                loadText(shaderPath).then(shaderLoad(model, name)).otherwise(getFailedLoadFunction(model, 'shader', shaderPath));
+                var shaderSource;
+                if (model.shaderOverride && (shaderSource = model.shaderOverride(shader, name, model.gltf))){
+                    shaderLoad(model, name)(shaderSource);
+                }else {
+                    var uri = new Uri(shader.uri);
+                    var shaderPath = uri.resolve(model._baseUri).toString();
+                    loadText(shaderPath).then(shaderLoad(model, name)).otherwise(getFailedLoadFunction(model, 'shader', shaderPath));
+                }
             }
         }
+    }
     }
 
     function parsePrograms(model) {
@@ -750,11 +795,22 @@ define([
         var textures = model.gltf.textures;
         for (var name in textures) {
             if (textures.hasOwnProperty(name)) {
-                ++model._loadResources.pendingTextureLoads;
                 var texture = textures[name];
                 var uri = new Uri(images[texture.source].uri);
                 var imagePath = uri.resolve(model._baseUri).toString();
-                loadImage(imagePath).then(imageLoad(model, name)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
+                var textureCached = undefined;
+                if (defined(model._cache)) {
+                    textureCached = model._cache.get(imagePath);
+                    if (defined(textureCached)) {
+                        model._rendererResources.textures[name] = textureCached;
+                        textureCached.ref();
+                    }
+                }
+
+                if (!defined(textureCached)) {
+                    ++model._loadResources.pendingTextureLoads;
+                    loadImage(imagePath).then(imageLoad(model, name)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
+                }
             }
         }
     }
@@ -1069,6 +1125,10 @@ define([
         tx.sampler = sampler;
 
         model._rendererResources.textures[gltfTexture.name] = tx;
+
+        if (defined(model._cache)) {
+            model._cache.add(tx, source.src);
+        }
     }
 
     function createTextures(model, context) {
@@ -1873,7 +1933,7 @@ define([
                         uniformMap : pickUniformMap,
                         renderState : rs,
                         owner : owner,
-                        pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
+                        pass : Pass.OPAQUE
                     });
                     pickCommands.push(pickCommand);
                 }
@@ -2207,7 +2267,7 @@ define([
 
         var justLoaded = false;
 
-        if (this._state === ModelState.FAILED) {
+        if (this._state === ModelState.FAILED && defined(this._loadError)) {
             throw this._loadError;
         }
 
@@ -2320,7 +2380,11 @@ define([
     function destroy(property) {
         for (var name in property) {
             if (property.hasOwnProperty(name)) {
-                property[name].destroy();
+                if (defined(property[name].unref)){
+                    property[name].unref();
+                }else {
+                    property[name].destroy();
+                }
             }
         }
     }

@@ -1,4 +1,4 @@
-<project name="Cesium" default="combine">
+	<project name="Cesium" default="combine">
 	<target name="build" description="A developer build that prepares the source tree for use as standard AMD modules.">
 		<mkdir dir="${buildDirectory}" />
 		<glslToJavascript minify="${build.minification}" minifystatefile="${buildDirectory}/minifyShaders.state">
@@ -22,6 +22,12 @@
 	</target>
 
 	<target name="combine" depends="build,combineJavaScript" description="Combines all source files into a single stand-alone script." />
+
+	<target name="combineNotWorker">
+		<antcall target="combine">
+			<param name="build.workers" value="false" />
+		</antcall>
+	</target>
 
 	<target name="minify" description="Combines all source files into a single stand-alone, minified script.">
 		<antcall target="combine">
@@ -99,6 +105,7 @@
 
 	<!-- properties controlling which steps get run -->
 	<property name="build.minification" value="false" />
+	<property name="build.workers" value="true" />
 	<property name="pragmas.debug" value="true" />
 
 	<!-- properties controlling how to run the server-->
@@ -342,6 +349,46 @@
 		</copy>
 	</target>
 
+	<target name="combineJavaScriptNotWorker.create">
+		<!-- create relative paths because r.js can't handle full Windows paths -->
+		<property name="relativeAlmondPath" location="${almondPath}" relative="true" basedir="${sourceDirectory}" />
+		<property name="combineOutputDirectory" location="${buildDirectory}/combineOutput" />
+
+		<mkdir dir="${combineOutputDirectory}" />
+		<property name="relativeCombineOutputDirectory" location="${combineOutputDirectory}" relative="true" basedir="${sourceDirectory}" />
+
+		<!-- create combined Cesium.js	-->
+		<antcall target="combineJavaScript.combineCesium" />
+
+		<mkdir dir="${buildStubsDirectory}" />
+		<generateStubs stuboutput="${buildStubsDirectory}/Cesium.js" pathsoutput="${buildStubsDirectory}/paths.js">
+			<sourcefiles refid="cesiumJsFiles" />
+		</generateStubs>
+
+		<!-- create combined Cesium.js workers -->
+		<!--antcall target="combineJavaScript.combineCesiumWorkers" /-->
+
+		<!-- copy to build folder with copyright header added at the top -->
+		<copy todir="${outputDirectory}">
+			<fileset dir="${combineOutputDirectory}" />
+			<filterchain>
+				<concatfilter prepend="${sourceDirectory}/copyrightHeader.js" />
+			</filterchain>
+		</copy>
+
+		<delete dir="${combineOutputDirectory}" />
+
+		<!-- copy other resources -->
+		<copy todir="${outputDirectory}" includeEmptyDirs="false">
+			<fileset dir="${sourceDirectory}">
+				<exclude name="**/*.js" />
+				<exclude name="**/*.glsl" />
+				<exclude name="**/.gitignore" />
+				<exclude name="**/package.json" />
+			</fileset>
+		</copy>
+	</target>
+
 	<target name="combineJavaScript.combineCesium" depends="combineJavaScript.combineCesium.check" unless="no.combineCesium.create">
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
 			<arg value="${rjsPath}" />
@@ -357,7 +404,7 @@
 		</exec>
 	</target>
 
-	<target name="combineJavaScript.combineCesiumWorkers" depends="combineJavaScript.combineCesiumWorkers.check" unless="no.combineCesiumWorkers.create">
+	<target name="combineJavaScript.combineCesiumWorkers" depends="combineJavaScript.combineCesiumWorkers.check" unless="no.combineCesiumWorkers.create" if="${build.workers}">
 		<!-- create standalone worker files -->
 		<apply executable="${nodePath}" dir="${sourceDirectory}" relative="true" force="true">
 			<arg value="${rjsPath}" />
