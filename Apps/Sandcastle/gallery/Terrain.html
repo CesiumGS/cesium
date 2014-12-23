@@ -179,7 +179,7 @@ Sandcastle.addToolbarButton('Sample Everest Terrain', function() {
         }
     }
 
-    Cesium.when(Cesium.sampleTerrain(scene.terrainProvider, 9, terrainSamplePositions), sampleTerrainSuccess);
+    Cesium.when(Cesium.sampleTerrain(viewer.terrainProvider, 9, terrainSamplePositions), sampleTerrainSuccess);
 }, 'sampleButtons');
 //Sandcastle_End
 Sandcastle.finishedLoading();
