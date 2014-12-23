@@ -530,7 +530,7 @@ define([
         options.maximumHeights = Property.getValueOrUndefined(wall.maximumHeights, time, options.maximumHeights);
         options.granularity = Property.getValueOrUndefined(wall.granularity, time);
 
-        if (!defined(wall.fill) || wall.fill.getValue(time)) {
+        if (Property.getValueOrDefault(wall.fill, time, true)) {
             var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
             this._material = material;
 
@@ -551,7 +551,7 @@ define([
             }));
         }
 
-        if (defined(wall.outline) && wall.outline.getValue(time)) {
+        if (Property.getValueOrDefault(wall.outline, time, false)) {
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
 
             var outlineColor = Property.getValueOrClonedDefault(wall.outlineColor, time, Color.BLACK, scratchColor);

@@ -17,12 +17,12 @@ define([
         '../ThirdParty/topojson',
         '../ThirdParty/when',
         './BillboardGraphics',
+        './CallbackProperty',
         './ColorMaterialProperty',
         './ConstantPositionProperty',
         './ConstantProperty',
         './DataSource',
         './EntityCollection',
-        './CallbackProperty',
         './PolygonGraphics',
         './PolylineGraphics'
     ], function(
@@ -43,12 +43,12 @@ define([
         topojson,
         when,
         BillboardGraphics,
+        CallbackProperty,
         ColorMaterialProperty,
         ConstantPositionProperty,
         ConstantProperty,
         DataSource,
         EntityCollection,
-        CallbackProperty,
         PolygonGraphics,
         PolylineGraphics) {
     "use strict";
