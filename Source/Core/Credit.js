@@ -138,7 +138,10 @@ define([
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     Credit.equals = function(left, right) {
-        return (!defined(left) && !defined(right)) || (left._id === right._id);
+        return (left === right) ||
+               ((defined(left)) &&
+                (defined(right)) &&
+                (left._id === right._id));
     };
 
     /**
