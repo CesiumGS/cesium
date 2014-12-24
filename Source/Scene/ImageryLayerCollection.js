@@ -347,8 +347,8 @@ define([
      *                                             return undefined.
      *
      * @example
-     * var pickRay = viewer.scene.camera.getPickRay(windowPosition);
-     * var featuresPromise = viewer.scene.imageryLayers.pickImageryLayerFeatures(pickRay, viewer.scene);
+     * var pickRay = viewer.camera.getPickRay(windowPosition);
+     * var featuresPromise = viewer.imageryLayers.pickImageryLayerFeatures(pickRay, viewer.scene);
      * if (!Cesium.defined(featuresPromise)) {
      *     console.log('No features picked.');
      * } else {

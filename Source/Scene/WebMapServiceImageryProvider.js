@@ -113,7 +113,7 @@ define([
      *     proxy: new Cesium.DefaultProxy('/proxy/')
      * });
      *
-     * viewer.scene.imageryLayers.addImageryProvider(provider);
+     * viewer.imageryLayers.addImageryProvider(provider);
      */
     var WebMapServiceImageryProvider = function WebMapServiceImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
