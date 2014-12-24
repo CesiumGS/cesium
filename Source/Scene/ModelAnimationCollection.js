@@ -207,12 +207,11 @@ define([
         options = clone(options);
 
         var scheduledAnimations = [];
-        var animations = this._model.gltf.animations;
-        for (var name in animations) {
-            if (animations.hasOwnProperty(name)) {
-                options.name = name;
-                scheduledAnimations.push(this.add(options));
-            }
+        var animationIds = this._model._animationIds;
+        var length = animationIds.length;
+        for (var i = 0; i < length; ++i) {
+            options.name = animationIds[i];
+            scheduledAnimations.push(this.add(options));
         }
 
         return scheduledAnimations;
