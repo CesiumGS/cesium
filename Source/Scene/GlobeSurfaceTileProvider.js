@@ -95,6 +95,7 @@ define([
         this.hasWaterMask = false;
         this.oceanNormalMap = undefined;
         this.zoomedOutOceanSpecularIntensity = 0.5;
+        this.enableLighting = false;
 
         this._quadtree = undefined;
         this._terrainProvider = options.terrainProvider;
@@ -806,6 +807,7 @@ define([
         var showReflectiveOcean = tileProvider.hasWaterMask && defined(waterMaskTexture);
         var oceanNormalMap = tileProvider.oceanNormalMap;
         var showOceanWaves = showReflectiveOcean && defined(oceanNormalMap);
+        var hasVertexNormals = tileProvider.terrainProvider.ready && tileProvider.terrainProvider.hasVertexNormals;
 
         if (showReflectiveOcean) {
             --maxTextures;
@@ -825,6 +827,8 @@ define([
         var southMercatorYHigh = 0.0;
         var southMercatorYLow = 0.0;
         var oneOverMercatorHeight = 0.0;
+
+        var useWebMercatorProjection = false;
 
         if (frameState.mode !== SceneMode.SCENE3D) {
             var projection = frameState.mapProjection;
@@ -860,6 +864,8 @@ define([
                 southMercatorYLow = southMercatorY - float32ArrayScratch[0];
 
                 oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
+
+                useWebMercatorProjection = true;
             }
         }
 
@@ -986,7 +992,7 @@ define([
             uniformMap.waterMask = waterMaskTexture;
             Cartesian4.clone(surfaceTile.waterMaskTranslationAndScale, uniformMap.waterMaskTranslationAndScale);
 
-            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(context, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves);
+            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(context, frameState.mode, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection);
             command.renderState = renderState;
             command.primitiveType = PrimitiveType.TRIANGLES;
             command.vertexArray = surfaceTile.vertexArray;

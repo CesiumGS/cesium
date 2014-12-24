@@ -121,6 +121,14 @@ define([
 
         this._surfaceShaderSet = new GlobeSurfaceShaderSet();
 
+        this._surfaceShaderSet.baseVertexShaderSource = new ShaderSource({
+            sources : [GlobeVS]
+        });
+
+        this._surfaceShaderSet.baseFragmentShaderSource = new ShaderSource({
+            sources : [GlobeFS]
+        });
+
         this._surface = new QuadtreePrimitive({
             tileProvider : new GlobeSurfaceTileProvider({
                 terrainProvider : terrainProvider,
@@ -240,7 +248,6 @@ define([
          * @default false
          */
         this.enableLighting = false;
-        this._enableLighting = false;
 
         /**
          * The distance where everything becomes lit. This only takes effect
@@ -272,7 +279,6 @@ define([
 
         this._oceanNormalMap = undefined;
         this._zoomedOutOceanSpecularIntensity = 0.5;
-        this._hasVertexNormals = false;
         this._lightingFadeDistance = new Cartesian2(this.lightingFadeOutDistance, this.lightingFadeInDistance);
 
         var that = this;
@@ -872,80 +878,13 @@ define([
             }
         }
 
-        // Initial compile or re-compile if uber-shader parameters changed
-        var hasVertexNormals = terrainProvider.ready && terrainProvider.hasVertexNormals;
-        var enableLighting = this.enableLighting;
-
         if (!defined(northPoleCommand.shaderProgram) ||
-            !defined(southPoleCommand.shaderProgram) ||
-            modeChanged ||
-            this._hasVertexNormals !== hasVertexNormals ||
-            this._enableLighting !== enableLighting) {
-
-            var getPosition3DMode = 'vec4 getPosition(vec3 position3DWC) { return getPosition3DMode(position3DWC); }';
-            var getPosition2DMode = 'vec4 getPosition(vec3 position3DWC) { return getPosition2DMode(position3DWC); }';
-            var getPositionColumbusViewMode = 'vec4 getPosition(vec3 position3DWC) { return getPositionColumbusViewMode(position3DWC); }';
-            var getPositionMorphingMode = 'vec4 getPosition(vec3 position3DWC) { return getPositionMorphingMode(position3DWC); }';
-
-            var getPositionMode;
-
-            switch (mode) {
-            case SceneMode.SCENE3D:
-                getPositionMode = getPosition3DMode;
-                break;
-            case SceneMode.SCENE2D:
-                getPositionMode = getPosition2DMode;
-                break;
-            case SceneMode.COLUMBUS_VIEW:
-                getPositionMode = getPositionColumbusViewMode;
-                break;
-            case SceneMode.MORPHING:
-                getPositionMode = getPositionMorphingMode;
-                break;
-            }
-
-            var get2DYPositionFractionGeographicProjection = 'float get2DYPositionFraction() { return get2DGeographicYPositionFraction(); }';
-            var get2DYPositionFractionMercatorProjection = 'float get2DYPositionFraction() { return get2DMercatorYPositionFraction(); }';
-
-            var get2DYPositionFraction;
-
-            if (projection instanceof GeographicProjection) {
-                get2DYPositionFraction = get2DYPositionFractionGeographicProjection;
-            } else {
-                get2DYPositionFraction = get2DYPositionFractionMercatorProjection;
-            }
-
-            var surfaceShaderSet = this._surfaceShaderSet;
-
-            var shaderDefines = [];
-
-            if (enableLighting) {
-                if (hasVertexNormals) {
-                    shaderDefines.push('ENABLE_VERTEX_LIGHTING');
-                } else {
-                    shaderDefines.push('ENABLE_DAYNIGHT_SHADING');
-                }
-            }
-
-            surfaceShaderSet.baseVertexShaderSource = new ShaderSource({
-                defines : shaderDefines,
-                sources : [GlobeVS, getPositionMode, get2DYPositionFraction]
-            });
-
-            surfaceShaderSet.baseFragmentShaderSource = new ShaderSource({
-                defines : shaderDefines,
-                sources : [GlobeFS]
-            });
-
-            surfaceShaderSet.invalidateShaders();
+            !defined(southPoleCommand.shaderProgram)) {
 
             var poleShaderProgram = context.replaceShaderProgram(northPoleCommand.shaderProgram, GlobeVSPole, GlobeFSPole, terrainAttributeLocations);
 
             northPoleCommand.shaderProgram = poleShaderProgram;
             southPoleCommand.shaderProgram = poleShaderProgram;
-
-            this._hasVertexNormals = hasVertexNormals;
-            this._enableLighting = enableLighting;
         }
 
         this._occluder.cameraPosition = frameState.camera.positionWC;
@@ -981,6 +920,7 @@ define([
             tileProvider.zoomedOutOceanSpecularIntensity = this._zoomedOutOceanSpecularIntensity;
             tileProvider.hasWaterMask = hasWaterMask;
             tileProvider.oceanNormalMap = this._oceanNormalMap;
+            tileProvider.enableLighting = this.enableLighting;
 
             surface.update(context, frameState, commandList);
 
