@@ -59,7 +59,7 @@ define([
             shadersByFlags = this._shadersByTexturesFlags[numberOfDayTextures] = [];
         }
 
-        var surfaceShader = shadersByFlags[flags];
+        surfaceShader = shadersByFlags[flags];
         if (!defined(surfaceShader)) {
             // Cache miss - we've never seen this combination of numberOfDayTextures and flags before.
             var vs = this.baseVertexShaderSource.clone();
