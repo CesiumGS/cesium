@@ -49,11 +49,7 @@ define([
 
         // Credits are immutable so generate an id to use to optimize equal()
         var id;
-        var key = JSON.stringify({
-            t : text,
-            i : imageUrl,
-            l : link
-        });
+        var key = JSON.stringify([text, imageUrl, link]);
 
         if (defined(creditToId[key])) {
             id = creditToId[key];

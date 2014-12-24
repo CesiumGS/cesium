@@ -269,21 +269,8 @@ define([
      * @param {Credit} credit The credit to display
      */
     CreditDisplay.prototype.beginFrame = function() {
-        var i;
-        var length;
-        var c = this._currentFrameCredits;
-
-        length = c.imageCredits.length;
-        for (i = 0; i < length; ++i) {
-            c.imageCredits[i] = undefined;
-        }
-        c.imageCredits.length = 0;
-
-        length = c.textCredits.length;
-        for (i = 0; i < length; ++i) {
-            c.textCredits[i] = undefined;
-        }
-        c.textCredits.length = 0;
+        this._currentFrameCredits.imageCredits.length = 0;
+        this._currentFrameCredits.textCredits.length = 0;
     };
 
     /**
