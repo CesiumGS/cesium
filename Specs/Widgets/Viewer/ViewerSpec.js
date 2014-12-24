@@ -13,7 +13,9 @@ defineSuite([
         'DataSources/DataSourceCollection',
         'DataSources/DataSourceDisplay',
         'DataSources/Entity',
+        'Scene/Camera',
         'Scene/CameraFlightPath',
+        'Scene/ImageryLayerCollection',
         'Scene/SceneMode',
         'Specs/DomEventSimulator',
         'Specs/MockDataSource',
@@ -40,7 +42,9 @@ defineSuite([
         DataSourceCollection,
         DataSourceDisplay,
         Entity,
+        Camera,
         CameraFlightPath,
+        ImageryLayerCollection,
         SceneMode,
         DomEventSimulator,
         MockDataSource,
@@ -102,6 +106,9 @@ defineSuite([
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        expect(viewer.imageryLayers).toBeInstanceOf(ImageryLayerCollection);
+        expect(viewer.terrainProvider).toBeInstanceOf(EllipsoidTerrainProvider);
+        expect(viewer.camera).toBeInstanceOf(Camera);
         expect(viewer.dataSourceDisplay).toBeInstanceOf(DataSourceDisplay);
         expect(viewer.dataSources).toBeInstanceOf(DataSourceCollection);
         expect(viewer.canvas).toBe(viewer.cesiumWidget.canvas);
@@ -281,6 +288,10 @@ defineSuite([
             terrainProvider : provider
         });
         expect(viewer.scene.terrainProvider).toBe(provider);
+
+        var anotherProvider = new EllipsoidTerrainProvider();
+        viewer.terrainProvider = anotherProvider;
+        expect(viewer.terrainProvider).toBe(anotherProvider);
     });
 
     it('can set fullScreenElement', function() {
