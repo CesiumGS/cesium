@@ -377,6 +377,47 @@ define([
         },
 
         /**
+         * Gets the collection of image layers that will be rendered on the globe.
+         * @memberof Viewer.prototype
+         *
+         * @type {ImageryLayerCollection}
+         * @readonly
+         */
+        imageryLayers : {
+            get : function() {
+                return this._scene.imageryLayers;
+            }
+        },
+
+        /**
+         * The terrain provider providing surface geometry for the globe.
+         * @memberof CesiumWidget.prototype
+         *
+         * @type {TerrainProvider}
+         */
+        terrainProvider : {
+            get : function() {
+                return this._scene.terrainProvider;
+            },
+            set : function(terrainProvider) {
+                this._scene.terrainProvider = terrainProvider;
+            }
+        },
+
+        /**
+         * Gets the camera.
+         * @memberof CesiumWidget.prototype
+         *
+         * @type {Camera}
+         * @readonly
+         */
+        camera : {
+            get : function() {
+                return this._scene.camera;
+            }
+        },
+
+        /**
          * Gets the clock.
          * @memberof CesiumWidget.prototype
          *
