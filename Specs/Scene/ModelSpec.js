@@ -334,6 +334,7 @@ defineSuite([
         expect(node).toBeDefined();
         expect(node.name).toEqual('LOD3sp');
         expect(node.id).toEqual('LOD3sp');
+        expect(node.show).toEqual(true);
 
         // Change node transform and render
         expect(duckModel._cesiumAnimationsDirty).toEqual(false);
@@ -506,6 +507,68 @@ defineSuite([
         cesiumAirModel.zoomTo();
         expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
         cesiumAirModel.show = false;
+    });
+
+    it('renders cesiumAir with per-node show (root)', function() {
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        var commands = cesiumAirModel._nodeCommands;
+        var i;
+        var length;
+
+        cesiumAirModel.show = true;
+        cesiumAirModel.zoomTo();
+
+        cesiumAirModel.getNode('Cesium_Air').show = false;
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        length = commands.length;
+        for (i = 0; i < length; ++i) {
+            expect(commands[i].show).toEqual(false);
+        }
+
+        cesiumAirModel.getNode('Cesium_Air').show = true;
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+
+        length = commands.length;
+        for (i = 0; i < length; ++i) {
+            expect(commands[i].show).toEqual(true);
+        }
+
+        cesiumAirModel.show = false;
+    });
+
+    it('renders cesiumAir with per-node show (non-root)', function() {
+        cesiumAirModel.show = true;
+        cesiumAirModel.zoomTo();
+
+        var commands = cesiumAirModel._nodeCommands;
+        var i;
+        var length;
+
+        var commandsPropFalse = 0;
+        var commandsPropTrue = 0;
+
+        cesiumAirModel.getNode('Prop').show = false;
+        scene.renderForSpecs();
+
+        length = commands.length;
+        for (i = 0; i < length; ++i) {
+            commandsPropFalse += commands[i].show ? 1 : 0;
+        }
+
+        cesiumAirModel.getNode('Prop').show = true;
+        scene.renderForSpecs();
+
+        length = commands.length;
+        for (i = 0; i < length; ++i) {
+            commandsPropTrue += commands[i].show ? 1 : 0;
+        }
+
+        cesiumAirModel.show = false;
+
+        // Prop node has one mesh with two primitives
+        expect(commandsPropFalse).toEqual(commandsPropTrue - 2);
     });
 
     it('picks cesiumAir', function() {

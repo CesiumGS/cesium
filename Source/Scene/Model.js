@@ -370,7 +370,7 @@ define([
          * @default false
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
-        this._debugShowBoudingVolume = this.debugShowBoundingVolume;
+        this._debugShowBoudingVolume = false;
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -383,7 +383,7 @@ define([
          * @default false
          */
         this.debugWireframe = defaultValue(options.debugWireframe, false);
-        this._debugWireframe = this.debugWireframe;
+        this._debugWireframe = false;
 
         this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
         this._initialRadius = undefined;           // Radius without model's scale property, model-matrix scale, animations, or skins
@@ -392,6 +392,7 @@ define([
         this._loadError = undefined;
         this._loadResources = undefined;
 
+        this._perNodeShowDirty = false;             // true when the Cesium API was used to change a node's show property
         this._cesiumAnimationsDirty = false;       // true when the Cesium API, not a glTF animation, changed a node transform
         this._maxDirtyNumber = 0;                  // Used in place of a dirty boolean flag to avoid an extra graph traversal
 
@@ -962,6 +963,9 @@ define([
                     translation : undefined,
                     rotation : undefined,
                     scale : undefined,
+
+                    // Per-node show inherited from parent
+                    computedShow : true,
 
                     // Computed transforms
                     transformToRoot : new Matrix4(),
@@ -1992,7 +1996,7 @@ define([
                 var command = new DrawCommand({
                     boundingVolume : new BoundingSphere(), // updated in update()
                     modelMatrix : new Matrix4(),           // computed in update()
-                    primitiveType : model.debugWireframe ? PrimitiveType.LINES : primitive.primitive,
+                    primitiveType : primitive.primitive,
                     vertexArray : vertexArray,
                     count : count,
                     offset : offset,
@@ -2000,7 +2004,6 @@ define([
                     uniformMap : uniformMap,
                     renderState : rs,
                     owner : owner,
-                    debugShowBoundingVolume : debugShowBoundingVolume,
                     pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
                 });
 
@@ -2246,6 +2249,7 @@ define([
                 }
             }
         }
+
         ++model._maxDirtyNumber;
     }
 
@@ -2276,6 +2280,44 @@ define([
                 if (defined(bindShapeMatrix)) {
                     // Optimization for when bind shape matrix is the identity.
                     computedJointMatrices[m] = Matrix4.multiplyTransformation(computedJointMatrices[m], bindShapeMatrix, computedJointMatrices[m]);
+                }
+            }
+        }
+    }
+
+
+    function updatePerNodeShow(model) {
+        // Totally not worth it, but we could optimize this:
+        // http://blogs.agi.com/insight3d/index.php/2008/02/13/deletion-in-bounding-volume-hierarchies/
+
+        var rootNodes = model._runtime.rootNodes;
+        var length = rootNodes.length;
+
+        var nodeStack = scratchNodeStack;
+
+        for (var i = 0; i < length; ++i) {
+            var n = rootNodes[i];
+            n.computedShow = n.publicNode.show;
+            nodeStack.push(n);
+
+            while (nodeStack.length > 0) {
+                n = nodeStack.pop();
+                var show = n.computedShow;
+
+                var nodeCommands = n.commands;
+                var nodeCommandsLength = nodeCommands.length;
+                for (var j = 0 ; j < nodeCommandsLength; ++j) {
+                    nodeCommands[j].show = show;
+                }
+                // if commandsLength is zero, the node has a light or camera
+
+                var children = n.children;
+                var childrenLength = children.length;
+                for (var k = 0; k < childrenLength; ++k) {
+                    var child = children[k];
+                    // Parent needs to be shown for child to be shown.
+                    child.computedShow = show && child.publicNode.show;
+                    nodeStack.push(child);
                 }
             }
         }
@@ -2548,7 +2590,13 @@ define([
                 }
             }
 
+            if (this._perNodeShowDirty) {
+                this._perNodeShowDirty = false;
+                updatePerNodeShow(this);
+            }
             updatePickIds(this, context);
+            updateWireframe(this);
+            updateShowBoundingVolume(this);
         }
 
         if (justLoaded) {
@@ -2566,24 +2614,27 @@ define([
         // and then have them visible immediately when show is set to true.
         if (show) {
 // PERFORMANCE_IDEA: This is terrible
+            var passes = frameState.passes;
             var nodeCommands = this._nodeCommands;
             var length = nodeCommands.length;
-
-            var passes = frameState.passes;
             var i;
+            var nc;
 
             if (passes.render) {
                 for (i = 0; i < length; ++i) {
-                    commandList.push(nodeCommands[i].command);
+                    nc = nodeCommands[i];
+                    if (nc.show) {
+                        commandList.push(nc.command);
+                    }
                 }
-
-                updateWireframe(this);
-                updateShowBoundingVolume(this);
             }
 
             if (passes.pick) {
                 for (i = 0; i < length; ++i) {
-                    commandList.push(nodeCommands[i].pickCommand);
+                    nc = nodeCommands[i];
+                    if (nc.show) {
+                        commandList.push(nc.pickCommand);
+                    }
                 }
             }
         }
