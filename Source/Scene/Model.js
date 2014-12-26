@@ -2637,8 +2637,3 @@ define([
 
     return Model;
 });
-
-//TODO: ref count cached animations
-//TODO: function to invalidate whole cache or one url
-//TODO: x number of frames/seconds later to avoid ping ponging.  Use a generic system to schedule it?
-//TODO: only destroy inside render loop?
