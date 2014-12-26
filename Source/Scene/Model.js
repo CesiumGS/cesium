@@ -383,7 +383,7 @@ define([
          * @default false
          */
         this.debugWireframe = defaultValue(options.debugWireframe, false);
-        this._debugWireframe = false;
+        this._debugWireframe = this.debugWireframe;
 
         this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
         this._initialRadius = undefined;           // Radius without model's scale property, model-matrix scale, animations, or skins
@@ -420,8 +420,7 @@ define([
         this._cachedRendererResources = undefined;
         this._loadRendererResourcesFromCache = false;
 
-        this._renderCommands = [];
-        this._pickCommands = [];
+        this._nodeCommands = [];
         this._pickIds = [];
     };
 
@@ -1919,8 +1918,7 @@ define([
     }
 
     function createCommand(model, gltfNode, runtimeNode, context) {
-        var commands = model._renderCommands;
-        var pickCommands = model._pickCommands;
+        var nodeCommands = model._nodeCommands;
         var pickIds = model._pickIds;
         var allowPicking = model.allowPicking;
         var runtimeMeshes = model._runtime.meshesByName;
@@ -1994,7 +1992,7 @@ define([
                 var command = new DrawCommand({
                     boundingVolume : new BoundingSphere(), // updated in update()
                     modelMatrix : new Matrix4(),           // computed in update()
-                    primitiveType : primitive.primitive,
+                    primitiveType : model.debugWireframe ? PrimitiveType.LINES : primitive.primitive,
                     vertexArray : vertexArray,
                     count : count,
                     offset : offset,
@@ -2005,7 +2003,6 @@ define([
                     debugShowBoundingVolume : debugShowBoundingVolume,
                     pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
                 });
-                commands.push(command);
 
                 var pickCommand;
 
@@ -2031,14 +2028,16 @@ define([
                         owner : owner,
                         pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
                     });
-                    pickCommands.push(pickCommand);
                 }
 
-                runtimeNode.commands.push({
+                var nodeCommand = {
+                    show : true,
+                    boundingSphere : boundingSphere,
                     command : command,
-                    pickCommand : pickCommand,
-                    boundingSphere : boundingSphere
-                });
+                    pickCommand : pickCommand
+                };
+                runtimeNode.commands.push(nodeCommand);
+                nodeCommands.push(nodeCommand);
             }
         }
     }
@@ -2302,11 +2301,25 @@ define([
             // This assumes the original primitive was TRIANGLES and that the triangles
             // are connected for the wireframe to look perfect.
             var primitiveType = model.debugWireframe ? PrimitiveType.LINES : PrimitiveType.TRIANGLES;
-            var commands = model._renderCommands;
-            var length = commands.length;
+            var nodeCommands = model._nodeCommands;
+            var length = nodeCommands.length;
 
             for (var i = 0; i < length; ++i) {
-                commands[i].primitiveType = primitiveType;
+                nodeCommands[i].command.primitiveType = primitiveType;
+            }
+        }
+    }
+
+    function updateShowBoundingVolume(model) {
+        if (model.debugShowBoundingVolume !== model._debugShowBoundingVolume) {
+            model._debugShowBoundingVolume = model.debugShowBoundingVolume;
+
+            var debugShowBoundingVolume = model.debugShowBoundingVolume;
+            var nodeCommands = model._nodeCommands;
+            var length = nodeCommands.length;
+
+            for (var i = 0; i < length; i++) {
+                nodeCommands[i].command.debugShowBoundingVolume = debugShowBoundingVolume;
             }
         }
     }
@@ -2536,7 +2549,6 @@ define([
             }
 
             updatePickIds(this, context);
-            updateWireframe(this);
         }
 
         if (justLoaded) {
@@ -2554,30 +2566,24 @@ define([
         // and then have them visible immediately when show is set to true.
         if (show) {
 // PERFORMANCE_IDEA: This is terrible
+            var nodeCommands = this._nodeCommands;
+            var length = nodeCommands.length;
+
             var passes = frameState.passes;
             var i;
-            var length;
-            var commands;
+
             if (passes.render) {
-                commands = this._renderCommands;
-                length = commands.length;
                 for (i = 0; i < length; ++i) {
-                    commandList.push(commands[i]);
+                    commandList.push(nodeCommands[i].command);
                 }
 
-                if (this.debugShowBoundingVolume !== this._debugShowBoundingVolume) {
-                    this._debugShowBoundingVolume = this.debugShowBoundingVolume;
-                    for (i = 0; i < commands.length; i++) {
-                        commands[i].debugShowBoundingVolume = this.debugShowBoundingVolume;
-                    }
-                }
+                updateWireframe(this);
+                updateShowBoundingVolume(this);
             }
 
             if (passes.pick) {
-                commands = this._pickCommands;
-                length = commands.length;
                 for (i = 0; i < length; ++i) {
-                    commandList.push(commands[i]);
+                    commandList.push(nodeCommands[i].pickCommand);
                 }
             }
         }
