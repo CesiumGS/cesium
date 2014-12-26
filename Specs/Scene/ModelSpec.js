@@ -258,10 +258,10 @@ defineSuite([
         duckModel.zoomTo();
         scene.renderForSpecs();
 
-        var commands = duckModel._renderCommands;
+        var commands = duckModel._nodeCommands;
         var length = commands.length;
         for (var i = 0; i < length; ++i) {
-            expect(commands[i].primitiveType).toEqual(PrimitiveType.LINES);
+            expect(commands[i].command.primitiveType).toEqual(PrimitiveType.LINES);
         }
 
         duckModel.show = false;
