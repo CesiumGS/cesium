@@ -249,7 +249,7 @@ define([
          * @memberof Entity.prototype
          * @type {Property}
          */
-        orientation : PropertyHelper.createRawPropertyDescriptor('orientation'),
+        orientation : PropertyHelper.createPropertyDescriptor('orientation'),
         /**
          * Gets or sets the path.
          * @memberof Entity.prototype
