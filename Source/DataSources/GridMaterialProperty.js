@@ -158,12 +158,5 @@ define([
         Property.equals(this._lineOffset, other._lineOffset));
     };
 
-    /**
-     * @private
-     */
-    GridMaterialProperty.prototype._raiseDefinitionChanged = function() {
-        this._definitionChanged.raiseEvent(this);
-    };
-
     return GridMaterialProperty;
 });

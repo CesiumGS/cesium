@@ -127,12 +127,5 @@ define([
                 Property.equals(this._color, other._color));
     };
 
-    /**
-     * @private
-     */
-    ColorMaterialProperty.prototype._raiseDefinitionChanged = function() {
-        this._definitionChanged.raiseEvent(this);
-    };
-
     return ColorMaterialProperty;
 });

@@ -111,12 +111,5 @@ define([
                 Property.equals(this._glowPower, other._glowPower));
     };
 
-    /**
-     * @private
-     */
-    PolylineGlowProperty.prototype._raiseDefinitionChanged = function() {
-        this._definitionChanged.raiseEvent(this);
-    };
-
     return PolylineGlowProperty;
 });

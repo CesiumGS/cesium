@@ -161,12 +161,5 @@ define([
                        Property.equals(this._repeat, other._repeat));
     };
 
-    /**
-     * @private
-     */
-    StripeMaterialProperty.prototype._raiseDefinitionChanged = function() {
-        this._definitionChanged.raiseEvent(this);
-    };
-
     return StripeMaterialProperty;
 });
