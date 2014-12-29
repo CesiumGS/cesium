@@ -36,7 +36,7 @@ defineSuite([
         }
     });
 
-    it('works with a simple worker', function(done) {
+    it('works with a simple worker', function() {
         taskProcessor = new TaskProcessor('returnParameters');
 
         var parameters = {
@@ -46,9 +46,8 @@ defineSuite([
             }
         };
 
-        taskProcessor.scheduleTask(parameters).then(function(result) {
+        return taskProcessor.scheduleTask(parameters).then(function(result) {
             expect(result).toEqual(parameters);
-            done();
         });
     });
 
@@ -62,14 +61,14 @@ defineSuite([
         expect(taskProcessor.isDestroyed()).toEqual(true);
     });
 
-    it('can transfer array buffer', function(done) {
+    it('can transfer array buffer', function() {
         taskProcessor = new TaskProcessor('returnByteLength');
 
         var byteLength = 100;
         var parameters = new ArrayBuffer(byteLength);
         expect(parameters.byteLength).toEqual(byteLength);
 
-        when(TaskProcessor._canTransferArrayBuffer, function(canTransferArrayBuffer) {
+        return when(TaskProcessor._canTransferArrayBuffer, function(canTransferArrayBuffer) {
             var promise = taskProcessor.scheduleTask(parameters, [parameters]);
 
             if (canTransferArrayBuffer) {
@@ -78,14 +77,13 @@ defineSuite([
             }
 
             // the worker should see the array with proper byte length
-            promise.then(function(result) {
+            return promise.then(function(result) {
                 expect(result).toEqual(byteLength);
-                done();
             });
         });
     });
 
-    it('can transfer array buffer back from worker', function(done) {
+    it('can transfer array buffer back from worker', function() {
         taskProcessor = new TaskProcessor('transferArrayBuffer');
 
         var byteLength = 100;
@@ -94,13 +92,12 @@ defineSuite([
         };
 
         // the worker should see the array with proper byte length
-        taskProcessor.scheduleTask(parameters).then(function(result) {
+        return taskProcessor.scheduleTask(parameters).then(function(result) {
             expect(result.byteLength).toEqual(100);
-            done();
         });
     });
 
-    it('rejects promise if worker throws', function(done) {
+    it('rejects promise if worker throws', function() {
         taskProcessor = new TaskProcessor('throwError');
 
         var message = 'foo';
@@ -108,12 +105,11 @@ defineSuite([
             message : message
         };
 
-        taskProcessor.scheduleTask(parameters).then(function() {
+        return taskProcessor.scheduleTask(parameters).then(function() {
             // Should not be called.
             expect(false).toBe(true);
         }).otherwise(function(error) {
             expect(error.message).toEqual(message);
-            done();
         });
     });
 
@@ -125,12 +121,11 @@ defineSuite([
             message : message
         };
 
-        taskProcessor.scheduleTask(parameters).then(function() {
+        return taskProcessor.scheduleTask(parameters).then(function() {
             // Should not be called.
             expect(false).toBe(true);
         }).otherwise(function(error) {
             expect(error).toContain('postMessage failed');
-            done();
         });
     });
 });

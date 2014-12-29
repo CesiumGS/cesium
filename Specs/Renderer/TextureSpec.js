@@ -46,29 +46,24 @@ defineSuite([
     var va;
     var texture;
 
-    beforeAll(function(done) {
+    beforeAll(function() {
         context = createContext();
 
         var promises = [];
         promises.push(loadImage('./Data/Images/Green.png').then(function(image) {
             greenImage = image;
         }));
-
         promises.push(loadImage('./Data/Images/Blue.png').then(function(image) {
             blueImage = image;
         }));
-
         promises.push(loadImage('./Data/Images/BlueAlpha.png').then(function(image) {
             blueAlphaImage = image;
         }));
-
         promises.push(loadImage('./Data/Images/BlueOverRed.png').then(function(image) {
             blueOverRedImage = image;
         }));
 
-        when.all(promises, function() {
-            done();
-        });
+        return when.all(promises);
     });
 
     afterAll(function() {

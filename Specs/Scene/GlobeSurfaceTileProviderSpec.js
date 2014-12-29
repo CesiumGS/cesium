@@ -159,7 +159,7 @@ defineSuite([
         });
     }, 'WebGL');
 
-    describe('layer updating', function(done) {
+    describe('layer updating', function() {
         it('removing a layer removes it from all tiles', function() {
             var layerCollection = globe.imageryLayers;
 
@@ -168,7 +168,7 @@ defineSuite([
                 url : 'Data/Images/Red16x16.png'
             }));
 
-            updateUntilDone(globe).then(function() {
+            return updateUntilDone(globe).then(function() {
                 // All tiles should have one or more associated images.
                 forEachRenderedTile(surface, 1, undefined, function(tile) {
                     expect(tile.data.imagery.length).toBeGreaterThan(0);
@@ -183,12 +183,10 @@ defineSuite([
                 forEachRenderedTile(surface, 1, undefined, function(tile) {
                     expect(tile.data.imagery.length).toEqual(0);
                 });
-
-                done();
             });
         });
 
-        it('adding a layer adds it to all tiles after update', function(done) {
+        it('adding a layer adds it to all tiles after update', function() {
             var layerCollection = globe.imageryLayers;
 
             layerCollection.removeAll();
@@ -196,7 +194,7 @@ defineSuite([
                 url : 'Data/Images/Red16x16.png'
             }));
 
-            updateUntilDone(globe).then(function() {
+            return updateUntilDone(globe).then(function() {
                 // Add another layer
                 var layer2 = layerCollection.addImageryProvider(new SingleTileImageryProvider({
                     url : 'Data/Images/Green4x4.png'
@@ -218,13 +216,11 @@ defineSuite([
                         }
                         expect(hasImageFromLayer2).toEqual(true);
                     });
-
-                    done();
                 });
             });
         });
 
-        it('moving a layer moves the corresponding TileImagery instances on every tile', function(done) {
+        it('moving a layer moves the corresponding TileImagery instances on every tile', function() {
             var layerCollection = globe.imageryLayers;
 
             layerCollection.removeAll();
@@ -235,7 +231,7 @@ defineSuite([
                 url : 'Data/Images/Green4x4.png'
             }));
 
-            updateUntilDone(globe).then(function() {
+            return updateUntilDone(globe).then(function() {
                 forEachRenderedTile(surface, 1, undefined, function(tile) {
                     expect(tile.data.imagery.length).toBeGreaterThan(0);
                     var indexOfFirstLayer1 = tile.data.imagery.length;
@@ -274,13 +270,11 @@ defineSuite([
                         expect(indexOfFirstLayer2).toBeLessThan(indexOfFirstLayer1);
                         expect(indexOfLastLayer2).toBeLessThan(indexOfFirstLayer1);
                     });
-
-                    done();
                 });
             });
         });
 
-        it('adding a layer creates its skeletons only once', function(done) {
+        it('adding a layer creates its skeletons only once', function() {
             var layerCollection = globe.imageryLayers;
 
             layerCollection.removeAll();
@@ -288,7 +282,7 @@ defineSuite([
                 url : 'Data/Images/Red16x16.png'
             }));
 
-            updateUntilDone(globe).then(function() {
+            return updateUntilDone(globe).then(function() {
                 // Add another layer
                 var layer2 = layerCollection.addImageryProvider(new SingleTileImageryProvider({
                     url : 'Data/Images/Green4x4.png'
@@ -310,14 +304,12 @@ defineSuite([
                         }
                         expect(tilesFromLayer2).toBe(1);
                     });
-
-                    done();
                 });
             });
         });
     }, 'WebGL');
 
-    it('renders in 2D geographic', function(done) {
+    it('renders in 2D geographic', function() {
         var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({
@@ -327,13 +319,12 @@ defineSuite([
         switchTo2D();
         frameState.mapProjection = new GeographicProjection(Ellipsoid.WGS84);
 
-        updateUntilDone(globe).then(function() {
+        return updateUntilDone(globe).then(function() {
             expect(render(context, frameState, globe)).toBeGreaterThan(0);
-            done();
         });
     });
 
-    it('renders in 2D web mercator', function(done) {
+    it('renders in 2D web mercator', function() {
         var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({
@@ -343,13 +334,12 @@ defineSuite([
         switchTo2D();
         frameState.mapProjection = new WebMercatorProjection(Ellipsoid.WGS84);
 
-        updateUntilDone(globe).then(function() {
+        return updateUntilDone(globe).then(function() {
             expect(render(context, frameState, globe)).toBeGreaterThan(0);
-            done();
         });
     });
 
-    it('renders in Columbus View geographic', function(done) {
+    it('renders in Columbus View geographic', function() {
         var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({
@@ -359,13 +349,12 @@ defineSuite([
         frameState.camera.update(SceneMode.COLUMBUS_VIEW);
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
 
-        updateUntilDone(globe).then(function() {
+        return updateUntilDone(globe).then(function() {
             expect(render(context, frameState, globe)).toBeGreaterThan(0);
-            done();
         });
     });
 
-    it('renders in Columbus View web mercator', function(done) {
+    it('renders in Columbus View web mercator', function() {
         var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({
@@ -375,13 +364,12 @@ defineSuite([
         frameState.camera.update(SceneMode.COLUMBUS_VIEW);
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
 
-        updateUntilDone(globe).then(function() {
+        return updateUntilDone(globe).then(function() {
             expect(render(context, frameState, globe)).toBeGreaterThan(0);
-            done();
         });
     });
 
-    it('renders in 3D', function(done) {
+    it('renders in 3D', function() {
         var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({
@@ -390,26 +378,24 @@ defineSuite([
 
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
-        updateUntilDone(globe).then(function() {
+        return updateUntilDone(globe).then(function() {
             expect(render(context, frameState, globe)).toBeGreaterThan(0);
-            done();
         });
     });
 
-    it('can change baseColor', function(done) {
+    it('can change baseColor', function() {
         var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
         globe.baseColor = Color.RED;
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
-        updateUntilDone(globe).then(function() {
+        return updateUntilDone(globe).then(function() {
             expect(render(context, frameState, globe)).toBeGreaterThan(0);
             expect(context.readPixels()).toEqual([255, 0, 0, 255]);
-            done();
         });
     });
 
-    it('renders in 3D and then Columbus View', function(done) {
+    it('renders in 3D and then Columbus View', function() {
         var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({
@@ -418,7 +404,7 @@ defineSuite([
 
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
-        updateUntilDone(globe).then(function() {
+        return updateUntilDone(globe).then(function() {
             expect(render(context, frameState, globe)).toBeGreaterThan(0);
 
             frameState.camera.update(SceneMode.COLUMBUS_VIEW);
@@ -426,12 +412,11 @@ defineSuite([
 
             return updateUntilDone(globe).then(function() {
                 expect(render(context, frameState, globe)).toBeGreaterThan(0);
-                done();
             });
         });
     });
 
-    it('renders even if imagery root tiles fail to load', function(done) {
+    it('renders even if imagery root tiles fail to load', function() {
         var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
 
@@ -444,13 +429,12 @@ defineSuite([
 
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
-        updateUntilDone(globe).then(function() {
+        return updateUntilDone(globe).then(function() {
             expect(render(context, frameState, globe)).toBeGreaterThan(0);
-            done();
         });
     });
 
-    it('passes layer adjustment values as uniforms', function(done) {
+    it('passes layer adjustment values as uniforms', function() {
         var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
         var layer = layerCollection.addImageryProvider(new SingleTileImageryProvider({
@@ -466,7 +450,7 @@ defineSuite([
 
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
-        updateUntilDone(globe).then(function() {
+        return updateUntilDone(globe).then(function() {
             var commandList = [];
             expect(render(context, frameState, globe, commandList)).toBeGreaterThan(0);
 
@@ -491,12 +475,10 @@ defineSuite([
             }
 
             expect(tileCommandCount).toBeGreaterThan(0);
-
-            done();
         });
     });
 
-    it('skips layer with uniform alpha value of zero', function(done) {
+    it('skips layer with uniform alpha value of zero', function() {
         var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
         var layer = layerCollection.addImageryProvider(new SingleTileImageryProvider({
@@ -507,7 +489,7 @@ defineSuite([
 
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
-        updateUntilDone(globe).then(function() {
+        return updateUntilDone(globe).then(function() {
             var commandList = [];
             expect(render(context, frameState, globe, commandList)).toBeGreaterThan(0);
 
@@ -527,12 +509,10 @@ defineSuite([
             }
 
             expect(tileCommandCount).toBeGreaterThan(0);
-
-            done();
         });
     });
 
-    it('can render more imagery layers than the available texture units', function(done) {
+    it('can render more imagery layers than the available texture units', function() {
         var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
 
@@ -544,7 +524,7 @@ defineSuite([
 
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
-        updateUntilDone(globe).then(function() {
+        return updateUntilDone(globe).then(function() {
             var commandList = [];
             expect(render(context, frameState, globe, commandList)).toBeGreaterThan(0);
 
@@ -584,12 +564,10 @@ defineSuite([
             }
 
             expect(tileCount).toBeGreaterThanOrEqualTo(1);
-
-            done();
         });
     });
 
-    it('adds terrain and imagery credits to the CreditDisplay', function(done) {
+    it('adds terrain and imagery credits to the CreditDisplay', function() {
         var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
 
@@ -605,32 +583,29 @@ defineSuite([
             credit : terrainCredit
         });
 
-        updateUntilDone(globe).then(function() {
+        return updateUntilDone(globe).then(function() {
             var creditDisplay = frameState.creditDisplay;
             expect(creditDisplay._currentFrameCredits.textCredits).toContain(imageryCredit);
             expect(creditDisplay._currentFrameCredits.textCredits).toContain(terrainCredit);
-            done();
         });
     });
 
     describe('switching terrain providers', function() {
-        it('clears the replacement queue', function(done) {
-            updateUntilDone(globe).then(function() {
+        it('clears the replacement queue', function() {
+            return updateUntilDone(globe).then(function() {
                 var surface = globe._surface;
                 var replacementQueue = surface._tileReplacementQueue;
                 expect(replacementQueue.count).toBeGreaterThan(0);
 
                 surface.tileProvider.terrainProvider = new EllipsoidTerrainProvider();
                 expect(replacementQueue.count).toBe(0);
-
-                done();
             });
         });
 
-        it('recreates the level zero tiles', function(done) {
+        it('recreates the level zero tiles', function() {
             var surface = globe._surface;
 
-            updateUntilDone(globe).then(function() {
+            return updateUntilDone(globe).then(function() {
                 var levelZeroTiles = surface._levelZeroTiles;
                 expect(levelZeroTiles.length).toBe(2);
 
@@ -643,8 +618,6 @@ defineSuite([
                     levelZeroTiles = surface._levelZeroTiles;
                     expect(levelZeroTiles[0]).not.toBe(levelZero0);
                     expect(levelZeroTiles[1]).not.toBe(levelZero1);
-
-                    done();
                 });
             });
         });
@@ -653,7 +626,7 @@ defineSuite([
             var surface = globe._surface;
             var provider = surface.tileProvider.terrainProvider;
 
-            updateUntilDone(globe).then(function() {
+            return updateUntilDone(globe).then(function() {
                 var levelZeroTiles = surface._levelZeroTiles;
                 expect(levelZeroTiles.length).toBe(2);
 
@@ -666,14 +639,12 @@ defineSuite([
                     levelZeroTiles = surface._levelZeroTiles;
                     expect(levelZeroTiles[0]).toBe(levelZero0);
                     expect(levelZeroTiles[1]).toBe(levelZero1);
-
-                    done();
                 });
             });
         });
     }, 'WebGL');
 
-    it('renders back side of globe when camera is near the poles', function(done) {
+    it('renders back side of globe when camera is near the poles', function() {
         var camera = frameState.camera;
         camera.position = new Cartesian3(2909078.1077849553, -38935053.40234136, -63252400.94628872);
         camera.direction = new Cartesian3(-0.03928753135806185, 0.44884096070717633, 0.8927476025569903);
@@ -681,12 +652,10 @@ defineSuite([
         camera.right = new Cartesian3(0.99922794650124, 0.017672942642764363, 0.03508814656908402);
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
-        updateUntilDone(globe).then(function() {
+        return updateUntilDone(globe).then(function() {
             // Both level zero tiles should be rendered.
             forEachRenderedTile(surface, 2, 2, function(tile) {
             });
-
-            done();
         });
     });
 

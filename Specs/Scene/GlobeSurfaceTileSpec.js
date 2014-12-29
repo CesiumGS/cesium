@@ -87,7 +87,7 @@ defineSuite([
             destroyContext(context);
         });
 
-        beforeEach(function(done) {
+        beforeEach(function() {
             tilingScheme = new WebMercatorTilingScheme();
             alwaysDeferTerrainProvider.tilingScheme = tilingScheme;
             alwaysFailTerrainProvider.tilingScheme = tilingScheme;
@@ -95,11 +95,9 @@ defineSuite([
             rootTile = rootTiles[0];
             imageryLayerCollection = new ImageryLayerCollection();
 
-            setTimeout(function() {
-                if (realTerrainProvider.ready) {
-                    done();
-                }
-            }, 10);
+            return pollToPromise(function() {
+                return realTerrainProvider.ready;
+            });
         });
 
         afterEach(function() {
@@ -135,8 +133,8 @@ defineSuite([
             }
         });
 
-        it('once a root tile is loaded, its children get both loadedTerrain and upsampledTerrain', function(done) {
-            pollToPromise(function() {
+        it('once a root tile is loaded, its children get both loadedTerrain and upsampledTerrain', function() {
+            return pollToPromise(function() {
                 GlobeSurfaceTile.processStateMachine(rootTile, context, realTerrainProvider, imageryLayerCollection);
                 return rootTile.state === QuadtreeTileLoadState.DONE;
             }).then(function() {
@@ -146,24 +144,20 @@ defineSuite([
                     expect(children[i].data.loadedTerrain).toBeDefined();
                     expect(children[i].data.upsampledTerrain).toBeDefined();
                 }
-
-                done();
             });
         });
 
-        it('loaded terrainData is copied to the tile once it is available', function(done) {
-            pollToPromise(function() {
+        it('loaded terrainData is copied to the tile once it is available', function() {
+            return pollToPromise(function() {
                 GlobeSurfaceTile.processStateMachine(rootTile, context, realTerrainProvider, imageryLayerCollection);
                 return rootTile.data.loadedTerrain.state >= TerrainState.RECEIVED;
             }).then(function() {
                 expect(rootTile.data.terrainData).toBeDefined();
-
-                done();
             });
         });
 
-        it('upsampled terrainData is copied to the tile once it is available', function(done) {
-            pollToPromise(function() {
+        it('upsampled terrainData is copied to the tile once it is available', function() {
+            return pollToPromise(function() {
                 GlobeSurfaceTile.processStateMachine(rootTile, context, realTerrainProvider, imageryLayerCollection);
                 return rootTile.data.loadedTerrain.state >= TerrainState.RECEIVED;
             }).then(function() {
@@ -173,16 +167,14 @@ defineSuite([
                     return childTile.data.upsampledTerrain.state >= TerrainState.RECEIVED;
                 }).then(function() {
                     expect(rootTile.children[0].data.terrainData).toBeDefined();
-
-                    done();
                 });
             });
         });
 
-        it('loaded terrain data replaces upsampled terrain data', function(done) {
+        it('loaded terrain data replaces upsampled terrain data', function() {
             var childTile = rootTile.children[0];
 
-            pollToPromise(function() {
+            return pollToPromise(function() {
                 GlobeSurfaceTile.processStateMachine(rootTile, context, realTerrainProvider, imageryLayerCollection);
                 return rootTile.data.loadedTerrain.state >= TerrainState.RECEIVED;
             }).then(function() {
@@ -200,18 +192,16 @@ defineSuite([
                         return childTile.data.loadedTerrain.state >= TerrainState.RECEIVED;
                     }).then(function() {
                         expect(childTile.data.terrainData).not.toBe(upsampledTerrainData);
-
-                        done();
                     });
                 });
             });
         });
 
-        it('loaded terrain replacing upsampled terrain triggers re-upsampling and re-loading of children', function(done) {
+        it('loaded terrain replacing upsampled terrain triggers re-upsampling and re-loading of children', function() {
             var childTile = rootTile.children[0];
             var grandchildTile = childTile.children[0];
 
-            pollToPromise(function() {
+            return pollToPromise(function() {
                 GlobeSurfaceTile.processStateMachine(rootTile, context, realTerrainProvider, imageryLayerCollection);
                 GlobeSurfaceTile.processStateMachine(childTile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
                 GlobeSurfaceTile.processStateMachine(grandchildTile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
@@ -228,18 +218,16 @@ defineSuite([
                 }).then(function() {
                     expect(grandchildTile.data.upsampledTerrain).not.toBe(grandchildUpsampledTerrain);
                     expect(grandchildTile.data.loadedTerrain).toBeDefined();
-
-                    done();
                 });
             });
         });
 
-        it('improved upsampled terrain triggers re-upsampling of children', function(done) {
+        it('improved upsampled terrain triggers re-upsampling of children', function() {
             var childTile = rootTile.children[0];
             var grandchildTile = childTile.children[0];
             var greatGrandchildTile = grandchildTile.children[0];
 
-            pollToPromise(function() {
+            return pollToPromise(function() {
                 GlobeSurfaceTile.processStateMachine(rootTile, context, realTerrainProvider, imageryLayerCollection);
                 GlobeSurfaceTile.processStateMachine(childTile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
                 GlobeSurfaceTile.processStateMachine(grandchildTile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
@@ -259,16 +247,14 @@ defineSuite([
                 }).then(function() {
                     expect(greatGrandchildTile.data.upsampledTerrain).toBeDefined();
                     expect(greatGrandchildTile.data.upsampledTerrain).not.toBe(greatGrandchildUpsampledTerrain);
-
-                    done();
                 });
             });
         });
 
-        it('releases previous upsampled water mask when a real one is loaded', function(done) {
+        it('releases previous upsampled water mask when a real one is loaded', function() {
             var childTile = rootTile.children[0];
 
-            pollToPromise(function() {
+            return pollToPromise(function() {
                 GlobeSurfaceTile.processStateMachine(rootTile, context, realTerrainProvider, imageryLayerCollection);
                 GlobeSurfaceTile.processStateMachine(childTile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
                 return rootTile.renderable && childTile.renderable;
@@ -284,32 +270,28 @@ defineSuite([
                     expect(childTile.data.waterMaskTexture).toBeDefined();
                     expect(childTile.data.waterMaskTexture).not.toBe(childWaterMaskTexture);
                     expect(childWaterMaskTexture.referenceCount + 1).toBe(referenceCount);
-
-                    done();
                 });
             });
         });
 
-        it('upsampled terrain is used when real terrain fails to load', function(done) {
+        it('upsampled terrain is used when real terrain fails to load', function() {
             var childTile = rootTile.children[0];
 
-            pollToPromise(function() {
+            return pollToPromise(function() {
                 GlobeSurfaceTile.processStateMachine(rootTile, context, realTerrainProvider, imageryLayerCollection);
                 GlobeSurfaceTile.processStateMachine(childTile, context, alwaysFailTerrainProvider, imageryLayerCollection);
                 return rootTile.renderable && childTile.renderable;
             }).then(function() {
                 expect(childTile.data.loadedTerrain).toBeUndefined();
                 expect(childTile.upsampledFromParent).toBe(true);
-
-                done();
             });
         });
 
-        it('child of loaded tile is not re-upsampled or re-loaded if it is already loaded', function(done) {
+        it('child of loaded tile is not re-upsampled or re-loaded if it is already loaded', function() {
             var childTile = rootTile.children[0];
             var grandchildTile = childTile.children[0];
 
-            pollToPromise(function() {
+            return pollToPromise(function() {
                 GlobeSurfaceTile.processStateMachine(rootTile, context, realTerrainProvider, imageryLayerCollection);
                 GlobeSurfaceTile.processStateMachine(childTile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
                 return rootTile.data.loadedTerrain.state >= TerrainState.RECEIVED &&
@@ -332,19 +314,17 @@ defineSuite([
                         expect(grandchildTile.state).toBe(QuadtreeTileLoadState.DONE);
                         expect(grandchildTile.data.loadedTerrain).toBeUndefined();
                         expect(grandchildTile.data.upsampledTerrain).toBeUndefined();
-
-                        done();
                     });
                 });
             });
         });
 
-        it('child of upsampled tile is not re-upsampled if it is already loaded', function(done) {
+        it('child of upsampled tile is not re-upsampled if it is already loaded', function() {
             var childTile = rootTile.children[0];
             var grandchildTile = childTile.children[0];
             var greatGrandchildTile = grandchildTile.children[0];
 
-            pollToPromise(function() {
+            return pollToPromise(function() {
                 GlobeSurfaceTile.processStateMachine(rootTile, context, realTerrainProvider, imageryLayerCollection);
                 GlobeSurfaceTile.processStateMachine(childTile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
                 GlobeSurfaceTile.processStateMachine(grandchildTile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
@@ -371,17 +351,15 @@ defineSuite([
                         expect(greatGrandchildTile.state).toBe(QuadtreeTileLoadState.DONE);
                         expect(greatGrandchildTile.data.loadedTerrain).toBeUndefined();
                         expect(greatGrandchildTile.data.upsampledTerrain).toBeUndefined();
-
-                        done();
                     });
                 });
             });
         });
 
-        it('entirely upsampled tile is marked as such', function(done) {
+        it('entirely upsampled tile is marked as such', function() {
             var childTile = rootTile.children[0];
 
-            pollToPromise(function() {
+            return pollToPromise(function() {
                 GlobeSurfaceTile.processStateMachine(rootTile, context, realTerrainProvider, imageryLayerCollection);
                 GlobeSurfaceTile.processStateMachine(childTile, context, alwaysFailTerrainProvider, imageryLayerCollection);
                 return rootTile.state >= QuadtreeTileLoadState.DONE &&
@@ -389,12 +367,10 @@ defineSuite([
             }).then(function() {
                 expect(rootTile.state).toBe(QuadtreeTileLoadState.DONE);
                 expect(childTile.upsampledFromParent).toBe(true);
-
-                done();
             });
         });
 
-        it('uses shared water mask texture for tiles that are entirely water', function(done) {
+        it('uses shared water mask texture for tiles that are entirely water', function() {
             var allWaterTerrainProvider = {
                 requestTileGeometry : function(x, y, level) {
                     var real = realTerrainProvider.requestTileGeometry(x, y, level);
@@ -418,7 +394,7 @@ defineSuite([
 
             var childTile = rootTile.children[0];
 
-            pollToPromise(function() {
+            return pollToPromise(function() {
                 if (rootTile.state !== QuadtreeTileLoadState.DONE) {
                     GlobeSurfaceTile.processStateMachine(rootTile, context, allWaterTerrainProvider, imageryLayerCollection);
                     return false;
@@ -429,12 +405,10 @@ defineSuite([
             }).then(function() {
                 expect(childTile.data.waterMaskTexture).toBeDefined();
                 expect(childTile.data.waterMaskTexture).toBe(rootTile.data.waterMaskTexture);
-
-                done();
             });
         });
 
-        it('uses undefined water mask texture for tiles that are entirely land', function(done) {
+        it('uses undefined water mask texture for tiles that are entirely land', function() {
             var allLandTerrainProvider = {
                 requestTileGeometry : function(x, y, level) {
                     var real = realTerrainProvider.requestTileGeometry(x, y, level);
@@ -458,7 +432,7 @@ defineSuite([
 
             var childTile = rootTile.children[0];
 
-            pollToPromise(function() {
+            return pollToPromise(function() {
                 if (rootTile.state !== QuadtreeTileLoadState.DONE) {
                     GlobeSurfaceTile.processStateMachine(rootTile, context, allLandTerrainProvider, imageryLayerCollection);
                     return false;
@@ -468,8 +442,6 @@ defineSuite([
                 }
             }).then(function() {
                 expect(childTile.data.waterMaskTexture).toBeUndefined();
-
-                done();
             });
         });
     }, 'WebGL');
@@ -485,7 +457,7 @@ defineSuite([
             destroyContext(context);
         });
 
-        it('gets correct results even when the mesh includes normals', function(done) {
+        it('gets correct results even when the mesh includes normals', function() {
             var terrainProvider = new CesiumTerrainProvider({
                 url : '//cesiumjs.org/stk-terrain/tilesets/world/tiles',
                 requestVertexNormals : true
@@ -500,7 +472,7 @@ defineSuite([
 
             var imageryLayerCollection = new ImageryLayerCollection();
 
-            pollToPromise(function() {
+            return pollToPromise(function() {
                 if (!terrainProvider.ready) {
                     return false;
                 }
@@ -514,8 +486,6 @@ defineSuite([
                 var pickResult = tile.data.pick(ray, undefined, true);
                 var cartographic = Ellipsoid.WGS84.cartesianToCartographic(pickResult);
                 expect(cartographic.height).toBeGreaterThan(-500.0);
-
-                done();
             });
         });
     });

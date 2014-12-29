@@ -22,7 +22,7 @@ defineSuite([
         waitsForPromise,
         when) {
      "use strict";
-     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
      it('conforms to TerrainData interface', function() {
          expect(QuantizedMeshTerrainData).toConformToInterface(TerrainData);
@@ -103,17 +103,7 @@ defineSuite([
              var nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 1, 1);
              var nePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 1, 1);
 
-             var upsampleResults;
-
-             when.all([swPromise, sePromise, nwPromise, nePromise], function(results) {
-                 upsampleResults = results;
-             });
-
-             waitsFor(function() {
-                 return defined(upsampleResults);
-             });
-
-             runs(function() {
+             return when.all([swPromise, sePromise, nwPromise, nePromise], function(upsampleResults) {
                  expect(upsampleResults.length).toBe(4);
 
                  for (var i = 0; i < upsampleResults.length; ++i) {
@@ -191,17 +181,7 @@ defineSuite([
              var nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 1, 1);
              var nePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 1, 1);
 
-             var upsampleResults;
-
-             when.all([swPromise, sePromise, nwPromise, nePromise], function(results) {
-                 upsampleResults = results;
-             });
-
-             waitsFor(function() {
-                 return defined(upsampleResults);
-             });
-
-             runs(function() {
+             return when.all([swPromise, sePromise, nwPromise, nePromise], function(upsampleResults) {
                  expect(upsampleResults.length).toBe(4);
 
                  for (var i = 0; i < upsampleResults.length; ++i) {
@@ -252,7 +232,7 @@ defineSuite([
              });
 
              var tilingScheme = new GeographicTilingScheme();
-             waitsForPromise(data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1), function(upsampled) {
+             return data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1).then(function(upsampled) {
                  var uBuffer = upsampled._uValues;
                  var vBuffer = upsampled._vValues;
                  var ib = upsampled._indices;
@@ -353,7 +333,7 @@ defineSuite([
          });
 
          it('creates specified vertices plus skirt vertices', function() {
-             waitsForPromise(data.createMesh(tilingScheme, 0, 0, 0), function(mesh) {
+             return data.createMesh(tilingScheme, 0, 0, 0).then(function(mesh) {
                  expect(mesh).toBeInstanceOf(TerrainMesh);
                  expect(mesh.vertices.length).toBe(12 * 6); // 4 regular vertices, 8 skirt vertices.
                  expect(mesh.indices.length).toBe(10 * 3); // 2 regular triangles, 8 skirt triangles.
@@ -397,7 +377,7 @@ defineSuite([
              childTileMask : 15
          });
 
-         waitsForPromise(data.createMesh(tilingScheme, 0, 0, 0), function(mesh) {
+         return data.createMesh(tilingScheme, 0, 0, 0).then(function(mesh) {
              expect(mesh).toBeInstanceOf(TerrainMesh);
              expect(mesh.indices.BYTES_PER_ELEMENT).toBe(4);
          });

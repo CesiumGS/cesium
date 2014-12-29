@@ -2,6 +2,7 @@
 defineSuite([
         'Core/Cartesian3',
         'Core/Color',
+        'Core/loadImage',
         'Core/PixelFormat',
         'Core/PrimitiveType',
         'Renderer/BufferUsage',
@@ -12,10 +13,12 @@ defineSuite([
         'Renderer/TextureMinificationFilter',
         'Renderer/TextureWrap',
         'Specs/createContext',
-        'Specs/destroyContext'
+        'Specs/destroyContext',
+        'ThirdParty/when'
     ], 'Renderer/CubeMap', function(
         Cartesian3,
         Color,
+        loadImage,
         PixelFormat,
         PrimitiveType,
         BufferUsage,
@@ -26,9 +29,10 @@ defineSuite([
         TextureMinificationFilter,
         TextureWrap,
         createContext,
-        destroyContext) {
+        destroyContext,
+        when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
     var sp;
@@ -40,29 +44,24 @@ defineSuite([
     var blueAlphaImage;
     var blueOverRedImage;
 
-    beforeAll(function(done) {
+    beforeAll(function() {
         context = createContext();
 
-        greenImage = new Image();
-        blueImage = new Image();
-        blueAlphaImage = new Image();
-        blueOverRedImage = new Image();
+        var promises = [];
+        promises.push(loadImage('./Data/Images/Green.png').then(function(result) {
+            greenImage = result;
+        }));
+        promises.push(loadImage('./Data/Images/Blue.png').then(function(result) {
+            blueImage = result;
+        }));
+        promises.push(loadImage('./Data/Images/BlueAlpha.png').then(function(result) {
+            blueAlphaImage = result;
+        }));
+        promises.push(loadImage('./Data/Images/BlueOverRed.png').then(function(result) {
+            blueOverRedImage = result;
+        }));
 
-        function imageLoadComplete() {
-            if (greenImage.complete && blueImage.complete && blueAlphaImage.complete && blueOverRedImage.complete) {
-                done();
-            }
-        }
-
-        greenImage.onload = imageLoadComplete;
-        blueImage.onload = imageLoadComplete;
-        blueAlphaImage.onload = imageLoadComplete;
-        blueOverRedImage.onload = imageLoadComplete;
-
-        greenImage.src = './Data/Images/Green.png';
-        blueImage.src = './Data/Images/Blue.png';
-        blueAlphaImage.src = './Data/Images/BlueAlpha.png';
-        blueOverRedImage.src = './Data/Images/BlueOverRed.png';
+        return when.all(promises);
     });
 
     afterAll(function() {

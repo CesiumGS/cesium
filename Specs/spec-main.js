@@ -15,7 +15,9 @@ require.config({
     paths : {
         'Specs' : '../Specs'
     }
-}, ['Specs/SpecList'], function() {
+});
+
+require(['./ThirdParty/when'], function(when) {
     /**
      * ## Require &amp; Instantiate
      *
@@ -66,6 +68,64 @@ require.config({
     } else {
         extend(window, jasmineInterface);
     }
+
+    // Override beforeEach(), afterEach(), beforeAll(), afterAll(), and it() to automatically
+    // call done() when a returned promise resolves.
+    var originalIt = window.it;
+
+    window.it = function(description, f) {
+        originalIt(description, function(done) {
+            var result = f();
+            when(result, function() {
+                done();
+            });
+        });
+    };
+
+    var originalBeforeEach = window.beforeEach;
+
+    window.beforeEach = function(f) {
+        originalBeforeEach(function(done) {
+            var result = f();
+            when(result, function() {
+                done();
+            });
+        });
+    };
+
+    var originalAfterEach = window.afterEach;
+
+    window.afterEach = function(f) {
+        originalAfterEach(function(done) {
+            var result = f();
+            when(result, function() {
+                done();
+            });
+        });
+    };
+
+    var originalBeforeAll = window.beforeAll;
+
+    window.beforeAll = function(f) {
+        originalBeforeAll(function(done) {
+            var result = f();
+            when(result, function() {
+                done();
+            });
+        });
+    };
+
+    var originalAfterAll = window.afterAll;
+
+    window.afterAll = function(f) {
+        originalAfterAll(function(done) {
+            var result = f();
+            when(result, function() {
+                done();
+            });
+        });
+    };
+
 
     /**
      * ## Runner Parameters
@@ -153,4 +213,4 @@ require.config({
         return destination;
     }
 
-}());
+});
