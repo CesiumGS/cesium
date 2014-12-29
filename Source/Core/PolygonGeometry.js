@@ -522,7 +522,7 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {Object} options.polygonHierarchy A polygon hierarchy that can include holes.
+     * @param {PolygonHierarchy} options.polygonHierarchy A polygon hierarchy that can include holes.
      * @param {Number} [options.height=0.0] The height of the polygon.
      * @param {Number} [options.extrudedHeight] The height of the polygon.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.

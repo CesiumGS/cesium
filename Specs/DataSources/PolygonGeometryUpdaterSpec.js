@@ -5,6 +5,7 @@ defineSuite([
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
         'Core/JulianDate',
+        'Core/PolygonHierarchy',
         'Core/ShowGeometryInstanceAttribute',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
@@ -27,6 +28,7 @@ defineSuite([
         Color,
         ColorGeometryInstanceAttribute,
         JulianDate,
+        PolygonHierarchy,
         ShowGeometryInstanceAttribute,
         TimeInterval,
         TimeIntervalCollection,
@@ -60,12 +62,12 @@ defineSuite([
 
     function createBasicPolygon() {
         var polygon = new PolygonGraphics();
-        polygon.positions = new ConstantProperty(Cartesian3.fromRadiansArray([
+        polygon.hierarchy = new ConstantProperty(new PolygonHierarchy(Cartesian3.fromRadiansArray([
             0, 0,
             1, 0,
             1, 1,
             0, 1
-        ]));
+        ])));
         var entity = new Entity();
         entity.polygon = polygon;
         return entity;
@@ -160,8 +162,8 @@ defineSuite([
         var point3 = new SampledPositionProperty();
         point3.addSample(time, new Cartesian3());
 
-        entity.polygon.positions = new PropertyArray();
-        entity.polygon.positions.setValue([point1, point2, point3]);
+        entity.polygon.hierarchy = new PropertyArray();
+        entity.polygon.hierarchy.setValue([point1, point2, point3]);
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -357,12 +359,12 @@ defineSuite([
 
     it('dynamic updater sets properties', function() {
         var polygon = new PolygonGraphics();
-        polygon.positions = createDynamicProperty(Cartesian3.fromRadiansArray([
+        polygon.hierarchy = createDynamicProperty(new PolygonHierarchy(Cartesian3.fromRadiansArray([
             0, 0,
             1, 0,
             1, 1,
             0, 1
-        ]));
+        ])));
         polygon.show = createDynamicProperty(true);
         polygon.height = createDynamicProperty(3);
         polygon.extrudedHeight = createDynamicProperty(2);
@@ -386,7 +388,7 @@ defineSuite([
 
         var options = dynamicUpdater._options;
         expect(options.id).toEqual(entity);
-        expect(options.polygonHierarchy.positions).toEqual(polygon.positions.getValue());
+        expect(options.polygonHierarchy).toEqual(polygon.hierarchy.getValue());
         expect(options.height).toEqual(polygon.height.getValue());
         expect(options.extrudedHeight).toEqual(polygon.extrudedHeight.getValue());
         expect(options.perPositionHeight).toEqual(polygon.perPositionHeight.getValue());
@@ -403,7 +405,7 @@ defineSuite([
         expect(primitives.length).toBe(2);
 
         //If a dynamic position returns undefined, the primitive should go away.
-        polygon.positions.setValue(undefined);
+        polygon.hierarchy.setValue(undefined);
         dynamicUpdater.update(time);
         expect(primitives.length).toBe(0);
 
@@ -417,7 +419,7 @@ defineSuite([
         var listener = jasmine.createSpy('listener');
         updater.geometryChanged.addEventListener(listener);
 
-        entity.polygon.positions = new ConstantProperty([]);
+        entity.polygon.hierarchy = new ConstantProperty([]);
         expect(listener.callCount).toEqual(1);
 
         entity.polygon.height = new ConstantProperty(82);
@@ -426,7 +428,7 @@ defineSuite([
         entity.availability = new TimeIntervalCollection();
         expect(listener.callCount).toEqual(3);
 
-        entity.polygon.positions = undefined;
+        entity.polygon.hierarchy = undefined;
         expect(listener.callCount).toEqual(4);
 
         //Since there's no valid geometry, changing another property should not raise the event.
