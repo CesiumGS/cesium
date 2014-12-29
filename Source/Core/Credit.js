@@ -9,6 +9,9 @@ define([
         DeveloperError) {
     "use strict";
 
+    var nextCreditId = 0;
+    var creditToId = {};
+
     /**
      * A credit contains data pertaining to how to display attributions/credits for certain content on the screen.
      *
@@ -23,7 +26,6 @@ define([
      * //Create a credit with a tooltip, image and link
      * var credit = new Cesium.Credit('Cesium', '/images/cesium_logo.png', 'http://cesiumjs.org/');
      */
-
     var Credit = function(text, imageUrl, link) {
         var hasLink = (defined(link));
         var hasImage = (defined(imageUrl));
@@ -40,14 +42,23 @@ define([
         }
 
         this._text = text;
-
         this._imageUrl = imageUrl;
-
         this._link = link;
-
         this._hasLink = hasLink;
-
         this._hasImage = hasImage;
+
+        // Credits are immutable so generate an id to use to optimize equal()
+        var id;
+        var key = JSON.stringify([text, imageUrl, link]);
+
+        if (defined(creditToId[key])) {
+            id = creditToId[key];
+        } else {
+            id = nextCreditId++;
+            creditToId[key] = id;
+        }
+
+        this._id = id;
     };
 
     defineProperties(Credit.prototype, {
@@ -82,6 +93,18 @@ define([
             get : function() {
                 return this._link;
             }
+        },
+
+        /**
+         * @memberof Credit.prototype
+         * @type {Number}
+         *
+         * @private
+         */
+        id : {
+            get : function() {
+                return this._id;
+            }
         }
     });
 
@@ -111,15 +134,10 @@ define([
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     Credit.equals = function(left, right) {
-        var leftUndefined = (!defined(left));
-        var rightUndefined = (!defined(right));
-
-        return ((left === right) ||
-               ((leftUndefined && rightUndefined) ||
-               (!leftUndefined && !rightUndefined)) &&
-               ((left._text === right._text &&
-               left._imageUrl === right._imageUrl &&
-               left._link === right._link)));
+        return (left === right) ||
+               ((defined(left)) &&
+                (defined(right)) &&
+                (left._id === right._id));
     };
 
     /**
