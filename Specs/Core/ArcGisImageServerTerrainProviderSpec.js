@@ -9,8 +9,8 @@ defineSuite([
         'Core/Math',
         'Core/queryToObject',
         'Core/TerrainProvider',
-        'Specs/waitsForPromise',
-        'ThirdParty/Uri'
+        'ThirdParty/Uri',
+        'ThirdParty/when'
     ], function(
         ArcGisImageServerTerrainProvider,
         DefaultProxy,
@@ -21,10 +21,10 @@ defineSuite([
         CesiumMath,
         queryToObject,
         TerrainProvider,
-        waitsForPromise,
-        Uri) {
+        Uri,
+        when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -134,7 +134,7 @@ defineSuite([
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
-            waitsForPromise(terrainProvider.requestTileGeometry(0, 0, 0), function(terrainData) {
+            return when(terrainProvider.requestTileGeometry(0, 0, 0), function(terrainData) {
                 expect(loadImage.createImage).toHaveBeenCalled();
                 expect(terrainData).toBeDefined();
             });
@@ -160,7 +160,7 @@ defineSuite([
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
-            waitsForPromise(terrainProvider.requestTileGeometry(0, 0, 0), function(terrainData) {
+            return when(terrainProvider.requestTileGeometry(0, 0, 0), function(terrainData) {
                 expect(loadImage.createImage).toHaveBeenCalled();
                 expect(terrainData).toBeDefined();
             });
@@ -188,7 +188,7 @@ defineSuite([
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
-            waitsForPromise(terrainProvider.requestTileGeometry(0, 0, 0), function(terrainData) {
+            return when(terrainProvider.requestTileGeometry(0, 0, 0), function(terrainData) {
                 expect(loadImage.createImage).toHaveBeenCalled();
                 expect(terrainData).toBeDefined();
             });
@@ -209,7 +209,7 @@ defineSuite([
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
-            waitsForPromise(terrainProvider.requestTileGeometry(0, 0, 0), function(terrainData) {
+            return when(terrainProvider.requestTileGeometry(0, 0, 0), function(terrainData) {
                 expect(loadImage.createImage).toHaveBeenCalled();
                 expect(terrainData).toBeInstanceOf(HeightmapTerrainData);
             });
