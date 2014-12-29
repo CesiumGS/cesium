@@ -40,8 +40,29 @@ defineSuite([
     var blueAlphaImage;
     var blueOverRedImage;
 
-    beforeAll(function() {
+    beforeAll(function(done) {
         context = createContext();
+
+        greenImage = new Image();
+        blueImage = new Image();
+        blueAlphaImage = new Image();
+        blueOverRedImage = new Image();
+
+        function imageLoadComplete() {
+            if (greenImage.complete && blueImage.complete && blueAlphaImage.complete && blueOverRedImage.complete) {
+                done();
+            }
+        }
+
+        greenImage.onload = imageLoadComplete;
+        blueImage.onload = imageLoadComplete;
+        blueAlphaImage.onload = imageLoadComplete;
+        blueOverRedImage.onload = imageLoadComplete;
+
+        greenImage.src = './Data/Images/Green.png';
+        blueImage.src = './Data/Images/Blue.png';
+        blueAlphaImage.src = './Data/Images/BlueAlpha.png';
+        blueOverRedImage.src = './Data/Images/BlueOverRed.png';
     });
 
     afterAll(function() {
@@ -52,24 +73,6 @@ defineSuite([
         sp = sp && sp.destroy();
         va = va && va.destroy();
         cubeMap = cubeMap && cubeMap.destroy();
-    });
-
-    it('create images', function() {
-        greenImage = new Image();
-        greenImage.src = './Data/Images/Green.png';
-
-        blueImage = new Image();
-        blueImage.src = './Data/Images/Blue.png';
-
-        blueAlphaImage = new Image();
-        blueAlphaImage.src = './Data/Images/BlueAlpha.png';
-
-        blueOverRedImage = new Image();
-        blueOverRedImage.src = './Data/Images/BlueOverRed.png';
-
-        waitsFor(function() {
-            return greenImage.complete && blueImage.complete && blueAlphaImage.complete && blueOverRedImage.complete;
-        }, 'Load .png file(s) for texture test.', 3000);
     });
 
     it('gets the pixel format', function() {

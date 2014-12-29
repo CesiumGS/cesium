@@ -41,12 +41,6 @@ require.config({
         });
     };
 
-    window.runs = function() {
-    };
-
-    window.waitsFor = function() {
-    };
-
     /**
      * Since this is being run in a browser and the results should populate to an HTML page, require the HTML-specific Jasmine code, injecting the same reference.
      */
