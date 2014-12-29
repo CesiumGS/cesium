@@ -68,7 +68,6 @@ defineSuite([
 
         var entity = new Entity();
         entity.position = new ConstantPositionProperty(Cartesian3.ZERO);
-        entity.orientation = new ConstantPositionProperty(Quaternion.IDENTITY);
         entity.cylinder = cylinder;
         return entity;
     }

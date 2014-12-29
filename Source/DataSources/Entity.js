@@ -1,20 +1,32 @@
 /*global define*/
 define([
+        '../Core/Cartesian3',
         '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createPropertyDescriptor'
+        '../Core/Matrix3',
+        '../Core/Matrix4',
+        '../Core/Quaternion',
+        '../Core/Transforms',
+        './createPropertyDescriptor',
+        './Property'
     ], function(
+        Cartesian3,
         createGuid,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createPropertyDescriptor) {
+        Matrix3,
+        Matrix4,
+        Quaternion,
+        Transforms,
+        createPropertyDescriptor,
+        Property) {
     "use strict";
 
     /**
@@ -373,6 +385,27 @@ define([
                 }
             }
         }
+    };
+
+    var matrix3Scratch = new Matrix3();
+    var positionScratch = new Cartesian3();
+    var orientationScratch = new Quaternion();
+
+    /**
+     * @private
+     */
+    Entity.prototype._getModelMatrix = function(time, result) {
+        var position = Property.getValueOrUndefined(this._position, time, positionScratch);
+        if (!defined(position)) {
+            return undefined;
+        }
+        var orientation = Property.getValueOrUndefined(this._orientation, time, orientationScratch);
+        if (!defined(orientation)) {
+            result = Transforms.eastNorthUpToFixedFrame(position, undefined, result);
+        } else {
+            result = Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, result);
+        }
+        return result;
     };
 
     return Entity;
