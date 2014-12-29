@@ -96,7 +96,7 @@ define([
         },
 
         /**
-         * Gets or sets the {@link PolygonHierarchy}.
+         * Gets or sets the property specifying the {@link PolygonHierarchy}.
          * @memberof PolygonGraphics.prototype
          * @type {Property}
          */

@@ -15,7 +15,6 @@ define([
 
     /**
      * A {@link Property} whose value does not change with respect to simulation time.
-     * If the value is not a number, string, array, or HTMLElement then it must provide clone and equals functions.
      *
      * @alias ConstantProperty
      * @constructor
@@ -76,7 +75,6 @@ define([
 
     /**
      * Sets the value of the property.
-     * If the value is not a number, string, array, or HTMLElement then it must provide clone and equals functions.
      *
      * @param {Object} value The property value.
      *

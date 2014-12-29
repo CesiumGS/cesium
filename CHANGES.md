@@ -6,10 +6,12 @@ Change Log
 * Breaking changes
   * Removed `GeometryPipeline.wrapLongitude`, which were previously deprecated in 1.4, use `GeometryPipeline.splitLongitude` instead.
   * Removed `GeometryPipeline.combine`, which were previously deprecated in 1.4, use `GeometryPipeline.combineInstances` instead.
+  * `PolygonGraphics.positions` created by `GeoJSONDataSource` now evaluate to a `PolygonHierarchy` object instead of an array of positions.
 * Deprecated
   * `Rectangle.intersectWith` was deprecated. It will be removed in Cesium 1.6. Use `Rectangle.intersection`, which is the same but returns `undefined` when two rectangles do not intersect.
   * `Rectangle.isEmpty` was deprecated. It will be removed in Cesium 1.6.
   * `viewerEntityMixin` was deprecated. It will be removed in Cesium 1.6. It's functionality has been made directly part of the `Viewer` widget.
+  * `PolygonGraphics.positions` was deprecated and replaced with `PolygonGraphics.hierarchy`, whose value is a `PolygonHierarchy` instead of an array of positions.  `PolygonGraphics.positions` will be removed in Cesium 1.8.
 * Dramatically improve the quality of font outlines.
 * Improved polygon loading performance.
 * Fixed upsampleQuantizedTerrainMesh rounding errors that had occasionally led to missing terrain skirt geometry in upsampled tiles.
@@ -24,6 +26,10 @@ Change Log
 * Added `CylinderGraphics` and `Entity.cylinder`.
 * Added caching to `Model` to save memory and improve loading speed when several models with the same url are created.
 * Added the following properties to `Viewer` and `CesiumWidget`: `imageryLayers`, `terrainProvider`, and `camera`.  This avoids the need to access `viewer.scene` in some cases.
+* Added `PolygonHierarchy` to make defining polygons with holes clearer.
+* Added `PolygonGraphics.hierarchy` for supporting polygons with holes via data sources.
+* `GeoJsonDataSource` now supports polygons with holes.
+* `ConstantProperty` can now hold any value; previously it was limited to values that implemented `equals` and `clones` functions, as well as a few special cases.
 
 ### 1.4 - 2014-12-01
 
