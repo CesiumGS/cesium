@@ -107,37 +107,61 @@ define([
         case gl.INT:
         case gl.BOOL:
             return function() {
-                gl.uniform1i(location, uniform.value);
+                if (uniform.value !== uniform._value) {
+                    uniform._value = uniform.value;
+                    gl.uniform1i(location, uniform.value);
+                }
             };
         case gl.INT_VEC2:
         case gl.BOOL_VEC2:
             return function() {
                 var v = uniform.value;
-                gl.uniform2i(location, v.x, v.y);
+                if (!Cartesian2.equals(v, uniform._value)) {
+                    uniform._value = Cartesian2.clone(v, uniform._value);
+                    gl.uniform2i(location, v.x, v.y);
+                }
             };
         case gl.INT_VEC3:
         case gl.BOOL_VEC3:
             return function() {
                 var v = uniform.value;
-                gl.uniform3i(location, v.x, v.y, v.z);
+                if (!Cartesian3.equals(v, uniform._value)) {
+                    uniform._value = Cartesian3.clone(v, uniform._value);
+                    gl.uniform3i(location, v.x, v.y, v.z);
+                }
             };
         case gl.INT_VEC4:
         case gl.BOOL_VEC4:
             return function() {
                 var v = uniform.value;
-                gl.uniform4i(location, v.x, v.y, v.z, v.w);
+                if (!Cartesian4.equals(v, uniform._value)) {
+                    uniform._value = Cartesian4.clone(v, uniform._value);
+                    gl.uniform4i(location, v.x, v.y, v.z, v.w);
+                }
             };
         case gl.FLOAT_MAT2:
             return function() {
-                gl.uniformMatrix2fv(location, false, Matrix2.toArray(uniform.value, scratchUniformMatrix2));
+                var v = uniform.value;
+                if (!Matrix2.equals(v, uniform._value)) {
+                    uniform._value = Matrix2.clone(v, uniform._value);
+                    gl.uniformMatrix2fv(location, false, Matrix2.toArray(uniform.value, scratchUniformMatrix2));
+                }
             };
         case gl.FLOAT_MAT3:
             return function() {
-                gl.uniformMatrix3fv(location, false, Matrix3.toArray(uniform.value, scratchUniformMatrix3));
+                var v = uniform.value;
+                if (!Matrix3.equals(v, uniform._value)) {
+                    uniform._value = Matrix3.clone(v, uniform._value);
+                    gl.uniformMatrix3fv(location, false, Matrix3.toArray(uniform.value, scratchUniformMatrix3));
+                }
             };
         case gl.FLOAT_MAT4:
             return function() {
-                gl.uniformMatrix4fv(location, false, Matrix4.toArray(uniform.value, scratchUniformMatrix4));
+                var v = uniform.value;
+                if (!Matrix4.equals(v, uniform._value)) {
+                    uniform._value = Matrix4.clone(v, uniform._value);
+                    gl.uniformMatrix4fv(location, false, Matrix4.toArray(uniform.value, scratchUniformMatrix4));
+                }
             };
         default:
             throw new RuntimeError('Unrecognized uniform type: ' + uniform._activeUniform.type + ' for uniform "' + uniform._activeUniform.name + '".');
@@ -279,63 +303,99 @@ define([
         case gl.BOOL:
             return function() {
                 var value = uniformArray.value;
+                var _value = uniformArray._value;
                 var length = value.length;
                 for (var i = 0; i < length; ++i) {
-                    gl.uniform1i(locations[i], value[i]);
+                    var v = value[i];
+
+                    if (v !== _value[i]) {
+                        _value[i] = v;
+                        gl.uniform1i(locations[i], v);
+                    }
                 }
             };
         case gl.INT_VEC2:
         case gl.BOOL_VEC2:
             return function() {
                 var value = uniformArray.value;
+                var _value = uniformArray._value;
                 var length = value.length;
                 for (var i = 0; i < length; ++i) {
                     var v = value[i];
-                    gl.uniform2i(locations[i], v.x, v.y);
+
+                    if (!Cartesian2.equals(v, _value[i])) {
+                        _value[i] = Cartesian2.clone(v, _value[i]);
+                        gl.uniform2i(locations[i], v.x, v.y);
+                    }
                 }
             };
         case gl.INT_VEC3:
         case gl.BOOL_VEC3:
             return function() {
                 var value = uniformArray.value;
+                var _value = uniformArray._value;
                 var length = value.length;
                 for (var i = 0; i < length; ++i) {
                     var v = value[i];
-                    gl.uniform3i(locations[i], v.x, v.y, v.z);
+
+                    if (!Cartesian3.equals(v, _value[i])) {
+                        _value[i] = Cartesian3.clone(v, _value[i]);
+                        gl.uniform3i(locations[i], v.x, v.y, v.z);
+                    }
                 }
             };
         case gl.INT_VEC4:
         case gl.BOOL_VEC4:
             return function() {
                 var value = uniformArray.value;
+                var _value = uniformArray._value;
                 var length = value.length;
                 for (var i = 0; i < length; ++i) {
                     var v = value[i];
-                    gl.uniform4i(locations[i], v.x, v.y, v.z, v.w);
+
+                    if (!Cartesian4.equals(v, _value[i])) {
+                        _value[i] = Cartesian4.clone(v, _value[i]);
+                        gl.uniform4i(locations[i], v.x, v.y, v.z, v.w);
+                    }
                 }
             };
         case gl.FLOAT_MAT2:
             return function() {
                 var value = uniformArray.value;
+                var _value = uniformArray._value;
                 var length = value.length;
                 for (var i = 0; i < length; ++i) {
-                    gl.uniformMatrix2fv(locations[i], false, Matrix2.toArray(value[i], scratchUniformMatrix2));
+                    var v = value[i];
+                    if (!Matrix2.equals(v, _value[i])) {
+                        _value[i] = Matrix2.clone(v, _value[i]);
+                        gl.uniformMatrix2fv(locations[i], false, Matrix2.toArray(v, scratchUniformMatrix2));
+                    }
                 }
             };
         case gl.FLOAT_MAT3:
             return function() {
                 var value = uniformArray.value;
+                var _value = uniformArray._value;
                 var length = value.length;
                 for (var i = 0; i < length; ++i) {
-                    gl.uniformMatrix3fv(locations[i], false, Matrix3.toArray(value[i], scratchUniformMatrix3));
+                    var v = value[i];
+                    if (!Matrix3.equals(v, _value[i])) {
+                        _value[i] = Matrix3.clone(v, _value[i]);
+                        gl.uniformMatrix3fv(locations[i], false, Matrix3.toArray(value[i], scratchUniformMatrix3));
+                    }
                 }
             };
         case gl.FLOAT_MAT4:
             return function() {
                 var value = uniformArray.value;
+                var _value = uniformArray._value;
                 var length = value.length;
                 for (var i = 0; i < length; ++i) {
-                    gl.uniformMatrix4fv(locations[i], false, Matrix4.toArray(value[i], scratchUniformMatrix4));
+                    var v = value[i];
+                    if (!Matrix4.equals(v, _value[i])) {
+                        _value[i] = Matrix4.clone(v, _value[i]);
+                        gl.uniformMatrix4fv(locations[i], false, Matrix4.toArray(value[i], scratchUniformMatrix4));
+                    }
                 }
             };
         default:
