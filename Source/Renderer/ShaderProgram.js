@@ -40,133 +40,6 @@ define([
         scratchUniformMatrix3 = new Float32Array(9);
         scratchUniformMatrix4 = new Float32Array(16);
     }
-    function setUniform(uniform) {
-        var gl = uniform._gl;
-        var location = uniform._location;
-        switch (uniform._activeUniform.type) {
-        case gl.FLOAT:
-            return function() {
-                if (uniform.value !== uniform._value) {
-                    uniform._value = uniform.value;
-                    gl.uniform1f(location, uniform.value);
-                }
-            };
-        case gl.FLOAT_VEC2:
-            return function() {
-                var v = uniform.value;
-// TODO: static/dynamic flag for u_dayTextureTranslationAndScale, etc.  Also base on uniform semantics.
-// TODO: fast equals?
-// TODO: fast clone?
-                if (!Cartesian2.equals(v, uniform._value)) {
-                    uniform._value = Cartesian2.clone(v, uniform._value);
-                    gl.uniform2f(location, v.x, v.y);
-                }
-            };
-        case gl.FLOAT_VEC3:
-            return function() {
-                var v = uniform.value;
-
-                if (defined(v.red)) {
-                    if (!Color.equals(v, uniform._value)) {
-                        uniform._value = Color.clone(v, uniform._value);
-                        gl.uniform3f(location, v.red, v.green, v.blue);
-                    }
-                } else if (defined(v.x)) {
-                    if (!Cartesian3.equals(v, uniform._value)) {
-                        uniform._value = Cartesian3.clone(v, uniform._value);
-                        gl.uniform3f(location, v.x, v.y, v.z);
-                    }
-                } else {
-                    throw new DeveloperError('Invalid vec3 value for uniform "' + uniform._activeUniform.name + '".');
-                }
-            };
-        case gl.FLOAT_VEC4:
-            return function() {
-                var v = uniform.value;
-
-                if (defined(v.red)) {
-                    if (!Color.equals(v, uniform._value)) {
-                        uniform._value = Color.clone(v, uniform._value);
-                        gl.uniform4f(location, v.red, v.green, v.blue, v.alpha);
-                    }
-                } else if (defined(v.x)) {
-                    if (!Cartesian4.equals(v, uniform._value)) {
-                        uniform._value = Cartesian4.clone(v, uniform._value);
-                        gl.uniform4f(location, v.x, v.y, v.z, v.w);
-                    }
-                } else {
-                    throw new DeveloperError('Invalid vec4 value for uniform "' + uniform._activeUniform.name + '".');
-                }
-            };
-        case gl.SAMPLER_2D:
-        case gl.SAMPLER_CUBE:
-            return function() {
-                gl.activeTexture(gl.TEXTURE0 + uniform.textureUnitIndex);
-                gl.bindTexture(uniform.value._target, uniform.value._texture);
-            };
-        case gl.INT:
-        case gl.BOOL:
-            return function() {
-                if (uniform.value !== uniform._value) {
-                    uniform._value = uniform.value;
-                    gl.uniform1i(location, uniform.value);
-                }
-            };
-        case gl.INT_VEC2:
-        case gl.BOOL_VEC2:
-            return function() {
-                var v = uniform.value;
-                if (!Cartesian2.equals(v, uniform._value)) {
-                    uniform._value = Cartesian2.clone(v, uniform._value);
-                    gl.uniform2i(location, v.x, v.y);
-                }
-            };
-        case gl.INT_VEC3:
-        case gl.BOOL_VEC3:
-            return function() {
-                var v = uniform.value;
-                if (!Cartesian3.equals(v, uniform._value)) {
-                    uniform._value = Cartesian3.clone(v, uniform._value);
-                    gl.uniform3i(location, v.x, v.y, v.z);
-                }
-            };
-        case gl.INT_VEC4:
-        case gl.BOOL_VEC4:
-            return function() {
-                var v = uniform.value;
-                if (!Cartesian4.equals(v, uniform._value)) {
-                    uniform._value = Cartesian4.clone(v, uniform._value);
-                    gl.uniform4i(location, v.x, v.y, v.z, v.w);
-                }
-            };
-        case gl.FLOAT_MAT2:
-            return function() {
-                var v = uniform.value;
-                if (!Matrix2.equals(v, uniform._value)) {
-                    uniform._value = Matrix2.clone(v, uniform._value);
-                    gl.uniformMatrix2fv(location, false, Matrix2.toArray(uniform.value, scratchUniformMatrix2));
-                }
-            };
-        case gl.FLOAT_MAT3:
-            return function() {
-                var v = uniform.value;
-                if (!Matrix3.equals(v, uniform._value)) {
-                    uniform._value = Matrix3.clone(v, uniform._value);
-                    gl.uniformMatrix3fv(location, false, Matrix3.toArray(uniform.value, scratchUniformMatrix3));
-                }
-            };
-        case gl.FLOAT_MAT4:
-            return function() {
-                var v = uniform.value;
-                if (!Matrix4.equals(v, uniform._value)) {
-                    uniform._value = Matrix4.clone(v, uniform._value);
-                    gl.uniformMatrix4fv(location, false, Matrix4.toArray(uniform.value, scratchUniformMatrix4));
-                }
-            };
-        default:
-            throw new RuntimeError('Unrecognized uniform type: ' + uniform._activeUniform.type + ' for uniform "' + uniform._activeUniform.name + '".');
-        }
-    }
 
     /**
      * @private
@@ -185,7 +58,54 @@ define([
          */
         this.textureUnitIndex = undefined;
 
-        this._set = setUniform(this);
+        var set;
+        switch (activeUniform.type) {
+            case gl.FLOAT:
+                set = this.setFloat;
+                break;
+            case gl.FLOAT_VEC2:
+                set = this.setFloatVec2;
+                break;
+            case gl.FLOAT_VEC3:
+                set = this.setFloatVec3;
+                break;
+            case gl.FLOAT_VEC4:
+                set = this.setFloatVec4;
+                break;
+            case gl.SAMPLER_2D:
+            case gl.SAMPLER_CUBE:
+                set = this.setSampler;
+                break;
+            case gl.INT:
+            case gl.BOOL:
+                set = this.setInt;
+                break;
+            case gl.INT_VEC2:
+            case gl.BOOL_VEC2:
+                set = this.setIntVec2;
+                break;
+            case gl.INT_VEC3:
+            case gl.BOOL_VEC3:
+                set = this.setIntVec3;
+                break;
+            case gl.INT_VEC4:
+            case gl.BOOL_VEC4:
+                set = this.setIntVec4;
+                break;
+            case gl.FLOAT_MAT2:
+                set = this.setMat2;
+                break;
+            case gl.FLOAT_MAT3:
+                set = this.setMat3;
+                break;
+            case gl.FLOAT_MAT4:
+                set = this.setMat4;
+                break;
+            default:
+                throw new RuntimeError('Unrecognized uniform type: ' + activeUniform.type + ' for uniform "' + uniformName + '".');
+        }
+
+        this._set = set;
 
         if ((activeUniform.type === gl.SAMPLER_2D) || (activeUniform.type === gl.SAMPLER_CUBE)) {
             this._setSampler = function(textureUnitIndex) {
@@ -209,199 +129,117 @@ define([
         }
     });
 
-    function setUniformArray(uniformArray) {
-        var gl = uniformArray._gl;
-        var locations = uniformArray._locations;
-        switch (uniformArray._activeUniform.type) {
-        case gl.FLOAT:
-            return function() {
-                var value = uniformArray.value;
-                var _value = uniformArray._value;
-                var length = value.length;
-                for (var i = 0; i < length; ++i) {
-                    var v = value[i];
-
-                    if (v !== _value[i]) {
-                        _value[i] = v;
-                        gl.uniform1f(locations[i], v);
-                    }
-                }
-            };
-        case gl.FLOAT_VEC2:
-            return function() {
-                var value = uniformArray.value;
-                var _value = uniformArray._value;
-                var length = value.length;
-                for (var i = 0; i < length; ++i) {
-                    var v = value[i];
-
-                    if (!Cartesian2.equals(v, _value[i])) {
-                        _value[i] = Cartesian2.clone(v, _value[i]);
-                        gl.uniform2f(locations[i], v.x, v.y);
-                    }
-                }
-            };
-        case gl.FLOAT_VEC3:
-            return function() {
-                var value = uniformArray.value;
-                var _value = uniformArray._value;
-                var length = value.length;
-                for (var i = 0; i < length; ++i) {
-                    var v = value[i];
-
-                    if (defined(v.red)) {
-                        if (!Color.equals(v, _value[i])) {
-                            _value[i] = Color.clone(v, _value[i]);
-                            gl.uniform3f(locations[i], v.red, v.green, v.blue);
-                        }
-                    } else if (defined(v.x)) {
-                        if (!Cartesian3.equals(v, _value[i])) {
-                            _value[i] = Cartesian3.clone(v, _value[i]);
-                            gl.uniform3f(locations[i], v.x, v.y, v.z);
-                        }
-                    } else {
-                        throw new DeveloperError('Invalid vec3 value.');
-                    }
-                }
-            };
-        case gl.FLOAT_VEC4:
-            return function() {
-                var value = uniformArray.value;
-                var _value = uniformArray._value;
-                var length = value.length;
-                for (var i = 0; i < length; ++i) {
-                    var v = value[i];
-
-                    if (defined(v.red)) {
-                        if (!Color.equals(v, _value[i])) {
-                            _value[i] = Color.clone(v, _value[i]);
-                            gl.uniform4f(locations[i], v.red, v.green, v.blue, v.alpha);
-                        }
-                    } else if (defined(v.x)) {
-                        if (!Cartesian4.equals(v, _value[i])) {
-                            _value[i] = Cartesian4.clone(v, _value[i]);
-                            gl.uniform4f(locations[i], v.x, v.y, v.z, v.w);
-                        }
-                    } else {
-                        throw new DeveloperError('Invalid vec4 value.');
-                    }
-                }
-            };
-        case gl.SAMPLER_2D:
-        case gl.SAMPLER_CUBE:
-            return function() {
-                var value = uniformArray.value;
-                var length = value.length;
-                for (var i = 0; i < length; ++i) {
-                    var v = value[i];
-                    var index = uniformArray.textureUnitIndex + i;
-                    gl.activeTexture(gl.TEXTURE0 + index);
-                    gl.bindTexture(v._target, v._texture);
-                }
-            };
-        case gl.INT:
-        case gl.BOOL:
-            return function() {
-                var value = uniformArray.value;
-                var _value = uniformArray._value;
-                var length = value.length;
-                for (var i = 0; i < length; ++i) {
-                    var v = value[i];
-
-                    if (v !== _value[i]) {
-                        _value[i] = v;
-                        gl.uniform1i(locations[i], v);
-                    }
-                }
-            };
-        case gl.INT_VEC2:
-        case gl.BOOL_VEC2:
-            return function() {
-                var value = uniformArray.value;
-                var _value = uniformArray._value;
-                var length = value.length;
-                for (var i = 0; i < length; ++i) {
-                    var v = value[i];
-
-                    if (!Cartesian2.equals(v, _value[i])) {
-                        _value[i] = Cartesian2.clone(v, _value[i]);
-                        gl.uniform2i(locations[i], v.x, v.y);
-                    }
-                }
-            };
-        case gl.INT_VEC3:
-        case gl.BOOL_VEC3:
-            return function() {
-                var value = uniformArray.value;
-                var _value = uniformArray._value;
-                var length = value.length;
-                for (var i = 0; i < length; ++i) {
-                    var v = value[i];
-
-                    if (!Cartesian3.equals(v, _value[i])) {
-                        _value[i] = Cartesian3.clone(v, _value[i]);
-                        gl.uniform3i(locations[i], v.x, v.y, v.z);
-                    }
-                }
-            };
-        case gl.INT_VEC4:
-        case gl.BOOL_VEC4:
-            return function() {
-                var value = uniformArray.value;
-                var _value = uniformArray._value;
-                var length = value.length;
-                for (var i = 0; i < length; ++i) {
-                    var v = value[i];
-
-                    if (!Cartesian4.equals(v, _value[i])) {
-                        _value[i] = Cartesian4.clone(v, _value[i]);
-                        gl.uniform4i(locations[i], v.x, v.y, v.z, v.w);
-                    }
-                }
-            };
-        case gl.FLOAT_MAT2:
-            return function() {
-                var value = uniformArray.value;
-                var _value = uniformArray._value;
-                var length = value.length;
-                for (var i = 0; i < length; ++i) {
-                    var v = value[i];
-                    if (!Matrix2.equals(v, _value[i])) {
-                        _value[i] = Matrix2.clone(v, _value[i]);
-                        gl.uniformMatrix2fv(locations[i], false, Matrix2.toArray(v, scratchUniformMatrix2));
-                    }
-                }
-            };
-        case gl.FLOAT_MAT3:
-            return function() {
-                var value = uniformArray.value;
-                var _value = uniformArray._value;
-                var length = value.length;
-                for (var i = 0; i < length; ++i) {
-                    var v = value[i];
-                    if (!Matrix3.equals(v, _value[i])) {
-                        _value[i] = Matrix3.clone(v, _value[i]);
-                        gl.uniformMatrix3fv(locations[i], false, Matrix3.toArray(value[i], scratchUniformMatrix3));
-                    }
-                }
-            };
-        case gl.FLOAT_MAT4:
-            return function() {
-                var value = uniformArray.value;
-                var _value = uniformArray._value;
-                var length = value.length;
-                for (var i = 0; i < length; ++i) {
-                    var v = value[i];
-                    if (!Matrix4.equals(v, _value[i])) {
-                        _value[i] = Matrix4.clone(v, _value[i]);
-                        gl.uniformMatrix4fv(locations[i], false, Matrix4.toArray(value[i], scratchUniformMatrix4));
-                    }
-                }
-            };
-        default:
-            throw new RuntimeError('Unrecognized uniform type: ' + uniformArray._activeUniform.type);
+    Uniform.prototype.setFloat = function() {
+        if (this.value !== this._value) {
+            this._value = this.value;
+            this._gl.uniform1f(this._location, this.value);
         }
-    }
+    };
+
+    Uniform.prototype.setFloatVec2 = function() {
+        var v = this.value;
+        if (!Cartesian2.equals(v, this._value)) {
+            this._value = Cartesian2.clone(v, this._value);
+            this._gl.uniform2f(this._location, v.x, v.y);
+        }
+    };
+
+    Uniform.prototype.setFloatVec3 = function() {
+        var v = this.value;
+
+        if (defined(v.red)) {
+            if (!Color.equals(v, this._value)) {
+                this._value = Color.clone(v, this._value);
+                this._gl.uniform3f(this._location, v.red, v.green, v.blue);
+            }
+        } else if (defined(v.x)) {
+            if (!Cartesian3.equals(v, this._value)) {
+                this._value = Cartesian3.clone(v, this._value);
+                this._gl.uniform3f(this._location, v.x, v.y, v.z);
+            }
+        } else {
+            throw new DeveloperError('Invalid vec3 value for uniform "' + this._activethis.name + '".');
+        }
+    };
+
+    Uniform.prototype.setFloatVec4 = function() {
+        var v = this.value;
+
+        if (defined(v.red)) {
+            if (!Color.equals(v, this._value)) {
+                this._value = Color.clone(v, this._value);
+                this._gl.uniform4f(this._location, v.red, v.green, v.blue, v.alpha);
+            }
+        } else if (defined(v.x)) {
+            if (!Cartesian4.equals(v, this._value)) {
+                this._value = Cartesian4.clone(v, this._value);
+                this._gl.uniform4f(this._location, v.x, v.y, v.z, v.w);
+            }
+        } else {
+            throw new DeveloperError('Invalid vec4 value for uniform "' + this._activethis.name + '".');
+        }
+    };
+
+    Uniform.prototype.setSampler = function() {
+        var gl = this._gl;
+        gl.activeTexture(gl.TEXTURE0 + this.textureUnitIndex);
+        gl.bindTexture(this.value._target, this.value._texture);
+    };
+
+    Uniform.prototype.setInt = function() {
+        if (this.value !== this._value) {
+            this._value = this.value;
+            this._gl.uniform1i(this._location, this.value);
+        }
+    };
+
+    Uniform.prototype.setIntVec2 = function() {
+        var v = this.value;
+        if (!Cartesian2.equals(v, this._value)) {
+            this._value = Cartesian2.clone(v, this._value);
+            this._gl.uniform2i(this._location, v.x, v.y);
+        }
+    };
+
+    Uniform.prototype.setIntVec3 = function() {
+        var v = this.value;
+        if (!Cartesian3.equals(v, this._value)) {
+            this._value = Cartesian3.clone(v, this._value);
+            this._gl.uniform3i(this._location, v.x, v.y, v.z);
+        }
+    };
+
+    Uniform.prototype.setIntVec4 = function() {
+        var v = this.value;
+        if (!Cartesian4.equals(v, this._value)) {
+            this._value = Cartesian4.clone(v, this._value);
+            this._gl.uniform4i(this._location, v.x, v.y, v.z, v.w);
+        }
+    };
+
+    Uniform.prototype.setMat2 = function() {
+        var v = this.value;
+        if (!Matrix2.equals(v, this._value)) {
+            this._value = Matrix2.clone(v, this._value);
+            this._gl.uniformMatrix2fv(this._location, false, Matrix2.toArray(this.value, scratchUniformMatrix2));
+        }
+    };
+
+    Uniform.prototype.setMat3 = function() {
+        var v = this.value;
+        if (!Matrix3.equals(v, this._value)) {
+            this._value = Matrix3.clone(v, this._value);
+            this._gl.uniformMatrix3fv(this._location, false, Matrix3.toArray(this.value, scratchUniformMatrix3));
+        }
+    };
+
+    Uniform.prototype.setMat4 = function() {
+        var v = this.value;
+        if (!Matrix4.equals(v, this._value)) {
+            this._value = Matrix4.clone(v, this._value);
+            this._gl.uniformMatrix4fv(this._location, false, Matrix4.toArray(this.value, scratchUniformMatrix4));
+        }
+    };
 
     /**
      * @private
@@ -419,7 +257,54 @@ define([
          */
         this.textureUnitIndex = undefined;
 
-        this._set = setUniformArray(this);
+        var set;
+        switch (activeUniform.type) {
+            case gl.FLOAT:
+                set = this.setFloat;
+                break;
+            case gl.FLOAT_VEC2:
+                set = this.setFloatVec2;
+                break;
+            case gl.FLOAT_VEC3:
+                set = this.setFloatVec3;
+                break;
+            case gl.FLOAT_VEC4:
+                set = this.setFloatVec4;
+                break;
+            case gl.SAMPLER_2D:
+            case gl.SAMPLER_CUBE:
+                set = this.setSampler;
+                break;
+            case gl.INT:
+            case gl.BOOL:
+                set = this.setInt;
+                break;
+            case gl.INT_VEC2:
+            case gl.BOOL_VEC2:
+                set = this.setIntVec2;
+                break;
+            case gl.INT_VEC3:
+            case gl.BOOL_VEC3:
+                set = this.setIntVec3;
+                break;
+            case gl.INT_VEC4:
+            case gl.BOOL_VEC4:
+                set = this.setIntVec4;
+                break;
+            case gl.FLOAT_MAT2:
+                set = this.setMat2;
+                break;
+            case gl.FLOAT_MAT3:
+                set = this.setMat3;
+                break;
+            case gl.FLOAT_MAT4:
+                set = this.setMat4;
+                break;
+            default:
+                throw new RuntimeError('Unrecognized uniform type: ' + activeUniform.type + ' for uniform "' + uniformName + '".');
+        }
+
+        this._set = set;
 
         if ((activeUniform.type === gl.SAMPLER_2D) || (activeUniform.type === gl.SAMPLER_CUBE)) {
             this._setSampler = function(textureUnitIndex) {
@@ -462,6 +347,222 @@ define([
 
         return textureUnitIndex;
     }
+
+    UniformArray.prototype.setFloat = function() {
+        var gl = this._gl;
+        var locations = this._locations;
+
+        var value = this.value;
+        var _value = this._value;
+        var length = value.length;
+        for (var i = 0; i < length; ++i) {
+            var v = value[i];
+
+            if (v !== _value[i]) {
+                _value[i] = v;
+                gl.uniform1f(locations[i], v);
+            }
+        }
+    };
+
+    UniformArray.prototype.setFloatVec2 = function() {
+        var gl = this._gl;
+        var locations = this._locations;
+
+        var value = this.value;
+        var _value = this._value;
+        var length = value.length;
+        for (var i = 0; i < length; ++i) {
+            var v = value[i];
+
+            if (!Cartesian2.equals(v, _value[i])) {
+                _value[i] = Cartesian2.clone(v, _value[i]);
+                gl.uniform2f(locations[i], v.x, v.y);
+            }
+        }
+    };
+
+    UniformArray.prototype.setFloatVec3 = function() {
+        var gl = this._gl;
+        var locations = this._locations;
+
+        var value = this.value;
+        var _value = this._value;
+        var length = value.length;
+        for (var i = 0; i < length; ++i) {
+            var v = value[i];
+
+            if (defined(v.red)) {
+                if (!Color.equals(v, _value[i])) {
+                    _value[i] = Color.clone(v, _value[i]);
+                    gl.uniform3f(locations[i], v.red, v.green, v.blue);
+                }
+            } else if (defined(v.x)) {
+                if (!Cartesian3.equals(v, _value[i])) {
+                    _value[i] = Cartesian3.clone(v, _value[i]);
+                    gl.uniform3f(locations[i], v.x, v.y, v.z);
+                }
+            } else {
+                throw new DeveloperError('Invalid vec3 value.');
+            }
+        }
+    };
+
+    UniformArray.prototype.setFloatVec4 = function() {
+        var gl = this._gl;
+        var locations = this._locations;
+
+        var value = this.value;
+        var _value = this._value;
+        var length = value.length;
+        for (var i = 0; i < length; ++i) {
+            var v = value[i];
+
+            if (defined(v.red)) {
+                if (!Color.equals(v, _value[i])) {
+                    _value[i] = Color.clone(v, _value[i]);
+                    gl.uniform4f(locations[i], v.red, v.green, v.blue, v.alpha);
+                }
+            } else if (defined(v.x)) {
+                if (!Cartesian4.equals(v, _value[i])) {
+                    _value[i] = Cartesian4.clone(v, _value[i]);
+                    gl.uniform4f(locations[i], v.x, v.y, v.z, v.w);
+                }
+            } else {
+                throw new DeveloperError('Invalid vec4 value.');
+            }
+        }
+    };
+
+    UniformArray.prototype.setSampler = function() {
+        var gl = this._gl;
+        var locations = this._locations;
+
+        var value = this.value;
+        var length = value.length;
+        for (var i = 0; i < length; ++i) {
+            var v = value[i];
+            var index = this.textureUnitIndex + i;
+            gl.activeTexture(gl.TEXTURE0 + index);
+            gl.bindTexture(v._target, v._texture);
+        }
+    };
+
+    UniformArray.prototype.setInt = function() {
+        var gl = this._gl;
+        var locations = this._locations;
+
+        var value = this.value;
+        var _value = this._value;
+        var length = value.length;
+        for (var i = 0; i < length; ++i) {
+            var v = value[i];
+
+            if (v !== _value[i]) {
+                _value[i] = v;
+                gl.uniform1i(locations[i], v);
+            }
+        }
+    };
+
+    UniformArray.prototype.setIntVec2 = function() {
+        var gl = this._gl;
+        var locations = this._locations;
+
+        var value = this.value;
+        var _value = this._value;
+        var length = value.length;
+        for (var i = 0; i < length; ++i) {
+            var v = value[i];
+
+            if (!Cartesian2.equals(v, _value[i])) {
+                _value[i] = Cartesian2.clone(v, _value[i]);
+                gl.uniform2i(locations[i], v.x, v.y);
+            }
+        }
+    };
+
+    UniformArray.prototype.setIntVec3 = function() {
+        var gl = this._gl;
+        var locations = this._locations;
+
+        var value = this.value;
+        var _value = this._value;
+        var length = value.length;
+        for (var i = 0; i < length; ++i) {
+            var v = value[i];
+
+            if (!Cartesian3.equals(v, _value[i])) {
+                _value[i] = Cartesian3.clone(v, _value[i]);
+                gl.uniform3i(locations[i], v.x, v.y, v.z);
+            }
+        }
+    };
+
+    UniformArray.prototype.setIntVec4 = function() {
+        var gl = this._gl;
+        var locations = this._locations;
+
+        var value = this.value;
+        var _value = this._value;
+        var length = value.length;
+        for (var i = 0; i < length; ++i) {
+            var v = value[i];
+
+            if (!Cartesian4.equals(v, _value[i])) {
+                _value[i] = Cartesian4.clone(v, _value[i]);
+                gl.uniform4i(locations[i], v.x, v.y, v.z, v.w);
+            }
+        }
+    };
+
+    UniformArray.prototype.setMat2 = function() {
+        var gl = this._gl;
+        var locations = this._locations;
+
+        var value = this.value;
+        var _value = this._value;
+        var length = value.length;
+        for (var i = 0; i < length; ++i) {
+            var v = value[i];
+            if (!Matrix2.equals(v, _value[i])) {
+                _value[i] = Matrix2.clone(v, _value[i]);
+                gl.uniformMatrix2fv(locations[i], false, Matrix2.toArray(v, scratchUniformMatrix2));
+            }
+        }
+    };
+
+    UniformArray.prototype.setMat3 = function() {
+        var gl = this._gl;
+        var locations = this._locations;
+
+        var value = this.value;
+        var _value = this._value;
+        var length = value.length;
+        for (var i = 0; i < length; ++i) {
+            var v = value[i];
+            if (!Matrix3.equals(v, _value[i])) {
+                _value[i] = Matrix3.clone(v, _value[i]);
+                gl.uniformMatrix3fv(locations[i], false, Matrix3.toArray(value[i], scratchUniformMatrix3));
+            }
+        }
+    };
+
+    UniformArray.prototype.setMat4 = function() {
+        var gl = this._gl;
+        var locations = this._locations;
+
+        var value = this.value;
+        var _value = this._value;
+        var length = value.length;
+        for (var i = 0; i < length; ++i) {
+            var v = value[i];
+            if (!Matrix4.equals(v, _value[i])) {
+                _value[i] = Matrix4.clone(v, _value[i]);
+                gl.uniformMatrix4fv(locations[i], false, Matrix4.toArray(value[i], scratchUniformMatrix4));
+            }
+        }
+    };
 
     var nextShaderProgramId = 0;
 
