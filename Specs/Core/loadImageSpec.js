@@ -12,35 +12,19 @@ defineSuite([
 
     var dataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2Nk+M/wHwAEBgIA5agATwAAAABJRU5ErkJggg==';
 
-    it('can load an image', function() {
-        var loadedImage;
-        when(loadImage('./Data/Images/Green.png'), function(image) {
-            loadedImage = image;
-        });
-
-        waitsFor(function() {
-            return defined(loadedImage);
-        }, 'The image should load.', 5000);
-
-        runs(function() {
+    it('can load an image', function(done) {
+        loadImage('./Data/Images/Green.png').then(function(loadedImage) {
             expect(loadedImage.width).toEqual(1);
             expect(loadedImage.height).toEqual(1);
+            done();
         });
     });
 
-    it('can load an image from a data URI', function() {
-        var loadedImage;
-        when(loadImage(dataUri), function(image) {
-            loadedImage = image;
-        });
-
-        waitsFor(function() {
-            return defined(loadedImage);
-        }, 'The image should load.');
-
-        runs(function() {
+    it('can load an image from a data URI', function(done) {
+        loadImage(dataUri).then(function(loadedImage) {
             expect(loadedImage.width).toEqual(1);
             expect(loadedImage.height).toEqual(1);
+            done();
         });
     });
 

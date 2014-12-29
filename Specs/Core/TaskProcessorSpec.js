@@ -2,11 +2,11 @@
 defineSuite([
         'Core/TaskProcessor',
         'require',
-        'Specs/waitsForPromise'
+        'ThirdParty/when'
     ], function(
         TaskProcessor,
         require,
-        waitsForPromise) {
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -36,7 +36,7 @@ defineSuite([
         }
     });
 
-    it('works with a simple worker', function() {
+    it('works with a simple worker', function(done) {
         taskProcessor = new TaskProcessor('returnParameters');
 
         var parameters = {
@@ -45,10 +45,10 @@ defineSuite([
                 val : true
             }
         };
-        var promise = taskProcessor.scheduleTask(parameters);
 
-        waitsForPromise(promise, function(result) {
+        taskProcessor.scheduleTask(parameters).then(function(result) {
             expect(result).toEqual(parameters);
+            done();
         });
     });
 
@@ -62,14 +62,14 @@ defineSuite([
         expect(taskProcessor.isDestroyed()).toEqual(true);
     });
 
-    it('can transfer array buffer', function() {
+    it('can transfer array buffer', function(done) {
         taskProcessor = new TaskProcessor('returnByteLength');
 
         var byteLength = 100;
         var parameters = new ArrayBuffer(byteLength);
         expect(parameters.byteLength).toEqual(byteLength);
 
-        waitsForPromise(TaskProcessor._canTransferArrayBuffer, function(canTransferArrayBuffer) {
+        when(TaskProcessor._canTransferArrayBuffer, function(canTransferArrayBuffer) {
             var promise = taskProcessor.scheduleTask(parameters, [parameters]);
 
             if (canTransferArrayBuffer) {
@@ -78,13 +78,14 @@ defineSuite([
             }
 
             // the worker should see the array with proper byte length
-            waitsForPromise(promise, function(result) {
+            promise.then(function(result) {
                 expect(result).toEqual(byteLength);
+                done();
             });
         });
     });
 
-    it('can transfer array buffer back from worker', function() {
+    it('can transfer array buffer back from worker', function(done) {
         taskProcessor = new TaskProcessor('transferArrayBuffer');
 
         var byteLength = 100;
@@ -92,15 +93,14 @@ defineSuite([
             byteLength : byteLength
         };
 
-        var promise = taskProcessor.scheduleTask(parameters);
-
         // the worker should see the array with proper byte length
-        waitsForPromise(promise, function(result) {
+        taskProcessor.scheduleTask(parameters).then(function(result) {
             expect(result.byteLength).toEqual(100);
+            done();
         });
     });
 
-    it('rejects promise if worker throws', function() {
+    it('rejects promise if worker throws', function(done) {
         taskProcessor = new TaskProcessor('throwError');
 
         var message = 'foo';
@@ -108,10 +108,12 @@ defineSuite([
             message : message
         };
 
-        var promise = taskProcessor.scheduleTask(parameters);
-
-        waitsForPromise.toReject(promise, function(error) {
+        taskProcessor.scheduleTask(parameters).then(function() {
+            // Should not be called.
+            expect(false).toBe(true);
+        }).otherwise(function(error) {
             expect(error.message).toEqual(message);
+            done();
         });
     });
 
@@ -123,10 +125,12 @@ defineSuite([
             message : message
         };
 
-        var promise = taskProcessor.scheduleTask(parameters);
-
-        waitsForPromise.toReject(promise, function(error) {
+        taskProcessor.scheduleTask(parameters).then(function() {
+            // Should not be called.
+            expect(false).toBe(true);
+        }).otherwise(function(error) {
             expect(error).toContain('postMessage failed');
+            done();
         });
     });
 });
