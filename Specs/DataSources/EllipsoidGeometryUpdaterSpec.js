@@ -63,7 +63,6 @@ defineSuite([
 
         var entity = new Entity();
         entity.position = new ConstantPositionProperty(Cartesian3.ZERO);
-        entity.orientation = new ConstantProperty(Quaternion.IDENTITY);
         entity.ellipsoid = ellipsoid;
         return entity;
     }
@@ -344,7 +343,7 @@ defineSuite([
         expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(outline.getValue(time2)));
     });
 
-    it('dynamic elllipsoid creates and updates', function() {
+    it('dynamic ellipsoid creates and updates', function() {
         var ellipsoid = new EllipsoidGraphics();
         ellipsoid.show = createDynamicProperty(true);
         ellipsoid.radii = createDynamicProperty(new Cartesian3(1, 2, 3));
@@ -379,7 +378,7 @@ defineSuite([
         updater.destroy();
     });
 
-    it('dynamic elllipsoid is hidden if missing required values', function() {
+    it('dynamic ellipsoid is hidden if missing required values', function() {
         var ellipsoid = new EllipsoidGraphics();
         ellipsoid.show = createDynamicProperty(true);
         ellipsoid.radii = createDynamicProperty(new Cartesian3(1, 2, 3));
@@ -388,7 +387,6 @@ defineSuite([
 
         var entity = new Entity();
         entity.position = createDynamicProperty(Cartesian3.fromDegrees(0, 0, 0));
-        entity.orientation = createDynamicProperty(Quaternion.IDENTITY);
         entity.ellipsoid = ellipsoid;
 
         var updater = new EllipsoidGeometryUpdater(entity, scene);
@@ -416,16 +414,8 @@ defineSuite([
         expect(primitives.get(1).show).toBe(false);
         expect(primitives.length).toBe(2);
 
-        //no orientation
-        ellipsoid.radii.setValue(new Cartesian3(1, 2, 3));
-        entity.orientation.setValue(undefined);
-        dynamicUpdater.update(time);
-        expect(primitives.get(0).show).toBe(false);
-        expect(primitives.get(1).show).toBe(false);
-        expect(primitives.length).toBe(2);
-
         //everything valid again
-        entity.orientation.setValue(Quaternion.IDENTITY);
+        ellipsoid.radii.setValue(new Cartesian3(1, 2, 3));
         dynamicUpdater.update(time);
         expect(primitives.get(0).show).toBe(true);
         expect(primitives.get(1).show).toBe(true);
@@ -436,7 +426,7 @@ defineSuite([
         updater.destroy();
     });
 
-    it('dynamic elllipsoid fast path updates attributes', function() {
+    it('dynamic ellipsoid fast path updates attributes', function() {
         var ellipsoid = new EllipsoidGraphics();
         ellipsoid.show = createDynamicProperty(true);
         ellipsoid.radii = createDynamicProperty(new Cartesian3(1, 2, 3));
