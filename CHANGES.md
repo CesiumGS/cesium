@@ -14,6 +14,7 @@ Change Log
   * `PolygonGraphics.positions` was deprecated and replaced with `PolygonGraphics.hierarchy`, whose value is a `PolygonHierarchy` instead of an array of positions.  `PolygonGraphics.positions` will be removed in Cesium 1.8.
 * Improved GeoJSON, TopoJSON, and general polygon loading performance.
 * Added caching to `Model` to save memory and improve loading speed when several models with the same url are created.
+* Added `ModelNode.show` for per-node show/hide.
 * Added the following properties to `Viewer` and `CesiumWidget`: `imageryLayers`, `terrainProvider`, and `camera`.  This avoids the need to access `viewer.scene` in some cases.
 * Dramatically improved the quality of font outlines.
 * Added `BoxGraphics` and `Entity.box`.

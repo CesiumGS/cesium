@@ -38,6 +38,7 @@ define([
          */
         this.useMatrix = false;
 
+        this._show = true;
         this._matrix = Matrix4.clone(matrix);
     };
 
@@ -73,6 +74,26 @@ define([
         id : {
             get : function() {
                 return this._id;
+            }
+        },
+
+        /**
+         * Determines if this node and its children will be shown.
+         *
+         * @memberof ModelNode.prototype
+         * @type {Boolean}
+         *
+         * @default true
+         */
+        show : {
+            get : function() {
+                return this._show;
+            },
+            set : function(value) {
+                if (this._show !== value) {
+                    this._show = value;
+                    this._model._perNodeShowDirty = true;
+                }
             }
         },
 
