@@ -553,7 +553,8 @@ define([
         var rotation = defaultValue(options.rotation, 0.0);
         var stRotation = defaultValue(options.stRotation, 0.0);
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
-        var extrudedHeight = defaultValue(options.extrudedHeight, surfaceHeight);
+        var extrudedHeight = options.extrudedHeight;
+        var extrude = (defined(extrudedHeight) && Math.abs(surfaceHeight - extrudedHeight) > 1.0);
         var closeTop = defaultValue(options.closeTop, true);
         var closeBottom = defaultValue(options.closeBottom, true);
 
@@ -574,7 +575,8 @@ define([
         this._rotation = rotation;
         this._stRotation = stRotation;
         this._vertexFormat = vertexFormat;
-        this._extrudedHeight = extrudedHeight;
+        this._extrudedHeight = defaultValue(extrudedHeight, 0.0);
+        this._extrude = extrude;
         this._closeTop = closeTop;
         this._closeBottom = closeBottom;
         this._workerName = 'createRectangleGeometry';
@@ -584,7 +586,7 @@ define([
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    RectangleGeometry.packedLength = Rectangle.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 7;
+    RectangleGeometry.packedLength = Rectangle.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 8;
 
     /**
      * Stores the provided instance into the provided array.
@@ -620,6 +622,7 @@ define([
         array[startingIndex++] = value._rotation;
         array[startingIndex++] = value._stRotation;
         array[startingIndex++] = value._extrudedHeight;
+        array[startingIndex++] = value._extrude ? 1.0 : 0.0;
         array[startingIndex++] = value._closeTop ? 1.0 : 0.0;
         array[startingIndex]   = value._closeBottom ? 1.0 : 0.0;
     };
@@ -654,6 +657,7 @@ define([
         var rotation = array[startingIndex++];
         var stRotation = array[startingIndex++];
         var extrudedHeight = array[startingIndex++];
+        var extrude = array[startingIndex++] === 1.0;
         var closeTop = array[startingIndex++] === 1.0;
         var closeBottom = array[startingIndex] === 1.0;
 
@@ -663,10 +667,10 @@ define([
                 ellipsoid : ellipsoid,
                 vertexFormat : vertexFormat,
                 granularity : granularity,
-                surfaceHeight : surfaceHeight,
+                height : surfaceHeight,
                 rotation : rotation,
                 stRotation : stRotation,
-                extrudedHeight : extrudedHeight,
+                extrudedHeight : extrude ? extrudedHeight : undefined,
                 closeTop : closeTop,
                 closeBottom : closeBottom
             });
@@ -679,6 +683,7 @@ define([
         result._rotation = rotation;
         result._stRotation = stRotation;
         result._extrudedHeight = extrudedHeight;
+        result._extrude = extrude;
         result._closeTop = closeTop;
         result._closeBottom = closeBottom;
 
@@ -702,6 +707,7 @@ define([
         var rectangle = Rectangle.clone(rectangleGeometry._rectangle, rectangleScratch);
         var ellipsoid = rectangleGeometry._ellipsoid;
         var surfaceHeight = rectangleGeometry._surfaceHeight;
+        var extrude = rectangleGeometry._extrude;
         var extrudedHeight = rectangleGeometry._extrudedHeight;
         var stRotation = rectangleGeometry._stRotation;
         var vertexFormat = rectangleGeometry._vertexFormat;
@@ -733,7 +739,7 @@ define([
         var geometry;
         var boundingSphere;
         rectangle = rectangleGeometry._rectangle;
-        if (defined(extrudedHeight)) {
+        if (extrude) {
             geometry = constructExtrudedRectangle(options);
             var topBS = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight, topBoundingSphere);
             var bottomBS = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, extrudedHeight, bottomBoundingSphere);
