@@ -13,7 +13,6 @@ define([
         '../Core/Event',
         '../Core/GeometryInstance',
         '../Core/Iso8601',
-        '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/MaterialAppearance',
@@ -38,7 +37,6 @@ define([
         Event,
         GeometryInstance,
         Iso8601,
-        Matrix3,
         Matrix4,
         ShowGeometryInstanceAttribute,
         MaterialAppearance,
@@ -57,10 +55,7 @@ define([
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
 
-    var positionScratch = new Cartesian3();
-    var orientationScratch = new Cartesian3();
     var radiiScratch = new Cartesian3();
-    var matrix3Scratch = new Cartesian3();
     var scratchColor = new Color();
     var unitSphere = new Cartesian3(1, 1, 1);
 
@@ -336,14 +331,10 @@ define([
             };
         }
 
-        entity.position.getValue(Iso8601.MINIMUM_VALUE, positionScratch);
-        entity.orientation.getValue(Iso8601.MINIMUM_VALUE, orientationScratch);
-        Matrix3.fromQuaternion(orientationScratch, matrix3Scratch);
-
         return new GeometryInstance({
             id : entity,
             geometry : new EllipsoidGeometry(this._options),
-            modelMatrix : Matrix4.fromRotationTranslation(matrix3Scratch, positionScratch),
+            modelMatrix : entity._getModelMatrix(Iso8601.MINIMUM_VALUE),
             attributes : attributes
         });
     };
@@ -370,15 +361,12 @@ define([
         var entity = this._entity;
         var isAvailable = entity.isAvailable(time);
 
-        entity.position.getValue(Iso8601.MINIMUM_VALUE, positionScratch);
-        entity.orientation.getValue(Iso8601.MINIMUM_VALUE, orientationScratch);
-        Matrix3.fromQuaternion(orientationScratch, matrix3Scratch);
         var outlineColor = Property.getValueOrDefault(this._outlineColorProperty, time, Color.BLACK);
 
         return new GeometryInstance({
             id : entity,
             geometry : new EllipsoidOutlineGeometry(this._options),
-            modelMatrix : Matrix4.fromRotationTranslation(matrix3Scratch, positionScratch),
+            modelMatrix : entity._getModelMatrix(Iso8601.MINIMUM_VALUE),
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
                 color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
@@ -410,7 +398,7 @@ define([
             return;
         }
 
-        var ellipsoid = this._entity.ellipsoid;
+        var ellipsoid = entity.ellipsoid;
 
         if (!defined(ellipsoid)) {
             if (this._fillEnabled || this._outlineEnabled) {
@@ -439,13 +427,12 @@ define([
             return;
         }
 
-        var position = this._entity.position;
-        var orientation = this._entity.orientation;
+        var position = entity.position;
         var radii = ellipsoid.radii;
 
         var show = ellipsoid.show;
         if ((defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE)) || //
-            (!defined(position) || !defined(orientation) || !defined(radii))) {
+            (!defined(position) || !defined(radii))) {
             if (this._fillEnabled || this._outlineEnabled) {
                 this._fillEnabled = false;
                 this._outlineEnabled = false;
@@ -470,7 +457,7 @@ define([
         var subdivisions = ellipsoid.subdivisions;
 
         if (!position.isConstant || //
-            !orientation.isConstant || //
+            !Property.isConstant(entity.orientation) || //
             !radii.isConstant || //
             !Property.isConstant(stackPartitions) || //
             !Property.isConstant(slicePartitions) || //
@@ -557,10 +544,9 @@ define([
             return;
         }
 
-        var position = Property.getValueOrUndefined(entity.position, time, positionScratch);
-        var orientation = Property.getValueOrUndefined(entity.orientation, time, orientationScratch);
         var radii = Property.getValueOrUndefined(ellipsoid.radii, time, radiiScratch);
-        if (!defined(position) || !defined(orientation) || !defined(radii)) {
+        var modelMatrix = entity._getModelMatrix(time, this._modelMatrix);
+        if (!defined(modelMatrix) || !defined(radii)) {
             if (defined(this._primitive)) {
                 this._primitive.show = false;
             }
@@ -588,10 +574,6 @@ define([
         //In 3D we use a fast path by modifying Primitive.modelMatrix instead of regenerating the primitive every frame.
         var sceneMode = this._scene.mode;
         var in3D = sceneMode === SceneMode.SCENE3D;
-
-        var modelMatrix = this._modelMatrix;
-        matrix3Scratch = Matrix3.fromQuaternion(orientation, matrix3Scratch);
-        modelMatrix = Matrix4.fromRotationTranslation(matrix3Scratch, position, modelMatrix);
 
         var options = this._options;
         //We only rebuild the primitive if something other than the radii has changed

@@ -1,9 +1,10 @@
 /*global define*/
 define([
-        '../Core/BoxGeometry',
-        '../Core/BoxOutlineGeometry',
+        '../Core/Cartesian3',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
+        '../Core/CylinderGeometry',
+        '../Core/CylinderOutlineGeometry',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -21,10 +22,11 @@ define([
         './MaterialProperty',
         './Property'
     ], function(
-        BoxGeometry,
-        BoxOutlineGeometry,
+        Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
+        CylinderGeometry,
+        CylinderOutlineGeometry,
         defaultValue,
         defined,
         defineProperties,
@@ -48,24 +50,29 @@ define([
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
+
     var scratchColor = new Color();
 
     var GeometryOptions = function(entity) {
         this.id = entity;
         this.vertexFormat = undefined;
-        this.dimensions = undefined;
+        this.length = undefined;
+        this.topRadius = undefined;
+        this.bottomRadius = undefined;
+        this.slices = undefined;
+        this.numberOfVerticalLines = undefined;
     };
 
     /**
-     * A {@link GeometryUpdater} for boxes.
+     * A {@link GeometryUpdater} for cylinders.
      * Clients do not normally create this class directly, but instead rely on {@link DataSourceDisplay}.
-     * @alias BoxGeometryUpdater
+     * @alias CylinderGeometryUpdater
      * @constructor
      *
      * @param {Entity} entity The entity containing the geometry to be visualized.
      * @param {Scene} scene The scene where visualization is taking place.
      */
-    var BoxGeometryUpdater = function(entity, scene) {
+    var CylinderGeometryUpdater = function(entity, scene) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(entity)) {
             throw new DeveloperError('entity is required');
@@ -77,7 +84,7 @@ define([
 
         this._entity = entity;
         this._scene = scene;
-        this._entitySubscription = entity.definitionChanged.addEventListener(BoxGeometryUpdater.prototype._onEntityPropertyChanged, this);
+        this._entitySubscription = entity.definitionChanged.addEventListener(CylinderGeometryUpdater.prototype._onEntityPropertyChanged, this);
         this._fillEnabled = false;
         this._dynamic = false;
         this._outlineEnabled = false;
@@ -89,13 +96,13 @@ define([
         this._outlineColorProperty = undefined;
         this._outlineWidth = 1.0;
         this._options = new GeometryOptions(entity);
-        this._onEntityPropertyChanged(entity, 'box', entity.box, undefined);
+        this._onEntityPropertyChanged(entity, 'cylinder', entity.cylinder, undefined);
     };
 
-    defineProperties(BoxGeometryUpdater, {
+    defineProperties(CylinderGeometryUpdater, {
         /**
          * Gets the type of Appearance to use for simple color-based geometry.
-         * @memberof BoxGeometryUpdater
+         * @memberof CylinderGeometryUpdater
          * @type {Appearance}
          */
         perInstanceColorAppearanceType : {
@@ -103,7 +110,7 @@ define([
         },
         /**
          * Gets the type of Appearance to use for material-based geometry.
-         * @memberof BoxGeometryUpdater
+         * @memberof CylinderGeometryUpdater
          * @type {Appearance}
          */
         materialAppearanceType : {
@@ -111,10 +118,10 @@ define([
         }
     });
 
-    defineProperties(BoxGeometryUpdater.prototype, {
+    defineProperties(CylinderGeometryUpdater.prototype, {
         /**
          * Gets the entity associated with this geometry.
-         * @memberof BoxGeometryUpdater.prototype
+         * @memberof CylinderGeometryUpdater.prototype
          *
          * @type {Entity}
          * @readonly
@@ -126,7 +133,7 @@ define([
         },
         /**
          * Gets a value indicating if the geometry has a fill component.
-         * @memberof BoxGeometryUpdater.prototype
+         * @memberof CylinderGeometryUpdater.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -138,7 +145,7 @@ define([
         },
         /**
          * Gets a value indicating if fill visibility varies with simulation time.
-         * @memberof BoxGeometryUpdater.prototype
+         * @memberof CylinderGeometryUpdater.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -153,7 +160,7 @@ define([
         },
         /**
          * Gets the material property used to fill the geometry.
-         * @memberof BoxGeometryUpdater.prototype
+         * @memberof CylinderGeometryUpdater.prototype
          *
          * @type {MaterialProperty}
          * @readonly
@@ -165,7 +172,7 @@ define([
         },
         /**
          * Gets a value indicating if the geometry has an outline component.
-         * @memberof BoxGeometryUpdater.prototype
+         * @memberof CylinderGeometryUpdater.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -176,8 +183,8 @@ define([
             }
         },
         /**
-         * Gets a value indicating if the geometry has an outline component.
-         * @memberof BoxGeometryUpdater.prototype
+         * Gets a value indicating if outline visibility varies with simulation time.
+         * @memberof CylinderGeometryUpdater.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -192,7 +199,7 @@ define([
         },
         /**
          * Gets the {@link Color} property for the geometry outline.
-         * @memberof BoxGeometryUpdater.prototype
+         * @memberof CylinderGeometryUpdater.prototype
          *
          * @type {Property}
          * @readonly
@@ -205,7 +212,7 @@ define([
         /**
          * Gets the constant with of the geometry outline, in pixels.
          * This value is only valid if isDynamic is false.
-         * @memberof BoxGeometryUpdater.prototype
+         * @memberof CylinderGeometryUpdater.prototype
          *
          * @type {Number}
          * @readonly
@@ -219,7 +226,7 @@ define([
          * Gets a value indicating if the geometry is time-varying.
          * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
          * returned by GeometryUpdater#createDynamicUpdater.
-         * @memberof BoxGeometryUpdater.prototype
+         * @memberof CylinderGeometryUpdater.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -232,7 +239,7 @@ define([
         /**
          * Gets a value indicating if the geometry is closed.
          * This property is only valid for static geometry.
-         * @memberof BoxGeometryUpdater.prototype
+         * @memberof CylinderGeometryUpdater.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -243,7 +250,7 @@ define([
         /**
          * Gets an event that is raised whenever the public properties
          * of this updater change.
-         * @memberof BoxGeometryUpdater.prototype
+         * @memberof CylinderGeometryUpdater.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -261,7 +268,7 @@ define([
      * @param {JulianDate} time The time for which to retrieve visibility.
      * @returns {Boolean} true if geometry is outlined at the provided time, false otherwise.
      */
-    BoxGeometryUpdater.prototype.isOutlineVisible = function(time) {
+    CylinderGeometryUpdater.prototype.isOutlineVisible = function(time) {
         var entity = this._entity;
         return this._outlineEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time);
     };
@@ -272,7 +279,7 @@ define([
      * @param {JulianDate} time The time for which to retrieve visibility.
      * @returns {Boolean} true if geometry is filled at the provided time, false otherwise.
      */
-    BoxGeometryUpdater.prototype.isFilled = function(time) {
+    CylinderGeometryUpdater.prototype.isFilled = function(time) {
         var entity = this._entity;
         return this._fillEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._fillProperty.getValue(time);
     };
@@ -285,7 +292,7 @@ define([
      *
      * @exception {DeveloperError} This instance does not represent a filled geometry.
      */
-    BoxGeometryUpdater.prototype.createFillGeometryInstance = function(time) {
+    CylinderGeometryUpdater.prototype.createFillGeometryInstance = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
@@ -321,7 +328,7 @@ define([
 
         return new GeometryInstance({
             id : entity,
-            geometry : BoxGeometry.fromDimensions(this._options),
+            geometry : new CylinderGeometry(this._options),
             modelMatrix : entity._getModelMatrix(Iso8601.MINIMUM_VALUE),
             attributes : attributes
         });
@@ -335,7 +342,7 @@ define([
      *
      * @exception {DeveloperError} This instance does not represent an outlined geometry.
      */
-    BoxGeometryUpdater.prototype.createOutlineGeometryInstance = function(time) {
+    CylinderGeometryUpdater.prototype.createOutlineGeometryInstance = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
@@ -352,7 +359,7 @@ define([
 
         return new GeometryInstance({
             id : entity,
-            geometry : BoxOutlineGeometry.fromDimensions(this._options),
+            geometry : new CylinderOutlineGeometry(this._options),
             modelMatrix : entity._getModelMatrix(Iso8601.MINIMUM_VALUE),
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
@@ -366,7 +373,7 @@ define([
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
-    BoxGeometryUpdater.prototype.isDestroyed = function() {
+    CylinderGeometryUpdater.prototype.isDestroyed = function() {
         return false;
     };
 
@@ -375,19 +382,19 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
-    BoxGeometryUpdater.prototype.destroy = function() {
+    CylinderGeometryUpdater.prototype.destroy = function() {
         this._entitySubscription();
         destroyObject(this);
     };
 
-    BoxGeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
-        if (!(propertyName === 'availability' || propertyName === 'position' || propertyName === 'orientation' || propertyName === 'box')) {
+    CylinderGeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
+        if (!(propertyName === 'availability' || propertyName === 'position' || propertyName === 'orientation' || propertyName === 'cylinder')) {
             return;
         }
 
-        var box = this._entity.box;
+        var cylinder = entity.cylinder;
 
-        if (!defined(box)) {
+        if (!defined(cylinder)) {
             if (this._fillEnabled || this._outlineEnabled) {
                 this._fillEnabled = false;
                 this._outlineEnabled = false;
@@ -396,10 +403,10 @@ define([
             return;
         }
 
-        var fillProperty = box.fill;
+        var fillProperty = cylinder.fill;
         var fillEnabled = defined(fillProperty) && fillProperty.isConstant ? fillProperty.getValue(Iso8601.MINIMUM_VALUE) : true;
 
-        var outlineProperty = box.outline;
+        var outlineProperty = cylinder.outline;
         var outlineEnabled = defined(outlineProperty);
         if (outlineEnabled && outlineProperty.isConstant) {
             outlineEnabled = outlineProperty.getValue(Iso8601.MINIMUM_VALUE);
@@ -414,11 +421,14 @@ define([
             return;
         }
 
-        var dimensions = box.dimensions;
         var position = entity.position;
+        var length = cylinder.length;
+        var topRadius = cylinder.topRadius;
+        var bottomRadius = cylinder.bottomRadius;
 
-        var show = box.show;
-        if (!defined(dimensions) || !defined(position) || (defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE))) {
+        var show = cylinder.show;
+        if ((defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE)) || //
+            (!defined(position) || !defined(length) || !defined(topRadius) || !defined(bottomRadius))) {
             if (this._fillEnabled || this._outlineEnabled) {
                 this._fillEnabled = false;
                 this._outlineEnabled = false;
@@ -427,23 +437,29 @@ define([
             return;
         }
 
-        var material = defaultValue(box.material, defaultMaterial);
+        var material = defaultValue(cylinder.material, defaultMaterial);
         var isColorMaterial = material instanceof ColorMaterialProperty;
         this._materialProperty = material;
         this._fillProperty = defaultValue(fillProperty, defaultFill);
         this._showProperty = defaultValue(show, defaultShow);
-        this._showOutlineProperty = defaultValue(box.outline, defaultOutline);
-        this._outlineColorProperty = outlineEnabled ? defaultValue(box.outlineColor, defaultOutlineColor) : undefined;
+        this._showOutlineProperty = defaultValue(cylinder.outline, defaultOutline);
+        this._outlineColorProperty = outlineEnabled ? defaultValue(cylinder.outlineColor, defaultOutlineColor) : undefined;
 
-        var outlineWidth = box.outlineWidth;
+        var slices = cylinder.slices;
+        var outlineWidth = cylinder.outlineWidth;
+        var numberOfVerticalLines = cylinder.numberOfVerticalLines;
 
         this._fillEnabled = fillEnabled;
         this._outlineEnabled = outlineEnabled;
 
         if (!position.isConstant || //
             !Property.isConstant(entity.orientation) || //
-            !dimensions.isConstant || //
-            !Property.isConstant(outlineWidth)) {
+            !length.isConstant || //
+            !topRadius.isConstant || //
+            !bottomRadius.isConstant || //
+            !Property.isConstant(slices) || //
+            !Property.isConstant(outlineWidth) || //
+            !Property.isConstant(numberOfVerticalLines)) {
             if (!this._dynamic) {
                 this._dynamic = true;
                 this._geometryChanged.raiseEvent(this);
@@ -451,7 +467,11 @@ define([
         } else {
             var options = this._options;
             options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
-            options.dimensions = dimensions.getValue(Iso8601.MINIMUM_VALUE, options.dimensions);
+            options.length = length.getValue(Iso8601.MINIMUM_VALUE);
+            options.topRadius = topRadius.getValue(Iso8601.MINIMUM_VALUE);
+            options.bottomRadius = bottomRadius.getValue(Iso8601.MINIMUM_VALUE);
+            options.slices = defined(slices) ? slices.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.numberOfVerticalLines = defined(numberOfVerticalLines) ? numberOfVerticalLines.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             this._outlineWidth = defined(outlineWidth) ? outlineWidth.getValue(Iso8601.MINIMUM_VALUE) : 1.0;
             this._dynamic = false;
             this._geometryChanged.raiseEvent(this);
@@ -466,7 +486,7 @@ define([
      *
      * @exception {DeveloperError} This instance does not represent dynamic geometry.
      */
-    BoxGeometryUpdater.prototype.createDynamicUpdater = function(primitives) {
+    CylinderGeometryUpdater.prototype.createDynamicUpdater = function(primitives) {
         //>>includeStart('debug', pragmas.debug);
         if (!this._dynamic) {
             throw new DeveloperError('This instance does not represent dynamic geometry.');
@@ -499,26 +519,32 @@ define([
         //>>includeEnd('debug');
 
         var primitives = this._primitives;
-        primitives.remove(this._primitive);
-        primitives.remove(this._outlinePrimitive);
+        primitives.removeAndDestroy(this._primitive);
+        primitives.removeAndDestroy(this._outlinePrimitive);
 
         var geometryUpdater = this._geometryUpdater;
         var entity = geometryUpdater._entity;
-        var box = entity.box;
-        if (!entity.isAvailable(time) || !Property.getValueOrDefault(box.show, time, true)) {
+        var cylinder = entity.cylinder;
+        if (!entity.isAvailable(time) || !Property.getValueOrDefault(cylinder.show, time, true)) {
             return;
         }
 
         var options = this._options;
         var modelMatrix = entity._getModelMatrix(time);
-        var dimensions = Property.getValueOrUndefined(box.dimensions, time, options.dimensions);
-        if (!defined(modelMatrix) || !defined(dimensions)) {
+        var length = Property.getValueOrUndefined(cylinder.length, time);
+        var topRadius = Property.getValueOrUndefined(cylinder.topRadius, time);
+        var bottomRadius = Property.getValueOrUndefined(cylinder.bottomRadius, time);
+        if (!defined(modelMatrix) || !defined(length) || !defined(topRadius) || !defined(bottomRadius)) {
             return;
         }
 
-        options.dimensions = dimensions;
+        options.length = length;
+        options.topRadius = topRadius;
+        options.bottomRadius = bottomRadius;
+        options.slices = Property.getValueOrUndefined(cylinder.slices, time);
+        options.numberOfVerticalLines = Property.getValueOrUndefined(cylinder.numberOfVerticalLines, time);
 
-        if (Property.getValueOrDefault(box.fill, time, true)) {
+        if (Property.getValueOrDefault(cylinder.fill, time, true)) {
             var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
             this._material = material;
 
@@ -532,7 +558,7 @@ define([
             this._primitive = primitives.add(new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
-                    geometry : BoxGeometry.fromDimensions(options),
+                    geometry : new CylinderGeometry(options),
                     modelMatrix : modelMatrix
                 }),
                 appearance : appearance,
@@ -540,17 +566,17 @@ define([
             }));
         }
 
-        if (Property.getValueOrDefault(box.outline, time, true)) {
+        if (Property.getValueOrDefault(cylinder.outline, time, false)) {
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
 
-            var outlineColor = Property.getValueOrClonedDefault(box.outlineColor, time, Color.BLACK, scratchColor);
-            var outlineWidth = Property.getValueOrDefault(box.outlineWidth, 1.0);
+            var outlineColor = Property.getValueOrClonedDefault(cylinder.outlineColor, time, Color.BLACK, scratchColor);
+            var outlineWidth = Property.getValueOrDefault(cylinder.outlineWidth, 1.0);
             var translucent = outlineColor.alpha !== 1.0;
 
             this._outlinePrimitive = primitives.add(new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
-                    geometry : BoxOutlineGeometry.fromDimensions(options),
+                    geometry : new CylinderOutlineGeometry(options),
                     modelMatrix : modelMatrix,
                     attributes : {
                         color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
@@ -574,10 +600,10 @@ define([
 
     DynamicGeometryUpdater.prototype.destroy = function() {
         var primitives = this._primitives;
-        primitives.remove(this._primitive);
-        primitives.remove(this._outlinePrimitive);
+        primitives.removeAndDestroy(this._primitive);
+        primitives.removeAndDestroy(this._outlinePrimitive);
         destroyObject(this);
     };
 
-    return BoxGeometryUpdater;
+    return CylinderGeometryUpdater;
 });
