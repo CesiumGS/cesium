@@ -9,9 +9,9 @@ define([
         PolylineVolumeOutlineGeometry) {
     "use strict";
 
-    function createPolylineVolumeOutlineGeometry(polylineVolumeOutlineGeometry) {
-        if (defined(polylineVolumeOutlineGeometry.buffer)) {
-            polylineVolumeOutlineGeometry = PolylineVolumeOutlineGeometry.unpack(polylineVolumeOutlineGeometry);
+    function createPolylineVolumeOutlineGeometry(polylineVolumeOutlineGeometry, offset) {
+        if (defined(offset)) {
+            polylineVolumeOutlineGeometry = PolylineVolumeOutlineGeometry.unpack(polylineVolumeOutlineGeometry, offset);
         }
         polylineVolumeOutlineGeometry._ellipsoid = Ellipsoid.clone(polylineVolumeOutlineGeometry._ellipsoid);
         return PolylineVolumeOutlineGeometry.createGeometry(polylineVolumeOutlineGeometry);

@@ -7,9 +7,9 @@ define([
         EllipsoidOutlineGeometry) {
     "use strict";
 
-    return function(ellipsoidGeometry) {
-        if (defined(ellipsoidGeometry.buffer)) {
-            ellipsoidGeometry = EllipsoidOutlineGeometry.unpack(ellipsoidGeometry);
+    return function(ellipsoidGeometry, offset) {
+        if (defined(ellipsoidGeometry.buffer, offset)) {
+            ellipsoidGeometry = EllipsoidOutlineGeometry.unpack(ellipsoidGeometry, offset);
         }
         return EllipsoidOutlineGeometry.createGeometry(ellipsoidGeometry);
     };

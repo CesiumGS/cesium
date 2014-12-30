@@ -9,9 +9,9 @@ define([
         Ellipsoid) {
     "use strict";
 
-    function createCorridorGeometry(corridorGeometry) {
-        if (defined(corridorGeometry.buffer)) {
-            corridorGeometry = CorridorGeometry.unpack(corridorGeometry);
+    function createCorridorGeometry(corridorGeometry, offset) {
+        if (defined(offset)) {
+            corridorGeometry = CorridorGeometry.unpack(corridorGeometry, offset);
         }
         corridorGeometry._ellipsoid = Ellipsoid.clone(corridorGeometry._ellipsoid);
         return CorridorGeometry.createGeometry(corridorGeometry);

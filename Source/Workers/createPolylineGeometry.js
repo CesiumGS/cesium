@@ -9,9 +9,9 @@ define([
         PolylineGeometry) {
     "use strict";
 
-    function createPolylineGeometry(polylineGeometry) {
-        if (defined(polylineGeometry.buffer)) {
-            polylineGeometry = PolylineGeometry.unpack(polylineGeometry);
+    function createPolylineGeometry(polylineGeometry, offset) {
+        if (defined(offset)) {
+            polylineGeometry = PolylineGeometry.unpack(polylineGeometry, offset);
         }
         polylineGeometry._ellipsoid = Ellipsoid.clone(polylineGeometry._ellipsoid);
         return PolylineGeometry.createGeometry(polylineGeometry);

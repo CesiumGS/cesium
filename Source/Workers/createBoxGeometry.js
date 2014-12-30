@@ -7,9 +7,9 @@ define([
         defined) {
     "use strict";
 
-    return function(boxGeometry) {
-        if (defined(boxGeometry.buffer)) {
-            boxGeometry = BoxGeometry.unpack(boxGeometry);
+    return function(boxGeometry, offset) {
+        if (defined(offset)) {
+            boxGeometry = BoxGeometry.unpack(boxGeometry, offset);
         }
         return BoxGeometry.createGeometry(boxGeometry);
     };

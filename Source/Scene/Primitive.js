@@ -731,22 +731,10 @@ define([
                     for (i = 0; i < length; ++i) {
                         geometry = instances[i].geometry;
                         instanceIds.push(instances[i].id);
-                        if (defined(geometry.constructor.pack)) {
-                            var packedLength = defined(geometry.constructor.packedLength) ? geometry.constructor.packedLength : geometry.packedLength;
-                            var array = new Float64Array(packedLength);
-                            geometry.constructor.pack(geometry, array);
-
-                            subTasks.push({
-                                moduleName : geometry._workerName,
-                                geometry : array,
-                                transferableObjects : [array.buffer]
-                            });
-                        } else {
-                            subTasks.push({
-                                moduleName : geometry._workerName,
-                                geometry : geometry
-                            });
-                        }
+                        subTasks.push({
+                            moduleName : geometry._workerName,
+                            geometry : geometry
+                        });
                     }
 
                     if (!defined(createGeometryTaskProcessors)) {
@@ -756,11 +744,41 @@ define([
                         }
                     }
 
+                    var subTask;
                     subTasks = subdivideArray(subTasks, numberOfCreationWorkers);
+
                     for (i = 0; i < subTasks.length; i++) {
+                        var packedLength = 0;
+                        var workerSubTasks = subTasks[i];
+                        var workerSubTasksLength = workerSubTasks.length;
+                        for (j = 0; j < workerSubTasksLength; ++j) {
+                            subTask = workerSubTasks[j];
+                            geometry = subTask.geometry;
+                            if (defined(geometry.constructor.pack)) {
+                                subTask.offset = packedLength;
+                                packedLength += defined(geometry.constructor.packedLength) ? geometry.constructor.packedLength : geometry.packedLength;
+                            }
+                        }
+
+                        var subTaskTransferableObjects;
+
+                        if (packedLength > 0) {
+                            var array = new Float64Array(packedLength);
+                            subTaskTransferableObjects = [array.buffer];
+
+                            for (j = 0; j < workerSubTasksLength; ++j) {
+                                subTask = workerSubTasks[j];
+                                geometry = subTask.geometry;
+                                if (defined(geometry.constructor.pack)) {
+                                    geometry.constructor.pack(geometry, array, subTask.offset);
+                                    subTask.geometry = array;
+                                }
+                            }
+                        }
+
                         promises.push(createGeometryTaskProcessors[i].scheduleTask({
                             subTasks : subTasks[i]
-                        }, subTasks[i].transferableObjects));
+                        }, subTaskTransferableObjects));
                     }
 
                     this._state = PrimitiveState.CREATING;
