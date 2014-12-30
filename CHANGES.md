@@ -4,26 +4,25 @@ Change Log
 ### 1.5 - 2015-01-05
 
 * Breaking changes
-  * Removed `GeometryPipeline.wrapLongitude`, which were previously deprecated in 1.4, use `GeometryPipeline.splitLongitude` instead.
-  * Removed `GeometryPipeline.combine`, which were previously deprecated in 1.4, use `GeometryPipeline.combineInstances` instead.
+  * Removed `GeometryPipeline.wrapLongitude`, which was deprecated in 1.4.  Use `GeometryPipeline.splitLongitude` instead.
+  * Removed `GeometryPipeline.combine`, which was deprecated in 1.4.  Use `GeometryPipeline.combineInstances` instead.
 * Deprecated
+  * `viewerEntityMixin` was deprecated. It will be removed in Cesium 1.6. Its functionality is now directly part of the `Viewer` widget.
   * `Rectangle.intersectWith` was deprecated. It will be removed in Cesium 1.6. Use `Rectangle.intersection`, which is the same but returns `undefined` when two rectangles do not intersect.
   * `Rectangle.isEmpty` was deprecated. It will be removed in Cesium 1.6.
-  * `viewerEntityMixin` was deprecated. It will be removed in Cesium 1.6. It's functionality has been made directly part of the `Viewer` widget.
+* Improved GeoJSON, TopoJSON, and general polygon loading performance.
+* Added caching to `Model` to save memory and improve loading speed when several models with the same url are created.
+* Added the following properties to `Viewer` and `CesiumWidget`: `imageryLayers`, `terrainProvider`, and `camera`.  This avoids the need to access `viewer.scene` in some cases.
 * Dramatically improve the quality of font outlines.
-* Improved polygon loading performance.
-* Fixed upsampleQuantizedTerrainMesh rounding errors that had occasionally led to missing terrain skirt geometry in upsampled tiles.
-* Improved GeoJSON loading performance.
-* `ConstantProperty` now accepts `HTMLElement` instances as valid values.
-* `BillboardGraphics.image` and `ImageMaterialProperty.image` now accept `Property` instances that represent an `Image` or `Canvas` in addition to a url.
-* Added `Math.mod` which computes `m % n` but also works when `m` is negative.
-* Fixed a bug in `PolylineGeometry` that would cause gaps in the line. [#2136](https://github.com/AnalyticalGraphicsInc/cesium/issues/2136)
-* Fixed imagery providers whose rectangle crosses the IDL. Added `Rectangle.computeWidth`, `Rectangle.computeHeight`, `Rectangle.width`, and `Rectangle.height`. [#2195](https://github.com/AnalyticalGraphicsInc/cesium/issues/2195)
 * Added `BoxGraphics` and `Entity.box`.
 * Added `CorridorGraphics` and `Entity.corridor`.
 * Added `CylinderGraphics` and `Entity.cylinder`.
-* Added caching to `Model` to save memory and improve loading speed when several models with the same url are created.
-* Added the following properties to `Viewer` and `CesiumWidget`: `imageryLayers`, `terrainProvider`, and `camera`.  This avoids the need to access `viewer.scene` in some cases.
+* Fixed imagery providers whose rectangle crosses the IDL. Added `Rectangle.computeWidth`, `Rectangle.computeHeight`, `Rectangle.width`, and `Rectangle.height`. [#2195](https://github.com/AnalyticalGraphicsInc/cesium/issues/2195)
+* `ConstantProperty` now accepts `HTMLElement` instances as valid values.
+* `BillboardGraphics.image` and `ImageMaterialProperty.image` now accept `Property` instances that represent an `Image` or `Canvas` in addition to a url.
+* Fixed a bug in `PolylineGeometry` that would cause gaps in the line. [#2136](https://github.com/AnalyticalGraphicsInc/cesium/issues/2136)
+* Fixed `upsampleQuantizedTerrainMesh` rounding errors that had occasionally led to missing terrain skirt geometry in upsampled tiles.
+* Added `Math.mod` which computes `m % n` but also works when `m` is negative.
 
 ### 1.4 - 2014-12-01
 
