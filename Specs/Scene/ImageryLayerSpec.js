@@ -17,7 +17,8 @@ defineSuite([
         'Scene/TileMapServiceImageryProvider',
         'Scene/WebMapServiceImageryProvider',
         'Specs/createContext',
-        'Specs/destroyContext'
+        'Specs/destroyContext',
+        'Specs/pollToPromise'
     ], function(
         ImageryLayer,
         EllipsoidTerrainProvider,
@@ -36,9 +37,10 @@ defineSuite([
         TileMapServiceImageryProvider,
         WebMapServiceImageryProvider,
         createContext,
-        destroyContext) {
+        destroyContext,
+        pollToPromise) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
 
@@ -87,26 +89,21 @@ defineSuite([
 
         var layer = new ImageryLayer(provider);
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        var imagery;
-        runs(function() {
+        }).then(function() {
             discardPolicy.shouldDiscard = true;
-            imagery = new Imagery(layer, 0, 0, 0);
+            var imagery = new Imagery(layer, 0, 0, 0);
             imagery.addReference();
             layer._requestImagery(imagery);
-        });
 
-        waitsFor(function() {
-            return imagery.state === ImageryState.RECEIVED;
-        }, 'image to load');
-
-        runs(function() {
-            layer._createTexture(context, imagery);
-            expect(imagery.state).toEqual(ImageryState.INVALID);
-            imagery.releaseReference();
+            return pollToPromise(function() {
+                return imagery.state === ImageryState.RECEIVED;
+            }).then(function() {
+                layer._createTexture(context, imagery);
+                expect(imagery.state).toEqual(ImageryState.INVALID);
+                imagery.releaseReference();
+            });
         });
     });
 
@@ -152,42 +149,32 @@ defineSuite([
 
         var layer = new ImageryLayer(provider);
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        var imagery;
-        runs(function() {
-            imagery = new Imagery(layer, 0, 0, 0);
+        }).then(function() {
+            var imagery = new Imagery(layer, 0, 0, 0);
             imagery.addReference();
             layer._requestImagery(imagery);
-        });
 
-        waitsFor(function() {
-            return imagery.state === ImageryState.RECEIVED;
-        }, 'image to load');
+            return pollToPromise(function() {
+                return imagery.state === ImageryState.RECEIVED;
+            }).then(function() {
+                layer._createTexture(context, imagery);
 
-        runs(function() {
-            layer._createTexture(context, imagery);
-        });
+                return pollToPromise(function() {
+                    return imagery.state === ImageryState.TEXTURE_LOADED;
+                }).then(function() {
+                    var textureBeforeReprojection = imagery.texture;
+                    layer._reprojectTexture(context, imagery);
 
-        waitsFor(function() {
-            return imagery.state === ImageryState.TEXTURE_LOADED;
-        }, 'texture to load');
-
-        var textureBeforeReprojection;
-        runs(function() {
-            textureBeforeReprojection = imagery.texture;
-            layer._reprojectTexture(context, imagery);
-        });
-
-        waitsFor(function() {
-            return imagery.state === ImageryState.READY;
-        }, 'texture to be ready');
-
-        runs(function() {
-            expect(textureBeforeReprojection).not.toEqual(imagery.texture);
-            imagery.releaseReference();
+                    return pollToPromise(function() {
+                        return imagery.state === ImageryState.READY;
+                    }).then(function() {
+                        expect(textureBeforeReprojection).not.toEqual(imagery.texture);
+                        imagery.releaseReference();
+                    });
+                });
+            });
         });
     });
 
@@ -216,11 +203,9 @@ defineSuite([
             var layer = layers.addImageryProvider(provider);
             var terrainProvider = new EllipsoidTerrainProvider();
 
-            waitsFor(function() {
+            return pollToPromise(function() {
                 return provider.ready && terrainProvider.ready;
-            }, 'imagery provider to become ready');
-
-            runs(function() {
+            }).then(function() {
                 var tiles = QuadtreeTile.createLevelZeroTiles(terrainProvider.tilingScheme);
                 tiles[0].data = new GlobeSurfaceTile();
                 tiles[1].data = new GlobeSurfaceTile();
@@ -263,11 +248,9 @@ defineSuite([
             var layer = layers.addImageryProvider(provider);
             var terrainProvider = new EllipsoidTerrainProvider();
 
-            waitsFor(function() {
+            return pollToPromise(function() {
                 return provider.ready && terrainProvider.ready;
-            }, 'imagery provider to become ready');
-
-            runs(function() {
+            }).then(function() {
                 var tiles = QuadtreeTile.createLevelZeroTiles(terrainProvider.tilingScheme);
                 tiles[0].data = new GlobeSurfaceTile();
                 tiles[1].data = new GlobeSurfaceTile();
@@ -314,11 +297,9 @@ defineSuite([
 
             var terrainProvider = new EllipsoidTerrainProvider();
 
-            waitsFor(function() {
+            return pollToPromise(function() {
                 return provider.ready && terrainProvider.ready;
-            }, 'imagery provider to become ready');
-
-            runs(function() {
+            }).then(function() {
                 var level0 = QuadtreeTile.createLevelZeroTiles(terrainProvider.tilingScheme);
                 var level1 = level0[0].children;
                 var level2 = level1[0].children;
@@ -370,11 +351,9 @@ defineSuite([
 
             var terrainProvider = new EllipsoidTerrainProvider();
 
-            waitsFor(function() {
+            return pollToPromise(function() {
                 return provider.ready && terrainProvider.ready;
-            }, 'imagery provider to become ready');
-
-            runs(function() {
+            }).then(function() {
                 var tiles = QuadtreeTile.createLevelZeroTiles(terrainProvider.tilingScheme);
                 tiles[0].data = new GlobeSurfaceTile();
                 tiles[1].data = new GlobeSurfaceTile();

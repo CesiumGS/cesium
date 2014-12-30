@@ -12,7 +12,7 @@ defineSuite([
         waitsForPromise,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var terrainProvider = new CesiumTerrainProvider({
         url : 'http://cesiumjs.org/smallterrain'
@@ -23,19 +23,9 @@ defineSuite([
                          Cartographic.fromDegrees(86.925145, 27.988257),
                          Cartographic.fromDegrees(87.0, 28.0)
                      ];
-        var promise = sampleTerrain(terrainProvider, 11, positions);
 
-        var done = false;
-        when(promise, function(passedPositions) {
+        return sampleTerrain(terrainProvider, 11, positions).then(function(passedPositions) {
             expect(passedPositions).toBe(positions);
-            done = true;
-        });
-
-        waitsFor(function() {
-            return done;
-        }, 'height query to finish');
-
-        runs(function() {
             expect(positions[0].height).toBeGreaterThan(5000);
             expect(positions[0].height).toBeLessThan(10000);
             expect(positions[1].height).toBeGreaterThan(5000);
@@ -52,19 +42,9 @@ defineSuite([
                          Cartographic.fromDegrees(86.925145, 27.988257),
                          Cartographic.fromDegrees(87.0, 28.0)
                      ];
-        var promise = sampleTerrain(stkWorldTerrain, 11, positions);
 
-        var done = false;
-        when(promise, function(passedPositions) {
+        return sampleTerrain(stkWorldTerrain, 11, positions).then(function(passedPositions) {
             expect(passedPositions).toBe(positions);
-            done = true;
-        });
-
-        waitsFor(function() {
-            return done;
-        }, 'height query to finish');
-
-        runs(function() {
             expect(positions[0].height).toBeGreaterThan(5000);
             expect(positions[0].height).toBeLessThan(10000);
             expect(positions[1].height).toBeGreaterThan(5000);
@@ -76,18 +56,8 @@ defineSuite([
         var positions = [
                          Cartographic.fromDegrees(0.0, 0.0, 0.0)
                      ];
-        var promise = sampleTerrain(terrainProvider, 11, positions);
 
-        var done = false;
-        when(promise, function() {
-            done = true;
-        });
-
-        waitsFor(function() {
-            return done;
-        }, 'height query to finish');
-
-        runs(function() {
+        return sampleTerrain(terrainProvider, 11, positions).then(function() {
             expect(positions[0].height).toBeUndefined();
         });
     });
@@ -98,18 +68,8 @@ defineSuite([
                          Cartographic.fromDegrees(0.0, 0.0, 0.0),
                          Cartographic.fromDegrees(87.0, 28.0)
                      ];
-        var promise = sampleTerrain(terrainProvider, 11, positions);
 
-        var done = false;
-        when(promise, function() {
-            done = true;
-        });
-
-        waitsFor(function() {
-            return done;
-        }, 'height query to finish');
-
-        runs(function() {
+        return sampleTerrain(terrainProvider, 11, positions).then(function() {
             expect(positions[0].height).toBeGreaterThan(5000);
             expect(positions[0].height).toBeLessThan(10000);
             expect(positions[1].height).toBeUndefined();
@@ -144,9 +104,8 @@ defineSuite([
         });
 
         var positions = [new Cartographic(0.33179290856829535, 0.7363107781851078)];
-        var promise = sampleTerrain(stkWorldTerrain, 12, positions);
-
-        waitsForPromise(promise, function() {
+        
+        return sampleTerrain(stkWorldTerrain, 12, positions).then(function() {
             expect(positions[0].height).toBeDefined();
         });
     });

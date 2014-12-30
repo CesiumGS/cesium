@@ -23,6 +23,7 @@ defineSuite([
         'Specs/createScene',
         'Specs/destroyScene',
         'Specs/equals',
+        'Specs/pollToPromise',
         'Specs/render'
     ], 'Scene/Scene', function(
         BoundingSphere,
@@ -48,9 +49,10 @@ defineSuite([
         createScene,
         destroyScene,
         equals,
+        pollToPromise,
         render) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,WebGLRenderingContext*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,WebGLRenderingContext*/
 
     var scene;
 
@@ -436,10 +438,10 @@ defineSuite([
 
         s.renderForSpecs();
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             render(s._context, s.frameState, s.globe);
-            return !equals(this.env, s._context.readPixels(), [0, 0, 0, 0]);
-        }, 'the central body to be rendered', 5000);
+            return !jasmine.matchersUtil.equals(s._context.readPixels(), [0, 0, 0, 0]);
+        });
     });
 
     it('renders with multipass OIT if MRT is available', function() {

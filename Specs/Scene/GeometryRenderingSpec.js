@@ -42,6 +42,7 @@ defineSuite([
         'Specs/createFrameState',
         'Specs/destroyContext',
         'Specs/pick',
+        'Specs/pollToPromise',
         'Specs/render'
     ], 'Scene/GeometryRendering', function(
         BoundingSphere,
@@ -86,9 +87,10 @@ defineSuite([
         createFrameState,
         destroyContext,
         pick,
+        pollToPromise,
         render) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
     var ellipsoid;
@@ -305,11 +307,9 @@ defineSuite([
 
         var frameState = createFrameState();
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return render(context, frameState, primitive) > 0;
-        });
-
-        runs(function() {
+        }).then(function() {
             viewSphere3D(frameState.camera, primitive._boundingSphereWC[0], primitive.modelMatrix);
 
             if (typeof afterView === 'function') {
@@ -362,7 +362,7 @@ defineSuite([
         });
 
         it('async', function() {
-            renderAsync(instance);
+            return renderAsync(instance);
         });
     }, 'WebGL');
 
@@ -400,7 +400,7 @@ defineSuite([
         });
 
         it('async', function() {
-            renderAsync(instance);
+            return renderAsync(instance);
         });
     }, 'WebGL');
 
@@ -440,7 +440,7 @@ defineSuite([
         });
 
         it('async', function() {
-            renderAsync(instance);
+            return renderAsync(instance);
         });
     }, 'WebGL');
 
@@ -479,7 +479,7 @@ defineSuite([
         });
 
         it('async', function() {
-            renderAsync(instance);
+            return renderAsync(instance);
         });
 
         it('rotated', function() {
@@ -560,7 +560,7 @@ defineSuite([
         });
 
         it('async', function() {
-            renderAsync(instance);
+            return renderAsync(instance);
         });
 
         it('renders bottom', function() {
@@ -619,7 +619,7 @@ defineSuite([
         });
 
         it('async', function() {
-            renderAsync(instance);
+            return renderAsync(instance);
         });
     }, 'WebGL');
 
@@ -657,7 +657,7 @@ defineSuite([
         });
 
         it('async', function() {
-            renderAsync(instance);
+            return renderAsync(instance);
         });
     }, 'WebGL');
 
@@ -696,7 +696,7 @@ defineSuite([
         });
 
         it('async', function() {
-            renderAsync(instance);
+            return renderAsync(instance);
         });
 
         it('rotated geometry', function() {
@@ -786,7 +786,7 @@ defineSuite([
         });
 
         it('async', function() {
-            renderAsync(instance);
+            return renderAsync(instance);
         });
 
         it('renders bottom', function() {
@@ -873,7 +873,7 @@ defineSuite([
         });
 
         it('async', function() {
-            renderAsync(instance);
+            return renderAsync(instance);
         });
 
         it('at height', function() {
@@ -982,7 +982,7 @@ defineSuite([
         });
 
         it('async', function() {
-            renderAsync(instance);
+            return renderAsync(instance);
         });
 
         it('renders bottom', function() {
@@ -1135,7 +1135,7 @@ defineSuite([
         });
 
         it('async', function() {
-            renderAsync(instance, afterView3D);
+            return renderAsync(instance, afterView3D);
         });
     }, 'WebGL');
 
@@ -1181,7 +1181,7 @@ defineSuite([
         });
 
         it('async', function() {
-            renderAsync(instance);
+            return renderAsync(instance);
         });
 
         it('at height', function() {
@@ -1249,7 +1249,7 @@ defineSuite([
         });
 
         it('async', function() {
-            renderAsync(instance);
+            return renderAsync(instance);
         });
 
         it('renders bottom', function() {
@@ -1346,7 +1346,7 @@ defineSuite([
         });
 
         it('async', function() {
-            renderAsync(instance);
+            return renderAsync(instance);
         });
 
         it('renders bottom', function() {
@@ -1433,7 +1433,7 @@ defineSuite([
         });
 
         it('async', function() {
-            renderAsync(instance);
+            return renderAsync(instance);
         });
 
         it('per segment colors', function() {
@@ -1507,7 +1507,7 @@ defineSuite([
         });
 
         it('async', function() {
-            renderAsync(instance, undefined, appearance);
+            return renderAsync(instance, undefined, appearance);
         });
 
         it('per segment colors', function() {

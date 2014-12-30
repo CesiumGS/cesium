@@ -26,6 +26,7 @@ defineSuite([
         'Specs/destroyContext',
         'Specs/destroyScene',
         'Specs/pick',
+        'Specs/pollToPromise',
         'Specs/render'
     ], function(
         Primitive,
@@ -54,9 +55,10 @@ defineSuite([
         destroyContext,
         destroyScene,
         pick,
+        pollToPromise,
         render) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
     var frameState;
@@ -872,11 +874,9 @@ defineSuite([
         frameState.camera.viewRectangle(rectangle1);
         us.update(context, frameState);
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return render(context, frameState, primitive) > 0;
-        });
-
-        runs(function() {
+        }).then(function() {
             ClearCommand.ALL.execute(context);
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 

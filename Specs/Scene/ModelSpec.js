@@ -13,7 +13,8 @@ defineSuite([
         'Core/Transforms',
         'Scene/ModelAnimationLoop',
         'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/destroyScene',
+        'Specs/pollToPromise'
     ], function(
         Model,
         Cartesian2,
@@ -28,9 +29,10 @@ defineSuite([
         Transforms,
         ModelAnimationLoop,
         createScene,
-        destroyScene) {
+        destroyScene,
+        pollToPromise) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,WebGLRenderingContext*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,WebGLRenderingContext*/
 
     var duckUrl = './Data/Models/duck/duck.gltf';
     var customDuckUrl = './Data/Models/customDuck/duck.gltf';
@@ -40,11 +42,6 @@ defineSuite([
     var riggedFigureUrl = './Data/Models/rigged-figure-test/rigged-figure-test.gltf';
 
     var duckModel;
-    var customDuckModel;
-    var separateDuckModel;
-    var cesiumAirModel;
-    var animBoxesModel;
-    var riggedFigureModel;
 
     var scene;
     var primitives;
@@ -52,6 +49,10 @@ defineSuite([
     beforeAll(function() {
         scene = createScene();
         primitives = scene.primitives;
+
+        return loadModel(duckUrl).then(function(model) {
+            duckModel = model;
+        });
     });
 
     afterAll(function() {
@@ -91,18 +92,14 @@ defineSuite([
         }));
         addZoomTo(model);
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             // Render scene to progressively load the model
             scene.renderForSpecs();
             return model.ready;
-        }, url + ' ready', 10000);
-
-        return model;
+        }, { timeout: 10000 }).then(function() {
+            return model;
+        });
     }
-
-    it('loads duck', function() {
-        duckModel = loadModel(duckUrl);
-    });
 
     it('fromGltf throws without options', function() {
         expect(function() {
@@ -152,13 +149,11 @@ defineSuite([
         }));
         addZoomTo(model);
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             // Render scene to progressively load the model
             scene.renderForSpecs();
             return model.ready;
-        }, 'ready', 10000);
-
-        runs(function() {
+        }, { timeout: 10000 }).then(function() {
             expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
             model.show = true;
@@ -176,66 +171,64 @@ defineSuite([
 
         spyOn(scene.context, 'createRenderState').and.callThrough();
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             // Render scene to progressively load the model
             scene.renderForSpecs();
             return model.ready;
-        }, 'ready', 10000);
-
-        var rs = {
-            frontFace : WebGLRenderingContext.CCW,
-            cull : {
-                enabled : true,
-                face : WebGLRenderingContext.BACK
-            },
-            lineWidth : 1.0,
-            polygonOffset : {
-                enabled : false,
-                factor : 0.0,
-                units : 0.0
-            },
-            scissorTest : {
-                enabled : false,
-                rectangle : {
-                    x : 0.0,
-                    y : 0.0,
-                    width : 0.0,
-                    height : 0.0
-                }
-            },
-            depthRange : {
-                near : 0.0,
-                far : 1.0
-            },
-            depthTest : {
-                enabled : true,
-                func : WebGLRenderingContext.LESS
-            },
-            colorMask : {
-                red : true,
-                green : true,
-                blue : true,
-                alpha : true
-            },
-            depthMask : true,
-            blending : {
-                enabled : false,
-                color : {
-                    red : 0.0,
-                    green : 0.0,
-                    blue : 0.0,
-                    alpha : 0.0
+        }, { timeout: 10000 }).then(function() {
+            var rs = {
+                frontFace : WebGLRenderingContext.CCW,
+                cull : {
+                    enabled : true,
+                    face : WebGLRenderingContext.BACK
                 },
-                equationRgb : WebGLRenderingContext.FUNC_ADD,
-                equationAlpha : WebGLRenderingContext.FUNC_ADD,
-                functionSourceRgb : WebGLRenderingContext.ONE,
-                functionSourceAlpha : WebGLRenderingContext.ONE,
-                functionDestinationRgb : WebGLRenderingContext.ZERO,
-                functionDestinationAlpha : WebGLRenderingContext.ZERO
-            }
-        };
+                lineWidth : 1.0,
+                polygonOffset : {
+                    enabled : false,
+                    factor : 0.0,
+                    units : 0.0
+                },
+                scissorTest : {
+                    enabled : false,
+                    rectangle : {
+                        x : 0.0,
+                        y : 0.0,
+                        width : 0.0,
+                        height : 0.0
+                    }
+                },
+                depthRange : {
+                    near : 0.0,
+                    far : 1.0
+                },
+                depthTest : {
+                    enabled : true,
+                    func : WebGLRenderingContext.LESS
+                },
+                colorMask : {
+                    red : true,
+                    green : true,
+                    blue : true,
+                    alpha : true
+                },
+                depthMask : true,
+                blending : {
+                    enabled : false,
+                    color : {
+                        red : 0.0,
+                        green : 0.0,
+                        blue : 0.0,
+                        alpha : 0.0
+                    },
+                    equationRgb : WebGLRenderingContext.FUNC_ADD,
+                    equationAlpha : WebGLRenderingContext.FUNC_ADD,
+                    functionSourceRgb : WebGLRenderingContext.ONE,
+                    functionSourceAlpha : WebGLRenderingContext.ONE,
+                    functionDestinationRgb : WebGLRenderingContext.ZERO,
+                    functionDestinationAlpha : WebGLRenderingContext.ZERO
+                }
+            };
 
-        runs(function() {
             expect(scene.context.createRenderState).toHaveBeenCalledWith(rs);
             primitives.remove(model);
         });
@@ -453,9 +446,7 @@ defineSuite([
     });
 
     it('destroys', function() {
-        var m = loadModel(duckUrl);
-
-        runs(function() {
+        loadModel(duckUrl).then(function(m) {
             expect(m.isDestroyed()).toEqual(false);
             primitives.remove(m);
             expect(m.isDestroyed()).toEqual(true);
@@ -464,494 +455,535 @@ defineSuite([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    it('loads customDuck', function() {
-        customDuckModel = loadModel(customDuckUrl);
-    });
+    describe('customDuck', function() {
+        var customDuckModel;
 
-    it('renders customDuckModel (NPOT textures and all uniform semantics)', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        beforeAll(function() {
+            return loadModel(customDuckUrl).then(function(model) {
+                customDuckModel = model;
+            });
+        });        
 
-        customDuckModel.show = true;
-        customDuckModel.zoomTo();
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
-        customDuckModel.show = false;
+        it('renders customDuckModel (NPOT textures and all uniform semantics)', function() {
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+            customDuckModel.show = true;
+            customDuckModel.zoomTo();
+            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            customDuckModel.show = false;
+        });
     });
 
     ///////////////////////////////////////////////////////////////////////////
 
-    it('loads separateDuck', function() {
-        separateDuckModel = loadModel(separateDuckUrl);
-    });
+    describe('separateDuck', function() {
+        var separateDuckModel;
 
-    it('renders separateDuckModel (external .glsl, .bin, and .png files)', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        beforeAll(function() {
+            return loadModel(separateDuckUrl).then(function(model) {
+                separateDuckModel = model;
+            });
+        });        
 
-        separateDuckModel.show = true;
-        separateDuckModel.zoomTo();
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
-        separateDuckModel.show = false;
+        it('renders separateDuckModel (external .glsl, .bin, and .png files)', function() {
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+            separateDuckModel.show = true;
+            separateDuckModel.zoomTo();
+            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            separateDuckModel.show = false;
+        });
     });
 
     ///////////////////////////////////////////////////////////////////////////
 
-    it('loads cesiumAir', function() {
-        cesiumAirModel = loadModel(cesiumAirUrl, {
-            minimumPixelSize : 1,
-            asynchronous : false
+    describe('cesiumAir', function() {
+        var cesiumAirModel;
+
+        beforeAll(function() {
+            return loadModel(cesiumAirUrl, {
+                minimumPixelSize : 1,
+                asynchronous : false
+            }).then(function(model) {
+                cesiumAirModel = model;
+                expect(cesiumAirModel.minimumPixelSize).toEqual(1);
+                expect(cesiumAirModel.asynchronous).toEqual(false);
+            });
+        });        
+
+        it('renders cesiumAir (has translucency)', function() {
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+            cesiumAirModel.show = true;
+            cesiumAirModel.zoomTo();
+            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            cesiumAirModel.show = false;
         });
-        expect(cesiumAirModel.minimumPixelSize).toEqual(1);
-        expect(cesiumAirModel.asynchronous).toEqual(false);
-    });
 
-    it('renders cesiumAir (has translucency)', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        it('picks cesiumAir', function() {
+            if (FeatureDetection.isInternetExplorer()) {
+                // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
+                return;
+            }
 
-        cesiumAirModel.show = true;
-        cesiumAirModel.zoomTo();
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
-        cesiumAirModel.show = false;
-    });
+            cesiumAirModel.show = true;
+            cesiumAirModel.zoomTo();
 
-    it('picks cesiumAir', function() {
-        if (FeatureDetection.isInternetExplorer()) {
-            // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
-            return;
-        }
+            var pick = scene.pick(new Cartesian2(0, 0));
+            expect(pick.primitive).toEqual(cesiumAirModel);
+            expect(pick.id).toEqual(cesiumAirUrl);
+            expect(pick.node).toBeDefined();
+            expect(pick.mesh).toBeDefined();
 
-        cesiumAirModel.show = true;
-        cesiumAirModel.zoomTo();
-
-        var pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick.primitive).toEqual(cesiumAirModel);
-        expect(pick.id).toEqual(cesiumAirUrl);
-        expect(pick.node).toBeDefined();
-        expect(pick.mesh).toBeDefined();
-
-        cesiumAirModel.show = false;
+            cesiumAirModel.show = false;
+        });
     });
 
     ///////////////////////////////////////////////////////////////////////////
 
-    it('loads animBoxes', function() {
-        animBoxesModel = loadModel(animBoxesUrl, {
-            scale : 2.0
-        });
-    });
+    describe('animBoxes', function() {
+        var animBoxesModel;
 
-    it('renders animBoxes without animation', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-        animBoxesModel.show = true;
-        animBoxesModel.zoomTo();
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
-        animBoxesModel.show = false;
-    });
-
-    it('adds and removes all animations', function() {
-        var animations = animBoxesModel.activeAnimations;
-        expect(animations.length).toEqual(0);
-
-        var spyAdd = jasmine.createSpy('listener');
-        animations.animationAdded.addEventListener(spyAdd);
-        var a = animations.addAll();
-        expect(animations.length).toEqual(2);
-        expect(spyAdd.calls.count()).toEqual(2);
-        expect(spyAdd.calls[0].args[0]).toBe(animBoxesModel);
-        expect(spyAdd.calls[0].args[1]).toBe(a[0]);
-        expect(spyAdd.calls[1].args[0]).toBe(animBoxesModel);
-        expect(spyAdd.calls[1].args[1]).toBe(a[1]);
-        animations.animationAdded.removeEventListener(spyAdd);
-
-        expect(animations.contains(a[0])).toEqual(true);
-        expect(animations.get(0)).toEqual(a[0]);
-        expect(animations.contains(a[1])).toEqual(true);
-        expect(animations.get(1)).toEqual(a[1]);
-
-        var spyRemove = jasmine.createSpy('listener');
-        animations.animationRemoved.addEventListener(spyRemove);
-        animations.removeAll();
-        expect(animations.length).toEqual(0);
-        expect(spyRemove.calls.count()).toEqual(2);
-        expect(spyRemove.calls[0].args[0]).toBe(animBoxesModel);
-        expect(spyRemove.calls[0].args[1]).toBe(a[0]);
-        expect(spyRemove.calls[1].args[0]).toBe(animBoxesModel);
-        expect(spyRemove.calls[1].args[1]).toBe(a[1]);
-        animations.animationRemoved.removeEventListener(spyRemove);
-    });
-
-    it('addAll throws when model is not loaded', function() {
-        var m = new Model();
-        expect(function() {
-            return m.activeAnimations.addAll();
-        }).toThrowDeveloperError();
-    });
-
-    it('addAll throws when speedup is less than or equal to zero.', function() {
-        expect(function() {
-            return animBoxesModel.activeAnimations.addAll({
-                speedup : 0.0
+        beforeAll(function() {
+            return loadModel(animBoxesUrl, {
+                scale : 2.0
+            }).then(function(model) {
+                animBoxesModel = model;
             });
-        }).toThrowDeveloperError();
-    });
-
-    it('adds and removes an animation', function() {
-        var animations = animBoxesModel.activeAnimations;
-        expect(animations.length).toEqual(0);
-
-        var spyAdd = jasmine.createSpy('listener');
-        animations.animationAdded.addEventListener(spyAdd);
-        var a = animations.add({
-            name : 'animation_1'
-        });
-        expect(a).toBeDefined();
-        expect(a.name).toEqual('animation_1');
-        expect(a.startTime).not.toBeDefined();
-        expect(a.delay).toEqual(0.0);
-        expect(a.stopTime).not.toBeDefined();
-        expect(a.removeOnStop).toEqual(false);
-        expect(a.speedup).toEqual(1.0);
-        expect(a.reverse).toEqual(false);
-        expect(a.loop).toEqual(ModelAnimationLoop.NONE);
-        expect(a.start).toBeDefined();
-        expect(a.update).toBeDefined();
-        expect(a.stop).toBeDefined();
-        expect(spyAdd).toHaveBeenCalledWith(animBoxesModel, a);
-        animations.animationAdded.removeEventListener(spyAdd);
-
-        expect(animations.contains(a)).toEqual(true);
-        expect(animations.get(0)).toEqual(a);
-
-        var spyRemove = jasmine.createSpy('listener');
-        animations.animationRemoved.addEventListener(spyRemove);
-        expect(animations.remove(a)).toEqual(true);
-        expect(animations.remove(a)).toEqual(false);
-        expect(animations.remove()).toEqual(false);
-        expect(animations.contains(a)).toEqual(false);
-        expect(animations.length).toEqual(0);
-        expect(spyRemove).toHaveBeenCalledWith(animBoxesModel, a);
-        animations.animationRemoved.removeEventListener(spyRemove);
-    });
-
-    it('add throws when model is not loaded', function() {
-        var m = new Model();
-        expect(function() {
-            return m.activeAnimations.add({
-                name : 'animation_1'
-            });
-        }).toThrowDeveloperError();
-    });
-
-    it('add throws when name is invalid.', function() {
-        expect(function() {
-            return animBoxesModel.activeAnimations.add({
-                name : 'animation-does-not-exist'
-            });
-        }).toThrowDeveloperError();
-    });
-
-    it('add throws when speedup is less than or equal to zero.', function() {
-        expect(function() {
-            return animBoxesModel.activeAnimations.add({
-                name : 'animation_1',
-                speedup : 0.0
-            });
-        }).toThrowDeveloperError();
-    });
-
-    it('get throws without an index', function() {
-        var m = new Model();
-        expect(function() {
-            return m.activeAnimations.get();
-        }).toThrowDeveloperError();
-    });
-
-    it('contains(undefined) returns false', function() {
-        expect(animBoxesModel.activeAnimations.contains(undefined)).toEqual(false);
-    });
-
-    it('raises animation start, update, and stop events when removeOnStop is true', function() {
-        var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
-        var animations = animBoxesModel.activeAnimations;
-        var a = animations.add({
-            name : 'animation_1',
-            startTime : time,
-            removeOnStop : true
         });
 
-        var spyStart = jasmine.createSpy('listener');
-        a.start.addEventListener(spyStart);
-
-        var spyUpdate = jasmine.createSpy('listener');
-        a.update.addEventListener(spyUpdate);
-
-        var stopped = false;
-        a.stop.addEventListener(function(model, animation) {
-            stopped = true;
-        });
-        var spyStop = jasmine.createSpy('listener');
-        a.stop.addEventListener(spyStop);
-
-        animBoxesModel.show = true;
-
-        waitsFor(function() {
-            scene.renderForSpecs(time);
-            time = JulianDate.addSeconds(time, 1.0, time, new JulianDate());
-            return stopped;
-        }, 'raises animation start, update, and stop events when removeOnStop is true', 10000);
-
-        runs(function() {
-            expect(spyStart).toHaveBeenCalledWith(animBoxesModel, a);
-
-            expect(spyUpdate.calls.count()).toEqual(4);
-            expect(spyUpdate.calls[0].args[0]).toBe(animBoxesModel);
-            expect(spyUpdate.calls[0].args[1]).toBe(a);
-            expect(spyUpdate.calls[0].args[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
-            expect(spyUpdate.calls[1].args[2]).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
-            expect(spyUpdate.calls[2].args[2]).toEqualEpsilon(2.0, CesiumMath.EPSILON14);
-            expect(spyUpdate.calls[3].args[2]).toEqualEpsilon(3.0, CesiumMath.EPSILON14);
-
-            expect(spyStop).toHaveBeenCalledWith(animBoxesModel, a);
-            expect(animations.length).toEqual(0);
+        it('renders animBoxes without animation', function() {
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+            animBoxesModel.show = true;
+            animBoxesModel.zoomTo();
+            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
             animBoxesModel.show = false;
         });
-    });
 
-    it('Animates with a delay', function() {
-        var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
+        it('adds and removes all animations', function() {
+            var animations = animBoxesModel.activeAnimations;
+            expect(animations.length).toEqual(0);
 
-        var animations = animBoxesModel.activeAnimations;
-        var a = animations.add({
-            name : 'animation_1',
-            startTime : time,
-            delay : 1.0
+            var spyAdd = jasmine.createSpy('listener');
+            animations.animationAdded.addEventListener(spyAdd);
+            var a = animations.addAll();
+            expect(animations.length).toEqual(2);
+            expect(spyAdd.calls.count()).toEqual(2);
+
+            var allArgsAdd = spyAdd.calls.all();
+            expect(allArgsAdd[0].args[0]).toBe(animBoxesModel);
+            expect(allArgsAdd[0].args[1]).toBe(a[0]);
+            expect(allArgsAdd[1].args[0]).toBe(animBoxesModel);
+            expect(allArgsAdd[1].args[1]).toBe(a[1]);
+            animations.animationAdded.removeEventListener(spyAdd);
+
+            expect(animations.contains(a[0])).toEqual(true);
+            expect(animations.get(0)).toEqual(a[0]);
+            expect(animations.contains(a[1])).toEqual(true);
+            expect(animations.get(1)).toEqual(a[1]);
+
+            var spyRemove = jasmine.createSpy('listener');
+            animations.animationRemoved.addEventListener(spyRemove);
+            animations.removeAll();
+            expect(animations.length).toEqual(0);
+            expect(spyRemove.calls.count()).toEqual(2);
+
+            var allArgsRemove = spyRemove.calls.all();
+            expect(allArgsRemove[0].args[0]).toBe(animBoxesModel);
+            expect(allArgsRemove[0].args[1]).toBe(a[0]);
+            expect(allArgsRemove[1].args[0]).toBe(animBoxesModel);
+            expect(allArgsRemove[1].args[1]).toBe(a[1]);
+            animations.animationRemoved.removeEventListener(spyRemove);
         });
 
-        var spyStart = jasmine.createSpy('listener');
-        a.start.addEventListener(spyStart);
-
-        animBoxesModel.show = true;
-        scene.renderForSpecs(time); // Does not fire start
-        scene.renderForSpecs(JulianDate.addSeconds(time, 1.0, new JulianDate()));
-
-        expect(spyStart.calls.count()).toEqual(1);
-
-        expect(animations.remove(a)).toEqual(true);
-        animBoxesModel.show = false;
-    });
-
-    it('Animates with an explicit stopTime', function() {
-        var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
-        var stopTime = JulianDate.fromDate(new Date('January 1, 2014 12:00:01 UTC'));
-
-        var animations = animBoxesModel.activeAnimations;
-        var a = animations.add({
-            name : 'animation_1',
-            startTime : time,
-            stopTime : stopTime
+        it('addAll throws when model is not loaded', function() {
+            var m = new Model();
+            expect(function() {
+                return m.activeAnimations.addAll();
+            }).toThrowDeveloperError();
         });
 
-        var spyUpdate = jasmine.createSpy('listener');
-        a.update.addEventListener(spyUpdate);
-
-        animBoxesModel.show = true;
-        scene.renderForSpecs(time);
-        scene.renderForSpecs(JulianDate.addSeconds(time, 1.0, new JulianDate()));
-        scene.renderForSpecs(JulianDate.addSeconds(time, 2.0, new JulianDate())); // Does not fire update
-
-        expect(spyUpdate.calls.count()).toEqual(2);
-        expect(spyUpdate.calls[0].args[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
-        expect(spyUpdate.calls[1].args[2]).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
-        expect(animations.remove(a)).toEqual(true);
-        animBoxesModel.show = false;
-    });
-
-    it('Animates with a speedup', function() {
-        var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
-        var animations = animBoxesModel.activeAnimations;
-        var a = animations.add({
-            name : 'animation_1',
-            startTime : time,
-            speedup : 1.5
+        it('addAll throws when speedup is less than or equal to zero.', function() {
+            expect(function() {
+                return animBoxesModel.activeAnimations.addAll({
+                    speedup : 0.0
+                });
+            }).toThrowDeveloperError();
         });
 
-        var spyUpdate = jasmine.createSpy('listener');
-        a.update.addEventListener(spyUpdate);
+        it('adds and removes an animation', function() {
+            var animations = animBoxesModel.activeAnimations;
+            expect(animations.length).toEqual(0);
 
-        animBoxesModel.show = true;
-        scene.renderForSpecs(time);
-        scene.renderForSpecs(JulianDate.addSeconds(time, 1.0, new JulianDate()));
-        scene.renderForSpecs(JulianDate.addSeconds(time, 2.0, new JulianDate()));
+            var spyAdd = jasmine.createSpy('listener');
+            animations.animationAdded.addEventListener(spyAdd);
+            var a = animations.add({
+                name : 'animation_1'
+            });
+            expect(a).toBeDefined();
+            expect(a.name).toEqual('animation_1');
+            expect(a.startTime).not.toBeDefined();
+            expect(a.delay).toEqual(0.0);
+            expect(a.stopTime).not.toBeDefined();
+            expect(a.removeOnStop).toEqual(false);
+            expect(a.speedup).toEqual(1.0);
+            expect(a.reverse).toEqual(false);
+            expect(a.loop).toEqual(ModelAnimationLoop.NONE);
+            expect(a.start).toBeDefined();
+            expect(a.update).toBeDefined();
+            expect(a.stop).toBeDefined();
+            expect(spyAdd).toHaveBeenCalledWith(animBoxesModel, a);
+            animations.animationAdded.removeEventListener(spyAdd);
 
-        expect(spyUpdate.calls.count()).toEqual(3);
-        expect(spyUpdate.calls[0].args[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
-        expect(spyUpdate.calls[1].args[2]).toEqualEpsilon(1.5, CesiumMath.EPSILON14);
-        expect(spyUpdate.calls[2].args[2]).toEqualEpsilon(3.0, CesiumMath.EPSILON14);
-        expect(animations.remove(a)).toEqual(true);
-        animBoxesModel.show = false;
-    });
+            expect(animations.contains(a)).toEqual(true);
+            expect(animations.get(0)).toEqual(a);
 
-    it('Animates in reverse', function() {
-        var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
-        var animations = animBoxesModel.activeAnimations;
-        var a = animations.add({
-            name : 'animation_1',
-            startTime : time,
-            reverse : true
+            var spyRemove = jasmine.createSpy('listener');
+            animations.animationRemoved.addEventListener(spyRemove);
+            expect(animations.remove(a)).toEqual(true);
+            expect(animations.remove(a)).toEqual(false);
+            expect(animations.remove()).toEqual(false);
+            expect(animations.contains(a)).toEqual(false);
+            expect(animations.length).toEqual(0);
+            expect(spyRemove).toHaveBeenCalledWith(animBoxesModel, a);
+            animations.animationRemoved.removeEventListener(spyRemove);
         });
 
-        var spyUpdate = jasmine.createSpy('listener');
-        a.update.addEventListener(spyUpdate);
-
-        animBoxesModel.show = true;
-        scene.renderForSpecs(time);
-        scene.renderForSpecs(JulianDate.addSeconds(time, 1.0, new JulianDate()));
-        scene.renderForSpecs(JulianDate.addSeconds(time, 2.0, new JulianDate()));
-        scene.renderForSpecs(JulianDate.addSeconds(time, 3.0, new JulianDate()));
-
-        expect(spyUpdate.calls.count()).toEqual(4);
-        expect(spyUpdate.calls[0].args[2]).toEqualEpsilon(3.708, CesiumMath.EPSILON3);
-        expect(spyUpdate.calls[1].args[2]).toEqualEpsilon(2.708, CesiumMath.EPSILON3);
-        expect(spyUpdate.calls[2].args[2]).toEqualEpsilon(1.708, CesiumMath.EPSILON3);
-        expect(spyUpdate.calls[3].args[2]).toEqualEpsilon(0.708, CesiumMath.EPSILON3);
-        expect(animations.remove(a)).toEqual(true);
-        animBoxesModel.show = false;
-    });
-
-    it('Animates with REPEAT', function() {
-        var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
-        var animations = animBoxesModel.activeAnimations;
-        var a = animations.add({
-            name : 'animation_1',
-            startTime : time,
-            loop : ModelAnimationLoop.REPEAT
+        it('add throws when model is not loaded', function() {
+            var m = new Model();
+            expect(function() {
+                return m.activeAnimations.add({
+                    name : 'animation_1'
+                });
+            }).toThrowDeveloperError();
         });
 
-        var spyUpdate = jasmine.createSpy('listener');
-        a.update.addEventListener(spyUpdate);
-
-        animBoxesModel.show = true;
-        for (var i = 0; i < 8; ++i) {
-            scene.renderForSpecs(JulianDate.addSeconds(time, i, new JulianDate()));
-        }
-
-        expect(spyUpdate.calls.count()).toEqual(8);
-        expect(spyUpdate.calls[0].args[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON3);
-        expect(spyUpdate.calls[1].args[2]).toEqualEpsilon(1.0, CesiumMath.EPSILON3);
-        expect(spyUpdate.calls[2].args[2]).toEqualEpsilon(2.0, CesiumMath.EPSILON3);
-        expect(spyUpdate.calls[3].args[2]).toEqualEpsilon(3.0, CesiumMath.EPSILON3);
-        expect(spyUpdate.calls[4].args[2]).toEqualEpsilon(0.291, CesiumMath.EPSILON3); // Repeat with duration of ~3.7
-        expect(spyUpdate.calls[5].args[2]).toEqualEpsilon(1.291, CesiumMath.EPSILON3);
-        expect(spyUpdate.calls[6].args[2]).toEqualEpsilon(2.291, CesiumMath.EPSILON3);
-        expect(spyUpdate.calls[7].args[2]).toEqualEpsilon(3.291, CesiumMath.EPSILON3);
-        expect(animations.remove(a)).toEqual(true);
-        animBoxesModel.show = false;
-    });
-
-    it('Animates with MIRRORED_REPEAT', function() {
-        var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
-        var animations = animBoxesModel.activeAnimations;
-        var a = animations.add({
-            name : 'animation_1',
-            startTime : time,
-            loop : ModelAnimationLoop.MIRRORED_REPEAT
+        it('add throws when name is invalid.', function() {
+            expect(function() {
+                return animBoxesModel.activeAnimations.add({
+                    name : 'animation-does-not-exist'
+                });
+            }).toThrowDeveloperError();
         });
 
-        var spyUpdate = jasmine.createSpy('listener');
-        a.update.addEventListener(spyUpdate);
-
-        animBoxesModel.show = true;
-        for (var i = 0; i < 8; ++i) {
-            scene.renderForSpecs(JulianDate.addSeconds(time, i, new JulianDate()));
-        }
-
-        expect(spyUpdate.calls.count()).toEqual(8);
-        expect(spyUpdate.calls[0].args[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON3);
-        expect(spyUpdate.calls[1].args[2]).toEqualEpsilon(1.0, CesiumMath.EPSILON3);
-        expect(spyUpdate.calls[2].args[2]).toEqualEpsilon(2.0, CesiumMath.EPSILON3);
-        expect(spyUpdate.calls[3].args[2]).toEqualEpsilon(3.0, CesiumMath.EPSILON3);
-        expect(spyUpdate.calls[4].args[2]).toEqualEpsilon(3.416, CesiumMath.EPSILON3); // Mirror repeat with duration of 3.6
-        expect(spyUpdate.calls[5].args[2]).toEqualEpsilon(2.416, CesiumMath.EPSILON3);
-        expect(spyUpdate.calls[6].args[2]).toEqualEpsilon(1.416, CesiumMath.EPSILON3);
-        expect(spyUpdate.calls[7].args[2]).toEqualEpsilon(0.416, CesiumMath.EPSILON3);
-        expect(animations.remove(a)).toEqual(true);
-        animBoxesModel.show = false;
-    });
-
-    it('Animates and renders', function() {
-        var m = loadModel(animBoxesUrl, {
-            scale : 2.0
+        it('add throws when speedup is less than or equal to zero.', function() {
+            expect(function() {
+                return animBoxesModel.activeAnimations.add({
+                    name : 'animation_1',
+                    speedup : 0.0
+                });
+            }).toThrowDeveloperError();
         });
 
-        runs(function() {
-            var node = m.getNode('inner_box');
+        it('get throws without an index', function() {
+            var m = new Model();
+            expect(function() {
+                return m.activeAnimations.get();
+            }).toThrowDeveloperError();
+        });
+
+        it('contains(undefined) returns false', function() {
+            expect(animBoxesModel.activeAnimations.contains(undefined)).toEqual(false);
+        });
+
+        it('raises animation start, update, and stop events when removeOnStop is true', function() {
             var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
-            var animations = m.activeAnimations;
+            var animations = animBoxesModel.activeAnimations;
             var a = animations.add({
                 name : 'animation_1',
+                startTime : time,
+                removeOnStop : true
+            });
+
+            var spyStart = jasmine.createSpy('listener');
+            a.start.addEventListener(spyStart);
+
+            var spyUpdate = jasmine.createSpy('listener');
+            a.update.addEventListener(spyUpdate);
+
+            var stopped = false;
+            a.stop.addEventListener(function(model, animation) {
+                stopped = true;
+            });
+            var spyStop = jasmine.createSpy('listener');
+            a.stop.addEventListener(spyStop);
+
+            animBoxesModel.show = true;
+
+            return pollToPromise(function() {
+                scene.renderForSpecs(time);
+                time = JulianDate.addSeconds(time, 1.0, time, new JulianDate());
+                return stopped;
+            }, { timeout: 10000 }).then(function() {
+                expect(spyStart).toHaveBeenCalledWith(animBoxesModel, a);
+
+                expect(spyUpdate.calls.count()).toEqual(4);
+
+                var allArgs = spyUpdate.calls.all();
+                expect(allArgs[0].args[0]).toBe(animBoxesModel);
+                expect(allArgs[0].args[1]).toBe(a);
+                expect(allArgs[0].args[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
+                expect(allArgs[1].args[2]).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+                expect(allArgs[2].args[2]).toEqualEpsilon(2.0, CesiumMath.EPSILON14);
+                expect(allArgs[3].args[2]).toEqualEpsilon(3.0, CesiumMath.EPSILON14);
+
+                expect(spyStop).toHaveBeenCalledWith(animBoxesModel, a);
+                expect(animations.length).toEqual(0);
+                animBoxesModel.show = false;
+            });
+        });
+
+        it('Animates with a delay', function() {
+            var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
+
+            var animations = animBoxesModel.activeAnimations;
+            var a = animations.add({
+                name : 'animation_1',
+                startTime : time,
+                delay : 1.0
+            });
+
+            var spyStart = jasmine.createSpy('listener');
+            a.start.addEventListener(spyStart);
+
+            animBoxesModel.show = true;
+            scene.renderForSpecs(time); // Does not fire start
+            scene.renderForSpecs(JulianDate.addSeconds(time, 1.0, new JulianDate()));
+
+            expect(spyStart.calls.count()).toEqual(1);
+
+            expect(animations.remove(a)).toEqual(true);
+            animBoxesModel.show = false;
+        });
+
+        it('Animates with an explicit stopTime', function() {
+            var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
+            var stopTime = JulianDate.fromDate(new Date('January 1, 2014 12:00:01 UTC'));
+
+            var animations = animBoxesModel.activeAnimations;
+            var a = animations.add({
+                name : 'animation_1',
+                startTime : time,
+                stopTime : stopTime
+            });
+
+            var spyUpdate = jasmine.createSpy('listener');
+            a.update.addEventListener(spyUpdate);
+
+            animBoxesModel.show = true;
+            scene.renderForSpecs(time);
+            scene.renderForSpecs(JulianDate.addSeconds(time, 1.0, new JulianDate()));
+            scene.renderForSpecs(JulianDate.addSeconds(time, 2.0, new JulianDate())); // Does not fire update
+
+            expect(spyUpdate.calls.count()).toEqual(2);
+            var allArgs = spyUpdate.calls.all();
+            expect(allArgs[0].args[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
+            expect(allArgs[1].args[2]).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+            expect(animations.remove(a)).toEqual(true);
+            animBoxesModel.show = false;
+        });
+
+        it('Animates with a speedup', function() {
+            var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
+            var animations = animBoxesModel.activeAnimations;
+            var a = animations.add({
+                name : 'animation_1',
+                startTime : time,
+                speedup : 1.5
+            });
+
+            var spyUpdate = jasmine.createSpy('listener');
+            a.update.addEventListener(spyUpdate);
+
+            animBoxesModel.show = true;
+            scene.renderForSpecs(time);
+            scene.renderForSpecs(JulianDate.addSeconds(time, 1.0, new JulianDate()));
+            scene.renderForSpecs(JulianDate.addSeconds(time, 2.0, new JulianDate()));
+
+            expect(spyUpdate.calls.count()).toEqual(3);
+
+            var allArgs = spyUpdate.calls.all();
+            expect(allArgs[0].args[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
+            expect(allArgs[1].args[2]).toEqualEpsilon(1.5, CesiumMath.EPSILON14);
+            expect(allArgs[2].args[2]).toEqualEpsilon(3.0, CesiumMath.EPSILON14);
+            expect(animations.remove(a)).toEqual(true);
+            animBoxesModel.show = false;
+        });
+
+        it('Animates in reverse', function() {
+            var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
+            var animations = animBoxesModel.activeAnimations;
+            var a = animations.add({
+                name : 'animation_1',
+                startTime : time,
+                reverse : true
+            });
+
+            var spyUpdate = jasmine.createSpy('listener');
+            a.update.addEventListener(spyUpdate);
+
+            animBoxesModel.show = true;
+            scene.renderForSpecs(time);
+            scene.renderForSpecs(JulianDate.addSeconds(time, 1.0, new JulianDate()));
+            scene.renderForSpecs(JulianDate.addSeconds(time, 2.0, new JulianDate()));
+            scene.renderForSpecs(JulianDate.addSeconds(time, 3.0, new JulianDate()));
+
+            expect(spyUpdate.calls.count()).toEqual(4);
+
+            var allArgs = spyUpdate.calls.all();
+            expect(allArgs[0].args[2]).toEqualEpsilon(3.708, CesiumMath.EPSILON3);
+            expect(allArgs[1].args[2]).toEqualEpsilon(2.708, CesiumMath.EPSILON3);
+            expect(allArgs[2].args[2]).toEqualEpsilon(1.708, CesiumMath.EPSILON3);
+            expect(allArgs[3].args[2]).toEqualEpsilon(0.708, CesiumMath.EPSILON3);
+            expect(animations.remove(a)).toEqual(true);
+            animBoxesModel.show = false;
+        });
+
+        it('Animates with REPEAT', function() {
+            var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
+            var animations = animBoxesModel.activeAnimations;
+            var a = animations.add({
+                name : 'animation_1',
+                startTime : time,
+                loop : ModelAnimationLoop.REPEAT
+            });
+
+            var spyUpdate = jasmine.createSpy('listener');
+            a.update.addEventListener(spyUpdate);
+
+            animBoxesModel.show = true;
+            for (var i = 0; i < 8; ++i) {
+                scene.renderForSpecs(JulianDate.addSeconds(time, i, new JulianDate()));
+            }
+
+            expect(spyUpdate.calls.count()).toEqual(8);
+
+            var allArgs = spyUpdate.calls.all();
+            expect(allArgs[0].args[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON3);
+            expect(allArgs[1].args[2]).toEqualEpsilon(1.0, CesiumMath.EPSILON3);
+            expect(allArgs[2].args[2]).toEqualEpsilon(2.0, CesiumMath.EPSILON3);
+            expect(allArgs[3].args[2]).toEqualEpsilon(3.0, CesiumMath.EPSILON3);
+            expect(allArgs[4].args[2]).toEqualEpsilon(0.291, CesiumMath.EPSILON3); // Repeat with duration of ~3.7
+            expect(allArgs[5].args[2]).toEqualEpsilon(1.291, CesiumMath.EPSILON3);
+            expect(allArgs[6].args[2]).toEqualEpsilon(2.291, CesiumMath.EPSILON3);
+            expect(allArgs[7].args[2]).toEqualEpsilon(3.291, CesiumMath.EPSILON3);
+            expect(animations.remove(a)).toEqual(true);
+            animBoxesModel.show = false;
+        });
+
+        it('Animates with MIRRORED_REPEAT', function() {
+            var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
+            var animations = animBoxesModel.activeAnimations;
+            var a = animations.add({
+                name : 'animation_1',
+                startTime : time,
+                loop : ModelAnimationLoop.MIRRORED_REPEAT
+            });
+
+            var spyUpdate = jasmine.createSpy('listener');
+            a.update.addEventListener(spyUpdate);
+
+            animBoxesModel.show = true;
+            for (var i = 0; i < 8; ++i) {
+                scene.renderForSpecs(JulianDate.addSeconds(time, i, new JulianDate()));
+            }
+
+            expect(spyUpdate.calls.count()).toEqual(8);
+
+            var allArgs = spyUpdate.calls.all();
+            expect(allArgs[0].args[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON3);
+            expect(allArgs[1].args[2]).toEqualEpsilon(1.0, CesiumMath.EPSILON3);
+            expect(allArgs[2].args[2]).toEqualEpsilon(2.0, CesiumMath.EPSILON3);
+            expect(allArgs[3].args[2]).toEqualEpsilon(3.0, CesiumMath.EPSILON3);
+            expect(allArgs[4].args[2]).toEqualEpsilon(3.416, CesiumMath.EPSILON3); // Mirror repeat with duration of 3.6
+            expect(allArgs[5].args[2]).toEqualEpsilon(2.416, CesiumMath.EPSILON3);
+            expect(allArgs[6].args[2]).toEqualEpsilon(1.416, CesiumMath.EPSILON3);
+            expect(allArgs[7].args[2]).toEqualEpsilon(0.416, CesiumMath.EPSILON3);
+            expect(animations.remove(a)).toEqual(true);
+            animBoxesModel.show = false;
+        });
+
+        it('Animates and renders', function() {
+            return loadModel(animBoxesUrl, {
+                scale : 2.0
+            }).then(function(m) {
+                var node = m.getNode('inner_box');
+                var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
+                var animations = m.activeAnimations;
+                var a = animations.add({
+                    name : 'animation_1',
+                    startTime : time
+                });
+
+                expect(node.matrix).toEqual(Matrix4.IDENTITY);
+                var previousMatrix = Matrix4.clone(node.matrix);
+
+                m.zoomTo();
+
+                for (var i = 1; i < 4; ++i) {
+                    var t = JulianDate.addSeconds(time, i, new JulianDate());
+                    expect(scene.renderForSpecs(t)).toEqual([0, 0, 0, 255]);
+
+                    m.show = true;
+                    expect(scene.renderForSpecs(t)).not.toEqual([0, 0, 0, 255]);
+                    m.show = false;
+
+                    expect(node.matrix).not.toEqual(previousMatrix);
+                    previousMatrix = Matrix4.clone(node.matrix);
+                }
+
+                expect(animations.remove(a)).toEqual(true);
+                primitives.remove(m);
+            });
+        });
+    });
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    describe('riggedFigure', function() {
+        var riggedFigureModel;
+
+        beforeAll(function() {
+            return loadModel(riggedFigureUrl).then(function(model) {
+                riggedFigureModel = model;
+            });
+        });
+
+        it('renders riggedFigure without animation', function() {
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+            riggedFigureModel.show = true;
+            riggedFigureModel.zoomTo();
+            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            riggedFigureModel.show = false;
+        });
+
+        it('renders riggedFigure with animation (skinning)', function() {
+            var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
+            var animations = riggedFigureModel.activeAnimations;
+            animations.addAll({
                 startTime : time
             });
 
-            expect(node.matrix).toEqual(Matrix4.IDENTITY);
-            var previousMatrix = Matrix4.clone(node.matrix);
+            riggedFigureModel.zoomTo();
 
-            m.zoomTo();
-
-            for (var i = 1; i < 4; ++i) {
-                var t = JulianDate.addSeconds(time, i, new JulianDate());
+            for (var i = 0; i < 6; ++i) {
+                var t = JulianDate.addSeconds(time, 0.25 * i, new JulianDate());
                 expect(scene.renderForSpecs(t)).toEqual([0, 0, 0, 255]);
 
-                m.show = true;
+                riggedFigureModel.show = true;
                 expect(scene.renderForSpecs(t)).not.toEqual([0, 0, 0, 255]);
-                m.show = false;
-
-                expect(node.matrix).not.toEqual(previousMatrix);
-                previousMatrix = Matrix4.clone(node.matrix);
+                riggedFigureModel.show = false;
             }
 
-            expect(animations.remove(a)).toEqual(true);
-            primitives.remove(m);
-        });
-    });
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    it('loads riggedFigure', function() {
-        riggedFigureModel = loadModel(riggedFigureUrl);
-    });
-
-    it('renders riggedFigure without animation', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-
-        riggedFigureModel.show = true;
-        riggedFigureModel.zoomTo();
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
-        riggedFigureModel.show = false;
-    });
-
-    it('renders riggedFigure with animation (skinning)', function() {
-        var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
-        var animations = riggedFigureModel.activeAnimations;
-        animations.addAll({
-            startTime : time
-        });
-
-        riggedFigureModel.zoomTo();
-
-        for (var i = 0; i < 6; ++i) {
-            var t = JulianDate.addSeconds(time, 0.25 * i, new JulianDate());
-            expect(scene.renderForSpecs(t)).toEqual([0, 0, 0, 255]);
-
-            riggedFigureModel.show = true;
-            expect(scene.renderForSpecs(t)).not.toEqual([0, 0, 0, 255]);
+            animations.removeAll();
             riggedFigureModel.show = false;
-        }
-
-        animations.removeAll();
-        riggedFigureModel.show = false;
+        });
     });
 
     it('should load a model where WebGL shader optimizer removes an attribute (linux)', function() {
         var url = './Data/Models/test-shader-optimize/test-shader-optimize.gltf';
-        var m = loadModel(url);
+        return loadModel(url);
     });
 
 }, 'WebGL');

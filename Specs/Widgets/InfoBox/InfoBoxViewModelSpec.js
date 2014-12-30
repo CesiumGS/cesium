@@ -1,8 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-        'Widgets/InfoBox/InfoBoxViewModel'
+        'Widgets/InfoBox/InfoBoxViewModel',
+        'Specs/pollToPromise'
     ], function(
-        InfoBoxViewModel) {
+        InfoBoxViewModel,
+        pollToPromise) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -23,10 +25,10 @@ defineSuite([
         var safeString = '<p>This is a test.</p>';
         var viewModel = new InfoBoxViewModel();
         viewModel.descriptionRawHtml = safeString;
-        waitsFor(function() {
+
+        return pollToPromise(function() {
             return viewModel.descriptionSanitizedHtml !== viewModel.loadingIndicatorHtml;
-        });
-        runs(function() {
+        }).then(function() {
             expect(viewModel.descriptionSanitizedHtml).toBe(safeString);
         });
     });
@@ -35,10 +37,10 @@ defineSuite([
         var evilString = 'Testing. <script>console.error("Scripts are disallowed by default.");</script>';
         var viewModel = new InfoBoxViewModel();
         viewModel.descriptionRawHtml = evilString;
-        waitsFor(function() {
+
+        return pollToPromise(function() {
             return viewModel.descriptionSanitizedHtml !== viewModel.loadingIndicatorHtml;
-        });
-        runs(function() {
+        }).then(function() {
             expect(viewModel.descriptionSanitizedHtml).toContain('Testing.');
             expect(viewModel.descriptionSanitizedHtml).not.toContain('script');
         });
@@ -48,10 +50,10 @@ defineSuite([
         var viewModel = new InfoBoxViewModel();
         expect(viewModel._bodyless).toBe(true);
         viewModel.descriptionRawHtml = 'Testing';
-        waitsFor(function() {
+
+        return pollToPromise(function() {
             return viewModel.descriptionSanitizedHtml !== viewModel.loadingIndicatorHtml;
-        });
-        runs(function() {
+        }).then(function() {
             expect(viewModel._bodyless).toBe(false);
         });
     });
@@ -65,10 +67,10 @@ defineSuite([
         var viewModel = new InfoBoxViewModel();
 
         viewModel.descriptionRawHtml = testString;
-        waitsFor(function() {
+
+        return pollToPromise(function() {
             return viewModel.descriptionSanitizedHtml !== viewModel.loadingIndicatorHtml;
-        });
-        runs(function() {
+        }).then(function() {
             expect(viewModel.descriptionSanitizedHtml).toBe(testString);
 
             viewModel.sanitizer = customSanitizer;
