@@ -388,7 +388,7 @@ define([
     };
 
     CylinderGeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
-        if (!(propertyName === 'availability' || propertyName === 'position' || propertyName === 'cylinder')) {
+        if (!(propertyName === 'availability' || propertyName === 'position' || propertyName === 'orientation' || propertyName === 'cylinder')) {
             return;
         }
 
