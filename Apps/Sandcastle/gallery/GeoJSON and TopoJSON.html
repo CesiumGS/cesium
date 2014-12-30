@@ -28,7 +28,6 @@ function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
-Cesium.viewerEntityMixin(viewer);
 
 //Example 1: Load with default styling.
 Sandcastle.addDefaultToolbarButton('Default styling', function() {
@@ -91,8 +90,7 @@ Sandcastle.reset = function() {
   viewer.dataSources.removeAll();
   
   //Set the camera to a US centered tilted view.
-  var camera = viewer.scene.camera;
-  camera.lookAt(Cesium.Cartesian3.fromDegrees(-98, 15.0, 5000000),
+  viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(-98, 15.0, 5000000),
       Cesium.Cartesian3.fromDegrees(-98, 40.0, 0), Cesium.Cartesian3.UNIT_Z);
 };
 //Sandcastle_End

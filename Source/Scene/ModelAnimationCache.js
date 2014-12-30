@@ -1,15 +1,19 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/LinearSpline',
+        '../Core/Matrix4',
         '../Core/Quaternion',
         '../Core/QuaternionSpline',
         './getModelAccessor'
     ], function(
         Cartesian3,
+        defaultValue,
         defined,
         LinearSpline,
+        Matrix4,
         Quaternion,
         QuaternionSpline,
         getModelAccessor) {
@@ -22,10 +26,7 @@ define([
     var ModelAnimationCache = function() {
     };
 
-    var cachedAnimationParameters = {
-    };
-
-    function getAnimationParameterKey(model, accessor) {
+    function getAccessorKey(model, accessor) {
         var gltf = model.gltf;
         var buffers = gltf.buffers;
         var bufferViews = gltf.bufferViews;
@@ -36,13 +37,17 @@ define([
         var byteOffset = bufferView.byteOffset + accessor.byteOffset;
         var byteLength = accessor.count * getModelAccessor(accessor).componentsPerAttribute;
 
-        return model.basePath + buffer.path + ':' + byteOffset + ':' + byteLength;
+        // buffer.path will be undefined when animations are embedded.
+        return model.cacheKey + '//' + defaultValue(buffer.path, '') + '/' + byteOffset + '/' + byteLength;
     }
+
+    var cachedAnimationParameters = {
+    };
 
     var axisScratch = new Cartesian3();
 
     ModelAnimationCache.getAnimationParameterValues = function(model, accessor) {
-        var key = getAnimationParameterKey(model, accessor);
+        var key = getAccessorKey(model, accessor);
         var values = cachedAnimationParameters[key];
 
         if (!defined(values)) {
@@ -78,7 +83,7 @@ define([
             }
             // GLTF_SPEC: Support more parameter types when glTF supports targeting materials. https://github.com/KhronosGroup/glTF/issues/142
 
-            if (model.basePath !== '') {
+            if (defined(model.cacheKey)) {
                 // Only cache when we can create a unique id
                 cachedAnimationParameters[key] = values;
             }
@@ -91,7 +96,7 @@ define([
     };
 
     function getAnimationSplineKey(model, animationName, samplerName) {
-        return model.basePath + ':' + animationName + ':' + samplerName;
+        return model.cacheKey + '//' + animationName + '/' + samplerName;
     }
 
  // GLTF_SPEC: https://github.com/KhronosGroup/glTF/issues/185
@@ -138,13 +143,47 @@ define([
                 // GLTF_SPEC: Support new interpolators. https://github.com/KhronosGroup/glTF/issues/156
             }
 
-            if (model.basePath !== '') {
+            if (defined(model.cacheKey)) {
                 // Only cache when we can create a unique id
                 cachedAnimationSplines[key] = spline;
             }
         }
 
         return spline;
+    };
+
+    var cachedSkinInverseBindMatrices = {
+    };
+
+    ModelAnimationCache.getSkinInverseBindMatrices = function(model, accessor) {
+        var key = getAccessorKey(model, accessor);
+        var matrices = cachedSkinInverseBindMatrices[key];
+
+        if (!defined(matrices)) {
+            // Cache miss
+
+            var buffers = model._loadResources.buffers;
+            var gltf = model.gltf;
+            var bufferViews = gltf.bufferViews;
+
+            var bufferView = bufferViews[accessor.bufferView];
+
+            var componentType = accessor.componentType;
+            var type = accessor.type;
+            var count = accessor.count;
+            var typedArray = getModelAccessor(accessor).createArrayBufferView(buffers[bufferView.buffer], bufferView.byteOffset + accessor.byteOffset, count);
+            matrices =  new Array(count);
+
+            if ((componentType === WebGLRenderingContext.FLOAT) && (type === 'MAT4')) {
+                for (var i = 0; i < count; ++i) {
+                    matrices[i] = Matrix4.fromArray(typedArray, 16 * i);
+                }
+            }
+
+            cachedSkinInverseBindMatrices[key] = matrices;
+        }
+
+        return matrices;
     };
 
     return ModelAnimationCache;
