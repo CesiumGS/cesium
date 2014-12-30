@@ -219,13 +219,13 @@ define([
     UniformArray.prototype.setSampler = function() {
         var gl = this._gl;
         var locations = this._locations;
+        var textureUnitIndex = gl.TEXTURE0 + this.textureUnitIndex;
 
         var value = this.value;
         var length = value.length;
         for (var i = 0; i < length; ++i) {
             var v = value[i];
-            var index = this.textureUnitIndex + i;
-            gl.activeTexture(gl.TEXTURE0 + index);
+            gl.activeTexture(textureUnitIndex + i);
             gl.bindTexture(v._target, v._texture);
         }
     };
