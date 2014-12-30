@@ -43,7 +43,7 @@ define([
      * @returns {ColorMaterialProperty} A new instance configured to represent the provided color.
      */
     ColorMaterialProperty.fromColor = function(color) {
-        deprecationWarning('ColorMaterialProperty.fromColor', 'ColorMaterialProperty.fromColor was deprecated in Cesium 1.5.  It will be removed in 1.7.  Use "new ColorMaterialProperty(color)" instead.');
+        deprecationWarning('ColorMaterialProperty.fromColor', 'ColorMaterialProperty.fromColor was deprecated in Cesium 1.6.  It will be removed in 1.8.  Use "new ColorMaterialProperty(color)" instead.');
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(color)) {

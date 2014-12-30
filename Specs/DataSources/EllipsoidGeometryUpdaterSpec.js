@@ -433,7 +433,7 @@ defineSuite([
         ellipsoid.outline = createDynamicProperty(true);
         ellipsoid.fill = createDynamicProperty(true);
         ellipsoid.outlineColor = createDynamicProperty(Color.BLUE);
-        ellipsoid.material = ColorMaterialProperty.fromColor(Color.RED);
+        ellipsoid.material = new ColorMaterialProperty(Color.RED);
 
         var entity = new Entity();
         entity.position = createDynamicProperty(Cartesian3.fromDegrees(0, 0, 0));
@@ -453,7 +453,7 @@ defineSuite([
         ellipsoid.fill.setValue(false);
         ellipsoid.outline.setValue(false);
         ellipsoid.outlineColor = createDynamicProperty(Color.YELLOW);
-        ellipsoid.material = ColorMaterialProperty.fromColor(Color.ORANGE);
+        ellipsoid.material = new ColorMaterialProperty(Color.ORANGE);
         dynamicUpdater.update(time);
 
         var attributes = primitives.get(0).getGeometryInstanceAttributes(entity);
