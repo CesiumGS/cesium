@@ -8,7 +8,6 @@ define([
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
-        '../Core/Quaternion',
         '../Core/Transforms',
         '../Scene/DistanceDisplayCondition',
         '../Scene/Model',
@@ -23,7 +22,6 @@ define([
         CesiumMath,
         Matrix3,
         Matrix4,
-        Quaternion,
         Transforms,
         DistanceDisplayCondition,
         Model,
@@ -33,10 +31,6 @@ define([
 
     var defaultScale = 1.0;
     var defaultMinimumPixelSize = 0.0;
-    var matrix3Scratch = new Matrix3();
-
-    var position = new Cartesian3();
-    var orientation = new Quaternion();
 
     /**
      * A {@link Visualizer} which maps {@link Entity#model} to a {@link Model}.
@@ -63,7 +57,7 @@ define([
         this._entityCollection = entityCollection;
         this._modelHash = {};
         this._entitiesToVisualize = new AssociativeArray();
-
+        this._modelMatrixScratch = new Matrix4();
         this._onCollectionChanged(entityCollection, entityCollection.entities, [], []);
     };
 
@@ -95,10 +89,11 @@ define([
             var modelData = modelHash[entity.id];
             var show = entity.isAvailable(time) && Property.getValueOrDefault(modelGraphics._show, time, true);
 
+            var modelMatrix;
             if (show) {
-                position = Property.getValueOrUndefined(entity._position, time, position);
+                modelMatrix = entity._getModelMatrix(time, this._modelMatrixScratch);
                 uri = Property.getValueOrUndefined(modelGraphics._uri, time);
-                show = defined(position) && defined(uri);
+                show = defined(modelMatrix) && defined(uri);
             }
 
             if (!show) {
@@ -127,9 +122,7 @@ define([
 
                 modelData = {
                     modelPrimitive : model,
-                    uri : uri,
-                    position : undefined,
-                    orientation : undefined
+                    uri : uri
                 };
                 modelHash[entity.id] = modelData;
             }
@@ -137,19 +130,12 @@ define([
             model.show = true;
             model.scale = Property.getValueOrDefault(modelGraphics._scale, time, defaultScale);
             model.minimumPixelSize = Property.getValueOrDefault(modelGraphics._minimumPixelSize, time, defaultMinimumPixelSize);
+            model.modelMatrix = Matrix4.clone(modelMatrix, model.modelMatrix);
 
-            orientation = Property.getValueOrUndefined(entity._orientation, time, orientation);
-            if (!Cartesian3.equals(position, modelData.position) || !Quaternion.equals(orientation, modelData.orientation)) {
-                if (!defined(orientation)) {
-//                    Transforms.eastNorthUpToFixedFrame(position, scene.globe.ellipsoid, model.modelMatrix);
-                    Transforms.northEastDownToFixedFrame(position, scene.globe.ellipsoid, model.modelMatrix);
-                    Matrix4.multiplyByMatrix3(model.modelMatrix, Matrix3.fromRotationZ(CesiumMath.toRadians(90.0)), model.modelMatrix);
-                } else {
-//                    Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, model.modelMatrix);
-                }
-                modelData.position = Cartesian3.clone(position, modelData.position);
-                modelData.orientation = Quaternion.clone(orientation, modelData.orientation);
-            }
+// TODO: remove
+            Transforms.northEastDownToFixedFrame(entity.position.getValue(time), scene.globe.ellipsoid, model.modelMatrix);
+            Matrix4.multiplyByMatrix3(model.modelMatrix, Matrix3.fromRotationZ(CesiumMath.toRadians(90.0)), model.modelMatrix);
+//
         }
         return true;
     };

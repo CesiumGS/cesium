@@ -13,9 +13,6 @@ define([
         '../Core/Event',
         '../Core/GeometryInstance',
         '../Core/Iso8601',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
-        '../Core/Quaternion',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
@@ -38,9 +35,6 @@ define([
         Event,
         GeometryInstance,
         Iso8601,
-        Matrix3,
-        Matrix4,
-        Quaternion,
         ShowGeometryInstanceAttribute,
         MaterialAppearance,
         PerInstanceColorAppearance,
@@ -57,9 +51,6 @@ define([
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
 
-    var positionScratch = new Cartesian3();
-    var orientationScratch = new Quaternion();
-    var matrix3Scratch = new Matrix3();
     var scratchColor = new Color();
 
     var GeometryOptions = function(entity) {
@@ -335,14 +326,10 @@ define([
             };
         }
 
-        entity.position.getValue(Iso8601.MINIMUM_VALUE, positionScratch);
-        entity.orientation.getValue(Iso8601.MINIMUM_VALUE, orientationScratch);
-        Matrix3.fromQuaternion(orientationScratch, matrix3Scratch);
-
         return new GeometryInstance({
             id : entity,
             geometry : new CylinderGeometry(this._options),
-            modelMatrix : Matrix4.fromRotationTranslation(matrix3Scratch, positionScratch),
+            modelMatrix : entity._getModelMatrix(Iso8601.MINIMUM_VALUE),
             attributes : attributes
         });
     };
@@ -370,14 +357,10 @@ define([
         var isAvailable = entity.isAvailable(time);
         var outlineColor = Property.getValueOrDefault(this._outlineColorProperty, time, Color.BLACK);
 
-        entity.position.getValue(Iso8601.MINIMUM_VALUE, positionScratch);
-        entity.orientation.getValue(Iso8601.MINIMUM_VALUE, orientationScratch);
-        Matrix3.fromQuaternion(orientationScratch, matrix3Scratch);
-
         return new GeometryInstance({
             id : entity,
             geometry : new CylinderOutlineGeometry(this._options),
-            modelMatrix : Matrix4.fromRotationTranslation(matrix3Scratch, positionScratch),
+            modelMatrix : entity._getModelMatrix(Iso8601.MINIMUM_VALUE),
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
                 color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
@@ -439,14 +422,13 @@ define([
         }
 
         var position = entity.position;
-        var orientation = entity.orientation;
         var length = cylinder.length;
         var topRadius = cylinder.topRadius;
         var bottomRadius = cylinder.bottomRadius;
 
         var show = cylinder.show;
         if ((defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE)) || //
-            (!defined(position) || !defined(orientation) || !defined(length) || !defined(topRadius) || !defined(bottomRadius))) {
+            (!defined(position) || !defined(length) || !defined(topRadius) || !defined(bottomRadius))) {
             if (this._fillEnabled || this._outlineEnabled) {
                 this._fillEnabled = false;
                 this._outlineEnabled = false;
@@ -471,7 +453,7 @@ define([
         this._outlineEnabled = outlineEnabled;
 
         if (!position.isConstant || //
-            !orientation.isConstant || //
+            !Property.isConstant(entity.orientation) || //
             !length.isConstant || //
             !topRadius.isConstant || //
             !bottomRadius.isConstant || //
@@ -548,19 +530,13 @@ define([
         }
 
         var options = this._options;
-        var position = Property.getValueOrUndefined(entity.position, time, positionScratch);
-        var orientation = Property.getValueOrUndefined(entity.orientation, time, orientationScratch);
+        var modelMatrix = entity._getModelMatrix(time);
         var length = Property.getValueOrUndefined(cylinder.length, time);
         var topRadius = Property.getValueOrUndefined(cylinder.topRadius, time);
         var bottomRadius = Property.getValueOrUndefined(cylinder.bottomRadius, time);
-        if (!defined(position) || !defined(orientation) || !defined(length) || !defined(topRadius) || !defined(bottomRadius)) {
+        if (!defined(modelMatrix) || !defined(length) || !defined(topRadius) || !defined(bottomRadius)) {
             return;
         }
-
-        entity.position.getValue(Iso8601.MINIMUM_VALUE, positionScratch);
-        entity.orientation.getValue(Iso8601.MINIMUM_VALUE, orientationScratch);
-        Matrix3.fromQuaternion(orientationScratch, matrix3Scratch);
-        var modelMatrix = Matrix4.fromRotationTranslation(matrix3Scratch, positionScratch);
 
         options.length = length;
         options.topRadius = topRadius;
