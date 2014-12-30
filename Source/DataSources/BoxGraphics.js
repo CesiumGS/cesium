@@ -22,10 +22,8 @@ define([
      * @constructor
      */
     var BoxGraphics = function() {
-        this._minimumCorner = undefined;
-        this._minimumCornerSubscription = undefined;
-        this._maximumCorner = undefined;
-        this._maximumCornerSubscription = undefined;
+        this._dimensions = undefined;
+        this._dimensionsSubscription = undefined;
         this._show = undefined;
         this._showSubscription = undefined;
         this._fill = undefined;
@@ -67,14 +65,7 @@ define([
          * @memberof BoxGraphics.prototype
          * @type {PositionProperty}
          */
-        minimumCorner : createPropertyDescriptor('minimumCorner'),
-
-        /**
-         * Gets or sets the {@link Cartesian3} specifying the box's maximum corner.
-         * @memberof BoxGraphics.prototype
-         * @type {PositionProperty}
-         */
-        maximumCorner : createPropertyDescriptor('maximumCorner'),
+        dimensions : createPropertyDescriptor('dimensions'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the box.
@@ -122,8 +113,7 @@ define([
         if (!defined(result)) {
             result = new BoxGraphics();
         }
-        result.minimumCorner = this.minimumCorner;
-        result.maximumCorner = this.maximumCorner;
+        result.dimensions = this.dimensions;
         result.show = this.show;
         result.material = this.material;
         result.fill = this.fill;
@@ -146,8 +136,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        this.minimumCorner = defaultValue(this.minimumCorner, source.minimumCorner);
-        this.maximumCorner = defaultValue(this.maximumCorner, source.maximumCorner);
+        this.dimensions = defaultValue(this.dimensions, source.dimensions);
         this.show = defaultValue(this.show, source.show);
         this.material = defaultValue(this.material, source.material);
         this.fill = defaultValue(this.fill, source.fill);
