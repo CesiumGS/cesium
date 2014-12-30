@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
@@ -9,6 +10,7 @@ define([
         './StripeOrientation'
     ], function(
         Color,
+        defaultValue,
         defined,
         defineProperties,
         Event,
@@ -29,7 +31,9 @@ define([
      * @alias StripeMaterialProperty
      * @constructor
      */
-    var StripeMaterialProperty = function() {
+    var StripeMaterialProperty = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         this._definitionChanged = new Event();
 
         this._orientation = undefined;
@@ -46,6 +50,12 @@ define([
 
         this._repeat = undefined;
         this._repeatSubscription = undefined;
+
+        this.orientation = options.orientation;
+        this.evenColor = options.evenColor;
+        this.oddColor = options.oddColor;
+        this.offset = options.offset;
+        this.repeat = options.repeat;
     };
 
     defineProperties(StripeMaterialProperty.prototype, {

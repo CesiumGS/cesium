@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
@@ -8,6 +9,7 @@ define([
         './PropertyHelper'
     ], function(
         Color,
+        defaultValue,
         defined,
         defineProperties,
         Event,
@@ -23,12 +25,17 @@ define([
      * @alias PolylineGlowProperty
      * @constructor
      */
-    var PolylineGlowProperty = function() {
+    var PolylineGlowProperty = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         this._definitionChanged = new Event();
         this._color = undefined;
         this._colorSubscription = undefined;
         this._glowPower = undefined;
         this._glowPowerSubscription = undefined;
+
+        this.color = options.color;
+        this.glowPower = options.glowPower;
     };
 
     defineProperties(PolylineGlowProperty.prototype, {

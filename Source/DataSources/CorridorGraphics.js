@@ -75,7 +75,7 @@ define([
          * @memberof CorridorGraphics.prototype
          * @type {MaterialProperty}
          */
-        material : PropertyHelper.createPropertyDescriptor('material'),
+        material : PropertyHelper.createMaterialPropertyDescriptor('material'),
 
         /**
          * Gets or sets the positions.

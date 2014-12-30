@@ -109,7 +109,7 @@ define([
          * @memberof CylinderGraphics.prototype
          * @type {MaterialProperty}
          */
-        material : PropertyHelper.createPropertyDescriptor('material'),
+        material : PropertyHelper.createMaterialPropertyDescriptor('material'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the cylinder should be filled.
