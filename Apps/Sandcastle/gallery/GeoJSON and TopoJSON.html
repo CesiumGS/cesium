@@ -73,7 +73,7 @@ Sandcastle.addToolbarButton('Custom styling', function() {
             }
             
             //Set the polygon material to our random color.
-            entity.polygon.material = new ColorMaterialProperty(color);
+            entity.polygon.material = new Cesium.ColorMaterialProperty(color);
             //Outline each polygon in black.
             entity.polygon.outlineColor = new Cesium.ConstantProperty(Cesium.Color.BLACK);
 
