@@ -23,6 +23,7 @@ defineSuite([
         'Scene/HorizontalOrigin',
         'Scene/LabelStyle',
         'Scene/VerticalOrigin',
+        'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
         CzmlDataSource,
@@ -48,6 +49,7 @@ defineSuite([
         HorizontalOrigin,
         LabelStyle,
         VerticalOrigin,
+        pollToPromise,
         when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -135,12 +137,13 @@ defineSuite([
     var vehicleUrl = 'Data/CZML/Vehicle.czml';
 
     beforeAll(function() {
-        loadJson(simpleUrl).then(function(result) {
-            simple = result;
-        });
-        loadJson(vehicleUrl).then(function(result) {
-            vehicle = result;
-        });
+        return when.join(
+            loadJson(simpleUrl).then(function(result) {
+                simple = result;
+            }),
+            loadJson(vehicleUrl).then(function(result) {
+                vehicle = result;
+            }));
     });
 
     it('default constructor has expected values', function() {
@@ -220,7 +223,7 @@ defineSuite([
     it('processUrl loads expected data', function() {
         var dataSource = new CzmlDataSource();
         dataSource.processUrl(simpleUrl);
-        waitsFor(function() {
+        return pollToPromise(function() {
             return dataSource.entities.entities.length === 10;
         });
     });
@@ -228,41 +231,34 @@ defineSuite([
     it('processUrl loads data on top of existing', function() {
         var dataSource = new CzmlDataSource();
         dataSource.processUrl(simpleUrl);
-        waitsFor(function() {
+        
+        return pollToPromise(function() {
             return dataSource.entities.entities.length === 10;
-        });
-
-        runs(function() {
+        }).then(function() {
             dataSource.processUrl(vehicleUrl);
-        });
-
-        waitsFor(function() {
-            return dataSource.entities.entities.length === 10;
+            return pollToPromise(function() {
+                return dataSource.entities.entities.length > 10;
+            });
         });
     });
 
     it('loadUrl replaces data', function() {
         var dataSource = new CzmlDataSource();
         dataSource.processUrl(simpleUrl);
-        waitsFor(function() {
+        return pollToPromise(function() {
             return dataSource.entities.entities.length === 10;
-        });
-
-        runs(function() {
+        }).then(function() {
             dataSource.loadUrl(vehicleUrl);
-        });
-
-        waitsFor(function() {
-            return dataSource.entities.entities.length === 1;
+            return pollToPromise(function() {
+                return dataSource.entities.entities.length === 1;
+            });
         });
     });
 
     it('process loads expected data', function() {
-        waitsFor(function() {
+        return pollToPromise(function() {
             return defined(simple);
-        });
-
-        runs(function() {
+        }).then(function() {
             var dataSource = new CzmlDataSource();
             dataSource.process(simple, simpleUrl);
             expect(dataSource.entities.entities.length).toEqual(10);
@@ -270,11 +266,9 @@ defineSuite([
     });
 
     it('process loads data on top of existing', function() {
-        waitsFor(function() {
+        return pollToPromise(function() {
             return defined(simple) && defined(vehicle);
-        });
-
-        runs(function() {
+        }).then(function() {
             var dataSource = new CzmlDataSource();
             dataSource.process(simple, simpleUrl);
             expect(dataSource.entities.entities.length === 10);
@@ -285,11 +279,9 @@ defineSuite([
     });
 
     it('load replaces data', function() {
-        waitsFor(function() {
+        return pollToPromise(function() {
             return defined(simple) && defined(vehicle);
-        });
-
-        runs(function() {
+        }).then(function() {
             var dataSource = new CzmlDataSource();
             dataSource.process(simple, simpleUrl);
             expect(dataSource.entities.entities.length).toEqual(10);
@@ -427,20 +419,12 @@ defineSuite([
         var spy = jasmine.createSpy('errorEvent');
         dataSource.errorEvent.addEventListener(spy);
 
-        var promise = dataSource.loadUrl('Data/Images/Blue.png'); //not JSON
-
-        var resolveSpy = jasmine.createSpy('resolve');
-        var rejectSpy = jasmine.createSpy('reject');
-        when(promise, resolveSpy, rejectSpy);
-
-        waitsFor(function() {
-            return rejectSpy.wasCalled;
-        });
-
-        runs(function() {
+        // Blue.png is not JSON
+        return dataSource.loadUrl('Data/Images/Blue.png').then(function() {
+            // should not be called.
+            expect(false).toBe(true);
+        }).otherwise(function() {
             expect(spy).toHaveBeenCalledWith(dataSource, jasmine.any(Error));
-            expect(rejectSpy).toHaveBeenCalledWith(jasmine.any(Error));
-            expect(resolveSpy).not.toHaveBeenCalled();
         });
     });
 
@@ -450,20 +434,12 @@ defineSuite([
         var spy = jasmine.createSpy('errorEvent');
         dataSource.errorEvent.addEventListener(spy);
 
-        var promise = dataSource.processUrl('Data/Images/Blue.png'); //not JSON
-
-        var resolveSpy = jasmine.createSpy('resolve');
-        var rejectSpy = jasmine.createSpy('reject');
-        when(promise, resolveSpy, rejectSpy);
-
-        waitsFor(function() {
-            return rejectSpy.wasCalled;
-        });
-
-        runs(function() {
+        // Blue.png is not JSON
+        dataSource.processUrl('Data/Images/Blue.png').then(function() {
+            // should not be called.
+            expect(false).toBe(true);
+        }).otherwise(function() {
             expect(spy).toHaveBeenCalledWith(dataSource, jasmine.any(Error));
-            expect(rejectSpy).toHaveBeenCalledWith(jasmine.any(Error));
-            expect(resolveSpy).not.toHaveBeenCalled();
         });
     });
 
