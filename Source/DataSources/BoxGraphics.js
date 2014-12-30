@@ -61,9 +61,9 @@ define([
         show : createPropertyDescriptor('show'),
 
         /**
-         * Gets or sets the {@link Cartesian3} specifying the box's minimum corner.
+         * Gets or sets the {@link Cartesian3} {@link Property} specifying the dimensions of the box.
          * @memberof BoxGraphics.prototype
-         * @type {PositionProperty}
+         * @type {Property}
          */
         dimensions : createPropertyDescriptor('dimensions'),
 
