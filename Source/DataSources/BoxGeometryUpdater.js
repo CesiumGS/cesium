@@ -53,8 +53,7 @@ define([
     var GeometryOptions = function(entity) {
         this.id = entity;
         this.vertexFormat = undefined;
-        this.minimumCorner = undefined;
-        this.maximumCorner = undefined;
+        this.dimensions = undefined;
     };
 
     /**
@@ -322,7 +321,8 @@ define([
 
         return new GeometryInstance({
             id : entity,
-            geometry : new BoxGeometry(this._options),
+            geometry : BoxGeometry.fromDimensions(this._options),
+            modelMatrix : entity._getModelMatrix(Iso8601.MINIMUM_VALUE),
             attributes : attributes
         });
     };
@@ -352,7 +352,8 @@ define([
 
         return new GeometryInstance({
             id : entity,
-            geometry : new BoxOutlineGeometry(this._options),
+            geometry : BoxOutlineGeometry.fromDimensions(this._options),
+            modelMatrix : entity._getModelMatrix(Iso8601.MINIMUM_VALUE),
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
                 color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
@@ -380,7 +381,7 @@ define([
     };
 
     BoxGeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
-        if (!(propertyName === 'availability' || propertyName === 'box')) {
+        if (!(propertyName === 'availability' || propertyName === 'position' || propertyName === 'orientation' || propertyName === 'box')) {
             return;
         }
 
@@ -413,12 +414,11 @@ define([
             return;
         }
 
-        var minimumCorner = box.minimumCorner;
-        var maximumCorner = box.maximumCorner;
+        var dimensions = box.dimensions;
+        var position = entity.position;
 
         var show = box.show;
-        if (!defined(minimumCorner) || !defined(minimumCorner) || //
-            (defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE))) {
+        if (!defined(dimensions) || !defined(position) || (defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE))) {
             if (this._fillEnabled || this._outlineEnabled) {
                 this._fillEnabled = false;
                 this._outlineEnabled = false;
@@ -440,8 +440,9 @@ define([
         this._fillEnabled = fillEnabled;
         this._outlineEnabled = outlineEnabled;
 
-        if (!minimumCorner.isConstant || //
-            !maximumCorner.isConstant || //
+        if (!position.isConstant || //
+            !Property.isConstant(entity.orientation) || //
+            !dimensions.isConstant || //
             !Property.isConstant(outlineWidth)) {
             if (!this._dynamic) {
                 this._dynamic = true;
@@ -450,8 +451,7 @@ define([
         } else {
             var options = this._options;
             options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
-            options.minimumCorner = minimumCorner.getValue(Iso8601.MINIMUM_VALUE, options.minimumCorner);
-            options.maximumCorner = maximumCorner.getValue(Iso8601.MINIMUM_VALUE, options.maximumCorner);
+            options.dimensions = dimensions.getValue(Iso8601.MINIMUM_VALUE, options.dimensions);
             this._outlineWidth = defined(outlineWidth) ? outlineWidth.getValue(Iso8601.MINIMUM_VALUE) : 1.0;
             this._dynamic = false;
             this._geometryChanged.raiseEvent(this);
@@ -510,14 +510,13 @@ define([
         }
 
         var options = this._options;
-        var minimumCorner = Property.getValueOrUndefined(box.minimumCorner, time, options.minimumCorner);
-        var maximumCorner = Property.getValueOrUndefined(box.maximumCorner, time, options.maximumCorner);
-        if (!defined(minimumCorner) || !defined(maximumCorner)) {
+        var modelMatrix = entity._getModelMatrix(time);
+        var dimensions = Property.getValueOrUndefined(box.dimensions, time, options.dimensions);
+        if (!defined(modelMatrix) || !defined(dimensions)) {
             return;
         }
 
-        options.minimumCorner = minimumCorner;
-        options.maximumCorner = maximumCorner;
+        options.dimensions = dimensions;
 
         if (Property.getValueOrDefault(box.fill, time, true)) {
             var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
@@ -533,7 +532,8 @@ define([
             this._primitive = primitives.add(new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
-                    geometry : new BoxGeometry(options)
+                    geometry : BoxGeometry.fromDimensions(options),
+                    modelMatrix : modelMatrix
                 }),
                 appearance : appearance,
                 asynchronous : false
@@ -550,7 +550,8 @@ define([
             this._outlinePrimitive = primitives.add(new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
-                    geometry : new BoxOutlineGeometry(options),
+                    geometry : BoxOutlineGeometry.fromDimensions(options),
+                    modelMatrix : modelMatrix,
                     attributes : {
                         color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
                     }
