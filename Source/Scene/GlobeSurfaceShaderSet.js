@@ -155,20 +155,18 @@ define([
 
             vs.sources.push(getPositionMode);
 
-            if (sceneMode !== SceneMode.SCENE3D) {
-                var get2DYPositionFractionGeographicProjection = 'float get2DYPositionFraction() { return get2DGeographicYPositionFraction(); }';
-                var get2DYPositionFractionMercatorProjection = 'float get2DYPositionFraction() { return get2DMercatorYPositionFraction(); }';
+            var get2DYPositionFractionGeographicProjection = 'float get2DYPositionFraction() { return get2DGeographicYPositionFraction(); }';
+            var get2DYPositionFractionMercatorProjection = 'float get2DYPositionFraction() { return get2DMercatorYPositionFraction(); }';
 
-                var get2DYPositionFraction;
+            var get2DYPositionFraction;
 
-                if (useWebMercatorProjection) {
-                    get2DYPositionFraction = get2DYPositionFractionMercatorProjection;
-                } else {
-                    get2DYPositionFraction = get2DYPositionFractionGeographicProjection;
-                }
-
-                vs.sources.push(get2DYPositionFraction);
+            if (useWebMercatorProjection) {
+                get2DYPositionFraction = get2DYPositionFractionMercatorProjection;
+            } else {
+                get2DYPositionFraction = get2DYPositionFractionGeographicProjection;
             }
+
+            vs.sources.push(get2DYPositionFraction);
 
             var shader = context.createShaderProgram(vs, fs, this._attributeLocations);
             surfaceShader = shadersByFlags[flags] = new GlobeSurfaceShader(numberOfDayTextures, flags, shader);
