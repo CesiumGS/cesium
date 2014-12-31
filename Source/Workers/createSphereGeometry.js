@@ -7,9 +7,9 @@ define([
         SphereGeometry) {
     "use strict";
 
-    return function(sphereGeometry) {
-        if (defined(sphereGeometry.buffer)) {
-            sphereGeometry = SphereGeometry.unpack(sphereGeometry);
+    return function(sphereGeometry, offset) {
+        if (defined(offset)) {
+            sphereGeometry = SphereGeometry.unpack(sphereGeometry, offset);
         }
         return SphereGeometry.createGeometry(sphereGeometry);
     };

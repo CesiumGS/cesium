@@ -9,9 +9,9 @@ define([
         WallOutlineGeometry) {
     "use strict";
 
-    function createWallOutlineGeometry(wallGeometry) {
-        if (defined(wallGeometry.buffer)) {
-            wallGeometry = WallOutlineGeometry.unpack(wallGeometry);
+    function createWallOutlineGeometry(wallGeometry, offset) {
+        if (defined(offset)) {
+            wallGeometry = WallOutlineGeometry.unpack(wallGeometry, offset);
         }
         wallGeometry._ellipsoid = Ellipsoid.clone(wallGeometry._ellipsoid);
         return WallOutlineGeometry.createGeometry(wallGeometry);

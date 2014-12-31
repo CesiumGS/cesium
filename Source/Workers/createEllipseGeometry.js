@@ -11,9 +11,9 @@ define([
         Ellipsoid) {
     "use strict";
 
-    function createEllipseGeometry(ellipseGeometry) {
-        if (defined(ellipseGeometry.buffer)) {
-            ellipseGeometry = EllipseGeometry.unpack(ellipseGeometry);
+    function createEllipseGeometry(ellipseGeometry, offset) {
+        if (defined(offset)) {
+            ellipseGeometry = EllipseGeometry.unpack(ellipseGeometry, offset);
         }
         ellipseGeometry._center = Cartesian3.clone(ellipseGeometry._center);
         ellipseGeometry._ellipsoid = Ellipsoid.clone(ellipseGeometry._ellipsoid);

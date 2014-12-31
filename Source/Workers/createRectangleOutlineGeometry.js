@@ -11,9 +11,9 @@ define([
         RectangleOutlineGeometry) {
     "use strict";
 
-    function createRectangleOutlineGeometry(rectangleGeometry) {
-        if (defined(rectangleGeometry.buffer)) {
-            rectangleGeometry = RectangleOutlineGeometry.unpack(rectangleGeometry);
+    function createRectangleOutlineGeometry(rectangleGeometry, offset) {
+        if (defined(offset)) {
+            rectangleGeometry = RectangleOutlineGeometry.unpack(rectangleGeometry, offset);
         }
         rectangleGeometry._ellipsoid = Ellipsoid.clone(rectangleGeometry._ellipsoid);
         rectangleGeometry._rectangle = Rectangle.clone(rectangleGeometry._rectangle);

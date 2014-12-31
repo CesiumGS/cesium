@@ -7,9 +7,9 @@ define([
         defined) {
     "use strict";
 
-    return function(cylinderGeometry) {
-        if (defined(cylinderGeometry.buffer)) {
-            cylinderGeometry = CylinderGeometry.unpack(cylinderGeometry);
+    return function(cylinderGeometry, offset) {
+        if (defined(offset)) {
+            cylinderGeometry = CylinderGeometry.unpack(cylinderGeometry, offset);
         }
         return CylinderGeometry.createGeometry(cylinderGeometry);
     };
