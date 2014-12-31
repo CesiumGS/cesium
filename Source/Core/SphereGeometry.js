@@ -4,13 +4,15 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
-        './EllipsoidGeometry'
+        './EllipsoidGeometry',
+        './VertexFormat'
     ], function(
         Cartesian3,
         defaultValue,
         defined,
         DeveloperError,
-        EllipsoidGeometry) {
+        EllipsoidGeometry,
+        VertexFormat) {
     "use strict";
 
     /**
@@ -77,6 +79,15 @@ define([
         EllipsoidGeometry.pack(value._ellipsoidGeometry, array, startingIndex);
     };
 
+    var scratchEllipsoidGeometry = new EllipsoidGeometry();
+    var scratchOptions = {
+        radius : undefined,
+        radii : new Cartesian3(),
+        vertexFormat : new VertexFormat(),
+        stackPartitions : undefined,
+        slicePartitions : undefined
+    };
+
     /**
      * Retrieves an instance from a packed array.
      *
@@ -85,22 +96,18 @@ define([
      * @param {SphereGeometry} [result] The object into which to store the result.
      */
     SphereGeometry.unpack = function(array, startingIndex, result) {
-        var ellipsoidGeometry = EllipsoidGeometry.unpack(array, startingIndex);
+        var ellipsoidGeometry = EllipsoidGeometry.unpack(array, startingIndex, scratchEllipsoidGeometry);
+        scratchOptions.vertexFormat = VertexFormat.clone(ellipsoidGeometry._vertexFormat, scratchOptions.vertexFormat);
+        scratchOptions.stackPartitions = ellipsoidGeometry._stackPartitions;
+        scratchOptions.slicePartitions = ellipsoidGeometry._slicePartitions;
 
         if (!defined(result)) {
-            return new SphereGeometry({
-                radius : ellipsoidGeometry._radii.x,
-                vertexFormat : ellipsoidGeometry._vertexFormat,
-                stackPartitions : ellipsoidGeometry._stackPartitions,
-                slicePartitions : ellipsoidGeometry._slicePartitions
-            });
+            scratchOptions.radius = ellipsoidGeometry._radius;
+            return new SphereGeometry(scratchOptions);
         }
 
-        result._radius = ellipsoidGeometry._radii.x;
-        result._vertexFormat = ellipsoidGeometry._vertexFormat;
-        result._stackPartitions = ellipsoidGeometry._stackPartitions;
-        result._slicePartitions = ellipsoidGeometry._slicePartitions;
-
+        Cartesian3.clone(ellipsoidGeometry._radii, scratchOptions.radii);
+        result._ellipsoidGeometry = new EllipsoidGeometry(scratchOptions);
         return result;
     };
 

@@ -1,14 +1,20 @@
 /*global define*/
 define([
+        './Cartesian3',
         './defaultValue',
         './defined',
         './DeveloperError',
-        './EllipseGeometry'
+        './EllipseGeometry',
+        './Ellipsoid',
+        './VertexFormat'
     ], function(
+        Cartesian3,
         defaultValue,
         defined,
         DeveloperError,
-        EllipseGeometry) {
+        EllipseGeometry,
+        Ellipsoid,
+        VertexFormat) {
     "use strict";
 
     /**
@@ -94,6 +100,24 @@ define([
         EllipseGeometry.pack(value._ellipseGeometry, array, startingIndex);
     };
 
+    var scratchEllipseGeometry = new EllipseGeometry({
+        center : new Cartesian3(),
+        semiMajorAxis : 1.0,
+        semiMinorAxis : 1.0
+    });
+    var scratchOptions = {
+        center : new Cartesian3(),
+        radius : undefined,
+        ellipsoid : Ellipsoid.clone(Ellipsoid.UNIT_SPHERE),
+        height : undefined,
+        extrudedHeight : undefined,
+        granularity : undefined,
+        vertexFormat : new VertexFormat(),
+        stRotation : undefined,
+        semiMajorAxis : undefined,
+        semiMinorAxis : undefined
+    };
+
     /**
      * Retrieves an instance from a packed array.
      *
@@ -102,22 +126,23 @@ define([
      * @param {CircleGeometry} [result] The object into which to store the result.
      */
     CircleGeometry.unpack = function(array, startingIndex, result) {
-        var ellipseGeometry = EllipseGeometry.unpack(array, startingIndex);
+        var ellipseGeometry = EllipseGeometry.unpack(array, startingIndex, scratchEllipseGeometry);
+        scratchOptions.center = Cartesian3.clone(ellipseGeometry._center, scratchOptions.center);
+        scratchOptions.ellipsoid = Ellipsoid.clone(ellipseGeometry._ellipsoid, scratchOptions.ellipsoid);
+        scratchOptions.height = ellipseGeometry._height;
+        scratchOptions.extrudedHeight = ellipseGeometry._extrudedHeight;
+        scratchOptions.granularity = ellipseGeometry._granularity;
+        scratchOptions.vertexFormat = VertexFormat.clone(ellipseGeometry._vertexFormat, scratchOptions.vertexFormat);
+        scratchOptions.stRotation = ellipseGeometry._stRotation;
 
         if (!defined(result)) {
-            return new CircleGeometry({
-                center : ellipseGeometry._center,
-                radius : ellipseGeometry._semiMajorAxis,
-                ellipsoid : ellipseGeometry._ellipsoid,
-                height : ellipseGeometry._height,
-                extrudedHeight : ellipseGeometry._extrudedHeight,
-                granularity : ellipseGeometry._granularity,
-                vertexFormat : ellipseGeometry._vertexFormat,
-                stRotation : ellipseGeometry._stRotation
-            });
+            scratchOptions.radius = ellipseGeometry._semiMajorAxis;
+            return new CircleGeometry(scratchOptions);
         }
 
-        result._ellipseGeometry = ellipseGeometry;
+        scratchOptions.semiMajorAxis = ellipseGeometry._semiMajorAxis;
+        scratchOptions.semiMinorAxis = ellipseGeometry._semiMinorAxis;
+        result._ellipseGeometry = new EllipseGeometry(scratchOptions);
         return result;
     };
 

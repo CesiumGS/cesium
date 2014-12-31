@@ -165,6 +165,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var center = options.center;
+        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var semiMajorAxis = options.semiMajorAxis;
         var semiMinorAxis = options.semiMinorAxis;
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
@@ -196,7 +197,7 @@ define([
         this._center = Cartesian3.clone(center);
         this._semiMajorAxis = semiMajorAxis;
         this._semiMinorAxis = semiMinorAxis;
-        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+        this._ellipsoid = Ellipsoid.clone(ellipsoid);
         this._rotation = defaultValue(options.rotation, 0.0);
         this._height = height;
         this._granularity = granularity;
@@ -248,6 +249,20 @@ define([
         array[startingIndex]   = value._numberOfVerticalLines;
     };
 
+    var scratchCenter = new Cartesian3();
+    var scratchEllipsoid = new Ellipsoid();
+    var scratchOptions = {
+        center : scratchCenter,
+        ellipsoid : scratchEllipsoid,
+        semiMajorAxis : undefined,
+        semiMinorAxis : undefined,
+        rotation : undefined,
+        height : undefined,
+        granularity : undefined,
+        extrudedHeight : undefined,
+        numberOfVerticalLines : undefined
+    };
+
     /**
      * Retrieves an instance from a packed array.
      *
@@ -264,10 +279,10 @@ define([
 
         startingIndex = defaultValue(startingIndex, 0);
 
-        var center = Cartesian3.unpack(array, startingIndex);
+        var center = Cartesian3.unpack(array, startingIndex, scratchCenter);
         startingIndex += Cartesian3.packedLength;
 
-        var ellipsoid = Ellipsoid.unpack(array, startingIndex);
+        var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
         startingIndex += Ellipsoid.packedLength;
 
         var semiMajorAxis = array[startingIndex++];
@@ -280,22 +295,18 @@ define([
         var numberOfVerticalLines = array[startingIndex];
 
         if (!defined(result)) {
-            return new EllipseOutlineGeometry({
-                center : center,
-                ellipsoid : ellipsoid,
-                semiMajorAxis : semiMajorAxis,
-                semiMinorAxis : semiMinorAxis,
-                rotation : rotation,
-                height : height,
-                granularity : granularity,
-                extrudedHeight : extrudedHeight,
-                extrude : extrude,
-                numberOfVerticalLines : numberOfVerticalLines
-            });
+            scratchOptions.height = height;
+            scratchOptions.extrudedHeight = extrudedHeight;
+            scratchOptions.granularity = granularity;
+            scratchOptions.rotation = rotation;
+            scratchOptions.semiMajorAxis = semiMajorAxis;
+            scratchOptions.semiMinorAxis = semiMinorAxis;
+            scratchOptions.numberOfVerticalLines = numberOfVerticalLines;
+            return new EllipseOutlineGeometry(scratchOptions);
         }
 
-        result._center = center;
-        result._ellipsoid = ellipsoid;
+        result._center = Cartesian3.clone(center, result._center);
+        result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
         result._semiMajorAxis = semiMajorAxis;
         result._semiMinorAxis = semiMinorAxis;
         result._rotation = rotation;

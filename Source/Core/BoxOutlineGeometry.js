@@ -136,6 +136,13 @@ define([
         Cartesian3.pack(value._max, array, startingIndex + Cartesian3.packedLength);
     };
 
+    var scratchMin = new Cartesian3();
+    var scratchMax = new Cartesian3();
+    var scratchOptions = {
+        minimumCorner : scratchMin,
+        maximumCorner : scratchMax
+    };
+
     /**
      * Retrieves an instance from a packed array.
      *
@@ -152,18 +159,15 @@ define([
 
         startingIndex = defaultValue(startingIndex, 0);
 
-        var min = Cartesian3.unpack(array, startingIndex);
-        var max = Cartesian3.unpack(array, startingIndex + Cartesian3.packedLength);
+        var min = Cartesian3.unpack(array, startingIndex, scratchMin);
+        var max = Cartesian3.unpack(array, startingIndex + Cartesian3.packedLength, scratchMax);
 
         if (!defined(result)) {
-            return new BoxOutlineGeometry({
-                minimumCorner : min,
-                maximumCorner : max
-            });
+            return new BoxOutlineGeometry(scratchOptions);
         }
 
-        result._min = min;
-        result._max = max;
+        result._min = Cartesian3.clone(min, result._min);
+        result._max = Cartesian3.clone(max, result._max);
 
         return result;
     };

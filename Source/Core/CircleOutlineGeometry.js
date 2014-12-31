@@ -1,14 +1,18 @@
 /*global define*/
 define([
+        './Cartesian3',
         './defaultValue',
         './defined',
         './DeveloperError',
-        './EllipseOutlineGeometry'
+        './EllipseOutlineGeometry',
+        './Ellipsoid'
     ], function(
+        Cartesian3,
         defaultValue,
         defined,
         DeveloperError,
-        EllipseOutlineGeometry) {
+        EllipseOutlineGeometry,
+        Ellipsoid) {
     "use strict";
 
     /**
@@ -92,6 +96,23 @@ define([
         EllipseOutlineGeometry.pack(value._ellipseGeometry, array, startingIndex);
     };
 
+    var scratchEllipseGeometry = new EllipseOutlineGeometry({
+        center : new Cartesian3(),
+        semiMajorAxis : 1.0,
+        semiMinorAxis : 1.0
+    });
+    var scratchOptions = {
+        center : new Cartesian3(),
+        radius : undefined,
+        ellipsoid : Ellipsoid.clone(Ellipsoid.UNIT_SPHERE),
+        height : undefined,
+        extrudedHeight : undefined,
+        granularity : undefined,
+        numberOfVerticalLines : undefined,
+        semiMajorAxis : undefined,
+        semiMinorAxis : undefined
+    };
+
     /**
      * Retrieves an instance from a packed array.
      *
@@ -100,21 +121,22 @@ define([
      * @param {CircleOutlineGeometry} [result] The object into which to store the result.
      */
     CircleOutlineGeometry.unpack = function(array, startingIndex, result) {
-        var ellipseGeometry = EllipseOutlineGeometry.unpack(array, startingIndex);
+        var ellipseGeometry = EllipseOutlineGeometry.unpack(array, startingIndex, scratchEllipseGeometry);
+        scratchOptions.center = Cartesian3.clone(ellipseGeometry._center, scratchOptions.center);
+        scratchOptions.ellipsoid = Ellipsoid.clone(ellipseGeometry._ellipsoid, scratchOptions.ellipsoid);
+        scratchOptions.height = ellipseGeometry._height;
+        scratchOptions.extrudedHeight = ellipseGeometry._extrudedHeight;
+        scratchOptions.granularity = ellipseGeometry._granularity;
+        scratchOptions.numberOfVerticalLines = ellipseGeometry._numberOfVerticalLines;
 
         if (!defined(result)) {
-            return new CircleOutlineGeometry({
-                center : ellipseGeometry._center,
-                radius : ellipseGeometry._semiMajorAxis,
-                ellipsoid : ellipseGeometry._ellipsoid,
-                height : ellipseGeometry._height,
-                extrudedHeight : ellipseGeometry._extrudedHeight,
-                granularity : ellipseGeometry._granularity,
-                numberOfVerticalLines : ellipseGeometry._numberOfVerticalLines
-            });
+            scratchOptions.radius = ellipseGeometry._semiMajorAxis;
+            return new CircleOutlineGeometry(scratchOptions);
         }
 
-        result._ellipseGeometry = ellipseGeometry;
+        scratchOptions.semiMajorAxis = ellipseGeometry._semiMajorAxis;
+        scratchOptions.semiMinorAxis = ellipseGeometry._semiMinorAxis;
+        result._ellipseGeometry = new EllipseOutlineGeometry(scratchOptions);
         return result;
     };
 

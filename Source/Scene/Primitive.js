@@ -756,7 +756,7 @@ define([
                             geometry = subTask.geometry;
                             if (defined(geometry.constructor.pack)) {
                                 subTask.offset = packedLength;
-                                packedLength += defined(geometry.constructor.packedLength) ? geometry.constructor.packedLength : geometry.packedLength;
+                                packedLength += defaultValue(geometry.constructor.packedLength, geometry.packedLength);
                             }
                         }
 

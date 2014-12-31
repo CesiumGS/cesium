@@ -590,12 +590,14 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var center = options.center;
+        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var semiMajorAxis = options.semiMajorAxis;
         var semiMinorAxis = options.semiMinorAxis;
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         var height = defaultValue(options.height, 0.0);
         var extrudedHeight = options.extrudedHeight;
         var extrude = (defined(extrudedHeight) && Math.abs(height - extrudedHeight) > 1.0);
+        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(center)) {
@@ -621,12 +623,12 @@ define([
         this._center = Cartesian3.clone(center);
         this._semiMajorAxis = semiMajorAxis;
         this._semiMinorAxis = semiMinorAxis;
-        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+        this._ellipsoid = Ellipsoid.clone(ellipsoid);
         this._rotation = defaultValue(options.rotation, 0.0);
         this._stRotation = defaultValue(options.stRotation, 0.0);
         this._height = height;
         this._granularity = granularity;
-        this._vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+        this._vertexFormat = VertexFormat.clone(vertexFormat);
         this._extrudedHeight = defaultValue(extrudedHeight, height);
         this._extrude = extrude;
         this._workerName = 'createEllipseGeometry';
@@ -677,6 +679,22 @@ define([
         array[startingIndex]   = value._extrude ? 1.0 : 0.0;
     };
 
+    var scratchCenter = new Cartesian3();
+    var scratchEllipsoid = new Ellipsoid();
+    var scratchVertexFormat = new VertexFormat();
+    var scratchOptions = {
+        center : scratchCenter,
+        ellipsoid : scratchEllipsoid,
+        vertexFormat : scratchVertexFormat,
+        semiMajorAxis : undefined,
+        semiMinorAxis : undefined,
+        rotation : undefined,
+        stRotation : undefined,
+        height : undefined,
+        granularity : undefined,
+        extrudedHeight : undefined
+    };
+
     /**
      * Retrieves an instance from a packed array.
      *
@@ -693,13 +711,13 @@ define([
 
         startingIndex = defaultValue(startingIndex, 0);
 
-        var center = Cartesian3.unpack(array, startingIndex);
+        var center = Cartesian3.unpack(array, startingIndex, scratchCenter);
         startingIndex += Cartesian3.packedLength;
 
-        var ellipsoid = Ellipsoid.unpack(array, startingIndex);
+        var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
         startingIndex += Ellipsoid.packedLength;
 
-        var vertexFormat = VertexFormat.unpack(array, startingIndex);
+        var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
         startingIndex += VertexFormat.packedLength;
 
         var semiMajorAxis = array[startingIndex++];
@@ -712,24 +730,19 @@ define([
         var extrude = array[startingIndex] === 1.0;
 
         if (!defined(result)) {
-            return new EllipseGeometry({
-                center : center,
-                ellipsoid : ellipsoid,
-                vertexFormat : vertexFormat,
-                semiMajorAxis : semiMajorAxis,
-                semiMinorAxis : semiMinorAxis,
-                rotation : rotation,
-                stRotation : stRotation,
-                height : height,
-                granularity : granularity,
-                extrudedHeight : extrudedHeight,
-                extrude : extrude
-            });
+            scratchOptions.height = height;
+            scratchOptions.extrudedHeight = extrudedHeight;
+            scratchOptions.granularity = granularity;
+            scratchOptions.stRotation = stRotation;
+            scratchOptions.rotation = rotation;
+            scratchOptions.semiMajorAxis = semiMajorAxis;
+            scratchOptions.semiMinorAxis = semiMinorAxis;
+            return new EllipseGeometry(scratchOptions);
         }
 
-        result._center = center;
-        result._ellipsoid = ellipsoid;
-        result._vertexFormat = vertexFormat;
+        result._center = Cartesian3.clone(center, result._center);
+        result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
+        result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
         result._semiMajorAxis = semiMajorAxis;
         result._semiMinorAxis = semiMinorAxis;
         result._rotation = rotation;

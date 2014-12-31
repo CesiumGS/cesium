@@ -77,6 +77,15 @@ define([
         EllipsoidOutlineGeometry.pack(value._ellipsoidGeometry, array, startingIndex);
     };
 
+    var scratchEllipsoidGeometry = new EllipsoidOutlineGeometry();
+    var scratchOptions = {
+        radius : undefined,
+        radii : new Cartesian3(),
+        stackPartitions : undefined,
+        slicePartitions : undefined,
+        subdivisions : undefined
+    };
+
     /**
      * Retrieves an instance from a packed array.
      *
@@ -85,22 +94,18 @@ define([
      * @param {SphereOutlineGeometry} [result] The object into which to store the result.
      */
     SphereOutlineGeometry.unpack = function(array, startingIndex, result) {
-        var ellipsoidGeometry = EllipsoidOutlineGeometry.unpack(array, startingIndex);
+        var ellipsoidGeometry = EllipsoidOutlineGeometry.unpack(array, startingIndex, scratchEllipsoidGeometry);
+        scratchOptions.stackPartitions = ellipsoidGeometry._stackPartitions;
+        scratchOptions.slicePartitions = ellipsoidGeometry._slicePartitions;
+        scratchOptions.subdivisions = ellipsoidGeometry._subdivisions;
 
         if (!defined(result)) {
-            return new SphereOutlineGeometry({
-                radius : ellipsoidGeometry._radii.x,
-                stackPartitions : ellipsoidGeometry._stackPartitions,
-                slicePartitions : ellipsoidGeometry._slicePartitions,
-                subdivisions : ellipsoidGeometry._subdivisions
-            });
+            scratchOptions.radius = ellipsoidGeometry._radius;
+            return new SphereOutlineGeometry(scratchOptions);
         }
 
-        result._radius = ellipsoidGeometry._radii.x;
-        result._stackPartitions = ellipsoidGeometry._stackPartitions;
-        result._slicePartitions = ellipsoidGeometry._slicePartitions;
-        result._subdivisions = ellipsoidGeometry._subdivisions;
-
+        Cartesian3.clone(ellipsoidGeometry._radii, scratchOptions.radii);
+        result._ellipsoidGeometry = new EllipsoidOutlineGeometry(scratchOptions);
         return result;
     };
 

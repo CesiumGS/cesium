@@ -147,6 +147,15 @@ define([
         VertexFormat.pack(value._vertexFormat, array, startingIndex + 2 * Cartesian3.packedLength);
     };
 
+    var scratchMin = new Cartesian3();
+    var scratchMax = new Cartesian3();
+    var scratchVertexFormat = new VertexFormat();
+    var scratchOptions = {
+        minimumCorner : scratchMin,
+        maximumCorner : scratchMax,
+        vertexFormat : scratchVertexFormat
+    };
+
     /**
      * Retrieves an instance from a packed array.
      *
@@ -163,21 +172,17 @@ define([
 
         startingIndex = defaultValue(startingIndex, 0);
 
-        var min = Cartesian3.unpack(array, startingIndex);
-        var max = Cartesian3.unpack(array, startingIndex + Cartesian3.packedLength);
-        var vertexFormat = VertexFormat.unpack(array, startingIndex + 2 * Cartesian3.packedLength);
+        var min = Cartesian3.unpack(array, startingIndex, scratchMin);
+        var max = Cartesian3.unpack(array, startingIndex + Cartesian3.packedLength, scratchMax);
+        var vertexFormat = VertexFormat.unpack(array, startingIndex + 2 * Cartesian3.packedLength, scratchVertexFormat);
 
         if (!defined(result)) {
-            return new BoxGeometry({
-                minimumCorner : min,
-                maximumCorner : max,
-                vertexFormat : vertexFormat
-            });
+            return new BoxGeometry(scratchOptions);
         }
 
-        result._minimumCorner = min;
-        result._maximumCorner = max;
-        result._vertexFormat = vertexFormat;
+        result._minimumCorner = Cartesian3.clone(min, result._minimumCorner);
+        result._maximumCorner = Cartesian3.clone(max, result._maximumCorner);
+        result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
 
         return result;
     };

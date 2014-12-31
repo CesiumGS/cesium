@@ -120,6 +120,14 @@ define([
         array[startingIndex]   = value._subdivisions;
     };
 
+    var scratchRadii = new Cartesian3();
+    var scratchOptions = {
+        radii : scratchRadii,
+        stackPartitions : undefined,
+        slicePartitions : undefined,
+        subdivisions : undefined
+    };
+
     /**
      * Retrieves an instance from a packed array.
      *
@@ -136,7 +144,7 @@ define([
 
         startingIndex = defaultValue(startingIndex, 0);
 
-        var radii = Cartesian3.unpack(array, startingIndex);
+        var radii = Cartesian3.unpack(array, startingIndex, scratchRadii);
         startingIndex += Cartesian3.packedLength;
 
         var stackPartitions = array[startingIndex++];
@@ -144,15 +152,13 @@ define([
         var subdivisions = array[startingIndex++];
 
         if (!defined(result)) {
-            return new EllipsoidOutlineGeometry({
-                radii : radii,
-                stackPartitions : stackPartitions,
-                slicePartitions : slicePartitions,
-                subdivisions : subdivisions
-            });
+            scratchOptions.stackPartitions = stackPartitions;
+            scratchOptions.slicePartitions = slicePartitions;
+            scratchOptions.subdivisions = subdivisions;
+            return new EllipsoidOutlineGeometry(scratchOptions);
         }
 
-        result._radii = radii;
+        result._radii = Cartesian3.clone(radii, result._radii);
         result._stackPartitions = stackPartitions;
         result._slicePartitions = slicePartitions;
         result._subdivisions = subdivisions;

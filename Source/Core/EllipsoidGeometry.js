@@ -89,7 +89,7 @@ define([
         this._radii = Cartesian3.clone(radii);
         this._stackPartitions = stackPartitions;
         this._slicePartitions = slicePartitions;
-        this._vertexFormat = vertexFormat;
+        this._vertexFormat = VertexFormat.clone(vertexFormat);
         this._workerName = 'createEllipsoidGeometry';
     };
 
@@ -129,6 +129,15 @@ define([
         array[startingIndex]   = value._slicePartitions;
     };
 
+    var scratchRadii = new Cartesian3();
+    var scratchVertexFormat = new VertexFormat();
+    var scratchOptions = {
+        radii : scratchRadii,
+        vertexFormat : scratchVertexFormat,
+        stackPartitions : undefined,
+        slicePartitions : undefined
+    };
+
     /**
      * Retrieves an instance from a packed array.
      *
@@ -145,26 +154,23 @@ define([
 
         startingIndex = defaultValue(startingIndex, 0);
 
-        var radii = Cartesian3.unpack(array, startingIndex);
+        var radii = Cartesian3.unpack(array, startingIndex, scratchRadii);
         startingIndex += Cartesian3.packedLength;
 
-        var vertexFormat = VertexFormat.unpack(array, startingIndex);
+        var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
         startingIndex += VertexFormat.packedLength;
 
         var stackPartitions = array[startingIndex++];
         var slicePartitions = array[startingIndex];
 
         if (!defined(result)) {
-            return new EllipsoidGeometry({
-                radii : radii,
-                vertexFormat : vertexFormat,
-                stackPartitions : stackPartitions,
-                slicePartitions : slicePartitions
-            });
+            scratchOptions.stackPartitions = stackPartitions;
+            scratchOptions.slicePartitions = slicePartitions;
+            return new EllipsoidGeometry(scratchOptions);
         }
 
-        result._radii = radii;
-        result._vertexFormat = vertexFormat;
+        result._radii = Cartesian3.clone(radii, result._radii);
+        result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
         result._stackPartitions = stackPartitions;
         result._slicePartitions = slicePartitions;
 
