@@ -12,6 +12,7 @@ Change Log
   * `Rectangle.isEmpty` was deprecated. It will be removed in Cesium 1.6.
 * Improved GeoJSON, TopoJSON, and general polygon loading performance.
 * Added caching to `Model` to save memory and improve loading speed when several models with the same url are created.
+* Added `ModelNode.show` for per-node show/hide.
 * Added the following properties to `Viewer` and `CesiumWidget`: `imageryLayers`, `terrainProvider`, and `camera`.  This avoids the need to access `viewer.scene` in some cases.
 * Dramatically improved the quality of font outlines.
 * Added `BoxGraphics` and `Entity.box`.
