@@ -64,7 +64,7 @@ define([
      * var terrainProvider = new Cesium.VRTheWorldTerrainProvider({
      *   url : '//www.vr-theworld.com/vr-theworld/tiles1.0.0/73/'
      * });
-     * scene.terrainProvider = terrainProvider;
+     * viewer.terrainProvider = terrainProvider;
      */
     var VRTheWorldTerrainProvider = function VRTheWorldTerrainProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

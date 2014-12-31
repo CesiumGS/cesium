@@ -11,7 +11,6 @@ define([
         'Cesium/Widgets/Viewer/Viewer',
         'Cesium/Widgets/Viewer/viewerCesiumInspectorMixin',
         'Cesium/Widgets/Viewer/viewerDragDropMixin',
-        'Cesium/Widgets/Viewer/viewerEntityMixin',
         'domReady!'
     ], function(
         defined,
@@ -24,8 +23,7 @@ define([
         TileMapServiceImageryProvider,
         Viewer,
         viewerCesiumInspectorMixin,
-        viewerDragDropMixin,
-        viewerEntityMixin) {
+        viewerDragDropMixin) {
     "use strict";
     /*global console*/
 
@@ -65,7 +63,6 @@ define([
     }
 
     viewer.extend(viewerDragDropMixin);
-    viewer.extend(viewerEntityMixin);
     if (endUserOptions.inspector) {
         viewer.extend(viewerCesiumInspectorMixin);
     }

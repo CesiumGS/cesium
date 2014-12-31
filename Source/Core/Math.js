@@ -494,8 +494,8 @@ define([
         }
         //>>includeEnd('debug');
         var mod = CesiumMath.mod(x, CesiumMath.TWO_PI);
-        if (mod === 0.0 && x !== 0.0) {
-            return CesiumMath.sign(x) * CesiumMath.TWO_PI;
+        if (Math.abs(mod) < CesiumMath.EPSILON14 && Math.abs(x) > CesiumMath.EPSILON14) {
+            return CesiumMath.TWO_PI;
         }
         return mod;
     };

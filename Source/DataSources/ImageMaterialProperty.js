@@ -114,12 +114,5 @@ define([
                 Property.equals(this._repeat, other._repeat));
     };
 
-    /**
-     * @private
-     */
-    ImageMaterialProperty.prototype._raiseDefinitionChanged = function(){
-        this._definitionChanged.raiseEvent(this);
-    };
-
     return ImageMaterialProperty;
 });

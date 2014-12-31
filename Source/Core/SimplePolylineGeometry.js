@@ -132,6 +132,12 @@ define([
 
     var scratchArray1 = new Array(2);
     var scratchArray2 = new Array(2);
+    var generateArcOptionsScratch = {
+        positions : scratchArray1,
+        height: scratchArray2,
+        ellipsoid: undefined,
+        minDistance : undefined
+    };
 
     /**
      * Computes the geometric representation of a simple polyline, including its vertices, indices, and a bounding sphere.
@@ -148,7 +154,6 @@ define([
         var ellipsoid = simplePolylineGeometry._ellipsoid;
 
         var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
-
         var perSegmentColors = defined(colors) && !perVertex;
 
         var i;
@@ -157,46 +162,41 @@ define([
         var positionValues;
         var numberOfPositions;
         var colorValues;
-        var p0, p1, c0, c1, ci;
         var color;
         var offset = 0;
-        var l = 0;
-        var k = 0;
-        var j = 0;
 
         if (followSurface) {
             var heights = PolylinePipeline.extractHeights(positions, ellipsoid);
-            if (perSegmentColors) {
-                for (i = 0; i < length-1; i++) {
-                    p0 = positions[i];
-                    p1 = positions[i+1];
+            var generateArcOptions = generateArcOptionsScratch;
+            generateArcOptions.minDistance = minDistance;
+            generateArcOptions.ellipsoid = ellipsoid;
 
-                    l += PolylinePipeline.numberOfPoints(p0, p1, minDistance);
-                    l++;
+            if (perSegmentColors) {
+                var positionCount = 0;
+                for (i = 0; i < length - 1; i++) {
+                    positionCount += PolylinePipeline.numberOfPoints(positions[i], positions[i+1], minDistance) + 1;
                 }
 
-                positionValues = new Float64Array(l*3);
-                colorValues = new Uint8Array(l*4);
+                positionValues = new Float64Array(positionCount * 3);
+                colorValues = new Uint8Array(positionCount * 4);
 
-                ci = 0;
-                for (i = 0; i < length-1; i++) {
+                generateArcOptions.positions = scratchArray1;
+                generateArcOptions.height= scratchArray2;
+
+                var ci = 0;
+                for (i = 0; i < length - 1; ++i) {
                     scratchArray1[0] = positions[i];
-                    scratchArray1[1] = positions[i+1];
+                    scratchArray1[1] = positions[i + 1];
 
                     scratchArray2[0] = heights[i];
-                    scratchArray2[1] = heights[i+1];
+                    scratchArray2[1] = heights[i + 1];
 
-                    var pos = PolylinePipeline.generateArc({
-                        positions : scratchArray1,
-                        minDistance : minDistance,
-                        ellipsoid: ellipsoid,
-                        height: scratchArray2
-                    });
+                    var pos = PolylinePipeline.generateArc(generateArcOptions);
 
                     if (defined(colors)) {
-                        var segLen = pos.length/3;
+                        var segLen = pos.length / 3;
                         color = colors[i];
-                        for(k = 0; k < segLen; k++) {
+                        for(var k = 0; k < segLen; ++k) {
                             colorValues[ci++] = Color.floatToByte(color.red);
                             colorValues[ci++] = Color.floatToByte(color.green);
                             colorValues[ci++] = Color.floatToByte(color.blue);
@@ -208,60 +208,63 @@ define([
                     offset += pos.length;
                 }
             } else {
-                positionValues = new Float64Array(PolylinePipeline.generateArc({
-                    positions: positions,
-                    minDistance: minDistance,
-                    ellipsoid: ellipsoid,
-                    height: heights
-                }));
+                generateArcOptions.positions = positions;
+                generateArcOptions.height= heights;
+                positionValues = new Float64Array(PolylinePipeline.generateArc(generateArcOptions));
 
                 if (defined(colors)) {
-                    colorValues = new Uint8Array(positionValues.length/3*4);
+                    colorValues = new Uint8Array(positionValues.length / 3 * 4);
 
-                    for (i = 0; i < length-1; i++) {
-                        p0 = positions[i];
-                        p1 = positions[i+1];
-                        c0 = colors[i];
-                        c1 = colors[i+1];
+                    for (i = 0; i < length - 1; ++i) {
+                        var p0 = positions[i];
+                        var p1 = positions[i + 1];
+                        var c0 = colors[i];
+                        var c1 = colors[i + 1];
                         offset = interpolateColors(p0, p1, c0, c1, minDistance, colorValues, offset);
                     }
-                    colorValues[offset++] = Color.floatToByte(c1.red);
-                    colorValues[offset++] = Color.floatToByte(c1.green);
-                    colorValues[offset++] = Color.floatToByte(c1.blue);
-                    colorValues[offset++] = Color.floatToByte(c1.alpha);
+
+                    var lastColor = colors[length - 1];
+                    colorValues[offset++] = Color.floatToByte(lastColor.red);
+                    colorValues[offset++] = Color.floatToByte(lastColor.green);
+                    colorValues[offset++] = Color.floatToByte(lastColor.blue);
+                    colorValues[offset++] = Color.floatToByte(lastColor.alpha);
                 }
             }
         } else {
-            numberOfPositions = perSegmentColors ? positions.length * 2 - 2 : positions.length;
+            numberOfPositions = perSegmentColors ? length * 2 - 2 : length;
             positionValues = new Float64Array(numberOfPositions * 3);
             colorValues = defined(colors) ? new Uint8Array(numberOfPositions * 4) : undefined;
+
+            var positionIndex = 0;
+            var colorIndex = 0;
+
             for (i = 0; i < length; ++i) {
                 var p = positions[i];
 
                 if (perSegmentColors && i > 0) {
-                    Cartesian3.pack(p, positionValues, j);
-                    j += 3;
+                    Cartesian3.pack(p, positionValues, positionIndex);
+                    positionIndex += 3;
 
                     color = colors[i - 1];
-                    colorValues[k++] = Color.floatToByte(color.red);
-                    colorValues[k++] = Color.floatToByte(color.green);
-                    colorValues[k++] = Color.floatToByte(color.blue);
-                    colorValues[k++] = Color.floatToByte(color.alpha);
+                    colorValues[colorIndex++] = Color.floatToByte(color.red);
+                    colorValues[colorIndex++] = Color.floatToByte(color.green);
+                    colorValues[colorIndex++] = Color.floatToByte(color.blue);
+                    colorValues[colorIndex++] = Color.floatToByte(color.alpha);
                 }
 
                 if (perSegmentColors && i === length - 1) {
                     break;
                 }
 
-                Cartesian3.pack(p, positionValues, j);
-                j += 3;
+                Cartesian3.pack(p, positionValues, positionIndex);
+                positionIndex += 3;
 
                 if (defined(colors)) {
                     color = colors[i];
-                    colorValues[k++] = Color.floatToByte(color.red);
-                    colorValues[k++] = Color.floatToByte(color.green);
-                    colorValues[k++] = Color.floatToByte(color.blue);
-                    colorValues[k++] = Color.floatToByte(color.alpha);
+                    colorValues[colorIndex++] = Color.floatToByte(color.red);
+                    colorValues[colorIndex++] = Color.floatToByte(color.green);
+                    colorValues[colorIndex++] = Color.floatToByte(color.blue);
+                    colorValues[colorIndex++] = Color.floatToByte(color.alpha);
                 }
             }
         }
@@ -286,10 +289,10 @@ define([
         var numberOfIndices = (numberOfPositions - 1) * 2;
         var indices = IndexDatatype.createTypedArray(numberOfPositions, numberOfIndices);
 
-        j = 0;
-        for (i = 0; i < numberOfPositions - 1; i++) {
-            indices[j++] = i;
-            indices[j++] = i + 1;
+        var index = 0;
+        for (i = 0; i < numberOfPositions - 1; ++i) {
+            indices[index++] = i;
+            indices[index++] = i + 1;
         }
 
         return new Geometry({

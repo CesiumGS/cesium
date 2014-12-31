@@ -113,11 +113,7 @@ define([
      *     proxy: new Cesium.DefaultProxy('/proxy/')
      * });
      *
-     * viewer.scene.imageryLayers.addImageryProvider(provider);
-     *
-     * // This line is not required to use a WMS imagery layer, but adding it will enable automatic
-     * // display of WMS feature information (if available) on click.
-     * viewer.extend(Cesium.viewerEntityMixin);
+     * viewer.imageryLayers.addImageryProvider(provider);
      */
     var WebMapServiceImageryProvider = function WebMapServiceImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

@@ -4,348 +4,21 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/FeatureDetection',
-        '../Core/Matrix2',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
         '../Core/RuntimeError',
-        './AutomaticUniforms'
+        './AutomaticUniforms',
+        './Uniform',
+        './UniformArray'
     ], function(
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
-        FeatureDetection,
-        Matrix2,
-        Matrix3,
-        Matrix4,
         RuntimeError,
-        AutomaticUniforms) {
+        AutomaticUniforms,
+        Uniform,
+        UniformArray) {
     "use strict";
     /*global console*/
-
-    var scratchUniformMatrix2;
-    var scratchUniformMatrix3;
-    var scratchUniformMatrix4;
-    if (FeatureDetection.supportsTypedArrays()) {
-        scratchUniformMatrix2 = new Float32Array(4);
-        scratchUniformMatrix3 = new Float32Array(9);
-        scratchUniformMatrix4 = new Float32Array(16);
-    }
-    function setUniform(uniform) {
-        var gl = uniform._gl;
-        var location = uniform._location;
-        switch (uniform._activeUniform.type) {
-        case gl.FLOAT:
-            return function() {
-                gl.uniform1f(location, uniform.value);
-            };
-        case gl.FLOAT_VEC2:
-            return function() {
-                var v = uniform.value;
-                gl.uniform2f(location, v.x, v.y);
-            };
-        case gl.FLOAT_VEC3:
-            return function() {
-                var v = uniform.value;
-
-                if (defined(v.red)) {
-                    gl.uniform3f(location, v.red, v.green, v.blue);
-                } else if (defined(v.x)) {
-                    gl.uniform3f(location, v.x, v.y, v.z);
-                } else {
-                    throw new DeveloperError('Invalid vec3 value for uniform "' + uniform._activeUniform.name + '".');
-                }
-            };
-        case gl.FLOAT_VEC4:
-            return function() {
-                var v = uniform.value;
-
-                if (defined(v.red)) {
-                    gl.uniform4f(location, v.red, v.green, v.blue, v.alpha);
-                } else if (defined(v.x)) {
-                    gl.uniform4f(location, v.x, v.y, v.z, v.w);
-                } else {
-                    throw new DeveloperError('Invalid vec4 value for uniform "' + uniform._activeUniform.name + '".');
-                }
-            };
-        case gl.SAMPLER_2D:
-        case gl.SAMPLER_CUBE:
-            return function() {
-                gl.activeTexture(gl.TEXTURE0 + uniform.textureUnitIndex);
-                gl.bindTexture(uniform.value._target, uniform.value._texture);
-            };
-        case gl.INT:
-        case gl.BOOL:
-            return function() {
-                gl.uniform1i(location, uniform.value);
-            };
-        case gl.INT_VEC2:
-        case gl.BOOL_VEC2:
-            return function() {
-                var v = uniform.value;
-                gl.uniform2i(location, v.x, v.y);
-            };
-        case gl.INT_VEC3:
-        case gl.BOOL_VEC3:
-            return function() {
-                var v = uniform.value;
-                gl.uniform3i(location, v.x, v.y, v.z);
-            };
-        case gl.INT_VEC4:
-        case gl.BOOL_VEC4:
-            return function() {
-                var v = uniform.value;
-                gl.uniform4i(location, v.x, v.y, v.z, v.w);
-            };
-        case gl.FLOAT_MAT2:
-            return function() {
-                gl.uniformMatrix2fv(location, false, Matrix2.toArray(uniform.value, scratchUniformMatrix2));
-            };
-        case gl.FLOAT_MAT3:
-            return function() {
-                gl.uniformMatrix3fv(location, false, Matrix3.toArray(uniform.value, scratchUniformMatrix3));
-            };
-        case gl.FLOAT_MAT4:
-            return function() {
-                gl.uniformMatrix4fv(location, false, Matrix4.toArray(uniform.value, scratchUniformMatrix4));
-            };
-        default:
-            throw new RuntimeError('Unrecognized uniform type: ' + uniform._activeUniform.type + ' for uniform "' + uniform._activeUniform.name + '".');
-        }
-    }
-
-    /**
-     * @private
-     */
-    var Uniform = function(gl, activeUniform, uniformName, location, value) {
-        this.value = value;
-
-        this._gl = gl;
-        this._activeUniform = activeUniform;
-        this._uniformName = uniformName;
-        this._location = location;
-
-        /**
-         * @private
-         */
-        this.textureUnitIndex = undefined;
-
-        this._set = setUniform(this);
-
-        if ((activeUniform.type === gl.SAMPLER_2D) || (activeUniform.type === gl.SAMPLER_CUBE)) {
-            this._setSampler = function(textureUnitIndex) {
-                this.textureUnitIndex = textureUnitIndex;
-                gl.uniform1i(location, textureUnitIndex);
-                return textureUnitIndex + 1;
-            };
-        }
-    };
-
-    defineProperties(Uniform.prototype, {
-        name : {
-            get : function() {
-                return this._uniformName;
-            }
-        },
-        datatype : {
-            get : function() {
-                return this._activeUniform.type;
-            }
-        }
-    });
-
-    function setUniformArray(uniformArray) {
-        var gl = uniformArray._gl;
-        var locations = uniformArray._locations;
-        switch (uniformArray._activeUniform.type) {
-        case gl.FLOAT:
-            return function() {
-                var value = uniformArray.value;
-                var length = value.length;
-                for (var i = 0; i < length; ++i) {
-                    gl.uniform1f(locations[i], value[i]);
-                }
-            };
-        case gl.FLOAT_VEC2:
-            return function() {
-                var value = uniformArray.value;
-                var length = value.length;
-                for (var i = 0; i < length; ++i) {
-                    var v = value[i];
-                    gl.uniform2f(locations[i], v.x, v.y);
-                }
-            };
-        case gl.FLOAT_VEC3:
-            return function() {
-                var value = uniformArray.value;
-                var length = value.length;
-                for (var i = 0; i < length; ++i) {
-                    var v = value[i];
-
-                    if (defined(v.red)) {
-                        gl.uniform3f(locations[i], v.red, v.green, v.blue);
-                    } else if (defined(v.x)) {
-                        gl.uniform3f(locations[i], v.x, v.y, v.z);
-                    } else {
-                        throw new DeveloperError('Invalid vec3 value.');
-                    }
-                }
-            };
-        case gl.FLOAT_VEC4:
-            return function() {
-                var value = uniformArray.value;
-                var length = value.length;
-                for (var i = 0; i < length; ++i) {
-                    var v = value[i];
-
-                    if (defined(v.red)) {
-                        gl.uniform4f(locations[i], v.red, v.green, v.blue, v.alpha);
-                    } else if (defined(v.x)) {
-                        gl.uniform4f(locations[i], v.x, v.y, v.z, v.w);
-                    } else {
-                        throw new DeveloperError('Invalid vec4 value.');
-                    }
-                }
-            };
-        case gl.SAMPLER_2D:
-        case gl.SAMPLER_CUBE:
-            return function() {
-                var value = uniformArray.value;
-                var length = value.length;
-                for (var i = 0; i < length; ++i) {
-                    var v = value[i];
-                    var index = uniformArray.textureUnitIndex + i;
-                    gl.activeTexture(gl.TEXTURE0 + index);
-                    gl.bindTexture(v._target, v._texture);
-                }
-            };
-        case gl.INT:
-        case gl.BOOL:
-            return function() {
-                var value = uniformArray.value;
-                var length = value.length;
-                for (var i = 0; i < length; ++i) {
-                    gl.uniform1i(locations[i], value[i]);
-                }
-            };
-        case gl.INT_VEC2:
-        case gl.BOOL_VEC2:
-            return function() {
-                var value = uniformArray.value;
-                var length = value.length;
-                for (var i = 0; i < length; ++i) {
-                    var v = value[i];
-                    gl.uniform2i(locations[i], v.x, v.y);
-                }
-            };
-        case gl.INT_VEC3:
-        case gl.BOOL_VEC3:
-            return function() {
-                var value = uniformArray.value;
-                var length = value.length;
-                for (var i = 0; i < length; ++i) {
-                    var v = value[i];
-                    gl.uniform3i(locations[i], v.x, v.y, v.z);
-                }
-            };
-        case gl.INT_VEC4:
-        case gl.BOOL_VEC4:
-            return function() {
-                var value = uniformArray.value;
-                var length = value.length;
-                for (var i = 0; i < length; ++i) {
-                    var v = value[i];
-                    gl.uniform4i(locations[i], v.x, v.y, v.z, v.w);
-                }
-            };
-        case gl.FLOAT_MAT2:
-            return function() {
-                var value = uniformArray.value;
-                var length = value.length;
-                for (var i = 0; i < length; ++i) {
-                    gl.uniformMatrix2fv(locations[i], false, Matrix2.toArray(value[i], scratchUniformMatrix2));
-                }
-            };
-        case gl.FLOAT_MAT3:
-            return function() {
-                var value = uniformArray.value;
-                var length = value.length;
-                for (var i = 0; i < length; ++i) {
-                    gl.uniformMatrix3fv(locations[i], false, Matrix3.toArray(value[i], scratchUniformMatrix3));
-                }
-            };
-        case gl.FLOAT_MAT4:
-            return function() {
-                var value = uniformArray.value;
-                var length = value.length;
-                for (var i = 0; i < length; ++i) {
-                    gl.uniformMatrix4fv(locations[i], false, Matrix4.toArray(value[i], scratchUniformMatrix4));
-                }
-            };
-        default:
-            throw new RuntimeError('Unrecognized uniform type: ' + uniformArray._activeUniform.type);
-        }
-    }
-
-    /**
-     * @private
-     */
-    var UniformArray = function(gl, activeUniform, uniformName, locations, value) {
-        this._gl = gl;
-        this._activeUniform = activeUniform;
-        this._uniformName = uniformName;
-        this.value = value;
-        this._locations = locations;
-
-        /**
-         * @private
-         */
-        this.textureUnitIndex = undefined;
-
-        this._set = setUniformArray(this);
-
-        if ((activeUniform.type === gl.SAMPLER_2D) || (activeUniform.type === gl.SAMPLER_CUBE)) {
-            this._setSampler = function(textureUnitIndex) {
-                this.textureUnitIndex = textureUnitIndex;
-
-                var length = locations.length;
-                for (var i = 0; i < length; ++i) {
-                    var index = textureUnitIndex + i;
-                    gl.uniform1i(locations[i], index);
-                }
-
-                return textureUnitIndex + length;
-            };
-        }
-    };
-
-    defineProperties(UniformArray.prototype, {
-        name : {
-            get : function() {
-                return this._uniformName;
-            }
-        },
-        datatype : {
-            get : function() {
-                return this._activeUniform.type;
-            }
-        }
-    });
-
-    function setSamplerUniforms(gl, program, samplerUniforms) {
-        gl.useProgram(program);
-
-        var textureUnitIndex = 0;
-        var length = samplerUniforms.length;
-        for (var i = 0; i < length; ++i) {
-            textureUnitIndex = samplerUniforms[i]._setSampler(textureUnitIndex);
-        }
-
-        gl.useProgram(null);
-
-        return textureUnitIndex;
-    }
 
     var nextShaderProgramId = 0;
 
@@ -424,12 +97,6 @@ define([
             get : function() {
                 initialize(this);
                 return this._uniformsByName;
-            }
-        },
-        manualUniforms : {
-            get : function() {
-                initialize(this);
-                return this._manualUniforms;
             }
         }
     });
@@ -578,8 +245,7 @@ define([
                     // if the uniform is not active (e.g., it is optimized out).  Looks like
                     // getActiveUniform() above returns uniforms that are not actually active.
                     if (location !== null) {
-                        var uniformValue = gl.getUniform(program, location);
-                        var uniform = new Uniform(gl, activeUniform, uniformName, location, uniformValue);
+                        var uniform = new Uniform(gl, activeUniform, uniformName, location);
 
                         uniformsByName[uniformName] = uniform;
                         uniforms.push(uniform);
@@ -626,17 +292,15 @@ define([
                         }
                     } else {
                         locations = [];
-                        value = [];
                         for (var j = 0; j < activeUniform.size; ++j) {
                             loc = gl.getUniformLocation(program, uniformName + '[' + j + ']');
 
                             // Workaround for IE 11.0.9.  See above.
                             if (loc !== null) {
                                 locations.push(loc);
-                                value.push(gl.getUniform(program, loc));
                             }
                         }
-                        uniformArray = new UniformArray(gl, activeUniform, uniformName, locations, value);
+                        uniformArray = new UniformArray(gl, activeUniform, uniformName, locations);
 
                         uniformsByName[uniformName] = uniformArray;
                         uniforms.push(uniformArray);
@@ -658,7 +322,7 @@ define([
 
     function partitionUniforms(uniforms) {
         var automaticUniforms = [];
-        var manualUniforms = {};
+        var manualUniforms = [];
 
         for ( var uniform in uniforms) {
             if (uniforms.hasOwnProperty(uniform)) {
@@ -669,7 +333,7 @@ define([
                         automaticUniform : automaticUniform
                     });
                 } else {
-                    manualUniforms[uniform] = uniforms[uniform];
+                    manualUniforms.push(uniforms[uniform]);
                 }
             }
         }
@@ -678,6 +342,20 @@ define([
             automaticUniforms : automaticUniforms,
             manualUniforms : manualUniforms
         };
+    }
+
+    function setSamplerUniforms(gl, program, samplerUniforms) {
+        gl.useProgram(program);
+
+        var textureUnitIndex = 0;
+        var length = samplerUniforms.length;
+        for (var i = 0; i < length; ++i) {
+            textureUnitIndex = samplerUniforms[i]._setSampler(textureUnitIndex);
+        }
+
+        gl.useProgram(null);
+
+        return textureUnitIndex;
     }
 
     function initialize(shader) {
@@ -708,30 +386,32 @@ define([
     };
 
     ShaderProgram.prototype._setUniforms = function(uniformMap, uniformState, validate) {
-        // TODO: Performance
-
         var len;
         var i;
 
-        var uniforms = this._uniforms;
-        var manualUniforms = this._manualUniforms;
-        var automaticUniforms = this._automaticUniforms;
-
-        if (uniformMap) {
-            for ( var uniform in manualUniforms) {
-                if (manualUniforms.hasOwnProperty(uniform)) {
-                    manualUniforms[uniform].value = uniformMap[uniform]();
-                }
+        if (defined(uniformMap)) {
+            var manualUniforms = this._manualUniforms;
+            len = manualUniforms.length;
+            for (i = 0; i < len; ++i) {
+                var mu = manualUniforms[i];
+                mu.value = uniformMap[mu.name]();
             }
         }
 
+        var automaticUniforms = this._automaticUniforms;
         len = automaticUniforms.length;
         for (i = 0; i < len; ++i) {
-            automaticUniforms[i].uniform.value = automaticUniforms[i].automaticUniform.getValue(uniformState);
+            var au = automaticUniforms[i];
+            au.uniform.value = au.automaticUniform.getValue(uniformState);
         }
 
         ///////////////////////////////////////////////////////////////////
 
+        // It appears that assigning the uniform values above and then setting them here
+        // (which makes the GL calls) is faster than removing this loop and making
+        // the GL calls above.  I suspect this is because each GL call pollutes the
+        // L2 cache making our JavaScript and the browser/driver ping-pong cache lines.
+        var uniforms = this._uniforms;
         len = uniforms.length;
         for (i = 0; i < len; ++i) {
             uniforms[i]._set();
@@ -743,7 +423,7 @@ define([
 
             gl.validateProgram(program);
             if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)) {
-                throw new DeveloperError('Program validation failed.  Link log: ' + gl.getProgramInfoLog(program));
+                throw new DeveloperError('Program validation failed.  Program info log: ' + gl.getProgramInfoLog(program));
             }
         }
     };
