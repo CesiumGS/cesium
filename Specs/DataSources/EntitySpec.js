@@ -1,15 +1,25 @@
 /*global defineSuite*/
 defineSuite([
         'DataSources/Entity',
+        'Core/Cartesian3',
         'Core/JulianDate',
+        'Core/Matrix3',
+        'Core/Matrix4',
+        'Core/Quaternion',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
+        'Core/Transforms',
         'DataSources/ConstantProperty'
     ], function(
         Entity,
+        Cartesian3,
         JulianDate,
+        Matrix3,
+        Matrix4,
+        Quaternion,
         TimeInterval,
         TimeIntervalCollection,
+        Transforms,
         ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -118,6 +128,49 @@ defineSuite([
         expect(function() {
             entity.merge(undefined);
         }).toThrowDeveloperError();
+    });
+
+    it('_getModelMatrix returns undefined when position is undefined.', function() {
+        var entity = new Entity();
+        entity.orientation = new ConstantProperty(Quaternion.IDENTITY);
+        expect(entity._getModelMatrix(new JulianDate())).toBeUndefined();
+    });
+
+    it('_getModelMatrix returns correct value.', function() {
+        var entity = new Entity();
+
+        var position = new Cartesian3(123456, 654321, 123456);
+        var orientation = new Quaternion(1, 2, 3, 4);
+        Quaternion.normalize(orientation, orientation);
+
+        entity.position = new ConstantProperty(position);
+        entity.orientation = new ConstantProperty(orientation);
+
+        var modelMatrix = entity._getModelMatrix(new JulianDate());
+        var expected = Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation), position);
+        expect(modelMatrix).toEqual(expected);
+    });
+
+    it('_getModelMatrix returns ENU when quaternion is undefined.', function() {
+        var entity = new Entity();
+        var position = new Cartesian3(123456, 654321, 123456);
+        entity.position = new ConstantProperty(position);
+
+        var modelMatrix = entity._getModelMatrix(new JulianDate());
+        var expected = Transforms.eastNorthUpToFixedFrame(position);
+        expect(modelMatrix).toEqual(expected);
+    });
+
+    it('_getModelMatrix works with result parameter.', function() {
+        var entity = new Entity();
+        var position = new Cartesian3(123456, 654321, 123456);
+        entity.position = new ConstantProperty(position);
+
+        var result = new Matrix4();
+        var modelMatrix = entity._getModelMatrix(new JulianDate(), result);
+        var expected = Transforms.eastNorthUpToFixedFrame(position);
+        expect(modelMatrix).toBe(result);
+        expect(modelMatrix).toEqual(expected);
     });
 
     it('can add and remove custom properties.', function() {

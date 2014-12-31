@@ -376,10 +376,10 @@ define([
         // the geometry tile.  The ImageryProvider and ImageryLayer both have the
         // opportunity to constrain the rectangle.  The imagery TilingScheme's rectangle
         // always fully contains the ImageryProvider's rectangle.
-        var imageryBounds = Rectangle.intersectWith(imageryProvider.rectangle, this._rectangle, imageryBoundsScratch);
-        var rectangle = Rectangle.intersectWith(tile.rectangle, imageryBounds, tileImageryBoundsScratch);
+        var imageryBounds = Rectangle.intersection(imageryProvider.rectangle, this._rectangle, imageryBoundsScratch);
+        var rectangle = Rectangle.intersection(tile.rectangle, imageryBounds, tileImageryBoundsScratch);
 
-        if (rectangle.east <= rectangle.west || rectangle.north <= rectangle.south) {
+        if (!defined(rectangle)) {
             // There is no overlap between this terrain tile and this imagery
             // provider.  Unless this is the base layer, no skeletons need to be created.
             // We stretch texels at the edge of the base layer over the entire globe.
@@ -389,6 +389,7 @@ define([
 
             var baseImageryRectangle = imageryBounds;
             var baseTerrainRectangle = tile.rectangle;
+            rectangle = tileImageryBoundsScratch;
 
             if (baseTerrainRectangle.south >= baseImageryRectangle.north) {
                 rectangle.north = rectangle.south = baseImageryRectangle.north;
@@ -441,8 +442,8 @@ define([
         // of the northwest tile, we don't actually need the northernmost or westernmost tiles.
 
         // We define "very close" as being within 1/512 of the width of the tile.
-        var veryCloseX = (tile.rectangle.north - tile.rectangle.south) / 512.0;
-        var veryCloseY = (tile.rectangle.east - tile.rectangle.west) / 512.0;
+        var veryCloseX = tile.rectangle.height / 512.0;
+        var veryCloseY = tile.rectangle.width / 512.0;
 
         var northwestTileRectangle = imageryTilingScheme.tileXYToRectangle(northwestTileCoordinates.x, northwestTileCoordinates.y, imageryLevel);
         if (Math.abs(northwestTileRectangle.south - tile.rectangle.north) < veryCloseY && northwestTileCoordinates.y < southeastTileCoordinates.y) {
@@ -465,7 +466,7 @@ define([
 
         var terrainRectangle = tile.rectangle;
         var imageryRectangle = imageryTilingScheme.tileXYToRectangle(northwestTileCoordinates.x, northwestTileCoordinates.y, imageryLevel);
-        var clippedImageryRectangle = Rectangle.intersectWith(imageryRectangle, imageryBounds, clippedRectangleScratch);
+        var clippedImageryRectangle = Rectangle.intersection(imageryRectangle, imageryBounds, clippedRectangleScratch);
 
         var minU;
         var maxU = 0.0;
@@ -477,11 +478,11 @@ define([
         // it may not start at the northern or western edge of the terrain tile.
         // Calculate where it does start.
         if (!this.isBaseLayer() && Math.abs(clippedImageryRectangle.west - tile.rectangle.west) >= veryCloseX) {
-            maxU = Math.min(1.0, (clippedImageryRectangle.west - terrainRectangle.west) / (terrainRectangle.east - terrainRectangle.west));
+            maxU = Math.min(1.0, (clippedImageryRectangle.west - terrainRectangle.west) / terrainRectangle.width);
         }
 
         if (!this.isBaseLayer() && Math.abs(clippedImageryRectangle.north - tile.rectangle.north) >= veryCloseY) {
-            minV = Math.max(0.0, (clippedImageryRectangle.north - terrainRectangle.south) / (terrainRectangle.north - terrainRectangle.south));
+            minV = Math.max(0.0, (clippedImageryRectangle.north - terrainRectangle.south) / terrainRectangle.height);
         }
 
         var initialMinV = minV;
@@ -490,9 +491,9 @@ define([
             minU = maxU;
 
             imageryRectangle = imageryTilingScheme.tileXYToRectangle(i, northwestTileCoordinates.y, imageryLevel);
-            clippedImageryRectangle = Rectangle.intersectWith(imageryRectangle, imageryBounds, clippedRectangleScratch);
+            clippedImageryRectangle = Rectangle.intersection(imageryRectangle, imageryBounds, clippedRectangleScratch);
 
-            maxU = Math.min(1.0, (clippedImageryRectangle.east - terrainRectangle.west) / (terrainRectangle.east - terrainRectangle.west));
+            maxU = Math.min(1.0, (clippedImageryRectangle.east - terrainRectangle.west) / terrainRectangle.width);
 
             // If this is the eastern-most imagery tile mapped to this terrain tile,
             // and there are more imagery tiles to the east of this one, the maxU
@@ -508,8 +509,8 @@ define([
                 maxV = minV;
 
                 imageryRectangle = imageryTilingScheme.tileXYToRectangle(i, j, imageryLevel);
-                clippedImageryRectangle = Rectangle.intersectWith(imageryRectangle, imageryBounds, clippedRectangleScratch);
-                minV = Math.max(0.0, (clippedImageryRectangle.south - terrainRectangle.south) / (terrainRectangle.north - terrainRectangle.south));
+                clippedImageryRectangle = Rectangle.intersection(imageryRectangle, imageryBounds, clippedRectangleScratch);
+                minV = Math.max(0.0, (clippedImageryRectangle.south - terrainRectangle.south) / terrainRectangle.height);
 
                 // If this is the southern-most imagery tile mapped to this terrain tile,
                 // and there are more imagery tiles to the south of this one, the minV
@@ -543,11 +544,11 @@ define([
     ImageryLayer.prototype._calculateTextureTranslationAndScale = function(tile, tileImagery) {
         var imageryRectangle = tileImagery.readyImagery.rectangle;
         var terrainRectangle = tile.rectangle;
-        var terrainWidth = terrainRectangle.east - terrainRectangle.west;
-        var terrainHeight = terrainRectangle.north - terrainRectangle.south;
+        var terrainWidth = terrainRectangle.width;
+        var terrainHeight = terrainRectangle.height;
 
-        var scaleX = terrainWidth / (imageryRectangle.east - imageryRectangle.west);
-        var scaleY = terrainHeight / (imageryRectangle.north - imageryRectangle.south);
+        var scaleX = terrainWidth / imageryRectangle.width;
+        var scaleY = terrainHeight / imageryRectangle.height;
         return new Cartesian4(
                 scaleX * (terrainRectangle.west - imageryRectangle.west) / terrainWidth,
                 scaleY * (terrainRectangle.south - imageryRectangle.south) / terrainHeight,
@@ -674,7 +675,7 @@ define([
         // avoids precision problems in the reprojection transformation while making
         // no noticeable difference in the georeferencing of the image.
         if (!(this._imageryProvider.tilingScheme instanceof GeographicTilingScheme) &&
-            (rectangle.east - rectangle.west) / texture.width > 1e-5) {
+            rectangle.width / texture.width > 1e-5) {
                 var reprojectedTexture = reprojectToGeographic(this, context, texture, imagery.rectangle);
                 texture.destroy();
                 imagery.texture = texture = reprojectedTexture;
@@ -949,7 +950,7 @@ define([
         var ellipsoid = tilingScheme.ellipsoid;
         var latitudeFactor = !(layer._imageryProvider.tilingScheme instanceof GeographicTilingScheme) ? Math.cos(latitudeClosestToEquator) : 1.0;
         var tilingSchemeRectangle = tilingScheme.rectangle;
-        var levelZeroMaximumTexelSpacing = ellipsoid.maximumRadius * (tilingSchemeRectangle.east - tilingSchemeRectangle.west) * latitudeFactor / (imageryProvider.tileWidth * tilingScheme.getNumberOfXTilesAtLevel(0));
+        var levelZeroMaximumTexelSpacing = ellipsoid.maximumRadius * tilingSchemeRectangle.width * latitudeFactor / (imageryProvider.tileWidth * tilingScheme.getNumberOfXTilesAtLevel(0));
 
         var twoToTheLevelPower = levelZeroMaximumTexelSpacing / texelSpacing;
         var level = Math.log(twoToTheLevelPower) / Math.log(2);

@@ -34,7 +34,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     baseLayerPicker : false
 });
 
-var layers = viewer.scene.imageryLayers;
+var layers = viewer.imageryLayers;
 var blackMarble = layers.addImageryProvider(new Cesium.TileMapServiceImageryProvider({
     url : '//cesiumjs.org/blackmarble',
     maximumLevel : 8,

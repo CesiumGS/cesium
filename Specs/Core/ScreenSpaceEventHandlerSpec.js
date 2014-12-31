@@ -56,7 +56,20 @@ defineSuite([
         return cloningSpy;
     }
 
+    var eventsToStop = 'pointerdown pointerup pointermove mousedown mouseup mousemove touchstart touchend touchmove dblclick wheel mousewheel DOMMouseScroll'.split(' ');
+
+    function stop(event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+
     beforeEach(function() {
+        // ignore events that bubble up to the document.
+        // this prevents triggering the browser's "middle click to scroll" behavior
+        eventsToStop.forEach(function(e) {
+            document.addEventListener(e, stop, false);
+        });
+
         element = document.createElement('div');
         element.style.position = 'absolute';
         element.style.top = '0';
@@ -74,6 +87,10 @@ defineSuite([
     afterEach(function() {
         document.body.removeChild(element);
         handler = !handler.isDestroyed() && handler.destroy();
+
+        eventsToStop.forEach(function(e) {
+            document.removeEventListener(e, stop, false);
+        });
     });
 
     describe('setInputAction', function() {

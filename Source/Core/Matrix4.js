@@ -2113,24 +2113,33 @@ define([
      * //Prints "Both matrices are equal" on the console
      */
     Matrix4.equals = function(left, right) {
+        // Given that most matrices will be transformation matrices, the elements
+        // are tested in order such that the test is likely to fail as early
+        // as possible.  I _think_ this is just as friendly to the L1 cache
+        // as testing in index order.  It is certainty faster in practice.
         return (left === right) ||
                (defined(left) &&
                 defined(right) &&
-                left[0] === right[0] &&
-                left[1] === right[1] &&
-                left[2] === right[2] &&
-                left[3] === right[3] &&
-                left[4] === right[4] &&
-                left[5] === right[5] &&
-                left[6] === right[6] &&
-                left[7] === right[7] &&
-                left[8] === right[8] &&
-                left[9] === right[9] &&
-                left[10] === right[10] &&
-                left[11] === right[11] &&
+                // Translation
                 left[12] === right[12] &&
                 left[13] === right[13] &&
                 left[14] === right[14] &&
+
+                // Rotation/scale
+                left[0] === right[0] &&
+                left[1] === right[1] &&
+                left[2] === right[2] &&
+                left[4] === right[4] &&
+                left[5] === right[5] &&
+                left[6] === right[6] &&
+                left[8] === right[8] &&
+                left[9] === right[9] &&
+                left[10] === right[10] &&
+
+                // Bottom row
+                left[3] === right[3] &&
+                left[7] === right[7] &&
+                left[11] === right[11] &&
                 left[15] === right[15]);
     };
 

@@ -18,6 +18,7 @@ defineSuite([
         'DataSources/TimeIntervalCollectionProperty',
         'DataSources/WallGraphics',
         'Scene/PrimitiveCollection',
+        'Specs/createDynamicProperty',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
@@ -39,6 +40,7 @@ defineSuite([
         TimeIntervalCollectionProperty,
         WallGraphics,
         PrimitiveCollection,
+        createDynamicProperty,
         createScene,
         destroyScene) {
     "use strict";
@@ -330,50 +332,50 @@ defineSuite([
     });
 
     it('dynamic updater sets properties', function() {
-        function makeProperty(value1, value2) {
-            var property = new TimeIntervalCollectionProperty();
-            property.intervals.addInterval(new TimeInterval({
-                start : time,
-                stop : time2,
-                isStopIncluded : false,
-                data : value1
-            }));
-            property.intervals.addInterval(new TimeInterval({
-                start : time2,
-                stop : time3,
-                isStopIncluded : false,
-                data : value2
-            }));
-            return property;
-        }
+        var wall = new WallGraphics();
+        wall.positions = createDynamicProperty(Cartesian3.fromRadiansArray([0, 0, 1, 0, 1, 1, 0, 1]));
+        wall.show = createDynamicProperty(true);
+        wall.minimumHeights = createDynamicProperty([1, 2, 3, 4]);
+        wall.maximumHeights = createDynamicProperty([2, 3, 4, 5]);
+        wall.granularity = createDynamicProperty(1);
+        wall.fill = createDynamicProperty(true);
+        wall.outline = createDynamicProperty(true);
+        wall.outlineColor = createDynamicProperty(Color.RED);
 
-        var entity = createBasicWall();
-
-        var wall = entity.wall;
-        wall.show = makeProperty(true, false);
-        wall.minimumHeights = makeProperty([1, 2, 3, 4], [5, 6, 7, 8]);
-        wall.maximumHeights = makeProperty([2, 3, 4, 5], [6, 7, 8, 9]);
-        wall.granularity = makeProperty(1, 2);
-        wall.fill = makeProperty(false, true);
-        wall.outline = makeProperty(true, false);
-        wall.outlineColor = makeProperty(Color.RED, Color.BLUE);
-
-        entity.availability = new TimeIntervalCollection();
-        entity.availability.addInterval(new TimeInterval({
-            start : time,
-            stop : time3,
-            isStopIncluded : false
-        }));
+        var entity = new Entity();
+        entity.wall = wall;
 
         var updater = new WallGeometryUpdater(entity, scene);
         var primitives = new PrimitiveCollection();
         var dynamicUpdater = updater.createDynamicUpdater(primitives);
         expect(dynamicUpdater.isDestroyed()).toBe(false);
         expect(primitives.length).toBe(0);
+
         dynamicUpdater.update(time);
-        expect(primitives.length).toBe(1);
-        dynamicUpdater.destroy();
+        expect(primitives.length).toBe(2);
+
+        var options = dynamicUpdater._options;
+        expect(options.id).toEqual(entity);
+        expect(options.positions).toEqual(wall.positions.getValue());
+        expect(options.minimumHeights).toEqual(wall.minimumHeights.getValue());
+        expect(options.maximumHeights).toEqual(wall.maximumHeights.getValue());
+        expect(options.granularity).toEqual(wall.granularity.getValue());
+
+        //If a dynamic show returns false, the primitive should go away.
+        wall.show.setValue(false);
+        dynamicUpdater.update(time);
         expect(primitives.length).toBe(0);
+
+        wall.show.setValue(true);
+        dynamicUpdater.update(time);
+        expect(primitives.length).toBe(2);
+
+        //If a dynamic position returns undefined, the primitive should go away.
+        wall.positions.setValue(undefined);
+        dynamicUpdater.update(time);
+        expect(primitives.length).toBe(0);
+
+        dynamicUpdater.destroy();
         updater.destroy();
     });
 

@@ -5,7 +5,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Math'
     ], function(
-            AttributeCompression,
+        AttributeCompression,
         Cartesian2,
         Cartesian3,
         CesiumMath) {

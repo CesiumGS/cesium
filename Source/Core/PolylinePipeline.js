@@ -32,9 +32,9 @@ define([
      */
     var PolylinePipeline = {};
 
-    PolylinePipeline.numberOfPoints = function(p0, p1, granularity) {
-        var angleBetween = Cartesian3.angleBetween(p0, p1);
-        return Math.ceil(angleBetween / granularity);
+    PolylinePipeline.numberOfPoints = function(p0, p1, minDistance) {
+        var distance = Cartesian3.distance(p0, p1);
+        return Math.ceil(distance / minDistance);
     };
 
     var cartoScratch = new Cartographic();
@@ -57,8 +57,12 @@ define([
     var wrapLongitudeIntersection = new Cartesian3();
     var wrapLongitudeOffset = new Cartesian3();
 
+    var subdivideHeightsScratchArray = [];
+
     function subdivideHeights(numPoints, h0, h1) {
-        var heights = new Array(numPoints);
+        var heights = subdivideHeightsScratchArray;
+        heights.length = numPoints;
+
         var i;
         if (h0 === h1) {
             for (i = 0; i < numPoints; i++) {
@@ -68,14 +72,13 @@ define([
         }
 
         var dHeight = h1 - h0;
-        var heightPerVertex = dHeight / (numPoints);
+        var heightPerVertex = dHeight / numPoints;
 
-        for (i = 1; i < numPoints; i++) {
+        for (i = 0; i < numPoints; i++) {
             var h = h0 + i*heightPerVertex;
             heights[i] = h;
         }
 
-        heights[0] = h0;
         return heights;
     }
 
@@ -85,13 +88,14 @@ define([
     var scaleFirst = new Cartesian3();
     var scaleLast = new Cartesian3();
     var ellipsoidGeodesic = new EllipsoidGeodesic();
+
     //Returns subdivided line scaled to ellipsoid surface starting at p1 and ending at p2.
     //Result includes p1, but not include p2.  This function is called for a sequence of line segments,
     //and this prevents duplication of end point.
-    function generateCartesianArc(p0, p1, granularity, ellipsoid, h0, h1, array, offset) {
+    function generateCartesianArc(p0, p1, minDistance, ellipsoid, h0, h1, array, offset) {
         var first = ellipsoid.scaleToGeodeticSurface(p0, scaleFirst);
         var last = ellipsoid.scaleToGeodeticSurface(p1, scaleLast);
-        var numPoints = PolylinePipeline.numberOfPoints(p0, p1, granularity);
+        var numPoints = PolylinePipeline.numberOfPoints(p0, p1, minDistance);
         var start = ellipsoid.cartesianToCartographic(first, carto1);
         var end = ellipsoid.cartesianToCartographic(last, carto2);
         var heights = subdivideHeights(numPoints, h0, h1);
@@ -195,6 +199,8 @@ define([
         };
     };
 
+    var removeDuplicatesEpsilon = CesiumMath.EPSILON7;
+
     /**
      * Removes adjacent duplicate positions in an array of positions.
      *
@@ -228,7 +234,7 @@ define([
         for (i = 1; i < length; ++i) {
             v0 = positions[i - 1];
             v1 = positions[i];
-            if (Cartesian3.equals(v0, v1)) {
+            if (Cartesian3.equalsEpsilon(v0, v1, removeDuplicatesEpsilon)) {
                 break;
             }
         }
@@ -237,13 +243,11 @@ define([
             return undefined;
         }
 
-        var cleanedPositions = [];
-        cleanedPositions.push(positions[0]);
-
+        var cleanedPositions = positions.slice(0, i);
         for (; i < length; ++i) {
             v0 = positions[i - 1];
             v1 = positions[i];
-            if (!Cartesian3.equals(v0, v1)) {
+            if (!Cartesian3.equalsEpsilon(v0, v1, removeDuplicatesEpsilon)) {
                 cleanedPositions.push(Cartesian3.clone(v1));
             }
         }
@@ -283,43 +287,40 @@ define([
 
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var height = defaultValue(options.height, 0);
-        var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+        var minDistance = options.minDistance;
+        if (!defined(minDistance)) {
+            var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+            minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
+        }
 
         var length = positions.length;
         var numPoints = 0;
         var i;
-        var p0;
-        var p1;
 
-        for (i = 0; i < length-1; i++) {
-            p0 = positions[i];
-            p1 = positions[i+1];
-            numPoints += PolylinePipeline.numberOfPoints(p0, p1, granularity);
+        for (i = 0; i < length -1; i++) {
+            numPoints += PolylinePipeline.numberOfPoints(positions[i], positions[i+1], minDistance);
         }
-        numPoints++;
-        var arrayLength = numPoints * 3;
+
+        var arrayLength = (numPoints + 1) * 3;
         var newPositions = new Array(arrayLength);
         var offset = 0;
+        var hasHeightArray = isArray(height);
+
         for (i = 0; i < length - 1; i++) {
-            p0 = positions[i];
-            p1 = positions[i + 1];
+            var p0 = positions[i];
+            var p1 = positions[i + 1];
 
-            var h0;
-            var h1;
-            if (isArray(height)) {
-                h0 = height[i];
-                h1 = height[i + 1];
-            } else {
-                h0 = height;
-                h1 = height;
-            }
+            var h0 = hasHeightArray ? height[i] : height;
+            var h1 = hasHeightArray ? height[i + 1] : height;
 
-            offset = generateCartesianArc(p0, p1, granularity, ellipsoid, h0, h1, newPositions, offset);
+            offset = generateCartesianArc(p0, p1, minDistance, ellipsoid, h0, h1, newPositions, offset);
         }
+
+        subdivideHeightsScratchArray.length = 0;
 
         var lastPoint = positions[length - 1];
         var carto = ellipsoid.cartesianToCartographic(lastPoint, carto1);
-        carto.height = isArray(height) ? height[length - 1] : height;
+        carto.height = hasHeightArray ? height[length - 1] : height;
         var cart = ellipsoid.cartographicToCartesian(carto, cartesian);
         Cartesian3.pack(cart, newPositions, arrayLength - 3);
 

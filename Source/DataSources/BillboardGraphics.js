@@ -70,7 +70,7 @@ define([
         },
 
         /**
-         * Gets or sets the string {@link Property} specifying the URL of the billboard's texture.
+         * Gets or sets the Image, URL, or Canvas {@link Property} specifying the billboard's texture.
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */

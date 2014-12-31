@@ -48,6 +48,7 @@ define([
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
+    var scratchColor = new Color();
 
     var GeometryOptions = function(entity) {
         this.id = entity;
@@ -525,74 +526,61 @@ define([
         }
         //>>includeEnd('debug');
 
+        var primitives = this._primitives;
+        primitives.remove(this._primitive);
+        primitives.remove(this._outlinePrimitive);
+
         var geometryUpdater = this._geometryUpdater;
-
-        if (defined(this._primitive)) {
-            this._primitives.remove(this._primitive);
-        }
-
-        if (defined(this._outlinePrimitive)) {
-            this._primitives.remove(this._outlinePrimitive);
-        }
-
         var entity = geometryUpdater._entity;
         var rectangle = entity.rectangle;
-        var show = rectangle.show;
-
-        if (!entity.isAvailable(time) || (defined(show) && !show.getValue(time))) {
+        if (!entity.isAvailable(time) || !Property.getValueOrDefault(rectangle.show, time, true)) {
             return;
         }
 
         var options = this._options;
+        var coordinates = Property.getValueOrUndefined(rectangle.coordinates, time, options.rectangle);
+        if (!defined(coordinates)) {
+            return;
+        }
 
-        var coordinates = rectangle.coordinates;
-        var closeBottom = rectangle.closeBottom;
-        var closeTop = rectangle.closeTop;
-        var height = rectangle.height;
-        var extrudedHeight = rectangle.extrudedHeight;
-        var granularity = rectangle.granularity;
-        var stRotation = rectangle.stRotation;
-        var rotation = rectangle.rotation;
+        options.rectangle = coordinates;
+        options.height = Property.getValueOrUndefined(rectangle.height, time);
+        options.extrudedHeight = Property.getValueOrUndefined(rectangle.extrudedHeight, time);
+        options.granularity = Property.getValueOrUndefined(rectangle.granularity, time);
+        options.stRotation = Property.getValueOrUndefined(rectangle.stRotation, time);
+        options.rotation = Property.getValueOrUndefined(rectangle.rotation, time);
+        options.closeBottom = Property.getValueOrUndefined(rectangle.closeBottom, time);
+        options.closeTop = Property.getValueOrUndefined(rectangle.closeTop, time);
 
-        options.rectangle = coordinates.getValue(time, options.rectangle);
-        options.height = defined(height) ? height.getValue(time, options) : undefined;
-        options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(time, options) : undefined;
-        options.granularity = defined(granularity) ? granularity.getValue(time) : undefined;
-        options.stRotation = defined(stRotation) ? stRotation.getValue(time) : undefined;
-        options.rotation = defined(rotation) ? rotation.getValue(time) : undefined;
+        if (Property.getValueOrDefault(rectangle.fill, time, true)) {
+            var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
+            this._material = material;
 
-        if (!defined(rectangle.fill) || rectangle.fill.getValue(time)) {
-            options.closeBottom = defined(closeBottom) ? closeBottom.getValue(time) : undefined;
-            options.closeTop = defined(closeTop) ? closeTop.getValue(time) : undefined;
-
-            this._material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
-            var material = this._material;
             var appearance = new MaterialAppearance({
                 material : material,
                 translucent : material.isTranslucent(),
-                closed : options.closeTop && options.closeBottom
+                closed : defined(options.extrudedHeight)
             });
             options.vertexFormat = appearance.vertexFormat;
 
-            this._primitive = new Primitive({
+            this._primitive = primitives.add(new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
                     geometry : new RectangleGeometry(options)
                 }),
                 appearance : appearance,
                 asynchronous : false
-            });
-            this._primitives.add(this._primitive);
+            }));
         }
 
-        if (defined(rectangle.outline) && rectangle.outline.getValue(time)) {
+        if (Property.getValueOrDefault(rectangle.outline, time, false)) {
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
 
-            var outlineColor = defined(rectangle.outlineColor) ? rectangle.outlineColor.getValue(time) : Color.BLACK;
-            var outlineWidth = defined(rectangle.outlineWidth) ? rectangle.outlineWidth.getValue(time) : 1.0;
+            var outlineColor = Property.getValueOrClonedDefault(rectangle.outlineColor, time, Color.BLACK, scratchColor);
+            var outlineWidth = Property.getValueOrDefault(rectangle.outlineWidth, 1.0);
             var translucent = outlineColor.alpha !== 1.0;
 
-            this._outlinePrimitive = new Primitive({
+            this._outlinePrimitive = primitives.add(new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
                     geometry : new RectangleOutlineGeometry(options),
@@ -608,8 +596,7 @@ define([
                     }
                 }),
                 asynchronous : false
-            });
-            this._primitives.add(this._outlinePrimitive);
+            }));
         }
     };
 
@@ -618,13 +605,9 @@ define([
     };
 
     DynamicGeometryUpdater.prototype.destroy = function() {
-        if (defined(this._primitive)) {
-            this._primitives.remove(this._primitive);
-        }
-
-        if (defined(this._outlinePrimitive)) {
-            this._primitives.remove(this._outlinePrimitive);
-        }
+        var primitives = this._primitives;
+        primitives.removeAndDestroy(this._primitive);
+        primitives.removeAndDestroy(this._outlinePrimitive);
         destroyObject(this);
     };
 

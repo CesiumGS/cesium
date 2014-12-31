@@ -15,6 +15,7 @@ defineSuite([
         'Core/Rectangle',
         'Core/RectangleGeometry',
         'Core/ShowGeometryInstanceAttribute',
+        'Core/Transforms',
         'Renderer/ClearCommand',
         'Scene/MaterialAppearance',
         'Scene/OrthographicFrustum',
@@ -44,6 +45,7 @@ defineSuite([
         Rectangle,
         RectangleGeometry,
         ShowGeometryInstanceAttribute,
+        Transforms,
         ClearCommand,
         MaterialAppearance,
         OrthographicFrustum,
@@ -439,6 +441,50 @@ defineSuite([
         primitive.update(context, frameState, commands);
         expect(commands.length).toEqual(1);
         expect(commands[0].modelMatrix).toEqual(modelMatrix);
+
+        primitive = primitive && primitive.destroy();
+
+        frameState.scene3DOnly = false;
+    });
+
+    it('computes model matrix when given one for a single instance and for the primitive in 3D only', function() {
+        frameState.scene3DOnly = true;
+
+        var instanceModelMatrix = Matrix4.fromUniformScale(2.0);
+
+        var dimensions = new Cartesian3(400000.0, 300000.0, 500000.0);
+        var positionOnEllipsoid = Cartesian3.fromDegrees(-105.0, 45.0);
+        var primitiveModelMatrix = Matrix4.multiplyByTranslation(
+            Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
+            new Cartesian3(0.0, 0.0, dimensions.z * 0.5), new Matrix4());
+
+        var boxGeometry = BoxGeometry.fromDimensions({
+            vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+            dimensions : dimensions
+        });
+        var boxGeometryInstance = new GeometryInstance({
+            geometry : boxGeometry,
+            modelMatrix : instanceModelMatrix,
+            attributes : {
+                color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
+            }
+        });
+        var primitive = new Primitive({
+            geometryInstances : boxGeometryInstance,
+            modelMatrix : primitiveModelMatrix,
+            appearance : new PerInstanceColorAppearance({
+                translucent : false,
+                closed: true
+            }),
+            asynchronous : false
+        });
+
+        var expectedModelMatrix = Matrix4.multiplyTransformation(primitiveModelMatrix, instanceModelMatrix, new Matrix4());
+
+        var commands = [];
+        primitive.update(context, frameState, commands);
+        expect(commands.length).toEqual(1);
+        expect(commands[0].modelMatrix).toEqual(expectedModelMatrix);
 
         primitive = primitive && primitive.destroy();
 

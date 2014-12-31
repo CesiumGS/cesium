@@ -180,7 +180,6 @@ define([
      * @exception {DeveloperError} <code>options.rectangle.east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
      * @exception {DeveloperError} <code>options.rectangle.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
      * @exception {DeveloperError} <code>options.rectangle.north</code> must be greater than <code>rectangle.south</code>.
-     * @exception {DeveloperError} <code>options.rectangle.east</code> must be greater than <code>rectangle.west</code>.
      *
      * @see RectangleOutlineGeometry#createGeometry
      *

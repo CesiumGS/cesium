@@ -23,6 +23,16 @@ defineSuite([
         viewModel.destroy();
     });
 
+    it('constructor can take an element id', function() {
+        var testElement = document.createElement('span');
+        testElement.id = 'testElement';
+        document.body.appendChild(testElement);
+        var viewModel = new FullscreenButtonViewModel('testElement');
+        expect(viewModel.fullscreenElement).toBe(testElement);
+        viewModel.destroy();
+        document.body.removeChild(testElement);
+    });
+
     it('isFullscreenEnabled work as expected', function() {
         var viewModel = new FullscreenButtonViewModel();
         expect(viewModel.isFullscreenEnabled).toEqual(Fullscreen.enabled);

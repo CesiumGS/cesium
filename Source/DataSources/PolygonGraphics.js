@@ -45,6 +45,8 @@ define([
         this._outlineWidth = undefined;
         this._outlineWidthSubscription = undefined;
         this._definitionChanged = new Event();
+        this._fill = undefined;
+        this._fillSubscription = undefined;
     };
 
     defineProperties(PolygonGraphics.prototype, {
