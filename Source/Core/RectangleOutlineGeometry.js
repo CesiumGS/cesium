@@ -260,6 +260,17 @@ define([
         array[startingIndex]   = value._extrudedHeight;
     };
 
+    var scratchRectangle = new Rectangle();
+    var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
+    var scratchOptions = {
+        rectangle : scratchRectangle,
+        ellipsoid : scratchEllipsoid,
+        granularity : undefined,
+        height : undefined,
+        rotation : undefined,
+        extrudedHeight : undefined
+    };
+
     /**
      * Retrieves an instance from a packed array.
      *
@@ -276,31 +287,28 @@ define([
 
         startingIndex = defaultValue(startingIndex, 0);
 
-        var rectangle = Rectangle.unpack(array, startingIndex);
+        var rectangle = Rectangle.unpack(array, startingIndex, scratchRectangle);
         startingIndex += Rectangle.packedLength;
 
-        var ellipsoid = Ellipsoid.unpack(array, startingIndex);
+        var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
         startingIndex += Ellipsoid.packedLength;
 
         var granularity = array[startingIndex++];
-        var surfaceHeight = array[startingIndex++];
+        var height = array[startingIndex++];
         var rotation = array[startingIndex++];
         var extrudedHeight = array[startingIndex];
 
         if (!defined(result)) {
-            return new RectangleOutlineGeometry({
-                rectangle : rectangle,
-                ellipsoid : ellipsoid,
-                granularity : granularity,
-                surfaceHeight : surfaceHeight,
-                rotation : rotation,
-                extrudedHeight : extrudedHeight
-            });
+            scratchOptions.granularity = granularity;
+            scratchOptions.height = height;
+            scratchOptions.rotation = rotation;
+            scratchOptions.extrudedHeight = extrudedHeight;
+            return new RectangleOutlineGeometry(scratchOptions);
         }
 
-        result._rectangle = rectangle;
-        result._ellipsoid = ellipsoid;
-        result._surfaceHeight = surfaceHeight;
+        result._rectangle = Rectangle.clone(rectangle, result._rectangle);
+        result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
+        result._surfaceHeight = height;
         result._rotation = rotation;
         result._extrudedHeight = extrudedHeight;
 

@@ -340,7 +340,7 @@ define([
         //>>includeEnd('debug');
 
         this._positions = positions;
-        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+        this._ellipsoid = Ellipsoid.clone(defaultValue(options.ellipsoid, Ellipsoid.WGS84));
         this._width = width;
         this._height = defaultValue(options.height, 0);
         this._extrudedHeight = defaultValue(options.extrudedHeight, this._height);
@@ -393,6 +393,17 @@ define([
         array[startingIndex]   = value._granularity;
     };
 
+    var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
+    var scratchOptions = {
+        positions : undefined,
+        ellipsoid : scratchEllipsoid,
+        width : undefined,
+        height : undefined,
+        extrudedHeight : undefined,
+        cornerType : undefined,
+        granularity : undefined
+    };
+
     /**
      * Retrieves an instance from a packed array.
      *
@@ -416,7 +427,7 @@ define([
             positions[i] = Cartesian3.unpack(array, startingIndex);
         }
 
-        var ellipsoid = Ellipsoid.unpack(array, startingIndex);
+        var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
         startingIndex += Ellipsoid.packedLength;
 
         var width = array[startingIndex++];
@@ -426,19 +437,17 @@ define([
         var granularity = array[startingIndex];
 
         if (!defined(result)) {
-            return new CorridorOutlineGeometry({
-                positions : positions,
-                ellipsoid : ellipsoid,
-                width : width,
-                height : height,
-                extrudedHeight : extrudedHeight,
-                cornerType : cornerType,
-                granularity : granularity
-            });
+            scratchOptions.positions = positions;
+            scratchOptions.width = width;
+            scratchOptions.height = height;
+            scratchOptions.extrudedHeight = extrudedHeight;
+            scratchOptions.cornerType = cornerType;
+            scratchOptions.granularity = granularity;
+            return new CorridorOutlineGeometry(scratchOptions);
         }
 
         result._positions = positions;
-        result._ellipsoid = ellipsoid;
+        result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
         result._width = width;
         result._height = height;
         result._extrudedHeight = extrudedHeight;

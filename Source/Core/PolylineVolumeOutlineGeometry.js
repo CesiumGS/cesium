@@ -144,7 +144,7 @@ define([
 
         this._positions = positions;
         this._shape = shape;
-        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+        this._ellipsoid = Ellipsoid.clone(defaultValue(options.ellipsoid, Ellipsoid.WGS84));
         this._cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         this._workerName = 'createPolylineVolumeOutlineGeometry';
@@ -204,6 +204,16 @@ define([
         array[startingIndex]   = value._granularity;
     };
 
+    var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
+    var scratchOptions = {
+        polylinePositions : undefined,
+        shapePositions : undefined,
+        ellipsoid : scratchEllipsoid,
+        height : undefined,
+        cornerType : undefined,
+        granularity : undefined
+    };
+
     /**
      * Retrieves an instance from a packed array.
      *
@@ -236,25 +246,23 @@ define([
             shape[i] = Cartesian2.unpack(array, startingIndex);
         }
 
-        var ellipsoid = Ellipsoid.unpack(array, startingIndex);
+        var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
         startingIndex += Ellipsoid.packedLength;
 
         var cornerType = array[startingIndex++];
         var granularity = array[startingIndex];
 
         if (!defined(result)) {
-            return new PolylineVolumeOutlineGeometry({
-                polylinePositions : positions,
-                shapePositions : shape,
-                ellipsoid : ellipsoid,
-                cornerType : cornerType,
-                granularity : granularity
-            });
+            scratchOptions.polylinePositions = positions;
+            scratchOptions.shapePositions = shape;
+            scratchOptions.cornerType = cornerType;
+            scratchOptions.granularity = granularity;
+            return new PolylineVolumeOutlineGeometry(scratchOptions);
         }
 
         result._positions = positions;
         result._shape = shape;
-        result._ellipsoid = ellipsoid;
+        result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
         result._cornerType = cornerType;
         result._granularity = granularity;
 

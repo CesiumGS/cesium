@@ -102,7 +102,7 @@ define([
         this._length = length;
         this._topRadius = topRadius;
         this._bottomRadius = bottomRadius;
-        this._vertexFormat = vertexFormat;
+        this._vertexFormat = VertexFormat.clone(vertexFormat);
         this._slices = slices;
         this._workerName = 'createCylinderGeometry';
     };
@@ -142,6 +142,15 @@ define([
         array[startingIndex]   = value._slices;
     };
 
+    var scratchVertexFormat = new VertexFormat();
+    var scratchOptions = {
+        vertexFormat : scratchVertexFormat,
+        length : undefined,
+        topRadius : undefined,
+        bottomRadius : undefined,
+        slices : undefined
+    };
+
     /**
      * Retrieves an instance from a packed array.
      *
@@ -158,7 +167,7 @@ define([
 
         startingIndex = defaultValue(startingIndex, 0);
 
-        var vertexFormat = VertexFormat.unpack(array, startingIndex);
+        var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
         startingIndex += VertexFormat.packedLength;
 
         var length = array[startingIndex++];
@@ -167,16 +176,14 @@ define([
         var slices = array[startingIndex];
 
         if (!defined(result)) {
-            return new CylinderGeometry({
-                vertexFormat : vertexFormat,
-                length : length,
-                topRadius : topRadius,
-                bottomRadius : bottomRadius,
-                slices : slices
-            });
+            scratchOptions.length = length;
+            scratchOptions.topRadius = topRadius;
+            scratchOptions.bottomRadius = bottomRadius;
+            scratchOptions.slices = slices;
+            return new CylinderGeometry(scratchOptions);
         }
 
-        result._vertexFormat = vertexFormat;
+        result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
         result._length = length;
         result._topRadius = topRadius;
         result._bottomRadius = bottomRadius;

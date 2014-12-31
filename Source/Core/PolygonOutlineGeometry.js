@@ -321,7 +321,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._ellipsoid = ellipsoid;
+        this._ellipsoid = Ellipsoid.clone(ellipsoid);
         this._granularity = granularity;
         this._height = height;
         this._extrudedHeight = defaultValue(extrudedHeight, 0.0);
@@ -369,6 +369,16 @@ define([
         array[startingIndex] = value._perPositionHeight ? 1.0 : 0.0;
     };
 
+    var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
+    var scratchOptions = {
+        polygonHierarchy : undefined,
+        ellipsoid : scratchEllipsoid,
+        height : undefined,
+        extrudedHeight : undefined,
+        granularity : undefined,
+        perPositionHeight : undefined
+    };
+
     /**
      * Retrieves an instance from a packed array.
      *
@@ -389,7 +399,7 @@ define([
         startingIndex = polygonHierarchy.startingIndex;
         delete polygonHierarchy.startingIndex;
 
-        var ellipsoid = Ellipsoid.unpack(array, startingIndex);
+        var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
         startingIndex += Ellipsoid.packedLength;
 
         var height = array[startingIndex++];
@@ -399,18 +409,16 @@ define([
         var perPositionHeight = array[startingIndex] === 1.0;
 
         if (!defined(result)) {
-            return new PolygonOutlineGeometry({
-                polygonHierarchy : polygonHierarchy,
-                ellipsoid : ellipsoid,
-                height : height,
-                extrudedHeight : extrudedHeight,
-                granularity : granularity,
-                perPositionHeight : perPositionHeight
-            });
+            scratchOptions.polygonHierarchy = polygonHierarchy;
+            scratchOptions.height = height;
+            scratchOptions.extrudedHeight = extrudedHeight;
+            scratchOptions.granularity = granularity;
+            scratchOptions.perPositionHeight = perPositionHeight;
+            return new PolygonOutlineGeometry(scratchOptions);
         }
 
         result._polygonHierarchy = polygonHierarchy;
-        result._ellipsoid = ellipsoid;
+        result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
         result._height = height;
         result._extrudedHeight = extrudedHeight;
         result._granularity = granularity;

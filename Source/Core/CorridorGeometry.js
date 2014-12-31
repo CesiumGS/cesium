@@ -663,8 +663,8 @@ define([
         //>>includeEnd('debug');
 
         this._positions = positions;
-        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-        this._vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+        this._ellipsoid = Ellipsoid.clone(defaultValue(options.ellipsoid, Ellipsoid.WGS84));
+        this._vertexFormat = VertexFormat.clone(defaultValue(options.vertexFormat, VertexFormat.DEFAULT));
         this._width = width;
         this._height = defaultValue(options.height, 0);
         this._extrudedHeight = defaultValue(options.extrudedHeight, this._height);
@@ -720,6 +720,19 @@ define([
         array[startingIndex]   = value._granularity;
     };
 
+    var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
+    var scratchVertexFormat = new VertexFormat();
+    var scratchOptions = {
+        positions : undefined,
+        ellipsoid : scratchEllipsoid,
+        vertexFormat : scratchVertexFormat,
+        width : undefined,
+        height : undefined,
+        extrudedHeight : undefined,
+        cornerType : undefined,
+        granularity : undefined
+    };
+
     /**
      * Retrieves an instance from a packed array.
      *
@@ -743,10 +756,10 @@ define([
             positions[i] = Cartesian3.unpack(array, startingIndex);
         }
 
-        var ellipsoid = Ellipsoid.unpack(array, startingIndex);
+        var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
         startingIndex += Ellipsoid.packedLength;
 
-        var vertexFormat = VertexFormat.unpack(array, startingIndex);
+        var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
         startingIndex += VertexFormat.packedLength;
 
         var width = array[startingIndex++];
@@ -756,21 +769,18 @@ define([
         var granularity = array[startingIndex];
 
         if (!defined(result)) {
-            return new CorridorGeometry({
-                positions : positions,
-                ellipsoid : ellipsoid,
-                vertexFormat : vertexFormat,
-                width : width,
-                height : height,
-                extrudedHeight : extrudedHeight,
-                cornerType : cornerType,
-                granularity : granularity
-            });
+            scratchOptions.positions = positions;
+            scratchOptions.width = width;
+            scratchOptions.height = height;
+            scratchOptions.extrudedHeight = extrudedHeight;
+            scratchOptions.cornerType = cornerType;
+            scratchOptions.granularity = granularity;
+            return new CorridorGeometry(scratchOptions);
         }
 
         result._positions = positions;
-        result._ellipsoid = ellipsoid;
-        result._vertexFormat = vertexFormat;
+        result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
+        result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
         result._width = width;
         result._height = height;
         result._extrudedHeight = extrudedHeight;

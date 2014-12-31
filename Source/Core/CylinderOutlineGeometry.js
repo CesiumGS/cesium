@@ -131,6 +131,14 @@ define([
         array[startingIndex]   = value._numberOfVerticalLines;
     };
 
+    var scratchOptions = {
+        length : undefined,
+        topRadius : undefined,
+        bottomRadius : undefined,
+        slices : undefined,
+        numberOfVerticalLines : undefined
+    };
+
     /**
      * Retrieves an instance from a packed array.
      *
@@ -154,13 +162,12 @@ define([
         var numberOfVerticalLines = array[startingIndex];
 
         if (!defined(result)) {
-            return new CylinderOutlineGeometry({
-                length : length,
-                topRadius : topRadius,
-                bottomRadius : bottomRadius,
-                slices : slices,
-                numberOfVerticalLines : numberOfVerticalLines
-            });
+            scratchOptions.length = length;
+            scratchOptions.topRadius = topRadius;
+            scratchOptions.bottomRadius = bottomRadius;
+            scratchOptions.slices = slices;
+            scratchOptions.numberOfVerticalLines = numberOfVerticalLines;
+            return new CylinderOutlineGeometry(scratchOptions);
         }
 
         result._length = length;

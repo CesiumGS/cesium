@@ -628,8 +628,8 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._vertexFormat = vertexFormat;
-        this._ellipsoid = ellipsoid;
+        this._vertexFormat = VertexFormat.clone(vertexFormat);
+        this._ellipsoid = Ellipsoid.clone(ellipsoid);
         this._granularity = granularity;
         this._stRotation = stRotation;
         this._height = height;
@@ -733,6 +733,19 @@ define([
         array[startingIndex] = value._perPositionHeight ? 1.0 : 0.0;
     };
 
+    var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
+    var scratchVertexFormat = new VertexFormat();
+    var scratchOptions = {
+        polygonHierarchy : undefined,
+        ellipsoid : scratchEllipsoid,
+        vertexFormat : scratchVertexFormat,
+        height : undefined,
+        extrudedHeight : undefined,
+        granularity : undefined,
+        stRotation : undefined,
+        perPositionHeight : undefined
+    };
+
     /**
      * Retrieves an instance from a packed array.
      *
@@ -753,10 +766,10 @@ define([
         startingIndex = polygonHierarchy.startingIndex;
         delete polygonHierarchy.startingIndex;
 
-        var ellipsoid = Ellipsoid.unpack(array, startingIndex);
+        var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
         startingIndex += Ellipsoid.packedLength;
 
-        var vertexFormat = VertexFormat.unpack(array, startingIndex);
+        var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
         startingIndex += VertexFormat.packedLength;
 
         var height = array[startingIndex++];
@@ -767,21 +780,18 @@ define([
         var perPositionHeight = array[startingIndex] === 1.0;
 
         if (!defined(result)) {
-            return new PolygonGeometry({
-                polygonHierarchy : polygonHierarchy,
-                ellipsoid : ellipsoid,
-                vertexFormat : vertexFormat,
-                height : height,
-                extrudedHeight : extrudedHeight,
-                granularity : granularity,
-                stRotation : stRotation,
-                perPositionHeight : perPositionHeight
-            });
+            scratchOptions.polygonHierarchy = polygonHierarchy;
+            scratchOptions.height = height;
+            scratchOptions.extrudedHeight = extrudedHeight;
+            scratchOptions.granularity = granularity;
+            scratchOptions.stRotation = stRotation;
+            scratchOptions.perPositionHeight = perPositionHeight;
+            return new PolygonGeometry(scratchOptions);
         }
 
         result._polygonHierarchy = polygonHierarchy;
-        result._ellipsoid = ellipsoid;
-        result._vertexFormat = vertexFormat;
+        result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
+        result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
         result._height = height;
         result._extrudedHeight = extrudedHeight;
         result._granularity = granularity;

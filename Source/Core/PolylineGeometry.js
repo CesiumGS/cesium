@@ -133,10 +133,10 @@ define([
         this._colors = colors;
         this._width = width;
         this._perVertex = perVertex;
-        this._vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+        this._vertexFormat = VertexFormat.clone(defaultValue(options.vertexFormat, VertexFormat.DEFAULT));
         this._followSurface = defaultValue(options.followSurface, true);
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
-        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+        this._ellipsoid = Ellipsoid.clone(defaultValue(options.ellipsoid, Ellipsoid.WGS84));
         this._workerName = 'createPolylineGeometry';
 
         var numComponents = 1 + positions.length * Cartesian3.packedLength;
@@ -199,6 +199,19 @@ define([
         array[startingIndex]   = value._granularity;
     };
 
+    var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
+    var scratchVertexFormat = new VertexFormat();
+    var scratchOptions = {
+        positions : undefined,
+        colors : undefined,
+        ellipsoid : scratchEllipsoid,
+        vertexFormat : scratchVertexFormat,
+        width : undefined,
+        perVertex : undefined,
+        followSurface : undefined,
+        granularity : undefined
+    };
+
     /**
      * Retrieves an instance from a packed array.
      *
@@ -231,10 +244,10 @@ define([
             colors[i] = Color.unpack(array, startingIndex);
         }
 
-        var ellipsoid = Ellipsoid.unpack(array, startingIndex);
+        var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
         startingIndex += Ellipsoid.packedLength;
 
-        var vertexFormat = VertexFormat.unpack(array, startingIndex);
+        var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
         startingIndex += VertexFormat.packedLength;
 
         var width = array[startingIndex++];
@@ -243,22 +256,19 @@ define([
         var granularity = array[startingIndex];
 
         if (!defined(result)) {
-            return new PolylineGeometry({
-                positions : positions,
-                colors : colors,
-                ellipsoid : ellipsoid,
-                vertexFormat : vertexFormat,
-                width : width,
-                perVertex : perVertex,
-                followSurface : followSurface,
-                granularity : granularity
-            });
+            scratchOptions.positions = positions;
+            scratchOptions.colors = colors;
+            scratchOptions.width = width;
+            scratchOptions.perVertex = perVertex;
+            scratchOptions.followSurface = followSurface;
+            scratchOptions.granularity = granularity;
+            return new PolylineGeometry(scratchOptions);
         }
 
         result._positions = positions;
         result._colors = colors;
-        result._ellipsoid = ellipsoid;
-        result._vertexFormat = vertexFormat;
+        result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
+        result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
         result._width = width;
         result._perVertex = perVertex;
         result._followSurface = followSurface;

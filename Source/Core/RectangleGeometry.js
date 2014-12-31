@@ -570,11 +570,11 @@ define([
 
         this._rectangle = rectangle;
         this._granularity = granularity;
-        this._ellipsoid = ellipsoid;
+        this._ellipsoid = Ellipsoid.clone(ellipsoid);
         this._surfaceHeight = surfaceHeight;
         this._rotation = rotation;
         this._stRotation = stRotation;
-        this._vertexFormat = vertexFormat;
+        this._vertexFormat = VertexFormat.clone(vertexFormat);
         this._extrudedHeight = defaultValue(extrudedHeight, 0.0);
         this._extrude = extrude;
         this._closeTop = closeTop;
@@ -627,6 +627,22 @@ define([
         array[startingIndex]   = value._closeBottom ? 1.0 : 0.0;
     };
 
+    var scratchRectangle = new Rectangle();
+    var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
+    var scratchVertexFormat = new VertexFormat();
+    var scratchOptions = {
+        rectangle : scratchRectangle,
+        ellipsoid : scratchEllipsoid,
+        vertexFormat : scratchVertexFormat,
+        granularity : undefined,
+        height : undefined,
+        rotation : undefined,
+        stRotation : undefined,
+        extrudedHeight : undefined,
+        closeTop : undefined,
+        closeBottom : undefined
+    };
+
     /**
      * Retrieves an instance from a packed array.
      *
@@ -643,13 +659,13 @@ define([
 
         startingIndex = defaultValue(startingIndex, 0);
 
-        var rectangle = Rectangle.unpack(array, startingIndex);
+        var rectangle = Rectangle.unpack(array, startingIndex, scratchRectangle);
         startingIndex += Rectangle.packedLength;
 
-        var ellipsoid = Ellipsoid.unpack(array, startingIndex);
+        var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
         startingIndex += Ellipsoid.packedLength;
 
-        var vertexFormat = VertexFormat.unpack(array, startingIndex);
+        var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
         startingIndex += VertexFormat.packedLength;
 
         var granularity = array[startingIndex++];
@@ -662,27 +678,24 @@ define([
         var closeBottom = array[startingIndex] === 1.0;
 
         if (!defined(result)) {
-            return new RectangleGeometry({
-                rectangle : rectangle,
-                ellipsoid : ellipsoid,
-                vertexFormat : vertexFormat,
-                granularity : granularity,
-                height : surfaceHeight,
-                rotation : rotation,
-                stRotation : stRotation,
-                extrudedHeight : extrude ? extrudedHeight : undefined,
-                closeTop : closeTop,
-                closeBottom : closeBottom
-            });
+            scratchOptions.granularity = granularity;
+            scratchOptions.height = surfaceHeight;
+            scratchOptions.rotation = rotation;
+            scratchOptions.stRotation = stRotation;
+            scratchOptions.extrudedHeight = extrude ? extrudedHeight : undefined;
+            scratchOptions.closeTop = closeTop;
+            scratchOptions.closeBottom = closeBottom;
+            return new RectangleGeometry(scratchOptions);
         }
 
-        result._rectangle = rectangle;
-        result._ellipsoid = ellipsoid;
-        result._vertexFormat = vertexFormat;
+        result._rectangle = Rectangle.clone(rectangle, result._rectangle);
+        result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
+        result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
+        result._granularity = granularity;
         result._surfaceHeight = surfaceHeight;
         result._rotation = rotation;
         result._stRotation = stRotation;
-        result._extrudedHeight = extrudedHeight;
+        result._extrudedHeight = extrude ? extrudedHeight : undefined;
         result._extrude = extrude;
         result._closeTop = closeTop;
         result._closeBottom = closeBottom;

@@ -187,7 +187,6 @@ define([
      * @param {Cartesian2[]} options.shapePositions An array of {@link Cartesian2} positions that define the shape to be extruded along the polyline
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Number} [options.height=0] The distance between the ellipsoid surface and the positions.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {CornerType} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.
      *
@@ -230,10 +229,9 @@ define([
 
         this._positions = positions;
         this._shape = shape;
-        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-        this._height = defaultValue(options.height, 0.0);
+        this._ellipsoid = Ellipsoid.clone(defaultValue(options.ellipsoid, Ellipsoid.WGS84));
         this._cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
-        this._vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+        this._vertexFormat = VertexFormat.clone(defaultValue(options.vertexFormat, VertexFormat.DEFAULT));
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         this._workerName = 'createPolylineVolumeGeometry';
 
@@ -244,7 +242,7 @@ define([
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
-        this.packedLength = numComponents + Ellipsoid.packedLength + VertexFormat.packedLength + 3;
+        this.packedLength = numComponents + Ellipsoid.packedLength + VertexFormat.packedLength + 2;
     };
 
     /**
@@ -291,9 +289,19 @@ define([
         VertexFormat.pack(value._vertexFormat, array, startingIndex);
         startingIndex += VertexFormat.packedLength;
 
-        array[startingIndex++] = value._height;
         array[startingIndex++] = value._cornerType;
         array[startingIndex]   = value._granularity;
+    };
+
+    var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
+    var scratchVertexFormat = new VertexFormat();
+    var scratchOptions = {
+        polylinePositions : undefined,
+        shapePositions : undefined,
+        ellipsoid : scratchEllipsoid,
+        vertexFormat : scratchVertexFormat,
+        cornerType : undefined,
+        granularity : undefined
     };
 
     /**
@@ -328,33 +336,27 @@ define([
             shape[i] = Cartesian2.unpack(array, startingIndex);
         }
 
-        var ellipsoid = Ellipsoid.unpack(array, startingIndex);
+        var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
         startingIndex += Ellipsoid.packedLength;
 
-        var vertexFormat = VertexFormat.unpack(array, startingIndex);
+        var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
         startingIndex += VertexFormat.packedLength;
 
-        var height = array[startingIndex++];
         var cornerType = array[startingIndex++];
         var granularity = array[startingIndex];
 
         if (!defined(result)) {
-            return new PolylineVolumeGeometry({
-                polylinePositions : positions,
-                shapePositions : shape,
-                ellipsoid : ellipsoid,
-                vertexFormat : vertexFormat,
-                height : height,
-                cornerType : cornerType,
-                granularity : granularity
-            });
+            scratchOptions.polylinePositions = positions;
+            scratchOptions.shapePositions = shape;
+            scratchOptions.cornerType = cornerType;
+            scratchOptions.granularity = granularity;
+            return new PolylineVolumeGeometry(scratchOptions);
         }
 
         result._positions = positions;
         result._shape = shape;
-        result._ellipsoid = ellipsoid;
-        result._vertexFormat = vertexFormat;
-        result._height = height;
+        result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
+        result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
         result._cornerType = cornerType;
         result._granularity = granularity;
 

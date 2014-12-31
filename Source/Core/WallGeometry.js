@@ -106,9 +106,9 @@ define([
         this._positions = wallPositions;
         this._minimumHeights = minimumHeights;
         this._maximumHeights = maximumHeights;
-        this._vertexFormat = vertexFormat;
+        this._vertexFormat = VertexFormat.clone(vertexFormat);
         this._granularity = granularity;
-        this._ellipsoid = ellipsoid;
+        this._ellipsoid = Ellipsoid.clone(ellipsoid);
         this._workerName = 'createWallGeometry';
 
         var numComponents = 1 + wallPositions.length * Cartesian3.packedLength + 2;
@@ -185,6 +185,17 @@ define([
         array[startingIndex] = value._granularity;
     };
 
+    var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
+    var scratchVertexFormat = new VertexFormat();
+    var scratchOptions = {
+        positions : undefined,
+        minimumHeights : undefined,
+        maximumHeights : undefined,
+        ellipsoid : scratchEllipsoid,
+        vertexFormat : scratchVertexFormat,
+        granularity : undefined
+    };
+
     /**
      * Retrieves an instance from a packed array.
      *
@@ -230,30 +241,27 @@ define([
             }
         }
 
-        var ellipsoid = Ellipsoid.unpack(array, startingIndex);
+        var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
         startingIndex += Ellipsoid.packedLength;
 
-        var vertexFormat = VertexFormat.unpack(array, startingIndex);
+        var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
         startingIndex += VertexFormat.packedLength;
 
         var granularity = array[startingIndex];
 
         if (!defined(result)) {
-            return new WallGeometry({
-                positions : positions,
-                minimumHeights : minimumHeights,
-                maximumHeights : maximumHeights,
-                ellipsoid : ellipsoid,
-                vertexFormat : vertexFormat,
-                granularity : granularity
-            });
+            scratchOptions.positions = positions;
+            scratchOptions.minimumHeights = minimumHeights;
+            scratchOptions.maximumHeights = maximumHeights;
+            scratchOptions.granularity = granularity;
+            return new WallGeometry(scratchOptions);
         }
 
         result._positions = positions;
         result._minimumHeights = minimumHeights;
         result._maximumHeights = maximumHeights;
-        result._ellipsoid = ellipsoid;
-        result._vertexFormat = vertexFormat;
+        result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
+        result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
         result._granularity = granularity;
 
         return result;

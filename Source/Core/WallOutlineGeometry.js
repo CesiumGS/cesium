@@ -97,7 +97,7 @@ define([
         this._minimumHeights = minimumHeights;
         this._maximumHeights = maximumHeights;
         this._granularity = granularity;
-        this._ellipsoid = ellipsoid;
+        this._ellipsoid = Ellipsoid.clone(ellipsoid);
         this._workerName = 'createWallOutlineGeometry';
 
         var numComponents = 1 + wallPositions.length * Cartesian3.packedLength + 2;
@@ -171,6 +171,15 @@ define([
         array[startingIndex]   = value._granularity;
     };
 
+    var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
+    var scratchOptions = {
+        positions : undefined,
+        minimumHeights : undefined,
+        maximumHeights : undefined,
+        ellipsoid : scratchEllipsoid,
+        granularity : undefined
+    };
+
     /**
      * Retrieves an instance from a packed array.
      *
@@ -216,25 +225,23 @@ define([
             }
         }
 
-        var ellipsoid = Ellipsoid.unpack(array, startingIndex);
+        var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
         startingIndex += Ellipsoid.packedLength;
 
         var granularity = array[startingIndex];
 
         if (!defined(result)) {
-            return new WallOutlineGeometry({
-                positions : positions,
-                minimumHeights : minimumHeights,
-                maximumHeights : maximumHeights,
-                ellipsoid : ellipsoid,
-                granularity : granularity
-            });
+            scratchOptions.positions = positions;
+            scratchOptions.minimumHeights = minimumHeights;
+            scratchOptions.maximumHeights = maximumHeights;
+            scratchOptions.granularity = granularity;
+            return new WallOutlineGeometry(scratchOptions);
         }
 
         result._positions = positions;
         result._minimumHeights = minimumHeights;
         result._maximumHeights = maximumHeights;
-        result._ellipsoid = ellipsoid;
+        result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
         result._granularity = granularity;
 
         return result;
