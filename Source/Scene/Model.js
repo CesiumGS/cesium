@@ -370,7 +370,7 @@ define([
          * @default false
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
-        this._debugShowBoudingVolume = this.debugShowBoundingVolume;
+        this._debugShowBoudingVolume = false;
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -392,6 +392,7 @@ define([
         this._loadError = undefined;
         this._loadResources = undefined;
 
+        this._perNodeShowDirty = false;             // true when the Cesium API was used to change a node's show property
         this._cesiumAnimationsDirty = false;       // true when the Cesium API, not a glTF animation, changed a node transform
         this._maxDirtyNumber = 0;                  // Used in place of a dirty boolean flag to avoid an extra graph traversal
 
@@ -420,8 +421,7 @@ define([
         this._cachedRendererResources = undefined;
         this._loadRendererResourcesFromCache = false;
 
-        this._renderCommands = [];
-        this._pickCommands = [];
+        this._nodeCommands = [];
         this._pickIds = [];
     };
 
@@ -963,6 +963,9 @@ define([
                     translation : undefined,
                     rotation : undefined,
                     scale : undefined,
+
+                    // Per-node show inherited from parent
+                    computedShow : true,
 
                     // Computed transforms
                     transformToRoot : new Matrix4(),
@@ -1919,8 +1922,7 @@ define([
     }
 
     function createCommand(model, gltfNode, runtimeNode, context) {
-        var commands = model._renderCommands;
-        var pickCommands = model._pickCommands;
+        var nodeCommands = model._nodeCommands;
         var pickIds = model._pickIds;
         var allowPicking = model.allowPicking;
         var runtimeMeshes = model._runtime.meshesByName;
@@ -2002,10 +2004,8 @@ define([
                     uniformMap : uniformMap,
                     renderState : rs,
                     owner : owner,
-                    debugShowBoundingVolume : debugShowBoundingVolume,
                     pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
                 });
-                commands.push(command);
 
                 var pickCommand;
 
@@ -2031,14 +2031,16 @@ define([
                         owner : owner,
                         pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
                     });
-                    pickCommands.push(pickCommand);
                 }
 
-                runtimeNode.commands.push({
+                var nodeCommand = {
+                    show : true,
+                    boundingSphere : boundingSphere,
                     command : command,
-                    pickCommand : pickCommand,
-                    boundingSphere : boundingSphere
-                });
+                    pickCommand : pickCommand
+                };
+                runtimeNode.commands.push(nodeCommand);
+                nodeCommands.push(nodeCommand);
             }
         }
     }
@@ -2247,6 +2249,7 @@ define([
                 }
             }
         }
+
         ++model._maxDirtyNumber;
     }
 
@@ -2282,6 +2285,44 @@ define([
         }
     }
 
+
+    function updatePerNodeShow(model) {
+        // Totally not worth it, but we could optimize this:
+        // http://blogs.agi.com/insight3d/index.php/2008/02/13/deletion-in-bounding-volume-hierarchies/
+
+        var rootNodes = model._runtime.rootNodes;
+        var length = rootNodes.length;
+
+        var nodeStack = scratchNodeStack;
+
+        for (var i = 0; i < length; ++i) {
+            var n = rootNodes[i];
+            n.computedShow = n.publicNode.show;
+            nodeStack.push(n);
+
+            while (nodeStack.length > 0) {
+                n = nodeStack.pop();
+                var show = n.computedShow;
+
+                var nodeCommands = n.commands;
+                var nodeCommandsLength = nodeCommands.length;
+                for (var j = 0 ; j < nodeCommandsLength; ++j) {
+                    nodeCommands[j].show = show;
+                }
+                // if commandsLength is zero, the node has a light or camera
+
+                var children = n.children;
+                var childrenLength = children.length;
+                for (var k = 0; k < childrenLength; ++k) {
+                    var child = children[k];
+                    // Parent needs to be shown for child to be shown.
+                    child.computedShow = show && child.publicNode.show;
+                    nodeStack.push(child);
+                }
+            }
+        }
+    }
+
     function updatePickIds(model, context) {
         var id = model.id;
         if (model._id !== id) {
@@ -2302,11 +2343,25 @@ define([
             // This assumes the original primitive was TRIANGLES and that the triangles
             // are connected for the wireframe to look perfect.
             var primitiveType = model.debugWireframe ? PrimitiveType.LINES : PrimitiveType.TRIANGLES;
-            var commands = model._renderCommands;
-            var length = commands.length;
+            var nodeCommands = model._nodeCommands;
+            var length = nodeCommands.length;
 
             for (var i = 0; i < length; ++i) {
-                commands[i].primitiveType = primitiveType;
+                nodeCommands[i].command.primitiveType = primitiveType;
+            }
+        }
+    }
+
+    function updateShowBoundingVolume(model) {
+        if (model.debugShowBoundingVolume !== model._debugShowBoundingVolume) {
+            model._debugShowBoundingVolume = model.debugShowBoundingVolume;
+
+            var debugShowBoundingVolume = model.debugShowBoundingVolume;
+            var nodeCommands = model._nodeCommands;
+            var length = nodeCommands.length;
+
+            for (var i = 0; i < length; i++) {
+                nodeCommands[i].command.debugShowBoundingVolume = debugShowBoundingVolume;
             }
         }
     }
@@ -2533,8 +2588,13 @@ define([
                 }
             }
 
+            if (this._perNodeShowDirty) {
+                this._perNodeShowDirty = false;
+                updatePerNodeShow(this);
+            }
             updatePickIds(this, context);
             updateWireframe(this);
+            updateShowBoundingVolume(this);
         }
 
         if (justLoaded) {
@@ -2553,29 +2613,26 @@ define([
         if (show) {
 // PERFORMANCE_IDEA: This is terrible
             var passes = frameState.passes;
+            var nodeCommands = this._nodeCommands;
+            var length = nodeCommands.length;
             var i;
-            var length;
-            var commands;
-            if (passes.render) {
-                commands = this._renderCommands;
-                length = commands.length;
-                for (i = 0; i < length; ++i) {
-                    commandList.push(commands[i]);
-                }
+            var nc;
 
-                if (this.debugShowBoundingVolume !== this._debugShowBoundingVolume) {
-                    this._debugShowBoundingVolume = this.debugShowBoundingVolume;
-                    for (i = 0; i < commands.length; i++) {
-                        commands[i].debugShowBoundingVolume = this.debugShowBoundingVolume;
+            if (passes.render) {
+                for (i = 0; i < length; ++i) {
+                    nc = nodeCommands[i];
+                    if (nc.show) {
+                        commandList.push(nc.command);
                     }
                 }
             }
 
             if (passes.pick) {
-                commands = this._pickCommands;
-                length = commands.length;
                 for (i = 0; i < length; ++i) {
-                    commandList.push(commands[i]);
+                    nc = nodeCommands[i];
+                    if (nc.show) {
+                        commandList.push(nc.pickCommand);
+                    }
                 }
             }
         }
@@ -2629,8 +2686,3 @@ define([
 
     return Model;
 });
-
-//TODO: ref count cached animations
-//TODO: function to invalidate whole cache or one url
-//TODO: x number of frames/seconds later to avoid ping ponging.  Use a generic system to schedule it?
-//TODO: only destroy inside render loop?
