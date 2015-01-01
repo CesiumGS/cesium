@@ -8,7 +8,6 @@ defineSuite([
         'Core/Math',
         'Core/TerrainData',
         'Core/TerrainMesh',
-        'Specs/waitsForPromise',
         'ThirdParty/when'
     ], function(
         QuantizedMeshTerrainData,
@@ -19,7 +18,6 @@ defineSuite([
         CesiumMath,
         TerrainData,
         TerrainMesh,
-        waitsForPromise,
         when) {
      "use strict";
      /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
@@ -307,7 +305,7 @@ defineSuite([
              var nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
              var nePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
 
-             waitsForPromise(when.all([nwPromise, nePromise]), function(upsampleResults) {
+             return when.all([nwPromise, nePromise], function(upsampleResults) {
                  expect(upsampleResults.length).toBe(2);
                  var uBuffer, vBuffer;
                  for (var i = 0; i < upsampleResults.length; i++) {

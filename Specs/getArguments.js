@@ -1,4 +1,7 @@
+/*global define*/
 define([], function() {
+    'use strict';
+
     // Jasmine 2.1 requires that objects be constructed with the same constructor in
     // order to be considered equal.  The 'arguments' keyword looks like an array, but
     // it's actually (at least in Chrome and Firefox) constructed with a special
@@ -16,7 +19,7 @@ define([], function() {
      */
     var getArguments = function() {
         return arguments;
-    }
+    };
 
     return getArguments;
 });

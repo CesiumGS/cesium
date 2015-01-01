@@ -14,7 +14,8 @@ defineSuite([
         'Scene/ModelAnimationLoop',
         'Specs/createScene',
         'Specs/destroyScene',
-        'Specs/pollToPromise'
+        'Specs/pollToPromise',
+        'ThirdParty/when'
     ], function(
         Model,
         Cartesian2,
@@ -30,7 +31,8 @@ defineSuite([
         ModelAnimationLoop,
         createScene,
         destroyScene,
-        pollToPromise) {
+        pollToPromise,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,WebGLRenderingContext*/
 
@@ -459,7 +461,7 @@ defineSuite([
             return loadModel(customDuckUrl).then(function(model) {
                 customDuckModel = model;
             });
-        });        
+        });
 
         it('renders customDuckModel (NPOT textures and all uniform semantics)', function() {
             expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
@@ -480,7 +482,7 @@ defineSuite([
             return loadModel(separateDuckUrl).then(function(model) {
                 separateDuckModel = model;
             });
-        });        
+        });
 
         it('renders separateDuckModel (external .glsl, .bin, and .png files)', function() {
             expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
@@ -506,7 +508,7 @@ defineSuite([
                 expect(cesiumAirModel.minimumPixelSize).toEqual(1);
                 expect(cesiumAirModel.asynchronous).toEqual(false);
             });
-        });        
+        });
 
         it('renders cesiumAir (has translucency)', function() {
             expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
@@ -623,11 +625,11 @@ defineSuite([
             animations.animationAdded.addEventListener(spyAdd);
             var a = animations.addAll();
             expect(animations.length).toEqual(2);
-            expect(spyAdd.calls.length).toEqual(2);
-            expect(spyAdd.calls[0].args[0]).toBe(animBoxesModel);
-            expect(spyAdd.calls[0].args[1]).toBe(a[0]);
-            expect(spyAdd.calls[1].args[0]).toBe(animBoxesModel);
-            expect(spyAdd.calls[1].args[1]).toBe(a[1]);
+            expect(spyAdd.calls.count()).toEqual(2);
+            expect(spyAdd.calls.argsFor(0)[0]).toBe(animBoxesModel);
+            expect(spyAdd.calls.argsFor(0)[1]).toBe(a[0]);
+            expect(spyAdd.calls.argsFor(1)[0]).toBe(animBoxesModel);
+            expect(spyAdd.calls.argsFor(1)[1]).toBe(a[1]);
             animations.animationAdded.removeEventListener(spyAdd);
 
             expect(animations.contains(a[0])).toEqual(true);
@@ -639,11 +641,11 @@ defineSuite([
             animations.animationRemoved.addEventListener(spyRemove);
             animations.removeAll();
             expect(animations.length).toEqual(0);
-            expect(spyRemove.calls.length).toEqual(2);
-            expect(spyRemove.calls[0].args[0]).toBe(animBoxesModel);
-            expect(spyRemove.calls[0].args[1]).toBe(a[0]);
-            expect(spyRemove.calls[1].args[0]).toBe(animBoxesModel);
-            expect(spyRemove.calls[1].args[1]).toBe(a[1]);
+            expect(spyRemove.calls.count()).toEqual(2);
+            expect(spyRemove.calls.argsFor(0)[0]).toBe(animBoxesModel);
+            expect(spyRemove.calls.argsFor(0)[1]).toBe(a[0]);
+            expect(spyRemove.calls.argsFor(1)[0]).toBe(animBoxesModel);
+            expect(spyRemove.calls.argsFor(1)[1]).toBe(a[1]);
             animations.animationRemoved.removeEventListener(spyRemove);
         });
 
@@ -1076,11 +1078,9 @@ defineSuite([
     });
 
     it('releaseGltfJson releases glTFJSON when constructed with fromGltf', function() {
-        var m = loadModel(duckUrl, {
+        return loadModel(duckUrl, {
             releaseGltfJson : true
-        });
-
-        runs(function() {
+        }).then(function(m) {
             expect(m.releaseGltfJson).toEqual(true);
             expect(m.gltf).not.toBeDefined();
 
@@ -1099,13 +1099,11 @@ defineSuite([
         }));
         addZoomTo(m);
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             // Render scene to progressively load the model
             scene.renderForSpecs();
             return m.ready;
-        }, 'ready', 10000);
-
-        runs(function() {
+        }, { timeout: 10000 }).then(function() {
             expect(m.releaseGltfJson).toEqual(true);
             expect(m.gltf).not.toBeDefined();
 
@@ -1125,7 +1123,7 @@ defineSuite([
         expect(modelRendererResourceCache[key]).not.toBeDefined();
 
         // Use a custom cache key to avoid conflicting with previous tests
-        var m = loadModel(duckUrl, {
+        var promise = loadModel(duckUrl, {
             cacheKey : key
         });
 
@@ -1135,31 +1133,23 @@ defineSuite([
 
         // This is a cache hit, but the JSON request is still pending.
         // In the test below, the cache hit occurs after the request completes.
-        var m2 = loadModel(duckUrl, {
+        var promise2 = loadModel(duckUrl, {
             cacheKey : key
         });
 
         expect(gltfCache[key].count).toEqual(2);
 
-        waitsFor(function() {
-            // Render scene to progressively load the model
-            scene.renderForSpecs();
+        return when.all([promise, promise2], function(models) {
+            var m = models[0];
+            var m2 = models[1];
 
-            if (m.ready && m2.ready) {
-                // glTF JSON cache set ready once the JSON was downloaded
-                expect(gltfCache[key].ready).toEqual(true);
+            // glTF JSON cache set ready once the JSON was downloaded
+            expect(gltfCache[key].ready).toEqual(true);
 
-                expect(modelRendererResourceCache[key]).toBeDefined();
-                expect(modelRendererResourceCache[key].count).toEqual(2);
-                expect(modelRendererResourceCache[key].ready).toEqual(true);
+            expect(modelRendererResourceCache[key]).toBeDefined();
+            expect(modelRendererResourceCache[key].count).toEqual(2);
+            expect(modelRendererResourceCache[key].ready).toEqual(true);
 
-                return true;
-            }
-
-            return false;
-        }, 'ready', 10000);
-
-        runs(function() {
             verifyRender(m);
             verifyRender(m2);
 
@@ -1181,35 +1171,26 @@ defineSuite([
         expect(gltfCache[key]).not.toBeDefined();
 
         // Use a custom cache key to avoid conflicting with previous tests
-        var m = loadModel(duckUrl, {
+        var promise = loadModel(duckUrl, {
             cacheKey : key
         });
-        var m2;
 
         expect(gltfCache[key]).toBeDefined();
         expect(gltfCache[key].count).toEqual(1);
         expect(gltfCache[key].ready).toEqual(false);
 
-        waitsFor(function() {
-            // Render scene to progressively load the model
-            scene.renderForSpecs();
+        return promise.then(function(m) {
+            // Cache hit after JSON request completed.
+            var m2;
+            loadModel(duckUrl, {
+                cacheKey : key
+            }).then(function(model) {
+                m2 = model;
+            });
 
-            if (m.ready) {
-                // Cache hit after JSON request completed.
-                m2 = loadModel(duckUrl, {
-                    cacheKey : key
-                });
+            expect(gltfCache[key].ready).toEqual(true);
+            expect(gltfCache[key].count).toEqual(2);
 
-                expect(gltfCache[key].ready).toEqual(true);
-                expect(gltfCache[key].count).toEqual(2);
-
-                return true;
-            }
-
-            return false;
-        }, 'ready', 10000);
-
-        runs(function() {
             verifyRender(m);
             verifyRender(m2);
 
@@ -1244,7 +1225,7 @@ defineSuite([
         expect(gltfCache[key].count).toEqual(1);
         expect(gltfCache[key].ready).toEqual(true);
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             // Render scene to progressively load the model
             scene.renderForSpecs();
 
@@ -1253,9 +1234,7 @@ defineSuite([
             expect(modelRendererResourceCache[key].ready).toEqual(m.ready);
 
             return m.ready;
-        }, 'ready', 10000);
-
-        runs(function() {
+        }, { timeout: 10000 }).then(function() {
             verifyRender(m);
 
             primitives.remove(m);
@@ -1315,7 +1294,7 @@ defineSuite([
         expect(gltfCache[key3].count).toEqual(1);
         expect(gltfCache[key3].ready).toEqual(true);
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             // Render scene to progressively load the model
             scene.renderForSpecs();
 
@@ -1330,9 +1309,7 @@ defineSuite([
             }
 
             return false;
-        }, 'ready', 10000);
-
-        runs(function() {
+        }, { timeout: 10000 }).then(function() {
             verifyRender(m);
             verifyRender(m2);
             verifyRender(m3);

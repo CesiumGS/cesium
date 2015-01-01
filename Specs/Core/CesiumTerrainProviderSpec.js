@@ -444,27 +444,13 @@ defineSuite([
                 requestVertexNormals : true
             });
 
-            waitsFor(function() {
+            return pollToPromise(function() {
                 return terrainProvider.ready;
-            });
-
-            var loadedData;
-
-            runs(function() {
-                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
-
-                when(promise, function(terrainData) {
-                    loadedData = terrainData;
+            }).then(function() {
+                return terrainProvider.requestTileGeometry(0, 0, 0).then(function(loadedData) {
+                    expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
+                    expect(loadedData._encodedNormals).toBeDefined();
                 });
-            });
-
-            waitsFor(function() {
-                return defined(loadedData);
-            }, 'request to complete');
-
-            runs(function() {
-                expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
-                expect(loadedData._encodedNormals).toBeDefined();
             });
         });
 
@@ -506,27 +492,13 @@ defineSuite([
                 requestVertexNormals : true
             });
 
-            waitsFor(function() {
+            return pollToPromise(function() {
                 return terrainProvider.ready;
-            });
-
-            var loadedData;
-
-            runs(function() {
-                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
-
-                when(promise, function(terrainData) {
-                    loadedData = terrainData;
+            }).then(function() {
+                return terrainProvider.requestTileGeometry(0, 0, 0).then(function(loadedData) {
+                    expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
+                    expect(loadedData._encodedNormals).toBeDefined();
                 });
-            });
-
-            waitsFor(function() {
-                return defined(loadedData);
-            }, 'request to complete');
-
-            runs(function() {
-                expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
-                expect(loadedData._encodedNormals).toBeDefined();
             });
         });
 

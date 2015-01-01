@@ -32,7 +32,7 @@ define([
 			}
 		}
 
-		setTimeout(poller, pollInterval);
+		poller();
 
 		return deferred.promise;
 	};

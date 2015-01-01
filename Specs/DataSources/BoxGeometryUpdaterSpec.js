@@ -347,20 +347,20 @@ defineSuite([
         updater.geometryChanged.addEventListener(listener);
 
         entity.box.dimensions = new ConstantProperty();
-        expect(listener.callCount).toEqual(1);
+        expect(listener.calls.count()).toEqual(1);
 
         entity.availability = new TimeIntervalCollection();
-        expect(listener.callCount).toEqual(2);
+        expect(listener.calls.count()).toEqual(2);
 
         entity.box.dimensions = undefined;
-        expect(listener.callCount).toEqual(3);
+        expect(listener.calls.count()).toEqual(3);
 
         //Since there's no valid geometry, changing another property should not raise the event.
         entity.box.height = undefined;
 
         //Modifying an unrelated property should not have any effect.
         entity.viewFrom = new ConstantProperty(Cartesian3.UNIT_X);
-        expect(listener.callCount).toEqual(3);
+        expect(listener.calls.count()).toEqual(3);
     });
 
     it('createFillGeometryInstance throws if object is not filled', function() {

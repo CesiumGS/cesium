@@ -182,7 +182,7 @@ define([
                     compare : function(actual, expectedConstructor) {
                         return { pass : actual instanceof expectedConstructor };
                     }
-                }
+                };
             },
 
             toThrow : function(expectedConstructor) {

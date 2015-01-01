@@ -19,6 +19,7 @@ defineSuite([
         'Scene/SceneMode',
         'Specs/DomEventSimulator',
         'Specs/MockDataSource',
+        'Specs/pollToPromise',
         'Widgets/Animation/Animation',
         'Widgets/BaseLayerPicker/BaseLayerPicker',
         'Widgets/BaseLayerPicker/ProviderViewModel',
@@ -48,6 +49,7 @@ defineSuite([
         SceneMode,
         DomEventSimulator,
         MockDataSource,
+        pollToPromise,
         Animation,
         BaseLayerPicker,
         ProviderViewModel,
@@ -58,7 +60,7 @@ defineSuite([
         SceneModePicker,
         Timeline) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var testProvider = {
         isReady : function() {
@@ -497,7 +499,7 @@ defineSuite([
             throw error;
         };
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return !viewer.useDefaultRenderLoop;
         }, 'render loop to be disabled.');
     });
@@ -643,11 +645,9 @@ defineSuite([
             throw error;
         };
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return !viewer.useDefaultRenderLoop;
-        });
-
-        runs(function() {
+        }).then(function() {
             expect(viewer._element.querySelector('.cesium-widget-errorPanel')).not.toBeNull();
 
             var messages = viewer._element.querySelectorAll('.cesium-widget-errorPanel-message');
@@ -678,11 +678,9 @@ defineSuite([
             throw error;
         };
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return !viewer.useDefaultRenderLoop;
-        });
-
-        runs(function() {
+        }).then(function() {
             expect(viewer._element.querySelector('.cesium-widget-errorPanel')).toBeNull();
         });
     });
@@ -730,7 +728,7 @@ defineSuite([
         expect(viewer.trackedEntity).toBe(entity);
 
         //Needed to avoid actually creating a flight when we issue the home command.
-        spyOn(CameraFlightPath, 'createTween').andReturn({
+        spyOn(CameraFlightPath, 'createTween').and.returnValue({
             startObject : {},
             stopObject: {},
             duration : 0.0
@@ -772,7 +770,7 @@ defineSuite([
         expect(viewer.homeButton.viewModel.command).toHaveBeenCalled();
 
         // reset the spy before removing the other entity
-        viewer.homeButton.viewModel.command.reset();
+        viewer.homeButton.viewModel.command.calls.reset();
 
         viewer.trackedEntity = beforeEntity;
         preMixinDataSource.entities.remove(beforeEntity);

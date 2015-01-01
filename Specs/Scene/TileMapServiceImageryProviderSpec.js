@@ -160,7 +160,7 @@ defineSuite([
     it('routes resource request through a proxy if one is specified', function() {
         var proxy = new DefaultProxy('/proxy/');
         var requestMetadata = when.defer();
-        spyOn(loadWithXhr, 'load').andCallFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             requestMetadata.resolve(url);
             deferred.reject(); //since the TMS server doesn't exist (and doesn't need too) we can just reject here.
         });
@@ -170,7 +170,7 @@ defineSuite([
             proxy : proxy
         });
 
-        waitsForPromise(requestMetadata, function(url) {
+        return requestMetadata.promise.then(function(url) {
             expect(url.indexOf(proxy.getURL('made/up/tms/server'))).toEqual(0);
         });
     });

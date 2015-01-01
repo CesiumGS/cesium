@@ -9,6 +9,8 @@
 
  [jasmine-gem]: http://github.com/pivotal/jasmine-gem
  */
+
+/*global define,require*/
 require.config({
     //waitSeconds: 0
     baseUrl : '../Source',
@@ -18,6 +20,10 @@ require.config({
 });
 
 require(['./ThirdParty/when'], function(when) {
+    'use strict';
+
+    /*global jasmineRequire,jasmine,exports,specs*/
+
     /**
      * ## Require &amp; Instantiate
      *
@@ -26,6 +32,7 @@ require(['./ThirdParty/when'], function(when) {
     window.jasmine = jasmineRequire.core(jasmineRequire);
 
     window.defineSuite = function(deps, name, suite, categories) {
+        /*global define,describe*/
         if (typeof suite === 'object' || typeof suite === 'string') {
             categories = suite;
         }
@@ -58,12 +65,24 @@ require(['./ThirdParty/when'], function(when) {
      *
      * Build up the functions that will be exposed as the Jasmine public interface. A project can customize, rename or alias any of these functions as desired, provided the implementation remains unchanged.
      */
-    var jasmineInterface = jasmineRequire.interface(jasmine, env);
+    var jasmineInterface = jasmineRequire['interface'](jasmine, env);
+
+    /**
+     * Helper function for readability below.
+     */
+    function extend(destination, source) {
+        for (var property in source) {
+            if (source.hasOwnProperty(property)) {
+                destination[property] = source[property];
+            }
+        }
+        return destination;
+    }
 
     /**
      * Add all of the Jasmine global/public interface to the proper global, so a project can use the public interface directly. For example, calling `describe` in specs instead of `jasmine.getEnv().describe`.
      */
-    if (typeof window == "undefined" && typeof exports == "object") {
+    if (typeof window === 'undefined' && typeof exports === 'object') {
         extend(exports, jasmineInterface);
     } else {
         extend(window, jasmineInterface);
@@ -204,13 +223,4 @@ require(['./ThirdParty/when'], function(when) {
 
         env.execute();
     });
-
-    /**
-     * Helper function for readability above.
-     */
-    function extend(destination, source) {
-        for (var property in source) destination[property] = source[property];
-        return destination;
-    }
-
 });

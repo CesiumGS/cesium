@@ -3,12 +3,14 @@ defineSuite([
         'Widgets/Geocoder/GeocoderViewModel',
         'Core/Cartesian3',
         'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/destroyScene',
+        'Specs/pollToPromise'
     ], function(
         GeocoderViewModel,
         Cartesian3,
         createScene,
-        destroyScene) {
+        destroyScene,
+        pollToPromise) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -70,7 +72,7 @@ defineSuite([
         viewModel.searchText = '220 Valley Creek Blvd, Exton, PA';
         viewModel.search();
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             scene.tweens.update();
             return !Cartesian3.equals(cameraPosition, scene.camera.position);
         });

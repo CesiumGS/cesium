@@ -11,7 +11,8 @@ defineSuite([
         'Scene/SceneMode',
         'Scene/SkyBox',
         'Scene/TileCoordinatesImageryProvider',
-        'Specs/DomEventSimulator'
+        'Specs/DomEventSimulator',
+        'Specs/pollToPromise'
     ], function(
         CesiumWidget,
         Clock,
@@ -24,9 +25,10 @@ defineSuite([
         SceneMode,
         SkyBox,
         TileCoordinatesImageryProvider,
-        DomEventSimulator) {
+        DomEventSimulator,
+        pollToPromise) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var container;
     var widget;
@@ -247,7 +249,7 @@ defineSuite([
             throw error;
         };
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return !widget.useDefaultRenderLoop;
         }, 'render loop to be disabled.');
     });
@@ -260,11 +262,9 @@ defineSuite([
             throw error;
         };
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return !widget.useDefaultRenderLoop;
-        });
-
-        runs(function() {
+        }).then(function() {
             expect(widget._element.querySelector('.cesium-widget-errorPanel')).not.toBeNull();
 
             var messages = widget._element.querySelectorAll('.cesium-widget-errorPanel-message');
@@ -295,11 +295,9 @@ defineSuite([
             throw error;
         };
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return !widget.useDefaultRenderLoop;
-        });
-
-        runs(function() {
+        }).then(function() {
             expect(widget._element.querySelector('.cesium-widget-errorPanel')).toBeNull();
         });
     });
