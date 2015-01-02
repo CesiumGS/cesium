@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE WMT_MS_Capabilities SYSTEM "http://schemas.opengis.net/wms/1.1.1/capabilities_1_1_1.dtd" [
+<!ELEMENT VendorSpecificCapabilities (TileSet*) >
+<!ELEMENT TileSet (SRS, BoundingBox?, Resolutions, Width, Height, Format, Layers*, Styles*) >
+<!ELEMENT Resolutions (#PCDATA) >
+<!ELEMENT Width (#PCDATA) >
+<!ELEMENT Height (#PCDATA) >
+<!ELEMENT Layers (#PCDATA) >
+<!ELEMENT Styles (#PCDATA) >
+]>
+<WMT_MS_Capabilities version="1.1.1">
+  <Service>
+    <Name>OGC:WMS</Name>
+    <Title>Web Map Service - GeoWebCache</Title>
+    <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="http://localhost:8090/geoserver/gwc/service/wms?SERVICE=WMS&amp;"/>
+  </Service>
+  <Capability>
+    <Request>
+      <GetCapabilities>
+        <Format>application/vnd.ogc.wms_xml</Format>
+        <DCPType>
+          <HTTP>
+            <Get>
+              <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="http://localhost:8090/geoserver/gwc/service/wms?SERVICE=WMS&amp;"/>
+            </Get>
+          </HTTP>
+        </DCPType>
+      </GetCapabilities>
+      <GetMap>
+        <Format>image/png</Format>
+        <Format>image/blunt</Format>
+        <Format>array/blunt</Format>
+        <DCPType>
+          <HTTP>
+            <Get>
+              <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="http://localhost:8090/geoserver/gwc/service/wms?SERVICE=WMS&amp;"/>
+            </Get>
+          </HTTP>
+        </DCPType>
+      </GetMap>
+      <GetFeatureInfo>
+        <Format>text/plain</Format>
+        <Format>application/json</Format>
+        <Format>application/vnd.ogc.gml</Format>
+        <Format>text/html</Format>
+        <Format>info/blunt</Format>
+        <DCPType>
+          <HTTP>
+            <Get>
+              <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="http://localhost:8090/geoserver/gwc/service/wms?SERVICE=WMS&amp;"/>
+            </Get>
+          </HTTP>
+        </DCPType>
+      </GetFeatureInfo>
+      <DescribeLayer>
+        <Format>application/vnd.ogc.wms_xml</Format>
+        <DCPType>
+          <HTTP>
+            <Get>
+              <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="http://localhost:8090/geoserver/gwc/service/wms?SERVICE=WMS&amp;"/>
+            </Get>
+          </HTTP>
+        </DCPType>
+      </DescribeLayer>
+      <GetLegendGraphic>
+        <Format>image/png</Format>
+        <Format>image/jpeg</Format>
+        <Format>image/gif</Format>
+        <DCPType>
+          <HTTP>
+            <Get>
+              <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="http://localhost:8090/geoserver/gwc/service/wms?SERVICE=WMS&amp;"/>
+            </Get>
+          </HTTP>
+        </DCPType>
+      </GetLegendGraphic>
+    </Request>
+    <Exception>
+      <Format>application/vnd.ogc.se_xml</Format>
+    </Exception>
+    <VendorSpecificCapabilities>
+      <TileSet>
+        <SRS>EPSG:4326</SRS>
+        <BoundingBox SRS="EPSG:4326" minx="-180.0" miny="-90.0"  maxx="180.0"  maxy="90.0" />
+        <Resolutions>0.703125 0.3515625 0.17578125 0.087890625 0.0439453125 0.02197265625 0.010986328125 0.0054931640625 0.00274658203125 0.001373291015625 6.866455078125E-4 3.4332275390625E-4 1.71661376953125E-4 8.58306884765625E-5 4.291534423828125E-5 2.1457672119140625E-5 1.0728836059570312E-5 5.364418029785156E-6 2.682209014892578E-6 1.341104507446289E-6 6.705522537231445E-7 3.3527612686157227E-7 </Resolutions>
+        <Width>256</Width>
+        <Height>256</Height>
+        <Format>image/png</Format>
+        <Layers>carto:routeFrance</Layers>
+        <Styles></Styles>
+      </TileSet>
+      <TileSet>
+        <SRS>EPSG:4326</SRS>
+        <BoundingBox SRS="EPSG:4326" minx="-180.0" miny="-90.0"  maxx="180.0"  maxy="90.0" />
+        <Resolutions>0.703125 0.3515625 0.17578125 0.087890625 0.0439453125 0.02197265625 0.010986328125 0.0054931640625 0.00274658203125 0.001373291015625 6.866455078125E-4 3.4332275390625E-4 </Resolutions>
+        <Width>256</Width>
+        <Height>256</Height>
+        <Format>image/png</Format>
+        <Layers>elevation:SRTM90Colored</Layers>
+        <Styles></Styles>
+      </TileSet>
+      <TileSet>
+        <SRS>EPSG:4326</SRS>
+        <BoundingBox SRS="EPSG:4326" minx="-180.0" miny="-90.0"  maxx="180.0"  maxy="90.0" />
+        <Resolutions>0.703125 0.3515625 0.17578125 0.087890625 0.0439453125 0.02197265625 0.010986328125 0.0054931640625 0.00274658203125 0.001373291015625 6.866455078125E-4 3.4332275390625E-4 </Resolutions>
+        <Width>256</Width>
+        <Height>256</Height>
+        <Format>image/png</Format>
+        <Layers>elevation:SRTM90</Layers>
+        <Styles></Styles>
+      </TileSet>
+      <TileSet>
+        <SRS>EPSG:4326</SRS>
+        <BoundingBox SRS="EPSG:4326" minx="-180.0" miny="-90.0"  maxx="180.0"  maxy="90.0" />
+        <Resolutions>0.703125 0.3515625 0.17578125 0.087890625 0.0439453125 0.02197265625 0.010986328125 0.0054931640625 0.00274658203125 0.001373291015625 6.866455078125E-4 3.4332275390625E-4 </Resolutions>
+        <Width>256</Width>
+        <Height>256</Height>
+        <Format>image/png</Format>
+        <Layers>elevation:SRTM90</Layers>
+        <Styles>mySLD</Styles>
+      </TileSet>
+      <TileSet>
+        <SRS>EPSG:4326</SRS>
+        <BoundingBox SRS="EPSG:4326" minx="-180.0" miny="-90.0"  maxx="180.0"  maxy="90.0" />
+        <Resolutions>0.703125 0.3515625 0.17578125 0.087890625 0.0439453125 0.02197265625 0.010986328125 0.0054931640625 0.00274658203125 0.001373291015625 6.866455078125E-4 3.4332275390625E-4 1.71661376953125E-4 8.58306884765625E-5 4.291534423828125E-5 2.1457672119140625E-5 1.0728836059570312E-5 5.364418029785156E-6 2.682209014892578E-6 1.341104507446289E-6 6.705522537231445E-7 3.3527612686157227E-7 </Resolutions>
+        <Width>700</Width>
+        <Height>700</Height>
+        <Format>image/png</Format>
+        <Layers>carto:carto250</Layers>
+        <Styles></Styles>
+      </TileSet>
+    </VendorSpecificCapabilities>
+    <Layer>
+      <Title>GeoWebCache WMS</Title>
+      <Abstract>Note that not all GeoWebCache instances provide a full WMS service.</Abstract>
+      <LatLonBoundingBox minx="-180.0" miny="-90.0" maxx="180.0" maxy="90.0"/>
+      <Layer queryable="1" opaque="0">
+        <Name>carto:carto250</Name>
+        <Title>carto250</Title>
+        <SRS>EPSG:4326</SRS>
+        <LatLonBoundingBox minx="-180.0" miny="-89.99999999999999" maxx="0" maxy="0"/>
+        <BoundingBox SRS="EPSG:4326" minx="-180.0" miny="-90" maxx="0" maxy="0"/>
+        <Dimension name="elevation" units="meters" default="500" multipleValues="1" nearestValue="0">500, 490, 480</Dimension>
+        <Dimension name="text_dimension" units="my_units"  multipleValues="1"  nearestValue="0">first, second, third</Dimension>
+        <Style>
+          <Name>raster</Name>
+        </Style>
+        <Style>
+          <Name>blue</Name>
+        </Style>
+      </Layer>
+    </Layer>
+  </Capability>
+</WMT_MS_Capabilities>

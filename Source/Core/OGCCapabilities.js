@@ -8,26 +8,27 @@ define([
         defineProperties,
         DeveloperError) {
     "use strict";
+    /* global console */
     /**
      * Object that returns the capabilities of an OGC server (WMS, "TMS",WMTS,WCS)
      * @alias OGCCapabilities
      * @constructor
-     * @see OGCHGelper       
+     * @see OGCHGelper
      */
     var OGCCapabilities = function() {};
 
     /**
      * check if a proposition for a dimension can be used to request.
      * @function
-     * 
+     *
      * @param {Object} dimension see {@link OGCCapabilities#dimensions} with the following attributes
-     * @param {String} 
+     * @param {String}
      *              dimension.Identifier identifier of the dimension
-     * @param {String} 
+     * @param {String}
      *              [dimension.UOM] unit of measure of the dimension
-     * @param {String} 
+     * @param {String}
      *              [dimension.Default] the default value of the dimension
-     * @param {Array} 
+     * @param {Array}
      *              dimension.Value an array of String that indicates the range of this dimension for each element of the array:
      * <table>
      *  <thead><tr><th>Syntax</th><th>Meaning</th></tr></thead>
@@ -42,8 +43,7 @@ define([
      * @return {Boolean|undefined} indicate if the String toValidate is a correct value for the dimension. If the function can't determine, it will return undefined
      */
     OGCCapabilities.dimensionValidator=function(dimension,toValidate){
-        //var dimension={Identifier:"time",UOM:"ISO8601",Default:"2001-01-03T01:15:30",Value:["2030-01-05,2999-11-27,2100-07-29","1980-01-01/2010-12-31/P10DT0H0M0S,1960-01-01/1970-12-31/P1D"]};var toValidates=["2999-11-27","2979-11-27","1980-01-21","1980-07-03","1965-07-01","1965-07-01T10:00:00"]; toValidates.forEach(function(elt){var resultat=Cesium.OGCCapabilities.dimensionValidator(dimension,elt);console.log(elt+" "+resultat)});
-        //var dimension={Identifier:"times",UOM:"ISO",Default:"2001-01-03T01:15:30",Value:["2030-01-05,2999-11-27,2100-07-29","1980-01-01/2010-12-31/P10DT0H0M0S,1960-01-01/1970-12-31/P1D"]};var toValidates=["2999-11-27","2979-11-27","1980-01-21","1980-07-03","1965-07-01","1965-07-01T10:00:00"]; toValidates.forEach(function(elt){var resultat=Cesium.OGCCapabilities.dimensionValidator(dimension,elt);console.log(elt+" "+resultat)});
+
         var isTimeDimension=/^time$/i.test(dimension.Identifier)|| /^iso8601$/i.test(dimension.UOM);
         var resultat;
         var tabResult=dimension.Value.map(function(element){
@@ -56,7 +56,7 @@ define([
                 var reg=/[,\/]*([^\/,]+)\/([^\/,]+)\/([^\/,]+),?/;
                 var tab;
                 var toValidateDate=isTimeDimension?new Date(toValidate+' UTC'):undefined;
-                while( (tab=reg.exec(element))!=null && !(defined(retour) && retour==true)){
+                while( (tab=reg.exec(element))!==null && !(defined(retour) && retour===true)){
                     var min=tab[1],max=tab[2],res=tab[3];
                     if(isTimeDimension){
                         try{
@@ -64,16 +64,16 @@ define([
                             max=new Date(max+' UTC');
                             var tabPeriod=/^P(\d+Y)?(\d+M)?(\d+W)?(\d+D)?(T(\d+H)?(\d+M)?(\d+S)?)?$/.exec(res);
                             // /^P(\d+Y)?(\d+M)?(\d+W)?(\d+D)?(T(\d+H)?(\d+M)?(\d+S)?)?$/.exec(period) return [ "P3Y6M5W4DT12H15M17S", "3Y", "6M", "5W", "4D", "T12H15M17S", "12H", "15M", "17S" ] for period="P3Y6M5W4DT12H15M17S"
-                            var periodYear=defined(tabPeriod[1])?parseInt(tabPeriod[1].replace(/[\D]/,"")):0; 
-                            var periodMonth=defined(tabPeriod[2])?parseInt(tabPeriod[2].replace(/[\D]/,"")):0;
-                            var periodWeek=defined(tabPeriod[3])?parseInt(tabPeriod[3].replace(/[\D]/,"")):0;
-                            var periodDay=defined(tabPeriod[4])?parseInt(tabPeriod[4].replace(/[\D]/,"")):0;
-                            var periodHour=defined(tabPeriod[6])?parseInt(tabPeriod[6].replace(/[\D]/,"")):0;
-                            var periodMinute=defined(tabPeriod[7])?parseInt(tabPeriod[7].replace(/[\D]/,"")):0;
-                            var periodSecond=defined(tabPeriod[8])?parseInt(tabPeriod[8].replace(/[\D]/,"")):0;
+                            var periodYear=defined(tabPeriod[1])?parseInt(tabPeriod[1].replace(/[\D]/,""),10):0;
+                            var periodMonth=defined(tabPeriod[2])?parseInt(tabPeriod[2].replace(/[\D]/,""),10):0;
+                            var periodWeek=defined(tabPeriod[3])?parseInt(tabPeriod[3].replace(/[\D]/,""),10):0;
+                            var periodDay=defined(tabPeriod[4])?parseInt(tabPeriod[4].replace(/[\D]/,""),10):0;
+                            var periodHour=defined(tabPeriod[6])?parseInt(tabPeriod[6].replace(/[\D]/,""),10):0;
+                            var periodMinute=defined(tabPeriod[7])?parseInt(tabPeriod[7].replace(/[\D]/,""),10):0;
+                            var periodSecond=defined(tabPeriod[8])?parseInt(tabPeriod[8].replace(/[\D]/,""),10):0;
                             var periodTotalSecondWithoutMonthAndYear=(((periodWeek*7+periodDay)*24+periodHour)*60+periodMinute)*60+periodSecond;
                             var deltaMilliSeconds=periodTotalSecondWithoutMonthAndYear*1000/10;
-                            while(min.getTime()<=max.getTime() && !(defined(retour) && retour==true)){
+                            while(min.getTime()<=max.getTime() && !(defined(retour) && retour===true)){
                                 if(Math.abs(min.getTime()-toValidateDate.getTime())<deltaMilliSeconds){
                                     retour=true;
                                 }
@@ -81,7 +81,7 @@ define([
                                 min.setMonth(min.getMonth()+periodMonth);
                                 min.setSeconds(min.getSeconds()+periodTotalSecondWithoutMonthAndYear);
                             }
-                            if(!(defined(retour) && retour==true)){
+                            if(!(defined(retour) && retour===true)){
                                 if(Math.abs(min.getTime()-max.getTime())<deltaMilliSeconds){
                                     retour=true;
                                 }else{
@@ -108,13 +108,13 @@ define([
                 }
             }else{
                 //syntax of value1,value2,value3,...
-                var reg=/,*([^\/,]+),?/;
-                var tab;
-                while( (tab=reg.exec(element))!=null && !(defined(retour) && retour==true)){
-                    if(tab[1].trim()===toValidate){
+                var reg2=/,*([^\/,]+),?/;
+                var tab2;
+                while( (tab2=reg2.exec(element))!==null && !(defined(retour) && retour===true)){
+                    if(tab2[1].trim()===toValidate){
                         retour=true;
                     }
-                    element=element.replace(tab[0],"");
+                    element=element.replace(tab2[0],"");
                 }
                 if(!defined(retour)){
                     retour=false;
@@ -126,7 +126,7 @@ define([
             if(!defined(resultat)){
                 resultat=elt;
             }else{
-                if(resultat==false){
+                if(resultat===false){
                     resultat=elt;
                 }
             }
@@ -153,7 +153,29 @@ define([
          * @type {Number}
          * @readonly
          */
-        heightMapWidth : {
+        tileMapWidth : {
+            get : DeveloperError.throwInstantiationError
+        },
+
+        /**
+         * Gets the rectangle, in tiling units, describing the geographical limits. This function should
+         * not be called before {@link OGCCapabilities#ready} returns true.
+         * @memberof OGCCapabilities.prototype
+         * @type {Rectangle}
+         * @readonly
+         */
+        rectangle : {
+            get : DeveloperError.throwInstantiationError
+        },
+
+        /**
+         * Gets the maximum level proposed by server. Can be undefined if there is no limiting level. This function should
+         * not be called before {@link OGCCapabilities#ready} returns true.
+         * @memberof OGCCapabilities.prototype
+         * @type {Number|undefined}
+         * @readonly
+         */
+        maxLevel : {
             get : DeveloperError.throwInstantiationError
         },
 
@@ -164,12 +186,12 @@ define([
          * @type {Number}
          * @readonly
          */
-        heightMapHeight : {
+        tileMapHeight : {
             get : DeveloperError.throwInstantiationError
         },
 
         /**
-         * Gets the list of applicable styles. It's an array of strings where 
+         * Gets the list of applicable styles. It's an array of strings where
          * first element (length always greater than 0 )is the default style.
          * This function should not be called before {@link OGCCapabilities#ready} returns true.
          * @memberof OGCCapabilities.prototype
@@ -234,19 +256,7 @@ define([
          */
         formatFeatureInfo : {
             get : DeveloperError.throwInstantiationError
-        },
-
-        /**
-         * Gets the coverage format defined for this OGCCapabilities. See {@link OGCCapabilities#getURLCoverage} and {@link OGCHelper.FormatCoverage}.  This function should
-         * not be called before {@link OGCCapabilities#ready} returns true. It's Undefined when there is no format available.
-         * @memberof OGCCapabilities.prototype
-         * @type {OGCHelper.FormatCoverage}
-         * @readonly
-         */
-        formatCoverage : {
-            get : DeveloperError.throwInstantiationError
         }
-
     });
 
     /**
@@ -257,12 +267,12 @@ define([
      * @param {Number} y The Y coordinate of the tile for which to request image.
      * @param {Number} level The level of the tile for which to request image.
      * @param {Object} [options] Object with the following attributes:
-     * @param {String} [options.style=OGCCapabilities.prototype.styles[0]] the style to apply. see {@link OGCCapabilities#styles} 
+     * @param {String} [options.style=OGCCapabilities.prototype.styles[0]] the style to apply. see {@link OGCCapabilities#styles}
      * @param {Object} [options.dimensions] dimensions to apply. It's an array of Objects whose attributes are strings: <ul>
      * <li>name for identifier of the dimension</li>
      * <li>value for requested value for the dimension</li>
-     * </ul>  see {@link OGCCapabilities#dimensions} 
-     * @returns {String} URL string to request an imaged tile.
+     * </ul>  see {@link OGCCapabilities#dimensions}
+     * @returns {String} URL string to request an imaged tile. The returned string can be "" if the request isn't acceptable
      */
     OGCCapabilities.prototype.getURLImage=DeveloperError.throwInstantiationError;
 
@@ -274,12 +284,12 @@ define([
      * @param {Number} y The Y coordinate of the tile for which to request array.
      * @param {Number} level The level of the tile for which to request array.
      * @param {Object} [options] Object with the following attributes:
-     * @param {String} [options.style=OGCCapabilities.prototype.styles[0]] the style to apply. see {@link OGCCapabilities#styles} 
+     * @param {String} [options.style=OGCCapabilities.prototype.styles[0]] the style to apply. see {@link OGCCapabilities#styles}
      * @param {Object} [options.dimensions] dimensions to apply. It's an array of Objects whose attributes are strings: <ul>
      * <li>name for identifier of the dimension</li>
      * <li>value for requested value for the dimension</li>
-     * </ul>  see {@link OGCCapabilities#dimensions} 
-     * @returns {String} URL string to request an array representing tile.
+     * </ul>  see {@link OGCCapabilities#dimensions}
+     * @returns {String} URL string to request an array representing tile. The returned string can be "" if the request isn't acceptable
      */
     OGCCapabilities.prototype.getURLArray=DeveloperError.throwInstantiationError;
 
@@ -298,8 +308,8 @@ define([
      * @param {Object} [options.dimensions] dimensions to apply. It's an array of Objects whose attributes are strings: <ul>
      * <li>name for identifier of the dimension</li>
      * <li>value for requested value for the dimension</li>
-     * </ul>  see {@link OGCCapabilities#dimensions} 
-     * @returns {String} URL string to request a feature info representing 'the middle" of tile.
+     * </ul>  see {@link OGCCapabilities#dimensions}
+     * @returns {String} URL string to request a feature info representing 'the middle" of tile. The returned string can be "" if the request isn't acceptable
      */
     OGCCapabilities.prototype.getURLFeatureInfoImage=DeveloperError.throwInstantiationError;
 
@@ -318,27 +328,10 @@ define([
      * @param {Object} [options.dimensions] dimensions to apply. It's an array of Objects whose attributes are strings: <ul>
      * <li>name for identifier of the dimension</li>
      * <li>value for requested value for the dimension</li>
-     * </ul>  see {@link OGCCapabilities#dimensions} 
-     * @returns {String} URL string to request a feature info representing 'the middle" of tile.
+     * </ul>  see {@link OGCCapabilities#dimensions}
+     * @returns {String} URL string to request a feature info representing 'the middle" of tile. The returned string can be "" if the request isn't acceptable
      */
     OGCCapabilities.prototype.getURLFeatureInfoArray=DeveloperError.throwInstantiationError;
-
-    /**
-     * Determines the URL to request a coverage that represents the requested tile. This function can be undefined if this capacity is not supported.
-     * @function
-     *
-     * @param {Number} x The X coordinate of the tile for which to request coverage.
-     * @param {Number} y The Y coordinate of the tile for which to request coverage.
-     * @param {Number} level The level of the tile for which to request coverage.
-     * @param {Object} [options] Object with the following attributes:
-     * @param {String} [options.style=OGCCapabilities.prototype.styles[0]] the style to apply. see {@link OGCCapabilities#styles} 
-     * @param {Object} [options.dimensions] dimensions to apply. It's an array of Objects whose attributes are strings: <ul>
-     * <li>name for identifier of the dimension</li>
-     * <li>value for requested value for the dimension</li>
-     * </ul>  see {@link OGCCapabilities#dimensions} 
-     * @returns {String} URL string to request coverage representing tile.
-     */
-    OGCCapabilities.prototype.getURLCoverage=DeveloperError.throwInstantiationError;
 
     /**
      * Determines whether data for a tile is available to be loaded.

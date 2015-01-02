@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TileMap version="1.0.0" tilemapservice="http://localhost:8090/geoserver/gwc/service/tms/1.0.0">
+  <Title>SRTM90Colored</Title>
+  <Abstract/>
+  <SRS>EPSG:4326</SRS>
+  <BoundingBox minx="-180.0" miny="-90.0" maxx="0.0" maxy="0.0"/>
+  <Origin x="-180.0" y="-90.0"/>
+  <TileFormat width="256" height="256" mime-type="image/png" extension="png"/>
+  <TileSets profile="global-geodetic">
+    <TileSet href="http://localhost:8090/geoserver/gwc/service/tms/1.0.0/elevation%3ASRTM90Colored@EPSG%3A4326@png/0" units-per-pixel="0.703125" order="0"/>
+    <TileSet href="http://localhost:8090/geoserver/gwc/service/tms/1.0.0/elevation%3ASRTM90Colored@EPSG%3A4326@png/1" units-per-pixel="0.3515625" order="1"/>
+    <TileSet href="http://localhost:8090/geoserver/gwc/service/tms/1.0.0/elevation%3ASRTM90Colored@EPSG%3A4326@png/2" units-per-pixel="0.17578125" order="2"/>
+    <TileSet href="http://localhost:8090/geoserver/gwc/service/tms/1.0.0/elevation%3ASRTM90Colored@EPSG%3A4326@png/3" units-per-pixel="0.087890625" order="3"/>
+    <TileSet href="http://localhost:8090/geoserver/gwc/service/tms/1.0.0/elevation%3ASRTM90Colored@EPSG%3A4326@png/4" units-per-pixel="0.0439453125" order="4"/>
+    <TileSet href="http://localhost:8090/geoserver/gwc/service/tms/1.0.0/elevation%3ASRTM90Colored@EPSG%3A4326@png/5" units-per-pixel="0.02197265625" order="5"/>
+    <TileSet href="http://localhost:8090/geoserver/gwc/service/tms/1.0.0/elevation%3ASRTM90Colored@EPSG%3A4326@png/6" units-per-pixel="0.010986328125" order="6"/>
+    <TileSet href="http://localhost:8090/geoserver/gwc/service/tms/1.0.0/elevation%3ASRTM90Colored@EPSG%3A4326@png/7" units-per-pixel="0.0054931640625" order="7"/>
+    <TileSet href="http://localhost:8090/geoserver/gwc/service/tms/1.0.0/elevation%3ASRTM90Colored@EPSG%3A4326@png/8" units-per-pixel="0.00274658203125" order="8"/>
+    <TileSet href="http://localhost:8090/geoserver/gwc/service/tms/1.0.0/elevation%3ASRTM90Colored@EPSG%3A4326@png/9" units-per-pixel="0.001373291015625" order="9"/>
+    <TileSet href="http://localhost:8090/geoserver/gwc/service/tms/1.0.0/elevation%3ASRTM90Colored@EPSG%3A4326@png/10" units-per-pixel="6.866455078125E-4" order="10"/>
+    <TileSet href="http://localhost:8090/geoserver/gwc/service/tms/1.0.0/elevation%3ASRTM90Colored@EPSG%3A4326@png/11" units-per-pixel="3.4332275390625E-4" order="11"/>
+    <TileSet href="http://localhost:8090/geoserver/gwc/service/tms/1.0.0/elevation%3ASRTM90Colored@EPSG%3A4326@png/12" units-per-pixel="1.71661376953125E-4" order="12"/>
+    <TileSet href="http://localhost:8090/geoserver/gwc/service/tms/1.0.0/elevation%3ASRTM90Colored@EPSG%3A4326@png/13" units-per-pixel="8.58306884765625E-5" order="13"/>
+  </TileSets>
+</TileMap>
