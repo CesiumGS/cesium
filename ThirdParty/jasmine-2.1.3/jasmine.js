@@ -573,13 +573,7 @@ getJasmineRequireObj().Env = function(j$) {
       env: this,
       id: getNextSuiteId(),
       description: 'Jasmine__TopLevel__Suite',
-      queueRunner: queueRunnerFactory,
-      onStart: function(suite) {
-        reporter.suiteStarted(suite.result);
-      },
-      resultCallback: function(attrs) {
-        reporter.suiteDone(attrs);
-      }
+      queueRunner: queueRunnerFactory
     });
     runnableLookupTable[topSuite.id] = topSuite;
     defaultResourcesForRunnable(topSuite.id);
@@ -1411,14 +1405,19 @@ getJasmineRequireObj().buildExpectationResult = function() {
     var messageFormatter = options.messageFormatter || function() {},
       stackFormatter = options.stackFormatter || function() {};
 
-    return {
+    var result = {
       matcherName: options.matcherName,
-      expected: options.expected,
-      actual: options.actual,
       message: message(),
       stack: stack(),
       passed: options.passed
     };
+
+    if(!result.passed) {
+      result.expected = options.expected;
+      result.actual = options.actual;
+    }
+
+    return result;
 
     function message() {
       if (options.passed) {
@@ -2905,5 +2904,5 @@ getJasmineRequireObj().interface = function(jasmine, env) {
 };
 
 getJasmineRequireObj().version = function() {
-  return '2.1.2';
+  return '2.1.3';
 };
