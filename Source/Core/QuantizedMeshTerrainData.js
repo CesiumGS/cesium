@@ -373,14 +373,15 @@ define([
         var northSkirtHeight = isNorthChild ? this._northSkirtHeight : (shortestSkirt * 0.5);
 
         return when(upsamplePromise, function(result) {
-            var indicesTypedArray = IndexDatatype.createTypedArray(result.vertices.length / 3, result.indices);
+            var quantizedVertices = new Uint16Array(result.vertices);
+            var indicesTypedArray = IndexDatatype.createTypedArray(quantizedVertices.length / 3, result.indices);
             var encodedNormals;
             if (defined(result.encodedNormals)) {
                 encodedNormals = new Uint8Array(result.encodedNormals);
             }
 
             return new QuantizedMeshTerrainData({
-                quantizedVertices : new Uint16Array(result.vertices),
+                quantizedVertices : quantizedVertices,
                 indices : indicesTypedArray,
                 encodedNormals : encodedNormals,
                 minimumHeight : result.minimumHeight,
@@ -414,9 +415,9 @@ define([
      *          the rectangle, so expect incorrect results for positions far outside the rectangle.
      */
     QuantizedMeshTerrainData.prototype.interpolateHeight = function(rectangle, longitude, latitude) {
-        var u = CesiumMath.clamp((longitude - rectangle.west) / (rectangle.east - rectangle.west), 0.0, 1.0);
+        var u = CesiumMath.clamp((longitude - rectangle.west) / rectangle.width, 0.0, 1.0);
         u *= maxShort;
-        var v = CesiumMath.clamp((latitude - rectangle.south) / (rectangle.north - rectangle.south), 0.0, 1.0);
+        var v = CesiumMath.clamp((latitude - rectangle.south) / rectangle.height, 0.0, 1.0);
         v *= maxShort;
 
         var uBuffer = this._uValues;

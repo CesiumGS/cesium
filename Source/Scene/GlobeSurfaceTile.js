@@ -131,6 +131,8 @@ define([
 
         this.pickBoundingSphere = new BoundingSphere();
         this.pickTerrain = undefined;
+
+        this.surfaceShader = undefined;
     };
 
     defineProperties(GlobeSurfaceTile.prototype, {
@@ -265,8 +267,7 @@ define([
         if (defined(this.vertexArray)) {
             indexBuffer = this.vertexArray.indexBuffer;
 
-            this.vertexArray.destroy();
-            this.vertexArray = undefined;
+            this.vertexArray = this.vertexArray.destroy();
 
             if (!indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
                 --indexBuffer.referenceCount;
@@ -279,8 +280,7 @@ define([
         if (defined(this.wireframeVertexArray)) {
             indexBuffer = this.wireframeVertexArray.indexBuffer;
 
-            this.wireframeVertexArray.destroy();
-            this.wireframeVertexArray = undefined;
+            this.wireframeVertexArray = this.wireframeVertexArray.destroy();
 
             if (!indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
                 --indexBuffer.referenceCount;
@@ -733,11 +733,11 @@ define([
         // Compute the water mask translation and scale
         var sourceTileRectangle = sourceTile.rectangle;
         var tileRectangle = tile.rectangle;
-        var tileWidth = tileRectangle.east - tileRectangle.west;
-        var tileHeight = tileRectangle.north - tileRectangle.south;
+        var tileWidth = tileRectangle.width;
+        var tileHeight = tileRectangle.height;
 
-        var scaleX = tileWidth / (sourceTileRectangle.east - sourceTileRectangle.west);
-        var scaleY = tileHeight / (sourceTileRectangle.north - sourceTileRectangle.south);
+        var scaleX = tileWidth / sourceTileRectangle.width;
+        var scaleY = tileHeight / sourceTileRectangle.height;
         surfaceTile.waterMaskTranslationAndScale.x = scaleX * (tileRectangle.west - sourceTileRectangle.west) / tileWidth;
         surfaceTile.waterMaskTranslationAndScale.y = scaleY * (tileRectangle.south - sourceTileRectangle.south) / tileHeight;
         surfaceTile.waterMaskTranslationAndScale.z = scaleX;

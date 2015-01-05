@@ -26,7 +26,7 @@ define([
     var ModelMaterial = function(model, material, id) {
         this._name = material.name;
         this._id = id;
-        this._uniformMap = model._rendererResources.uniformMaps[id];
+        this._uniformMap = model._uniformMaps[id];
     };
 
     defineProperties(ModelMaterial.prototype, {

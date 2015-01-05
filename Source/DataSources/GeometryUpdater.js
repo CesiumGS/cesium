@@ -24,6 +24,8 @@ define([
      * @see EllipsoidGeometryUpdater
      * @see PolygonGeometryUpdater
      * @see PolylineGeometryUpdater
+     * @see RectangleGeometryUpdater
+     * @see WallGeometryUpdater
      */
     var GeometryUpdater = function(entity, scene) {
         DeveloperError.throwInstantiationError();

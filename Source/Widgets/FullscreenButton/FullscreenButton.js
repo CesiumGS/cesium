@@ -27,7 +27,7 @@ define([
      * @constructor
      *
      * @param {Element|String} container The DOM element or ID that will contain the widget.
-     * @param {Element} [fullscreenElement=document.body] The element to be placed into fullscreen mode.
+     * @param {Element|String} [fullscreenElement=document.body] The element or id to be placed into fullscreen mode.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *

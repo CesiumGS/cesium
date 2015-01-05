@@ -17,12 +17,12 @@ define([
         '../ThirdParty/topojson',
         '../ThirdParty/when',
         './BillboardGraphics',
+        './CallbackProperty',
         './ColorMaterialProperty',
         './ConstantPositionProperty',
         './ConstantProperty',
         './DataSource',
         './EntityCollection',
-        './CallbackProperty',
         './PolygonGraphics',
         './PolylineGraphics'
     ], function(
@@ -43,12 +43,12 @@ define([
         topojson,
         when,
         BillboardGraphics,
+        CallbackProperty,
         ColorMaterialProperty,
         ConstantPositionProperty,
         ConstantProperty,
         DataSource,
         EntityCollection,
-        CallbackProperty,
         PolygonGraphics,
         PolylineGraphics) {
     "use strict";
@@ -84,6 +84,8 @@ define([
     var simpleStyleIdentifiers = ['title', 'description', //
     'marker-size', 'marker-symbol', 'marker-color', 'stroke', //
     'stroke-opacity', 'stroke-width', 'fill', 'fill-opacity'];
+
+    var stringifyScratch = new Array(4);
 
     function describe(properties, nameProperty) {
         var html = '<table class="cesium-infoBox-defaultTable"><tbody>';
@@ -252,21 +254,33 @@ define([
             symbol = defaultValue(properties['marker-symbol'], symbol);
         }
 
-        var canvasOrPromise;
-        if (defined(symbol)) {
-            if (symbol.length === 1) {
-                canvasOrPromise = dataSource._pinBuilder.fromText(symbol.toUpperCase(), color, size);
+        stringifyScratch[0] = symbol;
+        stringifyScratch[1] = color;
+        stringifyScratch[2] = size;
+        var id = JSON.stringify(stringifyScratch);
+
+        var dataURLPromise = dataSource._pinCache[id];
+        if (!defined(dataURLPromise)) {
+            var canvasOrPromise;
+            if (defined(symbol)) {
+                if (symbol.length === 1) {
+                    canvasOrPromise = dataSource._pinBuilder.fromText(symbol.toUpperCase(), color, size);
+                } else {
+                    canvasOrPromise = dataSource._pinBuilder.fromMakiIconId(symbol, color, size);
+                }
             } else {
-                canvasOrPromise = dataSource._pinBuilder.fromMakiIconId(symbol, color, size);
+                canvasOrPromise = dataSource._pinBuilder.fromColor(color, size);
             }
-        } else {
-            canvasOrPromise = dataSource._pinBuilder.fromColor(color, size);
+            dataURLPromise = when(canvasOrPromise, function(canvas) {
+                return canvas.toDataURL();
+            });
+            dataSource._pinCache[id] = dataURLPromise;
         }
 
-        dataSource._promises.push(when(canvasOrPromise, function(canvas) {
+        dataSource._promises.push(when(dataURLPromise, function(dataUrl) {
             var billboard = new BillboardGraphics();
             billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
-            billboard.image = new ConstantProperty(canvas.toDataURL());
+            billboard.image = new ConstantProperty(dataUrl);
 
             var entity = createObject(geoJson, dataSource._entityCollection);
             entity.billboard = billboard;
@@ -471,6 +485,7 @@ define([
         this._loading = new Event();
         this._entityCollection = new EntityCollection();
         this._promises = [];
+        this._pinCache = {};
         this._pinBuilder = new PinBuilder();
     };
 
@@ -845,6 +860,7 @@ define([
 
             return when.all(that._promises, function() {
                 that._promises.length = 0;
+                that._pinCache = {};
                 DataSource.setLoading(that, false);
             });
         }).otherwise(function(error) {

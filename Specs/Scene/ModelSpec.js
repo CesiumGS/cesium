@@ -87,7 +87,9 @@ defineSuite([
             scale : options.scale,
             minimumPixelSize : options.minimumPixelSize,
             id : url,        // for picking tests
-            asynchronous : options.asynchronous
+            asynchronous : options.asynchronous,
+            releaseGltfJson : options.releaseGltfJson,
+            cacheKey : options.cacheKey
         }));
         addZoomTo(model);
 
@@ -98,6 +100,14 @@ defineSuite([
         }, url + ' ready', 10000);
 
         return model;
+    }
+
+    function verifyRender(model) {
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        model.show = true;
+        model.zoomTo();
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        model.show = false;
     }
 
     it('loads duck', function() {
@@ -130,17 +140,14 @@ defineSuite([
        expect(duckModel.activeAnimations).toBeDefined();
        expect(duckModel.ready).toEqual(true);
        expect(duckModel.asynchronous).toEqual(true);
+       expect(duckModel.releaseGltfJson).toEqual(false);
+       expect(duckModel.cacheKey).toEndWith('Data/Models/duck/duck.gltf');
        expect(duckModel.debugShowBoundingVolume).toEqual(false);
        expect(duckModel.debugWireframe).toEqual(false);
     });
 
     it('renders', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-
-        duckModel.show = true;
-        duckModel.zoomTo();
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
-        duckModel.show = false;
+        verifyRender(duckModel);
     });
 
     it('renders from glTF', function() {
@@ -159,11 +166,7 @@ defineSuite([
         }, 'ready', 10000);
 
         runs(function() {
-            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-
-            model.show = true;
-            model.zoomTo();
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            verifyRender(model);
             primitives.remove(model);
         });
     });
@@ -242,11 +245,8 @@ defineSuite([
     });
 
     it('renders bounding volume', function() {
-        duckModel.show = true;
         duckModel.debugShowBoundingVolume = true;
-        duckModel.zoomTo();
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
-        duckModel.show = false;
+        verifyRender(duckModel);
         duckModel.debugShowBoundingVolume = false;
     });
 
@@ -258,10 +258,10 @@ defineSuite([
         duckModel.zoomTo();
         scene.renderForSpecs();
 
-        var commands = duckModel._renderCommands;
+        var commands = duckModel._nodeCommands;
         var length = commands.length;
         for (var i = 0; i < length; ++i) {
-            expect(commands[i].primitiveType).toEqual(PrimitiveType.LINES);
+            expect(commands[i].command.primitiveType).toEqual(PrimitiveType.LINES);
         }
 
         duckModel.show = false;
@@ -334,17 +334,14 @@ defineSuite([
         expect(node).toBeDefined();
         expect(node.name).toEqual('LOD3sp');
         expect(node.id).toEqual('LOD3sp');
+        expect(node.show).toEqual(true);
 
         // Change node transform and render
         expect(duckModel._cesiumAnimationsDirty).toEqual(false);
         node.matrix = Matrix4.fromUniformScale(1.01, new Matrix4());
         expect(duckModel._cesiumAnimationsDirty).toEqual(true);
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-        duckModel.show = true;
-        duckModel.zoomTo();
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
-        duckModel.show = false;
+        verifyRender(duckModel);
 
         expect(duckModel._cesiumAnimationsDirty).toEqual(false);
 
@@ -512,6 +509,68 @@ defineSuite([
         cesiumAirModel.show = false;
     });
 
+    it('renders cesiumAir with per-node show (root)', function() {
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        var commands = cesiumAirModel._nodeCommands;
+        var i;
+        var length;
+
+        cesiumAirModel.show = true;
+        cesiumAirModel.zoomTo();
+
+        cesiumAirModel.getNode('Cesium_Air').show = false;
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        length = commands.length;
+        for (i = 0; i < length; ++i) {
+            expect(commands[i].show).toEqual(false);
+        }
+
+        cesiumAirModel.getNode('Cesium_Air').show = true;
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+
+        length = commands.length;
+        for (i = 0; i < length; ++i) {
+            expect(commands[i].show).toEqual(true);
+        }
+
+        cesiumAirModel.show = false;
+    });
+
+    it('renders cesiumAir with per-node show (non-root)', function() {
+        cesiumAirModel.show = true;
+        cesiumAirModel.zoomTo();
+
+        var commands = cesiumAirModel._nodeCommands;
+        var i;
+        var length;
+
+        var commandsPropFalse = 0;
+        var commandsPropTrue = 0;
+
+        cesiumAirModel.getNode('Prop').show = false;
+        scene.renderForSpecs();
+
+        length = commands.length;
+        for (i = 0; i < length; ++i) {
+            commandsPropFalse += commands[i].show ? 1 : 0;
+        }
+
+        cesiumAirModel.getNode('Prop').show = true;
+        scene.renderForSpecs();
+
+        length = commands.length;
+        for (i = 0; i < length; ++i) {
+            commandsPropTrue += commands[i].show ? 1 : 0;
+        }
+
+        cesiumAirModel.show = false;
+
+        // Prop node has one mesh with two primitives
+        expect(commandsPropFalse).toEqual(commandsPropTrue - 2);
+    });
+
     it('picks cesiumAir', function() {
         if (FeatureDetection.isInternetExplorer()) {
             // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
@@ -539,11 +598,7 @@ defineSuite([
     });
 
     it('renders animBoxes without animation', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-        animBoxesModel.show = true;
-        animBoxesModel.zoomTo();
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
-        animBoxesModel.show = false;
+        verifyRender(animBoxesModel);
     });
 
     it('adds and removes all animations', function() {
@@ -919,12 +974,7 @@ defineSuite([
     });
 
     it('renders riggedFigure without animation', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-
-        riggedFigureModel.show = true;
-        riggedFigureModel.zoomTo();
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
-        riggedFigureModel.show = false;
+        verifyRender(riggedFigureModel);
     });
 
     it('renders riggedFigure with animation (skinning)', function() {
@@ -952,6 +1002,279 @@ defineSuite([
     it('should load a model where WebGL shader optimizer removes an attribute (linux)', function() {
         var url = './Data/Models/test-shader-optimize/test-shader-optimize.gltf';
         var m = loadModel(url);
+    });
+
+    it('releaseGltfJson releases glTFJSON when constructed with fromGltf', function() {
+        var m = loadModel(duckUrl, {
+            releaseGltfJson : true
+        });
+
+        runs(function() {
+            expect(m.releaseGltfJson).toEqual(true);
+            expect(m.gltf).not.toBeDefined();
+
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('releaseGltfJson releases glTF JSON when constructed with Model constructor function', function() {
+        var m = primitives.add(new Model({
+            gltf : duckModel.gltf,
+            modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
+            show : false,
+            releaseGltfJson : true,
+            asynchronous : true
+        }));
+        addZoomTo(m);
+
+        waitsFor(function() {
+            // Render scene to progressively load the model
+            scene.renderForSpecs();
+            return m.ready;
+        }, 'ready', 10000);
+
+        runs(function() {
+            expect(m.releaseGltfJson).toEqual(true);
+            expect(m.gltf).not.toBeDefined();
+
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('Models are cached with fromGltf (1/2)', function() {
+        var key = 'a-cache-key';
+
+        // This cache for this model is initially empty
+        var gltfCache = Model._gltfCache;
+        expect(gltfCache[key]).not.toBeDefined();
+
+        var modelRendererResourceCache = scene.context.cache.modelRendererResourceCache;
+        expect(modelRendererResourceCache[key]).not.toBeDefined();
+
+        // Use a custom cache key to avoid conflicting with previous tests
+        var m = loadModel(duckUrl, {
+            cacheKey : key
+        });
+
+        expect(gltfCache[key]).toBeDefined();
+        expect(gltfCache[key].count).toEqual(1);
+        expect(gltfCache[key].ready).toEqual(false);
+
+        // This is a cache hit, but the JSON request is still pending.
+        // In the test below, the cache hit occurs after the request completes.
+        var m2 = loadModel(duckUrl, {
+            cacheKey : key
+        });
+
+        expect(gltfCache[key].count).toEqual(2);
+
+        waitsFor(function() {
+            // Render scene to progressively load the model
+            scene.renderForSpecs();
+
+            if (m.ready && m2.ready) {
+                // glTF JSON cache set ready once the JSON was downloaded
+                expect(gltfCache[key].ready).toEqual(true);
+
+                expect(modelRendererResourceCache[key]).toBeDefined();
+                expect(modelRendererResourceCache[key].count).toEqual(2);
+                expect(modelRendererResourceCache[key].ready).toEqual(true);
+
+                return true;
+            }
+
+            return false;
+        }, 'ready', 10000);
+
+        runs(function() {
+            verifyRender(m);
+            verifyRender(m2);
+
+            primitives.remove(m);
+            expect(gltfCache[key].count).toEqual(1);
+            expect(modelRendererResourceCache[key].count).toEqual(1);
+
+            primitives.remove(m2);
+            expect(gltfCache[key]).not.toBeDefined();
+            expect(modelRendererResourceCache[key]).not.toBeDefined();
+        });
+    });
+
+    it('Models are cached with fromGltf (2/2)', function() {
+        var key = 'a-cache-key';
+
+        // This cache for this model is initially empty
+        var gltfCache = Model._gltfCache;
+        expect(gltfCache[key]).not.toBeDefined();
+
+        // Use a custom cache key to avoid conflicting with previous tests
+        var m = loadModel(duckUrl, {
+            cacheKey : key
+        });
+        var m2;
+
+        expect(gltfCache[key]).toBeDefined();
+        expect(gltfCache[key].count).toEqual(1);
+        expect(gltfCache[key].ready).toEqual(false);
+
+        waitsFor(function() {
+            // Render scene to progressively load the model
+            scene.renderForSpecs();
+
+            if (m.ready) {
+                // Cache hit after JSON request completed.
+                m2 = loadModel(duckUrl, {
+                    cacheKey : key
+                });
+
+                expect(gltfCache[key].ready).toEqual(true);
+                expect(gltfCache[key].count).toEqual(2);
+
+                return true;
+            }
+
+            return false;
+        }, 'ready', 10000);
+
+        runs(function() {
+            verifyRender(m);
+            verifyRender(m2);
+
+            primitives.remove(m);
+            expect(gltfCache[key].count).toEqual(1);
+
+            primitives.remove(m2);
+            expect(gltfCache[key]).not.toBeDefined();
+        });
+    });
+
+    it('Cache with a custom cacheKey the Model Constructor (1/2)', function() {
+        var key = 'a-cache-key';
+
+        // This cache for this model is initially empty
+        var gltfCache = Model._gltfCache;
+        expect(gltfCache[key]).not.toBeDefined();
+
+        var modelRendererResourceCache = scene.context.cache.modelRendererResourceCache;
+        expect(modelRendererResourceCache[key]).not.toBeDefined();
+
+        var m = primitives.add(new Model({
+            gltf : duckModel.gltf,
+            modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
+            show : false,
+            cacheKey : key,
+            asynchronous : true
+        }));
+        addZoomTo(m);
+
+        expect(gltfCache[key]).toBeDefined();
+        expect(gltfCache[key].count).toEqual(1);
+        expect(gltfCache[key].ready).toEqual(true);
+
+        waitsFor(function() {
+            // Render scene to progressively load the model
+            scene.renderForSpecs();
+
+            expect(modelRendererResourceCache[key]).toBeDefined();
+            expect(modelRendererResourceCache[key].count).toEqual(1);
+            expect(modelRendererResourceCache[key].ready).toEqual(m.ready);
+
+            return m.ready;
+        }, 'ready', 10000);
+
+        runs(function() {
+            verifyRender(m);
+
+            primitives.remove(m);
+            expect(gltfCache[key]).not.toBeDefined();
+            expect(modelRendererResourceCache[key]).not.toBeDefined();
+        });
+    });
+
+    it('Cache with a custom cacheKey when using the Model Constructor (2/2)', function() {
+        var key = 'a-cache-key';
+        var key3 = 'another-cache-key';
+
+        // This cache for these keys is initially empty
+        var gltfCache = Model._gltfCache;
+        expect(gltfCache[key]).not.toBeDefined();
+        expect(gltfCache[key3]).not.toBeDefined();
+
+        var modelRendererResourceCache = scene.context.cache.modelRendererResourceCache;
+        expect(modelRendererResourceCache[key]).not.toBeDefined();
+        expect(modelRendererResourceCache[key3]).not.toBeDefined();
+
+        var m = primitives.add(new Model({
+            gltf : duckModel.gltf,
+            modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
+            show : false,
+            cacheKey : key,
+            asynchronous : true
+        }));
+        addZoomTo(m);
+
+        expect(gltfCache[key]).toBeDefined();
+        expect(gltfCache[key].count).toEqual(1);
+        expect(gltfCache[key].ready).toEqual(true);
+
+        // Should be cache hit.  Not need to provide glTF.
+        var m2 = primitives.add(new Model({
+            modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
+            show : false,
+            cacheKey : key,
+            asynchronous : true
+        }));
+        addZoomTo(m2);
+
+        expect(gltfCache[key].count).toEqual(2);
+
+        // Should be cache miss.
+        var m3 = primitives.add(new Model({
+            gltf : duckModel.gltf,
+            modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
+            show : false,
+            cacheKey : key3,
+            asynchronous : true
+        }));
+        addZoomTo(m3);
+
+        expect(gltfCache[key3]).toBeDefined();
+        expect(gltfCache[key3].count).toEqual(1);
+        expect(gltfCache[key3].ready).toEqual(true);
+
+        waitsFor(function() {
+            // Render scene to progressively load the model
+            scene.renderForSpecs();
+
+            if (m.ready && m2.ready && m3.ready) {
+                expect(modelRendererResourceCache[key]).toBeDefined();
+                expect(modelRendererResourceCache[key].count).toEqual(2);
+
+                expect(modelRendererResourceCache[key3]).toBeDefined();
+                expect(modelRendererResourceCache[key3].count).toEqual(1);
+
+                return true;
+            }
+
+            return false;
+        }, 'ready', 10000);
+
+        runs(function() {
+            verifyRender(m);
+            verifyRender(m2);
+            verifyRender(m3);
+
+            primitives.remove(m);
+            primitives.remove(m2);
+            expect(gltfCache[key]).not.toBeDefined();
+            expect(modelRendererResourceCache[key]).not.toBeDefined();
+
+            primitives.remove(m3);
+            expect(gltfCache[key3]).not.toBeDefined();
+            expect(modelRendererResourceCache[key3]).not.toBeDefined();
+        });
     });
 
 }, 'WebGL');

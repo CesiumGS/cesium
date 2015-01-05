@@ -6,7 +6,8 @@ define([
         '../../Core/DeveloperError',
         '../../Core/Fullscreen',
         '../../ThirdParty/knockout',
-        '../createCommand'
+        '../createCommand',
+        '../getElement'
     ], function(
         defaultValue,
         defineProperties,
@@ -14,7 +15,8 @@ define([
         DeveloperError,
         Fullscreen,
         knockout,
-        createCommand) {
+        createCommand,
+        getElement) {
     "use strict";
 
     /**
@@ -22,7 +24,7 @@ define([
      * @alias FullscreenButtonViewModel
      * @constructor
      *
-     * @param {Element} [fullscreenElement=document.body] The element to be placed into fullscreen mode.
+     * @param {Element|String} [fullscreenElement=document.body] The element or id to be placed into fullscreen mode.
      */
     var FullscreenButtonViewModel = function(fullscreenElement) {
         var that = this;
@@ -79,7 +81,7 @@ define([
             }
         }, knockout.getObservable(this, 'isFullscreenEnabled'));
 
-        this._fullscreenElement = defaultValue(fullscreenElement, document.body);
+        this._fullscreenElement = defaultValue(getElement(fullscreenElement), document.body);
 
         this._callback = function() {
             tmpIsFullscreen(Fullscreen.fullscreen);

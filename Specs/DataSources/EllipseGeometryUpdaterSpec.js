@@ -18,6 +18,7 @@ defineSuite([
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/PrimitiveCollection',
+        'Specs/createDynamicProperty',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
@@ -39,6 +40,7 @@ defineSuite([
         SampledProperty,
         TimeIntervalCollectionProperty,
         PrimitiveCollection,
+        createDynamicProperty,
         createScene,
         destroyScene) {
     "use strict";
@@ -410,51 +412,48 @@ defineSuite([
     });
 
     it('dynamic updater sets properties', function() {
-        //This test is mostly a smoke screen for now.
-        var time1 = new JulianDate(0, 0);
-        var time2 = new JulianDate(1, 0);
-        var time3 = new JulianDate(2, 0);
-
-        function makeProperty(value1, value2) {
-            var property = new TimeIntervalCollectionProperty();
-            property.intervals.addInterval(new TimeInterval({
-                start : time1,
-                stop : time2,
-                isStopIncluded : false,
-                data : value1
-            }));
-            property.intervals.addInterval(new TimeInterval({
-                start : time2,
-                stop : time3,
-                isStopIncluded : false,
-                data : value2
-            }));
-            return property;
-        }
-
         var ellipse = new EllipseGraphics();
-        ellipse.semiMajorAxis = makeProperty(2, 12);
-        ellipse.semiMinorAxis = makeProperty(1, 11);
-        ellipse.outline = makeProperty(true, false);
-        ellipse.fill = makeProperty(false, true);
+        ellipse.show = createDynamicProperty(true);
+        ellipse.semiMajorAxis = createDynamicProperty(2);
+        ellipse.semiMinorAxis = createDynamicProperty(1);
+        ellipse.outline = createDynamicProperty(true);
+        ellipse.fill = createDynamicProperty(true);
 
         var entity = new Entity();
-        entity.availability = new TimeIntervalCollection();
-        entity.availability.addInterval(new TimeInterval({
-            start : time1,
-            stop : time3,
-            isStopIncluded : false
-        }));
-        entity.position = makeProperty(Cartesian3.UNIT_Z, Cartesian3.UNIT_Y);
+        entity.position = createDynamicProperty(Cartesian3.UNIT_Z);
         entity.ellipse = ellipse;
 
         var updater = new EllipseGeometryUpdater(entity, scene);
         var primitives = new PrimitiveCollection();
         var dynamicUpdater = updater.createDynamicUpdater(primitives);
-        expect(dynamicUpdater.isDestroyed()).toBe(false);
         expect(primitives.length).toBe(0);
-        dynamicUpdater.update(time1);
+
+        dynamicUpdater.update(JulianDate.now());
+        expect(primitives.length).toBe(2);
+        expect(dynamicUpdater.isDestroyed()).toBe(false);
+
+        expect(dynamicUpdater._options.id).toBe(entity);
+        expect(dynamicUpdater._options.semiMajorAxis).toEqual(ellipse.semiMajorAxis.getValue());
+        expect(dynamicUpdater._options.semiMinorAxis).toEqual(ellipse.semiMinorAxis.getValue());
+
+        ellipse.show.setValue(false);
+        dynamicUpdater.update(JulianDate.now());
+        expect(primitives.length).toBe(0);
+
+        ellipse.show.setValue(true);
+        ellipse.fill.setValue(false);
+        dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(1);
+
+        ellipse.fill.setValue(true);
+        ellipse.outline.setValue(false);
+        dynamicUpdater.update(JulianDate.now());
+        expect(primitives.length).toBe(1);
+
+        ellipse.semiMajorAxis.setValue(undefined);
+        dynamicUpdater.update(JulianDate.now());
+        expect(primitives.length).toBe(0);
+
         dynamicUpdater.destroy();
         expect(primitives.length).toBe(0);
         updater.destroy();
@@ -533,8 +532,7 @@ defineSuite([
 
     it('createDynamicUpdater throws if primitives undefined', function() {
         var entity = createBasicEllipse();
-        entity.ellipse.semiMajorAxis = new SampledProperty(Number);
-        entity.ellipse.semiMajorAxis.addSample(time, 4);
+        entity.ellipse.semiMajorAxis = createDynamicProperty(4);
         var updater = new EllipseGeometryUpdater(entity, scene);
         expect(updater.isDynamic).toBe(true);
         expect(function() {
@@ -544,8 +542,7 @@ defineSuite([
 
     it('dynamicUpdater.update throws if no time specified', function() {
         var entity = createBasicEllipse();
-        entity.ellipse.semiMajorAxis = new SampledProperty(Number);
-        entity.ellipse.semiMajorAxis.addSample(time, 4);
+        entity.ellipse.semiMajorAxis = createDynamicProperty(4);
         var updater = new EllipseGeometryUpdater(entity, scene);
         var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
         expect(function() {
