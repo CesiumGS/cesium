@@ -1,7 +1,7 @@
 var Cesium = require('./');
 var fs = require('fs');
 
-Cesium.on('ready', function() {
+Cesium.isReady.then(function() {
     // Something trivial
     var vec = new Cesium.Cartesian3(0, 1, 2);
     console.log("The length of vector " + vec + " is " + Cesium.Cartesian3.magnitude(vec));

@@ -179,7 +179,7 @@ function loadSectionModules(section, callback) {
   });
   
   requirejs.config({
-    baseUrl: "./node_modules/cesium"
+    baseUrl: "."
   });
 
   requirejs(modulePaths, function() {
