@@ -203,7 +203,10 @@ define([
                         primitive.attributes = {};
                     }
 
-                    primitive.primitive = defaultValue(primitive.primitive, WebGLRenderingContext.TRIANGLES);
+                    // Backwards compatibility for glTF 0.8. primitive was renamed to mode.
+                    var defaultMode = defaultValue(primitive.primitive, WebGLRenderingContext.TRIANGLES);
+
+                    primitive.mode = defaultValue(primitive.mode, defaultMode);
                 }
             }
         }
