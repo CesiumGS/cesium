@@ -49,7 +49,7 @@ define([
      * });
      * var geometry = Cesium.CircleGeometry.createGeometry(circle);
      */
-    var CircleGeometry = function(options) {
+    function CircleGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var radius = options.radius;
 
@@ -74,8 +74,7 @@ define([
             stRotation : options.stRotation
         };
         this._ellipseGeometry = new EllipseGeometry(ellipseGeometryOptions);
-        this._workerName = 'createCircleGeometry';
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.

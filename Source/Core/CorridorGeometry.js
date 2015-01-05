@@ -648,7 +648,7 @@ define([
      *   width : 100000
      * });
      */
-    var CorridorGeometry = function(options) {
+    function CorridorGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var positions = options.positions;
         var width = options.width;
@@ -670,14 +670,13 @@ define([
         this._extrudedHeight = defaultValue(options.extrudedHeight, this._height);
         this._cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
-        this._workerName = 'createCorridorGeometry';
 
         /**
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
         this.packedLength = 1 + positions.length * Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 5;
-    };
+    }
 
     /**
      * Stores the provided instance into the provided array.

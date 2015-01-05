@@ -80,7 +80,7 @@ define([
      * });
      * var geometry = Cesium.WallGeometry.createGeometry(wall);
      */
-    var WallGeometry = function(options) {
+    function WallGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var wallPositions = options.positions;
@@ -109,7 +109,6 @@ define([
         this._vertexFormat = VertexFormat.clone(vertexFormat);
         this._granularity = granularity;
         this._ellipsoid = Ellipsoid.clone(ellipsoid);
-        this._workerName = 'createWallGeometry';
 
         var numComponents = 1 + wallPositions.length * Cartesian3.packedLength + 2;
         if (defined(minimumHeights)) {
@@ -124,7 +123,7 @@ define([
          * @type {Number}
          */
         this.packedLength = numComponents + Ellipsoid.packedLength + VertexFormat.packedLength + 1;
-    };
+    }
 
     /**
      * Stores the provided instance into the provided array.

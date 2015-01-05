@@ -161,7 +161,7 @@ define([
      * });
      * var geometry = Cesium.EllipseOutlineGeometry.createGeometry(ellipse);
      */
-    var EllipseOutlineGeometry = function(options) {
+    function EllipseOutlineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var center = options.center;
@@ -204,8 +204,7 @@ define([
         this._extrudedHeight = defaultValue(extrudedHeight, 0.0);
         this._extrude = extrude;
         this._numberOfVerticalLines = Math.max(defaultValue(options.numberOfVerticalLines, 16), 0);
-        this._workerName = 'createEllipseOutlineGeometry';
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.

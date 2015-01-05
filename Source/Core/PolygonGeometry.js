@@ -603,7 +603,7 @@ define([
      * });
      * var geometry = Cesium.PolygonGeometry.createGeometry(extrudedPolygon);
      */
-    var PolygonGeometry = function(options) {
+    function PolygonGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
@@ -637,14 +637,13 @@ define([
         this._extrude = extrude;
         this._polygonHierarchy = polygonHierarchy;
         this._perPositionHeight = perPositionHeight;
-        this._workerName = 'createPolygonGeometry';
 
         /**
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
         this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + VertexFormat.packedLength + 6;
-    };
+    }
 
     /**
      * A description of a polygon from an array of positions.
