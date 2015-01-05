@@ -179,12 +179,20 @@ defineSuite([
 
     it('frustum offset', function() {
         frustum.setOffset(1.0, -1.0);
-        expect(frustum.xOffset).toBe(1.0);
-        expect(frustum.yOffset).toBe(-1.0);
+        expect(frustum._xOffset).toBe(1.0);
+        expect(frustum._yOffset).toBe(-1.0);
+    });
+
+    it('frustum offset clone', function() {
+        frustum.setOffset(1.0, -1.0);
+        var frustum2 = frustum.clone();
+        expect(frustum2._xOffset).toBe(1.0);
+        expect(frustum2._yOffset).toBe(-1.0);
     });
 
     it('get frustum left plane with offset', function() {
         frustum.setOffset(-1.0, 1.0);
+        frustum = frustum.clone(); // Force a FOV update
         var planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), Cartesian3.UNIT_Y).planes;
         var leftPlane = planes[0];
         var expectedResult = new Cartesian4(0.5, 0.0, -Math.sqrt(3.0) / 2.0, 0.0);
@@ -193,6 +201,7 @@ defineSuite([
 
     it('get frustum right plane with offset', function() {
         frustum.setOffset(-1.0, 1.0);
+        frustum = frustum.clone(); // Force a FOV update
         var planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), Cartesian3.UNIT_Y).planes;
         var rightPlane = planes[1];
         var expectedResult = new Cartesian4(-Math.sqrt(3.0) / 2.0, 0.0, 0.5, 0.0);
@@ -201,6 +210,7 @@ defineSuite([
 
     it('get frustum bottom plane with offset', function() {
         frustum.setOffset(-1.0, 1.0);
+        frustum = frustum.clone(); // Force a FOV update
         var planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), Cartesian3.UNIT_Y).planes;
         var bottomPlane = planes[2];
         var expectedResult = new Cartesian4(0.0, Math.sqrt(3.0) / 2.0, 0.5, 0.0);
@@ -209,6 +219,7 @@ defineSuite([
 
     it('get frustum top plane with offset', function() {
         frustum.setOffset(-1.0, 1.0);
+        frustum = frustum.clone(); // Force a FOV update
         var planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), Cartesian3.UNIT_Y).planes;
         var topPlane = planes[3];
         var expectedResult = new Cartesian4(0.0, -0.5, -Math.sqrt(3.0) / 2.0, 0.0);
@@ -217,6 +228,7 @@ defineSuite([
 
     it('get frustum near plane with offset', function() {
         frustum.setOffset(-1.0, 1.0);
+        frustum = frustum.clone(); // Force a FOV update
         var planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), Cartesian3.UNIT_Y).planes;
         var nearPlane = planes[4];
         var expectedResult = new Cartesian4(0.0, 0.0, -1.0, -1.0);
@@ -225,6 +237,7 @@ defineSuite([
 
     it('get frustum far plane with offset', function() {
         frustum.setOffset(-1.0, 1.0);
+        frustum = frustum.clone(); // Force a FOV update
         var planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), Cartesian3.UNIT_Y).planes;
         var farPlane = planes[5];
         var expectedResult = new Cartesian4(0.0, 0.0, 1.0, 2.0);

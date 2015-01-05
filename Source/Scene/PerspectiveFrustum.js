@@ -72,10 +72,8 @@ define([
          * @type {Number}
          * @default 0.0
          */
-        this.xOffset = 0.0;
-        this.yOffset = 0.0;
-        this._xOffset = this.xOffset;
-        this._yOffset = this.yOffset;
+        this._xOffset = 0.0;
+        this._yOffset = 0.0;
     };
 
     function update(frustum) {
@@ -88,8 +86,7 @@ define([
         var f = frustum._offCenterFrustum;
 
         if (frustum.fov !== frustum._fov || frustum.aspectRatio !== frustum._aspectRatio ||
-                frustum.near !== frustum._near || frustum.far !== frustum._far ||
-                frustum.xOffset !== frustum._xOffset || frustum.yOffset !== frustum._yOffset) {
+                frustum.near !== frustum._near || frustum.far !== frustum._far) {
             //>>includeStart('debug', pragmas.debug);
             if (frustum.fov < 0 || frustum.fov >= Math.PI) {
                 throw new DeveloperError('fov must be in the range [0, PI).');
@@ -109,8 +106,6 @@ define([
             frustum._fovy = (frustum.aspectRatio <= 1) ? frustum.fov : Math.atan(Math.tan(frustum.fov * 0.5) / frustum.aspectRatio) * 2.0;
             frustum._near = frustum.near;
             frustum._far = frustum.far;
-            frustum._xOffset = frustum.xOffset;
-            frustum._yOffset = frustum.yOffset;
 
             f.top = frustum.near * Math.tan(0.5 * frustum._fovy);
             f.bottom = -f.top;
@@ -179,8 +174,8 @@ define([
      * @param {Number} yOffset The frustum offset in the y direction.
      */
     PerspectiveFrustum.prototype.setOffset = function(xOffset, yOffset) {
-      this.xOffset = xOffset;
-      this.yOffset = yOffset;
+      this._xOffset = xOffset;
+      this._yOffset = yOffset;
     };
 
     /**
@@ -254,16 +249,15 @@ define([
         result.fov = this.fov;
         result.near = this.near;
         result.far = this.far;
-        result.xOffset = this.xOffset;
-        result.yOffset = this.yOffset;
 
         // force update of clone to compute matrices
         result._aspectRatio = undefined;
         result._fov = undefined;
         result._near = undefined;
         result._far = undefined;
-        result._xOffset = 0.0;
-        result._yOffset = 0.0;
+
+        result._xOffset = this._xOffset;
+        result._yOffset = this._yOffset;
 
         this._offCenterFrustum.clone(result._offCenterFrustum);
 
@@ -289,9 +283,7 @@ define([
                 this.aspectRatio === other.aspectRatio &&
                 this.near === other.near &&
                 this.far === other.far &&
-                this._offCenterFrustum.equals(other._offCenterFrustum) &&
-                this.xOffset === other.xOffset &&
-                this.yOffset === other.yOffset);
+                this._offCenterFrustum.equals(other._offCenterFrustum));
     };
 
     return PerspectiveFrustum;
