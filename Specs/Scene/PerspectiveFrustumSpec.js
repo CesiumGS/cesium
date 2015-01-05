@@ -176,4 +176,59 @@ defineSuite([
         expect(frustum2).toBe(result);
         expect(frustum).toEqual(frustum2);
     });
+
+    it('frustum offset', function() {
+        frustum.setOffset(1.0, -1.0);
+        expect(frustum.xOffset).toBe(1.0);
+        expect(frustum.yOffset).toBe(-1.0);
+    });
+
+    it('get frustum left plane with offset', function() {
+        frustum.setOffset(-1.0, 1.0);
+        var planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), Cartesian3.UNIT_Y).planes;
+        var leftPlane = planes[0];
+        var expectedResult = new Cartesian4(0.5, 0.0, -Math.sqrt(3.0) / 2.0, 0.0);
+        expect(leftPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON14);
+    });
+
+    it('get frustum right plane with offset', function() {
+        frustum.setOffset(-1.0, 1.0);
+        var planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), Cartesian3.UNIT_Y).planes;
+        var rightPlane = planes[1];
+        var expectedResult = new Cartesian4(-Math.sqrt(3.0) / 2.0, 0.0, 0.5, 0.0);
+        expect(rightPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON14);
+    });
+
+    it('get frustum bottom plane with offset', function() {
+        frustum.setOffset(-1.0, 1.0);
+        var planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), Cartesian3.UNIT_Y).planes;
+        var bottomPlane = planes[2];
+        var expectedResult = new Cartesian4(0.0, Math.sqrt(3.0) / 2.0, 0.5, 0.0);
+        expect(bottomPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON14);
+    });
+
+    it('get frustum top plane with offset', function() {
+        frustum.setOffset(-1.0, 1.0);
+        var planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), Cartesian3.UNIT_Y).planes;
+        var topPlane = planes[3];
+        var expectedResult = new Cartesian4(0.0, -0.5, -Math.sqrt(3.0) / 2.0, 0.0);
+        expect(topPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON14);
+    });
+
+    it('get frustum near plane with offset', function() {
+        frustum.setOffset(-1.0, 1.0);
+        var planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), Cartesian3.UNIT_Y).planes;
+        var nearPlane = planes[4];
+        var expectedResult = new Cartesian4(0.0, 0.0, -1.0, -1.0);
+        expect(nearPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON14);
+    });
+
+    it('get frustum far plane with offset', function() {
+        frustum.setOffset(-1.0, 1.0);
+        var planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), Cartesian3.UNIT_Y).planes;
+        var farPlane = planes[5];
+        var expectedResult = new Cartesian4(0.0, 0.0, 1.0, 2.0);
+        expect(farPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON14);
+    });
+
 });
