@@ -101,7 +101,7 @@ define([
         scratchOptions.slicePartitions = ellipsoidGeometry._slicePartitions;
 
         if (!defined(result)) {
-            scratchOptions.radius = ellipsoidGeometry._radius;
+            scratchOptions.radius = ellipsoidGeometry._radii.x;
             return new SphereGeometry(scratchOptions);
         }
 

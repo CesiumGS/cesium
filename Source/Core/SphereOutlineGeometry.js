@@ -99,7 +99,7 @@ define([
         scratchOptions.subdivisions = ellipsoidGeometry._subdivisions;
 
         if (!defined(result)) {
-            scratchOptions.radius = ellipsoidGeometry._radius;
+            scratchOptions.radius = ellipsoidGeometry._radii.x;
             return new SphereOutlineGeometry(scratchOptions);
         }
 
