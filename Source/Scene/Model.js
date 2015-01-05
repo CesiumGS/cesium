@@ -2003,7 +2003,7 @@ define([
                 var command = new DrawCommand({
                     boundingVolume : new BoundingSphere(), // updated in update()
                     modelMatrix : new Matrix4(),           // computed in update()
-                    primitiveType : primitive.primitive,
+                    primitiveType : primitive.mode,
                     vertexArray : vertexArray,
                     count : count,
                     offset : offset,
@@ -2028,7 +2028,7 @@ define([
                     pickCommand = new DrawCommand({
                         boundingVolume : new BoundingSphere(), // updated in update()
                         modelMatrix : new Matrix4(),           // computed in update()
-                        primitiveType : primitive.primitive,
+                        primitiveType : primitive.mode,
                         vertexArray : vertexArray,
                         count : count,
                         offset : offset,
