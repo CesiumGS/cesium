@@ -61,7 +61,8 @@ define([
         }
         var asset = gltf.asset;
 
-        if (!defined(asset.profile)) {
+        // Backwards compatibility for glTF 0.8. profile was a string.
+        if (!defined(asset.profile) || (typeof asset.profile === 'string')) {
             asset.profile = {};
         }
         var profile = asset.profile;
