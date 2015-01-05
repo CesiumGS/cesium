@@ -207,12 +207,11 @@ define([
         options = clone(options);
 
         var scheduledAnimations = [];
-        var animations = this._model.gltf.animations;
-        for (var name in animations) {
-            if (animations.hasOwnProperty(name)) {
-                options.name = name;
-                scheduledAnimations.push(this.add(options));
-            }
+        var animationIds = this._model._animationIds;
+        var length = animationIds.length;
+        for (var i = 0; i < length; ++i) {
+            options.name = animationIds[i];
+            scheduledAnimations.push(this.add(options));
         }
 
         return scheduledAnimations;
@@ -348,15 +347,15 @@ define([
             var scheduledAnimation = scheduledAnimations[i];
             var runtimeAnimation = scheduledAnimation._runtimeAnimation;
 
-            if (!defined(scheduledAnimation._startTime)) {
-                scheduledAnimation._startTime = JulianDate.addSeconds(defaultValue(scheduledAnimation.startTime, sceneTime), scheduledAnimation.delay, new JulianDate());
+            if (!defined(scheduledAnimation._computedStartTime)) {
+                scheduledAnimation._computedStartTime = JulianDate.addSeconds(defaultValue(scheduledAnimation.startTime, sceneTime), scheduledAnimation.delay, new JulianDate());
             }
 
             if (!defined(scheduledAnimation._duration)) {
                 scheduledAnimation._duration = runtimeAnimation.stopTime * (1.0 / scheduledAnimation.speedup);
             }
 
-            var startTime = scheduledAnimation._startTime;
+            var startTime = scheduledAnimation._computedStartTime;
             var duration = scheduledAnimation._duration;
             var stopTime = scheduledAnimation.stopTime;
 

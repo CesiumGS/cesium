@@ -33,7 +33,7 @@ var clock = viewer.clock;
 
 function flyToSanDiego() {
     Sandcastle.declare(flyToSanDiego);
-    scene.camera.flyTo({
+    viewer.camera.flyTo({
         destination : Cesium.Cartesian3.fromDegrees(-117.16, 32.71, 15000.0)
     });
 }
@@ -43,7 +43,7 @@ function flyToLocation() {
 
     // Create callback for browser's geolocation
     function fly(position) {
-        scene.camera.flyTo({
+        viewer.camera.flyTo({
             destination : Cesium.Cartesian3.fromDegrees(position.coords.longitude, position.coords.latitude, 1000.0)
         });
     }
@@ -60,7 +60,7 @@ function viewRectangle() {
     var east = -72.0;
     var north = 42.0;
 
-    scene.camera.viewRectangle(Cesium.Rectangle.fromDegrees(west, south, east, north));
+    viewer.camera.viewRectangle(Cesium.Rectangle.fromDegrees(west, south, east, north));
 
     // Show the rectangle.  Not required; just for show.
     var polylines = scene.primitives.add(new Cesium.PolylineCollection());
@@ -83,7 +83,7 @@ function flyToRectangle() {
     var east = -87.0;
     var north = 40.0;
 
-    scene.camera.flyToRectangle({
+    viewer.camera.flyToRectangle({
         destination : Cesium.Rectangle.fromDegrees(west, south, east, north)
     });
 
@@ -107,7 +107,7 @@ function setReferenceFrame() {
     var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
 
     // View in east-north-up frame
-    var camera = scene.camera;
+    var camera = viewer.camera;
     Cesium.Matrix4.clone(transform, camera.transform);
     camera.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
 
@@ -131,7 +131,7 @@ function icrf(scene, time) {
 
     var icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(time);
     if (Cesium.defined(icrfToFixed)) {
-        scene.camera.transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed, Cesium.Cartesian3.ZERO);
+        viewer.camera.transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed);
     }
 }
 
@@ -192,7 +192,7 @@ Sandcastle.reset = function() {
     scene.primitives.removeAll();
     scene.tweens.removeAll();
 
-    scene.camera.setTransform(Cesium.Matrix4.IDENTITY);
+    viewer.camera.setTransform(Cesium.Matrix4.IDENTITY);
 
     clock.multiplier = 1.0;
     scene.preRender.removeEventListener(icrf);

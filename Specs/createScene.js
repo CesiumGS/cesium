@@ -3,16 +3,16 @@ define([
         'Core/clone',
         'Core/defaultValue',
         'Core/defined',
+        'Core/queryToObject',
         'Scene/Scene',
-        'Specs/createCanvas',
-        'Specs/getQueryParameters'
+        'Specs/createCanvas'
     ], function(
         clone,
         defaultValue,
         defined,
+        queryToObject,
         Scene,
-        createCanvas,
-        getQueryParameters) {
+        createCanvas) {
     "use strict";
 
     function createScene(options) {
@@ -27,7 +27,7 @@ define([
 
         var scene = new Scene(options);
 
-        var parameters = getQueryParameters();
+        var parameters = queryToObject(window.location.search.substring(1));
         if (defined(parameters.webglValidation)) {
             var context = scene.context;
             context.validateShaderProgram = true;
@@ -42,6 +42,8 @@ define([
             scene.render(time);
             return scene.context.readPixels();
         };
+
+        scene.rethrowRenderErrors = defaultValue(options.rethrowRenderErrors, true);
 
         return scene;
     }

@@ -1,18 +1,18 @@
 /*global define*/
 define([
         '../Core/clone',
+        '../Core/combine',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Renderer/createShaderSource',
         './BlendingState',
         './CullFace'
     ], function(
         clone,
+        combine,
         defaultValue,
         defined,
         defineProperties,
-        createShaderSource,
         BlendingState,
         CullFace) {
     "use strict";
@@ -139,10 +139,19 @@ define([
      * @returns {String} The full GLSL fragment shader source.
      */
     Appearance.prototype.getFragmentShaderSource = function() {
-        return createShaderSource({
-            defines : [this.flat ? 'FLAT' : '', this.faceForward ? 'FACE_FORWARD' : ''],
-            sources : [defined(this.material) ? this.material.shaderSource : '', this.fragmentShaderSource]
-        });
+        var parts = [];
+        if (this.flat) {
+            parts.push('#define FLAT');
+        }
+        if (this.faceForward) {
+            parts.push('#define FACE_FORWARD');
+        }
+        if (defined(this.material)) {
+            parts.push(this.material.shaderSource);
+        }
+        parts.push(this.fragmentShaderSource);
+
+        return parts.join('\n');
     };
 
     /**
@@ -176,7 +185,7 @@ define([
     /**
      * @private
      */
-    Appearance.getDefaultRenderState = function(translucent, closed) {
+    Appearance.getDefaultRenderState = function(translucent, closed, existing) {
         var rs = {
             depthTest : {
                 enabled : true
@@ -193,6 +202,10 @@ define([
                 enabled : true,
                 face : CullFace.BACK
             };
+        }
+
+        if (defined(existing)) {
+            rs = combine(existing, rs, true);
         }
 
         return rs;

@@ -5,6 +5,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/ComponentDatatype',
         'Core/GeometryAttribute',
+        'Core/GeometryType',
         'Core/PrimitiveType'
     ], function(
         Geometry,
@@ -12,6 +13,7 @@ defineSuite([
         Cartesian3,
         ComponentDatatype,
         GeometryAttribute,
+        GeometryType,
         PrimitiveType) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -35,21 +37,15 @@ defineSuite([
             attributes : attributes,
             indices : indices,
             primitiveType : PrimitiveType.TRIANGLES,
-            boundingSphere : boundingSphere
+            boundingSphere : boundingSphere,
+            geometryType : GeometryType.TRIANGLES
         });
 
         expect(geometry.attributes).toBe(attributes);
         expect(geometry.indices).toBe(indices);
         expect(geometry.primitiveType).toEqual(PrimitiveType.TRIANGLES);
         expect(geometry.boundingSphere).toBe(boundingSphere);
-    });
-
-    it('constructor thows without primitiveType', function() {
-        expect(function() {
-            return new Geometry({
-                attributes : {}
-            });
-        }).toThrowDeveloperError();
+        expect(geometry.geometryType).toEqual(GeometryType.TRIANGLES);
     });
 
     it('constructor throws without attributes', function() {

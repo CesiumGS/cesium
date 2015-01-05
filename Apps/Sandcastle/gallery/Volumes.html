@@ -28,16 +28,14 @@ function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
 function createPrimitives(scene) {
-    var primitives = scene.primitives;
-
-    var e = primitives.add(new Cesium.EllipsoidPrimitive({
+    var e = scene.primitives.add(new Cesium.EllipsoidPrimitive({
         center : Cesium.Cartesian3.fromDegrees(-75.0, 40.0, 500000.0),
         radii : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0),
         material : Cesium.Material.fromType(Cesium.Material.RimLightingType)
     }));
     Sandcastle.declare(e); // For Sandcastle highlighting.
 
-    var e2 = primitives.add(new Cesium.EllipsoidPrimitive({
+    var e2 = scene.primitives.add(new Cesium.EllipsoidPrimitive({
         modelMatrix : Cesium.Transforms.eastNorthUpToFixedFrame(
             Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 500000.0)),
         radii : new Cesium.Cartesian3(300000.0, 300000.0, 500000.0),

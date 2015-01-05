@@ -27,24 +27,30 @@ define([
     /**
      * @private
      */
-    PolygonGeometryLibrary.subdivideLine = function(p0, p1, granularity) {
-        var length = Cartesian3.distance(p0, p1);
-        var angleBetween = Cartesian3.angleBetween(p0, p1);
-        var n = angleBetween / granularity;
-        var countDivide = Math.ceil(Math.log(n) / Math.log(2));
-        if (countDivide < 1) {
-            countDivide = 0;
-        }
-        var numVertices = Math.pow(2, countDivide);
+    PolygonGeometryLibrary.subdivideLineCount = function(p0, p1, minDistance) {
+        var distance = Cartesian3.distance(p0, p1);
+        var n = distance / minDistance;
+        var countDivide = Math.max(0, Math.ceil(Math.log(n) / Math.log(2)));
+        return Math.pow(2, countDivide);
+    };
 
+    /**
+     * @private
+     */
+    PolygonGeometryLibrary.subdivideLine = function(p0, p1, minDistance, result) {
+        var numVertices = PolygonGeometryLibrary.subdivideLineCount(p0, p1, minDistance);
+        var length = Cartesian3.distance(p0, p1);
         var distanceBetweenVertices = length / numVertices;
 
-        var positions = new Array(numVertices * 3);
+        if (!defined(result)) {
+            result = [];
+        }
+
+        var positions = result;
+        positions.length = numVertices * 3;
+
         var index = 0;
-        positions[index++] = p0.x;
-        positions[index++] = p0.y;
-        positions[index++] = p0.z;
-        for ( var i = 1; i < numVertices; i++) {
+        for ( var i = 0; i < numVertices; i++) {
             var p = getPointAtDistance(p0, p1, i * distanceBetweenVertices, length);
             positions[index++] = p[0];
             positions[index++] = p[1];

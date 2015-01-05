@@ -31,8 +31,8 @@ define([
         '../Core/Transforms',
         '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
-        '../Renderer/createShaderSource',
         '../Renderer/DrawCommand',
+        '../Renderer/ShaderSource',
         '../Shaders/GlobeFS',
         '../Shaders/GlobeFSDepth',
         '../Shaders/GlobeFSPole',
@@ -80,8 +80,8 @@ define([
         Transforms,
         BufferUsage,
         ClearCommand,
-        createShaderSource,
         DrawCommand,
+        ShaderSource,
         GlobeFS,
         GlobeFSDepth,
         GlobeFSPole,
@@ -120,6 +120,14 @@ define([
         this._imageryLayerCollection = imageryLayerCollection;
 
         this._surfaceShaderSet = new GlobeSurfaceShaderSet();
+
+        this._surfaceShaderSet.baseVertexShaderSource = new ShaderSource({
+            sources : [GlobeVS]
+        });
+
+        this._surfaceShaderSet.baseFragmentShaderSource = new ShaderSource({
+            sources : [GlobeFS]
+        });
 
         this._surface = new QuadtreePrimitive({
             tileProvider : new GlobeSurfaceTileProvider({
@@ -200,7 +208,6 @@ define([
          */
         this.oceanNormalMapUrl = buildModuleUrl('Assets/Textures/waterNormalsSmall.jpg');
         this._oceanNormalMapUrl = undefined;
-        this._oceanNormalMapChanged = false;
 
         /**
          * True if primitives such as billboards, polylines, labels, etc. should be depth-tested
@@ -241,7 +248,6 @@ define([
          * @default false
          */
         this.enableLighting = false;
-        this._enableLighting = false;
 
         /**
          * The distance where everything becomes lit. This only takes effect
@@ -273,8 +279,6 @@ define([
 
         this._oceanNormalMap = undefined;
         this._zoomedOutOceanSpecularIntensity = 0.5;
-        this._hasWaterMask = false;
-        this._hasVertexNormals = false;
         this._lightingFadeDistance = new Cartesian2(this.lightingFadeOutDistance, this.lightingFadeInDistance);
 
         var that = this;
@@ -353,7 +357,7 @@ define([
      *
      * @example
      * // find intersection of ray through a pixel and the globe
-     * var ray = scene.camera.getPickRay(windowCoordinates);
+     * var ray = viewer.camera.getPickRay(windowCoordinates);
      * var intersection = globe.pick(ray, scene);
      */
     Globe.prototype.pick = function(ray, scene, result) {
@@ -542,12 +546,23 @@ define([
     var rightScratch = new Cartesian3();
     var upScratch = new Cartesian3();
     var negativeZ = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
+    var cartographicScratch = new Cartographic(0.0, 0.0);
+    var pt1Scratch = new Cartesian3();
+    var pt2Scratch = new Cartesian3();
+
     function computePoleQuad(globe, frameState, maxLat, maxGivenLat, viewProjMatrix, viewportTransformation) {
-        var pt1 = globe._ellipsoid.cartographicToCartesian(new Cartographic(0.0, maxGivenLat));
-        var pt2 = globe._ellipsoid.cartographicToCartesian(new Cartographic(Math.PI, maxGivenLat));
+        cartographicScratch.longitude = 0.0;
+        cartographicScratch.latitude = maxGivenLat;
+        var pt1 = globe._ellipsoid.cartographicToCartesian(cartographicScratch, pt1Scratch);
+
+        cartographicScratch.longitude = Math.PI;
+        var pt2 = globe._ellipsoid.cartographicToCartesian(cartographicScratch, pt2Scratch);
+
         var radius = Cartesian3.magnitude(Cartesian3.subtract(pt1, pt2, rightScratch), rightScratch) * 0.5;
 
-        var center = globe._ellipsoid.cartographicToCartesian(new Cartographic(0.0, maxLat));
+        cartographicScratch.longitude = 0.0;
+        cartographicScratch.latitude = maxLat;
+        var center = globe._ellipsoid.cartographicToCartesian(cartographicScratch, pt1Scratch);
 
         var right;
         var dir = frameState.camera.direction;
@@ -845,107 +860,31 @@ define([
             var oceanNormalMapUrl = this.oceanNormalMapUrl;
             this._oceanNormalMapUrl = oceanNormalMapUrl;
 
-            var that = this;
-            when(loadImage(oceanNormalMapUrl), function(image) {
-                if (oceanNormalMapUrl !== that.oceanNormalMapUrl) {
-                    // url changed while we were loading
-                    return;
-                }
+            if (defined(oceanNormalMapUrl)) {
+                var that = this;
+                when(loadImage(oceanNormalMapUrl), function(image) {
+                    if (oceanNormalMapUrl !== that.oceanNormalMapUrl) {
+                        // url changed while we were loading
+                        return;
+                    }
 
-                that._oceanNormalMap = that._oceanNormalMap && that._oceanNormalMap.destroy();
-                that._oceanNormalMap = context.createTexture2D({
-                    source : image
+                    that._oceanNormalMap = that._oceanNormalMap && that._oceanNormalMap.destroy();
+                    that._oceanNormalMap = context.createTexture2D({
+                        source : image
+                    });
                 });
-                that._oceanNormalMapChanged = true;
-            });
+            } else {
+                this._oceanNormalMap = this._oceanNormalMap && this._oceanNormalMap.destroy();
+            }
         }
 
-        // Initial compile or re-compile if uber-shader parameters changed
-        var hasVertexNormals = terrainProvider.ready && terrainProvider.hasVertexNormals;
-        var enableLighting = this.enableLighting;
-
         if (!defined(northPoleCommand.shaderProgram) ||
-            !defined(southPoleCommand.shaderProgram) ||
-            modeChanged ||
-            this._oceanNormalMapChanged ||
-            this._hasWaterMask !== hasWaterMask ||
-            this._hasVertexNormals !== hasVertexNormals ||
-            this._enableLighting !== enableLighting) {
-
-            var getPosition3DMode = 'vec4 getPosition(vec3 position3DWC) { return getPosition3DMode(position3DWC); }';
-            var getPosition2DMode = 'vec4 getPosition(vec3 position3DWC) { return getPosition2DMode(position3DWC); }';
-            var getPositionColumbusViewMode = 'vec4 getPosition(vec3 position3DWC) { return getPositionColumbusViewMode(position3DWC); }';
-            var getPositionMorphingMode = 'vec4 getPosition(vec3 position3DWC) { return getPositionMorphingMode(position3DWC); }';
-
-            var getPositionMode;
-
-            switch (mode) {
-            case SceneMode.SCENE3D:
-                getPositionMode = getPosition3DMode;
-                break;
-            case SceneMode.SCENE2D:
-                getPositionMode = getPosition2DMode;
-                break;
-            case SceneMode.COLUMBUS_VIEW:
-                getPositionMode = getPositionColumbusViewMode;
-                break;
-            case SceneMode.MORPHING:
-                getPositionMode = getPositionMorphingMode;
-                break;
-            }
-
-            var get2DYPositionFractionGeographicProjection = 'float get2DYPositionFraction() { return get2DGeographicYPositionFraction(); }';
-            var get2DYPositionFractionMercatorProjection = 'float get2DYPositionFraction() { return get2DMercatorYPositionFraction(); }';
-
-            var get2DYPositionFraction;
-
-            if (projection instanceof GeographicProjection) {
-                get2DYPositionFraction = get2DYPositionFractionGeographicProjection;
-            } else {
-                get2DYPositionFraction = get2DYPositionFractionMercatorProjection;
-            }
-
-            var surfaceShaderSet = this._surfaceShaderSet;
-
-            var shaderDefines = [];
-
-            if (hasWaterMask) {
-                shaderDefines.push('SHOW_REFLECTIVE_OCEAN');
-
-                if (defined(this._oceanNormalMap)) {
-                    shaderDefines.push('SHOW_OCEAN_WAVES');
-                }
-            }
-
-            if (enableLighting) {
-                if (hasVertexNormals) {
-                    shaderDefines.push('ENABLE_VERTEX_LIGHTING');
-                } else {
-                    shaderDefines.push('ENABLE_DAYNIGHT_SHADING');
-                }
-            }
-
-            surfaceShaderSet.baseVertexShaderString = createShaderSource({
-                defines : shaderDefines,
-                sources : [GlobeVS, getPositionMode, get2DYPositionFraction]
-            });
-
-            surfaceShaderSet.baseFragmentShaderString = createShaderSource({
-                defines : shaderDefines,
-                sources : [GlobeFS]
-            });
-
-            surfaceShaderSet.invalidateShaders();
+            !defined(southPoleCommand.shaderProgram)) {
 
             var poleShaderProgram = context.replaceShaderProgram(northPoleCommand.shaderProgram, GlobeVSPole, GlobeFSPole, terrainAttributeLocations);
 
             northPoleCommand.shaderProgram = poleShaderProgram;
             southPoleCommand.shaderProgram = poleShaderProgram;
-
-            this._hasWaterMask = hasWaterMask;
-            this._hasVertexNormals = hasVertexNormals;
-            this._enableLighting = enableLighting;
-            this._oceanNormalMapChanged = false;
         }
 
         this._occluder.cameraPosition = frameState.camera.positionWC;
@@ -979,7 +918,9 @@ define([
             tileProvider.lightingFadeOutDistance = this.lightingFadeOutDistance;
             tileProvider.lightingFadeInDistance = this.lightingFadeInDistance;
             tileProvider.zoomedOutOceanSpecularIntensity = this._zoomedOutOceanSpecularIntensity;
+            tileProvider.hasWaterMask = hasWaterMask;
             tileProvider.oceanNormalMap = this._oceanNormalMap;
+            tileProvider.enableLighting = this.enableLighting;
 
             surface.update(context, frameState, commandList);
 

@@ -109,7 +109,7 @@ define([
 
         var geo;
         if (!perPositionHeight) {
-            geo = PolygonPipeline.computeSubdivision(positions, indices, granularity);
+            geo = PolygonPipeline.computeSubdivision(ellipsoid, positions, indices, granularity);
         } else {
             var length = positions.length;
             var flattenedPositions = new Array(length * 3);
@@ -329,48 +329,89 @@ define([
         return geometry;
     }
 
-    function computeWallIndices(positions, granularity, perPositionHeight){
-        var edgePositions = [];
-        var subdividedEdge;
-        var edgeIndex;
-        var UL, UR, LL, LR;
-        var i;
+    var computeWallIndicesSubdivided = [];
 
-        var length = positions.length;
+    function computeWallIndices(positions, ellipsoid, granularity, perPositionHeight){
+        var edgePositions;
+        var topEdgeLength;
+        var i;
         var p1;
         var p2;
+
+        var length = positions.length;
+        var index = 0;
+
         if (!perPositionHeight) {
+            var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
+
+            var numVertices = 0;
+            for (i = 0; i < length; i++) {
+                numVertices += PolygonGeometryLibrary.subdivideLineCount(positions[i], positions[(i + 1) % length], minDistance);
+            }
+
+            topEdgeLength = (numVertices + length) * 3;
+            edgePositions = new Array(topEdgeLength * 2);
             for (i = 0; i < length; i++) {
                 p1 = positions[i];
                 p2 = positions[(i + 1) % length];
-                subdividedEdge = PolygonGeometryLibrary.subdivideLine(p1, p2, granularity);
-                subdividedEdge.push(p2.x, p2.y, p2.z);
-                edgePositions = edgePositions.concat(subdividedEdge);
+
+                var tempPositions = PolygonGeometryLibrary.subdivideLine(p1, p2, minDistance, computeWallIndicesSubdivided);
+                var tempPositionsLength = tempPositions.length;
+                for (var j = 0; j < tempPositionsLength; ++j, ++index) {
+                    edgePositions[index] = tempPositions[j];
+                    edgePositions[index + topEdgeLength] = tempPositions[j];
+                }
+
+                edgePositions[index] = p2.x;
+                edgePositions[index + topEdgeLength] = p2.x;
+                ++index;
+
+                edgePositions[index] = p2.y;
+                edgePositions[index + topEdgeLength] = p2.y;
+                ++index;
+
+                edgePositions[index] = p2.z;
+                edgePositions[index + topEdgeLength] = p2.z;
+                ++index;
             }
         } else {
+            topEdgeLength = length * 3 * 2;
+            edgePositions = new Array(topEdgeLength * 2);
             for (i = 0; i < length; i++) {
                 p1 = positions[i];
                 p2 = positions[(i + 1) % length];
-                edgePositions.push(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
+                edgePositions[index] = edgePositions[index + topEdgeLength] = p1.x;
+                ++index;
+                edgePositions[index] = edgePositions[index + topEdgeLength] = p1.y;
+                ++index;
+                edgePositions[index] = edgePositions[index + topEdgeLength] = p1.z;
+                ++index;
+                edgePositions[index] = edgePositions[index + topEdgeLength] = p2.x;
+                ++index;
+                edgePositions[index] = edgePositions[index + topEdgeLength] = p2.y;
+                ++index;
+                edgePositions[index] = edgePositions[index + topEdgeLength] = p2.z;
+                ++index;
             }
         }
 
-        edgePositions = edgePositions.concat(edgePositions);
         length = edgePositions.length;
         var indices = IndexDatatype.createTypedArray(length / 3, length - positions.length * 6);
-        edgeIndex = 0;
+        var edgeIndex = 0;
         length /= 6;
 
         for (i = 0; i < length; i++) {
-            UL = i;
-            UR = UL + 1;
+            var UL = i;
+            var UR = UL + 1;
+            var LL = UL + length;
+            var LR = LL + 1;
+
             p1 = Cartesian3.fromArray(edgePositions, UL * 3, p1Scratch);
             p2 = Cartesian3.fromArray(edgePositions, UR * 3, p2Scratch);
-            if (Cartesian3.equalsEpsilon(p1, p2, CesiumMath.EPSILON6)) {
+            if (Cartesian3.equalsEpsilon(p1, p2, CesiumMath.EPSILON14)) {
                 continue;
             }
-            LL = UL + length;
-            LR = LL + 1;
+
             indices[edgeIndex++] = UL;
             indices[edgeIndex++] = LL;
             indices[edgeIndex++] = UR;
@@ -396,15 +437,20 @@ define([
 
     function createGeometryFromPositionsExtruded(ellipsoid, positions, granularity, hierarchy, perPositionHeight) {
         var topGeo = createGeometryFromPositions(ellipsoid, positions, granularity, perPositionHeight).geometry;
+
         var edgePoints = topGeo.attributes.position.values;
         var indices = topGeo.indices;
+
         var topBottomPositions = edgePoints.concat(edgePoints);
         var numPositions = topBottomPositions.length / 3;
+
         var newIndices = IndexDatatype.createTypedArray(numPositions, indices.length * 2);
         newIndices.set(indices);
         var ilength = indices.length;
+
         var i;
         var length = numPositions / 2;
+
         for (i = 0; i < ilength; i += 3) {
             var i0 = newIndices[i] + length;
             var i1 = newIndices[i + 1] + length;
@@ -414,6 +460,7 @@ define([
             newIndices[i + 1 + ilength] = i1;
             newIndices[i + 2 + ilength] = i0;
         }
+
         var topAndBottomGeo = new Geometry({
             attributes : new GeometryAttributes({
                 position : new GeometryAttribute({
@@ -429,10 +476,10 @@ define([
         var geos = {
             topAndBottom : new GeometryInstance({
                 geometry : topAndBottomGeo
-            })
+            }),
+            walls : []
         };
 
-        geos.walls = [];
         var outerRing = hierarchy.outerRing;
         var tangentPlane = EllipsoidTangentPlane.fromPoints(outerRing, ellipsoid);
         var positions2D = tangentPlane.projectPointsOntoPlane(outerRing, createGeometryFromPositionsExtrudedPositions);
@@ -442,7 +489,7 @@ define([
             outerRing.reverse();
         }
 
-        var wallGeo = computeWallIndices(outerRing, granularity, perPositionHeight);
+        var wallGeo = computeWallIndices(outerRing, ellipsoid, granularity, perPositionHeight);
         geos.walls.push(new GeometryInstance({
             geometry : wallGeo
         }));
@@ -459,7 +506,7 @@ define([
                 hole.reverse();
             }
 
-            wallGeo = computeWallIndices(hole, granularity);
+            wallGeo = computeWallIndices(hole, ellipsoid, granularity);
             geos.walls.push(new GeometryInstance({
                 geometry : wallGeo
             }));
@@ -552,7 +599,7 @@ define([
      *       -68.0, 40.0
      *     ]),
      *     extrudedHeight: 300000
-     *   } 
+     *   }
      * });
      * var geometry = Cesium.PolygonGeometry.createGeometry(extrudedPolygon);
      */
@@ -729,33 +776,29 @@ define([
         if (extrude) {
             for (i = 0; i < polygons.length; i++) {
                 geometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, polygonHierarchy[i], perPositionHeight);
-                if (defined(geometry)) {
-                    topAndBottom = geometry.topAndBottom;
-                    topAndBottom.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(topAndBottom.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
-                    topAndBottom.geometry = computeAttributes(vertexFormat, topAndBottom.geometry, outerPositions, ellipsoid, stRotation, true, false);
-                    geometries.push(topAndBottom);
+                topAndBottom = geometry.topAndBottom;
+                topAndBottom.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(topAndBottom.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
+                topAndBottom.geometry = computeAttributes(vertexFormat, topAndBottom.geometry, outerPositions, ellipsoid, stRotation, true, false);
+                geometries.push(topAndBottom);
 
-                    walls = geometry.walls;
-                    for ( var k = 0; k < walls.length; k++) {
-                        var wall = walls[k];
-                        wall.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(wall.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
-                        wall.geometry = computeAttributes(vertexFormat, wall.geometry, outerPositions, ellipsoid, stRotation, true, true);
-                        geometries.push(wall);
-                    }
+                walls = geometry.walls;
+                for ( var k = 0; k < walls.length; k++) {
+                    var wall = walls[k];
+                    wall.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(wall.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
+                    wall.geometry = computeAttributes(vertexFormat, wall.geometry, outerPositions, ellipsoid, stRotation, true, true);
+                    geometries.push(wall);
                 }
             }
         } else {
             for (i = 0; i < polygons.length; i++) {
                 geometry = createGeometryFromPositions(ellipsoid, polygons[i], granularity, perPositionHeight);
-                if (defined(geometry)) {
-                    geometry.geometry = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry, height, ellipsoid, !perPositionHeight);
-                    geometry.geometry = computeAttributes(vertexFormat, geometry.geometry, outerPositions, ellipsoid, stRotation, false, false);
-                    geometries.push(geometry);
-                }
+                geometry.geometry = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry, height, ellipsoid, !perPositionHeight);
+                geometry.geometry = computeAttributes(vertexFormat, geometry.geometry, outerPositions, ellipsoid, stRotation, false, false);
+                geometries.push(geometry);
             }
         }
 
-        geometry = GeometryPipeline.combine(geometries);
+        geometry = GeometryPipeline.combineInstances(geometries)[0];
         geometry.attributes.position.values = new Float64Array(geometry.attributes.position.values);
         geometry.indices = IndexDatatype.createTypedArray(geometry.attributes.position.values.length / 3, geometry.indices);
 

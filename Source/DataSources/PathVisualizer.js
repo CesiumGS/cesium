@@ -50,6 +50,13 @@ define([
     var subSampleCompositePropertyScratch = new TimeInterval();
     var subSampleIntervalPropertyScratch = new TimeInterval();
 
+    var EntityData = function(entity) {
+        this.entity = entity;
+        this.polyline = undefined;
+        this.index = undefined;
+        this.updater = undefined;
+    };
+
     function subSampleSampledProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
         var times = property._property._times;
 
@@ -281,22 +288,15 @@ define([
         }
     };
 
-    PolylineUpdater.prototype.updateObject = function(time, entity) {
+    PolylineUpdater.prototype.updateObject = function(time, item) {
+        var entity = item.entity;
         var pathGraphics = entity._path;
-        if (!defined(pathGraphics)) {
-            return;
-        }
-
         var positionProperty = entity._position;
-        if (!defined(positionProperty)) {
-            return;
-        }
 
-        var polyline;
         var sampleStart;
         var sampleStop;
         var showProperty = pathGraphics._show;
-        var pathVisualizerIndex = entity._pathVisualizerIndex;
+        var polyline = item.polyline;
         var show = !defined(showProperty) || showProperty.getValue(time);
 
         //While we want to show the path, there may not actually be anything to show
@@ -343,29 +343,28 @@ define([
 
         if (!show) {
             //don't bother creating or updating anything else
-            if (defined(pathVisualizerIndex)) {
-                polyline = this._polylineCollection.get(pathVisualizerIndex);
+            if (defined(polyline)) {
+                this._unusedIndexes.push(item.index);
+                item.polyline = undefined;
                 polyline.show = false;
-                entity._pathVisualizerIndex = undefined;
-                this._unusedIndexes.push(pathVisualizerIndex);
+                item.index = undefined;
             }
             return;
         }
 
-        if (!defined(pathVisualizerIndex)) {
+        if (!defined(polyline)) {
             var unusedIndexes = this._unusedIndexes;
             var length = unusedIndexes.length;
             if (length > 0) {
-                pathVisualizerIndex = unusedIndexes.pop();
-                polyline = this._polylineCollection.get(pathVisualizerIndex);
+                var index = unusedIndexes.pop();
+                polyline = this._polylineCollection.get(index);
+                item.index = index;
             } else {
-                pathVisualizerIndex = this._polylineCollection.length;
+                item.index = this._polylineCollection.length;
                 polyline = this._polylineCollection.add();
             }
-            entity._pathVisualizerIndex = pathVisualizerIndex;
             polyline.id = entity;
-        } else {
-            polyline = this._polylineCollection.get(pathVisualizerIndex);
+            item.polyline = polyline;
         }
 
         var resolution = Property.getValueOrDefault(pathGraphics._resolution, time, defaultResolution);
@@ -376,13 +375,13 @@ define([
         polyline.width = Property.getValueOrDefault(pathGraphics._width, time, defaultWidth);
     };
 
-    PolylineUpdater.prototype.removeObject = function(entity) {
-        var pathVisualizerIndex = entity._pathVisualizerIndex;
-        if (defined(pathVisualizerIndex)) {
-            var polyline = this._polylineCollection.get(pathVisualizerIndex);
+    PolylineUpdater.prototype.removeObject = function(item) {
+        var polyline = item.polyline;
+        if (defined(polyline)) {
+            this._unusedIndexes.push(item.index);
+            item.polyline = undefined;
             polyline.show = false;
-            this._unusedIndexes.push(pathVisualizerIndex);
-            entity._pathVisualizerIndex = undefined;
+            item.index = undefined;
         }
     };
 
@@ -414,7 +413,7 @@ define([
         this._scene = scene;
         this._updaters = {};
         this._entityCollection = entityCollection;
-        this._entitiesToVisualize = new AssociativeArray();
+        this._items = new AssociativeArray();
 
         this._onCollectionChanged(entityCollection, entityCollection.entities, [], []);
     };
@@ -440,9 +439,10 @@ define([
             }
         }
 
-        var entities = this._entitiesToVisualize.values;
-        for (var i = 0, len = entities.length; i < len; i++) {
-            var entity = entities[i];
+        var items = this._items.values;
+        for (var i = 0, len = items.length; i < len; i++) {
+            var item = items[i];
+            var entity = item.entity;
             var positionProperty = entity._position;
 
             var lastUpdater = entity._pathUpdater;
@@ -455,12 +455,12 @@ define([
             var currentUpdater = this._updaters[frameToVisualize];
 
             if ((lastUpdater === currentUpdater) && (defined(currentUpdater))) {
-                currentUpdater.updateObject(time, entity);
+                currentUpdater.updateObject(time, item);
                 continue;
             }
 
             if (defined(lastUpdater)) {
-                lastUpdater.removeObject(entity);
+                lastUpdater.removeObject(item);
             }
 
             if (!defined(currentUpdater)) {
@@ -469,9 +469,9 @@ define([
                 this._updaters[frameToVisualize] = currentUpdater;
             }
 
-            entity._pathUpdater = currentUpdater;
+            item.updater = currentUpdater;
             if (defined(currentUpdater)) {
-                currentUpdater.updateObject(time, entity);
+                currentUpdater.updateObject(time, item);
             }
         }
         return true;
@@ -490,8 +490,7 @@ define([
      * Removes and destroys all primitives created by this instance.
      */
     PathVisualizer.prototype.destroy = function() {
-        var entityCollection = this._entityCollection;
-        entityCollection.collectionChanged.removeEventListener(PathVisualizer.prototype._onCollectionChanged, this);
+        this._entityCollection.collectionChanged.removeEventListener(PathVisualizer.prototype._onCollectionChanged, this);
 
         var updaters = this._updaters;
         for ( var key in updaters) {
@@ -500,48 +499,44 @@ define([
             }
         }
 
-        var entities = entityCollection.entities;
-        var length = entities.length;
-        for (var i = 0; i < length; i++) {
-            entities[i]._pathUpdater = undefined;
-            entities[i]._pathVisualizerIndex = undefined;
-        }
         return destroyObject(this);
     };
 
     PathVisualizer.prototype._onCollectionChanged = function(entityCollection, added, removed, changed) {
         var i;
         var entity;
-        var _pathUpdater;
-        var entities = this._entitiesToVisualize;
+        var item;
+        var items = this._items;
 
         for (i = added.length - 1; i > -1; i--) {
             entity = added[i];
             if (defined(entity._path) && defined(entity._position)) {
-                entities.set(entity.id, entity);
+                items.set(entity.id, new EntityData(entity));
             }
         }
 
         for (i = changed.length - 1; i > -1; i--) {
             entity = changed[i];
             if (defined(entity._path) && defined(entity._position)) {
-                entities.set(entity.id, entity);
-            } else {
-                _pathUpdater = entity._pathUpdater;
-                if (defined(_pathUpdater)) {
-                    _pathUpdater.removeObject(entity);
+                if (!items.contains(entity.id)) {
+                    items.set(entity.id, new EntityData(entity));
                 }
-                entities.remove(entity.id);
+            } else {
+                item = items.get(entity.id);
+                if (defined(item)) {
+                    item.updater.removeObject(item);
+                    items.remove(entity.id);
+                }
             }
         }
 
         for (i = removed.length - 1; i > -1; i--) {
             entity = removed[i];
-            _pathUpdater = entity._pathUpdater;
-            if (defined(_pathUpdater)) {
-                _pathUpdater.removeObject(entity);
+            item = items.get(entity.id);
+            if (defined(item)) {
+                item.updater.removeObject(item);
+                items.remove(entity.id);
             }
-            entities.remove(entity.id);
         }
     };
 

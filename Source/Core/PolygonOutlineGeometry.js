@@ -41,8 +41,9 @@ define([
         WindingOrder) {
     "use strict";
     var createGeometryFromPositionsPositions = [];
+    var createGeometryFromPositionsSubdivided = [];
 
-    function createGeometryFromPositions(ellipsoid, positions, granularity, perPositionHeight) {
+    function createGeometryFromPositions(ellipsoid, positions, minDistance, perPositionHeight) {
         var cleanedPositions = PolygonPipeline.removeDuplicates(positions);
 
         //>>includeStart('debug', pragmas.debug);
@@ -60,25 +61,43 @@ define([
             cleanedPositions.reverse();
         }
 
-        var subdividedPositions = [];
-        var length = cleanedPositions.length;
+        var subdividedPositions;
         var i;
+
+        var length = cleanedPositions.length;
+        var index = 0;
+
         if (!perPositionHeight) {
+            var numVertices = 0;
             for (i = 0; i < length; i++) {
-                subdividedPositions = subdividedPositions.concat(PolygonGeometryLibrary.subdivideLine(cleanedPositions[i], cleanedPositions[(i + 1) % length], granularity));
+                numVertices += PolygonGeometryLibrary.subdivideLineCount(cleanedPositions[i], cleanedPositions[(i + 1) % length], minDistance);
+            }
+            subdividedPositions = new Float64Array(numVertices * 3);
+            for (i = 0; i < length; i++) {
+                var tempPositions = PolygonGeometryLibrary.subdivideLine(cleanedPositions[i], cleanedPositions[(i + 1) % length], minDistance, createGeometryFromPositionsSubdivided);
+                var tempPositionsLength = tempPositions.length;
+                for (var j = 0; j < tempPositionsLength; ++j) {
+                    subdividedPositions[index++] = tempPositions[j];
+                }
             }
         } else {
+            subdividedPositions = new Float64Array(length * 2 * 3);
             for (i = 0; i < length; i++) {
                 var p0 = cleanedPositions[i];
                 var p1 = cleanedPositions[(i + 1) % length];
-                subdividedPositions.push(p0.x, p0.y, p0.z, p1.x, p1.y, p1.z);
+                subdividedPositions[index++] = p0.x;
+                subdividedPositions[index++] = p0.y;
+                subdividedPositions[index++] = p0.z;
+                subdividedPositions[index++] = p1.x;
+                subdividedPositions[index++] = p1.y;
+                subdividedPositions[index++] = p1.z;
             }
         }
 
         length = subdividedPositions.length / 3;
         var indicesSize = length * 2;
-        var indices = IndexDatatype.createTypedArray(subdividedPositions.length / 3, indicesSize);
-        var index = 0;
+        var indices = IndexDatatype.createTypedArray(length, indicesSize);
+        index = 0;
         for (i = 0; i < length - 1; i++) {
             indices[index++] = i;
             indices[index++] = i + 1;
@@ -92,7 +111,7 @@ define([
                     position : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.DOUBLE,
                         componentsPerAttribute : 3,
-                        values : new Float64Array(subdividedPositions)
+                        values : subdividedPositions
                     })
                 }),
                 indices : indices,
@@ -101,7 +120,7 @@ define([
         });
     }
 
-    function createGeometryFromPositionsExtruded(ellipsoid, positions, granularity, perPositionHeight) {
+    function createGeometryFromPositionsExtruded(ellipsoid, positions, minDistance, perPositionHeight) {
         var cleanedPositions = PolygonPipeline.removeDuplicates(positions);
 
         //>>includeStart('debug', pragmas.debug);
@@ -118,53 +137,64 @@ define([
             positions2D.reverse();
             cleanedPositions.reverse();
         }
-        var subdividedPositions = [];
-        var length = cleanedPositions.length;
+
+        var subdividedPositions;
         var i;
+
+        var length = cleanedPositions.length;
         var corners = new Array(length);
-        corners[0] = 0;
-        if (!perPositionHeight) {
-            for (i = 0; i < length - 1; i++) {
-                subdividedPositions = subdividedPositions.concat(PolygonGeometryLibrary.subdivideLine(cleanedPositions[i], cleanedPositions[i + 1], granularity));
-                corners[i + 1] = subdividedPositions.length / 3;
-            }
-            subdividedPositions = subdividedPositions.concat(PolygonGeometryLibrary.subdivideLine(cleanedPositions[length - 1], cleanedPositions[0], granularity));
-        } else {
-            var p0;
-            var p1;
-            for (i = 0; i < length - 1; i++) {
-                p0 = cleanedPositions[i];
-                p1 = cleanedPositions[(i + 1) % length];
-                subdividedPositions.push(p0.x, p0.y, p0.z, p1.x, p1.y, p1.z);
-                corners[i + 1] = subdividedPositions.length / 3;
-            }
-            p0 = cleanedPositions[length - 1];
-            p1 = cleanedPositions[0];
-            subdividedPositions.push(p0.x, p0.y, p0.z, p1.x, p1.y, p1.z);
-        }
-
-        length = subdividedPositions.length / 3;
-        var indicesSize = ((length * 2) + corners.length) * 2;
-        var indices = IndexDatatype.createTypedArray(subdividedPositions.length / 3, indicesSize);
         var index = 0;
-        for (i = 0; i < length - 1; i++) {
-            indices[index++] = i;
-            indices[index++] = i + 1;
-            indices[index++] = i + length;
-            indices[index++] = i + 1 + length;
-        }
-        indices[index++] = length - 1;
-        indices[index++] = 0;
-        indices[index++] = length + length - 1;
-        indices[index++] = length;
 
-        for (i = 0; i < corners.length; i++) {
+        if (!perPositionHeight) {
+            var numVertices = 0;
+            for (i = 0; i < length; i++) {
+                numVertices += PolygonGeometryLibrary.subdivideLineCount(cleanedPositions[i], cleanedPositions[(i + 1) % length], minDistance);
+            }
+
+            subdividedPositions = new Float64Array(numVertices * 3 * 2);
+            for (i = 0; i < length; ++i) {
+                corners[i] = index / 3;
+                var tempPositions = PolygonGeometryLibrary.subdivideLine(cleanedPositions[i], cleanedPositions[(i + 1) % length], minDistance, createGeometryFromPositionsSubdivided);
+                var tempPositionsLength = tempPositions.length;
+                for (var j = 0; j < tempPositionsLength; ++j) {
+                    subdividedPositions[index++] = tempPositions[j];
+                }
+            }
+        } else {
+            subdividedPositions = new Float64Array(length * 2 * 3 * 2);
+            for (i = 0; i < length; ++i) {
+                corners[i] = index / 3;
+                var p0 = cleanedPositions[i];
+                var p1 = cleanedPositions[(i + 1) % length];
+
+                subdividedPositions[index++] = p0.x;
+                subdividedPositions[index++] = p0.y;
+                subdividedPositions[index++] = p0.z;
+                subdividedPositions[index++] = p1.x;
+                subdividedPositions[index++] = p1.y;
+                subdividedPositions[index++] = p1.z;
+            }
+        }
+
+        length = subdividedPositions.length / (3 * 2);
+        var cornersLength = corners.length;
+
+        var indicesSize = ((length * 2) + cornersLength) * 2;
+        var indices = IndexDatatype.createTypedArray(length, indicesSize);
+
+        index = 0;
+        for (i = 0; i < length; ++i) {
+            indices[index++] = i;
+            indices[index++] = (i + 1) % length;
+            indices[index++] = i + length;
+            indices[index++] = ((i + 1) % length) + length;
+        }
+
+        for (i = 0; i < cornersLength; i++) {
             var corner = corners[i];
             indices[index++] = corner;
             indices[index++] = corner + length;
         }
-
-        subdividedPositions = subdividedPositions.concat(subdividedPositions);
 
         return new GeometryInstance({
             geometry : new Geometry({
@@ -172,7 +202,7 @@ define([
                     position : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.DOUBLE,
                         componentsPerAttribute : 3,
-                        values : new Float64Array(subdividedPositions)
+                        values : subdividedPositions
                     })
                 }),
                 indices : indices,
@@ -255,7 +285,7 @@ define([
      *
      * // 3. create extruded polygon outline
      * var extrudedPolygon = new Cesium.PolygonOutlineGeometry({
-     *   polygonHierarchy : { 
+     *   polygonHierarchy : {
      *     positions : Cesium.Cartesian3.fromDegreesArray([
      *       -72.0, 40.0,
      *       -70.0, 35.0,
@@ -401,26 +431,23 @@ define([
 
         var geometry;
         var geometries = [];
+        var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
 
         if (extrude) {
             for (i = 0; i < polygons.length; i++) {
-                geometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, perPositionHeight);
-                if (defined(geometry)) {
-                    geometry.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(geometry.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
-                    geometries.push(geometry);
-                }
+                geometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], minDistance, perPositionHeight);
+                geometry.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(geometry.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
+                geometries.push(geometry);
             }
         } else {
             for (i = 0; i < polygons.length; i++) {
-                geometry = createGeometryFromPositions(ellipsoid, polygons[i], granularity, perPositionHeight);
-                if (defined(geometry)) {
-                    geometry.geometry = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry, height, ellipsoid, !perPositionHeight);
-                    geometries.push(geometry);
-                }
+                geometry = createGeometryFromPositions(ellipsoid, polygons[i], minDistance, perPositionHeight);
+                geometry.geometry = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry, height, ellipsoid, !perPositionHeight);
+                geometries.push(geometry);
             }
         }
 
-        geometry = GeometryPipeline.combine(geometries);
+        geometry = GeometryPipeline.combineInstances(geometries)[0];
         var boundingSphere = BoundingSphere.fromVertices(geometry.attributes.position.values);
 
         return new Geometry({

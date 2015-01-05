@@ -502,6 +502,67 @@ defineSuite([
         expect(compositeObject.billboard.show).toBeUndefined();
     });
 
+    it('works when collection being composited suspends updates', function() {
+        var collection = new EntityCollection();
+        var composite = new CompositeEntityCollection([collection]);
+
+        collection.suspendEvents();
+        collection.getOrCreateEntity('id1');
+        collection.getOrCreateEntity('id2');
+
+        expect(composite.getById('id1')).toBeUndefined();
+        expect(composite.getById('id2')).toBeUndefined();
+
+        collection.resumeEvents();
+
+        expect(composite.getById('id1')).toBeDefined();
+        expect(composite.getById('id2')).toBeDefined();
+    });
+
+    it('custom entity properties are properly registed on new composited entity.', function() {
+        var oldValue = 'tubelcane';
+        var newValue = 'fizzbuzz';
+        var propertyName = 'customProperty';
+
+        var collection = new EntityCollection();
+        var e1 = collection.getOrCreateEntity('id1');
+        e1.addProperty(propertyName);
+        e1[propertyName] = oldValue;
+
+        var composite = new CompositeEntityCollection([collection]);
+        var e1Composite = composite.getById('id1');
+        expect(e1Composite[propertyName]).toEqual(e1[propertyName]);
+
+        var listener = jasmine.createSpy('listener');
+        e1Composite.definitionChanged.addEventListener(listener);
+
+        e1[propertyName] = newValue;
+        expect(listener).toHaveBeenCalledWith(e1Composite, propertyName, newValue, oldValue);
+    });
+
+    it('custom entity properties are properly registed on existing composited entity.', function() {
+        var oldValue = 'tubelcane';
+        var newValue = 'fizzbuzz';
+        var propertyName = 'customProperty';
+
+        var collection = new EntityCollection();
+        var e1 = collection.getOrCreateEntity('id1');
+
+        var composite = new CompositeEntityCollection([collection]);
+
+        e1.addProperty(propertyName);
+        e1[propertyName] = oldValue;
+
+        var e1Composite = composite.getById('id1');
+        expect(e1Composite[propertyName]).toEqual(e1[propertyName]);
+
+        var listener = jasmine.createSpy('listener');
+        e1Composite.definitionChanged.addEventListener(listener);
+
+        e1[propertyName] = newValue;
+        expect(listener).toHaveBeenCalledWith(e1Composite, propertyName, newValue, oldValue);
+    });
+
     it('can use the same entity collection in multiple composites', function() {
         var id = 'test';
 

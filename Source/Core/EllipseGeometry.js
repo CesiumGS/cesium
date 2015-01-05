@@ -467,18 +467,14 @@ define([
     }
 
     function computeWallIndices(positions) {
-        var UL;
-        var UR;
-        var LL;
-        var LR;
         var length = positions.length / 3;
         var indices = IndexDatatype.createTypedArray(length, length * 6);
         var index = 0;
-        for ( var i = 0; i < length - 1; i++) {
-            UL = i;
-            LL = i + length;
-            UR = UL + 1;
-            LR = UR + length;
+        for (var i = 0; i < length; i++) {
+            var UL = i;
+            var LL = i + length;
+            var UR = (UL + 1) % length;
+            var LR = UR + length;
             indices[index++] = UL;
             indices[index++] = LL;
             indices[index++] = UR;
@@ -486,17 +482,6 @@ define([
             indices[index++] = LL;
             indices[index++] = LR;
         }
-
-        UL = length - 1;
-        LL = i + length;
-        UR = 0;
-        LR = UR + length;
-        indices[index++] = UL;
-        indices[index++] = LL;
-        indices[index++] = UR;
-        indices[index++] = UR;
-        indices[index++] = LL;
-        indices[index++] = LR;
 
         return indices;
     }
@@ -549,7 +534,7 @@ define([
             primitiveType : PrimitiveType.TRIANGLES
         });
 
-        var geo = GeometryPipeline.combine([
+        var geo = GeometryPipeline.combineInstances([
             new GeometryInstance({
                 geometry : topBottomGeo
             }),
@@ -560,8 +545,8 @@ define([
 
         return {
             boundingSphere : boundingSphere,
-            attributes : geo.attributes,
-            indices : geo.indices
+            attributes : geo[0].attributes,
+            indices : geo[0].indices
         };
     }
 
@@ -610,7 +595,7 @@ define([
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         var height = defaultValue(options.height, 0.0);
         var extrudedHeight = options.extrudedHeight;
-        var extrude = (defined(extrudedHeight) && !CesiumMath.equalsEpsilon(height, extrudedHeight, 1.0));
+        var extrude = (defined(extrudedHeight) && Math.abs(height - extrudedHeight) > 1.0);
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(center)) {

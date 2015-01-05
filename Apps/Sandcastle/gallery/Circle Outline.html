@@ -30,7 +30,6 @@ function startup(Cesium) {
 // Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
-var primitives = scene.primitives;
 
 // Example 1: Draw a circle outline on the globe surface.
 // Create the circle outline geometry.
@@ -47,14 +46,11 @@ var circleOutlineInstance = new Cesium.GeometryInstance({
     }
 });
 // Add the geometry instance to primitives.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : [circleOutlineInstance],
     appearance : new Cesium.PerInstanceColorAppearance({
         flat : true,
         renderState : {
-            depthTest : {
-                enabled : true
-            },
             lineWidth : Math.min(2.0, scene.maximumAliasedLineWidth)
         }
     })
@@ -80,14 +76,11 @@ circleOutlineInstance = new Cesium.GeometryInstance({
     }
 });
 // Add the geometry instance to primitives.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : [circleOutlineInstance],
     appearance : new Cesium.PerInstanceColorAppearance({
         flat : true,
         renderState : {
-            depthTest : {
-                enabled : true
-            },
             lineWidth : Math.min(2.0, scene.maximumAliasedLineWidth)
         }
     })

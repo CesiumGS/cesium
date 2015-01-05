@@ -76,6 +76,14 @@ define([
                 return this.actual >= lower && this.actual <= upper;
             },
 
+            toStartWith : function(expected) {
+                return this.actual.slice(0, expected.length) === expected;
+            },
+
+            toEndWith : function(expected) {
+                return this.actual.slice(-expected.length) === expected;
+            },
+
             toEqual : function(expected) {
                 return equals(this.env, this.actual, expected);
             },

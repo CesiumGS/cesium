@@ -30,7 +30,6 @@ function startup(Cesium) {
 // Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
-var primitives = scene.primitives;
    
 // Draw the outline of a box.
 
@@ -60,14 +59,11 @@ var boxOutlineInstance = new Cesium.GeometryInstance({
 });
 
 // Add the geometry instance to primitives.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : boxOutlineInstance,
     appearance : new Cesium.PerInstanceColorAppearance({
         flat : true,
         renderState : {
-            depthTest : {
-                enabled : true
-            },
             lineWidth : Math.min(2.0, scene.maximumAliasedLineWidth)
         }
     })

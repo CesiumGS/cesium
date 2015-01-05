@@ -46,7 +46,7 @@ define([
      *     responseType : 'blob'
      * }).then(function(blob) {
      *     // use the data
-     * }.otherwise(function(error) {
+     * }).otherwise(function(error) {
      *     // an error occurred
      * });
      */

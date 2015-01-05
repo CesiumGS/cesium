@@ -29,15 +29,11 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
-// Adding the viewerEntityMixin enables automatic display
-// of WMS feature information on click.
-viewer.extend(Cesium.viewerEntityMixin);
-
 // Add a WMS imagery layer
-var imageryLayers = viewer.scene.imageryLayers;
+var imageryLayers = viewer.imageryLayers;
 imageryLayers.addImageryProvider(new Cesium.WebMapServiceImageryProvider({
-    url : 'http://geoserver.research.nicta.com.au/geotopo_250k/ows',
-    layers : 'bores',
+    url : 'http://nationalmap.nicta.com.au/proxy/http://geoserver-nm.nicta.com.au/geotopo_250k/ows',
+    layers : 'Hydrography:bores',
     parameters : {
         transparent : true,
         format : 'image/png'
@@ -45,7 +41,7 @@ imageryLayers.addImageryProvider(new Cesium.WebMapServiceImageryProvider({
 }));
 
 // Start off looking at Australia.
-viewer.scene.camera.viewRectangle(Cesium.Rectangle.fromDegrees(114.591, -45.837, 148.970, -5.730));//Sandcastle_End
+viewer.camera.viewRectangle(Cesium.Rectangle.fromDegrees(114.591, -45.837, 148.970, -5.730));//Sandcastle_End
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {

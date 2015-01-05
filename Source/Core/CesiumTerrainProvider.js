@@ -2,6 +2,7 @@
 define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
+        './appendForwardSlash',
         './BoundingSphere',
         './Cartesian3',
         './Credit',
@@ -12,6 +13,7 @@ define([
         './Event',
         './GeographicTilingScheme',
         './HeightmapTerrainData',
+        './IndexDatatype',
         './loadArrayBuffer',
         './loadJson',
         './QuantizedMeshTerrainData',
@@ -22,6 +24,7 @@ define([
     ], function(
         Uri,
         when,
+        appendForwardSlash,
         BoundingSphere,
         Cartesian3,
         Credit,
@@ -32,6 +35,7 @@ define([
         Event,
         GeographicTilingScheme,
         HeightmapTerrainData,
+        IndexDatatype,
         loadArrayBuffer,
         loadJson,
         QuantizedMeshTerrainData,
@@ -88,10 +92,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._url = options.url;
-        if (this._url.length === 0 || this._url[this._url.length - 1] !== '/') {
-            this._url = this._url + '/';
-        }
+        this._url = appendForwardSlash(options.url);
         this._proxy = options.proxy;
 
         this._tilingScheme = new GeographicTilingScheme({
@@ -119,6 +120,7 @@ define([
          * @private
          */
         this._requestVertexNormals = defaultValue(options.requestVertexNormals, false);
+        this._littleEndianExtensionSize = true;
 
         this._errorEvent = new Event();
 
@@ -184,8 +186,17 @@ define([
                 that._credit = new Credit(data.attribution);
             }
 
-            if (defined(data.extensions) && data.extensions.indexOf('vertexnormals') !== -1) {
+            // The vertex normals defined in the 'octvertexnormals' extension is identical to the original
+            // contents of the original 'vertexnormals' extension.  'vertexnormals' extension is now
+            // deprecated, as the extensionLength for this extension was incorrectly using big endian.
+            // We maintain backwards compatibility with the legacy 'vertexnormal' implementation
+            // by setting the _littleEndianExtensionSize to false. Always prefer 'octvertexnormals'
+            // over 'vertexnormals' if both extensions are supported by the server.
+            if (defined(data.extensions) && data.extensions.indexOf('octvertexnormals') !== -1) {
                 that._hasVertexNormals = true;
+            } else if (defined(data.extensions) && data.extensions.indexOf('vertexnormals') !== -1) {
+                that._hasVertexNormals = true;
+                that._littleEndianExtensionSize = false;
             }
 
             that._ready = true;
@@ -237,23 +248,17 @@ define([
         OCT_VERTEX_NORMALS: 1
     };
 
-    var requestHeadersVertexNormals = {
-            // prefer quantized-mesh media-type
-            // only request vertex normals if Lighting is enabled on the CesiumTerrainProvider
-            Accept : 'application/vnd.quantized-mesh;extensions=vertexnormals,application/octet-stream;q=0.9,*/*;q=0.01'
-    };
-
-    function loadTileVertexNormals(url) {
-        return loadArrayBuffer(url, requestHeadersVertexNormals);
-    }
-
-    var requestHeadersDefault = {
-            // prefer quantized-mesh media-type
-            Accept : 'application/vnd.quantized-mesh,application/octet-stream;q=0.9,*/*;q=0.01'
-    };
-
-    function loadTile(url) {
-        return loadArrayBuffer(url, requestHeadersDefault);
+    function getRequestHeader(extensionsList) {
+        if (!defined(extensionsList) || extensionsList.length === 0) {
+            return {
+                Accept : 'application/vnd.quantized-mesh,application/octet-stream;q=0.9,*/*;q=0.01'
+            };
+        } else {
+            var extensions = extensionsList.join('-');
+            return {
+                Accept : 'application/vnd.quantized-mesh;extensions=' + extensions + ',application/octet-stream;q=0.9,*/*;q=0.01'
+            };
+        }
     }
 
     function createHeightmapTerrainData(provider, buffer, level, x, y, tmsY) {
@@ -277,7 +282,8 @@ define([
         var encodedVertexElements = 3;
         var encodedVertexLength = Uint16Array.BYTES_PER_ELEMENT * encodedVertexElements;
         var triangleElements = 3;
-        var triangleLength = Uint16Array.BYTES_PER_ELEMENT * triangleElements;
+        var bytesPerIndex = Uint16Array.BYTES_PER_ELEMENT;
+        var triangleLength = bytesPerIndex * triangleElements;
 
         var view = new DataView(buffer);
         var center = new Cartesian3(view.getFloat64(pos, true), view.getFloat64(pos + 8, true), view.getFloat64(pos + 16, true));
@@ -302,8 +308,9 @@ define([
         pos += vertexCount * encodedVertexLength;
 
         if (vertexCount > 64 * 1024) {
-            // More than 64k vertices, so indices are 32-bit.  Not supported right now.
-            throw new RuntimeError('CesiumTerrainProvider currently does not support tiles with more than 65536 vertices.');
+            // More than 64k vertices, so indices are 32-bit.
+            bytesPerIndex = Uint32Array.BYTES_PER_ELEMENT;
+            triangleLength = bytesPerIndex * triangleElements;
         }
 
         // Decode the vertex buffer.
@@ -330,9 +337,14 @@ define([
             heightBuffer[i] = height;
         }
 
+        // skip over any additional padding that was added for 2/4 byte alignment
+        if (pos % bytesPerIndex !== 0) {
+            pos += (bytesPerIndex - (pos % bytesPerIndex));
+        }
+
         var triangleCount = view.getUint32(pos, true);
         pos += Uint32Array.BYTES_PER_ELEMENT;
-        var indices = new Uint16Array(buffer, pos, triangleCount * triangleElements);
+        var indices = IndexDatatype.createTypedArrayFromArrayBuffer(vertexCount, buffer, pos, triangleCount * triangleElements);
         pos += triangleCount * triangleLength;
 
         // High water mark decoding based on decompressIndices_ in webgl-loader's loader.js.
@@ -349,29 +361,29 @@ define([
 
         var westVertexCount = view.getUint32(pos, true);
         pos += Uint32Array.BYTES_PER_ELEMENT;
-        var westIndices = new Uint16Array(buffer, pos, westVertexCount);
-        pos += westVertexCount * Uint16Array.BYTES_PER_ELEMENT;
+        var westIndices = IndexDatatype.createTypedArrayFromArrayBuffer(vertexCount, buffer, pos, westVertexCount);
+        pos += westVertexCount * bytesPerIndex;
 
         var southVertexCount = view.getUint32(pos, true);
         pos += Uint32Array.BYTES_PER_ELEMENT;
-        var southIndices = new Uint16Array(buffer, pos, southVertexCount);
-        pos += southVertexCount * Uint16Array.BYTES_PER_ELEMENT;
+        var southIndices = IndexDatatype.createTypedArrayFromArrayBuffer(vertexCount, buffer, pos, southVertexCount);
+        pos += southVertexCount * bytesPerIndex;
 
         var eastVertexCount = view.getUint32(pos, true);
         pos += Uint32Array.BYTES_PER_ELEMENT;
-        var eastIndices = new Uint16Array(buffer, pos, eastVertexCount);
-        pos += eastVertexCount * Uint16Array.BYTES_PER_ELEMENT;
+        var eastIndices = IndexDatatype.createTypedArrayFromArrayBuffer(vertexCount, buffer, pos, eastVertexCount);
+        pos += eastVertexCount * bytesPerIndex;
 
         var northVertexCount = view.getUint32(pos, true);
         pos += Uint32Array.BYTES_PER_ELEMENT;
-        var northIndices = new Uint16Array(buffer, pos, northVertexCount);
-        pos += northVertexCount * Uint16Array.BYTES_PER_ELEMENT;
+        var northIndices = IndexDatatype.createTypedArrayFromArrayBuffer(vertexCount, buffer, pos, northVertexCount);
+        pos += northVertexCount * bytesPerIndex;
 
         var encodedNormalBuffer;
         while (pos < view.byteLength) {
-            var extensionId = view.getUint8(pos);
+            var extensionId = view.getUint8(pos, true);
             pos += Uint8Array.BYTES_PER_ELEMENT;
-            var extensionLength = view.getUint32(pos);
+            var extensionLength = view.getUint32(pos, provider._littleEndianExtensionSize);
             pos += Uint32Array.BYTES_PER_ELEMENT;
 
             if (extensionId === QuantizedMeshExtensionIds.OCT_VERTEX_NORMALS) {
@@ -447,10 +459,14 @@ define([
 
         var promise;
 
-        var tileLoader = loadTile;
+        var extensionList = [];
         if (this._requestVertexNormals && this._hasVertexNormals) {
-            tileLoader = loadTileVertexNormals;
+            extensionList.push(this._littleEndianExtensionSize ? "octvertexnormals" : "vertexnormals");
         }
+
+        var tileLoader = function(tileUrl) {
+            return loadArrayBuffer(tileUrl, getRequestHeader(extensionList));
+        };
 
         throttleRequests = defaultValue(throttleRequests, true);
         if (throttleRequests) {
@@ -653,7 +669,9 @@ define([
                 return false;
             }
             var levelAvailable = available[level];
-            return isTileInRange(levelAvailable, x, y);
+            var yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
+            var tmsY = (yTiles - y - 1);
+            return isTileInRange(levelAvailable, x, tmsY);
         }
     };
 

@@ -48,6 +48,7 @@ define([
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
+    var scratchColor = new Color();
 
     var GeometryOptions = function(entity) {
         this.id = entity;
@@ -69,15 +70,20 @@ define([
      * @constructor
      *
      * @param {Entity} entity The entity containing the geometry to be visualized.
+     * @param {Scene} scene The scene where visualization is taking place.
      */
-    var RectangleGeometryUpdater = function(entity) {
+    var RectangleGeometryUpdater = function(entity, scene) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(entity)) {
             throw new DeveloperError('entity is required');
         }
+        if (!defined(scene)) {
+            throw new DeveloperError('scene is required');
+        }
         //>>includeEnd('debug');
 
         this._entity = entity;
+        this._scene = scene;
         this._entitySubscription = entity.definitionChanged.addEventListener(RectangleGeometryUpdater.prototype._onEntityPropertyChanged, this);
         this._fillEnabled = false;
         this._isClosed = false;
@@ -89,6 +95,7 @@ define([
         this._hasConstantOutline = true;
         this._showOutlineProperty = undefined;
         this._outlineColorProperty = undefined;
+        this._outlineWidth = 1.0;
         this._options = new GeometryOptions(entity);
         this._onEntityPropertyChanged(entity, 'rectangle', entity.rectangle, undefined);
     };
@@ -201,6 +208,19 @@ define([
         outlineColorProperty : {
             get : function() {
                 return this._outlineColorProperty;
+            }
+        },
+        /**
+         * Gets the constant with of the geometry outline, in pixels.
+         * This value is only valid if isDynamic is false.
+         * @memberof RectangleGeometryUpdater.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        outlineWidth : {
+            get : function() {
+                return this._outlineWidth;
             }
         },
         /**
@@ -337,13 +357,14 @@ define([
 
         var entity = this._entity;
         var isAvailable = entity.isAvailable(time);
+        var outlineColor = Property.getValueOrDefault(this._outlineColorProperty, time, Color.BLACK);
 
         return new GeometryInstance({
             id : entity,
             geometry : new RectangleOutlineGeometry(this._options),
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
-                color : ColorGeometryInstanceAttribute.fromColor(isAvailable ? this._outlineColorProperty.getValue(time) : Color.BLACK)
+                color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
             }
         });
     };
@@ -427,6 +448,7 @@ define([
         var granularity = rectangle.granularity;
         var stRotation = rectangle.stRotation;
         var rotation = rectangle.rotation;
+        var outlineWidth = rectangle.outlineWidth;
         var closeBottom = rectangle.closeBottom;
         var closeTop = rectangle.closeTop;
 
@@ -439,6 +461,7 @@ define([
             !Property.isConstant(granularity) || //
             !Property.isConstant(stRotation) || //
             !Property.isConstant(rotation) || //
+            !Property.isConstant(outlineWidth) || //
             !Property.isConstant(closeBottom) || //
             !Property.isConstant(closeTop)) {
             if (!this._dynamic) {
@@ -447,7 +470,7 @@ define([
             }
         } else {
             var options = this._options;
-            options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.VERTEX_FORMAT;
+            options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
             options.rectangle = coordinates.getValue(Iso8601.MINIMUM_VALUE, options.rectangle);
             options.height = defined(height) ? height.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
@@ -457,6 +480,7 @@ define([
             options.closeBottom = defined(closeBottom) ? closeBottom.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.closeTop = defined(closeTop) ? closeTop.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             this._isClosed = defined(extrudedHeight) && defined(options.closeTop) && defined(options.closeBottom) && options.closeTop && options.closeBottom;
+            this._outlineWidth = defined(outlineWidth) ? outlineWidth.getValue(Iso8601.MINIMUM_VALUE) : 1.0;
             this._dynamic = false;
             this._geometryChanged.raiseEvent(this);
         }
@@ -502,71 +526,61 @@ define([
         }
         //>>includeEnd('debug');
 
+        var primitives = this._primitives;
+        primitives.remove(this._primitive);
+        primitives.remove(this._outlinePrimitive);
+
         var geometryUpdater = this._geometryUpdater;
-
-        if (defined(this._primitive)) {
-            this._primitives.remove(this._primitive);
-        }
-
-        if (defined(this._outlinePrimitive)) {
-            this._primitives.remove(this._outlinePrimitive);
-        }
-
         var entity = geometryUpdater._entity;
         var rectangle = entity.rectangle;
-        var show = rectangle.show;
-
-        if (!entity.isAvailable(time) || (defined(show) && !show.getValue(time))) {
+        if (!entity.isAvailable(time) || !Property.getValueOrDefault(rectangle.show, time, true)) {
             return;
         }
 
         var options = this._options;
+        var coordinates = Property.getValueOrUndefined(rectangle.coordinates, time, options.rectangle);
+        if (!defined(coordinates)) {
+            return;
+        }
 
-        var coordinates = rectangle.coordinates;
-        var closeBottom = rectangle.closeBottom;
-        var closeTop = rectangle.closeTop;
-        var height = rectangle.height;
-        var extrudedHeight = rectangle.extrudedHeight;
-        var granularity = rectangle.granularity;
-        var stRotation = rectangle.stRotation;
-        var rotation = rectangle.rotation;
+        options.rectangle = coordinates;
+        options.height = Property.getValueOrUndefined(rectangle.height, time);
+        options.extrudedHeight = Property.getValueOrUndefined(rectangle.extrudedHeight, time);
+        options.granularity = Property.getValueOrUndefined(rectangle.granularity, time);
+        options.stRotation = Property.getValueOrUndefined(rectangle.stRotation, time);
+        options.rotation = Property.getValueOrUndefined(rectangle.rotation, time);
+        options.closeBottom = Property.getValueOrUndefined(rectangle.closeBottom, time);
+        options.closeTop = Property.getValueOrUndefined(rectangle.closeTop, time);
 
-        options.rectangle = coordinates.getValue(time, options.rectangle);
-        options.height = defined(height) ? height.getValue(time, options) : undefined;
-        options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(time, options) : undefined;
-        options.granularity = defined(granularity) ? granularity.getValue(time) : undefined;
-        options.stRotation = defined(stRotation) ? stRotation.getValue(time) : undefined;
-        options.rotation = defined(rotation) ? rotation.getValue(time) : undefined;
+        if (Property.getValueOrDefault(rectangle.fill, time, true)) {
+            var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
+            this._material = material;
 
-        if (!defined(rectangle.fill) || rectangle.fill.getValue(time)) {
-            options.closeBottom = defined(closeBottom) ? closeBottom.getValue(time) : undefined;
-            options.closeTop = defined(closeTop) ? closeTop.getValue(time) : undefined;
-
-            this._material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
-            var material = this._material;
             var appearance = new MaterialAppearance({
                 material : material,
                 translucent : material.isTranslucent(),
-                closed : options.closeTop && options.closeBottom
+                closed : defined(options.extrudedHeight)
             });
             options.vertexFormat = appearance.vertexFormat;
 
-            this._primitive = new Primitive({
+            this._primitive = primitives.add(new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
                     geometry : new RectangleGeometry(options)
                 }),
                 appearance : appearance,
                 asynchronous : false
-            });
-            this._primitives.add(this._primitive);
+            }));
         }
 
-        if (defined(rectangle.outline) && rectangle.outline.getValue(time)) {
+        if (Property.getValueOrDefault(rectangle.outline, time, false)) {
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
 
-            var outlineColor = defined(rectangle.outlineColor) ? rectangle.outlineColor.getValue(time) : Color.BLACK;
-            this._outlinePrimitive = new Primitive({
+            var outlineColor = Property.getValueOrClonedDefault(rectangle.outlineColor, time, Color.BLACK, scratchColor);
+            var outlineWidth = Property.getValueOrDefault(rectangle.outlineWidth, 1.0);
+            var translucent = outlineColor.alpha !== 1.0;
+
+            this._outlinePrimitive = primitives.add(new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
                     geometry : new RectangleOutlineGeometry(options),
@@ -576,11 +590,13 @@ define([
                 }),
                 appearance : new PerInstanceColorAppearance({
                     flat : true,
-                    translucent : outlineColor.alpha !== 1.0
+                    translucent : translucent,
+                    renderState : {
+                        lineWidth : geometryUpdater._scene.clampLineWidth(outlineWidth)
+                    }
                 }),
                 asynchronous : false
-            });
-            this._primitives.add(this._outlinePrimitive);
+            }));
         }
     };
 
@@ -589,13 +605,9 @@ define([
     };
 
     DynamicGeometryUpdater.prototype.destroy = function() {
-        if (defined(this._primitive)) {
-            this._primitives.remove(this._primitive);
-        }
-
-        if (defined(this._outlinePrimitive)) {
-            this._primitives.remove(this._outlinePrimitive);
-        }
+        var primitives = this._primitives;
+        primitives.removeAndDestroy(this._primitive);
+        primitives.removeAndDestroy(this._outlinePrimitive);
         destroyObject(this);
     };
 

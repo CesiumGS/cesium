@@ -79,6 +79,7 @@
 			<include name="LICENSE.md" />
 			<include name="CHANGES.md" />
 			<include name="README.md" />
+			<include name="web.config" />
 			<zipfileset file="index.release.html" fullpath="index.html" />
 		</zip>
 	</target>
@@ -106,7 +107,7 @@
 
 	<!-- Inputs -->
 	<!-- this version should be set to the upcoming version, so it can be tagged without requiring a bump first -->
-	<property name="version" value="1.1" />
+	<property name="version" value="1.5" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />
@@ -540,9 +541,17 @@
 			<arg value="optimize=uglify2" />
 			<arg value="pragmas.debug=false" />
 			<arg value="mainConfigFile=../Apps/CesiumViewer/CesiumViewerStartup.js" />
-			<arg value="name=CesiumViewer/CesiumViewerStartup" />
+			<arg value="name=CesiumViewerStartup" />
 			<arg value="out=${relativeCesiumViewerOutputDirectory}/CesiumViewerStartup.js" />
 		</exec>
+
+		<!-- add copyright header -->
+		<copy file="${cesiumViewerOutputDirectory}/CesiumViewerStartup.js" tofile="${cesiumViewerOutputDirectory}/CesiumViewerStartup.js.tmp">
+			<filterchain>
+				<concatfilter prepend="${sourceDirectory}/copyrightHeader.js" />
+			</filterchain>
+		</copy>
+		<move file="${cesiumViewerOutputDirectory}/CesiumViewerStartup.js.tmp" tofile="${cesiumViewerOutputDirectory}/CesiumViewerStartup.js" />
 
 		<exec executable="${nodePath}" dir="${cesiumViewerDirectory}">
 			<arg value="${rjsPath}" />
@@ -564,15 +573,22 @@
 		<copy file="${requirejsPath}/require.min.js" tofile="${cesiumViewerOutputDirectory}/require.js" />
 
 		<!-- Copy the built Cesium assets and workers -->
-		<copy todir="${cesiumViewerOutputDirectory}">
-			<fileset dir="${buildOutputDirectory}" excludes="Cesium.js" />
+		<copy todir="${cesiumViewerOutputDirectory}" includeemptydirs="false">
+			<fileset dir="${buildOutputDirectory}">
+				<include name="Assets/**" />
+				<include name="Workers/**" />
+				<include name="Widgets/**" />
+				<exclude name="Widgets/**/*.css" />
+			</fileset>
 		</copy>
+
+		<!-- Copy web.config -->
+		<copy file="${basedir}/web.config" tofile="${cesiumViewerOutputDirectory}/web.config" />
 
 		<!-- rewrite the paths in the configuration -->
 		<replace dir="${cesiumViewerOutputDirectory}" summary="true">
 			<replacefilter token="../../Source" value="." />
-			<replacefilter token="../Apps/CesiumViewer" value="." />
-			<replacefilter token="../ThirdParty/requirejs-2.1.9" value="." />
+			<replacefilter token="../../ThirdParty/requirejs-2.1.9" value="." />
 			<include name="CesiumViewerStartup.js" />
 		</replace>
 

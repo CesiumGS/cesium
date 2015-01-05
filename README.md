@@ -22,12 +22,21 @@ Our mission is to create the leading web-based globe and map for visualizing dyn
 
 We appreciate attribution by including the Cesium logo and link in your app.
 
+### Featured Demos ###
+
+<p align="center">
+<a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html"><img src="http://cesiumjs.org/images/Sandcastle.png" height="150" /></a>&nbsp;
+<a href="http://apps.agi.com/SatelliteViewer/"><img src="http://cesiumjs.org/images/SatelliteViewer.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/noradtrackssanta.html"><img src="http://cesiumjs.org/demos/images/noradtrackssanta.png" height="150" /></a>&nbsp;
+</p>
+
 ### Demos ###
 
 <p align="center">
+<a href="http://cesiumjs.org/demos/GPlates.html"><img src="http://cesiumjs.org/demos/images/GPlates.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/ign.html"><img src="http://cesiumjs.org/demos/images/ign.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/atovisualizer.html"><img src="http://cesiumjs.org/demos/images/atovisualizer.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/sunshine.html"><img src="http://cesiumjs.org/demos/images/sunshine.jpg" height="150" /></a>&nbsp;
-<a href="http://cesiumjs.org/demos/noradtrackssanta.html"><img src="http://cesiumjs.org/demos/images/noradtrackssanta.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/doarama.html"><img src="http://cesiumjs.org/demos/images/doarama.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/powdertracks.html"><img src="http://cesiumjs.org/demos/images/powdertracks.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/earthkamexplorer.html"><img src="http://cesiumjs.org/demos/images/earthkamexplorer.png" height="150" /></a>&nbsp;
@@ -37,8 +46,6 @@ We appreciate attribution by including the Cesium logo and link in your app.
 <a href="http://cesiumjs.org/demos/agsattrack.html"><img src="http://cesiumjs.org/demos/images/agsattrack.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/weblvcsimulationviewer.html"><img src="http://cesiumjs.org/demos/images/weblvcsimulationviewer.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/vega.html"><img src="http://cesiumjs.org/demos/images/vega.png" height="150" /></a>&nbsp;
-<a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html"><img src="http://cesiumjs.org/images/Sandcastle.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/Cesium/Build/Apps/CesiumViewer/"><img src="http://cesiumjs.org/images/CesiumViewer.png" height="150" /></a>&nbsp;
-<a href="http://apps.agi.com/SatelliteViewer/"><img src="http://cesiumjs.org/images/SatelliteViewer.png" height="150" /></a>&nbsp;
 </p>
 

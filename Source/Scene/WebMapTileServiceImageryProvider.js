@@ -1,27 +1,35 @@
 /*global define*/
 define([
+        '../Core/combine',
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/freezeObject',
+        '../Core/objectToQuery',
+        '../Core/queryToObject',
         '../Core/Rectangle',
         '../Core/WebMercatorTilingScheme',
+        '../ThirdParty/Uri',
         './ImageryProvider'
     ], function(
+        combine,
         Credit,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
+        freezeObject,
+        objectToQuery,
+        queryToObject,
         Rectangle,
         WebMercatorTilingScheme,
+        Uri,
         ImageryProvider) {
     "use strict";
-
-    var trailingQMarkRegex = /\?$/;
 
     /**
      * Provides tiled imagery served by {@link http://www.opengeospatial.org/standards/wmts|WMTS 1.0.0} compliant servers.
@@ -36,6 +44,7 @@ define([
      * @param {String} options.layer The layer name for WMTS requests.
      * @param {String} options.style The style name for WMTS requests.
      * @param {String} options.tileMatrixSetID The identifier of the TileMatrixSet to use for WMTS requests.
+     * @param {Array} [options.tileMatrixLabels] A list of identifiers in the TileMatrix to use for WMTS requests, one per TileMatrix level.
      * @param {Number} [options.tileWidth=256] The tile width in pixels.
      * @param {Number} [options.tileHeight=256] The tile height in pixels.
      * @param {TilingScheme} [options.tilingScheme] The tiling scheme corresponding to the organization of the tiles in the TileMatrixSet.
@@ -59,13 +68,14 @@ define([
      *     style : 'default',
      *     format : 'image/jpeg',
      *     tileMatrixSetID : 'default028mm',
+     *     // tileMatrixLabels : ['default028mm:0', 'default028mm:1', 'default028mm:2' ...],
      *     maximumLevel: 19,
      *     credit : new Cesium.Credit('U. S. Geological Survey')
      * });
-     * viewer.scene.imageryLayers.addImageryProvider(shadedRelief);
+     * viewer.imageryLayers.addImageryProvider(shadedRelief);
      */
     var WebMapTileServiceImageryProvider = function WebMapTileServiceImageryProvider(options) {
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         if (!defined(options.url)) {
             throw new DeveloperError('options.url is required.');
@@ -80,22 +90,18 @@ define([
             throw new DeveloperError('options.tileMatrixSetID is required.');
         }
 
-
         this._url = options.url;
-        if (!trailingQMarkRegex.test(this._url)) {
-            this._url = this._url + '?';
-        }
-
         this._layer = options.layer;
         this._style = options.style;
         this._tileMatrixSetID = options.tileMatrixSetID;
-        this._format = defaultValue(options.format,'image/jpeg');
+        this._tileMatrixLabels = options.tileMatrixLabels;
+        this._format = defaultValue(options.format, 'image/jpeg');
         this._proxy = options.proxy;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
 
-        this._tilingScheme = defaultValue(options.tilingScheme,new WebMercatorTilingScheme());
-        this._tileWidth = defaultValue(options.tileWidth,256);
-        this._tileHeight = defaultValue(options.tileHeight,256);
+        this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new WebMercatorTilingScheme();
+        this._tileWidth = defaultValue(options.tileWidth, 256);
+        this._tileHeight = defaultValue(options.tileHeight, 256);
 
         this._minimumLevel = defaultValue(options.minimumLevel, 0);
         this._maximumLevel = defaultValue(options.maximumLevel, 18);
@@ -114,25 +120,35 @@ define([
 
         this._errorEvent = new Event();
 
-        this._ready = true;
-
         var credit = options.credit;
-        if (typeof credit === 'string') {
-            credit = new Credit(credit);
-        }
-        this._credit = credit;
+        this._credit = typeof credit === 'string' ? new Credit(credit) : credit;
     };
 
+    var defaultParameters = freezeObject({
+        service : 'WMTS',
+        version : '1.0.0',
+        request : 'GetTile'
+    });
+
     function buildImageUrl(imageryProvider, col, row, level) {
-        var url = imageryProvider._url +
-                  "service=WMTS&VERSION=1.0.0&request=GetTile" +
-                  "&TILEMATRIX="+ level +
-                  "&LAYER="+ imageryProvider._layer +
-                  "&STYLE="+ imageryProvider._style +
-                  "&TILEROW="+ row +
-                  "&TILECOL=" + col +
-                  "&TILEMATRIXSET=" + imageryProvider._tileMatrixSetID +
-                  "&FORMAT=" + imageryProvider._format ;
+        var uri = new Uri(imageryProvider._url);
+        var queryOptions = queryToObject(defaultValue(uri.query, ''));
+        var labels;
+
+        queryOptions = combine(defaultParameters, queryOptions);
+
+        labels = imageryProvider._tileMatrixLabels;
+        queryOptions.tilematrix = defined(labels) ? labels[level] : level;
+        queryOptions.layer = imageryProvider._layer;
+        queryOptions.style = imageryProvider._style;
+        queryOptions.tilerow = row;
+        queryOptions.tilecol = col;
+        queryOptions.tilematrixset = imageryProvider._tileMatrixSetID;
+        queryOptions.format = imageryProvider._format;
+
+        uri.query = objectToQuery(queryOptions);
+
+        var url = uri.toString();
 
         var proxy = imageryProvider._proxy;
         if (defined(proxy)) {
@@ -147,6 +163,7 @@ define([
          * Gets the URL of the service hosting the imagery.
          * @memberof WebMapTileServiceImageryProvider.prototype
          * @type {String}
+         * @readonly
          */
         url : {
             get : function() {
@@ -158,6 +175,7 @@ define([
          * Gets the proxy used by this provider.
          * @memberof WebMapTileServiceImageryProvider.prototype
          * @type {Proxy}
+         * @readonly
          */
         proxy : {
             get : function() {
@@ -170,15 +188,10 @@ define([
          * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
          * @memberof WebMapTileServiceImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         tileWidth : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('tileWidth must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
                 return this._tileWidth;
             }
         },
@@ -188,15 +201,10 @@ define([
          * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
          * @memberof WebMapTileServiceImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
-        tileHeight: {
+        tileHeight : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('tileHeight must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
                 return this._tileHeight;
             }
         },
@@ -206,15 +214,10 @@ define([
          * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
          * @memberof WebMapTileServiceImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         maximumLevel : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('maximumLevel must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
                 return this._maximumLevel;
             }
         },
@@ -224,15 +227,10 @@ define([
          * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
          * @memberof WebMapTileServiceImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         minimumLevel : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('minimumLevel must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
                 return this._minimumLevel;
             }
         },
@@ -242,15 +240,10 @@ define([
          * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
          * @memberof WebMapTileServiceImageryProvider.prototype
          * @type {TilingScheme}
+         * @readonly
          */
         tilingScheme : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('tilingScheme must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
                 return this._tilingScheme;
             }
         },
@@ -260,15 +253,10 @@ define([
          * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
          * @memberof WebMapTileServiceImageryProvider.prototype
          * @type {Rectangle}
+         * @readonly
          */
         rectangle : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('rectangle must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
                 return this._rectangle;
             }
         },
@@ -280,15 +268,10 @@ define([
          * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
          * @memberof WebMapTileServiceImageryProvider.prototype
          * @type {TileDiscardPolicy}
+         * @readonly
          */
         tileDiscardPolicy : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('tileDiscardPolicy must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
                 return this._tileDiscardPolicy;
             }
         },
@@ -299,6 +282,7 @@ define([
          * are passed an instance of {@link TileProviderError}.
          * @memberof WebMapTileServiceImageryProvider.prototype
          * @type {Event}
+         * @readonly
          */
         errorEvent : {
             get : function() {
@@ -310,6 +294,7 @@ define([
          * Gets the mime type of images returned by this imagery provider.
          * @memberof WebMapTileServiceImageryProvider.prototype
          * @type {String}
+         * @readonly
          */
         format : {
             get : function() {
@@ -321,11 +306,10 @@ define([
          * Gets a value indicating whether or not the provider is ready for use.
          * @memberof WebMapTileServiceImageryProvider.prototype
          * @type {Boolean}
+         * @readonly
          */
         ready : {
-            get : function() {
-                return this._ready;
-            }
+            value: true
         },
 
         /**
@@ -333,6 +317,7 @@ define([
          * the source of the imagery.  This function should not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
          * @memberof WebMapTileServiceImageryProvider.prototype
          * @type {Credit}
+         * @readonly
          */
         credit : {
             get : function() {
@@ -348,6 +333,7 @@ define([
          * and texture upload time are reduced.
          * @memberof WebMapTileServiceImageryProvider.prototype
          * @type {Boolean}
+         * @readonly
          */
         hasAlphaChannel : {
             get : function() {
@@ -385,12 +371,6 @@ define([
      * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
     WebMapTileServiceImageryProvider.prototype.requestImage = function(x, y, level) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
         var url = buildImageUrl(this, x, y, level);
         return ImageryProvider.loadImage(this, url);
     };

@@ -76,8 +76,8 @@
 .cesium-viewer-cesiumInspectorContainer {
     display: block;
     position: absolute;
-    top: 5px;
-    left: 5px;
+    top: 50px;
+    right: 10px;
 }
 
 .cesium-viewer-geocoderContainer {

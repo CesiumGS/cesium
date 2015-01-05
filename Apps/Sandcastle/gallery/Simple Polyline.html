@@ -30,7 +30,6 @@ function startup(Cesium) {
 // Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
-var primitives = scene.primitives;
        
 // Example 1: Draw a yellow polyline on the globe surface.
 var yellowPolyline = new Cesium.GeometryInstance({
@@ -81,28 +80,22 @@ var perVertexPolyline = new Cesium.GeometryInstance({
 });
 
 // Add yellow polyline instances to primitives.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : yellowPolyline,
     appearance : new Cesium.PerInstanceColorAppearance({
         flat : true,
         renderState : {
-            depthTest : {
-                enabled : true
-            },
             lineWidth : Math.min(2.0, scene.maximumAliasedLineWidth)
         }
     })
 }));
 
 // Add perSegment and perVertex polyline instances to primitives.
-primitives.add(new Cesium.Primitive({
+scene.primitives.add(new Cesium.Primitive({
     geometryInstances : [perSegmentPolyline, perVertexPolyline],
     appearance : new Cesium.PerInstanceColorAppearance({
         flat : true,
         renderState : {
-            depthTest : {
-                enabled : true
-            },
             lineWidth : Math.min(2.0, scene.maximumAliasedLineWidth)
         }
     })

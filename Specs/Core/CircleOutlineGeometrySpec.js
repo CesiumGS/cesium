@@ -49,12 +49,12 @@ defineSuite([
         var m = CircleOutlineGeometry.createGeometry(new CircleOutlineGeometry({
             ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
-            granularity : 0.75,
+            granularity : 0.1,
             radius : 1.0
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 10);
-        expect(m.indices.length).toEqual(2 * 10);
+        expect(m.attributes.position.values.length).toEqual(3 * 6);
+        expect(m.indices.length).toEqual(2 * 6);
         expect(m.boundingSphere.radius).toEqual(1);
     });
 
@@ -62,26 +62,26 @@ defineSuite([
         var m = CircleOutlineGeometry.createGeometry(new CircleOutlineGeometry({
             ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
-            granularity : 0.75,
+            granularity : 0.1,
             radius : 1.0,
             extrudedHeight : 10000
         }));
 
-        expect(m.attributes.position.values.length).toEqual(2 * 10 * 3);
-        expect(m.indices.length).toEqual(2 * 10 * 2 + (16*2));
+        expect(m.attributes.position.values.length).toEqual(2 * 6 * 3);
+        expect(m.indices.length).toEqual(2 * 6 * 2 + 16 * 2);
     });
 
     it('computes positions extruded, no lines between top and bottom', function() {
         var m = CircleOutlineGeometry.createGeometry(new CircleOutlineGeometry({
             ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
-            granularity : 0.75,
+            granularity : 0.1,
             radius : 1.0,
             extrudedHeight : 10000,
             numberOfVerticalLines : 0
         }));
 
-        expect(m.attributes.position.values.length).toEqual(2 * 10 * 3);
-        expect(m.indices.length).toEqual(2 * 10 * 2);
+        expect(m.attributes.position.values.length).toEqual(2 * 6 * 3);
+        expect(m.indices.length).toEqual(2 * 6 * 2);
     });
 });

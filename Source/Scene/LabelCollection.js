@@ -223,7 +223,7 @@ define([
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
             glyph = glyphs[glyphIndex];
             dimensions = glyph.dimensions;
-            totalWidth += dimensions.width;
+            totalWidth += dimensions.computedWidth;
             maxHeight = Math.max(maxHeight, dimensions.height);
         }
 
@@ -258,7 +258,7 @@ define([
                 glyph.billboard._setTranslate(glyphPixelOffset);
             }
 
-            glyphPixelOffset.x += dimensions.width * scale * resolutionScale;
+            glyphPixelOffset.x += dimensions.computedWidth * scale * resolutionScale;
         }
     }
 

@@ -324,7 +324,7 @@ define([
 
         this._mode = SceneMode.SCENE3D;
 
-        this._mapProjection = defaultValue(options.mapProjection, new GeographicProjection());
+        this._mapProjection = defined(options.mapProjection) ? options.mapProjection : new GeographicProjection();
 
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
@@ -503,7 +503,7 @@ define([
          * @type {Number}
          * @readonly
          *
-         * @see {@link http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml|glGet} with <code>ALIASED_LINE_WIDTH_RANGE</code>.
+         * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>ALIASED_LINE_WIDTH_RANGE</code>.
          */
         maximumAliasedLineWidth : {
             get : function() {
@@ -632,7 +632,6 @@ define([
          * @memberof Scene.prototype
          *
          * @type {TerrainProvider}
-         * @readonly
          */
         terrainProvider : {
             get : function() {
@@ -690,6 +689,7 @@ define([
         /**
          * @memberof Scene.prototype
          * @private
+         * @readonly
          */
         context : {
             get : function() {
@@ -725,6 +725,7 @@ define([
          * Gets whether or not the scene is optimized for 3D only viewing.
          * @memberof Scene.prototype
          * @type {Boolean}
+         * @readonly
          */
         scene3DOnly : {
             get : function() {
@@ -738,6 +739,7 @@ define([
          * other factors that could prevent OIT from functioning on a given system configuration.
          * @memberof Scene.prototype
          * @type {Boolean}
+         * @readonly
          */
         orderIndependentTranslucency : {
             get : function() {
@@ -749,6 +751,7 @@ define([
          * Gets the unique identifier for this scene.
          * @memberof Scene.prototype
          * @type {String}
+         * @readonly
          */
         id : {
             get : function() {
@@ -985,8 +988,12 @@ define([
     function createDebugFragmentShaderProgram(command, scene, shaderProgram) {
         var context = scene.context;
         var sp = defaultValue(shaderProgram, command.shaderProgram);
-        var fragmentShaderSource = sp.fragmentShaderSource;
-        var renamedFS = fragmentShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_Debug_main()');
+        var fs = sp.fragmentShaderSource.clone();
+
+        fs.sources = fs.sources.map(function(source) {
+            source = source.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_Debug_main()');
+            return source;
+        });
 
         var newMain =
             'void main() \n' +
@@ -1012,9 +1019,10 @@ define([
 
         newMain += '}';
 
-        var source = renamedFS + '\n' + newMain;
+        fs.sources.push(newMain);
+
         var attributeLocations = getAttributeLocations(sp);
-        return context.createShaderProgram(sp.vertexShaderSource, source, attributeLocations);
+        return context.createShaderProgram(sp.vertexShaderSource, fs, attributeLocations);
     }
 
     function executeDebugCommand(command, scene, passState, renderState, shaderProgram) {
@@ -1374,9 +1382,10 @@ define([
         if (scene.debugShowFramesPerSecond) {
             if (!defined(scene._performanceDisplay)) {
                 var performanceContainer = document.createElement('div');
+                performanceContainer.className = 'cesium-performanceDisplay';
                 performanceContainer.style.position = 'absolute';
-                performanceContainer.style.top = '10px';
-                performanceContainer.style.left = '10px';
+                performanceContainer.style.top = '50px';
+                performanceContainer.style.right = '10px';
                 var container = scene._canvas.parentNode;
                 container.appendChild(performanceContainer);
                 var performanceDisplay = new PerformanceDisplay({container: performanceContainer});
@@ -1409,6 +1418,14 @@ define([
                 throw error;
             }
         }
+    };
+
+    /**
+     * @private
+     */
+    Scene.prototype.clampLineWidth = function(width) {
+        var context = this._context;
+        return Math.max(context.minimumAliasedLineWidth, Math.min(width, context.maximumAliasedLineWidth));
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();

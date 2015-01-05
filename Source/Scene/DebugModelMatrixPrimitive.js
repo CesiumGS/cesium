@@ -131,33 +131,63 @@ define([
                 this.modelMatrix[14] = 0.01;
             }
 
-            this._primitive = new Primitive({
-                geometryInstances : new GeometryInstance({
-                    geometry : PolylineGeometry.createGeometry(new PolylineGeometry({
-                        positions : [
-                            Cartesian3.ZERO,
-                            Cartesian3.UNIT_X,
-                            Cartesian3.ZERO,
-                            Cartesian3.UNIT_Y,
-                            Cartesian3.ZERO,
-                            Cartesian3.UNIT_Z
-                        ],
-                        width : this.width,
-                        vertexFormat : PolylineColorAppearance.VERTEX_FORMAT,
-                        colors : [
-                            Color.RED,
-                            Color.RED,
-                            Color.GREEN,
-                            Color.GREEN,
-                            Color.BLUE,
-                            Color.BLUE
-                        ],
-                        followSurface: false
-                    })),
-                    modelMatrix : Matrix4.multiplyByUniformScale(this.modelMatrix, this.length, new Matrix4()),
-                    id : this.id,
-                    pickPrimitive : this
+            var x = new GeometryInstance({
+                geometry : new PolylineGeometry({
+                    positions : [
+                        Cartesian3.ZERO,
+                        Cartesian3.UNIT_X
+                    ],
+                    width : this.width,
+                    vertexFormat : PolylineColorAppearance.VERTEX_FORMAT,
+                    colors : [
+                        Color.RED,
+                        Color.RED
+                    ],
+                    followSurface: false
                 }),
+                modelMatrix : Matrix4.multiplyByUniformScale(this.modelMatrix, this.length, new Matrix4()),
+                id : this.id,
+                pickPrimitive : this
+            });
+            var y = new GeometryInstance({
+                geometry : new PolylineGeometry({
+                    positions : [
+                        Cartesian3.ZERO,
+                        Cartesian3.UNIT_Y
+                    ],
+                    width : this.width,
+                    vertexFormat : PolylineColorAppearance.VERTEX_FORMAT,
+                    colors : [
+                        Color.GREEN,
+                        Color.GREEN
+                    ],
+                    followSurface: false
+                }),
+                modelMatrix : Matrix4.multiplyByUniformScale(this.modelMatrix, this.length, new Matrix4()),
+                id : this.id,
+                pickPrimitive : this
+            });
+            var z = new GeometryInstance({
+                geometry : new PolylineGeometry({
+                    positions : [
+                        Cartesian3.ZERO,
+                        Cartesian3.UNIT_Z
+                    ],
+                    width : this.width,
+                    vertexFormat : PolylineColorAppearance.VERTEX_FORMAT,
+                    colors : [
+                        Color.BLUE,
+                        Color.BLUE
+                    ],
+                    followSurface: false
+                }),
+                modelMatrix : Matrix4.multiplyByUniformScale(this.modelMatrix, this.length, new Matrix4()),
+                id : this.id,
+                pickPrimitive : this
+            });
+
+            this._primitive = new Primitive({
+                geometryInstances : [x, y, z],
                 appearance : new PolylineColorAppearance(),
                 asynchronous : false
             });

@@ -56,6 +56,9 @@ define([
      *        By default, tiles are loaded using the same protocol as the page.
      * @param {String} [options.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps
      *        imagery to load.
+     * @param {String} [options.culture=''] The culture to use when requesting Bing Maps imagery. Not
+     *        all cultures are supported. See {@link http://msdn.microsoft.com/en-us/library/hh441729.aspx}
+     *        for information on the supported cultures.
      * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
      *        is invalid and should be discarded.  If this value is not specified, a default
      *        {@link DiscardMissingTileImagePolicy} is used which requests
@@ -100,6 +103,7 @@ define([
         this._url = options.url;
         this._tileProtocol = options.tileProtocol;
         this._mapStyle = defaultValue(options.mapStyle, BingMapsStyle.AERIAL);
+        this._culture = defaultValue(options.culture, '');
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._proxy = options.proxy;
         this._credit = new Credit('Bing Imagery', BingMapsImageryProvider._logoData, 'http://www.bing.com');
@@ -144,7 +148,7 @@ define([
             that._tileHeight = resource.imageHeight;
             that._maximumLevel = resource.zoomMax - 1;
             that._imageUrlSubdomains = resource.imageUrlSubdomains;
-            that._imageUrlTemplate = resource.imageUrl.replace('{culture}', '');
+            that._imageUrlTemplate = resource.imageUrl.replace('{culture}', that._culture);
 
             var tileProtocol = that._tileProtocol;
             if (!defined(tileProtocol)) {
@@ -212,6 +216,7 @@ define([
          * Gets the name of the BingMaps server url hosting the imagery.
          * @memberof BingMapsImageryProvider.prototype
          * @type {String}
+         * @readonly
          */
         url : {
             get : function() {
@@ -223,6 +228,7 @@ define([
          * Gets the proxy used by this provider.
          * @memberof BingMapsImageryProvider.prototype
          * @type {Proxy}
+         * @readonly
          */
         proxy : {
             get : function() {
@@ -235,6 +241,7 @@ define([
          * Gets the Bing Maps key.
          * @memberof BingMapsImageryProvider.prototype
          * @type {String}
+         * @readonly
          */
         key : {
             get : function() {
@@ -246,6 +253,7 @@ define([
          * Gets the type of Bing Maps imagery to load.
          * @memberof BingMapsImageryProvider.prototype
          * @type {BingMapsStyle}
+         * @readonly
          */
         mapStyle : {
             get : function() {
@@ -254,10 +262,25 @@ define([
         },
 
         /**
+         * The culture to use when requesting Bing Maps imagery. Not
+         * all cultures are supported. See {@link http://msdn.microsoft.com/en-us/library/hh441729.aspx}
+         * for information on the supported cultures.
+         * @memberof BingMapsImageryProvider.prototype
+         * @type {String}
+         * @readonly
+         */
+        culture : {
+            get : function() {
+                return this._culture;
+            }
+        },
+
+        /**
          * Gets the width of each tile, in pixels. This function should
          * not be called before {@link BingMapsImageryProvider#ready} returns true.
          * @memberof BingMapsImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         tileWidth : {
             get : function() {
@@ -276,6 +299,7 @@ define([
          * not be called before {@link BingMapsImageryProvider#ready} returns true.
          * @memberof BingMapsImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         tileHeight: {
             get : function() {
@@ -295,6 +319,7 @@ define([
          * not be called before {@link BingMapsImageryProvider#ready} returns true.
          * @memberof BingMapsImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         maximumLevel : {
             get : function() {
@@ -313,6 +338,7 @@ define([
          * not be called before {@link BingMapsImageryProvider#ready} returns true.
          * @memberof BingMapsImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         minimumLevel : {
             get : function() {
@@ -331,6 +357,7 @@ define([
          * not be called before {@link BingMapsImageryProvider#ready} returns true.
          * @memberof BingMapsImageryProvider.prototype
          * @type {TilingScheme}
+         * @readonly
          */
         tilingScheme : {
             get : function() {
@@ -349,6 +376,7 @@ define([
          * not be called before {@link BingMapsImageryProvider#ready} returns true.
          * @memberof BingMapsImageryProvider.prototype
          * @type {Rectangle}
+         * @readonly
          */
         rectangle : {
             get : function() {
@@ -369,6 +397,7 @@ define([
          * not be called before {@link BingMapsImageryProvider#ready} returns true.
          * @memberof BingMapsImageryProvider.prototype
          * @type {TileDiscardPolicy}
+         * @readonly
          */
         tileDiscardPolicy : {
             get : function() {
@@ -388,6 +417,7 @@ define([
          * are passed an instance of {@link TileProviderError}.
          * @memberof BingMapsImageryProvider.prototype
          * @type {Event}
+         * @readonly
          */
         errorEvent : {
             get : function() {
@@ -399,6 +429,7 @@ define([
          * Gets a value indicating whether or not the provider is ready for use.
          * @memberof BingMapsImageryProvider.prototype
          * @type {Boolean}
+         * @readonly
          */
         ready : {
             get : function() {
@@ -411,6 +442,7 @@ define([
          * the source of the imagery.  This function should not be called before {@link BingMapsImageryProvider#ready} returns true.
          * @memberof BingMapsImageryProvider.prototype
          * @type {Credit}
+         * @readonly
          */
         credit : {
             get : function() {
@@ -426,6 +458,7 @@ define([
          * and texture upload time.
          * @memberof BingMapsImageryProvider.prototype
          * @type {Boolean}
+         * @readonly
          */
         hasAlphaChannel : {
             get : function() {
@@ -597,8 +630,8 @@ define([
             for (var areaIndex = 0, areaLength = attribution.coverageAreas.length; !included && areaIndex < areaLength; ++areaIndex) {
                 var area = coverageAreas[areaIndex];
                 if (level >= area.zoomMin && level <= area.zoomMax) {
-                    var intersection = Rectangle.intersectWith(rectangle, area.bbox, intersectionScratch);
-                    if (!Rectangle.isEmpty(intersection)) {
+                    var intersection = Rectangle.intersection(rectangle, area.bbox, intersectionScratch);
+                    if (defined(intersection)) {
                         included = true;
                     }
                 }

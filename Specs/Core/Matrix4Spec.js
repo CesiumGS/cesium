@@ -578,6 +578,27 @@ defineSuite([
         expect(left).toEqual(expected);
     });
 
+    it('multiplyByMatrix3 works', function() {
+        var left = Matrix4.fromRotationTranslation(Matrix3.fromRotationZ(CesiumMath.toRadians(45.0)), new Cartesian3(1.0, 2.0, 3.0));
+        var rightRotation = Matrix3.fromRotationX(CesiumMath.toRadians(30.0));
+        var right = Matrix4.fromRotationTranslation(rightRotation);
+        var expected = new Matrix4.multiplyTransformation(left, right, new Matrix4());
+        var result = new Matrix4();
+        var returnedResult = Matrix4.multiplyByMatrix3(left, rightRotation, result);
+        expect(returnedResult).toBe(result);
+        expect(result).toEqual(expected);
+    });
+
+    it('multiplyByMatrix3 works with a result parameter that is an input result parameter', function() {
+        var left = Matrix4.fromRotationTranslation(Matrix3.fromRotationZ(CesiumMath.toRadians(45.0)), new Cartesian3(1.0, 2.0, 3.0));
+        var rightRotation = Matrix3.fromRotationX(CesiumMath.toRadians(30.0));
+        var right = Matrix4.fromRotationTranslation(rightRotation);
+        var expected = new Matrix4.multiplyTransformation(left, right, new Matrix4());
+        var returnedResult = Matrix4.multiplyByMatrix3(left, rightRotation, left);
+        expect(returnedResult).toBe(left);
+        expect(left).toEqual(expected);
+    });
+
     it('multiplyByTranslation works', function() {
         var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
         var translation = new Cartesian3(17, 18, 19);
@@ -891,6 +912,16 @@ defineSuite([
         expect(Matrix4.multiply(returnedResult, matrix, new Matrix4())).toEqualEpsilon(Matrix4.IDENTITY, CesiumMath.EPSILON15);
     });
 
+    it('inverse translates zero scale matrix', function() {
+        var matrix = Matrix4.fromTranslation(new Cartesian3(1.0, 2.0, 3.0));
+        matrix = Matrix4.multiplyByUniformScale(matrix, 0.0, matrix);
+        var expected = Matrix4.fromTranslation(new Cartesian3(-1.0, -2.0, -3.0));
+        expected = Matrix4.multiplyByUniformScale(expected, 0.0, expected);
+
+        var result = Matrix4.inverse(matrix, new Matrix4());
+        expect(expected).toEqualEpsilon(result, CesiumMath.EPSILON20);
+    });
+
     it('inverseTransformation works', function() {
         var matrix = new Matrix4(1, 0, 0, 10,
                                  0, 0, 1, 20,
@@ -960,12 +991,6 @@ defineSuite([
     it('fromRotationTranslation throws without rotation parameter', function() {
         expect(function() {
             Matrix4.fromRotationTranslation(undefined, new Cartesian3());
-        }).toThrowDeveloperError();
-    });
-
-    it('fromRotationTranslation throws without translation parameter', function() {
-        expect(function() {
-            Matrix4.fromRotationTranslation(new Matrix4(), undefined);
         }).toThrowDeveloperError();
     });
 
@@ -1508,6 +1533,24 @@ defineSuite([
     it('multiplyTransformation throws without result parameter', function() {
         expect(function() {
             Matrix4.multiplyTransformation(new Matrix4(), new Matrix4());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyByMatrix3 throws without left parameter', function() {
+        expect(function() {
+            Matrix4.multiplyByMatrix3();
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyByMatrix3 throws without matrix parameter', function() {
+        expect(function() {
+            Matrix4.multiplyByMatrix3(new Matrix4());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyByMatrix3 throws without rotation parameter', function() {
+        expect(function() {
+            Matrix4.multiplyByMatrix3(new Matrix4(), new Matrix3());
         }).toThrowDeveloperError();
     });
 

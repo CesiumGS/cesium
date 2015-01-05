@@ -17,7 +17,10 @@ defineSuite([
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'DataSources/WallGraphics',
-        'Scene/PrimitiveCollection'
+        'Scene/PrimitiveCollection',
+        'Specs/createDynamicProperty',
+        'Specs/createScene',
+        'Specs/destroyScene'
     ], function(
         WallGeometryUpdater,
         Cartesian3,
@@ -36,13 +39,28 @@ defineSuite([
         SampledProperty,
         TimeIntervalCollectionProperty,
         WallGraphics,
-        PrimitiveCollection) {
+        PrimitiveCollection,
+        createDynamicProperty,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    var time = new JulianDate(0, 0);
-    var time2 = new JulianDate(1, 0);
-    var time3 = new JulianDate(2, 0);
+    var time;
+    var time2;
+    var time3;
+    var scene;
+
+    beforeAll(function() {
+        scene = createScene();
+        time = new JulianDate(0, 0);
+        time2 = new JulianDate(10, 0);
+        time3 = new JulianDate(20, 0);
+    });
+
+    afterAll(function() {
+        destroyScene(scene);
+    });
 
     function createBasicWall() {
         var wall = new WallGraphics();
@@ -59,7 +77,7 @@ defineSuite([
 
     it('Constructor sets expected defaults', function() {
         var entity = new Entity();
-        var updater = new WallGeometryUpdater(entity);
+        var updater = new WallGeometryUpdater(entity, scene);
 
         expect(updater.isDestroyed()).toBe(false);
         expect(updater.entity).toBe(entity);
@@ -70,6 +88,7 @@ defineSuite([
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
+        expect(updater.outlineWidth).toBe(1.0);
         expect(updater.isDynamic).toBe(false);
         expect(updater.isOutlineVisible(time)).toBe(false);
         expect(updater.isFilled(time)).toBe(false);
@@ -79,7 +98,7 @@ defineSuite([
 
     it('No geometry available when wall is undefined ', function() {
         var entity = createBasicWall();
-        var updater = new WallGeometryUpdater(entity);
+        var updater = new WallGeometryUpdater(entity, scene);
         entity.wall = undefined;
 
         expect(updater.fillEnabled).toBe(false);
@@ -89,7 +108,7 @@ defineSuite([
 
     it('No geometry available when not filled or outline.', function() {
         var entity = createBasicWall();
-        var updater = new WallGeometryUpdater(entity);
+        var updater = new WallGeometryUpdater(entity, scene);
         entity.wall.fill = new ConstantProperty(false);
         entity.wall.outline = new ConstantProperty(false);
 
@@ -100,7 +119,7 @@ defineSuite([
 
     it('Values correct when using default graphics', function() {
         var entity = createBasicWall();
-        var updater = new WallGeometryUpdater(entity);
+        var updater = new WallGeometryUpdater(entity, scene);
 
         expect(updater.isClosed).toBe(false);
         expect(updater.fillEnabled).toBe(true);
@@ -109,19 +128,28 @@ defineSuite([
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
+        expect(updater.outlineWidth).toBe(1.0);
         expect(updater.isDynamic).toBe(false);
     });
 
     it('Wall material is correctly exposed.', function() {
         var entity = createBasicWall();
-        var updater = new WallGeometryUpdater(entity);
+        var updater = new WallGeometryUpdater(entity, scene);
         entity.wall.material = new GridMaterialProperty(Color.BLUE);
         expect(updater.fillMaterialProperty).toBe(entity.wall.material);
     });
 
+    it('A time-varying outlineWidth causes geometry to be dynamic', function() {
+        var entity = createBasicWall();
+        var updater = new WallGeometryUpdater(entity, scene);
+        entity.wall.outlineWidth = new SampledProperty(Number);
+        entity.wall.outlineWidth.addSample(time, 1);
+        expect(updater.isDynamic).toBe(true);
+    });
+
     it('A time-varying positions causes geometry to be dynamic', function() {
         var entity = createBasicWall();
-        var updater = new WallGeometryUpdater(entity);
+        var updater = new WallGeometryUpdater(entity, scene);
         var point1 = new SampledPositionProperty();
         point1.addSample(time, new Cartesian3());
         var point2 = new SampledPositionProperty();
@@ -136,7 +164,7 @@ defineSuite([
 
     it('A time-varying minimumHeights causes geometry to be dynamic', function() {
         var entity = createBasicWall();
-        var updater = new WallGeometryUpdater(entity);
+        var updater = new WallGeometryUpdater(entity, scene);
         entity.wall.minimumHeights = new TimeIntervalCollectionProperty();
         entity.wall.minimumHeights.intervals.addInterval(new TimeInterval({
             start : time,
@@ -148,7 +176,7 @@ defineSuite([
 
     it('A time-varying maximumHeights causes geometry to be dynamic', function() {
         var entity = createBasicWall();
-        var updater = new WallGeometryUpdater(entity);
+        var updater = new WallGeometryUpdater(entity, scene);
         entity.wall.maximumHeights = new TimeIntervalCollectionProperty();
         entity.wall.maximumHeights.intervals.addInterval(new TimeInterval({
             start : time,
@@ -160,7 +188,7 @@ defineSuite([
 
     it('A time-varying granularity causes geometry to be dynamic', function() {
         var entity = createBasicWall();
-        var updater = new WallGeometryUpdater(entity);
+        var updater = new WallGeometryUpdater(entity, scene);
         entity.wall.granularity = new SampledProperty(Number);
         entity.wall.granularity.addSample(time, 1);
         expect(updater.isDynamic).toBe(true);
@@ -179,7 +207,7 @@ defineSuite([
         wall.outlineColor = new ConstantProperty(options.outlineColor);
         wall.granularity = new ConstantProperty(options.granularity);
 
-        var updater = new WallGeometryUpdater(entity);
+        var updater = new WallGeometryUpdater(entity, scene);
 
         var instance;
         var geometry;
@@ -239,6 +267,13 @@ defineSuite([
         });
     });
 
+    it('Correctly exposes outlineWidth', function() {
+        var entity = createBasicWall();
+        entity.wall.outlineWidth = new ConstantProperty(8);
+        var updater = new WallGeometryUpdater(entity, scene);
+        expect(updater.outlineWidth).toBe(8);
+    });
+
     it('Attributes have expected values at creation time', function() {
         var fill = new TimeIntervalCollectionProperty();
         fill.intervals.addInterval(new TimeInterval({
@@ -283,7 +318,7 @@ defineSuite([
         entity.wall.outline = outline;
         entity.wall.outlineColor = outlineColor;
 
-        var updater = new WallGeometryUpdater(entity);
+        var updater = new WallGeometryUpdater(entity, scene);
 
         var instance = updater.createFillGeometryInstance(time2);
         var attributes = instance.attributes;
@@ -297,56 +332,56 @@ defineSuite([
     });
 
     it('dynamic updater sets properties', function() {
-        function makeProperty(value1, value2) {
-            var property = new TimeIntervalCollectionProperty();
-            property.intervals.addInterval(new TimeInterval({
-                start : time,
-                stop : time2,
-                isStopIncluded : false,
-                data : value1
-            }));
-            property.intervals.addInterval(new TimeInterval({
-                start : time2,
-                stop : time3,
-                isStopIncluded : false,
-                data : value2
-            }));
-            return property;
-        }
+        var wall = new WallGraphics();
+        wall.positions = createDynamicProperty(Cartesian3.fromRadiansArray([0, 0, 1, 0, 1, 1, 0, 1]));
+        wall.show = createDynamicProperty(true);
+        wall.minimumHeights = createDynamicProperty([1, 2, 3, 4]);
+        wall.maximumHeights = createDynamicProperty([2, 3, 4, 5]);
+        wall.granularity = createDynamicProperty(1);
+        wall.fill = createDynamicProperty(true);
+        wall.outline = createDynamicProperty(true);
+        wall.outlineColor = createDynamicProperty(Color.RED);
 
-        var entity = createBasicWall();
+        var entity = new Entity();
+        entity.wall = wall;
 
-        var wall = entity.wall;
-        wall.show = makeProperty(true, false);
-        wall.minimumHeights = makeProperty([1, 2, 3, 4], [5, 6, 7, 8]);
-        wall.maximumHeights = makeProperty([2, 3, 4, 5], [6, 7, 8, 9]);
-        wall.granularity = makeProperty(1, 2);
-        wall.fill = makeProperty(false, true);
-        wall.outline = makeProperty(true, false);
-        wall.outlineColor = makeProperty(Color.RED, Color.BLUE);
-
-        entity.availability = new TimeIntervalCollection();
-        entity.availability.addInterval(new TimeInterval({
-            start : time,
-            stop : time3,
-            isStopIncluded : false
-        }));
-
-        var updater = new WallGeometryUpdater(entity);
+        var updater = new WallGeometryUpdater(entity, scene);
         var primitives = new PrimitiveCollection();
         var dynamicUpdater = updater.createDynamicUpdater(primitives);
         expect(dynamicUpdater.isDestroyed()).toBe(false);
         expect(primitives.length).toBe(0);
+
         dynamicUpdater.update(time);
-        expect(primitives.length).toBe(1);
-        dynamicUpdater.destroy();
+        expect(primitives.length).toBe(2);
+
+        var options = dynamicUpdater._options;
+        expect(options.id).toEqual(entity);
+        expect(options.positions).toEqual(wall.positions.getValue());
+        expect(options.minimumHeights).toEqual(wall.minimumHeights.getValue());
+        expect(options.maximumHeights).toEqual(wall.maximumHeights.getValue());
+        expect(options.granularity).toEqual(wall.granularity.getValue());
+
+        //If a dynamic show returns false, the primitive should go away.
+        wall.show.setValue(false);
+        dynamicUpdater.update(time);
         expect(primitives.length).toBe(0);
+
+        wall.show.setValue(true);
+        dynamicUpdater.update(time);
+        expect(primitives.length).toBe(2);
+
+        //If a dynamic position returns undefined, the primitive should go away.
+        wall.positions.setValue(undefined);
+        dynamicUpdater.update(time);
+        expect(primitives.length).toBe(0);
+
+        dynamicUpdater.destroy();
         updater.destroy();
     });
 
     it('geometryChanged event is raised when expected', function() {
         var entity = createBasicWall();
-        var updater = new WallGeometryUpdater(entity);
+        var updater = new WallGeometryUpdater(entity, scene);
         var listener = jasmine.createSpy('listener');
         updater.geometryChanged.addEventListener(listener);
 
@@ -372,7 +407,7 @@ defineSuite([
 
     it('createFillGeometryInstance throws if object is not filled', function() {
         var entity = new Entity();
-        var updater = new WallGeometryUpdater(entity);
+        var updater = new WallGeometryUpdater(entity, scene);
         expect(function() {
             return updater.createFillGeometryInstance(time);
         }).toThrowDeveloperError();
@@ -380,7 +415,7 @@ defineSuite([
 
     it('createFillGeometryInstance throws if no time provided', function() {
         var entity = createBasicWall();
-        var updater = new WallGeometryUpdater(entity);
+        var updater = new WallGeometryUpdater(entity, scene);
         expect(function() {
             return updater.createFillGeometryInstance(undefined);
         }).toThrowDeveloperError();
@@ -388,7 +423,7 @@ defineSuite([
 
     it('createOutlineGeometryInstance throws if object is not outlined', function() {
         var entity = new Entity();
-        var updater = new WallGeometryUpdater(entity);
+        var updater = new WallGeometryUpdater(entity, scene);
         expect(function() {
             return updater.createOutlineGeometryInstance(time);
         }).toThrowDeveloperError();
@@ -397,7 +432,7 @@ defineSuite([
     it('createOutlineGeometryInstance throws if no time provided', function() {
         var entity = createBasicWall();
         entity.wall.outline = new ConstantProperty(true);
-        var updater = new WallGeometryUpdater(entity);
+        var updater = new WallGeometryUpdater(entity, scene);
         expect(function() {
             return updater.createOutlineGeometryInstance(undefined);
         }).toThrowDeveloperError();
@@ -405,7 +440,7 @@ defineSuite([
 
     it('createDynamicUpdater throws if not dynamic', function() {
         var entity = createBasicWall();
-        var updater = new WallGeometryUpdater(entity);
+        var updater = new WallGeometryUpdater(entity, scene);
         expect(function() {
             return updater.createDynamicUpdater(new PrimitiveCollection());
         }).toThrowDeveloperError();
@@ -415,7 +450,7 @@ defineSuite([
         var entity = createBasicWall();
         entity.wall.granularity = new SampledProperty(Number);
         entity.wall.granularity.addSample(time, 4);
-        var updater = new WallGeometryUpdater(entity);
+        var updater = new WallGeometryUpdater(entity, scene);
         expect(updater.isDynamic).toBe(true);
         expect(function() {
             return updater.createDynamicUpdater(undefined);
@@ -426,7 +461,7 @@ defineSuite([
         var entity = createBasicWall();
         entity.wall.granularity = new SampledProperty(Number);
         entity.wall.granularity.addSample(time, 4);
-        var updater = new WallGeometryUpdater(entity);
+        var updater = new WallGeometryUpdater(entity, scene);
         var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
         expect(function() {
             dynamicUpdater.update(undefined);
@@ -436,6 +471,13 @@ defineSuite([
     it('Constructor throws if no Entity supplied', function() {
         expect(function() {
             return new WallGeometryUpdater(undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('Constructor throws if no scene supplied', function() {
+        var entity = createBasicWall();
+        expect(function() {
+            return new WallGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
     });
 });

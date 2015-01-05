@@ -31,7 +31,7 @@ defineSuite([
         expect(property.getValue(time)).toEqual(expected);
     });
 
-    it('setValue rasies definitionChanged event', function() {
+    it('setValue raises definitionChanged event', function() {
         var property = new PositionPropertyArray();
         var listener = jasmine.createSpy('listener');
         property.definitionChanged.addEventListener(listener);

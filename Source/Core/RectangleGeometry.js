@@ -170,9 +170,9 @@ define([
             var p = Cartesian3.fromArray(positions, i, positionScratch);
 
             if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
-                var p1 = Cartesian3.fromArray(positions, i + 6, v1Scratch);
+                var p1 = Cartesian3.fromArray(positions, (i + 6) % length, v1Scratch);
                 if (recomputeNormal) {
-                    var p2 = Cartesian3.fromArray(positions, i + 3, v2Scratch);
+                    var p2 = Cartesian3.fromArray(positions, (i + 3) % length, v2Scratch);
                     Cartesian3.subtract(p1, p, p1);
                     Cartesian3.subtract(p2, p, p2);
                     normal = Cartesian3.normalize(Cartesian3.cross(p2, p1, normal), normal);
@@ -242,6 +242,12 @@ define([
 
         var position = positionScratch;
         var st = stScratch;
+
+        var minX = Number.MAX_VALUE;
+        var minY = Number.MAX_VALUE;
+        var maxX = Number.MIN_VALUE;
+        var maxY = Number.MIN_VALUE;
+
         for (var row = 0; row < height; ++row) {
             for (var col = 0; col < width; ++col) {
                 RectangleGeometryLibrary.computePosition(options, row, col, position, st);
@@ -253,7 +259,19 @@ define([
                 if (vertexFormat.st) {
                     textureCoordinates[stIndex++] = st.x;
                     textureCoordinates[stIndex++] = st.y;
+
+                    minX = Math.min(minX, st.x);
+                    minY = Math.min(minY, st.y);
+                    maxX = Math.max(maxX, st.x);
+                    maxY = Math.max(maxY, st.y);
                 }
+            }
+        }
+
+        if (vertexFormat.st && (minX < 0.0 || minY < 0.0 || maxX > 1.0 || maxY > 1.0)) {
+            for (var k = 0; k < textureCoordinates.length; k += 2) {
+                textureCoordinates[k] = (textureCoordinates[k] - minX) / (maxX - minX);
+                textureCoordinates[k + 1] = (textureCoordinates[k + 1] - minY) / (maxY - minY);
             }
         }
 
@@ -450,14 +468,14 @@ define([
         var index = 0;
         for (i = 0; i < length - 1; i+=2) {
             upperLeft = i;
-            upperRight = upperLeft + 2;
+            upperRight = (upperLeft + 2) % length;
             var p1 = Cartesian3.fromArray(wallPositions, upperLeft * 3, v1Scratch);
             var p2 = Cartesian3.fromArray(wallPositions, upperRight * 3, v2Scratch);
             if (Cartesian3.equalsEpsilon(p1, p2, CesiumMath.EPSILON10)) {
                 continue;
             }
-            lowerLeft = upperLeft + 1;
-            lowerRight = lowerLeft + 2;
+            lowerLeft = (upperLeft + 1) % length;
+            lowerRight = (lowerLeft + 2) % length;
             wallIndices[index++] = upperLeft;
             wallIndices[index++] = lowerLeft;
             wallIndices[index++] = upperRight;
@@ -468,7 +486,7 @@ define([
 
         geo.indices = wallIndices;
 
-        geo = GeometryPipeline.combine([
+        geo = GeometryPipeline.combineInstances([
             new GeometryInstance({
                 geometry : topBottomGeo
             }),
@@ -477,7 +495,7 @@ define([
             })
         ]);
 
-        return geo;
+        return geo[0];
     }
 
     /**
@@ -501,7 +519,6 @@ define([
      * @exception {DeveloperError} <code>options.rectangle.east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
      * @exception {DeveloperError} <code>options.rectangle.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
      * @exception {DeveloperError} <code>options.rectangle.north</code> must be greater than <code>options.rectangle.south</code>.
-     * @exception {DeveloperError} <code>options.rectangle.east</code> must be greater than <code>options.rectangle.west</code>.
      *
      * @see RectangleGeometry#createGeometry
      *
@@ -598,8 +615,8 @@ define([
             Matrix3.clone(Matrix3.IDENTITY, tangentRotationMatrix);
         }
 
-        options.lonScalar = 1.0 / (rectangle.east - rectangle.west);
-        options.latScalar = 1.0 / (rectangle.north - rectangle.south);
+        options.lonScalar = 1.0 / rectangle.width;
+        options.latScalar = 1.0 / rectangle.height;
         options.vertexFormat = vertexFormat;
         options.textureMatrix = textureMatrix;
         options.tangentRotationMatrix = tangentRotationMatrix;

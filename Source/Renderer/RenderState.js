@@ -5,7 +5,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
-        '../Core/FeatureDetection',
         '../Core/RuntimeError',
         '../Core/WindingOrder'
     ], function(
@@ -14,7 +13,6 @@ define([
         defaultValue,
         defined,
         DeveloperError,
-        FeatureDetection,
         RuntimeError,
         WindingOrder) {
     "use strict";
