@@ -18,10 +18,11 @@ define([
     function createScene(options) {
         options = defaultValue(options, {});
 
-        var canvas = defaultValue(options.canvas, createCanvas());
+        // save the canvas so we don't try to clone an HTMLCanvasElement
+        var canvas = defined(options.canvas) ? options.canvas : createCanvas();
         options.canvas = undefined;
 
-        options = clone(defaultValue(options, {}), true);
+        options = clone(options, true);
 
         options.canvas = canvas;
         options.contextOptions = defaultValue(options.contextOptions, {});
