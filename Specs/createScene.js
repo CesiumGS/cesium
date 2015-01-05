@@ -16,9 +16,14 @@ define([
     "use strict";
 
     function createScene(options) {
+        options = defaultValue(options, {});
+
+        var canvas = defaultValue(options.canvas, createCanvas());
+        options.canvas = undefined;
+
         options = clone(defaultValue(options, {}), true);
 
-        options.canvas = defaultValue(options.canvas, createCanvas());
+        options.canvas = canvas;
         options.contextOptions = defaultValue(options.contextOptions, {});
 
         var contextOptions = options.contextOptions;
