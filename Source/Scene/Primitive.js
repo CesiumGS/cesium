@@ -731,14 +731,8 @@ define([
                     for (i = 0; i < length; ++i) {
                         geometry = instances[i].geometry;
                         instanceIds.push(instances[i].id);
-
-                        var moduleName = geometry.constructor.name;
-                        if (moduleName === "Object") {
-                            moduleName = undefined;
-                        }
-
                         subTasks.push({
-                            moduleName : moduleName,
+                            moduleName : geometry._workerName,
                             geometry : geometry
                         });
                     }

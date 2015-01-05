@@ -110,7 +110,7 @@ define([
      * });
      * var geometry = Cesium.PolylineGeometry.createGeometry(polyline);
      */
-    function PolylineGeometry(options) {
+    var PolylineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var positions = options.positions;
         var colors = options.colors;
@@ -137,6 +137,7 @@ define([
         this._followSurface = defaultValue(options.followSurface, true);
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         this._ellipsoid = Ellipsoid.clone(defaultValue(options.ellipsoid, Ellipsoid.WGS84));
+        this._workerName = 'createPolylineGeometry';
 
         var numComponents = 1 + positions.length * Cartesian3.packedLength;
         numComponents += defined(colors) ? 1 + colors.length * Color.packedLength : 1;
@@ -146,7 +147,7 @@ define([
          * @type {Number}
          */
         this.packedLength = numComponents + Ellipsoid.packedLength + VertexFormat.packedLength + 4;
-    }
+    };
 
     /**
      * Stores the provided instance into the provided array.

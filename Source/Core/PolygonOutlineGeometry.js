@@ -298,7 +298,7 @@ define([
      * });
      * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(extrudedPolygon);
      */
-    function PolygonOutlineGeometry(options) {
+    var PolygonOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
@@ -328,13 +328,14 @@ define([
         this._extrude = extrude;
         this._polygonHierarchy = polygonHierarchy;
         this._perPositionHeight = perPositionHeight;
+        this._workerName = 'createPolygonOutlineGeometry';
 
         /**
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
         this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + 5;
-    }
+    };
 
     /**
      * Stores the provided instance into the provided array.

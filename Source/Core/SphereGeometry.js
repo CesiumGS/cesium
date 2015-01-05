@@ -41,7 +41,7 @@ define([
      * });
      * var geometry = Cesium.SphereGeometry.createGeometry(sphere);
      */
-    function SphereGeometry(options) {
+    var SphereGeometry = function(options) {
         var radius = defaultValue(options.radius, 1.0);
         var radii = new Cartesian3(radius, radius, radius);
         var ellipsoidOptions = {
@@ -52,7 +52,8 @@ define([
         };
 
         this._ellipsoidGeometry = new EllipsoidGeometry(ellipsoidOptions);
-    }
+        this._workerName = 'createSphereGeometry';
+    };
 
     /**
      * The number of elements used to pack the object into an array.

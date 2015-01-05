@@ -213,7 +213,7 @@ define([
      *   shapePositions : computeCircle(100000.0)
      * });
      */
-    function PolylineVolumeGeometry(options) {
+    var PolylineVolumeGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var positions = options.polylinePositions;
         var shape = options.shapePositions;
@@ -233,6 +233,7 @@ define([
         this._cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
         this._vertexFormat = VertexFormat.clone(defaultValue(options.vertexFormat, VertexFormat.DEFAULT));
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+        this._workerName = 'createPolylineVolumeGeometry';
 
         var numComponents = 1 + positions.length * Cartesian3.packedLength;
         numComponents += 1 + shape.length * Cartesian2.packedLength;
@@ -242,7 +243,7 @@ define([
          * @type {Number}
          */
         this.packedLength = numComponents + Ellipsoid.packedLength + VertexFormat.packedLength + 2;
-    }
+    };
 
     /**
      * Stores the provided instance into the provided array.

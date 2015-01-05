@@ -128,7 +128,7 @@ define([
      *   shapePositions : computeCircle(100000.0)
      * });
      */
-    function PolylineVolumeOutlineGeometry(options) {
+    var PolylineVolumeOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var positions = options.polylinePositions;
         var shape = options.shapePositions;
@@ -147,6 +147,7 @@ define([
         this._ellipsoid = Ellipsoid.clone(defaultValue(options.ellipsoid, Ellipsoid.WGS84));
         this._cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+        this._workerName = 'createPolylineVolumeOutlineGeometry';
 
         var numComponents = 1 + positions.length * Cartesian3.packedLength;
         numComponents += 1 + shape.length * Cartesian2.packedLength;
@@ -156,7 +157,7 @@ define([
          * @type {Number}
          */
         this.packedLength = numComponents + Ellipsoid.packedLength + 2;
-    }
+    };
 
     /**
      * Stores the provided instance into the provided array.

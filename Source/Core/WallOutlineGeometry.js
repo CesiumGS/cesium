@@ -71,7 +71,7 @@ define([
      * });
      * var geometry = Cesium.WallOutlineGeometry.createGeometry(wall);
      */
-    function WallOutlineGeometry(options) {
+    var WallOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var wallPositions = options.positions;
@@ -98,6 +98,7 @@ define([
         this._maximumHeights = maximumHeights;
         this._granularity = granularity;
         this._ellipsoid = Ellipsoid.clone(ellipsoid);
+        this._workerName = 'createWallOutlineGeometry';
 
         var numComponents = 1 + wallPositions.length * Cartesian3.packedLength + 2;
         if (defined(minimumHeights)) {
@@ -112,7 +113,7 @@ define([
          * @type {Number}
          */
         this.packedLength = numComponents + Ellipsoid.packedLength + 1;
-    }
+    };
 
     /**
      * Stores the provided instance into the provided array.

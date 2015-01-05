@@ -586,7 +586,7 @@ define([
      * });
      * var geometry = Cesium.EllipseGeometry.createGeometry(ellipse);
      */
-    function EllipseGeometry(options) {
+    var EllipseGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var center = options.center;
@@ -631,7 +631,8 @@ define([
         this._vertexFormat = VertexFormat.clone(vertexFormat);
         this._extrudedHeight = defaultValue(extrudedHeight, height);
         this._extrude = extrude;
-    }
+        this._workerName = 'createEllipseGeometry';
+    };
 
     /**
      * The number of elements used to pack the object into an array.

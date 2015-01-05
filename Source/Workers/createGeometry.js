@@ -17,14 +17,9 @@ define([
         var module = moduleCache[moduleName];
         if (!defined(module)) {
             // in web workers, require is synchronous
-            require(['../Core/' + moduleName], function(f) {
-                module = function(geometry, offset) {
-                    if (defined(offset)) {
-                        geometry = f.unpack(geometry, offset);
-                    }
-                    return f.createGeometry(geometry);
-                };
-                moduleCache[moduleName] = module;
+            require(['./' + moduleName], function(f) {
+                module = f;
+                moduleCache[module] = f;
             });
         }
         return module;

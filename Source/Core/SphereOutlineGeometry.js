@@ -39,7 +39,7 @@ define([
      * });
      * var geometry = Cesium.SphereOutlineGeometry.createGeometry(sphere);
      */
-    function SphereOutlineGeometry(options) {
+    var SphereOutlineGeometry = function(options) {
         var radius = defaultValue(options.radius, 1.0);
         var radii = new Cartesian3(radius, radius, radius);
         var ellipsoidOptions = {
@@ -50,7 +50,8 @@ define([
         };
 
         this._ellipsoidGeometry = new EllipsoidOutlineGeometry(ellipsoidOptions);
-    }
+        this._workerName = 'createSphereOutlineGeometry';
+    };
 
     /**
      * The number of elements used to pack the object into an array.
