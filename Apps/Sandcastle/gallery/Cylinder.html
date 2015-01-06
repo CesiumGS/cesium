@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Draw a cylinder or cone.">
+    <meta name="cesium-sandcastle-labels" content="Geometries">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    "use strict";
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer');
+
+var greenCylinder = viewer.entities.add({
+    name : 'Green cylinder with black outline',
+    position: Cesium.Cartesian3.fromDegrees(-100.0, 40.0, 200000.0),
+    cylinder : {
+        length : 400000.0,
+        topRadius : 200000.0,
+        bottomRadius : 200000.0,
+        material : Cesium.Color.GREEN,
+        outline : true,
+        outlineColor : Cesium.Color.DARK_GREEN
+    },
+    viewFrom : new Cesium.Cartesian3(0.0, -1500000.0, 500000.0)
+});
+
+var redCone = viewer.entities.add({
+    name : 'Red cone',
+    position: Cesium.Cartesian3.fromDegrees(-105.0, 40.0, 200000.0),
+    cylinder : {
+        length : 400000.0,
+        topRadius : 0.0,
+        bottomRadius : 200000.0,
+        material : Cesium.Color.RED
+    },
+    viewFrom : new Cesium.Cartesian3(0.0, -1500000.0, 500000.0)
+});
+
+viewer.trackedEntity = greenCylinder;
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>
