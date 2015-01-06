@@ -7,21 +7,24 @@ Change Log
   * `Rectangle.intersectWith` was deprecated in Cesium 1.5. Use `Rectangle.intersection`, which is the same but returns `undefined` when two rectangles do not intersect.
   * `Rectangle.isEmpty` was deprecated in Cesium 1.5.
   * The `sourceUri` parameter to `GeoJsonDatasource.load` was deprecated in Cesium 1.4 and has been removed. Use options.sourceUri instead.
+  * `PolygonGraphics.positions` created by `GeoJSONDataSource` now evaluate to a `PolygonHierarchy` object instead of an array of positions.
 * Deprecated
-  *
+  * `PolygonGraphics.positions` was deprecated and replaced with `PolygonGraphics.hierarchy`, whose value is a `PolygonHierarchy` instead of an array of positions.  `PolygonGraphics.positions` will be removed in Cesium 1.8.
 * Added `PolylineVolumeGraphics` and `Entity.polylineVolume`
+* Added `PolygonHierarchy` to make defining polygons with holes clearer.
+* Added `PolygonGraphics.hierarchy` for supporting polygons with holes via data sources.
+* `GeoJsonDataSource` now supports polygons with holes.
+* `ConstantProperty` can now hold any value; previously it was limited to values that implemented `equals` and `clones` functions, as well as a few special cases.
 
 ### 1.5 - 2015-01-05
 
 * Breaking changes
   * Removed `GeometryPipeline.wrapLongitude`, which was deprecated in 1.4.  Use `GeometryPipeline.splitLongitude` instead.
   * Removed `GeometryPipeline.combine`, which was deprecated in 1.4.  Use `GeometryPipeline.combineInstances` instead.
-  * `PolygonGraphics.positions` created by `GeoJSONDataSource` now evaluate to a `PolygonHierarchy` object instead of an array of positions.
 * Deprecated
   * `viewerEntityMixin` was deprecated. It will be removed in Cesium 1.6. Its functionality is now directly part of the `Viewer` widget.
   * `Rectangle.intersectWith` was deprecated. It will be removed in Cesium 1.6. Use `Rectangle.intersection`, which is the same but returns `undefined` when two rectangles do not intersect.
   * `Rectangle.isEmpty` was deprecated. It will be removed in Cesium 1.6.
-  * `PolygonGraphics.positions` was deprecated and replaced with `PolygonGraphics.hierarchy`, whose value is a `PolygonHierarchy` instead of an array of positions.  `PolygonGraphics.positions` will be removed in Cesium 1.8.
 * Improved GeoJSON, TopoJSON, and general polygon loading performance.
 * Added caching to `Model` to save memory and improve loading speed when several models with the same url are created.
 * Added `ModelNode.show` for per-node show/hide.
@@ -36,10 +39,6 @@ Change Log
 * Fixed a bug in `PolylineGeometry` that would cause gaps in the line. [#2136](https://github.com/AnalyticalGraphicsInc/cesium/issues/2136)
 * Fixed `upsampleQuantizedTerrainMesh` rounding errors that had occasionally led to missing terrain skirt geometry in upsampled tiles.
 * Added `Math.mod` which computes `m % n` but also works when `m` is negative.
-* Added `PolygonHierarchy` to make defining polygons with holes clearer.
-* Added `PolygonGraphics.hierarchy` for supporting polygons with holes via data sources.
-* `GeoJsonDataSource` now supports polygons with holes.
-* `ConstantProperty` can now hold any value; previously it was limited to values that implemented `equals` and `clones` functions, as well as a few special cases.
 
 ### 1.4 - 2014-12-01
 
