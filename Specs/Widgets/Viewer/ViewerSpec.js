@@ -27,6 +27,7 @@ defineSuite([
         'Widgets/Geocoder/Geocoder',
         'Widgets/HomeButton/HomeButton',
         'Widgets/SceneModePicker/SceneModePicker',
+        'Widgets/SelectionIndicator/SelectionIndicator',
         'Widgets/Timeline/Timeline'
     ], function(
         Viewer,
@@ -56,6 +57,7 @@ defineSuite([
         Geocoder,
         HomeButton,
         SceneModePicker,
+        SelectionIndicator,
         Timeline) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -106,6 +108,7 @@ defineSuite([
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        expect(viewer.selectionIndicator).toBeInstanceOf(SelectionIndicator);
         expect(viewer.imageryLayers).toBeInstanceOf(ImageryLayerCollection);
         expect(viewer.terrainProvider).toBeInstanceOf(EllipsoidTerrainProvider);
         expect(viewer.camera).toBeInstanceOf(Camera);
@@ -137,6 +140,7 @@ defineSuite([
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        expect(viewer.selectionIndicator).toBeInstanceOf(SelectionIndicator);
         viewer.resize();
         viewer.render();
     });
@@ -154,6 +158,7 @@ defineSuite([
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        expect(viewer.selectionIndicator).toBeInstanceOf(SelectionIndicator);
         viewer.resize();
         viewer.render();
     });
@@ -171,6 +176,7 @@ defineSuite([
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        expect(viewer.selectionIndicator).toBeInstanceOf(SelectionIndicator);
         viewer.resize();
         viewer.render();
     });
@@ -188,6 +194,7 @@ defineSuite([
         expect(viewer.animation).toBeUndefined();
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        expect(viewer.selectionIndicator).toBeInstanceOf(SelectionIndicator);
         viewer.resize();
         viewer.render();
     });
@@ -205,6 +212,7 @@ defineSuite([
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeUndefined();
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        expect(viewer.selectionIndicator).toBeInstanceOf(SelectionIndicator);
         viewer.resize();
         viewer.render();
     });
@@ -222,6 +230,7 @@ defineSuite([
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeUndefined();
+        expect(viewer.selectionIndicator).toBeInstanceOf(SelectionIndicator);
         viewer.resize();
         viewer.render();
     });
@@ -240,6 +249,7 @@ defineSuite([
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeUndefined();
         expect(viewer.fullscreenButton).toBeUndefined();
+        expect(viewer.selectionIndicator).toBeInstanceOf(SelectionIndicator);
         viewer.resize();
         viewer.render();
     });
@@ -259,6 +269,7 @@ defineSuite([
         expect(viewer.animation).toBeUndefined(Animation);
         expect(viewer.timeline).toBeUndefined();
         expect(viewer.fullscreenButton).toBeUndefined();
+        expect(viewer.selectionIndicator).toBeInstanceOf(SelectionIndicator);
         viewer.resize();
         viewer.render();
     });
@@ -276,6 +287,25 @@ defineSuite([
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        expect(viewer.selectionIndicator).toBeInstanceOf(SelectionIndicator);
+        viewer.resize();
+        viewer.render();
+    });
+
+    it('can shut off SelectionIndicator', function() {
+        viewer = new Viewer(container, {
+            selectionIndicator : false
+        });
+        expect(viewer.container).toBe(container);
+        expect(viewer.cesiumWidget).toBeInstanceOf(CesiumWidget);
+        expect(viewer.geocoder).toBeInstanceOf(Geocoder);
+        expect(viewer.homeButton).toBeInstanceOf(HomeButton);
+        expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
+        expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.animation).toBeInstanceOf(Animation);
+        expect(viewer.timeline).toBeInstanceOf(Timeline);
+        expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        expect(viewer.selectionIndicator).toBeUndefined();
         viewer.resize();
         viewer.render();
     });
