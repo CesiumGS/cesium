@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+### 1.6 - 2015-02-??
+
+* Breaking changes
+  *
+* Deprecated
+  *
+* `WebMapTileServiceImageryProvider` now supports RESTful requests (by accepting a tile-URL template).
+
 ### 1.5 - 2015-01-05
 
 * Breaking changes
