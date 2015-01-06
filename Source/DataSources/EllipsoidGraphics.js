@@ -34,6 +34,8 @@ define([
         this._slicePartitionsSubscription = undefined;
         this._subdivisions = undefined;
         this._subdivisionsSubscription = undefined;
+        this._fill = undefined;
+        this._fillSubscription = undefined;
         this._outline = undefined;
         this._outlineSubscription = undefined;
         this._outlineColor = undefined;
