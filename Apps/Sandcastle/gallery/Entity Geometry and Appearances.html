@@ -28,9 +28,8 @@ function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
 Cesium.Math.setRandomNumberSeed(1234);
-var viewer = new Cesium.Viewer('cesiumContainer');
 
-// Combine instances for an rectangle, polygon, ellipse, and circle into a single primitive.
+var viewer = new Cesium.Viewer('cesiumContainer');
 var entities = viewer.entities;
 
 var i;
@@ -514,7 +513,6 @@ entities.add({
     }
 });
 
-/*
 function starPositions(arms, rOuter, rInner) {
     var angle = Math.PI / arms;
     var pos = [];
@@ -526,44 +524,26 @@ function starPositions(arms, rOuter, rInner) {
     return pos;
 }
 
-positions = Cesium.Cartesian3.fromDegreesArrayHeights([
-    -102.0, 15.0, 100000.0,
-    -105.0, 20.0, 200000.0,
-    -110.0, 20.0, 100000.0
-]);
-var polylineVolumeFill = new Cesium.GeometryInstance({
-    geometry : new Cesium.PolylineVolumeGeometry({
-        polylinePositions : positions,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        shapePositions : starPositions(7, 30000.0, 20000.0)
-    }),
-    attributes : {
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
+entities.add({
+    polylineVolume : {
+        positions : Cesium.Cartesian3.fromDegreesArrayHeights([-102.0, 15.0, 100000.0,
+                                                               -105.0, 20.0, 200000.0,
+                                                               -110.0, 20.0, 100000.0]),
+        shape : starPositions(7, 30000.0, 20000.0),
+        outline : true,
+        outlineColor : Cesium.Color.WHITE,
+        outlineWidth : 1,
+        material : Cesium.Color.fromRandom({alpha : 1.0})
     }
 });
 
-var polylineVolumeOutline = new Cesium.GeometryInstance({
-    geometry : new Cesium.PolylineVolumeOutlineGeometry({
-        polylinePositions : positions,
-        shapePositions : starPositions(7, 30000.0, 20000.0)
-    }),
-    attributes : {
-        color : solidWhite
-    }
-});
-
-var polylineVolume = new Cesium.GeometryInstance({
-    geometry : new Cesium.PolylineVolumeGeometry({
-        polylinePositions : Cesium.Cartesian3.fromDegreesArray([
-            -102.0, 15.0,
-            -105.0, 20.0,
-            -110.0, 20.0
-        ]),
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        shapePositions : starPositions(7, 30000, 20000)
-    }),
-    attributes : {
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
+entities.add({
+    polylineVolume : {
+        positions : Cesium.Cartesian3.fromDegreesArray([-102.0, 15.0,
+                                                        -105.0, 20.0,
+                                                        -110.0, 20.0]),
+        shape : starPositions(7, 30000.0, 20000.0),
+        material : Cesium.Color.fromRandom({alpha : 1.0})
     }
 });
 
@@ -576,41 +556,16 @@ function computeCircle(radius) {
     return positions;
 }
 
-var tubeGeometry = new Cesium.GeometryInstance({
-    geometry : new Cesium.PolylineVolumeGeometry({
-        polylinePositions : Cesium.Cartesian3.fromDegreesArray([
-            -104.0, 13.0,
-            -107.0, 18.0,
-            -112.0, 18.0
-        ]),
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        shapePositions : computeCircle(40000.0)
-    }),
-    attributes : {
-        color : solidWhite
+entities.add({
+    polylineVolume : {
+        positions : Cesium.Cartesian3.fromDegreesArray([-104.0, 13.0,
+                                                        -107.0, 18.0,
+                                                        -112.0, 18.0]),
+        shape : computeCircle(40000.0),
+        material : Cesium.Color.WHITE
     }
 });
-
-primitives.add(new Cesium.Primitive({
-    geometryInstances : [tubeGeometry, polylineVolume, polylineVolumeFill],
-    appearance : new Cesium.PerInstanceColorAppearance({
-        translucent : false,
-        closed : true
-    })
-}));
-
-primitives.add(new Cesium.Primitive({
-    geometryInstances : polylineVolumeOutline,
-    appearance : new Cesium.PerInstanceColorAppearance({
-        flat : true,
-        translucent : false,
-        renderState : {
-            lineWidth : 1.0
-        }
-    })
-}));
- */
- //Sandcastle_End
+//Sandcastle_End
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {

@@ -30,46 +30,56 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer', {timeline : false, animation : false});
 
 var pinBuilder = new Cesium.PinBuilder();
-var billboardCollection = viewer.scene.primitives.add(new Cesium.BillboardCollection());
 
-//Create a blank, solid colored pin.
-billboardCollection.add({
-    image : pinBuilder.fromColor(Cesium.Color.ROYALBLUE, 48),
-    verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
-    position : Cesium.Cartesian3.fromDegrees(-75.170726, 39.9208667, 0)
-});
-    
-//Create a black pin labeled with a question mark.
-billboardCollection.add({
-    image : pinBuilder.fromText('?', Cesium.Color.BLACK, 48),
-    verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
-    position : Cesium.Cartesian3.fromDegrees(-75.1698529, 39.9220071, 0)
+var bluePin = viewer.entities.add({
+    name : 'Blank blue pin',
+    position : Cesium.Cartesian3.fromDegrees(-75.170726, 39.9208667),
+    billboard : {
+        image : pinBuilder.fromColor(Cesium.Color.ROYALBLUE, 48).toDataURL(),
+        verticalOrigin : Cesium.VerticalOrigin.BOTTOM
+    }
 });
 
-//Create a green pin labeled with a png file on the server.
+var questionPin = viewer.entities.add({
+    name : 'Question mark',
+    position : Cesium.Cartesian3.fromDegrees(-75.1698529, 39.9220071),
+    billboard : {
+        image : pinBuilder.fromText('?', Cesium.Color.BLACK, 48).toDataURL(),
+        verticalOrigin : Cesium.VerticalOrigin.BOTTOM
+    }
+});
+
 var url = Cesium.buildModuleUrl('Assets/Textures/maki/grocery.png');
-Cesium.when(pinBuilder.fromUrl(url, Cesium.Color.GREEN, 48), function(canvas){
-    billboardCollection.add({
-        image : canvas,
-        verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
-        position : Cesium.Cartesian3.fromDegrees(-75.1705217, 39.921786, 0)
+Cesium.when(pinBuilder.fromUrl(url, Cesium.Color.GREEN, 48), function(canvas) {
+    var groceryPin = viewer.entities.add({
+        name : 'Grocery store',
+        position : Cesium.Cartesian3.fromDegrees(-75.1705217, 39.921786),
+        billboard : {
+            image : canvas.toDataURL(),
+            verticalOrigin : Cesium.VerticalOrigin.BOTTOM
+        }
     });
 });
 
 //Create a red pin representing a hospital from the maki icon set.
 Cesium.when(pinBuilder.fromMakiIconId('hospital', Cesium.Color.RED, 48), function(canvas) {
-    billboardCollection.add({
-        image : canvas,
-        verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
-        position : Cesium.Cartesian3.fromDegrees(-75.1698606, 39.9211275, 0)
+    var hospitlPin = viewer.entities.add({
+        name : 'Hospital',
+        position : Cesium.Cartesian3.fromDegrees(-75.1698606, 39.9211275),
+        billboard : {
+            image : canvas.toDataURL(),
+            verticalOrigin : Cesium.VerticalOrigin.BOTTOM
+        }
     });
 });
 
 //Set the view to the location of our pins.
 viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(-75.1703817, 39.9182722, 250),
-              Cesium.Cartesian3.fromDegrees(-75.1703817, 39.9212722, 0), Cesium.Cartesian3.UNIT_Z);
+                     Cesium.Cartesian3.fromDegrees(-75.1703817, 39.9212722, 0),
+                     Cesium.Cartesian3.UNIT_Z);
+
 //Sandcastle_End
-    Sandcastle.finishedLoading();
+Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
     startup(Cesium);

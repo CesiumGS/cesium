@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Draw a polygon or extruded polygon on the globe surface.">
+    <meta name="cesium-sandcastle-labels" content="Geometries">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    "use strict";
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer');
+
+var redPolygon = viewer.entities.add({
+    name : 'Red polygon on surface',
+    polygon : {
+        hierarchy : Cesium.Cartesian3.fromDegreesArray([-115.0, 37.0,
+                                                        -115.0, 32.0,
+                                                        -107.0, 33.0,
+                                                        -102.0, 31.0,
+                                                        -102.0, 35.0]),
+        material : Cesium.Color.RED
+    }
+});
+
+var greenPolygon = viewer.entities.add({
+    name : 'Green extruded polygon',
+    polygon : {
+        hierarchy : Cesium.Cartesian3.fromDegreesArray([-108.0, 42.0,
+                                                        -100.0, 42.0,
+                                                        -104.0, 40.0]),
+        extrudedHeight: 500000.0,
+        material : Cesium.Color.GREEN
+    }
+});
+
+var orangePolygon = viewer.entities.add({
+    name : 'Orange polygon with per-position heights and outline',
+    polygon : {
+        hierarchy : Cesium.Cartesian3.fromDegreesArrayHeights([-108.0, 25.0, 100000,
+                                                               -100.0, 25.0, 100000,
+                                                               -100.0, 30.0, 100000,
+                                                               -108.0, 30.0, 300000]),
+        extrudedHeight: 0,
+        perPositionHeight : true,
+        material : Cesium.Color.ORANGE,
+        outline : true,
+        outlineColor : Cesium.Color.BLACK
+    }
+});
+
+var bluePolygon = viewer.entities.add({
+    name : 'Blue polygon with holes and outline',
+    polygon : {
+        hierarchy : {
+            positions : Cesium.Cartesian3.fromDegreesArray([-99.0, 30.0,
+                                                            -85.0, 30.0,
+                                                            -85.0, 40.0,
+                                                            -99.0, 40.0]),
+            holes : [{
+                positions : Cesium.Cartesian3.fromDegreesArray([
+                    -97.0, 31.0,
+                    -97.0, 39.0,
+                    -87.0, 39.0,
+                    -87.0, 31.0
+                ]),
+                holes : [{
+                    positions : Cesium.Cartesian3.fromDegreesArray([
+                        -95.0, 33.0,
+                        -89.0, 33.0,
+                        -89.0, 37.0,
+                        -95.0, 37.0
+                    ]),
+                    holes : [{
+                        positions : Cesium.Cartesian3.fromDegreesArray([
+                            -93.0, 34.0,
+                            -91.0, 34.0,
+                            -91.0, 36.0,
+                            -93.0, 36.0
+                        ])
+                    }]
+                }]
+            }]
+        },
+        material : Cesium.Color.BLUE,
+        outline : true,
+        outlineColor : Cesium.Color.BLACK
+    }
+});
+
+viewer.camera.zoomIn(15000000);
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>
