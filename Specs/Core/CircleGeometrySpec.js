@@ -54,12 +54,12 @@ defineSuite([
             vertexFormat : VertexFormat.POSITION_ONLY,
             ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
-            granularity : 0.75,
+            granularity : 0.1,
             radius : 1.0
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 24);
-        expect(m.indices.length).toEqual(3 * 34);
+        expect(m.attributes.position.values.length).toEqual(3 * 12);
+        expect(m.indices.length).toEqual(3 * 14);
         expect(m.boundingSphere.radius).toEqual(1);
     });
 
@@ -68,16 +68,16 @@ defineSuite([
             vertexFormat : VertexFormat.ALL,
             ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
-            granularity : 0.75,
+            granularity : 0.1,
             radius : 1.0
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 24);
-        expect(m.attributes.st.values.length).toEqual(2 * 24);
-        expect(m.attributes.normal.values.length).toEqual(3 * 24);
-        expect(m.attributes.tangent.values.length).toEqual(3 * 24);
-        expect(m.attributes.binormal.values.length).toEqual(3 * 24);
-        expect(m.indices.length).toEqual(3 * 34);
+        expect(m.attributes.position.values.length).toEqual(3 * 12);
+        expect(m.attributes.st.values.length).toEqual(2 * 12);
+        expect(m.attributes.normal.values.length).toEqual(3 * 12);
+        expect(m.attributes.tangent.values.length).toEqual(3 * 12);
+        expect(m.attributes.binormal.values.length).toEqual(3 * 12);
+        expect(m.indices.length).toEqual(3 * 14);
     });
 
     it('computes positions extruded', function() {
@@ -85,13 +85,13 @@ defineSuite([
             vertexFormat : VertexFormat.POSITION_ONLY,
             ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
-            granularity : 0.75,
+            granularity : 0.1,
             radius : 1.0,
             extrudedHeight: 10000
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * (24 + 10) * 2);
-        expect(m.indices.length).toEqual(3 * (34 + 10) * 2);
+        expect(m.attributes.position.values.length).toEqual(3 * (12 + 6) * 2);
+        expect(m.indices.length).toEqual(3 * (14 + 6) * 2);
     });
 
     it('compute all vertex attributes extruded', function() {
@@ -99,17 +99,17 @@ defineSuite([
             vertexFormat : VertexFormat.ALL,
             ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
-            granularity : 0.75,
+            granularity : 0.1,
             radius : 1.0,
             extrudedHeight: 10000
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * (24 + 10) * 2);
-        expect(m.attributes.st.values.length).toEqual(2 * (24 + 10) * 2);
-        expect(m.attributes.normal.values.length).toEqual(3 * (24 + 10) * 2);
-        expect(m.attributes.tangent.values.length).toEqual(3 * (24 + 10) * 2);
-        expect(m.attributes.binormal.values.length).toEqual(3 * (24 + 10) * 2);
-        expect(m.indices.length).toEqual(3 * (34 + 10) * 2);
+        expect(m.attributes.position.values.length).toEqual(3 * (12 + 6) * 2);
+        expect(m.attributes.st.values.length).toEqual(2 * (12 + 6) * 2);
+        expect(m.attributes.normal.values.length).toEqual(3 * (12 + 6) * 2);
+        expect(m.attributes.tangent.values.length).toEqual(3 * (12 + 6) * 2);
+        expect(m.attributes.binormal.values.length).toEqual(3 * (12 + 6) * 2);
+        expect(m.indices.length).toEqual(3 * (14 + 6) * 2);
     });
 
     it('compute texture coordinates with rotation', function() {
@@ -117,7 +117,7 @@ defineSuite([
             vertexFormat : VertexFormat.POSITION_AND_ST,
             ellipsoid : Ellipsoid.WGS84,
             center : Cartesian3.fromDegrees(0,0),
-            granularity : 0.75,
+            granularity : 0.1,
             radius : 1.0,
             stRotation : CesiumMath.PI_OVER_TWO
         }));
@@ -126,9 +126,9 @@ defineSuite([
         var st = m.attributes.st.values;
         var length = st.length;
 
-        expect(positions.length).toEqual(3 * 24);
-        expect(length).toEqual(2 * 24);
-        expect(m.indices.length).toEqual(3 * 34);
+        expect(positions.length).toEqual(3 * 12);
+        expect(length).toEqual(2 * 12);
+        expect(m.indices.length).toEqual(3 * 14);
 
         expect(st[length - 2]).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
         expect(st[length - 1]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);

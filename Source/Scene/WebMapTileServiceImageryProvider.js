@@ -72,7 +72,7 @@ define([
      *     maximumLevel: 19,
      *     credit : new Cesium.Credit('U. S. Geological Survey')
      * });
-     * viewer.scene.imageryLayers.addImageryProvider(shadedRelief);
+     * viewer.imageryLayers.addImageryProvider(shadedRelief);
      */
     var WebMapTileServiceImageryProvider = function WebMapTileServiceImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

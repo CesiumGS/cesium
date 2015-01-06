@@ -291,6 +291,93 @@ defineSuite([
                  expect(hasTriangle(ib, nw, extra, v43)).toBe(true);
              });
          });
+
+         it('works for a quad with an extra vertex on the splitting plane', function() {
+             var data = new QuantizedMeshTerrainData({
+                 minimumHeight : 0.0,
+                 maximumHeight : 6.0,
+                 quantizedVertices : new Uint16Array([ // order is sw, nw, se, ne, extra vertex in nw quadrant
+                                                      // u
+                                                      0, 0, 32767, 32767, 0.5 * 32767,
+                                                      // v
+                                                      0, 32767, 0, 32767, 0.75 * 32767,
+                                                      // heights
+                                                      32767 / 6.0, 2.0 * 32767 / 6.0, 3.0 * 32767 / 6.0, 4.0 * 32767 / 6.0, 32767
+                                                  ]),
+                 indices : new Uint16Array([
+                                            0, 4, 1,
+                                            1, 4, 3,
+                                            0, 2, 4,
+                                            3, 4, 2
+                                                ]),
+                 boundingSphere : new BoundingSphere(),
+                 horizonOcclusionPoint : new Cartesian3(),
+                 westIndices : [],
+                 southIndices : [],
+                 eastIndices : [],
+                 northIndices : [],
+                 westSkirtHeight : 1.0,
+                 southSkirtHeight : 1.0,
+                 eastSkirtHeight : 1.0,
+                 northSkirtHeight : 1.0,
+                 childTileMask : 15
+             });
+
+             var tilingScheme = new GeographicTilingScheme();
+             var nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
+             var nePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
+
+             waitsForPromise(when.all([nwPromise, nePromise]), function(upsampleResults) {
+                 expect(upsampleResults.length).toBe(2);
+                 var uBuffer, vBuffer;
+                 for (var i = 0; i < upsampleResults.length; i++) {
+                     var upsampled = upsampleResults[i];
+                     expect(upsampled).toBeDefined();
+
+                     uBuffer = upsampled._uValues;
+                     vBuffer = upsampled._vValues;
+                     var ib = upsampled._indices;
+
+                     expect(uBuffer.length).toBe(6);
+                     expect(vBuffer.length).toBe(6);
+                     expect(upsampled._heightValues.length).toBe(6);
+                     expect(ib.length).toBe(4 * 3);
+
+                     var sw = findVertexWithCoordinates(uBuffer, vBuffer, 0.0, 0.0);
+                     expect(sw).not.toBe(-1);
+                     var nw = findVertexWithCoordinates(uBuffer, vBuffer, 0.0, 1.0);
+                     expect(nw).not.toBe(-1);
+                     var se = findVertexWithCoordinates(uBuffer, vBuffer, 1.0, 0.0);
+                     expect(se).not.toBe(-1);
+                     var ne = findVertexWithCoordinates(uBuffer, vBuffer, 1.0, 1.0);
+                     expect(ne).not.toBe(-1);
+                 }
+
+                 // northwest
+                 uBuffer = upsampleResults[0]._uValues;
+                 vBuffer = upsampleResults[0]._vValues;
+                 var extra = findVertexWithCoordinates(uBuffer, vBuffer, 1.0, 0.5);
+                 expect(extra).not.toBe(-1);
+                 var v40 = findVertexWithCoordinates(uBuffer, vBuffer, horizontalIntercept(0.0, 0.0, 0.5, 0.75) * 2.0, 0.0);
+                 expect(v40).not.toBe(-1);
+                 expect(upsampleResults[0]._westIndices.length).toBe(2);
+                 expect(upsampleResults[0]._eastIndices.length).toBe(3);
+                 expect(upsampleResults[0]._northIndices.length).toBe(2);
+                 expect(upsampleResults[0]._southIndices.length).toBe(3);
+
+                 // northeast
+                 uBuffer = upsampleResults[1]._uValues;
+                 vBuffer = upsampleResults[1]._vValues;
+                 extra = findVertexWithCoordinates(uBuffer, vBuffer, 0.0, 0.5);
+                 expect(extra).not.toBe(-1);
+                 var v42 = findVertexWithCoordinates(uBuffer, vBuffer, horizontalIntercept(1.0, 0.0, 0.5, 0.75) * 0.5, 0.0);
+                 expect(v42).not.toBe(-1);
+                 expect(upsampleResults[1]._westIndices.length).toBe(3);
+                 expect(upsampleResults[1]._eastIndices.length).toBe(2);
+                 expect(upsampleResults[1]._northIndices.length).toBe(2);
+                 expect(upsampleResults[1]._southIndices.length).toBe(3);
+             });
+         });
      });
 
      describe('createMesh', function() {

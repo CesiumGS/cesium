@@ -59,7 +59,7 @@ define([
             }
         },
         /**
-         * Gets or sets the string property which is the url of the desired image.
+         * Gets or sets the Image, URL, or Canvas {@link Property} specifying the material's texture.
          * @memberof ImageMaterialProperty.prototype
          * @type {Property}
          */
@@ -112,13 +112,6 @@ define([
                (other instanceof ImageMaterialProperty && //
                 Property.equals(this._image, other._image) && //
                 Property.equals(this._repeat, other._repeat));
-    };
-
-    /**
-     * @private
-     */
-    ImageMaterialProperty.prototype._raiseDefinitionChanged = function(){
-        this._definitionChanged.raiseEvent(this);
     };
 
     return ImageMaterialProperty;

@@ -78,7 +78,7 @@ define([
         return false;
     }
 
-    function removeCredit(credit) {
+    function removeCreditDomElement(credit) {
         var element = credit.element;
         if (defined(element)) {
             var container = element.parentNode;
@@ -102,16 +102,20 @@ define([
         var displayedTextCredits = creditDisplay._displayedCredits.textCredits;
         for (i = 0; i < textCredits.length; i++) {
             credit = textCredits[i];
-            index = displayedTextCredits.indexOf(credit);
-            if (index === -1) {
-                displayTextCredit(credit, creditDisplay._textContainer, creditDisplay._delimiter);
-            } else {
-                displayedTextCredits.splice(index, 1);
+            if (defined(credit)) {
+                index = displayedTextCredits.indexOf(credit);
+                if (index === -1) {
+                    displayTextCredit(credit, creditDisplay._textContainer, creditDisplay._delimiter);
+                } else {
+                    displayedTextCredits.splice(index, 1);
+                }
             }
         }
         for (i = 0; i < displayedTextCredits.length; i++) {
             credit = displayedTextCredits[i];
-            removeCredit(credit);
+            if (defined(credit)) {
+                removeCreditDomElement(credit);
+            }
         }
 
     }
@@ -123,16 +127,20 @@ define([
         var displayedImageCredits = creditDisplay._displayedCredits.imageCredits;
         for (i = 0; i < imageCredits.length; i++) {
             credit = imageCredits[i];
-            index = displayedImageCredits.indexOf(credit);
-            if (index === -1) {
-                displayImageCredit(credit, creditDisplay._imageContainer);
-            } else {
-                displayedImageCredits.splice(index, 1);
+            if (defined(credit)) {
+                index = displayedImageCredits.indexOf(credit);
+                if (index === -1) {
+                    displayImageCredit(credit, creditDisplay._imageContainer);
+                } else {
+                    displayedImageCredits.splice(index, 1);
+                }
             }
         }
         for (i = 0; i < displayedImageCredits.length; i++) {
             credit = displayedImageCredits[i];
-            removeCredit(credit);
+            if (defined(credit)) {
+                removeCreditDomElement(credit);
+            }
         }
     }
 
@@ -193,13 +201,13 @@ define([
 
         if (credit.hasImage()) {
             var imageCredits = this._currentFrameCredits.imageCredits;
-            if (!contains(imageCredits, credit) && !contains(this._defaultImageCredits, credit)) {
-                imageCredits.push(credit);
+            if (!contains(this._defaultImageCredits, credit)) {
+                imageCredits[credit.id] = credit;
             }
         } else {
             var textCredits = this._currentFrameCredits.textCredits;
-            if (!contains(textCredits, credit) && !contains(this._defaultTextCredits, credit)) {
-                textCredits.push(credit);
+            if (!contains(this._defaultTextCredits, credit)) {
+                textCredits[credit.id] = credit;
             }
         }
     };

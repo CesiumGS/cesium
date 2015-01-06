@@ -163,9 +163,6 @@ defineSuite([
 
         expect(sp.allUniforms.u_vec4.name).toEqual('u_vec4');
         expect(sp.allUniforms.czm_viewport.name).toEqual('czm_viewport');
-
-        expect(sp.manualUniforms.u_vec4.name).toEqual('u_vec4');
-        expect(sp.manualUniforms.czm_viewport).not.toBeDefined();
     });
 
     it('has uniforms', function() {

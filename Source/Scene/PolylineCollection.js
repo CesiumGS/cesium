@@ -3,6 +3,7 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Cartographic',
         '../Core/Color',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
@@ -30,6 +31,7 @@ define([
         BoundingSphere,
         Cartesian3,
         Cartesian4,
+        Cartographic,
         Color,
         ComponentDatatype,
         defaultValue,
@@ -1344,6 +1346,8 @@ define([
     };
     var scratchLengths = new Array(1);
     var pscratch = new Cartesian3();
+    var scratchCartographic = new Cartographic();
+
     PolylineBucket.prototype.getSegments = function(polyline, projection) {
         var positions = polyline._actualPositions;
 
@@ -1368,7 +1372,7 @@ define([
         for ( var n = 0; n < length; ++n) {
             position = positions[n];
             p = Matrix4.multiplyByPoint(modelMatrix, position, p);
-            newPositions.push(projection.project(ellipsoid.cartesianToCartographic(p)));
+            newPositions.push(projection.project(ellipsoid.cartesianToCartographic(p, scratchCartographic)));
         }
 
         if (newPositions.length > 0) {

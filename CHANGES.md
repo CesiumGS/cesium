@@ -1,28 +1,62 @@
 Change Log
 ==========
 
+### 1.6 - 2015-02-02
+
+* Added `Camera.roll`.
+
+### 1.5 - 2015-01-05
+
+* Breaking changes
+  * Removed `GeometryPipeline.wrapLongitude`, which was deprecated in 1.4.  Use `GeometryPipeline.splitLongitude` instead.
+  * Removed `GeometryPipeline.combine`, which was deprecated in 1.4.  Use `GeometryPipeline.combineInstances` instead.
+* Deprecated
+  * `viewerEntityMixin` was deprecated. It will be removed in Cesium 1.6. Its functionality is now directly part of the `Viewer` widget.
+  * `Rectangle.intersectWith` was deprecated. It will be removed in Cesium 1.6. Use `Rectangle.intersection`, which is the same but returns `undefined` when two rectangles do not intersect.
+  * `Rectangle.isEmpty` was deprecated. It will be removed in Cesium 1.6.
+* Improved GeoJSON, TopoJSON, and general polygon loading performance.
+* Added caching to `Model` to save memory and improve loading speed when several models with the same url are created.
+* Added `ModelNode.show` for per-node show/hide.
+* Added the following properties to `Viewer` and `CesiumWidget`: `imageryLayers`, `terrainProvider`, and `camera`.  This avoids the need to access `viewer.scene` in some cases.
+* Dramatically improved the quality of font outlines.
+* Added `BoxGraphics` and `Entity.box`.
+* Added `CorridorGraphics` and `Entity.corridor`.
+* Added `CylinderGraphics` and `Entity.cylinder`.
+* Fixed imagery providers whose rectangle crosses the IDL. Added `Rectangle.computeWidth`, `Rectangle.computeHeight`, `Rectangle.width`, and `Rectangle.height`. [#2195](https://github.com/AnalyticalGraphicsInc/cesium/issues/2195)
+* `ConstantProperty` now accepts `HTMLElement` instances as valid values.
+* `BillboardGraphics.image` and `ImageMaterialProperty.image` now accept `Property` instances that represent an `Image` or `Canvas` in addition to a url.
+* Fixed a bug in `PolylineGeometry` that would cause gaps in the line. [#2136](https://github.com/AnalyticalGraphicsInc/cesium/issues/2136)
+* Fixed `upsampleQuantizedTerrainMesh` rounding errors that had occasionally led to missing terrain skirt geometry in upsampled tiles.
+* Added `Math.mod` which computes `m % n` but also works when `m` is negative.
+
 ### 1.4 - 2014-12-01
 
+* Breaking changes
+  * Types implementing `TerrainProvider` are now required to implement the `getTileDataAvailable` function.  Backwards compatibility for this was deprecated in Cesium 1.2.
 * Deprecated
-    * The `sourceUri` parameter to `GeoJsonDatasource.load` has been deprecated and will be removed in Cesium 1.6 on February 3, 2015 ([#2257](https://github.com/AnalyticalGraphicsInc/cesium/issues/2257)).  Use `options.sourceUri` instead.
-    * `GeometryPipeline.wrapLongitude` was deprecated in Cesium 1.4. It will be removed in Cesium 1.5 on January 2, 2015. Use `GeometryPipeline.splitLongitude`. ([#2272](https://github.com/AnalyticalGraphicsInc/cesium/issues/2272))
-    * `GeometryPipeline.combine` was deprecated in Cesium 1.4. It will be removed in Cesium 1.5. Use `GeometryPipeline.combineInstances`.
+    * The `sourceUri` parameter to `GeoJsonDatasource.load` was deprecated and will be removed in Cesium 1.6 on February 3, 2015 ([#2257](https://github.com/AnalyticalGraphicsInc/cesium/issues/2257)).  Use `options.sourceUri` instead.
+    * `GeometryPipeline.wrapLongitude` was deprecated. It will be removed in Cesium 1.5 on January 2, 2015. Use `GeometryPipeline.splitLongitude`. ([#2272](https://github.com/AnalyticalGraphicsInc/cesium/issues/2272))
+    * `GeometryPipeline.combine` was deprecated. It will be removed in Cesium 1.5. Use `GeometryPipeline.combineInstances`.
+* Added support for touch events on Internet Explorer 11 using the [Pointer Events API](http://www.w3.org/TR/pointerevents/).
 * Added geometry outline width support to the `DataSource` layer.  This is exposed via the new `outlineWidth` property on `EllipseGraphics`, `EllipsoidGraphics`, `PolygonGraphics`, `RectangleGraphics`, and `WallGraphics`.
 * Added `outlineWidth` support to CZML geometry packets.
 * Added `stroke-width` support to the GeoJSON simple-style implementation.
-* Added `Camera.roll`.
-* Added support for touch events on Internet Explorer 11 using the [Pointer Events API](http://www.w3.org/TR/pointerevents/).
 * Added the ability to specify global GeoJSON default styling.  See the [documentation](http://cesiumjs.org/Cesium/Build/Documentation/GeoJsonDataSource.html) for details.
 * Added `CallbackProperty` to support lazy property evaluation as well as make custom properties easier to create.
 * Added an options parameter to `GeoJsonDataSource.load`, `GeoJsonDataSource.loadUrl`, and `GeoJsonDataSource.fromUrl` to allow for basic per-instance styling. [Sandcastle example](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=GeoJSON%20and%20TopoJSON.html&label=Showcases).
+* Improved GeoJSON loading performance.
+* Improved point visualization performance for all DataSources.
+* Improved the performance and memory usage of `EllipseGeometry`, `EllipseOutlineGeometry`, `CircleGeometry`, and `CircleOutlineGeometry`.
 * Added `tileMatrixLabels` option to `WebMapTileServiceImageryProvider`.
 * Fixed a bug in `PolylineGeometry` that would cause the geometry to be split across the IDL for 3D only scenes. [#1197](https://github.com/AnalyticalGraphicsInc/cesium/issues/1197)
 * Added `modelMatrix` and `cull` options to `Primitive` constructor.
 * The `translation` parameter to `Matrix4.fromRotationTranslation` now defaults to `Cartesian3.ZERO`.
-* Improved point visualization performance for all DataSources.
 * Fixed `ModelNode.matrix` when a node is targeted for animation.
-* Improved GeoJSON loading performance.
-* Clamp of `Camera.tilt` to [-pi / 2, pi / 2] instead of [0, pi / 2].
+* `Camera.tilt` now clamps to [-pi / 2, pi / 2] instead of [0, pi / 2].
+* Fixed an issue that could lead to poor performance on lower-end GPUs like the Intel HD 3000.
+* Added `distanceSquared` to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
+* Added `Matrix4.multiplyByMatrix3`.
+* Fixed a bug in `Model` where the WebGL shader optimizer in Linux was causing mesh loading to fail.
 
 ### 1.3 - 2014-11-03
 
