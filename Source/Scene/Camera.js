@@ -806,7 +806,7 @@ define([
                 var rollAngle;
 
                 do {
-                    rollAngle = CesiumMath.zeroToTwoPi(angle) - this.roll;
+                    rollAngle = CesiumMath.zeroToTwoPi(angle) - CesiumMath.zeroToTwoPi(this.roll);
                     this.look(this.direction, rollAngle);
                 } while (!CesiumMath.equalsEpsilon(rollAngle, 0.0, CesiumMath.EPSILON4));
             }
