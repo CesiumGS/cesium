@@ -3,6 +3,13 @@ Change Log
 
 ### 1.6 - 2015-02-02
 
+* Breaking changes
+  * `Rectangle.intersectWith` was deprecated in Cesium 1.5. Use `Rectangle.intersection`, which is the same but returns `undefined` when two rectangles do not intersect.
+  * `Rectangle.isEmpty` was deprecated in Cesium 1.5.
+  * The `sourceUri` parameter to `GeoJsonDatasource.load` was deprecated in Cesium 1.4 and has been removed. Use options.sourceUri instead.
+* Deprecated
+  *
+* Added `PolylineVolumeGraphics` and `Entity.polylineVolume`
 * Added `Camera.roll`.
 
 ### 1.5 - 2015-01-05
