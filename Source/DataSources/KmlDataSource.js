@@ -154,7 +154,9 @@ define([
 
     function proxyUrl(url, proxy) {
         if (defined(proxy)) {
-            url = proxy.getURL(url);
+            if ((new Uri(url)).scheme) {
+                url = proxy.getURL(url);
+            }
         }
         return url;
     }
@@ -734,6 +736,12 @@ define([
     }
 
     function processFolder(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
+        //var visibility = queryBooleanValue(node, 'visibility', namespaces.kml);
+        //entity.uiShow = defined(visibility) ? visibility : true;
+        //if (defined(visibility) && !visibility) {
+            //return;
+        //}
+
         parent = new Entity(createId(node));
         parent.name = queryStringValue(node, 'name', namespaces.kml);
         entityCollection.add(parent);
@@ -744,8 +752,12 @@ define([
         var id = createId(placemark.id);
         var name = queryStringValue(placemark, 'name', namespaces.kml);
         var description = queryStringValue(placemark, 'description', namespaces.kml);
-        var visibility = queryBooleanValue(placemark, 'visibility', namespaces.kml);
+        //var visibility = queryBooleanValue(placemark, 'visibility', namespaces.kml);
         var timeSpanNode = queryFirstNode(placemark, 'TimeSpan', namespaces.kml);
+
+        //if (defined(visibility) && !visibility) {
+            //return;
+        //}
 
         var entity = entityCollection.getOrCreateEntity(id);
         entity.name = name;
@@ -795,8 +807,8 @@ define([
         var description = queryStringValue(groundOverlay, 'description', namespaces.kml);
         entity.description = defined(description) ? new ConstantProperty(description) : undefined;
 
-        var visibility = queryBooleanValue(groundOverlay, 'visibility', namespaces.kml);
-        entity.uiShow = defined(visibility) ? visibility : true;
+        //var visibility = queryBooleanValue(groundOverlay, 'visibility', namespaces.kml);
+        //entity.uiShow = defined(visibility) ? visibility : true;
 
         var latLonBox = queryFirstNode(groundOverlay, 'LatLonBox', namespaces.kml);
         if (defined(latLonBox)) {
@@ -858,11 +870,22 @@ define([
         window.console.log('Unsupported feature: ' + node.nodeName);
     }
 
+    function processNetworkLink(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
+        var linkUrl = queryStringValue(node, 'Link', namespaces.kml);
+        var networkLinkSource = new KmlDataSource(dataSource._proxy);
+        when(networkLinkSource.loadUrl(linkUrl), function() {
+            var entities = networkLinkSource.entities.entities;
+            for (var i = 0; i < entities.length; i++) {
+                dataSource._entityCollection.add(entities[i]);
+            }
+        });
+    }
+
     var featureTypes = {
         Document : processDocument,
         Folder : processFolder,
         Placemark : processPlacemark,
-        NetworkLink : processUnsupported,
+        NetworkLink : processNetworkLink,
         GroundOverlay : processGroundOverlay,
         PhotoOverlay : processUnsupported,
         ScreenOverlay : processUnsupported
@@ -987,8 +1010,8 @@ define([
      *
      * @returns {KmlDataSource} A new instance set to load the specified url.
      */
-    KmlDataSource.fromUrl = function(url) {
-        var result = new KmlDataSource();
+    KmlDataSource.fromUrl = function(url, proxy) {
+        var result = new KmlDataSource(proxy);
         result.loadUrl(url);
         return result;
     };

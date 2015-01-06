@@ -33,6 +33,7 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Element|String} [options.dropTarget=viewer.container] The DOM element which will serve as the drop target.
      * @param {Boolean} [options.clearOnDrop=true] When true, dropping files will clear all existing data sources first, when false, new data sources will be loaded after the existing ones.
+     * @param {DefaultProxy} [options.proxy] The proxy to be used for KML network links.
      *
      * @exception {DeveloperError} Element with id <options.dropTarget> does not exist in the document.
      * @exception {DeveloperError} dropTarget is already defined by another mixin.
@@ -74,6 +75,7 @@ define([
         var dropError = new Event();
         var clearOnDrop = defaultValue(options.clearOnDrop, true);
         var dropTarget = defaultValue(options.dropTarget, viewer.container);
+        var proxy = options.proxy;
 
         dropTarget = getElement(dropTarget);
 
@@ -160,7 +162,7 @@ define([
             for (var i = 0; i < length; i++) {
                 var file = files[i];
                 var reader = new FileReader();
-                reader.onload = createOnLoadCallback(viewer, file);
+                reader.onload = createOnLoadCallback(viewer, file, proxy);
                 reader.onerror = createDropErrorCallback(viewer, file);
                 reader.readAsText(file);
             }
@@ -200,7 +202,7 @@ define([
         dropTarget.addEventListener('dragexit', stop, false);
     }
 
-    function createOnLoadCallback(viewer, file) {
+    function createOnLoadCallback(viewer, file, proxy) {
         return function(evt) {
             var fileName = file.name;
             try {
@@ -216,11 +218,11 @@ define([
                         sourceUri : fileName
                     });
                 } else if (/\.kml$/i.test(fileName)) {
-                    dataSource = new KmlDataSource();
+                    dataSource = new KmlDataSource(proxy);
                     var parser = new DOMParser();
                     loadPromise = dataSource.load(parser.parseFromString(evt.target.result, "text/xml"), fileName);
                 } else if (/\.kmz$/i.test(fileName)) {
-                    dataSource = new KmlDataSource();
+                    dataSource = new KmlDataSource(proxy);
                     loadPromise = dataSource.loadKmz(file, fileName);
                 } else {
                     viewer.dropError.raiseEvent(viewer, fileName, 'Unrecognized file: ' + fileName);
