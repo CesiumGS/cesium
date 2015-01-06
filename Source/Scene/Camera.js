@@ -7,6 +7,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/EasingFunction',
         '../Core/Ellipsoid',
@@ -29,6 +30,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         EasingFunction,
         Ellipsoid,
@@ -507,7 +509,8 @@ define([
     }
 
     function getHeading2D(camera) {
-        return Math.atan2(camera.right.y, camera.right.x);
+        var right = camera.right;
+        return Math.atan2(right.y, right.x);
     }
 
     var scratchHeadingMatrix4 = new Matrix4();
@@ -539,42 +542,37 @@ define([
         camera.look(axis, angle);
     }
 
-    function getTiltCV(camera) {
+    function getPitchCV(camera) {
         // CesiumMath.acosClamped(dot(camera.direction, Cartesian3.negate(Cartesian3.UNIT_Z))
         return CesiumMath.PI_OVER_TWO - CesiumMath.acosClamped(-camera.direction.z);
     }
 
-    var scratchTiltCartesian3 = new Cartesian3();
+    var scratchPitchCartesian3 = new Cartesian3();
 
-    function getTilt3D(camera) {
-        var direction = Cartesian3.normalize(camera.position, scratchTiltCartesian3);
+    function getPitch3D(camera) {
+        var direction = Cartesian3.normalize(camera.position, scratchPitchCartesian3);
         Cartesian3.negate(direction, direction);
 
         return CesiumMath.PI_OVER_TWO - CesiumMath.acosClamped(Cartesian3.dot(camera.direction, direction));
     }
 
     function getRollCV(camera) {
-        if (CesiumMath.equalsEpsilon(Math.abs(camera.direction.z), 1.0, CesiumMath.EPSILON6)) {
-            return undefined;
-        }
-
         var right = camera.right;
-        return CesiumMath.PI_OVER_TWO - Math.acos(right.z);
+        return Math.atan2(right.z, right.x);
     }
+
+    var scratchRollMatrix4 = new Matrix4();
+    var scratchRollMatrix3 = new Matrix3();
+    var scratchRollCartesian3 = new Cartesian3();
 
     function getRoll3D(camera) {
         var ellipsoid = camera._projection.ellipsoid;
-        var toFixedFrame = Transforms.eastNorthUpToFixedFrame(camera.position, ellipsoid, scratchHeadingMatrix4);
-        var transform = Matrix4.getRotation(toFixedFrame, scratchHeadingMatrix3);
+        var toFixedFrame = Transforms.eastNorthUpToFixedFrame(camera.position, ellipsoid, scratchRollMatrix4);
+        var transform = Matrix4.getRotation(toFixedFrame, scratchRollMatrix3);
         Matrix3.transpose(transform, transform);
 
-        var direction = Matrix3.multiplyByVector(transform, camera.direction, scratchHeadingCartesian3);
-        if (CesiumMath.equalsEpsilon(Math.abs(direction.z), 1.0, CesiumMath.EPSILON3)) {
-            return undefined;
-        }
-
-        var right = Matrix3.multiplyByVector(transform, camera.right, scratchHeadingCartesian3);
-        return CesiumMath.PI_OVER_TWO - Math.acos(right.z);
+        var right = Matrix3.multiplyByVector(transform, camera.right, scratchRollCartesian3);
+        return Math.atan2(right.z, right.x);
     }
 
     defineProperties(Camera.prototype, {
@@ -716,7 +714,6 @@ define([
             },
             //TODO See https://github.com/AnalyticalGraphicsInc/cesium/issues/832
             set : function (angle) {
-
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(angle)) {
                     throw new DeveloperError('angle is required.');
@@ -732,24 +729,23 @@ define([
         },
 
         /**
-         * Gets or sets the camera tilt in radians.
+         * Gets or sets the camera pitch in radians.
          * @memberof Camera.prototype
          *
          * @type {Number}
          */
-        tilt : {
+        pitch : {
             get : function() {
                 if (this._mode === SceneMode.COLUMBUS_VIEW) {
-                    return getTiltCV(this);
+                    return getPitchCV(this);
                 } else if (this._mode === SceneMode.SCENE3D) {
-                    return getTilt3D(this);
+                    return getPitch3D(this);
                 }
 
                 return undefined;
             },
             //TODO See https://github.com/AnalyticalGraphicsInc/cesium/issues/832
             set : function(angle) {
-
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(angle)) {
                     throw new DeveloperError('angle is required.');
@@ -758,9 +754,28 @@ define([
 
                 if (this._mode === SceneMode.COLUMBUS_VIEW || this._mode === SceneMode.SCENE3D) {
                     angle = CesiumMath.clamp(angle, -CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO);
-                    angle = angle - this.tilt;
+                    angle = angle - this.pitch;
                     this.look(this.right, angle);
                 }
+            }
+        },
+
+        /**
+         * Gets or sets the camera tilt in radians.
+         * @memberof Camera.prototype
+         *
+         * @type {Number}
+         *
+         * @deprecated
+         */
+        tilt : {
+            get : function() {
+                deprecationWarning('Camera.tilt', 'Camera.tilt was deprecated in Cesium 1.6. It will be removed in Cesium 1.8. Use Camera.pitch.');
+                return this.pitch;
+            },
+            set : function(angle) {
+                deprecationWarning('Camera.tilt', 'Camera.tilt was deprecated in Cesium 1.6. It will be removed in Cesium 1.8. Use Camera.pitch.');
+                this.pitch = angle;
             }
         },
 
@@ -782,20 +797,18 @@ define([
             },
             //TODO See https://github.com/AnalyticalGraphicsInc/cesium/issues/832
             set : function(angle) {
-
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(angle)) {
                     throw new DeveloperError('angle is required.');
                 }
                 //>>includeEnd('debug');
 
-                if (this._mode === SceneMode.COLUMBUS_VIEW || this._mode === SceneMode.SCENE3D) {
-                    var roll = this.roll;
-                    if (defined(roll)) {
-                        angle = angle - roll;
-                        this.look(this.direction, angle);
-                    }
-                }
+                var rollAngle;
+
+                do {
+                    rollAngle = CesiumMath.zeroToTwoPi(angle) - this.roll;
+                    this.look(this.direction, rollAngle);
+                } while (!CesiumMath.equalsEpsilon(rollAngle, 0.0, CesiumMath.EPSILON4));
             }
         }
     });
