@@ -19,6 +19,7 @@ define([
         './PointVisualizer',
         './PolygonGeometryUpdater',
         './PolylineGeometryUpdater',
+        './PolylineVolumeGeometryUpdater',
         './RectangleGeometryUpdater',
         './WallGeometryUpdater'
     ], function(
@@ -41,6 +42,7 @@ define([
         PointVisualizer,
         PolygonGeometryUpdater,
         PolylineGeometryUpdater,
+        PolylineVolumeGeometryUpdater,
         RectangleGeometryUpdater,
         WallGeometryUpdater) {
     "use strict";
@@ -109,6 +111,7 @@ define([
                 new GeometryVisualizer(EllipsoidGeometryUpdater, scene, entities),
                 new GeometryVisualizer(PolygonGeometryUpdater, scene, entities),
                 new GeometryVisualizer(PolylineGeometryUpdater, scene, entities),
+                new GeometryVisualizer(PolylineVolumeGeometryUpdater, scene, entities),
                 new GeometryVisualizer(RectangleGeometryUpdater, scene, entities),
                 new GeometryVisualizer(WallGeometryUpdater, scene, entities),
                 new LabelVisualizer(scene, entities),
