@@ -14,8 +14,12 @@
 			<specs dir="${specsDirectory}" includes="**/*.js" excludes="*.js" />
 		</createSpecList>
 
+		<condition property="exclude.development.gallery" value="**/development/*.html">
+			<istrue value="${build.debugUnminified}" />
+		</condition>
+
 		<createGalleryList output="${galleryDirectory}/gallery-index.js">
-			<demos dir="${galleryDirectory}" includes="**/*.html" excludes="**/development/*.html" />
+			<demos dir="${galleryDirectory}" includes="**/*.html" excludes="${exclude.development.gallery}" />
 		</createGalleryList>
 
 		<createSandcastleJsHintOptions output="${sandcastleDirectory}/jsHintOptions.js" jshintoptionspath="${jsHintOptionsPath}" />
