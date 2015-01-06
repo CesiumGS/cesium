@@ -24,6 +24,7 @@ define([
         './PointGraphics',
         './PolygonGraphics',
         './PolylineGraphics',
+        './PolylineVolumeGraphics',
         './Property',
         './PropertyHelper',
         './RectangleGraphics',
@@ -53,6 +54,7 @@ define([
         PointGraphics,
         PolygonGraphics,
         PolylineGraphics,
+        PolylineVolumeGraphics,
         Property,
         PropertyHelper,
         RectangleGraphics,
@@ -293,7 +295,7 @@ define([
          * @memberof Entity.prototype
          * @type {PolylineGraphics}
          */
-        polylineVolume : createPropertyDescriptor('polylineVolume'),
+        polylineVolume : PropertyHelper.createPropertyTypeDescriptor('polylineVolume', PolylineVolumeGraphics),
         /**
          * Gets or sets the position.
          * @memberof Entity.prototype

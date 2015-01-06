@@ -5,14 +5,14 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createPropertyDescriptor'
+        './PropertyHelper'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createPropertyDescriptor) {
+        PropertyHelper) {
     "use strict";
 
     /**
@@ -21,7 +21,7 @@ define([
      * @alias PolylineVolumeGraphics
      * @constructor
      */
-    var PolylineVolumeGraphics = function() {
+    var PolylineVolumeGraphics = function(options) {
         this._show = undefined;
         this._showSubscription = undefined;
         this._material = undefined;
@@ -43,6 +43,8 @@ define([
         this._outlineWidth = undefined;
         this._outlineWidthSubscription = undefined;
         this._definitionChanged = new Event();
+
+        this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     };
 
     defineProperties(PolylineVolumeGraphics.prototype, {
@@ -64,28 +66,28 @@ define([
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
-        show : createPropertyDescriptor('show'),
+        show : PropertyHelper.createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the volume.
          * @memberof PolylineVolumeGraphics.prototype
          * @type {MaterialProperty}
          */
-        material : createPropertyDescriptor('material'),
+        material : PropertyHelper.createMaterialPropertyDescriptor('material'),
 
         /**
          * Gets or sets the positions of the line.
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
-        positions : createPropertyDescriptor('positions'),
+        positions : PropertyHelper.createPropertyDescriptor('positions'),
 
         /**
          * Gets or sets the array of {@link Cartesian2} instances that define the shape to be extruded along the polyline.
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
-        shape : createPropertyDescriptor('shape'),
+        shape : PropertyHelper.createPropertyDescriptor('shape'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the sampling distance, in radians,
@@ -93,42 +95,42 @@ define([
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
-        granularity : createPropertyDescriptor('granularity'),
+        granularity : PropertyHelper.createPropertyDescriptor('granularity'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the volume should be filled.
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
-        fill : createPropertyDescriptor('fill'),
+        fill : PropertyHelper.createPropertyDescriptor('fill'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the volume should be outlined.
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
-        outline : createPropertyDescriptor('outline'),
+        outline : PropertyHelper.createPropertyDescriptor('outline'),
 
         /**
          * Gets or sets the Color {@link Property} specifying whether the color of the outline.
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
-        outlineColor : createPropertyDescriptor('outlineColor'),
+        outlineColor : PropertyHelper.createPropertyDescriptor('outlineColor'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the width of the outline.
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
-        outlineWidth : createPropertyDescriptor('outlineWidth'),
+        outlineWidth : PropertyHelper.createPropertyDescriptor('outlineWidth'),
 
         /**
          * Gets or sets the {@link CornerType} {@link Property} specifying how corners are triangulated.
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
-        cornerType : createPropertyDescriptor('cornerType')
+        cornerType : PropertyHelper.createPropertyDescriptor('cornerType')
     });
 
     /**
