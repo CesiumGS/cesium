@@ -15,7 +15,7 @@
 		</createSpecList>
 
 		<createGalleryList output="${galleryDirectory}/gallery-index.js">
-			<demos dir="${galleryDirectory}" includes="**/*.html" />
+			<demos dir="${galleryDirectory}" includes="**/*.html" excludes="**/development/*.html" />
 		</createGalleryList>
 
 		<createSandcastleJsHintOptions output="${sandcastleDirectory}/jsHintOptions.js" jshintoptionspath="${jsHintOptionsPath}" />
