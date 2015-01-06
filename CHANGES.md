@@ -6,7 +6,10 @@ Change Log
 * Breaking changes
   * `Rectangle.intersectWith` was deprecated in Cesium 1.5. Use `Rectangle.intersection`, which is the same but returns `undefined` when two rectangles do not intersect.
   * `Rectangle.isEmpty` was deprecated in Cesium 1.5.
-  
+* Deprecated
+  *
+* Added `PolylineVolumeGraphics` and `Entity.polylineVolume`
+
 ### 1.5 - 2015-01-05
 
 * Breaking changes
