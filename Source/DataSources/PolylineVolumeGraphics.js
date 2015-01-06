@@ -16,26 +16,22 @@ define([
     "use strict";
 
     /**
-     * An optionally time-dynamic corridor.
+     * An optionally time-dynamic polyline volume.
      *
-     * @alias CorridorGraphics
+     * @alias PolylineVolumeGraphics
      * @constructor
      */
-    var CorridorGraphics = function() {
+    var PolylineVolumeGraphics = function() {
         this._show = undefined;
         this._showSubscription = undefined;
         this._material = undefined;
         this._materialSubscription = undefined;
         this._positions = undefined;
         this._positionsSubscription = undefined;
-        this._height = undefined;
-        this._heightSubscription = undefined;
-        this._extrudedHeight = undefined;
-        this._extrudedHeightSubscription = undefined;
+        this._shape = undefined;
+        this._shapeSubscription = undefined;
         this._granularity = undefined;
         this._granularitySubscription = undefined;
-        this._width = undefined;
-        this._widthSubscription = undefined;
         this._cornerType = undefined;
         this._cornerTypeSubscription = undefined;
         this._fill = undefined;
@@ -49,10 +45,10 @@ define([
         this._definitionChanged = new Event();
     };
 
-    defineProperties(CorridorGraphics.prototype, {
+    defineProperties(PolylineVolumeGraphics.prototype, {
         /**
          * Gets the event that is raised whenever a new property is assigned.
-         * @memberof CorridorGraphics.prototype
+         * @memberof PolylineVolumeGraphics.prototype
          *
          * @type {Event}
          * @readonly
@@ -64,112 +60,92 @@ define([
         },
 
         /**
-         * Gets or sets the boolean {@link Property} specifying the corridor's visibility.
-         * @memberof CorridorGraphics.prototype
+         * Gets or sets the boolean {@link Property} specifying the volumes's visibility.
+         * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
         show : createPropertyDescriptor('show'),
 
         /**
-         * Gets or sets the {@link MaterialProperty} specifying the appearance of the corridor.
-         * @memberof CorridorGraphics.prototype
+         * Gets or sets the {@link MaterialProperty} specifying the appearance of the volume.
+         * @memberof PolylineVolumeGraphics.prototype
          * @type {MaterialProperty}
          */
         material : createPropertyDescriptor('material'),
 
         /**
-         * Gets or sets the positions.
-         * @memberof CorridorGraphics.prototype
+         * Gets or sets the positions of the line.
+         * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
         positions : createPropertyDescriptor('positions'),
 
         /**
-         * Gets or sets the Number {@link Property} specifying the height of the corridor.
-         * If undefined, the corridor will be on the surface.
-         * @memberof CorridorGraphics.prototype
+         * Gets or sets the array of {@link Cartesian2} instances that define the shape to be extruded along the polyline.
+         * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
-        height : createPropertyDescriptor('height'),
-
-        /**
-         * Gets or sets the Number {@link Property} specifying the extruded height of the corridor.
-         * Setting this property creates a corridor shaped volume starting at height and ending
-         * at the extruded height.
-         * @memberof CorridorGraphics.prototype
-         * @type {Property}
-         */
-        extrudedHeight : createPropertyDescriptor('extrudedHeight'),
+        shape : createPropertyDescriptor('shape'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the sampling distance, in radians,
          * between each latitude and longitude point.
-         * @memberof CorridorGraphics.prototype
+         * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
         granularity : createPropertyDescriptor('granularity'),
 
         /**
-         * Gets or sets the Number {@link Property} specifying the rotation of the texture coordinates,
-         * in radians. A positive rotation is counter-clockwise.
-         * @memberof CorridorGraphics.prototype
-         * @type {Property}
-         */
-        width : createPropertyDescriptor('width'),
-
-        /**
-         * Gets or sets the Boolean {@link Property} specifying whether the corridor should be filled.
-         * @memberof CorridorGraphics.prototype
+         * Gets or sets the Boolean {@link Property} specifying whether the volume should be filled.
+         * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
         fill : createPropertyDescriptor('fill'),
 
         /**
-         * Gets or sets the Boolean {@link Property} specifying whether the corridor should be outlined.
-         * @memberof CorridorGraphics.prototype
+         * Gets or sets the Boolean {@link Property} specifying whether the volume should be outlined.
+         * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
         outline : createPropertyDescriptor('outline'),
 
         /**
          * Gets or sets the Color {@link Property} specifying whether the color of the outline.
-         * @memberof CorridorGraphics.prototype
+         * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
         outlineColor : createPropertyDescriptor('outlineColor'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the width of the outline.
-         * @memberof CorridorGraphics.prototype
+         * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
         outlineWidth : createPropertyDescriptor('outlineWidth'),
 
         /**
          * Gets or sets the {@link CornerType} {@link Property} specifying how corners are triangulated.
-         * @memberof CorridorGraphics.prototype
+         * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
         cornerType : createPropertyDescriptor('cornerType')
     });
 
     /**
-     * Duplicates a CorridorGraphics instance.
+     * Duplicates a PolylineVolumeGraphics instance.
      *
-     * @param {CorridorGraphics} [result] The object onto which to store the result.
-     * @returns {CorridorGraphics} The modified result parameter or a new instance if one was not provided.
+     * @param {PolylineVolumeGraphics} [result] The object onto which to store the result.
+     * @returns {PolylineVolumeGraphics} The modified result parameter or a new instance if one was not provided.
      */
-    CorridorGraphics.prototype.clone = function(result) {
+    PolylineVolumeGraphics.prototype.clone = function(result) {
         if (!defined(result)) {
-            result = new CorridorGraphics();
+            result = new PolylineVolumeGraphics();
         }
         result.show = this.show;
         result.material = this.material;
         result.positions = this.positions;
-        result.height = this.height;
-        result.extrudedHeight = this.extrudedHeight;
+        result.shape = this.shape;
         result.granularity = this.granularity;
-        result.width = this.width;
         result.fill = this.fill;
         result.outline = this.outline;
         result.outlineColor = this.outlineColor;
@@ -182,9 +158,9 @@ define([
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
      *
-     * @param {CorridorGraphics} source The object to be merged into this object.
+     * @param {PolylineVolumeGraphics} source The object to be merged into this object.
      */
-    CorridorGraphics.prototype.merge = function(source) {
+    PolylineVolumeGraphics.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
@@ -194,10 +170,8 @@ define([
         this.show = defaultValue(this.show, source.show);
         this.material = defaultValue(this.material, source.material);
         this.positions = defaultValue(this.positions, source.positions);
-        this.height = defaultValue(this.height, source.height);
-        this.extrudedHeight = defaultValue(this.extrudedHeight, source.extrudedHeight);
+        this.shape = defaultValue(this.shape, source.shape);
         this.granularity = defaultValue(this.granularity, source.granularity);
-        this.width = defaultValue(this.width, source.width);
         this.fill = defaultValue(this.fill, source.fill);
         this.outline = defaultValue(this.outline, source.outline);
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
@@ -205,5 +179,5 @@ define([
         this.cornerType = defaultValue(this.cornerType, source.cornerType);
     };
 
-    return CorridorGraphics;
+    return PolylineVolumeGraphics;
 });
