@@ -34,6 +34,8 @@ define([
         this._maximumHeightsSubscription = undefined;
         this._granularity = undefined;
         this._granularitySubscription = undefined;
+        this._fill = undefined;
+        this._fillSubscription = undefined;
         this._outline = undefined;
         this._outlineSubscription = undefined;
         this._outlineColor = undefined;
