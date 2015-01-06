@@ -42,6 +42,8 @@ define([
         this._closeTopSubscription = undefined;
         this._closeBottom = undefined;
         this._closeBottomSubscription = undefined;
+        this._fill = undefined;
+        this._fillSubscription = undefined;
         this._outline = undefined;
         this._outlineSubscription = undefined;
         this._outlineColor = undefined;

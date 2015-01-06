@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+### 1.6 - 2015-02-02
+* Breaking changes
+  *
+* Deprecated
+  *
+* Added `PolylineVolumeGraphics` and `Entity.polylineVolume`
+
 ### 1.5 - 2015-01-05
 
 * Breaking changes

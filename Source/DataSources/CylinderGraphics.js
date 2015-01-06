@@ -36,6 +36,8 @@ define([
         this._showSubscription = undefined;
         this._material = undefined;
         this._materialSubscription = undefined;
+        this._fill = undefined;
+        this._fillSubscription = undefined;
         this._outline = undefined;
         this._outlineSubscription = undefined;
         this._outlineColor = undefined;

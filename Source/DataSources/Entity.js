@@ -24,6 +24,7 @@ define([
         './PointGraphics',
         './PolygonGraphics',
         './PolylineGraphics',
+        './PolylineVolumeGraphics',
         './Property',
         './PropertyHelper',
         './RectangleGraphics',
@@ -53,6 +54,7 @@ define([
         PointGraphics,
         PolygonGraphics,
         PolylineGraphics,
+        PolylineVolumeGraphics,
         Property,
         PropertyHelper,
         RectangleGraphics,
@@ -92,7 +94,7 @@ define([
         this._parent = undefined;
         this._propertyNames = ['billboard', 'box', 'corridor', 'cylinder', 'description', 'ellipse', //
                                'ellipsoid', 'label', 'model', 'orientation', 'path', 'point', 'polygon', //
-                               'polyline', 'position', 'rectangle', 'viewFrom', 'wall'];
+                               'polyline', 'polylineVolume', 'position', 'rectangle', 'viewFrom', 'wall'];
 
         this._billboard = undefined;
         this._billboardSubscription = undefined;
@@ -122,6 +124,8 @@ define([
         this._polygonSubscription = undefined;
         this._polyline = undefined;
         this._polylineSubscription = undefined;
+        this._polylineVolume = undefined;
+        this._polylineVolumeSubscription = undefined;
         this._position = undefined;
         this._positionSubscription = undefined;
         this._rectangle = undefined;
@@ -286,6 +290,12 @@ define([
          * @type {PolylineGraphics}
          */
         polyline : PropertyHelper.createPropertyTypeDescriptor('polyline', PolylineGraphics),
+        /**
+         * Gets or sets the polyline volume.
+         * @memberof Entity.prototype
+         * @type {PolylineGraphics}
+         */
+        polylineVolume : PropertyHelper.createPropertyTypeDescriptor('polylineVolume', PolylineVolumeGraphics),
         /**
          * Gets or sets the position.
          * @memberof Entity.prototype

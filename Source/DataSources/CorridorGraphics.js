@@ -38,6 +38,8 @@ define([
         this._widthSubscription = undefined;
         this._cornerType = undefined;
         this._cornerTypeSubscription = undefined;
+        this._fill = undefined;
+        this._fillSubscription = undefined;
         this._outline = undefined;
         this._outlineSubscription = undefined;
         this._outlineColor = undefined;

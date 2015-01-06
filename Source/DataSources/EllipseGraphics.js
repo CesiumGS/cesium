@@ -40,6 +40,8 @@ define([
         this._granularitySubscription = undefined;
         this._stRotation = undefined;
         this._stRotationSubscription = undefined;
+        this._fill = undefined;
+        this._fillSubscription = undefined;
         this._outline = undefined;
         this._outlineSubscription = undefined;
         this._outlineColor = undefined;

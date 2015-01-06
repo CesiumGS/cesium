@@ -16,24 +16,24 @@ define([
     "use strict";
 
     /**
-     * An optionally time-dynamic two dimensional wall.
+     * An optionally time-dynamic polyline volume.
      *
-     * @alias WallGraphics
+     * @alias PolylineVolumeGraphics
      * @constructor
      */
-    var WallGraphics = function(options) {
+    var PolylineVolumeGraphics = function(options) {
         this._show = undefined;
         this._showSubscription = undefined;
         this._material = undefined;
         this._materialSubscription = undefined;
         this._positions = undefined;
         this._positionsSubscription = undefined;
-        this._minimumHeights = undefined;
-        this._minimumHeightsSubscription = undefined;
-        this._maximumHeights = undefined;
-        this._maximumHeightsSubscription = undefined;
+        this._shape = undefined;
+        this._shapeSubscription = undefined;
         this._granularity = undefined;
         this._granularitySubscription = undefined;
+        this._cornerType = undefined;
+        this._cornerTypeSubscription = undefined;
         this._fill = undefined;
         this._fillSubscription = undefined;
         this._outline = undefined;
@@ -47,10 +47,10 @@ define([
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     };
 
-    defineProperties(WallGraphics.prototype, {
+    defineProperties(PolylineVolumeGraphics.prototype, {
         /**
          * Gets the event that is raised whenever a new property is assigned.
-         * @memberof WallGraphics.prototype
+         * @memberof PolylineVolumeGraphics.prototype
          *
          * @type {Event}
          * @readonly
@@ -62,102 +62,97 @@ define([
         },
 
         /**
-         * Gets or sets the boolean {@link Property} specifying the wall's visibility.
-         * @memberof WallGraphics.prototype
+         * Gets or sets the boolean {@link Property} specifying the volumes's visibility.
+         * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
         show : PropertyHelper.createPropertyDescriptor('show'),
 
         /**
-         * Gets or sets the {@link MaterialProperty} specifying the appearance of the wall.
-         * @memberof WallGraphics.prototype
+         * Gets or sets the {@link MaterialProperty} specifying the appearance of the volume.
+         * @memberof PolylineVolumeGraphics.prototype
          * @type {MaterialProperty}
          */
         material : PropertyHelper.createMaterialPropertyDescriptor('material'),
 
         /**
-         * Gets or sets the vertex positions.
-         * @memberof WallGraphics.prototype
+         * Gets or sets the positions of the line.
+         * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
         positions : PropertyHelper.createPropertyDescriptor('positions'),
 
         /**
-         * Gets or sets the Array {@link Property} specifying the bottom heights of the wall.
-         * This array must be the same length as positions, containing a height for
-         * each position.  If undefined, the bottom of the wall will be on the surface of the
-         * ellipsoid.
-         * @memberof WallGraphics.prototype
+         * Gets or sets the array of {@link Cartesian2} instances that define the shape to be extruded along the polyline.
+         * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
-        minimumHeights : PropertyHelper.createPropertyDescriptor('minimumHeights'),
-
-        /**
-         * Gets or sets the Array {@link Property} specifying the top heights along the wall.
-         * This array must be the same length as positions, containing a height for
-         * each position.  If undefined, the heights from positions are used.
-         * @memberof WallGraphics.prototype
-         * @type {Property}
-         */
-        maximumHeights : PropertyHelper.createPropertyDescriptor('maximumHeights'),
+        shape : PropertyHelper.createPropertyDescriptor('shape'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the sampling distance, in radians,
          * between each latitude and longitude point.
-         * @memberof WallGraphics.prototype
+         * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
         granularity : PropertyHelper.createPropertyDescriptor('granularity'),
 
         /**
-         * Gets or sets the Boolean {@link Property} specifying whether the wall should be filled.
-         * @memberof WallGraphics.prototype
+         * Gets or sets the Boolean {@link Property} specifying whether the volume should be filled.
+         * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
         fill : PropertyHelper.createPropertyDescriptor('fill'),
 
         /**
-         * Gets or sets the Boolean {@link Property} specifying whether the wall should be outlined.
-         * @memberof WallGraphics.prototype
+         * Gets or sets the Boolean {@link Property} specifying whether the volume should be outlined.
+         * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
         outline : PropertyHelper.createPropertyDescriptor('outline'),
 
         /**
          * Gets or sets the Color {@link Property} specifying whether the color of the outline.
-         * @memberof WallGraphics.prototype
+         * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
         outlineColor : PropertyHelper.createPropertyDescriptor('outlineColor'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the width of the outline.
-         * @memberof WallGraphics.prototype
+         * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
-        outlineWidth : PropertyHelper.createPropertyDescriptor('outlineWidth')
+        outlineWidth : PropertyHelper.createPropertyDescriptor('outlineWidth'),
+
+        /**
+         * Gets or sets the {@link CornerType} {@link Property} specifying how corners are triangulated.
+         * @memberof PolylineVolumeGraphics.prototype
+         * @type {Property}
+         */
+        cornerType : PropertyHelper.createPropertyDescriptor('cornerType')
     });
 
     /**
-     * Duplicates a WallGraphics instance.
+     * Duplicates a PolylineVolumeGraphics instance.
      *
-     * @param {WallGraphics} [result] The object onto which to store the result.
-     * @returns {WallGraphics} The modified result parameter or a new instance if one was not provided.
+     * @param {PolylineVolumeGraphics} [result] The object onto which to store the result.
+     * @returns {PolylineVolumeGraphics} The modified result parameter or a new instance if one was not provided.
      */
-    WallGraphics.prototype.clone = function(result) {
+    PolylineVolumeGraphics.prototype.clone = function(result) {
         if (!defined(result)) {
-            result = new WallGraphics();
+            result = new PolylineVolumeGraphics();
         }
         result.show = this.show;
         result.material = this.material;
         result.positions = this.positions;
-        result.minimumHeights = this.minimumHeights;
-        result.maximumHeights = this.maximumHeights;
+        result.shape = this.shape;
         result.granularity = this.granularity;
         result.fill = this.fill;
         result.outline = this.outline;
         result.outlineColor = this.outlineColor;
         result.outlineWidth = this.outlineWidth;
+        result.cornerType = this.cornerType;
         return result;
     };
 
@@ -165,9 +160,9 @@ define([
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
      *
-     * @param {WallGraphics} source The object to be merged into this object.
+     * @param {PolylineVolumeGraphics} source The object to be merged into this object.
      */
-    WallGraphics.prototype.merge = function(source) {
+    PolylineVolumeGraphics.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
@@ -177,14 +172,14 @@ define([
         this.show = defaultValue(this.show, source.show);
         this.material = defaultValue(this.material, source.material);
         this.positions = defaultValue(this.positions, source.positions);
-        this.minimumHeights = defaultValue(this.minimumHeights, source.minimumHeights);
-        this.maximumHeights = defaultValue(this.maximumHeights, source.maximumHeights);
+        this.shape = defaultValue(this.shape, source.shape);
         this.granularity = defaultValue(this.granularity, source.granularity);
         this.fill = defaultValue(this.fill, source.fill);
         this.outline = defaultValue(this.outline, source.outline);
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
         this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
+        this.cornerType = defaultValue(this.cornerType, source.cornerType);
     };
 
-    return WallGraphics;
+    return PolylineVolumeGraphics;
 });
