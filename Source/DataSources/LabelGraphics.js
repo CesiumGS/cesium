@@ -192,8 +192,8 @@ define([
         result.verticalOrigin = this.verticalOrigin;
         result.eyeOffset = this.eyeOffset;
         result.pixelOffset = this.pixelOffset;
-        result.translucencyByDistance = this._translucencyByDistance;
-        result.pixelOffsetScaleByDistance = this._pixelOffsetScaleByDistance;
+        result.translucencyByDistance = this.translucencyByDistance;
+        result.pixelOffsetScaleByDistance = this.pixelOffsetScaleByDistance;
         return result;
     };
 
@@ -222,8 +222,8 @@ define([
         this.verticalOrigin = defaultValue(this.verticalOrigin, source.verticalOrigin);
         this.eyeOffset = defaultValue(this.eyeOffset, source.eyeOffset);
         this.pixelOffset = defaultValue(this.pixelOffset, source.pixelOffset);
-        this.translucencyByDistance = defaultValue(this._translucencyByDistance, source._translucencyByDistance);
-        this.pixelOffsetScaleByDistance = defaultValue(this._pixelOffsetScaleByDistance, source._pixelOffsetScaleByDistance);
+        this.translucencyByDistance = defaultValue(this._translucencyByDistance, source.translucencyByDistance);
+        this.pixelOffsetScaleByDistance = defaultValue(this._pixelOffsetScaleByDistance, source.pixelOffsetScaleByDistance);
     };
 
     return LabelGraphics;

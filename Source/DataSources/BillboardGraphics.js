@@ -223,21 +223,21 @@ define([
         }
         //>>includeEnd('debug');
 
-        this.color = defaultValue(this._color, source._color);
-        this.eyeOffset = defaultValue(this._eyeOffset, source._eyeOffset);
-        this.horizontalOrigin = defaultValue(this._horizontalOrigin, source._horizontalOrigin);
-        this.image = defaultValue(this._image, source._image);
-        this.pixelOffset = defaultValue(this._pixelOffset, source._pixelOffset);
-        this.scale = defaultValue(this._scale, source._scale);
-        this.rotation = defaultValue(this._rotation, source._rotation);
-        this.alignedAxis = defaultValue(this._alignedAxis, source._alignedAxis);
-        this.show = defaultValue(this._show, source._show);
-        this.verticalOrigin = defaultValue(this._verticalOrigin, source._verticalOrigin);
-        this.width = defaultValue(this._width, source._width);
-        this.height = defaultValue(this._height, source._height);
-        this.scaleByDistance = defaultValue(this._scaleByDistance, source._scaleByDistance);
-        this.translucencyByDistance = defaultValue(this._translucencyByDistance, source._translucencyByDistance);
-        this.pixelOffsetScaleByDistance = defaultValue(this._pixelOffsetScaleByDistance, source._pixelOffsetScaleByDistance);
+        this.color = defaultValue(this._color, source.color);
+        this.eyeOffset = defaultValue(this._eyeOffset, source.eyeOffset);
+        this.horizontalOrigin = defaultValue(this._horizontalOrigin, source.horizontalOrigin);
+        this.image = defaultValue(this._image, source.image);
+        this.pixelOffset = defaultValue(this._pixelOffset, source.pixelOffset);
+        this.scale = defaultValue(this._scale, source.scale);
+        this.rotation = defaultValue(this._rotation, source.rotation);
+        this.alignedAxis = defaultValue(this._alignedAxis, source.alignedAxis);
+        this.show = defaultValue(this._show, source.show);
+        this.verticalOrigin = defaultValue(this._verticalOrigin, source.verticalOrigin);
+        this.width = defaultValue(this._width, source.width);
+        this.height = defaultValue(this._height, source.height);
+        this.scaleByDistance = defaultValue(this._scaleByDistance, source.scaleByDistance);
+        this.translucencyByDistance = defaultValue(this._translucencyByDistance, source.translucencyByDistance);
+        this.pixelOffsetScaleByDistance = defaultValue(this._pixelOffsetScaleByDistance, source.pixelOffsetScaleByDistance);
     };
 
     return BillboardGraphics;
