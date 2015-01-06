@@ -6,7 +6,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/getFilenameFromUri',
@@ -32,7 +31,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Event,
         getFilenameFromUri,
@@ -776,19 +774,12 @@ define([
         }
         //>>includeEnd('debug');
 
-        var sourceUri = options;
-        if (typeof options === 'string') {
-            sourceUri = options;
-            deprecationWarning('GeoJsonDataSource.load', 'GeoJsonDataSource.load now takes an options object instead of a string as its second parameter.  Support for passing a string parameter will be removed in Cesium 1.6');
-        } else if (defined(options)) {
-            sourceUri = options.sourceUri;
-        }
-
-        return load(this, geoJson, sourceUri, options);
+        return load(this, geoJson, undefined, options);
     };
 
     function load(that, geoJson, sourceUri, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        sourceUri = defaultValue(sourceUri, options.sourceUri);
 
         options = {
             markerSize : defaultValue(options.markerSize, defaultMarkerSize),

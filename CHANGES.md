@@ -6,7 +6,8 @@ Change Log
 * Breaking changes
   * `Rectangle.intersectWith` was deprecated in Cesium 1.5. Use `Rectangle.intersection`, which is the same but returns `undefined` when two rectangles do not intersect.
   * `Rectangle.isEmpty` was deprecated in Cesium 1.5.
-  
+  * The `sourceUri` parameter to `GeoJsonDatasource.load` was deprecated in Cesium 1.4 and has been removed. Use options.sourceUri instead.
+
 ### 1.5 - 2015-01-05
 
 * Breaking changes
