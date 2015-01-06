@@ -121,7 +121,7 @@ defineSuite([
         var updater = new PolylineVolumeGeometryUpdater(entity, scene);
 
         expect(updater.fillEnabled).toBe(true);
-        expect(updater.fillMaterialProperty).toEqual(ColorMaterialProperty.fromColor(Color.WHITE));
+        expect(updater.fillMaterialProperty).toEqual(new ColorMaterialProperty(Color.WHITE));
         expect(updater.outlineEnabled).toBe(false);
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
@@ -227,7 +227,7 @@ defineSuite([
     it('Creates expected per-color geometry', function() {
         validateGeometryInstance({
             show : true,
-            material : ColorMaterialProperty.fromColor(Color.RED),
+            material : new ColorMaterialProperty(Color.RED),
             shape : Cartesian2.fromArray([-1, -1, 1, -1, 1, 1, 1, -1]),
             granularity : 0.97,
             fill : true,
