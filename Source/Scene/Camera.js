@@ -558,7 +558,7 @@ define([
 
     function getRollCV(camera) {
         var right = camera.right;
-        return Math.atan2(right.z, right.x);
+        return CesiumMath.PI_OVER_TWO - Math.acos(right.z);
     }
 
     var scratchRollMatrix4 = new Matrix4();
@@ -572,7 +572,7 @@ define([
         Matrix3.transpose(transform, transform);
 
         var right = Matrix3.multiplyByVector(transform, camera.right, scratchRollCartesian3);
-        return Math.atan2(right.z, right.x);
+        return CesiumMath.PI_OVER_TWO - Math.acos(right.z);
     }
 
     defineProperties(Camera.prototype, {
