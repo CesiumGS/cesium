@@ -30,11 +30,8 @@ function startup(Cesium) {
 Cesium.Math.setRandomNumberSeed(1234);
 var viewer = new Cesium.Viewer('cesiumContainer');
 
-var dataSource = new Cesium.CustomDataSource();
-viewer.dataSources.add(dataSource);
-
 // Combine instances for an rectangle, polygon, ellipse, and circle into a single primitive.
-var entities = dataSource.entities;
+var entities = viewer.entities;
 
 var i;
 var height;

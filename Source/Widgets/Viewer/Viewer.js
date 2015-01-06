@@ -733,6 +733,17 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         },
 
         /**
+         * Gets the collection of entities not tied to a particular data source.
+         * @memberof Viewer.prototype
+         * @type {EntityCollection}
+         */
+        entities : {
+            get : function() {
+                return this._dataSourceDisplay.getDefaultDataSource().entities;
+            }
+        },
+
+        /**
          * Gets the set of {@link DataSource} instances to be visualized.
          * @memberof Viewer.prototype
          * @type {DataSourceCollection}

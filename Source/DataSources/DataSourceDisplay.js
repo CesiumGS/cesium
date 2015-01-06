@@ -9,6 +9,7 @@ define([
         './BoxGeometryUpdater',
         './CorridorGeometryUpdater',
         './CylinderGeometryUpdater',
+        './CustomDataSource',
         './EllipseGeometryUpdater',
         './EllipsoidGeometryUpdater',
         './GeometryVisualizer',
@@ -30,6 +31,7 @@ define([
         BoxGeometryUpdater,
         CorridorGeometryUpdater,
         CylinderGeometryUpdater,
+        CustomDataSource,
         EllipseGeometryUpdater,
         EllipsoidGeometryUpdater,
         GeometryVisualizer,
@@ -82,6 +84,12 @@ define([
         for (var i = 0, len = dataSourceCollection.length; i < len; i++) {
             this._onDataSourceAdded(dataSourceCollection, dataSourceCollection.get(i));
         }
+
+        var defaultDataSource = new CustomDataSource();
+        var visualizers = this._visualizersCallback(this._scene, defaultDataSource);
+        defaultDataSource._visualizers = visualizers;
+        this._onDataSourceAdded(undefined, defaultDataSource);
+        this._defaultDataSource = defaultDataSource;
     };
 
     /**
@@ -128,6 +136,17 @@ define([
     };
 
     /**
+     * Gets the default data source which can be used to
+     * manually create and visualize entities not tied to
+     * a specific data source,
+     *
+     * @returns {CustomDataSource} The default data sources.
+     */
+    DataSourceDisplay.prototype.getDefaultDataSource = function() {
+        return this._defaultDataSource;
+    };
+
+    /**
      * Returns true if this object was destroyed; otherwise, false.
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than
@@ -165,6 +184,7 @@ define([
         for (var i = 0, length = dataSourceCollection.length; i < length; ++i) {
             this._onDataSourceRemoved(this._dataSourceCollection, dataSourceCollection.get(i));
         }
+        this._onDataSourceRemoved(undefined, this._defaultDataSource);
 
         return destroyObject(this);
     };
@@ -202,6 +222,13 @@ define([
                 result = visualizers[x].update(time) && result;
             }
         }
+
+        visualizers = this._defaultDataSource._visualizers;
+        vLength = visualizers.length;
+        for (x = 0; x < vLength; x++) {
+            result = visualizers[x].update(time) && result;
+        }
+
         return result;
     };
 
