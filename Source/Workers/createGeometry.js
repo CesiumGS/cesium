@@ -36,7 +36,7 @@ define([
 
             if (defined(moduleName)) {
                 var createFunction = getModule(moduleName);
-                results.push(createFunction(geometry));
+                results.push(createFunction(geometry, task.offset));
             } else {
                 //Already created geometry
                 results.push(geometry);

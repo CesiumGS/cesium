@@ -8,7 +8,8 @@ defineSuite([
         'Core/Math',
         'Core/Matrix2',
         'Core/Rectangle',
-        'Core/VertexFormat'
+        'Core/VertexFormat',
+        'Specs/createPackableSpecs'
     ], function(
         RectangleGeometry,
         Cartesian2,
@@ -18,7 +19,8 @@ defineSuite([
         CesiumMath,
         Matrix2,
         Rectangle,
-        VertexFormat) {
+        VertexFormat,
+        createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -234,4 +236,12 @@ defineSuite([
         expect(m.indices.length).toEqual(8 * 3);
     });
 
+    var rectangle = new RectangleGeometry({
+        vertexFormat : VertexFormat.POSITION_ONLY,
+        rectangle : new Rectangle(-2.0, -1.0, 0.0, 1.0),
+        granularity : 1.0,
+        ellipsoid : Ellipsoid.UNIT_SPHERE
+    });
+    var packedInstance = [-2.0, -1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0];
+    createPackableSpecs(RectangleGeometry, rectangle, packedInstance);
 });

@@ -2,11 +2,13 @@
 defineSuite([
         'Core/BoxGeometry',
         'Core/Cartesian3',
-        'Core/VertexFormat'
+        'Core/VertexFormat',
+        'Specs/createPackableSpecs'
     ], function(
         BoxGeometry,
         Cartesian3,
-        VertexFormat) {
+        VertexFormat,
+        createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -81,4 +83,10 @@ defineSuite([
         expect(m.attributes.position.values.length).toEqual(8 * 3);
         expect(m.indices.length).toEqual(12 * 3);
     });
+
+    createPackableSpecs(BoxGeometry, new BoxGeometry({
+        minimumCorner : new Cartesian3(1.0, 2.0, 3.0),
+        maximumCorner : new Cartesian3(4.0, 5.0, 6.0),
+        vertexFormat : VertexFormat.POSITION_AND_NORMAL
+    }), [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0]);
 });
