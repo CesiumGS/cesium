@@ -518,7 +518,6 @@ define([
         this._outlinePrimitive = undefined;
         this._geometryUpdater = geometryUpdater;
         this._options = new GeometryOptions(geometryUpdater._entity);
-        this._scrach = undefined;
     };
 
     DynamicGeometryUpdater.prototype.update = function(time) {
@@ -540,7 +539,7 @@ define([
         }
 
         var options = this._options;
-        var hierarchy = Property.getValueOrUndefined(polygon.hierarchy, time, this._scrach);
+        var hierarchy = Property.getValueOrUndefined(polygon.hierarchy, time);
         if (!defined(hierarchy)) {
             return;
         }
