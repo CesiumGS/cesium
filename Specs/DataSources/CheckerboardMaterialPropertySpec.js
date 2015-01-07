@@ -34,6 +34,23 @@ defineSuite([
         expect(result.repeat).toEqual(new Cartesian2(2.0, 2.0));
     });
 
+    it('constructor sets options and allows raw assignment', function() {
+        var options = {
+            evenColor : Color.RED,
+            oddColor : Color.BLUE,
+            repeat : new Cartesian2(1, 2)
+        };
+
+        var property = new CheckerboardMaterialProperty(options);
+        expect(property.evenColor).toBeInstanceOf(ConstantProperty);
+        expect(property.oddColor).toBeInstanceOf(ConstantProperty);
+        expect(property.repeat).toBeInstanceOf(ConstantProperty);
+
+        expect(property.evenColor.getValue()).toEqual(options.evenColor);
+        expect(property.oddColor.getValue()).toEqual(options.oddColor);
+        expect(property.repeat.getValue()).toEqual(options.repeat);
+    });
+
     it('works with constant values', function() {
         var property = new CheckerboardMaterialProperty();
         property.evenColor = new ConstantProperty(Color.RED);

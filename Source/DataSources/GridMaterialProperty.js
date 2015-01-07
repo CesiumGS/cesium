@@ -2,6 +2,7 @@
 define([
         '../Core/Cartesian2',
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
@@ -10,6 +11,7 @@ define([
     ], function(
         Cartesian2,
         Color,
+        defaultValue,
         defined,
         defineProperties,
         Event,
@@ -28,7 +30,9 @@ define([
      * @alias GridMaterialProperty
      * @constructor
      */
-    var GridMaterialProperty = function() {
+    var GridMaterialProperty = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         this._definitionChanged = new Event();
         this._color = undefined;
         this._colorSubscription = undefined;
@@ -41,11 +45,11 @@ define([
         this._lineOffset = undefined;
         this._lineOffsetSubscription = undefined;
 
-        this.color = undefined;
-        this.cellAlpha = undefined;
-        this.lineCount = undefined;
-        this.lineThickness = undefined;
-        this.lineOffset = undefined;
+        this.color = options.color;
+        this.cellAlpha = options.cellAlpha;
+        this.lineCount = options.lineCount;
+        this.lineThickness = options.lineThickness;
+        this.lineOffset = options.lineOffset;
     };
 
     defineProperties(GridMaterialProperty.prototype, {

@@ -2,6 +2,7 @@
 define([
         '../Core/Cartesian2',
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
@@ -10,6 +11,7 @@ define([
     ], function(
         Cartesian2,
         Color,
+        defaultValue,
         defined,
         defineProperties,
         Event,
@@ -27,7 +29,9 @@ define([
      * @alias CheckerboardMaterialProperty
      * @constructor
      */
-    var CheckerboardMaterialProperty = function() {
+    var CheckerboardMaterialProperty = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         this._definitionChanged = new Event();
 
         this._evenColor = undefined;
@@ -38,6 +42,10 @@ define([
 
         this._repeat = undefined;
         this._repeatSubscription = undefined;
+
+        this.evenColor = options.evenColor;
+        this.oddColor = options.oddColor;
+        this.repeat = options.repeat;
     };
 
     defineProperties(CheckerboardMaterialProperty.prototype, {
