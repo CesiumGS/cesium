@@ -24,7 +24,9 @@ define([
             return result;
         }
 
-        throw new DeveloperError('Unknown material type.');
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Unable to infer material type: ' + value);
+        //>>includeEnd('debug');
     }
 
     /**

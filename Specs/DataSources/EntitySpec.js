@@ -9,7 +9,23 @@ defineSuite([
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
         'Core/Transforms',
-        'DataSources/ConstantProperty'
+        'DataSources/BillboardGraphics',
+        'DataSources/BoxGraphics',
+        'DataSources/ConstantProperty',
+        'DataSources/ConstantPositionProperty',
+        'DataSources/CorridorGraphics',
+        'DataSources/CylinderGraphics',
+        'DataSources/EllipseGraphics',
+        'DataSources/EllipsoidGraphics',
+        'DataSources/LabelGraphics',
+        'DataSources/ModelGraphics',
+        'DataSources/PathGraphics',
+        'DataSources/PointGraphics',
+        'DataSources/PolygonGraphics',
+        'DataSources/PolylineGraphics',
+        'DataSources/PolylineVolumeGraphics',
+        'DataSources/RectangleGraphics',
+        'DataSources/WallGraphics'
     ], function(
         Entity,
         Cartesian3,
@@ -20,15 +36,99 @@ defineSuite([
         TimeInterval,
         TimeIntervalCollection,
         Transforms,
-        ConstantProperty) {
+        BillboardGraphics,
+        BoxGraphics,
+        ConstantProperty,
+        ConstantPositionProperty,
+        CorridorGraphics,
+        CylinderGraphics,
+        EllipseGraphics,
+        EllipsoidGraphics,
+        LabelGraphics,
+        ModelGraphics,
+        PathGraphics,
+        PointGraphics,
+        PolygonGraphics,
+        PolylineGraphics,
+        PolylineVolumeGraphics,
+        RectangleGraphics,
+        WallGraphics) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('constructor sets id.', function() {
-        var entity = new Entity({
-            id : 'someId'
-        });
-        expect(entity.id).toEqual('someId');
+    it('constructor sets expected properties.', function() {
+        var entity = new Entity();
+        expect(entity.id).toBeDefined();
+        expect(entity.name).toBeUndefined();
+        expect(entity.billboard).toBeUndefined();
+        expect(entity.box).toBeUndefined();
+        expect(entity.corridor).toBeUndefined();
+        expect(entity.cylinder).toBeUndefined();
+        expect(entity.description).toBeUndefined();
+        expect(entity.ellipse).toBeUndefined();
+        expect(entity.ellipsoid).toBeUndefined();
+        expect(entity.label).toBeUndefined();
+        expect(entity.model).toBeUndefined();
+        expect(entity.orientation).toBeUndefined();
+        expect(entity.path).toBeUndefined();
+        expect(entity.point).toBeUndefined();
+        expect(entity.polygon).toBeUndefined();
+        expect(entity.polyline).toBeUndefined();
+        expect(entity.polylineVolume).toBeUndefined();
+        expect(entity.position).toBeUndefined();
+        expect(entity.rectangle).toBeUndefined();
+        expect(entity.viewFrom).toBeUndefined();
+        expect(entity.wall).toBeUndefined();
+
+        var options = {
+            id : 'someId',
+            name : 'bob',
+            customProperty : {},
+            billboard : {},
+            box : {},
+            corridor : {},
+            cylinder : {},
+            description : 'description',
+            ellipse : {},
+            ellipsoid : {},
+            label : {},
+            model : {},
+            orientation : new Quaternion(1, 2, 3, 4),
+            path : {},
+            point : {},
+            polygon : {},
+            polyline : {},
+            polylineVolume : {},
+            position : new Cartesian3(5, 6, 7),
+            rectangle : {},
+            viewFrom : new Cartesian3(8, 9, 10),
+            wall : {}
+        };
+
+        entity = new Entity(options);
+        expect(entity.id).toEqual(options.id);
+        expect(entity.name).toEqual(options.name);
+        expect(entity.customProperty).toBe(options.customProperty);
+
+        expect(entity.billboard).toBeInstanceOf(BillboardGraphics);
+        expect(entity.box).toBeInstanceOf(BoxGraphics);
+        expect(entity.corridor).toBeInstanceOf(CorridorGraphics);
+        expect(entity.cylinder).toBeInstanceOf(CylinderGraphics);
+        expect(entity.description).toBeInstanceOf(ConstantProperty);
+        expect(entity.ellipse).toBeInstanceOf(EllipseGraphics);
+        expect(entity.ellipsoid).toBeInstanceOf(EllipsoidGraphics);
+        expect(entity.label).toBeInstanceOf(LabelGraphics);
+        expect(entity.model).toBeInstanceOf(ModelGraphics);
+        expect(entity.orientation).toBeInstanceOf(ConstantProperty);
+        expect(entity.path).toBeInstanceOf(PathGraphics);
+        expect(entity.point).toBeInstanceOf(PointGraphics);
+        expect(entity.polygon).toBeInstanceOf(PolygonGraphics);
+        expect(entity.polyline).toBeInstanceOf(PolylineGraphics);
+        expect(entity.polylineVolume).toBeInstanceOf(PolylineVolumeGraphics);
+        expect(entity.position).toBeInstanceOf(ConstantPositionProperty);
+        expect(entity.rectangle).toBeInstanceOf(RectangleGraphics);
+        expect(entity.viewFrom).toBeInstanceOf(ConstantProperty);
+        expect(entity.wall).toBeInstanceOf(WallGraphics);
     });
 
     it('isAvailable is always true if no availability defined.', function() {
