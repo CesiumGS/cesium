@@ -200,8 +200,8 @@ define([
         //>>includeEnd('debug');
 
         var headingQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, heading, result);
-        var tiltQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, pitch, scratchHPRQuaternion);
-        result = Quaternion.multiply(headingQuaternion, tiltQuaternion, headingQuaternion);
+        var pitchQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, pitch, scratchHPRQuaternion);
+        result = Quaternion.multiply(headingQuaternion, pitchQuaternion, headingQuaternion);
 
         var rollQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, roll, scratchHPRQuaternion);
         return Quaternion.multiply(rollQuaternion, result, result);
