@@ -73,6 +73,7 @@
 				<include name="Documentation/**" />
 			</zipfileset>
 			<include name="Apps/**" />
+			<exclude name="Apps/Sandcastle/gallery/development/**" />
 			<include name="Source/**" />
 			<include name="Specs/**" />
 			<include name="ThirdParty/**" />
