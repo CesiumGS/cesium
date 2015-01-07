@@ -3,12 +3,14 @@ defineSuite([
         'Core/SphereGeometry',
         'Core/Cartesian3',
         'Core/Math',
-        'Core/VertexFormat'
+        'Core/VertexFormat',
+        'Specs/createPackableSpecs'
     ], function(
         SphereGeometry,
         Cartesian3,
         CesiumMath,
-        VertexFormat) {
+        VertexFormat,
+        createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -82,4 +84,13 @@ defineSuite([
             expect(binormal).toEqualEpsilon(Cartesian3.cross(normal, tangent, normal), CesiumMath.EPSILON7);
         }
     });
+
+    var sphere = new SphereGeometry({
+        vertexFormat : VertexFormat.POSITION_ONLY,
+        radius : 1,
+        stackPartitions : 3,
+        slicePartitions: 3
+    });
+    var packedInstance = [1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 3.0];
+    createPackableSpecs(SphereGeometry, sphere, packedInstance);
 });

@@ -6,7 +6,8 @@ defineSuite([
         'Core/Color',
         'Core/Ellipsoid',
         'Core/Math',
-        'Core/PrimitiveType'
+        'Core/PrimitiveType',
+        'Specs/createPackableSpecs'
     ], function(
         SimplePolylineGeometry,
         BoundingSphere,
@@ -14,7 +15,8 @@ defineSuite([
         Color,
         Ellipsoid,
         CesiumMath,
-        PrimitiveType) {
+        PrimitiveType,
+        createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -132,4 +134,14 @@ defineSuite([
         var numVertices = positions.length;
         expect(line.attributes.color.values.length).toEqual(numVertices * 4);
     });
+
+    var positions = [new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(0.0, 1.0, 0.0), new Cartesian3(0.0, 0.0, 1.0)];
+    var line = new SimplePolylineGeometry({
+        positions : positions,
+        ellipsoid : Ellipsoid.UNIT_SPHERE,
+        granularity : 0.1,
+        followSurface: false
+    });
+    var packedInstance = [3.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.1];
+    createPackableSpecs(SimplePolylineGeometry, line, packedInstance);
 });
