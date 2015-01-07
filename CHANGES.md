@@ -11,7 +11,7 @@ Change Log
   *
 * Added `PolylineVolumeGraphics` and `Entity.polylineVolume`
 * Added `Quaternion.fromHeadingPitchRoll` to create a rotation from heading, pitch, and roll angles.
-* Added `Transforms.headingPitchRollToFixedFrame` to create a local from from a position and heading/pitch/roll angles.
+* Added `Transforms.headingPitchRollToFixedFrame` to create a local frame from a position and heading/pitch/roll angles.
 
 ### 1.5 - 2015-01-05
 
