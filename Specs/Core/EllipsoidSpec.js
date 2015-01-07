@@ -3,12 +3,14 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/Cartesian3',
         'Core/Cartographic',
-        'Core/Math'
+        'Core/Math',
+        'Specs/createPackableSpecs'
     ], function(
         Ellipsoid,
         Cartesian3,
         Cartographic,
-        CesiumMath) {
+        CesiumMath,
+        createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -432,4 +434,6 @@ defineSuite([
         expect(cloned).toBe(result);
         expect(cloned).toEqual(myEllipsoid);
     });
+
+    createPackableSpecs(Ellipsoid, Ellipsoid.WGS84, [Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z]);
 });

@@ -10,7 +10,8 @@ defineSuite([
         'Core/Interval',
         'Core/Math',
         'Core/Matrix4',
-        'Core/Rectangle'
+        'Core/Rectangle',
+        'Specs/createPackableSpecs'
     ], function(
         BoundingSphere,
         Cartesian3,
@@ -22,7 +23,8 @@ defineSuite([
         Interval,
         CesiumMath,
         Matrix4,
-        Rectangle) {
+        Rectangle,
+        createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -717,4 +719,6 @@ defineSuite([
         point = new Cartographic(rectangle.east, Rectangle.center(rectangle).latitude, maxHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
     });
+
+    createPackableSpecs(BoundingSphere, new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 4.0), [1.0, 2.0, 3.0, 4.0]);
 });

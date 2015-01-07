@@ -5,14 +5,16 @@ defineSuite([
         'Core/Color',
         'Core/Ellipsoid',
         'Core/Math',
-        'Core/VertexFormat'
+        'Core/VertexFormat',
+        'Specs/createPackableSpecs'
     ], function(
         PolylineGeometry,
         Cartesian3,
         Color,
         Ellipsoid,
         CesiumMath,
-        VertexFormat) {
+        VertexFormat,
+        createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -159,4 +161,15 @@ defineSuite([
             }));
         }).toThrowDeveloperError();
     });
+
+    var positions = [new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(0.0, 1.0, 0.0), new Cartesian3(0.0, 0.0, 1.0)];
+    var line = new PolylineGeometry({
+        positions : positions,
+        width : 10.0,
+        vertexFormat : VertexFormat.POSITION_ONLY,
+        granularity : Math.PI,
+        ellipsoid: Ellipsoid.UNIT_SPHERE
+    });
+    var packedInstance = [3.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 10.0, 0.0, 1.0, Math.PI];
+    createPackableSpecs(PolylineGeometry, line, packedInstance);
 });
