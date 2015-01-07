@@ -5,14 +5,14 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './PropertyHelper'
+        './createPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        PropertyHelper) {
+        createPropertyDescriptor) {
     "use strict";
 
     /**
@@ -54,25 +54,25 @@ define([
          * @memberof ModelGraphics.prototype
          * @type {Property}
          */
-        show : PropertyHelper.createPropertyDescriptor('show'),
+        show : createPropertyDescriptor('show'),
         /**
          * Gets or sets the Number {@link Property} specifying the model's scale.
          * @memberof ModelGraphics.prototype
          * @type {Property}
          */
-        scale : PropertyHelper.createPropertyDescriptor('scale'),
+        scale : createPropertyDescriptor('scale'),
         /**
          * Gets or sets the Number {@link Property} specifying the model's approximate minimum pixel size regardless of zoom.
          * @memberof ModelGraphics.prototype
          * @type {Property}
          */
-        minimumPixelSize : PropertyHelper.createPropertyDescriptor('minimumPixelSize'),
+        minimumPixelSize : createPropertyDescriptor('minimumPixelSize'),
         /**
          * Gets or sets the string {@link Property} specifying the model's uri.
          * @memberof ModelGraphics.prototype
          * @type {Property}
          */
-        uri : PropertyHelper.createPropertyDescriptor('uri')
+        uri : createPropertyDescriptor('uri')
     });
 
     /**

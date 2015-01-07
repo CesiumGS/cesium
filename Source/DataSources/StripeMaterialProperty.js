@@ -5,8 +5,8 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
+        './createPropertyDescriptor',
         './Property',
-        './PropertyHelper',
         './StripeOrientation'
     ], function(
         Color,
@@ -14,8 +14,8 @@ define([
         defined,
         defineProperties,
         Event,
+        createPropertyDescriptor,
         Property,
-        PropertyHelper,
         StripeOrientation) {
     "use strict";
 
@@ -95,19 +95,19 @@ define([
          * @memberof StripeMaterialProperty.prototype
          * @type {Property}
          */
-        orientation : PropertyHelper.createPropertyDescriptor('orientation'),
+        orientation : createPropertyDescriptor('orientation'),
         /**
          * Gets or sets the {@link Color} property which determines the first color.
          * @memberof StripeMaterialProperty.prototype
          * @type {Property}
          */
-        evenColor : PropertyHelper.createPropertyDescriptor('evenColor'),
+        evenColor : createPropertyDescriptor('evenColor'),
         /**
          * Gets or sets the {@link Color} property which determines the second color.
          * @memberof StripeMaterialProperty.prototype
          * @type {Property}
          */
-        oddColor : PropertyHelper.createPropertyDescriptor('oddColor'),
+        oddColor : createPropertyDescriptor('oddColor'),
         /**
          * Gets or sets the numeric property which determines at which point into the pattern
          * to begin drawing; with 0.0 being the beginning of the even color, 1.0 the beginning
@@ -116,13 +116,13 @@ define([
          * @memberof StripeMaterialProperty.prototype
          * @type {Property}
          */
-        offset : PropertyHelper.createPropertyDescriptor('offset'),
+        offset : createPropertyDescriptor('offset'),
         /**
          * A numeric property which determines how many times the stripe pattern repeats.
          * @memberof StripeMaterialProperty.prototype
          * @type {Property}
          */
-        repeat : PropertyHelper.createPropertyDescriptor('repeat')
+        repeat : createPropertyDescriptor('repeat')
     });
 
     /**

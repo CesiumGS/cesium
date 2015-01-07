@@ -6,7 +6,8 @@ define([
         '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
-        './PropertyHelper'
+        './createMaterialPropertyDescriptor',
+        './createPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
@@ -14,7 +15,8 @@ define([
         deprecationWarning,
         DeveloperError,
         Event,
-        PropertyHelper) {
+        createMaterialPropertyDescriptor,
+        createPropertyDescriptor) {
     "use strict";
 
     /**
@@ -72,14 +74,14 @@ define([
          * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        show : PropertyHelper.createPropertyDescriptor('show'),
+        show : createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the polygon.
          * @memberof PolygonGraphics.prototype
          * @type {MaterialProperty}
          */
-        material : PropertyHelper.createMaterialPropertyDescriptor('material'),
+        material : createMaterialPropertyDescriptor('material'),
 
         /**
          * Gets or sets the positions that define the polygon.
@@ -102,7 +104,7 @@ define([
          * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        hierarchy : PropertyHelper.createPropertyDescriptor('hierarchy'),
+        hierarchy : createPropertyDescriptor('hierarchy'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the height of the polygon.
@@ -110,7 +112,7 @@ define([
          * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        height : PropertyHelper.createPropertyDescriptor('height'),
+        height : createPropertyDescriptor('height'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the extruded height of the polygon.
@@ -119,7 +121,7 @@ define([
          * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        extrudedHeight : PropertyHelper.createPropertyDescriptor('extrudedHeight'),
+        extrudedHeight : createPropertyDescriptor('extrudedHeight'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the sampling distance, in radians,
@@ -127,7 +129,7 @@ define([
          * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        granularity : PropertyHelper.createPropertyDescriptor('granularity'),
+        granularity : createPropertyDescriptor('granularity'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the rotation of the texture coordinates,
@@ -135,42 +137,42 @@ define([
          * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        stRotation : PropertyHelper.createPropertyDescriptor('stRotation'),
+        stRotation : createPropertyDescriptor('stRotation'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the polygon should be filled.
          * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        fill : PropertyHelper.createPropertyDescriptor('fill'),
+        fill : createPropertyDescriptor('fill'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the polygon should be outlined.
          * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        outline : PropertyHelper.createPropertyDescriptor('outline'),
+        outline : createPropertyDescriptor('outline'),
 
         /**
          * Gets or sets the Color {@link Property} specifying whether the color of the outline.
          * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        outlineColor : PropertyHelper.createPropertyDescriptor('outlineColor'),
+        outlineColor : createPropertyDescriptor('outlineColor'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the width of the outline.
          * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        outlineWidth : PropertyHelper.createPropertyDescriptor('outlineWidth'),
+        outlineWidth : createPropertyDescriptor('outlineWidth'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the polygon uses per-position heights.
          * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        perPositionHeight : PropertyHelper.createPropertyDescriptor('perPositionHeight')
+        perPositionHeight : createPropertyDescriptor('perPositionHeight')
     });
 
     /**

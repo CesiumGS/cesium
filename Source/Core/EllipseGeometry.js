@@ -762,6 +762,7 @@ define([
      * @returns {Geometry} The computed vertices and indices.
      */
     EllipseGeometry.createGeometry = function(ellipseGeometry) {
+        ellipseGeometry._center = ellipseGeometry._ellipsoid.scaleToGeodeticSurface(ellipseGeometry._center, ellipseGeometry._center);
         var options = {
             center : ellipseGeometry._center,
             semiMajorAxis : ellipseGeometry._semiMajorAxis,

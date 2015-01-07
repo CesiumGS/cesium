@@ -13,6 +13,7 @@ Change Log
 * Improved performance of asynchronous geometry creation (as much as 20% faster in some use cases). [#2342](https://github.com/AnalyticalGraphicsInc/cesium/issues/2342)
 * Added `PolylineVolumeGraphics` and `Entity.polylineVolume`
 * Added `BillboardGraphics.imageSubRegion`, to enable custom texture atlas use for `Entity` instances.
+* Added `CheckerboardMaterialProperty` to enable use of the checkerboard material with the entity API.
 * Added `PolygonHierarchy` to make defining polygons with holes clearer.
 * Added `PolygonGraphics.hierarchy` for supporting polygons with holes via data sources.
 * `GeoJsonDataSource` now supports polygons with holes.

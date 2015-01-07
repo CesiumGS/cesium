@@ -5,14 +5,14 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './PropertyHelper'
+        './createPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        PropertyHelper) {
+        createPropertyDescriptor) {
     "use strict";
 
     /**
@@ -73,84 +73,84 @@ define([
          * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        text : PropertyHelper.createPropertyDescriptor('text'),
+        text : createPropertyDescriptor('text'),
 
         /**
          * Gets or sets the string {@link Property} specifying the the label's font.
          * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        font : PropertyHelper.createPropertyDescriptor('font'),
+        font : createPropertyDescriptor('font'),
 
         /**
          * Gets or sets the {@link LabelStyle} {@link Property} specifying the the label's style.
          * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        style : PropertyHelper.createPropertyDescriptor('style'),
+        style : createPropertyDescriptor('style'),
 
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the the label's fill color.
          * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        fillColor : PropertyHelper.createPropertyDescriptor('fillColor'),
+        fillColor : createPropertyDescriptor('fillColor'),
 
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the the label's outline color.
          * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        outlineColor : PropertyHelper.createPropertyDescriptor('outlineColor'),
+        outlineColor : createPropertyDescriptor('outlineColor'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the label outline's width.
          * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        outlineWidth : PropertyHelper.createPropertyDescriptor('outlineWidth'),
+        outlineWidth : createPropertyDescriptor('outlineWidth'),
 
         /**
          * Gets or sets the {@link HorizontalOrigin} {@link Property} specifying the label's horizontal origin.
          * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        horizontalOrigin : PropertyHelper.createPropertyDescriptor('horizontalOrigin'),
+        horizontalOrigin : createPropertyDescriptor('horizontalOrigin'),
 
         /**
          * Gets or sets the {@link VerticalOrigin} {@link Property} specifying the label's vertical origin.
          * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        verticalOrigin : PropertyHelper.createPropertyDescriptor('verticalOrigin'),
+        verticalOrigin : createPropertyDescriptor('verticalOrigin'),
 
         /**
          * Gets or sets the {@link Cartesian3} {@link Property} specifying the label's eye offset.
          * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        eyeOffset : PropertyHelper.createPropertyDescriptor('eyeOffset'),
+        eyeOffset : createPropertyDescriptor('eyeOffset'),
 
         /**
          * Gets or sets the {@link Cartesian2} {@link Property} specifying the label's pixel offset.
          * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        pixelOffset : PropertyHelper.createPropertyDescriptor('pixelOffset'),
+        pixelOffset : createPropertyDescriptor('pixelOffset'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the label's scale.
          * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        scale : PropertyHelper.createPropertyDescriptor('scale'),
+        scale : createPropertyDescriptor('scale'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the label's visibility.
          * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        show : PropertyHelper.createPropertyDescriptor('show'),
+        show : createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link NearFarScalar} {@link Property} used to set translucency based on distance.
@@ -158,7 +158,7 @@ define([
          * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        translucencyByDistance : PropertyHelper.createPropertyDescriptor('translucencyByDistance'),
+        translucencyByDistance : createPropertyDescriptor('translucencyByDistance'),
 
         /**
          * Gets or sets the {@link NearFarScalar} {@link Property} used to set pixel offset scaling based on distance.
@@ -166,7 +166,7 @@ define([
          * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        pixelOffsetScaleByDistance : PropertyHelper.createPropertyDescriptor('pixelOffsetScaleByDistance')
+        pixelOffsetScaleByDistance : createPropertyDescriptor('pixelOffsetScaleByDistance')
 
     });
 

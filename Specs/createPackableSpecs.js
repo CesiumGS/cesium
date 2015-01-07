@@ -1,5 +1,8 @@
 /*global define*/
-define(['Core/defined'], function(defined) {
+define([
+        'Core/defined'
+    ], function(
+        defined) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

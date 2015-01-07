@@ -1,5 +1,8 @@
 /*global define*/
-define(['./defined'], function(defined) {
+define([
+        './defined'
+    ], function(
+        defined) {
     "use strict";
 
     /**

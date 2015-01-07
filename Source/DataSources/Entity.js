@@ -14,7 +14,10 @@ define([
         '../Core/Transforms',
         './BillboardGraphics',
         './BoxGraphics',
+        './ConstantPositionProperty',
         './CorridorGraphics',
+        './createPropertyDescriptor',
+        './createRawPropertyDescriptor',
         './CylinderGraphics',
         './EllipseGraphics',
         './EllipsoidGraphics',
@@ -26,7 +29,6 @@ define([
         './PolylineGraphics',
         './PolylineVolumeGraphics',
         './Property',
-        './PropertyHelper',
         './RectangleGraphics',
         './WallGraphics'
     ], function(
@@ -44,7 +46,10 @@ define([
         Transforms,
         BillboardGraphics,
         BoxGraphics,
+        ConstantPositionProperty,
         CorridorGraphics,
+        createPropertyDescriptor,
+        createRawPropertyDescriptor,
         CylinderGraphics,
         EllipseGraphics,
         EllipsoidGraphics,
@@ -56,10 +61,26 @@ define([
         PolylineGraphics,
         PolylineVolumeGraphics,
         Property,
-        PropertyHelper,
         RectangleGraphics,
         WallGraphics) {
     "use strict";
+
+    function createConstantPositionProperty(value) {
+        return new ConstantPositionProperty(value);
+    }
+
+    function createPositionPropertyDescriptor(name) {
+        return createPropertyDescriptor(name, undefined, createConstantPositionProperty);
+    }
+
+    function createPropertyTypeDescriptor(name, Type) {
+        return createPropertyDescriptor(name, undefined, function(value) {
+            if (value instanceof Type) {
+                return value;
+            }
+            return new Type(value);
+        });
+    }
 
     /**
      * Entity instances are the primary data store for processed data.
@@ -148,7 +169,7 @@ define([
          * @memberof Entity.prototype
          * @type {TimeIntervalCollection}
          */
-        availability : PropertyHelper.createRawPropertyDescriptor('availability'),
+        availability : createRawPropertyDescriptor('availability'),
         /**
          * Gets the unique ID associated with this object.
          * @memberof Entity.prototype
@@ -195,7 +216,7 @@ define([
          * @memberof Entity.prototype
          * @type {Entity}
          */
-        parent : PropertyHelper.createRawPropertyDescriptor('parent'),
+        parent : createRawPropertyDescriptor('parent'),
         /**
          * Gets the names of all properties registered on this instance.
          * @memberof Entity.prototype
@@ -211,116 +232,116 @@ define([
          * @memberof Entity.prototype
          * @type {BillboardGraphics}
          */
-        billboard : PropertyHelper.createPropertyTypeDescriptor('billboard', BillboardGraphics),
+        billboard : createPropertyTypeDescriptor('billboard', BillboardGraphics),
         /**
          * Gets or sets the box.
          * @memberof Entity.prototype
          * @type {BoxGraphics}
          */
-        box : PropertyHelper.createPropertyTypeDescriptor('box', BoxGraphics),
+        box : createPropertyTypeDescriptor('box', BoxGraphics),
         /**
          * Gets or sets the corridor.
          * @memberof Entity.prototype
          * @type {CorridorGraphics}
          */
-        corridor : PropertyHelper.createPropertyTypeDescriptor('corridor', CorridorGraphics),
+        corridor : createPropertyTypeDescriptor('corridor', CorridorGraphics),
         /**
          * Gets or sets the cylinder.
          * @memberof Entity.prototype
          * @type {CylinderGraphics}
          */
-        cylinder : PropertyHelper.createPropertyTypeDescriptor('cylinder', CylinderGraphics),
+        cylinder : createPropertyTypeDescriptor('cylinder', CylinderGraphics),
         /**
          * Gets or sets the description.
          * @memberof Entity.prototype
          * @type {Property}
          */
-        description : PropertyHelper.createPropertyDescriptor('description'),
+        description : createPropertyDescriptor('description'),
         /**
          * Gets or sets the ellipse.
          * @memberof Entity.prototype
          * @type {EllipseGraphics}
          */
-        ellipse : PropertyHelper.createPropertyTypeDescriptor('ellipse', EllipseGraphics),
+        ellipse : createPropertyTypeDescriptor('ellipse', EllipseGraphics),
         /**
          * Gets or sets the ellipsoid.
          * @memberof Entity.prototype
          * @type {EllipsoidGraphics}
          */
-        ellipsoid : PropertyHelper.createPropertyTypeDescriptor('ellipsoid', EllipsoidGraphics),
+        ellipsoid : createPropertyTypeDescriptor('ellipsoid', EllipsoidGraphics),
         /**
          * Gets or sets the label.
          * @memberof Entity.prototype
          * @type {LabelGraphics}
          */
-        label : PropertyHelper.createPropertyTypeDescriptor('label', LabelGraphics),
+        label : createPropertyTypeDescriptor('label', LabelGraphics),
         /**
          * Gets or sets the model.
          * @memberof Entity.prototype
          * @type {LabelGraphics}
          */
-        model : PropertyHelper.createPropertyTypeDescriptor('model', ModelGraphics),
+        model : createPropertyTypeDescriptor('model', ModelGraphics),
         /**
          * Gets or sets the orientation.
          * @memberof Entity.prototype
          * @type {Property}
          */
-        orientation : PropertyHelper.createPropertyDescriptor('orientation'),
+        orientation : createPropertyDescriptor('orientation'),
         /**
          * Gets or sets the path.
          * @memberof Entity.prototype
          * @type {PathGraphics}
          */
-        path : PropertyHelper.createPropertyTypeDescriptor('path', PathGraphics),
+        path : createPropertyTypeDescriptor('path', PathGraphics),
         /**
          * Gets or sets the point graphic.
          * @memberof Entity.prototype
          * @type {PointGraphics}
          */
-        point : PropertyHelper.createPropertyTypeDescriptor('point', PointGraphics),
+        point : createPropertyTypeDescriptor('point', PointGraphics),
         /**
          * Gets or sets the polygon.
          * @memberof Entity.prototype
          * @type {PolygonGraphics}
          */
-        polygon : PropertyHelper.createPropertyTypeDescriptor('polygon', PolygonGraphics),
+        polygon : createPropertyTypeDescriptor('polygon', PolygonGraphics),
         /**
          * Gets or sets the polyline.
          * @memberof Entity.prototype
          * @type {PolylineGraphics}
          */
-        polyline : PropertyHelper.createPropertyTypeDescriptor('polyline', PolylineGraphics),
+        polyline : createPropertyTypeDescriptor('polyline', PolylineGraphics),
         /**
          * Gets or sets the polyline volume.
          * @memberof Entity.prototype
          * @type {PolylineGraphics}
          */
-        polylineVolume : PropertyHelper.createPropertyTypeDescriptor('polylineVolume', PolylineVolumeGraphics),
+        polylineVolume : createPropertyTypeDescriptor('polylineVolume', PolylineVolumeGraphics),
         /**
          * Gets or sets the position.
          * @memberof Entity.prototype
          * @type {PositionProperty}
          */
-        position : PropertyHelper.createPositionPropertyDescriptor('position'),
+        position : createPositionPropertyDescriptor('position'),
         /**
          * Gets or sets the rectangle.
          * @memberof Entity.prototype
          * @type {RectangleGraphics}
          */
-        rectangle : PropertyHelper.createPropertyTypeDescriptor('rectangle', RectangleGraphics),
+        rectangle : createPropertyTypeDescriptor('rectangle', RectangleGraphics),
         /**
          * Gets or sets the suggested initial offset for viewing this object
          * with the camera.  The offset is defined in the east-north-up reference frame.
          * @memberof Entity.prototype
          * @type {Cartesian3}
          */
-        viewFrom : PropertyHelper.createPropertyDescriptor('viewFrom'),
+        viewFrom : createPropertyDescriptor('viewFrom'),
         /**
          * Gets or sets the wall.
          * @memberof Entity.prototype
          * @type {WallGraphics}
          */
-        wall : PropertyHelper.createPropertyTypeDescriptor('wall', WallGraphics)
+        wall : createPropertyTypeDescriptor('wall', WallGraphics)
     });
 
     /**
@@ -366,7 +387,7 @@ define([
         //>>includeEnd('debug');
 
         propertyNames.push(propertyName);
-        Object.defineProperty(this, propertyName, PropertyHelper.createRawPropertyDescriptor(propertyName, true));
+        Object.defineProperty(this, propertyName, createRawPropertyDescriptor(propertyName, true));
     };
 
     /**

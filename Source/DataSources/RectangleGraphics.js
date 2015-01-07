@@ -5,14 +5,16 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './PropertyHelper'
+        './createMaterialPropertyDescriptor',
+        './createPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        PropertyHelper) {
+        createMaterialPropertyDescriptor,
+        createPropertyDescriptor) {
     "use strict";
 
     /**
@@ -74,21 +76,21 @@ define([
          * @memberof RectangleGraphics.prototype
          * @type {Property}
          */
-        show : PropertyHelper.createPropertyDescriptor('show'),
+        show : createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link Rectangle} {@link Property} specifying the extent.
          * @memberof RectangleGraphics.prototype
          * @type {Property}
          */
-        coordinates : PropertyHelper.createPropertyDescriptor('coordinates'),
+        coordinates : createPropertyDescriptor('coordinates'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the rectangle.
          * @memberof RectangleGraphics.prototype
          * @type {MaterialProperty}
          */
-        material : PropertyHelper.createMaterialPropertyDescriptor('material'),
+        material : createMaterialPropertyDescriptor('material'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the height of the rectangle.
@@ -96,7 +98,7 @@ define([
          * @memberof RectangleGraphics.prototype
          * @type {Property}
          */
-        height : PropertyHelper.createPropertyDescriptor('height'),
+        height : createPropertyDescriptor('height'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the extruded height of the rectangle.
@@ -105,7 +107,7 @@ define([
          * @memberof RectangleGraphics.prototype
          * @type {Property}
          */
-        extrudedHeight : PropertyHelper.createPropertyDescriptor('extrudedHeight'),
+        extrudedHeight : createPropertyDescriptor('extrudedHeight'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the sampling distance, in radians,
@@ -113,7 +115,7 @@ define([
          * @memberof RectangleGraphics.prototype
          * @type {Property}
          */
-        granularity : PropertyHelper.createPropertyDescriptor('granularity'),
+        granularity : createPropertyDescriptor('granularity'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the rotation of the texture coordinates,
@@ -121,7 +123,7 @@ define([
          * @memberof RectangleGraphics.prototype
          * @type {Property}
          */
-        stRotation : PropertyHelper.createPropertyDescriptor('stRotation'),
+        stRotation : createPropertyDescriptor('stRotation'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the rotation of the texture coordinates,
@@ -129,49 +131,49 @@ define([
          * @memberof RectangleGraphics.prototype
          * @type {Property}
          */
-        rotation : PropertyHelper.createPropertyDescriptor('rotation'),
+        rotation : createPropertyDescriptor('rotation'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the rectangle should be filled.
          * @memberof RectangleGraphics.prototype
          * @type {Property}
          */
-        fill : PropertyHelper.createPropertyDescriptor('fill'),
+        fill : createPropertyDescriptor('fill'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the rectangle should be outlined.
          * @memberof RectangleGraphics.prototype
          * @type {Property}
          */
-        outline : PropertyHelper.createPropertyDescriptor('outline'),
+        outline : createPropertyDescriptor('outline'),
 
         /**
          * Gets or sets the Color {@link Property} specifying whether the color of the outline.
          * @memberof RectangleGraphics.prototype
          * @type {Property}
          */
-        outlineColor : PropertyHelper.createPropertyDescriptor('outlineColor'),
+        outlineColor : createPropertyDescriptor('outlineColor'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the width of the outline.
          * @memberof EllipseGraphics.prototype
          * @type {Property}
          */
-        outlineWidth : PropertyHelper.createPropertyDescriptor('outlineWidth'),
+        outlineWidth : createPropertyDescriptor('outlineWidth'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether an extruded rectangle should have a closed top.
          * @memberof RectangleGraphics.prototype
          * @type {Property}
          */
-        closeTop : PropertyHelper.createPropertyDescriptor('closeTop'),
+        closeTop : createPropertyDescriptor('closeTop'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether an extruded rectangle should have a closed bottom.
          * @memberof RectangleGraphics.prototype
          * @type {Property}
          */
-        closeBottom : PropertyHelper.createPropertyDescriptor('closeBottom')
+        closeBottom : createPropertyDescriptor('closeBottom')
     });
 
     /**

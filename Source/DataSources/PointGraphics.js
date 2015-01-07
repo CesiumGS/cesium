@@ -5,14 +5,14 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './PropertyHelper'
+        './createPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        PropertyHelper) {
+        createPropertyDescriptor) {
     "use strict";
 
     /**
@@ -57,35 +57,35 @@ define([
          * @memberof PointGraphics.prototype
          * @type {Property}
          */
-        color : PropertyHelper.createPropertyDescriptor('color'),
+        color : createPropertyDescriptor('color'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the point's size in pixels.
          * @memberof PointGraphics.prototype
          * @type {Property}
          */
-        pixelSize : PropertyHelper.createPropertyDescriptor('pixelSize'),
+        pixelSize : createPropertyDescriptor('pixelSize'),
 
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the the point's outline color.
          * @memberof PointGraphics.prototype
          * @type {Property}
          */
-        outlineColor : PropertyHelper.createPropertyDescriptor('outlineColor'),
+        outlineColor : createPropertyDescriptor('outlineColor'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the point's outline width.
          * @memberof PointGraphics.prototype
          * @type {Property}
          */
-        outlineWidth : PropertyHelper.createPropertyDescriptor('outlineWidth'),
+        outlineWidth : createPropertyDescriptor('outlineWidth'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the point's visibility.
          * @memberof PointGraphics.prototype
          * @type {Property}
          */
-        show : PropertyHelper.createPropertyDescriptor('show'),
+        show : createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link NearFarScalar} {@link Property} used to scale billboards based on distance.
@@ -93,7 +93,7 @@ define([
          * @memberof PointGraphics.prototype
          * @type {Property}
          */
-        scaleByDistance : PropertyHelper.createPropertyDescriptor('scaleByDistance')
+        scaleByDistance : createPropertyDescriptor('scaleByDistance')
     });
 
     /**

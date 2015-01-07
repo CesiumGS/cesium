@@ -5,16 +5,16 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
-        './Property',
-        './PropertyHelper'
+        './createPropertyDescriptor',
+        './Property'
     ], function(
         Color,
         defaultValue,
         defined,
         defineProperties,
         Event,
-        Property,
-        PropertyHelper) {
+        createPropertyDescriptor,
+        Property) {
     "use strict";
 
     var defaultColor = Color.WHITE;
@@ -69,13 +69,13 @@ define([
          * @memberof PolylineGlowProperty.prototype
          * @type {Property}
          */
-        color : PropertyHelper.createPropertyDescriptor('color'),
+        color : createPropertyDescriptor('color'),
         /**
          * A numeric {@link Property} which determines the strength of the glow, as a percentage of the total line width (less than 1.0).
          * @memberof PolylineGlowProperty.prototype
          * @type {Property}
          */
-        glowPower : PropertyHelper.createPropertyDescriptor('glowPower')
+        glowPower : createPropertyDescriptor('glowPower')
     });
 
     /**

@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Cartesian2',
+        '../Core/Color',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
@@ -8,6 +9,7 @@ define([
         './Property'
     ], function(
         Cartesian2,
+        Color,
         defined,
         defineProperties,
         Event,
@@ -15,40 +17,50 @@ define([
         Property) {
     "use strict";
 
-    var defaultRepeat = new Cartesian2(1, 1);
+    var defaultEvenColor = Color.WHITE;
+    var defaultOddColor = Color.BLACK;
+    var defaultRepeat = new Cartesian2(2.0, 2.0);
 
     /**
-     * A {@link MaterialProperty} that maps to image {@link Material} uniforms.
-     * @alias ImageMaterialProperty
+     * A {@link MaterialProperty} that maps to checkerboard {@link Material} uniforms.
+     *
+     * @alias CheckerboardMaterialProperty
      * @constructor
      */
-    var ImageMaterialProperty = function() {
+    var CheckerboardMaterialProperty = function() {
         this._definitionChanged = new Event();
-        this._image = undefined;
-        this._imageSubscription = undefined;
+
+        this._evenColor = undefined;
+        this._evenColorSubscription = undefined;
+
+        this._oddColor = undefined;
+        this._oddColorSubscription = undefined;
+
         this._repeat = undefined;
         this._repeatSubscription = undefined;
     };
 
-    defineProperties(ImageMaterialProperty.prototype, {
+    defineProperties(CheckerboardMaterialProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.
-         * @memberof ImageMaterialProperty.prototype
+         * @memberof CheckerboardMaterialProperty.prototype
          *
          * @type {Boolean}
          * @readonly
          */
         isConstant : {
             get : function() {
-                return Property.isConstant(this._image) && Property.isConstant(this._repeat);
+                return Property.isConstant(this._evenColor) && //
+                       Property.isConstant(this._oddColor) && //
+                       Property.isConstant(this._repeat);
             }
         },
         /**
          * Gets the event that is raised whenever the definition of this property changes.
          * The definition is considered to have changed if a call to getValue would return
          * a different result for the same time.
-         * @memberof ImageMaterialProperty.prototype
+         * @memberof CheckerboardMaterialProperty.prototype
          *
          * @type {Event}
          * @readonly
@@ -59,16 +71,21 @@ define([
             }
         },
         /**
-         * Gets or sets the Image, URL, or Canvas {@link Property} specifying the material's texture.
-         * @memberof ImageMaterialProperty.prototype
+         * Gets or sets the {@link Color} property which determines the first color.
+         * @memberof CheckerboardMaterialProperty.prototype
          * @type {Property}
          */
-        image : createPropertyDescriptor('image'),
+        evenColor : createPropertyDescriptor('evenColor'),
         /**
-         * Gets or sets the {@link Cartesian2} property which determines the number of times the image repeats in each direction.
-         * @memberof ImageMaterialProperty.prototype
+         * Gets or sets the {@link Color} property which determines the second color.
+         * @memberof CheckerboardMaterialProperty.prototype
          * @type {Property}
-         * @default new ConstantProperty(new Cartesian2(1, 1))
+         */
+        oddColor : createPropertyDescriptor('oddColor'),
+        /**
+         * A {@link Cartesian2} property which determines how many times the checkerboard tiles repeat in each direction.
+         * @memberof CheckerboardMaterialProperty.prototype
+         * @type {Property}
          */
         repeat : createPropertyDescriptor('repeat')
     });
@@ -79,8 +96,8 @@ define([
      * @param {JulianDate} time The time for which to retrieve the type.
      * @returns {String} The type of material.
      */
-    ImageMaterialProperty.prototype.getType = function(time) {
-        return 'Image';
+    CheckerboardMaterialProperty.prototype.getType = function(time) {
+        return 'Checkerboard';
     };
 
     /**
@@ -90,13 +107,13 @@ define([
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
      */
-    ImageMaterialProperty.prototype.getValue = function(time, result) {
+    CheckerboardMaterialProperty.prototype.getValue = function(time, result) {
         if (!defined(result)) {
             result = {};
         }
-
-        result.image = Property.getValueOrUndefined(this._image, time);
-        result.repeat = Property.getValueOrClonedDefault(this._repeat, time, defaultRepeat, result.repeat);
+        result.lightColor = Property.getValueOrClonedDefault(this._evenColor, time, defaultEvenColor, result.lightColor);
+        result.darkColor = Property.getValueOrClonedDefault(this._oddColor, time, defaultOddColor, result.darkColor);
+        result.repeat = Property.getValueOrDefault(this._repeat, time, defaultRepeat);
         return result;
     };
 
@@ -107,12 +124,13 @@ define([
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
-    ImageMaterialProperty.prototype.equals = function(other) {
+    CheckerboardMaterialProperty.prototype.equals = function(other) {
         return this === other || //
-               (other instanceof ImageMaterialProperty && //
-                Property.equals(this._image, other._image) && //
-                Property.equals(this._repeat, other._repeat));
+               (other instanceof CheckerboardMaterialProperty && //
+                       Property.equals(this._evenColor, other._evenColor) && //
+                       Property.equals(this._oddColor, other._oddColor) && //
+                       Property.equals(this._repeat, other._repeat));
     };
 
-    return ImageMaterialProperty;
+    return CheckerboardMaterialProperty;
 });

@@ -4,15 +4,15 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
-        './Property',
-        './PropertyHelper'
+        './createPropertyDescriptor',
+        './Property'
     ], function(
         Color,
         defined,
         defineProperties,
         Event,
-        Property,
-        PropertyHelper) {
+        createPropertyDescriptor,
+        Property) {
     "use strict";
 
     var defaultColor = Color.WHITE;
@@ -68,21 +68,21 @@ define([
          * @type {Property}
          * @default new ConstantProperty(Color.WHITE)
          */
-        color : PropertyHelper.createPropertyDescriptor('color'),
+        color : createPropertyDescriptor('color'),
         /**
          * Gets or sets the {@link Color} property which determines the polyline's outline color.
          * @memberof PolylineOutlineMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(Color.BLACK)
          */
-        outlineColor : PropertyHelper.createPropertyDescriptor('outlineColor'),
+        outlineColor : createPropertyDescriptor('outlineColor'),
         /**
          * Gets or sets the numberic property which determines the polyline's outline width.
          * @memberof PolylineOutlineMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(0)
          */
-        outlineWidth : PropertyHelper.createPropertyDescriptor('outlineWidth')
+        outlineWidth : createPropertyDescriptor('outlineWidth')
     });
 
     /**
