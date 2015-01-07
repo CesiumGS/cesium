@@ -24,6 +24,8 @@ define([
     var BillboardGraphics = function(options) {
         this._image = undefined;
         this._imageSubscription = undefined;
+        this._imageSubRegion = undefined;
+        this._imageSubRegionSubscription = undefined;
         this._width = undefined;
         this._widthSubscription = undefined;
         this._height = undefined;
@@ -77,6 +79,14 @@ define([
          * @type {Property}
          */
         image : PropertyHelper.createPropertyDescriptor('image'),
+
+        /**
+         * Gets or sets the {@link BoundingRectangle} that defines a sub-region of the
+         * specified image to use for the billboard, rather than the entire image.
+         * @memberof BillboardGraphics.prototype
+         * @type {Property}
+         */
+        imageSubRegion : PropertyHelper.createPropertyDescriptor('imageSubRegion'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the billboard's scale.
@@ -196,6 +206,7 @@ define([
         result.eyeOffset = this._eyeOffset;
         result.horizontalOrigin = this._horizontalOrigin;
         result.image = this._image;
+        result.imageSubRegion = this._imageSubRegion;
         result.pixelOffset = this._pixelOffset;
         result.scale = this._scale;
         result.rotation = this._rotation;
@@ -227,6 +238,7 @@ define([
         this.eyeOffset = defaultValue(this._eyeOffset, source.eyeOffset);
         this.horizontalOrigin = defaultValue(this._horizontalOrigin, source.horizontalOrigin);
         this.image = defaultValue(this._image, source.image);
+        this.imageSubRegion = defaultValue(this._imageSubRegion, source.imageSubRegion);
         this.pixelOffset = defaultValue(this._pixelOffset, source.pixelOffset);
         this.scale = defaultValue(this._scale, source.scale);
         this.rotation = defaultValue(this._rotation, source.rotation);
