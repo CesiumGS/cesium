@@ -12,16 +12,23 @@ define([
     "use strict";
 
     /**
-     * A {@link DataSource} which processes both
-     * {@link http://www.geojson.org/|GeoJSON} and {@link https://github.com/mbostock/topojson|TopoJSON} data.
-     * {@link https://github.com/mapbox/simplestyle-spec|Simplestyle} properties will also be used if they
-     * are present.
+     * A {@link DataSource} implementation which can be used to manually manage a group of entities.
      *
      * @alias CustomDataSource
      * @constructor
      *
-     * @param {String} [name] The name of this data source.  If undefined, a name will be taken from
-     *                        the name of the GeoJSON file.
+     * @example
+     * var dataSource = new Cesium.CustomDataSource();
+     * dataSource.name = "myData";
+     *
+     * var entity = dataSource.entities.add({
+     *    position : Cesium.Cartesian3.fromDegrees(1, 2, 0),
+     *    billboard : {
+     *        image : 'image.png'
+     *    }
+     * });
+     *
+     * viewer.dataSources.add(dataSource);
      */
     var CustomDataSource = function() {
         this._name = undefined;
@@ -35,7 +42,7 @@ define([
 
     defineProperties(CustomDataSource.prototype, {
         /**
-         * Gets a human-readable name for this instance.
+         * Gets or sets a human-readable name for this instance.
          * @memberof CustomDataSource.prototype
          * @type {String}
          */
@@ -51,7 +58,7 @@ define([
             }
         },
         /**
-         * This DataSource only defines static data, therefore this property is always undefined.
+         * Gets or sets the clock for this instance.
          * @memberof CustomDataSource.prototype
          * @type {DataSourceClock}
          */
@@ -77,7 +84,7 @@ define([
             }
         },
         /**
-         * Gets a value indicating if the data source is currently loading data.
+         * Gets or sets whether the data source is currently loading data.
          * @memberof CustomDataSource.prototype
          * @type {Boolean}
          */
