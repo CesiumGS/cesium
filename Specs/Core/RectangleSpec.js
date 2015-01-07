@@ -4,13 +4,15 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Ellipsoid',
-        'Core/Math'
+        'Core/Math',
+        'Specs/createPackableSpecs'
     ], function(
         Rectangle,
         Cartesian3,
         Cartographic,
         Ellipsoid,
-        CesiumMath) {
+        CesiumMath,
+        createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -641,4 +643,8 @@ defineSuite([
             Rectangle.contains(rectangle, undefined);
         }).toThrowDeveloperError();
     });
+
+    var rectangle = new Rectangle(west, south, east, north);
+    var packedInstance = [west, south, east, north];
+    createPackableSpecs(Rectangle, rectangle, packedInstance);
 });

@@ -3,12 +3,14 @@ defineSuite([
         'Core/WallOutlineGeometry',
         'Core/Cartesian3',
         'Core/Ellipsoid',
-        'Core/Math'
+        'Core/Math',
+        'Specs/createPackableSpecs'
     ], function(
         WallOutlineGeometry,
         Cartesian3,
         Ellipsoid,
-        CesiumMath) {
+        CesiumMath,
+        createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -165,5 +167,14 @@ defineSuite([
         cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 9));
         expect(cartographic.height).toEqualEpsilon(max, CesiumMath.EPSILON8);
     });
+
+    var positions = [new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(0.0, 1.0, 0.0), new Cartesian3(0.0, 0.0, 1.0)];
+    var wall = new WallOutlineGeometry({
+        positions : positions,
+        granularity : 0.01,
+        ellipsoid: Ellipsoid.UNIT_SPHERE
+    });
+    var packedInstance = [3.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.01];
+    createPackableSpecs(WallOutlineGeometry, wall, packedInstance);
 });
 
