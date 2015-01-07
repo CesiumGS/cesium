@@ -1,8 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-        'Core/EllipsoidOutlineGeometry'
+        'Core/EllipsoidOutlineGeometry',
+        'Core/Cartesian3',
+        'Specs/createPackableSpecs'
     ], function(
-        EllipsoidOutlineGeometry) {
+        EllipsoidOutlineGeometry,
+        Cartesian3,
+        createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -41,4 +45,13 @@ defineSuite([
         expect(m.indices.length).toEqual(15 * 2);
         expect(m.boundingSphere.radius).toEqual(1);
     });
+
+    var ellipsoidgeometry = new EllipsoidOutlineGeometry({
+        radii : new Cartesian3(1.0, 2.0, 3.0),
+        slicePartitions: 3,
+        stackPartitions: 3,
+        subdivisions: 3
+    });
+    var packedInstance = [1.0, 2.0, 3.0, 3.0, 3.0, 3.0];
+    createPackableSpecs(EllipsoidOutlineGeometry, ellipsoidgeometry, packedInstance);
 });

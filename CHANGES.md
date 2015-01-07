@@ -10,6 +10,7 @@ Change Log
   * `PolygonGraphics.positions` created by `GeoJSONDataSource` now evaluate to a `PolygonHierarchy` object instead of an array of positions.
 * Deprecated
   * `PolygonGraphics.positions` was deprecated and replaced with `PolygonGraphics.hierarchy`, whose value is a `PolygonHierarchy` instead of an array of positions.  `PolygonGraphics.positions` will be removed in Cesium 1.8.
+* Improved performance of asynchronous geometry creation (as much as 20% faster in some use cases). [#2342](https://github.com/AnalyticalGraphicsInc/cesium/issues/2342)
 * Added `PolylineVolumeGraphics` and `Entity.polylineVolume`
 * Added `BillboardGraphics.imageSubRegion`, to enable custom texture atlas use for `Entity` instances.
 * Added `PolygonHierarchy` to make defining polygons with holes clearer.

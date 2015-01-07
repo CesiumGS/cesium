@@ -1,8 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-        'Core/CylinderOutlineGeometry'
+        'Core/CylinderOutlineGeometry',
+        'Specs/createPackableSpecs'
     ], function(
-        CylinderOutlineGeometry) {
+        CylinderOutlineGeometry,
+        createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -101,4 +103,14 @@ defineSuite([
         expect(m.attributes.position.values.length).toEqual(3 * 3 * 2);
         expect(m.indices.length).toEqual(6 * 2);
     });
+
+    var cylinder = new CylinderOutlineGeometry({
+        length: 1,
+        topRadius: 1,
+        bottomRadius: 0,
+        slices: 3,
+        numberOfVerticalLines: 0
+    });
+    var packedInstance = [1.0, 1.0, 0.0, 3.0, 0.0];
+    createPackableSpecs(CylinderOutlineGeometry, cylinder, packedInstance);
 });
