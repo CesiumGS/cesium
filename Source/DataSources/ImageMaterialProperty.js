@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Cartesian2',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
@@ -8,6 +9,7 @@ define([
         './Property'
     ], function(
         Cartesian2,
+        defaultValue,
         defined,
         defineProperties,
         Event,
@@ -22,12 +24,17 @@ define([
      * @alias ImageMaterialProperty
      * @constructor
      */
-    var ImageMaterialProperty = function() {
+    var ImageMaterialProperty = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         this._definitionChanged = new Event();
         this._image = undefined;
         this._imageSubscription = undefined;
         this._repeat = undefined;
         this._repeatSubscription = undefined;
+
+        this.image = options.image;
+        this.repeat = options.repeat;
     };
 
     defineProperties(ImageMaterialProperty.prototype, {

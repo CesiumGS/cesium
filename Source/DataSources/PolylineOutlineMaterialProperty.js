@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
@@ -8,6 +9,7 @@ define([
         './Property'
     ], function(
         Color,
+        defaultValue,
         defined,
         defineProperties,
         Event,
@@ -17,14 +19,16 @@ define([
 
     var defaultColor = Color.WHITE;
     var defaultOutlineColor = Color.BLACK;
-    var defaultOutlineWidth = 0.0;
+    var defaultOutlineWidth = 1.0;
 
     /**
      * A {@link MaterialProperty} that maps to polyline outline {@link Material} uniforms.
      * @alias PolylineOutlineMaterialProperty
      * @constructor
      */
-    var PolylineOutlineMaterialProperty = function() {
+    var PolylineOutlineMaterialProperty = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         this._definitionChanged = new Event();
         this._color = undefined;
         this._colorSubscription = undefined;
@@ -32,6 +36,10 @@ define([
         this._outlineColorSubscription = undefined;
         this._outlineWidth = undefined;
         this._outlineWidthSubscription = undefined;
+
+        this.color = options.color;
+        this.outlineColor = options.outlineColor;
+        this.outlineWidth = options.outlineWidth;
     };
 
     defineProperties(PolylineOutlineMaterialProperty.prototype, {
