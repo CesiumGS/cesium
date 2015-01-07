@@ -61,8 +61,8 @@ define([
      * @see WebMapServiceImageryProvider
      *
      * @example
-     * // USGS shaded relief tile provider
-     * var shadedRelief = new Cesium.WebMapTileServiceImageryProvider({
+     * // Example 1. USGS shaded relief tiles (KVP)
+     * var shadedRelief1 = new Cesium.WebMapTileServiceImageryProvider({
      *     url : 'http://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS',
      *     layer : 'USGSShadedReliefOnly',
      *     style : 'default',
@@ -72,7 +72,20 @@ define([
      *     maximumLevel: 19,
      *     credit : new Cesium.Credit('U. S. Geological Survey')
      * });
-     * viewer.imageryLayers.addImageryProvider(shadedRelief);
+     * viewer.imageryLayers.addImageryProvider(shadedRelief1);
+     *
+     * @example
+     * // Example 2. USGS shaded relief tiles (RESTful)
+     * var shadedRelief2 = new Cesium.WebMapTileServiceImageryProvider({
+     *     url : 'http://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS/tile/1.0.0/USGSShadedReliefOnly/{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg',
+     *     layer : 'USGSShadedReliefOnly',
+     *     style : 'default',
+     *     format : 'image/jpeg',
+     *     tileMatrixSetID : 'default028mm',
+     *     maximumLevel: 19,
+     *     credit : new Cesium.Credit('U. S. Geological Survey')
+     * });
+     * viewer.imageryLayers.addImageryProvider(shadedRelief2);
      */
     var WebMapTileServiceImageryProvider = function WebMapTileServiceImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
