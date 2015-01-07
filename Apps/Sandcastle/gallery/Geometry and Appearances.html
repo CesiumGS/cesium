@@ -473,7 +473,9 @@ entities.add({
                                                                -85.0, 43.0, 100000.0,
                                                                -87.5, 41.0, 100000.0,
                                                                -90.0, 43.0, 100000.0]),
-        material : Cesium.Color.TEAL //TODO Checkerboard repeat : new Cesium.Cartesian2(20.0, 6.0)
+        material : new Cesium.CheckerboardMaterialProperty({
+            repeat : new Cesium.Cartesian2(20.0, 6.0)
+        })
     }
 });
 
