@@ -36,6 +36,7 @@ define([
      *
      * @see BoxOutlineGeometry.fromDimensions
      * @see BoxOutlineGeometry.createGeometry
+     * @see Packable
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Box%20Outline.html|Cesium Sandcastle Box Outline Demo}
      *
@@ -103,6 +104,72 @@ define([
             maximumCorner : max
         };
         return new BoxOutlineGeometry(newOptions);
+    };
+
+    /**
+     * The number of elements used to pack the object into an array.
+     * @type {Number}
+     */
+    BoxOutlineGeometry.packedLength = 2 * Cartesian3.packedLength;
+
+    /**
+     * Stores the provided instance into the provided array.
+     * @function
+     *
+     * @param {Object} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     */
+    BoxOutlineGeometry.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        Cartesian3.pack(value._min, array, startingIndex);
+        Cartesian3.pack(value._max, array, startingIndex + Cartesian3.packedLength);
+    };
+
+    var scratchMin = new Cartesian3();
+    var scratchMax = new Cartesian3();
+    var scratchOptions = {
+        minimumCorner : scratchMin,
+        maximumCorner : scratchMax
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {BoxOutlineGeometry} [result] The object into which to store the result.
+     */
+    BoxOutlineGeometry.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        var min = Cartesian3.unpack(array, startingIndex, scratchMin);
+        var max = Cartesian3.unpack(array, startingIndex + Cartesian3.packedLength, scratchMax);
+
+        if (!defined(result)) {
+            return new BoxOutlineGeometry(scratchOptions);
+        }
+
+        result._min = Cartesian3.clone(min, result._min);
+        result._max = Cartesian3.clone(max, result._max);
+
+        return result;
     };
 
     /**

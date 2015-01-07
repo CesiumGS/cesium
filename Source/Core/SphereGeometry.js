@@ -2,11 +2,17 @@
 define([
         './Cartesian3',
         './defaultValue',
-        './EllipsoidGeometry'
+        './defined',
+        './DeveloperError',
+        './EllipsoidGeometry',
+        './VertexFormat'
     ], function(
         Cartesian3,
         defaultValue,
-        EllipsoidGeometry) {
+        defined,
+        DeveloperError,
+        EllipsoidGeometry,
+        VertexFormat) {
     "use strict";
 
     /**
@@ -47,6 +53,62 @@ define([
 
         this._ellipsoidGeometry = new EllipsoidGeometry(ellipsoidOptions);
         this._workerName = 'createSphereGeometry';
+    };
+
+    /**
+     * The number of elements used to pack the object into an array.
+     * @type {Number}
+     */
+    SphereGeometry.packedLength = EllipsoidGeometry.packedLength;
+
+    /**
+     * Stores the provided instance into the provided array.
+     * @function
+     *
+     * @param {Object} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     */
+    SphereGeometry.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+        //>>includeEnd('debug');
+
+        EllipsoidGeometry.pack(value._ellipsoidGeometry, array, startingIndex);
+    };
+
+    var scratchEllipsoidGeometry = new EllipsoidGeometry();
+    var scratchOptions = {
+        radius : undefined,
+        radii : new Cartesian3(),
+        vertexFormat : new VertexFormat(),
+        stackPartitions : undefined,
+        slicePartitions : undefined
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {SphereGeometry} [result] The object into which to store the result.
+     */
+    SphereGeometry.unpack = function(array, startingIndex, result) {
+        var ellipsoidGeometry = EllipsoidGeometry.unpack(array, startingIndex, scratchEllipsoidGeometry);
+        scratchOptions.vertexFormat = VertexFormat.clone(ellipsoidGeometry._vertexFormat, scratchOptions.vertexFormat);
+        scratchOptions.stackPartitions = ellipsoidGeometry._stackPartitions;
+        scratchOptions.slicePartitions = ellipsoidGeometry._slicePartitions;
+
+        if (!defined(result)) {
+            scratchOptions.radius = ellipsoidGeometry._radii.x;
+            return new SphereGeometry(scratchOptions);
+        }
+
+        Cartesian3.clone(ellipsoidGeometry._radii, scratchOptions.radii);
+        result._ellipsoidGeometry = new EllipsoidGeometry(scratchOptions);
+        return result;
     };
 
     /**

@@ -200,7 +200,8 @@ define([
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var surfaceHeight = defaultValue(options.height, 0.0);
-        var rotation = options.rotation;
+        var rotation = defaultValue(options.rotation, 0.0);
+        var extrudedHeight = defaultValue(options.extrudedHeight, surfaceHeight);
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(rectangle)) {
@@ -217,8 +218,101 @@ define([
         this._ellipsoid = ellipsoid;
         this._surfaceHeight = surfaceHeight;
         this._rotation = rotation;
-        this._extrudedHeight = options.extrudedHeight;
+        this._extrudedHeight = extrudedHeight;
         this._workerName = 'createRectangleOutlineGeometry';
+    };
+
+    /**
+     * The number of elements used to pack the object into an array.
+     * @type {Number}
+     */
+    RectangleOutlineGeometry.packedLength = Rectangle.packedLength + Ellipsoid.packedLength + 4;
+
+    /**
+     * Stores the provided instance into the provided array.
+     *
+     * @param {BoundingSphere} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     */
+    RectangleOutlineGeometry.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        Rectangle.pack(value._rectangle, array, startingIndex);
+        startingIndex += Rectangle.packedLength;
+
+        Ellipsoid.pack(value._ellipsoid, array, startingIndex);
+        startingIndex += Ellipsoid.packedLength;
+
+        array[startingIndex++] = value._granularity;
+        array[startingIndex++] = value._surfaceHeight;
+        array[startingIndex++] = value._rotation;
+        array[startingIndex]   = value._extrudedHeight;
+    };
+
+    var scratchRectangle = new Rectangle();
+    var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
+    var scratchOptions = {
+        rectangle : scratchRectangle,
+        ellipsoid : scratchEllipsoid,
+        granularity : undefined,
+        height : undefined,
+        rotation : undefined,
+        extrudedHeight : undefined
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {RectangleGeometry} [result] The object into which to store the result.
+     */
+    RectangleOutlineGeometry.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        var rectangle = Rectangle.unpack(array, startingIndex, scratchRectangle);
+        startingIndex += Rectangle.packedLength;
+
+        var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
+        startingIndex += Ellipsoid.packedLength;
+
+        var granularity = array[startingIndex++];
+        var height = array[startingIndex++];
+        var rotation = array[startingIndex++];
+        var extrudedHeight = array[startingIndex];
+
+        if (!defined(result)) {
+            scratchOptions.granularity = granularity;
+            scratchOptions.height = height;
+            scratchOptions.rotation = rotation;
+            scratchOptions.extrudedHeight = extrudedHeight;
+            return new RectangleOutlineGeometry(scratchOptions);
+        }
+
+        result._rectangle = Rectangle.clone(rectangle, result._rectangle);
+        result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
+        result._surfaceHeight = height;
+        result._rotation = rotation;
+        result._extrudedHeight = extrudedHeight;
+
+        return result;
     };
 
     var nwScratch = new Cartographic();
