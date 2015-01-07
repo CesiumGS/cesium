@@ -10,6 +10,7 @@ Change Log
 * Deprecated
   *
 * Added `PolylineVolumeGraphics` and `Entity.polylineVolume`
+* Added `BillboardGraphics.imageSubRegion`, to enable custom texture atlas use for `Entity` instances.
 
 ### 1.5 - 2015-01-05
 
