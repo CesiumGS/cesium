@@ -4,13 +4,15 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/Math',
-        'Core/VertexFormat'
+        'Core/VertexFormat',
+        'Specs/createPackableSpecs'
     ], function(
         EllipseGeometry,
         Cartesian3,
         Ellipsoid,
         CesiumMath,
-        VertexFormat) {
+        VertexFormat,
+        createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -161,4 +163,19 @@ defineSuite([
         expect(m.attributes.binormal.values.length).toEqual(3 * (12 + 6) * 2);
         expect(m.indices.length).toEqual(3 * (14 + 6) * 2);
     });
+
+    var center = Cartesian3.fromDegrees(0,0);
+    var ellipsoid = Ellipsoid.WGS84;
+    var packableInstance = new EllipseGeometry({
+        vertexFormat : VertexFormat.POSITION_AND_ST,
+        ellipsoid : ellipsoid,
+        center : center,
+        granularity : 0.1,
+        semiMajorAxis : 1.0,
+        semiMinorAxis : 1.0,
+        stRotation : CesiumMath.PI_OVER_TWO
+    });
+    var packedInstance = [center.x, center.y, center.z, ellipsoid.radii.x, ellipsoid.radii.y, ellipsoid.radii.z, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, CesiumMath.PI_OVER_TWO, 0.0, 0.1, 0.0, 0.0];
+    createPackableSpecs(EllipseGeometry, packableInstance, packedInstance);
+
 });

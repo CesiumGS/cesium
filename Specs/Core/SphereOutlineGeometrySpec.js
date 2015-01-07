@@ -1,8 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-        'Core/SphereOutlineGeometry'
+        'Core/SphereOutlineGeometry',
+        'Specs/createPackableSpecs'
     ], function(
-        SphereOutlineGeometry) {
+        SphereOutlineGeometry,
+        createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
     it('constructor throws if stackPartitions less than 1', function() {
@@ -40,4 +42,13 @@ defineSuite([
         expect(m.indices.length).toEqual(6 * 2);
         expect(m.boundingSphere.radius).toEqual(1);
     });
+
+    var sphere = new SphereOutlineGeometry({
+        radius : 1,
+        stackPartitions : 3,
+        slicePartitions: 3,
+        subdivisions: 2
+    });
+    var packedInstance = [1.0, 1.0, 1.0, 3.0, 3.0, 2.0];
+    createPackableSpecs(SphereOutlineGeometry, sphere, packedInstance);
 });

@@ -7,7 +7,8 @@ defineSuite([
         'Core/GeographicProjection',
         'Core/Math',
         'Core/Matrix2',
-        'Core/Rectangle'
+        'Core/Rectangle',
+        'Specs/createPackableSpecs'
     ], function(
         RectangleOutlineGeometry,
         Cartesian2,
@@ -16,7 +17,8 @@ defineSuite([
         GeographicProjection,
         CesiumMath,
         Matrix2,
-        Rectangle) {
+        Rectangle,
+        createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -148,5 +150,13 @@ defineSuite([
         expect(positions.length).toEqual(8 * 3);
         expect(m.indices.length).toEqual(8 * 2);
     });
+
+    var rectangle = new RectangleOutlineGeometry({
+        rectangle : new Rectangle(-2.0, -1.0, 0.0, 1.0),
+        granularity : 1.0,
+        ellipsoid : Ellipsoid.UNIT_SPHERE
+    });
+    var packedInstance = [-2.0, -1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0];
+    createPackableSpecs(RectangleOutlineGeometry, rectangle, packedInstance);
 
 });

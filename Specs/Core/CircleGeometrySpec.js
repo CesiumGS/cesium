@@ -4,13 +4,15 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/Math',
-        'Core/VertexFormat'
+        'Core/VertexFormat',
+        'Specs/createPackableSpecs'
     ], function(
         CircleGeometry,
         Cartesian3,
         Ellipsoid,
         CesiumMath,
-        VertexFormat) {
+        VertexFormat,
+        createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -133,4 +135,17 @@ defineSuite([
         expect(st[length - 2]).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
         expect(st[length - 1]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
     });
+
+    var center = Cartesian3.fromDegrees(0,0);
+    var ellipsoid = Ellipsoid.WGS84;
+    var packableInstance = new CircleGeometry({
+        vertexFormat : VertexFormat.POSITION_AND_ST,
+        ellipsoid : ellipsoid,
+        center : center,
+        granularity : 0.1,
+        radius : 1.0,
+        stRotation : CesiumMath.PI_OVER_TWO
+    });
+    var packedInstance = [center.x, center.y, center.z, ellipsoid.radii.x, ellipsoid.radii.y, ellipsoid.radii.z, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, CesiumMath.PI_OVER_TWO, 0.0, 0.1, 0.0, 0.0];
+    createPackableSpecs(CircleGeometry, packableInstance, packedInstance);
 });

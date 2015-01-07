@@ -16,6 +16,91 @@ define([
      */
     var PolygonGeometryLibrary = {};
 
+    PolygonGeometryLibrary.computeHierarchyPackedLength = function(polygonHierarchy) {
+        var numComponents = 0;
+        var stack = [polygonHierarchy];
+        while (stack.length > 0) {
+            var hierarchy = stack.pop();
+            if (!defined(hierarchy)) {
+                continue;
+            }
+
+            numComponents += 2;
+
+            var positions = hierarchy.positions;
+            var holes = hierarchy.holes;
+
+            if (defined(positions)) {
+                numComponents += positions.length * Cartesian3.packedLength;
+            }
+
+            if (defined(holes)) {
+                var length = holes.length;
+                for (var i = 0; i < length; ++i) {
+                    stack.push(holes[i]);
+                }
+            }
+        }
+
+        return numComponents;
+    };
+
+    PolygonGeometryLibrary.packPolygonHierarchy = function(polygonHierarchy, array, startingIndex) {
+        var stack = [polygonHierarchy];
+        while (stack.length > 0) {
+            var hierarchy = stack.pop();
+            if (!defined(hierarchy)) {
+                continue;
+            }
+
+            var positions = hierarchy.positions;
+            var holes = hierarchy.holes;
+
+            array[startingIndex++] = defined(positions) ? positions.length : 0;
+            array[startingIndex++] = defined(holes) ? holes.length : 0;
+
+            if (defined(positions)) {
+                var positionsLength = positions.length;
+                for (var i = 0; i < positionsLength; ++i, startingIndex += 3) {
+                    Cartesian3.pack(positions[i], array, startingIndex);
+                }
+            }
+
+            if (defined(holes)) {
+                var holesLength = holes.length;
+                for (var j = 0; j < holesLength; ++j) {
+                    stack.push(holes[j]);
+                }
+            }
+        }
+
+        return startingIndex;
+    };
+
+    PolygonGeometryLibrary.unpackPolygonHierarchy = function(array, startingIndex) {
+        var positionsLength = array[startingIndex++];
+        var holesLength = array[startingIndex++];
+
+        var positions = new Array(positionsLength);
+        var holes = holesLength > 0 ? new Array(holesLength) : undefined;
+
+        for (var i = 0; i < positionsLength; ++i, startingIndex += Cartesian3.packedLength) {
+            positions[i] = Cartesian3.unpack(array, startingIndex);
+        }
+
+        for (var j = 0; j < holesLength; ++j) {
+            holes[j] = PolygonGeometryLibrary.unpackPolygonHierarchy(array, startingIndex);
+            startingIndex = holes[j].startingIndex;
+            delete holes[j].startingIndex;
+        }
+
+        return {
+            positions : positions,
+            holes : holes,
+            startingIndex : startingIndex
+        };
+    };
+
     var distanceScratch = new Cartesian3();
     function getPointAtDistance(p0, p1, distance, length) {
         Cartesian3.subtract(p1, p0, distanceScratch);
