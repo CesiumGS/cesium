@@ -11,6 +11,7 @@ Change Log
 * Deprecated
   * `PolygonGraphics.positions` was deprecated and replaced with `PolygonGraphics.hierarchy`, whose value is a `PolygonHierarchy` instead of an array of positions.  `PolygonGraphics.positions` will be removed in Cesium 1.8.
 * Added `PolylineVolumeGraphics` and `Entity.polylineVolume`
+* Added `BillboardGraphics.imageSubRegion`, to enable custom texture atlas use for `Entity` instances.
 * Added `PolygonHierarchy` to make defining polygons with holes clearer.
 * Added `PolygonGraphics.hierarchy` for supporting polygons with holes via data sources.
 * `GeoJsonDataSource` now supports polygons with holes.
