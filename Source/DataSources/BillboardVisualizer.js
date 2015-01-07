@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/AssociativeArray',
+        '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
@@ -14,6 +15,7 @@ define([
         './Property'
     ], function(
         AssociativeArray,
+        BoundingRectangle,
         Cartesian2,
         Cartesian3,
         Color,
@@ -43,6 +45,7 @@ define([
     var scaleByDistance = new NearFarScalar();
     var translucencyByDistance = new NearFarScalar();
     var pixelOffsetScaleByDistance = new NearFarScalar();
+    var boundingRectangle = new BoundingRectangle();
 
     var EntityData = function(entity) {
         this.entity = entity;
@@ -149,6 +152,11 @@ define([
             billboard.scaleByDistance = Property.getValueOrUndefined(billboardGraphics._scaleByDistance, time, scaleByDistance);
             billboard.translucencyByDistance = Property.getValueOrUndefined(billboardGraphics._translucencyByDistance, time, translucencyByDistance);
             billboard.pixelOffsetScaleByDistance = Property.getValueOrUndefined(billboardGraphics._pixelOffsetScaleByDistance, time, pixelOffsetScaleByDistance);
+
+            var subRegion = Property.getValueOrUndefined(billboardGraphics._imageSubRegion, time, boundingRectangle);
+            if (defined(subRegion)) {
+                billboard.setImageSubRegion(billboard._imageId, subRegion);
+            }
         }
         return true;
     };

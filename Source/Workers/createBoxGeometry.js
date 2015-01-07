@@ -1,9 +1,16 @@
 /*global define*/
 define([
-        '../Core/BoxGeometry'
+        '../Core/BoxGeometry',
+        '../Core/defined'
     ], function(
-        BoxGeometry) {
+        BoxGeometry,
+        defined) {
     "use strict";
 
-    return BoxGeometry.createGeometry;
+    return function(boxGeometry, offset) {
+        if (defined(offset)) {
+            boxGeometry = BoxGeometry.unpack(boxGeometry, offset);
+        }
+        return BoxGeometry.createGeometry(boxGeometry);
+    };
 });

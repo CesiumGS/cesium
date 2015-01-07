@@ -99,6 +99,87 @@ define([
     };
 
     /**
+     * The number of elements used to pack the object into an array.
+     * @type {Number}
+     */
+    CylinderOutlineGeometry.packedLength = 5;
+
+    /**
+     * Stores the provided instance into the provided array.
+     * @function
+     *
+     * @param {Object} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     */
+    CylinderOutlineGeometry.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        array[startingIndex++] = value._length;
+        array[startingIndex++] = value._topRadius;
+        array[startingIndex++] = value._bottomRadius;
+        array[startingIndex++] = value._slices;
+        array[startingIndex]   = value._numberOfVerticalLines;
+    };
+
+    var scratchOptions = {
+        length : undefined,
+        topRadius : undefined,
+        bottomRadius : undefined,
+        slices : undefined,
+        numberOfVerticalLines : undefined
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {CylinderOutlineGeometry} [result] The object into which to store the result.
+     */
+    CylinderOutlineGeometry.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        var length = array[startingIndex++];
+        var topRadius = array[startingIndex++];
+        var bottomRadius = array[startingIndex++];
+        var slices = array[startingIndex++];
+        var numberOfVerticalLines = array[startingIndex];
+
+        if (!defined(result)) {
+            scratchOptions.length = length;
+            scratchOptions.topRadius = topRadius;
+            scratchOptions.bottomRadius = bottomRadius;
+            scratchOptions.slices = slices;
+            scratchOptions.numberOfVerticalLines = numberOfVerticalLines;
+            return new CylinderOutlineGeometry(scratchOptions);
+        }
+
+        result._length = length;
+        result._topRadius = topRadius;
+        result._bottomRadius = bottomRadius;
+        result._slices = slices;
+        result._numberOfVerticalLines = numberOfVerticalLines;
+
+        return result;
+    };
+
+    /**
      * Computes the geometric representation of an outline of a cylinder, including its vertices, indices, and a bounding sphere.
      *
      * @param {CylinderOutlineGeometry} cylinderGeometry A description of the cylinder outline.

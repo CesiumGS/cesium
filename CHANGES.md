@@ -9,9 +9,11 @@ Change Log
   * The `sourceUri` parameter to `GeoJsonDatasource.load` was deprecated in Cesium 1.4 and has been removed. Use options.sourceUri instead.
 * Deprecated
   *
+* Improved performance of asynchronous geometry creation (as much as 20% faster in some use cases). [#2342](https://github.com/AnalyticalGraphicsInc/cesium/issues/2342)
 * Added `PolylineVolumeGraphics` and `Entity.polylineVolume`
 * Added `Quaternion.fromHeadingPitchRoll` to create a rotation from heading, pitch, and roll angles.
 * Added `Transforms.headingPitchRollToFixedFrame` to create a local frame from a position and heading/pitch/roll angles.
+* Added `BillboardGraphics.imageSubRegion`, to enable custom texture atlas use for `Entity` instances.
 
 ### 1.5 - 2015-01-05
 

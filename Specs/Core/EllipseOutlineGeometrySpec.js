@@ -2,11 +2,13 @@
 defineSuite([
         'Core/EllipseOutlineGeometry',
         'Core/Cartesian3',
-        'Core/Ellipsoid'
+        'Core/Ellipsoid',
+        'Specs/createPackableSpecs'
     ], function(
         EllipseOutlineGeometry,
         Cartesian3,
-        Ellipsoid) {
+        Ellipsoid,
+        createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -110,4 +112,17 @@ defineSuite([
         expect(m.attributes.position.values.length).toEqual(3 * 6 * 2);
         expect(m.indices.length).toEqual(2 * 6 * 2);
     });
+
+    var center = Cartesian3.fromDegrees(0,0);
+    var ellipsoid = Ellipsoid.WGS84;
+    var packableInstance = new EllipseOutlineGeometry({
+        ellipsoid : ellipsoid,
+        center : center,
+        granularity : 0.1,
+        semiMajorAxis : 1.0,
+        semiMinorAxis : 1.0,
+        numberOfVerticalLines : 0
+    });
+    var packedInstance = [center.x, center.y, center.z, ellipsoid.radii.x, ellipsoid.radii.y, ellipsoid.radii.z, 1.0, 1.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0];
+    createPackableSpecs(EllipseOutlineGeometry, packableInstance, packedInstance);
 });
