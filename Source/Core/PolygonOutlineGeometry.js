@@ -44,37 +44,29 @@ define([
     var createGeometryFromPositionsSubdivided = [];
 
     function createGeometryFromPositions(ellipsoid, positions, minDistance, perPositionHeight) {
-        var cleanedPositions = PolygonPipeline.removeDuplicates(positions);
-
-        //>>includeStart('debug', pragmas.debug);
-        if (cleanedPositions.length < 3) {
-            throw new DeveloperError('Duplicate positions result in not enough positions to form a polygon.');
-        }
-        //>>includeEnd('debug');
-
-        var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, ellipsoid);
-        var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, createGeometryFromPositionsPositions);
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(positions, ellipsoid);
+        var positions2D = tangentPlane.projectPointsOntoPlane(positions, createGeometryFromPositionsPositions);
 
         var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
         if (originalWindingOrder === WindingOrder.CLOCKWISE) {
             positions2D.reverse();
-            cleanedPositions.reverse();
+            positions.reverse();
         }
 
         var subdividedPositions;
         var i;
 
-        var length = cleanedPositions.length;
+        var length = positions.length;
         var index = 0;
 
         if (!perPositionHeight) {
             var numVertices = 0;
             for (i = 0; i < length; i++) {
-                numVertices += PolygonGeometryLibrary.subdivideLineCount(cleanedPositions[i], cleanedPositions[(i + 1) % length], minDistance);
+                numVertices += PolygonGeometryLibrary.subdivideLineCount(positions[i], positions[(i + 1) % length], minDistance);
             }
             subdividedPositions = new Float64Array(numVertices * 3);
             for (i = 0; i < length; i++) {
-                var tempPositions = PolygonGeometryLibrary.subdivideLine(cleanedPositions[i], cleanedPositions[(i + 1) % length], minDistance, createGeometryFromPositionsSubdivided);
+                var tempPositions = PolygonGeometryLibrary.subdivideLine(positions[i], positions[(i + 1) % length], minDistance, createGeometryFromPositionsSubdivided);
                 var tempPositionsLength = tempPositions.length;
                 for (var j = 0; j < tempPositionsLength; ++j) {
                     subdividedPositions[index++] = tempPositions[j];
@@ -83,8 +75,8 @@ define([
         } else {
             subdividedPositions = new Float64Array(length * 2 * 3);
             for (i = 0; i < length; i++) {
-                var p0 = cleanedPositions[i];
-                var p1 = cleanedPositions[(i + 1) % length];
+                var p0 = positions[i];
+                var p1 = positions[(i + 1) % length];
                 subdividedPositions[index++] = p0.x;
                 subdividedPositions[index++] = p0.y;
                 subdividedPositions[index++] = p0.z;
@@ -121,40 +113,32 @@ define([
     }
 
     function createGeometryFromPositionsExtruded(ellipsoid, positions, minDistance, perPositionHeight) {
-        var cleanedPositions = PolygonPipeline.removeDuplicates(positions);
-
-        //>>includeStart('debug', pragmas.debug);
-        if (cleanedPositions.length < 3) {
-            throw new DeveloperError('Duplicate positions result in not enough positions to form a polygon.');
-        }
-        //>>includeEnd('debug');
-
-        var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, ellipsoid);
-        var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, createGeometryFromPositionsPositions);
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(positions, ellipsoid);
+        var positions2D = tangentPlane.projectPointsOntoPlane(positions, createGeometryFromPositionsPositions);
 
         var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
         if (originalWindingOrder === WindingOrder.CLOCKWISE) {
             positions2D.reverse();
-            cleanedPositions.reverse();
+            positions.reverse();
         }
 
         var subdividedPositions;
         var i;
 
-        var length = cleanedPositions.length;
+        var length = positions.length;
         var corners = new Array(length);
         var index = 0;
 
         if (!perPositionHeight) {
             var numVertices = 0;
             for (i = 0; i < length; i++) {
-                numVertices += PolygonGeometryLibrary.subdivideLineCount(cleanedPositions[i], cleanedPositions[(i + 1) % length], minDistance);
+                numVertices += PolygonGeometryLibrary.subdivideLineCount(positions[i], positions[(i + 1) % length], minDistance);
             }
 
             subdividedPositions = new Float64Array(numVertices * 3 * 2);
             for (i = 0; i < length; ++i) {
                 corners[i] = index / 3;
-                var tempPositions = PolygonGeometryLibrary.subdivideLine(cleanedPositions[i], cleanedPositions[(i + 1) % length], minDistance, createGeometryFromPositionsSubdivided);
+                var tempPositions = PolygonGeometryLibrary.subdivideLine(positions[i], positions[(i + 1) % length], minDistance, createGeometryFromPositionsSubdivided);
                 var tempPositionsLength = tempPositions.length;
                 for (var j = 0; j < tempPositionsLength; ++j) {
                     subdividedPositions[index++] = tempPositions[j];
@@ -164,8 +148,8 @@ define([
             subdividedPositions = new Float64Array(length * 2 * 3 * 2);
             for (i = 0; i < length; ++i) {
                 corners[i] = index / 3;
-                var p0 = cleanedPositions[i];
-                var p1 = cleanedPositions[(i + 1) % length];
+                var p0 = positions[i];
+                var p1 = positions[(i + 1) % length];
 
                 subdividedPositions[index++] = p0.x;
                 subdividedPositions[index++] = p0.y;
@@ -479,10 +463,7 @@ define([
      * Computes the geometric representation of a polygon outline, including its vertices, indices, and a bounding sphere.
      *
      * @param {PolygonOutlineGeometry} polygonGeometry A description of the polygon outline.
-     * @returns {Geometry} The computed vertices and indices.
-     *
-     * @exception {DeveloperError} At least three positions are required.
-     * @exception {DeveloperError} Duplicate positions result in not enough positions to form a polygon.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     PolygonOutlineGeometry.createGeometry = function(polygonGeometry) {
         var ellipsoid = polygonGeometry._ellipsoid;
@@ -504,13 +485,17 @@ define([
             var outerRing = outerNode.positions;
 
             if (outerRing.length < 3) {
-                throw new DeveloperError('At least three positions are required.');
+                continue;
             }
 
             var numChildren = outerNode.holes ? outerNode.holes.length : 0;
             // The outer polygon contains inner polygons
             for (i = 0; i < numChildren; i++) {
                 var hole = outerNode.holes[i];
+                hole.positions = PolygonPipeline.removeDuplicates(hole.positions);
+                if (hole.positions.length < 3) {
+                    continue;
+                }
                 polygons.push(hole.positions);
 
                 var numGrandchildren = 0;
@@ -524,6 +509,10 @@ define([
             }
 
             polygons.push(outerRing);
+        }
+
+        if (polygons.length === 0) {
+            return undefined;
         }
 
         var geometry;

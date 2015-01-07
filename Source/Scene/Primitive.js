@@ -462,7 +462,8 @@ define([
         return new GeometryInstance({
             geometry : geometry,
             modelMatrix : Matrix4.clone(instance.modelMatrix),
-            attributes : newAttributes
+            attributes : newAttributes,
+            pickPrimitive : instance.pickPrimitive
         });
     }
 
@@ -699,6 +700,14 @@ define([
             return;
         }
 
+        if (defined(this._error)) {
+            throw this._error;
+        }
+
+        if (this._state === PrimitiveState.FAILED) {
+            return;
+        }
+
         var projection = frameState.mapProjection;
         var colorCommand;
         var pickCommand;
@@ -720,9 +729,7 @@ define([
 
         if (this._state !== PrimitiveState.COMPLETE && this._state !== PrimitiveState.COMBINED) {
             if (this.asynchronous) {
-                if (this._state === PrimitiveState.FAILED) {
-                    throw this._error;
-                } else if (this._state === PrimitiveState.READY) {
+                if (this._state === PrimitiveState.READY) {
                     instances = (isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
                     this._numberOfInstances = length = instances.length;
 
@@ -812,6 +819,11 @@ define([
                     this._state = PrimitiveState.COMBINING;
 
                     when(promise, function(packedResult) {
+                        if (!defined(packedResult)) {
+                            that._state = PrimitiveState.FAILED;
+                            return;
+                        }
+
                         var result = PrimitivePipeline.unpackCombineGeometryResults(packedResult);
                         that._geometries = result.geometries;
                         that._attributeLocations = result.attributeLocations;
@@ -829,8 +841,9 @@ define([
                 instances = (isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
                 this._numberOfInstances = length = instances.length;
                 geometries = new Array(length);
-                clonedInstances = new Array(instances.length);
+                clonedInstances = new Array(length);
 
+                var geometryIndex = 0;
                 for (i = 0; i < length; i++) {
                     var instance = instances[i];
                     geometry = instance.geometry;
@@ -842,13 +855,24 @@ define([
                     } else {
                         createdGeometry = geometry.constructor.createGeometry(geometry);
                     }
-                    geometries[i] = createdGeometry;
-                    clonedInstances[i] = cloneInstance(instance, createdGeometry);
+
+                    if (defined(createdGeometry)) {
+                        geometries[geometryIndex] = createdGeometry;
+                        clonedInstances[geometryIndex++] = cloneInstance(instance, createdGeometry);
+                    }
+                }
+
+                geometries.length = geometryIndex;
+                clonedInstances.length = geometryIndex;
+
+                if (geometryIndex === 0) {
+                    this._state = PrimitiveState.FAILED;
+                    return;
                 }
 
                 var result = PrimitivePipeline.combineGeometry({
                     instances : clonedInstances,
-                    pickIds : allowPicking ? createPickIds(context, this, instances) : undefined,
+                    pickIds : allowPicking ? createPickIds(context, this, clonedInstances) : undefined,
                     ellipsoid : projection.ellipsoid,
                     projection : projection,
                     elementIndexUintSupported : context.elementIndexUint,

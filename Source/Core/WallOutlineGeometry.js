@@ -322,9 +322,7 @@ define([
      * Computes the geometric representation of a wall outline, including its vertices, indices, and a bounding sphere.
      *
      * @param {WallOutlineGeometry} wallGeometry A description of the wall outline.
-     * @returns {Geometry} The computed vertices and indices.
-     *
-     * @exception {DeveloperError} unique positions must be greater than or equal to 2.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     WallOutlineGeometry.createGeometry = function(wallGeometry) {
         var wallPositions = wallGeometry._positions;
@@ -334,6 +332,10 @@ define([
         var ellipsoid = wallGeometry._ellipsoid;
 
         var pos = WallGeometryLibrary.computePositions(ellipsoid, wallPositions, maximumHeights, minimumHeights, granularity, false);
+        if (!defined(pos)) {
+            return undefined;
+        }
+
         var bottomPositions = pos.bottomPositions;
         var topPositions = pos.topPositions;
 

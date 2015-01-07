@@ -503,6 +503,12 @@ define([
         var length = items.length;
         for (var i = 0; i < length; i++) {
             var geometry = items[i];
+            ++count;
+
+            if (!defined(geometry)) {
+                continue;
+            }
+
             var attributes = geometry.attributes;
 
             count += 6 + 2 * BoundingSphere.packedLength + (defined(geometry.indices) ? geometry.indices.length : 0);
@@ -531,6 +537,13 @@ define([
         packedData[count++] = length;
         for (var i = 0; i < length; i++) {
             var geometry = items[i];
+
+            var validGeometry = defined(geometry);
+            packedData[count++] = validGeometry ? 1.0 : 0.0;
+
+            if (!validGeometry) {
+                continue;
+            }
 
             packedData[count++] = geometry.primitiveType;
             packedData[count++] = geometry.geometryType;
@@ -606,6 +619,12 @@ define([
 
         var packedGeometryIndex = 1;
         while (packedGeometryIndex < packedGeometry.length) {
+            var valid = packedGeometry[packedGeometryIndex++] === 1.0;
+            if (!valid) {
+                result[resultIndex++] = undefined;
+                continue;
+            }
+
             var primitiveType = packedGeometry[packedGeometryIndex++];
             var geometryType = packedGeometry[packedGeometryIndex++];
 
@@ -955,11 +974,21 @@ define([
         var length = createGeometryResults.length;
         var instanceIndex = 0;
 
+        var validInstances = [];
+        var validPickIds = [];
+
         for (var resultIndex = 0; resultIndex < length; resultIndex++) {
             var geometries = PrimitivePipeline.unpackCreateGeometryResults(createGeometryResults[resultIndex]);
             var geometriesLength = geometries.length;
             for (var geometryIndex = 0; geometryIndex < geometriesLength; geometryIndex++) {
-                instances[instanceIndex++].geometry = geometries[geometryIndex];
+                var geometry = geometries[geometryIndex];
+                if (defined(geometry)) {
+                    var instance = instances[instanceIndex];
+                    instance.geometry = geometry;
+                    validInstances.push(instance);
+                    validPickIds.push(pickIds[instanceIndex]);
+                }
+                ++instanceIndex;
             }
         }
 
@@ -967,8 +996,8 @@ define([
         var projection = packedParameters.isGeographic ? new GeographicProjection(ellipsoid) : new WebMercatorProjection(ellipsoid);
 
         return {
-            instances : instances,
-            pickIds : pickIds,
+            instances : validInstances,
+            pickIds : validPickIds,
             ellipsoid : ellipsoid,
             projection : projection,
             elementIndexUintSupported : packedParameters.elementIndexUintSupported,
