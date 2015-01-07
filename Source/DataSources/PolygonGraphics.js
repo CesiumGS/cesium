@@ -3,6 +3,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         './createPropertyDescriptor'
@@ -10,6 +11,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         createPropertyDescriptor) {
@@ -26,8 +28,8 @@ define([
         this._showSubscription = undefined;
         this._material = undefined;
         this._materialSubscription = undefined;
-        this._positions = undefined;
-        this._positionsSubscription = undefined;
+        this._hierarchy = undefined;
+        this._hierarchySubscription = undefined;
         this._height = undefined;
         this._heightSubscription = undefined;
         this._extrudedHeight = undefined;
@@ -78,11 +80,27 @@ define([
         material : createPropertyDescriptor('material'),
 
         /**
-         * Gets or sets the vertex positions.
+         * Gets or sets the positions that define the polygon.
          * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        positions : createPropertyDescriptor('positions'),
+        positions : {
+            get : function() {
+                deprecationWarning('PolygonGraphics.positions', 'PolygonGraphics.positions was deprecated in Cesium 1.6, use PolygonGraphics.hierarchy instead. This property will be removed in Cesium 1.9.');
+                return this.hierarchy;
+            },
+            set : function(value) {
+                deprecationWarning('PolygonGraphics.positions', 'PolygonGraphics.positions was deprecated in Cesium 1.6, use PolygonGraphics.hierarchy instead. This property will be removed in Cesium 1.9.');
+                this.hierarchy = value;
+            }
+        },
+
+        /**
+         * Gets or sets the property specifying the {@link PolygonHierarchy}.
+         * @memberof PolygonGraphics.prototype
+         * @type {Property}
+         */
+        hierarchy : createPropertyDescriptor('hierarchy'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the height of the polygon.
@@ -165,7 +183,7 @@ define([
         }
         result.show = this.show;
         result.material = this.material;
-        result.positions = this.positions;
+        result.hierarchy = this.hierarchy;
         result.height = this.height;
         result.extrudedHeight = this.extrudedHeight;
         result.granularity = this.granularity;
@@ -193,7 +211,7 @@ define([
 
         this.show = defaultValue(this.show, source.show);
         this.material = defaultValue(this.material, source.material);
-        this.positions = defaultValue(this.positions, source.positions);
+        this.hierarchy = defaultValue(this.hierarchy, source.hierarchy);
         this.height = defaultValue(this.height, source.height);
         this.extrudedHeight = defaultValue(this.extrudedHeight, source.extrudedHeight);
         this.granularity = defaultValue(this.granularity, source.granularity);

@@ -5,6 +5,7 @@ defineSuite([
         'Core/Color',
         'Core/Event',
         'Core/JulianDate',
+        'Core/PolygonHierarchy',
         'DataSources/EntityCollection',
         'Specs/waitsForPromise',
         'ThirdParty/when'
@@ -14,6 +15,7 @@ defineSuite([
         Color,
         Event,
         JulianDate,
+        PolygonHierarchy,
         EntityCollection,
         waitsForPromise,
         when) {
@@ -69,7 +71,7 @@ defineSuite([
     }
 
     function polygonCoordinatesToCartesian(coordinates) {
-        return coordinatesArrayToCartesian(coordinates[0]);
+        return coordinatesArrayToCartesian(coordinates);
     }
 
     function multiPolygonCoordinatesToCartesian(coordinates) {
@@ -150,7 +152,7 @@ defineSuite([
 
     var multiPolygon = {
         type : 'MultiPolygon',
-        coordinates : [[[[102.0, 2.0], [103.0, 2.0], [103.0, 3.0], [102.0, 3.0], [102.0, 2.0]]], [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]], [[100.2, 0.2], [100.8, 0.2], [100.8, 0.8], [100.2, 0.8], [100.2, 0.2]]]]
+        coordinates : [[[[102.0, 2.0], [103.0, 2.0], [103.0, 3.0], [102.0, 3.0], [102.0, 2.0]]], [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]]]]
     };
 
     var geometryCollection = {
@@ -400,7 +402,7 @@ defineSuite([
             var entityCollection = dataSource.entities;
             var entity = entityCollection.entities[0];
             expect(entity.properties).toBe(polygon.properties);
-            expect(entity.polygon.positions.getValue(time)).toEqual(polygonCoordinatesToCartesian(polygon.coordinates));
+            expect(entity.polygon.hierarchy.getValue(time)).toEqual(new PolygonHierarchy(polygonCoordinatesToCartesian(polygon.coordinates[0])));
             expect(entity.polygon.perPositionHeight).toBeUndefined();
             expect(entity.polygon.material.color.getValue(time)).toEqual(GeoJsonDataSource.fill);
             expect(entity.polygon.outline.getValue(time)).toEqual(true);
@@ -415,7 +417,7 @@ defineSuite([
             var entityCollection = dataSource.entities;
             var entity = entityCollection.entities[0];
             expect(entity.properties).toBe(polygonWithHeights.properties);
-            expect(entity.polygon.positions.getValue(time)).toEqual(polygonCoordinatesToCartesian(polygonWithHeights.coordinates));
+            expect(entity.polygon.hierarchy.getValue(time)).toEqual(new PolygonHierarchy(polygonCoordinatesToCartesian(polygonWithHeights.coordinates[0])));
             expect(entity.polygon.perPositionHeight.getValue(time)).toBe(true);
             expect(entity.polygon.material.color.getValue(time)).toEqual(GeoJsonDataSource.fill);
             expect(entity.polygon.outline.getValue(time)).toEqual(true);
@@ -430,7 +432,7 @@ defineSuite([
             var entityCollection = dataSource.entities;
             var entity = entityCollection.entities[0];
             expect(entity.properties).toBe(polygonWithHoles.properties);
-            expect(entity.polygon.positions.getValue(time)).toEqual(polygonCoordinatesToCartesian(polygonWithHoles.coordinates));
+            expect(entity.polygon.hierarchy.getValue(time)).toEqual(new PolygonHierarchy(polygonCoordinatesToCartesian(polygonWithHoles.coordinates[0]), [new PolygonHierarchy(polygonCoordinatesToCartesian(polygonWithHoles.coordinates[1]))]));
         });
     });
 
@@ -443,7 +445,7 @@ defineSuite([
             for (var i = 0; i < multiPolygon.coordinates.length; i++) {
                 var entity = entities[i];
                 expect(entity.properties).toBe(multiPolygon.properties);
-                expect(entity.polygon.positions.getValue(time)).toEqual(positions[i]);
+                expect(entity.polygon.hierarchy.getValue(time)).toEqual(new PolygonHierarchy(positions[i]));
             }
         });
     });
@@ -456,7 +458,7 @@ defineSuite([
 
             var polygon = entities[0];
             expect(polygon.properties).toBe(topoJson.objects.polygon.properties);
-            expect(polygon.polygon.positions).toBeDefined();
+            expect(polygon.polygon.hierarchy).toBeDefined();
 
             var lineString = entities[1];
             expect(lineString.properties).toBe(topoJson.objects.lineString.properties);
