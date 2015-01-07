@@ -4,15 +4,15 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
-        './Property',
-        './PropertyHelper'
+        './createPropertyDescriptor',
+        './Property'
     ], function(
         Cartesian2,
         defined,
         defineProperties,
         Event,
-        Property,
-        PropertyHelper) {
+        createPropertyDescriptor,
+        Property) {
     "use strict";
 
     var defaultRepeat = new Cartesian2(1, 1);
@@ -63,14 +63,14 @@ define([
          * @memberof ImageMaterialProperty.prototype
          * @type {Property}
          */
-        image : PropertyHelper.createPropertyDescriptor('image'),
+        image : createPropertyDescriptor('image'),
         /**
          * Gets or sets the {@link Cartesian2} property which determines the number of times the image repeats in each direction.
          * @memberof ImageMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(new Cartesian2(1, 1))
          */
-        repeat : PropertyHelper.createPropertyDescriptor('repeat')
+        repeat : createPropertyDescriptor('repeat')
     });
 
     /**

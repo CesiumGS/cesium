@@ -5,14 +5,14 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './PropertyHelper'
+        './createPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        PropertyHelper) {
+        createPropertyDescriptor) {
     "use strict";
 
     /**
@@ -78,7 +78,7 @@ define([
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        image : PropertyHelper.createPropertyDescriptor('image'),
+        image : createPropertyDescriptor('image'),
 
         /**
          * Gets or sets the {@link BoundingRectangle} that defines a sub-region of the
@@ -86,70 +86,70 @@ define([
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        imageSubRegion : PropertyHelper.createPropertyDescriptor('imageSubRegion'),
+        imageSubRegion : createPropertyDescriptor('imageSubRegion'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the billboard's scale.
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        scale : PropertyHelper.createPropertyDescriptor('scale'),
+        scale : createPropertyDescriptor('scale'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the billboard's rotation.
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        rotation : PropertyHelper.createPropertyDescriptor('rotation'),
+        rotation : createPropertyDescriptor('rotation'),
 
         /**
          * Gets or sets the {@link Cartesian3} {@link Property} specifying the billboard rotation's aligned axis.
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        alignedAxis : PropertyHelper.createPropertyDescriptor('alignedAxis'),
+        alignedAxis : createPropertyDescriptor('alignedAxis'),
 
         /**
          * Gets or sets the {@link HorizontalOrigin} {@link Property} specifying the billboard's horizontal origin.
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        horizontalOrigin : PropertyHelper.createPropertyDescriptor('horizontalOrigin'),
+        horizontalOrigin : createPropertyDescriptor('horizontalOrigin'),
 
         /**
          * Gets or sets the {@link VerticalOrigin} {@link Property} specifying the billboard's vertical origin.
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        verticalOrigin : PropertyHelper.createPropertyDescriptor('verticalOrigin'),
+        verticalOrigin : createPropertyDescriptor('verticalOrigin'),
 
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the billboard's color.
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        color : PropertyHelper.createPropertyDescriptor('color'),
+        color : createPropertyDescriptor('color'),
 
         /**
          * Gets or sets the {@link Cartesian3} {@link Property} specifying the billboard's eye offset.
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        eyeOffset : PropertyHelper.createPropertyDescriptor('eyeOffset'),
+        eyeOffset : createPropertyDescriptor('eyeOffset'),
 
         /**
          * Gets or sets the {@link Cartesian2} {@link Property} specifying the billboard's pixel offset.
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        pixelOffset : PropertyHelper.createPropertyDescriptor('pixelOffset'),
+        pixelOffset : createPropertyDescriptor('pixelOffset'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the billboard's visibility.
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        show : PropertyHelper.createPropertyDescriptor('show'),
+        show : createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the billboard's width in pixels.
@@ -157,7 +157,7 @@ define([
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        width : PropertyHelper.createPropertyDescriptor('width'),
+        width : createPropertyDescriptor('width'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the billboard's height in pixels.
@@ -165,7 +165,7 @@ define([
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        height : PropertyHelper.createPropertyDescriptor('height'),
+        height : createPropertyDescriptor('height'),
 
         /**
          * Gets or sets the {@link NearFarScalar} {@link Property} used to scale billboards based on distance.
@@ -173,7 +173,7 @@ define([
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        scaleByDistance : PropertyHelper.createPropertyDescriptor('scaleByDistance'),
+        scaleByDistance : createPropertyDescriptor('scaleByDistance'),
 
         /**
          * Gets or sets the {@link NearFarScalar} {@link Property} used to set translucency based on distance.
@@ -181,7 +181,7 @@ define([
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        translucencyByDistance : PropertyHelper.createPropertyDescriptor('translucencyByDistance'),
+        translucencyByDistance : createPropertyDescriptor('translucencyByDistance'),
 
         /**
          * Gets or sets the {@link NearFarScalar} {@link Property} used to set pixel offset scaling based on distance.
@@ -189,7 +189,7 @@ define([
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        pixelOffsetScaleByDistance : PropertyHelper.createPropertyDescriptor('pixelOffsetScaleByDistance')
+        pixelOffsetScaleByDistance : createPropertyDescriptor('pixelOffsetScaleByDistance')
     });
 
     /**

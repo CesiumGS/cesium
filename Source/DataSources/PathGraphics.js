@@ -5,14 +5,16 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './PropertyHelper'
+        './createMaterialPropertyDescriptor',
+        './createPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        PropertyHelper) {
+        createMaterialPropertyDescriptor,
+        createPropertyDescriptor) {
     "use strict";
 
     /**
@@ -57,42 +59,42 @@ define([
          * @memberof PathGraphics.prototype
          * @type {MaterialProperty}
          */
-        material : PropertyHelper.createMaterialPropertyDescriptor('material'),
+        material : createMaterialPropertyDescriptor('material'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the path's visibility.
          * @memberof PathGraphics.prototype
          * @type {Property}
          */
-        show : PropertyHelper.createPropertyDescriptor('show'),
+        show : createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the path's width.
          * @memberof PathGraphics.prototype
          * @type {Property}
          */
-        width : PropertyHelper.createPropertyDescriptor('width'),
+        width : createPropertyDescriptor('width'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the maximum step size, in seconds, to take when sampling the position.
          * @memberof PathGraphics.prototype
          * @type {Property}
          */
-        resolution : PropertyHelper.createPropertyDescriptor('resolution'),
+        resolution : createPropertyDescriptor('resolution'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the number of seconds in front of the object to show.
          * @memberof PathGraphics.prototype
          * @type {Property}
          */
-        leadTime : PropertyHelper.createPropertyDescriptor('leadTime'),
+        leadTime : createPropertyDescriptor('leadTime'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the number of seconds behind the object to show.
          * @memberof PathGraphics.prototype
          * @type {Property}
          */
-        trailTime : PropertyHelper.createPropertyDescriptor('trailTime')
+        trailTime : createPropertyDescriptor('trailTime')
     });
 
     /**

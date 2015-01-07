@@ -5,14 +5,16 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './PropertyHelper'
+        './createMaterialPropertyDescriptor',
+        './createPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        PropertyHelper) {
+        createMaterialPropertyDescriptor,
+        createPropertyDescriptor) {
     "use strict";
 
     /**
@@ -66,21 +68,21 @@ define([
          * @memberof WallGraphics.prototype
          * @type {Property}
          */
-        show : PropertyHelper.createPropertyDescriptor('show'),
+        show : createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the wall.
          * @memberof WallGraphics.prototype
          * @type {MaterialProperty}
          */
-        material : PropertyHelper.createMaterialPropertyDescriptor('material'),
+        material : createMaterialPropertyDescriptor('material'),
 
         /**
          * Gets or sets the vertex positions.
          * @memberof WallGraphics.prototype
          * @type {Property}
          */
-        positions : PropertyHelper.createPropertyDescriptor('positions'),
+        positions : createPropertyDescriptor('positions'),
 
         /**
          * Gets or sets the Array {@link Property} specifying the bottom heights of the wall.
@@ -90,7 +92,7 @@ define([
          * @memberof WallGraphics.prototype
          * @type {Property}
          */
-        minimumHeights : PropertyHelper.createPropertyDescriptor('minimumHeights'),
+        minimumHeights : createPropertyDescriptor('minimumHeights'),
 
         /**
          * Gets or sets the Array {@link Property} specifying the top heights along the wall.
@@ -99,7 +101,7 @@ define([
          * @memberof WallGraphics.prototype
          * @type {Property}
          */
-        maximumHeights : PropertyHelper.createPropertyDescriptor('maximumHeights'),
+        maximumHeights : createPropertyDescriptor('maximumHeights'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the sampling distance, in radians,
@@ -107,35 +109,35 @@ define([
          * @memberof WallGraphics.prototype
          * @type {Property}
          */
-        granularity : PropertyHelper.createPropertyDescriptor('granularity'),
+        granularity : createPropertyDescriptor('granularity'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the wall should be filled.
          * @memberof WallGraphics.prototype
          * @type {Property}
          */
-        fill : PropertyHelper.createPropertyDescriptor('fill'),
+        fill : createPropertyDescriptor('fill'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the wall should be outlined.
          * @memberof WallGraphics.prototype
          * @type {Property}
          */
-        outline : PropertyHelper.createPropertyDescriptor('outline'),
+        outline : createPropertyDescriptor('outline'),
 
         /**
          * Gets or sets the Color {@link Property} specifying whether the color of the outline.
          * @memberof WallGraphics.prototype
          * @type {Property}
          */
-        outlineColor : PropertyHelper.createPropertyDescriptor('outlineColor'),
+        outlineColor : createPropertyDescriptor('outlineColor'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the width of the outline.
          * @memberof WallGraphics.prototype
          * @type {Property}
          */
-        outlineWidth : PropertyHelper.createPropertyDescriptor('outlineWidth')
+        outlineWidth : createPropertyDescriptor('outlineWidth')
     });
 
     /**

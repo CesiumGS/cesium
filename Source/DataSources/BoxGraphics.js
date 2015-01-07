@@ -5,14 +5,16 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './PropertyHelper'
+        './createMaterialPropertyDescriptor',
+        './createPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        PropertyHelper) {
+        createMaterialPropertyDescriptor,
+        createPropertyDescriptor) {
     "use strict";
 
     /**
@@ -60,49 +62,49 @@ define([
          * @memberof BoxGraphics.prototype
          * @type {Property}
          */
-        show : PropertyHelper.createPropertyDescriptor('show'),
+        show : createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link Cartesian3} {@link Property} specifying the dimensions of the box.
          * @memberof BoxGraphics.prototype
          * @type {Property}
          */
-        dimensions : PropertyHelper.createPropertyDescriptor('dimensions'),
+        dimensions : createPropertyDescriptor('dimensions'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the box.
          * @memberof BoxGraphics.prototype
          * @type {MaterialProperty}
          */
-        material : PropertyHelper.createMaterialPropertyDescriptor('material'),
+        material : createMaterialPropertyDescriptor('material'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the box should be filled.
          * @memberof BoxGraphics.prototype
          * @type {Property}
          */
-        fill : PropertyHelper.createPropertyDescriptor('fill'),
+        fill : createPropertyDescriptor('fill'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the box should be outlined.
          * @memberof BoxGraphics.prototype
          * @type {Property}
          */
-        outline : PropertyHelper.createPropertyDescriptor('outline'),
+        outline : createPropertyDescriptor('outline'),
 
         /**
          * Gets or sets the Color {@link Property} specifying whether the color of the outline.
          * @memberof BoxGraphics.prototype
          * @type {Property}
          */
-        outlineColor : PropertyHelper.createPropertyDescriptor('outlineColor'),
+        outlineColor : createPropertyDescriptor('outlineColor'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the width of the outline.
          * @memberof BoxGraphics.prototype
          * @type {Property}
          */
-        outlineWidth : PropertyHelper.createPropertyDescriptor('outlineWidth')
+        outlineWidth : createPropertyDescriptor('outlineWidth')
     });
 
     /**

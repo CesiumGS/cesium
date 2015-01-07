@@ -7,8 +7,8 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         './ConstantProperty',
-        './Property',
-        './PropertyHelper'
+        './createPropertyDescriptor',
+        './Property'
     ], function(
         Color,
         defined,
@@ -17,8 +17,8 @@ define([
         DeveloperError,
         Event,
         ConstantProperty,
-        Property,
-        PropertyHelper) {
+        createPropertyDescriptor,
+        Property) {
     "use strict";
 
     /**
@@ -86,7 +86,7 @@ define([
          * @memberof ColorMaterialProperty.prototype
          * @type {Property}
          */
-        color : PropertyHelper.createPropertyDescriptor('color')
+        color : createPropertyDescriptor('color')
     });
 
     /**

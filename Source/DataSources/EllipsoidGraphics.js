@@ -5,14 +5,16 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './PropertyHelper'
+        './createMaterialPropertyDescriptor',
+        './createPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        PropertyHelper) {
+        createMaterialPropertyDescriptor,
+        createPropertyDescriptor) {
     "use strict";
 
     /**
@@ -66,70 +68,70 @@ define([
          * @memberof EllipsoidGraphics.prototype
          * @type {Property}
          */
-        show : PropertyHelper.createPropertyDescriptor('show'),
+        show : createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link Cartesian3} {@link Property} specifying the radii of the ellipsoid.
          * @memberof EllipsoidGraphics.prototype
          * @type {Property}
          */
-        radii : PropertyHelper.createPropertyDescriptor('radii'),
+        radii : createPropertyDescriptor('radii'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the ellipsoid.
          * @memberof EllipsoidGraphics.prototype
          * @type {MaterialProperty}
          */
-        material : PropertyHelper.createMaterialPropertyDescriptor('material'),
+        material : createMaterialPropertyDescriptor('material'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the ellipsoid should be filled.
          * @memberof EllipsoidGraphics.prototype
          * @type {Property}
          */
-        fill : PropertyHelper.createPropertyDescriptor('fill'),
+        fill : createPropertyDescriptor('fill'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the ellipsoid should be outlined.
          * @memberof EllipsoidGraphics.prototype
          * @type {Property}
          */
-        outline : PropertyHelper.createPropertyDescriptor('outline'),
+        outline : createPropertyDescriptor('outline'),
 
         /**
          * Gets or sets the Color {@link Property} specifying whether the color of the outline.
          * @memberof EllipsoidGraphics.prototype
          * @type {Property}
          */
-        outlineColor : PropertyHelper.createPropertyDescriptor('outlineColor'),
+        outlineColor : createPropertyDescriptor('outlineColor'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the width of the outline.
          * @memberof EllipsoidGraphics.prototype
          * @type {Property}
          */
-        outlineWidth : PropertyHelper.createPropertyDescriptor('outlineWidth'),
+        outlineWidth : createPropertyDescriptor('outlineWidth'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the number of times to partition the ellipsoid into stacks.
          * @memberof EllipsoidGraphics.prototype
          * @type {Property}
          */
-        stackPartitions : PropertyHelper.createPropertyDescriptor('stackPartitions'),
+        stackPartitions : createPropertyDescriptor('stackPartitions'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the number of times to partition the ellipsoid into radial slices.
          * @memberof EllipsoidGraphics.prototype
          * @type {Property}
          */
-        slicePartitions : PropertyHelper.createPropertyDescriptor('slicePartitions'),
+        slicePartitions : createPropertyDescriptor('slicePartitions'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the number of points per line, determining the granularity of the curvature .
          * @memberof EllipsoidGraphics.prototype
          * @type {Property}
          */
-        subdivisions : PropertyHelper.createPropertyDescriptor('subdivisions')
+        subdivisions : createPropertyDescriptor('subdivisions')
     });
 
     /**

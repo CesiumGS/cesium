@@ -5,16 +5,16 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
-        './Property',
-        './PropertyHelper'
+        './createPropertyDescriptor',
+        './Property'
     ], function(
         Cartesian2,
         Color,
         defined,
         defineProperties,
         Event,
-        Property,
-        PropertyHelper) {
+        createPropertyDescriptor,
+        Property) {
     "use strict";
 
     var defaultEvenColor = Color.WHITE;
@@ -75,19 +75,19 @@ define([
          * @memberof CheckerboardMaterialProperty.prototype
          * @type {Property}
          */
-        evenColor : PropertyHelper.createPropertyDescriptor('evenColor'),
+        evenColor : createPropertyDescriptor('evenColor'),
         /**
          * Gets or sets the {@link Color} property which determines the second color.
          * @memberof CheckerboardMaterialProperty.prototype
          * @type {Property}
          */
-        oddColor : PropertyHelper.createPropertyDescriptor('oddColor'),
+        oddColor : createPropertyDescriptor('oddColor'),
         /**
          * A {@link Cartesian2} property which determines how many times the checkerboard tiles repeat in each direction.
          * @memberof CheckerboardMaterialProperty.prototype
          * @type {Property}
          */
-        repeat : PropertyHelper.createPropertyDescriptor('repeat')
+        repeat : createPropertyDescriptor('repeat')
     });
 
     /**

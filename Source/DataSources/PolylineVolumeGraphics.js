@@ -5,14 +5,16 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './PropertyHelper'
+        './createMaterialPropertyDescriptor',
+        './createPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        PropertyHelper) {
+        createMaterialPropertyDescriptor,
+        createPropertyDescriptor) {
     "use strict";
 
     /**
@@ -66,28 +68,28 @@ define([
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
-        show : PropertyHelper.createPropertyDescriptor('show'),
+        show : createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the volume.
          * @memberof PolylineVolumeGraphics.prototype
          * @type {MaterialProperty}
          */
-        material : PropertyHelper.createMaterialPropertyDescriptor('material'),
+        material : createMaterialPropertyDescriptor('material'),
 
         /**
          * Gets or sets the positions of the line.
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
-        positions : PropertyHelper.createPropertyDescriptor('positions'),
+        positions : createPropertyDescriptor('positions'),
 
         /**
          * Gets or sets the array of {@link Cartesian2} instances that define the shape to be extruded along the polyline.
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
-        shape : PropertyHelper.createPropertyDescriptor('shape'),
+        shape : createPropertyDescriptor('shape'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the sampling distance, in radians,
@@ -95,42 +97,42 @@ define([
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
-        granularity : PropertyHelper.createPropertyDescriptor('granularity'),
+        granularity : createPropertyDescriptor('granularity'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the volume should be filled.
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
-        fill : PropertyHelper.createPropertyDescriptor('fill'),
+        fill : createPropertyDescriptor('fill'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the volume should be outlined.
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
-        outline : PropertyHelper.createPropertyDescriptor('outline'),
+        outline : createPropertyDescriptor('outline'),
 
         /**
          * Gets or sets the Color {@link Property} specifying whether the color of the outline.
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
-        outlineColor : PropertyHelper.createPropertyDescriptor('outlineColor'),
+        outlineColor : createPropertyDescriptor('outlineColor'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the width of the outline.
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
-        outlineWidth : PropertyHelper.createPropertyDescriptor('outlineWidth'),
+        outlineWidth : createPropertyDescriptor('outlineWidth'),
 
         /**
          * Gets or sets the {@link CornerType} {@link Property} specifying how corners are triangulated.
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
-        cornerType : PropertyHelper.createPropertyDescriptor('cornerType')
+        cornerType : createPropertyDescriptor('cornerType')
     });
 
     /**
