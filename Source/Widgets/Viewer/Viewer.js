@@ -1241,7 +1241,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var time = clock.currentTime;
         var entityView = this._entityView;
         var infoBoxViewModel = defined(this._infoBox) ? this._infoBox.viewModel : undefined;
-        var selectionIndicatorViewModel = this._selectionIndicator.viewModel;
+        var selectionIndicatorViewModel = defined(this._selectionIndicator) ? this._selectionIndicator.viewModel : undefined;
 
         var isUpdated = this._dataSourceDisplay.update(time);
         if (this._allowDataSourcesToSuspendAnimation) {
