@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
         'DataSources/BillboardVisualizer',
+        'Core/BoundingRectangle',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
@@ -16,6 +17,7 @@ defineSuite([
         'Specs/destroyScene'
     ], function(
         BillboardVisualizer,
+        BoundingRectangle,
         Cartesian2,
         Cartesian3,
         Color,
@@ -129,6 +131,7 @@ defineSuite([
             billboard.show = new ConstantProperty(true);
             billboard.color = new ConstantProperty(new Color(0.5, 0.5, 0.5, 0.5));
             billboard.image = new ConstantProperty('Data/Images/Blue.png');
+            billboard.imageSubRegion = new ConstantProperty(new BoundingRectangle(0, 0, 1, 1));
             billboard.eyeOffset = new ConstantProperty(new Cartesian3(1.0, 2.0, 3.0));
             billboard.scale = new ConstantProperty(12.5);
             billboard.rotation = new ConstantProperty(1.5);
@@ -165,6 +168,7 @@ defineSuite([
                     expect(bb.scaleByDistance).toEqual(testObject.billboard.scaleByDistance.getValue(time));
                     expect(bb.translucencyByDistance).toEqual(testObject.billboard.translucencyByDistance.getValue(time));
                     expect(bb.pixelOffsetScaleByDistance).toEqual(testObject.billboard.pixelOffsetScaleByDistance.getValue(time));
+                    expect(bb._imageSubRegion).toEqual(testObject.billboard.imageSubRegion.getValue(time));
                 }
                 return bb.show; //true once the image is loaded.
             });

@@ -128,6 +128,121 @@ define([
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         this._workerName = 'createSimplePolylineGeometry';
+
+        var numComponents = 1 + positions.length * Cartesian3.packedLength;
+        numComponents += defined(colors) ? 1 + colors.length * Color.packedLength : 1;
+
+        /**
+         * The number of elements used to pack the object into an array.
+         * @type {Number}
+         */
+        this.packedLength = numComponents + Ellipsoid.packedLength + 3;
+    };
+
+    /**
+     * Stores the provided instance into the provided array.
+     * @function
+     *
+     * @param {Object} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     */
+    SimplePolylineGeometry.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        var i;
+
+        var positions = value._positions;
+        var length = positions.length;
+        array[startingIndex++] = length;
+
+        for (i = 0; i < length; ++i, startingIndex += Cartesian3.packedLength) {
+            Cartesian3.pack(positions[i], array, startingIndex);
+        }
+
+        var colors = value._colors;
+        length = defined(colors) ? colors.length : 0.0;
+        array[startingIndex++] = length;
+
+        for (i = 0; i < length; ++i, startingIndex += Color.packedLength) {
+            Color.pack(colors[i], array, startingIndex);
+        }
+
+        Ellipsoid.pack(value._ellipsoid, array, startingIndex);
+        startingIndex += Ellipsoid.packedLength;
+
+        array[startingIndex++] = value._perVertex ? 1.0 : 0.0;
+        array[startingIndex++] = value._followSurface ? 1.0 : 0.0;
+        array[startingIndex]   = value._granularity;
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {SimplePolylineGeometry} [result] The object into which to store the result.
+     */
+    SimplePolylineGeometry.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        var i;
+
+        var length = array[startingIndex++];
+        var positions = new Array(length);
+
+        for (i = 0; i < length; ++i, startingIndex += Cartesian3.packedLength) {
+            positions[i] = Cartesian3.unpack(array, startingIndex);
+        }
+
+        length = array[startingIndex++];
+        var colors = length > 0 ? new Array(length) : undefined;
+
+        for (i = 0; i < length; ++i, startingIndex += Color.packedLength) {
+            colors[i] = Color.unpack(array, startingIndex);
+        }
+
+        var ellipsoid = Ellipsoid.unpack(array, startingIndex);
+        startingIndex += Ellipsoid.packedLength;
+
+        var perVertex = array[startingIndex++] === 1.0;
+        var followSurface = array[startingIndex++] === 1.0;
+        var granularity = array[startingIndex];
+
+        if (!defined(result)) {
+            return new SimplePolylineGeometry({
+                positions : positions,
+                colors : colors,
+                ellipsoid : ellipsoid,
+                perVertex : perVertex,
+                followSurface : followSurface,
+                granularity : granularity
+            });
+        }
+
+        result._positions = positions;
+        result._colors = colors;
+        result._ellipsoid = ellipsoid;
+        result._perVertex = perVertex;
+        result._followSurface = followSurface;
+        result._granularity = granularity;
+
+        return result;
     };
 
     var scratchArray1 = new Array(2);
