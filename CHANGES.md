@@ -13,6 +13,7 @@ Change Log
 * Added `PolylineVolumeGraphics` and `Entity.polylineVolume`
 * Added `BillboardGraphics.imageSubRegion`, to enable custom texture atlas use for `Entity` instances.
 * Added `CheckerboardMaterialProperty` to enable use of the checkerboard material with the entity API.
+* Instead of throwing an exception when there are not enough unique positions to define a geometry, creating a `Primitive` will succeed, but not render. [#2375](https://github.com/AnalyticalGraphicsInc/cesium/issues/2375)
 
 ### 1.5 - 2015-01-05
 
