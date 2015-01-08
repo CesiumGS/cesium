@@ -404,7 +404,7 @@ define([
          */
         ready : {
             get : function() {
-                return this._state === PrimitiveState.COMPLETE;
+                return this._state === PrimitiveState.COMPLETE || this._state === PrimitiveState.FAILED;
             }
         }
     });
@@ -720,6 +720,7 @@ define([
         var j;
         var index;
         var promise;
+        var instance;
         var instances;
         var clonedInstances;
         var geometries;
@@ -820,19 +821,15 @@ define([
                     this._state = PrimitiveState.COMBINING;
 
                     when(promise, function(packedResult) {
-                        if (!defined(packedResult)) {
-                            that._state = PrimitiveState.FAILED;
-                            return;
-                        }
-
                         var result = PrimitivePipeline.unpackCombineGeometryResults(packedResult);
                         that._geometries = result.geometries;
                         that._attributeLocations = result.attributeLocations;
                         that._vaAttributes = result.vaAttributes;
                         that._perInstanceAttributeLocations = result.perInstanceAttributeLocations;
-                        that._state = PrimitiveState.COMBINED;
                         that.modelMatrix = Matrix4.clone(result.modelMatrix, that.modelMatrix);
                         that._validModelMatrix = !Matrix4.equals(that.modelMatrix, Matrix4.IDENTITY);
+
+                        that._state = defined(that._geometries) ? PrimitiveState.COMBINED : PrimitiveState.FAILED;
                     }, function(error) {
                         that._error = error;
                         that._state = PrimitiveState.FAILED;
@@ -841,14 +838,16 @@ define([
             } else {
                 instances = (isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
                 this._numberOfInstances = length = instances.length;
+
                 geometries = new Array(length);
                 clonedInstances = new Array(length);
 
+                var invalidInstances = [];
+
                 var geometryIndex = 0;
                 for (i = 0; i < length; i++) {
-                    var instance = instances[i];
+                    instance = instances[i];
                     geometry = instance.geometry;
-                    instanceIds.push(instance.id);
 
                     var createdGeometry;
                     if (defined(geometry.attributes) && defined(geometry.primitiveType)) {
@@ -860,19 +859,18 @@ define([
                     if (defined(createdGeometry)) {
                         geometries[geometryIndex] = createdGeometry;
                         clonedInstances[geometryIndex++] = cloneInstance(instance, createdGeometry);
+                        instanceIds.push(instance.id);
+                    } else {
+                        invalidInstances.push(instance);
                     }
                 }
 
                 geometries.length = geometryIndex;
                 clonedInstances.length = geometryIndex;
 
-                if (geometryIndex === 0) {
-                    this._state = PrimitiveState.FAILED;
-                    return;
-                }
-
                 var result = PrimitivePipeline.combineGeometry({
                     instances : clonedInstances,
+                    invalidInstances : invalidInstances,
                     pickIds : allowPicking ? createPickIds(context, this, clonedInstances) : undefined,
                     ellipsoid : projection.ellipsoid,
                     projection : projection,
@@ -888,9 +886,15 @@ define([
                 this._attributeLocations = result.attributeLocations;
                 this._vaAttributes = result.vaAttributes;
                 this._perInstanceAttributeLocations = result.vaAttributeLocations;
-                this._state = PrimitiveState.COMBINED;
                 this.modelMatrix = Matrix4.clone(result.modelMatrix, this.modelMatrix);
                 this._validModelMatrix = !Matrix4.equals(this.modelMatrix, Matrix4.IDENTITY);
+
+                for (i = 0; i < invalidInstances.length; ++i) {
+                    instance = invalidInstances[i];
+                    instanceIds.push(instance.id);
+                }
+
+                this._state = defined(this._geometries) ? PrimitiveState.COMBINED : PrimitiveState.FAILED;
             }
         }
 
@@ -1241,7 +1245,7 @@ define([
 
             var attribute = perInstanceAttributes[name];
             attribute.value = value;
-            if (!attribute.dirty) {
+            if (!attribute.dirty && attribute.valid) {
                 dirtyList.push(attribute);
                 attribute.dirty = true;
             }

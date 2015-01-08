@@ -9,10 +9,6 @@ define([
 
     function combineGeometry(packedParameters, transferableObjects) {
         var parameters = PrimitivePipeline.unpackCombineGeometryParameters(packedParameters);
-        if (parameters.instances.length === 0) {
-            return undefined;
-        }
-
         var results = PrimitivePipeline.combineGeometry(parameters);
         return PrimitivePipeline.packCombineGeometryResults(results, transferableObjects);
     }
