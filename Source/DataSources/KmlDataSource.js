@@ -877,18 +877,23 @@ define([
     }
 
     function processNetworkLink(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var linkUrl = queryStringValue(node, 'Link', namespaces.kml);
-        var networkLinkSource = new KmlDataSource(dataSource._proxy);
-        var promise = when(networkLinkSource.loadUrl(linkUrl), function() {
-            var entities = networkLinkSource.entities.entities;
-            for (var i = 0; i < entities.length; i++) {
-                dataSource._entityCollection.suspendEvents();
-                dataSource._entityCollection.add(entities[i]);
-                dataSource._entityCollection.resumeEvents();
-            }
-        });
+        var link = queryFirstNode(node, 'Link', namespaces.kml);
+        if (defined(link)) {
+            var linkUrl = queryStringValue(link, 'href', namespaces.kml);
+            if (defined(linkUrl)) {
+                var networkLinkSource = new KmlDataSource(dataSource._proxy);
+                var promise = when(networkLinkSource.loadUrl(linkUrl), function() {
+                    var entities = networkLinkSource.entities.entities;
+                    for (var i = 0; i < entities.length; i++) {
+                        dataSource._entityCollection.suspendEvents();
+                        dataSource._entityCollection.add(entities[i]);
+                        dataSource._entityCollection.resumeEvents();
+                    }
+                });
 
-        dataSource._promises.push(promise);
+                dataSource._promises.push(promise);
+            }
+        }
     }
 
     var featureTypes = {
