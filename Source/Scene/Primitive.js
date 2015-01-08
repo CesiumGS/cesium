@@ -463,7 +463,8 @@ define([
             geometry : geometry,
             modelMatrix : Matrix4.clone(instance.modelMatrix),
             attributes : newAttributes,
-            pickPrimitive : instance.pickPrimitive
+            pickPrimitive : instance.pickPrimitive,
+            id : instance.id
         });
     }
 
