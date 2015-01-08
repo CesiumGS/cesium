@@ -565,6 +565,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         for (var i = 0; i < dataSourceLength; i++) {
             this._dataSourceAdded(dataSourceCollection, dataSourceCollection.get(i));
         }
+        this._dataSourceAdded(undefined, dataSourceDisplay.defaultDataSource);
 
         // Hook up events so that we can subscribe to future sources.
         eventHelper.add(dataSourceCollection.dataSourceAdded, Viewer.prototype._dataSourceAdded, this);
@@ -739,7 +740,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
          */
         entities : {
             get : function() {
-                return this._dataSourceDisplay.getDefaultDataSource().entities;
+                return this._dataSourceDisplay.defaultDataSource.entities;
             }
         },
 
@@ -1157,6 +1158,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         for (i = 0; i < dataSourceLength; i++) {
             this._dataSourceRemoved(dataSources, dataSources.get(i));
         }
+        this._dataSourceRemoved(undefined, this._dataSourceDisplay.defaultDataSource);
 
         this._container.removeChild(this._element);
         this._element.removeChild(this._toolbar);
