@@ -2,6 +2,8 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EventHelper',
@@ -25,6 +27,8 @@ define([
     ], function(
         defaultValue,
         defined,
+        defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         EventHelper,
@@ -120,33 +124,60 @@ define([
                 new PathVisualizer(scene, entities)];
     };
 
+    defineProperties(DataSourceDisplay.prototype, {
+        /**
+         * Gets the scene associated with this display.
+         * @memberof DataSourceDisplay.prototype
+         * @type {Scene}
+         */
+        scene : {
+            get : function() {
+                return this._scene;
+            }
+        },
+        /**
+         * Gets the collection of data sources to display.
+         * @memberof DataSourceDisplay.prototype
+         * @type {DataSourceCollection}
+         */
+        dataSources : {
+            get : function() {
+                return this._dataSourceCollection;
+            }
+        },
+        /**
+         * Gets the default data source instance which can be used to
+         * manually create and visualize entities not tied to
+         * a specific data source. This instance is always available
+         * and does not appear in the list dataSources collection.
+         * @memberof DataSourceDisplay.prototype
+         * @type {CustomDataSource}
+         */
+        defaultDataSource : {
+            get : function() {
+                return this._defaultDataSource;
+            }
+        }
+    });
+
     /**
      * Gets the scene being used for display.
-     *
+     * @deprecated
      * @returns {Scene} The scene.
      */
     DataSourceDisplay.prototype.getScene = function() {
-        return this._scene;
+        deprecationWarning('DataSourceDisplay.getScene', 'DataSourceDisplay.getScene was deprecated on Cesium 1.5 and will be removed in Cesium 1.7, used the DataSourceDisplay.scene property instead.');
+        return this.scene;
     };
 
     /**
      * Gets the collection of data sources to be displayed.
-     *
+     * @deprecated
      * @returns {DataSourceCollection} The collection of data sources.
      */
     DataSourceDisplay.prototype.getDataSources = function() {
-        return this._dataSourceCollection;
-    };
-
-    /**
-     * Gets the default data source which can be used to
-     * manually create and visualize entities not tied to
-     * a specific data source,
-     *
-     * @returns {CustomDataSource} The default data sources.
-     */
-    DataSourceDisplay.prototype.getDefaultDataSource = function() {
-        return this._defaultDataSource;
+        deprecationWarning('DataSourceDisplay.getDataSources', 'DataSourceDisplay.getDataSources was deprecated on Cesium 1.5 and will be removed in Cesium 1.7, used the DataSourceDisplay.dataSources property instead.');
+        return this.dataSources;
     };
 
     /**

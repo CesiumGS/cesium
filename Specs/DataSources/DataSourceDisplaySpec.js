@@ -58,9 +58,16 @@ defineSuite([
             dataSourceCollection : dataSourceCollection,
             visualizersCallback : visualizersCallback
         });
+
+        expect(display.scene).toBe(scene);
+        expect(display.dataSources).toBe(dataSourceCollection);
+        expect(display.isDestroyed()).toEqual(false);
+        expect(display.defaultDataSource).toBeDefined();
+
+        //deprecated
         expect(display.getScene()).toBe(scene);
         expect(display.getDataSources()).toBe(dataSourceCollection);
-        expect(display.isDestroyed()).toEqual(false);
+
         display.destroy();
     });
 

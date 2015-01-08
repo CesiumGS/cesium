@@ -294,12 +294,11 @@ WebGLGlobeDataSource.prototype.load = function(data) {
             polyline.positions = new Cesium.ConstantProperty([surfacePosition, heightPosition]);
 
             //The polyline instance itself needs to be on an entity.
-            var entity = new Cesium.Entity(seriesName + ' index ' + i.toString());
-            entity.polyline = polyline;
-
-            //Add a property to the entity that indicates the series name.
-            entity.addProperty('seriesName');
-            entity.seriesName = seriesName;
+            var entity = new Cesium.Entity({
+                id : seriesName + ' index ' + i.toString(),
+                polyline : polyline,
+                seriesName : seriesName //Custom property to indicate series name
+            });
 
             //Add the entity to the collection.
             entities.add(entity);

@@ -87,6 +87,7 @@ define([
          * Gets or sets the positions that define the polygon.
          * @memberof PolygonGraphics.prototype
          * @type {Property}
+         * @deprecated
          */
         positions : {
             get : function() {
