@@ -879,12 +879,16 @@ define([
     function processNetworkLink(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
         var linkUrl = queryStringValue(node, 'Link', namespaces.kml);
         var networkLinkSource = new KmlDataSource(dataSource._proxy);
-        when(networkLinkSource.loadUrl(linkUrl), function() {
+        var promise = when(networkLinkSource.loadUrl(linkUrl), function() {
             var entities = networkLinkSource.entities.entities;
             for (var i = 0; i < entities.length; i++) {
+                dataSource._entityCollection.suspendEvents();
                 dataSource._entityCollection.add(entities[i]);
+                dataSource._entityCollection.resumeEvents();
             }
         });
+
+        dataSource._promises.push(promise);
     }
 
     var featureTypes = {
@@ -910,6 +914,8 @@ define([
     }
 
     function loadKml(dataSource, kml, sourceUri, uriResolver) {
+        dataSource._promises = [];
+
         var docElement = queryFirstNode(kml.documentElement, 'Document', namespaces.kml);
         var name = docElement ? queryStringValue(docElement, 'name', namespaces.kml) : undefined;
         if (!defined(name) && defined(sourceUri)) {
@@ -946,7 +952,10 @@ define([
                 }
             }
 
-            DataSource.setLoading(dataSource, false);
+            when.all(dataSource._promises, function(){
+                DataSource.setLoading(dataSource, false);
+            });
+
             return dataSource;
         });
     }
@@ -1007,6 +1016,7 @@ define([
         this._isLoading = false;
         this._proxy = proxy;
         this._pinBuilder = new PinBuilder();
+        this._promises = [];
     };
 
     /**
