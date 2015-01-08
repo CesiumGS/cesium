@@ -7,12 +7,17 @@ Change Log
   * `Rectangle.intersectWith` was deprecated in Cesium 1.5. Use `Rectangle.intersection`, which is the same but returns `undefined` when two rectangles do not intersect.
   * `Rectangle.isEmpty` was deprecated in Cesium 1.5.
   * The `sourceUri` parameter to `GeoJsonDatasource.load` was deprecated in Cesium 1.4 and has been removed. Use options.sourceUri instead.
+  * `PolygonGraphics.positions` created by `GeoJSONDataSource` now evaluate to a `PolygonHierarchy` object instead of an array of positions.
 * Deprecated
-  *
+  * `PolygonGraphics.positions` was deprecated and replaced with `PolygonGraphics.hierarchy`, whose value is a `PolygonHierarchy` instead of an array of positions.  `PolygonGraphics.positions` will be removed in Cesium 1.8.
 * Improved performance of asynchronous geometry creation (as much as 20% faster in some use cases). [#2342](https://github.com/AnalyticalGraphicsInc/cesium/issues/2342)
 * Added `PolylineVolumeGraphics` and `Entity.polylineVolume`
 * Added `BillboardGraphics.imageSubRegion`, to enable custom texture atlas use for `Entity` instances.
 * Added `CheckerboardMaterialProperty` to enable use of the checkerboard material with the entity API.
+* Added `PolygonHierarchy` to make defining polygons with holes clearer.
+* Added `PolygonGraphics.hierarchy` for supporting polygons with holes via data sources.
+* `GeoJsonDataSource` now supports polygons with holes.
+* `ConstantProperty` can now hold any value; previously it was limited to values that implemented `equals` and `clones` functions, as well as a few special cases.
 * Instead of throwing an exception when there are not enough unique positions to define a geometry, creating a `Primitive` will succeed, but not render. [#2375](https://github.com/AnalyticalGraphicsInc/cesium/issues/2375)
 
 ### 1.5 - 2015-01-05

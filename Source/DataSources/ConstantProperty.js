@@ -1,21 +1,20 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/isArray'
+        '../Core/Event'
     ], function(
         defaultValue,
+        defined,
         defineProperties,
         DeveloperError,
-        Event,
-        isArray) {
+        Event) {
     "use strict";
 
     /**
      * A {@link Property} whose value does not change with respect to simulation time.
-     * If the value is not a number, string, array, or HTMLElement then it must provide clone and equals functions.
      *
      * @alias ConstantProperty
      * @constructor
@@ -29,7 +28,8 @@ define([
      */
     var ConstantProperty = function(value) {
         this._value = undefined;
-        this._simple = true;
+        this._hasClone = false;
+        this._hasEquals = false;
         this._definitionChanged = new Event();
         this.setValue(value);
     };
@@ -70,12 +70,11 @@ define([
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
      */
     ConstantProperty.prototype.getValue = function(time, result) {
-        return this._simple ? this._value : this._value.clone(result);
+        return this._hasClone ? this._value.clone(result) : this._value;
     };
 
     /**
      * Sets the value of the property.
-     * If the value is not a number, string, array, or HTMLElement then it must provide clone and equals functions.
      *
      * @param {Object} value The property value.
      *
@@ -84,24 +83,19 @@ define([
      */
     ConstantProperty.prototype.setValue = function(value) {
         var oldValue = this._value;
-        var simple = this._simple;
-        if ((simple && oldValue !== value) || (!simple && !oldValue.equals(value))) {
-            simple = typeof value !== 'object' || value instanceof HTMLElement || isArray(value);
+        if (oldValue !== value) {
+            var isDefined = defined(value);
+            var hasClone = isDefined && typeof value.clone === 'function';
+            var hasEquals = isDefined && typeof value.equals === 'function';
 
-            //>>includeStart('debug', pragmas.debug);
-            if (!simple) {
-                if (typeof value.clone !== 'function') {
-                    throw new DeveloperError('clone is a required function.');
-                }
-                if (typeof value.equals !== 'function') {
-                    throw new DeveloperError('equals is a required function.');
-                }
+            this._hasClone = hasClone;
+            this._hasEquals = hasEquals;
+
+            var changed = !hasEquals || !value.equals(oldValue);
+            if (changed) {
+                this._value = !hasClone ? value : value.clone();
+                this._definitionChanged.raiseEvent(this);
             }
-            //>>includeEnd('debug');
-
-            this._value = simple ? value : value.clone();
-            this._simple = simple;
-            this._definitionChanged.raiseEvent(this);
         }
     };
 
@@ -115,8 +109,8 @@ define([
     ConstantProperty.prototype.equals = function(other) {
         return this === other || //
                (other instanceof ConstantProperty && //
-                ((this._simple && (this._value === other._value)) || //
-                (!this._simple && this._value.equals(other._value))));
+                ((!this._hasEquals && (this._value === other._value)) || //
+                (this._hasEquals && this._value.equals(other._value))));
     };
 
     return ConstantProperty;
