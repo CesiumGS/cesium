@@ -483,7 +483,7 @@ define([
         while (queue.length !== 0) {
             var outerNode = queue.dequeue();
             var outerRing = outerNode.positions;
-
+            outerRing = PolygonPipeline.removeDuplicates(outerRing);
             if (outerRing.length < 3) {
                 continue;
             }
