@@ -21,8 +21,7 @@ define([
         '../Core/Math',
         '../Core/NearFarScalar',
         '../Core/PinBuilder',
-        '../Core/PolylinePipeline',
-        '../Core/PolygonPipeline',
+        '../Core/PolygonHierarchy',
         '../Core/Rectangle',
         '../Core/RuntimeError',
         '../Core/TimeInterval',
@@ -69,8 +68,7 @@ define([
         CesiumMath,
         NearFarScalar,
         PinBuilder,
-        PolylinePipeline,
-        PolygonPipeline,
+        PolygonHierarchy,
         Rectangle,
         RuntimeError,
         TimeInterval,
@@ -608,10 +606,7 @@ define([
         if (defined(coordinatesNode)) {
             var coordinates = readCoordinates(coordinatesNode);
             if (defined(coordinates)) {
-                coordinates = defaultValue(PolylinePipeline.removeDuplicates(coordinates), coordinates);
-                if (coordinates.length > 1) {
-                    polyline.positions = new ConstantProperty(coordinates);
-                }
+                polyline.positions = new ConstantProperty(coordinates);
             }
         }
     }
@@ -632,18 +627,29 @@ define([
             polygon.extrudedHeight = new ConstantProperty(0);
         }
 
-        var outerNodes = queryChildNodes(geometryNode, 'outerBoundaryIs', namespaces.kml);
-        var positions;
-        for (var j = 0; j < outerNodes.length; j++) {
-            var linearRingNode = queryFirstNode(outerNodes[j], 'LinearRing', namespaces.kml);
-            var coordinatesNode = queryFirstNode(linearRingNode, 'coordinates', namespaces.kml);
-            if (defined(coordinatesNode)) {
-                var coordinates = readCoordinates(coordinatesNode);
-                if (defined(coordinates)) {
-                    polygon.positions = new ConstantProperty(coordinates);
+        var outerBoundaryIsNode = queryFirstNode(geometryNode, 'outerBoundaryIs', namespaces.kml);
+        var linearRingNode = queryFirstNode(outerBoundaryIsNode, 'LinearRing', namespaces.kml);
+        var coordinatesNode = queryFirstNode(linearRingNode, 'coordinates', namespaces.kml);
+        if (defined(coordinatesNode)) {
+            var coordinates = readCoordinates(coordinatesNode);
+            if (defined(coordinates)) {
+                var hierarchy = new PolygonHierarchy(coordinates);
+
+                var innerBoundaryIsNodes = queryChildNodes(geometryNode, 'innerBoundaryIs', namespaces.kml);
+                for (var j = 0; j < innerBoundaryIsNodes.length; j++) {
+                    linearRingNode = queryChildNodes(innerBoundaryIsNodes[j], 'LinearRing', namespaces.kml);
+                    for (var k = 0; k < linearRingNode.length; k++) {
+                        coordinatesNode = queryFirstNode(linearRingNode[k], 'coordinates', namespaces.kml);
+                        if (defined(coordinatesNode)) {
+                            coordinates = readCoordinates(coordinatesNode);
+                            if (defined(coordinates)) {
+                                hierarchy.holes.push(new PolygonHierarchy(coordinates));
+                            }
+                        }
+                    }
                 }
+                polygon.hierarchy = new ConstantProperty(hierarchy);
             }
-            break;
         }
     }
 

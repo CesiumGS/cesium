@@ -463,7 +463,7 @@ defineSuite([
 
         var entities = dataSource.entities.entities;
         var entity = entities[0];
-        expect(entity.polygon.positions.getValue()).toEqual(coordinates);
+        expect(entity.polygon.hierarchy.getValue().positions).toEqual(coordinates);
     });
 
     it('handles gx:Track', function() {
