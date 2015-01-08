@@ -40,6 +40,7 @@ define([
      *
      * @see BoxGeometry.fromDimensions
      * @see BoxGeometry.createGeometry
+     * @see Packable
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Box.html|Cesium Sandcastle Box Demo}
      *
@@ -113,6 +114,77 @@ define([
             vertexFormat : options.vertexFormat
         };
         return new BoxGeometry(newOptions);
+    };
+
+    /**
+     * The number of elements used to pack the object into an array.
+     * @type {Number}
+     */
+    BoxGeometry.packedLength = 2 * Cartesian3.packedLength + VertexFormat.packedLength;
+
+    /**
+     * Stores the provided instance into the provided array.
+     * @function
+     *
+     * @param {Object} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     */
+    BoxGeometry.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        Cartesian3.pack(value._minimumCorner, array, startingIndex);
+        Cartesian3.pack(value._maximumCorner, array, startingIndex + Cartesian3.packedLength);
+        VertexFormat.pack(value._vertexFormat, array, startingIndex + 2 * Cartesian3.packedLength);
+    };
+
+    var scratchMin = new Cartesian3();
+    var scratchMax = new Cartesian3();
+    var scratchVertexFormat = new VertexFormat();
+    var scratchOptions = {
+        minimumCorner : scratchMin,
+        maximumCorner : scratchMax,
+        vertexFormat : scratchVertexFormat
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {BoxGeometry} [result] The object into which to store the result.
+     */
+    BoxGeometry.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        var min = Cartesian3.unpack(array, startingIndex, scratchMin);
+        var max = Cartesian3.unpack(array, startingIndex + Cartesian3.packedLength, scratchMax);
+        var vertexFormat = VertexFormat.unpack(array, startingIndex + 2 * Cartesian3.packedLength, scratchVertexFormat);
+
+        if (!defined(result)) {
+            return new BoxGeometry(scratchOptions);
+        }
+
+        result._minimumCorner = Cartesian3.clone(min, result._minimumCorner);
+        result._maximumCorner = Cartesian3.clone(max, result._maximumCorner);
+        result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
+
+        return result;
     };
 
     /**

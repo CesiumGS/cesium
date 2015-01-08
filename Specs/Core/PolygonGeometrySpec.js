@@ -6,14 +6,16 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/Math',
-        'Core/VertexFormat'
+        'Core/VertexFormat',
+        'Specs/createPackableSpecs'
     ], function(
         PolygonGeometry,
         BoundingSphere,
         Cartesian3,
         Ellipsoid,
         CesiumMath,
-        VertexFormat) {
+        VertexFormat,
+        createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -393,4 +395,49 @@ defineSuite([
         expect(p.indices.length).toEqual(3 * 22 * 2);
     });
 
+    var positions = Cartesian3.fromDegreesArray([
+        -124.0, 35.0,
+        -110.0, 35.0,
+        -110.0, 40.0
+    ]);
+    var holePositions0 = Cartesian3.fromDegreesArray([
+        -122.0, 36.0,
+        -122.0, 39.0,
+        -112.0, 39.0
+    ]);
+    var holePositions1 = Cartesian3.fromDegreesArray([
+        -120.0, 36.5,
+        -114.0, 36.5,
+        -114.0, 38.5
+    ]);
+    var hierarchy = {
+        positions : positions,
+        holes : [{
+            positions : holePositions0,
+            holes : [{
+                positions : holePositions1
+            }]
+        }]
+    };
+
+    var polygon = new PolygonGeometry({
+        vertexFormat : VertexFormat.POSITION_ONLY,
+        polygonHierarchy : hierarchy,
+        granularity : CesiumMath.PI_OVER_THREE
+    });
+
+    function addPositions(array, positions) {
+        for (var i = 0; i < positions.length; ++i) {
+            array.push(positions[i].x, positions[i].y, positions[i].z);
+        }
+    }
+    var packedInstance = [3.0, 1.0];
+    addPositions(packedInstance, positions);
+    packedInstance.push(3.0, 1.0);
+    addPositions(packedInstance, holePositions0);
+    packedInstance.push(3.0, 0.0);
+    addPositions(packedInstance, holePositions1);
+    packedInstance.push(Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z);
+    packedInstance.push(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 0.0, 0.0);
+    createPackableSpecs(PolygonGeometry, polygon, packedInstance);
 });

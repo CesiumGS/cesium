@@ -744,11 +744,41 @@ define([
                         }
                     }
 
+                    var subTask;
                     subTasks = subdivideArray(subTasks, numberOfCreationWorkers);
+
                     for (i = 0; i < subTasks.length; i++) {
+                        var packedLength = 0;
+                        var workerSubTasks = subTasks[i];
+                        var workerSubTasksLength = workerSubTasks.length;
+                        for (j = 0; j < workerSubTasksLength; ++j) {
+                            subTask = workerSubTasks[j];
+                            geometry = subTask.geometry;
+                            if (defined(geometry.constructor.pack)) {
+                                subTask.offset = packedLength;
+                                packedLength += defaultValue(geometry.constructor.packedLength, geometry.packedLength);
+                            }
+                        }
+
+                        var subTaskTransferableObjects;
+
+                        if (packedLength > 0) {
+                            var array = new Float64Array(packedLength);
+                            subTaskTransferableObjects = [array.buffer];
+
+                            for (j = 0; j < workerSubTasksLength; ++j) {
+                                subTask = workerSubTasks[j];
+                                geometry = subTask.geometry;
+                                if (defined(geometry.constructor.pack)) {
+                                    geometry.constructor.pack(geometry, array, subTask.offset);
+                                    subTask.geometry = array;
+                                }
+                            }
+                        }
+
                         promises.push(createGeometryTaskProcessors[i].scheduleTask({
                             subTasks : subTasks[i]
-                        }));
+                        }, subTaskTransferableObjects));
                     }
 
                     this._state = PrimitiveState.CREATING;

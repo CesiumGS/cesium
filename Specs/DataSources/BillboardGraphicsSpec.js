@@ -23,6 +23,7 @@ defineSuite([
     it('merge assigns unassigned properties', function() {
         var source = new BillboardGraphics();
         source.image = new ConstantProperty('');
+        source.imageSubRegion = new ConstantProperty();
         source.rotation = new ConstantProperty(5);
         source.alignedAxis = new ConstantProperty(new Cartesian3());
         source.color = new ConstantProperty(Color.BLACK);
@@ -42,6 +43,7 @@ defineSuite([
         target.merge(source);
 
         expect(target.image).toBe(source.image);
+        expect(target.imageSubRegion).toBe(source.imageSubRegion);
         expect(target.rotation).toBe(source.rotation);
         expect(target.alignedAxis).toBe(source.alignedAxis);
         expect(target.color).toBe(source.color);
@@ -61,6 +63,7 @@ defineSuite([
     it('merge does not assign assigned properties', function() {
         var source = new BillboardGraphics();
         source.image = new ConstantProperty('');
+        source.imageSubRegion = new ConstantProperty();
         source.rotation = new ConstantProperty(5);
         source.alignedAxis = new ConstantProperty(new Cartesian3());
         source.color = new ConstantProperty(Color.BLACK);
@@ -77,6 +80,7 @@ defineSuite([
         source.pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar(1.0, 0.0, 3.0e9, 0.0));
 
         var image = new ConstantProperty('');
+        var imageSubRegion = new ConstantProperty();
         var rotation = new ConstantProperty(5);
         var alignedAxis = new ConstantProperty(new Cartesian3());
         var color = new ConstantProperty(Color.BLACK);
@@ -94,6 +98,7 @@ defineSuite([
 
         var target = new BillboardGraphics();
         target.image = image;
+        target.imageSubRegion = imageSubRegion;
         target.rotation = rotation;
         target.alignedAxis = alignedAxis;
         target.color = color;
@@ -112,6 +117,7 @@ defineSuite([
         target.merge(source);
 
         expect(target.image).toBe(image);
+        expect(target.imageSubRegion).toBe(imageSubRegion);
         expect(target.rotation).toBe(rotation);
         expect(target.alignedAxis).toBe(alignedAxis);
         expect(target.color).toBe(color);
@@ -131,6 +137,7 @@ defineSuite([
     it('clone works', function() {
         var source = new BillboardGraphics();
         source.image = new ConstantProperty('');
+        source.imageSubRegion = new ConstantProperty();
         source.rotation = new ConstantProperty(5);
         source.alignedAxis = new ConstantProperty(new Cartesian3());
         source.color = new ConstantProperty(Color.BLACK);
@@ -148,6 +155,7 @@ defineSuite([
 
         var result = source.clone();
         expect(result.image).toBe(source.image);
+        expect(result.imageSubRegion).toBe(source.imageSubRegion);
         expect(result.rotation).toBe(source.rotation);
         expect(result.alignedAxis).toBe(source.alignedAxis);
         expect(result.color).toBe(source.color);
