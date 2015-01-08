@@ -829,6 +829,23 @@ define([
                         that.modelMatrix = Matrix4.clone(result.modelMatrix, that.modelMatrix);
                         that._validModelMatrix = !Matrix4.equals(that.modelMatrix, Matrix4.IDENTITY);
 
+                        var validInstancesIndices = packedResult.validInstancesIndices;
+                        var invalidInstancesIndices = packedResult.invalidInstancesIndices;
+                        var instanceIds = that._instanceIds;
+                        var reorderedInstanceIds = new Array(instanceIds.length);
+
+                        var validLength = validInstancesIndices.length;
+                        for (var i = 0; i < validLength; ++i) {
+                            reorderedInstanceIds[i] = instanceIds[validInstancesIndices[i]];
+                        }
+
+                        var invalidLength = invalidInstancesIndices.length;
+                        for (var j = 0; j < invalidLength; ++j) {
+                            reorderedInstanceIds[validLength + j] = instanceIds[invalidInstancesIndices[j]];
+                        }
+
+                        that._instanceIds = reorderedInstanceIds;
+
                         that._state = defined(that._geometries) ? PrimitiveState.COMBINED : PrimitiveState.FAILED;
                     }, function(error) {
                         that._error = error;

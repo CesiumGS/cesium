@@ -437,7 +437,7 @@ define([
                 var name = names[j];
                 instanceAttributes[name] = {
                     dirty : false,
-                    invalid : true,
+                    valid : false,
                     value : attributes[name].value,
                     indices : []
                 };
@@ -487,7 +487,9 @@ define([
             modelMatrix : parameters.modelMatrix,
             attributeLocations : attributeLocations,
             vaAttributes : perInstanceAttributes,
-            vaAttributeLocations : indices
+            vaAttributeLocations : indices,
+            validInstancesIndices : parameters.validInstancesIndices,
+            invalidInstancesIndices : parameters.invalidInstancesIndices
         };
     };
 
@@ -938,7 +940,7 @@ define([
             var numAttributes = packedData[i++];
             for (var x = 0; x < numAttributes; x++) {
                 var name = stringTable[packedData[i++]];
-                var valid = packedData[i++];
+                var valid = packedData[i++] === 1.0;
 
                 var indicesLength = packedData[i++];
                 var indices = indicesLength > 0 ? new Array(indicesLength) : undefined;
@@ -1011,8 +1013,10 @@ define([
         var instanceIndex = 0;
 
         var validInstances = [];
-        var validPickIds = [];
         var invalidInstances = [];
+        var validInstancesIndices = [];
+        var invalidInstancesIndices = [];
+        var validPickIds = [];
 
         for (var resultIndex = 0; resultIndex < length; resultIndex++) {
             var geometries = PrimitivePipeline.unpackCreateGeometryResults(createGeometryResults[resultIndex]);
@@ -1024,9 +1028,11 @@ define([
                 if (defined(geometry)) {
                     instance.geometry = geometry;
                     validInstances.push(instance);
+                    validInstancesIndices.push(instanceIndex);
                     validPickIds.push(pickIds[instanceIndex]);
                 } else {
                     invalidInstances.push(instance);
+                    invalidInstancesIndices.push(instanceIndex);
                 }
 
                 ++instanceIndex;
@@ -1039,6 +1045,8 @@ define([
         return {
             instances : validInstances,
             invalidInstances : invalidInstances,
+            validInstancesIndices : validInstancesIndices,
+            invalidInstancesIndices : invalidInstancesIndices,
             pickIds : validPickIds,
             ellipsoid : ellipsoid,
             projection : projection,
@@ -1065,7 +1073,9 @@ define([
             attributeLocations : results.attributeLocations,
             vaAttributes : results.vaAttributes,
             packedVaAttributeLocations : packAttributeLocations(results.vaAttributeLocations, transferableObjects),
-            modelMatrix : results.modelMatrix
+            modelMatrix : results.modelMatrix,
+            validInstancesIndices : results.validInstancesIndices,
+            invalidInstancesIndices : results.invalidInstancesIndices
         };
     };
 
