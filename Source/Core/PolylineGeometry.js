@@ -286,10 +286,7 @@ define([
      * Computes the geometric representation of a polyline, including its vertices, indices, and a bounding sphere.
      *
      * @param {PolylineGeometry} polylineGeometry A description of the polyline.
-     * @returns {Geometry} The computed vertices and indices.
-     *
-     * @exception {DeveloperError} At least two unique positions are required.
-     *
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     PolylineGeometry.createGeometry = function(polylineGeometry) {
         var width = polylineGeometry._width;
@@ -310,13 +307,11 @@ define([
         if (!defined(positions)) {
             positions = polylineGeometry._positions;
         }
-        var positionsLength = positions.length;
 
-        //>>includeStart('debug', pragmas.debug);
+        var positionsLength = positions.length;
         if (positionsLength < 2) {
-            throw new DeveloperError('At least two unique positions are required.');
+            return undefined;
         }
-        //>>includeEnd('debug');
 
         if (followSurface) {
             var heights = PolylinePipeline.extractHeights(positions, ellipsoid);
