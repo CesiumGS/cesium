@@ -8,9 +8,11 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/isArray',
         '../Core/GeometryInstance',
         '../Core/Iso8601',
         '../Core/PolygonGeometry',
+        '../Core/PolygonHierarchy',
         '../Core/PolygonOutlineGeometry',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/MaterialAppearance',
@@ -29,9 +31,11 @@ define([
         destroyObject,
         DeveloperError,
         Event,
+        isArray,
         GeometryInstance,
         Iso8601,
         PolygonGeometry,
+        PolygonHierarchy,
         PolygonOutlineGeometry,
         ShowGeometryInstanceAttribute,
         MaterialAppearance,
@@ -53,9 +57,7 @@ define([
     var GeometryOptions = function(entity) {
         this.id = entity;
         this.vertexFormat = undefined;
-        this.polygonHierarchy = {
-            positions : undefined
-        };
+        this.polygonHierarchy = undefined;
         this.perPositionHeight = undefined;
         this.height = undefined;
         this.extrudedHeight = undefined;
@@ -422,11 +424,11 @@ define([
             return;
         }
 
-        var positions = polygon.positions;
+        var hierarchy = polygon.hierarchy;
 
         var show = polygon.show;
         if ((defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE)) || //
-            (!defined(positions))) {
+            (!defined(hierarchy))) {
             if (this._fillEnabled || this._outlineEnabled) {
                 this._fillEnabled = false;
                 this._outlineEnabled = false;
@@ -454,7 +456,7 @@ define([
         this._fillEnabled = fillEnabled;
         this._outlineEnabled = outlineEnabled;
 
-        if (!positions.isConstant || //
+        if (!hierarchy.isConstant || //
             !Property.isConstant(height) || //
             !Property.isConstant(extrudedHeight) || //
             !Property.isConstant(granularity) || //
@@ -468,7 +470,12 @@ define([
         } else {
             var options = this._options;
             options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
-            options.polygonHierarchy.positions = positions.getValue(Iso8601.MINIMUM_VALUE, options.polygonHierarchy.positions);
+            var hierarchyValue = hierarchy.getValue(Iso8601.MINIMUM_VALUE);
+            if (isArray(hierarchyValue)) {
+                options.polygonHierarchy = new PolygonHierarchy(hierarchyValue);
+            } else {
+                options.polygonHierarchy = hierarchyValue;
+            }
             options.height = defined(height) ? height.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
@@ -532,12 +539,17 @@ define([
         }
 
         var options = this._options;
-        var positions = Property.getValueOrUndefined(polygon.positions, time, options.polygonHierarchy.positions);
-        if (!defined(positions)) {
+        var hierarchy = Property.getValueOrUndefined(polygon.hierarchy, time);
+        if (!defined(hierarchy)) {
             return;
         }
 
-        options.polygonHierarchy.positions = positions;
+        if (isArray(hierarchy)) {
+            options.polygonHierarchy = new PolygonHierarchy(hierarchy);
+        } else {
+            options.polygonHierarchy = hierarchy;
+        }
+
         options.height = Property.getValueOrUndefined(polygon.height, time);
         options.extrudedHeight = Property.getValueOrUndefined(polygon.extrudedHeight, time);
         options.granularity = Property.getValueOrUndefined(polygon.granularity, time);
