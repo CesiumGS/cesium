@@ -143,7 +143,6 @@ define([
 
     /**
      * Sets the value of the property.
-     * If the value is an object, the object must provide clone and equals functions.
      *
      * @param {Property[]} value An array of Property instances.
      */
