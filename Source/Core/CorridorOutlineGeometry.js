@@ -461,9 +461,7 @@ define([
      * Computes the geometric representation of a corridor, including its vertices, indices, and a bounding sphere.
      *
      * @param {CorridorOutlineGeometry} corridorOutlineGeometry A description of the corridor.
-     * @returns {Geometry} The computed vertices and indices.
-     *
-     * @exception {DeveloperError} Count of unique positions must be greater than 1.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     CorridorOutlineGeometry.createGeometry = function(corridorOutlineGeometry) {
         var positions = corridorOutlineGeometry._positions;
@@ -476,11 +474,9 @@ define([
             cleanPositions = positions;
         }
 
-        //>>includeStart('debug', pragmas.debug);
         if (cleanPositions.length < 2) {
-            throw new DeveloperError('Count of unique positions must be greater than 1.');
+            return undefined;
         }
-        //>>includeEnd('debug');
 
         var ellipsoid = corridorOutlineGeometry._ellipsoid;
         var params = {
