@@ -825,18 +825,26 @@ define([
     var scratchSetViewTransform2 = new Matrix4();
     var scratchSetViewQuaternion = new Quaternion();
     var scratchSetViewMatrix3 = new Matrix3();
+    var scratchSetViewCartographic = new Cartographic();
 
     Camera.prototype.setView = function(options) {
+        if (this._mode === SceneMode.MORPHING) {
+            return;
+        }
+
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        var scene2D = this._mode === SceneMode.SCENE2D;
+
         var heading = defaultValue(options.heading, 0.0);
-        var pitch = defaultValue(options.pitch, CesiumMath.PI_OVER_TWO);
-        var roll = defaultValue(options.roll, 0.0);
+        var pitch = scene2D || !defined(options.pitch) ? CesiumMath.PI_OVER_TWO : options.pitch;
+        var roll = scene2D || !defined(options.pitch) ? 0.0 : options.roll;
 
         var cartesian = options.cartesian;
         var cartographic = options.cartographic;
 
-        var ellipsoid = this._projection.ellipsoid;
+        var projection = this._projection;
+        var ellipsoid = projection.ellipsoid;
 
         if (!defined(cartesian)) {
             if (defined(cartographic)) {
@@ -850,7 +858,24 @@ define([
         var localTransform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, scratchSetViewTransform2);
         this.setTransform(localTransform);
 
-        Cartesian3.clone(Cartesian3.ZERO, this.position);
+        if (scene2D) {
+            Cartesian2.clone(Cartesian3.ZERO, this.position);
+
+            var cartographic2D = ellipsoid.cartesianToCartographic(cartesian, scratchSetViewCartographic);
+            var newLeft = -cartographic2D.height * 0.5;
+            var newRight = -newLeft;
+
+            var frustum = this.frustum;
+            if (newRight > newLeft) {
+                var ratio = frustum.top / frustum.right;
+                frustum.right = newRight;
+                frustum.left = newLeft;
+                frustum.top = frustum.right * ratio;
+                frustum.bottom = -frustum.top;
+            }
+        } else {
+            Cartesian3.clone(Cartesian3.ZERO, this.position);
+        }
 
         var headingQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, heading + CesiumMath.PI_OVER_TWO, new Quaternion());
         var pitchQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, pitch, new Quaternion());
