@@ -50,6 +50,7 @@ define([
      *        wall at <code>positions</code>. If undefined, the height at each position is 0.0.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
      *
+     * @exception {DeveloperError} positions length must be greater than or equal to 2.
      * @exception {DeveloperError} positions and maximumHeights must have the same length.
      * @exception {DeveloperError} positions and minimumHeights must have the same length.
      *
@@ -81,6 +82,9 @@ define([
         //>>includeStart('debug', pragmas.debug);
         if (!defined(wallPositions)) {
             throw new DeveloperError('options.positions is required.');
+        }
+        if (wallPositions.length < 2) {
+            throw new DeveloperError('options.positions length must be greater than or equal to 2.');
         }
         if (defined(maximumHeights) && maximumHeights.length !== wallPositions.length) {
             throw new DeveloperError('options.positions and options.maximumHeights must have the same length.');
@@ -322,9 +326,7 @@ define([
      * Computes the geometric representation of a wall outline, including its vertices, indices, and a bounding sphere.
      *
      * @param {WallOutlineGeometry} wallGeometry A description of the wall outline.
-     * @returns {Geometry} The computed vertices and indices.
-     *
-     * @exception {DeveloperError} unique positions must be greater than or equal to 2.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     WallOutlineGeometry.createGeometry = function(wallGeometry) {
         var wallPositions = wallGeometry._positions;
@@ -334,6 +336,10 @@ define([
         var ellipsoid = wallGeometry._ellipsoid;
 
         var pos = WallGeometryLibrary.computePositions(ellipsoid, wallPositions, maximumHeights, minimumHeights, granularity, false);
+        if (!defined(pos)) {
+            return undefined;
+        }
+
         var bottomPositions = pos.bottomPositions;
         var topPositions = pos.topPositions;
 

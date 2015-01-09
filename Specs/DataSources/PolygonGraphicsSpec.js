@@ -19,7 +19,7 @@ defineSuite([
     it('merge assigns unassigned properties', function() {
         var source = new PolygonGraphics();
         source.material = new ColorMaterialProperty();
-        source.positions = new ConstantProperty();
+        source.hierarchy = new ConstantProperty();
         source.show = new ConstantProperty();
         source.height = new ConstantProperty();
         source.extrudedHeight = new ConstantProperty();
@@ -35,7 +35,7 @@ defineSuite([
         target.merge(source);
 
         expect(target.material).toBe(source.material);
-        expect(target.positions).toBe(source.positions);
+        expect(target.hierarchy).toBe(source.hierarchy);
         expect(target.show).toBe(source.show);
         expect(target.height).toBe(source.height);
         expect(target.extrudedHeight).toBe(source.extrudedHeight);
@@ -66,7 +66,7 @@ defineSuite([
 
         var target = new PolygonGraphics();
         target.material = material;
-        target.positions = positions;
+        target.hierarchy = positions;
         target.show = show;
         target.height = height;
         target.extrudedHeight = extrudedHeight;
@@ -81,7 +81,7 @@ defineSuite([
         target.merge(source);
 
         expect(target.material).toBe(material);
-        expect(target.positions).toBe(positions);
+        expect(target.hierarchy).toBe(positions);
         expect(target.show).toBe(show);
         expect(target.height).toBe(height);
         expect(target.extrudedHeight).toBe(extrudedHeight);
@@ -97,7 +97,7 @@ defineSuite([
     it('clone works', function() {
         var source = new PolygonGraphics();
         source.material = new ColorMaterialProperty();
-        source.positions = new ConstantProperty();
+        source.hierarchy = new ConstantProperty();
         source.show = new ConstantProperty();
         source.height = new ConstantProperty();
         source.extrudedHeight = new ConstantProperty();
@@ -111,7 +111,7 @@ defineSuite([
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
-        expect(result.positions).toBe(source.positions);
+        expect(result.hierarchy).toBe(source.hierarchy);
         expect(result.show).toBe(source.show);
         expect(result.height).toBe(source.height);
         expect(result.extrudedHeight).toBe(source.extrudedHeight);
@@ -134,7 +134,7 @@ defineSuite([
     it('raises definitionChanged when a property is assigned or modified', function() {
         var property = new PolygonGraphics();
         testMaterialDefinitionChanged(property, 'material', Color.RED, Color.BLUE);
-        testDefinitionChanged(property, 'positions', [], []);
+        testDefinitionChanged(property, 'hierarchy', [], []);
         testDefinitionChanged(property, 'show', true, false);
         testDefinitionChanged(property, 'height', 3, 4);
         testDefinitionChanged(property, 'extrudedHeight', 4, 3);
