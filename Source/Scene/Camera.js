@@ -1464,64 +1464,25 @@ define([
         }
     };
 
-    function setPositionCartographic2D(camera, cartographic) {
-        var newLeft = -cartographic.height * 0.5;
-        var newRight = -newLeft;
-
-        var frustum = camera.frustum;
-        if (newRight > newLeft) {
-            var ratio = frustum.top / frustum.right;
-            frustum.right = newRight;
-            frustum.left = newLeft;
-            frustum.top = frustum.right * ratio;
-            frustum.bottom = -frustum.top;
-        }
-
-        //We use Cartesian2 instead of 3 here because Z must be constant in 2D mode.
-        Cartesian2.clone(camera._projection.project(cartographic), camera.position);
-        Cartesian3.negate(Cartesian3.UNIT_Z, camera.direction);
-        Cartesian3.clone(Cartesian3.UNIT_Y, camera.up);
-        Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
-    }
-
-    function setPositionCartographicCV(camera, cartographic) {
-        var projection = camera._projection;
-        camera.position = projection.project(cartographic);
-        Cartesian3.negate(Cartesian3.UNIT_Z, camera.direction);
-        Cartesian3.clone(Cartesian3.UNIT_Y, camera.up);
-        Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
-    }
-
-    function setPositionCartographic3D(camera, cartographic) {
-        var ellipsoid = camera._projection.ellipsoid;
-
-        ellipsoid.cartographicToCartesian(cartographic, camera.position);
-        Cartesian3.negate(camera.position, camera.direction);
-        Cartesian3.normalize(camera.direction, camera.direction);
-        Cartesian3.cross(camera.direction, Cartesian3.UNIT_Z, camera.right);
-        Cartesian3.cross(camera.right, camera.direction, camera.up);
-        Cartesian3.cross(camera.direction, camera.up, camera.right);
-    }
-
     /**
      * Moves the camera to the provided cartographic position.
+     *
+     * @deprecated
      *
      * @param {Cartographic} cartographic The new camera position.
      */
     Camera.prototype.setPositionCartographic = function(cartographic) {
+        deprecationWarning('Camera.setPositionCartographic', 'Camera.setPositionCartographic was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. Use Camera.setView.');
+
         //>>includeStart('debug', pragmas.debug);
         if (!defined(cartographic)) {
             throw new DeveloperError('cartographic is required.');
         }
         //>>includeEnd('debug');
 
-        if (this._mode === SceneMode.SCENE2D) {
-            setPositionCartographic2D(this, cartographic);
-        } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
-            setPositionCartographicCV(this, cartographic);
-        } else if (this._mode === SceneMode.SCENE3D) {
-            setPositionCartographic3D(this, cartographic);
-        }
+        this.setView({
+            cartographic : cartographic
+        });
     };
 
     /**
