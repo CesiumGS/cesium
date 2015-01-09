@@ -18,6 +18,7 @@ Change Log
 * Added `PolygonGraphics.hierarchy` for supporting polygons with holes via data sources.
 * `GeoJsonDataSource` now supports polygons with holes.
 * `ConstantProperty` can now hold any value; previously it was limited to values that implemented `equals` and `clones` functions, as well as a few special cases.
+* Fixed a bug in `EllipsoidGeodesic` that caused it to modify the `height` of the positions passed to the constructor or to to `setEndPoints`.
 
 ### 1.5 - 2015-01-05
 
