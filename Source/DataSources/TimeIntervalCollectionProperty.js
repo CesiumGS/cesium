@@ -4,7 +4,6 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/isArray',
         '../Core/TimeIntervalCollection',
         './Property'
     ], function(
@@ -12,7 +11,6 @@ define([
         defineProperties,
         DeveloperError,
         Event,
-        isArray,
         TimeIntervalCollection,
         Property) {
     "use strict";
@@ -106,8 +104,6 @@ define([
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
-     *
-     * @exception {DeveloperError} This value requires a clone function be specified for the TimeIntervalCollectionProperty constructor.
      */
     TimeIntervalCollectionProperty.prototype.getValue = function(time, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -117,7 +113,7 @@ define([
         //>>includeEnd('debug');
 
         var value = this._intervals.findDataForIntervalContainingDate(time);
-        if (defined(value) && (typeof value === 'object' && !isArray(value))) {
+        if (defined(value) && (typeof value.clone === 'function')) {
             return value.clone(result);
         }
         return value;
