@@ -838,7 +838,7 @@ define([
 
         var heading = defaultValue(options.heading, 0.0);
         var pitch = scene2D || !defined(options.pitch) ? CesiumMath.PI_OVER_TWO : options.pitch;
-        var roll = scene2D || !defined(options.pitch) ? 0.0 : options.roll;
+        var roll = scene2D || !defined(options.roll) ? 0.0 : options.roll;
 
         var cartesian = options.cartesian;
         var cartographic = options.cartographic;
