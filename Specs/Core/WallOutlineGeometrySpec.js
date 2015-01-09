@@ -48,16 +48,15 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws with less than 2 unique positions', function() {
-        expect(function() {
-            return WallOutlineGeometry.createGeometry(new WallOutlineGeometry({
-                positions : Cartesian3.fromDegreesArrayHeights([
-                    49.0, 18.0, 1000.0,
-                    49.0, 18.0, 5000.0,
-                    49.0, 18.0, 1000.0
-                ])
-            }));
-        }).toThrowDeveloperError();
+    it('createGeometry returnes undefined with less than 2 unique positions', function() {
+        var geometry = WallOutlineGeometry.createGeometry(new WallOutlineGeometry({
+            positions : Cartesian3.fromDegreesArrayHeights([
+                49.0, 18.0, 1000.0,
+                49.0, 18.0, 5000.0,
+                49.0, 18.0, 1000.0
+            ])
+        }));
+        expect(geometry).not.toBeDefined();
     });
 
     it('creates positions relative to ellipsoid', function() {

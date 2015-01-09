@@ -36,22 +36,20 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws without 2 unique polyline positions', function() {
-        expect(function() {
-            return PolylineVolumeOutlineGeometry.createGeometry(new PolylineVolumeOutlineGeometry({
-                polylinePositions: [new Cartesian3()],
-                shapePositions: shape
-            }));
-        }).toThrowDeveloperError();
+    it('createGeometry returnes undefined without 2 unique polyline positions', function() {
+        var geometry = PolylineVolumeOutlineGeometry.createGeometry(new PolylineVolumeOutlineGeometry({
+            polylinePositions: [new Cartesian3()],
+            shapePositions: shape
+        }));
+        expect(geometry).not.toBeDefined();
     });
 
-    it('throws without 3 unique shape positions', function() {
-        expect(function() {
-            return PolylineVolumeOutlineGeometry.createGeometry(new PolylineVolumeOutlineGeometry({
-                polylinePositions: [Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
-                shapePositions: [Cartesian2.UNIT_X, Cartesian2.UNIT_X, Cartesian2.UNIT_X]
-            }));
-        }).toThrowDeveloperError();
+    it('createGeometry returnes undefined without 3 unique shape positions', function() {
+        var geometry = PolylineVolumeOutlineGeometry.createGeometry(new PolylineVolumeOutlineGeometry({
+            polylinePositions: [Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
+            shapePositions: [Cartesian2.UNIT_X, Cartesian2.UNIT_X, Cartesian2.UNIT_X]
+        }));
+        expect(geometry).not.toBeDefined();
     });
 
     it('computes positions', function() {

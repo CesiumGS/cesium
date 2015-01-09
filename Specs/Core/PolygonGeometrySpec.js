@@ -47,32 +47,30 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws due to duplicate positions', function() {
-        expect(function() {
-            return PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
-                positions : Cartesian3.fromDegreesArray([
-                    0.0, 0.0,
-                    0.0, 0.0,
-                    0.0, 0.0
-                ])
-            }));
-        }).toThrowDeveloperError();
+    it('createGeometry returns undefined due to duplicate positions', function() {
+        var geometry = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
+            positions : Cartesian3.fromDegreesArray([
+                0.0, 0.0,
+                0.0, 0.0,
+                0.0, 0.0
+            ])
+        }));
+        expect(geometry).not.toBeDefined();
     });
 
-    it('throws due to duplicate positions extruded', function() {
-        expect(function() {
-            return PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
-                positions : Cartesian3.fromDegreesArray([
-                    0.0, 0.0,
-                    0.0, 0.0,
-                    0.0, 0.0
-                ]),
-                extrudedHeight: 2
-            }));
-        }).toThrowDeveloperError();
+    it('createGeometry returns undefined due to duplicate positions extruded', function() {
+        var geometry = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
+            positions : Cartesian3.fromDegreesArray([
+                0.0, 0.0,
+                0.0, 0.0,
+                0.0, 0.0
+            ]),
+            extrudedHeight: 2
+        }));
+        expect(geometry).not.toBeDefined();
     });
 
-    it('throws due to duplicate hierarchy positions', function() {
+    it('createGeometry returns undefined due to duplicate hierarchy positions', function() {
         var hierarchy = {
                 positions : Cartesian3.fromDegreesArray([
                     1.0, 1.0,
@@ -88,11 +86,8 @@ defineSuite([
                 }]
         };
 
-        expect(function() {
-            return PolygonGeometry.createGeometry(new PolygonGeometry({
-                polygonHierarchy : hierarchy
-            }));
-        }).toThrowDeveloperError();
+        var geometry = PolygonGeometry.createGeometry(new PolygonGeometry({ polygonHierarchy : hierarchy }));
+        expect(geometry).not.toBeDefined();
     });
 
     it('computes positions', function() {
