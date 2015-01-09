@@ -51,17 +51,15 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws with less than 2 unique positions', function() {
-        expect(function() {
-            return WallGeometry.createGeometry(new WallGeometry({
-                vertexFormat : VertexFormat.POSITION_ONLY,
-                positions    : Cartesian3.fromDegreesArrayHeights([
-                    49.0, 18.0, 1000.0,
-                    49.0, 18.0, 5000.0,
-                    49.0, 18.0, 1000.0
-                ])
-            }));
-        }).toThrowDeveloperError();
+    it('createGeometry returnes undefined with less than 2 unique positions', function() {
+        var geometry = WallGeometry.createGeometry(new WallGeometry({
+            positions : Cartesian3.fromDegreesArrayHeights([
+                49.0, 18.0, 1000.0,
+                49.0, 18.0, 5000.0,
+                49.0, 18.0, 1000.0
+            ])
+        }));
+        expect(geometry).not.toBeDefined();
     });
 
     it('does not throw when positions are unique but close', function() {
