@@ -29,19 +29,43 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
-var entity = viewer.entities.add({
+var blueEllipsoid = viewer.entities.add({
+    name : 'Blue ellipsoid',
+    position: Cesium.Cartesian3.fromDegrees(-114.0, 40.0, 300000.0),
+    ellipsoid : {
+        radii : new Cesium.Cartesian3(200000.0, 200000.0, 300000.0),
+        material : Cesium.Color.BLUE
+    },
+    viewFrom : new Cesium.Cartesian3(0, -1500000.0, 400000.0)
+});
+
+var redSphere = viewer.entities.add({
     name : 'Red sphere with black outline',
-    position: Cesium.Cartesian3.fromDegrees(-100.0, 40.0, 300000.0),
+    position: Cesium.Cartesian3.fromDegrees(-107.0, 40.0, 300000.0),
     ellipsoid : {
         radii : new Cesium.Cartesian3(300000.0, 300000.0, 300000.0),
         material : Cesium.Color.RED,
         outline : true,
         outlineColor : Cesium.Color.BLACK
     },
-    viewFrom : new Cesium.Cartesian3(0, -1000000.0, 300000.0)
+    viewFrom : new Cesium.Cartesian3(0, -1500000.0, 400000.0)
 });
 
-viewer.trackedEntity = entity;
+var outlineOnly = viewer.entities.add({
+    name : 'Yellow ellipsoid outline',
+    position: Cesium.Cartesian3.fromDegrees(-100.0, 40.0, 300000.0),
+    ellipsoid : {
+        radii : new Cesium.Cartesian3(200000.0, 200000.0, 300000.0),
+        fill : false,
+        outline : true,
+        outlineColor : Cesium.Color.YELLOW,
+        slicePartitions : 24,
+        stackPartitions : 36
+    },
+    viewFrom : new Cesium.Cartesian3(0, -1500000.0, 400000.0)
+});
+
+viewer.trackedEntity = redSphere;
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

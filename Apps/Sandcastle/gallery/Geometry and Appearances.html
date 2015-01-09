@@ -34,6 +34,7 @@ var entities = viewer.entities;
 
 var i;
 var height;
+var positions;
 var stripeMaterial = new Cesium.StripeMaterialProperty({
     evenColor : new Cesium.Color(1.0, 1.0, 1.0, 0.5),
     oddColor : new Cesium.Color(0.0, 0.0, 1.0, 0.5),
@@ -363,39 +364,6 @@ for (i = 0; i < 5; ++i) {
     });
 }
 
-var positions = [];
-var colors = [];
-for (i = 0; i < 40; ++i) {
-    positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 9.0));
-    colors.push(Cesium.Color.fromRandom({alpha : 1.0}));
-}
-
-/*
-positions = [];
-var colors = [];
-for (i = 0; i < 40; ++i) {
-    positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 48.0));
-    colors.push(Cesium.Color.fromRandom({alpha : 1.0}));
-}
-
-primitives.add(new Cesium.Primitive({
-    geometryInstances : new Cesium.GeometryInstance({
-        geometry : new Cesium.SimplePolylineGeometry({
-            positions : positions,
-            colors : colors
-        })
-    }),
-    appearance : new Cesium.PerInstanceColorAppearance({
-        flat : true,
-        renderState : {
-            // Override the appearance render state to change the
-            // line width on system's that support it (Linx/Mac).
-            lineWidth : Math.min(4.0, scene.maximumAliasedLineWidth)
-        }
-    })
-}));
-*/
-
 positions = [];
 for (i = 0; i < 40; ++i) {
     positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 15.0));
@@ -411,60 +379,11 @@ entities.add({
         })
     }
 });
+
 positions = [];
-colors = [];
 for (i = 0; i < 40; ++i) {
     positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 9.0));
-    colors.push(Cesium.Color.fromRandom({alpha : 1.0}));
 }
-positions = [];
-colors = [];
-for (i = 0; i < 40; ++i) {
-    positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 9.0));
-    colors.push(Cesium.Color.fromRandom({alpha : 1.0}));
-}
-/*
-// create a polyline with per segment colors
-positions = [];
-colors = [];
-for (i = 0; i < 40; ++i) {
-    positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 12.0));
-    colors.push(Cesium.Color.fromRandom({alpha : 1.0}));
-}
-
-primitives.add(new Cesium.Primitive({
-    geometryInstances : new Cesium.GeometryInstance({
-        geometry : new Cesium.PolylineGeometry({
-            positions : positions,
-            width : 10.0,
-            vertexFormat : Cesium.PolylineColorAppearance.VERTEX_FORMAT,
-            colors : colors
-        })
-    }),
-    appearance : new Cesium.PolylineColorAppearance()
-}));
-
-// create a polyline with per vertex colors
-positions = [];
-colors = [];
-for (i = 0; i < 40; ++i) {
-    positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 9.0));
-    colors.push(Cesium.Color.fromRandom({alpha : 1.0}));
-}
-
-primitives.add(new Cesium.Primitive({
-    geometryInstances : new Cesium.GeometryInstance({
-        geometry : new Cesium.PolylineGeometry({
-            positions : positions,
-            width : 10.0,
-            vertexFormat : Cesium.PolylineColorAppearance.VERTEX_FORMAT,
-            colors : colors,
-            colorsPerVertex : true
-        })
-    }),
-    appearance : new Cesium.PolylineColorAppearance()
-}));
-*/
 
 entities.add({
     wall : {
