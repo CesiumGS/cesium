@@ -505,46 +505,6 @@ define([
 
         if (positionChanged || directionChanged || upChanged || rightChanged || transformChanged) {
             updateViewMatrix(camera);
-
-            var viewMatrix = camera._viewMatrix;
-            /*
-            viewMatrix[0] = r.x;
-            viewMatrix[1] = u.x;
-            viewMatrix[2] = -d.x;
-            viewMatrix[3] = 0.0;
-            viewMatrix[4] = r.y;
-            viewMatrix[5] = u.y;
-            viewMatrix[6] = -d.y;
-            viewMatrix[7] = 0.0;
-            viewMatrix[8] = r.z;
-            viewMatrix[9] = u.z;
-            viewMatrix[10] = -d.z;
-            viewMatrix[11] = 0.0;
-            viewMatrix[12] = -Cartesian3.dot(r, e);
-            viewMatrix[13] = -Cartesian3.dot(u, e);
-            viewMatrix[14] = Cartesian3.dot(d, e);
-            viewMatrix[15] = 1.0;
-            */
-
-            /*
-            var roll;
-            var pitch;
-            var heading = Math.asin(-viewMatrix[4]);
-            if (heading < CesiumMath.PI_OVER_TWO) {
-                if (heading > -CesiumMath.PI_OVER_TWO) {
-                    roll = Math.atan2(viewMatrix[6], viewMatrix[5]);
-                    pitch = Math.atan2(viewMatrix[8], viewMatrix[0]);
-                } else {
-                    // not a unique solution (roll + pitch constant)
-                    roll = Math.atan2(-viewMatrix[2], viewMatrix[10]);
-                    pitch = 0.0;
-                }
-            } else {
-                // not a unique solution (roll - pitch constant)
-                roll = Math.atan2(viewMatrix[2], viewMatrix[10]);
-                pitch = 0.0;
-            }
-            */
         }
     }
 
@@ -678,14 +638,33 @@ define([
         heading : {
             get : function () {
                 if (this._mode !== SceneMode.MORPHING) {
-                    return this._heading;
+                    var origin = this.positionWC;
+                    var ellipsoid = this._projection.ellipsoid;
+
+                    var oldTransform = Matrix4.clone(this.transform);
+                    var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid);
+                    this.setTransform(transform);
+
+
+                    var right = this.right;
+                    var direction = this.direction;
+
+                    var heading;
+                    if (Math.abs(direction.z) < Math.abs(right.z)) {
+                        heading = Math.atan2(direction.y, direction.x) - CesiumMath.PI_OVER_TWO;
+                    } else {
+                        heading = Math.atan2(right.y, right.x);
+                    }
+
+                    this.setTransform(oldTransform);
+
+                    return CesiumMath.zeroToTwoPi(heading);
                 }
 
                 return undefined;
             },
             set : function (angle) {
                 deprecationWarning('Camera.heading', 'Camera.heading was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. Use Camera.setView.');
-
 
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(angle)) {
@@ -694,7 +673,7 @@ define([
                 //>>includeEnd('debug');
 
                 if (this._mode !== SceneMode.MORPHING) {
-                    this._heading = angle;
+                    this.setView({ heading : angle });
                 }
             }
         },
@@ -708,7 +687,18 @@ define([
         pitch : {
             get : function() {
                 if (this._mode === SceneMode.COLUMBUS_VIEW || this._mode === SceneMode.SCENE3D) {
-                    return this._pitch;
+                    var origin = this.positionWC;
+                    var ellipsoid = this._projection.ellipsoid;
+
+                    var oldTransform = Matrix4.clone(this.transform);
+                    var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid);
+                    this.setTransform(transform);
+
+                    var pitch = CesiumMath.PI_OVER_TWO - CesiumMath.acosClamped(-this.direction.z);
+
+                    this.setTransform(oldTransform);
+
+                    return pitch;
                 }
 
                 return undefined;
@@ -738,7 +728,7 @@ define([
                 //>>includeEnd('debug');
 
                 if (this._mode === SceneMode.COLUMBUS_VIEW || this._mode === SceneMode.SCENE3D) {
-                    this._pitch = angle;
+                    this.setView({ pitch : angle });
                 }
             }
         },
@@ -752,7 +742,26 @@ define([
         roll : {
             get : function() {
                 if (this._mode === SceneMode.COLUMBUS_VIEW || this._mode === SceneMode.SCENE3D) {
-                    return this._roll;
+                    var origin = this.positionWC;
+                    var ellipsoid = this._projection.ellipsoid;
+
+                    var heading = this.heading;
+
+                    var oldTransform = Matrix4.clone(this.transform);
+                    var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid);
+                    this.setTransform(transform);
+
+                    var up = this.up;
+                    var right = this.right;
+
+                    var roll = Math.acos(-right.z) - CesiumMath.PI_OVER_TWO;
+                    if (up.z < 0.0) {
+                        roll = CesiumMath.PI - roll;
+                    }
+
+                    this.setTransform(oldTransform);
+
+                    return CesiumMath.zeroToTwoPi(roll);
                 }
 
                 return undefined;
@@ -890,10 +899,6 @@ define([
         Cartesian3.cross(this.direction, this.up, this.right);
 
         this.setTransform(currentTransform);
-
-        this._heading = heading;
-        this._pitch = pitch;
-        this._roll = roll;
     };
 
     /**
