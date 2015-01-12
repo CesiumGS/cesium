@@ -36,7 +36,7 @@ defineSuite([
 
     it('throws with polygon hierarchy with less than three positions', function() {
         var hierarchy = {
-            positions : [Cartesian3.fromDegrees(0, 0)]
+            positions : [Cartesian3.fromDegrees(0,0)]
         };
 
         expect(function() {
@@ -44,33 +44,30 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws due to duplicate positions', function() {
-        expect(function() {
-            return PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
-                positions : Cartesian3.fromDegreesArray([
-                    0.0, 0.0,
-                    0.0, 0.0,
-                    0.0, 0.0
-                ])
-            }));
-        }).toThrowDeveloperError();
+    it('createGeometry returns undefined due to duplicate positions', function() {
+        var geometry = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
+            positions : Cartesian3.fromDegreesArray([
+                0.0, 0.0,
+                0.0, 0.0,
+                0.0, 0.0
+            ])
+        }));
+        expect(geometry).not.toBeDefined();
     });
 
-
-    it('throws due to duplicate positions extruded', function() {
-        expect(function() {
-            return PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
-                positions : Cartesian3.fromDegreesArray([
-                    0.0, 0.0,
-                    0.0, 0.0,
-                    0.0, 0.0
-                ]),
-                extrudedeHeight: 2
-            }));
-        }).toThrowDeveloperError();
+    it('createGeometry returns undefined due to duplicate positions extruded', function() {
+        var geometry = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
+            positions : Cartesian3.fromDegreesArray([
+                0.0, 0.0,
+                0.0, 0.0,
+                0.0, 0.0
+            ]),
+            extrudedHeight: 2
+        }));
+        expect(geometry).not.toBeDefined();
     });
 
-    it('throws due to duplicate hierarchy positions', function() {
+    it('createGeometry returns undefined due to duplicate hierarchy positions', function() {
         var hierarchy = {
                 positions : Cartesian3.fromDegreesArray([
                     1.0, 1.0,
@@ -86,11 +83,8 @@ defineSuite([
                 }]
         };
 
-        expect(function() {
-            return PolygonOutlineGeometry.createGeometry(new PolygonOutlineGeometry({
-                polygonHierarchy : hierarchy
-            }));
-        }).toThrowDeveloperError();
+        var geometry = PolygonOutlineGeometry.createGeometry(new PolygonOutlineGeometry({ polygonHierarchy : hierarchy }));
+        expect(geometry).not.toBeDefined();
     });
 
     it('computes positions', function() {
