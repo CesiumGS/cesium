@@ -578,6 +578,7 @@
 			<fileset dir="${buildOutputDirectory}">
 				<include name="Assets/**" />
 				<include name="Workers/**" />
+				<include name="ThirdParty/Workers/**" />
 				<include name="Widgets/**" />
 				<exclude name="Widgets/**/*.css" />
 			</fileset>
