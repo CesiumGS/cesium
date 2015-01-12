@@ -508,6 +508,9 @@ define([
         }
     }
 
+    var scratchHPRMatrix1 = new Matrix4();
+    var scratchHPRMatrix2 = new Matrix4();
+
     defineProperties(Camera.prototype, {
         /**
          * Gets the inverse camera transform.
@@ -641,8 +644,8 @@ define([
                     var origin = this.positionWC;
                     var ellipsoid = this._projection.ellipsoid;
 
-                    var oldTransform = Matrix4.clone(this.transform);
-                    var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid);
+                    var oldTransform = Matrix4.clone(this.transform, scratchHPRMatrix1);
+                    var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
                     this.setTransform(transform);
 
 
@@ -690,8 +693,8 @@ define([
                     var origin = this.positionWC;
                     var ellipsoid = this._projection.ellipsoid;
 
-                    var oldTransform = Matrix4.clone(this.transform);
-                    var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid);
+                    var oldTransform = Matrix4.clone(this.transform, scratchHPRMatrix1);
+                    var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
                     this.setTransform(transform);
 
                     var pitch = CesiumMath.PI_OVER_TWO - CesiumMath.acosClamped(-this.direction.z);
@@ -747,8 +750,8 @@ define([
 
                     var heading = this.heading;
 
-                    var oldTransform = Matrix4.clone(this.transform);
-                    var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid);
+                    var oldTransform = Matrix4.clone(this.transform, scratchHPRMatrix1);
+                    var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
                     this.setTransform(transform);
 
                     var up = this.up;
