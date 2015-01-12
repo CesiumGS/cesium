@@ -839,6 +839,19 @@ define([
     var scratchSetViewMatrix3 = new Matrix3();
     var scratchSetViewCartographic = new Cartographic();
 
+    /**
+     * Sets the camera position and orientation with heading, pitch and roll angles.
+     *
+     * The position can be given as either a cartesian or a cartographic. If both are given,
+     * then the cartesian will be used. If neither is given, then the current camera position
+     * will be used.
+     *
+     * @param {Cartesian3} [options.cartesian] The cartesian position of the camera.
+     * @param {Cartographic} [options.cartographic] The cartographic position of the camera.
+     * @param {Number} [options.heading] The heading in radians or the current heading will be used if undefined.
+     * @param {Number} [options.pitch] The pitch in radians or the current pitch will be used if undefined.
+     * @param {Number} [options.roll] The roll in radians or the current roll will be used if undefined.
+     */
     Camera.prototype.setView = function(options) {
         if (this._mode === SceneMode.MORPHING) {
             return;
@@ -848,9 +861,9 @@ define([
 
         var scene2D = this._mode === SceneMode.SCENE2D;
 
-        var heading = defaultValue(options.heading, 0.0);
-        var pitch = scene2D || !defined(options.pitch) ? CesiumMath.PI_OVER_TWO : options.pitch;
-        var roll = scene2D || !defined(options.roll) ? 0.0 : options.roll;
+        var heading = defaultValue(options.heading, this.heading);
+        var pitch = scene2D ? CesiumMath.PI_OVER_TWO : defaultValue(options.pitch, this.pitch);
+        var roll = scene2D ? 0.0 : defaultValue(options.roll, this.roll);
 
         var cartesian = options.cartesian;
         var cartographic = options.cartographic;
@@ -1489,7 +1502,10 @@ define([
         //>>includeEnd('debug');
 
         this.setView({
-            cartographic : cartographic
+            cartographic : cartographic,
+            heading : 0.0,
+            pitch : CesiumMath.PI_OVER_TWO,
+            roll : 0.0
         });
     };
 
