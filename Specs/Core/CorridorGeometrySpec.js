@@ -22,24 +22,23 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws without 2 unique positions', function() {
-        expect(function() {
-            return CorridorGeometry.createGeometry(new CorridorGeometry({
-                positions : Cartesian3.fromDegreesArray([
-                    90.0, -30.0,
-                    90.0, -30.0
-                ]),
-                width: 10000
-            }));
-        }).toThrowDeveloperError();
-    });
-
     it('throws without width', function() {
         expect(function() {
             return new CorridorGeometry({
                 positions: [new Cartesian3()]
             });
         }).toThrowDeveloperError();
+    });
+
+    it('createGeometry returns undefined without 2 unique positions', function() {
+        var geometry = CorridorGeometry.createGeometry(new CorridorGeometry({
+            positions : Cartesian3.fromDegreesArray([
+                90.0, -30.0,
+                90.0, -30.0
+            ]),
+            width: 10000
+        }));
+        expect(geometry).not.toBeDefined();
     });
 
     it('computes positions', function() {

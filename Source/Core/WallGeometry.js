@@ -59,6 +59,7 @@ define([
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
+     * @exception {DeveloperError} positions length must be greater than or equal to 2.
      * @exception {DeveloperError} positions and maximumHeights must have the same length.
      * @exception {DeveloperError} positions and minimumHeights must have the same length.
      *
@@ -90,6 +91,9 @@ define([
         //>>includeStart('debug', pragmas.debug);
         if (!defined(wallPositions)) {
             throw new DeveloperError('options.positions is required.');
+        }
+        if (wallPositions.length < 2) {
+            throw new DeveloperError('options.positions length must be greater than or equal to 2.');
         }
         if (defined(maximumHeights) && maximumHeights.length !== wallPositions.length) {
             throw new DeveloperError('options.positions and options.maximumHeights must have the same length.');
@@ -344,9 +348,7 @@ define([
      * Computes the geometric representation of a wall, including its vertices, indices, and a bounding sphere.
      *
      * @param {WallGeometry} wallGeometry A description of the wall.
-     * @returns {Geometry} The computed vertices and indices.
-     *
-     * @exception {DeveloperError} unique positions must be greater than or equal to 2.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     WallGeometry.createGeometry = function(wallGeometry) {
         var wallPositions = wallGeometry._positions;
@@ -357,6 +359,10 @@ define([
         var ellipsoid = wallGeometry._ellipsoid;
 
         var pos = WallGeometryLibrary.computePositions(ellipsoid, wallPositions, maximumHeights, minimumHeights, granularity, true);
+        if (!defined(pos)) {
+            return undefined;
+        }
+
         var bottomPositions = pos.bottomPositions;
         var topPositions = pos.topPositions;
 
