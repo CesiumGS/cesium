@@ -4,6 +4,7 @@ defineSuite([
         'Core/Cartesian3',
         'Scene/SceneMode',
         'Specs/createCamera',
+        'Specs/createCanvas',
         'Specs/createFrameState',
         'Specs/createScene',
         'Specs/destroyScene'
@@ -12,6 +13,7 @@ defineSuite([
         Cartesian3,
         SceneMode,
         createCamera,
+        createCanvas,
         createFrameState,
         createScene,
         destroyScene) {
@@ -21,7 +23,12 @@ defineSuite([
     var scene;
 
     beforeAll(function() {
-        scene = createScene();
+        scene = createScene({
+            canvas : createCanvas({
+                width : 5,
+                height : 5
+            })
+        });
     });
 
     afterAll(function() {

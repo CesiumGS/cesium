@@ -4,13 +4,15 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/Math',
-        'Core/VertexFormat'
+        'Core/VertexFormat',
+        'Specs/createPackableSpecs'
     ], function(
         WallGeometry,
         Cartesian3,
         Ellipsoid,
         CesiumMath,
-        VertexFormat) {
+        VertexFormat,
+        createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -49,17 +51,15 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws with less than 2 unique positions', function() {
-        expect(function() {
-            return WallGeometry.createGeometry(new WallGeometry({
-                vertexFormat : VertexFormat.POSITION_ONLY,
-                positions    : Cartesian3.fromDegreesArrayHeights([
-                    49.0, 18.0, 1000.0,
-                    49.0, 18.0, 5000.0,
-                    49.0, 18.0, 1000.0
-                ])
-            }));
-        }).toThrowDeveloperError();
+    it('createGeometry returnes undefined with less than 2 unique positions', function() {
+        var geometry = WallGeometry.createGeometry(new WallGeometry({
+            positions : Cartesian3.fromDegreesArrayHeights([
+                49.0, 18.0, 1000.0,
+                49.0, 18.0, 5000.0,
+                49.0, 18.0, 1000.0
+            ])
+        }));
+        expect(geometry).not.toBeDefined();
     });
 
     it('does not throw when positions are unique but close', function() {
@@ -222,5 +222,15 @@ defineSuite([
         cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 9));
         expect(cartographic.height).toEqualEpsilon(max, CesiumMath.EPSILON8);
     });
+
+    var positions = [new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(0.0, 1.0, 0.0), new Cartesian3(0.0, 0.0, 1.0)];
+    var wall = new WallGeometry({
+        positions : positions,
+        vertexFormat : VertexFormat.POSITION_ONLY,
+        granularity : 0.01,
+        ellipsoid: Ellipsoid.UNIT_SPHERE
+    });
+    var packedInstance = [3.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.01];
+    createPackableSpecs(WallGeometry, wall, packedInstance);
 });
 

@@ -889,7 +889,7 @@ define([
 
         this._imageIndex = -1;
         this._imageId = id;
-        this._imageSubRegion = subRegion;
+        this._imageSubRegion = BoundingRectangle.clone(subRegion);
 
         if (defined(this._billboardCollection._textureAtlas)) {
             this._loadImage();

@@ -1,9 +1,16 @@
 /*global define*/
 define([
-        '../Core/CylinderGeometry'
+        '../Core/CylinderGeometry',
+        '../Core/defined'
     ], function(
-        CylinderGeometry) {
+        CylinderGeometry,
+        defined) {
     "use strict";
 
-    return CylinderGeometry.createGeometry;
+    return function(cylinderGeometry, offset) {
+        if (defined(offset)) {
+            cylinderGeometry = CylinderGeometry.unpack(cylinderGeometry, offset);
+        }
+        return CylinderGeometry.createGeometry(cylinderGeometry);
+    };
 });

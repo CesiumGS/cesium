@@ -133,11 +133,148 @@ define([
         this._colors = colors;
         this._width = width;
         this._perVertex = perVertex;
-        this._vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+        this._vertexFormat = VertexFormat.clone(defaultValue(options.vertexFormat, VertexFormat.DEFAULT));
         this._followSurface = defaultValue(options.followSurface, true);
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
-        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+        this._ellipsoid = Ellipsoid.clone(defaultValue(options.ellipsoid, Ellipsoid.WGS84));
         this._workerName = 'createPolylineGeometry';
+
+        var numComponents = 1 + positions.length * Cartesian3.packedLength;
+        numComponents += defined(colors) ? 1 + colors.length * Color.packedLength : 1;
+
+        /**
+         * The number of elements used to pack the object into an array.
+         * @type {Number}
+         */
+        this.packedLength = numComponents + Ellipsoid.packedLength + VertexFormat.packedLength + 4;
+    };
+
+    /**
+     * Stores the provided instance into the provided array.
+     * @function
+     *
+     * @param {Object} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     */
+    PolylineGeometry.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        var i;
+
+        var positions = value._positions;
+        var length = positions.length;
+        array[startingIndex++] = length;
+
+        for (i = 0; i < length; ++i, startingIndex += Cartesian3.packedLength) {
+            Cartesian3.pack(positions[i], array, startingIndex);
+        }
+
+        var colors = value._colors;
+        length = defined(colors) ? colors.length : 0.0;
+        array[startingIndex++] = length;
+
+        for (i = 0; i < length; ++i, startingIndex += Color.packedLength) {
+            Color.pack(colors[i], array, startingIndex);
+        }
+
+        Ellipsoid.pack(value._ellipsoid, array, startingIndex);
+        startingIndex += Ellipsoid.packedLength;
+
+        VertexFormat.pack(value._vertexFormat, array, startingIndex);
+        startingIndex += VertexFormat.packedLength;
+
+        array[startingIndex++] = value._width;
+        array[startingIndex++] = value._perVertex ? 1.0 : 0.0;
+        array[startingIndex++] = value._followSurface ? 1.0 : 0.0;
+        array[startingIndex]   = value._granularity;
+    };
+
+    var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
+    var scratchVertexFormat = new VertexFormat();
+    var scratchOptions = {
+        positions : undefined,
+        colors : undefined,
+        ellipsoid : scratchEllipsoid,
+        vertexFormat : scratchVertexFormat,
+        width : undefined,
+        perVertex : undefined,
+        followSurface : undefined,
+        granularity : undefined
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {PolylineGeometry} [result] The object into which to store the result.
+     */
+    PolylineGeometry.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        var i;
+
+        var length = array[startingIndex++];
+        var positions = new Array(length);
+
+        for (i = 0; i < length; ++i, startingIndex += Cartesian3.packedLength) {
+            positions[i] = Cartesian3.unpack(array, startingIndex);
+        }
+
+        length = array[startingIndex++];
+        var colors = length > 0 ? new Array(length) : undefined;
+
+        for (i = 0; i < length; ++i, startingIndex += Color.packedLength) {
+            colors[i] = Color.unpack(array, startingIndex);
+        }
+
+        var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
+        startingIndex += Ellipsoid.packedLength;
+
+        var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
+        startingIndex += VertexFormat.packedLength;
+
+        var width = array[startingIndex++];
+        var perVertex = array[startingIndex++] === 1.0;
+        var followSurface = array[startingIndex++] === 1.0;
+        var granularity = array[startingIndex];
+
+        if (!defined(result)) {
+            scratchOptions.positions = positions;
+            scratchOptions.colors = colors;
+            scratchOptions.width = width;
+            scratchOptions.perVertex = perVertex;
+            scratchOptions.followSurface = followSurface;
+            scratchOptions.granularity = granularity;
+            return new PolylineGeometry(scratchOptions);
+        }
+
+        result._positions = positions;
+        result._colors = colors;
+        result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
+        result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
+        result._width = width;
+        result._perVertex = perVertex;
+        result._followSurface = followSurface;
+        result._granularity = granularity;
+
+        return result;
     };
 
     var scratchCartesian3 = new Cartesian3();
@@ -149,10 +286,7 @@ define([
      * Computes the geometric representation of a polyline, including its vertices, indices, and a bounding sphere.
      *
      * @param {PolylineGeometry} polylineGeometry A description of the polyline.
-     * @returns {Geometry} The computed vertices and indices.
-     *
-     * @exception {DeveloperError} At least two unique positions are required.
-     *
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     PolylineGeometry.createGeometry = function(polylineGeometry) {
         var width = polylineGeometry._width;
@@ -173,13 +307,11 @@ define([
         if (!defined(positions)) {
             positions = polylineGeometry._positions;
         }
-        var positionsLength = positions.length;
 
-        //>>includeStart('debug', pragmas.debug);
+        var positionsLength = positions.length;
         if (positionsLength < 2) {
-            throw new DeveloperError('At least two unique positions are required.');
+            return undefined;
         }
-        //>>includeEnd('debug');
 
         if (followSurface) {
             var heights = PolylinePipeline.extractHeights(positions, ellipsoid);

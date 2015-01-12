@@ -2,18 +2,16 @@
 define([
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
+        '../Core/PolylineVolumeGeometry',
+        '../Core/PolylineVolumeOutlineGeometry',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/isArray',
         '../Core/GeometryInstance',
         '../Core/Iso8601',
-        '../Core/PolygonGeometry',
-        '../Core/PolygonHierarchy',
-        '../Core/PolygonOutlineGeometry',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
@@ -25,18 +23,16 @@ define([
     ], function(
         Color,
         ColorGeometryInstanceAttribute,
+        PolylineVolumeGeometry,
+        PolylineVolumeOutlineGeometry,
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
         Event,
-        isArray,
         GeometryInstance,
         Iso8601,
-        PolygonGeometry,
-        PolygonHierarchy,
-        PolygonOutlineGeometry,
         ShowGeometryInstanceAttribute,
         MaterialAppearance,
         PerInstanceColorAppearance,
@@ -57,24 +53,22 @@ define([
     var GeometryOptions = function(entity) {
         this.id = entity;
         this.vertexFormat = undefined;
-        this.polygonHierarchy = undefined;
-        this.perPositionHeight = undefined;
-        this.height = undefined;
-        this.extrudedHeight = undefined;
+        this.polylinePositions = undefined;
+        this.shapePositions = undefined;
+        this.cornerType = undefined;
         this.granularity = undefined;
-        this.stRotation = undefined;
     };
 
     /**
-     * A {@link GeometryUpdater} for polygons.
+     * A {@link GeometryUpdater} for polyline volumes.
      * Clients do not normally create this class directly, but instead rely on {@link DataSourceDisplay}.
-     * @alias PolygonGeometryUpdater
+     * @alias PolylineVolumeGeometryUpdater
      * @constructor
      *
      * @param {Entity} entity The entity containing the geometry to be visualized.
      * @param {Scene} scene The scene where visualization is taking place.
      */
-    var PolygonGeometryUpdater = function(entity, scene) {
+    var PolylineVolumeGeometryUpdater = function(entity, scene) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(entity)) {
             throw new DeveloperError('entity is required');
@@ -86,9 +80,8 @@ define([
 
         this._entity = entity;
         this._scene = scene;
-        this._entitySubscription = entity.definitionChanged.addEventListener(PolygonGeometryUpdater.prototype._onEntityPropertyChanged, this);
+        this._entitySubscription = entity.definitionChanged.addEventListener(PolylineVolumeGeometryUpdater.prototype._onEntityPropertyChanged, this);
         this._fillEnabled = false;
-        this._isClosed = false;
         this._dynamic = false;
         this._outlineEnabled = false;
         this._geometryChanged = new Event();
@@ -99,21 +92,21 @@ define([
         this._outlineColorProperty = undefined;
         this._outlineWidth = 1.0;
         this._options = new GeometryOptions(entity);
-        this._onEntityPropertyChanged(entity, 'polygon', entity.polygon, undefined);
+        this._onEntityPropertyChanged(entity, 'polylineVolume', entity.polylineVolume, undefined);
     };
 
-    defineProperties(PolygonGeometryUpdater, {
+    defineProperties(PolylineVolumeGeometryUpdater, {
         /**
-         * Gets the type of Appearance to use for simple color-based geometry.
-         * @memberof PolygonGeometryUpdater
+         * Gets the type of appearance to use for simple color-based geometry.
+         * @memberof PolylineVolumeGeometryUpdater
          * @type {Appearance}
          */
         perInstanceColorAppearanceType : {
             value : PerInstanceColorAppearance
         },
         /**
-         * Gets the type of Appearance to use for material-based geometry.
-         * @memberof PolygonGeometryUpdater
+         * Gets the type of appearance to use for material-based geometry.
+         * @memberof PolylineVolumeGeometryUpdater
          * @type {Appearance}
          */
         materialAppearanceType : {
@@ -121,10 +114,10 @@ define([
         }
     });
 
-    defineProperties(PolygonGeometryUpdater.prototype, {
+    defineProperties(PolylineVolumeGeometryUpdater.prototype, {
         /**
          * Gets the entity associated with this geometry.
-         * @memberof PolygonGeometryUpdater.prototype
+         * @memberof PolylineVolumeGeometryUpdater.prototype
          *
          * @type {Entity}
          * @readonly
@@ -136,7 +129,7 @@ define([
         },
         /**
          * Gets a value indicating if the geometry has a fill component.
-         * @memberof PolygonGeometryUpdater.prototype
+         * @memberof PolylineVolumeGeometryUpdater.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -148,7 +141,7 @@ define([
         },
         /**
          * Gets a value indicating if fill visibility varies with simulation time.
-         * @memberof PolygonGeometryUpdater.prototype
+         * @memberof PolylineVolumeGeometryUpdater.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -163,7 +156,7 @@ define([
         },
         /**
          * Gets the material property used to fill the geometry.
-         * @memberof PolygonGeometryUpdater.prototype
+         * @memberof PolylineVolumeGeometryUpdater.prototype
          *
          * @type {MaterialProperty}
          * @readonly
@@ -175,7 +168,7 @@ define([
         },
         /**
          * Gets a value indicating if the geometry has an outline component.
-         * @memberof PolygonGeometryUpdater.prototype
+         * @memberof PolylineVolumeGeometryUpdater.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -187,7 +180,7 @@ define([
         },
         /**
          * Gets a value indicating if the geometry has an outline component.
-         * @memberof PolygonGeometryUpdater.prototype
+         * @memberof PolylineVolumeGeometryUpdater.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -202,7 +195,7 @@ define([
         },
         /**
          * Gets the {@link Color} property for the geometry outline.
-         * @memberof PolygonGeometryUpdater.prototype
+         * @memberof PolylineVolumeGeometryUpdater.prototype
          *
          * @type {Property}
          * @readonly
@@ -215,7 +208,7 @@ define([
         /**
          * Gets the constant with of the geometry outline, in pixels.
          * This value is only valid if isDynamic is false.
-         * @memberof PolygonGeometryUpdater.prototype
+         * @memberof PolylineVolumeGeometryUpdater.prototype
          *
          * @type {Number}
          * @readonly
@@ -229,7 +222,7 @@ define([
          * Gets a value indicating if the geometry is time-varying.
          * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
          * returned by GeometryUpdater#createDynamicUpdater.
-         * @memberof PolygonGeometryUpdater.prototype
+         * @memberof PolylineVolumeGeometryUpdater.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -242,20 +235,18 @@ define([
         /**
          * Gets a value indicating if the geometry is closed.
          * This property is only valid for static geometry.
-         * @memberof PolygonGeometryUpdater.prototype
+         * @memberof PolylineVolumeGeometryUpdater.prototype
          *
          * @type {Boolean}
          * @readonly
          */
         isClosed : {
-            get : function() {
-                return this._isClosed;
-            }
+            value : true
         },
         /**
          * Gets an event that is raised whenever the public properties
          * of this updater change.
-         * @memberof PolygonGeometryUpdater.prototype
+         * @memberof PolylineVolumeGeometryUpdater.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -273,7 +264,7 @@ define([
      * @param {JulianDate} time The time for which to retrieve visibility.
      * @returns {Boolean} true if geometry is outlined at the provided time, false otherwise.
      */
-    PolygonGeometryUpdater.prototype.isOutlineVisible = function(time) {
+    PolylineVolumeGeometryUpdater.prototype.isOutlineVisible = function(time) {
         var entity = this._entity;
         return this._outlineEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time);
     };
@@ -284,7 +275,7 @@ define([
      * @param {JulianDate} time The time for which to retrieve visibility.
      * @returns {Boolean} true if geometry is filled at the provided time, false otherwise.
      */
-    PolygonGeometryUpdater.prototype.isFilled = function(time) {
+    PolylineVolumeGeometryUpdater.prototype.isFilled = function(time) {
         var entity = this._entity;
         return this._fillEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._fillProperty.getValue(time);
     };
@@ -297,7 +288,7 @@ define([
      *
      * @exception {DeveloperError} This instance does not represent a filled geometry.
      */
-    PolygonGeometryUpdater.prototype.createFillGeometryInstance = function(time) {
+    PolylineVolumeGeometryUpdater.prototype.createFillGeometryInstance = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
@@ -333,7 +324,7 @@ define([
 
         return new GeometryInstance({
             id : entity,
-            geometry : new PolygonGeometry(this._options),
+            geometry : new PolylineVolumeGeometry(this._options),
             attributes : attributes
         });
     };
@@ -346,7 +337,7 @@ define([
      *
      * @exception {DeveloperError} This instance does not represent an outlined geometry.
      */
-    PolygonGeometryUpdater.prototype.createOutlineGeometryInstance = function(time) {
+    PolylineVolumeGeometryUpdater.prototype.createOutlineGeometryInstance = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
@@ -363,7 +354,7 @@ define([
 
         return new GeometryInstance({
             id : entity,
-            geometry : new PolygonOutlineGeometry(this._options),
+            geometry : new PolylineVolumeOutlineGeometry(this._options),
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
                 color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
@@ -376,7 +367,7 @@ define([
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
-    PolygonGeometryUpdater.prototype.isDestroyed = function() {
+    PolylineVolumeGeometryUpdater.prototype.isDestroyed = function() {
         return false;
     };
 
@@ -385,19 +376,19 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
-    PolygonGeometryUpdater.prototype.destroy = function() {
+    PolylineVolumeGeometryUpdater.prototype.destroy = function() {
         this._entitySubscription();
         destroyObject(this);
     };
 
-    PolygonGeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
-        if (!(propertyName === 'availability' || propertyName === 'polygon')) {
+    PolylineVolumeGeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
+        if (!(propertyName === 'availability' || propertyName === 'polylineVolume')) {
             return;
         }
 
-        var polygon = this._entity.polygon;
+        var polylineVolume = this._entity.polylineVolume;
 
-        if (!defined(polygon)) {
+        if (!defined(polylineVolume)) {
             if (this._fillEnabled || this._outlineEnabled) {
                 this._fillEnabled = false;
                 this._outlineEnabled = false;
@@ -406,10 +397,10 @@ define([
             return;
         }
 
-        var fillProperty = polygon.fill;
+        var fillProperty = polylineVolume.fill;
         var fillEnabled = defined(fillProperty) && fillProperty.isConstant ? fillProperty.getValue(Iso8601.MINIMUM_VALUE) : true;
 
-        var outlineProperty = polygon.outline;
+        var outlineProperty = polylineVolume.outline;
         var outlineEnabled = defined(outlineProperty);
         if (outlineEnabled && outlineProperty.isConstant) {
             outlineEnabled = outlineProperty.getValue(Iso8601.MINIMUM_VALUE);
@@ -424,11 +415,11 @@ define([
             return;
         }
 
-        var hierarchy = polygon.hierarchy;
+        var positions = polylineVolume.positions;
+        var shape = polylineVolume.shape;
 
-        var show = polygon.show;
-        if ((defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE)) || //
-            (!defined(hierarchy))) {
+        var show = polylineVolume.show;
+        if (!defined(positions) || !defined(shape) || (defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE))) {
             if (this._fillEnabled || this._outlineEnabled) {
                 this._fillEnabled = false;
                 this._outlineEnabled = false;
@@ -437,32 +428,26 @@ define([
             return;
         }
 
-        var material = defaultValue(polygon.material, defaultMaterial);
+        var material = defaultValue(polylineVolume.material, defaultMaterial);
         var isColorMaterial = material instanceof ColorMaterialProperty;
         this._materialProperty = material;
         this._fillProperty = defaultValue(fillProperty, defaultFill);
         this._showProperty = defaultValue(show, defaultShow);
-        this._showOutlineProperty = defaultValue(polygon.outline, defaultOutline);
-        this._outlineColorProperty = outlineEnabled ? defaultValue(polygon.outlineColor, defaultOutlineColor) : undefined;
+        this._showOutlineProperty = defaultValue(polylineVolume.outline, defaultOutline);
+        this._outlineColorProperty = outlineEnabled ? defaultValue(polylineVolume.outlineColor, defaultOutlineColor) : undefined;
 
-        var height = polygon.height;
-        var extrudedHeight = polygon.extrudedHeight;
-        var granularity = polygon.granularity;
-        var stRotation = polygon.stRotation;
-        var outlineWidth = polygon.outlineWidth;
-        var perPositionHeight = polygon.perPositionHeight;
+        var granularity = polylineVolume.granularity;
+        var outlineWidth = polylineVolume.outlineWidth;
+        var cornerType = polylineVolume.cornerType;
 
-        this._isClosed = defined(extrudedHeight);
         this._fillEnabled = fillEnabled;
         this._outlineEnabled = outlineEnabled;
 
-        if (!hierarchy.isConstant || //
-            !Property.isConstant(height) || //
-            !Property.isConstant(extrudedHeight) || //
+        if (!positions.isConstant || //
+            !shape.isConstant || //
             !Property.isConstant(granularity) || //
-            !Property.isConstant(stRotation) || //
             !Property.isConstant(outlineWidth) || //
-            !Property.isConstant(perPositionHeight)) {
+            !Property.isConstant(cornerType)) {
             if (!this._dynamic) {
                 this._dynamic = true;
                 this._geometryChanged.raiseEvent(this);
@@ -470,17 +455,10 @@ define([
         } else {
             var options = this._options;
             options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
-            var hierarchyValue = hierarchy.getValue(Iso8601.MINIMUM_VALUE);
-            if (isArray(hierarchyValue)) {
-                options.polygonHierarchy = new PolygonHierarchy(hierarchyValue);
-            } else {
-                options.polygonHierarchy = hierarchyValue;
-            }
-            options.height = defined(height) ? height.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.polylinePositions = positions.getValue(Iso8601.MINIMUM_VALUE, options.polylinePositions);
+            options.shapePositions = shape.getValue(Iso8601.MINIMUM_VALUE, options.shape);
             options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.stRotation = defined(stRotation) ? stRotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.perPositionHeight = defined(perPositionHeight) ? perPositionHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.cornerType = defined(cornerType) ? cornerType.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             this._outlineWidth = defined(outlineWidth) ? outlineWidth.getValue(Iso8601.MINIMUM_VALUE) : 1.0;
             this._dynamic = false;
             this._geometryChanged.raiseEvent(this);
@@ -495,7 +473,7 @@ define([
      *
      * @exception {DeveloperError} This instance does not represent dynamic geometry.
      */
-    PolygonGeometryUpdater.prototype.createDynamicUpdater = function(primitives) {
+    PolylineVolumeGeometryUpdater.prototype.createDynamicUpdater = function(primitives) {
         //>>includeStart('debug', pragmas.debug);
         if (!this._dynamic) {
             throw new DeveloperError('This instance does not represent dynamic geometry.');
@@ -533,61 +511,55 @@ define([
 
         var geometryUpdater = this._geometryUpdater;
         var entity = geometryUpdater._entity;
-        var polygon = entity.polygon;
-        if (!entity.isAvailable(time) || !Property.getValueOrDefault(polygon.show, time, true)) {
+        var polylineVolume = entity.polylineVolume;
+        if (!entity.isAvailable(time) || !Property.getValueOrDefault(polylineVolume.show, time, true)) {
             return;
         }
 
         var options = this._options;
-        var hierarchy = Property.getValueOrUndefined(polygon.hierarchy, time);
-        if (!defined(hierarchy)) {
+        var positions = Property.getValueOrUndefined(polylineVolume.positions, time, options.polylinePositions);
+        var shape = Property.getValueOrUndefined(polylineVolume.shape, time);
+        if (!defined(positions) || !defined(shape)) {
             return;
         }
 
-        if (isArray(hierarchy)) {
-            options.polygonHierarchy = new PolygonHierarchy(hierarchy);
-        } else {
-            options.polygonHierarchy = hierarchy;
-        }
+        options.polylinePositions = positions;
+        options.shapePositions = shape;
+        options.granularity = Property.getValueOrUndefined(polylineVolume.granularity, time);
+        options.cornerType = Property.getValueOrUndefined(polylineVolume.cornerType, time);
 
-        options.height = Property.getValueOrUndefined(polygon.height, time);
-        options.extrudedHeight = Property.getValueOrUndefined(polygon.extrudedHeight, time);
-        options.granularity = Property.getValueOrUndefined(polygon.granularity, time);
-        options.stRotation = Property.getValueOrUndefined(polygon.stRotation, time);
-        options.perPositionHeight = Property.getValueOrUndefined(polygon.perPositionHeight, time);
-
-        if (Property.getValueOrDefault(polygon.fill, time, true)) {
+        if (!defined(polylineVolume.fill) || polylineVolume.fill.getValue(time)) {
             var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
             this._material = material;
 
             var appearance = new MaterialAppearance({
                 material : material,
                 translucent : material.isTranslucent(),
-                closed : defined(options.extrudedHeight)
+                closed : true
             });
             options.vertexFormat = appearance.vertexFormat;
 
             this._primitive = primitives.add(new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
-                    geometry : new PolygonGeometry(options)
+                    geometry : new PolylineVolumeGeometry(options)
                 }),
                 appearance : appearance,
                 asynchronous : false
             }));
         }
 
-        if (Property.getValueOrDefault(polygon.outline, time, false)) {
+        if (defined(polylineVolume.outline) && polylineVolume.outline.getValue(time)) {
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
 
-            var outlineColor = Property.getValueOrClonedDefault(polygon.outlineColor, time, Color.BLACK, scratchColor);
-            var outlineWidth = Property.getValueOrDefault(polygon.outlineWidth, 1.0);
+            var outlineColor = Property.getValueOrClonedDefault(polylineVolume.outlineColor, time, Color.BLACK, scratchColor);
+            var outlineWidth = Property.getValueOrDefault(polylineVolume.outlineWidth, 1.0);
             var translucent = outlineColor.alpha !== 1.0;
 
             this._outlinePrimitive = primitives.add(new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
-                    geometry : new PolygonOutlineGeometry(options),
+                    geometry : new PolylineVolumeOutlineGeometry(options),
                     attributes : {
                         color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
                     }
@@ -614,5 +586,5 @@ define([
         destroyObject(this);
     };
 
-    return PolygonGeometryUpdater;
+    return PolylineVolumeGeometryUpdater;
 });

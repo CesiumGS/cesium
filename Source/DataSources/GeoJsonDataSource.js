@@ -6,12 +6,12 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/getFilenameFromUri',
         '../Core/loadJson',
         '../Core/PinBuilder',
+        '../Core/PolygonHierarchy',
         '../Core/RuntimeError',
         '../Scene/VerticalOrigin',
         '../ThirdParty/topojson',
@@ -32,12 +32,12 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Event,
         getFilenameFromUri,
         loadJson,
         PinBuilder,
+        PolygonHierarchy,
         RuntimeError,
         VerticalOrigin,
         topojson,
@@ -348,6 +348,10 @@ define([
     }
 
     function createPolygon(dataSource, geoJson, crsFunction, coordinates, options) {
+        if (coordinates.length === 0 || coordinates[0].length === 0) {
+            return;
+        }
+
         var outlineColorProperty = options.strokeMaterialProperty.color;
         var material = options.fillMaterialProperty;
         var widthProperty = options.strokeWidthProperty;
@@ -399,8 +403,15 @@ define([
         polygon.outlineColor = outlineColorProperty;
         polygon.outlineWidth = widthProperty;
         polygon.material = material;
-        polygon.positions = new ConstantProperty(coordinatesArrayToCartesianArray(coordinates, crsFunction));
-        if (coordinates.length > 0 && coordinates[0].length > 2) {
+
+        var holes = [];
+        for (var i = 1, len = coordinates.length; i < len; i++) {
+            holes.push(new PolygonHierarchy(coordinatesArrayToCartesianArray(coordinates[i], crsFunction)));
+        }
+
+        var positions = coordinates[0];
+        polygon.hierarchy = new ConstantProperty(new PolygonHierarchy(coordinatesArrayToCartesianArray(positions, crsFunction), holes));
+        if (positions[0].length > 2) {
             polygon.perPositionHeight = new ConstantProperty(true);
         }
 
@@ -409,13 +420,13 @@ define([
     }
 
     function processPolygon(dataSource, geoJson, geometry, crsFunction, options) {
-        createPolygon(dataSource, geoJson, crsFunction, geometry.coordinates[0], options);
+        createPolygon(dataSource, geoJson, crsFunction, geometry.coordinates, options);
     }
 
     function processMultiPolygon(dataSource, geoJson, geometry, crsFunction, options) {
         var polygons = geometry.coordinates;
         for (var i = 0; i < polygons.length; i++) {
-            createPolygon(dataSource, geoJson, crsFunction, polygons[i][0], options);
+            createPolygon(dataSource, geoJson, crsFunction, polygons[i], options);
         }
     }
 
@@ -776,19 +787,12 @@ define([
         }
         //>>includeEnd('debug');
 
-        var sourceUri = options;
-        if (typeof options === 'string') {
-            sourceUri = options;
-            deprecationWarning('GeoJsonDataSource.load', 'GeoJsonDataSource.load now takes an options object instead of a string as its second parameter.  Support for passing a string parameter will be removed in Cesium 1.6');
-        } else if (defined(options)) {
-            sourceUri = options.sourceUri;
-        }
-
-        return load(this, geoJson, sourceUri, options);
+        return load(this, geoJson, undefined, options);
     };
 
     function load(that, geoJson, sourceUri, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        sourceUri = defaultValue(sourceUri, options.sourceUri);
 
         options = {
             markerSize : defaultValue(options.markerSize, defaultMarkerSize),

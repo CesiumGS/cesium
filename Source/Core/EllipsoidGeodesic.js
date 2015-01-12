@@ -185,10 +185,10 @@ define([
         vincentyInverseFormula(ellipsoidGeodesic, ellipsoid.maximumRadius, ellipsoid.minimumRadius,
                                start.longitude, start.latitude, end.longitude, end.latitude);
 
-        start.height = 0;
-        end.height = 0;
         ellipsoidGeodesic._start = Cartographic.clone(start, ellipsoidGeodesic._start);
         ellipsoidGeodesic._end = Cartographic.clone(end, ellipsoidGeodesic._end);
+        ellipsoidGeodesic._start.height = 0;
+        ellipsoidGeodesic._end.height = 0;
 
         setConstants(ellipsoidGeodesic);
     }
