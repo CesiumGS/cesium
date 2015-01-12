@@ -20,6 +20,8 @@ Change Log
 * `ConstantProperty` can now hold any value; previously it was limited to values that implemented `equals` and `clones` functions, as well as a few special cases.
 * Fixed a bug in `EllipsoidGeodesic` that caused it to modify the `height` of the positions passed to the constructor or to to `setEndPoints`.
 * Instead of throwing an exception when there are not enough unique positions to define a geometry, creating a `Primitive` will succeed, but not render. [#2375](https://github.com/AnalyticalGraphicsInc/cesium/issues/2375)
+* When you track an entity by clicking on the track button in the InfoBox, you can now stop tracking by clicking the button a second time.
+* Setting `viewer.trackedEntity` to `undefined` will now restore the camera controls to their default states.
 
 ### 1.5 - 2015-01-05
 
