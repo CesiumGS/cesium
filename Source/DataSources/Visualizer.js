@@ -38,6 +38,15 @@ define([
     Visualizer.prototype.update = DeveloperError.throwInstantiationError;
 
     /**
+     * Gets the bounding sphere of the visualization produced by this visualizer for the provided entity.
+     * @param entity The entity whose bounding sphere to retrieve.
+     * @returns {Promise|BoundingSphere} A Promise to a BoundingSphere if not yet ready,
+     *                                   a BoundingSphere if ready,
+     *                                   or undefined if no model exists for the provided entity.
+     */
+    Visualizer.prototype.getBoundingSphere = DeveloperError.throwInstantiationError;
+
+    /**
      * Returns true if this object was destroyed; otherwise, false.
      * @function
      *

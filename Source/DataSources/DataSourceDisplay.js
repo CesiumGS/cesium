@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/BoundingSphere',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -7,6 +8,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EventHelper',
+        '../ThirdParty/when',
         './BillboardVisualizer',
         './BoxGeometryUpdater',
         './CorridorGeometryUpdater',
@@ -25,6 +27,7 @@ define([
         './RectangleGeometryUpdater',
         './WallGeometryUpdater'
     ], function(
+        BoundingSphere,
         defaultValue,
         defined,
         defineProperties,
@@ -32,6 +35,7 @@ define([
         destroyObject,
         DeveloperError,
         EventHelper,
+        when,
         BillboardVisualizer,
         BoxGeometryUpdater,
         CorridorGeometryUpdater,
@@ -86,6 +90,7 @@ define([
         this._dataSourceCollection = dataSourceCollection;
         this._scene = scene;
         this._visualizersCallback = defaultValue(options.visualizersCallback, DataSourceDisplay.defaultVisualizersCallback);
+        this._lastTime = undefined;
 
         for (var i = 0, len = dataSourceCollection.length; i < len; i++) {
             this._onDataSourceAdded(dataSourceCollection, dataSourceCollection.get(i));
@@ -236,6 +241,8 @@ define([
         }
         //>>includeEnd('debug');
 
+        this._lastTime = time;
+
         var result = true;
 
         var i;
@@ -264,6 +271,58 @@ define([
         }
 
         return result;
+    };
+
+    DataSourceDisplay.prototype.getBoundingSphere = function(entity, dataSource) {
+        this.update(this._lastTime);
+
+        var i;
+        var length;
+        if (!defined(dataSource)) {
+            var entityId = entity.id;
+            dataSource = this._defaultDataSource;
+            if (!dataSource.entities.containsId(entityId)) {
+                var dataSources = this._dataSourceCollection;
+                length = dataSources.length;
+                for (i = 0; i < length; i++) {
+                    dataSource = dataSources.get(i);
+                    if (dataSource.entities.containsId(entity.id)) {
+                        break;
+                    }
+                    dataSource = undefined;
+                }
+            }
+        }
+
+        if (!defined(dataSource)) {
+            return undefined;
+        }
+
+        var promises = [];
+        var visualizers = dataSource._visualizers;
+        length = visualizers.length;
+        for (i = 0; i < length; i++) {
+            var visualizer = visualizers[i];
+            if (defined(visualizer.getBoundingSphere)) {
+                promises.push(visualizer.getBoundingSphere(entity));
+            }
+        }
+
+        var that = this;
+        return when.all(promises).then(function(boundingSpheres) {
+            var boundingSphere;
+
+            length = boundingSpheres.length;
+            for (i = 0; i < length; i++) {
+                var rightSphere = boundingSpheres[i];
+                if (defined(rightSphere)) {
+                    boundingSphere = defined(boundingSphere) ? boundingSphere : rightSphere.clone();
+                    BoundingSphere.union(boundingSphere, rightSphere, boundingSphere);
+                }
+            }
+
+            return boundingSphere;
+        });
     };
 
     DataSourceDisplay.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {

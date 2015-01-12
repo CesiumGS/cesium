@@ -230,6 +230,21 @@ define([
     };
 
     /**
+     *
+     * @param id
+     * @returns
+     */
+    EntityCollection.prototype.containsId = function(id) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(id)) {
+            throw new DeveloperError('id is required');
+        }
+        //>>includeEnd('debug');
+        return this._entities.contains(id);
+    };
+
+
+    /**
      * Removes an entity with the provided id from the collection.
      *
      * @param {Object} id The id of the entity to remove.

@@ -7,6 +7,8 @@ define([
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/EventHelper',
+        '../../Core/Matrix4',
+        '../../Core/Transforms',
         '../../Core/ScreenSpaceEventType',
         '../../DataSources/ConstantPositionProperty',
         '../../DataSources/DataSourceCollection',
@@ -41,6 +43,8 @@ define([
         destroyObject,
         DeveloperError,
         EventHelper,
+        Matrix4,
+        Transforms,
         ScreenSpaceEventType,
         ConstantPositionProperty,
         DataSourceCollection,
@@ -586,6 +590,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         cesiumWidget.screenSpaceEventHandler.setInputAction(pickAndSelectObject, ScreenSpaceEventType.LEFT_CLICK);
         cesiumWidget.screenSpaceEventHandler.setInputAction(pickAndTrackObject, ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+
+        this._dataSourceDisplay.update(clock.currentTime);
     };
 
     defineProperties(Viewer.prototype, {
@@ -1389,6 +1395,34 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                 this.clockTrackedDataSource = undefined;
             }
         }
+    };
+
+    function viewSphere3D(camera, controller, modelMatrix, sphere) {
+        var center = Matrix4.multiplyByPoint(modelMatrix, sphere.center, new Cartesian3());
+        var transform = Transforms.eastNorthUpToFixedFrame(center);
+        camera.transform = transform;
+        var r = 2.0 * Math.max(sphere.radius, camera.frustum.near);
+        controller.minimumZoomDistance = r * 0.5;
+        camera.lookAt(new Cartesian3(r, r, r), Cartesian3.ZERO, Cartesian3.UNIT_Z);
+        camera.setTransform(Matrix4.IDENTITY);
+    }
+
+    var zoomToScratch = new Matrix4();
+
+    /**
+     * Performs a one-time zoom to the provided entity.
+     * @param entity
+     * @returns {Promise} A Promise that evalutes to true if the zoom was successful or false if the entity is not currently visualized in the scene.
+     */
+    Viewer.prototype.zoomTo = function(entity) {
+        var that = this;
+        return when(this._dataSourceDisplay.getBoundingSphere(entity), function(boundingSphere) {
+            if (!defined(boundingSphere)) {
+                return false;
+            }
+            viewSphere3D(that.camera, that.scene.screenSpaceCameraController, entity._getModelMatrix(that.clock.currentTime, zoomToScratch), boundingSphere);
+            return true;
+        });
     };
 
     /**

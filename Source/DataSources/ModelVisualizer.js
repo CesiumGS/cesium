@@ -8,7 +8,8 @@ define([
         '../Core/Matrix4',
         '../Scene/Model',
         '../Scene/ModelAnimationLoop',
-        './Property'
+        './Property',
+        '../ThirdParty/when'
     ], function(
         AssociativeArray,
         Cartesian3,
@@ -18,7 +19,8 @@ define([
         Matrix4,
         Model,
         ModelAnimationLoop,
-        Property) {
+        Property,
+        when) {
     "use strict";
 
     var defaultScale = 1.0;
@@ -146,6 +148,39 @@ define([
             removeModel(this, entities[i], modelHash, primitives);
         }
         return destroyObject(this);
+    };
+
+    /**
+     * Gets the bounding sphere of the provided entity's model primitive.
+     * @param entity The entity whose bounding sphere to retrieve.
+     * @returns {Promise|BoundingSphere} A Promise to a BoundingSphere if the model is not yet loaded,
+     *                                   a BoundingSphere if the model is loaded,
+     *                                   or undefined if no model exists for the provided entity.
+     */
+    ModelVisualizer.prototype.getBoundingSphere = function(entity) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(entity)) {
+            throw new DeveloperError('entity is required.');
+        }
+        //>>includeEnd('debug');
+
+        var modelData = this._modelHash[entity.id];
+        if (!defined(modelData) || !defined(modelData.modelPrimitive)) {
+            return undefined;
+        }
+
+        var model = modelData.modelPrimitive;
+        if (model.ready) {
+            return model.boundingSphere;
+        } else {
+            var deferred = when.defer();
+            var removeEvent = model.readyToRender.addEventListener(function() {
+                removeEvent();
+                deferred.resolve(model.boundingSphere);
+            });
+            return deferred;
+        }
+        return undefined;
     };
 
     /**
