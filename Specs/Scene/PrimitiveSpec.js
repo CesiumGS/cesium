@@ -731,6 +731,32 @@ defineSuite([
         primitive = primitive && primitive.destroy();
     });
 
+    it('get bounding sphere from per instance attribute', function() {
+        var primitive = new Primitive({
+            geometryInstances : rectangleInstance1,
+            appearance : new PerInstanceColorAppearance(),
+            asynchronous : false
+        });
+
+        frameState.camera.viewRectangle(rectangle1);
+        us.update(context, frameState);
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+
+        var attributes = primitive.getGeometryInstanceAttributes('rectangle1');
+        expect(attributes.boundingSphere).toBeDefined();
+
+        var rectangleGeometry = RectangleGeometry.createGeometry(rectangleInstance1.geometry);
+        var expected = rectangleGeometry.boundingSphere;
+        expect(attributes.boundingSphere).toEqual(expected);
+
+        primitive = primitive && primitive.destroy();
+    });
+
     it('picking', function() {
         var primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
