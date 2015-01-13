@@ -33,13 +33,13 @@ define([
 
     /**
      * Provides tiled imagery served by {@link http://www.opengeospatial.org/standards/wmts|WMTS 1.0.0} compliant servers.
-     * This provider supports HTTP KVP-encoded GetTile requests, but does not yet support SOAP and RESTful encoding.
+     * This provider supports HTTP KVP-encoded and RESTful GetTile requests, but does not yet support the SOAP encoding.
      *
      * @alias WebMapTileServiceImageryProvider
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.url The WMTS server url.
+     * @param {String} options.url The base URL for the WMTS GetTile operation (for KVP-encoded requests) or the tile-URL template (for RESTful requests). The tile-URL template should contain the following variables: &#123;style&#125;, &#123;TileMatrixSet&#125;, &#123;TileMatrix&#125;, &#123;TileRow&#125;, &#123;TileCol&#125;. The first two are optional if actual values are hardcoded or not required by the server.
      * @param {String} [options.format='image/jpeg'] The MIME type for images to retrieve from the server.
      * @param {String} options.layer The layer name for WMTS requests.
      * @param {String} options.style The style name for WMTS requests.
@@ -61,8 +61,8 @@ define([
      * @see WebMapServiceImageryProvider
      *
      * @example
-     * // USGS shaded relief tile provider
-     * var shadedRelief = new Cesium.WebMapTileServiceImageryProvider({
+     * // Example 1. USGS shaded relief tiles (KVP)
+     * var shadedRelief1 = new Cesium.WebMapTileServiceImageryProvider({
      *     url : 'http://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS',
      *     layer : 'USGSShadedReliefOnly',
      *     style : 'default',
@@ -72,7 +72,20 @@ define([
      *     maximumLevel: 19,
      *     credit : new Cesium.Credit('U. S. Geological Survey')
      * });
-     * viewer.imageryLayers.addImageryProvider(shadedRelief);
+     * viewer.imageryLayers.addImageryProvider(shadedRelief1);
+     *
+     * @example
+     * // Example 2. USGS shaded relief tiles (RESTful)
+     * var shadedRelief2 = new Cesium.WebMapTileServiceImageryProvider({
+     *     url : 'http://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS/tile/1.0.0/USGSShadedReliefOnly/{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg',
+     *     layer : 'USGSShadedReliefOnly',
+     *     style : 'default',
+     *     format : 'image/jpeg',
+     *     tileMatrixSetID : 'default028mm',
+     *     maximumLevel: 19,
+     *     credit : new Cesium.Credit('U. S. Geological Survey')
+     * });
+     * viewer.imageryLayers.addImageryProvider(shadedRelief2);
      */
     var WebMapTileServiceImageryProvider = function WebMapTileServiceImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -131,24 +144,39 @@ define([
     });
 
     function buildImageUrl(imageryProvider, col, row, level) {
-        var uri = new Uri(imageryProvider._url);
-        var queryOptions = queryToObject(defaultValue(uri.query, ''));
-        var labels;
+        var labels = imageryProvider._tileMatrixLabels;
+        var tileMatrix = defined(labels) ? labels[level] : level.toString();
+        var url;
 
-        queryOptions = combine(defaultParameters, queryOptions);
+        if (imageryProvider._url.indexOf('{') >= 0) {
+            // resolve tile-URL template
+            url = imageryProvider._url
+                .replace('{style}', imageryProvider._style)
+                .replace('{Style}', imageryProvider._style)
+                .replace('{TileMatrixSet}', imageryProvider._tileMatrixSetID)
+                .replace('{TileMatrix}', tileMatrix)
+                .replace('{TileRow}', row.toString())
+                .replace('{TileCol}', col.toString());
+        }
+        else {
+            // build KVP request
+            var uri = new Uri(imageryProvider._url);
+            var queryOptions = queryToObject(defaultValue(uri.query, ''));
 
-        labels = imageryProvider._tileMatrixLabels;
-        queryOptions.tilematrix = defined(labels) ? labels[level] : level;
-        queryOptions.layer = imageryProvider._layer;
-        queryOptions.style = imageryProvider._style;
-        queryOptions.tilerow = row;
-        queryOptions.tilecol = col;
-        queryOptions.tilematrixset = imageryProvider._tileMatrixSetID;
-        queryOptions.format = imageryProvider._format;
+            queryOptions = combine(defaultParameters, queryOptions);
 
-        uri.query = objectToQuery(queryOptions);
+            queryOptions.tilematrix = tileMatrix;
+            queryOptions.layer = imageryProvider._layer;
+            queryOptions.style = imageryProvider._style;
+            queryOptions.tilerow = row;
+            queryOptions.tilecol = col;
+            queryOptions.tilematrixset = imageryProvider._tileMatrixSetID;
+            queryOptions.format = imageryProvider._format;
 
-        var url = uri.toString();
+            uri.query = objectToQuery(queryOptions);
+
+            url = uri.toString();
+        }
 
         var proxy = imageryProvider._proxy;
         if (defined(proxy)) {
