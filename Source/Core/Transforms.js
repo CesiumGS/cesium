@@ -378,6 +378,36 @@ define([
         return Matrix4.multiply(result, hprMatrix, result);
     };
 
+    var scratchENUMatrix4 = new Matrix4();
+    var scratchHPRMatrix3 = new Matrix3();
+
+    /**
+     * Computes a quaternion from a reference frame with axes computed from the heading-pitch-roll angles
+     * centered at the provided origin.
+     *
+     * @param {Cartesian3} origin The center point of the local reference frame.
+     * @param {Number} heading The heading angle in radians.
+     * @param {Number} pitch The pitch angle in radians.
+     * @param {Number} roll The roll angle in radians.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
+     * @param {Quaternion} [result] The object onto which to store the result.
+     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     *
+     * @example
+     * // Get the quaternion from local heading-pitch-roll at cartographic (0.0, 0.0) to Earth's fixed frame.
+     * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+     * var heading = -Cesium.Math.PI_OVER_TWO;
+     * var pitch = Cesium.Math.PI_OVER_FOUR;
+     * var roll = 0.0;
+     * var quaternion = Cesium.Transforms.headingPitchRollQuaternion(center, heading, pitch, roll);
+     */
+    Transforms.headingPitchRollQuaternion = function(origin, heading, pitch, roll, ellipsoid, result) {
+        // checks for required parameters happen in the called functions
+        var transform = Transforms.headingPitchRollToFixedFrame(origin, heading, pitch, roll, ellipsoid, scratchENUMatrix4);
+        var rotation = Matrix4.getRotation(transform, scratchHPRMatrix3);
+        return Quaternion.fromRotationMatrix(rotation, result);
+    };
+
 
     var gmstConstant0 = 6 * 3600 + 41 * 60 + 50.54841;
     var gmstConstant1 = 8640184.812866;
