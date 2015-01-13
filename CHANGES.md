@@ -22,6 +22,7 @@ Change Log
 * Fixed a bug in `EllipsoidGeodesic` that caused it to modify the `height` of the positions passed to the constructor or to to `setEndPoints`.
 * Instead of throwing an exception when there are not enough unique positions to define a geometry, creating a `Primitive` will succeed, but not render. [#2375](https://github.com/AnalyticalGraphicsInc/cesium/issues/2375)
 * `WebMapTileServiceImageryProvider` now supports RESTful requests (by accepting a tile-URL template).
+* The object returned by `Primitive.getGeometryInstanceAttributes` now contains the instance's bounding sphere.
 
 ### 1.5 - 2015-01-05
 
