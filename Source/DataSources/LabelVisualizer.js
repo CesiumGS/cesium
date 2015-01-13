@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/AssociativeArray',
+        '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
@@ -15,6 +16,7 @@ define([
         './Property'
     ], function(
         AssociativeArray,
+        BoundingSphere,
         Cartesian2,
         Cartesian3,
         Color,
@@ -158,6 +160,38 @@ define([
             label.pixelOffsetScaleByDistance = Property.getValueOrUndefined(labelGraphics._pixelOffsetScaleByDistance, time, pixelOffsetScaleByDistance);
         }
         return true;
+    };
+
+    /**
+     * Gets the bounding sphere of the provided entity's model primitive.
+     * @param entity The entity whose bounding sphere to retrieve.
+     * @returns {BoundingSphere} The bounding sphere of the label representing the provided entity, or undefined if the entity is not currently visible.
+     */
+    LabelVisualizer.prototype.getBoundingSphere = function(entity) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(entity)) {
+            throw new DeveloperError('entity is required.');
+        }
+        //>>includeEnd('debug');
+
+        var item = this._items.get(entity.id);
+        if (!defined(item) || !defined(item.label)) {
+            return undefined;
+        }
+
+        var boundingSphere;
+
+        var label = item.label;
+        var glyphs = label._glyphs;
+        var positions = [];
+        for (var i = 0, len = glyphs.length; i < len; i++) {
+            var glyph = glyphs[i];
+            if (defined(glyph.billboard)) {
+                positions.push(glyph.billboard.position);
+            }
+        }
+
+        return positions.length > 0 ? BoundingSphere.fromPoints(positions) : undefined;
     };
 
     /**

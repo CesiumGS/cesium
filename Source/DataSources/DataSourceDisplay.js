@@ -310,18 +310,12 @@ define([
 
         var that = this;
         return when.all(promises).then(function(boundingSpheres) {
-            var boundingSphere;
+            boundingSpheres = boundingSpheres.filter(defined);
 
-            length = boundingSpheres.length;
-            for (i = 0; i < length; i++) {
-                var rightSphere = boundingSpheres[i];
-                if (defined(rightSphere)) {
-                    boundingSphere = defined(boundingSphere) ? boundingSphere : rightSphere.clone();
-                    BoundingSphere.union(boundingSphere, rightSphere, boundingSphere);
-                }
+            if (boundingSpheres.length === 0) {
+                return undefined;
             }
-
-            return boundingSphere;
+            return BoundingSphere.fromBoundingSpheres(boundingSpheres);
         });
     };
 

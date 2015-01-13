@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/AssociativeArray',
+        '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/defined',
         '../Core/destroyObject',
@@ -12,6 +13,7 @@ define([
         '../ThirdParty/when'
     ], function(
         AssociativeArray,
+        BoundingSphere,
         Cartesian3,
         defined,
         destroyObject,
@@ -151,7 +153,7 @@ define([
     };
 
     /**
-     * Gets the bounding sphere of the provided entity's model primitive.
+     * Gets the bounding sphere of the provided entity's model primitive in earth-fixed.
      * @param entity The entity whose bounding sphere to retrieve.
      * @returns {Promise|BoundingSphere} A Promise to a BoundingSphere if the model is not yet loaded,
      *                                   a BoundingSphere if the model is loaded,
@@ -176,7 +178,7 @@ define([
             var deferred = when.defer();
             var removeEvent = model.readyToRender.addEventListener(function() {
                 removeEvent();
-                deferred.resolve(model.boundingSphere);
+                deferred.resolve(BoundingSphere.transform(model.boundingSphere, model.modelMatrix));
             });
             return deferred;
         }

@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../../Core/BoundingSphere',
         '../../Core/Cartesian3',
         '../../Core/defaultValue',
         '../../Core/defined',
@@ -7,6 +8,7 @@ define([
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/EventHelper',
+        '../../Core/isArray',
         '../../Core/Matrix4',
         '../../Core/Transforms',
         '../../Core/ScreenSpaceEventType',
@@ -36,6 +38,7 @@ define([
         '../subscribeAndEvaluate',
         '../Timeline/Timeline'
     ], function(
+        BoundingSphere,
         Cartesian3,
         defaultValue,
         defined,
@@ -43,6 +46,7 @@ define([
         destroyObject,
         DeveloperError,
         EventHelper,
+        isArray,
         Matrix4,
         Transforms,
         ScreenSpaceEventType,
@@ -1397,17 +1401,14 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         }
     };
 
-    function viewSphere3D(camera, controller, modelMatrix, sphere) {
-        var center = Matrix4.multiplyByPoint(modelMatrix, sphere.center, new Cartesian3());
-        var transform = Transforms.eastNorthUpToFixedFrame(center);
+    function viewSphere3D(camera, controller, sphere) {
+        var transform = Transforms.eastNorthUpToFixedFrame(sphere.center);
         camera.transform = transform;
         var r = 2.0 * Math.max(sphere.radius, camera.frustum.near);
-        controller.minimumZoomDistance = r * 0.5;
+        controller.minimumZoomDistance = Math.min(controller.minimumZoomDistance, r * 0.5);
         camera.lookAt(new Cartesian3(r, r, r), Cartesian3.ZERO, Cartesian3.UNIT_Z);
         camera.setTransform(Matrix4.IDENTITY);
     }
-
-    var zoomToScratch = new Matrix4();
 
     /**
      * Performs a one-time zoom to the provided entity.
@@ -1416,11 +1417,27 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      */
     Viewer.prototype.zoomTo = function(entity) {
         var that = this;
+
+        if (isArray(entity)) {
+            var promises = [];
+            for (var i = 0, len = entity.length; i < len; i++) {
+                promises.push(this._dataSourceDisplay.getBoundingSphere(entity[i]));
+            }
+            return when.all(promises, function(boundingSpheres) {
+                boundingSpheres = boundingSpheres.filter(defined);
+                if (boundingSpheres.length === 0) {
+                    return false;
+                }
+                viewSphere3D(that.camera, that.scene.screenSpaceCameraController, BoundingSphere.fromBoundingSpheres(boundingSpheres));
+                return true;
+            });
+        }
+
         return when(this._dataSourceDisplay.getBoundingSphere(entity), function(boundingSphere) {
             if (!defined(boundingSphere)) {
                 return false;
             }
-            viewSphere3D(that.camera, that.scene.screenSpaceCameraController, entity._getModelMatrix(that.clock.currentTime, zoomToScratch), boundingSphere);
+            viewSphere3D(that.camera, that.scene.screenSpaceCameraController, boundingSphere);
             return true;
         });
     };

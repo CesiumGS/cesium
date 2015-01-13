@@ -2,6 +2,7 @@
 define([
         '../Core/AssociativeArray',
         '../Core/BoundingRectangle',
+        '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
@@ -16,6 +17,7 @@ define([
     ], function(
         AssociativeArray,
         BoundingRectangle,
+        BoundingSphere,
         Cartesian2,
         Cartesian3,
         Color,
@@ -159,6 +161,26 @@ define([
             }
         }
         return true;
+    };
+
+    /**
+     * Gets the bounding sphere of the provided entity's model primitive in earth-fixed.
+     * @param entity The entity whose bounding sphere to retrieve.
+     * @returns {BoundingSphere} The bounding sphere of the billboard representing the provided entity, or undefined if the entity is not currently visible.
+     */
+    BillboardVisualizer.prototype.getBoundingSphere = function(entity) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(entity)) {
+            throw new DeveloperError('entity is required.');
+        }
+        //>>includeEnd('debug');
+
+        var item = this._items.get(entity.id);
+        if (!defined(item) || !defined(item.billboard)) {
+            return undefined;
+        }
+
+        return new BoundingSphere(item.billboard.position);
     };
 
     /**
