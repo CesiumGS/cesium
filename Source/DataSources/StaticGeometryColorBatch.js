@@ -199,6 +199,10 @@ define([
         return isUpdated;
     };
 
+    StaticGeometryColorBatch.prototype.getBoundingSphere = function(entity) {
+        return undefined;
+    };
+
     StaticGeometryColorBatch.prototype.removeAllPrimitives = function() {
         this._solidBatch.removeAllPrimitives();
         this._translucentBatch.removeAllPrimitives();

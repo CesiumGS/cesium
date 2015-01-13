@@ -207,6 +207,10 @@ define([
         return isUpdated;
     };
 
+    StaticGeometryPerMaterialBatch.prototype.getBoundingSphere = function(entity) {
+        return undefined;
+    };
+
     StaticGeometryPerMaterialBatch.prototype.removeAllPrimitives = function() {
         var items = this._items;
         var length = items.length;

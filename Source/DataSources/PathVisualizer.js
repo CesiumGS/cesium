@@ -478,6 +478,17 @@ define([
     };
 
     /**
+     * Gets the bounding sphere which encloses the visualization produced for the specified entity.
+     * This function is not supported by this implementation and always returns undefined.
+     *
+     * @param {Entity} entity The entity whose bounding sphere to retrieve.
+     * @returns undefined;
+     */
+    PathVisualizer.prototype.getBoundingSphere = function(entity){
+        return undefined;
+    };
+
+    /**
      * Returns true if this object was destroyed; otherwise, false.
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.

@@ -164,8 +164,9 @@ define([
     };
 
     /**
-     * Gets the bounding sphere of the provided entity's model primitive in earth-fixed.
-     * @param entity The entity whose bounding sphere to retrieve.
+     * Gets the bounding sphere which encloses the billboard produced for the specified entity.
+     *
+     * @param {Entity} entity The entity whose bounding sphere to retrieve.
      * @returns {BoundingSphere} The bounding sphere of the billboard representing the provided entity, or undefined if the entity is not currently visible.
      */
     BillboardVisualizer.prototype.getBoundingSphere = function(entity) {

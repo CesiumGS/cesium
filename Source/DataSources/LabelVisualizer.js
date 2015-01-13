@@ -163,8 +163,9 @@ define([
     };
 
     /**
-     * Gets the bounding sphere of the provided entity's model primitive.
-     * @param entity The entity whose bounding sphere to retrieve.
+     * Gets the bounding sphere which encloses the label produced for the specified entity.
+     *
+     * @param {Entity} entity The entity whose bounding sphere to retrieve.
      * @returns {BoundingSphere} The bounding sphere of the label representing the provided entity, or undefined if the entity is not currently visible.
      */
     LabelVisualizer.prototype.getBoundingSphere = function(entity) {

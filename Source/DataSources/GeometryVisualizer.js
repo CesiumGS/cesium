@@ -1,18 +1,22 @@
 /*global define*/
 define([
         '../Core/AssociativeArray',
+        '../Core/BoundingSphere',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../ThirdParty/when',
         './ColorMaterialProperty',
         './StaticGeometryColorBatch',
         './StaticGeometryPerMaterialBatch',
         './StaticOutlineGeometryBatch'
     ], function(
         AssociativeArray,
+        BoundingSphere,
         defined,
         destroyObject,
         DeveloperError,
+        when,
         ColorMaterialProperty,
         StaticGeometryColorBatch,
         StaticGeometryPerMaterialBatch,
@@ -53,6 +57,10 @@ define([
             geometries[i].destroy();
         }
         this._dynamicUpdaters.removeAll();
+    };
+
+    DynamicGeometryBatch.prototype.getBoundingSphere = function(entity) {
+        return undefined;
     };
 
     function removeUpdater(that, updater) {
@@ -205,6 +213,33 @@ define([
         isUpdated = this._dynamicBatch.update(time) && isUpdated;
         isUpdated = this._outlineBatch.update(time) && isUpdated;
         return isUpdated;
+    };
+
+    /**
+     * Gets the bounding sphere which encloses the geometry produced for the specified entity.
+     *
+     * @param {Entity} entity The entity whose bounding sphere to retrieve.
+     * @returns {Promise|BoundingSphere} A Promise to a BoundingSphere if the model is not yet loaded,
+     *                                   a BoundingSphere if the model is loaded,
+     *                                   or undefined if no model exists for the provided entity.
+     */
+    GeometryVisualizer.prototype.getBoundingSphere = function(entity) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(entity)) {
+            throw new DeveloperError('entity is required.');
+        }
+        //>>includeEnd('debug');
+
+        return when.all([this._closedColorBatch.getBoundingSphere(entity), this._closedMaterialBatch.getBoundingSphere(entity), //
+                         this._openColorBatch.getBoundingSphere(entity), this._openMaterialBatch.getBoundingSphere(entity), //
+                         this._dynamicBatch.getBoundingSphere(entity), this._outlineBatch.getBoundingSphere(entity)], function(boundingSpheres) {
+            boundingSpheres = boundingSpheres.filter(defined);
+
+            if (boundingSpheres.length === 0) {
+                return undefined;
+            }
+            return BoundingSphere.fromBoundingSpheres(boundingSpheres);
+        });
     };
 
     /**

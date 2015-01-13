@@ -153,8 +153,9 @@ define([
     };
 
     /**
-     * Gets the bounding sphere of the provided entity's model primitive in earth-fixed.
-     * @param entity The entity whose bounding sphere to retrieve.
+     * Gets the bounding sphere which encloses the model produced for the specified entity.
+     *
+     * @param {Entity} entity The entity whose bounding sphere to retrieve.
      * @returns {Promise|BoundingSphere} A Promise to a BoundingSphere if the model is not yet loaded,
      *                                   a BoundingSphere if the model is loaded,
      *                                   or undefined if no model exists for the provided entity.

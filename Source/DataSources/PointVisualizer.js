@@ -171,9 +171,10 @@ define([
     };
 
     /**
-     * Gets the bounding sphere of the provided entity's model primitive.
-     * @param entity The entity whose bounding sphere to retrieve.
-     * @returns {BoundingSphere} The bounding sphere of the billboard representing the provided entity, or undefined if the entity is not currently visible.
+     * Gets the bounding sphere which encloses the point billboard produced for the specified entity.
+     *
+     * @param {Entity} entity The entity whose bounding sphere to retrieve.
+     * @returns {BoundingSphere} The bounding sphere of the point billboard representing the provided entity, or undefined if the entity is not currently visible.
      */
     PointVisualizer.prototype.getBoundingSphere = function(entity) {
         //>>includeStart('debug', pragmas.debug);

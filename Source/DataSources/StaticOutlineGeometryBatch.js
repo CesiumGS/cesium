@@ -252,6 +252,10 @@ define([
         return isUpdated;
     };
 
+    StaticOutlineGeometryBatch.prototype.getBoundingSphere = function(entity) {
+        return undefined;
+    };
+
     StaticOutlineGeometryBatch.prototype.removeAllPrimitives = function() {
         var i;
 

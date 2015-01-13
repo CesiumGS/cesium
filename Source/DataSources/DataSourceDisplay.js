@@ -273,6 +273,9 @@ define([
         return result;
     };
 
+    /**
+     * @private
+     */
     DataSourceDisplay.prototype.getBoundingSphere = function(entity, dataSource) {
         this.update(this._lastTime);
 
