@@ -114,11 +114,9 @@ define([
         maximumHeights = o.topHeights;
         minimumHeights = o.bottomHeights;
 
-        //>>includeStart('debug', pragmas.debug);
         if (wallPositions.length < 2) {
-            throw new DeveloperError('unique positions must be greater than or equal to 2');
+            return undefined;
         }
-        //>>includeEnd('debug');
 
         if (wallPositions.length >= 3) {
             // Order positions counter-clockwise

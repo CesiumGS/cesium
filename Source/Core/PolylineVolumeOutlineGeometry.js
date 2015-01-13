@@ -275,10 +275,7 @@ define([
      * Computes the geometric representation of the outline of a polyline with a volume, including its vertices, indices, and a bounding sphere.
      *
      * @param {PolylineVolumeOutlineGeometry} polylineVolumeOutlineGeometry A description of the polyline volume outline.
-     * @returns {Geometry} The computed vertices and indices.
-     *
-     * @exception {DeveloperError} Count of unique polyline positions must be greater than 1.
-     * @exception {DeveloperError} Count of unique shape positions must be at least 3.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     PolylineVolumeOutlineGeometry.createGeometry = function(polylineVolumeOutlineGeometry) {
         var positions = polylineVolumeOutlineGeometry._positions;
@@ -286,14 +283,9 @@ define([
         var shape2D = polylineVolumeOutlineGeometry._shape;
         shape2D = PolylineVolumeGeometryLibrary.removeDuplicatesFromShape(shape2D);
 
-        //>>includeStart('debug', pragmas.debug);
-        if (cleanPositions.length < 2) {
-            throw new DeveloperError('Count of unique polyline positions must be greater than 1.');
+        if (cleanPositions.length < 2 || shape2D.length < 3) {
+            return undefined;
         }
-        if (shape2D.length < 3) {
-            throw new DeveloperError('Count of unique shape positions must be at least 3.');
-        }
-        //>>includeEnd('debug');
 
         if (PolygonPipeline.computeWindingOrder2D(shape2D) === WindingOrder.CLOCKWISE) {
             shape2D.reverse();
