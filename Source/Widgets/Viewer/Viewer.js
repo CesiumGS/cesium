@@ -1226,7 +1226,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         if (defined(this.trackedEntity)) {
             if (entityCollection.getById(this.trackedEntity.id) === this.trackedEntity) {
-                this.homeButton.viewModel.command();
+                this.trackedEntity = undefined;
             }
         }
 
@@ -1305,7 +1305,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         for (var i = 0; i < length; i++) {
             var removedObject = removed[i];
             if (this.trackedEntity === removedObject) {
-                this.homeButton.viewModel.command();
+                this.trackedEntity = undefined;
             }
             if (this.selectedEntity === removedObject) {
                 this.selectedEntity = undefined;
