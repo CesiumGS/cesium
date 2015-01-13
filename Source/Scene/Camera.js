@@ -7,6 +7,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/EasingFunction',
         '../Core/Ellipsoid',
@@ -29,6 +30,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         EasingFunction,
         Ellipsoid,
@@ -506,52 +508,8 @@ define([
         }
     }
 
-    function getHeading2D(camera) {
-        return Math.atan2(camera.right.y, camera.right.x);
-    }
-
-    var scratchHeadingMatrix4 = new Matrix4();
-    var scratchHeadingMatrix3 = new Matrix3();
-    var scratchHeadingCartesian3 = new Cartesian3();
-
-    function getHeading3D(camera) {
-        var ellipsoid = camera._projection.ellipsoid;
-        var toFixedFrame = Transforms.eastNorthUpToFixedFrame(camera.position, ellipsoid, scratchHeadingMatrix4);
-        var transform = Matrix4.getRotation(toFixedFrame, scratchHeadingMatrix3);
-        Matrix3.transpose(transform, transform);
-
-        var right = Matrix3.multiplyByVector(transform, camera.right, scratchHeadingCartesian3);
-        return Math.atan2(right.y, right.x);
-    }
-
-    function setHeading2D(camera, angle) {
-        var rightAngle = getHeading2D(camera);
-        angle = rightAngle - angle;
-        camera.look(Cartesian3.UNIT_Z, angle);
-    }
-
-    var scratchHeadingAxis = new Cartesian3();
-
-    function setHeading3D(camera, angle) {
-        var axis = Cartesian3.normalize(camera.position, scratchHeadingAxis);
-        var upAngle = getHeading3D(camera);
-        angle = upAngle - angle;
-        camera.look(axis, angle);
-    }
-
-    function getTiltCV(camera) {
-        // CesiumMath.acosClamped(dot(camera.direction, Cartesian3.negate(Cartesian3.UNIT_Z))
-        return CesiumMath.PI_OVER_TWO - CesiumMath.acosClamped(-camera.direction.z);
-    }
-
-    var scratchTiltCartesian3 = new Cartesian3();
-
-    function getTilt3D(camera) {
-        var direction = Cartesian3.normalize(camera.position, scratchTiltCartesian3);
-        Cartesian3.negate(direction, direction);
-
-        return CesiumMath.PI_OVER_TWO - CesiumMath.acosClamped(Cartesian3.dot(camera.direction, direction));
-    }
+    var scratchHPRMatrix1 = new Matrix4();
+    var scratchHPRMatrix2 = new Matrix4();
 
     defineProperties(Camera.prototype, {
         /**
@@ -675,23 +633,41 @@ define([
         },
 
         /**
-         * Gets or sets the camera heading in radians.
+         * Gets the camera heading in radians.
          * @memberof Camera.prototype
          *
          * @type {Number}
          */
         heading : {
             get : function () {
-                if (this._mode === SceneMode.SCENE2D || this._mode === SceneMode.COLUMBUS_VIEW) {
-                    return getHeading2D(this);
-                } else if (this._mode === SceneMode.SCENE3D) {
-                    return getHeading3D(this);
+                if (this._mode !== SceneMode.MORPHING) {
+                    var origin = this.positionWC;
+                    var ellipsoid = this._projection.ellipsoid;
+
+                    var oldTransform = Matrix4.clone(this.transform, scratchHPRMatrix1);
+                    var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
+                    this.setTransform(transform);
+
+
+                    var right = this.right;
+                    var direction = this.direction;
+
+                    var heading;
+                    if (Math.abs(direction.z) < Math.abs(right.z)) {
+                        heading = Math.atan2(direction.y, direction.x) - CesiumMath.PI_OVER_TWO;
+                    } else {
+                        heading = Math.atan2(right.y, right.x);
+                    }
+
+                    this.setTransform(oldTransform);
+
+                    return CesiumMath.zeroToTwoPi(heading);
                 }
 
                 return undefined;
             },
-            //TODO See https://github.com/AnalyticalGraphicsInc/cesium/issues/832
             set : function (angle) {
+                deprecationWarning('Camera.heading', 'Camera.heading was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. Use Camera.setView.');
 
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(angle)) {
@@ -699,11 +675,36 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                if (this._mode === SceneMode.SCENE2D || this._mode === SceneMode.COLUMBUS_VIEW) {
-                    setHeading2D(this, angle);
-                } else if (this._mode === SceneMode.SCENE3D) {
-                    setHeading3D(this, angle);
+                if (this._mode !== SceneMode.MORPHING) {
+                    this.setView({ heading : angle });
                 }
+            }
+        },
+
+        /**
+         * Gets the camera pitch in radians.
+         * @memberof Camera.prototype
+         *
+         * @type {Number}
+         */
+        pitch : {
+            get : function() {
+                if (this._mode === SceneMode.COLUMBUS_VIEW || this._mode === SceneMode.SCENE3D) {
+                    var origin = this.positionWC;
+                    var ellipsoid = this._projection.ellipsoid;
+
+                    var oldTransform = Matrix4.clone(this.transform, scratchHPRMatrix1);
+                    var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
+                    this.setTransform(transform);
+
+                    var pitch = CesiumMath.PI_OVER_TWO - CesiumMath.acosClamped(-this.direction.z);
+
+                    this.setTransform(oldTransform);
+
+                    return pitch;
+                }
+
+                return undefined;
             }
         },
 
@@ -712,19 +713,16 @@ define([
          * @memberof Camera.prototype
          *
          * @type {Number}
+         *
+         * @deprecated
          */
         tilt : {
             get : function() {
-                if (this._mode === SceneMode.COLUMBUS_VIEW) {
-                    return getTiltCV(this);
-                } else if (this._mode === SceneMode.SCENE3D) {
-                    return getTilt3D(this);
-                }
-
-                return undefined;
+                deprecationWarning('Camera.tilt', 'Camera.tilt was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. Use Camera.pitch.');
+                return this.pitch;
             },
-            //TODO See https://github.com/AnalyticalGraphicsInc/cesium/issues/832
             set : function(angle) {
+                deprecationWarning('Camera.tilt', 'Camera.tilt was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. Use Camera.setView.');
 
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(angle)) {
@@ -733,10 +731,41 @@ define([
                 //>>includeEnd('debug');
 
                 if (this._mode === SceneMode.COLUMBUS_VIEW || this._mode === SceneMode.SCENE3D) {
-                    angle = CesiumMath.clamp(angle, -CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO);
-                    angle = angle - this.tilt;
-                    this.look(this.right, angle);
+                    this.setView({ pitch : angle });
                 }
+            }
+        },
+
+        /**
+         * Gets the camera roll in radians.
+         * @memberof Camera.prototype
+         *
+         * @type {Number}
+         */
+        roll : {
+            get : function() {
+                if (this._mode === SceneMode.COLUMBUS_VIEW || this._mode === SceneMode.SCENE3D) {
+                    var origin = this.positionWC;
+                    var ellipsoid = this._projection.ellipsoid;
+
+                    var oldTransform = Matrix4.clone(this.transform, scratchHPRMatrix1);
+                    var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
+                    this.setTransform(transform);
+
+                    var up = this.up;
+                    var right = this.right;
+
+                    var roll = Math.acos(-right.z) - CesiumMath.PI_OVER_TWO;
+                    if (up.z < 0.0) {
+                        roll = CesiumMath.PI - roll;
+                    }
+
+                    this.setTransform(oldTransform);
+
+                    return CesiumMath.zeroToTwoPi(roll);
+                }
+
+                return undefined;
             }
         }
     });
@@ -799,6 +828,96 @@ define([
         Matrix4.multiplyByPointAsVector(inverse, direction, this.direction);
         Matrix4.multiplyByPointAsVector(inverse, up, this.up);
         Cartesian3.cross(this.direction, this.up, this.right);
+    };
+
+    var scratchSetViewCartesian = new Cartesian3();
+    var scratchSetViewTransform1 = new Matrix4();
+    var scratchSetViewTransform2 = new Matrix4();
+    var scratchSetViewQuaternion = new Quaternion();
+    var scratchSetViewMatrix3 = new Matrix3();
+    var scratchSetViewCartographic = new Cartographic();
+
+    /**
+     * Sets the camera position and orientation with heading, pitch and roll angles.
+     *
+     * The position can be given as either a cartesian or a cartographic. If both are given,
+     * then the cartesian will be used. If neither is given, then the current camera position
+     * will be used.
+     *
+     * @param {Cartesian3} [options.cartesian] The cartesian position of the camera.
+     * @param {Cartographic} [options.cartographic] The cartographic position of the camera.
+     * @param {Number} [options.heading] The heading in radians or the current heading will be used if undefined.
+     * @param {Number} [options.pitch] The pitch in radians or the current pitch will be used if undefined.
+     * @param {Number} [options.roll] The roll in radians or the current roll will be used if undefined.
+     */
+    Camera.prototype.setView = function(options) {
+        if (this._mode === SceneMode.MORPHING) {
+            return;
+        }
+
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        var scene2D = this._mode === SceneMode.SCENE2D;
+        var scene3D = this._mode === SceneMode.SCENE3D;
+
+        var heading = defaultValue(options.heading, this.heading);
+        var pitch = scene2D ? CesiumMath.PI_OVER_TWO : defaultValue(options.pitch, this.pitch);
+        var roll = scene2D ? 0.0 : defaultValue(options.roll, this.roll);
+
+        if (scene3D) {
+            roll = -roll;
+        }
+
+        var cartesian = options.cartesian;
+        var cartographic = options.cartographic;
+
+        var projection = this._projection;
+        var ellipsoid = projection.ellipsoid;
+
+        if (!defined(cartesian)) {
+            if (defined(cartographic)) {
+                cartesian = ellipsoid.cartographicToCartesian(cartographic, scratchSetViewCartesian);
+            } else {
+                cartesian = Cartesian3.clone(this.positionWC, scratchSetViewCartesian);
+            }
+        }
+
+        var currentTransform = Matrix4.clone(this.transform, scratchSetViewTransform1);
+        var localTransform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, scratchSetViewTransform2);
+        this.setTransform(localTransform);
+
+        if (scene2D) {
+            Cartesian2.clone(Cartesian3.ZERO, this.position);
+
+            var cartographic2D = ellipsoid.cartesianToCartographic(cartesian, scratchSetViewCartographic);
+            var newLeft = -cartographic2D.height * 0.5;
+            var newRight = -newLeft;
+
+            var frustum = this.frustum;
+            if (newRight > newLeft) {
+                var ratio = frustum.top / frustum.right;
+                frustum.right = newRight;
+                frustum.left = newLeft;
+                frustum.top = frustum.right * ratio;
+                frustum.bottom = -frustum.top;
+            }
+        } else {
+            Cartesian3.clone(Cartesian3.ZERO, this.position);
+        }
+
+        var headingQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, heading + CesiumMath.PI_OVER_TWO, new Quaternion());
+        var pitchQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, pitch, new Quaternion());
+        var rotQuat = Quaternion.multiply(headingQuaternion, pitchQuaternion, headingQuaternion);
+
+        var rollQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, roll, new Quaternion());
+        Quaternion.multiply(rollQuaternion, rotQuat, rotQuat);
+        var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
+
+        Matrix3.getColumn(rotMat, 0, this.direction);
+        Matrix3.getColumn(rotMat, 2, this.up);
+        Cartesian3.cross(this.direction, this.up, this.right);
+
+        this.setTransform(currentTransform);
     };
 
     /**
@@ -1369,64 +1488,28 @@ define([
         }
     };
 
-    function setPositionCartographic2D(camera, cartographic) {
-        var newLeft = -cartographic.height * 0.5;
-        var newRight = -newLeft;
-
-        var frustum = camera.frustum;
-        if (newRight > newLeft) {
-            var ratio = frustum.top / frustum.right;
-            frustum.right = newRight;
-            frustum.left = newLeft;
-            frustum.top = frustum.right * ratio;
-            frustum.bottom = -frustum.top;
-        }
-
-        //We use Cartesian2 instead of 3 here because Z must be constant in 2D mode.
-        Cartesian2.clone(camera._projection.project(cartographic), camera.position);
-        Cartesian3.negate(Cartesian3.UNIT_Z, camera.direction);
-        Cartesian3.clone(Cartesian3.UNIT_Y, camera.up);
-        Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
-    }
-
-    function setPositionCartographicCV(camera, cartographic) {
-        var projection = camera._projection;
-        camera.position = projection.project(cartographic);
-        Cartesian3.negate(Cartesian3.UNIT_Z, camera.direction);
-        Cartesian3.clone(Cartesian3.UNIT_Y, camera.up);
-        Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
-    }
-
-    function setPositionCartographic3D(camera, cartographic) {
-        var ellipsoid = camera._projection.ellipsoid;
-
-        ellipsoid.cartographicToCartesian(cartographic, camera.position);
-        Cartesian3.negate(camera.position, camera.direction);
-        Cartesian3.normalize(camera.direction, camera.direction);
-        Cartesian3.cross(camera.direction, Cartesian3.UNIT_Z, camera.right);
-        Cartesian3.cross(camera.right, camera.direction, camera.up);
-        Cartesian3.cross(camera.direction, camera.up, camera.right);
-    }
-
     /**
      * Moves the camera to the provided cartographic position.
+     *
+     * @deprecated
      *
      * @param {Cartographic} cartographic The new camera position.
      */
     Camera.prototype.setPositionCartographic = function(cartographic) {
+        deprecationWarning('Camera.setPositionCartographic', 'Camera.setPositionCartographic was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. Use Camera.setView.');
+
         //>>includeStart('debug', pragmas.debug);
         if (!defined(cartographic)) {
             throw new DeveloperError('cartographic is required.');
         }
         //>>includeEnd('debug');
 
-        if (this._mode === SceneMode.SCENE2D) {
-            setPositionCartographic2D(this, cartographic);
-        } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
-            setPositionCartographicCV(this, cartographic);
-        } else if (this._mode === SceneMode.SCENE3D) {
-            setPositionCartographic3D(this, cartographic);
-        }
+        this.setView({
+            cartographic : cartographic,
+            heading : 0.0,
+            pitch : CesiumMath.PI_OVER_TWO,
+            roll : 0.0
+        });
     };
 
     /**
