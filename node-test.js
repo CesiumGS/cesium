@@ -44,10 +44,10 @@ Cesium.isReady.then(function() {
      * Write CZML
      */
 
-    var departCart = new Cesium.Cartographic.fromDegrees(-118.4081, 33.9425);
-    var departTime = new Cesium.JulianDate.fromIso8601('2012-08-04T16:00:00Z');
-    var arriveCart = new Cesium.Cartographic.fromDegrees(-75.2411, 39.8719);
-    var arriveTime = new Cesium.JulianDate.fromIso8601('2012-08-04T17:04:54Z');
+    var departCart = Cesium.Cartographic.fromDegrees(-118.4081, 33.9425);
+    var departTime = Cesium.JulianDate.fromIso8601('2012-08-04T16:00:00Z');
+    var arriveCart = Cesium.Cartographic.fromDegrees(-75.2411, 39.8719);
+    var arriveTime = Cesium.JulianDate.fromIso8601('2012-08-04T17:04:54Z');
 
     var arc = generateFlightArc(departCart, departTime, arriveCart, arriveTime);
 
