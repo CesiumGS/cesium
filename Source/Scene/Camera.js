@@ -748,8 +748,6 @@ define([
                     var origin = this.positionWC;
                     var ellipsoid = this._projection.ellipsoid;
 
-                    var heading = this.heading;
-
                     var oldTransform = Matrix4.clone(this.transform, scratchHPRMatrix1);
                     var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
                     this.setTransform(transform);
@@ -860,10 +858,15 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var scene2D = this._mode === SceneMode.SCENE2D;
+        var scene3D = this._mode === SceneMode.SCENE3D;
 
         var heading = defaultValue(options.heading, this.heading);
         var pitch = scene2D ? CesiumMath.PI_OVER_TWO : defaultValue(options.pitch, this.pitch);
         var roll = scene2D ? 0.0 : defaultValue(options.roll, this.roll);
+
+        if (scene3D) {
+            roll = -roll;
+        }
 
         var cartesian = options.cartesian;
         var cartographic = options.cartographic;
