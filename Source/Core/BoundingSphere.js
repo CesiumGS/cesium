@@ -544,7 +544,7 @@ define([
     /**
      * Computes a tight-fitting bounding sphere enclosing the provided array of bounding spheres.
      *
-     * @param {BoundingSphere} boundingSpheres The array of bounding spheres.
+     * @param {BoundingSphere[]} boundingSpheres The array of bounding spheres.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      */
