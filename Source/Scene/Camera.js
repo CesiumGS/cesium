@@ -648,7 +648,6 @@ define([
                     var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
                     this.setTransform(transform);
 
-
                     var right = this.right;
                     var direction = this.direction;
 
