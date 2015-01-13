@@ -386,7 +386,7 @@ defineSuite([
             heading : 0.0,
             pitch : CesiumMath.PI_OVER_TWO,
             roll : 0.0,
-            cartographic : cart
+            positionCartographic : cart
         });
 
         expect(Cartesian2.fromCartesian3(camera.position, new Cartesian2())).toEqualEpsilon(Cartesian2.fromCartesian3(projection.project(cart), new Cartesian2()), CesiumMath.EPSILON11);
@@ -409,7 +409,7 @@ defineSuite([
             heading : 0.0,
             pitch : CesiumMath.PI_OVER_TWO,
             roll : 0.0,
-            cartographic : cart
+            positionCartographic : cart
         });
 
         expect(camera.position).toEqualEpsilon(projection.project(cart), CesiumMath.EPSILON11);
@@ -430,7 +430,7 @@ defineSuite([
             heading : 0.0,
             pitch : CesiumMath.PI_OVER_TWO,
             roll : 0.0,
-            cartographic : cart
+            positionCartographic : cart
         });
 
         expect(camera.position).toEqualEpsilon(ellipsoid.cartographicToCartesian(cart), CesiumMath.EPSILON6);

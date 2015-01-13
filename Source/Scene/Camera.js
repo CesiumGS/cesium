@@ -843,8 +843,8 @@ define([
      * then the cartesian will be used. If neither is given, then the current camera position
      * will be used.
      *
-     * @param {Cartesian3} [options.cartesian] The cartesian position of the camera.
-     * @param {Cartographic} [options.cartographic] The cartographic position of the camera.
+     * @param {Cartesian3} [options.position] The cartesian position of the camera.
+     * @param {Cartographic} [options.positionCartographic] The cartographic position of the camera.
      * @param {Number} [options.heading] The heading in radians or the current heading will be used if undefined.
      * @param {Number} [options.pitch] The pitch in radians or the current pitch will be used if undefined.
      * @param {Number} [options.roll] The roll in radians or the current roll will be used if undefined.
@@ -867,8 +867,8 @@ define([
             roll = -roll;
         }
 
-        var cartesian = options.cartesian;
-        var cartographic = options.cartographic;
+        var cartesian = options.position;
+        var cartographic = options.positionCartographic;
 
         var projection = this._projection;
         var ellipsoid = projection.ellipsoid;
