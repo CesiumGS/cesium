@@ -16,10 +16,12 @@ Change Log
 * Added `CheckerboardMaterialProperty` to enable use of the checkerboard material with the entity API.
 * Added `PolygonHierarchy` to make defining polygons with holes clearer.
 * Added `PolygonGraphics.hierarchy` for supporting polygons with holes via data sources.
+* Added 'BoundingSphere.fromBoundingSpheres', which creates a BoundingSphere that encloses the specified array of BoundingSpheres.
 * `GeoJsonDataSource` now supports polygons with holes.
 * `ConstantProperty` can now hold any value; previously it was limited to values that implemented `equals` and `clones` functions, as well as a few special cases.
 * Fixed a bug in `EllipsoidGeodesic` that caused it to modify the `height` of the positions passed to the constructor or to to `setEndPoints`.
 * Instead of throwing an exception when there are not enough unique positions to define a geometry, creating a `Primitive` will succeed, but not render. [#2375](https://github.com/AnalyticalGraphicsInc/cesium/issues/2375)
+* `WebMapTileServiceImageryProvider` now supports RESTful requests (by accepting a tile-URL template).
 
 ### 1.5 - 2015-01-05
 
