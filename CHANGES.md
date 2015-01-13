@@ -15,7 +15,7 @@ Change Log
   * `PolygonGraphics.positions` was deprecated and replaced with `PolygonGraphics.hierarchy`, whose value is a `PolygonHierarchy` instead of an array of positions.  `PolygonGraphics.positions` will be removed in Cesium 1.8.
 * Improved performance of asynchronous geometry creation (as much as 20% faster in some use cases). [#2342](https://github.com/AnalyticalGraphicsInc/cesium/issues/2342)
 * Added `PolylineVolumeGraphics` and `Entity.polylineVolume`
-* Added `Camera.roll`.
+* Added `Camera.setView` (which use heading, pitch, and roll) and `Camera.roll`.
 * Added `Quaternion.fromHeadingPitchRoll` to create a rotation from heading, pitch, and roll angles.
 * Added `Transforms.headingPitchRollToFixedFrame` to create a local frame from a position and heading/pitch/roll angles.
 * Added `BillboardGraphics.imageSubRegion`, to enable custom texture atlas use for `Entity` instances.
