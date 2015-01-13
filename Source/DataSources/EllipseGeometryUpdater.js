@@ -531,8 +531,8 @@ define([
         //>>includeEnd('debug');
 
         var primitives = this._primitives;
-        primitives.removeAndDestroy(this._primitive);
-        primitives.removeAndDestroy(this._outlinePrimitive);
+        this._primitive = primitives.removeAndDestroy(this._primitive);
+        this._outlinePrimitive = primitives.removeAndDestroy(this._outlinePrimitive);
 
         var geometryUpdater = this._geometryUpdater;
         var entity = geometryUpdater._entity;
@@ -584,7 +584,7 @@ define([
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
 
             var outlineColor = Property.getValueOrClonedDefault(ellipse.outlineColor, time, Color.BLACK, scratchColor);
-            var outlineWidth = Property.getValueOrDefault(ellipse.outlineWidth, 1.0);
+            var outlineWidth = Property.getValueOrDefault(ellipse.outlineWidth, time, 1.0);
             var translucent = outlineColor.alpha !== 1.0;
 
             this._outlinePrimitive = primitives.add(new Primitive({

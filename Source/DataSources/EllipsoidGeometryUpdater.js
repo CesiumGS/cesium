@@ -584,8 +584,8 @@ define([
 
         if (rebuildPrimitives) {
             var primitives = this._primitives;
-            primitives.removeAndDestroy(this._primitive);
-            primitives.removeAndDestroy(this._outlinePrimitive);
+            this._primitive = primitives.removeAndDestroy(this._primitive);
+            this._outlinePrimitive = primitives.removeAndDestroy(this._outlinePrimitive);
             this._lastSceneMode = sceneMode;
             this._lastOutlineWidth = outlineWidth;
 
