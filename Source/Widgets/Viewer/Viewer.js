@@ -1406,7 +1406,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         camera.transform = transform;
         var r = 2.0 * Math.max(sphere.radius, camera.frustum.near);
         controller.minimumZoomDistance = Math.min(controller.minimumZoomDistance, r * 0.5);
-        camera.lookAt(new Cartesian3(r, r, r), Cartesian3.ZERO, Cartesian3.UNIT_Z);
+        camera.lookAt(new Cartesian3(0, -r, r), Cartesian3.ZERO, Cartesian3.UNIT_Z);
         camera.setTransform(Matrix4.IDENTITY);
     }
 
