@@ -1416,8 +1416,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * @returns {Promise} A Promise that evalutes to true if the zoom was successful or false if the entity is not currently visualized in the scene.
      */
     Viewer.prototype.zoomTo = function(entity) {
-        var that = this;
+        this._dataSourceDisplay.update(this.clock.currentTime);
+        this.render();
 
+        var that = this;
         if (isArray(entity)) {
             var promises = [];
             for (var i = 0, len = entity.length; i < len; i++) {

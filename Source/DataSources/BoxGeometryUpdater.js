@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/BoundingSphere',
         '../Core/BoxGeometry',
         '../Core/BoxOutlineGeometry',
         '../Core/Color',
@@ -21,6 +22,7 @@ define([
         './MaterialProperty',
         './Property'
     ], function(
+        BoundingSphere,
         BoxGeometry,
         BoxOutlineGeometry,
         Color,
@@ -566,6 +568,32 @@ define([
                 asynchronous : false
             }));
         }
+    };
+
+    DynamicGeometryUpdater.prototype.getBoundingSphere = function(entity) {
+        var primitive = this._primitive;
+        var attributes;
+
+        var tmp;
+        var boundingSphere;
+        if (defined(primitive) && primitive.show) {
+            attributes = primitive.getGeometryInstanceAttributes(entity);
+            tmp = attributes.boundingSphere;
+            if (defined(tmp)) {
+                boundingSphere = tmp.clone();
+            }
+        }
+
+        var outline = this._outlinePrimitive;
+        if (defined(outline) && outline.show) {
+            attributes = outline.getGeometryInstanceAttributes(entity);
+            tmp = attributes.boundingSphere;
+            if (defined(tmp)) {
+                boundingSphere = defined(boundingSphere) ? BoundingSphere.union(tmp, boundingSphere, boundingSphere) : tmp.clone();
+            }
+        }
+
+        return boundingSphere;
     };
 
     DynamicGeometryUpdater.prototype.isDestroyed = function() {

@@ -60,6 +60,10 @@ define([
     };
 
     DynamicGeometryBatch.prototype.getBoundingSphere = function(entity) {
+        var updater = this._dynamicUpdaters.get(entity.id);
+        if (defined(updater) && defined(updater.getBoundingSphere)) {
+            return updater.getBoundingSphere(entity);
+        }
         return undefined;
     };
 

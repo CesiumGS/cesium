@@ -90,7 +90,6 @@ define([
         this._dataSourceCollection = dataSourceCollection;
         this._scene = scene;
         this._visualizersCallback = defaultValue(options.visualizersCallback, DataSourceDisplay.defaultVisualizersCallback);
-        this._lastTime = undefined;
 
         for (var i = 0, len = dataSourceCollection.length; i < len; i++) {
             this._onDataSourceAdded(dataSourceCollection, dataSourceCollection.get(i));
@@ -241,8 +240,6 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._lastTime = time;
-
         var result = true;
 
         var i;
@@ -277,8 +274,6 @@ define([
      * @private
      */
     DataSourceDisplay.prototype.getBoundingSphere = function(entity, dataSource) {
-        this.update(this._lastTime);
-
         var i;
         var length;
         if (!defined(dataSource)) {
