@@ -1247,8 +1247,12 @@ define([
     };
 
     function createGetFunction(name, perInstanceAttributes) {
+        var attribute = perInstanceAttributes[name];
         return function() {
-            return perInstanceAttributes[name].value;
+            if (defined(attribute) && defined(attribute.value)) {
+                return perInstanceAttributes[name].value;
+            }
+            return attribute;
         };
     }
 
@@ -1317,9 +1321,12 @@ define([
             if (perInstanceAttributes.hasOwnProperty(name)) {
                 hasProperties = true;
                 properties[name] = {
-                    get : createGetFunction(name, perInstanceAttributes),
-                    set : createSetFunction(name, perInstanceAttributes, this._dirtyAttributes)
+                    get : createGetFunction(name, perInstanceAttributes)
                 };
+
+                if (name !== 'boundingSphere' && name !== 'boundingSphereCV') {
+                    properties[name].set = createSetFunction(name, perInstanceAttributes, this._dirtyAttributes);
+                }
             }
         }
 
