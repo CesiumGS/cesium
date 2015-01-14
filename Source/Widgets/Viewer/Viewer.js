@@ -7,6 +7,7 @@ define([
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/EventHelper',
+        '../../Core/Matrix4',
         '../../Core/ScreenSpaceEventType',
         '../../DataSources/ConstantPositionProperty',
         '../../DataSources/DataSourceCollection',
@@ -41,6 +42,7 @@ define([
         destroyObject,
         DeveloperError,
         EventHelper,
+        Matrix4,
         ScreenSpaceEventType,
         ConstantPositionProperty,
         DataSourceCollection,
@@ -382,8 +384,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             infoBox = new InfoBox(infoBoxContainer);
 
             var infoBoxViewModel = infoBox.viewModel;
-            eventHelper.add(infoBoxViewModel.cameraClicked, Viewer.prototype._trackSelectedEntity, this);
-            eventHelper.add(infoBoxViewModel.closeClicked, Viewer.prototype._clearSelectedEntity, this);
+            eventHelper.add(infoBoxViewModel.cameraClicked, Viewer.prototype._onInfoBoxCameraClicked, this);
+            eventHelper.add(infoBoxViewModel.closeClicked, Viewer.prototype._onInfoBoxClockClicked, this);
         }
 
         // Main Toolbar
@@ -961,6 +963,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                         this._entityView = new EntityView(value, scene, this.scene.globe.ellipsoid);
                     } else {
                         this._entityView = undefined;
+                        this.camera.setTransform(Matrix4.IDENTITY);
                     }
                 }
             }
@@ -1236,7 +1239,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         if (defined(this.trackedEntity)) {
             if (entityCollection.getById(this.trackedEntity.id) === this.trackedEntity) {
-                this.homeButton.viewModel.command();
+                this.trackedEntity = undefined;
             }
         }
 
@@ -1275,7 +1278,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             if (selectedEntity.isAvailable(time)) {
                 if (defined(selectedEntity.position)) {
                     position = selectedEntity.position.getValue(time, oldPosition);
-                    enableCamera = defined(position) && (this.trackedEntity !== this.selectedEntity);
+                    enableCamera = defined(position);
                 }
                 // else "position" is undefined and "enableCamera" is false.
             }
@@ -1315,7 +1318,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         for (var i = 0; i < length; i++) {
             var removedObject = removed[i];
             if (this.trackedEntity === removedObject) {
-                this.homeButton.viewModel.command();
+                this.trackedEntity = undefined;
             }
             if (this.selectedEntity === removedObject) {
                 this.selectedEntity = undefined;
@@ -1326,8 +1329,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     /**
      * @private
      */
-    Viewer.prototype._trackSelectedEntity = function() {
-        this.trackedEntity = this.selectedEntity;
+    Viewer.prototype._onInfoBoxCameraClicked = function(infoBoxViewModel) {
+        if (infoBoxViewModel.isCameraTracking && (this.trackedEntity === this.selectedEntity)) {
+            this.trackedEntity = undefined;
+        } else {
+            this.trackedEntity = this.selectedEntity;
+        }
     };
 
     /**
@@ -1340,7 +1347,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     /**
      * @private
      */
-    Viewer.prototype._clearSelectedEntity = function() {
+    Viewer.prototype._onInfoBoxClockClicked = function(infoBoxViewModel) {
         this.selectedEntity = undefined;
     };
 
