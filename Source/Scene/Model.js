@@ -509,7 +509,7 @@ define([
          *
          * @default undefined
          *
-         * @exception {DeveloperError} The model is not loaded.  Use the Model.readyPromise or wait for Model.ready to be true.
+         * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
          *
          * @example
          * // Center in WGS84 coordinates
@@ -519,7 +519,7 @@ define([
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (this._state !== ModelState.LOADED) {
-                    throw new DeveloperError('The model is not loaded.  Use the Model.readyPromise or wait for Model.ready to be true.');
+                    throw new DeveloperError('The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.');
                 }
                 //>>includeEnd('debug');
 
@@ -759,7 +759,7 @@ define([
     function getRuntime(model, runtimeName, name) {
         //>>includeStart('debug', pragmas.debug);
         if (model._state !== ModelState.LOADED) {
-            throw new DeveloperError('The model is not loaded.  Use the Model.readyPromise or wait for Model.ready to be true.');
+            throw new DeveloperError('The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.');
         }
 
         if (!defined(name)) {
@@ -777,7 +777,7 @@ define([
      * @param {String} name The glTF name of the node.
      * @returns {ModelNode} The node or <code>undefined</code> if no node with <code>name</code> exists.
      *
-     * @exception {DeveloperError} The model is not loaded.  Use the Model.readyPromise or wait for Model.ready to be true.
+     * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
      *
      * @example
      * // Apply non-uniform scale to node LOD3sp
@@ -796,7 +796,7 @@ define([
      *
      * @returns {ModelMesh} The mesh or <code>undefined</code> if no mesh with <code>name</code> exists.
      *
-     * @exception {DeveloperError} The model is not loaded.  Use the Model.readyPromise or wait for Model.ready to be true.
+     * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
      */
     Model.prototype.getMesh = function(name) {
         return getRuntime(this, 'meshesByName', name);
@@ -808,7 +808,7 @@ define([
      * @param {String} name The glTF name of the material.
      * @returns {ModelMaterial} The material or <code>undefined</code> if no material with <code>name</code> exists.
      *
-     * @exception {DeveloperError} The model is not loaded.  Use the Model.readyPromise or wait for Model.ready to be true.
+     * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
      */
     Model.prototype.getMaterial = function(name) {
         return getRuntime(this, 'materialsByName', name);
