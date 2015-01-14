@@ -13,7 +13,8 @@ defineSuite([
         'Core/Transforms',
         'Scene/ModelAnimationLoop',
         'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/destroyScene',
+        'Specs/waitsForPromise'
     ], function(
         Model,
         Cartesian2,
@@ -28,7 +29,8 @@ defineSuite([
         Transforms,
         ModelAnimationLoop,
         createScene,
-        destroyScene) {
+        destroyScene,
+        waitsForPromise) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,WebGLRenderingContext*/
 
@@ -148,6 +150,12 @@ defineSuite([
 
     it('renders', function() {
         verifyRender(duckModel);
+    });
+
+    it('resolves readyPromise', function() {
+        waitsForPromise(duckModel.readyPromise, function(model) {
+            verifyRender(model);
+        });
     });
 
     it('renders from glTF', function() {

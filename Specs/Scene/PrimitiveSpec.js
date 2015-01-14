@@ -27,7 +27,8 @@ defineSuite([
         'Specs/destroyContext',
         'Specs/destroyScene',
         'Specs/pick',
-        'Specs/render'
+        'Specs/render',
+        'Specs/waitsForPromise'
     ], function(
         Primitive,
         BoxGeometry,
@@ -56,7 +57,8 @@ defineSuite([
         destroyContext,
         destroyScene,
         pick,
-        render) {
+        render,
+        waitsForPromise) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -199,6 +201,21 @@ defineSuite([
         expect(primitive.geometryInstances).toBeDefined();
 
         primitive = primitive && primitive.destroy();
+    });
+
+    it('does not release geometry instances when releaseGeometryInstances is false', function() {
+        var primitive = new Primitive({
+            geometryInstances : [rectangleInstance1, rectangleInstance2],
+            appearance : new PerInstanceColorAppearance(),
+            releaseGeometryInstances : false,
+            asynchronous : false
+        });
+
+        waitsForPromise(primitive.readyPromise, function(param) {
+            expect(param.ready).toBe(true);
+            primitive = primitive && primitive.destroy();
+        });
+        primitive.update(context, frameState, []);
     });
 
     it('does not render when geometryInstances is an empty array', function() {

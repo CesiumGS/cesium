@@ -17,6 +17,7 @@ Change Log
 * Added `PolygonHierarchy` to make defining polygons with holes clearer.
 * Added `PolygonGraphics.hierarchy` for supporting polygons with holes via data sources.
 * Added 'BoundingSphere.fromBoundingSpheres', which creates a BoundingSphere that encloses the specified array of BoundingSpheres.
+* Added 'Model.readyPromise' and 'Primitive.readyPromise' which are promises that resolve when the primitives are ready.
 * `GeoJsonDataSource` now supports polygons with holes.
 * `ConstantProperty` can now hold any value; previously it was limited to values that implemented `equals` and `clones` functions, as well as a few special cases.
 * Fixed a bug in `EllipsoidGeodesic` that caused it to modify the `height` of the positions passed to the constructor or to to `setEndPoints`.

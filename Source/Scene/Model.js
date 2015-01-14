@@ -31,6 +31,7 @@ define([
         '../Renderer/TextureWrap',
         '../ThirdParty/gltfDefaults',
         '../ThirdParty/Uri',
+        '../ThirdParty/when',
         './getModelAccessor',
         './ModelAnimationCache',
         './ModelAnimationCollection',
@@ -71,6 +72,7 @@ define([
         TextureWrap,
         gltfDefaults,
         Uri,
+        when,
         getModelAccessor,
         ModelAnimationCache,
         ModelAnimationCollection,
@@ -348,6 +350,7 @@ define([
          */
         this.readyToRender = new Event();
         this._ready = false;
+        this._readyPromise = when.defer();
 
         /**
          * The currently playing glTF animations.
@@ -560,6 +563,18 @@ define([
         ready : {
             get : function() {
                 return this._ready;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves when the model is ready to render.
+         * @memberof Model.prototype
+         * @type {Promise}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise;
             }
         },
 
@@ -2605,6 +2620,7 @@ define([
             frameState.afterRender.push(function() {
                 model._ready = true;
                 model.readyToRender.raiseEvent(model);
+                model.readyPromise.resolve(model);
             });
             return;
         }

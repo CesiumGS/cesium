@@ -293,6 +293,7 @@ define([
         this._pickCommands = [];
 
         this._createGeometryResults = undefined;
+        this._readyPromise = when.defer();
     };
 
     defineProperties(Primitive.prototype, {
@@ -405,6 +406,18 @@ define([
         ready : {
             get : function() {
                 return this._state === PrimitiveState.COMPLETE || this._state === PrimitiveState.FAILED;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves when the primitive is ready to render.
+         * @memberof Primitive.prototype
+         * @type {Promise}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise;
             }
         }
     });
@@ -798,6 +811,7 @@ define([
                     }, function(error) {
                         that._error = error;
                         that._state = PrimitiveState.FAILED;
+                        this._readyPromise.resolve(this);
                     });
                 } else if (this._state === PrimitiveState.CREATED) {
                     var transferableObjects = [];
@@ -850,6 +864,7 @@ define([
                     }, function(error) {
                         that._error = error;
                         that._state = PrimitiveState.FAILED;
+                        this._readyPromise.resolve(this);
                     });
                 }
             } else {
@@ -911,7 +926,12 @@ define([
                     instanceIds.push(instance.id);
                 }
 
-                this._state = defined(this._geometries) ? PrimitiveState.COMBINED : PrimitiveState.FAILED;
+                if (defined(this._geometries)) {
+                    this._state = PrimitiveState.COMBINED;
+                } else {
+                    this._state = PrimitiveState.FAILED;
+                    this._readyPromise.resolve(this);
+                }
             }
         }
 
@@ -969,6 +989,7 @@ define([
 
             this._geometries = undefined;
             this._state = PrimitiveState.COMPLETE;
+            this._readyPromise.resolve(this);
         }
 
         if (!this.show || this._state !== PrimitiveState.COMPLETE) {
