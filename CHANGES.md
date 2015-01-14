@@ -9,18 +9,31 @@ Change Log
   * The `sourceUri` parameter to `GeoJsonDatasource.load` was deprecated in Cesium 1.4 and has been removed. Use options.sourceUri instead.
   * `PolygonGraphics.positions` created by `GeoJSONDataSource` now evaluate to a `PolygonHierarchy` object instead of an array of positions.
 * Deprecated
+  * `Camera.tilt` was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. Use `Camera.pitch`.
+  * `Camera.heading` and `Camera.tilt` were deprecated in Cesium 1.6. They will become read-only in Cesium 1.7. Use `Camera.setView`.
+  * `Camera.setPositionCartographic` was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. Use `Camera.setView`.
   * `PolygonGraphics.positions` was deprecated and replaced with `PolygonGraphics.hierarchy`, whose value is a `PolygonHierarchy` instead of an array of positions.  `PolygonGraphics.positions` will be removed in Cesium 1.8.
+  * The `Model.readyToRender` event was deprecated and will be removed in Cesium 1.9.  Use the new 'Model.readyPromise' instead.
 * Improved performance of asynchronous geometry creation (as much as 20% faster in some use cases). [#2342](https://github.com/AnalyticalGraphicsInc/cesium/issues/2342)
 * Added `PolylineVolumeGraphics` and `Entity.polylineVolume`
+* Added `Camera.setView` (which use heading, pitch, and roll) and `Camera.roll`.
+* Added `Quaternion.fromHeadingPitchRoll` to create a rotation from heading, pitch, and roll angles.
+* Added `Transforms.headingPitchRollToFixedFrame` to create a local frame from a position and heading/pitch/roll angles.
+* Added `Transforms.headingPitchRollQuaternion` which is the quaternion rotation from `Transforms.headingPitchRollToFixedFrame`.
 * Added `BillboardGraphics.imageSubRegion`, to enable custom texture atlas use for `Entity` instances.
 * Added `CheckerboardMaterialProperty` to enable use of the checkerboard material with the entity API.
 * Added `PolygonHierarchy` to make defining polygons with holes clearer.
 * Added `PolygonGraphics.hierarchy` for supporting polygons with holes via data sources.
+* Added 'BoundingSphere.fromBoundingSpheres', which creates a BoundingSphere that encloses the specified array of BoundingSpheres.
+* Added 'Model.readyPromise' and 'Primitive.readyPromise' which are promises that resolve when the primitives are ready.
 * `GeoJsonDataSource` now supports polygons with holes.
 * `ConstantProperty` can now hold any value; previously it was limited to values that implemented `equals` and `clones` functions, as well as a few special cases.
 * Fixed a bug in `EllipsoidGeodesic` that caused it to modify the `height` of the positions passed to the constructor or to to `setEndPoints`.
 * Instead of throwing an exception when there are not enough unique positions to define a geometry, creating a `Primitive` will succeed, but not render. [#2375](https://github.com/AnalyticalGraphicsInc/cesium/issues/2375)
 * `WebMapTileServiceImageryProvider` now supports RESTful requests (by accepting a tile-URL template).
+* When you track an entity by clicking on the track button in the `InfoBox`, you can now stop tracking by clicking the button a second time.
+* Setting `viewer.trackedEntity` to `undefined` will now restore the camera controls to their default states.
+* The object returned by `Primitive.getGeometryInstanceAttributes` now contains the instance's bounding sphere.
 
 ### 1.5 - 2015-01-05
 
