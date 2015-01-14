@@ -19,6 +19,7 @@ Change Log
 * Added `Camera.setView` (which use heading, pitch, and roll) and `Camera.roll`.
 * Added `Quaternion.fromHeadingPitchRoll` to create a rotation from heading, pitch, and roll angles.
 * Added `Transforms.headingPitchRollToFixedFrame` to create a local frame from a position and heading/pitch/roll angles.
+* Added `Transforms.headingPitchRollQuaternion` which is the quaternion rotation from `Transforms.headingPitchRollToFixedFrame`.
 * Added `BillboardGraphics.imageSubRegion`, to enable custom texture atlas use for `Entity` instances.
 * Added `CheckerboardMaterialProperty` to enable use of the checkerboard material with the entity API.
 * Added `PolygonHierarchy` to make defining polygons with holes clearer.
