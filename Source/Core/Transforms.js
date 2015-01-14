@@ -352,7 +352,9 @@ define([
 
     /**
      * Computes a 4x4 transformation matrix from a reference frame with axes computed from the heading-pitch-roll angles
-     * centered at the provided origin to the provided ellipsoid's fixed reference frame.
+     * centered at the provided origin to the provided ellipsoid's fixed reference frame. Heading is the rotation from the local north
+     * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
+     * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
      *
      * @param {Cartesian3} origin The center point of the local reference frame.
      * @param {Number} heading The heading angle in radians.
@@ -383,7 +385,9 @@ define([
 
     /**
      * Computes a quaternion from a reference frame with axes computed from the heading-pitch-roll angles
-     * centered at the provided origin.
+     * centered at the provided origin. Heading is the rotation from the local north
+     * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
+     * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
      *
      * @param {Cartesian3} origin The center point of the local reference frame.
      * @param {Number} heading The heading angle in radians.

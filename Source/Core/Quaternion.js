@@ -178,7 +178,9 @@ define([
     var scratchHPRQuaternion = new Quaternion();
 
     /**
-     * Computes a rotation from the given heading, pitch and roll angles.
+     * Computes a rotation from the given heading, pitch and roll angles. Heading is the rotation about the
+     * negative z axis. Pitch is the rotation about the negative y axis. Roll is the rotation about
+     * the positive x axis.
      *
      * @param {Number} heading The heading angle in radians.
      * @param {Number} pitch The pitch angle in radians.

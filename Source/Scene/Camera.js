@@ -848,6 +848,27 @@ define([
      * @param {Number} [options.heading] The heading in radians or the current heading will be used if undefined.
      * @param {Number} [options.pitch] The pitch in radians or the current pitch will be used if undefined.
      * @param {Number} [options.roll] The roll in radians or the current roll will be used if undefined.
+     *
+     * @example
+     * // 1. Set view with heading, pitch and roll
+     * camera.setView({
+     *     position : cartesianPosition,
+     *     heading : Cesium.Math.toRadians(90.0), // east, default value is 0.0 (north)
+     *     pitch : Cesium.Math.toRadians(-90),    // default value (looking down)
+     *     roll : 0.0                             // default value
+     * });
+     *
+     * // 2. Set default top-down view with a cartographic position
+     * camera.setView({
+     *     positionCartographic : cartographic
+     * });
+     *
+     * // 3. Change heading, pitch and roll with the camera position remaining the same.
+     * camera.setView({
+     *     heading : Cesium.Math.toRadians(90.0), // east, default value is 0.0 (north)
+     *     pitch : Cesium.Math.toRadians(-90),    // default value (looking down)
+     *     roll : 0.0                             // default value
+     * });
      */
     Camera.prototype.setView = function(options) {
         if (this._mode === SceneMode.MORPHING) {
