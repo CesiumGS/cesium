@@ -293,6 +293,7 @@ define([
         this._pickCommands = [];
 
         this._createGeometryResults = undefined;
+        this._ready = false;
         this._readyPromise = when.defer();
     };
 
@@ -405,7 +406,7 @@ define([
          */
         ready : {
             get : function() {
-                return this._state === PrimitiveState.COMPLETE || this._state === PrimitiveState.FAILED;
+                return this._ready;
             }
         },
 
@@ -753,6 +754,13 @@ define([
                     for (i = 0; i < length; ++i) {
                         geometry = instances[i].geometry;
                         instanceIds.push(instances[i].id);
+
+                        //>>includeStart('debug', pragmas.debug);
+                        if (!defined(geometry._workerName)) {
+                            throw new DeveloperError('_workerName must be defined for asynchronous geometry.');
+                        }
+                        //>>includeEnd('debug');
+
                         subTasks.push({
                             moduleName : geometry._workerName,
                             geometry : geometry
@@ -808,10 +816,8 @@ define([
                     when.all(promises, function(results) {
                         that._createGeometryResults = results;
                         that._state = PrimitiveState.CREATED;
-                    }, function(error) {
-                        that._error = error;
-                        that._state = PrimitiveState.FAILED;
-                        this._readyPromise.resolve(this);
+                    }).otherwise(function(error) {
+                        setReady(that, frameState, PrimitiveState.FAILED, error);
                     });
                 } else if (this._state === PrimitiveState.CREATED) {
                     var transferableObjects = [];
@@ -861,10 +867,8 @@ define([
                         that._instanceIds = reorderedInstanceIds;
 
                         that._state = defined(that._geometries) ? PrimitiveState.COMBINED : PrimitiveState.FAILED;
-                    }, function(error) {
-                        that._error = error;
-                        that._state = PrimitiveState.FAILED;
-                        this._readyPromise.resolve(this);
+                    }).otherwise(function(error) {
+                        setReady(that, frameState, PrimitiveState.FAILED, error);
                     });
                 }
             } else {
@@ -929,8 +933,7 @@ define([
                 if (defined(this._geometries)) {
                     this._state = PrimitiveState.COMBINED;
                 } else {
-                    this._state = PrimitiveState.FAILED;
-                    this._readyPromise.resolve(this);
+                    setReady(this, frameState, PrimitiveState.FAILED, undefined);
                 }
             }
         }
@@ -988,8 +991,7 @@ define([
             }
 
             this._geometries = undefined;
-            this._state = PrimitiveState.COMPLETE;
-            this._readyPromise.resolve(this);
+            setReady(this, frameState, PrimitiveState.COMPLETE, undefined);
         }
 
         if (!this.show || this._state !== PrimitiveState.COMPLETE) {
@@ -1416,6 +1418,19 @@ define([
 
         return destroyObject(this);
     };
+
+    function setReady(primitive, frameState, state, error) {
+        primitive._error = error;
+        primitive._state = state;
+        frameState.afterRender.push(function() {
+            primitive._ready = primitive._state === PrimitiveState.COMPLETE || primitive._state === PrimitiveState.FAILED;
+            if (!defined(error)) {
+                primitive._readyPromise.resolve(primitive);
+            } else {
+                primitive._readyPromise.reject(error);
+            }
+        });
+    }
 
     return Primitive;
 });

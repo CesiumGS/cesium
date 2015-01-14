@@ -14,6 +14,7 @@ defineSuite([
         'Core/PrimitiveType',
         'Core/Rectangle',
         'Core/RectangleGeometry',
+        'Core/RuntimeError',
         'Core/ShowGeometryInstanceAttribute',
         'Core/Transforms',
         'Renderer/ClearCommand',
@@ -21,6 +22,7 @@ defineSuite([
         'Scene/OrthographicFrustum',
         'Scene/PerInstanceColorAppearance',
         'Scene/SceneMode',
+        'Specs/BadGeometry',
         'Specs/createContext',
         'Specs/createFrameState',
         'Specs/createScene',
@@ -44,6 +46,7 @@ defineSuite([
         PrimitiveType,
         Rectangle,
         RectangleGeometry,
+        RuntimeError,
         ShowGeometryInstanceAttribute,
         Transforms,
         ClearCommand,
@@ -51,6 +54,7 @@ defineSuite([
         OrthographicFrustum,
         PerInstanceColorAppearance,
         SceneMode,
+        BadGeometry,
         createContext,
         createFrameState,
         createScene,
@@ -89,6 +93,9 @@ defineSuite([
     });
 
     beforeEach(function() {
+        //Since we don't create a scene, we need to manually clean out the frameState.afterRender array before each test.
+        frameState.afterRender.length = 0;
+
         rectangle1 = Rectangle.fromDegrees(-80.0, 20.0, -70.0, 30.0);
         rectangle2 = Rectangle.fromDegrees(70.0, 20.0, 80.0, 30.0);
 
@@ -203,7 +210,7 @@ defineSuite([
         primitive = primitive && primitive.destroy();
     });
 
-    it('does not release geometry instances when releaseGeometryInstances is false', function() {
+    it('adds afterRender promise to frame state', function() {
         var primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
@@ -216,6 +223,8 @@ defineSuite([
             primitive = primitive && primitive.destroy();
         });
         primitive.update(context, frameState, []);
+        expect(frameState.afterRender.length).toEqual(1);
+        frameState.afterRender[0]();
     });
 
     it('does not render when geometryInstances is an empty array', function() {
@@ -865,6 +874,37 @@ defineSuite([
         expect(function() {
             primitive.update(context, frameState, []);
         }).toThrowDeveloperError();
+    });
+
+    it('failed geometry rejects promise and throws on next update', function() {
+        var primitive = new Primitive({
+            geometryInstances : [new GeometryInstance({
+                geometry : new BadGeometry()
+            })],
+            appearance : new MaterialAppearance({
+                materialSupport : MaterialAppearance.MaterialSupport.ALL
+            }),
+            compressVertices : false
+        });
+
+        waitsFor(function() {
+            if (frameState.afterRender.length > 0) {
+                frameState.afterRender[0]();
+                return true;
+            }
+            primitive.update(context, frameState, []);
+            return false;
+        });
+
+        waitsForPromise.toReject(primitive.readyPromise, function(e) {
+            expect(e).toBe(primitive._error);
+        });
+
+        runs(function() {
+            expect(function() {
+                primitive.update(context, frameState, []);
+            }).toThrowRuntimeError();
+        });
     });
 
     it('shader validation', function() {
