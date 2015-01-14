@@ -105,6 +105,7 @@ defineSuite([
     }
 
     function verifyRender(model) {
+        expect(model.ready).toBe(true);
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
         model.show = true;
         model.zoomTo();
