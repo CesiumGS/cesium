@@ -16,6 +16,7 @@ Change Log
 * Added `CheckerboardMaterialProperty` to enable use of the checkerboard material with the entity API.
 * Added `PolygonHierarchy` to make defining polygons with holes clearer.
 * Added `PolygonGraphics.hierarchy` for supporting polygons with holes via data sources.
+* Added 'BoundingSphere.fromBoundingSpheres', which creates a BoundingSphere that encloses the specified array of BoundingSpheres.
 * `GeoJsonDataSource` now supports polygons with holes.
 * `ConstantProperty` can now hold any value; previously it was limited to values that implemented `equals` and `clones` functions, as well as a few special cases.
 * Fixed a bug in `EllipsoidGeodesic` that caused it to modify the `height` of the positions passed to the constructor or to to `setEndPoints`.
@@ -23,6 +24,7 @@ Change Log
 * `WebMapTileServiceImageryProvider` now supports RESTful requests (by accepting a tile-URL template).
 * When you track an entity by clicking on the track button in the `InfoBox`, you can now stop tracking by clicking the button a second time.
 * Setting `viewer.trackedEntity` to `undefined` will now restore the camera controls to their default states.
+* The object returned by `Primitive.getGeometryInstanceAttributes` now contains the instance's bounding sphere.
 
 ### 1.5 - 2015-01-05
 
