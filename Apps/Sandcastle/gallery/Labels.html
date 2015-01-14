@@ -65,31 +65,6 @@ function setProperties() {
 
     entity.label.scale = 2.0;
 }
-/*
-function inReferenceFrame() {
-    Sandcastle.declare(inReferenceFrame);
-    scene.primitives.removeAll();
-    var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
-    var labels = scene.primitives.add(new Cesium.LabelCollection());
-    labels.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-    labels.add({
-        position : new Cesium.Cartesian3(0.0, 0.0, 0.0),
-        text     : 'Center'
-    });
-    labels.add({
-        position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0),
-        text     : 'East'
-    });
-    labels.add({
-        position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0),
-        text     : 'North'
-    });
-    labels.add({
-        position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0),
-        text     : 'Up'
-    });
-}
-*/
 
 function offsetByDistance() {
     Sandcastle.declare(offsetByDistance);
@@ -149,12 +124,6 @@ Sandcastle.addToolbarMenu([{
     onselect : function() {
         setProperties();
         Sandcastle.highlight(setProperties);
-    }
-}, {
-    text : 'Add labels in reference frame',
-    onselect : function() {
-        //inReferenceFrame();
-        //Sandcastle.highlight(inReferenceFrame);
     }
 }, {
     text : 'Offset label by distance',

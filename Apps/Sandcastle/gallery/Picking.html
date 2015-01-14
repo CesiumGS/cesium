@@ -27,7 +27,11 @@
 function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    selectionIndicator : false,
+    infoBox : false
+});
+
 var scene = viewer.scene;
 var handler;
 
