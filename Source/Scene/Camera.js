@@ -660,7 +660,7 @@ define([
 
                     this.setTransform(oldTransform);
 
-                    return CesiumMath.zeroToTwoPi(heading);
+                    return CesiumMath.TWO_PI - CesiumMath.zeroToTwoPi(heading);
                 }
 
                 return undefined;
@@ -696,7 +696,7 @@ define([
                     var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
                     this.setTransform(transform);
 
-                    var pitch = CesiumMath.PI_OVER_TWO - CesiumMath.acosClamped(-this.direction.z);
+                    var pitch = CesiumMath.PI_OVER_TWO - CesiumMath.acosClamped(this.direction.z);
 
                     this.setTransform(oldTransform);
 
@@ -761,7 +761,7 @@ define([
 
                     this.setTransform(oldTransform);
 
-                    return CesiumMath.zeroToTwoPi(roll);
+                    return CesiumMath.TWO_PI - CesiumMath.zeroToTwoPi(roll);
                 }
 
                 return undefined;
@@ -857,13 +857,13 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var scene2D = this._mode === SceneMode.SCENE2D;
-        var scene3D = this._mode === SceneMode.SCENE3D;
+        var sceneCV = this._mode === SceneMode.COLUMBUS_VIEW;
 
         var heading = defaultValue(options.heading, this.heading);
-        var pitch = scene2D ? CesiumMath.PI_OVER_TWO : defaultValue(options.pitch, this.pitch);
+        var pitch = scene2D ? -CesiumMath.PI_OVER_TWO : defaultValue(options.pitch, this.pitch);
         var roll = scene2D ? 0.0 : defaultValue(options.roll, this.roll);
 
-        if (scene3D) {
+        if (sceneCV) {
             roll = -roll;
         }
 
@@ -904,12 +904,7 @@ define([
             Cartesian3.clone(Cartesian3.ZERO, this.position);
         }
 
-        var headingQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, heading + CesiumMath.PI_OVER_TWO, new Quaternion());
-        var pitchQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, pitch, new Quaternion());
-        var rotQuat = Quaternion.multiply(headingQuaternion, pitchQuaternion, headingQuaternion);
-
-        var rollQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, roll, new Quaternion());
-        Quaternion.multiply(rollQuaternion, rotQuat, rotQuat);
+        var rotQuat = Quaternion.fromHeadingPitchRoll(heading - CesiumMath.PI_OVER_TWO, pitch, roll, scratchSetViewQuaternion);
         var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
 
         Matrix3.getColumn(rotMat, 0, this.direction);
@@ -1506,7 +1501,7 @@ define([
         this.setView({
             cartographic : cartographic,
             heading : 0.0,
-            pitch : CesiumMath.PI_OVER_TWO,
+            pitch : -CesiumMath.PI_OVER_TWO,
             roll : 0.0
         });
     };

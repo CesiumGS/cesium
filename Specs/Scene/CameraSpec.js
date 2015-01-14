@@ -126,14 +126,14 @@ defineSuite([
     it('get heading in 2D', function() {
         camera._mode = SceneMode.SCENE2D;
 
-        var heading = Math.atan2(camera.right.y, camera.right.x);
+        var heading = CesiumMath.TWO_PI - Math.atan2(camera.right.y, camera.right.x);
         expect(camera.heading).toEqual(heading);
     });
 
     it('get heading in CV', function() {
         camera._mode = SceneMode.COLUMBUS_VIEW;
 
-        var heading = Math.atan2(camera.right.y, camera.right.x);
+        var heading = CesiumMath.TWO_PI - Math.atan2(camera.right.y, camera.right.x);
         expect(camera.heading).toEqual(heading);
     });
 
@@ -146,7 +146,7 @@ defineSuite([
         Matrix3.transpose(transform, transform);
 
         var right = Matrix3.multiplyByVector(transform, camera.right, new Cartesian3());
-        var heading = CesiumMath.zeroToTwoPi(Math.atan2(right.y, right.x));
+        var heading = CesiumMath.TWO_PI - CesiumMath.zeroToTwoPi(Math.atan2(right.y, right.x));
 
         expect(camera.heading).toEqual(heading);
     });
@@ -222,7 +222,7 @@ defineSuite([
 
         var direction = Cartesian3.normalize(camera.position, new Cartesian3());
         Cartesian3.negate(direction, direction);
-        var pitch = CesiumMath.PI_OVER_TWO - Math.acos(Cartesian3.dot(camera.direction, direction));
+        var pitch = CesiumMath.PI_OVER_TWO - Math.acos(-Cartesian3.dot(camera.direction, direction));
 
         expect(camera.pitch).toEqual(pitch);
     });
@@ -278,7 +278,7 @@ defineSuite([
 
         camera.look(camera.direction, CesiumMath.toRadians(45.0));
 
-        var roll = Math.acos(-camera.right.z) - CesiumMath.PI_OVER_TWO;
+        var roll = CesiumMath.zeroToTwoPi(-CesiumMath.toRadians(45.0));
         expect(camera.roll).toEqualEpsilon(roll, CesiumMath.EPSILON6);
     });
 
@@ -299,7 +299,7 @@ defineSuite([
         Matrix3.transpose(transform, transform);
 
         var right = Matrix3.multiplyByVector(transform, camera.right, new Cartesian3());
-        var roll = Math.atan2(right.z, right.x);
+        var roll = CesiumMath.TWO_PI - Math.atan2(right.z, right.x);
 
         expect(camera.roll).toEqual(roll);
     });
@@ -384,7 +384,7 @@ defineSuite([
         var cart = Cartographic.fromDegrees(-75.0, 42.0, 100.0);
         camera.setView({
             heading : 0.0,
-            pitch : CesiumMath.PI_OVER_TWO,
+            pitch : -CesiumMath.PI_OVER_TWO,
             roll : 0.0,
             positionCartographic : cart
         });
@@ -407,7 +407,7 @@ defineSuite([
         var cart = Cartographic.fromDegrees(-75.0, 42.0, 100.0);
         camera.setView({
             heading : 0.0,
-            pitch : CesiumMath.PI_OVER_TWO,
+            pitch : -CesiumMath.PI_OVER_TWO,
             roll : 0.0,
             positionCartographic : cart
         });
@@ -428,7 +428,7 @@ defineSuite([
         var cart = new Cartographic(-75.0, 0.0, 100.0);
         camera.setView({
             heading : 0.0,
-            pitch : CesiumMath.PI_OVER_TWO,
+            pitch : -CesiumMath.PI_OVER_TWO,
             roll : 0.0,
             positionCartographic : cart
         });
