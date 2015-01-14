@@ -283,8 +283,13 @@ define([
      * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(extrudedPolygon);
      */
     var PolygonOutlineGeometry = function(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(options) || !defined(options.polygonHierarchy)) {
+            throw new DeveloperError('options.polygonHierarchy is required.');
+        }
+        //>>includeEnd('debug');
 
+        var polygonHierarchy = options.polygonHierarchy;
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         var height = defaultValue(options.height, 0.0);
@@ -297,13 +302,6 @@ define([
             extrudedHeight = Math.min(h, height);
             height = Math.max(h, height);
         }
-        var polygonHierarchy = options.polygonHierarchy;
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(polygonHierarchy)) {
-            throw new DeveloperError('options.polygonHierarchy is required.');
-        }
-        //>>includeEnd('debug');
 
         this._ellipsoid = Ellipsoid.clone(ellipsoid);
         this._granularity = granularity;
@@ -318,7 +316,7 @@ define([
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
-        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + 5;
+        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + 6;
     };
 
     /**
@@ -350,17 +348,13 @@ define([
         array[startingIndex++] = value._extrudedHeight;
         array[startingIndex++] = value._granularity;
         array[startingIndex++] = value._extrude ? 1.0 : 0.0;
-        array[startingIndex] = value._perPositionHeight ? 1.0 : 0.0;
+        array[startingIndex++] = value._perPositionHeight ? 1.0 : 0.0;
+        array[startingIndex++] = value.packedLength;
     };
 
     var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
-    var scratchOptions = {
-        polygonHierarchy : undefined,
-        ellipsoid : scratchEllipsoid,
-        height : undefined,
-        extrudedHeight : undefined,
-        granularity : undefined,
-        perPositionHeight : undefined
+    var dummyOptions = {
+        polygonHierarchy : {}
     };
 
     /**
@@ -390,15 +384,11 @@ define([
         var extrudedHeight = array[startingIndex++];
         var granularity = array[startingIndex++];
         var extrude = array[startingIndex++] === 1.0;
-        var perPositionHeight = array[startingIndex] === 1.0;
+        var perPositionHeight = array[startingIndex++] === 1.0;
+        var packedLength = array[startingIndex++];
 
         if (!defined(result)) {
-            scratchOptions.polygonHierarchy = polygonHierarchy;
-            scratchOptions.height = height;
-            scratchOptions.extrudedHeight = extrudedHeight;
-            scratchOptions.granularity = granularity;
-            scratchOptions.perPositionHeight = perPositionHeight;
-            return new PolygonOutlineGeometry(scratchOptions);
+            result = new PolygonOutlineGeometry(dummyOptions);
         }
 
         result._polygonHierarchy = polygonHierarchy;
@@ -408,6 +398,7 @@ define([
         result._granularity = granularity;
         result._extrude = extrude;
         result._perPositionHeight = perPositionHeight;
+        result.packedLength = packedLength;
 
         return result;
     };

@@ -24,6 +24,7 @@ define([
         Property,
         when) {
     "use strict";
+    /*global console*/
 
     var defaultScale = 1.0;
     var defaultMinimumPixelSize = 0.0;
@@ -109,7 +110,7 @@ define([
                     url : uri
                 });
 
-                model.readyToRender.addEventListener(readyToRender, this);
+                model.readyPromise.then(onModelReady).otherwise(onModelError);
 
                 model.id = entity;
                 primitives.add(model);
@@ -223,17 +224,20 @@ define([
     function removeModel(visualizer, entity, modelHash, primitives) {
         var modelData = modelHash[entity.id];
         if (defined(modelData)) {
-            var model = modelData.modelPrimitive;
-            model.readyToRender.removeEventListener(readyToRender, visualizer);
-            primitives.removeAndDestroy(model);
+            primitives.removeAndDestroy(modelData.modelPrimitive);
             delete modelHash[entity.id];
         }
     }
 
-    function readyToRender(model) {
+    function onModelReady(model) {
         model.activeAnimations.addAll({
             loop : ModelAnimationLoop.REPEAT
         });
     }
+
+    function onModelError(error) {
+        console.error(error);
+    }
+
     return ModelVisualizer;
 });
