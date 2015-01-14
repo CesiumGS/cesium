@@ -347,6 +347,43 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('fromBoundingSpheres with undefined returns an empty sphere', function() {
+        var sphere = BoundingSphere.fromBoundingSpheres();
+        expect(sphere.center).toEqual(Cartesian3.ZERO);
+        expect(sphere.radius).toEqual(0.0);
+    });
+
+    it('fromBoundingSpheres with empty array returns an empty sphere', function() {
+        var sphere = BoundingSphere.fromBoundingSpheres([]);
+        expect(sphere.center).toEqual(Cartesian3.ZERO);
+        expect(sphere.radius).toEqual(0.0);
+    });
+
+    it('fromBoundingSpheres works with 1 sphere', function() {
+        var one = new BoundingSphere(new Cartesian3(1, 2, 3), 4);
+
+        var sphere = BoundingSphere.fromBoundingSpheres([one]);
+        expect(sphere).toEqual(one);
+    });
+
+    it('fromBoundingSpheres works with 2 spheres', function() {
+        var one = new BoundingSphere(new Cartesian3(1, 2, 3), 4);
+        var two = new BoundingSphere(new Cartesian3(5, 6, 7), 8);
+
+        var sphere = BoundingSphere.fromBoundingSpheres([one, two]);
+        expect(sphere).toEqual(BoundingSphere.union(one, two, new BoundingSphere()));
+    });
+
+    it('fromBoundingSpheres works with 3 spheres', function() {
+        var one = new BoundingSphere(new Cartesian3(0, 0, 0), 1);
+        var two = new BoundingSphere(new Cartesian3(0, 3, 0), 1);
+        var three = new BoundingSphere(new Cartesian3(0, 0, 4), 1);
+
+        var expected = new BoundingSphere(new Cartesian3(0.0, 1.5, 2.0), 3.5);
+        var sphere = BoundingSphere.fromBoundingSpheres([one, two, three]);
+        expect(sphere).toEqual(expected);
+    });
+
     it('sphere on the positive side of a plane', function() {
         var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
         var normal = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());

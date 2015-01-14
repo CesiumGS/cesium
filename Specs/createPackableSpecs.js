@@ -15,6 +15,13 @@ define(['Core/defined'], function(defined) {
             expect(packedArray).toEqual(packedInstance);
         });
 
+        it('can roundtrip', function() {
+            var packedArray = [];
+            packable.pack(instance, packedArray);
+            var result = packable.unpack(packedArray);
+            expect(instance).toEqual(result);
+        });
+
         it('can unpack', function() {
             var result = packable.unpack(packedInstance);
             expect(result).toEqual(instance);
