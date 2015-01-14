@@ -293,6 +293,8 @@ define([
         this._pickCommands = [];
 
         this._createGeometryResults = undefined;
+        this._ready = false;
+        this._readyPromise = when.defer();
     };
 
     defineProperties(Primitive.prototype, {
@@ -404,7 +406,19 @@ define([
          */
         ready : {
             get : function() {
-                return this._state === PrimitiveState.COMPLETE || this._state === PrimitiveState.FAILED;
+                return this._ready;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves when the primitive is ready to render.
+         * @memberof Primitive.prototype
+         * @type {Promise}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise;
             }
         }
     });
@@ -740,6 +754,13 @@ define([
                     for (i = 0; i < length; ++i) {
                         geometry = instances[i].geometry;
                         instanceIds.push(instances[i].id);
+
+                        //>>includeStart('debug', pragmas.debug);
+                        if (!defined(geometry._workerName)) {
+                            throw new DeveloperError('_workerName must be defined for asynchronous geometry.');
+                        }
+                        //>>includeEnd('debug');
+
                         subTasks.push({
                             moduleName : geometry._workerName,
                             geometry : geometry
@@ -795,9 +816,8 @@ define([
                     when.all(promises, function(results) {
                         that._createGeometryResults = results;
                         that._state = PrimitiveState.CREATED;
-                    }, function(error) {
-                        that._error = error;
-                        that._state = PrimitiveState.FAILED;
+                    }).otherwise(function(error) {
+                        setReady(that, frameState, PrimitiveState.FAILED, error);
                     });
                 } else if (this._state === PrimitiveState.CREATED) {
                     var transferableObjects = [];
@@ -847,9 +867,8 @@ define([
                         that._instanceIds = reorderedInstanceIds;
 
                         that._state = defined(that._geometries) ? PrimitiveState.COMBINED : PrimitiveState.FAILED;
-                    }, function(error) {
-                        that._error = error;
-                        that._state = PrimitiveState.FAILED;
+                    }).otherwise(function(error) {
+                        setReady(that, frameState, PrimitiveState.FAILED, error);
                     });
                 }
             } else {
@@ -911,7 +930,11 @@ define([
                     instanceIds.push(instance.id);
                 }
 
-                this._state = defined(this._geometries) ? PrimitiveState.COMBINED : PrimitiveState.FAILED;
+                if (defined(this._geometries)) {
+                    this._state = PrimitiveState.COMBINED;
+                } else {
+                    setReady(this, frameState, PrimitiveState.FAILED, undefined);
+                }
             }
         }
 
@@ -968,7 +991,7 @@ define([
             }
 
             this._geometries = undefined;
-            this._state = PrimitiveState.COMPLETE;
+            setReady(this, frameState, PrimitiveState.COMPLETE, undefined);
         }
 
         if (!this.show || this._state !== PrimitiveState.COMPLETE) {
@@ -1395,6 +1418,19 @@ define([
 
         return destroyObject(this);
     };
+
+    function setReady(primitive, frameState, state, error) {
+        primitive._error = error;
+        primitive._state = state;
+        frameState.afterRender.push(function() {
+            primitive._ready = primitive._state === PrimitiveState.COMPLETE || primitive._state === PrimitiveState.FAILED;
+            if (!defined(error)) {
+                primitive._readyPromise.resolve(primitive);
+            } else {
+                primitive._readyPromise.reject(error);
+            }
+        });
+    }
 
     return Primitive;
 });
