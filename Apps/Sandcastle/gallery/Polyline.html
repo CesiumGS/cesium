@@ -52,7 +52,7 @@ var glowingLine = viewer.entities.add({
     }
 });
 
-var orangeOutlined = viewer.entities.add({
+var orangeWithOutline = viewer.entities.add({
     name : 'Orange line with black outline at height and following the surface',
     polyline : {
         positions : Cesium.Cartesian3.fromDegreesArrayHeights([-75, 39, 250000,
@@ -75,8 +75,11 @@ var yellowLine = viewer.entities.add({
         followSurface : false,
         material : Cesium.Color.PURPLE
     }
-});//Sandcastle_End
-    Sandcastle.finishedLoading();
+});
+
+viewer.zoomTo([redLine, glowingLine, orangeWithOutline, yellowLine]);
+//Sandcastle_End
+Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
     startup(Cesium);

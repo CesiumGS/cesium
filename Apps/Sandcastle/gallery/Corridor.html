@@ -42,8 +42,7 @@ var redCorridor = viewer.entities.add({
         material : new Cesium.Color(1.0, 0.0, 0.0, 0.5),
         outline : true,
         outlineColor : Cesium.Color.RED
-    },
-    viewFrom : new Cesium.Cartesian3(0, -2000000.0, 2000000.0)
+    }
 });
 
 var greenCorridor = viewer.entities.add({
@@ -59,8 +58,7 @@ var greenCorridor = viewer.entities.add({
                                                     width : 200000.0,
         cornerType: Cesium.CornerType.MITERED,
         material : Cesium.Color.GREEN
-    },
-    viewFrom : new Cesium.Cartesian3(0, -2000000.0, 2000000.0)
+    }
 });
 
 var blueCorridor = viewer.entities.add({
@@ -79,11 +77,10 @@ var blueCorridor = viewer.entities.add({
         material : new Cesium.Color(0.0, 0.0, 1.0, 0.5),
         outline : true,
         outlineColor : Cesium.Color.BLUE
-    },
-    viewFrom : new Cesium.Cartesian3(0, -2000000.0, 2000000.0)
+    }
 });
 
-viewer.trackedEntity = greenCorridor;
+viewer.zoomTo([redCorridor, greenCorridor, blueCorridor]);
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

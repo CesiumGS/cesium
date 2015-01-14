@@ -35,8 +35,7 @@ var blueEllipsoid = viewer.entities.add({
     ellipsoid : {
         radii : new Cesium.Cartesian3(200000.0, 200000.0, 300000.0),
         material : Cesium.Color.BLUE
-    },
-    viewFrom : new Cesium.Cartesian3(0, -1500000.0, 400000.0)
+    }
 });
 
 var redSphere = viewer.entities.add({
@@ -47,8 +46,7 @@ var redSphere = viewer.entities.add({
         material : Cesium.Color.RED,
         outline : true,
         outlineColor : Cesium.Color.BLACK
-    },
-    viewFrom : new Cesium.Cartesian3(0, -1500000.0, 400000.0)
+    }
 });
 
 var outlineOnly = viewer.entities.add({
@@ -61,11 +59,10 @@ var outlineOnly = viewer.entities.add({
         outlineColor : Cesium.Color.YELLOW,
         slicePartitions : 24,
         stackPartitions : 36
-    },
-    viewFrom : new Cesium.Cartesian3(0, -1500000.0, 400000.0)
+    }
 });
 
-viewer.trackedEntity = redSphere;
+viewer.zoomTo([blueEllipsoid, redSphere, outlineOnly]);
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

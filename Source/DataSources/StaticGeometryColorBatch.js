@@ -5,14 +5,16 @@ define([
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defined',
         '../Core/ShowGeometryInstanceAttribute',
-        '../Scene/Primitive'
+        '../Scene/Primitive',
+        '../ThirdParty/when'
     ], function(
         AssociativeArray,
         Color,
         ColorGeometryInstanceAttribute,
         defined,
         ShowGeometryInstanceAttribute,
-        Primitive) {
+        Primitive,
+        when) {
     "use strict";
 
     var colorScratch = new Color();
@@ -127,6 +129,18 @@ define([
         return isUpdated;
     };
 
+    Batch.prototype.contains = function(entity) {
+        return this.updaters.contains(entity.id);
+    };
+
+    Batch.prototype.getBoundingSphere = function(entity) {
+        var that = this;
+        return when(this.primitive.readyPromise, function() {
+            var boundingSphere = that.primitive.getGeometryInstanceAttributes(entity).boundingSphere;
+            return defined(boundingSphere) ? boundingSphere.clone() : undefined;
+        });
+    };
+
     Batch.prototype.removeAllPrimitives = function() {
         var primitive = this.primitive;
         if (defined(primitive)) {
@@ -200,6 +214,11 @@ define([
     };
 
     StaticGeometryColorBatch.prototype.getBoundingSphere = function(entity) {
+        if (this._solidBatch.contains(entity)) {
+            return this._solidBatch.getBoundingSphere(entity);
+        } else if (this._translucentBatch.contains(entity)) {
+            return this._translucentBatch.getBoundingSphere(entity);
+        }
         return undefined;
     };
 

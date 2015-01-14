@@ -4,12 +4,14 @@ define([
         '../Core/defined',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/Primitive',
+        '../ThirdParty/when',
         './MaterialProperty'
     ], function(
         AssociativeArray,
         defined,
         ShowGeometryInstanceAttribute,
         Primitive,
+        when,
         MaterialProperty) {
     "use strict";
 
@@ -133,6 +135,18 @@ define([
         return isUpdated;
     };
 
+    Batch.prototype.contains = function(entity) {
+        return this.updaters.contains(entity.id);
+    };
+
+    Batch.prototype.getBoundingSphere = function(entity) {
+        var that = this;
+        return when(this.primitive.readyPromise, function() {
+            var boundingSphere = that.primitive.getGeometryInstanceAttributes(entity).boundingSphere;
+            return defined(boundingSphere) ? boundingSphere.clone() : undefined;
+        });
+    };
+
     Batch.prototype.destroy = function(time) {
         var primitive = this.primitive;
         var primitives = this.primitives;
@@ -208,6 +222,14 @@ define([
     };
 
     StaticGeometryPerMaterialBatch.prototype.getBoundingSphere = function(entity) {
+        var items = this._items;
+        var length = items.length;
+        for (var i = 0; i < length; i++) {
+            var item = items[i];
+            if(item.contains(entity)){
+                return item.getBoundingSphere(entity);
+            }
+        }
         return undefined;
     };
 
