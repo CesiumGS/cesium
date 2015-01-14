@@ -233,39 +233,6 @@ function addMarkerBillboards() {
     });
 }
 
-/*
-function inReferenceFrame() {
-    Sandcastle.declare(inReferenceFrame);
-
-    var billboards = scene.primitives.add(new Cesium.BillboardCollection());
-    var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
-    billboards.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-
-    var facilityUrl = '../images/facility.gif';
-
-    // center
-    billboards.add({
-        image : facilityUrl,
-        position : new Cesium.Cartesian3(0.0, 0.0, 0.0)
-    });
-    // east
-    billboards.add({
-        image : facilityUrl,
-        position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0)
-    });
-    // north
-    billboards.add({
-        image : facilityUrl,
-        position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0)
-    });
-    // up
-    billboards.add({
-        image : facilityUrl,
-        position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0)
-    });
-}
-*/
-
 Sandcastle.addToolbarMenu([{
     text : 'Add billboard',
     onselect : function() {
@@ -319,12 +286,6 @@ Sandcastle.addToolbarMenu([{
     onselect : function() {
         addMarkerBillboards();
         Sandcastle.highlight(addMarkerBillboards);
-    }
-}, {
-    text : 'Add billboards in reference frame',
-    onselect : function() {
-      //  inReferenceFrame();
-      //  Sandcastle.highlight(inReferenceFrame);
     }
 }]);
 
