@@ -46,7 +46,7 @@ function createModel(url, height, heading, pitch, roll) {
         minimumPixelSize : 128
     }));
 
-    model.readyToRender.addEventListener(function(model) {
+    model.readyPromise.then(function(model) {
         // Play and loop all animations at half-speed
         model.activeAnimations.addAll({
             speedup : 0.5,
@@ -62,6 +62,8 @@ function createModel(url, height, heading, pitch, roll) {
         var r = 2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
         controller.minimumZoomDistance = r * 0.5;
         camera.lookAt(new Cesium.Cartesian3(r, r, r), Cesium.Cartesian3.ZERO, Cesium.Cartesian3.UNIT_Z);
+    }).otherwise(function(error){
+        window.alert(error);
     });
 }
 
