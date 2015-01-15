@@ -174,17 +174,9 @@ define([
         }
 
         var model = modelData.modelPrimitive;
-        if (model.ready) {
-            return model.boundingSphere;
-        } else {
-            var deferred = when.defer();
-            var removeEvent = model.readyToRender.addEventListener(function() {
-                removeEvent();
-                deferred.resolve(BoundingSphere.transform(model.boundingSphere, model.modelMatrix));
-            });
-            return deferred;
-        }
-        return undefined;
+        return when(model.readyPromise, function() {
+            BoundingSphere.transform(model.boundingSphere, model.modelMatrix);
+        });
     };
 
     /**

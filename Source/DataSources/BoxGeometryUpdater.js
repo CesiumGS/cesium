@@ -580,7 +580,7 @@ define([
             attributes = primitive.getGeometryInstanceAttributes(entity);
             tmp = attributes.boundingSphere;
             if (defined(tmp)) {
-                boundingSphere = tmp.clone();
+                boundingSphere = BoundingSphere.transform(tmp, primitive.modelMatrix);
             }
         }
 
@@ -589,7 +589,8 @@ define([
             attributes = outline.getGeometryInstanceAttributes(entity);
             tmp = attributes.boundingSphere;
             if (defined(tmp)) {
-                boundingSphere = defined(boundingSphere) ? BoundingSphere.union(tmp, boundingSphere, boundingSphere) : tmp.clone();
+                tmp = BoundingSphere.transform(tmp, outline.modelMatrix);
+                boundingSphere = defined(boundingSphere) ? BoundingSphere.union(tmp, boundingSphere, boundingSphere) : tmp;
             }
         }
 

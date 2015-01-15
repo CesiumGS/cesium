@@ -134,9 +134,9 @@ define([
     };
 
     Batch.prototype.getBoundingSphere = function(entity) {
-        var that = this;
-        return when(this.primitive.readyPromise, function() {
-            var boundingSphere = that.primitive.getGeometryInstanceAttributes(entity).boundingSphere;
+        var primitive = this.primitive;
+        return when(primitive.readyPromise, function() {
+            var boundingSphere = primitive.getGeometryInstanceAttributes(entity).boundingSphere;
             return defined(boundingSphere) ? boundingSphere.clone() : undefined;
         });
     };
