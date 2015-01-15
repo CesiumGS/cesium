@@ -29,7 +29,7 @@ function startup(Cesium) {
 //Sandcastle_Begin
 Cesium.Math.setRandomNumberSeed(1234);
 
-var viewer = new Cesium.Viewer('cesiumContainer');
+var viewer = new Cesium.Viewer('cesiumContainer', { infoBox : false });
 var entities = viewer.entities;
 
 var i;
@@ -486,6 +486,8 @@ entities.add({
         material : Cesium.Color.WHITE
     }
 });
+
+viewer.zoomTo(viewer.entities.entities);
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

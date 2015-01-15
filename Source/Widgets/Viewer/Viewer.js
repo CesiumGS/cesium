@@ -565,6 +565,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         // Prior to each render, check if anything needs to be resized.
         eventHelper.add(cesiumWidget.scene.preRender, Viewer.prototype.resize, this);
+        eventHelper.add(cesiumWidget.scene.postRender, Viewer.prototype._postRender, this);
 
         // We need to subscribe to the data sources and collections so that we can clear the
         // tracked object when it is removed from the scene.
@@ -955,24 +956,47 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             set : function(value) {
                 if (this._trackedEntity !== value) {
                     this._trackedEntity = value;
+
+                    //Cancel any pending zoom
+                    this._zoomDefer = undefined;
+                    this._entitiesForZoom = undefined;
+
                     var scene = this.scene;
                     var sceneMode = scene.mode;
-                    var isTracking = defined(value);
 
-                    if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
-                        scene.screenSpaceCameraController.enableTranslate = !isTracking;
-                    }
+                    if (!defined(value) || !defined(value.position)) {
+                        if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
+                            scene.screenSpaceCameraController.enableTranslate = true;
+                        }
 
-                    if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE3D) {
-                        scene.screenSpaceCameraController.enableTilt = !isTracking;
-                    }
+                        if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE3D) {
+                            scene.screenSpaceCameraController.enableTilt = true;
+                        }
 
-                    if (isTracking && defined(value.position)) {
-                        this._entityView = new EntityView(value, scene, this.scene.globe.ellipsoid);
-                    } else {
                         this._entityView = undefined;
                         this.camera.setTransform(Matrix4.IDENTITY);
+                        return;
                     }
+
+                    var that = this;
+                    var removeEvent = this.cesiumWidget.scene.postRender.addEventListener(function() {
+                        removeEvent();
+                        when(that._dataSourceDisplay.getBoundingSphere(value), function(boundingSphere) {
+                            if (value !== that._trackedEntity) {
+                                return;
+                            }
+
+                            if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
+                                scene.screenSpaceCameraController.enableTranslate = false;
+                            }
+
+                            if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE3D) {
+                                scene.screenSpaceCameraController.enableTilt = false;
+                            }
+
+                            that._entityView = new EntityView(value, scene, scene.globe.ellipsoid, boundingSphere);
+                        });
+                    });
                 }
             }
         },
@@ -1406,46 +1430,60 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         }
     };
 
-    function viewSphere3D(camera, controller, sphere) {
-        var transform = Transforms.eastNorthUpToFixedFrame(sphere.center);
-        camera.transform = transform;
-        var r = 2.0 * Math.max(sphere.radius, camera.frustum.near);
-        controller.minimumZoomDistance = Math.min(controller.minimumZoomDistance, r * 0.5);
-        camera.lookAt(new Cartesian3(0, -r, r), Cartesian3.ZERO, Cartesian3.UNIT_Z);
-        camera.setTransform(Matrix4.IDENTITY);
-    }
-
     /**
      * Performs a one-time zoom to the provided entity.
      * @param entity
      * @returns {Promise} A Promise that evalutes to true if the zoom was successful or false if the entity is not currently visualized in the scene.
      */
     Viewer.prototype.zoomTo = function(entity) {
-        this._dataSourceDisplay.update(this.clock.currentTime);
-        this.render();
-
-        var that = this;
+        this._zoomDefer = when.defer();
         if (isArray(entity)) {
-            var promises = [];
-            for (var i = 0, len = entity.length; i < len; i++) {
-                promises.push(this._dataSourceDisplay.getBoundingSphere(entity[i]));
-            }
-            return when.all(promises, function(boundingSpheres) {
-                boundingSpheres = boundingSpheres.filter(defined);
-                if (boundingSpheres.length === 0) {
-                    return false;
-                }
-                viewSphere3D(that.camera, that.scene.screenSpaceCameraController, BoundingSphere.fromBoundingSpheres(boundingSpheres));
-                return true;
-            });
+            this._entitiesForZoom = entity.slice(0);
+        } else {
+            this._entitiesForZoom = [entity];
+        }
+        return this._zoomDefer;
+    };
+
+    /**
+     * @private
+     */
+    Viewer.prototype._postRender = function() {
+        var deferred = this._zoomDefer;
+        if (!defined(deferred)) {
+            return;
+        }
+        this._zoomDefer = undefined;
+        var entities = this._entitiesForZoom;
+
+        var promises = [];
+        for (var i = 0, len = entities.length; i < len; i++) {
+            promises.push(this._dataSourceDisplay.getBoundingSphere(entities[i]));
         }
 
-        return when(this._dataSourceDisplay.getBoundingSphere(entity), function(boundingSphere) {
-            if (!defined(boundingSphere)) {
-                return false;
+        var that = this;
+        when.all(promises, function(boundingSpheres) {
+            //If another zoom has been scheduled since this one, just return
+            if (entities !== that._entitiesForZoom) {
+                deferred.resolve(false);
+                return;
             }
-            viewSphere3D(that.camera, that.scene.screenSpaceCameraController, boundingSphere);
-            return true;
+
+            boundingSpheres = boundingSpheres.filter(defined);
+            if (boundingSpheres.length === 0) {
+                deferred.resolve(false);
+                return;
+            }
+
+            //Stop tracking the current entity.
+            that.trackedEntity = undefined;
+
+            //Set camera
+            var sphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
+            var controller = that.scene.screenSpaceCameraController;
+            controller.minimumZoomDistance = Math.min(controller.minimumZoomDistance, sphere.radius * 0.5);
+            that.scene.camera.viewBoundingSphere(sphere, false);
+            deferred.resolve(true);
         });
     };
 

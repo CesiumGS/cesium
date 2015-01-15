@@ -1527,6 +1527,16 @@ define([
         });
     };
 
+    Camera.prototype.viewBoundingSphere = function(sphere, track) {
+        var transform = Transforms.eastNorthUpToFixedFrame(sphere.center);
+        this.transform = transform;
+        var r = 2.0 * Math.max(sphere.radius, this.frustum.near);
+        this.lookAt(new Cartesian3(0, -r, r), Cartesian3.ZERO, Cartesian3.UNIT_Z);
+        if(!track){
+            this.setTransform(Matrix4.IDENTITY);
+        }
+    };
+
     /**
      * Sets the camera position and orientation with an eye position, target, and up vector.
      * This method is not supported in 2D mode because there is only one direction to look.

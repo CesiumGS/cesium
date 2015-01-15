@@ -230,9 +230,10 @@ define([
     };
 
     /**
+     * Returns true if an entity with the provided id is in the collection, false otherwise.
      *
-     * @param id
-     * @returns
+     * @param id The entity identifier.
+     * @returns {Boolean} true if an entity with the provided id is in the collection, false otherwise.
      */
     EntityCollection.prototype.containsId = function(id) {
         //>>includeStart('debug', pragmas.debug);

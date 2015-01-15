@@ -35,9 +35,16 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 function createModel(url, height) {
     viewer.entities.removeAll();
 
+    var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height);
+    var heading = Cesium.Math.toRadians(135);
+    var pitch = 0;
+    var roll = 0;
+    var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, heading, pitch, roll);
+
     var entity = viewer.entities.add({
         name : url,
-        position : Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height),
+        position : position,
+        orientation : orientation,
         model : {
             uri : url,
             minimumPixelSize : 128

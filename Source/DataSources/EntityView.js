@@ -9,6 +9,7 @@ define([
         '../Core/JulianDate',
         '../Core/Math',
         '../Core/Matrix3',
+        '../Core/Matrix4',
         '../Core/Transforms',
         '../Scene/SceneMode'
     ], function(
@@ -21,6 +22,7 @@ define([
         JulianDate,
         CesiumMath,
         Matrix3,
+        Matrix4,
         Transforms,
         SceneMode) {
     "use strict";
@@ -167,7 +169,10 @@ define([
      * @param {Scene} scene The scene to use.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use for orienting the camera.
      */
-    var EntityView = function(entity, scene, ellipsoid) {
+    var EntityView = function(entity, scene, ellipsoid, boundingSphere) {
+
+        this._boundingSphere = boundingSphere;
+
         /**
          * The entity to track with the camera.
          * @type {Entity}
@@ -265,9 +270,16 @@ define([
         var up2D = this._up2D;
         var camera = scene.camera;
 
+        var updateLookAt = objectChanged || sceneModeChanged;
         if (objectChanged) {
             var viewFromProperty = entity.viewFrom;
-            if (!defined(viewFromProperty) || !defined(viewFromProperty.getValue(time, offset3D))) {
+            var sphere = this._boundingSphere;
+            if (defined(sphere)) {
+                var controller = scene.screenSpaceCameraController;
+                controller.minimumZoomDistance = Math.min(controller.minimumZoomDistance, sphere.radius * 0.5);
+                camera.viewBoundingSphere(sphere, true);
+                updateLookAt = false;
+            } else if (!defined(viewFromProperty) || !defined(viewFromProperty.getValue(time, offset3D))) {
                 Cartesian3.clone(EntityView._defaultOffset2D, offset2D);
                 Cartesian3.clone(EntityView._defaultUp2D, up2D);
                 Cartesian3.clone(EntityView._defaultOffset3D, offset3D);
@@ -292,7 +304,6 @@ define([
             }
         }
 
-        var updateLookAt = objectChanged || sceneModeChanged;
         this._lastEntity = entity;
         this._mode = scene.mode !== SceneMode.MORPHING ? scene.mode : this._mode;
 
