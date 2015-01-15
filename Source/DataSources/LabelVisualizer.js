@@ -13,6 +13,7 @@ define([
         '../Scene/LabelCollection',
         '../Scene/LabelStyle',
         '../Scene/VerticalOrigin',
+        './AsyncState',
         './Property'
     ], function(
         AssociativeArray,
@@ -28,6 +29,7 @@ define([
         LabelCollection,
         LabelStyle,
         VerticalOrigin,
+        AsyncState,
         Property) {
     "use strict";
 
@@ -168,31 +170,36 @@ define([
      * @param {Entity} entity The entity whose bounding sphere to retrieve.
      * @returns {BoundingSphere} The bounding sphere of the label representing the provided entity, or undefined if the entity is not currently visible.
      */
-    LabelVisualizer.prototype.getBoundingSphere = function(entity) {
+    LabelVisualizer.prototype.getBoundingSphere = function(entity, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(entity)) {
             throw new DeveloperError('entity is required.');
         }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required.');
+        }
         //>>includeEnd('debug');
 
         var item = this._items.get(entity.id);
-        if (!defined(item) || !defined(item.label)) {
-            return undefined;
+        if (!defined(item) || !defined(item.billboard)) {
+            return AsyncState.FAILED;
         }
-
-        var boundingSphere;
 
         var label = item.label;
         var glyphs = label._glyphs;
-        var positions = [];
+
+        //Currently labels all have the same position and we are not approximating
+        //eye offset, so just return the position of the first label.
         for (var i = 0, len = glyphs.length; i < len; i++) {
             var glyph = glyphs[i];
             if (defined(glyph.billboard)) {
-                positions.push(glyph.billboard.position);
+                Cartesian3.clone(glyph.billboard.position, result.center);
+                result.radius = 0;
+                return AsyncState.COMPLETED;
             }
         }
 
-        return positions.length > 0 ? BoundingSphere.fromPoints(positions) : undefined;
+        return AsyncState.FAILED;
     };
 
     /**

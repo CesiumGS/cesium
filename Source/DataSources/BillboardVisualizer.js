@@ -13,6 +13,7 @@ define([
         '../Scene/BillboardCollection',
         '../Scene/HorizontalOrigin',
         '../Scene/VerticalOrigin',
+        './AsyncState',
         './Property'
     ], function(
         AssociativeArray,
@@ -28,6 +29,7 @@ define([
         BillboardCollection,
         HorizontalOrigin,
         VerticalOrigin,
+        AsyncState,
         Property) {
     "use strict";
 
@@ -169,19 +171,24 @@ define([
      * @param {Entity} entity The entity whose bounding sphere to retrieve.
      * @returns {BoundingSphere} The bounding sphere of the billboard representing the provided entity, or undefined if the entity is not currently visible.
      */
-    BillboardVisualizer.prototype.getBoundingSphere = function(entity) {
+    BillboardVisualizer.prototype.getBoundingSphere = function(entity, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(entity)) {
             throw new DeveloperError('entity is required.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required.');
         }
         //>>includeEnd('debug');
 
         var item = this._items.get(entity.id);
         if (!defined(item) || !defined(item.billboard)) {
-            return undefined;
+            return AsyncState.FAILED;
         }
 
-        return new BoundingSphere(item.billboard.position);
+        Cartesian3.clone(item.billboard.position, result.center);
+        result.radius = 0;
+        return AsyncState.COMPLETED;
     };
 
     /**

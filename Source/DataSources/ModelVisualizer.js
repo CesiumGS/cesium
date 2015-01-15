@@ -9,7 +9,7 @@ define([
         '../Core/Matrix4',
         '../Scene/Model',
         '../Scene/ModelAnimationLoop',
-        '../ThirdParty/when',
+        './AsyncState',
         './Property'
     ], function(
         AssociativeArray,
@@ -21,7 +21,7 @@ define([
         Matrix4,
         Model,
         ModelAnimationLoop,
-        when,
+        AsyncState,
         Property) {
     "use strict";
     /*global console*/
@@ -161,22 +161,28 @@ define([
      *                                   a BoundingSphere if the model is loaded,
      *                                   or undefined if no model exists for the provided entity.
      */
-    ModelVisualizer.prototype.getBoundingSphere = function(entity) {
+    ModelVisualizer.prototype.getBoundingSphere = function(entity, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(entity)) {
             throw new DeveloperError('entity is required.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required.');
         }
         //>>includeEnd('debug');
 
         var modelData = this._modelHash[entity.id];
         if (!defined(modelData) || !defined(modelData.modelPrimitive)) {
-            return undefined;
+            return AsyncState.FAILED;
         }
 
         var model = modelData.modelPrimitive;
-        return when(model.readyPromise, function() {
-            return BoundingSphere.transform(model.boundingSphere, model.modelMatrix);
-        });
+        if (!model.ready) {
+            return AsyncState.PENDING;
+        }
+
+        BoundingSphere.transform(model.boundingSphere, model.modelMatrix, result);
+        return AsyncState.COMPLETED;
     };
 
     /**

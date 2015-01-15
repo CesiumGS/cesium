@@ -13,6 +13,7 @@ define([
         '../Core/Transforms',
         '../Scene/PolylineCollection',
         '../Scene/SceneMode',
+        './AsyncState',
         './CompositePositionProperty',
         './ConstantPositionProperty',
         './MaterialProperty',
@@ -34,6 +35,7 @@ define([
         Transforms,
         PolylineCollection,
         SceneMode,
+        AsyncState,
         CompositePositionProperty,
         ConstantPositionProperty,
         MaterialProperty,
@@ -484,8 +486,8 @@ define([
      * @param {Entity} entity The entity whose bounding sphere to retrieve.
      * @returns undefined;
      */
-    PathVisualizer.prototype.getBoundingSphere = function(entity){
-        return undefined;
+    PathVisualizer.prototype.getBoundingSphere = function(entity, result) {
+        return AsyncState.FAILED;
     };
 
     /**

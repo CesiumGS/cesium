@@ -44,7 +44,7 @@ define([
 
         if (defined(cartesian)) {
             if(defined(that._boundingSphereOffset)){
-                Cartesian3.add(that._boundingSphereOffset, cartesian, cartesian);
+                //Cartesian3.add(that._boundingSphereOffset, cartesian, cartesian);
             }
 
             var hasBasis = false;

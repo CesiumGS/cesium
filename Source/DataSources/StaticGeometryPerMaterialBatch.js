@@ -4,14 +4,14 @@ define([
         '../Core/defined',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/Primitive',
-        '../ThirdParty/when',
+        './AsyncState',
         './MaterialProperty'
     ], function(
         AssociativeArray,
         defined,
         ShowGeometryInstanceAttribute,
         Primitive,
-        when,
+        AsyncState,
         MaterialProperty) {
     "use strict";
 
@@ -139,12 +139,17 @@ define([
         return this.updaters.contains(entity.id);
     };
 
-    Batch.prototype.getBoundingSphere = function(entity) {
-        var that = this;
-        return when(this.primitive.readyPromise, function() {
-            var boundingSphere = that.primitive.getGeometryInstanceAttributes(entity).boundingSphere;
-            return defined(boundingSphere) ? boundingSphere.clone() : undefined;
-        });
+    Batch.prototype.getBoundingSphere = function(entity, result) {
+        var primitive = this.primitive;
+        if (!primitive.ready) {
+            return AsyncState.PENDING;
+        }
+        var attributes = primitive.getGeometryInstanceAttributes(entity);
+        if(!defined(attributes) || !defined(attributes.boundingSphere)) {
+            return AsyncState.FAILED;
+        }
+        attributes.boundingSphere.clone(result);
+        return AsyncState.COMPLETED;
     };
 
     Batch.prototype.destroy = function(time) {
@@ -221,16 +226,16 @@ define([
         return isUpdated;
     };
 
-    StaticGeometryPerMaterialBatch.prototype.getBoundingSphere = function(entity) {
+    StaticGeometryPerMaterialBatch.prototype.getBoundingSphere = function(entity, result) {
         var items = this._items;
         var length = items.length;
         for (var i = 0; i < length; i++) {
             var item = items[i];
             if(item.contains(entity)){
-                return item.getBoundingSphere(entity);
+                return item.getBoundingSphere(entity, result);
             }
         }
-        return undefined;
+        return AsyncState.FAILED;
     };
 
     StaticGeometryPerMaterialBatch.prototype.removeAllPrimitives = function() {

@@ -580,8 +580,8 @@ define([
         }
     };
 
-    DynamicGeometryUpdater.prototype.getBoundingSphere = function(entity) {
-        return dynamicGeometryGetBoundingSphere(entity, this._primitive, this._outlinePrimitive);
+    DynamicGeometryUpdater.prototype.getBoundingSphere = function(entity, result) {
+        return dynamicGeometryGetBoundingSphere(entity, this._primitive, this._outlinePrimitive, result);
     };
 
     DynamicGeometryUpdater.prototype.isDestroyed = function() {

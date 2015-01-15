@@ -6,7 +6,7 @@ define([
         '../Core/defined',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/Primitive',
-        '../ThirdParty/when'
+        './AsyncState'
     ], function(
         AssociativeArray,
         Color,
@@ -14,7 +14,7 @@ define([
         defined,
         ShowGeometryInstanceAttribute,
         Primitive,
-        when) {
+        AsyncState) {
     "use strict";
 
     var colorScratch = new Color();
@@ -133,12 +133,17 @@ define([
         return this.updaters.contains(entity.id);
     };
 
-    Batch.prototype.getBoundingSphere = function(entity) {
+    Batch.prototype.getBoundingSphere = function(entity, result) {
         var primitive = this.primitive;
-        return when(primitive.readyPromise, function() {
-            var boundingSphere = primitive.getGeometryInstanceAttributes(entity).boundingSphere;
-            return defined(boundingSphere) ? boundingSphere.clone() : undefined;
-        });
+        if (!primitive.ready) {
+            return AsyncState.PENDING;
+        }
+        var attributes = primitive.getGeometryInstanceAttributes(entity);
+        if(!defined(attributes) || !defined(attributes.boundingSphere)) {
+            return AsyncState.FAILED;
+        }
+        attributes.boundingSphere.clone(result);
+        return AsyncState.COMPLETED;
     };
 
     Batch.prototype.removeAllPrimitives = function() {
@@ -213,13 +218,13 @@ define([
         return isUpdated;
     };
 
-    StaticGeometryColorBatch.prototype.getBoundingSphere = function(entity) {
+    StaticGeometryColorBatch.prototype.getBoundingSphere = function(entity, result) {
         if (this._solidBatch.contains(entity)) {
-            return this._solidBatch.getBoundingSphere(entity);
+            return this._solidBatch.getBoundingSphere(entity, result);
         } else if (this._translucentBatch.contains(entity)) {
-            return this._translucentBatch.getBoundingSphere(entity);
+            return this._translucentBatch.getBoundingSphere(entity, result);
         }
-        return undefined;
+        return AsyncState.FAILED;
     };
 
     StaticGeometryColorBatch.prototype.removeAllPrimitives = function() {

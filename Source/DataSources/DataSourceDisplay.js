@@ -9,6 +9,7 @@ define([
         '../Core/DeveloperError',
         '../Core/EventHelper',
         '../ThirdParty/when',
+        './AsyncState',
         './BillboardVisualizer',
         './BoxGeometryUpdater',
         './CorridorGeometryUpdater',
@@ -36,6 +37,7 @@ define([
         DeveloperError,
         EventHelper,
         when,
+        AsyncState,
         BillboardVisualizer,
         BoxGeometryUpdater,
         CorridorGeometryUpdater,
@@ -273,7 +275,12 @@ define([
     /**
      * @private
      */
-    DataSourceDisplay.prototype.getBoundingSphere = function(entity, dataSource) {
+    DataSourceDisplay.prototype.getBoundingSphere = function(options) {
+        var entity = options.entity;
+        var dataSource = options.dataSource;
+        var result = options.result;
+        var requireComplete = options.requireComplete;
+
         var i;
         var length;
         if (!defined(dataSource)) {
@@ -293,28 +300,31 @@ define([
         }
 
         if (!defined(dataSource)) {
-            return undefined;
+            return AsyncState.FAILED;
         }
 
-        var promises = [];
+        var boundingSpheres = [];
         var visualizers = dataSource._visualizers;
         length = visualizers.length;
         for (i = 0; i < length; i++) {
             var visualizer = visualizers[i];
+            var tmp = new BoundingSphere();
             if (defined(visualizer.getBoundingSphere)) {
-                promises.push(visualizer.getBoundingSphere(entity));
+                var state = visualizer.getBoundingSphere(entity, tmp);
+                if (requireComplete && state === AsyncState.PENDING) {
+                    return AsyncState.PENDING;
+                } else if (state === AsyncState.COMPLETED) {
+                    boundingSpheres.push(tmp);
+                }
             }
         }
 
-        var that = this;
-        return when.all(promises).then(function(boundingSpheres) {
-            boundingSpheres = boundingSpheres.filter(defined);
+        if (boundingSpheres.length === 0) {
+            return AsyncState.FAILED;
+        }
 
-            if (boundingSpheres.length === 0) {
-                return undefined;
-            }
-            return BoundingSphere.fromBoundingSpheres(boundingSpheres);
-        });
+        result = BoundingSphere.fromBoundingSpheres(boundingSpheres, result);
+        return AsyncState.COMPLETED;
     };
 
     DataSourceDisplay.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {

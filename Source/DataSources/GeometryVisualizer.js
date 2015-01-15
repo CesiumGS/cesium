@@ -6,6 +6,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../ThirdParty/when',
+        './AsyncState',
         './ColorMaterialProperty',
         './StaticGeometryColorBatch',
         './StaticGeometryPerMaterialBatch',
@@ -17,6 +18,7 @@ define([
         destroyObject,
         DeveloperError,
         when,
+        AsyncState,
         ColorMaterialProperty,
         StaticGeometryColorBatch,
         StaticGeometryPerMaterialBatch,
@@ -59,12 +61,12 @@ define([
         this._dynamicUpdaters.removeAll();
     };
 
-    DynamicGeometryBatch.prototype.getBoundingSphere = function(entity) {
+    DynamicGeometryBatch.prototype.getBoundingSphere = function(entity, result) {
         var updater = this._dynamicUpdaters.get(entity.id);
         if (defined(updater) && defined(updater.getBoundingSphere)) {
-            return updater.getBoundingSphere(entity);
+            return updater.getBoundingSphere(entity, result);
         }
-        return undefined;
+        return AsyncState.FAILED;
     };
 
     function removeUpdater(that, updater) {
@@ -142,6 +144,7 @@ define([
         this._openColorBatch = new StaticGeometryColorBatch(primitives, type.perInstanceColorAppearanceType, false);
         this._openMaterialBatch = new StaticGeometryPerMaterialBatch(primitives, type.materialAppearanceType, false);
         this._dynamicBatch = new DynamicGeometryBatch(primitives);
+        this._batches = [this._closedColorBatch, this._closedMaterialBatch, this._openColorBatch, this._openMaterialBatch, this._dynamicBatch, this._outlineBatch];
 
         this._subscriptions = new AssociativeArray();
         this._updaters = new AssociativeArray();
@@ -210,12 +213,13 @@ define([
         removedObjects.removeAll();
         changedObjects.removeAll();
 
-        var isUpdated = this._closedColorBatch.update(time);
-        isUpdated = this._closedMaterialBatch.update(time) && isUpdated;
-        isUpdated = this._openColorBatch.update(time) && isUpdated;
-        isUpdated = this._openMaterialBatch.update(time) && isUpdated;
-        isUpdated = this._dynamicBatch.update(time) && isUpdated;
-        isUpdated = this._outlineBatch.update(time) && isUpdated;
+        var isUpdated = true;
+        var batches = this._batches;
+        var length = batches.length;
+        for (i = 0; i < length; i++) {
+            isUpdated = batches[i].update(time) && isUpdated;
+        }
+
         return isUpdated;
     };
 
@@ -227,23 +231,39 @@ define([
      *                                   a BoundingSphere if the model is loaded,
      *                                   or undefined if no model exists for the provided entity.
      */
-    GeometryVisualizer.prototype.getBoundingSphere = function(entity) {
+    GeometryVisualizer.prototype.getBoundingSphere = function(entity, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(entity)) {
             throw new DeveloperError('entity is required.');
         }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required.');
+        }
         //>>includeEnd('debug');
 
-        return when.all([this._closedColorBatch.getBoundingSphere(entity), this._closedMaterialBatch.getBoundingSphere(entity), //
-                         this._openColorBatch.getBoundingSphere(entity), this._openMaterialBatch.getBoundingSphere(entity), //
-                         this._dynamicBatch.getBoundingSphere(entity), this._outlineBatch.getBoundingSphere(entity)], function(boundingSpheres) {
-            boundingSpheres = boundingSpheres.filter(defined);
+        var boundingSpheres = [];
 
-            if (boundingSpheres.length === 0) {
-                return undefined;
+        var resultState;
+        var state = AsyncState.COMPLETED;
+        var batches = this._batches;
+        var tmp = new BoundingSphere();
+
+        for (var i = 0, length = batches.length; i < length; i++) {
+            state = batches[i].getBoundingSphere(entity, tmp);
+            if (state === AsyncState.PENDING) {
+                return AsyncState.PENDING;
+            } else if (state === AsyncState.COMPLETED) {
+                boundingSpheres.push(tmp);
+                tmp = new BoundingSphere();
             }
-            return BoundingSphere.fromBoundingSpheres(boundingSpheres);
-        });
+        }
+
+        if (boundingSpheres.length === 0) {
+            return AsyncState.FAILED;
+        }
+
+        BoundingSphere.fromBoundingSpheres(boundingSpheres, result);
+        return AsyncState.COMPLETED;
     };
 
     /**

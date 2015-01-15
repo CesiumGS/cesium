@@ -18,6 +18,7 @@ define([
         '../Scene/PolylineCollection',
         '../Scene/PolylineColorAppearance',
         '../Scene/PolylineMaterialAppearance',
+        './AsyncState',
         './ColorMaterialProperty',
         './ConstantProperty',
         './MaterialProperty',
@@ -41,6 +42,7 @@ define([
         PolylineCollection,
         PolylineColorAppearance,
         PolylineMaterialAppearance,
+        AsyncState,
         ColorMaterialProperty,
         ConstantProperty,
         MaterialProperty,
@@ -482,8 +484,12 @@ define([
         line.width = Property.getValueOrDefault(polyline._width, time, 1);
     };
 
-    DynamicGeometryUpdater.prototype.getBoundingSphere = function(entity) {
-        return this._line.show ? BoundingSphere.fromPoints(this._line.positions) : undefined;
+    DynamicGeometryUpdater.prototype.getBoundingSphere = function(entity, result) {
+        if (this._line.show && this._line.positions.length > 0) {
+            BoundingSphere.fromPoints(this._line.positions, result);
+            return AsyncState.COMPLETED;
+        }
+        return AsyncState.FAILED;
     };
 
     DynamicGeometryUpdater.prototype.isDestroyed = function() {

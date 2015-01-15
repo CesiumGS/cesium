@@ -2,45 +2,59 @@
 define([
         '../Core/BoundingSphere',
         '../Core/defined',
-        '../Core/DeveloperError'
+        '../Core/DeveloperError',
+        './AsyncState'
     ], function(
         BoundingSphere,
         defined,
-        DeveloperError) {
+        DeveloperError,
+        AsyncState) {
     "use strict";
 
+    var primitiveBSScratch = new BoundingSphere();
+    var primitiveBSScratch2 = new BoundingSphere();
     /**
      * @private
      */
-    var dynamicGeometryGetBoundingSphere = function(entity, primitive, outlinePrimitive) {
+    var dynamicGeometryGetBoundingSphere = function(entity, primitive, outlinePrimitive, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(entity)) {
             throw new DeveloperError('entity is required.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required.');
         }
         //>>includeEnd('debug');
 
         var attributes;
 
-        var tmp;
         var boundingSphere;
         if (defined(primitive) && primitive.show) {
             attributes = primitive.getGeometryInstanceAttributes(entity);
-            tmp = attributes.boundingSphere;
-            if (defined(tmp)) {
-                boundingSphere = BoundingSphere.transform(tmp, primitive.modelMatrix);
+            if (defined(attributes) && defined(attributes.boundingSphere)) {
+                boundingSphere = BoundingSphere.transform(attributes.boundingSphere, primitive.modelMatrix, primitiveBSScratch);
             }
         }
 
+        var boundingSphere2;
         if (defined(outlinePrimitive) && outlinePrimitive.show) {
             attributes = outlinePrimitive.getGeometryInstanceAttributes(entity);
-            tmp = attributes.boundingSphere;
-            if (defined(tmp)) {
-                tmp = BoundingSphere.transform(tmp, outlinePrimitive.modelMatrix);
-                boundingSphere = defined(boundingSphere) ? BoundingSphere.union(tmp, boundingSphere, boundingSphere) : tmp;
+            if (defined(attributes) && defined(attributes.boundingSphere)) {
+                boundingSphere2 = BoundingSphere.transform(attributes.boundingSphere, outlinePrimitive.modelMatrix, primitiveBSScratch2);
             }
         }
 
-        return boundingSphere;
+        if (defined(boundingSphere) && defined(boundingSphere2)) {
+            BoundingSphere.union(boundingSphere, boundingSphere2, result);
+        } else if (defined(boundingSphere)) {
+            BoundingSphere.clone(boundingSphere, result);
+        } else if (defined(boundingSphere2)) {
+            BoundingSphere.clone(boundingSphere2, result);
+        } else {
+            return AsyncState.FAILED;
+        }
+
+        return AsyncState.COMPLETED;
     };
 
     return dynamicGeometryGetBoundingSphere;

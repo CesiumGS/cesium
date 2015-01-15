@@ -12,6 +12,7 @@ define([
         '../../Core/Matrix4',
         '../../Core/ScreenSpaceEventType',
         '../../Core/Transforms',
+        '../../DataSources/AsyncState',
         '../../DataSources/ConstantPositionProperty',
         '../../DataSources/DataSourceCollection',
         '../../DataSources/DataSourceDisplay',
@@ -50,6 +51,7 @@ define([
         Matrix4,
         ScreenSpaceEventType,
         Transforms,
+        AsyncState,
         ConstantPositionProperty,
         DataSourceCollection,
         DataSourceDisplay,
@@ -958,8 +960,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                     this._trackedEntity = value;
 
                     //Cancel any pending zoom
-                    this._zoomDefer = undefined;
-                    this._entitiesForZoom = undefined;
+                    cancelZoom(this);
 
                     var scene = this.scene;
                     var sceneMode = scene.mode;
@@ -979,23 +980,39 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                     }
 
                     var that = this;
+                    var boundingSphere = new BoundingSphere();
+
                     var removeEvent = this.cesiumWidget.scene.postRender.addEventListener(function() {
-                        removeEvent();
-                        when(that._dataSourceDisplay.getBoundingSphere(value), function(boundingSphere) {
-                            if (value !== that._trackedEntity) {
-                                return;
-                            }
+                        var trackedEntity = that._trackedEntity;
 
-                            if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
-                                scene.screenSpaceCameraController.enableTranslate = false;
-                            }
+                        if (trackedEntity !== value) {
+                            removeEvent();
+                            return;
+                        }
 
-                            if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE3D) {
-                                scene.screenSpaceCameraController.enableTilt = false;
-                            }
-
-                            that._entityView = new EntityView(value, scene, scene.globe.ellipsoid, boundingSphere);
+                        var state = that._dataSourceDisplay.getBoundingSphere({
+                            entity : trackedEntity,
+                            result : boundingSphere,
+                            requireComplete : true
                         });
+
+                        if (state === AsyncState.PENDING) {
+                            return;
+                        } else if (state === AsyncState.FAILED) {
+                            removeEvent();
+                            return;
+                        }
+
+                        if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
+                            scene.screenSpaceCameraController.enableTranslate = false;
+                        }
+
+                        if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE3D) {
+                            scene.screenSpaceCameraController.enableTilt = false;
+                        }
+
+                        removeEvent();
+                        that._entityView = new EntityView(value, scene, scene.globe.ellipsoid, boundingSphere);
                     });
                 }
             }
@@ -1434,7 +1451,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * Performs a one-time zoom to the provided data.
      *
      * @param {Entity|Array|EntityCollection|DataSource} zoomTarget The entity, array of entities, entity collection or data source to view.
-     * @returns {Promise} A Promise that evalutes to true if the zoom was successful or false if the entity is not currently visualized in the scene.
+     * @returns {Promise} A Promise that resolves to true if the zoom was successful or false if the entity is not currently visualized in the scene or the zoom was cancelled.
      */
     Viewer.prototype.zoomTo = function(zoomTarget) {
         //>>includeStart('debug', pragmas.debug);
@@ -1442,6 +1459,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             throw new DeveloperError('zoomTarget is required.');
         }
         //>>includeEnd('debug');
+
+        cancelZoom(this);
 
         //If zoomTarget is a DataSource, this will retrieve the EntityCollection.
         //If zoomTarget is already an EntityCollection, this will retrieve the array.
@@ -1457,50 +1476,70 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             this._entitiesForZoom = [zoomTarget];
         }
 
-        this._zoomDefer = when.defer();
-        return this._zoomDefer;
+        var boundingSpherePromise = when.defer();
+        this._boundingSpherePromise = boundingSpherePromise;
+        return boundingSpherePromise.then(function(boundingSphere) {
+            return defined(boundingSphere);
+        });
     };
+
+    function cancelZoom(viewer) {
+        var boundingSpherePromise = viewer._boundingSpherePromise;
+        if (defined(boundingSpherePromise)) {
+            viewer._boundingSpherePromise = undefined;
+            viewer._entitiesForZoom = undefined;
+            boundingSpherePromise.resolve(undefined);
+        }
+    }
 
     /**
      * @private
      */
     Viewer.prototype._postRender = function() {
-        var deferred = this._zoomDefer;
-        if (!defined(deferred)) {
+        var entities = this._entitiesForZoom;
+        if (!defined(entities)) {
             return;
         }
-        this._zoomDefer = undefined;
-        var entities = this._entitiesForZoom;
 
-        var promises = [];
+        var boundingSpherePromise = this._boundingSpherePromise;
+        var boundingSpheres = [];
         for (var i = 0, len = entities.length; i < len; i++) {
-            promises.push(this._dataSourceDisplay.getBoundingSphere(entities[i]));
+            var result = new BoundingSphere();
+
+            var state = this._dataSourceDisplay.getBoundingSphere({
+                entity : entities[i],
+                result : result,
+                requireComplete : true
+            });
+
+            if (state === AsyncState.PENDING) {
+                return;
+            } else if (state === AsyncState.FAILED) {
+                cancelZoom(this);
+                return;
+            }
+
+            boundingSpheres.push(result);
         }
 
-        var that = this;
-        when.all(promises, function(boundingSpheres) {
-            //If another zoom has been scheduled since this one, just return
-            if (entities !== that._entitiesForZoom) {
-                deferred.resolve(false);
-                return;
-            }
+        if (boundingSpheres.length === 0) {
+            cancelZoom(this);
+            return;
+        }
 
-            boundingSpheres = boundingSpheres.filter(defined);
-            if (boundingSpheres.length === 0) {
-                deferred.resolve(false);
-                return;
-            }
+        //Stop tracking the current entity.
+        this.trackedEntity = undefined;
 
-            //Stop tracking the current entity.
-            that.trackedEntity = undefined;
+        //Set camera
+        var scene = this.scene;
+        var boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
+        var controller = scene.screenSpaceCameraController;
+        controller.minimumZoomDistance = Math.min(controller.minimumZoomDistance, boundingSphere.radius * 0.5);
+        scene.camera.viewBoundingSphere(boundingSphere, false);
 
-            //Set camera
-            var sphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
-            var controller = that.scene.screenSpaceCameraController;
-            controller.minimumZoomDistance = Math.min(controller.minimumZoomDistance, sphere.radius * 0.5);
-            that.scene.camera.viewBoundingSphere(sphere, false);
-            deferred.resolve(true);
-        });
+        this._entitiesForZoom = undefined;
+        this._boundingSpherePromise = undefined;
+        boundingSpherePromise.resolve(boundingSphere);
     };
 
     /**

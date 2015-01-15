@@ -7,7 +7,7 @@ define([
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
-        '../ThirdParty/when'
+        './AsyncState'
     ], function(
         AssociativeArray,
         Color,
@@ -16,7 +16,7 @@ define([
         ShowGeometryInstanceAttribute,
         PerInstanceColorAppearance,
         Primitive,
-        when) {
+        AsyncState) {
     "use strict";
 
     var Batch = function(primitives, translucent, width) {
@@ -138,12 +138,17 @@ define([
         return this.updaters.contains(entity.id);
     };
 
-    Batch.prototype.getBoundingSphere = function(entity) {
-        var that = this;
-        return when(this.primitive.readyPromise, function() {
-            var boundingSphere = that.primitive.getGeometryInstanceAttributes(entity).boundingSphere;
-            return defined(boundingSphere) ? boundingSphere.clone() : undefined;
-        });
+    Batch.prototype.getBoundingSphere = function(entity, result) {
+        var primitive = this.primitive;
+        if (!primitive.ready) {
+            return AsyncState.PENDING;
+        }
+        var attributes = primitive.getGeometryInstanceAttributes(entity);
+        if(!defined(attributes) || !defined(attributes.boundingSphere)) {
+            return AsyncState.FAILED;
+        }
+        attributes.boundingSphere.clone(result);
+        return AsyncState.COMPLETED;
     };
 
     Batch.prototype.removeAllPrimitives = function() {
@@ -266,7 +271,7 @@ define([
         return isUpdated;
     };
 
-    StaticOutlineGeometryBatch.prototype.getBoundingSphere = function(entity) {
+    StaticOutlineGeometryBatch.prototype.getBoundingSphere = function(entity, result) {
         var i;
 
         var solidBatches = this._solidBatches.values;
@@ -274,7 +279,7 @@ define([
         for (i = 0; i < solidBatchesLength; i++) {
             var solidBatch = solidBatches[i];
             if(solidBatch.contains(entity)){
-                return solidBatch.getBoundingSphere(entity);
+                return solidBatch.getBoundingSphere(entity, result);
             }
         }
 
@@ -283,11 +288,11 @@ define([
         for (i = 0; i < translucentBatchesLength; i++) {
             var translucentBatch = translucentBatches[i];
             if(translucentBatch.contains(entity)){
-                return translucentBatch.getBoundingSphere(entity);
+                return translucentBatch.getBoundingSphere(entity, result);
             }
         }
 
-        return undefined;
+        return AsyncState.FAILED;
     };
 
     StaticOutlineGeometryBatch.prototype.removeAllPrimitives = function() {
