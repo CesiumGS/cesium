@@ -1433,26 +1433,31 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     /**
      * Performs a one-time zoom to the provided data.
      *
-     * @param {Entity|Array|EntityCollection|DataSource} The entity, array of entities, entity collection or data source to view.
+     * @param {Entity|Array|EntityCollection|DataSource} zoomTarget The entity, array of entities, entity collection or data source to view.
      * @returns {Promise} A Promise that evalutes to true if the zoom was successful or false if the entity is not currently visualized in the scene.
      */
     Viewer.prototype.zoomTo = function(zoomTarget) {
-        this._zoomDefer = when.defer();
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(zoomTarget)) {
+            throw new DeveloperError('zoomTarget is required.');
+        }
+        //>>includeEnd('debug');
 
-        //If it's a
+        //If zoomTarget is a DataSource, this will retrieve the EntityCollection.
+        //If zoomTarget is already an EntityCollection, this will retrieve the array.
+        zoomTarget = defaultValue(zoomTarget.entities, zoomTarget);
+
+        //zoomTarget is now an array or an EntityCollection, this will retrieve the array
         zoomTarget = defaultValue(zoomTarget.entities, zoomTarget);
 
         if (isArray(zoomTarget)) {
-            //Standard array
             this._entitiesForZoom = zoomTarget.slice(0);
-        } else if (isArray(zoomTarget.entities)) {
-            //DataSource or EntityCollection
-            this._entitiesForZoom = zoomTarget.entities.slice(0);
         } else {
             //Single entity
             this._entitiesForZoom = [zoomTarget];
         }
 
+        this._zoomDefer = when.defer();
         return this._zoomDefer;
     };
 
