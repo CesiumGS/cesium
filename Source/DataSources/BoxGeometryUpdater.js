@@ -19,6 +19,7 @@ define([
         '../Scene/Primitive',
         './ColorMaterialProperty',
         './ConstantProperty',
+        './dynamicGeometryGetBoundingSphere',
         './MaterialProperty',
         './Property'
     ], function(
@@ -41,6 +42,7 @@ define([
         Primitive,
         ColorMaterialProperty,
         ConstantProperty,
+        dynamicGeometryGetBoundingSphere,
         MaterialProperty,
         Property) {
     "use strict";
@@ -571,30 +573,7 @@ define([
     };
 
     DynamicGeometryUpdater.prototype.getBoundingSphere = function(entity) {
-        var primitive = this._primitive;
-        var attributes;
-
-        var tmp;
-        var boundingSphere;
-        if (defined(primitive) && primitive.show) {
-            attributes = primitive.getGeometryInstanceAttributes(entity);
-            tmp = attributes.boundingSphere;
-            if (defined(tmp)) {
-                boundingSphere = BoundingSphere.transform(tmp, primitive.modelMatrix);
-            }
-        }
-
-        var outline = this._outlinePrimitive;
-        if (defined(outline) && outline.show) {
-            attributes = outline.getGeometryInstanceAttributes(entity);
-            tmp = attributes.boundingSphere;
-            if (defined(tmp)) {
-                tmp = BoundingSphere.transform(tmp, outline.modelMatrix);
-                boundingSphere = defined(boundingSphere) ? BoundingSphere.union(tmp, boundingSphere, boundingSphere) : tmp;
-            }
-        }
-
-        return boundingSphere;
+        return dynamicGeometryGetBoundingSphere(entity, this._primitive, this._outlinePrimitive);
     };
 
     DynamicGeometryUpdater.prototype.isDestroyed = function() {

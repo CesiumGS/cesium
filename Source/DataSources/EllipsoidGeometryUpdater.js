@@ -21,6 +21,7 @@ define([
         '../Scene/SceneMode',
         './ColorMaterialProperty',
         './ConstantProperty',
+        './dynamicGeometryGetBoundingSphere',
         './MaterialProperty',
         './Property'
     ], function(
@@ -45,6 +46,7 @@ define([
         SceneMode,
         ColorMaterialProperty,
         ConstantProperty,
+        dynamicGeometryGetBoundingSphere,
         MaterialProperty,
         Property) {
     "use strict";
@@ -690,6 +692,10 @@ define([
             this._primitive.modelMatrix = modelMatrix;
             this._outlinePrimitive.modelMatrix = modelMatrix;
         }
+    };
+
+    DynamicGeometryUpdater.prototype.getBoundingSphere = function(entity) {
+        return dynamicGeometryGetBoundingSphere(entity, this._primitive, this._outlinePrimitive);
     };
 
     DynamicGeometryUpdater.prototype.isDestroyed = function() {

@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/BoundingSphere',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
@@ -22,6 +23,7 @@ define([
         './MaterialProperty',
         './Property'
     ], function(
+        BoundingSphere,
         Color,
         ColorGeometryInstanceAttribute,
         defaultValue,
@@ -478,6 +480,10 @@ define([
         line.positions = positions;
         line.material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, line.material);
         line.width = Property.getValueOrDefault(polyline._width, time, 1);
+    };
+
+    DynamicGeometryUpdater.prototype.getBoundingSphere = function(entity) {
+        return this._line.show ? BoundingSphere.fromPoints(this._line.positions) : undefined;
     };
 
     DynamicGeometryUpdater.prototype.isDestroyed = function() {

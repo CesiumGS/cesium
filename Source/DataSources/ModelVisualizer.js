@@ -9,8 +9,8 @@ define([
         '../Core/Matrix4',
         '../Scene/Model',
         '../Scene/ModelAnimationLoop',
-        './Property',
-        '../ThirdParty/when'
+        '../ThirdParty/when',
+        './Property'
     ], function(
         AssociativeArray,
         BoundingSphere,
@@ -21,8 +21,8 @@ define([
         Matrix4,
         Model,
         ModelAnimationLoop,
-        Property,
-        when) {
+        when,
+        Property) {
     "use strict";
     /*global console*/
 
