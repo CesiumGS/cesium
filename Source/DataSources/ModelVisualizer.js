@@ -175,7 +175,7 @@ define([
 
         var model = modelData.modelPrimitive;
         return when(model.readyPromise, function() {
-            BoundingSphere.transform(model.boundingSphere, model.modelMatrix);
+            return BoundingSphere.transform(model.boundingSphere, model.modelMatrix);
         });
     };
 
