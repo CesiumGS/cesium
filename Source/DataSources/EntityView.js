@@ -41,7 +41,12 @@ define([
 
     function updateTransform(that, camera, updateLookAt, positionProperty, time, ellipsoid) {
         var cartesian = positionProperty.getValue(time, that._lastCartesian);
+
         if (defined(cartesian)) {
+            if(defined(that._boundingSphereOffset)){
+                Cartesian3.add(that._boundingSphereOffset, cartesian, cartesian);
+            }
+
             var hasBasis = false;
             var xBasis;
             var yBasis;
@@ -172,6 +177,7 @@ define([
     var EntityView = function(entity, scene, ellipsoid, boundingSphere) {
 
         this._boundingSphere = boundingSphere;
+        this._boundingSphereOffset = undefined;
 
         /**
          * The entity to track with the camera.
@@ -274,10 +280,12 @@ define([
         if (objectChanged) {
             var viewFromProperty = entity.viewFrom;
             var sphere = this._boundingSphere;
+            this._boundingSphereOffset = undefined;
             if (defined(sphere)) {
                 var controller = scene.screenSpaceCameraController;
                 controller.minimumZoomDistance = Math.min(controller.minimumZoomDistance, sphere.radius * 0.5);
                 camera.viewBoundingSphere(sphere, true);
+                this._boundingSphereOffset = Cartesian3.subtract(sphere.center, entity.position.getValue(time), new Cartesian3());
                 updateLookAt = false;
             } else if (!defined(viewFromProperty) || !defined(viewFromProperty.getValue(time, offset3D))) {
                 Cartesian3.clone(EntityView._defaultOffset2D, offset2D);

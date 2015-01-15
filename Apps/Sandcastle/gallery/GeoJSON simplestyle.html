@@ -42,7 +42,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 var dataSource = new Cesium.GeoJsonDataSource();
 viewer.dataSources.add(dataSource);
 dataSource.loadUrl('../../SampleData/simplestyles.geojson').then(function(){
-    viewer.zoomTo(dataSource.entities.entities);
+    viewer.zoomTo(dataSource);
 });
 //Sandcastle_End
     Sandcastle.finishedLoading();
