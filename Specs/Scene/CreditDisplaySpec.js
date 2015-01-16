@@ -49,6 +49,15 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('credits have unique ids', function() {
+        var credit1 = new Credit('credit1', imgSrc, 'http://cesiumjs.org/');
+        var credit2 = new Credit('credit2', imgSrc, 'http://cesiumjs.org/');
+        expect(credit1.id).not.toEqual(credit2.id);
+
+        var credit1a = new Credit('credit1', imgSrc, 'http://cesiumjs.org/');
+        expect(credit1.id).toEqual(credit1a.id);
+    });
+
     it('credit display displays text credit', function() {
         var creditDisplay = new CreditDisplay(container);
         var credit = new Credit('credit1');

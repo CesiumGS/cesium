@@ -1,15 +1,63 @@
 Change Log
 ==========
 
+### 1.6 - 2015-02-02
+
+* Breaking changes
+  * `Rectangle.intersectWith` was deprecated in Cesium 1.5. Use `Rectangle.intersection`, which is the same but returns `undefined` when two rectangles do not intersect.
+  * `Rectangle.isEmpty` was deprecated in Cesium 1.5.
+  * The `sourceUri` parameter to `GeoJsonDatasource.load` was deprecated in Cesium 1.4 and has been removed. Use options.sourceUri instead.
+  * `PolygonGraphics.positions` created by `GeoJSONDataSource` now evaluate to a `PolygonHierarchy` object instead of an array of positions.
+* Deprecated
+  * `Camera.tilt` was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. Use `Camera.pitch`.
+  * `Camera.heading` and `Camera.tilt` were deprecated in Cesium 1.6. They will become read-only in Cesium 1.7. Use `Camera.setView`.
+  * `Camera.setPositionCartographic` was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. Use `Camera.setView`.
+  * `PolygonGraphics.positions` was deprecated and replaced with `PolygonGraphics.hierarchy`, whose value is a `PolygonHierarchy` instead of an array of positions.  `PolygonGraphics.positions` will be removed in Cesium 1.8.
+  * The `Model.readyToRender` event was deprecated and will be removed in Cesium 1.9.  Use the new 'Model.readyPromise' instead.
+* Improved performance of asynchronous geometry creation (as much as 20% faster in some use cases). [#2342](https://github.com/AnalyticalGraphicsInc/cesium/issues/2342)
+* Added `PolylineVolumeGraphics` and `Entity.polylineVolume`
+* Added `Camera.setView` (which use heading, pitch, and roll) and `Camera.roll`.
+* Added `Quaternion.fromHeadingPitchRoll` to create a rotation from heading, pitch, and roll angles.
+* Added `Transforms.headingPitchRollToFixedFrame` to create a local frame from a position and heading/pitch/roll angles.
+* Added `Transforms.headingPitchRollQuaternion` which is the quaternion rotation from `Transforms.headingPitchRollToFixedFrame`.
+* Added `BillboardGraphics.imageSubRegion`, to enable custom texture atlas use for `Entity` instances.
+* Added `CheckerboardMaterialProperty` to enable use of the checkerboard material with the entity API.
+* Added `PolygonHierarchy` to make defining polygons with holes clearer.
+* Added `PolygonGraphics.hierarchy` for supporting polygons with holes via data sources.
+* Added 'BoundingSphere.fromBoundingSpheres', which creates a BoundingSphere that encloses the specified array of BoundingSpheres.
+* Added 'Model.readyPromise' and 'Primitive.readyPromise' which are promises that resolve when the primitives are ready.
+* `GeoJsonDataSource` now supports polygons with holes.
+* `ConstantProperty` can now hold any value; previously it was limited to values that implemented `equals` and `clones` functions, as well as a few special cases.
+* Fixed a bug in `EllipsoidGeodesic` that caused it to modify the `height` of the positions passed to the constructor or to to `setEndPoints`.
+* Instead of throwing an exception when there are not enough unique positions to define a geometry, creating a `Primitive` will succeed, but not render. [#2375](https://github.com/AnalyticalGraphicsInc/cesium/issues/2375)
+* `WebMapTileServiceImageryProvider` now supports RESTful requests (by accepting a tile-URL template).
+* When you track an entity by clicking on the track button in the `InfoBox`, you can now stop tracking by clicking the button a second time.
+* Setting `viewer.trackedEntity` to `undefined` will now restore the camera controls to their default states.
+* The object returned by `Primitive.getGeometryInstanceAttributes` now contains the instance's bounding sphere.
+
 ### 1.5 - 2015-01-05
 
+* Breaking changes
+  * Removed `GeometryPipeline.wrapLongitude`, which was deprecated in 1.4.  Use `GeometryPipeline.splitLongitude` instead.
+  * Removed `GeometryPipeline.combine`, which was deprecated in 1.4.  Use `GeometryPipeline.combineInstances` instead.
 * Deprecated
-  * `Rectangle.intersectWith` was deprecated in Cesium 1.5. It will be removed in Cesium 1.6. Use `Rectangle.intersection`, which is the same but returns `undefined` when two rectangles do not intersect.
-  * `Rectangle.isEmpty` was deprecated in Cesium 1.5. It will be removed in Cesium 1.6.
-* Improved polygon loading performance.
-* Fixed upsampleQuantizedTerrainMesh rounding errors that had occasionally led to missing terrain skirt geometry in upsampled tiles.
-* Added `Math.mod` which computes `m % n` but also works when `m` is negative.
+  * `viewerEntityMixin` was deprecated. It will be removed in Cesium 1.6. Its functionality is now directly part of the `Viewer` widget.
+  * `Rectangle.intersectWith` was deprecated. It will be removed in Cesium 1.6. Use `Rectangle.intersection`, which is the same but returns `undefined` when two rectangles do not intersect.
+  * `Rectangle.isEmpty` was deprecated. It will be removed in Cesium 1.6.
+* Improved GeoJSON, TopoJSON, and general polygon loading performance.
+* Added caching to `Model` to save memory and improve loading speed when several models with the same url are created.
+* Added `ModelNode.show` for per-node show/hide.
+* Added the following properties to `Viewer` and `CesiumWidget`: `imageryLayers`, `terrainProvider`, and `camera`.  This avoids the need to access `viewer.scene` in some cases.
+* Dramatically improved the quality of font outlines.
+* Added `BoxGraphics` and `Entity.box`.
+* Added `CorridorGraphics` and `Entity.corridor`.
+* Added `CylinderGraphics` and `Entity.cylinder`.
 * Fixed imagery providers whose rectangle crosses the IDL. Added `Rectangle.computeWidth`, `Rectangle.computeHeight`, `Rectangle.width`, and `Rectangle.height`. [#2195](https://github.com/AnalyticalGraphicsInc/cesium/issues/2195)
+* `ConstantProperty` now accepts `HTMLElement` instances as valid values.
+* `BillboardGraphics.image` and `ImageMaterialProperty.image` now accept `Property` instances that represent an `Image` or `Canvas` in addition to a url.
+* Fixed a bug in `PolylineGeometry` that would cause gaps in the line. [#2136](https://github.com/AnalyticalGraphicsInc/cesium/issues/2136)
+* Fixed `upsampleQuantizedTerrainMesh` rounding errors that had occasionally led to missing terrain skirt geometry in upsampled tiles.
+* Added `Math.mod` which computes `m % n` but also works when `m` is negative.
 
 ### 1.4 - 2014-12-01
 

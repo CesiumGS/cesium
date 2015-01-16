@@ -4,11 +4,12 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/combine',
         '../Core/clone',
+        '../Core/combine',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
@@ -31,6 +32,7 @@ define([
         '../Renderer/TextureWrap',
         '../ThirdParty/gltfDefaults',
         '../ThirdParty/Uri',
+        '../ThirdParty/when',
         './getModelAccessor',
         './ModelAnimationCache',
         './ModelAnimationCollection',
@@ -44,11 +46,12 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
-        combine,
         clone,
+        combine,
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         Event,
@@ -71,6 +74,7 @@ define([
         TextureWrap,
         gltfDefaults,
         Uri,
+        when,
         getModelAccessor,
         ModelAnimationCache,
         ModelAnimationCollection,
@@ -138,6 +142,51 @@ define([
         return ((this.pendingTextureLoads === 0) && (this.texturesToCreate.length === 0));
     };
 
+    ///////////////////////////////////////////////////////////////////////////
+
+    // glTF JSON can be big given embedded geometry, textures, and animations, so we
+    // cache it across all models using the same url/cache-key.  This also reduces the
+    // slight overhead in assigning defaults to missing values.
+    //
+    // Note that this is a global cache, compared to renderer resources, which
+    // are cached per context.
+    var CachedGltf = function(options) {
+        this._gltf = gltfDefaults(options.gltf);
+        this.ready = options.ready;
+        this.modelsToLoad = [];
+        this.count = 0;
+    };
+
+    defineProperties(CachedGltf.prototype, {
+        gltf : {
+            set : function(value) {
+                this._gltf = gltfDefaults(value);
+            },
+
+            get : function() {
+                return this._gltf;
+            }
+        }
+    });
+
+    var gltfCache = {};
+
+    function getAnimationIds(cachedGltf) {
+        var animationIds = [];
+        if (defined(cachedGltf) && defined(cachedGltf.gltf)) {
+            var animations = cachedGltf.gltf.animations;
+            for (var name in animations) {
+                if (animations.hasOwnProperty(name)) {
+                    animationIds.push(name);
+                }
+            }
+        }
+
+        return animationIds;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     /**
      * A 3D model based on glTF, the runtime asset format for WebGL, OpenGL ES, and OpenGL.
      * <p>
@@ -148,7 +197,7 @@ define([
      * <p>
      * An external glTF asset is created with {@link Model.fromGltf}.  glTF JSON can also be
      * created at runtime and passed to this constructor function.  In either case, the
-     * {@link Model#readyToRender} event is fired when the model is ready to render, i.e.,
+     * {@link Model#readyPromise} is resolved when the model is ready to render, i.e.,
      * when the external binary, image, and shader files are downloaded and the WebGL
      * resources are created.
      * </p>
@@ -170,14 +219,40 @@ define([
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      *
      * @see Model.fromGltf
-     * @see Model#readyToRender
+     * @see Model#readyPromise
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
      */
     var Model = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        this._gltf = gltfDefaults(options.gltf);
+        var cacheKey = options.cacheKey;
+        this._cacheKey = cacheKey;
+        this._cachedGltf = undefined;
+        this._releaseGltfJson = defaultValue(options.releaseGltfJson, false);
+        this._animationIds = undefined;
+
+        var cachedGltf;
+        if (defined(cacheKey) && defined(gltfCache[cacheKey]) && gltfCache[cacheKey].ready) {
+            // glTF JSON is in cache and ready
+            cachedGltf = gltfCache[cacheKey];
+            ++cachedGltf.count;
+        } else {
+            // glTF was explicitly provided, e.g., when a user uses the Model constructor directly
+            if (defined(options.gltf)) {
+                cachedGltf = new CachedGltf({
+                    gltf : options.gltf,
+                    ready : true
+                });
+                cachedGltf.count = 1;
+
+                if (defined(cacheKey)) {
+                    gltfCache[cacheKey] = cachedGltf;
+                }
+            }
+        }
+        setCachedGltf(this, cachedGltf);
+
         this._basePath = defaultValue(options.basePath, '');
 
         var docUri = new Uri(document.location.href);
@@ -255,28 +330,9 @@ define([
 
         this._allowPicking = defaultValue(options.allowPicking, true);
 
-        /**
-         * The event fired when this model is ready to render, i.e., when the external binary, image,
-         * and shader files were downloaded and the WebGL resources were created.
-         * <p>
-         * This event is fired at the end of the frame before the first frame the model is rendered in.
-         * </p>
-         *
-         * @type {Event}
-         * @default new Event()
-         *
-         * @example
-         * // Play all animations at half-speed when the model is ready to render
-         * model.readyToRender.addEventListener(function(model) {
-         *   model.activeAnimations.addAll({
-         *     speedup : 0.5
-         *   });
-         * });
-         *
-         * @see Model#ready
-         */
-        this.readyToRender = new Event();
+        this._readyToRender = new Event();
         this._ready = false;
+        this._readyPromise = when.defer();
 
         /**
          * The currently playing glTF animations.
@@ -299,7 +355,7 @@ define([
          * @default false
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
-        this._debugShowBoudingVolume = this.debugShowBoundingVolume;
+        this._debugShowBoudingVolume = false;
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -321,6 +377,7 @@ define([
         this._loadError = undefined;
         this._loadResources = undefined;
 
+        this._perNodeShowDirty = false;             // true when the Cesium API was used to change a node's show property
         this._cesiumAnimationsDirty = false;       // true when the Cesium API, not a glTF animation, changed a node transform
         this._maxDirtyNumber = 0;                  // Used in place of a dirty boolean flag to avoid an extra graph traversal
 
@@ -334,7 +391,9 @@ define([
             materialsByName : undefined,  // Indexed with the name property in the material
             materialsById : undefined     // Indexed with the material's property name
         };
-        this._rendererResources = {
+
+        this._uniformMaps = {};       // Not cached since it can be targeted by glTF animation
+        this._rendererResources = {   // Cached between models with the same url/cache-key
             buffers : {},
             vertexArrays : {},
             programs : {},
@@ -342,14 +401,19 @@ define([
             textures : {},
 
             samplers : {},
-            renderStates : {},
-            uniformMaps : {}
+            renderStates : {}
         };
+        this._cachedRendererResources = undefined;
+        this._loadRendererResourcesFromCache = false;
 
-        this._renderCommands = [];
-        this._pickCommands = [];
+        this._nodeCommands = [];
         this._pickIds = [];
     };
+
+    function setCachedGltf(model, cachedGltf) {
+        model._cachedGltf = cachedGltf;
+        model._animationIds = getAnimationIds(cachedGltf);
+    }
 
     defineProperties(Model.prototype, {
         /**
@@ -365,7 +429,52 @@ define([
          */
         gltf : {
             get : function() {
-                return this._gltf;
+                return defined(this._cachedGltf) ? this._cachedGltf.gltf : undefined;
+            }
+        },
+
+        /**
+         * When <code>true</code>, the glTF JSON is not stored with the model once the model is
+         * loaded (when {@link Model#ready} is <code>true</code>).  This saves memory when
+         * geometry, textures, and animations are embedded in the .gltf file, which is the
+         * default for the {@link http://cesiumjs.org/convertmodel.html|Cesium model converter}.
+         * This is especially useful for cases like 3D buildings, where each .gltf model is unique
+         * and caching the glTF JSON is not effective.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default false
+         *
+         * @private
+         */
+        releaseGltfJson : {
+            get : function() {
+                return this._releaseGltfJson;
+            }
+        },
+
+        /**
+         * The key identifying this model in the model cache for glTF JSON, renderer resources, and animations.
+         * Caching saves memory and improves loading speed when several models with the same url are created.
+         * <p>
+         * This key is automatically generated when the model is created with {@link Model.fromGltf}.  If the model
+         * is created directly from glTF JSON using the {@link Model} constructor, this key can be manually
+         * provided; otherwise, the model will not be changed.
+         * </p>
+         *
+         * @memberof Model.prototype
+         *
+         * @type {String}
+         * @readonly
+         *
+         * @private
+         */
+        cacheKey : {
+            get : function() {
+                return this._cacheKey;
             }
         },
 
@@ -400,7 +509,7 @@ define([
          *
          * @default undefined
          *
-         * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event or ready property.
+         * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
          *
          * @example
          * // Center in WGS84 coordinates
@@ -410,7 +519,7 @@ define([
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (this._state !== ModelState.LOADED) {
-                    throw new DeveloperError('The model is not loaded.  Wait for the model\'s readyToRender event or ready property.');
+                    throw new DeveloperError('The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.');
                 }
                 //>>includeEnd('debug');
 
@@ -422,7 +531,7 @@ define([
         /**
          * When <code>true</code>, this model is ready to render, i.e., the external binary, image,
          * and shader files were downloaded and the WebGL resources were created.  This is set to
-         * <code>true</code> right before {@link Model#readyToRender} is fired.
+         * <code>true</code> right before {@link Model#readyPromise} is resolved.
          *
          * @memberof Model.prototype
          *
@@ -431,11 +540,70 @@ define([
          *
          * @default false
          *
-         * @see Model#readyToRender
+         * @see Model#readyPromise
          */
         ready : {
             get : function() {
                 return this._ready;
+            }
+        },
+
+        /**
+         * The event fired when this model is ready to render, i.e., when the external binary, image,
+         * and shader files were downloaded and the WebGL resources were created.
+         * <p>
+         * This event is fired at the end of the frame before the first frame the model is rendered in.
+         * </p>
+         *
+         * @memberof Model.prototype
+         * @type {Event}
+         * @readonly
+         *
+         * @example
+         * // Play all animations at half-speed when the model is ready to render
+         * model.readyToRender.addEventListener(function(model) {
+         *   model.activeAnimations.addAll({
+         *     speedup : 0.5
+         *   });
+         * });
+         *
+         * @see Model#ready
+         * @deprecated
+         */
+        readyToRender : {
+            get : function() {
+                deprecationWarning('Model.readyToRender', 'Model.readyToRender was deprecated in Cesium 1.6 and will be removed in Cesium 1.9.  Use Model.readyPromise instead.');
+                return this._readyToRender;
+            }
+        },
+
+        /**
+         * Gets the promise that will be resolved when this model is ready to render, i.e., when the external binary, image,
+         * and shader files were downloaded and the WebGL resources were created.
+         * <p>
+         * This promise is resolved at the end of the frame before the first frame the model is rendered in.
+         * </p>
+         *
+         * @memberof Model.prototype
+         * @type {Promise}
+         * @readonly
+         *
+         * @example
+         * // Play all animations at half-speed when the model is ready to render
+         * Cesium.when(model.readyPromise).then(function(model) {
+         *   model.activeAnimations.addAll({
+         *     speedup : 0.5
+         *   });
+         * }).otherwise(function(error){
+         *   window.alert(error);
+         * });
+         *
+         * @see Model#ready
+         * @deprecated
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise;
             }
         },
 
@@ -475,7 +643,7 @@ define([
 
     /**
      * Creates a model from a glTF asset.  When the model is ready to render, i.e., when the external binary, image,
-     * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyToRender} event is fired.
+     * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyPromise} is resolved.
      *
      * @param {Object} options Object with the following properties:
      * @param {String} options.url The url to the .gltf file.
@@ -490,7 +658,7 @@ define([
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @returns {Model} The newly created model.
      *
-     * @see Model#readyToRender
+     * @see Model#readyPromise
      *
      * @example
      * // Example 1. Create a model from a glTF asset
@@ -514,7 +682,7 @@ define([
      *   debugWireframe : false
      * }));
      *
-     * model.readyToRender.addEventListener(function(model) {
+     * model.readyPromise.then(function(model) {
      *   // Play all animations when the model is ready to render
      *   model.activeAnimations.addAll();
      * });
@@ -533,21 +701,65 @@ define([
             basePath = url.substring(0, i + 1);
         }
 
+        var cacheKey = options.cacheKey;
+        if (!defined(cacheKey)) {
+            // Use absolute URL, since two URLs with different relative paths could point to the same model.
+            var docUri = new Uri(document.location.href);
+            var modelUri = new Uri(url);
+            cacheKey = modelUri.resolve(docUri).toString();
+        }
+
         options = clone(options);
         options.basePath = basePath;
+        options.cacheKey = cacheKey;
         var model = new Model(options);
 
-        loadText(url, options.headers).then(function(data) {
-            model._gltf = gltfDefaults(JSON.parse(data));
-        }).otherwise(getFailedLoadFunction(model, 'gltf', url));
+        var cachedGltf = gltfCache[cacheKey];
+        if (!defined(cachedGltf)) {
+            cachedGltf = new CachedGltf({
+                ready : false
+            });
+            cachedGltf.count = 1;
+            cachedGltf.modelsToLoad.push(model);
+            setCachedGltf(model, cachedGltf);
+            gltfCache[cacheKey] = cachedGltf;
+
+            loadText(url, options.headers).then(function(data) {
+                cachedGltf.gltf = JSON.parse(data);
+                var models = cachedGltf.modelsToLoad;
+                var length = models.length;
+                for (var i = 0; i < length; ++i) {
+                    var m = models[i];
+                    if (!m.isDestroyed()) {
+                        setCachedGltf(m, cachedGltf);
+                    }
+                }
+                cachedGltf.modelsToLoad = undefined;
+                cachedGltf.ready = true;
+            }).otherwise(getFailedLoadFunction(model, 'gltf', url));
+
+        } else if (!cachedGltf.ready) {
+            // Cache hit but the loadText() request is still pending
+            ++cachedGltf.count;
+            cachedGltf.modelsToLoad.push(model);
+        }
+        // else if the cached glTF is defined and ready, the
+        // model constructor will pick it up using the cache key.
 
         return model;
     };
 
+    /**
+     * For the unit tests to verify model caching.
+     *
+     * @private
+     */
+    Model._gltfCache = gltfCache;
+
     function getRuntime(model, runtimeName, name) {
         //>>includeStart('debug', pragmas.debug);
         if (model._state !== ModelState.LOADED) {
-            throw new DeveloperError('The model is not loaded.  Wait for the model\'s readyToRender event or ready property.');
+            throw new DeveloperError('The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.');
         }
 
         if (!defined(name)) {
@@ -565,7 +777,7 @@ define([
      * @param {String} name The glTF name of the node.
      * @returns {ModelNode} The node or <code>undefined</code> if no node with <code>name</code> exists.
      *
-     * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event or ready property.
+     * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
      *
      * @example
      * // Apply non-uniform scale to node LOD3sp
@@ -584,7 +796,7 @@ define([
      *
      * @returns {ModelMesh} The mesh or <code>undefined</code> if no mesh with <code>name</code> exists.
      *
-     * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event or ready property.
+     * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
      */
     Model.prototype.getMesh = function(name) {
         return getRuntime(this, 'meshesByName', name);
@@ -596,7 +808,7 @@ define([
      * @param {String} name The glTF name of the material.
      * @returns {ModelMaterial} The material or <code>undefined</code> if no material with <code>name</code> exists.
      *
-     * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event or ready property.
+     * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
      */
     Model.prototype.getMaterial = function(name) {
         return getRuntime(this, 'materialsByName', name);
@@ -796,6 +1008,9 @@ define([
                     rotation : undefined,
                     scale : undefined,
 
+                    // Per-node show inherited from parent
+                    computedShow : true,
+
                     // Computed transforms
                     transformToRoot : new Matrix4(),
                     computedMatrix : new Matrix4(),
@@ -841,12 +1056,12 @@ define([
         var runtimeMaterials = {};
         var runtimeMaterialsById = {};
         var materials = model.gltf.materials;
-        var rendererUniformMaps = model._rendererResources.uniformMaps;
+        var uniformMaps = model._uniformMaps;
 
         for (var name in materials) {
             if (materials.hasOwnProperty(name)) {
                 // Allocated now so ModelMaterial can keep a reference to it.
-                rendererUniformMaps[name] = {
+                uniformMaps[name] = {
                     uniformMap : undefined,
                     values : undefined,
                     jointMatrixUniformName : undefined
@@ -879,11 +1094,14 @@ define([
     }
 
     function parse(model) {
-        parseBuffers(model);
-        parseBufferViews(model);
-        parseShaders(model);
-        parsePrograms(model);
-        parseTextures(model);
+        if (!model._loadRendererResourcesFromCache) {
+            parseBuffers(model);
+            parseBufferViews(model);
+            parseShaders(model);
+            parsePrograms(model);
+            parseTextures(model);
+        }
+
         parseMaterials(model);
         parseMeshes(model);
         parseNodes(model);
@@ -1190,9 +1408,7 @@ define([
         loadResources.createSkins = false;
 
         var gltf = model.gltf;
-        var buffers = loadResources.buffers;
         var accessors = gltf.accessors;
-        var bufferViews = gltf.bufferViews;
         var skins = gltf.skins;
         var runtimeSkins = {};
 
@@ -1200,19 +1416,6 @@ define([
             if (skins.hasOwnProperty(name)) {
                 var skin = skins[name];
                 var accessor = accessors[skin.inverseBindMatrices];
-                var bufferView = bufferViews[accessor.bufferView];
-
-                var componentType = accessor.componentType;
-                var type = accessor.type;
-                var count = accessor.count;
-                var typedArray = getModelAccessor(accessor).createArrayBufferView(buffers[bufferView.buffer], bufferView.byteOffset + accessor.byteOffset, count);
-                var matrices =  new Array(count);
-
-                if ((componentType === WebGLRenderingContext.FLOAT) && (type === 'MAT4')) {
-                    for (var i = 0; i < count; ++i) {
-                        matrices[i] = Matrix4.fromArray(typedArray, 16 * i);
-                    }
-                }
 
                 var bindShapeMatrix;
                 if (!Matrix4.equals(skin.bindShapeMatrix, Matrix4.IDENTITY)) {
@@ -1220,7 +1423,7 @@ define([
                 }
 
                 runtimeSkins[name] = {
-                    inverseBindMatrices : matrices,
+                    inverseBindMatrices : ModelAnimationCache.getSkinInverseBindMatrices(model, accessor),
                     bindShapeMatrix : bindShapeMatrix // not used when undefined
                 };
             }
@@ -1685,7 +1888,7 @@ define([
         var materials = gltf.materials;
         var techniques = gltf.techniques;
         var programs = gltf.programs;
-        var rendererUniformMaps = model._rendererResources.uniformMaps;
+        var uniformMaps = model._uniformMaps;
 
         for (var materialName in materials) {
             if (materials.hasOwnProperty(materialName)) {
@@ -1742,7 +1945,7 @@ define([
                     }
                 }
 
-                var u = rendererUniformMaps[materialName];
+                var u = uniformMaps[materialName];
                 u.uniformMap = uniformMap;                          // uniform name -> function for the renderer
                 u.values = uniformValues;                           // material parameter name -> ModelMaterial for modifying the parameter at runtime
                 u.jointMatrixUniformName = jointMatrixUniformName;
@@ -1763,8 +1966,7 @@ define([
     }
 
     function createCommand(model, gltfNode, runtimeNode, context) {
-        var commands = model._renderCommands;
-        var pickCommands = model._pickCommands;
+        var nodeCommands = model._nodeCommands;
         var pickIds = model._pickIds;
         var allowPicking = model.allowPicking;
         var runtimeMeshes = model._runtime.meshesByName;
@@ -1776,7 +1978,7 @@ define([
         var rendererPrograms = resources.programs;
         var rendererPickPrograms = resources.pickPrograms;
         var rendererRenderStates = resources.renderStates;
-        var rendererUniformMaps = resources.uniformMaps;
+        var uniformMaps = model._uniformMaps;
 
         var gltf = model.gltf;
         var accessors = gltf.accessors;
@@ -1816,7 +2018,7 @@ define([
                 var count = ix.count;
                 var offset = (ix.byteOffset / IndexDatatype.getSizeInBytes(ix.componentType));  // glTF has offset in bytes.  Cesium has offsets in indices
 
-                var um = rendererUniformMaps[primitive.material];
+                var um = uniformMaps[primitive.material];
                 var uniformMap = um.uniformMap;
                 if (defined(um.jointMatrixUniformName)) {
                     var jointUniformMap = {};
@@ -1846,10 +2048,8 @@ define([
                     uniformMap : uniformMap,
                     renderState : rs,
                     owner : owner,
-                    debugShowBoundingVolume : debugShowBoundingVolume,
                     pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
                 });
-                commands.push(command);
 
                 var pickCommand;
 
@@ -1875,14 +2075,16 @@ define([
                         owner : owner,
                         pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
                     });
-                    pickCommands.push(pickCommand);
                 }
 
-                runtimeNode.commands.push({
+                var nodeCommand = {
+                    show : true,
+                    boundingSphere : boundingSphere,
                     command : command,
-                    pickCommand : pickCommand,
-                    boundingSphere : boundingSphere
-                });
+                    pickCommand : pickCommand
+                };
+                runtimeNode.commands.push(nodeCommand);
+                nodeCommands.push(nodeCommand);
             }
         }
     }
@@ -1966,15 +2168,36 @@ define([
     }
 
     function createResources(model, context) {
-        createBuffers(model, context);      // using glTF bufferViews
-        createPrograms(model, context);
-        createSamplers(model, context);
-        createTextures(model, context);
+        if (model._loadRendererResourcesFromCache) {
+            var resources = model._rendererResources;
+            var cachedResources = model._cachedRendererResources;
+
+            resources.buffers = cachedResources.buffers;
+            resources.vertexArrays = cachedResources.vertexArrays;
+            resources.programs = cachedResources.programs;
+            resources.pickPrograms = cachedResources.pickPrograms;
+            resources.textures = cachedResources.textures;
+            resources.samplers = cachedResources.samplers;
+            resources.renderStates = cachedResources.renderStates;
+        } else {
+            createBuffers(model, context);      // using glTF bufferViews
+            createPrograms(model, context);
+            createSamplers(model, context);
+            createTextures(model, context);
+        }
 
         createSkins(model);
         createRuntimeAnimations(model);
-        createVertexArrays(model, context); // using glTF meshes
-        createRenderStates(model, context); // using glTF materials/techniques/passes/states
+
+        if (!model._loadRendererResourcesFromCache) {
+            createVertexArrays(model, context); // using glTF meshes
+            createRenderStates(model, context); // using glTF materials/techniques/passes/states
+
+            // Long-term, we might not cache render states if they could change
+            // due to an animation, e.g., a uniform going from opaque to transparent.
+            // Could use copy-on-write if it is worth it.  Probably overkill.
+        }
+
         createUniformMaps(model, context);  // using glTF materials/techniques/passes/instanceProgram
         createRuntimeNodes(model, context); // using glTF scene
     }
@@ -2070,6 +2293,7 @@ define([
                 }
             }
         }
+
         ++model._maxDirtyNumber;
     }
 
@@ -2105,6 +2329,44 @@ define([
         }
     }
 
+
+    function updatePerNodeShow(model) {
+        // Totally not worth it, but we could optimize this:
+        // http://blogs.agi.com/insight3d/index.php/2008/02/13/deletion-in-bounding-volume-hierarchies/
+
+        var rootNodes = model._runtime.rootNodes;
+        var length = rootNodes.length;
+
+        var nodeStack = scratchNodeStack;
+
+        for (var i = 0; i < length; ++i) {
+            var n = rootNodes[i];
+            n.computedShow = n.publicNode.show;
+            nodeStack.push(n);
+
+            while (nodeStack.length > 0) {
+                n = nodeStack.pop();
+                var show = n.computedShow;
+
+                var nodeCommands = n.commands;
+                var nodeCommandsLength = nodeCommands.length;
+                for (var j = 0 ; j < nodeCommandsLength; ++j) {
+                    nodeCommands[j].show = show;
+                }
+                // if commandsLength is zero, the node has a light or camera
+
+                var children = n.children;
+                var childrenLength = children.length;
+                for (var k = 0; k < childrenLength; ++k) {
+                    var child = children[k];
+                    // Parent needs to be shown for child to be shown.
+                    child.computedShow = show && child.publicNode.show;
+                    nodeStack.push(child);
+                }
+            }
+        }
+    }
+
     function updatePickIds(model, context) {
         var id = model.id;
         if (model._id !== id) {
@@ -2125,11 +2387,25 @@ define([
             // This assumes the original primitive was TRIANGLES and that the triangles
             // are connected for the wireframe to look perfect.
             var primitiveType = model.debugWireframe ? PrimitiveType.LINES : PrimitiveType.TRIANGLES;
-            var commands = model._renderCommands;
-            var length = commands.length;
+            var nodeCommands = model._nodeCommands;
+            var length = nodeCommands.length;
 
             for (var i = 0; i < length; ++i) {
-                commands[i].primitiveType = primitiveType;
+                nodeCommands[i].command.primitiveType = primitiveType;
+            }
+        }
+    }
+
+    function updateShowBoundingVolume(model) {
+        if (model.debugShowBoundingVolume !== model._debugShowBoundingVolume) {
+            model._debugShowBoundingVolume = model.debugShowBoundingVolume;
+
+            var debugShowBoundingVolume = model.debugShowBoundingVolume;
+            var nodeCommands = model._nodeCommands;
+            var length = nodeCommands.length;
+
+            for (var i = 0; i < length; i++) {
+                nodeCommands[i].command.debugShowBoundingVolume = debugShowBoundingVolume;
             }
         }
     }
@@ -2182,6 +2458,61 @@ define([
         return scale;
     }
 
+    function releaseCachedGltf(model) {
+        if (defined(model._cacheKey) && defined(model._cachedGltf) && (--model._cachedGltf.count === 0)) {
+            delete gltfCache[model._cacheKey];
+        }
+        model._cachedGltf = undefined;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    var CachedRendererResources = function(context, cacheKey) {
+        this.buffers = undefined;
+        this.vertexArrays = undefined;
+        this.programs = undefined;
+        this.pickPrograms = undefined;
+        this.textures = undefined;
+        this.samplers = undefined;
+        this.renderStates = undefined;
+        this.ready = false;
+
+        this.context = context;
+        this.cacheKey = cacheKey;
+        this.count = 0;
+    };
+
+    function destroy(property) {
+        for (var name in property) {
+            if (property.hasOwnProperty(name)) {
+                property[name].destroy();
+            }
+        }
+    }
+
+    function destroyCachedRendererResources(resources) {
+        destroy(resources.buffers);
+        destroy(resources.vertexArrays);
+        destroy(resources.programs);
+        destroy(resources.pickPrograms);
+        destroy(resources.textures);
+    }
+
+    CachedRendererResources.prototype.release = function() {
+        if (--this.count === 0) {
+            if (defined(this.cacheKey)) {
+                // Remove if this was cached
+                delete this.context.cache.modelRendererResourceCache[this.cacheKey];
+            }
+            destroyCachedRendererResources(this);
+            return destroyObject(this);
+        }
+
+        return undefined;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -2198,9 +2529,40 @@ define([
         }
 
         if ((this._state === ModelState.NEEDS_LOAD) && defined(this.gltf)) {
+            // Use renderer resources from cache instead of loading/creating them?
+            var cachedRendererResources;
+            var cacheKey = this.cacheKey;
+            if (defined(cacheKey)) {
+                context.cache.modelRendererResourceCache = defaultValue(context.cache.modelRendererResourceCache, {});
+                var modelCaches = context.cache.modelRendererResourceCache;
+
+                cachedRendererResources = modelCaches[this.cacheKey];
+                if (defined(cachedRendererResources)) {
+                    if (!cachedRendererResources.ready) {
+                        // Cached resources for the model are not loaded yet.  We'll
+                        // try again every frame until they are.
+                        return;
+                    }
+
+                    ++cachedRendererResources.count;
+                    this._loadRendererResourcesFromCache = true;
+                } else {
+                    cachedRendererResources = new CachedRendererResources(context, cacheKey);
+                    cachedRendererResources.count = 1;
+                    modelCaches[this.cacheKey] = cachedRendererResources;
+                }
+                this._cachedRendererResources = cachedRendererResources;
+            } else {
+                cachedRendererResources = new CachedRendererResources(context);
+                cachedRendererResources.count = 1;
+                this._cachedRendererResources = cachedRendererResources;
+            }
+
             this._state = ModelState.LOADING;
+
             this._boundingSphere = computeBoundingSphere(this.gltf);
             this._initialRadius = this._boundingSphere.radius;
+
             this._loadResources = new LoadResources();
             parse(this);
         }
@@ -2219,6 +2581,23 @@ define([
             if (loadResources.finishedPendingLoads() && loadResources.finishedResourceCreation()) {
                 this._state = ModelState.LOADED;
                 this._loadResources = undefined;  // Clear CPU memory since WebGL resources were created.
+
+                var resources = this._rendererResources;
+                var cachedResources = this._cachedRendererResources;
+
+                cachedResources.buffers = resources.buffers;
+                cachedResources.vertexArrays = resources.vertexArrays;
+                cachedResources.programs = resources.programs;
+                cachedResources.pickPrograms = resources.pickPrograms;
+                cachedResources.textures = resources.textures;
+                cachedResources.samplers = resources.samplers;
+                cachedResources.renderStates = resources.renderStates;
+                cachedResources.ready = true;
+
+                if (this.releaseGltfJson) {
+                    releaseCachedGltf(this);
+                }
+
                 justLoaded = true;
             }
         }
@@ -2255,8 +2634,13 @@ define([
                 }
             }
 
+            if (this._perNodeShowDirty) {
+                this._perNodeShowDirty = false;
+                updatePerNodeShow(this);
+            }
             updatePickIds(this, context);
             updateWireframe(this);
+            updateShowBoundingVolume(this);
         }
 
         if (justLoaded) {
@@ -2264,7 +2648,8 @@ define([
             var model = this;
             frameState.afterRender.push(function() {
                 model._ready = true;
-                model.readyToRender.raiseEvent(model);
+                model._readyToRender.raiseEvent(model);
+                model.readyPromise.resolve(model);
             });
             return;
         }
@@ -2275,29 +2660,26 @@ define([
         if (show) {
 // PERFORMANCE_IDEA: This is terrible
             var passes = frameState.passes;
+            var nodeCommands = this._nodeCommands;
+            var length = nodeCommands.length;
             var i;
-            var length;
-            var commands;
-            if (passes.render) {
-                commands = this._renderCommands;
-                length = commands.length;
-                for (i = 0; i < length; ++i) {
-                    commandList.push(commands[i]);
-                }
+            var nc;
 
-                if (this.debugShowBoundingVolume !== this._debugShowBoundingVolume) {
-                    this._debugShowBoundingVolume = this.debugShowBoundingVolume;
-                    for (i = 0; i < commands.length; i++) {
-                        commands[i].debugShowBoundingVolume = this.debugShowBoundingVolume;
+            if (passes.render) {
+                for (i = 0; i < length; ++i) {
+                    nc = nodeCommands[i];
+                    if (nc.show) {
+                        commandList.push(nc.command);
                     }
                 }
             }
 
             if (passes.pick) {
-                commands = this._pickCommands;
-                length = commands.length;
                 for (i = 0; i < length; ++i) {
-                    commandList.push(commands[i]);
+                    nc = nodeCommands[i];
+                    if (nc.show) {
+                        commandList.push(nc.pickCommand);
+                    }
                 }
             }
         }
@@ -2317,22 +2699,6 @@ define([
         return false;
     };
 
-    function destroy(property) {
-        for (var name in property) {
-            if (property.hasOwnProperty(name)) {
-                property[name].destroy();
-            }
-        }
-    }
-
-    function release(property) {
-        for (var name in property) {
-            if (property.hasOwnProperty(name)) {
-                property[name].destroy();
-            }
-        }
-    }
-
     /**
      * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
      * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
@@ -2351,20 +2717,16 @@ define([
      * model = model && model.destroy();
      */
     Model.prototype.destroy = function() {
-        var resources = this._rendererResources;
-        destroy(resources.buffers);
-        destroy(resources.vertexArrays);
-        release(resources.programs);
-        release(resources.pickPrograms);
-        destroy(resources.textures);
-        resources = undefined;
         this._rendererResources = undefined;
+        this._cachedRendererResources = this._cachedRendererResources && this._cachedRendererResources.release();
 
         var pickIds = this._pickIds;
         var length = pickIds.length;
         for (var i = 0; i < length; ++i) {
             pickIds[i].destroy();
         }
+
+        releaseCachedGltf(this);
 
         return destroyObject(this);
     };

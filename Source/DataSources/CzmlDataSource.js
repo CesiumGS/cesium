@@ -850,7 +850,7 @@ define([
         }
     }
 
-    function processVertexData(object, positionsData, entityCollection) {
+    function processVertexData(object, propertyName, positionsData, entityCollection) {
         var i;
         var len;
         var references = positionsData.references;
@@ -863,13 +863,14 @@ define([
             var iso8601Interval = positionsData.interval;
             if (defined(iso8601Interval)) {
                 iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
-                if (!(object.positions instanceof CompositePositionProperty)) {
-                    object.positions = new CompositePositionProperty();
+                if (!(object[propertyName] instanceof CompositePositionProperty)) {
                     iso8601Interval.data = new PositionPropertyArray(properties);
-                    object.positions.intervals.addInterval(iso8601Interval);
+                    var property = new CompositePositionProperty();
+                    property.intervals.addInterval(iso8601Interval);
+                    object[propertyName] = property;
                 }
             } else {
-                object.positions = new PositionPropertyArray(properties);
+                object[propertyName] = new PositionPropertyArray(properties);
             }
         } else {
             var values = [];
@@ -900,12 +901,12 @@ define([
                 }
             }
             if (defined(positionsData.array)) {
-                processPacketData(Array, object, 'positions', positionsData, undefined, undefined, entityCollection);
+                processPacketData(Array, object, propertyName, positionsData, undefined, undefined, entityCollection);
             }
         }
     }
 
-    function processPositions(object, positionsData, entityCollection) {
+    function processPositions(object, propertyName, positionsData, entityCollection) {
         if (!defined(positionsData)) {
             return;
         }
@@ -913,10 +914,10 @@ define([
         if (isArray(positionsData)) {
             var length = positionsData.length;
             for (var i = 0; i < length; i++) {
-                processVertexData(object, positionsData[i], entityCollection);
+                processVertexData(object, propertyName, positionsData[i], entityCollection);
             }
         } else {
-            processVertexData(object, positionsData, entityCollection);
+            processVertexData(object, propertyName, positionsData, entityCollection);
         }
     }
 
@@ -1223,7 +1224,7 @@ define([
         processPacketData(Color, polygon, 'outlineColor', polygonData.outlineColor, interval, sourceUri, entityCollection);
         processPacketData(Number, polygon, 'outlineWidth', polygonData.outlineWidth, interval, sourceUri, entityCollection);
         processPacketData(Boolean, polygon, 'perPositionHeight', polygonData.perPositionHeight, interval, sourceUri, entityCollection);
-        processPositions(polygon, polygonData.positions, entityCollection);
+        processPositions(polygon, 'hierarchy', polygonData.positions, entityCollection);
     }
 
     function processRectangle(entity, packet, entityCollection, sourceUri) {
@@ -1287,7 +1288,7 @@ define([
         processPacketData(Boolean, wall, 'outline', wallData.outline, interval, sourceUri, entityCollection);
         processPacketData(Color, wall, 'outlineColor', wallData.outlineColor, interval, sourceUri, entityCollection);
         processPacketData(Number, wall, 'outlineWidth', wallData.outlineWidth, interval, sourceUri, entityCollection);
-        processPositions(wall, wallData.positions, entityCollection);
+        processPositions(wall, 'positions', wallData.positions, entityCollection);
     }
 
     function processPolyline(entity, packet, entityCollection, sourceUri) {
@@ -1313,7 +1314,7 @@ define([
         processMaterialPacketData(polyline, 'material', polylineData.material, interval, sourceUri, entityCollection);
         processPacketData(Boolean, polyline, 'followSurface', polylineData.followSurface, interval, sourceUri, entityCollection);
         processPacketData(Number, polyline, 'granularity', polylineData.granularity, interval, sourceUri, entityCollection);
-        processPositions(polyline, polylineData.positions, entityCollection);
+        processPositions(polyline, 'positions', polylineData.positions, entityCollection);
     }
 
     function processCzmlPacket(packet, entityCollection, updaterFunctions, sourceUri, dataSource) {

@@ -30,10 +30,14 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
 
-function createModel(url, height) {
+function createModel(url, height, heading, pitch, roll) {
     height = Cesium.defaultValue(height, 0.0);
+    heading = Cesium.defaultValue(heading, 0.0);
+    pitch = Cesium.defaultValue(pitch, 0.0);
+    roll = Cesium.defaultValue(roll, 0.0);
 
-    var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height));
+    var origin = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height);
+    var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, heading, pitch, roll);
 
     scene.primitives.removeAll(); // Remove previous model
     var model = scene.primitives.add(Cesium.Model.fromGltf({
@@ -42,7 +46,7 @@ function createModel(url, height) {
         minimumPixelSize : 128
     }));
 
-    model.readyToRender.addEventListener(function(model) {
+    model.readyPromise.then(function(model) {
         // Play and loop all animations at half-speed
         model.activeAnimations.addAll({
             speedup : 0.5,
@@ -52,12 +56,14 @@ function createModel(url, height) {
         // Zoom to model
         var center = Cesium.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cesium.Cartesian3());
         var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-        var camera = scene.camera;
+        var camera = viewer.camera;
         camera.transform = transform;
         var controller = scene.screenSpaceCameraController;
         var r = 2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
         controller.minimumZoomDistance = r * 0.5;
         camera.lookAt(new Cesium.Cartesian3(r, r, r), Cesium.Cartesian3.ZERO, Cesium.Cartesian3.UNIT_Z);
+    }).otherwise(function(error){
+        window.alert(error);
     });
 }
 
@@ -75,7 +81,11 @@ handler.setInputAction(function(movement) {
 var options = [{
 text : 'Aircraft',
 onselect : function() {
-    createModel('../../SampleData/models/CesiumAir/Cesium_Air.gltf', 5000.0);
+        var height = 5000.0;
+        var heading = 0.0;
+        var pitch = Cesium.Math.toRadians(10.0);
+        var roll = Cesium.Math.toRadians(-20.0);
+        createModel('../../SampleData/models/CesiumAir/Cesium_Air.gltf', height, heading, pitch, roll);
     }
 }, {
 text : 'Ground vehicle',

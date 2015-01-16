@@ -870,7 +870,7 @@ define([
         var edges = {};
 
         var radius = ellipsoid.maximumRadius;
-        var minDistance = 2.0 * radius * Math.sin(granularity * 0.5);
+        var minDistance = CesiumMath.chordLength(granularity, radius);
         var minDistanceSqrd = minDistance * minDistance;
 
         while (triangles.length > 0) {

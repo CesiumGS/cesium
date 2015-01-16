@@ -6,6 +6,9 @@ define([
         '../Core/DeveloperError',
         '../Core/EventHelper',
         './BillboardVisualizer',
+        './BoxGeometryUpdater',
+        './CorridorGeometryUpdater',
+        './CylinderGeometryUpdater',
         './EllipseGeometryUpdater',
         './EllipsoidGeometryUpdater',
         './GeometryVisualizer',
@@ -15,6 +18,7 @@ define([
         './PointVisualizer',
         './PolygonGeometryUpdater',
         './PolylineGeometryUpdater',
+        './PolylineVolumeGeometryUpdater',
         './RectangleGeometryUpdater',
         './WallGeometryUpdater'
     ], function(
@@ -24,6 +28,9 @@ define([
         DeveloperError,
         EventHelper,
         BillboardVisualizer,
+        BoxGeometryUpdater,
+        CorridorGeometryUpdater,
+        CylinderGeometryUpdater,
         EllipseGeometryUpdater,
         EllipsoidGeometryUpdater,
         GeometryVisualizer,
@@ -33,6 +40,7 @@ define([
         PointVisualizer,
         PolygonGeometryUpdater,
         PolylineGeometryUpdater,
+        PolylineVolumeGeometryUpdater,
         RectangleGeometryUpdater,
         WallGeometryUpdater) {
     "use strict";
@@ -88,10 +96,14 @@ define([
     DataSourceDisplay.defaultVisualizersCallback = function(scene, dataSource) {
         var entities = dataSource.entities;
         return [new BillboardVisualizer(scene, entities),
+                new GeometryVisualizer(BoxGeometryUpdater, scene, entities),
+                new GeometryVisualizer(CylinderGeometryUpdater, scene, entities),
+                new GeometryVisualizer(CorridorGeometryUpdater, scene, entities),
                 new GeometryVisualizer(EllipseGeometryUpdater, scene, entities),
                 new GeometryVisualizer(EllipsoidGeometryUpdater, scene, entities),
                 new GeometryVisualizer(PolygonGeometryUpdater, scene, entities),
                 new GeometryVisualizer(PolylineGeometryUpdater, scene, entities),
+                new GeometryVisualizer(PolylineVolumeGeometryUpdater, scene, entities),
                 new GeometryVisualizer(RectangleGeometryUpdater, scene, entities),
                 new GeometryVisualizer(WallGeometryUpdater, scene, entities),
                 new LabelVisualizer(scene, entities),

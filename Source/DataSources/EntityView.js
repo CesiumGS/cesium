@@ -297,7 +297,7 @@ define([
         this._mode = scene.mode !== SceneMode.MORPHING ? scene.mode : this._mode;
 
         if (scene.mode !== SceneMode.MORPHING) {
-            updateTransform(this, scene.camera, updateLookAt, positionProperty, time, ellipsoid);
+            updateTransform(this, camera, updateLookAt, positionProperty, time, ellipsoid);
         }
     };
 

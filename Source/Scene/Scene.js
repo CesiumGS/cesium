@@ -812,7 +812,6 @@ define([
         frameState.camera = camera;
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(scene);
-        frameState.afterRender.length = 0;
 
         clearPasses(frameState.passes);
     }
