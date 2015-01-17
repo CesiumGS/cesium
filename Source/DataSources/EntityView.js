@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/defaultValue',
         '../Core/defined',
@@ -13,6 +14,7 @@ define([
         '../Core/Transforms',
         '../Scene/SceneMode'
     ], function(
+        BoundingSphere,
         Cartesian3,
         defaultValue,
         defined,
@@ -43,10 +45,6 @@ define([
         var cartesian = positionProperty.getValue(time, that._lastCartesian);
 
         if (defined(cartesian)) {
-            if(defined(that._boundingSphereOffset)){
-                //Cartesian3.add(that._boundingSphereOffset, cartesian, cartesian);
-            }
-
             var hasBasis = false;
             var xBasis;
             var yBasis;
@@ -151,6 +149,9 @@ define([
                 transform[15] = 0.0;
             } else {
                 // Stationary or slow-moving, low-altitude objects use East-North-Up.
+                if(defined(that._boundingSphereOffset)){
+                    Cartesian3.add(that._boundingSphereOffset, cartesian, cartesian);
+                }
                 Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, camera.transform);
             }
         }
@@ -176,7 +177,7 @@ define([
      */
     var EntityView = function(entity, scene, ellipsoid, boundingSphere) {
 
-        this._boundingSphere = boundingSphere;
+        this._boundingSphere = BoundingSphere.clone(boundingSphere);
         this._boundingSphereOffset = undefined;
 
         /**

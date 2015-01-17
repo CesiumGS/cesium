@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../../Core/Cartesian2',
+        '../../Core/Cartesian3',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -10,6 +11,7 @@ define([
         '../../ThirdParty/knockout'
     ], function(
         Cartesian2,
+        Cartesian3,
         defaultValue,
         defined,
         defineProperties,
@@ -58,7 +60,7 @@ define([
          * Gets or sets the world position of the object for which to display the selection indicator.
          * @type {Cartesian3}
          */
-        this.position = undefined;
+        this.position = new Cartesian3();
 
         /**
          * Gets or sets the visibility of the selection indicator.

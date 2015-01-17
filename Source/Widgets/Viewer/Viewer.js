@@ -79,6 +79,12 @@ define([
         Timeline) {
     "use strict";
 
+    var getBoundingSphereOptions = {
+        entity : undefined,
+        result : new BoundingSphere(),
+        requireComplete : false
+    };
+
     function onTimelineScrubfunction(e) {
         var clock = e.clock;
         clock.currentTime = e.timeJulian;
@@ -586,8 +592,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         // Subscribe to left clicks and zoom to the picked object.
         function pickAndTrackObject(e) {
             var entity = pickEntity(that, e);
-            if (defined(entity) && defined(entity.position)) {
-                that.trackedEntity = entity;
+            if (defined(entity)) {
+                if (defined(entity.position)) {
+                    that.trackedEntity = entity;
+                } else {
+                    that.zoomTo(entity);
+                }
             }
         }
 
@@ -980,7 +990,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                     }
 
                     var that = this;
-                    var boundingSphere = new BoundingSphere();
 
                     var removeEvent = this.cesiumWidget.scene.postRender.addEventListener(function() {
                         var trackedEntity = that._trackedEntity;
@@ -990,11 +999,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                             return;
                         }
 
-                        var state = that._dataSourceDisplay.getBoundingSphere({
-                            entity : trackedEntity,
-                            result : boundingSphere,
-                            requireComplete : true
-                        });
+                        getBoundingSphereOptions.entity = trackedEntity;
+                        getBoundingSphereOptions.requireComplete = true;
+                        var state = that._dataSourceDisplay.getBoundingSphere(getBoundingSphereOptions);
 
                         if (state === AsyncState.PENDING) {
                             return;
@@ -1012,7 +1019,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                         }
 
                         removeEvent();
-                        that._entityView = new EntityView(value, scene, scene.globe.ellipsoid, boundingSphere);
+                        that._entityView = new EntityView(value, scene, scene.globe.ellipsoid, getBoundingSphereOptions.result);
                     });
                 }
             }
@@ -1304,58 +1311,51 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      */
     Viewer.prototype._onTick = function(clock) {
         var time = clock.currentTime;
-        var entityView = this._entityView;
-        var infoBoxViewModel = defined(this._infoBox) ? this._infoBox.viewModel : undefined;
-        var selectionIndicatorViewModel = defined(this._selectionIndicator) ? this._selectionIndicator.viewModel : undefined;
 
         var isUpdated = this._dataSourceDisplay.update(time);
         if (this._allowDataSourcesToSuspendAnimation) {
             this._clockViewModel.canAnimate = isUpdated;
         }
 
+        var entityView = this._entityView;
         if (defined(entityView)) {
             entityView.update(time);
         }
 
+        var position;
+        var enableCamera = false;
         var selectedEntity = this.selectedEntity;
         var showSelection = defined(selectedEntity) && this._enableInfoOrSelection;
-        if (showSelection) {
-            var oldPosition = defined(selectionIndicatorViewModel) ? selectionIndicatorViewModel.position : undefined;
-            var position;
-            var enableCamera = false;
 
-            if (selectedEntity.isAvailable(time)) {
-                if (defined(selectedEntity.position)) {
-                    position = selectedEntity.position.getValue(time, oldPosition);
-                    enableCamera = defined(position);
-                }
-                // else "position" is undefined and "enableCamera" is false.
-            }
-            // else "position" is undefined and "enableCamera" is false.
+        if (showSelection && selectedEntity.isAvailable(time)) {
+            getBoundingSphereOptions.entity = selectedEntity;
+            getBoundingSphereOptions.requireComplete = false;
+            var state = this._dataSourceDisplay.getBoundingSphere(getBoundingSphereOptions);
+            enableCamera = state !== AsyncState.FAILED;
 
-            if (defined(selectionIndicatorViewModel)) {
-                selectionIndicatorViewModel.position = position;
-            }
-
-            if (defined(infoBoxViewModel)) {
-                infoBoxViewModel.enableCamera = enableCamera;
-                infoBoxViewModel.isCameraTracking = (this.trackedEntity === this.selectedEntity);
-
-                if (defined(selectedEntity.description)) {
-                    infoBoxViewModel.descriptionRawHtml = defaultValue(selectedEntity.description.getValue(time), '');
-                } else {
-                    infoBoxViewModel.descriptionRawHtml = '';
-                }
+            if (enableCamera) {
+                position = getBoundingSphereOptions.result.center;
             }
         }
 
+        var selectionIndicatorViewModel = defined(this._selectionIndicator) ? this._selectionIndicator.viewModel : undefined;
         if (defined(selectionIndicatorViewModel)) {
-            selectionIndicatorViewModel.showSelection = showSelection;
+            Cartesian3.clone(position, selectionIndicatorViewModel.position);
+            selectionIndicatorViewModel.showSelection = showSelection && enableCamera;
             selectionIndicatorViewModel.update();
         }
 
+        var infoBoxViewModel = defined(this._infoBox) ? this._infoBox.viewModel : undefined;
         if (defined(infoBoxViewModel)) {
             infoBoxViewModel.showInfo = showSelection;
+            infoBoxViewModel.enableCamera = enableCamera;
+            infoBoxViewModel.isCameraTracking = (this.trackedEntity === this.selectedEntity);
+
+            if (showSelection && defined(selectedEntity.description)) {
+                infoBoxViewModel.descriptionRawHtml = defaultValue(selectedEntity.description.getValue(time), '');
+            } else {
+                infoBoxViewModel.descriptionRawHtml = '';
+            }
         }
     };
 
@@ -1382,7 +1382,13 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         if (infoBoxViewModel.isCameraTracking && (this.trackedEntity === this.selectedEntity)) {
             this.trackedEntity = undefined;
         } else {
-            this.trackedEntity = this.selectedEntity;
+            var selectedEntity = this.selectedEntity;
+            var position = selectedEntity.position;
+            if (defined(position)) {
+                this.trackedEntity = this.selectedEntity;
+            } else {
+                this.zoomTo(this.selectedEntity);
+            }
         }
     };
 
@@ -1504,13 +1510,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var boundingSpherePromise = this._boundingSpherePromise;
         var boundingSpheres = [];
         for (var i = 0, len = entities.length; i < len; i++) {
-            var result = new BoundingSphere();
 
-            var state = this._dataSourceDisplay.getBoundingSphere({
-                entity : entities[i],
-                result : result,
-                requireComplete : true
-            });
+            getBoundingSphereOptions.entity = entities[i];
+            getBoundingSphereOptions.requireComplete = true;
+            var state = this._dataSourceDisplay.getBoundingSphere(getBoundingSphereOptions);
 
             if (state === AsyncState.PENDING) {
                 return;
@@ -1519,7 +1522,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                 return;
             }
 
-            boundingSpheres.push(result);
+            boundingSpheres.push(BoundingSphere.clone(getBoundingSphereOptions.result));
         }
 
         if (boundingSpheres.length === 0) {
