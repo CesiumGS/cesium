@@ -3,12 +3,12 @@ define([
         '../Core/BoundingSphere',
         '../Core/defined',
         '../Core/DeveloperError',
-        './AsyncState'
+        './BoundingSphereState'
     ], function(
         BoundingSphere,
         defined,
         DeveloperError,
-        AsyncState) {
+        BoundingSphereState) {
     "use strict";
 
     var primitiveBSScratch = new BoundingSphere();
@@ -51,10 +51,10 @@ define([
         } else if (defined(boundingSphere2)) {
             BoundingSphere.clone(boundingSphere2, result);
         } else {
-            return AsyncState.FAILED;
+            return BoundingSphereState.FAILED;
         }
 
-        return AsyncState.COMPLETED;
+        return BoundingSphereState.DONE;
     };
 
     return dynamicGeometryGetBoundingSphere;

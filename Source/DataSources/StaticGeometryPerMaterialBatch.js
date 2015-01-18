@@ -4,14 +4,14 @@ define([
         '../Core/defined',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/Primitive',
-        './AsyncState',
+        './BoundingSphereState',
         './MaterialProperty'
     ], function(
         AssociativeArray,
         defined,
         ShowGeometryInstanceAttribute,
         Primitive,
-        AsyncState,
+        BoundingSphereState,
         MaterialProperty) {
     "use strict";
 
@@ -142,15 +142,15 @@ define([
     Batch.prototype.getBoundingSphere = function(entity, result) {
         var primitive = this.primitive;
         if (!primitive.ready) {
-            return AsyncState.PENDING;
+            return BoundingSphereState.PENDING;
         }
         var attributes = primitive.getGeometryInstanceAttributes(entity);
         if (!defined(attributes) || !defined(attributes.boundingSphere) ||//
             (defined(attributes.show) && attributes.show[0] === 0)) {
-            return AsyncState.FAILED;
+            return BoundingSphereState.FAILED;
         }
         attributes.boundingSphere.clone(result);
-        return AsyncState.COMPLETED;
+        return BoundingSphereState.DONE;
     };
 
     Batch.prototype.destroy = function(time) {
@@ -236,7 +236,7 @@ define([
                 return item.getBoundingSphere(entity, result);
             }
         }
-        return AsyncState.FAILED;
+        return BoundingSphereState.FAILED;
     };
 
     StaticGeometryPerMaterialBatch.prototype.removeAllPrimitives = function() {

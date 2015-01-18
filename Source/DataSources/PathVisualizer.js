@@ -13,7 +13,7 @@ define([
         '../Core/Transforms',
         '../Scene/PolylineCollection',
         '../Scene/SceneMode',
-        './AsyncState',
+        './BoundingSphereState',
         './CompositePositionProperty',
         './ConstantPositionProperty',
         './MaterialProperty',
@@ -35,7 +35,7 @@ define([
         Transforms,
         PolylineCollection,
         SceneMode,
-        AsyncState,
+        BoundingSphereState,
         CompositePositionProperty,
         ConstantPositionProperty,
         MaterialProperty,
@@ -484,12 +484,12 @@ define([
      *
      * @param {Entity} entity The entity whose bounding sphere to compute.
      * @param {BoundingSphere} result The bounding sphere onto which to store the result.
-     * @returns {AsyncState} AsyncState.COMPLETED if the result contains the bounding sphere,
-     *                       AsyncState.PENDING if the result is still being computed, or
-     *                       AsyncState.FAILED if the entity has no visualization in the current scene.
+     * @returns {BoundingSphereState} BoundingSphereState.DONE if the result contains the bounding sphere,
+     *                       BoundingSphereState.PENDING if the result is still being computed, or
+     *                       BoundingSphereState.FAILED if the entity has no visualization in the current scene.
      */
     PathVisualizer.prototype.getBoundingSphere = function(entity, result) {
-        return AsyncState.FAILED;
+        return BoundingSphereState.FAILED;
     };
 
     /**

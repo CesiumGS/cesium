@@ -12,7 +12,7 @@ define([
         '../../Core/Matrix4',
         '../../Core/ScreenSpaceEventType',
         '../../Core/Transforms',
-        '../../DataSources/AsyncState',
+        '../../DataSources/BoundingSphereState',
         '../../DataSources/ConstantPositionProperty',
         '../../DataSources/DataSourceCollection',
         '../../DataSources/DataSourceDisplay',
@@ -51,7 +51,7 @@ define([
         Matrix4,
         ScreenSpaceEventType,
         Transforms,
-        AsyncState,
+        BoundingSphereState,
         ConstantPositionProperty,
         DataSourceCollection,
         DataSourceDisplay,
@@ -1003,9 +1003,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                         getBoundingSphereOptions.requireComplete = true;
                         var state = that._dataSourceDisplay.getBoundingSphere(getBoundingSphereOptions);
 
-                        if (state === AsyncState.PENDING) {
+                        if (state === BoundingSphereState.PENDING) {
                             return;
-                        } else if (state === AsyncState.FAILED) {
+                        } else if (state === BoundingSphereState.FAILED) {
                             removeEvent();
                             return;
                         }
@@ -1331,7 +1331,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             getBoundingSphereOptions.entity = selectedEntity;
             getBoundingSphereOptions.requireComplete = false;
             var state = this._dataSourceDisplay.getBoundingSphere(getBoundingSphereOptions);
-            enableCamera = state !== AsyncState.FAILED;
+            enableCamera = state !== BoundingSphereState.FAILED;
 
             if (enableCamera) {
                 position = getBoundingSphereOptions.result.center;
@@ -1515,9 +1515,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             getBoundingSphereOptions.requireComplete = true;
             var state = this._dataSourceDisplay.getBoundingSphere(getBoundingSphereOptions);
 
-            if (state === AsyncState.PENDING) {
+            if (state === BoundingSphereState.PENDING) {
                 return;
-            } else if (state === AsyncState.FAILED) {
+            } else if (state === BoundingSphereState.FAILED) {
                 cancelZoom(this);
                 return;
             }

@@ -18,7 +18,7 @@ define([
         '../Scene/PolylineCollection',
         '../Scene/PolylineColorAppearance',
         '../Scene/PolylineMaterialAppearance',
-        './AsyncState',
+        './BoundingSphereState',
         './ColorMaterialProperty',
         './ConstantProperty',
         './MaterialProperty',
@@ -42,7 +42,7 @@ define([
         PolylineCollection,
         PolylineColorAppearance,
         PolylineMaterialAppearance,
-        AsyncState,
+        BoundingSphereState,
         ColorMaterialProperty,
         ConstantProperty,
         MaterialProperty,
@@ -488,9 +488,9 @@ define([
         var line = this._line;
         if (line.show && line.positions.length > 0) {
             BoundingSphere.fromPoints(line.positions, result);
-            return AsyncState.COMPLETED;
+            return BoundingSphereState.DONE;
         }
-        return AsyncState.FAILED;
+        return BoundingSphereState.FAILED;
     };
 
     DynamicGeometryUpdater.prototype.isDestroyed = function() {

@@ -9,7 +9,7 @@ define([
         '../Core/Matrix4',
         '../Scene/Model',
         '../Scene/ModelAnimationLoop',
-        './AsyncState',
+        './BoundingSphereState',
         './Property'
     ], function(
         AssociativeArray,
@@ -21,7 +21,7 @@ define([
         Matrix4,
         Model,
         ModelAnimationLoop,
-        AsyncState,
+        BoundingSphereState,
         Property) {
     "use strict";
     /*global console*/
@@ -158,9 +158,9 @@ define([
      *
      * @param {Entity} entity The entity whose bounding sphere to compute.
      * @param {BoundingSphere} result The bounding sphere onto which to store the result.
-     * @returns {AsyncState} AsyncState.COMPLETED if the result contains the bounding sphere,
-     *                       AsyncState.PENDING if the result is still being computed, or
-     *                       AsyncState.FAILED if the entity has no visualization in the current scene.
+     * @returns {BoundingSphereState} BoundingSphereState.DONE if the result contains the bounding sphere,
+     *                       BoundingSphereState.PENDING if the result is still being computed, or
+     *                       BoundingSphereState.FAILED if the entity has no visualization in the current scene.
      */
     ModelVisualizer.prototype.getBoundingSphere = function(entity, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -174,20 +174,20 @@ define([
 
         var modelData = this._modelHash[entity.id];
         if (!defined(modelData)) {
-            return AsyncState.FAILED;
+            return BoundingSphereState.FAILED;
         }
 
         var model = modelData.modelPrimitive;
         if (!defined(model) || !model.show) {
-            return AsyncState.FAILED;
+            return BoundingSphereState.FAILED;
         }
 
         if (!model.ready) {
-            return AsyncState.PENDING;
+            return BoundingSphereState.PENDING;
         }
 
         BoundingSphere.transform(model.boundingSphere, model.modelMatrix, result);
-        return AsyncState.COMPLETED;
+        return BoundingSphereState.DONE;
     };
 
     /**

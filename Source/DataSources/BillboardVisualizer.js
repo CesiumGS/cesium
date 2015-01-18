@@ -12,7 +12,7 @@ define([
         '../Scene/BillboardCollection',
         '../Scene/HorizontalOrigin',
         '../Scene/VerticalOrigin',
-        './AsyncState',
+        './BoundingSphereState',
         './Property'
     ], function(
         AssociativeArray,
@@ -27,7 +27,7 @@ define([
         BillboardCollection,
         HorizontalOrigin,
         VerticalOrigin,
-        AsyncState,
+        BoundingSphereState,
         Property) {
     "use strict";
 
@@ -168,9 +168,9 @@ define([
      *
      * @param {Entity} entity The entity whose bounding sphere to compute.
      * @param {BoundingSphere} result The bounding sphere onto which to store the result.
-     * @returns {AsyncState} AsyncState.COMPLETED if the result contains the bounding sphere,
-     *                       AsyncState.PENDING if the result is still being computed, or
-     *                       AsyncState.FAILED if the entity has no visualization in the current scene.
+     * @returns {BoundingSphereState} BoundingSphereState.DONE if the result contains the bounding sphere,
+     *                       BoundingSphereState.PENDING if the result is still being computed, or
+     *                       BoundingSphereState.FAILED if the entity has no visualization in the current scene.
      */
     BillboardVisualizer.prototype.getBoundingSphere = function(entity, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -184,12 +184,12 @@ define([
 
         var item = this._items.get(entity.id);
         if (!defined(item) || !defined(item.billboard)) {
-            return AsyncState.FAILED;
+            return BoundingSphereState.FAILED;
         }
 
         result.center = Cartesian3.clone(item.billboard.position, result.center);
         result.radius = 0;
-        return AsyncState.COMPLETED;
+        return BoundingSphereState.DONE;
     };
 
     /**

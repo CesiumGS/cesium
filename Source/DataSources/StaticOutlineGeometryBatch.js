@@ -7,7 +7,7 @@ define([
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
-        './AsyncState'
+        './BoundingSphereState'
     ], function(
         AssociativeArray,
         Color,
@@ -16,7 +16,7 @@ define([
         ShowGeometryInstanceAttribute,
         PerInstanceColorAppearance,
         Primitive,
-        AsyncState) {
+        BoundingSphereState) {
     "use strict";
 
     var Batch = function(primitives, translucent, width) {
@@ -141,15 +141,15 @@ define([
     Batch.prototype.getBoundingSphere = function(entity, result) {
         var primitive = this.primitive;
         if (!primitive.ready) {
-            return AsyncState.PENDING;
+            return BoundingSphereState.PENDING;
         }
         var attributes = primitive.getGeometryInstanceAttributes(entity);
         if (!defined(attributes) || !defined(attributes.boundingSphere) ||//
             (defined(attributes.show) && attributes.show[0] === 0)) {
-            return AsyncState.FAILED;
+            return BoundingSphereState.FAILED;
         }
         attributes.boundingSphere.clone(result);
-        return AsyncState.COMPLETED;
+        return BoundingSphereState.DONE;
     };
 
     Batch.prototype.removeAllPrimitives = function() {
@@ -293,7 +293,7 @@ define([
             }
         }
 
-        return AsyncState.FAILED;
+        return BoundingSphereState.FAILED;
     };
 
     StaticOutlineGeometryBatch.prototype.removeAllPrimitives = function() {

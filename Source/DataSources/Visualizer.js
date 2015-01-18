@@ -42,9 +42,9 @@ define([
      *
      * @param {Entity} entity The entity whose bounding sphere to compute.
      * @param {BoundingSphere} result The bounding sphere onto which to store the result.
-     * @returns {AsyncState} AsyncState.COMPLETED if the result contains the bounding sphere,
-     *                       AsyncState.PENDING if the result is still being computed, or
-     *                       AsyncState.FAILED if the entity has no visualization in the current scene.
+     * @returns {BoundingSphereState} BoundingSphereState.DONE if the result contains the bounding sphere,
+     *                       BoundingSphereState.PENDING if the result is still being computed, or
+     *                       BoundingSphereState.FAILED if the entity has no visualization in the current scene.
      */
     Visualizer.prototype.getBoundingSphere = DeveloperError.throwInstantiationError;
 

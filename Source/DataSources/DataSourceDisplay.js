@@ -9,7 +9,7 @@ define([
         '../Core/DeveloperError',
         '../Core/EventHelper',
         '../ThirdParty/when',
-        './AsyncState',
+        './BoundingSphereState',
         './BillboardVisualizer',
         './BoxGeometryUpdater',
         './CorridorGeometryUpdater',
@@ -37,7 +37,7 @@ define([
         DeveloperError,
         EventHelper,
         when,
-        AsyncState,
+        BoundingSphereState,
         BillboardVisualizer,
         BoxGeometryUpdater,
         CorridorGeometryUpdater,
@@ -277,9 +277,9 @@ define([
      *
      * @param {Entity} entity The entity whose bounding sphere to compute.
      * @param {BoundingSphere} result The bounding sphere onto which to store the result.
-     * @returns {AsyncState} AsyncState.COMPLETED if the result contains the bounding sphere,
-     *                       AsyncState.PENDING if the result is still being computed, or
-     *                       AsyncState.FAILED if the entity has no visualization in the current scene.
+     * @returns {BoundingSphereState} BoundingSphereState.DONE if the result contains the bounding sphere,
+     *                       BoundingSphereState.PENDING if the result is still being computed, or
+     *                       BoundingSphereState.FAILED if the entity has no visualization in the current scene.
      * @private
      */
     DataSourceDisplay.prototype.getBoundingSphere = function(options) {
@@ -306,7 +306,7 @@ define([
         }
 
         if (!defined(dataSource)) {
-            return AsyncState.FAILED;
+            return BoundingSphereState.FAILED;
         }
 
         var boundingSpheres = [];
@@ -317,20 +317,20 @@ define([
             var tmp = new BoundingSphere();
             if (defined(visualizer.getBoundingSphere)) {
                 var state = visualizer.getBoundingSphere(entity, tmp);
-                if (requireComplete && state === AsyncState.PENDING) {
-                    return AsyncState.PENDING;
-                } else if (state === AsyncState.COMPLETED) {
+                if (requireComplete && state === BoundingSphereState.PENDING) {
+                    return BoundingSphereState.PENDING;
+                } else if (state === BoundingSphereState.DONE) {
                     boundingSpheres.push(tmp);
                 }
             }
         }
 
         if (boundingSpheres.length === 0) {
-            return AsyncState.FAILED;
+            return BoundingSphereState.FAILED;
         }
 
         result = BoundingSphere.fromBoundingSpheres(boundingSpheres, result);
-        return AsyncState.COMPLETED;
+        return BoundingSphereState.DONE;
     };
 
     DataSourceDisplay.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {

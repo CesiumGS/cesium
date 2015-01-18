@@ -5,7 +5,7 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        './AsyncState',
+        './BoundingSphereState',
         './ColorMaterialProperty',
         './StaticGeometryColorBatch',
         './StaticGeometryPerMaterialBatch',
@@ -16,7 +16,7 @@ define([
         defined,
         destroyObject,
         DeveloperError,
-        AsyncState,
+        BoundingSphereState,
         ColorMaterialProperty,
         StaticGeometryColorBatch,
         StaticGeometryPerMaterialBatch,
@@ -64,7 +64,7 @@ define([
         if (defined(updater) && defined(updater.getBoundingSphere)) {
             return updater.getBoundingSphere(entity, result);
         }
-        return AsyncState.FAILED;
+        return BoundingSphereState.FAILED;
     };
 
     function removeUpdater(that, updater) {
@@ -229,9 +229,9 @@ define([
      *
      * @param {Entity} entity The entity whose bounding sphere to compute.
      * @param {BoundingSphere} result The bounding sphere onto which to store the result.
-     * @returns {AsyncState} AsyncState.COMPLETED if the result contains the bounding sphere,
-     *                       AsyncState.PENDING if the result is still being computed, or
-     *                       AsyncState.FAILED if the entity has no visualization in the current scene.
+     * @returns {BoundingSphereState} BoundingSphereState.DONE if the result contains the bounding sphere,
+     *                       BoundingSphereState.PENDING if the result is still being computed, or
+     *                       BoundingSphereState.FAILED if the entity has no visualization in the current scene.
      */
     GeometryVisualizer.prototype.getBoundingSphere = function(entity, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -248,27 +248,27 @@ define([
 
         var count = 0;
         var resultState;
-        var state = AsyncState.COMPLETED;
+        var state = BoundingSphereState.DONE;
         var batches = this._batches;
         var batchesLength = batches.length;
 
         for (var i = 0; i < batchesLength; i++) {
             state = batches[i].getBoundingSphere(entity, tmp);
-            if (state === AsyncState.PENDING) {
-                return AsyncState.PENDING;
-            } else if (state === AsyncState.COMPLETED) {
+            if (state === BoundingSphereState.PENDING) {
+                return BoundingSphereState.PENDING;
+            } else if (state === BoundingSphereState.DONE) {
                 boundingSpheres[count] = BoundingSphere.clone(tmp, boundingSpheres[count]);
                 count++;
             }
         }
 
         if (count === 0) {
-            return AsyncState.FAILED;
+            return BoundingSphereState.FAILED;
         }
 
         boundingSpheres.length = count;
         BoundingSphere.fromBoundingSpheres(boundingSpheres, result);
-        return AsyncState.COMPLETED;
+        return BoundingSphereState.DONE;
     };
 
     /**
