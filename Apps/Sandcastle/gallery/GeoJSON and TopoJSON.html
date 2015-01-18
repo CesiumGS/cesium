@@ -89,7 +89,7 @@ Sandcastle.addToolbarButton('Custom styling', function() {
 Sandcastle.reset = function() {
   viewer.dataSources.removeAll();
   
-  //Set the camera to continental US centered tilted view.
+  //Set the camera to a US centered tilted view.
   viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(-98, 15.0, 5000000),
       Cesium.Cartesian3.fromDegrees(-98, 40.0, 0), Cesium.Cartesian3.UNIT_Z);
 };
