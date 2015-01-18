@@ -1,7 +1,6 @@
 /*global define*/
 define([
         '../Core/AssociativeArray',
-        '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Color',
         '../Core/defined',
@@ -13,7 +12,6 @@ define([
         './Property'
     ], function(
         AssociativeArray,
-        BoundingSphere,
         Cartesian3,
         Color,
         defined,
@@ -173,10 +171,13 @@ define([
     };
 
     /**
-     * Gets the bounding sphere which encloses the point billboard produced for the specified entity.
+     * Computes a bounding sphere which encloses the visualization produced for the specified entity.
      *
-     * @param {Entity} entity The entity whose bounding sphere to retrieve.
-     * @returns {BoundingSphere} The bounding sphere of the point billboard representing the provided entity, or undefined if the entity is not currently visible.
+     * @param {Entity} entity The entity whose bounding sphere to compute.
+     * @param {BoundingSphere} result The bounding sphere onto which to store the result.
+     * @returns {AsyncState} AsyncState.COMPLETED if the result contains the bounding sphere,
+     *                       AsyncState.PENDING if the result is still being computed, or
+     *                       AsyncState.FAILED if the entity has no visualization in the current scene.
      */
     PointVisualizer.prototype.getBoundingSphere = function(entity, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -193,11 +194,10 @@ define([
             return AsyncState.FAILED;
         }
 
-        Cartesian3.clone(item.billboard.position, result.center);
+        result.center = Cartesian3.clone(item.billboard.position, result.center);
         result.radius = 0;
         return AsyncState.COMPLETED;
     };
-
 
     /**
      * Returns true if this object was destroyed; otherwise, false.

@@ -1340,7 +1340,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         var selectionIndicatorViewModel = defined(this._selectionIndicator) ? this._selectionIndicator.viewModel : undefined;
         if (defined(selectionIndicatorViewModel)) {
-            Cartesian3.clone(position, selectionIndicatorViewModel.position);
+            selectionIndicatorViewModel.position = Cartesian3.clone(position, selectionIndicatorViewModel.position);
             selectionIndicatorViewModel.showSelection = showSelection && enableCamera;
             selectionIndicatorViewModel.update();
         }

@@ -30,6 +30,17 @@ define([
     DynamicGeometryUpdater.prototype.update = DeveloperError.throwInstantiationError;
 
     /**
+     * Computes a bounding sphere which encloses the visualization produced for the specified entity.
+     *
+     * @param {Entity} entity The entity whose bounding sphere to compute.
+     * @param {BoundingSphere} result The bounding sphere onto which to store the result.
+     * @returns {AsyncState} AsyncState.COMPLETED if the result contains the bounding sphere,
+     *                       AsyncState.PENDING if the result is still being computed, or
+     *                       AsyncState.FAILED if the entity has no visualization in the current scene.
+     */
+    DynamicGeometryUpdater.prototype.getBoundingSphere = DeveloperError.throwInstantiationError;
+
+    /**
      * Returns true if this object was destroyed; otherwise, false.
      * @memberof DynamicGeometryUpdater
      *

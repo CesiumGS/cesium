@@ -5,7 +5,6 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../ThirdParty/when',
         './AsyncState',
         './ColorMaterialProperty',
         './StaticGeometryColorBatch',
@@ -17,7 +16,6 @@ define([
         defined,
         destroyObject,
         DeveloperError,
-        when,
         AsyncState,
         ColorMaterialProperty,
         StaticGeometryColorBatch,
@@ -223,13 +221,17 @@ define([
         return isUpdated;
     };
 
+    var getBoundingSphereArrayScratch = [];
+    var getBoundingSphereBoundingSphereScratch = new BoundingSphere();
+
     /**
-     * Gets the bounding sphere which encloses the geometry produced for the specified entity.
+     * Computes a bounding sphere which encloses the visualization produced for the specified entity.
      *
-     * @param {Entity} entity The entity whose bounding sphere to retrieve.
-     * @returns {Promise|BoundingSphere} A Promise to a BoundingSphere if the model is not yet loaded,
-     *                                   a BoundingSphere if the model is loaded,
-     *                                   or undefined if no model exists for the provided entity.
+     * @param {Entity} entity The entity whose bounding sphere to compute.
+     * @param {BoundingSphere} result The bounding sphere onto which to store the result.
+     * @returns {AsyncState} AsyncState.COMPLETED if the result contains the bounding sphere,
+     *                       AsyncState.PENDING if the result is still being computed, or
+     *                       AsyncState.FAILED if the entity has no visualization in the current scene.
      */
     GeometryVisualizer.prototype.getBoundingSphere = function(entity, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -241,27 +243,30 @@ define([
         }
         //>>includeEnd('debug');
 
-        var boundingSpheres = [];
+        var boundingSpheres = getBoundingSphereArrayScratch;
+        var tmp = getBoundingSphereBoundingSphereScratch;
 
+        var count = 0;
         var resultState;
         var state = AsyncState.COMPLETED;
         var batches = this._batches;
-        var tmp = new BoundingSphere();
+        var batchesLength = batches.length;
 
-        for (var i = 0, length = batches.length; i < length; i++) {
+        for (var i = 0; i < batchesLength; i++) {
             state = batches[i].getBoundingSphere(entity, tmp);
             if (state === AsyncState.PENDING) {
                 return AsyncState.PENDING;
             } else if (state === AsyncState.COMPLETED) {
-                boundingSpheres.push(tmp);
-                tmp = new BoundingSphere();
+                boundingSpheres[count] = BoundingSphere.clone(tmp, boundingSpheres[count]);
+                count++;
             }
         }
 
-        if (boundingSpheres.length === 0) {
+        if (count === 0) {
             return AsyncState.FAILED;
         }
 
+        boundingSpheres.length = count;
         BoundingSphere.fromBoundingSpheres(boundingSpheres, result);
         return AsyncState.COMPLETED;
     };

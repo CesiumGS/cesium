@@ -38,12 +38,13 @@ define([
     Visualizer.prototype.update = DeveloperError.throwInstantiationError;
 
     /**
-     * Gets the bounding sphere which encloses the visualization produced for the specified entity.
+     * Computes a bounding sphere which encloses the visualization produced for the specified entity.
      *
-     * @param {Entity} entity The entity whose bounding sphere to retrieve.
-     * @returns {Promise|BoundingSphere} A Promise to a BoundingSphere if visualization is not yet ready,
-     *                                   a BoundingSphere if ready,
-     *                                   or undefined if no visualization exists for the provided entity.
+     * @param {Entity} entity The entity whose bounding sphere to compute.
+     * @param {BoundingSphere} result The bounding sphere onto which to store the result.
+     * @returns {AsyncState} AsyncState.COMPLETED if the result contains the bounding sphere,
+     *                       AsyncState.PENDING if the result is still being computed, or
+     *                       AsyncState.FAILED if the entity has no visualization in the current scene.
      */
     Visualizer.prototype.getBoundingSphere = DeveloperError.throwInstantiationError;
 

@@ -123,8 +123,8 @@ define([
 
                 if (!updater.hasConstantFill) {
                     show = updater.isFilled(time);
-                    if (show !== attributes._lastShow) {
-                        attributes._lastShow = show;
+                    var currentShow = attributes.show[0] === 1;
+                    if (show !== currentShow) {
                         attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
                     }
                 }
@@ -145,7 +145,8 @@ define([
             return AsyncState.PENDING;
         }
         var attributes = primitive.getGeometryInstanceAttributes(entity);
-        if(!defined(attributes) || !defined(attributes.boundingSphere)) {
+        if (!defined(attributes) || !defined(attributes.boundingSphere) ||//
+            (defined(attributes.show) && attributes.show[0] === 0)) {
             return AsyncState.FAILED;
         }
         attributes.boundingSphere.clone(result);

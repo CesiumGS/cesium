@@ -273,6 +273,13 @@ define([
     };
 
     /**
+     * Computes a bounding sphere which encloses the visualization produced for the specified entity.
+     *
+     * @param {Entity} entity The entity whose bounding sphere to compute.
+     * @param {BoundingSphere} result The bounding sphere onto which to store the result.
+     * @returns {AsyncState} AsyncState.COMPLETED if the result contains the bounding sphere,
+     *                       AsyncState.PENDING if the result is still being computed, or
+     *                       AsyncState.FAILED if the entity has no visualization in the current scene.
      * @private
      */
     DataSourceDisplay.prototype.getBoundingSphere = function(options) {
@@ -284,14 +291,13 @@ define([
         var i;
         var length;
         if (!defined(dataSource)) {
-            var entityId = entity.id;
             dataSource = this._defaultDataSource;
-            if (!dataSource.entities.containsId(entityId)) {
+            if (!dataSource.entities.contains(entity)) {
                 var dataSources = this._dataSourceCollection;
                 length = dataSources.length;
                 for (i = 0; i < length; i++) {
                     dataSource = dataSources.get(i);
-                    if (dataSource.entities.containsId(entity.id)) {
+                    if (dataSource.entities.contains(entity)) {
                         break;
                     }
                     dataSource = undefined;

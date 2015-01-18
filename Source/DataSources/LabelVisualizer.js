@@ -1,7 +1,6 @@
 /*global define*/
 define([
         '../Core/AssociativeArray',
-        '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
@@ -17,7 +16,6 @@ define([
         './Property'
     ], function(
         AssociativeArray,
-        BoundingSphere,
         Cartesian2,
         Cartesian3,
         Color,
@@ -165,10 +163,13 @@ define([
     };
 
     /**
-     * Gets the bounding sphere which encloses the label produced for the specified entity.
+     * Computes a bounding sphere which encloses the visualization produced for the specified entity.
      *
-     * @param {Entity} entity The entity whose bounding sphere to retrieve.
-     * @returns {BoundingSphere} The bounding sphere of the label representing the provided entity, or undefined if the entity is not currently visible.
+     * @param {Entity} entity The entity whose bounding sphere to compute.
+     * @param {BoundingSphere} result The bounding sphere onto which to store the result.
+     * @returns {AsyncState} AsyncState.COMPLETED if the result contains the bounding sphere,
+     *                       AsyncState.PENDING if the result is still being computed, or
+     *                       AsyncState.FAILED if the entity has no visualization in the current scene.
      */
     LabelVisualizer.prototype.getBoundingSphere = function(entity, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -188,12 +189,12 @@ define([
         var label = item.label;
         var glyphs = label._glyphs;
 
-        //Currently labels all have the same position and we are not approximating
-        //eye offset, so just return the position of the first label.
         for (var i = 0, len = glyphs.length; i < len; i++) {
             var glyph = glyphs[i];
             if (defined(glyph.billboard)) {
-                Cartesian3.clone(glyph.billboard.position, result.center);
+                //Currently labels all have the same position and we are not approximating
+                //eye offset, so just return the position of the first label.
+                result.center = Cartesian3.clone(glyph.billboard.position, result.center);
                 result.radius = 0;
                 return AsyncState.COMPLETED;
             }

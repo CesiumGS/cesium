@@ -230,20 +230,19 @@ define([
     };
 
     /**
-     * Returns true if an entity with the provided id is in the collection, false otherwise.
+     * Returns true if the provided entity is in this collection, false otherwise.
      *
-     * @param id The entity identifier.
-     * @returns {Boolean} true if an entity with the provided id is in the collection, false otherwise.
+     * @param entity The entity.
+     * @returns {Boolean} true if the provided entity is in this collection, false otherwise.
      */
-    EntityCollection.prototype.containsId = function(id) {
+    EntityCollection.prototype.contains = function(entity) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(id)) {
-            throw new DeveloperError('id is required');
+        if (!defined(entity)) {
+            throw new DeveloperError('entity is required');
         }
         //>>includeEnd('debug');
-        return this._entities.contains(id);
+        return this._entities.get(entity.id) === entity;
     };
-
 
     /**
      * Removes an entity with the provided id from the collection.

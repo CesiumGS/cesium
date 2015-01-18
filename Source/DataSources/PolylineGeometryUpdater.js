@@ -485,8 +485,9 @@ define([
     };
 
     DynamicGeometryUpdater.prototype.getBoundingSphere = function(entity, result) {
-        if (this._line.show && this._line.positions.length > 0) {
-            BoundingSphere.fromPoints(this._line.positions, result);
+        var line = this._line;
+        if (line.show && line.positions.length > 0) {
+            BoundingSphere.fromPoints(line.positions, result);
             return AsyncState.COMPLETED;
         }
         return AsyncState.FAILED;

@@ -154,12 +154,13 @@ define([
     };
 
     /**
-     * Gets the bounding sphere which encloses the model produced for the specified entity.
+     * Computes a bounding sphere which encloses the visualization produced for the specified entity.
      *
-     * @param {Entity} entity The entity whose bounding sphere to retrieve.
-     * @returns {Promise|BoundingSphere} A Promise to a BoundingSphere if the model is not yet loaded,
-     *                                   a BoundingSphere if the model is loaded,
-     *                                   or undefined if no model exists for the provided entity.
+     * @param {Entity} entity The entity whose bounding sphere to compute.
+     * @param {BoundingSphere} result The bounding sphere onto which to store the result.
+     * @returns {AsyncState} AsyncState.COMPLETED if the result contains the bounding sphere,
+     *                       AsyncState.PENDING if the result is still being computed, or
+     *                       AsyncState.FAILED if the entity has no visualization in the current scene.
      */
     ModelVisualizer.prototype.getBoundingSphere = function(entity, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -172,11 +173,15 @@ define([
         //>>includeEnd('debug');
 
         var modelData = this._modelHash[entity.id];
-        if (!defined(modelData) || !defined(modelData.modelPrimitive)) {
+        if (!defined(modelData)) {
             return AsyncState.FAILED;
         }
 
         var model = modelData.modelPrimitive;
+        if (!defined(model) || !model.show) {
+            return AsyncState.FAILED;
+        }
+
         if (!model.ready) {
             return AsyncState.PENDING;
         }

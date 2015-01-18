@@ -480,11 +480,13 @@ define([
     };
 
     /**
-     * Gets the bounding sphere which encloses the visualization produced for the specified entity.
-     * This function is not supported by this implementation and always returns undefined.
+     * Computes a bounding sphere which encloses the visualization produced for the specified entity.
      *
-     * @param {Entity} entity The entity whose bounding sphere to retrieve.
-     * @returns undefined;
+     * @param {Entity} entity The entity whose bounding sphere to compute.
+     * @param {BoundingSphere} result The bounding sphere onto which to store the result.
+     * @returns {AsyncState} AsyncState.COMPLETED if the result contains the bounding sphere,
+     *                       AsyncState.PENDING if the result is still being computed, or
+     *                       AsyncState.FAILED if the entity has no visualization in the current scene.
      */
     PathVisualizer.prototype.getBoundingSphere = function(entity, result) {
         return AsyncState.FAILED;

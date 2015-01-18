@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../Core/BoundingSphere',
         '../Core/BoxGeometry',
         '../Core/BoxOutlineGeometry',
         '../Core/Color',
@@ -23,7 +22,6 @@ define([
         './MaterialProperty',
         './Property'
     ], function(
-        BoundingSphere,
         BoxGeometry,
         BoxOutlineGeometry,
         Color,
