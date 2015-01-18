@@ -285,7 +285,8 @@ define([
             if (defined(sphere)) {
                 var controller = scene.screenSpaceCameraController;
                 controller.minimumZoomDistance = Math.min(controller.minimumZoomDistance, sphere.radius * 0.5);
-                camera.viewBoundingSphere(sphere, true);
+                camera.viewBoundingSphere(sphere);
+                camera.setTransform(Transforms.eastNorthUpToFixedFrame(sphere.center));
                 this._boundingSphereOffset = Cartesian3.subtract(sphere.center, entity.position.getValue(time), new Cartesian3());
                 updateLookAt = false;
             } else if (!defined(viewFromProperty) || !defined(viewFromProperty.getValue(time, offset3D))) {

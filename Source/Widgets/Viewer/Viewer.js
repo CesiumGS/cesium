@@ -565,6 +565,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._selectedEntity = undefined;
         this._clockTrackedDataSource = undefined;
         this._forceResize = false;
+        this._zoomIsFlight = undefined;
+        this._entitiesForZoom = undefined;
+        this._zoomPromise = undefined;
+
         knockout.track(this, ['_trackedEntity', '_selectedEntity', '_clockTrackedDataSource']);
 
         //Listen to data source events in order to track clock changes.
@@ -1454,19 +1458,34 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     };
 
     /**
-     * Performs a one-time zoom to the provided data.
+     * Sets the camera to view the provided entity, entities, or data source.
      *
      * @param {Entity|Array|EntityCollection|DataSource} zoomTarget The entity, array of entities, entity collection or data source to view.
      * @returns {Promise} A Promise that resolves to true if the zoom was successful or false if the entity is not currently visualized in the scene or the zoom was cancelled.
      */
     Viewer.prototype.zoomTo = function(zoomTarget) {
+        zoomToOrFly(this, zoomTarget, false);
+    };
+
+    /**
+     * Flies the camera to the provided entity, entities, or data source.
+     *
+     * @param {Entity|Array|EntityCollection|DataSource} zoomTarget The entity, array of entities, entity collection or data source to view.
+     * @returns {Promise} A Promise that resolves to true if the zoom was successful or false if the entity is not currently visualized in the scene or the zoom was cancelled.
+     */
+    Viewer.prototype.flyTo = function(zoomTarget) {
+        zoomToOrFly(this, zoomTarget, true);
+    };
+
+    function zoomToOrFly(that, zoomTarget, isFlight) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(zoomTarget)) {
             throw new DeveloperError('zoomTarget is required.');
         }
         //>>includeEnd('debug');
 
-        cancelZoom(this);
+        cancelZoom(that);
+        that._zoomIsFlight = isFlight;
 
         //If zoomTarget is a DataSource, this will retrieve the EntityCollection.
         //If zoomTarget is already an EntityCollection, this will retrieve the array.
@@ -1476,25 +1495,25 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         zoomTarget = defaultValue(zoomTarget.entities, zoomTarget);
 
         if (isArray(zoomTarget)) {
-            this._entitiesForZoom = zoomTarget.slice(0);
+            that._entitiesForZoom = zoomTarget.slice(0);
         } else {
             //Single entity
-            this._entitiesForZoom = [zoomTarget];
+            that._entitiesForZoom = [zoomTarget];
         }
 
-        var boundingSpherePromise = when.defer();
-        this._boundingSpherePromise = boundingSpherePromise;
-        return boundingSpherePromise.then(function(boundingSphere) {
+        var zoomPromise = when.defer();
+        that._zoomPromise = zoomPromise;
+        return zoomPromise.then(function(boundingSphere) {
             return defined(boundingSphere);
         });
-    };
+    }
 
     function cancelZoom(viewer) {
-        var boundingSpherePromise = viewer._boundingSpherePromise;
-        if (defined(boundingSpherePromise)) {
-            viewer._boundingSpherePromise = undefined;
+        var zoomPromise = viewer._zoomPromise;
+        if (defined(zoomPromise)) {
+            viewer._zoomPromise = undefined;
             viewer._entitiesForZoom = undefined;
-            boundingSpherePromise.resolve(undefined);
+            zoomPromise.resolve(undefined);
         }
     }
 
@@ -1507,7 +1526,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             return;
         }
 
-        var boundingSpherePromise = this._boundingSpherePromise;
+        var zoomPromise = this._zoomPromise;
         var boundingSpheres = [];
         for (var i = 0, len = entities.length; i < len; i++) {
 
@@ -1538,11 +1557,15 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
         var controller = scene.screenSpaceCameraController;
         controller.minimumZoomDistance = Math.min(controller.minimumZoomDistance, boundingSphere.radius * 0.5);
-        scene.camera.viewBoundingSphere(boundingSphere, false);
+        if (!this._zoomIsFlight) {
+            scene.camera.viewBoundingSphere(boundingSphere);
+        } else {
+            scene.camera.flyToBoundingSphere(boundingSphere);
+        }
 
         this._entitiesForZoom = undefined;
-        this._boundingSpherePromise = undefined;
-        boundingSpherePromise.resolve(boundingSphere);
+        this._zoomPromise = undefined;
+        zoomPromise.resolve(boundingSphere);
     };
 
     /**

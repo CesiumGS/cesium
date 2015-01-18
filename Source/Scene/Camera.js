@@ -1527,16 +1527,6 @@ define([
         });
     };
 
-    Camera.prototype.viewBoundingSphere = function(sphere, track) {
-        var transform = Transforms.eastNorthUpToFixedFrame(sphere.center);
-        this.transform = transform;
-        var r = 2.0 * Math.max(sphere.radius, this.frustum.near);
-        this.lookAt(new Cartesian3(0, -r, r), Cartesian3.ZERO, Cartesian3.UNIT_Z);
-        if(!track){
-            this.setTransform(Matrix4.IDENTITY);
-        }
-    };
-
     /**
      * Sets the camera position and orientation with an eye position, target, and up vector.
      * This method is not supported in 2D mode because there is only one direction to look.
@@ -2173,6 +2163,69 @@ define([
     Camera.prototype.flyToRectangle = function(options) {
         var scene = this._scene;
         scene.tweens.add(CameraFlightPath.createTweenRectangle(scene, options));
+    };
+
+    /**
+     * Sets the camera so that the current view completely contains the provided bounding sphere.
+     *
+     * @param {BoundingSphere} boundingSphere The bounding sphere to view.
+     * @param {Object} [options] Object with the following properties:
+     */
+    Camera.prototype.viewBoundingSphere = function(boundingSphere, options) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(boundingSphere)) {
+            throw new DeveloperError('boundingSphere is required.');
+        }
+        //>>includeEnd('debug');
+
+        var transform = Transforms.eastNorthUpToFixedFrame(boundingSphere.center);
+        this.transform = transform;
+        var r = 2.0 * Math.max(boundingSphere.radius, this.frustum.near);
+        this.lookAt(new Cartesian3(0, -r, r), Cartesian3.ZERO, Cartesian3.UNIT_Z);
+        this.setTransform(Matrix4.IDENTITY);
+    };
+
+    /**
+     * Flys the camera to a location where the current view completely contains the provided bounding sphere.
+     *
+     * @param {BoundingSphere} boundingSphere The bounding sphere to view.
+     * @param {Object} [options] Object with the following properties:
+     * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
+     * @param {Camera~FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
+     * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
+     * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
+     */
+    Camera.prototype.flyToBoundingSphere = function(boundingSphere, options) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(boundingSphere)) {
+            throw new DeveloperError('boundingSphere is required.');
+        }
+        //>>includeEnd('debug');
+
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        var transform = Transforms.eastNorthUpToFixedFrame(boundingSphere.center);
+        this.setTransform(Matrix4.IDENTITY);
+        var r = 2.0 * Math.max(boundingSphere.radius, this.frustum.near);
+
+        var destination = new Cartesian3(0, -r, r);
+        Matrix4.multiplyByPoint(transform, destination, destination);
+
+        var direction = new Cartesian3();
+        Cartesian3.normalize(Cartesian3.subtract(boundingSphere.center, destination, direction), direction);
+
+        var up = Matrix4.multiplyByPoint(transform, Cartesian3.UNIT_Z, new Cartesian3());
+        Cartesian3.normalize(up, up);
+
+        this.flyTo({
+            destination : destination,
+            direction : direction,
+            up : up,
+            duration : options.duration,
+            complete : options.complete,
+            cancel : options.cancel,
+            endTransform : options.endTransform
+        });
     };
 
     /**
