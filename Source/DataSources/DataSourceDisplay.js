@@ -8,7 +8,6 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EventHelper',
-        '../ThirdParty/when',
         './BoundingSphereState',
         './BillboardVisualizer',
         './BoxGeometryUpdater',
@@ -36,7 +35,6 @@ define([
         destroyObject,
         DeveloperError,
         EventHelper,
-        when,
         BoundingSphereState,
         BillboardVisualizer,
         BoxGeometryUpdater,
@@ -54,7 +52,8 @@ define([
         PolylineGeometryUpdater,
         PolylineVolumeGeometryUpdater,
         RectangleGeometryUpdater,
-        WallGeometryUpdater) {
+        WallGeometryUpdater
+        ) {
     "use strict";
 
     /**
@@ -272,35 +271,47 @@ define([
         return result;
     };
 
+    var getBoundingSphereArrayScratch = [];
+    var getBoundingSphereBoundingSphereScratch = new BoundingSphere();
+
     /**
      * Computes a bounding sphere which encloses the visualization produced for the specified entity.
      *
      * @param {Entity} entity The entity whose bounding sphere to compute.
+     * @param {Boolean} allowPartial If true, pending bounding spheres are ignored and an answer will be returned from the currently available data.
+     *                               If false, the the function will halt and return pending if any of the bounding spheres are pending.
      * @param {BoundingSphere} result The bounding sphere onto which to store the result.
      * @returns {BoundingSphereState} BoundingSphereState.DONE if the result contains the bounding sphere,
      *                       BoundingSphereState.PENDING if the result is still being computed, or
      *                       BoundingSphereState.FAILED if the entity has no visualization in the current scene.
      * @private
      */
-    DataSourceDisplay.prototype.getBoundingSphere = function(options) {
-        var entity = options.entity;
-        var dataSource = options.dataSource;
-        var result = options.result;
-        var requireComplete = options.requireComplete;
+    DataSourceDisplay.prototype.getBoundingSphere = function(entity, allowPartial, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(entity)) {
+            throw new DeveloperError('entity is required.');
+        }
+        if (!defined(allowPartial)) {
+            throw new DeveloperError('allowPartial is required.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required.');
+        }
+        //>>includeEnd('debug');
 
         var i;
         var length;
-        if (!defined(dataSource)) {
-            dataSource = this._defaultDataSource;
-            if (!dataSource.entities.contains(entity)) {
-                var dataSources = this._dataSourceCollection;
-                length = dataSources.length;
-                for (i = 0; i < length; i++) {
-                    dataSource = dataSources.get(i);
-                    if (dataSource.entities.contains(entity)) {
-                        break;
-                    }
-                    dataSource = undefined;
+        var dataSource = this._defaultDataSource;
+        if (!dataSource.entities.contains(entity)) {
+            dataSource = undefined;
+
+            var dataSources = this._dataSourceCollection;
+            length = dataSources.length;
+            for (i = 0; i < length; i++) {
+                var d = dataSources.get(i);
+                if (d.entities.contains(entity)) {
+                    dataSource = d;
+                    break;
                 }
             }
         }
@@ -309,27 +320,31 @@ define([
             return BoundingSphereState.FAILED;
         }
 
-        var boundingSpheres = [];
+        var boundingSpheres = getBoundingSphereArrayScratch;
+        var tmp = getBoundingSphereBoundingSphereScratch;
+
+        var count = 0;
+        var resultState;
+        var state = BoundingSphereState.DONE;
         var visualizers = dataSource._visualizers;
-        length = visualizers.length;
-        for (i = 0; i < length; i++) {
-            var visualizer = visualizers[i];
-            var tmp = new BoundingSphere();
-            if (defined(visualizer.getBoundingSphere)) {
-                var state = visualizer.getBoundingSphere(entity, tmp);
-                if (requireComplete && state === BoundingSphereState.PENDING) {
-                    return BoundingSphereState.PENDING;
-                } else if (state === BoundingSphereState.DONE) {
-                    boundingSpheres.push(tmp);
-                }
+        var visualizersLength = visualizers.length;
+
+        for (i = 0; i < visualizersLength; i++) {
+            state = visualizers[i].getBoundingSphere(entity, tmp);
+            if (!allowPartial && state === BoundingSphereState.PENDING) {
+                return BoundingSphereState.PENDING;
+            } else if (state === BoundingSphereState.DONE) {
+                boundingSpheres[count] = BoundingSphere.clone(tmp, boundingSpheres[count]);
+                count++;
             }
         }
 
-        if (boundingSpheres.length === 0) {
+        if (count === 0) {
             return BoundingSphereState.FAILED;
         }
 
-        result = BoundingSphere.fromBoundingSpheres(boundingSpheres, result);
+        boundingSpheres.length = count;
+        BoundingSphere.fromBoundingSpheres(boundingSpheres, result);
         return BoundingSphereState.DONE;
     };
 

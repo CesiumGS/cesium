@@ -79,11 +79,7 @@ define([
         Timeline) {
     "use strict";
 
-    var getBoundingSphereOptions = {
-        entity : undefined,
-        result : new BoundingSphere(),
-        requireComplete : false
-    };
+    var boundingSphereScratch = new BoundingSphere();
 
     function onTimelineScrubfunction(e) {
         var clock = e.clock;
@@ -566,7 +562,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._clockTrackedDataSource = undefined;
         this._forceResize = false;
         this._zoomIsFlight = undefined;
-        this._entitiesForZoom = undefined;
+        this._zoomTarget = undefined;
         this._zoomPromise = undefined;
 
         knockout.track(this, ['_trackedEntity', '_selectedEntity', '_clockTrackedDataSource']);
@@ -1003,9 +999,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                             return;
                         }
 
-                        getBoundingSphereOptions.entity = trackedEntity;
-                        getBoundingSphereOptions.requireComplete = true;
-                        var state = that._dataSourceDisplay.getBoundingSphere(getBoundingSphereOptions);
+                        var state = that._dataSourceDisplay.getBoundingSphere(trackedEntity, false, boundingSphereScratch);
 
                         if (state === BoundingSphereState.PENDING) {
                             return;
@@ -1023,7 +1017,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                         }
 
                         removeEvent();
-                        that._entityView = new EntityView(value, scene, scene.globe.ellipsoid, getBoundingSphereOptions.result);
+                        that._entityView = new EntityView(value, scene, scene.globe.ellipsoid, boundingSphereScratch.result);
                     });
                 }
             }
@@ -1332,13 +1326,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var showSelection = defined(selectedEntity) && this._enableInfoOrSelection;
 
         if (showSelection && selectedEntity.isAvailable(time)) {
-            getBoundingSphereOptions.entity = selectedEntity;
-            getBoundingSphereOptions.requireComplete = false;
-            var state = this._dataSourceDisplay.getBoundingSphere(getBoundingSphereOptions);
+            var state = this._dataSourceDisplay.getBoundingSphere(selectedEntity, true, boundingSphereScratch);
             enableCamera = state !== BoundingSphereState.FAILED;
 
             if (enableCamera) {
-                position = getBoundingSphereOptions.result.center;
+                position = boundingSphereScratch.center;
             }
         }
 
@@ -1495,10 +1487,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         zoomTarget = defaultValue(zoomTarget.entities, zoomTarget);
 
         if (isArray(zoomTarget)) {
-            that._entitiesForZoom = zoomTarget.slice(0);
+            that._zoomTarget = zoomTarget.slice(0);
         } else {
             //Single entity
-            that._entitiesForZoom = [zoomTarget];
+            that._zoomTarget = [zoomTarget];
         }
 
         var zoomPromise = when.defer();
@@ -1512,7 +1504,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var zoomPromise = viewer._zoomPromise;
         if (defined(zoomPromise)) {
             viewer._zoomPromise = undefined;
-            viewer._entitiesForZoom = undefined;
+            viewer._zoomTarget = undefined;
             zoomPromise.resolve(undefined);
         }
     }
@@ -1521,7 +1513,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * @private
      */
     Viewer.prototype._postRender = function() {
-        var entities = this._entitiesForZoom;
+        var entities = this._zoomTarget;
         if (!defined(entities)) {
             return;
         }
@@ -1529,10 +1521,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var zoomPromise = this._zoomPromise;
         var boundingSpheres = [];
         for (var i = 0, len = entities.length; i < len; i++) {
-
-            getBoundingSphereOptions.entity = entities[i];
-            getBoundingSphereOptions.requireComplete = true;
-            var state = this._dataSourceDisplay.getBoundingSphere(getBoundingSphereOptions);
+            var state = this._dataSourceDisplay.getBoundingSphere(entities[i], false, boundingSphereScratch);
 
             if (state === BoundingSphereState.PENDING) {
                 return;
@@ -1541,7 +1530,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                 return;
             }
 
-            boundingSpheres.push(BoundingSphere.clone(getBoundingSphereOptions.result));
+            boundingSpheres.push(BoundingSphere.clone(boundingSphereScratch));
         }
 
         if (boundingSpheres.length === 0) {
@@ -1563,7 +1552,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             scene.camera.flyToBoundingSphere(boundingSphere);
         }
 
-        this._entitiesForZoom = undefined;
+        this._zoomTarget = undefined;
         this._zoomPromise = undefined;
         zoomPromise.resolve(boundingSphere);
     };
