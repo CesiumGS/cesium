@@ -1295,11 +1295,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         if (showSelection && selectedEntity.isAvailable(time)) {
             var state = this._dataSourceDisplay.getBoundingSphere(selectedEntity, true, boundingSphereScratch);
-            enableCamera = state !== BoundingSphereState.FAILED;
-
-            if (enableCamera) {
+            if (state !== BoundingSphereState.FAILED) {
                 position = boundingSphereScratch.center;
+            } else if (defined(selectedEntity.position)) {
+                position = selectedEntity.position.getValue(time, position);
             }
+            enableCamera = defined(position);
         }
 
         var selectionIndicatorViewModel = defined(this._selectionIndicator) ? this._selectionIndicator.viewModel : undefined;
@@ -1543,8 +1544,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         if (state === BoundingSphereState.PENDING) {
             return;
-        } else if (state === BoundingSphereState.FAILED) {
-            return;
         }
 
         if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
@@ -1555,7 +1554,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             scene.screenSpaceCameraController.enableTilt = false;
         }
 
-        viewer._entityView = new EntityView(trackedEntity, scene, scene.globe.ellipsoid, boundingSphereScratch);
+        var bs = state !== BoundingSphereState.FAILED ? boundingSphereScratch : undefined;
+        viewer._entityView = new EntityView(trackedEntity, scene, scene.globe.ellipsoid, bs);
         viewer._needTrackedEntityUpdate = false;
     }
 
