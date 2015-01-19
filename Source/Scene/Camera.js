@@ -2165,6 +2165,32 @@ define([
         scene.tweens.add(CameraFlightPath.createTweenRectangle(scene, options));
     };
 
+    function distanceToBoundingSphere3D(camera, radius) {
+        var frustum = camera.frustum;
+        var tanPhi = Math.tan(frustum.fovy * 0.5);
+        var tanTheta = frustum.aspectRatio * tanPhi;
+        return Math.max(radius / tanTheta, radius / tanPhi);
+    }
+
+    function distanceToBoundingSphere2D(camera, radius) {
+        var frustum = camera.frustum;
+
+        var right, top;
+        var ratio = frustum.right / frustum.top;
+        var heightRatio = radius * ratio;
+        if (radius > heightRatio) {
+            right = radius;
+            top = right / ratio;
+        } else {
+            top = radius;
+            right = heightRatio;
+        }
+
+        return Math.max(right, top) * 1.25;
+    }
+
+    var scratchViewBoundingSphereCartesian = new Cartesian3();
+
     /**
      * Sets the camera so that the current view completely contains the provided bounding sphere.
      *
@@ -2178,10 +2204,18 @@ define([
         }
         //>>includeEnd('debug');
 
-        var transform = Transforms.eastNorthUpToFixedFrame(boundingSphere.center);
-        this.transform = transform;
-        var r = 2.0 * Math.max(boundingSphere.radius, this.frustum.near);
-        this.lookAt(new Cartesian3(0, -r, r), Cartesian3.ZERO, Cartesian3.UNIT_Z);
+        if (this._mode === SceneMode.MORPHING) {
+            return;
+        }
+
+        this.transform = Transforms.eastNorthUpToFixedFrame(boundingSphere.center);
+
+        var r = this._mode === SceneMode.SCENE2D ? distanceToBoundingSphere2D(this, boundingSphere.radius) : distanceToBoundingSphere3D(this, boundingSphere.radius);
+        var position = Cartesian3.fromElements(0.0, -1.0, 1.0, scratchViewBoundingSphereCartesian);
+        Cartesian3.normalize(position, position);
+        Cartesian3.multiplyByScalar(position, r, position);
+
+        this.lookAt(position, Cartesian3.ZERO, Cartesian3.UNIT_Z);
         this.setTransform(Matrix4.IDENTITY);
     };
 
