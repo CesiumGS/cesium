@@ -221,6 +221,7 @@ define([
         if (defined(item)) {
             var billboard = item.billboard;
             if (defined(billboard)) {
+                item.textureValue = undefined;
                 item.billboard = undefined;
                 billboard.show = false;
                 billboard.image = undefined;
