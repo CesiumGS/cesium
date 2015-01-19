@@ -1017,7 +1017,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                         }
 
                         removeEvent();
-                        that._entityView = new EntityView(value, scene, scene.globe.ellipsoid, boundingSphereScratch.result);
+                        that._entityView = new EntityView(value, scene, scene.globe.ellipsoid, boundingSphereScratch);
                     });
                 }
             }
