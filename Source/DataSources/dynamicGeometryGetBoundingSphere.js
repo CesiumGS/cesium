@@ -29,18 +29,28 @@ define([
         var attributes;
 
         var boundingSphere;
-        if (defined(primitive) && primitive.show) {
-            attributes = primitive.getGeometryInstanceAttributes(entity);
-            if (defined(attributes) && defined(attributes.boundingSphere)) {
-                boundingSphere = BoundingSphere.transform(attributes.boundingSphere, primitive.modelMatrix, primitiveBSScratch);
+        if (defined(primitive)) {
+            if (!primitive.ready) {
+                return BoundingSphereState.PENDING;
+            }
+            if (primitive.show) {
+                attributes = primitive.getGeometryInstanceAttributes(entity);
+                if (defined(attributes) && defined(attributes.boundingSphere)) {
+                    boundingSphere = BoundingSphere.transform(attributes.boundingSphere, primitive.modelMatrix, primitiveBSScratch);
+                }
             }
         }
 
         var boundingSphere2;
         if (defined(outlinePrimitive) && outlinePrimitive.show) {
-            attributes = outlinePrimitive.getGeometryInstanceAttributes(entity);
-            if (defined(attributes) && defined(attributes.boundingSphere)) {
-                boundingSphere2 = BoundingSphere.transform(attributes.boundingSphere, outlinePrimitive.modelMatrix, primitiveBSScratch2);
+            if (!outlinePrimitive.ready) {
+                return BoundingSphereState.PENDING;
+            }
+            if (outlinePrimitive.show) {
+                attributes = outlinePrimitive.getGeometryInstanceAttributes(entity);
+                if (defined(attributes) && defined(attributes.boundingSphere)) {
+                    boundingSphere2 = BoundingSphere.transform(attributes.boundingSphere, outlinePrimitive.modelMatrix, primitiveBSScratch2);
+                }
             }
         }
 

@@ -529,8 +529,10 @@ define([
         //>>includeEnd('debug');
 
         var primitives = this._primitives;
-        this._primitive = primitives.removeAndDestroy(this._primitive);
-        this._outlinePrimitive = primitives.removeAndDestroy(this._outlinePrimitive);
+        primitives.removeAndDestroy(this._primitive);
+        primitives.removeAndDestroy(this._outlinePrimitive);
+        this._primitive = undefined;
+        this._outlinePrimitive = undefined;
 
         var geometryUpdater = this._geometryUpdater;
         var entity = geometryUpdater._entity;

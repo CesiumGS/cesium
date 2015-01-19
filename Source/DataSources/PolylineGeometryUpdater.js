@@ -431,9 +431,11 @@ define([
         var sceneId = geometryUpdater._scene.id;
 
         var polylineCollection = polylineCollections[sceneId];
-        if (!defined(polylineCollection)) {
+        if (!defined(polylineCollection) || polylineCollection.isDestroyed()) {
             polylineCollection = new PolylineCollection();
             polylineCollections[sceneId] = polylineCollection;
+            primitives.add(polylineCollection);
+        } else if (!primitives.contains(polylineCollection)) {
             primitives.add(polylineCollection);
         }
 
@@ -485,6 +487,15 @@ define([
     };
 
     DynamicGeometryUpdater.prototype.getBoundingSphere = function(entity, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(entity)) {
+            throw new DeveloperError('entity is required.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required.');
+        }
+        //>>includeEnd('debug');
+
         var line = this._line;
         if (line.show && line.positions.length > 0) {
             BoundingSphere.fromPoints(line.positions, result);

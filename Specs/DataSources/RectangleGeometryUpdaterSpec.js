@@ -18,6 +18,7 @@ defineSuite([
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/PrimitiveCollection',
         'Specs/createDynamicProperty',
+        'Specs/createDynamicGeometryBoundingSphereSpecs',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
@@ -39,6 +40,7 @@ defineSuite([
         TimeIntervalCollectionProperty,
         PrimitiveCollection,
         createDynamicProperty,
+        createDynamicGeometryBoundingSphereSpecs,
         createScene,
         destroyScene) {
     "use strict";
@@ -514,5 +516,11 @@ defineSuite([
         expect(function() {
             return new RectangleGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
+    });
+
+    var entity = createBasicRectangle();
+    entity.rectangle.extrudedHeight = createDynamicProperty(2);
+    createDynamicGeometryBoundingSphereSpecs(RectangleGeometryUpdater, entity, entity.rectangle, function() {
+        return scene;
     });
 });
