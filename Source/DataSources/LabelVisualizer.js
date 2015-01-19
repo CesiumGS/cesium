@@ -182,25 +182,13 @@ define([
         //>>includeEnd('debug');
 
         var item = this._items.get(entity.id);
-        if (!defined(item) || !defined(item.billboard)) {
+        if (!defined(item) || !defined(item.label)) {
             return BoundingSphereState.FAILED;
         }
 
-        var label = item.label;
-        var glyphs = label._glyphs;
-
-        for (var i = 0, len = glyphs.length; i < len; i++) {
-            var glyph = glyphs[i];
-            if (defined(glyph.billboard)) {
-                //Currently labels all have the same position and we are not approximating
-                //eye offset, so just return the position of the first label.
-                result.center = Cartesian3.clone(glyph.billboard.position, result.center);
-                result.radius = 0;
-                return BoundingSphereState.DONE;
-            }
-        }
-
-        return BoundingSphereState.FAILED;
+        result.center = Cartesian3.clone(item.label.position, result.center);
+        result.radius = 0;
+        return BoundingSphereState.DONE;
     };
 
     /**
