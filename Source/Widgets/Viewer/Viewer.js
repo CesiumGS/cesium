@@ -11,7 +11,6 @@ define([
         '../../Core/isArray',
         '../../Core/Matrix4',
         '../../Core/ScreenSpaceEventType',
-        '../../Core/Transforms',
         '../../DataSources/BoundingSphereState',
         '../../DataSources/ConstantPositionProperty',
         '../../DataSources/DataSourceCollection',
@@ -50,7 +49,6 @@ define([
         isArray,
         Matrix4,
         ScreenSpaceEventType,
-        Transforms,
         BoundingSphereState,
         ConstantPositionProperty,
         DataSourceCollection,
@@ -558,6 +556,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._enableInfoOrSelection = defined(infoBox) || defined(selectionIndicator);
         this._clockTrackedDataSource = undefined;
         this._trackedEntity = undefined;
+        this._needTrackedEntityUpdate = undefined;
         this._selectedEntity = undefined;
         this._clockTrackedDataSource = undefined;
         this._forceResize = false;
@@ -607,8 +606,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         cesiumWidget.screenSpaceEventHandler.setInputAction(pickAndSelectObject, ScreenSpaceEventType.LEFT_CLICK);
         cesiumWidget.screenSpaceEventHandler.setInputAction(pickAndTrackObject, ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
-
-        this._dataSourceDisplay.update(clock.currentTime);
     };
 
     defineProperties(Viewer.prototype, {
@@ -976,6 +973,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                     var sceneMode = scene.mode;
 
                     if (!defined(value) || !defined(value.position)) {
+                        this._needTrackedEntityUpdate = false;
                         if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
                             scene.screenSpaceCameraController.enableTranslate = true;
                         }
@@ -988,37 +986,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                         this.camera.setTransform(Matrix4.IDENTITY);
                         return;
                     }
-
-                    var that = this;
-
-                    var removeEvent = this.cesiumWidget.scene.postRender.addEventListener(function() {
-                        var trackedEntity = that._trackedEntity;
-
-                        if (trackedEntity !== value) {
-                            removeEvent();
-                            return;
-                        }
-
-                        var state = that._dataSourceDisplay.getBoundingSphere(trackedEntity, false, boundingSphereScratch);
-
-                        if (state === BoundingSphereState.PENDING) {
-                            return;
-                        } else if (state === BoundingSphereState.FAILED) {
-                            removeEvent();
-                            return;
-                        }
-
-                        if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
-                            scene.screenSpaceCameraController.enableTranslate = false;
-                        }
-
-                        if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE3D) {
-                            scene.screenSpaceCameraController.enableTilt = false;
-                        }
-
-                        removeEvent();
-                        that._entityView = new EntityView(value, scene, scene.globe.ellipsoid, boundingSphereScratch);
-                    });
+                    this._needTrackedEntityUpdate = true;
                 }
             }
         },
@@ -1513,20 +1481,25 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * @private
      */
     Viewer.prototype._postRender = function() {
-        var entities = this._zoomTarget;
+        updateZoomTarget(this);
+        updateTrackedEntity(this);
+    };
+
+    function updateZoomTarget(viewer) {
+        var entities = viewer._zoomTarget;
         if (!defined(entities)) {
             return;
         }
 
-        var zoomPromise = this._zoomPromise;
+        var zoomPromise = viewer._zoomPromise;
         var boundingSpheres = [];
         for (var i = 0, len = entities.length; i < len; i++) {
-            var state = this._dataSourceDisplay.getBoundingSphere(entities[i], false, boundingSphereScratch);
+            var state = viewer._dataSourceDisplay.getBoundingSphere(entities[i], false, boundingSphereScratch);
 
             if (state === BoundingSphereState.PENDING) {
                 return;
             } else if (state === BoundingSphereState.FAILED) {
-                cancelZoom(this);
+                cancelZoom(viewer);
                 return;
             }
 
@@ -1534,28 +1507,57 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         }
 
         if (boundingSpheres.length === 0) {
-            cancelZoom(this);
+            cancelZoom(viewer);
             return;
         }
 
         //Stop tracking the current entity.
-        this.trackedEntity = undefined;
+        viewer.trackedEntity = undefined;
 
         //Set camera
-        var scene = this.scene;
+        var scene = viewer.scene;
         var boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
         var controller = scene.screenSpaceCameraController;
         controller.minimumZoomDistance = Math.min(controller.minimumZoomDistance, boundingSphere.radius * 0.5);
-        if (!this._zoomIsFlight) {
+        if (!viewer._zoomIsFlight) {
             scene.camera.viewBoundingSphere(boundingSphere);
         } else {
             scene.camera.flyToBoundingSphere(boundingSphere);
         }
 
-        this._zoomTarget = undefined;
-        this._zoomPromise = undefined;
+        viewer._zoomTarget = undefined;
+        viewer._zoomPromise = undefined;
         zoomPromise.resolve(boundingSphere);
-    };
+    }
+
+    function updateTrackedEntity(viewer) {
+        if (!viewer._needTrackedEntityUpdate) {
+            return;
+        }
+
+        var scene = viewer.scene;
+        var sceneMode = scene.mode;
+        var trackedEntity = viewer._trackedEntity;
+
+        var state = viewer._dataSourceDisplay.getBoundingSphere(trackedEntity, false, boundingSphereScratch);
+
+        if (state === BoundingSphereState.PENDING) {
+            return;
+        } else if (state === BoundingSphereState.FAILED) {
+            return;
+        }
+
+        if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
+            scene.screenSpaceCameraController.enableTranslate = false;
+        }
+
+        if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE3D) {
+            scene.screenSpaceCameraController.enableTilt = false;
+        }
+
+        viewer._entityView = new EntityView(trackedEntity, scene, scene.globe.ellipsoid, boundingSphereScratch);
+        viewer._needTrackedEntityUpdate = false;
+    }
 
     /**
      * A function that augments a Viewer instance with additional functionality.
