@@ -341,18 +341,14 @@ defineSuite([
         }).toThrowRuntimeError();
     });
 
-    it('remove throws with undefined Entity', function() {
+    it('remove returns false with undefined Entity', function() {
         var entityCollection = new EntityCollection();
-        expect(function() {
-            entityCollection.remove(undefined);
-        }).toThrowDeveloperError();
+        expect(entityCollection.remove(undefined)).toBe(false);
     });
 
-    it('removeById throws for undefined id', function() {
+    it('removeById returns false with undefined id', function() {
         var entityCollection = new EntityCollection();
-        expect(function() {
-            entityCollection.removeById(undefined);
-        }).toThrowDeveloperError();
+        expect(entityCollection.removeById(undefined)).toBe(false);
     });
 
     it('getById throws if no id specified', function() {

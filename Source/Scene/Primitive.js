@@ -273,6 +273,7 @@ define([
         this._boundingSphere2D = [];
         this._boundingSphereMorph = [];
         this._perInstanceAttributeLocations = undefined;
+        this._perInstanceAttributeCache = [];
         this._instanceIds = [];
         this._lastPerInstanceAttributeIndex = 0;
         this._dirtyAttributes = [];
@@ -1334,9 +1335,13 @@ define([
         if (index === -1) {
             return undefined;
         }
+        var attributes = this._perInstanceAttributeCache[index];
+        if (defined(attributes)) {
+            return attributes;
+        }
 
         var perInstanceAttributes = this._perInstanceAttributeLocations[index];
-        var attributes = {};
+        attributes = {};
         var properties = {};
         var hasProperties = false;
 
@@ -1358,7 +1363,7 @@ define([
         }
 
         this._lastPerInstanceAttributeIndex = index;
-
+        this._perInstanceAttributeCache[index] = attributes;
         return attributes;
     };
 
