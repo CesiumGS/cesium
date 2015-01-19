@@ -34,7 +34,8 @@ define([
     var loadText = function(url, headers) {
         return loadWithXhr({
             url : url,
-            headers : headers
+            headers : headers,
+            preferText : true
         });
     };
 
