@@ -10,7 +10,6 @@ define([
         '../Core/JulianDate',
         '../Core/Math',
         '../Core/Matrix3',
-        '../Core/Matrix4',
         '../Core/Transforms',
         '../Scene/SceneMode'
     ], function(
@@ -24,7 +23,6 @@ define([
         JulianDate,
         CesiumMath,
         Matrix3,
-        Matrix4,
         Transforms,
         SceneMode) {
     "use strict";
@@ -43,7 +41,6 @@ define([
 
     function updateTransform(that, camera, updateLookAt, positionProperty, time, ellipsoid) {
         var cartesian = positionProperty.getValue(time, that._lastCartesian);
-
         if (defined(cartesian)) {
             var hasBasis = false;
             var xBasis;

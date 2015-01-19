@@ -69,12 +69,11 @@ define([
 
     function removeUpdater(that, updater) {
         //We don't keep track of which batch an updater is in, so just remove it from all of them.
-        that._outlineBatch.remove(updater);
-        that._closedColorBatch.remove(updater);
-        that._closedMaterialBatch.remove(updater);
-        that._openColorBatch.remove(updater);
-        that._openMaterialBatch.remove(updater);
-        that._dynamicBatch.remove(updater);
+        var batches = that._batches;
+        var length = batches.length;
+        for (var i = 0; i < length; i++) {
+            batches[i].remove(updater);
+        }
     }
 
     function insertUpdaterIntoBatch(that, time, updater) {
@@ -288,16 +287,16 @@ define([
         this._addedObjects.removeAll();
         this._removedObjects.removeAll();
 
-        this._outlineBatch.removeAllPrimitives();
-        this._closedColorBatch.removeAllPrimitives();
-        this._closedMaterialBatch.removeAllPrimitives();
-        this._openColorBatch.removeAllPrimitives();
-        this._openMaterialBatch.removeAllPrimitives();
-        this._dynamicBatch.removeAllPrimitives();
+        var i;
+        var batches = this._batches;
+        var length = batches.length;
+        for (i = 0; i < length; i++) {
+            batches[i].removeAllPrimitives();
+        }
 
         var subscriptions = this._subscriptions.values;
-        var len = subscriptions.length;
-        for (var i = 0; i < len; i++) {
+        length = subscriptions.length;
+        for (i = 0; i < length; i++) {
             subscriptions[i]();
         }
         this._subscriptions.removeAll();
