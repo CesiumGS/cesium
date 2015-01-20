@@ -2240,19 +2240,25 @@ define([
 
         var transform = Transforms.eastNorthUpToFixedFrame(boundingSphere.center);
         this.setTransform(Matrix4.IDENTITY);
-        var r = 2.0 * Math.max(boundingSphere.radius, this.frustum.near);
 
-        var destination = new Cartesian3(0, -r, r);
-        Matrix4.multiplyByPoint(transform, destination, destination);
+        var scene2D = this._mode === SceneMode.SCENE2D;
+        var r = scene2D ? distanceToBoundingSphere2D(this, boundingSphere.radius) : distanceToBoundingSphere3D(this, boundingSphere.radius);
+        var position = Cartesian3.fromElements(0.0, scene2D ? 0.0 : -1.0, 1.0, scratchViewBoundingSphereCartesian);
+        Cartesian3.normalize(position, position);
+        Cartesian3.multiplyByScalar(position, r, position);
+        Matrix4.multiplyByPoint(transform, position, position);
 
         var direction = new Cartesian3();
-        Cartesian3.normalize(Cartesian3.subtract(boundingSphere.center, destination, direction), direction);
+        Cartesian3.normalize(Cartesian3.subtract(boundingSphere.center, position, direction), direction);
 
-        var up = Matrix4.multiplyByPoint(transform, Cartesian3.UNIT_Z, new Cartesian3());
+        scene2D = scene2D || this._mode === SceneMode.COLUMBUS_VIEW;
+        var up = scene2D ? Cartesian3.clone(Cartesian3.UNIT_Z) : Matrix4.multiplyByPointAsVector(transform, Cartesian3.UNIT_Z, new Cartesian3());
+        var right = Cartesian3.cross(direction, up, new Cartesian3());
+        Cartesian3.cross(right, direction, up);
         Cartesian3.normalize(up, up);
 
         this.flyTo({
-            destination : destination,
+            destination : position,
             direction : direction,
             up : up,
             duration : options.duration,
