@@ -1552,6 +1552,15 @@ define([
      * @param {Cartesian3} up The up vector. This parameter is deprecated.
      *
      * @exception {DeveloperError} lookAt is not supported while morphing.
+     *
+     * @example
+     * // tilted view of the U.S.
+     * var center = Cesium.Cartesian3.fromDegrees(-98.0, 40.0);
+     * viewer.camera.lookAt({
+     *    target : center,
+     *    offset : new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0),
+     *    transform : Cesium.Transforms.eastNorthUpToFixedFrame(center, Cesium.Ellipsoid.WGS84) // default
+     * });
      */
     Camera.prototype.lookAt = function(options) {
         //>>includeStart('debug', pragmas.debug);
@@ -1666,6 +1675,11 @@ define([
         Cartesian3.negate(this.position, this.direction);
         Cartesian3.normalize(this.direction, this.direction);
         Cartesian3.cross(this.direction, Cartesian3.UNIT_Z, this.right);
+
+        if (Cartesian3.magnitudeSquared(this.right) < CesiumMath.EPSILON10) {
+            Cartesian3.clone(Cartesian3.UNIT_X, this.right);
+        }
+
         Cartesian3.normalize(this.right, this.right);
         Cartesian3.cross(this.right, this.direction, this.up);
         Cartesian3.normalize(this.up, this.up);

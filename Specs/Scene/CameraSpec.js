@@ -907,45 +907,40 @@ defineSuite([
 
     it('lookAt', function() {
         var target = new Cartesian3(-1.0, -1.0, 0.0);
-        var position = Cartesian3.clone(Cartesian3.UNIT_X);
-        var up = Cartesian3.clone(Cartesian3.UNIT_Z);
+        var offset = new Cartesian3(1.0, 1.0, 0.0);
+        var transform = Transforms.eastNorthUpToFixedFrame(target, Ellipsoid.UNIT_SPHERE);
 
         var tempCamera = camera.clone();
-        tempCamera.lookAt(position, target, up);
-        expect(tempCamera.position).toEqual(position);
-        expect(tempCamera.direction).toEqual(Cartesian3.normalize(Cartesian3.subtract(target, position, new Cartesian3()), new Cartesian3()));
-        expect(tempCamera.up).toEqual(up);
-        expect(tempCamera.right).toEqual(Cartesian3.normalize(Cartesian3.cross(tempCamera.direction, up, new Cartesian3()), new Cartesian3()));
+        tempCamera.lookAt({
+            target : target,
+            offset : offset,
+            transform : transform
+        });
+        tempCamera.setTransform(transform);
+
+        expect(tempCamera.position).toEqualEpsilon(offset, CesiumMath.EPSILON11);
+        expect(tempCamera.direction).toEqualEpsilon(Cartesian3.negate(Cartesian3.normalize(offset, new Cartesian3()), new Cartesian3()), CesiumMath.EPSILON11);
+        expect(tempCamera.right).toEqualEpsilon(Cartesian3.cross(tempCamera.direction, Cartesian3.UNIT_Z, new Cartesian3()), CesiumMath.EPSILON11);
+        expect(tempCamera.up).toEqualEpsilon(Cartesian3.cross(tempCamera.right, tempCamera.direction, new Cartesian3()), CesiumMath.EPSILON11);
 
         expect(1.0 - Cartesian3.magnitude(tempCamera.direction)).toBeLessThan(CesiumMath.EPSILON14);
         expect(1.0 - Cartesian3.magnitude(tempCamera.up)).toBeLessThan(CesiumMath.EPSILON14);
         expect(1.0 - Cartesian3.magnitude(tempCamera.right)).toBeLessThan(CesiumMath.EPSILON14);
     });
 
-    it('lookAt throws with no eye parameter', function() {
-        var target = Cartesian3.clone(Cartesian3.ZERO);
-        var up = Cartesian3.clone(Cartesian3.ZERO);
-        var tempCamera = camera.clone();
-        expect(function() {
-            tempCamera.lookAt(undefined, target, up);
-        }).toThrowDeveloperError();
-    });
-
     it('lookAt throws with no target parameter', function() {
-        var eye = Cartesian3.clone(Cartesian3.ZERO);
-        var up = Cartesian3.clone(Cartesian3.ZERO);
-        var tempCamera = camera.clone();
         expect(function() {
-            tempCamera.lookAt(eye, undefined, up);
+            camera.lookAt({
+                offset : Cartesian3.ZERO
+            });
         }).toThrowDeveloperError();
     });
 
-    it('lookAt throws with no up parameter', function() {
-        var eye = Cartesian3.clone(Cartesian3.ZERO);
-        var target = Cartesian3.clone(Cartesian3.ZERO);
-        var tempCamera = camera.clone();
+    it('lookAt throws with no offset parameter', function() {
         expect(function() {
-            tempCamera.lookAt(eye, target, undefined);
+            camera.lookAt({
+                target : Cartesian3.ZERO
+            });
         }).toThrowDeveloperError();
     });
 
@@ -958,27 +953,34 @@ defineSuite([
         frustum.top = 1.0;
         frustum.bottom = -1.0;
 
-        var target = new Cartesian3();
-        var position = new Cartesian3(10000.0, 10000.0, 30000.0);
-        var up = Cartesian3.clone(Cartesian3.UNIT_Z);
-
         var tempCamera = camera.clone();
         tempCamera.frustum = frustum;
         tempCamera.update(SceneMode.SCENE2D);
-        tempCamera.lookAt(position, target, up);
-        expect(Cartesian2.clone(tempCamera.position)).toEqual(Cartesian2.clone(target));
+
+        var target = Cartesian3.fromDegrees(0.0, 0.0);
+        var offset = new Cartesian3(10000.0, 10000.0, 30000.0);
+        var up = Cartesian3.clone(Cartesian3.UNIT_Z);
+        tempCamera.lookAt({
+            target : target,
+            offset : offset
+        });
+
+        expect(Cartesian2.clone(tempCamera.position)).toEqual(Cartesian2.ZERO);
         expect(tempCamera.direction).toEqual(Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()));
-        expect(tempCamera.up).toEqual(Cartesian3.UNIT_Y);
-        expect(tempCamera.right).toEqual(Cartesian3.UNIT_X);
-        expect(tempCamera.frustum.right).toEqual(position.z);
-        expect(tempCamera.frustum.left).toEqual(-position.z);
+        expect(tempCamera.up).toEqualEpsilon(Cartesian3.normalize(Cartesian3.fromElements(-offset.x, -offset.y, 0.0), new Cartesian3()), CesiumMath.EPSILON11);
+        expect(tempCamera.right).toEqualEpsilon(Cartesian3.cross(tempCamera.direction, tempCamera.up, new Cartesian3()), CesiumMath.EPSILON11);
+        expect(tempCamera.frustum.right).toEqual(Cartesian3.magnitude(offset));
+        expect(tempCamera.frustum.left).toEqual(-Cartesian3.magnitude(offset));
     });
 
     it('lookAt throws when morphing', function() {
         camera.update(SceneMode.MORPHING);
 
         expect(function() {
-            camera.lookAt(Cartesian3.UNIT_X, Cartesian3.ZERO, Cartesian3.UNIT_Y);
+            camera.lookAt({
+                target : Cartesian3.ZERO,
+                offset : Cartesian3.UNIT_X
+            });
         }).toThrowDeveloperError();
     });
 
