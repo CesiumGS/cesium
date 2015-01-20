@@ -1425,7 +1425,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * @returns {Promise} A Promise that resolves to true if the zoom was successful or false if the entity is not currently visualized in the scene or the zoom was cancelled.
      */
     Viewer.prototype.zoomTo = function(zoomTarget) {
-        zoomToOrFly(this, zoomTarget, false);
+        return zoomToOrFly(this, zoomTarget, false);
     };
 
     /**
@@ -1435,7 +1435,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * @returns {Promise} A Promise that resolves to true if the zoom was successful or false if the entity is not currently visualized in the scene or the zoom was cancelled.
      */
     Viewer.prototype.flyTo = function(zoomTarget) {
-        zoomToOrFly(this, zoomTarget, true);
+        return zoomToOrFly(this, zoomTarget, true);
     };
 
     function zoomToOrFly(that, zoomTarget, isFlight) {
@@ -1464,9 +1464,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         var zoomPromise = when.defer();
         that._zoomPromise = zoomPromise;
-        return zoomPromise.then(function(boundingSphere) {
-            return defined(boundingSphere);
-        });
+        return zoomPromise;
     }
 
     function cancelZoom(viewer) {
@@ -1474,7 +1472,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         if (defined(zoomPromise)) {
             viewer._zoomPromise = undefined;
             viewer._zoomTarget = undefined;
-            zoomPromise.resolve(undefined);
+            zoomPromise.resolve(false);
         }
     }
 
@@ -1528,7 +1526,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         viewer._zoomTarget = undefined;
         viewer._zoomPromise = undefined;
-        zoomPromise.resolve(boundingSphere);
+        zoomPromise.resolve(true);
     }
 
     function updateTrackedEntity(viewer) {

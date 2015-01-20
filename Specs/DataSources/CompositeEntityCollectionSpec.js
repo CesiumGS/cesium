@@ -86,6 +86,26 @@ defineSuite([
         expect(composite.getCollection(2)).toBe(entityCollection3);
     });
 
+    it('contains returns true if in collection', function() {
+        var entityCollection = new EntityCollection();
+        var composite = new CompositeEntityCollection();
+        composite.addCollection(entityCollection);
+        var entity = entityCollection.getOrCreateEntity('asd');
+        expect(entityCollection.contains(entity)).toBe(true);
+    });
+
+    it('contains returns false if not in collection', function() {
+        var entityCollection = new CompositeEntityCollection();
+        expect(entityCollection.contains(new Entity())).toBe(false);
+    });
+
+    it('contains throws with undefined Entity', function() {
+        var entityCollection = new CompositeEntityCollection();
+        expect(function() {
+            entityCollection.contains(undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('containsCollection works', function() {
         var entityCollection = new EntityCollection();
         var composite = new CompositeEntityCollection();
