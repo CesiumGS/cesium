@@ -1574,7 +1574,7 @@ define([
         var ratio;
 
         if (arguments.length > 1) {
-            deprecationWarning('Camera.lookAt', 'The eye, target, and up parameters were deprecated in Cesium 1.6. It will be removed in Cesium 1.9. Use the target, offset, and transform parameters.');
+            deprecationWarning('Camera.lookAt', 'The eye, target, and up parameters to Camera.lookAt were deprecated in Cesium 1.6. It will be removed in Cesium 1.8. Use the target, offset, and transform parameters.');
 
             var eye = arguments[0];
             target = arguments[1];
