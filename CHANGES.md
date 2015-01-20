@@ -15,6 +15,9 @@ Change Log
   * `PolygonGraphics.positions` was deprecated and replaced with `PolygonGraphics.hierarchy`, whose value is a `PolygonHierarchy` instead of an array of positions.  `PolygonGraphics.positions` will be removed in Cesium 1.8.
   * The `Model.readyToRender` event was deprecated and will be removed in Cesium 1.9.  Use the new `Model.readyPromise` instead.
   * The `mouseMoveOnDocument` parameter to the `ScreenSpaceEventHandler` constructor was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. `ScreenSpaceEventHandler` will be constructed as if `mouseMoveOnDocument` is `false`.
+  * `ColorMaterialProperty.fromColor(color)` has been deprecated and will be removed in Cesium 1.9. The constructor can now take a Color directly, for example `new ColorMaterialProperty(color)`.
+  * `DataSourceDisplay` methods `getScene` and `getDataSources` have been deprecated and replaced with `scene` and `dataSources` properties. They will be removed in Cesium 1.9.
+  * The `Entity` constructor taking a single string value for the id has been deprecated. The constructor now takes an options object which allows you to provide any and all `Entity` related properties at construction time. Support for the deprecated behavior will be removed in Cesium 1.9.
 * Improved performance of asynchronous geometry creation (as much as 20% faster in some use cases). [#2342](https://github.com/AnalyticalGraphicsInc/cesium/issues/2342)
 * Added `PolylineVolumeGraphics` and `Entity.polylineVolume`
 * Added `Camera.setView` (which use heading, pitch, and roll) and `Camera.roll`.
@@ -34,7 +37,19 @@ Change Log
 * `WebMapTileServiceImageryProvider` now supports RESTful requests (by accepting a tile-URL template).
 * When you track an entity by clicking on the track button in the `InfoBox`, you can now stop tracking by clicking the button a second time.
 * Setting `viewer.trackedEntity` to `undefined` will now restore the camera controls to their default states.
-* The object returned by `Primitive.getGeometryInstanceAttributes` now contains the instance's bounding sphere.
+* The object returned by `Primitive.getGeometryInstanceAttributes` now contains the instance's bounding sphere and repeated calls will always now return the same object instance.
+* Fixed a bug that caused dynamic geometry outlines widths to not work on implementations that support them.
+* Added `viewer.zoomTo` and `viewer.flyTo` which takes an entity, array of entities, `EntityCollection`, or `DataSource` as a parameter and zooms or flies to the corresponding visualization.
+* The `SelectionIndicator` widget now works for all entity visualization and uses the center of visualization instead of entity.position. This produces more accurate results, especially for shapes, volumes, and models.
+* Added `CustomDataSource` which makes it easy to create and manage a group of entities without having to manually implement the DataSource interface in a new class.
+* Added `DataSourceDisplay.defaultDataSource` which is an instance of `CustomDataSource` and allows you to easily add custom entities to the display.
+* Added `viewer.entities` which allows you to easily create and manage `Entity` instances without a corresponding `DataSource`. This is just a shortcut to `viewer.dataSourceDisplay.defaultDataSource.entities`
+* Added `Camera.viewBoundingSphere` and `Camera.flyToBoundingSphere`, which as the names imply, sets or flies to a view that encloses the provided `BoundingSphere`
+* The `Visualizer` interface has a new optional method, `getBoundingSphere` which when implemented, will be used to retrieve the bounding sphere created by any primitives produced by the Visualizer for a given entity.
+* For constant `Property` values, there is no longer a need to create an instance of `ConstantProperty` or `ConstantPositionProperty`, you can now assign a value directly to the corresponding property. The same is true for material images and colors.
+* All Entity and related class can now be assigned using anonymous objects as well as be passed template objects. The correct underlying instance is created for you automatically.
+* Many Sandcastle examples have been rewritten to make use of the newly improved Entity API.
+* For a more detailed overview of changes to the Entity API, read [this forum thread](https://groups.google.com/d/msg/cesium-dev/ol7edT6EtZw/a2-gvI4H0IwJ) for details.
 
 ### 1.5 - 2015-01-05
 
