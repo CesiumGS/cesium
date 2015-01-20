@@ -1527,59 +1527,150 @@ define([
         });
     };
 
+    var scratchLookAtMatrix4 = new Matrix4();
+    var scratchLookAtTransformMatrix4 = new Matrix4();
+
     /**
-     * Sets the camera position and orientation with an eye position, target, and up vector.
-     * This method is not supported in 2D mode because there is only one direction to look.
+     * Sets the camera position and orientation using a target, offset and transformation matrix. The target must be given in
+     * world coordinates. The offset is a cartesian offset from the target in a reference frame about the target. By default,
+     * the reference frame is the local east-north-up frame centered at the target. The transformation matrix can be used to
+     * specify a different reference frame.
      *
-     * @param {Cartesian3} eye The position of the camera.
-     * @param {Cartesian3} target The position to look at.
-     * @param {Cartesian3} up The up vector.
+     * In 2D, there must be a top down view. The camera will be placed above the target looking down. The height above the
+     * target will be the magnitude of the offset. The heading will be determined from the offset. If the heading cannot be
+     * determined from the offset, the heading will be north.
+     *
+     * @param {Object} options An object with the following properties:
+     * @param {Cartesian3} options.target The target position in world coordinates.
+     * @param {Cartesian3} options.offset The offset from the target in a reference frame centered at the target.
+     * @param {Matrix4} [options.transform] The transformation matrix defining the reference frame centered at the target. The default is a local east-north-up reference frame.
+     *
+     * The deprecated parameters sets the camera position and orientation with an eye position, target, and up vector.
+     *
+     * @param {Cartesian3} eye The position of the camera. This parameter is deprecated.
+     * @param {Cartesian3} target The position to look at. This parameter is deprecated.
+     * @param {Cartesian3} up The up vector. This parameter is deprecated.
      *
      * @exception {DeveloperError} lookAt is not supported while morphing.
      */
-    Camera.prototype.lookAt = function(eye, target, up) {
+    Camera.prototype.lookAt = function(options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(eye)) {
-            throw new DeveloperError('eye is required');
-        }
-        if (!defined(target)) {
-            throw new DeveloperError('target is required');
-        }
-        if (!defined(up)) {
-            throw new DeveloperError('up is required');
-        }
         if (this._mode === SceneMode.MORPHING) {
             throw new DeveloperError('lookAt is not supported while morphing.');
         }
         //>>includeEnd('debug');
 
-        if (this._mode === SceneMode.SCENE2D) {
-            Cartesian2.clone(target, this.position);
-            Cartesian3.negate(Cartesian3.UNIT_Z, this.direction);
+        var target;
+        var frustum;
+        var ratio;
 
-            Cartesian3.clone(up, this.up);
+        if (arguments.length > 1) {
+            deprecationWarning('Camera.lookAt', 'The eye, target, and up parameters were deprecated in Cesium 1.6. It will be removed in Cesium 1.9. Use the target, offset, and transform parameters.');
+
+            var eye = arguments[0];
+            target = arguments[1];
+            var up = arguments[2];
+
+            //>>includeStart('debug', pragmas.debug);
+            if (!defined(eye)) {
+                throw new DeveloperError('eye is required');
+            }
+            if (!defined(target)) {
+                throw new DeveloperError('target is required');
+            }
+            if (!defined(up)) {
+                throw new DeveloperError('up is required');
+            }
+            //>>includeEnd('debug');
+
+            if (this._mode === SceneMode.SCENE2D) {
+                Cartesian2.clone(target, this.position);
+                Cartesian3.negate(Cartesian3.UNIT_Z, this.direction);
+
+                Cartesian3.clone(up, this.up);
+                this.up.z = 0.0;
+
+                if (Cartesian3.magnitudeSquared(this.up) < CesiumMath.EPSILON10) {
+                    Cartesian3.clone(Cartesian3.UNIT_Y, this.up);
+                }
+
+                Cartesian3.cross(this.direction, this.up, this.right);
+
+                frustum = this.frustum;
+                ratio = frustum.top / frustum.right;
+                frustum.right = eye.z;
+                frustum.left = -frustum.right;
+                frustum.top = ratio * frustum.right;
+                frustum.bottom = -frustum.top;
+
+                return;
+            }
+
+            this.position = Cartesian3.clone(eye, this.position);
+            this.direction = Cartesian3.normalize(Cartesian3.subtract(target, eye, this.direction), this.direction);
+            this.right = Cartesian3.normalize(Cartesian3.cross(this.direction, up, this.right), this.right);
+            this.up = Cartesian3.cross(this.right, this.direction, this.up);
+
+            return;
+        }
+
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        target = options.target;
+        var offset = options.offset;
+        var transform = options.transform;
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(target)) {
+            throw new DeveloperError('target is required');
+        }
+        if (!defined(offset)) {
+            throw new DeveloperError('offset is required');
+        }
+        //>>includeEnd('debug');
+
+        var oldTransform = Matrix4.clone(this.transform, scratchLookAtTransformMatrix4);
+        transform = defined(transform) ? transform : Transforms.eastNorthUpToFixedFrame(target, Ellipsoid.WGS84, scratchLookAtMatrix4);
+        this.setTransform(transform);
+
+        if (this._mode === SceneMode.SCENE2D) {
+            Cartesian2.clone(Cartesian2.ZERO, this.position);
+
+            Cartesian3.negate(offset, this.up);
+            Cartesian3.normalize(this.up, this.up);
             this.up.z = 0.0;
+
+            this.setTransform(Matrix4.IDENTITY);
 
             if (Cartesian3.magnitudeSquared(this.up) < CesiumMath.EPSILON10) {
                 Cartesian3.clone(Cartesian3.UNIT_Y, this.up);
             }
 
+            Cartesian3.negate(Cartesian3.UNIT_Z, this.direction);
             Cartesian3.cross(this.direction, this.up, this.right);
+            Cartesian3.normalize(this.right, this.right);
 
-            var frustum = this.frustum;
-            var ratio = frustum.top / frustum.right;
-            frustum.right = eye.z;
+            frustum = this.frustum;
+            ratio = frustum.top / frustum.right;
+            frustum.right = Cartesian3.magnitude(offset);
             frustum.left = -frustum.right;
             frustum.top = ratio * frustum.right;
             frustum.bottom = -frustum.top;
 
+            this.setTransform(oldTransform);
+
             return;
         }
 
-        this.position = Cartesian3.clone(eye, this.position);
-        this.direction = Cartesian3.normalize(Cartesian3.subtract(target, eye, this.direction), this.direction);
-        this.right = Cartesian3.normalize(Cartesian3.cross(this.direction, up, this.right), this.right);
-        this.up = Cartesian3.cross(this.right, this.direction, this.up);
+        Cartesian3.clone(offset, this.position);
+        Cartesian3.negate(this.position, this.direction);
+        Cartesian3.normalize(this.direction, this.direction);
+        Cartesian3.cross(this.direction, Cartesian3.UNIT_Z, this.right);
+        Cartesian3.normalize(this.right, this.right);
+        Cartesian3.cross(this.right, this.direction, this.up);
+        Cartesian3.normalize(this.up, this.up);
+
+        this.setTransform(oldTransform);
     };
 
     var viewRectangle3DCartographic = new Cartographic();

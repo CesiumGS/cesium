@@ -108,14 +108,15 @@ function setReferenceFrame() {
 
     // View in east-north-up frame
     var camera = viewer.camera;
-    Cesium.Matrix4.clone(transform, camera.transform);
     camera.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
 
     // Zoom in
-    camera.lookAt(
-        new Cesium.Cartesian3(-120000.0, -120000.0, 120000.0),
-        Cesium.Cartesian3.ZERO,
-        Cesium.Cartesian3.UNIT_Z);
+    camera.lookAt({
+        target : center,
+        offset : new Cesium.Cartesian3(-120000.0, -120000.0, 120000.0),
+        transform : transform
+    });
+    camera.setTransform(transform);
 
     // Show reference frame.  Not required.
     scene.primitives.add(new Cesium.DebugModelMatrixPrimitive({
