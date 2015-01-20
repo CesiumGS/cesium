@@ -491,7 +491,7 @@ defineSuite([
             expect(entity.polygon.outlineWidth.getValue()).toEqual(options.strokeWidth);
 
             entity = entities[2];
-            var expectedImage = dataSource._pinBuilder.fromMakiIconId(options.markerSymbol, options.markerColor, options.markerSize).toDataURL();
+            var expectedImage = dataSource._pinBuilder.fromMakiIconId(options.markerSymbol, options.markerColor, options.markerSize);
             expect(entity.billboard.image.getValue()).toEqual(expectedImage);
         });
     });
@@ -519,7 +519,7 @@ defineSuite([
             expect(entity.polygon.outlineWidth.getValue()).toEqual(GeoJsonDataSource.strokeWidth);
 
             entity = entities[2];
-            var expectedImage = dataSource._pinBuilder.fromMakiIconId(GeoJsonDataSource.markerSymbol, GeoJsonDataSource.markerColor, GeoJsonDataSource.markerSize).toDataURL();
+            var expectedImage = dataSource._pinBuilder.fromMakiIconId(GeoJsonDataSource.markerSymbol, GeoJsonDataSource.markerColor, GeoJsonDataSource.markerSize);
             expect(entity.billboard.image.getValue()).toEqual(expectedImage);
         });
     });
