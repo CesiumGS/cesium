@@ -50,6 +50,7 @@ define([
     var EntityData = function(entity) {
         this.entity = entity;
         this.billboard = undefined;
+        this.textureValue = undefined;
     };
 
     /**
@@ -137,7 +138,10 @@ define([
             }
 
             billboard.show = show;
-            billboard.image = textureValue;
+            if (item.textureValue !== textureValue) {
+                billboard.image = textureValue;
+                item.textureValue = textureValue;
+            }
             billboard.position = position;
             billboard.color = Property.getValueOrDefault(billboardGraphics._color, time, defaultColor, color);
             billboard.eyeOffset = Property.getValueOrDefault(billboardGraphics._eyeOffset, time, defaultEyeOffset, eyeOffset);
@@ -217,6 +221,7 @@ define([
         if (defined(item)) {
             var billboard = item.billboard;
             if (defined(billboard)) {
+                item.textureValue = undefined;
                 item.billboard = undefined;
                 billboard.show = false;
                 billboard.image = undefined;

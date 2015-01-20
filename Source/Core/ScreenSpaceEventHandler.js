@@ -4,6 +4,7 @@ define([
         './Cartesian2',
         './defaultValue',
         './defined',
+        './deprecationWarning',
         './destroyObject',
         './DeveloperError',
         './KeyboardEventModifier',
@@ -13,6 +14,7 @@ define([
         Cartesian2,
         defaultValue,
         defined,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         KeyboardEventModifier,
@@ -21,7 +23,7 @@ define([
 
     function getPosition(screenSpaceEventHandler, event, result) {
         var element = screenSpaceEventHandler._element;
-        if (element === document) {
+        if (element === document || !screenSpaceEventHandler._mouseMoveOnDocument) {
             result.x = event.clientX;
             result.y = event.clientY;
             return result;
@@ -77,7 +79,7 @@ define([
         // some listeners may be registered on the document, so we still get events even after
         // leaving the bounds of element.
         // this is affected by the existence of an undocumented disableRootEvents property on element.
-        var alternateElement = !defined(element.disableRootEvents) ? document : element;
+        var alternateElement = !defined(element.disableRootEvents) && screenSpaceEventHandler._mouseMoveOnDocument ? document : element;
 
         if (defined(window.PointerEvent)) {
             registerListener(screenSpaceEventHandler, 'pointerdown', element, handlePointerDown);
@@ -636,9 +638,11 @@ define([
      * @alias ScreenSpaceEventHandler
      *
      * @param {Canvas} [element=document] The element to add events to.
+     * @param {Boolean} [mouseMoveOnDocument=true] Listen for mouse/pointer/touch down and move events on the document.
+     *
      * @constructor
      */
-    var ScreenSpaceEventHandler = function(element) {
+    var ScreenSpaceEventHandler = function(element, mouseMoveOnDocument) {
         this._inputEvents = {};
         this._buttonDown = undefined;
         this._isPinching = false;
@@ -658,6 +662,11 @@ define([
         this._clickPixelTolerance = 5;
 
         this._element = defaultValue(element, document);
+
+        this._mouseMoveOnDocument = defaultValue(mouseMoveOnDocument, true);
+        if (this._mouseMoveOnDocument) {
+            deprecationWarning('ScreenSpaceEventHandler', 'The mouseMoveOnDocument parameter to the ScreenSpaceEventHandler constructor was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. ScreenSpaceEventHandler will be constructed as if mouseMoveOnDocument is false.');
+        }
 
         registerListeners(this);
     };
