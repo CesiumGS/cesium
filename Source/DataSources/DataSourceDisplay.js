@@ -69,9 +69,6 @@ define([
      *        If undefined, all standard visualizers are used.
      */
     var DataSourceDisplay = function(options) {
-        var scene = options.scene;
-        var dataSourceCollection = options.dataSourceCollection;
-
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options)) {
             throw new DeveloperError('options is required.');
@@ -83,6 +80,9 @@ define([
             throw new DeveloperError('dataSourceCollection is required.');
         }
         //>>includeEnd('debug');
+
+        var scene = options.scene;
+        var dataSourceCollection = options.dataSourceCollection;
 
         this._eventHelper = new EventHelper();
         this._eventHelper.add(dataSourceCollection.dataSourceAdded, this._onDataSourceAdded, this);
