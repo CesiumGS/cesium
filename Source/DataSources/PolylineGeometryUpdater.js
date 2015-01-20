@@ -476,7 +476,7 @@ define([
         if (followSurface) {
             generateCartesianArcOptions.positions = positions;
             generateCartesianArcOptions.granularity = Property.getValueOrUndefined(polyline._granularity, time);
-            generateCartesianArcOptions.height = PolylinePipeline.extractHeights(positions, Ellipsoid.WGS84);
+            generateCartesianArcOptions.height = PolylinePipeline.extractHeights(positions, this._geometryUpdater._scene.globe.ellipsoid);
             positions = PolylinePipeline.generateCartesianArc(generateCartesianArcOptions);
         }
 

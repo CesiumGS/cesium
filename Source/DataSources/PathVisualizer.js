@@ -480,19 +480,6 @@ define([
     };
 
     /**
-     * Computes a bounding sphere which encloses the visualization produced for the specified entity.
-     *
-     * @param {Entity} entity The entity whose bounding sphere to compute.
-     * @param {BoundingSphere} result The bounding sphere onto which to store the result.
-     * @returns {BoundingSphereState} BoundingSphereState.DONE if the result contains the bounding sphere,
-     *                       BoundingSphereState.PENDING if the result is still being computed, or
-     *                       BoundingSphereState.FAILED if the entity has no visualization in the current scene.
-     */
-    PathVisualizer.prototype.getBoundingSphere = function(entity, result) {
-        return BoundingSphereState.FAILED;
-    };
-
-    /**
      * Returns true if this object was destroyed; otherwise, false.
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.

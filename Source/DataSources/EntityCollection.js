@@ -314,7 +314,6 @@ define([
         return this._entities.get(id);
     };
 
-
     /**
      * Gets an entity with the specified id or creates it and adds it to the collection if it does not exist.
      *
