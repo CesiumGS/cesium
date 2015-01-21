@@ -884,10 +884,6 @@ define([
         var pitch = scene2D ? -CesiumMath.PI_OVER_TWO : defaultValue(options.pitch, this.pitch);
         var roll = scene2D ? 0.0 : defaultValue(options.roll, this.roll);
 
-        if (sceneCV) {
-            roll = -roll;
-        }
-
         var cartesian = options.position;
         var cartographic = options.positionCartographic;
 
