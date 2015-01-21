@@ -3,7 +3,7 @@ define([
         'Core/BoundingSphere',
         'Core/Math',
         'Core/JulianDate',
-        'Datasources/BoundingSphereState'
+        'DataSources/BoundingSphereState'
     ], function(
         BoundingSphere,
         CesiumMath,
