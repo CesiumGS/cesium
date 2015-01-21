@@ -12,11 +12,12 @@ Change Log
   * `Camera.tilt` was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. Use `Camera.pitch`.
   * `Camera.heading` and `Camera.tilt` were deprecated in Cesium 1.6. They will become read-only in Cesium 1.7. Use `Camera.setView`.
   * `Camera.setPositionCartographic` was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. Use `Camera.setView`.
-   * The `eye`, `target`, and `up` parameters to `Camera.lookA`t were deprecated in Cesium 1.6. It will be removed in Cesium 1.8. Use the `target`, `offset`, and `transform` parameters.
+   * The `eye`, `target`, and `up` parameters to `Camera.lookAt` were deprecated in Cesium 1.6. It will be removed in Cesium 1.8. Use the `target` and `offset`.
   * `PolygonGraphics.positions` was deprecated and replaced with `PolygonGraphics.hierarchy`, whose value is a `PolygonHierarchy` instead of an array of positions.  `PolygonGraphics.positions` will be removed in Cesium 1.8.
   * The `Model.readyToRender` event was deprecated and will be removed in Cesium 1.9.  Use the new `Model.readyPromise` instead.
 * Improved performance of asynchronous geometry creation (as much as 20% faster in some use cases). [#2342](https://github.com/AnalyticalGraphicsInc/cesium/issues/2342)
 * Added `PolylineVolumeGraphics` and `Entity.polylineVolume`
+* Added `Camera.lookAtTransform` which sets the camera position and orientation given a transformation matrix defining a reference frame and an offset from the center of that frame.
 * Added `Camera.setView` (which use heading, pitch, and roll) and `Camera.roll`.
 * Added `Quaternion.fromHeadingPitchRoll` to create a rotation from heading, pitch, and roll angles.
 * Added `Transforms.headingPitchRollToFixedFrame` to create a local frame from a position and heading/pitch/roll angles.
