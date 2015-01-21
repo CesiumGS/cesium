@@ -2165,6 +2165,47 @@ define([
         scene.tweens.add(CameraFlightPath.createTweenRectangle(scene, options));
     };
 
+    var scratchFlyToQuaternion = new Quaternion();
+    var scratchFlyToMatrix3 = new Matrix3();
+    var scratchFlyToDirection = new Cartesian3();
+    var scratchFlyToUp = new Cartesian3();
+    var scratchFlyToMatrix4 = new Matrix4();
+
+    Camera.prototype.flyToHeadingPitchRoll = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        var heading = defaultValue(options.heading, 0.0);
+        var pitch = defaultValue(options.pitch, -CesiumMath.PI_OVER_TWO);
+        var roll = defaultValue(options.roll, 0.0);
+
+        var destination = options.destination;
+
+        var rotQuat = Quaternion.fromHeadingPitchRoll(heading - CesiumMath.PI_OVER_TWO, pitch, roll, scratchFlyToQuaternion);
+        var rotMat = Matrix3.fromQuaternion(rotQuat, scratchFlyToMatrix3);
+
+        var direction = Matrix3.getColumn(rotMat, 0, scratchFlyToDirection);
+        var up = Matrix3.getColumn(rotMat, 2, scratchFlyToUp);
+
+        var ellipsoid = this._projection.ellipsoid;
+        var transform = Transforms.eastNorthUpToFixedFrame(destination, ellipsoid, scratchFlyToMatrix4);
+
+        Matrix4.multiplyByPointAsVector(transform, direction, direction);
+        Matrix4.multiplyByPointAsVector(transform, up, up);
+
+        var newOptions = {
+            destination : destination,
+            direction : direction,
+            up : up,
+            duration : options.duration,
+            complete : options.complete,
+            cancel : options.cancel,
+            endTransform : options.endTransform
+        };
+
+        var scene = this._scene;
+        scene.tweens.add(CameraFlightPath.createTween(scene, newOptions));
+    };
+
     /**
      * Returns a duplicate of a Camera instance.
      *
