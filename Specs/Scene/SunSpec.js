@@ -41,11 +41,7 @@ defineSuite([
 
     function viewSun(camera, uniformState) {
         var sunPosition = uniformState.sunPositionWC;
-        camera.lookAt({
-            target : sunPosition,
-            offset : Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition, new Cartesian3()), CesiumMath.SOLAR_RADIUS + 100.0, new Cartesian3()),
-            transform : Matrix4.IDENTITY
-        });
+        camera.lookAt(sunPosition, Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition, new Cartesian3()), CesiumMath.SOLAR_RADIUS + 100.0, new Cartesian3()));
     }
 
     it('draws in 3D', function() {

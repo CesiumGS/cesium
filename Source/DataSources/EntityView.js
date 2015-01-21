@@ -149,11 +149,7 @@ define([
         }
 
         if (updateLookAt) {
-            camera.lookAt({
-                target : cartesian,
-                offset : that.scene.mode === SceneMode.SCENE2D ? that._offset2D : that._offset3D,
-                transform : camera.transform
-            });
+            camera.lookAtTransform(camera.transform, that.scene.mode === SceneMode.SCENE2D ? that._offset2D : that._offset3D);
         }
     }
 

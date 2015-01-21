@@ -50,11 +50,7 @@ defineSuite([
         var radius = Ellipsoid.MOON.maximumRadius;
         var offset = Cartesian3.multiplyByScalar(Cartesian3.normalize(moonPosition, new Cartesian3()), radius + 100.0, new Cartesian3());
 
-        camera.lookAt({
-            target : moonPosition,
-            offset : offset,
-            transform : Matrix4.IDENTITY
-        });
+        camera.lookAt(moonPosition, offset);
     }
 
     it('default constructs the moon', function() {

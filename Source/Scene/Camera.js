@@ -1531,19 +1531,15 @@ define([
     var scratchLookAtTransformMatrix4 = new Matrix4();
 
     /**
-     * Sets the camera position and orientation using a target, offset and transformation matrix. The target must be given in
-     * world coordinates. The offset is a cartesian offset from the target in a reference frame about the target. By default,
-     * the reference frame is the local east-north-up frame centered at the target. The transformation matrix can be used to
-     * specify a different reference frame.
+     * Sets the camera position and orientation using a target and offset. The target must be given in
+     * world coordinates. The offset is a cartesian offset from the target in the local east-north-up reference frame centered at the target.
      *
      * In 2D, there must be a top down view. The camera will be placed above the target looking down. The height above the
      * target will be the magnitude of the offset. The heading will be determined from the offset. If the heading cannot be
      * determined from the offset, the heading will be north.
      *
-     * @param {Object} options An object with the following properties:
-     * @param {Cartesian3} options.target The target position in world coordinates.
-     * @param {Cartesian3} options.offset The offset from the target in a reference frame centered at the target.
-     * @param {Matrix4} [options.transform] The transformation matrix defining the reference frame centered at the target. The default is a local east-north-up reference frame.
+     * @param {Cartesian3} target The target position in world coordinates.
+     * @param {Cartesian3} offset The offset from the target in the local east-north-up reference frame centered at the target.
      *
      * The deprecated parameters sets the camera position and orientation with an eye position, target, and up vector.
      *
@@ -1556,25 +1552,11 @@ define([
      * @example
      * // tilted view of the U.S.
      * var center = Cesium.Cartesian3.fromDegrees(-98.0, 40.0);
-     * viewer.camera.lookAt({
-     *    target : center,
-     *    offset : new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0),
-     *    transform : Cesium.Transforms.eastNorthUpToFixedFrame(center, Cesium.Ellipsoid.WGS84) // default
-     * });
+     * viewer.camera.lookAt(center, new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0));
      */
-    Camera.prototype.lookAt = function(options) {
-        //>>includeStart('debug', pragmas.debug);
-        if (this._mode === SceneMode.MORPHING) {
-            throw new DeveloperError('lookAt is not supported while morphing.');
-        }
-        //>>includeEnd('debug');
-
-        var target;
-        var frustum;
-        var ratio;
-
-        if (arguments.length > 1) {
-            deprecationWarning('Camera.lookAt', 'The eye, target, and up parameters to Camera.lookAt were deprecated in Cesium 1.6. It will be removed in Cesium 1.8. Use the target, offset, and transform parameters.');
+    Camera.prototype.lookAt = function(target, offset) {
+        if (arguments.length > 2) {
+            deprecationWarning('Camera.lookAt', 'The eye, target, and up parameters to Camera.lookAt were deprecated in Cesium 1.6. It will be removed in Cesium 1.8. Use the target and offset parameters.');
 
             var eye = arguments[0];
             target = arguments[1];
@@ -1589,6 +1571,9 @@ define([
             }
             if (!defined(up)) {
                 throw new DeveloperError('up is required');
+            }
+            if (this._mode === SceneMode.MORPHING) {
+                throw new DeveloperError('lookAt is not supported while morphing.');
             }
             //>>includeEnd('debug');
 
@@ -1605,8 +1590,8 @@ define([
 
                 Cartesian3.cross(this.direction, this.up, this.right);
 
-                frustum = this.frustum;
-                ratio = frustum.top / frustum.right;
+                var frustum = this.frustum;
+                var ratio = frustum.top / frustum.right;
                 frustum.right = eye.z;
                 frustum.left = -frustum.right;
                 frustum.top = ratio * frustum.right;
@@ -1623,23 +1608,48 @@ define([
             return;
         }
 
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        target = options.target;
-        var offset = options.offset;
-        var transform = options.transform;
-
         //>>includeStart('debug', pragmas.debug);
         if (!defined(target)) {
             throw new DeveloperError('target is required');
         }
+        //>>includeEnd('debug');
+
+        var transform = Transforms.eastNorthUpToFixedFrame(target, Ellipsoid.WGS84, scratchLookAtMatrix4);
+        this.lookAtTransform(transform, offset);
+    };
+
+    /**
+     * Sets the camera position and orientation using a target and transformation matrix. The offset is a cartesian
+     * offset from the center of the reference frame defined by the transformation matrix.
+     *
+     * In 2D, there must be a top down view. The camera will be placed above the center of the reference frame. The height above the
+     * target will be the magnitude of the offset. The heading will be determined from the offset. If the heading cannot be
+     * determined from the offset, the heading will be north.
+     *
+     * @param {Matrix4} transform The transformation matrix defining the reference frame.
+     * @param {Cartesian3} offset The offset from the target in a reference frame centered at the target.
+     *
+     * @exception {DeveloperError} lookAtTransform is not supported while morphing.
+     *
+     * @example
+     * // tilted view of the U.S.
+     * var center = Cesium.Cartesian3.fromDegrees(-98.0, 40.0);
+     * var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center, Cesium.Ellipsoid.WGS84);
+     * viewer.camera.lookAtTransform(transform, new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0));
+     */
+    Camera.prototype.lookAtTransform = function(transform, offset) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(transform)) {
+            throw new DeveloperError('transform is required');
+        }
         if (!defined(offset)) {
             throw new DeveloperError('offset is required');
         }
+        if (this._mode === SceneMode.MORPHING) {
+            throw new DeveloperError('lookAtTransform is not supported while morphing.');
+        }
         //>>includeEnd('debug');
 
-        var oldTransform = Matrix4.clone(this.transform, scratchLookAtTransformMatrix4);
-        transform = defined(transform) ? transform : Transforms.eastNorthUpToFixedFrame(target, Ellipsoid.WGS84, scratchLookAtMatrix4);
         this.setTransform(transform);
 
         if (this._mode === SceneMode.SCENE2D) {
@@ -1659,14 +1669,14 @@ define([
             Cartesian3.cross(this.direction, this.up, this.right);
             Cartesian3.normalize(this.right, this.right);
 
-            frustum = this.frustum;
-            ratio = frustum.top / frustum.right;
+            var frustum = this.frustum;
+            var ratio = frustum.top / frustum.right;
             frustum.right = Cartesian3.magnitude(offset);
             frustum.left = -frustum.right;
             frustum.top = ratio * frustum.right;
             frustum.bottom = -frustum.top;
 
-            this.setTransform(oldTransform);
+            this.setTransform(transform);
 
             return;
         }
@@ -1683,8 +1693,6 @@ define([
         Cartesian3.normalize(this.right, this.right);
         Cartesian3.cross(this.right, this.direction, this.up);
         Cartesian3.normalize(this.up, this.up);
-
-        this.setTransform(oldTransform);
     };
 
     var viewRectangle3DCartographic = new Cartographic();

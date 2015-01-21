@@ -64,10 +64,7 @@ defineSuite([
         model.zoomTo = function() {
             var camera = scene.camera;
             var r = Math.max(model.boundingSphere.radius, camera.frustum.near);
-            camera.lookAt({
-                target : Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cartesian3()),
-                offset : new Cartesian3(r, -r, -r)
-            });
+            camera.lookAt( Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cartesian3()), new Cartesian3(r, -r, -r));
         };
     }
 
