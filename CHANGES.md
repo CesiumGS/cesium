@@ -18,6 +18,7 @@ Change Log
 * Improved performance of asynchronous geometry creation (as much as 20% faster in some use cases). [#2342](https://github.com/AnalyticalGraphicsInc/cesium/issues/2342)
 * Added `PolylineVolumeGraphics` and `Entity.polylineVolume`
 * Added `Camera.setView` (which use heading, pitch, and roll) and `Camera.roll`.
+* Added `Camera.flyToHeadingPitchRoll` to fly to a position and orientation created from heading, pitch and roll angles.
 * Added `Quaternion.fromHeadingPitchRoll` to create a rotation from heading, pitch, and roll angles.
 * Added `Transforms.headingPitchRollToFixedFrame` to create a local frame from a position and heading/pitch/roll angles.
 * Added `Transforms.headingPitchRollQuaternion` which is the quaternion rotation from `Transforms.headingPitchRollToFixedFrame`.
