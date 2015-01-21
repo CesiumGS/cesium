@@ -878,7 +878,6 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var scene2D = this._mode === SceneMode.SCENE2D;
-        var sceneCV = this._mode === SceneMode.COLUMBUS_VIEW;
 
         var heading = defaultValue(options.heading, this.heading);
         var pitch = scene2D ? -CesiumMath.PI_OVER_TWO : defaultValue(options.pitch, this.pitch);
@@ -2167,6 +2166,19 @@ define([
     var scratchFlyToUp = new Cartesian3();
     var scratchFlyToMatrix4 = new Matrix4();
 
+    /**
+     * Flies the camera from its current position to a new position and orientation set with heading, pitch, and roll angles.
+     *
+     * @param {Object} Object with the following properties:@param {Object} options Object with the following properties:
+     * @param {Cartesian3} options.destination The final position of the camera in WGS84 (world) coordinates.
+     * @param {Number} [options.heading=0.0] The heading angle in radians.
+     * @param {Number} [options.pitch=Cesium.Math.PI_OVER_TWO] The pitch angle in radians.
+     * @param {Number} [options.roll=0.0] The roll angle in radians.
+     * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
+     * @param {Camera~FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
+     * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
+     * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
+     */
     Camera.prototype.flyToHeadingPitchRoll = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
