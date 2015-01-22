@@ -1625,7 +1625,7 @@ define([
 
     function offsetFromHeadingPitchRange(heading, pitch, range) {
         pitch = CesiumMath.clamp(pitch, -CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO);
-        heading = CesiumMath.zeroToTwoPi(heading + CesiumMath.PI_OVER_TWO);
+        heading = CesiumMath.zeroToTwoPi(heading) - CesiumMath.PI_OVER_TWO;
 
         var pitchQuat = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, -pitch, scratchLookAtHeadingPitchRangeQuaternion1);
         var headingQuat = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, -heading, scratchLookAtHeadingPitchRangeQuaternion2);
@@ -1679,7 +1679,6 @@ define([
             throw new DeveloperError('lookAtTransform is not supported while morphing.');
         }
         //>>includeEnd('debug');
-
 
         this.lookAt(target, offsetFromHeadingPitchRange(heading, pitch, range));
     };
