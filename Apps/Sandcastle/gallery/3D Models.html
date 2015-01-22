@@ -53,13 +53,15 @@ function createModel(url, height, heading, pitch, roll) {
             loop : Cesium.ModelAnimationLoop.REPEAT
         });
         
+        var camera = viewer.camera;
+        
         // Zoom to model
         var controller = scene.screenSpaceCameraController;
         var r = 2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
         controller.minimumZoomDistance = r * 0.5;
         
         var center = Cesium.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cesium.Cartesian3());
-        viewer.camera.lookAt(center, new Cesium.Cartesian3(r, r, r));
+        camera.lookAt(center, new Cesium.Cartesian3(r, r, r));
     }).otherwise(function(error){
         window.alert(error);
     });

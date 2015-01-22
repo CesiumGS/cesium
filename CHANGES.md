@@ -12,6 +12,7 @@ Change Log
   * `Camera.tilt` was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. Use `Camera.pitch`.
   * `Camera.heading` and `Camera.tilt` were deprecated in Cesium 1.6. They will become read-only in Cesium 1.7. Use `Camera.setView`.
   * `Camera.setPositionCartographic` was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. Use `Camera.setView`.
+  * `Camera.setTransform` was deprecated in Cesium 1.6. It will be removed in Cesium 1.8. Use `Camera.lookAtTransform`.
    * The `eye`, `target`, and `up` parameters to `Camera.lookAt` were deprecated in Cesium 1.6. It will be removed in Cesium 1.8. Use the `target` and `offset`.
   * `PolygonGraphics.positions` was deprecated and replaced with `PolygonGraphics.hierarchy`, whose value is a `PolygonHierarchy` instead of an array of positions.  `PolygonGraphics.positions` will be removed in Cesium 1.8.
   * The `Model.readyToRender` event was deprecated and will be removed in Cesium 1.9.  Use the new `Model.readyPromise` instead.

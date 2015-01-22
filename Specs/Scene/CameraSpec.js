@@ -341,28 +341,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('setTransform', function() {
-        var ellipsoid = Ellipsoid.WGS84;
-        var cartOrigin = Cartographic.fromDegrees(-75.59777, 40.03883);
-        var origin = ellipsoid.cartographicToCartesian(cartOrigin);
-        var transform = Transforms.eastNorthUpToFixedFrame(origin);
-
-        var height = 1000.0;
-        cartOrigin.height = height;
-
-        camera.position = ellipsoid.cartographicToCartesian(cartOrigin);
-        camera.direction = Cartesian3.negate(Cartesian3.fromCartesian4(Matrix4.getColumn(transform, 2, new Cartesian4())), new Cartesian3());
-        camera.up = Cartesian3.fromCartesian4(Matrix4.getColumn(transform, 1, new Cartesian4(), new Matrix4()));
-        camera.right = Cartesian3.fromCartesian4(Matrix4.getColumn(transform, 0, new Cartesian4()));
-
-        camera.setTransform(transform);
-
-        expect(camera.position).toEqualEpsilon(new Cartesian3(0.0, 0.0, height), CesiumMath.EPSILON9);
-        expect(camera.direction).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), CesiumMath.EPSILON9);
-        expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON9);
-        expect(camera.right).toEqualEpsilon(Cartesian3.UNIT_X, CesiumMath.EPSILON9);
-    });
-
     it('setView with cartographic in 2D', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new GeographicProjection(ellipsoid);
@@ -985,15 +963,31 @@ defineSuite([
         expect(1.0 - Cartesian3.magnitude(tempCamera.right)).toBeLessThan(CesiumMath.EPSILON14);
     });
 
+    it('lookAtTransform with no offset parameter', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var cartOrigin = Cartographic.fromDegrees(-75.59777, 40.03883);
+        var origin = ellipsoid.cartographicToCartesian(cartOrigin);
+        var transform = Transforms.eastNorthUpToFixedFrame(origin);
+
+        var height = 1000.0;
+        cartOrigin.height = height;
+
+        camera.position = ellipsoid.cartographicToCartesian(cartOrigin);
+        camera.direction = Cartesian3.negate(Cartesian3.fromCartesian4(Matrix4.getColumn(transform, 2, new Cartesian4())), new Cartesian3());
+        camera.up = Cartesian3.fromCartesian4(Matrix4.getColumn(transform, 1, new Cartesian4(), new Matrix4()));
+        camera.right = Cartesian3.fromCartesian4(Matrix4.getColumn(transform, 0, new Cartesian4()));
+
+        camera.lookAtTransform(transform);
+
+        expect(camera.position).toEqualEpsilon(new Cartesian3(0.0, 0.0, height), CesiumMath.EPSILON9);
+        expect(camera.direction).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), CesiumMath.EPSILON9);
+        expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON9);
+        expect(camera.right).toEqualEpsilon(Cartesian3.UNIT_X, CesiumMath.EPSILON9);
+    });
+
     it('lookAtTransform throws with no transform parameter', function() {
         expect(function() {
             camera.lookAtTransform(undefined, Cartesian3.ZERO);
-        }).toThrowDeveloperError();
-    });
-
-    it('lookAtTransform throws with no offset parameter', function() {
-        expect(function() {
-            camera.lookAtTransform(Matrix4.IDENTITY, undefined);
         }).toThrowDeveloperError();
     });
 
