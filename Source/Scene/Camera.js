@@ -646,7 +646,7 @@ define([
 
                     var oldTransform = Matrix4.clone(this.transform, scratchHPRMatrix1);
                     var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
-                    this.setTransform(transform);
+                    this._setTransform(transform);
 
                     var right = this.right;
                     var direction = this.direction;
@@ -658,7 +658,7 @@ define([
                         heading = Math.atan2(right.y, right.x);
                     }
 
-                    this.setTransform(oldTransform);
+                    this._setTransform(oldTransform);
 
                     return CesiumMath.TWO_PI - CesiumMath.zeroToTwoPi(heading);
                 }
@@ -694,11 +694,11 @@ define([
 
                     var oldTransform = Matrix4.clone(this.transform, scratchHPRMatrix1);
                     var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
-                    this.setTransform(transform);
+                    this._setTransform(transform);
 
                     var pitch = CesiumMath.PI_OVER_TWO - CesiumMath.acosClamped(this.direction.z);
 
-                    this.setTransform(oldTransform);
+                    this._setTransform(oldTransform);
 
                     return pitch;
                 }
@@ -749,7 +749,7 @@ define([
 
                     var oldTransform = Matrix4.clone(this.transform, scratchHPRMatrix1);
                     var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
-                    this.setTransform(transform);
+                    this._setTransform(transform);
 
                     var up = this.up;
                     var right = this.right;
@@ -759,7 +759,7 @@ define([
                         roll = CesiumMath.PI - roll;
                     }
 
-                    this.setTransform(oldTransform);
+                    this._setTransform(oldTransform);
 
                     return CesiumMath.TWO_PI - CesiumMath.zeroToTwoPi(roll);
                 }
@@ -805,16 +805,23 @@ define([
         }
     };
 
-    var setTransformPosition = new Cartesian3();
-    var setTransformUp = new Cartesian3();
-    var setTransformDirection = new Cartesian3();
-
     /**
      * Sets the camera's transform without changing the current view.
+     *
+     * @deprecated
      *
      * @param {Matrix4} transform The camera transform.
      */
     Camera.prototype.setTransform = function(transform) {
+        deprecationWarning('Camera.setTransform', 'Camera.setTransform was deprecated in Cesium 1.6. It will be removed in Cesium 1.8. Use Camera.lookAtTransform.');
+        this._setTransform(transform);
+    };
+
+    var setTransformPosition = new Cartesian3();
+    var setTransformUp = new Cartesian3();
+    var setTransformDirection = new Cartesian3();
+
+    Camera.prototype._setTransform = function(transform) {
         var position = Cartesian3.clone(this.positionWC, setTransformPosition);
         var up = Cartesian3.clone(this.upWC, setTransformUp);
         var direction = Cartesian3.clone(this.directionWC, setTransformDirection);
@@ -904,7 +911,7 @@ define([
 
         var currentTransform = Matrix4.clone(this.transform, scratchSetViewTransform1);
         var localTransform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, scratchSetViewTransform2);
-        this.setTransform(localTransform);
+        this._setTransform(localTransform);
 
         if (scene2D) {
             Cartesian2.clone(Cartesian3.ZERO, this.position);
@@ -932,7 +939,7 @@ define([
         Matrix3.getColumn(rotMat, 2, this.up);
         Cartesian3.cross(this.direction, this.up, this.right);
 
-        this.setTransform(currentTransform);
+        this._setTransform(currentTransform);
     };
 
     /**
@@ -1612,6 +1619,9 @@ define([
         if (!defined(target)) {
             throw new DeveloperError('target is required');
         }
+        if (!defined(offset)) {
+            throw new DeveloperError('offset is required');
+        }
         //>>includeEnd('debug');
 
         var transform = Transforms.eastNorthUpToFixedFrame(target, Ellipsoid.WGS84, scratchLookAtMatrix4);
@@ -1707,15 +1717,15 @@ define([
         if (!defined(transform)) {
             throw new DeveloperError('transform is required');
         }
-        if (!defined(offset)) {
-            throw new DeveloperError('offset is required');
-        }
         if (this._mode === SceneMode.MORPHING) {
             throw new DeveloperError('lookAtTransform is not supported while morphing.');
         }
         //>>includeEnd('debug');
 
-        this.setTransform(transform);
+        this._setTransform(transform);
+        if (!defined(offset)) {
+            return;
+        }
 
         if (this._mode === SceneMode.SCENE2D) {
             Cartesian2.clone(Cartesian2.ZERO, this.position);
@@ -1724,7 +1734,7 @@ define([
             Cartesian3.normalize(this.up, this.up);
             this.up.z = 0.0;
 
-            this.setTransform(Matrix4.IDENTITY);
+            this._setTransform(Matrix4.IDENTITY);
 
             if (Cartesian3.magnitudeSquared(this.up) < CesiumMath.EPSILON10) {
                 Cartesian3.clone(Cartesian3.UNIT_Y, this.up);
@@ -1741,7 +1751,7 @@ define([
             frustum.top = ratio * frustum.right;
             frustum.bottom = -frustum.top;
 
-            this.setTransform(transform);
+            this._setTransform(transform);
 
             return;
         }

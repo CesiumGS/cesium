@@ -204,7 +204,7 @@ Sandcastle.reset = function() {
     scene.primitives.removeAll();
     scene.tweens.removeAll();
 
-    viewer.camera.setTransform(Cesium.Matrix4.IDENTITY);
+    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
     clock.multiplier = 1.0;
     scene.preRender.removeEventListener(icrf);
