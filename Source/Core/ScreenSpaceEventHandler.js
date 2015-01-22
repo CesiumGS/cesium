@@ -23,7 +23,7 @@ define([
 
     function getPosition(screenSpaceEventHandler, event, result) {
         var element = screenSpaceEventHandler._element;
-        if (element === document || !screenSpaceEventHandler._mouseMoveOnDocument) {
+        if (element === document) {
             result.x = event.clientX;
             result.y = event.clientY;
             return result;
