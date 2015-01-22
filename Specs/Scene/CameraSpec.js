@@ -954,7 +954,7 @@ defineSuite([
         var tempCamera = camera.clone();
         tempCamera.lookAtHeadingPitchRange(target, heading, pitch, range);
 
-        tempCamera.setTransform(Matrix4.IDENTITY);
+        tempCamera.lookAtTransform(Matrix4.IDENTITY);
 
         expect(Cartesian3.distance(tempCamera.position, target)).toEqualEpsilon(range, CesiumMath.EPSILON6);
         expect(tempCamera.heading).toEqualEpsilon(heading, CesiumMath.EPSILON6);
@@ -1011,7 +1011,7 @@ defineSuite([
 
         expect(Cartesian2.clone(tempCamera.position)).toEqual(Cartesian2.ZERO);
 
-        tempCamera.setTransform(Matrix4.IDENTITY);
+        tempCamera.lookAtTransform(Matrix4.IDENTITY);
         expect(tempCamera.direction).toEqual(Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()));
         expect(tempCamera.heading).toEqualEpsilon(heading, CesiumMath.EPSILON6);
         expect(tempCamera.frustum.right).toEqual(range);
@@ -1107,7 +1107,7 @@ defineSuite([
         var tempCamera = camera.clone();
         tempCamera.lookAtTransformHeadingPitchRange(transform, heading, pitch, range);
 
-        tempCamera.setTransform(Matrix4.IDENTITY);
+        tempCamera.lookAtTransform(Matrix4.IDENTITY);
 
         expect(Cartesian3.distance(tempCamera.position, target)).toEqualEpsilon(range, CesiumMath.EPSILON6);
         expect(tempCamera.heading).toEqualEpsilon(heading, CesiumMath.EPSILON6);
@@ -1165,7 +1165,7 @@ defineSuite([
 
         expect(Cartesian2.clone(tempCamera.position)).toEqual(Cartesian2.ZERO);
 
-        tempCamera.setTransform(Matrix4.IDENTITY);
+        tempCamera.lookAtTransform(Matrix4.IDENTITY);
         expect(tempCamera.direction).toEqual(Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()));
         expect(tempCamera.heading).toEqualEpsilon(heading, CesiumMath.EPSILON6);
         expect(tempCamera.frustum.right).toEqual(range);
