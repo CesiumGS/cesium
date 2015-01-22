@@ -24,6 +24,8 @@ define([
     var BillboardGraphics = function() {
         this._image = undefined;
         this._imageSubscription = undefined;
+        this._imageSubRegion = undefined;
+        this._imageSubRegionSubscription = undefined;
         this._width = undefined;
         this._widthSubscription = undefined;
         this._height = undefined;
@@ -70,11 +72,19 @@ define([
         },
 
         /**
-         * Gets or sets the string {@link Property} specifying the URL of the billboard's texture.
+         * Gets or sets the Image, URL, or Canvas {@link Property} specifying the billboard's texture.
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
         image : createPropertyDescriptor('image'),
+
+        /**
+         * Gets or sets the {@link BoundingRectangle} that defines a sub-region of the
+         * specified image to use for the billboard, rather than the entire image.
+         * @memberof BillboardGraphics.prototype
+         * @type {Property}
+         */
+        imageSubRegion : createPropertyDescriptor('imageSubRegion'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the billboard's scale.
@@ -194,6 +204,7 @@ define([
         result.eyeOffset = this._eyeOffset;
         result.horizontalOrigin = this._horizontalOrigin;
         result.image = this._image;
+        result.imageSubRegion = this._imageSubRegion;
         result.pixelOffset = this._pixelOffset;
         result.scale = this._scale;
         result.rotation = this._rotation;
@@ -221,21 +232,22 @@ define([
         }
         //>>includeEnd('debug');
 
-        this.color = defaultValue(this._color, source._color);
-        this.eyeOffset = defaultValue(this._eyeOffset, source._eyeOffset);
-        this.horizontalOrigin = defaultValue(this._horizontalOrigin, source._horizontalOrigin);
-        this.image = defaultValue(this._image, source._image);
-        this.pixelOffset = defaultValue(this._pixelOffset, source._pixelOffset);
-        this.scale = defaultValue(this._scale, source._scale);
-        this.rotation = defaultValue(this._rotation, source._rotation);
-        this.alignedAxis = defaultValue(this._alignedAxis, source._alignedAxis);
-        this.show = defaultValue(this._show, source._show);
-        this.verticalOrigin = defaultValue(this._verticalOrigin, source._verticalOrigin);
-        this.width = defaultValue(this._width, source._width);
-        this.height = defaultValue(this._height, source._height);
-        this.scaleByDistance = defaultValue(this._scaleByDistance, source._scaleByDistance);
-        this.translucencyByDistance = defaultValue(this._translucencyByDistance, source._translucencyByDistance);
-        this.pixelOffsetScaleByDistance = defaultValue(this._pixelOffsetScaleByDistance, source._pixelOffsetScaleByDistance);
+        this.color = defaultValue(this._color, source.color);
+        this.eyeOffset = defaultValue(this._eyeOffset, source.eyeOffset);
+        this.horizontalOrigin = defaultValue(this._horizontalOrigin, source.horizontalOrigin);
+        this.image = defaultValue(this._image, source.image);
+        this.imageSubRegion = defaultValue(this._imageSubRegion, source.imageSubRegion);
+        this.pixelOffset = defaultValue(this._pixelOffset, source.pixelOffset);
+        this.scale = defaultValue(this._scale, source.scale);
+        this.rotation = defaultValue(this._rotation, source.rotation);
+        this.alignedAxis = defaultValue(this._alignedAxis, source.alignedAxis);
+        this.show = defaultValue(this._show, source.show);
+        this.verticalOrigin = defaultValue(this._verticalOrigin, source.verticalOrigin);
+        this.width = defaultValue(this._width, source.width);
+        this.height = defaultValue(this._height, source.height);
+        this.scaleByDistance = defaultValue(this._scaleByDistance, source.scaleByDistance);
+        this.translucencyByDistance = defaultValue(this._translucencyByDistance, source.translucencyByDistance);
+        this.pixelOffsetScaleByDistance = defaultValue(this._pixelOffsetScaleByDistance, source.pixelOffsetScaleByDistance);
     };
 
     return BillboardGraphics;

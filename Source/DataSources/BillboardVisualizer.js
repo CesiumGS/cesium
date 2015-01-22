@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/AssociativeArray',
+        '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
@@ -14,6 +15,7 @@ define([
         './Property'
     ], function(
         AssociativeArray,
+        BoundingRectangle,
         Cartesian2,
         Cartesian3,
         Color,
@@ -43,6 +45,13 @@ define([
     var scaleByDistance = new NearFarScalar();
     var translucencyByDistance = new NearFarScalar();
     var pixelOffsetScaleByDistance = new NearFarScalar();
+    var boundingRectangle = new BoundingRectangle();
+
+    var EntityData = function(entity) {
+        this.entity = entity;
+        this.billboard = undefined;
+        this.textureValue = undefined;
+    };
 
     /**
      * A {@link Visualizer} which maps {@link Entity#billboard} to a {@link Billboard}.
@@ -62,16 +71,13 @@ define([
         }
         //>>includeEnd('debug');
 
-        var billboardCollection = new BillboardCollection();
-        scene.primitives.add(billboardCollection);
         entityCollection.collectionChanged.addEventListener(BillboardVisualizer.prototype._onCollectionChanged, this);
 
         this._scene = scene;
         this._unusedIndexes = [];
-        this._billboardCollection = billboardCollection;
+        this._billboardCollection = undefined;
         this._entityCollection = entityCollection;
-        this._entitiesToVisualize = new AssociativeArray();
-
+        this._items = new AssociativeArray();
         this._onCollectionChanged(entityCollection, entityCollection.entities, [], []);
     };
 
@@ -89,15 +95,14 @@ define([
         }
         //>>includeEnd('debug');
 
-        var entities = this._entitiesToVisualize.values;
-        var billboardCollection = this._billboardCollection;
+        var items = this._items.values;
         var unusedIndexes = this._unusedIndexes;
-        for (var i = 0, len = entities.length; i < len; i++) {
-            var entity = entities[i];
+        for (var i = 0, len = items.length; i < len; i++) {
+            var item = items[i];
+            var entity = item.entity;
             var billboardGraphics = entity._billboard;
             var textureValue;
-            var billboard;
-            var billboardVisualizerIndex = entity._billboardVisualizerIndex;
+            var billboard = item.billboard;
             var show = entity.isAvailable(time) && Property.getValueOrDefault(billboardGraphics._show, time, true);
 
             if (show) {
@@ -108,28 +113,35 @@ define([
 
             if (!show) {
                 //don't bother creating or updating anything else
-                cleanEntity(entity, billboardCollection, unusedIndexes);
+                returnBillboard(item, unusedIndexes);
                 continue;
             }
 
-            if (!defined(billboardVisualizerIndex)) {
+            if (!defined(billboard)) {
+                var billboardCollection = this._billboardCollection;
+                if (!defined(billboardCollection)) {
+                    billboardCollection = new BillboardCollection();
+                    this._billboardCollection = billboardCollection;
+                    this._scene.primitives.add(billboardCollection);
+                }
+
                 var length = unusedIndexes.length;
                 if (length > 0) {
-                    billboardVisualizerIndex = unusedIndexes.pop();
-                    billboard = billboardCollection.get(billboardVisualizerIndex);
+                    billboard = billboardCollection.get(unusedIndexes.pop());
                 } else {
-                    billboardVisualizerIndex = billboardCollection.length;
                     billboard = billboardCollection.add();
                 }
-                entity._billboardVisualizerIndex = billboardVisualizerIndex;
+
                 billboard.id = entity;
                 billboard.image = undefined;
-            } else {
-                billboard = billboardCollection.get(billboardVisualizerIndex);
+                item.billboard = billboard;
             }
 
             billboard.show = show;
-            billboard.image = textureValue;
+            if (item.textureValue !== textureValue) {
+                billboard.image = textureValue;
+                item.textureValue = textureValue;
+            }
             billboard.position = position;
             billboard.color = Property.getValueOrDefault(billboardGraphics._color, time, defaultColor, color);
             billboard.eyeOffset = Property.getValueOrDefault(billboardGraphics._eyeOffset, time, defaultEyeOffset, eyeOffset);
@@ -144,6 +156,11 @@ define([
             billboard.scaleByDistance = Property.getValueOrUndefined(billboardGraphics._scaleByDistance, time, scaleByDistance);
             billboard.translucencyByDistance = Property.getValueOrUndefined(billboardGraphics._translucencyByDistance, time, translucencyByDistance);
             billboard.pixelOffsetScaleByDistance = Property.getValueOrUndefined(billboardGraphics._pixelOffsetScaleByDistance, time, pixelOffsetScaleByDistance);
+
+            var subRegion = Property.getValueOrUndefined(billboardGraphics._imageSubRegion, time, boundingRectangle);
+            if (defined(subRegion)) {
+                billboard.setImageSubRegion(billboard._imageId, subRegion);
+            }
         }
         return true;
     };
@@ -162,54 +179,54 @@ define([
      */
     BillboardVisualizer.prototype.destroy = function() {
         this._entityCollection.collectionChanged.removeEventListener(BillboardVisualizer.prototype._onCollectionChanged, this);
-        var entities = this._entitiesToVisualize.values;
-        var length = entities.length;
-        for (var i = 0; i < length; i++) {
-            entities[i]._billboardVisualizerIndex = undefined;
+        if (defined(this._billboardCollection)) {
+            this._scene.primitives.remove(this._billboardCollection);
         }
-        this._scene.primitives.remove(this._billboardCollection);
         return destroyObject(this);
     };
 
     BillboardVisualizer.prototype._onCollectionChanged = function(entityCollection, added, removed, changed) {
         var i;
         var entity;
-        var billboardCollection = this._billboardCollection;
         var unusedIndexes = this._unusedIndexes;
-        var entities = this._entitiesToVisualize;
+        var items = this._items;
 
         for (i = added.length - 1; i > -1; i--) {
             entity = added[i];
             if (defined(entity._billboard) && defined(entity._position)) {
-                entities.set(entity.id, entity);
+                items.set(entity.id, new EntityData(entity));
             }
         }
 
         for (i = changed.length - 1; i > -1; i--) {
             entity = changed[i];
             if (defined(entity._billboard) && defined(entity._position)) {
-                entities.set(entity.id, entity);
+                if (!items.contains(entity.id)) {
+                    items.set(entity.id, new EntityData(entity));
+                }
             } else {
-                cleanEntity(entity, billboardCollection, unusedIndexes);
-                entities.remove(entity.id);
+                returnBillboard(items.get(entity.id), unusedIndexes);
+                items.remove(entity.id);
             }
         }
 
         for (i = removed.length - 1; i > -1; i--) {
             entity = removed[i];
-            cleanEntity(entity, billboardCollection, unusedIndexes);
-            entities.remove(entity.id);
+            returnBillboard(items.get(entity.id), unusedIndexes);
+            items.remove(entity.id);
         }
     };
 
-    function cleanEntity(entity, collection, unusedIndexes) {
-        var billboardVisualizerIndex = entity._billboardVisualizerIndex;
-        if (defined(billboardVisualizerIndex)) {
-            var billboard = collection.get(billboardVisualizerIndex);
-            billboard.show = false;
-            billboard.image = undefined;
-            entity._billboardVisualizerIndex = undefined;
-            unusedIndexes.push(billboardVisualizerIndex);
+    function returnBillboard(item, unusedIndexes) {
+        if (defined(item)) {
+            var billboard = item.billboard;
+            if (defined(billboard)) {
+                item.textureValue = undefined;
+                item.billboard = undefined;
+                billboard.show = false;
+                billboard.image = undefined;
+                unusedIndexes.push(billboard._index);
+            }
         }
     }
 

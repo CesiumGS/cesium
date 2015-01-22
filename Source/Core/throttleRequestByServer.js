@@ -58,7 +58,7 @@ define([
         var server = getServer(url);
 
         var activeRequestsForServer = defaultValue(activeRequests[server], 0);
-        if (activeRequestsForServer > throttleRequestByServer.maximumRequestsPerServer) {
+        if (activeRequestsForServer >= throttleRequestByServer.maximumRequestsPerServer) {
             return undefined;
         }
 

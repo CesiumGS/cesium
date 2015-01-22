@@ -4,6 +4,7 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
+        'Core/Color',
         'Core/Matrix2',
         'Core/Matrix3',
         'Core/Matrix4',
@@ -19,6 +20,7 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        Color,
         Matrix2,
         Matrix3,
         Matrix4,
@@ -161,9 +163,6 @@ defineSuite([
 
         expect(sp.allUniforms.u_vec4.name).toEqual('u_vec4');
         expect(sp.allUniforms.czm_viewport.name).toEqual('czm_viewport');
-
-        expect(sp.manualUniforms.u_vec4.name).toEqual('u_vec4');
-        expect(sp.manualUniforms.czm_viewport).not.toBeDefined();
     });
 
     it('has uniforms', function() {
@@ -326,7 +325,9 @@ defineSuite([
             'uniform float u_float;' +
             'uniform vec2 u_vec2;' +
             'uniform vec3 u_vec3;' +
+            'uniform vec3 u_vec3color;' +
             'uniform vec4 u_vec4;' +
+            'uniform vec4 u_vec4color;' +
             'uniform int u_int;' +
             'uniform ivec2 u_ivec2;' +
             'uniform ivec3 u_ivec3;' +
@@ -338,13 +339,15 @@ defineSuite([
             'uniform mat2 u_mat2;' +
             'uniform mat3 u_mat3;' +
             'uniform mat4 u_mat4;' +
-            'void main() { gl_Position = vec4(u_float) * vec4((u_mat2 * u_vec2), 0.0, 0.0) * vec4((u_mat3 * u_vec3), 0.0) * (u_mat4 * u_vec4) * vec4(u_int) * vec4(u_ivec2, 0.0, 0.0) * vec4(u_ivec3, 0.0) * vec4(u_ivec4) * vec4(u_bool) * vec4(u_bvec2, 0.0, 0.0) * vec4(u_bvec3, 0.0) * vec4(u_bvec4); }';
+            'void main() { gl_Position = vec4(u_float) * vec4((u_mat2 * u_vec2), 0.0, 0.0) * vec4((u_mat3 * u_vec3), 0.0) * vec4((u_mat3 * u_vec3color), 0.0) * (u_mat4 * u_vec4) * (u_mat4 * u_vec4color) * vec4(u_int) * vec4(u_ivec2, 0.0, 0.0) * vec4(u_ivec3, 0.0) * vec4(u_ivec4) * vec4(u_bool) * vec4(u_bvec2, 0.0, 0.0) * vec4(u_bvec3, 0.0) * vec4(u_bvec4); }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = d.createShaderProgram(vs, fs);
         sp.allUniforms.u_float.value = 1.0;
         sp.allUniforms.u_vec2.value = new Cartesian2(1.0, 2.0);
         sp.allUniforms.u_vec3.value = new Cartesian3(1.0, 2.0, 3.0);
+        sp.allUniforms.u_vec3color.value = new Color(1.0, 2.0, 3.0);
         sp.allUniforms.u_vec4.value = new Cartesian4(1.0, 2.0, 3.0, 4.0);
+        sp.allUniforms.u_vec4color.value = new Color(1.0, 2.0, 3.0, 4.0);
         sp.allUniforms.u_int.value = 1;
         sp.allUniforms.u_ivec2.value = new Cartesian2(1, 2);
         sp.allUniforms.u_ivec3.value = new Cartesian3(1, 2, 3);
@@ -363,7 +366,9 @@ defineSuite([
         expect(d._gl.getUniform(sp._program, sp.allUniforms.u_float._location)).toEqual(1.0);
         expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec2._location)).toEqual(new Float32Array([1.0, 2.0]));
         expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec3._location)).toEqual(new Float32Array([1.0, 2.0, 3.0]));
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec3color._location)).toEqual(new Float32Array([1.0, 2.0, 3.0]));
         expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec4._location)).toEqual(new Float32Array([1.0, 2.0, 3.0, 4.0]));
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec4color._location)).toEqual(new Float32Array([1.0, 2.0, 3.0, 4.0]));
         expect(d._gl.getUniform(sp._program, sp.allUniforms.u_int._location)).toEqual(1);
         expect(d._gl.getUniform(sp._program, sp.allUniforms.u_ivec2._location)).toEqual(new Int32Array([1, 2]));
         expect(d._gl.getUniform(sp._program, sp.allUniforms.u_ivec3._location)).toEqual(new Int32Array([1, 2, 3]));
@@ -413,7 +418,9 @@ defineSuite([
             'uniform float u_float[2];' +
             'uniform vec2 u_vec2[2];' +
             'uniform vec3 u_vec3[2];' +
+            'uniform vec3 u_vec3color[2];' +
             'uniform vec4 u_vec4[2];' +
+            'uniform vec4 u_vec4color[2];' +
             'uniform int u_int[2];' +
             'uniform ivec2 u_ivec2[2];' +
             'uniform ivec3 u_ivec3[2];' +
@@ -425,14 +432,16 @@ defineSuite([
             'uniform mat2 u_mat2[2];' +
             'uniform mat3 u_mat3[2];' +
             'uniform mat4 u_mat4[2];' +
-            'void main() { gl_Position = vec4(u_float[0]) * vec4(u_float[1]) * vec4((u_mat2[0] * u_vec2[0]), 0.0, 0.0) * vec4((u_mat2[1] * u_vec2[1]), 0.0, 0.0) * vec4((u_mat3[0] * u_vec3[0]), 0.0) * vec4((u_mat3[1] * u_vec3[1]), 0.0) * (u_mat4[0] * u_vec4[0]) * (u_mat4[1] * u_vec4[1]) * vec4(u_int[0]) * vec4(u_int[1]) * vec4(u_ivec2[0], 0.0, 0.0) * vec4(u_ivec2[1], 0.0, 0.0) * vec4(u_ivec3[0], 0.0) * vec4(u_ivec3[1], 0.0) * vec4(u_ivec4[0]) * vec4(u_ivec4[1]) * vec4(u_bool[0]) * vec4(u_bool[1]) * vec4(u_bvec2[0], 0.0, 0.0) * vec4(u_bvec2[1], 0.0, 0.0) * vec4(u_bvec3[0], 0.0) * vec4(u_bvec3[1], 0.0) * vec4(u_bvec4[0]) * vec4(u_bvec4[1]); }';
+            'void main() { gl_Position = vec4(u_float[0]) * vec4(u_float[1]) * vec4((u_mat2[0] * u_vec2[0]), 0.0, 0.0) * vec4((u_mat2[1] * u_vec2[1]), 0.0, 0.0) * vec4((u_mat3[0] * u_vec3[0]), 0.0) * vec4((u_mat3[1] * u_vec3[1]), 0.0) * vec4((u_mat3[0] * u_vec3color[0]), 0.0) * vec4((u_mat3[1] * u_vec3color[1]), 0.0) * (u_mat4[0] * u_vec4[0]) * (u_mat4[1] * u_vec4[1]) * (u_mat4[0] * u_vec4color[0]) * (u_mat4[1] * u_vec4color[1]) * vec4(u_int[0]) * vec4(u_int[1]) * vec4(u_ivec2[0], 0.0, 0.0) * vec4(u_ivec2[1], 0.0, 0.0) * vec4(u_ivec3[0], 0.0) * vec4(u_ivec3[1], 0.0) * vec4(u_ivec4[0]) * vec4(u_ivec4[1]) * vec4(u_bool[0]) * vec4(u_bool[1]) * vec4(u_bvec2[0], 0.0, 0.0) * vec4(u_bvec2[1], 0.0, 0.0) * vec4(u_bvec3[0], 0.0) * vec4(u_bvec3[1], 0.0) * vec4(u_bvec4[0]) * vec4(u_bvec4[1]); }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = d.createShaderProgram(vs, fs);
 
         sp.allUniforms.u_float.value = [1.0, 2.0];
         sp.allUniforms.u_vec2.value = [new Cartesian2(1.0, 2.0), new Cartesian2(3.0, 4.0)];
         sp.allUniforms.u_vec3.value = [new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(4.0, 5.0, 6.0)];
+        sp.allUniforms.u_vec3color.value = [new Color(1.0, 2.0, 3.0), new Color(4.0, 5.0, 6.0)];
         sp.allUniforms.u_vec4.value = [new Cartesian4(1.0, 2.0, 3.0, 4.0), new Cartesian4(5.0, 6.0, 7.0, 8.0)];
+        sp.allUniforms.u_vec4color.value = [new Color(1.0, 2.0, 3.0, 4.0), new Color(5.0, 6.0, 7.0, 8.0)];
         sp.allUniforms.u_int.value = [1, 2];
         sp.allUniforms.u_ivec2.value = [new Cartesian2(1, 2), new Cartesian2(3, 4)];
         sp.allUniforms.u_ivec3.value = [new Cartesian3(1, 2, 3), new Cartesian3(4, 5, 6)];
@@ -454,8 +463,12 @@ defineSuite([
         expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec2._locations[1])).toEqual(new Float32Array([3.0, 4.0]));
         expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec3._locations[0])).toEqual(new Float32Array([1.0, 2.0, 3.0]));
         expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec3._locations[1])).toEqual(new Float32Array([4.0, 5.0, 6.0]));
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec3color._locations[0])).toEqual(new Float32Array([1.0, 2.0, 3.0]));
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec3color._locations[1])).toEqual(new Float32Array([4.0, 5.0, 6.0]));
         expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec4._locations[0])).toEqual(new Float32Array([1.0, 2.0, 3.0, 4.0]));
         expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec4._locations[1])).toEqual(new Float32Array([5.0, 6.0, 7.0, 8.0]));
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec4color._locations[0])).toEqual(new Float32Array([1.0, 2.0, 3.0, 4.0]));
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec4color._locations[1])).toEqual(new Float32Array([5.0, 6.0, 7.0, 8.0]));
         expect(d._gl.getUniform(sp._program, sp.allUniforms.u_int._locations[0])).toEqual(1);
         expect(d._gl.getUniform(sp._program, sp.allUniforms.u_int._locations[1])).toEqual(2);
         expect(d._gl.getUniform(sp._program, sp.allUniforms.u_ivec2._locations[0])).toEqual(new Int32Array([1, 2]));

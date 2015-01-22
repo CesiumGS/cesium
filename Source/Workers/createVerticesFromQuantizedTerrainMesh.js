@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/AttributeCompression',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
@@ -7,9 +8,9 @@ define([
         '../Core/Ellipsoid',
         '../Core/IndexDatatype',
         '../Core/Math',
-        '../Core/Oct',
         './createTaskProcessorWorker'
     ], function(
+        AttributeCompression,
         Cartesian2,
         Cartesian3,
         Cartographic,
@@ -17,7 +18,6 @@ define([
         Ellipsoid,
         IndexDatatype,
         CesiumMath,
-        Oct,
         createTaskProcessorWorker) {
     "use strict";
 
@@ -85,7 +85,7 @@ define([
             if (hasVertexNormals) {
                 toPack.x = octEncodedNormals[n];
                 toPack.y = octEncodedNormals[n + 1];
-                vertexBuffer[bufferIndex + nIndex] = Oct.packFloat(toPack);
+                vertexBuffer[bufferIndex + nIndex] = AttributeCompression.octPackFloat(toPack);
             }
         }
 
@@ -134,6 +134,15 @@ define([
 
         var vertexIndex = vertexBufferIndex / vertexStride;
 
+        var north = rectangle.north;
+        var south = rectangle.south;
+        var east = rectangle.east;
+        var west = rectangle.west;
+
+        if (east < west) {
+            east += CesiumMath.TWO_PI;
+        }
+
         for (var i = start; i !== end; i += increment) {
             var index = edgeVertices[i];
             var offset = index * vertexStride;
@@ -141,8 +150,8 @@ define([
             var v = vertexBuffer[offset + vIndex];
             var h = vertexBuffer[offset + hIndex];
 
-            cartographicScratch.longitude = CesiumMath.lerp(rectangle.west, rectangle.east, u);
-            cartographicScratch.latitude = CesiumMath.lerp(rectangle.south, rectangle.north, v);
+            cartographicScratch.longitude = CesiumMath.lerp(west, east, u);
+            cartographicScratch.latitude = CesiumMath.lerp(south, north, v);
             cartographicScratch.height = h - skirtLength;
 
             var position = ellipsoid.cartographicToCartesian(cartographicScratch, cartesian3Scratch);

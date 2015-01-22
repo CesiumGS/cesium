@@ -427,8 +427,8 @@ defineSuite([
         entity2.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
         entity2.ellipse = ellipse2;
 
-        var updater = new EllipseGeometryUpdater(entity);
-        var updater2 = new EllipseGeometryUpdater(entity2);
+        var updater = new EllipseGeometryUpdater(entity, scene);
+        var updater2 = new EllipseGeometryUpdater(entity2, scene);
         batch.add(time, updater);
         batch.add(time, updater2);
 

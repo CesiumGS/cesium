@@ -159,6 +159,18 @@ define([
     };
 
     /**
+     * Removes and destroys a primitive, regardless of destroyPrimitives setting.
+     * @private
+     */
+    PrimitiveCollection.prototype.removeAndDestroy = function(primitive) {
+        var removed = this.remove(primitive);
+        if (removed && !this.destroyPrimitives) {
+            primitive.destroy();
+        }
+        return removed;
+    };
+
+    /**
      * Removes all primitives in the collection.
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.

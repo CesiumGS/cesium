@@ -1,16 +1,109 @@
 Change Log
 ==========
 
+### 1.6 - 2015-02-02
+
+* Breaking changes
+  * `Rectangle.intersectWith` was deprecated in Cesium 1.5. Use `Rectangle.intersection`, which is the same but returns `undefined` when two rectangles do not intersect.
+  * `Rectangle.isEmpty` was deprecated in Cesium 1.5.
+  * The `sourceUri` parameter to `GeoJsonDatasource.load` was deprecated in Cesium 1.4 and has been removed. Use options.sourceUri instead.
+  * `PolygonGraphics.positions` created by `GeoJSONDataSource` now evaluate to a `PolygonHierarchy` object instead of an array of positions.
+* Deprecated
+  * `Camera.tilt` was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. Use `Camera.pitch`.
+  * `Camera.heading` and `Camera.tilt` were deprecated in Cesium 1.6. They will become read-only in Cesium 1.7. Use `Camera.setView`.
+  * `Camera.setPositionCartographic` was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. Use `Camera.setView`.
+  * `PolygonGraphics.positions` was deprecated and replaced with `PolygonGraphics.hierarchy`, whose value is a `PolygonHierarchy` instead of an array of positions.  `PolygonGraphics.positions` will be removed in Cesium 1.8.
+  * The `Model.readyToRender` event was deprecated and will be removed in Cesium 1.9.  Use the new `Model.readyPromise` instead.
+  * The `mouseMoveOnDocument` parameter to the `ScreenSpaceEventHandler` constructor was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. `ScreenSpaceEventHandler` will be constructed as if `mouseMoveOnDocument` is `false`.
+* Improved performance of asynchronous geometry creation (as much as 20% faster in some use cases). [#2342](https://github.com/AnalyticalGraphicsInc/cesium/issues/2342)
+* Added `PolylineVolumeGraphics` and `Entity.polylineVolume`
+* Added `Camera.setView` (which use heading, pitch, and roll) and `Camera.roll`.
+* Added `Quaternion.fromHeadingPitchRoll` to create a rotation from heading, pitch, and roll angles.
+* Added `Transforms.headingPitchRollToFixedFrame` to create a local frame from a position and heading/pitch/roll angles.
+* Added `Transforms.headingPitchRollQuaternion` which is the quaternion rotation from `Transforms.headingPitchRollToFixedFrame`.
+* Added `BillboardGraphics.imageSubRegion`, to enable custom texture atlas use for `Entity` instances.
+* Added `CheckerboardMaterialProperty` to enable use of the checkerboard material with the entity API.
+* Added `PolygonHierarchy` to make defining polygons with holes clearer.
+* Added `PolygonGraphics.hierarchy` for supporting polygons with holes via data sources.
+* Added `BoundingSphere.fromBoundingSpheres`, which creates a `BoundingSphere` that encloses the specified array of BoundingSpheres.
+* Added `Model.readyPromise` and `Primitive.readyPromise` which are promises that resolve when the primitives are ready.
+* `GeoJsonDataSource` now supports polygons with holes.
+* `ConstantProperty` can now hold any value; previously it was limited to values that implemented `equals` and `clones` functions, as well as a few special cases.
+* Fixed a bug in `EllipsoidGeodesic` that caused it to modify the `height` of the positions passed to the constructor or to to `setEndPoints`.
+* Instead of throwing an exception when there are not enough unique positions to define a geometry, creating a `Primitive` will succeed, but not render. [#2375](https://github.com/AnalyticalGraphicsInc/cesium/issues/2375)
+* `WebMapTileServiceImageryProvider` now supports RESTful requests (by accepting a tile-URL template).
+* When you track an entity by clicking on the track button in the `InfoBox`, you can now stop tracking by clicking the button a second time.
+* Setting `viewer.trackedEntity` to `undefined` will now restore the camera controls to their default states.
+* The object returned by `Primitive.getGeometryInstanceAttributes` now contains the instance's bounding sphere.
+
+### 1.5 - 2015-01-05
+
+* Breaking changes
+  * Removed `GeometryPipeline.wrapLongitude`, which was deprecated in 1.4.  Use `GeometryPipeline.splitLongitude` instead.
+  * Removed `GeometryPipeline.combine`, which was deprecated in 1.4.  Use `GeometryPipeline.combineInstances` instead.
+* Deprecated
+  * `viewerEntityMixin` was deprecated. It will be removed in Cesium 1.6. Its functionality is now directly part of the `Viewer` widget.
+  * `Rectangle.intersectWith` was deprecated. It will be removed in Cesium 1.6. Use `Rectangle.intersection`, which is the same but returns `undefined` when two rectangles do not intersect.
+  * `Rectangle.isEmpty` was deprecated. It will be removed in Cesium 1.6.
+* Improved GeoJSON, TopoJSON, and general polygon loading performance.
+* Added caching to `Model` to save memory and improve loading speed when several models with the same url are created.
+* Added `ModelNode.show` for per-node show/hide.
+* Added the following properties to `Viewer` and `CesiumWidget`: `imageryLayers`, `terrainProvider`, and `camera`.  This avoids the need to access `viewer.scene` in some cases.
+* Dramatically improved the quality of font outlines.
+* Added `BoxGraphics` and `Entity.box`.
+* Added `CorridorGraphics` and `Entity.corridor`.
+* Added `CylinderGraphics` and `Entity.cylinder`.
+* Fixed imagery providers whose rectangle crosses the IDL. Added `Rectangle.computeWidth`, `Rectangle.computeHeight`, `Rectangle.width`, and `Rectangle.height`. [#2195](https://github.com/AnalyticalGraphicsInc/cesium/issues/2195)
+* `ConstantProperty` now accepts `HTMLElement` instances as valid values.
+* `BillboardGraphics.image` and `ImageMaterialProperty.image` now accept `Property` instances that represent an `Image` or `Canvas` in addition to a url.
+* Fixed a bug in `PolylineGeometry` that would cause gaps in the line. [#2136](https://github.com/AnalyticalGraphicsInc/cesium/issues/2136)
+* Fixed `upsampleQuantizedTerrainMesh` rounding errors that had occasionally led to missing terrain skirt geometry in upsampled tiles.
+* Added `Math.mod` which computes `m % n` but also works when `m` is negative.
+
+### 1.4 - 2014-12-01
+
+* Breaking changes
+  * Types implementing `TerrainProvider` are now required to implement the `getTileDataAvailable` function.  Backwards compatibility for this was deprecated in Cesium 1.2.
+* Deprecated
+    * The `sourceUri` parameter to `GeoJsonDatasource.load` was deprecated and will be removed in Cesium 1.6 on February 3, 2015 ([#2257](https://github.com/AnalyticalGraphicsInc/cesium/issues/2257)).  Use `options.sourceUri` instead.
+    * `GeometryPipeline.wrapLongitude` was deprecated. It will be removed in Cesium 1.5 on January 2, 2015. Use `GeometryPipeline.splitLongitude`. ([#2272](https://github.com/AnalyticalGraphicsInc/cesium/issues/2272))
+    * `GeometryPipeline.combine` was deprecated. It will be removed in Cesium 1.5. Use `GeometryPipeline.combineInstances`.
+* Added support for touch events on Internet Explorer 11 using the [Pointer Events API](http://www.w3.org/TR/pointerevents/).
+* Added geometry outline width support to the `DataSource` layer.  This is exposed via the new `outlineWidth` property on `EllipseGraphics`, `EllipsoidGraphics`, `PolygonGraphics`, `RectangleGraphics`, and `WallGraphics`.
+* Added `outlineWidth` support to CZML geometry packets.
+* Added `stroke-width` support to the GeoJSON simple-style implementation.
+* Added the ability to specify global GeoJSON default styling.  See the [documentation](http://cesiumjs.org/Cesium/Build/Documentation/GeoJsonDataSource.html) for details.
+* Added `CallbackProperty` to support lazy property evaluation as well as make custom properties easier to create.
+* Added an options parameter to `GeoJsonDataSource.load`, `GeoJsonDataSource.loadUrl`, and `GeoJsonDataSource.fromUrl` to allow for basic per-instance styling. [Sandcastle example](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=GeoJSON%20and%20TopoJSON.html&label=Showcases).
+* Improved GeoJSON loading performance.
+* Improved point visualization performance for all DataSources.
+* Improved the performance and memory usage of `EllipseGeometry`, `EllipseOutlineGeometry`, `CircleGeometry`, and `CircleOutlineGeometry`.
+* Added `tileMatrixLabels` option to `WebMapTileServiceImageryProvider`.
+* Fixed a bug in `PolylineGeometry` that would cause the geometry to be split across the IDL for 3D only scenes. [#1197](https://github.com/AnalyticalGraphicsInc/cesium/issues/1197)
+* Added `modelMatrix` and `cull` options to `Primitive` constructor.
+* The `translation` parameter to `Matrix4.fromRotationTranslation` now defaults to `Cartesian3.ZERO`.
+* Fixed `ModelNode.matrix` when a node is targeted for animation.
+* `Camera.tilt` now clamps to [-pi / 2, pi / 2] instead of [0, pi / 2].
+* Fixed an issue that could lead to poor performance on lower-end GPUs like the Intel HD 3000.
+* Added `distanceSquared` to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
+* Added `Matrix4.multiplyByMatrix3`.
+* Fixed a bug in `Model` where the WebGL shader optimizer in Linux was causing mesh loading to fail.
+
 ### 1.3 - 2014-11-03
 
 * Worked around a shader compilation regression in Firefox 33 and 34 by falling back to a less precise shader on those browsers. [#2197](https://github.com/AnalyticalGraphicsInc/cesium/issues/2197)
 * Added support to the `CesiumTerrainProvider` for terrain tiles with more than 64K vertices, which is common for sub-meter terrain.
 * Added `Primitive.compressVertices`. When true (default), geometry vertices are compressed to save GPU memory.
+* Added `culture` option to `BingMapsImageryProvider` constructor.
+* Reduced the amount of GPU memory used by billboards and labels.
 * Fixed a bug that caused non-base imagery layers with a limited `rectangle` to be stretched to the edges of imagery tiles. [#416](https://github.com/AnalyticalGraphicsInc/cesium/issues/416)
 * Fixed rendering polylines with duplicate positions. [#898](https://github.com/AnalyticalGraphicsInc/cesium/issues/898)
-* Upgraded topojson from 1.6.8 to 1.6.18.
 * Fixed a bug in `Globe.pick` that caused it to return incorrect results when using terrain data with vertex normals.  The bug manifested itself as strange behavior when navigating around the surface with the mouse as well as incorrect results when using `Camera.viewRectangle`.
 * Fixed a bug in `sampleTerrain` that could cause it to produce undefined heights when sampling for a position very near the edge of a tile.
+* `ReferenceProperty` instances now retain their last value if the entity being referenced is removed from the target collection.  The reference will be automatically reattached if the target is reintroduced.
+* Upgraded topojson from 1.6.8 to 1.6.18.
+* Upgraded Knockout from version 3.1.0 to 3.2.0.
+* Upgraded CodeMirror, used by SandCastle, from 2.24 to 4.6.
 
 ### 1.2 - 2014-10-01
 

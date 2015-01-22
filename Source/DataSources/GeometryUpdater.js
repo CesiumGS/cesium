@@ -24,6 +24,8 @@ define([
      * @see EllipsoidGeometryUpdater
      * @see PolygonGeometryUpdater
      * @see PolylineGeometryUpdater
+     * @see RectangleGeometryUpdater
+     * @see WallGeometryUpdater
      */
     var GeometryUpdater = function(entity, scene) {
         DeveloperError.throwInstantiationError();
@@ -117,6 +119,17 @@ define([
          * @readonly
          */
         outlineColorProperty : {
+            get : DeveloperError.throwInstantiationError
+        },
+        /**
+         * Gets the constant with of the geometry outline, in pixels.
+         * This value is only valid if isDynamic is false.
+         * @memberof GeometryUpdater.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        outlineWidth : {
             get : DeveloperError.throwInstantiationError
         },
         /**

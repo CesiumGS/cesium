@@ -27,18 +27,24 @@
 function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
-//Create the viewer
 var viewer = new Cesium.Viewer('cesiumContainer');
-Cesium.viewerEntityMixin(viewer);
 
-//Example 1: Load a GeoJSON or TopoJSON file with default settings.
-Sandcastle.addDefaultToolbarButton('Basic loading', function() {
+//Example 1: Load with default styling.
+Sandcastle.addDefaultToolbarButton('Default styling', function() {
     viewer.dataSources.add(Cesium.GeoJsonDataSource.fromUrl('../../SampleData/ne_10m_us_states.topojson'));
 });
 
-//Example 2: Apply custom graphics to a GeoJSON or TopoJSON file 
-//based on the metadata contained in the file.
-Sandcastle.addToolbarButton('Custom Graphics', function() {
+//Example 2: Load with basic styling options.
+Sandcastle.addToolbarButton('Basic styling', function() {
+    viewer.dataSources.add(Cesium.GeoJsonDataSource.fromUrl('../../SampleData/ne_10m_us_states.topojson', {
+        stroke: Cesium.Color.HOTPINK,
+        fill: Cesium.Color.PINK,
+        strokeWidth: 3
+    }));
+});
+
+//Example 3: Apply custom graphics after load.
+Sandcastle.addToolbarButton('Custom styling', function() {
     //Seed the random number generator for repeatable results.
     Cesium.Math.setRandomNumberSeed(0);
 
@@ -68,6 +74,8 @@ Sandcastle.addToolbarButton('Custom Graphics', function() {
             
             //Set the polygon material to our random color.
             entity.polygon.material = Cesium.ColorMaterialProperty.fromColor(color);
+            //Outline each polygon in black.
+            entity.polygon.outlineColor = new Cesium.ConstantProperty(Cesium.Color.BLACK);
 
             //Extrude the polygon based on the state's population.  Each entity
             //stores the properties for the GeoJSON feature it was created from
@@ -82,8 +90,7 @@ Sandcastle.reset = function() {
   viewer.dataSources.removeAll();
   
   //Set the camera to a US centered tilted view.
-  var camera = viewer.scene.camera;
-  camera.lookAt(Cesium.Cartesian3.fromDegrees(-98, 15.0, 5000000),
+  viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(-98, 15.0, 5000000),
       Cesium.Cartesian3.fromDegrees(-98, 40.0, 0), Cesium.Cartesian3.UNIT_Z);
 };
 //Sandcastle_End

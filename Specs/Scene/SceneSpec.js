@@ -130,14 +130,10 @@ defineSuite([
   });
 
     it('draws background color', function() {
-        scene.initializeFrame();
-        scene.render();
-        expect(scene.context.readPixels()).toEqual([0, 0, 0, 255]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
         scene.backgroundColor = Color.BLUE;
-        scene.initializeFrame();
-        scene.render();
-        expect(scene.context.readPixels()).toEqual([0, 0, 255, 255]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
     });
 
     it('calls afterRender functions', function() {
@@ -152,8 +148,7 @@ defineSuite([
         };
         scene.primitives.add(primitive);
 
-        scene.initializeFrame();
-        scene.render();
+        scene.renderForSpecs();
         expect(spyListener).toHaveBeenCalled();
     });
 
@@ -178,8 +173,7 @@ defineSuite([
             return command !== c;   // Do not execute command
         };
 
-        scene.initializeFrame();
-        scene.render();
+        scene.renderForSpecs();
         expect(c.execute).not.toHaveBeenCalled();
     });
 
@@ -193,8 +187,7 @@ defineSuite([
         scene.primitives.add(new CommandMockPrimitive(c));
 
         expect(scene.debugCommandFilter).toBeUndefined();
-        scene.initializeFrame();
-        scene.render();
+        scene.renderForSpecs();
         expect(c.execute).toHaveBeenCalled();
     });
 
@@ -210,9 +203,7 @@ defineSuite([
 
         scene.primitives.add(new CommandMockPrimitive(c));
 
-        scene.initializeFrame();
-        scene.render();
-        expect(scene.context.readPixels()[0]).not.toEqual(0);  // Red bounding sphere
+        expect(scene.renderForSpecs()[0]).not.toEqual(0);  // Red bounding sphere
     });
 
     it('debugShowCommands tints commands', function() {
@@ -227,15 +218,14 @@ defineSuite([
         scene.primitives.add(new CommandMockPrimitive(c));
 
         scene.debugShowCommands = true;
-        scene.initializeFrame();
-        scene.render();
+        scene.renderForSpecs();
         expect(c._debugColor).toBeDefined();
         scene.debugShowCommands = false;
     });
 
     it('debugShowFramesPerSecond', function() {
         scene.debugShowFramesPerSecond = true;
-        scene.render();
+        scene.renderForSpecs();
         expect(scene._performanceDisplay).toBeDefined();
         scene.debugShowFramesPerSecond = false;
     });
@@ -262,18 +252,14 @@ defineSuite([
 
         scene.camera.viewRectangle(rectangle);
 
-        scene.initializeFrame();
-        scene.render();
-        var pixels = scene.context.readPixels();
+        var pixels = scene.renderForSpecs();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).not.toEqual(0);
         expect(pixels[2]).toEqual(0);
 
         primitives.raiseToTop(rectanglePrimitive1);
 
-        scene.initializeFrame();
-        scene.render();
-        pixels = scene.context.readPixels();
+        pixels = scene.renderForSpecs();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).not.toEqual(0);
         expect(pixels[2]).toEqual(0);
@@ -301,18 +287,14 @@ defineSuite([
 
         scene.camera.viewRectangle(rectangle);
 
-        scene.initializeFrame();
-        scene.render();
-        var pixels = scene.context.readPixels();
+        var pixels = scene.renderForSpecs();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
 
         primitives.raiseToTop(rectanglePrimitive1);
 
-        scene.initializeFrame();
-        scene.render();
-        pixels = scene.context.readPixels();
+        pixels = scene.renderForSpecs();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
@@ -333,9 +315,7 @@ defineSuite([
 
         scene.camera.viewRectangle(rectangle);
 
-        scene.initializeFrame();
-        scene.render();
-        var pixels = scene.context.readPixels();
+        var pixels = scene.renderForSpecs();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
@@ -359,9 +339,7 @@ defineSuite([
         scene.fxaaOrderIndependentTranslucency = false;
         scene.fxaa = false;
 
-        scene.initializeFrame();
-        scene.render();
-        var pixels = scene.context.readPixels();
+        var pixels = scene.renderForSpecs();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
@@ -416,9 +394,7 @@ defineSuite([
 
         s.camera.viewRectangle(rectangle);
 
-        s.initializeFrame();
-        s.render();
-        var pixels = s._context.readPixels();
+        var pixels = s.renderForSpecs();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
@@ -458,8 +434,7 @@ defineSuite([
         s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position, new Cartesian3()), new Cartesian3());
 
-        s.initializeFrame();
-        s.render();
+        s.renderForSpecs();
 
         waitsFor(function() {
             render(s._context, s.frameState, s.globe);
@@ -487,9 +462,7 @@ defineSuite([
 
             s.camera.viewRectangle(rectangle);
 
-            s.initializeFrame();
-            s.render();
-            var pixels = s._context.readPixels();
+            var pixels = s.renderForSpecs();
             expect(pixels[0]).not.toEqual(0);
             expect(pixels[1]).toEqual(0);
             expect(pixels[2]).toEqual(0);
@@ -518,9 +491,7 @@ defineSuite([
 
             s.camera.viewRectangle(rectangle);
 
-            s.initializeFrame();
-            s.render();
-            var pixels = s._context.readPixels();
+            var pixels = s.renderForSpecs();
             expect(pixels[0]).not.toEqual(0);
             expect(pixels[1]).toEqual(0);
             expect(pixels[2]).toEqual(0);
@@ -537,7 +508,9 @@ defineSuite([
     });
 
     it('raises renderError when render throws', function() {
-        var s = createScene();
+        var s = createScene({
+            rethrowRenderErrors : false
+        });
 
         var spyListener = jasmine.createSpy('listener');
         s.renderError.addEventListener(spyListener);

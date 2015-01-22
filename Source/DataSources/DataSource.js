@@ -92,5 +92,20 @@ define([
      */
     DataSource.prototype.update = DeveloperError.throwInstantiationError;
 
+    /**
+     * @private
+     */
+    DataSource.setLoading = function(dataSource, isLoading) {
+        if (dataSource._isLoading !== isLoading) {
+            if (isLoading) {
+                dataSource._entityCollection.suspendEvents();
+            } else {
+                dataSource._entityCollection.resumeEvents();
+            }
+            dataSource._isLoading = isLoading;
+            dataSource._loading.raiseEvent(dataSource, isLoading);
+        }
+    };
+
     return DataSource;
 });

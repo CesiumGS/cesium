@@ -48,6 +48,7 @@ define([
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
+    var scratchColor = new Color();
 
     var GeometryOptions = function(entity) {
         this.id = entity;
@@ -65,15 +66,20 @@ define([
      * @constructor
      *
      * @param {Entity} entity The entity containing the geometry to be visualized.
+     * @param {Scene} scene The scene where visualization is taking place.
      */
-    var WallGeometryUpdater = function(entity) {
+    var WallGeometryUpdater = function(entity, scene) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(entity)) {
             throw new DeveloperError('entity is required');
         }
+        if (!defined(scene)) {
+            throw new DeveloperError('scene is required');
+        }
         //>>includeEnd('debug');
 
         this._entity = entity;
+        this._scene = scene;
         this._entitySubscription = entity.definitionChanged.addEventListener(WallGeometryUpdater.prototype._onEntityPropertyChanged, this);
         this._fillEnabled = false;
         this._dynamic = false;
@@ -84,6 +90,7 @@ define([
         this._hasConstantOutline = true;
         this._showOutlineProperty = undefined;
         this._outlineColorProperty = undefined;
+        this._outlineWidth = 1.0;
         this._options = new GeometryOptions(entity);
         this._onEntityPropertyChanged(entity, 'wall', entity.wall, undefined);
     };
@@ -196,6 +203,19 @@ define([
         outlineColorProperty : {
             get : function() {
                 return this._outlineColorProperty;
+            }
+        },
+        /**
+         * Gets the constant with of the geometry outline, in pixels.
+         * This value is only valid if isDynamic is false.
+         * @memberof WallGeometryUpdater.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        outlineWidth : {
+            get : function() {
+                return this._outlineWidth;
             }
         },
         /**
@@ -332,13 +352,14 @@ define([
 
         var entity = this._entity;
         var isAvailable = entity.isAvailable(time);
+        var outlineColor = Property.getValueOrDefault(this._outlineColorProperty, time, Color.BLACK);
 
         return new GeometryInstance({
             id : entity,
             geometry : new WallOutlineGeometry(this._options),
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
-                color : ColorGeometryInstanceAttribute.fromColor(isAvailable ? this._outlineColorProperty.getValue(time) : Color.BLACK)
+                color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
             }
         });
     };
@@ -419,6 +440,7 @@ define([
 
         var minimumHeights = wall.minimumHeights;
         var maximumHeights = wall.maximumHeights;
+        var outlineWidth = wall.outlineWidth;
         var granularity = wall.granularity;
 
         this._fillEnabled = fillEnabled;
@@ -427,6 +449,7 @@ define([
         if (!positions.isConstant || //
             !Property.isConstant(minimumHeights) || //
             !Property.isConstant(maximumHeights) || //
+            !Property.isConstant(outlineWidth) || //
             !Property.isConstant(granularity)) {
             if (!this._dynamic) {
                 this._dynamic = true;
@@ -434,11 +457,12 @@ define([
             }
         } else {
             var options = this._options;
-            options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.VERTEX_FORMAT;
+            options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
             options.positions = positions.getValue(Iso8601.MINIMUM_VALUE, options.positions);
             options.minimumHeights = defined(minimumHeights) ? minimumHeights.getValue(Iso8601.MINIMUM_VALUE, options.minimumHeights) : undefined;
             options.maximumHeights = defined(maximumHeights) ? maximumHeights.getValue(Iso8601.MINIMUM_VALUE, options.maximumHeights) : undefined;
             options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            this._outlineWidth = defined(outlineWidth) ? outlineWidth.getValue(Iso8601.MINIMUM_VALUE) : 1.0;
             this._dynamic = false;
             this._geometryChanged.raiseEvent(this);
         }
@@ -484,62 +508,57 @@ define([
         }
         //>>includeEnd('debug');
 
+        var primitives = this._primitives;
+        primitives.removeAndDestroy(this._primitive);
+        primitives.removeAndDestroy(this._outlinePrimitive);
+
         var geometryUpdater = this._geometryUpdater;
-
-        if (defined(this._primitive)) {
-            this._primitives.remove(this._primitive);
-        }
-
-        if (defined(this._outlinePrimitive)) {
-            this._primitives.remove(this._outlinePrimitive);
-        }
-
         var entity = geometryUpdater._entity;
         var wall = entity.wall;
-        var show = wall.show;
-
-        if (!entity.isAvailable(time) || (defined(show) && !show.getValue(time))) {
+        if (!entity.isAvailable(time) || !Property.getValueOrDefault(wall.show, time, true)) {
             return;
         }
 
         var options = this._options;
+        var positions = Property.getValueOrUndefined(wall.positions, time, options.positions);
+        if (!defined(positions)) {
+            return;
+        }
 
-        var positions = wall.positions;
-        var minimumHeights = wall.minimumHeights;
-        var maximumHeights = wall.maximumHeights;
-        var granularity = wall.granularity;
+        options.positions = positions;
+        options.minimumHeights = Property.getValueOrUndefined(wall.minimumHeights, time, options.minimumHeights);
+        options.maximumHeights = Property.getValueOrUndefined(wall.maximumHeights, time, options.maximumHeights);
+        options.granularity = Property.getValueOrUndefined(wall.granularity, time);
 
-        options.positions = positions.getValue(time, options.positions);
-        options.minimumHeights = defined(minimumHeights) ? minimumHeights.getValue(time, options.minimumHeights) : undefined;
-        options.maximumHeights = defined(maximumHeights) ? maximumHeights.getValue(time, options.maximumHeights) : undefined;
-        options.granularity = defined(granularity) ? granularity.getValue(time) : undefined;
+        if (Property.getValueOrDefault(wall.fill, time, true)) {
+            var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
+            this._material = material;
 
-        if (!defined(wall.fill) || wall.fill.getValue(time)) {
-            this._material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
-            var material = this._material;
             var appearance = new MaterialAppearance({
                 material : material,
                 translucent : material.isTranslucent(),
-                closed : false
+                closed : defined(options.extrudedHeight)
             });
             options.vertexFormat = appearance.vertexFormat;
 
-            this._primitive = new Primitive({
+            this._primitive = primitives.add(new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
                     geometry : new WallGeometry(options)
                 }),
                 appearance : appearance,
                 asynchronous : false
-            });
-            this._primitives.add(this._primitive);
+            }));
         }
 
-        if (defined(wall.outline) && wall.outline.getValue(time)) {
+        if (Property.getValueOrDefault(wall.outline, time, false)) {
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
 
-            var outlineColor = defined(wall.outlineColor) ? wall.outlineColor.getValue(time) : Color.BLACK;
-            this._outlinePrimitive = new Primitive({
+            var outlineColor = Property.getValueOrClonedDefault(wall.outlineColor, time, Color.BLACK, scratchColor);
+            var outlineWidth = Property.getValueOrDefault(wall.outlineWidth, 1.0);
+            var translucent = outlineColor.alpha !== 1.0;
+
+            this._outlinePrimitive = primitives.add(new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : entity,
                     geometry : new WallOutlineGeometry(options),
@@ -549,11 +568,13 @@ define([
                 }),
                 appearance : new PerInstanceColorAppearance({
                     flat : true,
-                    translucent : outlineColor.alpha !== 1.0
+                    translucent : translucent,
+                    renderState : {
+                        lineWidth : geometryUpdater._scene.clampLineWidth(outlineWidth)
+                    }
                 }),
                 asynchronous : false
-            });
-            this._primitives.add(this._outlinePrimitive);
+            }));
         }
     };
 
@@ -562,13 +583,9 @@ define([
     };
 
     DynamicGeometryUpdater.prototype.destroy = function() {
-        if (defined(this._primitive)) {
-            this._primitives.remove(this._primitive);
-        }
-
-        if (defined(this._outlinePrimitive)) {
-            this._primitives.remove(this._outlinePrimitive);
-        }
+        var primitives = this._primitives;
+        primitives.removeAndDestroy(this._primitive);
+        primitives.removeAndDestroy(this._outlinePrimitive);
         destroyObject(this);
     };
 

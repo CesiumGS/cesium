@@ -1,31 +1,38 @@
 /*global defineSuite*/
-defineSuite(['DataSources/KmlDataSource',
-             'DataSources/ConstantProperty',
-             'DataSources/ColorMaterialProperty',
-             'Core/Cartesian3',
-             'Core/DeveloperError',
-             'Core/loadXML',
-             'Core/Cartographic',
-             'Core/Color',
-             'Core/Ellipsoid',
-             'Core/Event',
-             'Core/JulianDate',
-             'Core/Math',
-             'Core/RuntimeError'
-         ], function(
-            KmlDataSource,
-            ConstantProperty,
-            ColorMaterialProperty,
-            Cartesian3,
-            DeveloperError,
-            loadXML,
-            Cartographic,
-            Color,
-            Ellipsoid,
-            Event,
-            JulianDate,
-            CesiumMath,
-            RuntimeError) {
+defineSuite([
+        'DataSources/KmlDataSource',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/Color',
+        'Core/DeveloperError',
+        'Core/Ellipsoid',
+        'Core/Event',
+        'Core/JulianDate',
+        'Core/loadBlob',
+        'Core/loadXML',
+        'Core/Math',
+        'Core/RuntimeError',
+        'DataSources/ColorMaterialProperty',
+        'DataSources/ConstantProperty',
+        'DataSources/EntityCollection',
+        'Specs/waitsForPromise'
+    ], function(
+        KmlDataSource,
+        Cartesian3,
+        Cartographic,
+        Color,
+        DeveloperError,
+        Ellipsoid,
+        Event,
+        JulianDate,
+        loadBlob,
+        loadXML,
+        CesiumMath,
+        RuntimeError,
+        ColorMaterialProperty,
+        ConstantProperty,
+        EntityCollection,
+        waitsForPromise) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -33,12 +40,122 @@ defineSuite(['DataSources/KmlDataSource',
 
     it('default constructor has expected values', function() {
         var dataSource = new KmlDataSource();
+        expect(dataSource.name).toBeUndefined();
+        expect(dataSource.clock).toBeUndefined();
+        expect(dataSource.entities).toBeInstanceOf(EntityCollection);
+        expect(dataSource.changedEvent).toBeInstanceOf(Event);
+        expect(dataSource.isLoading).toBe(false);
         expect(dataSource.changedEvent).toBeInstanceOf(Event);
         expect(dataSource.errorEvent).toBeInstanceOf(Event);
-        expect(dataSource.clock).toBeUndefined();
-        expect(dataSource.entities.entities.length).toEqual(0);
+        expect(dataSource.loadingEvent).toBeInstanceOf(Event);
     });
 
+    it('load throws with undefined KML', function() {
+        var dataSource = new KmlDataSource();
+        expect(function() {
+            dataSource.load(undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('loadKmz throws with undefined blob', function() {
+        var dataSource = new KmlDataSource();
+        expect(function() {
+            dataSource.loadKmz(undefined);
+        }).toThrowDeveloperError();
+    });
+
+    xit('loadKmz rejects loading non-KMZ file', function() {
+        var dataSource = new KmlDataSource();
+        waitsForPromise(loadBlob('Data/Images/Blue.png'), function(blob) {
+            waitsForPromise.toReject(dataSource.loadKmz(blob));
+        });
+    });
+
+    it('loadKmz rejects KMZ file with no KML contained', function() {
+        var dataSource = new KmlDataSource();
+        waitsForPromise(loadBlob('Data/KML/empty.zip'), function(blob) {
+            waitsForPromise.toReject(dataSource.loadKmz(blob));
+        });
+    });
+
+    it('loadUrl works with a KML file', function() {
+        var dataSource = new KmlDataSource();
+        waitsForPromise(dataSource.loadUrl('Data/KML/simple.kml'), function(source) {
+            expect(source).toBe(dataSource);
+            expect(source.entities.entities.length).toEqual(1);
+        });
+    });
+
+    it('loadUrl works with a KMZ file', function() {
+        var dataSource = new KmlDataSource();
+        waitsForPromise(dataSource.loadUrl('Data/KML/simple.kmz'), function(source) {
+            expect(source).toBe(dataSource);
+            expect(source.entities.entities.length).toEqual(1);
+        });
+    });
+
+    it('loadUrl throws with undefined Url', function() {
+        var dataSource = new KmlDataSource();
+        expect(function() {
+            dataSource.loadUrl(undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('loadUrl rejects loading nonexistent file', function() {
+        var dataSource = new KmlDataSource();
+        waitsForPromise.toReject(dataSource.loadUrl('//test.invalid/invalid.kml'));
+    });
+
+    it('loadUrl rejects loading non-KML file', function() {
+        var dataSource = new KmlDataSource();
+        waitsForPromise.toReject(dataSource.loadUrl('Data/Images/Blue.png'));
+    });
+
+    it('loadUrl rejects KMZ file with no KML contained', function() {
+        var dataSource = new KmlDataSource();
+        waitsForPromise.toReject(dataSource.loadUrl('Data/KML/empty.zip'));
+    });
+
+    it('fromUrl works', function() {
+        var dataSource = KmlDataSource.fromUrl('Data/KML/simple.kml');
+
+        waitsFor(function() {
+            return !dataSource.isLoading;
+        });
+
+        runs(function() {
+            expect(dataSource.entities.entities.length).toEqual(1);
+        });
+    });
+
+    it('sets DataSource name from Document', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <name>NameInKml</name>\
+            </Document>\
+            </kml>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"), 'NameFromUri.kml');
+        expect(dataSource.name).toEqual('NameInKml');
+    });
+
+    it('sets DataSource name from sourceUri when not in file', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            </Document>\
+            </kml>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"), 'NameFromUri.kml');
+        expect(dataSource.name).toEqual('NameFromUri.kml');
+    });
+
+    /*
+    * Tests below this comment need to be reevaluated.
+    */
     it('loads shared styles', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <kml xmlns="http://www.opengis.net/kml/2.2">\
@@ -57,9 +174,9 @@ defineSuite(['DataSources/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
 
-        var objects = dataSource.entities.entities;
-        expect(objects.length).toEqual(1);
-        expect(objects[0].billboard.scale.getValue()).toEqual(3.0);
+        var entities = dataSource.entities.entities;
+        expect(entities.length).toEqual(1);
+        expect(entities[0].billboard.scale.getValue()).toEqual(3.0);
     });
 
     it('loads external styles', function() {
@@ -75,13 +192,13 @@ defineSuite(['DataSources/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
 
-        var objects = dataSource.entities.entities;
+        var entities = dataSource.entities.entities;
         waitsFor(function() {
-            return objects.length === 1;
+            return entities.length === 1;
         });
 
         runs(function() {
-            expect(objects[0].billboard.scale.getValue()).toEqual(3.0);
+            expect(entities[0].billboard.scale.getValue()).toEqual(3.0);
         });
     });
 
@@ -111,10 +228,10 @@ defineSuite(['DataSources/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
 
-        var objects = dataSource.entities.entities;
-        expect(objects.length).toEqual(1);
+        var entities = dataSource.entities.entities;
+        expect(entities.length).toEqual(1);
 
-        var billboard = objects[0].billboard;
+        var billboard = entities[0].billboard;
         expect(billboard.scale.getValue()).toEqual(2.0);
         expect(billboard.image.getValue()).toEqual('http://test.invalid');
     });
@@ -180,9 +297,9 @@ defineSuite(['DataSources/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(pointKml, "text/xml"));
 
-        var objects = dataSource.entities.entities;
-        expect(objects.length).toEqual(1);
-        expect(objects[0].position.getValue(time)).toEqual(cartesianPosition);
+        var entities = dataSource.entities.entities;
+        expect(entities.length).toEqual(1);
+        expect(entities[0].position.getValue(time)).toEqual(cartesianPosition);
     });
 
 //    it('processPoint throws error with invalid coordinates', function() {
@@ -229,14 +346,14 @@ defineSuite(['DataSources/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(pointKml, "text/xml"));
 
-        var objects = dataSource.entities.entities;
-        expect(objects.length).toEqual(1);
-        expect(objects[0].label.text.getValue()).toEqual(name.getValue());
-        expect(objects[0].label.scale.getValue()).toEqual(scale.getValue());
-        expect(objects[0].label.fillColor.red).toEqual(color.red);
-        expect(objects[0].label.fillColor.green).toEqual(color.green);
-        expect(objects[0].label.fillColor.blue).toEqual(color.blue);
-        expect(objects[0].label.fillColor.alpha).toEqual(color.alpha);
+        var entities = dataSource.entities.entities;
+        expect(entities.length).toEqual(1);
+        expect(entities[0].label.text.getValue()).toEqual(name.getValue());
+        expect(entities[0].label.scale.getValue()).toEqual(scale.getValue());
+        expect(entities[0].label.fillColor.red).toEqual(color.red);
+        expect(entities[0].label.fillColor.green).toEqual(color.green);
+        expect(entities[0].label.fillColor.blue).toEqual(color.blue);
+        expect(entities[0].label.fillColor.alpha).toEqual(color.alpha);
     });
 
     it('handles Line Geometry with two sets of coordinates', function() {
@@ -260,11 +377,11 @@ defineSuite(['DataSources/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(lineKml, "text/xml"));
 
-        var objects = dataSource.entities.entities;
-        var object = objects[0];
-        expect(objects.length).toEqual(1);
-        expect(object.polyline.positions.getValue()[0]).toEqual(cartesianPosition1);
-        expect(object.polyline.positions.getValue()[1]).toEqual(cartesianPosition2);
+        var entities = dataSource.entities.entities;
+        var entity = entities[0];
+        expect(entities.length).toEqual(1);
+        expect(entity.polyline.positions.getValue()[0]).toEqual(cartesianPosition1);
+        expect(entity.polyline.positions.getValue()[1]).toEqual(cartesianPosition2);
     });
 
 //    it('processLineString throws error with invalid coordinates', function() {
@@ -308,11 +425,11 @@ defineSuite(['DataSources/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(lineKml, "text/xml"));
 
-        var objects = dataSource.entities.entities;
-        var object = objects[0];
-        expect(objects.length).toEqual(1);
-        expect(object.polyline.positions.getValue()[0]).toEqual(cartesianPosition1);
-        expect(object.polyline.positions.getValue()[1]).toEqual(cartesianPosition2);
+        var entities = dataSource.entities.entities;
+        var entity = entities[0];
+        expect(entities.length).toEqual(1);
+        expect(entity.polyline.positions.getValue()[0]).toEqual(cartesianPosition1);
+        expect(entity.polyline.positions.getValue()[1]).toEqual(cartesianPosition2);
     });
 
     it('handles Polygon geometry', function() {
@@ -335,7 +452,8 @@ defineSuite(['DataSources/KmlDataSource',
             </Placemark>\
             </kml>';
 
-        var coordinates = [Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-123, 38, 0)),
+        var coordinates = [Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-122, 37, 0)),
+                           Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-123, 38, 0)),
                            Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-124, 39, 0)),
                            Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-125, 40, 0)),
                            Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-122, 37, 0))];
@@ -343,9 +461,9 @@ defineSuite(['DataSources/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(polygonKml, "text/xml"));
 
-        var objects = dataSource.entities.entities;
-        var entity = objects[0];
-        expect(entity.polygon.positions.getValue()).toEqual(coordinates);
+        var entities = dataSource.entities.entities;
+        var entity = entities[0];
+        expect(entity.polygon.hierarchy.getValue().positions).toEqual(coordinates);
     });
 
     it('handles gx:Track', function() {
@@ -353,7 +471,8 @@ defineSuite(['DataSources/KmlDataSource',
         var value = Ellipsoid.WGS84.cartographicToCartesian(cartographic);
         var time = new JulianDate.fromIso8601('2010-05-28T02:02:09Z');
         var trackKml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <kml xmlns="http://www.opengis.net/kml/2.2"\
+             xmlns:gx="http://www.google.com/kml/ext/2.2">\
             <Document>\
             <Placemark>\
             <gx:Track>\
@@ -367,13 +486,14 @@ defineSuite(['DataSources/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(trackKml, "text/xml"));
 
-        var object = dataSource.entities.entities[0];
-        expect(object.position.getValue(time)).toEqual(value);
+        var entity = dataSource.entities.entities[0];
+        expect(entity.position.getValue(time)).toEqual(value);
     });
 
     it('processGxTrack throws error with invalid input', function() {
         var trackKml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <kml xmlns="http://www.opengis.net/kml/2.2"\
+             xmlns:gx="http://www.google.com/kml/ext/2.2">\
             <Document>\
             <Placemark>\
             <gx:Track>\
@@ -399,7 +519,8 @@ defineSuite(['DataSources/KmlDataSource',
     it('handles gx:MultiTrack', function() {
         var time = new JulianDate.fromIso8601('2010-05-28T02:02:09Z');
         var trackKml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <kml xmlns="http://www.opengis.net/kml/2.2"\
+             xmlns:gx="http://www.google.com/kml/ext/2.2">\
             <Document>\
             <Placemark>\
             <gx:MultiTrack>\
@@ -419,11 +540,11 @@ defineSuite(['DataSources/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(trackKml, "text/xml"));
 
-        var objects = dataSource.entities.entities;
-        var object0 = objects[1];
-        var object1 = objects[2];
-        expect(objects.length).toEqual(3);
-        expect(object0.position.getValue(time)).toEqual(object1.position.getValue(time));
+        var entities = dataSource.entities.entities;
+        var entity0 = entities[1];
+        var entity1 = entities[2];
+        expect(entities.length).toEqual(3);
+        expect(entity0.position.getValue(time)).toEqual(entity1.position.getValue(time));
     });
 
     it('handles MultiGeometry', function() {
@@ -435,7 +556,9 @@ defineSuite(['DataSources/KmlDataSource',
         var cartesianPosition3 = Ellipsoid.WGS84.cartographicToCartesian(position3);
         var position4 = new Cartographic(CesiumMath.toRadians(8), CesiumMath.toRadians(9), 0);
         var cartesianPosition4 = Ellipsoid.WGS84.cartographicToCartesian(position4);
-        var multiKml = '<Placemark>\
+        var multiKml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Placemark>\
             <MultiGeometry>\
               <LineString>\
                 <coordinates>\
@@ -450,17 +573,18 @@ defineSuite(['DataSources/KmlDataSource',
                 </coordinates>\
               </LineString>\
             </MultiGeometry>\
-          </Placemark>';
+            </Placemark>\
+            </kml>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(multiKml, "text/xml"));
 
-        var objects = dataSource.entities.entities;
-        expect(objects.length).toEqual(3);
-        expect(objects[1].polyline.positions.getValue()[0]).toEqual(cartesianPosition1);
-        expect(objects[1].polyline.positions.getValue()[1]).toEqual(cartesianPosition2);
-        expect(objects[2].polyline.positions.getValue()[0]).toEqual(cartesianPosition3);
-        expect(objects[2].polyline.positions.getValue()[1]).toEqual(cartesianPosition4);
+        var entities = dataSource.entities.entities;
+        expect(entities.length).toEqual(3);
+        expect(entities[1].polyline.positions.getValue()[0]).toEqual(cartesianPosition1);
+        expect(entities[1].polyline.positions.getValue()[1]).toEqual(cartesianPosition2);
+        expect(entities[2].polyline.positions.getValue()[0]).toEqual(cartesianPosition3);
+        expect(entities[2].polyline.positions.getValue()[1]).toEqual(cartesianPosition4);
     });
 
     it('handles MultiGeometry with style', function() {
@@ -495,16 +619,16 @@ defineSuite(['DataSources/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(multiKml, "text/xml"));
 
-        var objects = dataSource.entities.entities;
-        var object1 = objects[1];
-        var object2 = objects[2];
-        expect(objects.length).toEqual(3);
-        expect(object1.billboard.scale.getValue()).toEqual(object2.billboard.scale.getValue());
-        expect(object1.billboard.image.getValue()).toEqual(object2.billboard.image.getValue());
-        expect(object1.billboard.color.red).toEqual(object2.billboard.color.red);
-        expect(object1.billboard.color.green).toEqual(object2.billboard.color.green);
-        expect(object1.billboard.color.blue).toEqual(object2.billboard.color.blue);
-        expect(object1.billboard.color.alpha).toEqual(object2.billboard.color.alpha);
+        var entities = dataSource.entities.entities;
+        var entity1 = entities[1];
+        var entity2 = entities[2];
+        expect(entities.length).toEqual(3);
+        expect(entity1.billboard.scale.getValue()).toEqual(entity2.billboard.scale.getValue());
+        expect(entity1.billboard.image.getValue()).toEqual(entity2.billboard.image.getValue());
+        expect(entity1.billboard.color.red).toEqual(entity2.billboard.color.red);
+        expect(entity1.billboard.color.green).toEqual(entity2.billboard.color.green);
+        expect(entity1.billboard.color.blue).toEqual(entity2.billboard.color.blue);
+        expect(entity1.billboard.color.alpha).toEqual(entity2.billboard.color.alpha);
     });
 
     it('handles IconStyle', function() {
@@ -532,10 +656,10 @@ defineSuite(['DataSources/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(iconKml, "text/xml"));
 
-        var objects = dataSource.entities.entities;
-        expect(objects.length).toEqual(1);
-        expect(objects[0].billboard.scale.getValue()).toEqual(scale.getValue());
-        expect(objects[0].billboard.color).toEqual(color);
+        var entities = dataSource.entities.entities;
+        expect(entities.length).toEqual(1);
+        expect(entities[0].billboard.scale.getValue()).toEqual(scale.getValue());
+        expect(entities[0].billboard.color).toEqual(color);
     });
 
     it('handles empty IconStyle element', function() {
@@ -554,9 +678,9 @@ defineSuite(['DataSources/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
 
-        var objects = dataSource.entities.entities;
-        expect(objects.length).toEqual(1);
-        var billboard = objects[0].billboard;
+        var entities = dataSource.entities.entities;
+        expect(entities.length).toEqual(1);
+        var billboard = entities[0].billboard;
         expect(billboard).toBeDefined();
     });
 
@@ -582,11 +706,10 @@ defineSuite(['DataSources/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(iconKml, "text/xml"));
 
-        var objects = dataSource.entities.entities;
-        expect(objects.length).toEqual(1);
-        expect(objects[0].label.scale.getValue()).toEqual(scale.getValue());
-        expect(objects[0].label.fillColor).toEqual(color);
-        expect(objects[0].billboard.image.getValue()).toEqual("http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png");
+        var entities = dataSource.entities.entities;
+        expect(entities.length).toEqual(1);
+        expect(entities[0].label.scale.getValue()).toEqual(scale.getValue());
+        expect(entities[0].label.fillColor).toEqual(color);
     });
 
     it('handles empty LabelStyle element', function() {
@@ -605,26 +728,23 @@ defineSuite(['DataSources/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
 
-        var objects = dataSource.entities.entities;
-        expect(objects.length).toEqual(1);
-        var label = objects[0].label;
+        var entities = dataSource.entities.entities;
+        expect(entities.length).toEqual(1);
+        var label = entities[0].label;
         expect(label.fillColor).toEqual(new ConstantProperty(new Color(1, 1, 1, 1)));
         expect(label.scale.getValue()).toEqual(1.0);
-        expect(objects[0].billboard.image.getValue()).toEqual("http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png");
     });
 
     it('handles LineStyle', function() {
         var lineKml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <kml xmlns="http://www.opengis.net/kml/2.2"\
+             xmlns:gx="http://www.google.com/kml/ext/2.2">\
             <Document>\
             <Style id="testStyle">\
             <LineStyle>\
                 <color>000000ff</color>\
                 <width>4</width>\
                 <gx:labelVisibility>1</gx:labelVisibility>\
-                <gx:outerColor>ffffffff</gx:outerColor>\
-                <gx:outerWidth>1.0</gx:outerWidth>\
-                <gx:physicalWidth>0.0</gx:physicalWidth>\
                 <gx:labelVisibility>0</gx:labelVisibility>\
             </LineStyle>\
             </Style>\
@@ -634,13 +754,17 @@ defineSuite(['DataSources/KmlDataSource',
             </Document>\
             </kml>';
 
+//        <gx:outerColor>ffffffff</gx:outerColor>\
+//        <gx:outerWidth>1.0</gx:outerWidth>\
+//        <gx:physicalWidth>0.0</gx:physicalWidth>\
+
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(lineKml, "text/xml"));
 
-        var objects = dataSource.entities.entities;
-        expect(objects.length).toEqual(1);
-        expect(objects[0].polyline.width.getValue()).toEqual(4);
-        expect(objects[0].polyline.material.outlineWidth.getValue()).toEqual(1);
+        var entities = dataSource.entities.entities;
+        expect(entities.length).toEqual(1);
+        expect(entities[0].polyline.width.getValue()).toEqual(4);
+//        expect(entities[0].polyline.material.outlineWidth.getValue()).toEqual(1);
     });
 
     it('handles empty LineStyle element', function() {
@@ -659,21 +783,22 @@ defineSuite(['DataSources/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
 
-        var objects = dataSource.entities.entities;
-        expect(objects.length).toEqual(1);
-        var polyline = objects[0].polyline;
+        var entities = dataSource.entities.entities;
+        expect(entities.length).toEqual(1);
+        var polyline = entities[0].polyline;
         expect(polyline).toBeDefined();
     });
 
-    it('LineStyle throws with invalid input', function() {
+    xit('LineStyle throws with invalid outerWidth', function() {
         var lineKml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <kml xmlns="http://www.opengis.net/kml/2.2"\
+             xmlns:gx="http://www.google.com/kml/ext/2.2">\
             <Document>\
             <Placemark>\
               <Style>\
                 <LineStyle>\
-            <gx:outerWidth>1.1</gx:outerWidth>\
-            </LineStyle>\
+                    <gx:outerWidth>1.1</gx:outerWidth>\
+                </LineStyle>\
               </Style>\
             </Placemark>\
             </Document>\
@@ -712,11 +837,11 @@ defineSuite(['DataSources/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(polyKml, "text/xml"));
 
-        var objects = dataSource.entities.entities;
-        var polygon = objects[0].polygon;
+        var entities = dataSource.entities.entities;
+        var polygon = entities[0].polygon;
         var material = polygon.material.getValue();
         var generatedColor = material.color;
-        expect(objects.length).toEqual(1);
+        expect(entities.length).toEqual(1);
         expect(generatedColor.red).toEqual(color.red);
         expect(generatedColor.green).toEqual(color.green);
         expect(generatedColor.blue).toEqual(color.blue);
@@ -739,9 +864,9 @@ defineSuite(['DataSources/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
 
-        var objects = dataSource.entities.entities;
-        expect(objects.length).toEqual(1);
-        var polygon = objects[0].polygon;
+        var entities = dataSource.entities.entities;
+        expect(entities.length).toEqual(1);
+        var polygon = entities[0].polygon;
         var generatedColor = polygon.material.color;
         expect(generatedColor).toEqual(new ConstantProperty(new Color(1, 1, 1, 1)));
     });
@@ -766,9 +891,9 @@ defineSuite(['DataSources/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(colorKml, "text/xml"));
 
-        var objects = dataSource.entities.entities;
-        var generatedColor = objects[0].billboard.color.getValue();
-        expect(objects.length).toEqual(1);
+        var entities = dataSource.entities.entities;
+        var generatedColor = entities[0].billboard.color.getValue();
+        expect(entities.length).toEqual(1);
         expect(generatedColor.red).toEqual(color.red);
         expect(generatedColor.green).toEqual(color.green);
         expect(generatedColor.blue).toEqual(color.blue);
@@ -795,9 +920,9 @@ defineSuite(['DataSources/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(colorKml, "text/xml"));
 
-        var objects = dataSource.entities.entities;
-        var generatedColor = objects[0].billboard.color.getValue();
-        expect(objects.length).toEqual(1);
+        var entities = dataSource.entities.entities;
+        var generatedColor = entities[0].billboard.color.getValue();
+        expect(entities.length).toEqual(1);
         expect(generatedColor.red <= color.red).toBe(true);
         expect(generatedColor.green).toEqual(color.green);
         expect(generatedColor.blue).toEqual(color.blue);
@@ -823,8 +948,8 @@ defineSuite(['DataSources/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(pathKml, "text/xml"), 'http://test.invalid');
 
-        var objects = dataSource.entities.entities;
-        var billboard = objects[0].billboard;
+        var entities = dataSource.entities.entities;
+        var billboard = entities[0].billboard;
         expect(billboard.image.getValue()).toEqual('http://test.invalid/images/Earth_Station.png');
     });
 
@@ -850,8 +975,8 @@ defineSuite(['DataSources/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(timeKml, "text/xml"));
 
-        var objects = dataSource.entities.entities;
-        var entity = objects[0];
+        var entities = dataSource.entities.entities;
+        var entity = entities[0];
         expect(entity.availability).toBeDefined();
         expect(entity.availability.start).toEqual(beginDate);
     });
@@ -897,36 +1022,10 @@ defineSuite(['DataSources/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(timeKml, "text/xml"));
 
-        var objects = dataSource.entities.entities;
-        var entity = objects[0];
+        var entities = dataSource.entities.entities;
+        var entity = entities[0];
         expect(entity.availability).toBeDefined();
         expect(entity.availability.start).toEqual(beginDate);
         expect(entity.availability.stop).toEqual(endDate);
-    });
-
-    it('load throws with undefined KML', function() {
-        var dataSource = new KmlDataSource();
-        expect(function() {
-            dataSource.load(undefined);
-        }).toThrowDeveloperError();
-    });
-
-    it('loadUrl throws with undefined Url', function() {
-        var dataSource = new KmlDataSource();
-        expect(function() {
-            dataSource.loadUrl(undefined);
-        }).toThrowDeveloperError();
-    });
-
-    it('loadUrl raises error with invalid url', function() {
-        var dataSource = new KmlDataSource();
-        var thrown = false;
-        dataSource.errorEvent.addEventListener(function() {
-            thrown = true;
-        });
-        dataSource.loadUrl('invalid.kml');
-        waitsFor(function() {
-            return thrown;
-        });
     });
 });

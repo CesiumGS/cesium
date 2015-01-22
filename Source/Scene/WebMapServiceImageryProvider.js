@@ -113,11 +113,7 @@ define([
      *     proxy: new Cesium.DefaultProxy('/proxy/')
      * });
      *
-     * viewer.scene.imageryLayers.addImageryProvider(provider);
-     *
-     * // This line is not required to use a WMS imagery layer, but adding it will enable automatic
-     * // display of WMS feature information (if available) on click.
-     * viewer.extend(Cesium.viewerEntityMixin);
+     * viewer.imageryLayers.addImageryProvider(provider);
      */
     var WebMapServiceImageryProvider = function WebMapServiceImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -151,7 +147,7 @@ define([
         this._rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
         this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new GeographicTilingScheme();
 
-        this._rectangle = Rectangle.intersectWith(this._rectangle, this._tilingScheme.rectangle);
+        this._rectangle = Rectangle.intersection(this._rectangle, this._tilingScheme.rectangle);
 
         var credit = options.credit;
         if (typeof credit === 'string') {
@@ -169,6 +165,7 @@ define([
          * Gets the URL of the WMS server.
          * @memberof WebMapServiceImageryProvider.prototype
          * @type {String}
+         * @readonly
          */
         url : {
             get : function() {
@@ -180,6 +177,7 @@ define([
          * Gets the proxy used by this provider.
          * @memberof WebMapServiceImageryProvider.prototype
          * @type {Proxy}
+         * @readonly
          */
         proxy : {
             get : function() {
@@ -191,6 +189,7 @@ define([
          * Gets the names of the WMS layers, separated by commas.
          * @memberof WebMapServiceImageryProvider.prototype
          * @type {String}
+         * @readonly
          */
         layers : {
             get : function() {
@@ -203,6 +202,7 @@ define([
          * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
          * @memberof WebMapServiceImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         tileWidth : {
             get : function() {
@@ -221,6 +221,7 @@ define([
          * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
          * @memberof WebMapServiceImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         tileHeight : {
             get : function() {
@@ -239,6 +240,7 @@ define([
          * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
          * @memberof WebMapServiceImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         maximumLevel : {
             get : function() {
@@ -257,6 +259,7 @@ define([
          * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
          * @memberof WebMapServiceImageryProvider.prototype
          * @type {Number}
+         * @readonly
          */
         minimumLevel : {
             get : function() {
@@ -275,6 +278,7 @@ define([
          * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
          * @memberof WebMapServiceImageryProvider.prototype
          * @type {TilingScheme}
+         * @readonly
          */
         tilingScheme : {
             get : function() {
@@ -293,6 +297,7 @@ define([
          * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
          * @memberof WebMapServiceImageryProvider.prototype
          * @type {Rectangle}
+         * @readonly
          */
         rectangle : {
             get : function() {
@@ -313,6 +318,7 @@ define([
          * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
          * @memberof WebMapServiceImageryProvider.prototype
          * @type {TileDiscardPolicy}
+         * @readonly
          */
         tileDiscardPolicy : {
             get : function() {
@@ -332,6 +338,7 @@ define([
          * are passed an instance of {@link TileProviderError}.
          * @memberof WebMapServiceImageryProvider.prototype
          * @type {Event}
+         * @readonly
          */
         errorEvent : {
             get : function() {
@@ -343,6 +350,7 @@ define([
          * Gets a value indicating whether or not the provider is ready for use.
          * @memberof WebMapServiceImageryProvider.prototype
          * @type {Boolean}
+         * @readonly
          */
         ready : {
             get : function() {
@@ -355,6 +363,7 @@ define([
          * the source of the imagery.  This function should not be called before {@link WebMapServiceImageryProvider#ready} returns true.
          * @memberof WebMapServiceImageryProvider.prototype
          * @type {Credit}
+         * @readonly
          */
         credit : {
             get : function() {
@@ -370,6 +379,7 @@ define([
          * and texture upload time are reduced.
          * @memberof WebMapServiceImageryProvider.prototype
          * @type {Boolean}
+         * @readonly
          */
         hasAlphaChannel : {
             get : function() {
@@ -461,8 +471,8 @@ define([
             projected = this._tilingScheme.projection.project(cartographic, cartesian3Scratch);
         }
 
-        var i = (this._tileWidth * (projected.x - rectangle.west) / (rectangle.east - rectangle.west)) | 0;
-        var j = (this._tileHeight * (rectangle.north - projected.y) / (rectangle.north - rectangle.south)) | 0;
+        var i = (this._tileWidth * (projected.x - rectangle.west) / rectangle.width) | 0;
+        var j = (this._tileHeight * (rectangle.north - projected.y) / rectangle.height) | 0;
 
         var url;
 

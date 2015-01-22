@@ -880,9 +880,7 @@ defineSuite([
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
 
-        scene.initializeFrame();
-        scene.render();
-        expect(scene.context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toNotEqual([0, 0, 0, 0]);
 
         destroyScene(scene);
     });

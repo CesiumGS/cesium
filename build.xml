@@ -107,7 +107,7 @@
 
 	<!-- Inputs -->
 	<!-- this version should be set to the upcoming version, so it can be tagged without requiring a bump first -->
-	<property name="version" value="1.2" />
+	<property name="version" value="1.5" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />
@@ -578,6 +578,7 @@
 			<fileset dir="${buildOutputDirectory}">
 				<include name="Assets/**" />
 				<include name="Workers/**" />
+				<include name="ThirdParty/Workers/**" />
 				<include name="Widgets/**" />
 				<exclude name="Widgets/**/*.css" />
 			</fileset>

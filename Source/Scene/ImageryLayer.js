@@ -11,8 +11,7 @@ define([
         '../Core/destroyObject',
         '../Core/FeatureDetection',
         '../Core/GeographicTilingScheme',
-        '../Core/Geometry',
-        '../Core/GeometryAttribute',
+        '../Core/IndexDatatype',
         '../Core/Math',
         '../Core/PixelFormat',
         '../Core/PrimitiveType',
@@ -45,8 +44,7 @@ define([
         destroyObject,
         FeatureDetection,
         GeographicTilingScheme,
-        Geometry,
-        GeometryAttribute,
+        IndexDatatype,
         CesiumMath,
         PixelFormat,
         PrimitiveType,
@@ -378,10 +376,10 @@ define([
         // the geometry tile.  The ImageryProvider and ImageryLayer both have the
         // opportunity to constrain the rectangle.  The imagery TilingScheme's rectangle
         // always fully contains the ImageryProvider's rectangle.
-        var imageryBounds = Rectangle.intersectWith(imageryProvider.rectangle, this._rectangle, imageryBoundsScratch);
-        var rectangle = Rectangle.intersectWith(tile.rectangle, imageryBounds, tileImageryBoundsScratch);
+        var imageryBounds = Rectangle.intersection(imageryProvider.rectangle, this._rectangle, imageryBoundsScratch);
+        var rectangle = Rectangle.intersection(tile.rectangle, imageryBounds, tileImageryBoundsScratch);
 
-        if (rectangle.east <= rectangle.west || rectangle.north <= rectangle.south) {
+        if (!defined(rectangle)) {
             // There is no overlap between this terrain tile and this imagery
             // provider.  Unless this is the base layer, no skeletons need to be created.
             // We stretch texels at the edge of the base layer over the entire globe.
@@ -391,6 +389,7 @@ define([
 
             var baseImageryRectangle = imageryBounds;
             var baseTerrainRectangle = tile.rectangle;
+            rectangle = tileImageryBoundsScratch;
 
             if (baseTerrainRectangle.south >= baseImageryRectangle.north) {
                 rectangle.north = rectangle.south = baseImageryRectangle.north;
@@ -443,8 +442,8 @@ define([
         // of the northwest tile, we don't actually need the northernmost or westernmost tiles.
 
         // We define "very close" as being within 1/512 of the width of the tile.
-        var veryCloseX = (tile.rectangle.north - tile.rectangle.south) / 512.0;
-        var veryCloseY = (tile.rectangle.east - tile.rectangle.west) / 512.0;
+        var veryCloseX = tile.rectangle.height / 512.0;
+        var veryCloseY = tile.rectangle.width / 512.0;
 
         var northwestTileRectangle = imageryTilingScheme.tileXYToRectangle(northwestTileCoordinates.x, northwestTileCoordinates.y, imageryLevel);
         if (Math.abs(northwestTileRectangle.south - tile.rectangle.north) < veryCloseY && northwestTileCoordinates.y < southeastTileCoordinates.y) {
@@ -467,7 +466,7 @@ define([
 
         var terrainRectangle = tile.rectangle;
         var imageryRectangle = imageryTilingScheme.tileXYToRectangle(northwestTileCoordinates.x, northwestTileCoordinates.y, imageryLevel);
-        var clippedImageryRectangle = Rectangle.intersectWith(imageryRectangle, imageryBounds, clippedRectangleScratch);
+        var clippedImageryRectangle = Rectangle.intersection(imageryRectangle, imageryBounds, clippedRectangleScratch);
 
         var minU;
         var maxU = 0.0;
@@ -479,11 +478,11 @@ define([
         // it may not start at the northern or western edge of the terrain tile.
         // Calculate where it does start.
         if (!this.isBaseLayer() && Math.abs(clippedImageryRectangle.west - tile.rectangle.west) >= veryCloseX) {
-            maxU = Math.min(1.0, (clippedImageryRectangle.west - terrainRectangle.west) / (terrainRectangle.east - terrainRectangle.west));
+            maxU = Math.min(1.0, (clippedImageryRectangle.west - terrainRectangle.west) / terrainRectangle.width);
         }
 
         if (!this.isBaseLayer() && Math.abs(clippedImageryRectangle.north - tile.rectangle.north) >= veryCloseY) {
-            minV = Math.max(0.0, (clippedImageryRectangle.north - terrainRectangle.south) / (terrainRectangle.north - terrainRectangle.south));
+            minV = Math.max(0.0, (clippedImageryRectangle.north - terrainRectangle.south) / terrainRectangle.height);
         }
 
         var initialMinV = minV;
@@ -492,9 +491,9 @@ define([
             minU = maxU;
 
             imageryRectangle = imageryTilingScheme.tileXYToRectangle(i, northwestTileCoordinates.y, imageryLevel);
-            clippedImageryRectangle = Rectangle.intersectWith(imageryRectangle, imageryBounds, clippedRectangleScratch);
+            clippedImageryRectangle = Rectangle.intersection(imageryRectangle, imageryBounds, clippedRectangleScratch);
 
-            maxU = Math.min(1.0, (clippedImageryRectangle.east - terrainRectangle.west) / (terrainRectangle.east - terrainRectangle.west));
+            maxU = Math.min(1.0, (clippedImageryRectangle.east - terrainRectangle.west) / terrainRectangle.width);
 
             // If this is the eastern-most imagery tile mapped to this terrain tile,
             // and there are more imagery tiles to the east of this one, the maxU
@@ -510,8 +509,8 @@ define([
                 maxV = minV;
 
                 imageryRectangle = imageryTilingScheme.tileXYToRectangle(i, j, imageryLevel);
-                clippedImageryRectangle = Rectangle.intersectWith(imageryRectangle, imageryBounds, clippedRectangleScratch);
-                minV = Math.max(0.0, (clippedImageryRectangle.south - terrainRectangle.south) / (terrainRectangle.north - terrainRectangle.south));
+                clippedImageryRectangle = Rectangle.intersection(imageryRectangle, imageryBounds, clippedRectangleScratch);
+                minV = Math.max(0.0, (clippedImageryRectangle.south - terrainRectangle.south) / terrainRectangle.height);
 
                 // If this is the southern-most imagery tile mapped to this terrain tile,
                 // and there are more imagery tiles to the south of this one, the minV
@@ -545,11 +544,11 @@ define([
     ImageryLayer.prototype._calculateTextureTranslationAndScale = function(tile, tileImagery) {
         var imageryRectangle = tileImagery.readyImagery.rectangle;
         var terrainRectangle = tile.rectangle;
-        var terrainWidth = terrainRectangle.east - terrainRectangle.west;
-        var terrainHeight = terrainRectangle.north - terrainRectangle.south;
+        var terrainWidth = terrainRectangle.width;
+        var terrainHeight = terrainRectangle.height;
 
-        var scaleX = terrainWidth / (imageryRectangle.east - imageryRectangle.west);
-        var scaleY = terrainHeight / (imageryRectangle.north - imageryRectangle.south);
+        var scaleX = terrainWidth / imageryRectangle.width;
+        var scaleY = terrainHeight / imageryRectangle.height;
         return new Cartesian4(
                 scaleX * (terrainRectangle.west - imageryRectangle.west) / terrainWidth,
                 scaleY * (terrainRectangle.south - imageryRectangle.south) / terrainHeight,
@@ -676,7 +675,7 @@ define([
         // avoids precision problems in the reprojection transformation while making
         // no noticeable difference in the georeferencing of the image.
         if (!(this._imageryProvider.tilingScheme instanceof GeographicTilingScheme) &&
-            (rectangle.east - rectangle.west) / texture.width > 1e-5) {
+            rectangle.width / texture.width > 1e-5) {
                 var reprojectedTexture = reprojectToGeographic(this, context, texture, imagery.rectangle);
                 texture.destroy();
                 imagery.texture = texture = reprojectedTexture;
@@ -742,34 +741,49 @@ define([
         u_texture : function() {
             return this.texture;
         },
-        u_northLatitude : function() {
-            return this.northLatitude;
-        },
-        u_southLatitude : function() {
-            return this.southLatitude;
-        },
-        u_southMercatorYLow : function() {
-            return this.southMercatorYLow;
-        },
-        u_southMercatorYHigh : function() {
-            return this.southMercatorYHigh;
-        },
-        u_oneOverMercatorHeight : function() {
-            return this.oneOverMercatorHeight;
-        },
 
         textureDimensions : new Cartesian2(),
-        texture : undefined,
-        northLatitude : 0,
-        southLatitude : 0,
-        southMercatorYHigh : 0,
-        southMercatorYLow : 0,
-        oneOverMercatorHeight : 0
+        texture : undefined
     };
 
-    var float32ArrayScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(1) : undefined;
+    var float32ArrayScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(2 * 64) : undefined;
 
     function reprojectToGeographic(imageryLayer, context, texture, rectangle) {
+        // This function has gone through a number of iterations, because GPUs are awesome.
+        //
+        // Originally, we had a very simple vertex shader and computed the Web Mercator texture coordinates
+        // per-fragment in the fragment shader.  That worked well, except on mobile devices, because
+        // fragment shaders have limited precision on many mobile devices.  The result was smearing artifacts
+        // at medium zoom levels because different geographic texture coordinates would be reprojected to Web
+        // Mercator as the same value.
+        //
+        // Our solution was to reproject to Web Mercator in the vertex shader instead of the fragment shader.
+        // This required far more vertex data.  With fragment shader reprojection, we only needed a single quad.
+        // But to achieve the same precision with vertex shader reprojection, we needed a vertex for each
+        // output pixel.  So we used a grid of 256x256 vertices, because most of our imagery
+        // tiles are 256x256.  Fortunately the grid could be created and uploaded to the GPU just once and
+        // re-used for all reprojections, so the performance was virtually unchanged from our original fragment
+        // shader approach.  See https://github.com/AnalyticalGraphicsInc/cesium/pull/714.
+        //
+        // Over a year later, we noticed (https://github.com/AnalyticalGraphicsInc/cesium/issues/2110)
+        // that our reprojection code was creating a rare but severe artifact on some GPUs (Intel HD 4600
+        // for one).  The problem was that the GLSL sin function on these GPUs had a discontinuity at fine scales in
+        // a few places.
+        //
+        // We solved this by implementing a more reliable sin function based on the CORDIC algorithm
+        // (https://github.com/AnalyticalGraphicsInc/cesium/pull/2111).  Even though this was a fair
+        // amount of code to be executing per vertex, the performance seemed to be pretty good on most GPUs.
+        // Unfortunately, on some GPUs, the performance was absolutely terrible
+        // (https://github.com/AnalyticalGraphicsInc/cesium/issues/2258).
+        //
+        // So that brings us to our current solution, the one you see here.  Effectively, we compute the Web
+        // Mercator texture coordinates on the CPU and store the T coordinate with each vertex (the S coordinate
+        // is the same in Geographic and Web Mercator).  To make this faster, we reduced our reprojection mesh
+        // to be only 2 vertices wide and 64 vertices high.  We should have reduced the width to 2 sooner,
+        // because the extra vertices weren't buying us anything.  The height of 64 means we are technically
+        // doing a slightly less accurate reprojection than we were before, but we can't see the difference
+        // so it's worth the 4x speedup.
+
         var reproject = context.cache.imageryLayer_reproject;
 
         if (!defined(reproject)) {
@@ -792,69 +806,48 @@ define([
                 }
             };
 
-            // We need a vertex array with close to one vertex per output texel because we're doing
-            // the reprojection by computing texture coordinates in the vertex shader.
-            // If we computed Web Mercator texture coordinate per-fragment instead, we could get away with only
-            // four vertices.  Problem is: fragment shaders have limited precision on many mobile devices,
-            // leading to all kinds of smearing artifacts.  Current browsers (Chrome 26 for example)
-            // do not correctly report the available fragment shader precision, so we can't have different
-            // paths for devices with or without high precision fragment shaders, even if we want to.
-
-            var positions = new Array(256 * 256 * 2);
+            var positions = new Float32Array(2 * 64 * 2);
             var index = 0;
-            for (var j = 0; j < 256; ++j) {
-                var y = j / 255.0;
-                for (var i = 0; i < 256; ++i) {
-                    var x = i / 255.0;
-                    positions[index++] = x;
-                    positions[index++] = y;
-                }
+            for (var j = 0; j < 64; ++j) {
+                var y = j / 63.0;
+                positions[index++] = 0.0;
+                positions[index++] = y;
+                positions[index++] = 1.0;
+                positions[index++] = y;
             }
 
-            var reprojectGeometry = new Geometry({
-                attributes : {
-                    position : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.FLOAT,
-                        componentsPerAttribute : 2,
-                        values : positions
-                    })
-                },
-                indices : TerrainProvider.getRegularGridIndices(256, 256),
-                primitiveType : PrimitiveType.TRIANGLES
-            });
-
-            var reprojectAttribInds = {
-                position : 0
+            var reprojectAttributeIndices = {
+                position : 0,
+                webMercatorT : 1
             };
 
-            reproject.vertexArray = context.createVertexArrayFromGeometry({
-                geometry : reprojectGeometry,
-                attributeLocations : reprojectAttribInds,
-                bufferUsage : BufferUsage.STATIC_DRAW
-            });
+            var indices = TerrainProvider.getRegularGridIndices(2, 64);
+            var indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+
+            reproject.vertexArray = context.createVertexArray([
+                {
+                    index : reprojectAttributeIndices.position,
+                    vertexBuffer : context.createVertexBuffer(positions, BufferUsage.STATIC_DRAW),
+                    componentsPerAttribute : 2
+                },
+                {
+                    index : reprojectAttributeIndices.webMercatorT,
+                    vertexBuffer : context.createVertexBuffer(64 * 2 * 4, BufferUsage.STREAM_DRAW),
+                    componentsPerAttribute : 1
+                }
+            ], indexBuffer);
 
             var vs = new ShaderSource({
                 sources : [ReprojectWebMercatorVS]
             });
 
-            // Firefox 33-34 has a regression that prevents the CORDIC implementation from compiling
-            // https://github.com/AnalyticalGraphicsInc/cesium/issues/2197
-            if (FeatureDetection.isFirefox()) {
-                var firefoxVersion = FeatureDetection.firefoxVersion();
-                if (firefoxVersion[0] >= 33 && firefoxVersion[0] <= 34) {
-                    vs.defines.push('DISABLE_CORDIC');
-                }
-            }
+            reproject.shaderProgram = context.createShaderProgram(vs, ReprojectWebMercatorFS, reprojectAttributeIndices);
 
-            reproject.shaderProgram = context.createShaderProgram(vs, ReprojectWebMercatorFS, reprojectAttribInds);
-
-            var maximumSupportedAnisotropy = context.maximumTextureFilterAnisotropy;
             reproject.sampler = context.createSampler({
                 wrapS : TextureWrap.CLAMP_TO_EDGE,
                 wrapT : TextureWrap.CLAMP_TO_EDGE,
                 minificationFilter : TextureMinificationFilter.LINEAR,
-                magnificationFilter : TextureMagnificationFilter.LINEAR,
-                maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(imageryLayer._maximumAnisotropy, maximumSupportedAnisotropy))
+                magnificationFilter : TextureMagnificationFilter.LINEAR
             });
         }
 
@@ -867,19 +860,12 @@ define([
         uniformMap.textureDimensions.y = height;
         uniformMap.texture = texture;
 
-        uniformMap.northLatitude = rectangle.north;
-        uniformMap.southLatitude = rectangle.south;
-
         var sinLatitude = Math.sin(rectangle.south);
         var southMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
 
-        float32ArrayScratch[0] = southMercatorY;
-        uniformMap.southMercatorYHigh = float32ArrayScratch[0];
-        uniformMap.southMercatorYLow = southMercatorY - float32ArrayScratch[0];
-
         sinLatitude = Math.sin(rectangle.north);
         var northMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
-        uniformMap.oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
+        var oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
 
         var outputTexture = context.createTexture2D({
             width : width,
@@ -903,6 +889,24 @@ define([
             colorTextures : [outputTexture]
         });
         reproject.framebuffer.destroyAttachments = false;
+
+        var south = rectangle.south;
+        var north = rectangle.north;
+
+        var webMercatorT = float32ArrayScratch;
+
+        var outputIndex = 0;
+        for (var webMercatorTIndex = 0; webMercatorTIndex < 64; ++webMercatorTIndex) {
+            var fraction = webMercatorTIndex / 63.0;
+            var latitude = CesiumMath.lerp(south, north, fraction);
+            sinLatitude = Math.sin(latitude);
+            var mercatorY = 0.5 * Math.log((1.0 + sinLatitude) / (1.0 - sinLatitude));
+            var mercatorFraction = (mercatorY - southMercatorY) * oneOverMercatorHeight;
+            webMercatorT[outputIndex++] = mercatorFraction;
+            webMercatorT[outputIndex++] = mercatorFraction;
+        }
+
+        reproject.vertexArray.getAttribute(1).vertexBuffer.copyFromArrayView(webMercatorT);
 
         var command = new ClearCommand({
             color : Color.BLACK,
@@ -946,7 +950,7 @@ define([
         var ellipsoid = tilingScheme.ellipsoid;
         var latitudeFactor = !(layer._imageryProvider.tilingScheme instanceof GeographicTilingScheme) ? Math.cos(latitudeClosestToEquator) : 1.0;
         var tilingSchemeRectangle = tilingScheme.rectangle;
-        var levelZeroMaximumTexelSpacing = ellipsoid.maximumRadius * (tilingSchemeRectangle.east - tilingSchemeRectangle.west) * latitudeFactor / (imageryProvider.tileWidth * tilingScheme.getNumberOfXTilesAtLevel(0));
+        var levelZeroMaximumTexelSpacing = ellipsoid.maximumRadius * tilingSchemeRectangle.width * latitudeFactor / (imageryProvider.tileWidth * tilingScheme.getNumberOfXTilesAtLevel(0));
 
         var twoToTheLevelPower = levelZeroMaximumTexelSpacing / texelSpacing;
         var level = Math.log(twoToTheLevelPower) / Math.log(2);

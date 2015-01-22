@@ -140,17 +140,13 @@ defineSuite([
     it('renders primitive in closest frustum', function() {
         createBillboards();
 
-        scene.initializeFrame();
-        scene.render();
-        var pixels = context.readPixels();
+        var pixels = scene.renderForSpecs();
         expect(pixels[0]).toEqual(0);
         expect(pixels[1]).not.toEqual(0);
         expect(pixels[2]).toEqual(0);
         expect(pixels[3]).toEqual(255);
 
-        scene.initializeFrame();
-        scene.render();
-        pixels = context.readPixels();
+        pixels = scene.renderForSpecs();
         expect(pixels[0]).toEqual(0);
         expect(pixels[1]).not.toEqual(0);
         expect(pixels[2]).toEqual(0);
@@ -161,13 +157,8 @@ defineSuite([
         createBillboards();
         billboard0.color = new Color(1.0, 1.0, 1.0, 0.0);
 
-        scene.initializeFrame();
-        scene.render();
-        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
-
-        scene.initializeFrame();
-        scene.render();
-        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
     });
 
     it('renders primitive in last frustum', function() {
@@ -176,27 +167,25 @@ defineSuite([
         billboard0.color = color;
         billboard1.color = color;
 
-        scene.initializeFrame();
-        scene.render();
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
-
-        scene.initializeFrame();
-        scene.render();
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(scene.renderForSpecs()).toEqual([255, 255, 255, 255]);
+        expect(scene.renderForSpecs()).toEqual([255, 255, 255, 255]);
     });
 
     it('renders primitive in last frustum with debugShowFrustums', function() {
         createBillboards();
-        var color = new Color(1.0, 1.0, 1.0, 0.0);
+        var color = new Color(1.0, 1.0, 1.0, 1.0);
         billboard0.color = color;
         billboard1.color = color;
 
+        spyOn(DrawCommand.prototype, 'execute');
+
         scene.debugShowFrustums = true;
-        scene.initializeFrame();
-        scene.render();
-        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
-        expect(scene.debugFrustumStatistics.totalCommands).toEqual(3);
-        expect(scene.debugFrustumStatistics.commandsInFrustums).toEqual({ 1 : 1, 2 : 1, 4 : 1});
+        scene.renderForSpecs();
+
+        expect(DrawCommand.prototype.execute).toHaveBeenCalled();
+        expect(DrawCommand.prototype.execute.mostRecentCall.args.length).toEqual(4);
+        expect(DrawCommand.prototype.execute.mostRecentCall.args[3]).toBeDefined();
+        expect(DrawCommand.prototype.execute.mostRecentCall.args[3].fragmentShaderSource.sources[1]).toContain('czm_Debug_main');
     });
 
     function createPrimitive(bounded, closestFrustum) {
@@ -283,13 +272,8 @@ defineSuite([
         var primitive = createPrimitive(false);
         primitives.add(primitive);
 
-        scene.initializeFrame();
-        scene.render();
-        expect(context.readPixels()).toEqual([255, 255, 0, 255]);
-
-        scene.initializeFrame();
-        scene.render();
-        expect(context.readPixels()).toEqual([255, 255, 0, 255]);
+        expect(scene.renderForSpecs()).toEqual([255, 255, 0, 255]);
+        expect(scene.renderForSpecs()).toEqual([255, 255, 0, 255]);
     });
 
     it('renders only in the closest frustum', function() {
@@ -303,17 +287,13 @@ defineSuite([
         primitive.color = new Color(1.0, 1.0, 0.0, 0.5);
         primitives.add(primitive);
 
-        scene.initializeFrame();
-        scene.render();
-        var pixels = context.readPixels();
+        var pixels = scene.renderForSpecs();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).not.toEqual(0);
         expect(pixels[2]).toEqual(0);
         expect(pixels[3]).toEqual(255);
 
-        scene.initializeFrame();
-        scene.render();
-        pixels = context.readPixels();
+        pixels = scene.renderForSpecs();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).not.toEqual(0);
         expect(pixels[2]).toEqual(0);
@@ -321,8 +301,7 @@ defineSuite([
     });
 
     it('render without a central body or any primitives', function() {
-        scene.initializeFrame();
-        scene.render();
+        scene.renderForSpecs();
     });
 
     it('does not crash when near plane is greater than or equal to the far plane', function() {
@@ -331,7 +310,6 @@ defineSuite([
         camera.position = new Cartesian3(0.0, 0.0, 1e12);
 
         createBillboards();
-        scene.initializeFrame();
-        scene.render();
+        scene.renderForSpecs();
     });
 }, 'WebGL');

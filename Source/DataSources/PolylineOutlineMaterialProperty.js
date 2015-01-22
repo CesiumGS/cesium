@@ -127,12 +127,5 @@ define([
                 Property.equals(this._outlineWidth, other._outlineWidth));
     };
 
-    /**
-     * @private
-     */
-    PolylineOutlineMaterialProperty.prototype._raiseDefinitionChanged = function(){
-        this._definitionChanged.raiseEvent(this);
-    };
-
     return PolylineOutlineMaterialProperty;
 });

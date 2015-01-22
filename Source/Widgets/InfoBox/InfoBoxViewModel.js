@@ -120,7 +120,7 @@ define([
         this.cameraIconPath = undefined;
         knockout.defineProperty(this, 'cameraIconPath', {
             get : function() {
-                return (this.enableCamera || this.isCameraTracking) ? cameraEnabledPath : cameraDisabledPath;
+                return (!this.enableCamera || this.isCameraTracking) ? cameraDisabledPath : cameraEnabledPath;
             }
         });
 

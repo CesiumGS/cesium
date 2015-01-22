@@ -317,59 +317,13 @@ defineSuite([
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3(), new Cartesian3());
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
 
-        scene.initializeFrame();
-        scene.render();
-        var pixels = scene.context.readPixels();
+        var pixels = scene.renderForSpecs();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
         expect(pixels[3]).toEqual(255);
 
         destroyScene(scene);
-    });
-
-    it('throws without positions due to duplicates', function() {
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
-
-        polygon = new Polygon();
-        polygon.ellipsoid = ellipsoid;
-        polygon.positions = Cartesian3.fromDegreesArray([
-            0.0, 0.0,
-            0.0, 0.0,
-            0.0, 0.0
-        ], ellipsoid);
-        polygon.asynchronous = false;
-
-        expect(function() {
-            render(context, frameState, polygon);
-        }).toThrowDeveloperError();
-    });
-
-    it('throws without hierarchy positions due to duplicates', function() {
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        var hierarchy = {
-                positions : Cartesian3.fromDegreesArray([
-                    1.0, 1.0,
-                    1.0, 1.0,
-                    1.0, 1.0
-                ], ellipsoid),
-                holes : [{
-                        positions : Cartesian3.fromDegreesArray([
-                            0.0, 0.0,
-                            0.0, 0.0,
-                            0.0, 0.0
-                        ], ellipsoid)
-                }]
-        };
-
-        polygon = new Polygon();
-        polygon.ellipsoid = ellipsoid;
-        polygon.configureFromPolygonHierarchy(hierarchy);
-        polygon.asynchronous = false;
-
-        expect(function () {
-            render(context, frameState, polygon);
-        }).toThrowDeveloperError();
     });
 
     it('is picked', function() {
@@ -432,7 +386,12 @@ defineSuite([
         var boundingVolume = commandList[0].boundingVolume;
         frameState.mode = mode;
 
-        var sphere = BoundingSphere.projectTo2D(BoundingSphere.fromPoints(polygon.positions));
+        var projectedPositions = [];
+        for (var i = 0; i < positions.length; ++i) {
+            projectedPositions.push(projection.project(ellipsoid.cartesianToCartographic(positions[i])));
+        }
+
+        var sphere = BoundingSphere.fromPoints(projectedPositions);
         sphere.center.x = (testMode === SceneMode.SCENE2D) ? 0.0 : sphere.center.x;
         expect(boundingVolume.center).toEqualEpsilon(sphere.center, CesiumMath.EPSILON2);
         expect(boundingVolume.radius).toEqualEpsilon(sphere.radius, CesiumMath.EPSILON2);

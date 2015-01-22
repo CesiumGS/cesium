@@ -4,6 +4,7 @@ define([
         './Cartesian3',
         './ComponentDatatype',
         './defaultValue',
+        './defined',
         './DeveloperError',
         './Ellipsoid',
         './Geometry',
@@ -17,6 +18,7 @@ define([
         Cartesian3,
         ComponentDatatype,
         defaultValue,
+        defined,
         DeveloperError,
         Ellipsoid,
         Geometry,
@@ -82,6 +84,86 @@ define([
         this._slicePartitions = slicePartitions;
         this._subdivisions = subdivisions;
         this._workerName = 'createEllipsoidOutlineGeometry';
+    };
+
+    /**
+     * The number of elements used to pack the object into an array.
+     * @type {Number}
+     */
+    EllipsoidOutlineGeometry.packedLength = Cartesian3.packedLength + 3;
+
+    /**
+     * Stores the provided instance into the provided array.
+     * @function
+     *
+     * @param {Object} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     */
+    EllipsoidOutlineGeometry.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        Cartesian3.pack(value._radii, array, startingIndex);
+        startingIndex += Cartesian3.packedLength;
+
+        array[startingIndex++] = value._stackPartitions;
+        array[startingIndex++] = value._slicePartitions;
+        array[startingIndex]   = value._subdivisions;
+    };
+
+    var scratchRadii = new Cartesian3();
+    var scratchOptions = {
+        radii : scratchRadii,
+        stackPartitions : undefined,
+        slicePartitions : undefined,
+        subdivisions : undefined
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {EllipsoidOutlineGeometry} [result] The object into which to store the result.
+     */
+    EllipsoidOutlineGeometry.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        var radii = Cartesian3.unpack(array, startingIndex, scratchRadii);
+        startingIndex += Cartesian3.packedLength;
+
+        var stackPartitions = array[startingIndex++];
+        var slicePartitions = array[startingIndex++];
+        var subdivisions = array[startingIndex++];
+
+        if (!defined(result)) {
+            scratchOptions.stackPartitions = stackPartitions;
+            scratchOptions.slicePartitions = slicePartitions;
+            scratchOptions.subdivisions = subdivisions;
+            return new EllipsoidOutlineGeometry(scratchOptions);
+        }
+
+        result._radii = Cartesian3.clone(radii, result._radii);
+        result._stackPartitions = stackPartitions;
+        result._slicePartitions = slicePartitions;
+        result._subdivisions = subdivisions;
+
+        return result;
     };
 
     /**

@@ -4,6 +4,7 @@ defineSuite([
         'Core/Cartesian3',
         'Scene/SceneMode',
         'Specs/createCamera',
+        'Specs/createCanvas',
         'Specs/createFrameState',
         'Specs/createScene',
         'Specs/destroyScene'
@@ -12,6 +13,7 @@ defineSuite([
         Cartesian3,
         SceneMode,
         createCamera,
+        createCanvas,
         createFrameState,
         createScene,
         destroyScene) {
@@ -21,7 +23,12 @@ defineSuite([
     var scene;
 
     beforeAll(function() {
-        scene = createScene();
+        scene = createScene({
+            canvas : createCanvas({
+                width : 5,
+                height : 5
+            })
+        });
     });
 
     afterAll(function() {
@@ -30,8 +37,7 @@ defineSuite([
 
     it('draws in 3D', function() {
         scene.sun = new Sun();
-        scene.initializeFrame();
-        scene.render();
+        scene.renderForSpecs();
 
         var us = scene.context.uniformState;
         var camera = scene.camera;
@@ -40,17 +46,14 @@ defineSuite([
         var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition, new Cartesian3()), 1e8, new Cartesian3());
         camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
-        scene.initializeFrame();
-        scene.render();
-        expect(scene.context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toNotEqual([0, 0, 0, 0]);
     });
 
     it('draws in Columbus view', function() {
         scene.sun = new Sun();
 
         scene.mode = SceneMode.COLUMBUS_VIEW;
-        scene.initializeFrame();
-        scene.render();
+        scene.renderForSpecs();
 
         var us = scene.context.uniformState;
         var camera = scene.camera;
@@ -59,9 +62,7 @@ defineSuite([
         var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition, new Cartesian3()), 1e8, new Cartesian3());
         camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
-        scene.initializeFrame();
-        scene.render();
-        expect(scene.context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toNotEqual([0, 0, 0, 0]);
     });
 
     it('does not render when show is false', function() {
@@ -147,8 +148,7 @@ defineSuite([
     it('draws without lens flare', function() {
         scene.sun = new Sun();
         scene.sun.glowFactor = 0.0;
-        scene.initializeFrame();
-        scene.render();
+        scene.renderForSpecs();
 
         var us = scene.context.uniformState;
         var camera = scene.camera;
@@ -157,9 +157,7 @@ defineSuite([
         var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition, new Cartesian3()), 1e8, new Cartesian3());
         camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
-        scene.initializeFrame();
-        scene.render();
-        expect(scene.context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toNotEqual([0, 0, 0, 0]);
     });
 
     it('isDestroyed', function() {

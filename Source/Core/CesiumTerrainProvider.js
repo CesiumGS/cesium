@@ -2,6 +2,7 @@
 define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
+        './appendForwardSlash',
         './BoundingSphere',
         './Cartesian3',
         './Credit',
@@ -23,6 +24,7 @@ define([
     ], function(
         Uri,
         when,
+        appendForwardSlash,
         BoundingSphere,
         Cartesian3,
         Credit,
@@ -90,10 +92,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._url = options.url;
-        if (this._url.length === 0 || this._url[this._url.length - 1] !== '/') {
-            this._url = this._url + '/';
-        }
+        this._url = appendForwardSlash(options.url);
         this._proxy = options.proxy;
 
         this._tilingScheme = new GeographicTilingScheme({
@@ -121,6 +120,7 @@ define([
          * @private
          */
         this._requestVertexNormals = defaultValue(options.requestVertexNormals, false);
+        this._littleEndianExtensionSize = true;
 
         this._errorEvent = new Event();
 
@@ -186,8 +186,17 @@ define([
                 that._credit = new Credit(data.attribution);
             }
 
-            if (defined(data.extensions) && data.extensions.indexOf('vertexnormals') !== -1) {
+            // The vertex normals defined in the 'octvertexnormals' extension is identical to the original
+            // contents of the original 'vertexnormals' extension.  'vertexnormals' extension is now
+            // deprecated, as the extensionLength for this extension was incorrectly using big endian.
+            // We maintain backwards compatibility with the legacy 'vertexnormal' implementation
+            // by setting the _littleEndianExtensionSize to false. Always prefer 'octvertexnormals'
+            // over 'vertexnormals' if both extensions are supported by the server.
+            if (defined(data.extensions) && data.extensions.indexOf('octvertexnormals') !== -1) {
                 that._hasVertexNormals = true;
+            } else if (defined(data.extensions) && data.extensions.indexOf('vertexnormals') !== -1) {
+                that._hasVertexNormals = true;
+                that._littleEndianExtensionSize = false;
             }
 
             that._ready = true;
@@ -239,23 +248,17 @@ define([
         OCT_VERTEX_NORMALS: 1
     };
 
-    var requestHeadersVertexNormals = {
-            // prefer quantized-mesh media-type
-            // only request vertex normals if Lighting is enabled on the CesiumTerrainProvider
-            Accept : 'application/vnd.quantized-mesh;extensions=vertexnormals,application/octet-stream;q=0.9,*/*;q=0.01'
-    };
-
-    function loadTileVertexNormals(url) {
-        return loadArrayBuffer(url, requestHeadersVertexNormals);
-    }
-
-    var requestHeadersDefault = {
-            // prefer quantized-mesh media-type
-            Accept : 'application/vnd.quantized-mesh,application/octet-stream;q=0.9,*/*;q=0.01'
-    };
-
-    function loadTile(url) {
-        return loadArrayBuffer(url, requestHeadersDefault);
+    function getRequestHeader(extensionsList) {
+        if (!defined(extensionsList) || extensionsList.length === 0) {
+            return {
+                Accept : 'application/vnd.quantized-mesh,application/octet-stream;q=0.9,*/*;q=0.01'
+            };
+        } else {
+            var extensions = extensionsList.join('-');
+            return {
+                Accept : 'application/vnd.quantized-mesh;extensions=' + extensions + ',application/octet-stream;q=0.9,*/*;q=0.01'
+            };
+        }
     }
 
     function createHeightmapTerrainData(provider, buffer, level, x, y, tmsY) {
@@ -378,9 +381,9 @@ define([
 
         var encodedNormalBuffer;
         while (pos < view.byteLength) {
-            var extensionId = view.getUint8(pos);
+            var extensionId = view.getUint8(pos, true);
             pos += Uint8Array.BYTES_PER_ELEMENT;
-            var extensionLength = view.getUint32(pos);
+            var extensionLength = view.getUint32(pos, provider._littleEndianExtensionSize);
             pos += Uint32Array.BYTES_PER_ELEMENT;
 
             if (extensionId === QuantizedMeshExtensionIds.OCT_VERTEX_NORMALS) {
@@ -456,10 +459,14 @@ define([
 
         var promise;
 
-        var tileLoader = loadTile;
+        var extensionList = [];
         if (this._requestVertexNormals && this._hasVertexNormals) {
-            tileLoader = loadTileVertexNormals;
+            extensionList.push(this._littleEndianExtensionSize ? "octvertexnormals" : "vertexnormals");
         }
+
+        var tileLoader = function(tileUrl) {
+            return loadArrayBuffer(tileUrl, getRequestHeader(extensionList));
+        };
 
         throttleRequests = defaultValue(throttleRequests, true);
         if (throttleRequests) {

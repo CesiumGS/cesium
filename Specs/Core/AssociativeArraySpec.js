@@ -73,10 +73,8 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('remove throws with undefined key', function() {
+    it('remove returns false with undefined key', function() {
         var associativeArray = new AssociativeArray();
-        expect(function() {
-            associativeArray.remove(undefined);
-        }).toThrowDeveloperError();
+        expect(associativeArray.remove(undefined)).toBe(false);
     });
 });

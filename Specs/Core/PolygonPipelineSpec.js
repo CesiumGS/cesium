@@ -4,18 +4,20 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Ellipsoid',
+        'Core/Math',
         'Core/WindingOrder'
     ], function(
         PolygonPipeline,
         Cartesian2,
         Cartesian3,
         Ellipsoid,
+        CesiumMath,
         WindingOrder) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     beforeEach(function() {
-        PolygonPipeline.resetSeed();
+        CesiumMath.setRandomNumberSeed(0.0);
     });
 
     it('removeDuplicates removes duplicate points', function() {
@@ -170,10 +172,7 @@ defineSuite([
                          new Cartesian2(2,6), new Cartesian2(6,6), new Cartesian2(6,9), new Cartesian2(0,9)];
 
         var indices = PolygonPipeline.triangulate(positions);
-        expect(indices).toEqual([ 0, 4, 7, 0, 3, 4, 0, 2, 3, 4, 6, 7, 4, 5, 6, 0, 1, 2 ]);
-
-        indices = PolygonPipeline.triangulate(positions);
-        expect(indices).toEqual([ 0, 3, 7, 0, 1, 3, 1, 2, 3, 3, 4, 7, 4, 5, 7, 5, 6, 7 ]);
+        expect(indices).toEqual([ 0, 3, 7, 0, 2, 3, 0, 1, 2, 3, 4, 7, 4, 6, 7, 4, 5, 6 ]);
 
         /* Do it a few times to make sure we never get stuck on it */
         for (var i = 0; i < 30; i++) {
@@ -195,14 +194,11 @@ defineSuite([
      * 0           1
      */
     it('triangulates a convex polygon with vertical and horizontal sides', function() {
-        var positions = [new Cartesian2(0,0), new Cartesian2(6,0), new Cartesian2(6,3), new Cartesian2(2,3),
-                         new Cartesian2(2,6), new Cartesian2(6,6), new Cartesian2(6,9), new Cartesian2(0,9)];
+        var positions = [new Cartesian2(0,0), new Cartesian2(6,0), new Cartesian2(6,3), new Cartesian2(8,3),
+                         new Cartesian2(8,6), new Cartesian2(6,6), new Cartesian2(6,9), new Cartesian2(0,9)];
 
         var indices = PolygonPipeline.triangulate(positions);
-        expect(indices).toEqual([ 0, 4, 7, 0, 3, 4, 0, 2, 3, 4, 6, 7, 4, 5, 6, 0, 1, 2 ]);
-
-        indices = PolygonPipeline.triangulate(positions);
-        expect(indices).toEqual([ 0, 3, 7, 0, 1, 3, 1, 2, 3, 3, 4, 7, 4, 5, 7, 5, 6, 7 ]);
+        expect(indices).toEqual([ 0, 2, 7, 0, 1, 2, 2, 3, 7, 3, 5, 7, 5, 6, 7, 3, 4, 5 ]);
 
         /* Do it a few times to make sure we never get stuck on it */
         for (var i = 0; i < 30; i++) {
@@ -216,17 +212,17 @@ defineSuite([
                 new Cartesian2(0.0, 1.0), new Cartesian2(1.9, 0.5)];
 
         var indices = PolygonPipeline.triangulate(positions);
-
         expect(indices).toEqual([ 0, 1, 7, 1, 2, 7, 2, 3, 7, 3, 6, 7, 3, 5, 6, 3, 4, 5 ]);
     });
+
     it('triangulates an even more complicated concave', function() {
         var positions = [new Cartesian2(0,0), new Cartesian2(1,0), new Cartesian2(1, -1), new Cartesian2(2, -1.4),
                     new Cartesian2(40, 2), new Cartesian2(10, 5), new Cartesian2(30, 10), new Cartesian2(25, 20),
                     new Cartesian2(20,20), new Cartesian2(10,15), new Cartesian2(15, 10), new Cartesian2(8, 10),
                     new Cartesian2(-1, 3)];
-        var indices = PolygonPipeline.triangulate(positions);
 
-        expect(indices).toEqual([ 0, 11, 12, 0, 10, 11, 0, 5, 10, 5, 6, 10, 6, 8, 10, 8, 9, 10, 6, 7, 8, 0, 4, 5, 0, 1, 4, 1, 3, 4, 1, 2, 3 ]);
+        var indices = PolygonPipeline.triangulate(positions);
+        expect(indices).toEqual([ 0, 1, 12, 1, 5, 12, 1, 4, 5, 1, 2, 4, 5, 11, 12, 2, 3, 4, 5, 10, 11, 5, 6, 10, 6, 9, 10, 6, 7, 9, 7, 8, 9 ]);
 
         /* Try it a bunch of times to make sure we can never get stuck on it */
         for (var i = 0; i < 50; i++) {
@@ -245,9 +241,9 @@ defineSuite([
      */
     it('triangulates a polygon with a side that intersects on of its other vertices', function() {
         var positions = [new Cartesian2(0,0), new Cartesian2(0, -5), new Cartesian2(2,0), new Cartesian2(4, -5), new Cartesian2(4, 0)];
-        var indices = PolygonPipeline.triangulate(positions);
 
-        expect(indices).toEqual([ 2, 3, 4, 0, 1, 2 ]);
+        var indices = PolygonPipeline.triangulate(positions);
+        expect(indices).toEqual([ 0, 1, 2, 2, 3, 4 ]);
     });
 
     /*
@@ -262,8 +258,8 @@ defineSuite([
     it('triangulates a polygon with a side that intersects on of its other vertices and superfluous vertices', function() {
         var positions = [ new Cartesian2(0,0), new Cartesian2(2, -5), new Cartesian2(4,0), new Cartesian2(6, -5), new Cartesian2(8, 0),
                           new Cartesian2(6,0), new Cartesian2(2,0) ];
-        var indices = PolygonPipeline.triangulate(positions);
 
+        var indices = PolygonPipeline.triangulate(positions);
         expect(indices).toEqual([ 0, 1, 2, 2, 3, 4 ]);
     });
 
@@ -280,9 +276,9 @@ defineSuite([
     it('triangulations a polygon with a "tucked" vertex', function() {
         var positions = [new Cartesian2(0,0), new Cartesian2(5,0), new Cartesian2(5,2), new Cartesian2(1, 2),
                          new Cartesian2(3, 2), new Cartesian2(3,4), new Cartesian2(0,4)];
-        var indices = PolygonPipeline.triangulate(positions);
 
-        expect(indices).toEqual([ 0, 4, 6, 0, 2, 4, 4, 5, 6, 0, 1, 2 ]);
+        var indices = PolygonPipeline.triangulate(positions);
+        expect(indices).toEqual([ 0, 1, 6, 1, 4, 6, 1, 2, 4, 4, 5, 6 ]);
     });
 
     it('throws without positions', function() {
@@ -299,33 +295,39 @@ defineSuite([
 
     ///////////////////////////////////////////////////////////////////////
 
-    it('computeSubdivision throws without positions', function() {
+    it('computeSubdivision throws without ellipsoid', function() {
         expect(function() {
             PolygonPipeline.computeSubdivision();
         }).toThrowDeveloperError();
     });
 
+    it('computeSubdivision throws without positions', function() {
+        expect(function() {
+            PolygonPipeline.computeSubdivision(Ellipsoid.WGS84);
+        }).toThrowDeveloperError();
+    });
+
     it('computeSubdivision throws without indices', function() {
         expect(function() {
-            PolygonPipeline.computeSubdivision([]);
+            PolygonPipeline.computeSubdivision(Ellipsoid.WGS84, []);
         }).toThrowDeveloperError();
     });
 
     it('computeSubdivision throws with less than 3 indices', function() {
         expect(function() {
-            PolygonPipeline.computeSubdivision([], [1, 2]);
+            PolygonPipeline.computeSubdivision(Ellipsoid.WGS84, [], [1, 2]);
         }).toThrowDeveloperError();
     });
 
     it('computeSubdivision throws without a multiple of 3 indices', function() {
         expect(function() {
-            PolygonPipeline.computeSubdivision([], [1, 2, 3, 4]);
+            PolygonPipeline.computeSubdivision(Ellipsoid.WGS84, [], [1, 2, 3, 4]);
         }).toThrowDeveloperError();
     });
 
     it('computeSubdivision throws with negative granularity', function() {
         expect(function() {
-            PolygonPipeline.computeSubdivision([], [1, 2, 3], -1.0);
+            PolygonPipeline.computeSubdivision(Ellipsoid.WGS84, [], [1, 2, 3], -1.0);
         }).toThrowDeveloperError();
     });
 
@@ -336,7 +338,7 @@ defineSuite([
                          new Cartesian3(90.0, 0.0, 0.0)
                         ];
         var indices = [0, 1, 2];
-        var subdivision = PolygonPipeline.computeSubdivision(positions, indices, 60.0);
+        var subdivision = PolygonPipeline.computeSubdivision(Ellipsoid.WGS84, positions, indices, 60.0);
 
         expect(subdivision.attributes.position.values[0]).toEqual(0.0);
         expect(subdivision.attributes.position.values[1]).toEqual(0.0);

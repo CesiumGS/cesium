@@ -253,6 +253,14 @@ defineSuite([
         verifyDraw(fs);
     });
 
+    it('has czm_decompressTextureCoordinates', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_decompressTextureCoordinates(8390656.0) == vec2(0.5, 0.5)); ' +
+            '}';
+        verifyDraw(fs);
+    });
+
     it('has signNotZero : float', function() {
         var fs =
             'void main() { ' +

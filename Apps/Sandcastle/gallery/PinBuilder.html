@@ -39,7 +39,7 @@ billboardCollection.add({
     position : Cesium.Cartesian3.fromDegrees(-75.170726, 39.9208667, 0)
 });
     
-//Create a black pin labeled with a quesiton mark.
+//Create a black pin labeled with a question mark.
 billboardCollection.add({
     image : pinBuilder.fromText('?', Cesium.Color.BLACK, 48),
     verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
@@ -66,9 +66,9 @@ Cesium.when(pinBuilder.fromMakiIconId('hospital', Cesium.Color.RED, 48), functio
 });
 
 //Set the view to the location of our pins.
-var camera = viewer.scene.camera;
-camera.lookAt(Cesium.Cartesian3.fromDegrees(-75.1703817, 39.9182722, 250),
-              Cesium.Cartesian3.fromDegrees(-75.1703817, 39.9212722, 0), Cesium.Cartesian3.UNIT_Z);//Sandcastle_End
+viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(-75.1703817, 39.9182722, 250),
+              Cesium.Cartesian3.fromDegrees(-75.1703817, 39.9212722, 0), Cesium.Cartesian3.UNIT_Z);
+//Sandcastle_End
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {

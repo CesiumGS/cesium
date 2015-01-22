@@ -67,7 +67,7 @@ define([
      * @constructor
      *
      * @param {Entity} entity The entity containing the geometry to be visualized.
-     * @param {Scene} scene The scene in which the geometry will be visualized.
+     * @param {Scene} scene The scene where visualization is taking place.
      */
     var PolylineGeometryUpdater = function(entity, scene) {
         //>>includeStart('debug', pragmas.debug);
@@ -442,35 +442,42 @@ define([
         this._positions = [];
     };
 
+    var generateCartesianArcOptions = {
+        positions : undefined,
+        granularity : undefined,
+        height : undefined
+    };
+
     DynamicGeometryUpdater.prototype.update = function(time) {
         var geometryUpdater = this._geometryUpdater;
         var entity = geometryUpdater._entity;
         var polyline = entity.polyline;
-        var primitive = this._line;
+        var line = this._line;
 
-        var show = entity.isAvailable(time) && Property.getValueOrDefault(polyline._show, time, true);
-        if (!show) {
-            primitive.show = false;
+        if (!entity.isAvailable(time) || !Property.getValueOrDefault(polyline._show, time, true)) {
+            line.show = false;
             return;
         }
 
         var positionsProperty = polyline.positions;
-        var positions = positionsProperty.getValue(time, this._positions);
+        var positions = Property.getValueOrUndefined(positionsProperty, time, this._positions);
+        if (!defined(positions)) {
+            line.show = false;
+            return;
+        }
 
         var followSurface = Property.getValueOrDefault(polyline._followSurface, time, true);
         if (followSurface) {
-            var granularity = Property.getValueOrUndefined(polyline._granularity, time);
-            positions = PolylinePipeline.generateCartesianArc({
-                positions : positions,
-                granularity : granularity,
-                height : PolylinePipeline.extractHeights(positions, Ellipsoid.WGS84)
-            });
+            generateCartesianArcOptions.positions = positions;
+            generateCartesianArcOptions.granularity = Property.getValueOrUndefined(polyline._granularity, time);
+            generateCartesianArcOptions.height = PolylinePipeline.extractHeights(positions, Ellipsoid.WGS84);
+            positions = PolylinePipeline.generateCartesianArc(generateCartesianArcOptions);
         }
 
-        primitive.show = true;
-        primitive.positions = positions;
-        primitive.material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, primitive.material);
-        primitive.width = Property.getValueOrDefault(polyline._width, time, 1);
+        line.show = true;
+        line.positions = positions;
+        line.material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, line.material);
+        line.width = Property.getValueOrDefault(polyline._width, time, 1);
     };
 
     DynamicGeometryUpdater.prototype.isDestroyed = function() {
@@ -483,10 +490,7 @@ define([
         var polylineCollection = polylineCollections[sceneId];
         polylineCollection.remove(this._line);
         if (polylineCollection.length === 0) {
-            this._primitives.remove(polylineCollection);
-            if (!polylineCollection.isDestroyed()) {
-                polylineCollection.destroy();
-            }
+            this._primitives.removeAndDestroy(polylineCollection);
             delete polylineCollections[sceneId];
         }
         destroyObject(this);
