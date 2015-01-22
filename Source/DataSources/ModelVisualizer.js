@@ -134,8 +134,8 @@ define([
             model.modelMatrix = Matrix4.clone(modelMatrix, model.modelMatrix);
 
 // TODO: remove
-            Transforms.northEastDownToFixedFrame(entity.position.getValue(time), scene.globe.ellipsoid, model.modelMatrix);
-            Matrix4.multiplyByMatrix3(model.modelMatrix, Matrix3.fromRotationZ(CesiumMath.toRadians(90.0)), model.modelMatrix);
+//            Transforms.northEastDownToFixedFrame(entity.position.getValue(time), scene.globe.ellipsoid, model.modelMatrix);
+//            Matrix4.multiplyByMatrix3(model.modelMatrix, Matrix3.fromRotationZ(CesiumMath.toRadians(90.0)), model.modelMatrix);
 //
         }
         return true;
