@@ -162,6 +162,7 @@ define([
      * @returns {BoundingSphereState} BoundingSphereState.DONE if the result contains the bounding sphere,
      *                       BoundingSphereState.PENDING if the result is still being computed, or
      *                       BoundingSphereState.FAILED if the entity has no visualization in the current scene.
+     * @private
      */
     ModelVisualizer.prototype.getBoundingSphere = function(entity, result) {
         //>>includeStart('debug', pragmas.debug);
