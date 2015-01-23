@@ -52,6 +52,7 @@ define([
     var EntityData = function(entity) {
         this.entity = entity;
         this.billboard = undefined;
+        this.textureValue = undefined;
     };
 
     /**
@@ -139,7 +140,10 @@ define([
             }
 
             billboard.show = show;
-            billboard.image = textureValue;
+            if (item.textureValue !== textureValue) {
+                billboard.image = textureValue;
+                item.textureValue = textureValue;
+            }
             billboard.position = position;
             billboard.color = Property.getValueOrDefault(billboardGraphics._color, time, defaultColor, color);
             billboard.eyeOffset = Property.getValueOrDefault(billboardGraphics._eyeOffset, time, defaultEyeOffset, eyeOffset);
@@ -165,6 +169,7 @@ define([
 
     /**
      * Computes a bounding sphere which encloses the visualization produced for the specified entity.
+     * The bounding sphere is in the fixed frame of the scene's globe.
      *
      * @param {Entity} entity The entity whose bounding sphere to compute.
      * @param {BoundingSphere} result The bounding sphere onto which to store the result.
@@ -248,6 +253,7 @@ define([
         if (defined(item)) {
             var billboard = item.billboard;
             if (defined(billboard)) {
+                item.textureValue = undefined;
                 item.billboard = undefined;
                 billboard.show = false;
                 billboard.image = undefined;

@@ -69,9 +69,6 @@ define([
      *        If undefined, all standard visualizers are used.
      */
     var DataSourceDisplay = function(options) {
-        var scene = options.scene;
-        var dataSourceCollection = options.dataSourceCollection;
-
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options)) {
             throw new DeveloperError('options is required.');
@@ -83,6 +80,9 @@ define([
             throw new DeveloperError('dataSourceCollection is required.');
         }
         //>>includeEnd('debug');
+
+        var scene = options.scene;
+        var dataSourceCollection = options.dataSourceCollection;
 
         this._eventHelper = new EventHelper();
         this._eventHelper.add(dataSourceCollection.dataSourceAdded, this._onDataSourceAdded, this);
@@ -276,6 +276,7 @@ define([
 
     /**
      * Computes a bounding sphere which encloses the visualization produced for the specified entity.
+     * The bounding sphere is in the fixed frame of the scene's globe.
      *
      * @param {Entity} entity The entity whose bounding sphere to compute.
      * @param {Boolean} allowPartial If true, pending bounding spheres are ignored and an answer will be returned from the currently available data.
@@ -330,12 +331,15 @@ define([
         var visualizersLength = visualizers.length;
 
         for (i = 0; i < visualizersLength; i++) {
-            state = visualizers[i].getBoundingSphere(entity, tmp);
-            if (!allowPartial && state === BoundingSphereState.PENDING) {
-                return BoundingSphereState.PENDING;
-            } else if (state === BoundingSphereState.DONE) {
-                boundingSpheres[count] = BoundingSphere.clone(tmp, boundingSpheres[count]);
-                count++;
+            var visualizer = visualizers[i];
+            if (defined(visualizer.getBoundingSphere)) {
+                state = visualizers[i].getBoundingSphere(entity, tmp);
+                if (!allowPartial && state === BoundingSphereState.PENDING) {
+                    return BoundingSphereState.PENDING;
+                } else if (state === BoundingSphereState.DONE) {
+                    boundingSpheres[count] = BoundingSphere.clone(tmp, boundingSpheres[count]);
+                    count++;
+                }
             }
         }
 

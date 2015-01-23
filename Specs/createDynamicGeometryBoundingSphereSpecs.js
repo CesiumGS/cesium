@@ -3,7 +3,7 @@ define([
         'Core/BoundingSphere',
         'Core/Math',
         'Core/JulianDate',
-        'Datasources/BoundingSphereState'
+        'DataSources/BoundingSphereState'
     ], function(
         BoundingSphere,
         CesiumMath,
@@ -31,8 +31,8 @@ define([
                 return state !== BoundingSphereState.PENDING;
             });
 
-            var primitive = scene.primitives.get(0);
             runs(function() {
+                var primitive = scene.primitives.get(0);
                 expect(state).toBe(BoundingSphereState.DONE);
                 var attributes = primitive.getGeometryInstanceAttributes(entity);
                 expect(result).toEqualEpsilon(BoundingSphere.transform(attributes.boundingSphere, primitive.modelMatrix, new BoundingSphere()), CesiumMath.EPSILON6);
@@ -60,8 +60,8 @@ define([
                 return state !== BoundingSphereState.PENDING;
             });
 
-            var primitive = scene.primitives.get(0);
             runs(function() {
+                var primitive = scene.primitives.get(0);
                 expect(state).toBe(BoundingSphereState.DONE);
                 var attributes = primitive.getGeometryInstanceAttributes(entity);
                 expect(result).toEqualEpsilon(BoundingSphere.transform(attributes.boundingSphere, primitive.modelMatrix, new BoundingSphere()), CesiumMath.EPSILON6);

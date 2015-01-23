@@ -220,12 +220,9 @@ define([
      * @returns {Boolean} true if the item was removed, false if it did not exist in the collection.
      */
     EntityCollection.prototype.remove = function(entity) {
-        //>>includeStart('debug', pragmas.debug);
         if (!defined(entity)) {
-            throw new DeveloperError('entity is required');
+            return false;
         }
-        //>>includeEnd('debug');
-
         return this.removeById(entity.id);
     };
 
@@ -251,11 +248,9 @@ define([
      * @returns {Boolean} true if the item was removed, false if no item with the provided id existed in the collection.
      */
     EntityCollection.prototype.removeById = function(id) {
-        //>>includeStart('debug', pragmas.debug);
         if (!defined(id)) {
-            throw new DeveloperError('id is required.');
+            return false;
         }
-        //>>includeEnd('debug');
 
         var entities = this._entities;
         var entity = entities.get(id);
@@ -318,7 +313,6 @@ define([
 
         return this._entities.get(id);
     };
-
 
     /**
      * Gets an entity with the specified id or creates it and adds it to the collection if it does not exist.

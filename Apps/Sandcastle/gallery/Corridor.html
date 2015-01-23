@@ -31,7 +31,6 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 
 var redCorridor = viewer.entities.add({
     name : 'Red corridor on surface with rounded corners and outline',
-    position : Cesium.Cartesian3.fromDegrees(-105.0, 40.0),
     corridor : {
         positions : Cesium.Cartesian3.fromDegreesArray([
                                                         -100.0, 40.0,
@@ -47,7 +46,6 @@ var redCorridor = viewer.entities.add({
 
 var greenCorridor = viewer.entities.add({
     name : 'Green corridor at height with mitered corners',
-    position : Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 100000.0),
     corridor : {
         positions : Cesium.Cartesian3.fromDegreesArray([
                                                         -90.0, 40.0,
@@ -63,7 +61,6 @@ var greenCorridor = viewer.entities.add({
 
 var blueCorridor = viewer.entities.add({
     name : 'Blue extruded corridor with beveled corners and outline',
-    position : Cesium.Cartesian3.fromDegrees(-85.0, 40.0, 150000.0),
     corridor : {
         positions : Cesium.Cartesian3.fromDegreesArray([
                                                         -80.0, 40.0,

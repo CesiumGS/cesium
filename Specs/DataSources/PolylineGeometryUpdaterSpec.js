@@ -19,6 +19,7 @@ defineSuite([
         'DataSources/SampledPositionProperty',
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
+        'Scene/Globe',
         'Scene/PrimitiveCollection',
         'Specs/createDynamicProperty',
         'Specs/createScene',
@@ -43,6 +44,7 @@ defineSuite([
         SampledPositionProperty,
         SampledProperty,
         TimeIntervalCollectionProperty,
+        Globe,
         PrimitiveCollection,
         createDynamicProperty,
         createScene,
@@ -53,6 +55,7 @@ defineSuite([
     var scene;
     beforeAll(function(){
         scene = createScene();
+        scene.globe = new Globe();
     });
 
     afterAll(function(){

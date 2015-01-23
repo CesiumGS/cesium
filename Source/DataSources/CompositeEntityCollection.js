@@ -245,6 +245,16 @@ define([
     };
 
     /**
+     * Returns true if the provided entity is in this collection, false otherwise.
+     *
+     * @param entity The entity.
+     * @returns {Boolean} true if the provided entity is in this collection, false otherwise.
+     */
+    CompositeEntityCollection.prototype.contains = function(entity) {
+        return this._composite.contains(entity);
+    };
+
+    /**
      * Determines the index of a given collection in the composite.
      *
      * @param {EntityCollection} collection The collection to find the index of.
