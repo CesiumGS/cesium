@@ -113,7 +113,7 @@ defineSuite([
     });
 
     it('get inverse transform', function() {
-        camera.transform = new Matrix4(5.0, 0.0, 0.0, 1.0, 0.0, 5.0, 0.0, 2.0, 0.0, 0.0, 5.0, 3.0, 0.0, 0.0, 0.0, 1.0);
+        camera._setTransform(new Matrix4(5.0, 0.0, 0.0, 1.0, 0.0, 5.0, 0.0, 2.0, 0.0, 0.0, 5.0, 3.0, 0.0, 0.0, 0.0, 1.0));
         var expected = Matrix4.inverseTransformation(camera.transform, new Matrix4());
         expect(expected).toEqual(camera.inverseTransform);
     });
@@ -424,10 +424,10 @@ defineSuite([
     });
 
     it('worldToCameraCoordinates transforms to the cameras reference frame', function() {
-        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                                       1.0, 0.0, 0.0, 0.0,
-                                       0.0, 1.0, 0.0, 0.0,
-                                       0.0, 0.0, 0.0, 1.0);
+        camera._setTransform(new Matrix4(0.0, 0.0, 1.0, 0.0,
+                                         1.0, 0.0, 0.0, 0.0,
+                                         0.0, 1.0, 0.0, 0.0,
+                                         0.0, 0.0, 0.0, 1.0));
         expect(camera.worldToCameraCoordinates(Cartesian4.UNIT_X)).toEqual(Cartesian4.UNIT_Z);
     });
 
@@ -438,10 +438,10 @@ defineSuite([
     });
 
     it('worldToCameraCoordinatesPoint transforms to the cameras reference frame', function() {
-        camera.transform = new Matrix4(0.0, 0.0, 1.0, 10.0,
-                                       1.0, 0.0, 0.0, 20.0,
-                                       0.0, 1.0, 0.0, 30.0,
-                                       0.0, 0.0, 0.0, 1.0);
+        camera._setTransform(new Matrix4(0.0, 0.0, 1.0, 10.0,
+                                         1.0, 0.0, 0.0, 20.0,
+                                         0.0, 1.0, 0.0, 30.0,
+                                         0.0, 0.0, 0.0, 1.0));
         var expected = Cartesian3.add(Matrix4.getColumn(camera.inverseTransform, 3, new Cartesian4()), Cartesian3.UNIT_Z, new Cartesian3());
         expect(camera.worldToCameraCoordinatesPoint(Cartesian3.UNIT_X)).toEqual(expected);
     });
@@ -453,10 +453,10 @@ defineSuite([
     });
 
     it('worldToCameraCoordinatesVector transforms to the cameras reference frame', function() {
-        camera.transform = new Matrix4(0.0, 0.0, 1.0, 10.0,
-                                       1.0, 0.0, 0.0, 20.0,
-                                       0.0, 1.0, 0.0, 30.0,
-                                       0.0, 0.0, 0.0, 1.0);
+        camera._setTransform(new Matrix4(0.0, 0.0, 1.0, 10.0,
+                                         1.0, 0.0, 0.0, 20.0,
+                                         0.0, 1.0, 0.0, 30.0,
+                                         0.0, 0.0, 0.0, 1.0));
         expect(camera.worldToCameraCoordinatesVector(Cartesian3.UNIT_X)).toEqual(Cartesian3.UNIT_Z);
     });
 
@@ -467,10 +467,10 @@ defineSuite([
     });
 
     it('cameraToWorldCoordinates transforms from the cameras reference frame', function() {
-        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                                       1.0, 0.0, 0.0, 0.0,
-                                       0.0, 1.0, 0.0, 0.0,
-                                       0.0, 0.0, 0.0, 1.0);
+        camera._setTransform(new Matrix4(0.0, 0.0, 1.0, 0.0,
+                                         1.0, 0.0, 0.0, 0.0,
+                                         0.0, 1.0, 0.0, 0.0,
+                                         0.0, 0.0, 0.0, 1.0));
         expect(camera.cameraToWorldCoordinates(Cartesian4.UNIT_Z)).toEqual(Cartesian4.UNIT_X);
     });
 
@@ -481,10 +481,10 @@ defineSuite([
     });
 
     it('cameraToWorldCoordinatesPoint transforms from the cameras reference frame', function() {
-        camera.transform = new Matrix4(0.0, 0.0, 1.0, 10.0,
-                                       1.0, 0.0, 0.0, 20.0,
-                                       0.0, 1.0, 0.0, 30.0,
-                                       0.0, 0.0, 0.0, 1.0);
+        camera._setTransform(new Matrix4(0.0, 0.0, 1.0, 10.0,
+                                         1.0, 0.0, 0.0, 20.0,
+                                         0.0, 1.0, 0.0, 30.0,
+                                         0.0, 0.0, 0.0, 1.0));
         var expected = Cartesian3.add(Cartesian3.UNIT_X, Matrix4.getColumn(camera.transform, 3, new Cartesian4()), new Cartesian3());
         expect(camera.cameraToWorldCoordinatesPoint(Cartesian3.UNIT_Z)).toEqual(expected);
     });
@@ -496,10 +496,10 @@ defineSuite([
     });
 
     it('cameraToWorldCoordinatesVector transforms from the cameras reference frame', function() {
-        camera.transform = new Matrix4(0.0, 0.0, 1.0, 10.0,
-                                       1.0, 0.0, 0.0, 20.0,
-                                       0.0, 1.0, 0.0, 30.0,
-                                       0.0, 0.0, 0.0, 1.0);
+        camera._setTransform(new Matrix4(0.0, 0.0, 1.0, 10.0,
+                                         1.0, 0.0, 0.0, 20.0,
+                                         0.0, 1.0, 0.0, 30.0,
+                                         0.0, 0.0, 0.0, 1.0));
         expect(camera.cameraToWorldCoordinatesVector(Cartesian3.UNIT_Z)).toEqual(Cartesian3.UNIT_X);
     });
 
