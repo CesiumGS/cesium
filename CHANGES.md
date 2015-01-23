@@ -45,7 +45,6 @@ Change Log
 * Added `DataSourceDisplay.defaultDataSource` which is an instance of `CustomDataSource` and allows you to easily add custom entities to the display.
 * Added `viewer.entities` which allows you to easily create and manage `Entity` instances without a corresponding `DataSource`. This is just a shortcut to `viewer.dataSourceDisplay.defaultDataSource.entities`
 * Added `Camera.viewBoundingSphere` and `Camera.flyToBoundingSphere`, which as the names imply, sets or flies to a view that encloses the provided `BoundingSphere`
-* The `Visualizer` interface has a new optional method, `getBoundingSphere` which when implemented, will be used to retrieve the bounding sphere created by any primitives produced by the Visualizer for a given entity.
 * For constant `Property` values, there is no longer a need to create an instance of `ConstantProperty` or `ConstantPositionProperty`, you can now assign a value directly to the corresponding property. The same is true for material images and colors.
 * All Entity and related class can now be assigned using anonymous objects as well as be passed template objects. The correct underlying instance is created for you automatically.
 * Many Sandcastle examples have been rewritten to make use of the newly improved Entity API.
