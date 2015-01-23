@@ -136,15 +136,17 @@ defineSuite([
     }
 
     function moveMouse(button, startPosition, endPosition, shiftKey) {
+        var canvasRect = canvas.getBoundingClientRect();
+
         var options = {
             button : button,
-            clientX : startPosition.x,
-            clientY : startPosition.y,
+            clientX : startPosition.x + canvasRect.left,
+            clientY : startPosition.y + canvasRect.top,
             shiftKey : shiftKey
         };
         simulateMouseDown(options);
-        options.clientX = endPosition.x;
-        options.clientY = endPosition.y;
+        options.clientX = endPosition.x + canvasRect.left;
+        options.clientY = endPosition.y + canvasRect.top;
         simulateMouseMove(options);
         simulateMouseUp(options);
     }

@@ -39,6 +39,12 @@ define([
         Cartesian2.clone(pinchMovement.angleAndHeight.endPosition, result.angleAndHeight.endPosition);
     }
 
+    function transformDocumentCoordinatesToCanvasCoordinates(coordinates, canvas) {
+        var canvasRect = canvas.getBoundingClientRect();
+        coordinates.x -= canvasRect.left;
+        coordinates.y -= canvasRect.top;
+    }
+
     function listenToPinch(aggregator, modifier, canvas) {
         var key = getKey(CameraEventType.PINCH, modifier);
 
@@ -81,6 +87,11 @@ define([
         }, ScreenSpaceEventType.PINCH_END, modifier);
 
         aggregator._documentEventHandler.setInputAction(function(mouseMovement) {
+            transformDocumentCoordinatesToCanvasCoordinates(mouseMovement.distance.startPosition, canvas);
+            transformDocumentCoordinatesToCanvasCoordinates(mouseMovement.distance.endPosition, canvas);
+            transformDocumentCoordinatesToCanvasCoordinates(mouseMovement.angleAndHeight.startPosition, canvas);
+            transformDocumentCoordinatesToCanvasCoordinates(mouseMovement.angleAndHeight.endPosition, canvas);
+
             if (isDown[key]) {
                 // Aggregate several input events into a single animation frame.
                 if (!update[key]) {
@@ -188,7 +199,7 @@ define([
         Cartesian2.clone(mouseMovement.endPosition, result.endPosition);
     }
 
-    function listenMouseMove(aggregator, modifier) {
+    function listenMouseMove(aggregator, modifier, canvas) {
         var update = aggregator._update;
         var movement = aggregator._movement;
         var lastMovement = aggregator._lastMovement;
@@ -219,7 +230,15 @@ define([
             }
         }
 
+        var mouseMovementScratch = {
+            startPosition : new Cartesian2(),
+            endPosition : new Cartesian2()
+        };
+
         aggregator._documentEventHandler.setInputAction(function(mouseMovement) {
+            transformDocumentCoordinatesToCanvasCoordinates(mouseMovement.startPosition, canvas);
+            transformDocumentCoordinatesToCanvasCoordinates(mouseMovement.endPosition, canvas);
+
             for ( var typeName in CameraEventType) {
                 if (CameraEventType.hasOwnProperty(typeName)) {
                     var type = CameraEventType[typeName];
@@ -282,7 +301,7 @@ define([
         listenMouseButtonDownUp(this, undefined, CameraEventType.LEFT_DRAG);
         listenMouseButtonDownUp(this, undefined, CameraEventType.RIGHT_DRAG);
         listenMouseButtonDownUp(this, undefined, CameraEventType.MIDDLE_DRAG);
-        listenMouseMove(this, undefined);
+        listenMouseMove(this, undefined, canvas);
 
         for ( var modifierName in KeyboardEventModifier) {
             if (KeyboardEventModifier.hasOwnProperty(modifierName)) {
@@ -293,7 +312,7 @@ define([
                     listenMouseButtonDownUp(this, modifier, CameraEventType.LEFT_DRAG);
                     listenMouseButtonDownUp(this, modifier, CameraEventType.RIGHT_DRAG);
                     listenMouseButtonDownUp(this, modifier, CameraEventType.MIDDLE_DRAG);
-                    listenMouseMove(this, modifier);
+                    listenMouseMove(this, modifier, canvas);
                 }
             }
         }
