@@ -33,7 +33,7 @@ define([
      * @param {Geometry} options.geometry The <code>Geometry</code> instance with the attribute.
      * @param {Number} [options.length=10000.0] The length of each line segment in meters.  This can be negative to point the vector in the opposite direction.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The model matrix that transforms to transform the geometry from model to world coordinates.
-     * @returns {Primitive} A new <code>Primitive<code> instance with geometry for the vectors.
+     * @returns {Primitive} A new <code>Primitive</code> instance with geometry for the vectors.
      *
      * @example
      * scene.primitives.add(Cesium.createTangentSpaceDebugPrimitive({
