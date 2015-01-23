@@ -9,6 +9,7 @@ define([
         '../Core/JulianDate',
         '../Core/Math',
         '../Core/Matrix3',
+        '../Core/Matrix4',
         '../Core/Transforms',
         '../Scene/SceneMode'
     ], function(
@@ -21,6 +22,7 @@ define([
         JulianDate,
         CesiumMath,
         Matrix3,
+        Matrix4,
         Transforms,
         SceneMode) {
     "use strict";
@@ -28,6 +30,7 @@ define([
     var updateTransformMatrix3Scratch1 = new Matrix3();
     var updateTransformMatrix3Scratch2 = new Matrix3();
     var updateTransformMatrix3Scratch3 = new Matrix3();
+    var updateTransformMatrix4Scratch = new Matrix4();
     var updateTransformCartesian3Scratch1 = new Cartesian3();
     var updateTransformCartesian3Scratch2 = new Cartesian3();
     var updateTransformCartesian3Scratch3 = new Cartesian3();
@@ -38,6 +41,8 @@ define([
     var northUpAxisFactor = 1.25;  // times ellipsoid's maximum radius
 
     function updateTransform(that, camera, updateLookAt, positionProperty, time, ellipsoid) {
+        var updatedCameraTransform = false;
+
         var cartesian = positionProperty.getValue(time, that._lastCartesian);
         if (defined(cartesian)) {
             var hasBasis = false;
@@ -124,8 +129,8 @@ define([
                 }
             }
 
+            var transform = updateTransformMatrix4Scratch;
             if (hasBasis) {
-                var transform = camera.transform;
                 transform[0]  = xBasis.x;
                 transform[1]  = xBasis.y;
                 transform[2]  = xBasis.z;
@@ -144,11 +149,14 @@ define([
                 transform[15] = 0.0;
             } else {
                 // Stationary or slow-moving, low-altitude objects use East-North-Up.
-                Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, camera.transform);
+                Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, transform);
             }
+
+            camera.lookAtTransform(transform, that.scene.mode === SceneMode.SCENE2D ? that._offset2D : that._offset3D);
+            updatedCameraTransform = true;
         }
 
-        if (updateLookAt) {
+        if (updateLookAt && !updatedCameraTransform) {
             camera.lookAtTransform(camera.transform, that.scene.mode === SceneMode.SCENE2D ? that._offset2D : that._offset3D);
         }
     }

@@ -1112,10 +1112,10 @@ defineSuite([
 
             afterViewCV = function(frameState, primitive) {
                 var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphereCV[0].center);
-                Matrix4.clone(transform, frameState.camera.transform);
+                Matrix4.clone(transform, frameState.camera._transform);
                 frameState.camera.rotateDown(-CesiumMath.PI_OVER_TWO);
                 frameState.camera.zoomIn(primitive._boundingSphereCV[0].radius);
-                Matrix4.clone(Matrix4.IDENTITY, frameState.camera.transform);
+                Matrix4.clone(Matrix4.IDENTITY, frameState.camera._transform);
             };
         });
 

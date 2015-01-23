@@ -82,20 +82,12 @@ define([
         }
         //>>includeEnd('debug');
         this._scene = scene;
-        /**
-         * Modifies the camera's reference frame. The inverse of this transformation is appended to the view matrix.
-         *
-         * @type {Matrix4}
-         * @default {@link Matrix4.IDENTITY}
-         *
-         * @see Transforms
-         * @see Camera#inverseTransform
-         */
-        this.transform = Matrix4.clone(Matrix4.IDENTITY);
+
         this._transform = Matrix4.clone(Matrix4.IDENTITY);
         this._invTransform = Matrix4.clone(Matrix4.IDENTITY);
         this._actualTransform = Matrix4.clone(Matrix4.IDENTITY);
         this._actualInvTransform = Matrix4.clone(Matrix4.IDENTITY);
+        this._transformChanged = false;
 
         /**
          * The position of the camera.
@@ -423,9 +415,10 @@ define([
             right = Cartesian3.clone(camera.right, camera._right);
         }
 
-        var transformChanged = !Matrix4.equals(camera._transform, camera.transform) || camera._modeChanged;
+        var transformChanged = camera._transformChanged || camera._modeChanged;
+        camera._transformChanged = false;
+
         if (transformChanged) {
-            Matrix4.clone(camera.transform, camera._transform);
             Matrix4.inverseTransformation(camera._transform, camera._invTransform);
 
             if (camera._mode === SceneMode.COLUMBUS_VIEW || camera._mode === SceneMode.SCENE2D) {
@@ -512,6 +505,26 @@ define([
     var scratchHPRMatrix2 = new Matrix4();
 
     defineProperties(Camera.prototype, {
+        /**
+         * Gets the camera's reference frame. The inverse of this transformation is appended to the view matrix.
+         * @memberof Camera.prototype
+         *
+         * @type {Matrix4}
+         * @readonly
+         *
+         * @default {@link Matrix4.IDENTITY}
+         */
+        transform : {
+            get : function() {
+                return this._transform;
+            },
+            set : function(value) {
+                deprecationWarning('Camera.transform', 'Camera.transform was deprecated in Cesium 1.6. It will be removed in Cesium 1.8. Use Camera.lookAtTransform.');
+                this._transform = value;
+                this._transformChanged = true;
+            }
+        },
+
         /**
          * Gets the inverse camera transform.
          * @memberof Camera.prototype
@@ -644,7 +657,7 @@ define([
                     var origin = this.positionWC;
                     var ellipsoid = this._projection.ellipsoid;
 
-                    var oldTransform = Matrix4.clone(this.transform, scratchHPRMatrix1);
+                    var oldTransform = Matrix4.clone(this._transform, scratchHPRMatrix1);
                     var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
                     this._setTransform(transform);
 
@@ -692,7 +705,7 @@ define([
                     var origin = this.positionWC;
                     var ellipsoid = this._projection.ellipsoid;
 
-                    var oldTransform = Matrix4.clone(this.transform, scratchHPRMatrix1);
+                    var oldTransform = Matrix4.clone(this._transform, scratchHPRMatrix1);
                     var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
                     this._setTransform(transform);
 
@@ -747,7 +760,7 @@ define([
                     var origin = this.positionWC;
                     var ellipsoid = this._projection.ellipsoid;
 
-                    var oldTransform = Matrix4.clone(this.transform, scratchHPRMatrix1);
+                    var oldTransform = Matrix4.clone(this._transform, scratchHPRMatrix1);
                     var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
                     this._setTransform(transform);
 
@@ -826,7 +839,8 @@ define([
         var up = Cartesian3.clone(this.upWC, setTransformUp);
         var direction = Cartesian3.clone(this.directionWC, setTransformDirection);
 
-        Matrix4.clone(transform, this.transform);
+        Matrix4.clone(transform, this._transform);
+        this._transformChanged = true;
         updateMembers(this);
         var inverse = this._actualInvTransform;
 
@@ -2407,7 +2421,8 @@ define([
         camera.direction = Cartesian3.clone(this.direction);
         camera.up = Cartesian3.clone(this.up);
         camera.right = Cartesian3.clone(this.right);
-        camera.transform = Matrix4.clone(this.transform);
+        camera._transform = Matrix4.clone(this.transform);
+        camera._transformChanged = true;
         camera.frustum = this.frustum.clone();
         return camera;
     };

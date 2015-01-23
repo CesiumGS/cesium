@@ -221,7 +221,7 @@ define([
             Matrix3.fromQuaternion(orientation, rotMatrix);
 
             Matrix4.clone(camera.transform, currentFrame);
-            Matrix4.clone(Matrix4.IDENTITY, camera.transform);
+            camera._setTransform(Matrix4.IDENTITY);
 
             camera.position = path.evaluate(time, camera.position);
             camera.right = Matrix3.getRow(rotMatrix, 0, camera.right);
@@ -340,7 +340,7 @@ define([
             Matrix3.fromQuaternion(orientation, rotMatrix);
 
             Matrix4.clone(camera.transform, currentFrame);
-            Matrix4.clone(Matrix4.IDENTITY, camera.transform);
+            camera._setTransform(Matrix4.IDENTITY);
 
             camera.position = path.evaluate(time, camera.position);
             camera.right = Matrix3.getRow(rotMatrix, 0, camera.right);

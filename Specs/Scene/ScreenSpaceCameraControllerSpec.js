@@ -541,7 +541,7 @@ defineSuite([
         setUpCV();
 
         var origin = Cartesian3.fromDegrees(-72.0, 40.0);
-        camera.transform = Transforms.eastNorthUpToFixedFrame(origin);
+        camera.lookAtTransform(Transforms.eastNorthUpToFixedFrame(origin), new Cartesian3(1.0, 0.0, 0.0));
 
         var position = Cartesian3.clone(camera.position);
         var startPosition = new Cartesian2(0, 0);
@@ -560,7 +560,7 @@ defineSuite([
         setUpCV();
 
         var origin = Cartesian3.fromDegrees(-72.0, 40.0);
-        camera.transform = Transforms.eastNorthUpToFixedFrame(origin);
+        camera._transform = Transforms.eastNorthUpToFixedFrame(origin);
 
         var position = Cartesian3.clone(camera.position);
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
@@ -577,7 +577,7 @@ defineSuite([
         setUpCV();
 
         var origin = Cartesian3.fromDegrees(-72.0, 40.0);
-        camera.transform = Transforms.eastNorthUpToFixedFrame(origin);
+        camera._transform = Transforms.eastNorthUpToFixedFrame(origin);
 
         var position = Cartesian3.clone(camera.position);
 
