@@ -6,7 +6,9 @@ define([
         './defaultValue',
         './defined',
         './destroyObject',
+        './DeveloperError',
         './isCrossOriginUrl',
+        './RuntimeError',
         'require'
     ], function(
         Uri,
@@ -15,7 +17,9 @@ define([
         defaultValue,
         defined,
         destroyObject,
+        DeveloperError,
         isCrossOriginUrl,
+        RuntimeError,
         require) {
     "use strict";
 
@@ -73,7 +77,15 @@ define([
         var deferred = deferreds[id];
 
         if (defined(data.error)) {
-            deferred.reject(data.error);
+            var error = data.error;
+            if (error.name === 'RuntimeError') {
+                error = new RuntimeError(data.error.message);
+                error.stack = data.error.stack;
+            } else if (error.name === 'DeveloperError') {
+                error = new DeveloperError(data.error.message);
+                error.stack = data.error.stack;
+            }
+            deferred.reject(error);
         } else {
             deferred.resolve(data.result);
         }

@@ -307,7 +307,8 @@ defineSuite([
     };
     var polygon = new PolygonOutlineGeometry({
         polygonHierarchy : hierarchy,
-        granularity : CesiumMath.PI_OVER_THREE
+        granularity : CesiumMath.PI_OVER_THREE,
+        perPositionHeight : true
     });
      function addPositions(array, positions) {
         for (var i = 0; i < positions.length; ++i) {
@@ -321,7 +322,7 @@ defineSuite([
     packedInstance.push(3.0, 0.0);
     addPositions(packedInstance, holePositions1);
     packedInstance.push(Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z);
-    packedInstance.push(0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 0.0);
+    packedInstance.push(0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 1.0, 42);
     createPackableSpecs(PolygonOutlineGeometry, polygon, packedInstance);
 
 });

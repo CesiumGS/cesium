@@ -259,25 +259,18 @@ define([
         stringifyScratch[2] = size;
         var id = JSON.stringify(stringifyScratch);
 
-        var dataURLPromise = dataSource._pinCache[id];
-        if (!defined(dataURLPromise)) {
-            var canvasOrPromise;
-            if (defined(symbol)) {
-                if (symbol.length === 1) {
-                    canvasOrPromise = dataSource._pinBuilder.fromText(symbol.toUpperCase(), color, size);
-                } else {
-                    canvasOrPromise = dataSource._pinBuilder.fromMakiIconId(symbol, color, size);
-                }
+        var canvasOrPromise;
+        if (defined(symbol)) {
+            if (symbol.length === 1) {
+                canvasOrPromise = dataSource._pinBuilder.fromText(symbol.toUpperCase(), color, size);
             } else {
-                canvasOrPromise = dataSource._pinBuilder.fromColor(color, size);
+                canvasOrPromise = dataSource._pinBuilder.fromMakiIconId(symbol, color, size);
             }
-            dataURLPromise = when(canvasOrPromise, function(canvas) {
-                return canvas.toDataURL();
-            });
-            dataSource._pinCache[id] = dataURLPromise;
+        } else {
+            canvasOrPromise = dataSource._pinBuilder.fromColor(color, size);
         }
 
-        dataSource._promises.push(when(dataURLPromise, function(dataUrl) {
+        dataSource._promises.push(when(canvasOrPromise, function(dataUrl) {
             var billboard = new BillboardGraphics();
             billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
             billboard.image = new ConstantProperty(dataUrl);
@@ -496,7 +489,6 @@ define([
         this._loading = new Event();
         this._entityCollection = new EntityCollection();
         this._promises = [];
-        this._pinCache = {};
         this._pinBuilder = new PinBuilder();
     };
 
@@ -864,7 +856,6 @@ define([
 
             return when.all(that._promises, function() {
                 that._promises.length = 0;
-                that._pinCache = {};
                 DataSource.setLoading(that, false);
             });
         }).otherwise(function(error) {

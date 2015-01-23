@@ -124,6 +124,18 @@ function setReferenceFrame() {
     }));
 }
 
+function setHeadingPitchRoll() {
+    Sandcastle.declare(setHeadingPitchRoll);
+    
+    var camera = viewer.camera;
+    camera.setView({
+        position : Cesium.Cartesian3.fromDegrees(-75.5847, 40.0397, 1000.0),
+        heading : -Cesium.Math.PI_OVER_TWO,
+        pitch : -Cesium.Math.PI_OVER_FOUR,
+        roll : 0.0
+    });
+}
+
 function icrf(scene, time) {
     if (scene.mode !== Cesium.SceneMode.SCENE3D) {
         return;
@@ -181,6 +193,12 @@ Sandcastle.addToolbarMenu([{
         Sandcastle.highlight(setReferenceFrame);
     }
 }, {
+    text : 'Set camera with heading, pitch, and roll',
+    onselect : function() {
+        setHeadingPitchRoll();
+        Sandcastle.highlight(setHeadingPitchRoll);
+    }
+},{
     text : 'View in ICRF',
     onselect : function() {
         viewInICRF();
