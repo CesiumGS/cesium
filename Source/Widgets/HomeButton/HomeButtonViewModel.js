@@ -37,7 +37,7 @@ define([
         var up;
 
         if (mode === SceneMode.SCENE2D) {
-            scene.camera.flyToRectangle({
+            scene.camera.flyTo({
                 destination : Rectangle.MAX_VALUE,
                 duration : duration,
                 endTransform : Matrix4.IDENTITY

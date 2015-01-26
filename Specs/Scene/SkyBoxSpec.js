@@ -57,9 +57,7 @@ defineSuite([
 
         var us = context.uniformState;
         var frameState = createFrameState(createCamera({
-            eye : new Cartesian3(7000000.0, 0.0, 0.0),
-            target : Cartesian3.ZERO,
-            up : Cartesian3.UNIT_Z,
+            offset : new Cartesian3(7000000.0, 0.0, 0.0),
             near : 1.0,
             far : 20000000.0
         }));
@@ -87,9 +85,7 @@ defineSuite([
 
         var us = context.uniformState;
         var frameState = createFrameState(createCamera({
-            eye : new Cartesian3(7000000.0, 0.0, 0.0),
-            target : Cartesian3.ZERO,
-            up : Cartesian3.UNIT_Z,
+            offset : new Cartesian3(7000000.0, 0.0, 0.0),
             near : 1.0,
             far : 20000000.0
         }));
@@ -113,9 +109,7 @@ defineSuite([
 
         var us = context.uniformState;
         var frameState = createFrameState(createCamera({
-            eye : new Cartesian3(7000000.0, 0.0, 0.0),
-            target : Cartesian3.ZERO,
-            up : Cartesian3.UNIT_Z,
+            offset : new Cartesian3(7000000.0, 0.0, 0.0),
             near : 1.0,
             far : 20000000.0
         }));
@@ -140,9 +134,7 @@ defineSuite([
 
         var us = context.uniformState;
         var frameState = createFrameState(createCamera({
-            eye : new Cartesian3(7000000.0, 0.0, 0.0),
-            target : Cartesian3.ZERO,
-            up : Cartesian3.UNIT_Z,
+            offset : new Cartesian3(7000000.0, 0.0, 0.0),
             near : 1.0,
             far : 20000000.0
         }));

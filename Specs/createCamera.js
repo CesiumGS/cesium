@@ -2,12 +2,16 @@
 define([
         'Core/Cartesian3',
         'Core/defaultValue',
+        'Core/defined',
         'Core/GeographicProjection',
+        'Core/Matrix4',
         'Scene/Camera'
     ], function(
         Cartesian3,
         defaultValue,
+        defined,
         GeographicProjection,
+        Matrix4,
         Camera) {
     "use strict";
 
@@ -26,17 +30,20 @@ define([
     function createCamera(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        var eye = defaultValue(options.eye, new Cartesian3(-1.0, 0.0, 0.0));
-        var target = defaultValue(options.target, Cartesian3.ZERO);
-        var up = defaultValue(options.up, Cartesian3.UNIT_Z);
-        var near = defaultValue(options.near, 0.01);
-        var far = defaultValue(options.far, 10.0);
-
         var scene = new MockScene(options.canvas);
         var camera = new Camera(scene);
-        camera.lookAt(eye, target, up);
-        camera.frustum.near = near;
-        camera.frustum.far = far;
+        camera.frustum.near = defaultValue(options.near, 0.01);
+        camera.frustum.far = defaultValue(options.far, 10.0);
+
+        var offset = defaultValue(options.offset, new Cartesian3(-1.0, 0.0, 0.0));
+
+        if (defined(options.target)) {
+            camera.lookAt(options.target, offset);
+        } else if (defined(options.transform)) {
+            camera.lookAtTransform(options.transform, offset);
+        } else {
+            camera.lookAtTransform(Matrix4.IDENTITY, offset);
+        }
 
         return camera;
     }
