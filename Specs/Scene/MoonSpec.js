@@ -5,6 +5,7 @@ defineSuite([
         'Core/defined',
         'Core/Ellipsoid',
         'Core/Matrix3',
+        'Core/Matrix4',
         'Core/Simon1994PlanetaryPositions',
         'Core/Transforms',
         'Specs/createCamera',
@@ -17,6 +18,7 @@ defineSuite([
         defined,
         Ellipsoid,
         Matrix3,
+        Matrix4,
         Simon1994PlanetaryPositions,
         Transforms,
         createCamera,
@@ -44,9 +46,11 @@ defineSuite([
 
         var moonPosition = Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame(date);
         Matrix3.multiplyByVector(icrfToFixed, moonPosition, moonPosition);
-        var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(moonPosition, new Cartesian3()), 1e7, new Cartesian3());
 
-        camera.lookAt(moonPosition, cameraPosition, Cartesian3.UNIT_Z);
+        var radius = Ellipsoid.MOON.maximumRadius;
+        var offset = Cartesian3.multiplyByScalar(Cartesian3.normalize(moonPosition, new Cartesian3()), radius + 100.0, new Cartesian3());
+
+        camera.lookAt(moonPosition, offset);
     }
 
     it('default constructs the moon', function() {

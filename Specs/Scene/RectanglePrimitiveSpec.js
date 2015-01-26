@@ -59,9 +59,7 @@ defineSuite([
         rectangle = new RectanglePrimitive();
 
         frameState = createFrameState(createCamera({
-            eye : new Cartesian3(1.02, 0.0, 0.0),
-            target : Cartesian3.ZERO,
-            up : Cartesian3.UNIT_Z
+            offset : new Cartesian3(1.02, 0.0, 0.0)
         }));
 
         us = context.uniformState;
