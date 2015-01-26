@@ -502,7 +502,7 @@ define([
             positions2D = tangentPlane.projectPointsOntoPlane(hole, createGeometryFromPositionsExtrudedPositions);
 
             windingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
-            if (windingOrder === WindingOrder.CLOCKWISE) {
+            if (windingOrder === WindingOrder.COUNTER_CLOCKWISE) {
                 hole.reverse();
             }
 
