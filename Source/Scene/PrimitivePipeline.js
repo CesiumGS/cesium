@@ -1046,7 +1046,8 @@ define([
      */
     PrimitivePipeline.unpackCombineGeometryParameters = function(packedParameters) {
         var instances = unpackInstancesForCombine(packedParameters.packedInstances);
-        var pickIds = packedParameters.allowPicking ? unpackPickIds(packedParameters.packedPickIds) : undefined;
+        var allowPicking = packedParameters.allowPicking;
+        var pickIds = allowPicking ? unpackPickIds(packedParameters.packedPickIds) : undefined;
         var createGeometryResults = packedParameters.createGeometryResults;
         var length = createGeometryResults.length;
         var instanceIndex = 0;
@@ -1068,7 +1069,9 @@ define([
                     instance.geometry = geometry;
                     validInstances.push(instance);
                     validInstancesIndices.push(instanceIndex);
-                    validPickIds.push(pickIds[instanceIndex]);
+                    if (allowPicking) {
+                        validPickIds.push(pickIds[instanceIndex]);
+                    }
                 } else {
                     invalidInstances.push(instance);
                     invalidInstancesIndices.push(instanceIndex);
