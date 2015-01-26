@@ -120,14 +120,8 @@ function setReferenceFrame() {
 
     // View in east-north-up frame
     var camera = viewer.camera;
-    Cesium.Matrix4.clone(transform, camera.transform);
     camera.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
-
-    // Zoom in
-    camera.lookAt(
-        new Cesium.Cartesian3(-120000.0, -120000.0, 120000.0),
-        Cesium.Cartesian3.ZERO,
-        Cesium.Cartesian3.UNIT_Z);
+    camera.lookAtTransform(transform, new Cesium.Cartesian3(-120000.0, -120000.0, 120000.0));
 
     // Show reference frame.  Not required.
     scene.primitives.add(new Cesium.DebugModelMatrixPrimitive({
@@ -155,7 +149,14 @@ function icrf(scene, time) {
 
     var icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(time);
     if (Cesium.defined(icrfToFixed)) {
-        viewer.camera.transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed);
+        var camera = viewer.camera;
+        
+        var offset = Cesium.Matrix4.multiplyByPoint(camera.transform, camera.position, new Cesium.Cartesian3());
+        var transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed);
+        var inverseTransform = Cesium.Matrix4.inverseTransformation(transform, new Cesium.Matrix4());
+        Cesium.Matrix4.multiplyByPoint(inverseTransform, offset, offset);
+        
+        camera.lookAtTransform(transform, offset);
     }
 }
 
@@ -228,7 +229,7 @@ Sandcastle.reset = function() {
     scene.primitives.removeAll();
     scene.tweens.removeAll();
 
-    viewer.camera.setTransform(Cesium.Matrix4.IDENTITY);
+    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
     clock.multiplier = 1.0;
     scene.preRender.removeEventListener(icrf);

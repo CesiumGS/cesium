@@ -20,6 +20,7 @@ define([
         '../Core/Rectangle',
         '../Core/Transforms',
         './CameraFlightPath',
+        './HeadingPitchRange',
         './PerspectiveFrustum',
         './SceneMode'
     ], function(
@@ -43,6 +44,7 @@ define([
         Rectangle,
         Transforms,
         CameraFlightPath,
+        HeadingPitchRange,
         PerspectiveFrustum,
         SceneMode) {
     "use strict";
@@ -82,20 +84,12 @@ define([
         }
         //>>includeEnd('debug');
         this._scene = scene;
-        /**
-         * Modifies the camera's reference frame. The inverse of this transformation is appended to the view matrix.
-         *
-         * @type {Matrix4}
-         * @default {@link Matrix4.IDENTITY}
-         *
-         * @see Transforms
-         * @see Camera#inverseTransform
-         */
-        this.transform = Matrix4.clone(Matrix4.IDENTITY);
+
         this._transform = Matrix4.clone(Matrix4.IDENTITY);
         this._invTransform = Matrix4.clone(Matrix4.IDENTITY);
         this._actualTransform = Matrix4.clone(Matrix4.IDENTITY);
         this._actualInvTransform = Matrix4.clone(Matrix4.IDENTITY);
+        this._transformChanged = false;
 
         /**
          * The position of the camera.
@@ -423,9 +417,10 @@ define([
             right = Cartesian3.clone(camera.right, camera._right);
         }
 
-        var transformChanged = !Matrix4.equals(camera._transform, camera.transform) || camera._modeChanged;
+        var transformChanged = camera._transformChanged || camera._modeChanged;
+        camera._transformChanged = false;
+
         if (transformChanged) {
-            Matrix4.clone(camera.transform, camera._transform);
             Matrix4.inverseTransformation(camera._transform, camera._invTransform);
 
             if (camera._mode === SceneMode.COLUMBUS_VIEW || camera._mode === SceneMode.SCENE2D) {
@@ -512,6 +507,26 @@ define([
     var scratchHPRMatrix2 = new Matrix4();
 
     defineProperties(Camera.prototype, {
+        /**
+         * Gets the camera's reference frame. The inverse of this transformation is appended to the view matrix.
+         * @memberof Camera.prototype
+         *
+         * @type {Matrix4}
+         * @readonly
+         *
+         * @default {@link Matrix4.IDENTITY}
+         */
+        transform : {
+            get : function() {
+                return this._transform;
+            },
+            set : function(value) {
+                deprecationWarning('Camera.transform', 'Camera.transform was deprecated in Cesium 1.6. It will be removed in Cesium 1.8. Use Camera.lookAtTransform.');
+                this._transform = value;
+                this._transformChanged = true;
+            }
+        },
+
         /**
          * Gets the inverse camera transform.
          * @memberof Camera.prototype
@@ -644,9 +659,9 @@ define([
                     var origin = this.positionWC;
                     var ellipsoid = this._projection.ellipsoid;
 
-                    var oldTransform = Matrix4.clone(this.transform, scratchHPRMatrix1);
+                    var oldTransform = Matrix4.clone(this._transform, scratchHPRMatrix1);
                     var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
-                    this.setTransform(transform);
+                    this._setTransform(transform);
 
                     var right = this.right;
                     var direction = this.direction;
@@ -658,7 +673,7 @@ define([
                         heading = Math.atan2(right.y, right.x);
                     }
 
-                    this.setTransform(oldTransform);
+                    this._setTransform(oldTransform);
 
                     return CesiumMath.TWO_PI - CesiumMath.zeroToTwoPi(heading);
                 }
@@ -692,13 +707,13 @@ define([
                     var origin = this.positionWC;
                     var ellipsoid = this._projection.ellipsoid;
 
-                    var oldTransform = Matrix4.clone(this.transform, scratchHPRMatrix1);
+                    var oldTransform = Matrix4.clone(this._transform, scratchHPRMatrix1);
                     var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
-                    this.setTransform(transform);
+                    this._setTransform(transform);
 
                     var pitch = CesiumMath.PI_OVER_TWO - CesiumMath.acosClamped(this.direction.z);
 
-                    this.setTransform(oldTransform);
+                    this._setTransform(oldTransform);
 
                     return pitch;
                 }
@@ -747,9 +762,9 @@ define([
                     var origin = this.positionWC;
                     var ellipsoid = this._projection.ellipsoid;
 
-                    var oldTransform = Matrix4.clone(this.transform, scratchHPRMatrix1);
+                    var oldTransform = Matrix4.clone(this._transform, scratchHPRMatrix1);
                     var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
-                    this.setTransform(transform);
+                    this._setTransform(transform);
 
                     var up = this.up;
                     var right = this.right;
@@ -759,7 +774,7 @@ define([
                         roll = CesiumMath.PI - roll;
                     }
 
-                    this.setTransform(oldTransform);
+                    this._setTransform(oldTransform);
 
                     return CesiumMath.TWO_PI - CesiumMath.zeroToTwoPi(roll);
                 }
@@ -805,21 +820,29 @@ define([
         }
     };
 
-    var setTransformPosition = new Cartesian3();
-    var setTransformUp = new Cartesian3();
-    var setTransformDirection = new Cartesian3();
-
     /**
      * Sets the camera's transform without changing the current view.
+     *
+     * @deprecated
      *
      * @param {Matrix4} transform The camera transform.
      */
     Camera.prototype.setTransform = function(transform) {
+        deprecationWarning('Camera.setTransform', 'Camera.setTransform was deprecated in Cesium 1.6. It will be removed in Cesium 1.8. Use Camera.lookAtTransform.');
+        this._setTransform(transform);
+    };
+
+    var setTransformPosition = new Cartesian3();
+    var setTransformUp = new Cartesian3();
+    var setTransformDirection = new Cartesian3();
+
+    Camera.prototype._setTransform = function(transform) {
         var position = Cartesian3.clone(this.positionWC, setTransformPosition);
         var up = Cartesian3.clone(this.upWC, setTransformUp);
         var direction = Cartesian3.clone(this.directionWC, setTransformDirection);
 
-        Matrix4.clone(transform, this.transform);
+        Matrix4.clone(transform, this._transform);
+        this._transformChanged = true;
         updateMembers(this);
         var inverse = this._actualInvTransform;
 
@@ -899,7 +922,7 @@ define([
 
         var currentTransform = Matrix4.clone(this.transform, scratchSetViewTransform1);
         var localTransform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, scratchSetViewTransform2);
-        this.setTransform(localTransform);
+        this._setTransform(localTransform);
 
         if (scene2D) {
             Cartesian2.clone(Cartesian3.ZERO, this.position);
@@ -927,7 +950,7 @@ define([
         Matrix3.getColumn(rotMat, 2, this.up);
         Cartesian3.cross(this.direction, this.up, this.right);
 
-        this.setTransform(currentTransform);
+        this._setTransform(currentTransform);
     };
 
     /**
@@ -1522,59 +1545,223 @@ define([
         });
     };
 
+    var scratchLookAtMatrix4 = new Matrix4();
+    var scratchLookAtTransformMatrix4 = new Matrix4();
+
     /**
-     * Sets the camera position and orientation with an eye position, target, and up vector.
-     * This method is not supported in 2D mode because there is only one direction to look.
+     * Sets the camera position and orientation using a target and offset. The target must be given in
+     * world coordinates. The offset can be either a cartesian or heading/pitch/range in the local east-north-up reference frame centered at the target.
+     * If the offset is a cartesian, then it is an offset from the center of the reference frame defined by the transformation matrix. If the offset
+     * is heading/pitch/range, then the heading and the pitch angles are defined in the reference frame defined by the transformation matrix.
+     * The heading is the angle from y axis and increasing towards the x axis. Pitch is the rotation from the xy-plane. Positive pitch
+     * angles are above the plane. Negative pitch angles are below the plane. The range is the distance from the center.
      *
-     * @param {Cartesian3} eye The position of the camera.
-     * @param {Cartesian3} target The position to look at.
-     * @param {Cartesian3} up The up vector.
+     * In 2D, there must be a top down view. The camera will be placed above the target looking down. The height above the
+     * target will be the magnitude of the offset. The heading will be determined from the offset. If the heading cannot be
+     * determined from the offset, the heading will be north.
+     *
+     * @param {Cartesian3} target The target position in world coordinates.
+     * @param {Cartesian3|HeadingPitchRange} offset The offset from the target in the local east-north-up reference frame centered at the target.
+     *
+     * The deprecated parameters sets the camera position and orientation with an eye position, target, and up vector.
+     *
+     * @param {Cartesian3} eye The position of the camera. This parameter is deprecated.
+     * @param {Cartesian3} target The position to look at. This parameter is deprecated.
+     * @param {Cartesian3} up The up vector. This parameter is deprecated.
      *
      * @exception {DeveloperError} lookAt is not supported while morphing.
+     *
+     * @example
+     * // 1. Using a cartesian offset
+     * var center = Cesium.Cartesian3.fromDegrees(-98.0, 40.0);
+     * viewer.camera.lookAt(center, new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0));
+     *
+     * // 2. Using a HeadingPitchRange offset
+     * var center = Cartesian3.fromDegrees(-72.0, 40.0);
+     * var heading = Cesium.Math.toRadians(50.0);
+     * var pitch = Cesium.Math.toRadians(-20.0);
+     * var range = 5000.0;
+     * viewer.camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, range));
      */
-    Camera.prototype.lookAt = function(eye, target, up) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(eye)) {
-            throw new DeveloperError('eye is required');
+    Camera.prototype.lookAt = function(target, offset) {
+        if (arguments.length > 2) {
+            deprecationWarning('Camera.lookAt', 'The eye, target, and up parameters to Camera.lookAt were deprecated in Cesium 1.6. It will be removed in Cesium 1.8. Use the target and offset parameters.');
+
+            var eye = arguments[0];
+            target = arguments[1];
+            var up = arguments[2];
+
+            //>>includeStart('debug', pragmas.debug);
+            if (!defined(eye)) {
+                throw new DeveloperError('eye is required');
+            }
+            if (!defined(target)) {
+                throw new DeveloperError('target is required');
+            }
+            if (!defined(up)) {
+                throw new DeveloperError('up is required');
+            }
+            if (this._mode === SceneMode.MORPHING) {
+                throw new DeveloperError('lookAt is not supported while morphing.');
+            }
+            //>>includeEnd('debug');
+
+            if (this._mode === SceneMode.SCENE2D) {
+                Cartesian2.clone(target, this.position);
+                Cartesian3.negate(Cartesian3.UNIT_Z, this.direction);
+
+                Cartesian3.clone(up, this.up);
+                this.up.z = 0.0;
+
+                if (Cartesian3.magnitudeSquared(this.up) < CesiumMath.EPSILON10) {
+                    Cartesian3.clone(Cartesian3.UNIT_Y, this.up);
+                }
+
+                Cartesian3.cross(this.direction, this.up, this.right);
+
+                var frustum = this.frustum;
+                var ratio = frustum.top / frustum.right;
+                frustum.right = eye.z;
+                frustum.left = -frustum.right;
+                frustum.top = ratio * frustum.right;
+                frustum.bottom = -frustum.top;
+
+                return;
+            }
+
+            this.position = Cartesian3.clone(eye, this.position);
+            this.direction = Cartesian3.normalize(Cartesian3.subtract(target, eye, this.direction), this.direction);
+            this.right = Cartesian3.normalize(Cartesian3.cross(this.direction, up, this.right), this.right);
+            this.up = Cartesian3.cross(this.right, this.direction, this.up);
+
+            return;
         }
+
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(target)) {
             throw new DeveloperError('target is required');
         }
-        if (!defined(up)) {
-            throw new DeveloperError('up is required');
-        }
-        if (this._mode === SceneMode.MORPHING) {
-            throw new DeveloperError('lookAt is not supported while morphing.');
+        if (!defined(offset)) {
+            throw new DeveloperError('offset is required');
         }
         //>>includeEnd('debug');
 
-        if (this._mode === SceneMode.SCENE2D) {
-            Cartesian2.clone(target, this.position);
-            Cartesian3.negate(Cartesian3.UNIT_Z, this.direction);
+        var transform = Transforms.eastNorthUpToFixedFrame(target, Ellipsoid.WGS84, scratchLookAtMatrix4);
+        this.lookAtTransform(transform, offset);
+    };
 
-            Cartesian3.clone(up, this.up);
+    var scratchLookAtHeadingPitchRangeOffset = new Cartesian3();
+    var scratchLookAtHeadingPitchRangeQuaternion1 = new Quaternion();
+    var scratchLookAtHeadingPitchRangeQuaternion2 = new Quaternion();
+    var scratchHeadingPitchRangeMatrix3 = new Matrix3();
+
+    function offsetFromHeadingPitchRange(heading, pitch, range) {
+        pitch = CesiumMath.clamp(pitch, -CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO);
+        heading = CesiumMath.zeroToTwoPi(heading) - CesiumMath.PI_OVER_TWO;
+
+        var pitchQuat = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, -pitch, scratchLookAtHeadingPitchRangeQuaternion1);
+        var headingQuat = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, -heading, scratchLookAtHeadingPitchRangeQuaternion2);
+        var rotQuat = Quaternion.multiply(headingQuat, pitchQuat, headingQuat);
+        var rotMatrix = Matrix3.fromQuaternion(rotQuat, scratchHeadingPitchRangeMatrix3);
+
+        var offset = Cartesian3.clone(Cartesian3.UNIT_X, scratchLookAtHeadingPitchRangeOffset);
+        Matrix3.multiplyByVector(rotMatrix, offset, offset);
+        Cartesian3.negate(offset, offset);
+        Cartesian3.multiplyByScalar(offset, range, offset);
+        return offset;
+    }
+
+    /**
+     * Sets the camera position and orientation using a target and transformation matrix. The offset can be either a cartesian or heading/pitch/range.
+     * If the offset is a cartesian, then it is an offset from the center of the reference frame defined by the transformation matrix. If the offset
+     * is heading/pitch/range, then the heading and the pitch angles are defined in the reference frame defined by the transformation matrix.
+     * The heading is the angle from y axis and increasing towards the x axis. Pitch is the rotation from the xy-plane. Positive pitch
+     * angles are above the plane. Negative pitch angles are below the plane. The range is the distance from the center.
+     *
+     * In 2D, there must be a top down view. The camera will be placed above the center of the reference frame. The height above the
+     * target will be the magnitude of the offset. The heading will be determined from the offset. If the heading cannot be
+     * determined from the offset, the heading will be north.
+     *
+     * @param {Matrix4} transform The transformation matrix defining the reference frame.
+     * @param {Cartesian3|HeadingPitchRange} offset The offset from the target in a reference frame centered at the target.
+     *
+     * @exception {DeveloperError} lookAtTransform is not supported while morphing.
+     *
+     * @example
+     * // 1. Using a cartesian offset
+     * var transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-98.0, 40.0));
+     * viewer.camera.lookAtTransform(transform, new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0));
+     *
+     * // 2. Using a HeadingPitchRange offset
+     * var transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(-72.0, 40.0));
+     * var heading = Cesium.Math.toRadians(50.0);
+     * var pitch = Cesium.Math.toRadians(-20.0);
+     * var range = 5000.0;
+     * viewer.camera.lookAtTransform(transform, new Cesium.HeadingPitchRange(heading, pitch, range));
+     */
+    Camera.prototype.lookAtTransform = function(transform, offset) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(transform)) {
+            throw new DeveloperError('transform is required');
+        }
+        if (this._mode === SceneMode.MORPHING) {
+            throw new DeveloperError('lookAtTransform is not supported while morphing.');
+        }
+        //>>includeEnd('debug');
+
+        this._setTransform(transform);
+        if (!defined(offset)) {
+            return;
+        }
+
+        var cartesianOffset;
+        if (defined(offset.heading)) {
+            cartesianOffset = offsetFromHeadingPitchRange(offset.heading, offset.pitch, offset.range);
+        } else {
+            cartesianOffset = offset;
+        }
+
+        if (this._mode === SceneMode.SCENE2D) {
+            Cartesian2.clone(Cartesian2.ZERO, this.position);
+
+            Cartesian3.negate(cartesianOffset, this.up);
             this.up.z = 0.0;
+            Cartesian3.normalize(this.up, this.up);
+
+            this._setTransform(Matrix4.IDENTITY);
 
             if (Cartesian3.magnitudeSquared(this.up) < CesiumMath.EPSILON10) {
                 Cartesian3.clone(Cartesian3.UNIT_Y, this.up);
             }
 
+            Cartesian3.negate(Cartesian3.UNIT_Z, this.direction);
             Cartesian3.cross(this.direction, this.up, this.right);
+            Cartesian3.normalize(this.right, this.right);
 
             var frustum = this.frustum;
             var ratio = frustum.top / frustum.right;
-            frustum.right = eye.z;
+            frustum.right = Cartesian3.magnitude(cartesianOffset);
             frustum.left = -frustum.right;
             frustum.top = ratio * frustum.right;
             frustum.bottom = -frustum.top;
 
+            this._setTransform(transform);
+
             return;
         }
 
-        this.position = Cartesian3.clone(eye, this.position);
-        this.direction = Cartesian3.normalize(Cartesian3.subtract(target, eye, this.direction), this.direction);
-        this.right = Cartesian3.normalize(Cartesian3.cross(this.direction, up, this.right), this.right);
-        this.up = Cartesian3.cross(this.right, this.direction, this.up);
+        Cartesian3.clone(cartesianOffset, this.position);
+        Cartesian3.negate(this.position, this.direction);
+        Cartesian3.normalize(this.direction, this.direction);
+        Cartesian3.cross(this.direction, Cartesian3.UNIT_Z, this.right);
+
+        if (Cartesian3.magnitudeSquared(this.right) < CesiumMath.EPSILON10) {
+            Cartesian3.clone(Cartesian3.UNIT_X, this.right);
+        }
+
+        Cartesian3.normalize(this.right, this.right);
+        Cartesian3.cross(this.right, this.direction, this.up);
+        Cartesian3.normalize(this.up, this.up);
     };
 
     var viewRectangle3DCartographic = new Cartographic();
@@ -2275,7 +2462,8 @@ define([
         camera.direction = Cartesian3.clone(this.direction);
         camera.up = Cartesian3.clone(this.up);
         camera.right = Cartesian3.clone(this.right);
-        camera.transform = Matrix4.clone(this.transform);
+        camera._transform = Matrix4.clone(this.transform);
+        camera._transformChanged = true;
         camera.frustum = this.frustum.clone();
         return camera;
     };

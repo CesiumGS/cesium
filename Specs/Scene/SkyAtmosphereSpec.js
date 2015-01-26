@@ -41,9 +41,8 @@ defineSuite([
         var us = context.uniformState;
         var radii = Ellipsoid.WGS84.radii;
         var frameState = createFrameState(createCamera({
-            eye : new Cartesian3(radii.x * 0.1, 0.0, radii.z * 1.005),
+            offset : new Cartesian3(radii.x * 0.1, 0.0, 0.0),
             target : new Cartesian3(0.0, 0.0, radii.z * 1.005),
-            up : Cartesian3.UNIT_Z,
             near : 1.0,
             far : 20000000.0
         }));
@@ -65,9 +64,8 @@ defineSuite([
         var us = context.uniformState;
         var radii = Ellipsoid.WGS84.radii;
         var frameState = createFrameState(createCamera({
-            eye : new Cartesian3(radii.x * 0.1, 0.0, radii.z * 1.005),
+            offset : new Cartesian3(radii.x * 0.1, 0.0, 0.0),
             target : new Cartesian3(0.0, 0.0, radii.z * 1.005),
-            up : Cartesian3.UNIT_Z,
             near : 1.0,
             far : 20000000.0
         }));
@@ -87,9 +85,8 @@ defineSuite([
         var us = context.uniformState;
         var radii = Ellipsoid.WGS84.radii;
         var frameState = createFrameState(createCamera({
-            eye : new Cartesian3(radii.x * 0.1, 0.0, radii.z * 1.005),
+            offset : new Cartesian3(radii.x * 0.1, 0.0, 0.0),
             target : new Cartesian3(0.0, 0.0, radii.z * 1.005),
-            up : Cartesian3.UNIT_Z,
             near : 1.0,
             far : 20000000.0
         }));
@@ -105,9 +102,8 @@ defineSuite([
         var us = context.uniformState;
         var radii = Ellipsoid.WGS84.radii;
         var frameState = createFrameState(createCamera({
-            eye : new Cartesian3(radii.x * 0.1, 0.0, radii.z * 1.005),
+            offset : new Cartesian3(radii.x * 0.1, 0.0, 0.0),
             target : new Cartesian3(0.0, 0.0, radii.z * 1.005),
-            up : Cartesian3.UNIT_Z,
             near : 1.0,
             far : 20000000.0
         }));
@@ -124,9 +120,8 @@ defineSuite([
         var us = context.uniformState;
         var radii = Ellipsoid.WGS84.radii;
         var frameState = createFrameState(createCamera({
-            eye : new Cartesian3(radii.x * 0.1, 0.0, radii.z * 1.005),
+            offset : new Cartesian3(radii.x * 0.1, 0.0, 0.0),
             target : new Cartesian3(0.0, 0.0, radii.z * 1.005),
-            up : Cartesian3.UNIT_Z,
             near : 1.0,
             far : 20000000.0
         }));
