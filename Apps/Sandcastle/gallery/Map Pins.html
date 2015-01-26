@@ -74,9 +74,7 @@ Cesium.when(pinBuilder.fromMakiIconId('hospital', Cesium.Color.RED, 48), functio
 });
 
 //Set the view to the location of our pins.
-viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(-75.1703817, 39.9182722, 250),
-                     Cesium.Cartesian3.fromDegrees(-75.1703817, 39.9212722, 0),
-                     Cesium.Cartesian3.UNIT_Z);
+viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(-75.17038170000053, 39.92127219999993), new Cesium.Cartesian3(0.0, -333.0, 250.0));
 
 //Sandcastle_End
 Sandcastle.finishedLoading();

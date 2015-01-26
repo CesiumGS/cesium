@@ -12,6 +12,11 @@ Change Log
   * `Camera.tilt` was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. Use `Camera.pitch`.
   * `Camera.heading` and `Camera.tilt` were deprecated in Cesium 1.6. They will become read-only in Cesium 1.7. Use `Camera.setView`.
   * `Camera.setPositionCartographic` was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. Use `Camera.setView`.
+  * The `direction` and `up` options to `Camera.flyTo` have been deprecated in Cesium 1.6. They will be removed in Cesium 1.8. Use the `orientation` option.
+  * `Camera.flyToRectangle` has been deprecated in Cesium 1.6. They will be removed in Cesium 1.8. Use `Camera.flyTo`.
+  * `Camera.setTransform` was deprecated in Cesium 1.6. It will be removed in Cesium 1.8. Use `Camera.lookAtTransform`.
+  * `Camera.transform` was deprecated in Cesium 1.6. It will be removed in Cesium 1.8. Use `Camera.lookAtTransform`.
+   * The `eye`, `target`, and `up` parameters to `Camera.lookAt` were deprecated in Cesium 1.6. It will be removed in Cesium 1.8. Use the `target` and `offset`.
   * `PolygonGraphics.positions` was deprecated and replaced with `PolygonGraphics.hierarchy`, whose value is a `PolygonHierarchy` instead of an array of positions.  `PolygonGraphics.positions` will be removed in Cesium 1.8.
   * The `Model.readyToRender` event was deprecated and will be removed in Cesium 1.9.  Use the new `Model.readyPromise` instead.
   * The `mouseMoveOnDocument` parameter to the `ScreenSpaceEventHandler` constructor was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. `ScreenSpaceEventHandler` will be constructed as if `mouseMoveOnDocument` is `false`.
@@ -20,7 +25,9 @@ Change Log
   * The `Entity` constructor taking a single string value for the id has been deprecated. The constructor now takes an options object which allows you to provide any and all `Entity` related properties at construction time. Support for the deprecated behavior will be removed in Cesium 1.9.
 * Improved performance of asynchronous geometry creation (as much as 20% faster in some use cases). [#2342](https://github.com/AnalyticalGraphicsInc/cesium/issues/2342)
 * Added `PolylineVolumeGraphics` and `Entity.polylineVolume`
+* Added `Camera.lookAtTransform` which sets the camera position and orientation given a transformation matrix defining a reference frame and either a cartesian offset or heading/pitch/range from the center of that frame.
 * Added `Camera.setView` (which use heading, pitch, and roll) and `Camera.roll`.
+* Added an orientation option to `Camera.flyTo` that can be either direction and up unit vectors or heading, pitch and roll angles.
 * Added `Quaternion.fromHeadingPitchRoll` to create a rotation from heading, pitch, and roll angles.
 * Added `Transforms.headingPitchRollToFixedFrame` to create a local frame from a position and heading/pitch/roll angles.
 * Added `Transforms.headingPitchRollQuaternion` which is the quaternion rotation from `Transforms.headingPitchRollToFixedFrame`.
@@ -45,7 +52,6 @@ Change Log
 * Added `DataSourceDisplay.defaultDataSource` which is an instance of `CustomDataSource` and allows you to easily add custom entities to the display.
 * Added `viewer.entities` which allows you to easily create and manage `Entity` instances without a corresponding `DataSource`. This is just a shortcut to `viewer.dataSourceDisplay.defaultDataSource.entities`
 * Added `Camera.viewBoundingSphere` and `Camera.flyToBoundingSphere`, which as the names imply, sets or flies to a view that encloses the provided `BoundingSphere`
-* The `Visualizer` interface has a new optional method, `getBoundingSphere` which when implemented, will be used to retrieve the bounding sphere created by any primitives produced by the Visualizer for a given entity.
 * For constant `Property` values, there is no longer a need to create an instance of `ConstantProperty` or `ConstantPositionProperty`, you can now assign a value directly to the corresponding property. The same is true for material images and colors.
 * All Entity and related class can now be assigned using anonymous objects as well as be passed template objects. The correct underlying instance is created for you automatically.
 * Many Sandcastle examples have been rewritten to make use of the newly improved Entity API.
