@@ -65,16 +65,11 @@ defineSuite([
 
     beforeEach(function() {
         var maxRadii = Ellipsoid.WGS84.maximumRadius;
-        var position = Cartesian3.multiplyByScalar(Cartesian3.normalize(new Cartesian3(0.0, -2.0, 1.0), new Cartesian3()), 2.5 * maxRadii, new Cartesian3());
-        var direction = Cartesian3.normalize(Cartesian3.negate(position, new Cartesian3()), new Cartesian3());
-        var right = Cartesian3.normalize(Cartesian3.cross(direction, Cartesian3.UNIT_Z, new Cartesian3()), new Cartesian3());
-        var up = Cartesian3.cross(right, direction, new Cartesian3());
+        var offset = Cartesian3.multiplyByScalar(Cartesian3.normalize(new Cartesian3(0.0, -2.0, 1.0), new Cartesian3()), 2.5 * maxRadii, new Cartesian3());
 
         camera = createCamera({
             canvas : canvas,
-            eye : position,
-            target : Cartesian3.ZERO,
-            up : up,
+            offset : offset,
             near : 1.0,
             far : 500000000.0
         });
@@ -612,7 +607,7 @@ defineSuite([
         setUpCV();
 
         var origin = Cartesian3.fromDegrees(-72.0, 40.0);
-        camera.transform = Transforms.eastNorthUpToFixedFrame(origin);
+        camera.lookAtTransform(Transforms.eastNorthUpToFixedFrame(origin), new Cartesian3(1.0, 0.0, 0.0));
 
         var position = Cartesian3.clone(camera.position);
         var startPosition = new Cartesian2(0, 0);
@@ -631,7 +626,7 @@ defineSuite([
         setUpCV();
 
         var origin = Cartesian3.fromDegrees(-72.0, 40.0);
-        camera.transform = Transforms.eastNorthUpToFixedFrame(origin);
+        camera._transform = Transforms.eastNorthUpToFixedFrame(origin);
 
         var position = Cartesian3.clone(camera.position);
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
@@ -648,7 +643,7 @@ defineSuite([
         setUpCV();
 
         var origin = Cartesian3.fromDegrees(-72.0, 40.0);
-        camera.transform = Transforms.eastNorthUpToFixedFrame(origin);
+        camera._transform = Transforms.eastNorthUpToFixedFrame(origin);
 
         var position = Cartesian3.clone(camera.position);
 
