@@ -21,14 +21,12 @@ define(['../Core/defaultValue'], function(defaultValue) {
          */
         this.heading = defaultValue(heading, 0.0);
 
-
         /**
          * Pitch is the rotation from the local xy-plane. Positive pitch angles
          * are above the plane. Negative pitch angles are below the plane.
          * @type {Number}
          */
         this.pitch = defaultValue(pitch, 0.0);
-
 
         /**
          * Range is the distance from the center of the local frame.
