@@ -66,6 +66,8 @@ defineSuite([
         this.drawingBufferHeight = 768;
         this.mapProjection = defaultValue(projection, new GeographicProjection());
         this.tweens = new TweenCollection();
+        this.screenSpaceCameraController = {};
+        this.camera = undefined;
     };
 
     beforeEach(function() {
@@ -83,6 +85,8 @@ defineSuite([
         camera.right = Cartesian3.clone(right);
 
         camera.minimumZoomDistance = 0.0;
+
+        scene.camera = camera;
     });
 
     it('constructor throws an exception when there is no canvas', function() {
@@ -1829,19 +1833,27 @@ defineSuite([
         expect(CameraFlightPath.createTween).toHaveBeenCalledWith(scene, options);
     });
 
-    it('flyToRectangle uses createTweenRectangle', function() {
-        spyOn(CameraFlightPath, 'createTweenRectangle').andReturn({
-            startObject : {},
-            stopObject: {},
-            duration : 0.0
-        });
+    it('flyTo with heading, pitch and roll', function() {
+        scene.mode = SceneMode.SCENE3D;
+
+        var heading = CesiumMath.toRadians(180.0);
+        var pitch = 0.0;
+        var roll = CesiumMath.toRadians(45.0);
 
         var options = {
-            destination : Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0)
+            destination : Cartesian3.fromDegrees(-117.16, 32.71, 0.0),
+            orientation : {
+                heading : heading,
+                pitch : pitch,
+                roll : roll
+            },
+            duration : 0.0
         };
-        camera.flyToRectangle(options);
+        camera.flyTo(options);
 
-        expect(CameraFlightPath.createTweenRectangle).toHaveBeenCalledWith(scene, options);
+        expect(camera.heading).toEqualEpsilon(heading, CesiumMath.EPSILON6);
+        expect(camera.pitch).toEqualEpsilon(pitch, CesiumMath.EPSILON6);
+        expect(camera.roll).toEqualEpsilon(roll, CesiumMath.EPSILON6);
     });
 
 });

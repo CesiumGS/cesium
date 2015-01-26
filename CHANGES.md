@@ -12,6 +12,8 @@ Change Log
   * `Camera.tilt` was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. Use `Camera.pitch`.
   * `Camera.heading` and `Camera.tilt` were deprecated in Cesium 1.6. They will become read-only in Cesium 1.7. Use `Camera.setView`.
   * `Camera.setPositionCartographic` was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. Use `Camera.setView`.
+  * The `direction` and `up` options to `Camera.flyTo` have been deprecated in Cesium 1.6. They will be removed in Cesium 1.8. Use the `orientation` option.
+  * `Camera.flyToRectangle` has been deprecated in Cesium 1.6. They will be removed in Cesium 1.8. Use `Camera.flyTo`.
   * `Camera.setTransform` was deprecated in Cesium 1.6. It will be removed in Cesium 1.8. Use `Camera.lookAtTransform`.
   * `Camera.transform` was deprecated in Cesium 1.6. It will be removed in Cesium 1.8. Use `Camera.lookAtTransform`.
    * The `eye`, `target`, and `up` parameters to `Camera.lookAt` were deprecated in Cesium 1.6. It will be removed in Cesium 1.8. Use the `target` and `offset`.
@@ -22,6 +24,7 @@ Change Log
 * Added `PolylineVolumeGraphics` and `Entity.polylineVolume`
 * Added `Camera.lookAtTransform` which sets the camera position and orientation given a transformation matrix defining a reference frame and either a cartesian offset or heading/pitch/range from the center of that frame.
 * Added `Camera.setView` (which use heading, pitch, and roll) and `Camera.roll`.
+* Added an orientation option to `Camera.flyTo` that can be either direction and up unit vectors or heading, pitch and roll angles.
 * Added `Quaternion.fromHeadingPitchRoll` to create a rotation from heading, pitch, and roll angles.
 * Added `Transforms.headingPitchRollToFixedFrame` to create a local frame from a position and heading/pitch/roll angles.
 * Added `Transforms.headingPitchRollQuaternion` which is the quaternion rotation from `Transforms.headingPitchRollToFixedFrame`.
