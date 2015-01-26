@@ -112,7 +112,7 @@ define([
                 }
                 model = Model.fromGltf({
                     url : uri,
-                    displayCondition : new DistanceDisplayCondition(0, 1000.0),
+                    displayCondition : new DistanceDisplayCondition(0, 2000.0),
                     loadOnlyIfDisplayCondition : true
                 });
 
@@ -132,11 +132,6 @@ define([
             model.scale = Property.getValueOrDefault(modelGraphics._scale, time, defaultScale);
             model.minimumPixelSize = Property.getValueOrDefault(modelGraphics._minimumPixelSize, time, defaultMinimumPixelSize);
             model.modelMatrix = Matrix4.clone(modelMatrix, model.modelMatrix);
-
-// TODO: remove
-//            Transforms.northEastDownToFixedFrame(entity.position.getValue(time), scene.globe.ellipsoid, model.modelMatrix);
-//            Matrix4.multiplyByMatrix3(model.modelMatrix, Matrix3.fromRotationZ(CesiumMath.toRadians(90.0)), model.modelMatrix);
-//
         }
         return true;
     };
