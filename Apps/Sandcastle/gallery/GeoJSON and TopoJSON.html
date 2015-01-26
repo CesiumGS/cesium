@@ -89,9 +89,9 @@ Sandcastle.addToolbarButton('Custom styling', function() {
 Sandcastle.reset = function() {
   viewer.dataSources.removeAll();
   
-  //Set the camera to a US centered tilted view.
-  viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(-98, 15.0, 5000000),
-      Cesium.Cartesian3.fromDegrees(-98, 40.0, 0), Cesium.Cartesian3.UNIT_Z);
+  //Set the camera to a US centered tilted view and switch back to moving in world coordinates.
+  viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(-98.0, 40.0), new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0));
+  viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 };
 //Sandcastle_End
     Sandcastle.finishedLoading();

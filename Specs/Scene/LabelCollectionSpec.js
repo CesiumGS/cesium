@@ -589,24 +589,16 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
         var us = context.uniformState;
-        var eye = new Cartesian3(0.0, 0.0, 1.0);
-        var target = Cartesian3.ZERO;
-        var up = Cartesian3.UNIT_Y;
         us.update(context, createFrameState(createCamera({
-            eye : eye,
-            target : target,
-            up : up
+            offset : new Cartesian3(0.0, 0.0, 1.0)
         })));
         render(context, frameState, labels);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        eye = new Cartesian3(0.0, 0.0, 6.0);
         us.update(context, createFrameState(createCamera({
-            eye : eye,
-            target : target,
-            up : up
+            offset : new Cartesian3(0.0, 0.0, 6.0)
         })));
         render(context, frameState, labels);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -626,24 +618,16 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
         var us = context.uniformState;
-        var eye = new Cartesian3(0.0, 0.0, 1.0);
-        var target = Cartesian3.ZERO;
-        var up = Cartesian3.UNIT_Y;
         us.update(context, createFrameState(createCamera({
-            eye : eye,
-            target : target,
-            up : up
+            offset : new Cartesian3(0.0, 0.0, 1.0)
         })));
         render(context, frameState, labels);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        eye = new Cartesian3(0.0, 0.0, 6.0);
         us.update(context, createFrameState(createCamera({
-            eye : eye,
-            target : target,
-            up : up
+            offset : new Cartesian3(0.0, 0.0, 6.0)
         })));
         render(context, frameState, labels);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
