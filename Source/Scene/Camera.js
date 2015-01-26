@@ -2124,13 +2124,31 @@ define([
         return undefined;
     };
 
+
+    var scratchFlyToDestination = new Cartesian3();
+    var scratchFlyToQuaternion = new Quaternion();
+    var scratchFlyToMatrix3 = new Matrix3();
+    var scratchFlyToDirection = new Cartesian3();
+    var scratchFlyToUp = new Cartesian3();
+    var scratchFlyToMatrix4 = new Matrix4();
+    var newOptions = {
+        destination : undefined,
+        direction : undefined,
+        up : undefined,
+        duration : undefined,
+        complete : undefined,
+        cancel : undefined,
+        endTransform : undefined
+    };
+
     /**
      * Flies the camera from its current position to a new position.
      *
      * @param {Object} options Object with the following properties:
-     * @param {Cartesian3} options.destination The final position of the camera in WGS84 (world) coordinates.
-     * @param {Cartesian3} [options.direction] The final direction of the camera in WGS84 (world) coordinates. By default, the direction will point towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D.
-     * @param {Cartesian3} [options.up] The final up direction in WGS84 (world) coordinates. By default, the up direction will point towards local north in 3D and in the positive y direction in Columbus view or 2D.
+     * @param {Cartesian3|Rectangle} options.destination The final position of the camera in WGS84 (world) coordinates or a rectangle that would be visible from a top-down view.
+     * @param {Object} [options.orientation] An object that contains either direction and up properties or heading, pith and roll properties. By default, the direction will point
+     * towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D. The up direction will point towards local north in 3D and in the positive
+     * y direction in Columbus view or 2D.
      * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
      * @param {Camera~FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
      * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
@@ -2139,14 +2157,99 @@ define([
      *                  to be in the correct coordinate system.
      *
      * @exception {DeveloperError} If either direction or up is given, then both are required.
+     *
+     * @example
+     * // 1. Fly to a position with a top-down view
+     * viewer.camera.flyTo({
+     *     destination : Cesium.Cartesian3.fromDegrees(-117.16, 32.71, 15000.0)
+     * });
+     *
+     * // 2. Fly to a Rectangle with a top-down view
+     * viewer.camera.flyTo({
+     *     destination : Cesium.Rectangle.fromDegrees(west, south, east, north)
+     * });
+     *
+     * // 3. Fly to a position with an orientation using unit vectors.
+     * viewer.camera.flyTo({
+     *     destination : Cesium.Cartesian3.fromDegrees(-122.19, 46.25, 5000.0),
+     *     orientation : {
+     *         direction : new Cesium.Cartesian3(-0.04231243104240401, -0.20123236049443421, -0.97862924300734),
+     *         up : new Cesium.Cartesian3(-0.47934589305293746, -0.8553216253114552, 0.1966022179118339)
+     *     }
+     * });
+     *
+     * // 4. Fly to a position with an orientation using heading, pitch and roll.
+     * viewer.camera.flyTo({
+     *     destination : Cesium.Cartesian3.fromDegrees(-122.19, 46.25, 5000.0),
+     *     orientation : {
+     *         heading : Cesium.Math.toRadians(175.0),
+     *         pitch : Cesium.Math.toRadians(-35.0),
+     *         roll : 0.0
+     *     }
+     * });
      */
     Camera.prototype.flyTo = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        var destination = options.destination;
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(destination)) {
+            throw new DeveloperError('destination is required.');
+        }
+        //>>includeEnd('debug');
+
         var scene = this._scene;
-        scene.tweens.add(CameraFlightPath.createTween(scene, options));
+
+        var isRectangle = defined(destination.west);
+        if (isRectangle) {
+            destination = scene.camera.getRectangleCameraCoordinates(destination, scratchFlyToDestination);
+        }
+
+        var direction;
+        var up;
+
+        var orientation = defaultValue(options.orientation, defaultValue.EMPTY_OBJECT);
+        if (defined(orientation.heading)) {
+            var heading = defaultValue(orientation.heading, 0.0);
+            var pitch = defaultValue(orientation.pitch, -CesiumMath.PI_OVER_TWO);
+            var roll = defaultValue(orientation.roll, 0.0);
+
+            var rotQuat = Quaternion.fromHeadingPitchRoll(heading - CesiumMath.PI_OVER_TWO, pitch, roll, scratchFlyToQuaternion);
+            var rotMat = Matrix3.fromQuaternion(rotQuat, scratchFlyToMatrix3);
+
+            direction = Matrix3.getColumn(rotMat, 0, scratchFlyToDirection);
+            up = Matrix3.getColumn(rotMat, 2, scratchFlyToUp);
+
+            var ellipsoid = this._projection.ellipsoid;
+            var transform = Transforms.eastNorthUpToFixedFrame(destination, ellipsoid, scratchFlyToMatrix4);
+
+            Matrix4.multiplyByPointAsVector(transform, direction, direction);
+            Matrix4.multiplyByPointAsVector(transform, up, up);
+        } else if (defined(orientation.direction)) {
+            direction = orientation.direction;
+            up = orientation.up;
+        } else if (defined(options.direction) || defined(options.up)) {
+            deprecationWarning('Camera.flyTo', 'The direction and up options to Camera.flyTo have been deprecated in Cesium 1.6. They will be removed in Cesium 1.8. Use the orientation option.');
+            direction = options.direction;
+            up = options.up;
+        }
+
+        newOptions.destination = destination;
+        newOptions.direction = direction;
+        newOptions.up = up;
+        newOptions.duration = options.duration;
+        newOptions.complete = options.complete;
+        newOptions.cancel = options.cancel;
+        newOptions.endTransform = options.endTransform;
+        newOptions.convert = isRectangle ? false : options.convert;
+
+        scene.tweens.add(CameraFlightPath.createTween(scene, newOptions));
     };
 
     /**
      * Flies the camera from its current position to a position where the entire rectangle is visible.
+     *
+     * @deprecated
      *
      * @param {Object} options Object with the following properties:
      * @param {Rectangle} options.destination The rectangle to view, in WGS84 (world) coordinates, which determines the final position of the camera.
@@ -2156,62 +2259,9 @@ define([
      * @param {Matrix4} [endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
      */
     Camera.prototype.flyToRectangle = function(options) {
+        deprecationWarning('Camera.flyToRectangle', 'Camera.flyToRectangle has been deprecated in Cesium 1.6. They will be removed in Cesium 1.8. Use Camera.flyTo.');
         var scene = this._scene;
         scene.tweens.add(CameraFlightPath.createTweenRectangle(scene, options));
-    };
-
-    var scratchFlyToQuaternion = new Quaternion();
-    var scratchFlyToMatrix3 = new Matrix3();
-    var scratchFlyToDirection = new Cartesian3();
-    var scratchFlyToUp = new Cartesian3();
-    var scratchFlyToMatrix4 = new Matrix4();
-
-    /**
-     * Flies the camera from its current position to a new position and orientation set with heading, pitch, and roll angles.
-     *
-     * @param {Object} Object with the following properties:@param {Object} options Object with the following properties:
-     * @param {Cartesian3} options.destination The final position of the camera in WGS84 (world) coordinates.
-     * @param {Number} [options.heading=0.0] The heading angle in radians.
-     * @param {Number} [options.pitch=Cesium.Math.PI_OVER_TWO] The pitch angle in radians.
-     * @param {Number} [options.roll=0.0] The roll angle in radians.
-     * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
-     * @param {Camera~FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
-     * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
-     * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
-     */
-    Camera.prototype.flyToHeadingPitchRoll = function(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        var heading = defaultValue(options.heading, 0.0);
-        var pitch = defaultValue(options.pitch, -CesiumMath.PI_OVER_TWO);
-        var roll = defaultValue(options.roll, 0.0);
-
-        var destination = options.destination;
-
-        var rotQuat = Quaternion.fromHeadingPitchRoll(heading - CesiumMath.PI_OVER_TWO, pitch, roll, scratchFlyToQuaternion);
-        var rotMat = Matrix3.fromQuaternion(rotQuat, scratchFlyToMatrix3);
-
-        var direction = Matrix3.getColumn(rotMat, 0, scratchFlyToDirection);
-        var up = Matrix3.getColumn(rotMat, 2, scratchFlyToUp);
-
-        var ellipsoid = this._projection.ellipsoid;
-        var transform = Transforms.eastNorthUpToFixedFrame(destination, ellipsoid, scratchFlyToMatrix4);
-
-        Matrix4.multiplyByPointAsVector(transform, direction, direction);
-        Matrix4.multiplyByPointAsVector(transform, up, up);
-
-        var newOptions = {
-            destination : destination,
-            direction : direction,
-            up : up,
-            duration : options.duration,
-            complete : options.complete,
-            cancel : options.cancel,
-            endTransform : options.endTransform
-        };
-
-        var scene = this._scene;
-        scene.tweens.add(CameraFlightPath.createTween(scene, newOptions));
     };
 
     /**

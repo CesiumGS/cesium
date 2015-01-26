@@ -1689,21 +1689,6 @@ defineSuite([
         expect(CameraFlightPath.createTween).toHaveBeenCalledWith(scene, options);
     });
 
-    it('flyToRectangle uses createTweenRectangle', function() {
-        spyOn(CameraFlightPath, 'createTweenRectangle').andReturn({
-            startObject : {},
-            stopObject: {},
-            duration : 0.0
-        });
-
-        var options = {
-            destination : Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0)
-        };
-        camera.flyToRectangle(options);
-
-        expect(CameraFlightPath.createTweenRectangle).toHaveBeenCalledWith(scene, options);
-    });
-
     it('flyToHeadingPitchRoll uses CameraFlightPath', function() {
         spyOn(CameraFlightPath, 'createTween').andReturn({
             startObject : {},
