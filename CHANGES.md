@@ -20,9 +20,7 @@ Change Log
   * The `mouseMoveOnDocument` parameter to the `ScreenSpaceEventHandler` constructor was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. `ScreenSpaceEventHandler` will be constructed as if `mouseMoveOnDocument` is `false`.
 * Improved performance of asynchronous geometry creation (as much as 20% faster in some use cases). [#2342](https://github.com/AnalyticalGraphicsInc/cesium/issues/2342)
 * Added `PolylineVolumeGraphics` and `Entity.polylineVolume`
-* Added `Camera.lookAtTransform` which sets the camera position and orientation given a transformation matrix defining a reference frame and an offset from the center of that frame.
-* Added `Camera.lookAtHeadingPitchRange` which sets the camera position and orientation given a target in world coordinates, heading/pitch angles, and a range from the target.
-* Added `Camera.lookAtTransformHeadingPitchRange` which sets the camera position and orientation given a transformation matrix defining a reference frame, heading/pitch angles, and a range from the center of the reference frame.
+* Added `Camera.lookAtTransform` which sets the camera position and orientation given a transformation matrix defining a reference frame and either a cartesian offset or heading/pitch/range from the center of that frame.
 * Added `Camera.setView` (which use heading, pitch, and roll) and `Camera.roll`.
 * Added `Quaternion.fromHeadingPitchRoll` to create a rotation from heading, pitch, and roll angles.
 * Added `Transforms.headingPitchRollToFixedFrame` to create a local frame from a position and heading/pitch/roll angles.

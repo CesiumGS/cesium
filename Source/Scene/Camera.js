@@ -20,6 +20,7 @@ define([
         '../Core/Rectangle',
         '../Core/Transforms',
         './CameraFlightPath',
+        './HeadingPitchRange',
         './PerspectiveFrustum',
         './SceneMode'
     ], function(
@@ -43,6 +44,7 @@ define([
         Rectangle,
         Transforms,
         CameraFlightPath,
+        HeadingPitchRange,
         PerspectiveFrustum,
         SceneMode) {
     "use strict";
@@ -1553,14 +1555,18 @@ define([
 
     /**
      * Sets the camera position and orientation using a target and offset. The target must be given in
-     * world coordinates. The offset is a cartesian offset from the target in the local east-north-up reference frame centered at the target.
+     * world coordinates. The offset can be either a cartesian or heading/pitch/range in the local east-north-up reference frame centered at the target.
+     * If the offset is a cartesian, then it is an offset from the center of the reference frame defined by the transformation matrix. If the offset
+     * is heading/pitch/range, then the heading and the pitch angles are defined in the reference frame defined by the transformation matrix.
+     * The heading is the angle from y axis and increasing towards the x axis. Pitch is the rotation from the xy-plane. Positive pitch
+     * angles are above the plane. Negative pitch angles are below the plane. The range is the distance from the center.
      *
      * In 2D, there must be a top down view. The camera will be placed above the target looking down. The height above the
      * target will be the magnitude of the offset. The heading will be determined from the offset. If the heading cannot be
      * determined from the offset, the heading will be north.
      *
      * @param {Cartesian3} target The target position in world coordinates.
-     * @param {Cartesian3} offset The offset from the target in the local east-north-up reference frame centered at the target.
+     * @param {Cartesian3|HeadingPitchRange} offset The offset from the target in the local east-north-up reference frame centered at the target.
      *
      * The deprecated parameters sets the camera position and orientation with an eye position, target, and up vector.
      *
@@ -1571,9 +1577,16 @@ define([
      * @exception {DeveloperError} lookAt is not supported while morphing.
      *
      * @example
-     * // tilted view of the U.S.
+     * // 1. Using a cartesian offset
      * var center = Cesium.Cartesian3.fromDegrees(-98.0, 40.0);
      * viewer.camera.lookAt(center, new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0));
+     *
+     * // 2. Using a HeadingPitchRange offset
+     * var center = Cartesian3.fromDegrees(-72.0, 40.0);
+     * var heading = Cesium.Math.toRadians(50.0);
+     * var pitch = Cesium.Math.toRadians(-20.0);
+     * var range = 5000.0;
+     * viewer.camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, range));
      */
     Camera.prototype.lookAt = function(target, offset) {
         if (arguments.length > 2) {
@@ -1664,67 +1677,32 @@ define([
     }
 
     /**
-     * Sets the camera position and orientation using a target, heading, pitch and range. The target must be given in
-     * world coordinates. Both the heading and the pitch angles are defined in the local east-north-up reference
-     * frame centered at the target. The heading is the angle from north and increasing in the east direction. Pitch is the rotation
-     * from the local east-north plane. Positive pitch angles are above the plane. Negative pitch angles are below the plane. The range
-     * is the distance from the target.
-     *
-     * In 2D, there must be a top down view. The camera will be placed above the target looking down. The height above the
-     * target will be the range.
-     *
-     * @param {Cartesian3} target The target position in world coordinates.
-     * @param {Number} heading The heading angle in radians.
-     * @param {Number} pitch The pitch angle in radians.
-     * @param {Number} range The distance from the target in meters.
-     *
-     * @example
-     * var center = Cartesian3.fromDegrees(-72.0, 40.0);
-     * var heading = Cesium.Math.toRadians(50.0);
-     * var pitch = Cesium.Math.toRadians(-20.0);
-     * var range = 5000.0;
-     * camera.lookAtHeadingPitchRange(center, heading, pitch, range);
-     */
-    Camera.prototype.lookAtHeadingPitchRange = function(target, heading, pitch, range) {
-      //>>includeStart('debug', pragmas.debug);
-        if (!defined(target)) {
-            throw new DeveloperError('target is required');
-        }
-        if (!defined(heading)) {
-            throw new DeveloperError('heading is required');
-        }
-        if (!defined(pitch)) {
-            throw new DeveloperError('pitch is required');
-        }
-        if (!defined(range)) {
-            throw new DeveloperError('range is required');
-        }
-        if (this._mode === SceneMode.MORPHING) {
-            throw new DeveloperError('lookAtTransform is not supported while morphing.');
-        }
-        //>>includeEnd('debug');
-
-        this.lookAt(target, offsetFromHeadingPitchRange(heading, pitch, range));
-    };
-
-    /**
-     * Sets the camera position and orientation using a target and transformation matrix. The offset is a cartesian
-     * offset from the center of the reference frame defined by the transformation matrix.
+     * Sets the camera position and orientation using a target and transformation matrix. The offset can be either a cartesian or heading/pitch/range.
+     * If the offset is a cartesian, then it is an offset from the center of the reference frame defined by the transformation matrix. If the offset
+     * is heading/pitch/range, then the heading and the pitch angles are defined in the reference frame defined by the transformation matrix.
+     * The heading is the angle from y axis and increasing towards the x axis. Pitch is the rotation from the xy-plane. Positive pitch
+     * angles are above the plane. Negative pitch angles are below the plane. The range is the distance from the center.
      *
      * In 2D, there must be a top down view. The camera will be placed above the center of the reference frame. The height above the
      * target will be the magnitude of the offset. The heading will be determined from the offset. If the heading cannot be
      * determined from the offset, the heading will be north.
      *
      * @param {Matrix4} transform The transformation matrix defining the reference frame.
-     * @param {Cartesian3} offset The offset from the target in a reference frame centered at the target.
+     * @param {Cartesian3|HeadingPitchRange} offset The offset from the target in a reference frame centered at the target.
      *
      * @exception {DeveloperError} lookAtTransform is not supported while morphing.
      *
      * @example
-     * // tilted view of the U.S.
-     * var center = Cesium.Cartesian3.fromDegrees(-98.0, 40.0);
-     * var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center, Cesium.Ellipsoid.WGS84);
+     * // 1. Using a cartesian offset
+     * var transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-98.0, 40.0));
      * viewer.camera.lookAtTransform(transform, new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0));
+     *
+     * // 2. Using a HeadingPitchRange offset
+     * var transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(-72.0, 40.0));
+     * var heading = Cesium.Math.toRadians(50.0);
+     * var pitch = Cesium.Math.toRadians(-20.0);
+     * var range = 5000.0;
+     * viewer.camera.lookAtTransform(transform, new Cesium.HeadingPitchRange(heading, pitch, range));
      */
     Camera.prototype.lookAtTransform = function(transform, offset) {
         //>>includeStart('debug', pragmas.debug);
@@ -1741,12 +1719,19 @@ define([
             return;
         }
 
+        var cartesianOffset;
+        if (defined(offset.heading)) {
+            cartesianOffset = offsetFromHeadingPitchRange(offset.heading, offset.pitch, offset.range);
+        } else {
+            cartesianOffset = offset;
+        }
+
         if (this._mode === SceneMode.SCENE2D) {
             Cartesian2.clone(Cartesian2.ZERO, this.position);
 
-            Cartesian3.negate(offset, this.up);
-            Cartesian3.normalize(this.up, this.up);
+            Cartesian3.negate(cartesianOffset, this.up);
             this.up.z = 0.0;
+            Cartesian3.normalize(this.up, this.up);
 
             this._setTransform(Matrix4.IDENTITY);
 
@@ -1760,7 +1745,7 @@ define([
 
             var frustum = this.frustum;
             var ratio = frustum.top / frustum.right;
-            frustum.right = Cartesian3.magnitude(offset);
+            frustum.right = Cartesian3.magnitude(cartesianOffset);
             frustum.left = -frustum.right;
             frustum.top = ratio * frustum.right;
             frustum.bottom = -frustum.top;
@@ -1770,7 +1755,7 @@ define([
             return;
         }
 
-        Cartesian3.clone(offset, this.position);
+        Cartesian3.clone(cartesianOffset, this.position);
         Cartesian3.negate(this.position, this.direction);
         Cartesian3.normalize(this.direction, this.direction);
         Cartesian3.cross(this.direction, Cartesian3.UNIT_Z, this.right);
@@ -1782,49 +1767,6 @@ define([
         Cartesian3.normalize(this.right, this.right);
         Cartesian3.cross(this.right, this.direction, this.up);
         Cartesian3.normalize(this.up, this.up);
-    };
-
-    /**
-     * Sets the camera position and orientation using a transformation matrix, heading, pitch and range. Both the heading and the pitch angles are
-     * defined in the reference frame defined by the transformation matrix. The heading is the angle from y axis and increasing towards
-     * the x axis. Pitch is the rotation from the xy-plane. Positive pitch angles are above the plane. Negative pitch angles are below the plane. The range
-     * is the distance from the center.
-     *
-     * In 2D, there must be a top down view. The camera will be placed above the center of the reference frame looking down. The height above the
-     * center will be the range.
-     *
-     * @param {Matrix4} transform The transformation matrix defining the reference frame.
-     * @param {Number} heading The heading angle in radians.
-     * @param {Number} pitch The pitch angle in radians.
-     * @param {Number} range The distance from the target in meters.
-     *
-     * @example
-     * var transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(-72.0, 40.0));
-     * var heading = Cesium.Math.toRadians(50.0);
-     * var pitch = Cesium.Math.toRadians(-20.0);
-     * var range = 5000.0;
-     * camera.lookAtTransformHeadingPitchRange(transform, heading, pitch, range);
-     */
-    Camera.prototype.lookAtTransformHeadingPitchRange = function(transform, heading, pitch, range) {
-      //>>includeStart('debug', pragmas.debug);
-        if (!defined(transform)) {
-            throw new DeveloperError('transform is required');
-        }
-        if (!defined(heading)) {
-            throw new DeveloperError('heading is required');
-        }
-        if (!defined(pitch)) {
-            throw new DeveloperError('pitch is required');
-        }
-        if (!defined(range)) {
-            throw new DeveloperError('range is required');
-        }
-        if (this._mode === SceneMode.MORPHING) {
-            throw new DeveloperError('lookAtTransform is not supported while morphing.');
-        }
-        //>>includeEnd('debug');
-
-        this.lookAtTransform(transform, offsetFromHeadingPitchRange(heading, pitch, range));
     };
 
     var viewRectangle3DCartographic = new Cartographic();

@@ -15,6 +15,7 @@ defineSuite([
         'Core/Transforms',
         'Core/WebMercatorProjection',
         'Scene/CameraFlightPath',
+        'Scene/HeadingPitchRange',
         'Scene/OrthographicFrustum',
         'Scene/PerspectiveFrustum',
         'Scene/SceneMode',
@@ -35,6 +36,7 @@ defineSuite([
         Transforms,
         WebMercatorProjection,
         CameraFlightPath,
+        HeadingPitchRange,
         OrthographicFrustum,
         PerspectiveFrustum,
         SceneMode,
@@ -900,6 +902,26 @@ defineSuite([
         expect(1.0 - Cartesian3.magnitude(tempCamera.right)).toBeLessThan(CesiumMath.EPSILON14);
     });
 
+    it('lookAt with heading, pitch and range', function() {
+        var target = Cartesian3.fromDegrees(0.0, 0.0);
+        var heading = CesiumMath.toRadians(45.0);
+        var pitch = CesiumMath.toRadians(-45.0);
+        var range = 2.0;
+
+        var tempCamera = camera.clone();
+        tempCamera.lookAt(target, new HeadingPitchRange(heading, pitch, range));
+
+        tempCamera.lookAtTransform(Matrix4.IDENTITY);
+
+        expect(Cartesian3.distance(tempCamera.position, target)).toEqualEpsilon(range, CesiumMath.EPSILON6);
+        expect(tempCamera.heading).toEqualEpsilon(heading, CesiumMath.EPSILON6);
+        expect(tempCamera.pitch).toEqualEpsilon(pitch, CesiumMath.EPSILON6);
+
+        expect(1.0 - Cartesian3.magnitude(tempCamera.direction)).toBeLessThan(CesiumMath.EPSILON14);
+        expect(1.0 - Cartesian3.magnitude(tempCamera.up)).toBeLessThan(CesiumMath.EPSILON14);
+        expect(1.0 - Cartesian3.magnitude(tempCamera.right)).toBeLessThan(CesiumMath.EPSILON14);
+    });
+
     it('lookAt throws with no target parameter', function() {
         expect(function() {
             camera.lookAt(undefined, Cartesian3.ZERO);
@@ -937,59 +959,7 @@ defineSuite([
         expect(tempCamera.frustum.left).toEqual(-Cartesian3.magnitude(offset));
     });
 
-    it('lookAt throws when morphing', function() {
-        camera.update(SceneMode.MORPHING);
-
-        expect(function() {
-            camera.lookAt(Cartesian3.ZERO, Cartesian3.UNIT_X);
-        }).toThrowDeveloperError();
-    });
-
-    it('lookAtHeadingPitchRange', function() {
-        var target = Cartesian3.fromDegrees(0.0, 0.0);
-        var heading = CesiumMath.toRadians(45.0);
-        var pitch = CesiumMath.toRadians(-45.0);
-        var range = 2.0;
-
-        var tempCamera = camera.clone();
-        tempCamera.lookAtHeadingPitchRange(target, heading, pitch, range);
-
-        tempCamera.lookAtTransform(Matrix4.IDENTITY);
-
-        expect(Cartesian3.distance(tempCamera.position, target)).toEqualEpsilon(range, CesiumMath.EPSILON6);
-        expect(tempCamera.heading).toEqualEpsilon(heading, CesiumMath.EPSILON6);
-        expect(tempCamera.pitch).toEqualEpsilon(pitch, CesiumMath.EPSILON6);
-
-        expect(1.0 - Cartesian3.magnitude(tempCamera.direction)).toBeLessThan(CesiumMath.EPSILON14);
-        expect(1.0 - Cartesian3.magnitude(tempCamera.up)).toBeLessThan(CesiumMath.EPSILON14);
-        expect(1.0 - Cartesian3.magnitude(tempCamera.right)).toBeLessThan(CesiumMath.EPSILON14);
-    });
-
-    it('lookAtHeadingPitchRange throws with no target parameter', function() {
-        expect(function() {
-            camera.lookAtHeadingPitchRange(undefined, 1.0, 2.0, 3.0);
-        }).toThrowDeveloperError();
-    });
-
-    it('lookAtHeadingPitchRange throws with no heading parameter', function() {
-        expect(function() {
-            camera.lookAtHeadingPitchRange(Cartesian3.ZERO, undefined, 2.0, 3.0);
-        }).toThrowDeveloperError();
-    });
-
-    it('lookAtHeadingPitchRange throws with no pitch parameter', function() {
-        expect(function() {
-            camera.lookAtHeadingPitchRange(Cartesian3.ZERO, 1.0, undefined, 3.0);
-        }).toThrowDeveloperError();
-    });
-
-    it('lookAtHeadingPitchRange throws with no range parameter', function() {
-        expect(function() {
-            camera.lookAtHeadingPitchRange(Cartesian3.ZERO, 1.0, 2.0, undefined);
-        }).toThrowDeveloperError();
-    });
-
-    it('lookAtHeadingPitchRange in 2D mode', function() {
+    it('lookAt in 2D mode with heading, pitch and range', function() {
         var frustum = new OrthographicFrustum();
         frustum.near = 1.0;
         frustum.far = 2.0;
@@ -1007,7 +977,7 @@ defineSuite([
         var pitch = CesiumMath.toRadians(-45.0);
         var range = 2.0;
 
-        tempCamera.lookAtHeadingPitchRange(target, heading, pitch, range);
+        tempCamera.lookAt(target, new HeadingPitchRange(heading, pitch, range));
 
         expect(Cartesian2.clone(tempCamera.position)).toEqual(Cartesian2.ZERO);
 
@@ -1016,6 +986,14 @@ defineSuite([
         expect(tempCamera.heading).toEqualEpsilon(heading, CesiumMath.EPSILON6);
         expect(tempCamera.frustum.right).toEqual(range);
         expect(tempCamera.frustum.left).toEqual(-range);
+    });
+
+    it('lookAt throws when morphing', function() {
+        camera.update(SceneMode.MORPHING);
+
+        expect(function() {
+            camera.lookAt(Cartesian3.ZERO, Cartesian3.UNIT_X);
+        }).toThrowDeveloperError();
     });
 
     it('lookAtTransform', function() {
@@ -1058,6 +1036,27 @@ defineSuite([
         expect(camera.right).toEqualEpsilon(Cartesian3.UNIT_X, CesiumMath.EPSILON9);
     });
 
+    it('lookAtTransform with heading, pitch and range', function() {
+        var target = Cartesian3.fromDegrees(0.0, 0.0);
+        var heading = CesiumMath.toRadians(45.0);
+        var pitch = CesiumMath.toRadians(-45.0);
+        var range = 2.0;
+        var transform = Transforms.eastNorthUpToFixedFrame(target);
+
+        var tempCamera = camera.clone();
+        tempCamera.lookAtTransform(transform, new HeadingPitchRange(heading, pitch, range));
+
+        tempCamera.lookAtTransform(Matrix4.IDENTITY);
+
+        expect(Cartesian3.distance(tempCamera.position, target)).toEqualEpsilon(range, CesiumMath.EPSILON6);
+        expect(tempCamera.heading).toEqualEpsilon(heading, CesiumMath.EPSILON6);
+        expect(tempCamera.pitch).toEqualEpsilon(pitch, CesiumMath.EPSILON6);
+
+        expect(1.0 - Cartesian3.magnitude(tempCamera.direction)).toBeLessThan(CesiumMath.EPSILON14);
+        expect(1.0 - Cartesian3.magnitude(tempCamera.up)).toBeLessThan(CesiumMath.EPSILON14);
+        expect(1.0 - Cartesian3.magnitude(tempCamera.right)).toBeLessThan(CesiumMath.EPSILON14);
+    });
+
     it('lookAtTransform throws with no transform parameter', function() {
         expect(function() {
             camera.lookAtTransform(undefined, Cartesian3.ZERO);
@@ -1089,60 +1088,7 @@ defineSuite([
         expect(tempCamera.frustum.left).toEqual(-Cartesian3.magnitude(offset));
     });
 
-    it('lookAtTransform throws when morphing', function() {
-        camera.update(SceneMode.MORPHING);
-
-        expect(function() {
-            camera.lookAtTransform(Matrix4.IDENTITY, Cartesian3.UNIT_X);
-        }).toThrowDeveloperError();
-    });
-
-    it('lookAtTransformHeadingPitchRange', function() {
-        var target = Cartesian3.fromDegrees(0.0, 0.0);
-        var heading = CesiumMath.toRadians(45.0);
-        var pitch = CesiumMath.toRadians(-45.0);
-        var range = 2.0;
-        var transform = Transforms.eastNorthUpToFixedFrame(target);
-
-        var tempCamera = camera.clone();
-        tempCamera.lookAtTransformHeadingPitchRange(transform, heading, pitch, range);
-
-        tempCamera.lookAtTransform(Matrix4.IDENTITY);
-
-        expect(Cartesian3.distance(tempCamera.position, target)).toEqualEpsilon(range, CesiumMath.EPSILON6);
-        expect(tempCamera.heading).toEqualEpsilon(heading, CesiumMath.EPSILON6);
-        expect(tempCamera.pitch).toEqualEpsilon(pitch, CesiumMath.EPSILON6);
-
-        expect(1.0 - Cartesian3.magnitude(tempCamera.direction)).toBeLessThan(CesiumMath.EPSILON14);
-        expect(1.0 - Cartesian3.magnitude(tempCamera.up)).toBeLessThan(CesiumMath.EPSILON14);
-        expect(1.0 - Cartesian3.magnitude(tempCamera.right)).toBeLessThan(CesiumMath.EPSILON14);
-    });
-
-    it('lookAtTransformHeadingPitchRange throws with no transform parameter', function() {
-        expect(function() {
-            camera.lookAtTransformHeadingPitchRange(undefined, 1.0, 2.0, 3.0);
-        }).toThrowDeveloperError();
-    });
-
-    it('lookAtTransformHeadingPitchRange throws with no heading parameter', function() {
-        expect(function() {
-            camera.lookAtTransformHeadingPitchRange(Matrix4.IDENTITY, undefined, 2.0, 3.0);
-        }).toThrowDeveloperError();
-    });
-
-    it('lookAtTransformHeadingPitchRange throws with no pitch parameter', function() {
-        expect(function() {
-            camera.lookAtTransformHeadingPitchRange(Matrix4.IDENTITY, 1.0, undefined, 3.0);
-        }).toThrowDeveloperError();
-    });
-
-    it('lookAtTransformHeadingPitchRange throws with no range parameter', function() {
-        expect(function() {
-            camera.lookAtTransformHeadingPitchRange(Matrix4.IDENTITY, 1.0, 2.0, undefined);
-        }).toThrowDeveloperError();
-    });
-
-    it('lookAtTransformHeadinPitchRange in 2D mode', function() {
+    it('lookAtTransform in 2D mode with heading, pitch and range', function() {
         var frustum = new OrthographicFrustum();
         frustum.near = 1.0;
         frustum.far = 2.0;
@@ -1161,7 +1107,7 @@ defineSuite([
         var range = 2.0;
         var transform = Transforms.eastNorthUpToFixedFrame(target);
 
-        tempCamera.lookAtTransformHeadingPitchRange(transform, heading, pitch, range);
+        tempCamera.lookAtTransform(transform, new HeadingPitchRange(heading, pitch, range));
 
         expect(Cartesian2.clone(tempCamera.position)).toEqual(Cartesian2.ZERO);
 
@@ -1172,11 +1118,11 @@ defineSuite([
         expect(tempCamera.frustum.left).toEqual(-range);
     });
 
-    it('lookAtTransformHeadinPitchRange throws when morphing', function() {
+    it('lookAtTransform throws when morphing', function() {
         camera.update(SceneMode.MORPHING);
 
         expect(function() {
-            camera.lookAtTransformHeadingPitchRange(Matrix4.IDENTITY, 1.0, 2.0, 3.0);
+            camera.lookAtTransform(Matrix4.IDENTITY, Cartesian3.UNIT_X);
         }).toThrowDeveloperError();
     });
 
