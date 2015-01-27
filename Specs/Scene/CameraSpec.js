@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Camera',
+        'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
@@ -22,6 +23,7 @@ defineSuite([
         'Scene/TweenCollection'
     ], function(
         Camera,
+        BoundingSphere,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -1854,6 +1856,61 @@ defineSuite([
         expect(camera.heading).toEqualEpsilon(heading, CesiumMath.EPSILON6);
         expect(camera.pitch).toEqualEpsilon(pitch, CesiumMath.EPSILON6);
         expect(camera.roll).toEqualEpsilon(roll, CesiumMath.EPSILON6);
+    });
+
+    it('viewBoundingSphere', function() {
+        scene.mode = SceneMode.SCENE3D;
+
+        var sphere = new BoundingSphere(Cartesian3.fromDegrees(-117.16, 32.71, 0.0), 10000.0);
+        camera.viewBoundingSphere(sphere);
+        camera._setTransform(Matrix4.IDENTITY);
+
+        var distance = Cartesian3.distance(camera.position, sphere.center);
+        expect(distance).toBeGreaterThan(sphere.radius);
+        expect(distance).toBeLessThan(sphere.radius * 3.0);
+    });
+
+    it('viewBoundingSphere with offset', function() {
+        scene.mode = SceneMode.SCENE3D;
+
+        var heading = CesiumMath.toRadians(45.0);
+        var pitch = CesiumMath.toRadians(-45.0);
+        var range = 15.0;
+
+        var sphere = new BoundingSphere(Cartesian3.fromDegrees(-117.16, 32.71, 0.0), 10.0);
+        camera.viewBoundingSphere(sphere, new HeadingPitchRange(heading, pitch, range));
+        camera._setTransform(Matrix4.IDENTITY);
+
+        var distance = Cartesian3.distance(camera.position, sphere.center);
+        expect(distance).toEqualEpsilon(range, CesiumMath.EPSILON10);
+        expect(camera.heading).toEqualEpsilon(heading, CesiumMath.EPSILON6);
+        expect(camera.pitch).toEqualEpsilon(pitch, CesiumMath.EPSILON5);
+    });
+
+    it('flyToBoundingSphere uses CameraFlightPath', function() {
+        spyOn(CameraFlightPath, 'createTween').andReturn({
+            startObject : {},
+            stopObject: {},
+            duration : 0.0
+        });
+
+        var sphere = new BoundingSphere(Cartesian3.fromDegrees(-117.16, 32.71, 0.0), 100000.0);
+        camera.flyToBoundingSphere(sphere);
+
+        expect(CameraFlightPath.createTween).toHaveBeenCalled();
+    });
+
+    it('flyToBoundingSphere uses CameraFlightPath', function() {
+        scene.mode = SceneMode.SCENE3D;
+
+        var sphere = new BoundingSphere(Cartesian3.fromDegrees(-117.16, 32.71, 0.0), 10000.0);
+        camera.flyToBoundingSphere(sphere, undefined, {
+            duration : 0.0
+        });
+
+        var distance = Cartesian3.distance(camera.position, sphere.center);
+        expect(distance).toBeGreaterThan(sphere.radius);
+        expect(distance).toBeLessThan(sphere.radius * 3.0);
     });
 
 });
