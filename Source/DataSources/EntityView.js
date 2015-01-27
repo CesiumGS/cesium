@@ -157,10 +157,13 @@ define([
                 Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, transform);
             }
 
-            if (updateLookAt) {
-                camera.lookAtTransform(transform, that.scene.mode === SceneMode.SCENE2D ? that._offset2D : that._offset3D);
-                updatedCameraTransform = true;
+            var offset = that.scene.mode === SceneMode.SCENE2D ? that._offset2D : that._offset3D;
+            if (Cartesian3.equals(offset, Cartesian3.ZERO)) {
+                offset = undefined;
             }
+
+            camera.lookAtTransform(transform, offset);
+            updatedCameraTransform = true;
         }
 
         if (updateLookAt && !updatedCameraTransform) {

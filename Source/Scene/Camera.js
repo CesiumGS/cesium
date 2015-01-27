@@ -2476,6 +2476,7 @@ define([
     }
 
     var scratchDefaultOffset = new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_FOUR, 0.0);
+    var MINIMUM_ZOOM = 100.0;
 
     /**
      * Sets the camera so that the current view contains the provided bounding sphere.
@@ -2509,7 +2510,9 @@ define([
         }
 
         if (defined(offset.range) && offset.range === 0.0) {
-            offset.range = this._mode === SceneMode.SCENE2D ? distanceToBoundingSphere2D(this, boundingSphere.radius) : distanceToBoundingSphere3D(this, boundingSphere.radius);
+            var radius = boundingSphere.radius;
+            var range = this._mode === SceneMode.SCENE2D ? distanceToBoundingSphere2D(this, radius) : distanceToBoundingSphere3D(this, radius);
+            offset.range = Math.max(range, MINIMUM_ZOOM);
         }
 
         this.lookAt(boundingSphere.center, offset);
@@ -2558,7 +2561,9 @@ define([
         }
 
         if (defined(offset.range) && offset.range === 0.0) {
-            offset.range = this._mode === SceneMode.SCENE2D ? distanceToBoundingSphere2D(this, boundingSphere.radius) : distanceToBoundingSphere3D(this, boundingSphere.radius);
+            var radius = boundingSphere.radius;
+            var range = this._mode === SceneMode.SCENE2D ? distanceToBoundingSphere2D(this, radius) : distanceToBoundingSphere3D(this, radius);
+            offset.range = Math.max(range, MINIMUM_ZOOM);
         }
 
         var position;
