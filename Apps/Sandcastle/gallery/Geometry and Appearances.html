@@ -36,8 +36,8 @@ var i;
 var height;
 var positions;
 var stripeMaterial = new Cesium.StripeMaterialProperty({
-    evenColor : new Cesium.Color(1.0, 1.0, 1.0, 0.5),
-    oddColor : new Cesium.Color(0.0, 0.0, 1.0, 0.5),
+    evenColor : Cesium.Color.WHITE.withAlpha(0.5),
+    oddColor : Cesium.Color.BLUE.withAlpha(0.5),
     repeat : 5.0
 });
 
@@ -197,7 +197,7 @@ entities.add({
         maximumHeights : [500000, 1000000, 500000],
         minimumHeights : [0, 500000, 0],
         outline : true,
-        outlineColor : new Cesium.Color(0.7, 0.7, 0.7, 1.0),
+        outlineColor : Cesium.Color.LIGHTGRAY,
         outlineWidth : 4,
         material : Cesium.Color.fromRandom({alpha : 0.7})
     }
@@ -374,7 +374,7 @@ entities.add({
         positions : positions,
         width : 10.0,
         material : new Cesium.PolylineGlowMaterialProperty({
-            color : new Cesium.Color(0.0, 0.5, 1.0, 1.0),
+            color : Cesium.Color.DEEPSKYBLUE,
             glowPower : 0.25
         })
     }
