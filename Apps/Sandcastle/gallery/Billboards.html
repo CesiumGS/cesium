@@ -74,7 +74,7 @@ function changeBillboardProperties() {
 
     var billboard = entity.billboard;
     billboard.scale = 3.0;
-    billboard.color = new Cesium.Color(1.0, 1.0, 1.0, 0.25);
+    billboard.color = Cesium.Color.WHITE.withAlpha(0.25);
 }
 
 function addMultipleBillboards() {

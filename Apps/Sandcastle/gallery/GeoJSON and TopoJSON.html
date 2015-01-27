@@ -73,14 +73,14 @@ Sandcastle.addToolbarButton('Custom styling', function() {
             }
             
             //Set the polygon material to our random color.
-            entity.polygon.material = new Cesium.ColorMaterialProperty(color);
+            entity.polygon.material = color;
             //Outline each polygon in black.
-            entity.polygon.outlineColor = new Cesium.ConstantProperty(Cesium.Color.BLACK);
+            entity.polygon.outlineColor = Cesium.Color.BLACK;
 
             //Extrude the polygon based on the state's population.  Each entity
             //stores the properties for the GeoJSON feature it was created from
             //Since the population is a huge number, we divide by 50.
-            entity.polygon.extrudedHeight = new Cesium.ConstantProperty(entity.properties.Population / 50.0);
+            entity.polygon.extrudedHeight = entity.properties.Population / 50.0;
         }
     });
 });
