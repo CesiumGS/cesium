@@ -38,6 +38,7 @@ define([
      * @returns {BoundingSphereState} BoundingSphereState.DONE if the result contains the bounding sphere,
      *                       BoundingSphereState.PENDING if the result is still being computed, or
      *                       BoundingSphereState.FAILED if the entity has no visualization in the current scene.
+     * @private
      */
     DynamicGeometryUpdater.prototype.getBoundingSphere = DeveloperError.throwInstantiationError;
 

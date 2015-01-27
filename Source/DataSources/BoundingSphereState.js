@@ -8,6 +8,7 @@ define([
     /**
      * The state of a BoundingSphere computation being performed by a {@link Visualizer}.
      * @exports BoundingSphereState
+     * @private
      */
     var BoundingSphereState = {
         /**

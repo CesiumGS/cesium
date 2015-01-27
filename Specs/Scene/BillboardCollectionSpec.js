@@ -245,24 +245,16 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         var us = context.uniformState;
-        var eye = new Cartesian3(0.0, 0.0, 1.0);
-        var target = Cartesian3.ZERO;
-        var up = Cartesian3.UNIT_Y;
         us.update(context, createFrameState(createCamera({
-            eye : eye,
-            target : target,
-            up : up
+            offset : new Cartesian3(0.0, 0.0, 1.0)
         })));
         render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        eye = new Cartesian3(0.0, 0.0, 6.0);
         us.update(context, createFrameState(createCamera({
-            eye : eye,
-            target : target,
-            up : up
+            offset : new Cartesian3(0.0, 0.0, 6.0)
         })));
         render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -280,28 +272,22 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         var us = context.uniformState;
-        var eye = new Cartesian3(0.0, 0.0, 1.0);
-        var target = Cartesian3.ZERO;
-        var up = Cartesian3.UNIT_Y;
+        var offset = new Cartesian3(0.0, 0.0, 1.0);
         us.update(context, createFrameState(createCamera({
-            eye : eye,
-            target : target,
-            up : up
+            offset : offset
         })));
         render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        eye = new Cartesian3(0.0, 0.0, 6.0);
+        offset = new Cartesian3(0.0, 0.0, 6.0);
         us.update(context, createFrameState(createCamera({
-            eye : eye,
-            target : target,
-            up : up
+            offset : offset
         })));
         render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-        us.update(context, createFrameState(createCamera(context)));
+        us.update(context, createFrameState(createCamera()));
     });
 
     it('render billboard with pixelOffsetScaleByDistance', function() {
@@ -315,24 +301,18 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
         var us = context.uniformState;
-        var eye = new Cartesian3(0.0, 0.0, 1.0);
-        var target = Cartesian3.ZERO;
-        var up = Cartesian3.UNIT_Y;
+        var offset = new Cartesian3(0.0, 0.0, 1.0);
         us.update(context, createFrameState(createCamera({
-            eye : eye,
-            target : target,
-            up : up
+            offset : offset
         })));
         render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        eye = new Cartesian3(0.0, 0.0, 6.0);
+        offset = new Cartesian3(0.0, 0.0, 6.0);
         us.update(context, createFrameState(createCamera({
-            eye : eye,
-            target : target,
-            up : up
+            offset : offset
         })));
         render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
