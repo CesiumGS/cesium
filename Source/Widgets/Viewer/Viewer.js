@@ -983,7 +983,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                         }
 
                         this._entityView = undefined;
-                        this.camera.lookAtTransform(Matrix4.IDENTITY, this.camera.positionWC);
+                        this.camera.lookAtTransform(Matrix4.IDENTITY);
                         return;
                     }
                     this._needTrackedEntityUpdate = true;
