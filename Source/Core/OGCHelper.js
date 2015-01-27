@@ -108,40 +108,11 @@ define([
      * Each element is an object with the following attributes:<ul>
      * <li>- format: the string describing the array MIME</li>
      * <li>- extension: the string describing the extension</li>
-     * <li>- postProcessArray: the function to apply to have an exploitable array. Return an usable typedArray. The parameters are:<ul>
-     *                          <li>-bufferIn : buffer to process</li>
-     *                          <li>-size: defines the dimension of the array (size.height* size.width cells)</li>
-     *                          <li>-highest: defines the highest element (without offset) of the data.</li>
-     *                          <li>-lowest: defines the lowest element (without offset) of the data.</li>
-     *                          <li>-offset: defines the offset of the data in order adjust the limitations</li>
-     *</ul></li></ul>
+     * </ul>
      */
     OGCHelper.FormatArray = [ {
         format : 'image/bil',
-        extension:'bil',
-        postProcessArray : function(bufferIn, size,highest,lowest,offset) {
-            var resultat;
-            var viewerIn = new DataView(bufferIn);
-            var littleEndianBuffer = new ArrayBuffer(size.height * size.width * 2);
-            var viewerOut = new DataView(littleEndianBuffer);
-            if (littleEndianBuffer.byteLength === bufferIn.byteLength) {
-                // time to switch bytes!!
-                var temp, goodCell = 0, somme = 0;
-                for (var i = 0; i < littleEndianBuffer.byteLength; i += 2) {
-                    temp = viewerIn.getInt16(i, false)-offset;
-                    if (temp > lowest && temp < highest) {
-                        viewerOut.setInt16(i, temp, true);
-                        somme += temp;
-                        goodCell++;
-                    } else {
-                        var val = (goodCell === 0 ? 1 : somme / goodCell);
-                        viewerOut.setInt16(i, val, true);
-                    }
-                }
-                resultat = new Int16Array(littleEndianBuffer);
-            }
-            return resultat;
-        }
+        extension:'bil'
     } ];
 
     /**
