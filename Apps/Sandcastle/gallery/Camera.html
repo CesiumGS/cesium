@@ -93,6 +93,7 @@ function flyToRectangle() {
     var south = 38.0;
     var east = -87.0;
     var north = 40.0;
+    var rectangle = Cesium.Rectangle.fromDegrees(west, south, east, north);
 
     viewer.camera.flyTo({
         destination : rectangle
