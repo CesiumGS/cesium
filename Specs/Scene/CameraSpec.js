@@ -1887,6 +1887,14 @@ defineSuite([
         expect(camera.pitch).toEqualEpsilon(pitch, CesiumMath.EPSILON5);
     });
 
+    it('viewBoundingSphere throws when morphing', function() {
+        camera._mode = SceneMode.MORPHING;
+
+        expect(function() {
+            camera.viewBoundingSphere(new BoundingSphere());
+        }).toThrowDeveloperError();
+    });
+
     it('flyToBoundingSphere uses CameraFlightPath', function() {
         spyOn(CameraFlightPath, 'createTween').andReturn({
             startObject : {},

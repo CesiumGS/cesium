@@ -2492,6 +2492,8 @@ define([
      *
      * @param {BoundingSphere} boundingSphere The bounding sphere to view.
      * @param {HeadingPitchRange} [offset] The offset from the target in the local east-north-up reference frame centered at the target.
+     *
+     * @exception {DeveloperError} viewBoundingSphere is not supported while morphing.
      */
     Camera.prototype.viewBoundingSphere = function(boundingSphere, offset) {
         //>>includeStart('debug', pragmas.debug);
@@ -2501,7 +2503,7 @@ define([
         //>>includeEnd('debug');
 
         if (this._mode === SceneMode.MORPHING) {
-            return;
+            throw new DeveloperError('viewBoundingSphere is not supported while morphing.');
         }
 
         if (!defined(offset)) {
