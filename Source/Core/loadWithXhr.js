@@ -132,8 +132,19 @@ define([
 
         var xhr = new XMLHttpRequest();
 
-        if (defined(overrideMimeType) && defined(xhr.overrideMimeType)) {
-            xhr.overrideMimeType(overrideMimeType);
+        var weWantXml = false;
+
+        if (defined(overrideMimeType)) {
+            if (defined(xhr.overrideMimeType)) {
+                xhr.overrideMimeType(overrideMimeType);
+            } else if (overrideMimeType === 'text/xml' && responseType === 'document') {
+                // This is an old browser without support for overrideMimeType, and we're asking for XML.
+                // Many XML documents are returned without the 'text/xml' MIME type, such as OGC servers,
+                // so our request will fail if we set the responseType without having a way to override the MIME
+                // type.  So request text instead and then parse out the XML from the text.
+                weWantXml = true;
+                responseType = 'text';
+            }
         }
 
         xhr.open(method, url, true);
@@ -153,7 +164,12 @@ define([
         xhr.onload = function(e) {
             if (xhr.status === 200) {
                 if (defined(xhr.response)) {
-                    deferred.resolve(xhr.response);
+                    if (weWantXml) {
+                        var parser = new DOMParser();
+                        deferred.resolve(parser.parseFromString(xhr.response, 'text/xml'));
+                    } else {
+                        deferred.resolve(xhr.response);
+                    }
                 } else {
                     // busted old browsers.
                     if (!defaultValue(preferText, false) && defined(xhr.responseXML) && xhr.responseXML.hasChildNodes()) {
