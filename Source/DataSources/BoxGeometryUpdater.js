@@ -544,7 +544,7 @@ define([
             }));
         }
 
-        if (Property.getValueOrDefault(box.outline, time, true)) {
+        if (Property.getValueOrDefault(box.outline, time, false)) {
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
 
             var outlineColor = Property.getValueOrClonedDefault(box.outlineColor, time, Color.BLACK, scratchColor);
