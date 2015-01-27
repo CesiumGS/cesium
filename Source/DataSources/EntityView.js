@@ -157,8 +157,10 @@ define([
                 Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, transform);
             }
 
-            camera.lookAtTransform(transform, that.scene.mode === SceneMode.SCENE2D ? that._offset2D : that._offset3D);
-            updatedCameraTransform = true;
+            if (updateLookAt) {
+                camera.lookAtTransform(transform, that.scene.mode === SceneMode.SCENE2D ? that._offset2D : that._offset3D);
+                updatedCameraTransform = true;
+            }
         }
 
         if (updateLookAt && !updatedCameraTransform) {
@@ -279,7 +281,6 @@ define([
                 var controller = scene.screenSpaceCameraController;
                 controller.minimumZoomDistance = Math.min(controller.minimumZoomDistance, sphere.radius * 0.5);
                 camera.viewBoundingSphere(sphere);
-                camera.setTransform(Transforms.eastNorthUpToFixedFrame(sphere.center));
                 this._boundingSphereOffset = Cartesian3.subtract(sphere.center, entity.position.getValue(time), new Cartesian3());
                 updateLookAt = false;
             } else if (!defined(viewFromProperty) || !defined(viewFromProperty.getValue(time, offset3D))) {

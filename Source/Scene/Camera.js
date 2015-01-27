@@ -2475,15 +2475,24 @@ define([
         return Math.max(right, top) * 1.25;
     }
 
-    var scratchViewBoundingSphereCartesian = new Cartesian3();
+    var scratchDefaultOffset = new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_FOUR, 0.0);
 
     /**
      * Sets the camera so that the current view completely contains the provided bounding sphere.
+     * The offset is heading/pitch/range in the local east-north-up reference frame centered at the center of the bounding sphere.
+     * The heading and the pitch angles are defined in the local east-north-up reference frame.
+     * The heading is the angle from y axis and increasing towards the x axis. Pitch is the rotation from the xy-plane. Positive pitch
+     * angles are above the plane. Negative pitch angles are below the plane. The range is the distance from the center. If the range is
+     * zero, a range will be computed such that the whole bounding sphere is visible.
+     *
+     * In 2D, there must be a top down view. The camera will be placed above the target looking down. The height above the
+     * target will be the range. The heading will be determined from the offset. If the heading cannot be
+     * determined from the offset, the heading will be north.
      *
      * @param {BoundingSphere} boundingSphere The bounding sphere to view.
-     * @param {Object} [options] Object with the following properties:
+     * @param {HeadingPitchRange} [offset] The offset from the target in the local east-north-up reference frame centered at the target.
      */
-    Camera.prototype.viewBoundingSphere = function(boundingSphere, options) {
+    Camera.prototype.viewBoundingSphere = function(boundingSphere, offset) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(boundingSphere)) {
             throw new DeveloperError('boundingSphere is required.');
@@ -2494,16 +2503,24 @@ define([
             return;
         }
 
-        this.transform = Transforms.eastNorthUpToFixedFrame(boundingSphere.center);
+        if (!defined(offset)) {
+            offset = scratchDefaultOffset;
+            offset.range = 0.0;
+        }
 
-        var r = this._mode === SceneMode.SCENE2D ? distanceToBoundingSphere2D(this, boundingSphere.radius) : distanceToBoundingSphere3D(this, boundingSphere.radius);
-        var position = Cartesian3.fromElements(0.0, -1.0, 1.0, scratchViewBoundingSphereCartesian);
-        Cartesian3.normalize(position, position);
-        Cartesian3.multiplyByScalar(position, r, position);
+        if (defined(offset.range) && offset.range === 0.0) {
+            offset.range = this._mode === SceneMode.SCENE2D ? distanceToBoundingSphere2D(this, boundingSphere.radius) : distanceToBoundingSphere3D(this, boundingSphere.radius);
+        }
 
-        this.lookAt(position, Cartesian3.ZERO, Cartesian3.UNIT_Z);
-        this.setTransform(Matrix4.IDENTITY);
+        this.lookAt(boundingSphere.center, offset);
     };
+
+    var scratchflyToBoundingSphereTransform = new Matrix4();
+    var scratchflyToBoundingSphereDestination = new Cartesian3();
+    var scratchflyToBoundingSphereDirection = new Cartesian3();
+    var scratchflyToBoundingSphereUp = new Cartesian3();
+    var scratchflyToBoundingSphereRight = new Cartesian3();
+    var scratchViewBoundingSphereCartesian = new Cartesian3();
 
     /**
      * Flys the camera to a location where the current view completely contains the provided bounding sphere.
@@ -2515,7 +2532,7 @@ define([
      * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
      */
-    Camera.prototype.flyToBoundingSphere = function(boundingSphere, options) {
+    Camera.prototype.flyToBoundingSphere = function(boundingSphere, offset, options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(boundingSphere)) {
             throw new DeveloperError('boundingSphere is required.');
@@ -2525,13 +2542,30 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var transform = Transforms.eastNorthUpToFixedFrame(boundingSphere.center);
-        this.setTransform(Matrix4.IDENTITY);
+        this._setTransform(Matrix4.IDENTITY);
 
         var scene2D = this._mode === SceneMode.SCENE2D;
-        var r = scene2D ? distanceToBoundingSphere2D(this, boundingSphere.radius) : distanceToBoundingSphere3D(this, boundingSphere.radius);
-        var position = Cartesian3.fromElements(0.0, scene2D ? 0.0 : -1.0, 1.0, scratchViewBoundingSphereCartesian);
+
+        if (!defined(offset)) {
+            offset = scratchDefaultOffset;
+            offset.range = 0.0;
+        }
+
+        if (defined(offset.range) && offset.range === 0.0) {
+            offset.range = scene2D ? distanceToBoundingSphere2D(this, boundingSphere.radius) : distanceToBoundingSphere3D(this, boundingSphere.radius);
+        }
+
+        var position = offsetFromHeadingPitchRange(offset.heading, offset.pitch, offset.range);
+        if (scene2D) {
+            Cartesian2.clone(Cartesian2.ZERO, position);
+        }
+
+        if (Cartesian3.magnitudeSquared(position) < CesiumMath.EPSILON10) {
+            Cartesian3.clone(Cartesian3.UNIT_Z, position);
+        }
+
         Cartesian3.normalize(position, position);
-        Cartesian3.multiplyByScalar(position, r, position);
+        Cartesian3.multiplyByScalar(position, offset.range, position);
         Matrix4.multiplyByPoint(transform, position, position);
 
         var direction = new Cartesian3();
@@ -2545,8 +2579,10 @@ define([
 
         this.flyTo({
             destination : position,
-            direction : direction,
-            up : up,
+            orientation : {
+                direction : direction,
+                up : up
+            },
             duration : options.duration,
             complete : options.complete,
             cancel : options.cancel,
