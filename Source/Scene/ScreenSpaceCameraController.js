@@ -717,11 +717,11 @@ define([
         controller._rotateRateRangeAdjustment = 1.0;
 
         var oldTransform = Matrix4.clone(camera.transform, rotateCVOldTransform);
-        camera.setTransform(transform);
+        camera._setTransform(transform);
 
         rotate3D(controller, startPosition, movement, Cartesian3.UNIT_Z);
 
-        camera.setTransform(oldTransform);
+        camera._setTransform(oldTransform);
         controller._globe = oldGlobe;
         controller._ellipsoid = oldEllipsoid;
 
@@ -815,14 +815,14 @@ define([
         var constrainedAxis = Cartesian3.UNIT_Z;
 
         var oldTransform = Matrix4.clone(camera.transform, rotateCVOldTransform);
-        camera.setTransform(transform);
+        camera._setTransform(transform);
 
         var tangent = Cartesian3.cross(Cartesian3.UNIT_Z, Cartesian3.normalize(camera.position, rotateCVCartesian3), rotateCVCartesian3);
         var dot = Cartesian3.dot(camera.right, tangent);
 
         rotate3D(controller, startPosition, movement, constrainedAxis, false, true);
 
-        camera.setTransform(verticalTransform);
+        camera._setTransform(verticalTransform);
         if (dot < 0.0) {
             if (movement.startPosition.y > movement.endPosition.y) {
                 constrainedAxis = undefined;
@@ -853,7 +853,7 @@ define([
             }
         }
 
-        camera.setTransform(oldTransform);
+        camera._setTransform(oldTransform);
         controller._globe = oldGlobe;
         controller._ellipsoid = oldEllipsoid;
 
@@ -865,7 +865,7 @@ define([
         adjustHeightForTerrain(controller);
 
         if (!Cartesian3.equals(camera.positionWC, originalPosition)) {
-            camera.setTransform(verticalTransform);
+            camera._setTransform(verticalTransform);
             camera.worldToCameraCoordinatesPoint(originalPosition, originalPosition);
 
             var magSqrd = Cartesian3.magnitudeSquared(originalPosition);
@@ -885,7 +885,7 @@ define([
             Cartesian3.cross(camera.direction, camera.up, camera.right);
             Cartesian3.cross(camera.right, camera.direction, camera.up);
 
-            camera.setTransform(oldTransform);
+            camera._setTransform(oldTransform);
         }
     }
 
@@ -1314,11 +1314,11 @@ define([
         controller._rotateRateRangeAdjustment = 1.0;
 
         var oldTransform = Matrix4.clone(camera.transform, tilt3DOldTransform);
-        camera.setTransform(transform);
+        camera._setTransform(transform);
 
         rotate3D(controller, startPosition, movement, Cartesian3.UNIT_Z);
 
-        camera.setTransform(oldTransform);
+        camera._setTransform(oldTransform);
         controller._globe = oldGlobe;
         controller._ellipsoid = oldEllipsoid;
 
@@ -1395,14 +1395,14 @@ define([
         var constrainedAxis = Cartesian3.UNIT_Z;
 
         var oldTransform = Matrix4.clone(camera.transform, tilt3DOldTransform);
-        camera.setTransform(transform);
+        camera._setTransform(transform);
 
         var tangent = Cartesian3.cross(verticalCenter, camera.positionWC, tilt3DCartesian3);
         var dot = Cartesian3.dot(camera.rightWC, tangent);
 
         rotate3D(controller, startPosition, movement, constrainedAxis, false, true);
 
-        camera.setTransform(verticalTransform);
+        camera._setTransform(verticalTransform);
 
         if (dot < 0.0) {
             if (movement.startPosition.y > movement.endPosition.y) {
@@ -1434,7 +1434,7 @@ define([
             }
         }
 
-        camera.setTransform(oldTransform);
+        camera._setTransform(oldTransform);
         controller._globe = oldGlobe;
         controller._ellipsoid = oldEllipsoid;
 
@@ -1446,7 +1446,7 @@ define([
         adjustHeightForTerrain(controller);
 
         if (!Cartesian3.equals(camera.positionWC, originalPosition)) {
-            camera.setTransform(verticalTransform);
+            camera._setTransform(verticalTransform);
             camera.worldToCameraCoordinatesPoint(originalPosition, originalPosition);
 
             var magSqrd = Cartesian3.magnitudeSquared(originalPosition);
@@ -1466,7 +1466,7 @@ define([
             Cartesian3.cross(camera.direction, camera.up, camera.right);
             Cartesian3.cross(camera.right, camera.direction, camera.up);
 
-            camera.setTransform(oldTransform);
+            camera._setTransform(oldTransform);
         }
     }
 

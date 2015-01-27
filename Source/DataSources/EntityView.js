@@ -9,6 +9,7 @@ define([
         '../Core/JulianDate',
         '../Core/Math',
         '../Core/Matrix3',
+        '../Core/Matrix4',
         '../Core/Transforms',
         '../Scene/SceneMode'
     ], function(
@@ -21,6 +22,7 @@ define([
         JulianDate,
         CesiumMath,
         Matrix3,
+        Matrix4,
         Transforms,
         SceneMode) {
     "use strict";
@@ -28,6 +30,7 @@ define([
     var updateTransformMatrix3Scratch1 = new Matrix3();
     var updateTransformMatrix3Scratch2 = new Matrix3();
     var updateTransformMatrix3Scratch3 = new Matrix3();
+    var updateTransformMatrix4Scratch = new Matrix4();
     var updateTransformCartesian3Scratch1 = new Cartesian3();
     var updateTransformCartesian3Scratch2 = new Cartesian3();
     var updateTransformCartesian3Scratch3 = new Cartesian3();
@@ -38,6 +41,8 @@ define([
     var northUpAxisFactor = 1.25;  // times ellipsoid's maximum radius
 
     function updateTransform(that, camera, updateLookAt, positionProperty, time, ellipsoid) {
+        var updatedCameraTransform = false;
+
         var cartesian = positionProperty.getValue(time, that._lastCartesian);
         if (defined(cartesian)) {
             var hasBasis = false;
@@ -124,8 +129,8 @@ define([
                 }
             }
 
+            var transform = updateTransformMatrix4Scratch;
             if (hasBasis) {
-                var transform = camera.transform;
                 transform[0]  = xBasis.x;
                 transform[1]  = xBasis.y;
                 transform[2]  = xBasis.z;
@@ -144,20 +149,18 @@ define([
                 transform[15] = 0.0;
             } else {
                 // Stationary or slow-moving, low-altitude objects use East-North-Up.
-                Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, camera.transform);
+                Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, transform);
             }
+
+            camera.lookAtTransform(transform, that.scene.mode === SceneMode.SCENE2D ? that._offset2D : that._offset3D);
+            updatedCameraTransform = true;
         }
 
-        if (updateLookAt) {
-            if (that.scene.mode === SceneMode.SCENE2D) {
-                camera.lookAt(that._offset2D, Cartesian3.ZERO, that._up2D);
-            } else {
-                camera.lookAt(that._offset3D, Cartesian3.ZERO, that._up3D);
-            }
+        if (updateLookAt && !updatedCameraTransform) {
+            camera.lookAtTransform(camera.transform, that.scene.mode === SceneMode.SCENE2D ? that._offset2D : that._offset3D);
         }
     }
 
-    var offset3DCrossScratch = new Cartesian3();
     /**
      * A utility object for tracking an entity with the camera.
      * @alias EntityView
@@ -213,12 +216,7 @@ define([
             },
             set : function(vector) {
                 this._defaultOffset3D = Cartesian3.clone(vector, new Cartesian3());
-                this._defaultUp3D = Cartesian3.cross(this._defaultOffset3D, Cartesian3.cross(Cartesian3.UNIT_Z,
-                        this._defaultOffset3D, offset3DCrossScratch), new Cartesian3());
-                Cartesian3.normalize(this._defaultUp3D, this._defaultUp3D);
-
                 this._defaultOffset2D = new Cartesian3(0.0, 0.0, Cartesian3.magnitude(this._defaultOffset3D));
-                this._defaultUp2D = Cartesian3.clone(Cartesian3.UNIT_Y);
             }
         }
     });
@@ -260,35 +258,24 @@ define([
         var sceneModeChanged = scene.mode !== this._mode && scene.mode !== SceneMode.MORPHING;
 
         var offset3D = this._offset3D;
-        var up3D = this._up3D;
         var offset2D = this._offset2D;
-        var up2D = this._up2D;
         var camera = scene.camera;
 
         if (objectChanged) {
             var viewFromProperty = entity.viewFrom;
             if (!defined(viewFromProperty) || !defined(viewFromProperty.getValue(time, offset3D))) {
                 Cartesian3.clone(EntityView._defaultOffset2D, offset2D);
-                Cartesian3.clone(EntityView._defaultUp2D, up2D);
                 Cartesian3.clone(EntityView._defaultOffset3D, offset3D);
-                Cartesian3.clone(EntityView._defaultUp3D, up3D);
             } else {
-                Cartesian3.cross(Cartesian3.UNIT_Z, offset3D, up3D);
-                Cartesian3.cross(offset3D, up3D, up3D);
-                Cartesian3.normalize(up3D, up3D);
-
                 var mag = Cartesian3.magnitude(offset3D);
                 Cartesian3.fromElements(0.0, 0.0, mag, offset2D);
-                Cartesian3.clone(this._defaultUp2D, up2D);
             }
         } else if (!sceneModeChanged && scene.mode !== SceneMode.MORPHING) {
             if (this._mode === SceneMode.SCENE2D) {
                 var distance = Math.max(camera.frustum.right - camera.frustum.left, camera.frustum.top - camera.frustum.bottom);
                 Cartesian3.fromElements(0.0, 0.0, distance, offset2D);
-                Cartesian3.clone(camera.up, up2D);
             } else if (this._mode === SceneMode.SCENE3D || this._mode === SceneMode.COLUMBUS_VIEW) {
                 Cartesian3.clone(camera.position, offset3D);
-                Cartesian3.clone(camera.up, up3D);
             }
         }
 
