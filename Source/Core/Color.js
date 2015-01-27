@@ -695,9 +695,9 @@ define([
      * @param {Color} [result] The object onto which to store the result.
      * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
      *
-     * @example var translucentRed = Cesium.Color.RED.addAlpha(0.9);
+     * @example var translucentRed = Cesium.Color.RED.withAlpha(0.9);
      */
-    Color.prototype.addAlpha = function(alpha, result) {
+    Color.prototype.withAlpha = function(alpha, result) {
         return Color.fromAlpha(this, alpha, result);
     };
 

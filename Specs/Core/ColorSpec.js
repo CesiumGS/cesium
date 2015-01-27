@@ -391,9 +391,9 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('addAlpha works', function() {
+    it('withAlpha works', function() {
         var resultParam = new Color();
-        var result = Color.RED.addAlpha(0.5, resultParam);
+        var result = Color.RED.withAlpha(0.5, resultParam);
         expect(resultParam).toBe(result);
         expect(result).toEqual(new Color(1, 0, 0, 0.5));
     });
