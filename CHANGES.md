@@ -21,6 +21,7 @@ Change Log
   * The `Model.readyToRender` event was deprecated and will be removed in Cesium 1.9.  Use the new `Model.readyPromise` instead.
   * The `mouseMoveOnDocument` parameter to the `ScreenSpaceEventHandler` constructor was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. `ScreenSpaceEventHandler` will be constructed as if `mouseMoveOnDocument` is `false`.
 * Improved performance of asynchronous geometry creation (as much as 20% faster in some use cases). [#2342](https://github.com/AnalyticalGraphicsInc/cesium/issues/2342)
+* Added `Color.fromAlpha` and `Color.addAlpha` to make it easy to create translucent colors from constants, i.e. `var translucentRed = Color.RED.addAlpha(0.95)`.
 * Added `PolylineVolumeGraphics` and `Entity.polylineVolume`
 * Added `Camera.lookAtTransform` which sets the camera position and orientation given a transformation matrix defining a reference frame and either a cartesian offset or heading/pitch/range from the center of that frame.
 * Added `Camera.setView` (which use heading, pitch, and roll) and `Camera.roll`.
