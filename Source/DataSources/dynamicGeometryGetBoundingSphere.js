@@ -11,8 +11,6 @@ define([
         BoundingSphereState) {
     "use strict";
 
-    var primitiveBSScratch = new BoundingSphere();
-    var primitiveBSScratch2 = new BoundingSphere();
     /**
      * @private
      */
@@ -28,43 +26,28 @@ define([
 
         var attributes;
 
-        var boundingSphere;
-        if (defined(primitive)) {
-            if (!primitive.ready) {
-                return BoundingSphereState.PENDING;
-            }
-            if (primitive.show) {
-                attributes = primitive.getGeometryInstanceAttributes(entity);
-                if (defined(attributes) && defined(attributes.boundingSphere)) {
-                    boundingSphere = BoundingSphere.transform(attributes.boundingSphere, primitive.modelMatrix, primitiveBSScratch);
-                }
+        //Outline and Fill geometries have the same bounding sphere, so just use whichever one is defined and ready
+        if (defined(primitive) && primitive.show && primitive.ready) {
+            attributes = primitive.getGeometryInstanceAttributes(entity);
+            if (defined(attributes) && defined(attributes.boundingSphere)) {
+                BoundingSphere.transform(attributes.boundingSphere, primitive.modelMatrix, result);
+                return BoundingSphereState.DONE;
             }
         }
 
-        var boundingSphere2;
-        if (defined(outlinePrimitive) && outlinePrimitive.show) {
-            if (!outlinePrimitive.ready) {
-                return BoundingSphereState.PENDING;
-            }
-            if (outlinePrimitive.show) {
-                attributes = outlinePrimitive.getGeometryInstanceAttributes(entity);
-                if (defined(attributes) && defined(attributes.boundingSphere)) {
-                    boundingSphere2 = BoundingSphere.transform(attributes.boundingSphere, outlinePrimitive.modelMatrix, primitiveBSScratch2);
-                }
+        if (defined(outlinePrimitive) && outlinePrimitive.show && outlinePrimitive.ready) {
+            attributes = outlinePrimitive.getGeometryInstanceAttributes(entity);
+            if (defined(attributes) && defined(attributes.boundingSphere)) {
+                BoundingSphere.transform(attributes.boundingSphere, outlinePrimitive.modelMatrix, result);
+                return BoundingSphereState.DONE;
             }
         }
 
-        if (defined(boundingSphere) && defined(boundingSphere2)) {
-            BoundingSphere.union(boundingSphere, boundingSphere2, result);
-        } else if (defined(boundingSphere)) {
-            BoundingSphere.clone(boundingSphere, result);
-        } else if (defined(boundingSphere2)) {
-            BoundingSphere.clone(boundingSphere2, result);
-        } else {
-            return BoundingSphereState.FAILED;
+        if ((defined(primitive) && !primitive.ready) || (defined(outlinePrimitive) && !outlinePrimitive.ready)) {
+            return BoundingSphereState.PENDING;
         }
 
-        return BoundingSphereState.DONE;
+        return BoundingSphereState.FAILED;
     };
 
     return dynamicGeometryGetBoundingSphere;
