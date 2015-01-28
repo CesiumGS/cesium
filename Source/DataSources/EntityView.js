@@ -295,7 +295,7 @@ define([
             }
         } else if (!sceneModeChanged && scene.mode !== SceneMode.MORPHING) {
             if (this._mode === SceneMode.SCENE2D) {
-                var distance = Math.max(camera.frustum.right - camera.frustum.left, camera.frustum.top - camera.frustum.bottom);
+                var distance = Math.max(camera.frustum.right - camera.frustum.left, camera.frustum.top - camera.frustum.bottom) * 0.5;
                 Cartesian3.fromElements(0.0, 0.0, distance, offset2D);
             } else if (this._mode === SceneMode.SCENE3D || this._mode === SceneMode.COLUMBUS_VIEW) {
                 Cartesian3.clone(camera.position, offset3D);

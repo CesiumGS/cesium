@@ -1726,13 +1726,14 @@ define([
 
             Cartesian3.negate(cartesianOffset, this.up);
             this.up.z = 0.0;
-            Cartesian3.normalize(this.up, this.up);
-
-            this._setTransform(Matrix4.IDENTITY);
 
             if (Cartesian3.magnitudeSquared(this.up) < CesiumMath.EPSILON10) {
                 Cartesian3.clone(Cartesian3.UNIT_Y, this.up);
             }
+
+            Cartesian3.normalize(this.up, this.up);
+
+            this._setTransform(Matrix4.IDENTITY);
 
             Cartesian3.negate(Cartesian3.UNIT_Z, this.direction);
             Cartesian3.cross(this.direction, this.up, this.right);
