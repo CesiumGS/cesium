@@ -77,13 +77,10 @@ define([
         clock.shouldAnimate = false;
     }
 
-    function pickEntity(viewer, e) {
-        var picked = viewer.scene.pick(e.position);
+    function pickEntityOrImageryLayerFeature(viewer, e) {
+        var picked = viewer.pickEntity(e.position);
         if (defined(picked)) {
-            var id = defaultValue(picked.id, picked.primitive.id);
-            if (id instanceof Entity) {
-                return id;
-            }
+            return picked;
         }
 
         // No regular entity picked.  Try picking features from imagery layers.
@@ -575,14 +572,14 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var that = this;
         // Subscribe to left clicks and zoom to the picked object.
         function pickAndTrackObject(e) {
-            var entity = pickEntity(that, e);
+            var entity = pickEntityOrImageryLayerFeature(that, e);
             if (defined(entity) && defined(entity.position)) {
                 that.trackedEntity = entity;
             }
         }
 
         function pickAndSelectObject(e) {
-            that.selectedEntity = pickEntity(that, e);
+            that.selectedEntity = pickEntityOrImageryLayerFeature(that, e);
         }
 
         cesiumWidget.screenSpaceEventHandler.setInputAction(pickAndSelectObject, ScreenSpaceEventType.LEFT_CLICK);
@@ -1383,6 +1380,53 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                 this.clockTrackedDataSource = undefined;
             }
         }
+    };
+
+    /**
+     * Returns the top-most Entity at the provided window coordinates or undefined if no Entity is at that location.
+     *
+     * @param {Cartesian2} windowPosition The window coordinates to perform picking on.
+     * @returns {Entity} The picked Entity or undefined if no entity was picked.
+     *
+     * @exception {DeveloperError} windowPosition is undefined.
+     */
+    Viewer.prototype.pickEntity = function(windowPosition) {
+        var picked = this.scene.pick(windowPosition);
+        if (defined(picked)) {
+            var id = defaultValue(picked.id, picked.primitive.id);
+            if (id instanceof Entity) {
+                return id;
+            }
+        }
+        return undefined;
+    };
+
+    /**
+     * Returns the list of Entities at the provided window coordinates or undefined if no Entities are at that location.
+     * The Entities are sorted front to back by their visual order in the scene.
+     *
+     * @param {Cartesian2} windowPosition The window coordinates to perform picking on.
+     * @returns {Entity[]} The picked Entities if no entity was picked.
+     *
+     * @exception {DeveloperError} windowPosition is undefined.
+     *
+     * @example
+     * var pickedObjects = Cesium.Scene.drillPick(new Cesium.Cartesian2(100.0, 200.0));
+     */
+    Viewer.prototype.drillPickEntities = function(windowPosition) {
+        var pickedPrimitives = this.scene.drillPick(windowPosition);
+        var length = pickedPrimitives.length;
+        var result = [];
+        var hash = {};
+        for (var i = 0; i < length; i++) {
+            var picked = pickedPrimitives[i];
+            var entity = defaultValue(picked.id, picked.primitive.id);
+            if (entity instanceof Entity && !defined(hash[entity.id])) {
+                result.push(entity);
+                hash[entity.id] = true;
+            }
+        }
+        return result;
     };
 
     /**
