@@ -2479,6 +2479,22 @@ define([
     var scratchDefaultOffset = new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_FOUR, 0.0);
     var MINIMUM_ZOOM = 100.0;
 
+    function adjustBoundingSphereOffset(camera, boundingSphere, offset) {
+        if (!defined(offset)) {
+            offset = scratchDefaultOffset;
+            offset.range = 0.0;
+        }
+
+        if (boundingSphere.radius === 0.0) {
+            offset.range = MINIMUM_ZOOM;
+        } else if (defined(offset.range) && offset.range === 0.0) {
+            var radius = boundingSphere.radius;
+            offset.range = camera._mode === SceneMode.SCENE2D ? distanceToBoundingSphere2D(camera, radius) : distanceToBoundingSphere3D(camera, radius);
+        }
+
+        return offset;
+    }
+
     /**
      * Sets the camera so that the current view contains the provided bounding sphere.
      * The offset is heading/pitch/range in the local east-north-up reference frame centered at the center of the bounding sphere.
@@ -2507,17 +2523,7 @@ define([
             throw new DeveloperError('viewBoundingSphere is not supported while morphing.');
         }
 
-        if (!defined(offset)) {
-            offset = scratchDefaultOffset;
-            offset.range = 0.0;
-        }
-
-        if (defined(offset.range) && offset.range === 0.0) {
-            var radius = boundingSphere.radius;
-            var range = this._mode === SceneMode.SCENE2D ? distanceToBoundingSphere2D(this, radius) : distanceToBoundingSphere3D(this, radius);
-            offset.range = Math.max(range, MINIMUM_ZOOM);
-        }
-
+        offset = adjustBoundingSphereOffset(this, boundingSphere, offset);
         this.lookAt(boundingSphere.center, offset);
     };
 
@@ -2557,17 +2563,7 @@ define([
 
         var scene2D = this._mode === SceneMode.SCENE2D || this._mode === SceneMode.COLUMBUS_VIEW;
         this._setTransform(Matrix4.IDENTITY);
-
-        if (!defined(offset)) {
-            offset = scratchDefaultOffset;
-            offset.range = 0.0;
-        }
-
-        if (defined(offset.range) && offset.range === 0.0) {
-            var radius = boundingSphere.radius;
-            var range = this._mode === SceneMode.SCENE2D ? distanceToBoundingSphere2D(this, radius) : distanceToBoundingSphere3D(this, radius);
-            offset.range = Math.max(range, MINIMUM_ZOOM);
-        }
+        offset = adjustBoundingSphereOffset(this, boundingSphere, offset);
 
         var position;
         if (scene2D) {
