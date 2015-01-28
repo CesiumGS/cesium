@@ -1387,8 +1387,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      *
      * @param {Cartesian2} windowPosition The window coordinates to perform picking on.
      * @returns {Entity} The picked Entity or undefined if no entity was picked.
-     *
-     * @exception {DeveloperError} windowPosition is undefined.
      */
     Viewer.prototype.pickEntity = function(windowPosition) {
         var picked = this.scene.pick(windowPosition);
@@ -1406,12 +1404,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * The Entities are sorted front to back by their visual order in the scene.
      *
      * @param {Cartesian2} windowPosition The window coordinates to perform picking on.
-     * @returns {Entity[]} The picked Entities if no entity was picked.
-     *
-     * @exception {DeveloperError} windowPosition is undefined.
-     *
-     * @example
-     * var pickedObjects = Cesium.Scene.drillPick(new Cesium.Cartesian2(100.0, 200.0));
+     * @returns {Entity[]} The picked Entities or undefined if no entity was picked.
      */
     Viewer.prototype.drillPickEntities = function(windowPosition) {
         var pickedPrimitives = this.scene.drillPick(windowPosition);

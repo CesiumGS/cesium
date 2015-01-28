@@ -2,6 +2,7 @@
 defineSuite([
         'Widgets/Viewer/Viewer',
         'Core/Cartesian3',
+        'Core/Cartesian3',
         'Core/ClockRange',
         'Core/ClockStep',
         'Core/EllipsoidTerrainProvider',
@@ -32,6 +33,7 @@ defineSuite([
         'Widgets/Timeline/Timeline'
     ], function(
         Viewer,
+        Cartesian2,
         Cartesian3,
         ClockRange,
         ClockStep,
@@ -824,5 +826,75 @@ defineSuite([
 
         expect(preMixinDataSource.entities.collectionChanged._listeners.length).not.toEqual(preMixinListenerCount);
         expect(postMixinDataSource.entities.collectionChanged._listeners.length).not.toEqual(postMixinListenerCount);
+    });
+
+    it('pick returns undefined with no primitives or entities', function() {
+        viewer = new Viewer(container);
+        expect(viewer.pickEntity(0, 0)).toBeUndefined();
+    });
+
+    it('pick returns undefined with no entities', function() {
+        viewer = new Viewer(container);
+
+        spyOn(viewer.scene, 'pick').andReturn({
+            id : undefined,
+            primitive : {}
+        });
+
+        expect(viewer.pickEntity(new Cartesian2(0, 0))).toBeUndefined();
+    });
+
+    it('pick returns entity', function() {
+        viewer = new Viewer(container);
+
+        var entityForPick = new Entity();
+        spyOn(viewer.scene, 'pick').andReturn({
+            id : entityForPick,
+            primitive : {}
+        });
+
+        expect(viewer.pickEntity(new Cartesian2(0, 0))).toEqual(entityForPick);
+    });
+
+    it('drillPickEntities returns empty array with no primitives or entities', function() {
+        viewer = new Viewer(container);
+        expect(viewer.drillPickEntities(new Cartesian2(0, 0))).toEqual([]);
+    });
+
+    it('drillPickEntities returns undefined with no entities', function() {
+        viewer = new Viewer(container);
+
+        spyOn(viewer.scene, 'drillPick').andReturn([{
+            id : undefined,
+            primitive : {}
+        }]);
+
+        expect(viewer.drillPickEntities(new Cartesian2(0, 0))).toEqual([]);
+    });
+
+    it('pick returns entities in correct order without dupes', function() {
+        viewer = new Viewer(container);
+
+        var entity1 = new Entity();
+        var entity2 = new Entity();
+        var entity3 = new Entity();
+        spyOn(viewer.scene, 'drillPick').andReturn([{
+            id : entity1,
+            primitive : {}
+        }, {
+            id : undefined,
+            primitive : {}
+        }, {
+            id : entity2,
+            primitive : {}
+        }, {
+            id : entity1,
+            primitive : {}
+        }, {
+            id : entity3,
+            primitive : {}
+        }]);
+
+        expect(viewer.drillPickEntities(new Cartesian2(0, 0))).toEqual([entity1, entity2, entity3]);
     });
 }, 'WebGL');
