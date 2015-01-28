@@ -35,7 +35,7 @@ defineSuite([
         scene.camera.direction = defaultCamera.direction.clone();
         scene.camera.up = defaultCamera.up.clone();
         scene.camera.right = defaultCamera.right.clone();
-        scene.camera.transform = defaultCamera.transform.clone();
+        scene.camera._transform = defaultCamera.transform.clone();
         scene.camera.frustum = defaultCamera.frustum.clone();
     });
 
