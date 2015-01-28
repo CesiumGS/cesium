@@ -157,7 +157,12 @@ define([
                 Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, transform);
             }
 
-            camera.lookAtTransform(transform, that.scene.mode === SceneMode.SCENE2D ? that._offset2D : that._offset3D);
+            var offset = that.scene.mode === SceneMode.SCENE2D ? that._offset2D : that._offset3D;
+            if (Cartesian3.equals(offset, Cartesian3.ZERO)) {
+                offset = undefined;
+            }
+
+            camera.lookAtTransform(transform, offset);
             updatedCameraTransform = true;
         }
 
@@ -279,7 +284,6 @@ define([
                 var controller = scene.screenSpaceCameraController;
                 controller.minimumZoomDistance = Math.min(controller.minimumZoomDistance, sphere.radius * 0.5);
                 camera.viewBoundingSphere(sphere);
-                camera.setTransform(Transforms.eastNorthUpToFixedFrame(sphere.center));
                 this._boundingSphereOffset = Cartesian3.subtract(sphere.center, entity.position.getValue(time), new Cartesian3());
                 updateLookAt = false;
             } else if (!defined(viewFromProperty) || !defined(viewFromProperty.getValue(time, offset3D))) {
@@ -291,7 +295,7 @@ define([
             }
         } else if (!sceneModeChanged && scene.mode !== SceneMode.MORPHING) {
             if (this._mode === SceneMode.SCENE2D) {
-                var distance = Math.max(camera.frustum.right - camera.frustum.left, camera.frustum.top - camera.frustum.bottom);
+                var distance = Math.max(camera.frustum.right - camera.frustum.left, camera.frustum.top - camera.frustum.bottom) * 0.5;
                 Cartesian3.fromElements(0.0, 0.0, distance, offset2D);
             } else if (this._mode === SceneMode.SCENE3D || this._mode === SceneMode.COLUMBUS_VIEW) {
                 Cartesian3.clone(camera.position, offset3D);

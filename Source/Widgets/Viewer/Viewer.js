@@ -983,7 +983,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                         }
 
                         this._entityView = undefined;
-                        this.camera.lookAtTransform(Matrix4.IDENTITY, this.camera.positionWC);
+                        this.camera.lookAtTransform(Matrix4.IDENTITY);
                         return;
                     }
                     this._needTrackedEntityUpdate = true;
@@ -1515,13 +1515,15 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         //Set camera
         var scene = viewer.scene;
+        var camera = scene.camera;
         var boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
         var controller = scene.screenSpaceCameraController;
         controller.minimumZoomDistance = Math.min(controller.minimumZoomDistance, boundingSphere.radius * 0.5);
         if (!viewer._zoomIsFlight) {
-            scene.camera.viewBoundingSphere(boundingSphere);
+            camera.viewBoundingSphere(boundingSphere);
+            camera.lookAtTransform(Matrix4.IDENTITY);
         } else {
-            scene.camera.flyToBoundingSphere(boundingSphere);
+            camera.flyToBoundingSphere(boundingSphere);
         }
 
         viewer._zoomTarget = undefined;
