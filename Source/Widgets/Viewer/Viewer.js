@@ -1419,7 +1419,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     };
 
     /**
-     * Sets the camera to view the provided entity, entities, or data source.
+     * Asynchronously sets the camera to view the provided entity, entities, or data source.
+     * If the data source is still in the process of loading or the visualization is otherwise still loading,
+     * this method ways for the data to be ready before performing the zoom.
      *
      * @param {Entity|Array|EntityCollection|DataSource} zoomTarget The entity, array of entities, entity collection or data source to view.
      * @returns {Promise} A Promise that resolves to true if the zoom was successful or false if the entity is not currently visualized in the scene or the zoom was cancelled.
@@ -1432,7 +1434,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * Flies the camera to the provided entity, entities, or data source.
      *
      * @param {Entity|Array|EntityCollection|DataSource} zoomTarget The entity, array of entities, entity collection or data source to view.
-     * @returns {Promise} A Promise that resolves to true if the zoom was successful or false if the entity is not currently visualized in the scene or the zoom was cancelled.
+     * @returns {Promise} A Promise that resolves to true if the flight was successful or false if the entity is not currently visualized in the scene or the flight was cancelled.
      */
     Viewer.prototype.flyTo = function(zoomTarget) {
         return zoomToOrFly(this, zoomTarget, true);
@@ -1448,22 +1450,35 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         cancelZoom(that);
         that._zoomIsFlight = isFlight;
 
-        //If zoomTarget is a DataSource, this will retrieve the EntityCollection.
-        //If zoomTarget is already an EntityCollection, this will retrieve the array.
-        zoomTarget = defaultValue(zoomTarget.entities, zoomTarget);
-
-        //zoomTarget is now an array or an EntityCollection, this will retrieve the array
-        zoomTarget = defaultValue(zoomTarget.entities, zoomTarget);
-
-        if (isArray(zoomTarget)) {
-            that._zoomTarget = zoomTarget.slice(0);
-        } else {
-            //Single entity
-            that._zoomTarget = [zoomTarget];
-        }
-
         var zoomPromise = when.defer();
         that._zoomPromise = zoomPromise;
+
+        //If the zoom target is a data source, and it's in the middle of loading, wait for it to finish loading.
+        if (zoomTarget.isLoading && defined(zoomTarget.loadingEvent)) {
+            var removeEvent = zoomTarget.loadingEvent.addEventListener(function() {
+                removeEvent();
+
+                //Only perform the zoom if it wasn't cancelled before the data source finished.
+                if (that._zoomPromise === zoomPromise) {
+                    that._zoomTarget = zoomTarget.entities.entities.slice(0);
+                }
+            });
+        } else {
+            //If zoomTarget is a DataSource, this will retrieve the EntityCollection.
+            //If zoomTarget is already an EntityCollection, this will retrieve the array.
+            zoomTarget = defaultValue(zoomTarget.entities, zoomTarget);
+
+            //zoomTarget is now an array or an EntityCollection, this will retrieve the array
+            zoomTarget = defaultValue(zoomTarget.entities, zoomTarget);
+
+            if (isArray(zoomTarget)) {
+                that._zoomTarget = zoomTarget.slice(0);
+            } else {
+                //Single entity
+                that._zoomTarget = [zoomTarget];
+            }
+        }
+
         return zoomPromise;
     }
 
