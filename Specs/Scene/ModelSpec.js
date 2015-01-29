@@ -447,6 +447,14 @@ defineSuite([
         expect(boundingSphere.radius).toEqualEpsilon(1.268, CesiumMath.EPSILON3);
     });
 
+    it('boundingSphere returns the bounding sphere when scaled', function() {
+        duckModel.scale = 10;
+        var boundingSphere = duckModel.boundingSphere;
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(1.343, 0.370, 08.694), CesiumMath.EPSILON3);
+        expect(boundingSphere.radius).toEqualEpsilon(12.688, CesiumMath.EPSILON3);
+        duckModel.scale = 1;
+    });
+
     it('destroys', function() {
         var m = loadModel(duckUrl);
 

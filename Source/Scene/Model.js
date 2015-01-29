@@ -373,6 +373,7 @@ define([
         this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
         this._initialRadius = undefined;           // Radius without model's scale property, model-matrix scale, animations, or skins
         this._boundingSphere = undefined;
+        this._scaledBoundingSphere = new BoundingSphere();
         this._state = ModelState.NEEDS_LOAD;
         this._loadError = undefined;
         this._loadResources = undefined;
@@ -523,8 +524,11 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                this._boundingSphere.radius = (this.scale * Matrix4.getMaximumScale(this.modelMatrix)) * this._initialRadius;
-                return this._boundingSphere;
+                var scale = (this.scale * Matrix4.getMaximumScale(this.modelMatrix));
+                var scaledBoundingSphere = this._scaledBoundingSphere;
+                scaledBoundingSphere.center = Cartesian3.multiplyByScalar(this._boundingSphere.center, scale, scaledBoundingSphere.center);
+                scaledBoundingSphere.radius = scale * this._initialRadius;
+                return scaledBoundingSphere;
             }
         },
 
