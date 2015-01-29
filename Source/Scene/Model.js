@@ -898,11 +898,16 @@ define([
         var buffers = model.gltf.buffers;
         for (var name in buffers) {
             if (buffers.hasOwnProperty(name)) {
-                ++model._loadResources.pendingBufferLoads;
                 var buffer = buffers[name];
-                var uri = new Uri(buffer.uri);
-                var bufferPath = uri.resolve(model._baseUri).toString();
-                loadArrayBuffer(bufferPath).then(bufferLoad(model, name)).otherwise(getFailedLoadFunction(model, 'buffer', bufferPath));
+
+                if (buffer.type === 'arraybuffer') {
+                    ++model._loadResources.pendingBufferLoads;
+                    var uri = new Uri(buffer.uri);
+                    var bufferPath = uri.resolve(model._baseUri).toString();
+                    loadArrayBuffer(bufferPath).then(bufferLoad(model, name)).otherwise(getFailedLoadFunction(model, 'buffer', bufferPath));
+                } else if (buffer.type === 'text') {
+                    // GLTF_SPEC: Load compressed .bin with loadText.  https://github.com/KhronosGroup/glTF/issues/230
+                }
             }
         }
     }
@@ -1935,6 +1940,8 @@ define([
                                 jointMatrixUniformName = name;
                             }
                         } else if (defined(parameter.source)) {
+                            // GLTF_SPEC: Use semantic to know which matrix to use from the node, e.g., model vs. model-view
+                            // https://github.com/KhronosGroup/glTF/issues/93
                             uniformMap[name] = getUniformFunctionFromSource(parameter.source, model);
                         } else if (defined(parameter.value)) {
                             // Technique value that isn't overridden by a material
@@ -2040,7 +2047,7 @@ define([
                 var command = new DrawCommand({
                     boundingVolume : new BoundingSphere(), // updated in update()
                     modelMatrix : new Matrix4(),           // computed in update()
-                    primitiveType : primitive.primitive,
+                    primitiveType : primitive.mode,
                     vertexArray : vertexArray,
                     count : count,
                     offset : offset,
@@ -2065,7 +2072,7 @@ define([
                     pickCommand = new DrawCommand({
                         boundingVolume : new BoundingSphere(), // updated in update()
                         modelMatrix : new Matrix4(),           // computed in update()
-                        primitiveType : primitive.primitive,
+                        primitiveType : primitive.mode,
                         vertexArray : vertexArray,
                         count : count,
                         offset : offset,
