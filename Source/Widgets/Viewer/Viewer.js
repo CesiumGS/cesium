@@ -952,7 +952,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                         this._entityView = new EntityView(value, scene, this.scene.globe.ellipsoid);
                     } else {
                         this._entityView = undefined;
-                        this.camera.setTransform(Matrix4.IDENTITY);
+                        this.camera.lookAtTransform(Matrix4.IDENTITY, this.camera.positionWC);
                     }
                 }
             }

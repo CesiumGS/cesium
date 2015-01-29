@@ -39,10 +39,9 @@ define([
         Cartesian2.clone(pinchMovement.angleAndHeight.endPosition, result.angleAndHeight.endPosition);
     }
 
-    function transformDocumentCoordinatesToCanvasCoordinates(coordinates, canvas) {
-        var canvasRect = canvas.getBoundingClientRect();
-        coordinates.x -= canvasRect.left;
-        coordinates.y -= canvasRect.top;
+    function transformDocumentCoordinatesToCanvasCoordinates(coordinates, canvasBoundingRectangle) {
+        coordinates.x -= canvasBoundingRectangle.left;
+        coordinates.y -= canvasBoundingRectangle.top;
     }
 
     function listenToPinch(aggregator, modifier, canvas) {
@@ -87,10 +86,11 @@ define([
         }, ScreenSpaceEventType.PINCH_END, modifier);
 
         aggregator._documentEventHandler.setInputAction(function(mouseMovement) {
-            transformDocumentCoordinatesToCanvasCoordinates(mouseMovement.distance.startPosition, canvas);
-            transformDocumentCoordinatesToCanvasCoordinates(mouseMovement.distance.endPosition, canvas);
-            transformDocumentCoordinatesToCanvasCoordinates(mouseMovement.angleAndHeight.startPosition, canvas);
-            transformDocumentCoordinatesToCanvasCoordinates(mouseMovement.angleAndHeight.endPosition, canvas);
+            var canvasBoundingRectangle = canvas.getBoundingClientRect();
+            transformDocumentCoordinatesToCanvasCoordinates(mouseMovement.distance.startPosition, canvasBoundingRectangle);
+            transformDocumentCoordinatesToCanvasCoordinates(mouseMovement.distance.endPosition, canvasBoundingRectangle);
+            transformDocumentCoordinatesToCanvasCoordinates(mouseMovement.angleAndHeight.startPosition, canvasBoundingRectangle);
+            transformDocumentCoordinatesToCanvasCoordinates(mouseMovement.angleAndHeight.endPosition, canvasBoundingRectangle);
 
             if (isDown[key]) {
                 // Aggregate several input events into a single animation frame.
@@ -236,8 +236,9 @@ define([
         };
 
         aggregator._documentEventHandler.setInputAction(function(mouseMovement) {
-            transformDocumentCoordinatesToCanvasCoordinates(mouseMovement.startPosition, canvas);
-            transformDocumentCoordinatesToCanvasCoordinates(mouseMovement.endPosition, canvas);
+            var canvasBoundingRectangle = canvas.getBoundingClientRect();
+            transformDocumentCoordinatesToCanvasCoordinates(mouseMovement.startPosition, canvasBoundingRectangle);
+            transformDocumentCoordinatesToCanvasCoordinates(mouseMovement.endPosition, canvasBoundingRectangle);
 
             for ( var typeName in CameraEventType) {
                 if (CameraEventType.hasOwnProperty(typeName)) {

@@ -72,11 +72,7 @@ defineSuite([
     beforeEach(function() {
         primitives = new PrimitiveCollection();
 
-        camera = createCamera({
-            eye : new Cartesian3(1.02, 0.0, 0.0),
-            target : Cartesian3.UNIT_Z,
-            up : new Cartesian3(-1.0, 0.0, 0.0)
-        });
+        camera = createCamera();
 
         us = context.uniformState;
         us.update(context, createFrameState(camera));
