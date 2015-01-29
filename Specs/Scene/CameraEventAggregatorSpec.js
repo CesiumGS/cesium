@@ -81,15 +81,17 @@ defineSuite([
     }
 
     function moveMouse(button, startPosition, endPosition, shiftKey) {
+        var canvasRect = canvas.getBoundingClientRect();
+
         var options = {
             button : button,
-            clientX : startPosition.x,
-            clientY : startPosition.y,
+            clientX : startPosition.x + canvasRect.left,
+            clientY : startPosition.y + canvasRect.top,
             shiftKey : shiftKey
         };
         simulateMouseDown(options);
-        options.clientX = endPosition.x;
-        options.clientY = endPosition.y;
+        options.clientX = endPosition.x + canvasRect.left;
+        options.clientY = endPosition.y + canvasRect.top;
         simulateMouseMove(options);
         simulateMouseUp(options);
     }
@@ -153,18 +155,20 @@ defineSuite([
         var endPosition = Cartesian2.UNIT_X;
         var endPosition2 = Cartesian2.UNIT_Y;
 
+        var canvasRect = canvas.getBoundingClientRect();
+
         var options = {
             button : MouseButtons.LEFT,
-            clientX : startPosition.x,
-            clientY : startPosition.y
+            clientX : startPosition.x + canvasRect.left,
+            clientY : startPosition.y + canvasRect.top
         };
         simulateMouseDown(options);
-        options.clientX = endPosition.x;
-        options.clientY = endPosition.y;
+        options.clientX = endPosition.x + canvasRect.left;
+        options.clientY = endPosition.y + canvasRect.top;
         simulateMouseMove(options);
         handler.reset();
-        options.clientX = endPosition2.x;
-        options.clientY = endPosition2.y;
+        options.clientX = endPosition2.x + canvasRect.left;
+        options.clientY = endPosition2.y + canvasRect.top;
         simulateMouseMove(options);
 
         var movement = handler.getLastMovement(CameraEventType.LEFT_DRAG);
@@ -264,17 +268,19 @@ defineSuite([
         var endPosition = Cartesian2.UNIT_X;
         var endPosition2 = Cartesian2.UNIT_Y;
 
+        var canvasRect = canvas.getBoundingClientRect();
+
         var options = {
             button : MouseButtons.LEFT,
-            clientX : startPosition.x,
-            clientY : startPosition.y
+            clientX : startPosition.x + canvasRect.left,
+            clientY : startPosition.y + canvasRect.top
         };
         simulateMouseDown(options);
-        options.clientX = endPosition.x;
-        options.clientY = endPosition.y;
+        options.clientX = endPosition.x + canvasRect.left;
+        options.clientY = endPosition.y + canvasRect.top;
         simulateMouseMove(options);
-        options.clientX = endPosition2.x;
-        options.clientY = endPosition2.y;
+        options.clientX = endPosition2.x + canvasRect.left;
+        options.clientY = endPosition2.y + canvasRect.top;
         simulateMouseMove(options);
 
         var movement = handler.getMovement(CameraEventType.LEFT_DRAG);
