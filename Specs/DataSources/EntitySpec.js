@@ -83,6 +83,8 @@ defineSuite([
         var options = {
             id : 'someId',
             name : 'bob',
+            availability : new TimeIntervalCollection(),
+            parent : new Entity(),
             customProperty : {},
             billboard : {},
             box : {},
@@ -108,6 +110,8 @@ defineSuite([
         entity = new Entity(options);
         expect(entity.id).toEqual(options.id);
         expect(entity.name).toEqual(options.name);
+        expect(entity.availability).toBe(options.availability);
+        expect(entity.parent).toBe(options.parent);
         expect(entity.customProperty).toBe(options.customProperty);
 
         expect(entity.billboard).toBeInstanceOf(BillboardGraphics);

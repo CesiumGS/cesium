@@ -83,16 +83,37 @@ define([
     }
 
     /**
-     * Entity instances are the primary data store for processed data.
-     * They are used primarily by the visualizers to create and maintain graphic
-     * primitives that represent the Entity's properties at a specific time.
+     * Entity instances aggregate multiple forms of visualization into a single high-level object.
+     * They can be created manually and added to {@link Viewer#entities} or be produced by
+     * data sources, such as {@link CzmlDataSource} and {@link GeoJsonDataSource}.
      * @alias Entity
      * @constructor
      *
-     * @param {String} [id] A unique identifier for this object.  If no id is provided, a GUID is generated.
+     * @param {Object} [options] Object with the following properties:
+     * @param {String} [options.id] A unique identifier for this object. If none is provided, a GUID is generated.
+     * @param {String} [options.name] A human readable name to display to users. It does not have to be unique.
+     * @param {Property} [options.description] A string Property specifying an HTML description for this entity.
+     * @param {PositionProperty} [options.position] A Property specifying the entity position.
+     * @param {Property} [options.orientation] A Property specifying the entity orientation.
+     * @param {Property} [options.viewFrom] A suggested initial offset for viewing this object.
+     * @param {Entity} [options.parent] A parent entity to associate with this entity.
+     * @param {BillboardGraphics} [options.billboard] A billboard to associate with this entity.
+     * @param {BoxGraphics} [options.box] A box to associate with this entity.
+     * @param {CorridorGraphics} [options.corridor] A corridor to associate with this entity.
+     * @param {CylinderGraphics} [options.cylinder] A cylinder to associate with this entity.
+     * @param {EllipseGraphics} [options.ellipse] A ellipse to associate with this entity.
+     * @param {EllipsoidGraphics} [options.ellipsoid] A ellipsoid to associate with this entity.
+     * @param {LabelGraphics} [options.label] A options.label to associate with this entity.
+     * @param {ModelGraphics} [options.model] A model to associate with this entity.
+     * @param {PathGraphics} [options.path] A path to associate with this entity.
+     * @param {PointGraphics} [options.point] A point to associate with this entity.
+     * @param {PolygonGraphics} [options.polygon] A polygon to associate with this entity.
+     * @param {PolylineGraphics} [options.polyline] A polyline to associate with this entity.
+     * @param {PolylineVolumeGraphics} [options.polylineVolume] A polylineVolume to associate with this entity.
+     * @param {RectangleGraphics} [options.rectangle] A rectangle to associate with this entity.
+     * @param {WallGraphics} [options.wall] A wall to associate with this entity.
      *
-     * @see Property
-     * @see EntityCollection
+     * @see {@link http://cesiumjs.org/2015/02/02/Working-with-Entities/|Working with Entities}
      */
     var Entity = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -112,7 +133,7 @@ define([
         this._id = id;
         this._definitionChanged = new Event();
         this._name = undefined;
-        this._parent = undefined;
+        this._parent = options.parent;
         this._propertyNames = ['billboard', 'box', 'corridor', 'cylinder', 'description', 'ellipse', //
                                'ellipsoid', 'label', 'model', 'orientation', 'path', 'point', 'polygon', //
                                'polyline', 'polylineVolume', 'position', 'rectangle', 'viewFrom', 'wall'];
@@ -181,7 +202,7 @@ define([
             }
         },
         /**
-         * Gets the event that is raised whenever a new property is assigned.
+         * Gets the event that is raised whenever a property or sub-property is changed or modified.
          * @memberof Entity.prototype
          *
          * @type {Event}
@@ -278,7 +299,7 @@ define([
         /**
          * Gets or sets the model.
          * @memberof Entity.prototype
-         * @type {LabelGraphics}
+         * @type {ModelGraphics}
          */
         model : createPropertyTypeDescriptor('model', ModelGraphics),
         /**
@@ -314,7 +335,7 @@ define([
         /**
          * Gets or sets the polyline volume.
          * @memberof Entity.prototype
-         * @type {PolylineGraphics}
+         * @type {PolylineVolumeGraphics}
          */
         polylineVolume : createPropertyTypeDescriptor('polylineVolume', PolylineVolumeGraphics),
         /**
@@ -333,7 +354,7 @@ define([
          * Gets or sets the suggested initial offset for viewing this object
          * with the camera.  The offset is defined in the east-north-up reference frame.
          * @memberof Entity.prototype
-         * @type {Cartesian3}
+         * @type {Property}
          */
         viewFrom : createPropertyDescriptor('viewFrom'),
         /**
@@ -436,6 +457,12 @@ define([
         var propertyNamesLength = sourcePropertyNames.length;
         for (var i = 0; i < propertyNamesLength; i++) {
             var name = sourcePropertyNames[i];
+
+            //Ignore parent when merging, this only happens at construction time.
+            if (name === 'parent') {
+                continue;
+            }
+
             var targetProperty = this[name];
             var sourceProperty = source[name];
 

@@ -756,6 +756,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         /**
          * Gets the collection of entities not tied to a particular data source.
+         * This is a shortcut to [dataSourceDisplay.defaultDataSource.entities]{@link Viewer#dataSourceDisplay}.
          * @memberof Viewer.prototype
          * @type {EntityCollection}
          */
