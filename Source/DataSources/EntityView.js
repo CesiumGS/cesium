@@ -52,7 +52,8 @@ define([
             var yBasis;
             var zBasis;
 
-            if (that.scene.mode === SceneMode.SCENE3D) {
+            var mode = that.scene.mode;
+            if (mode === SceneMode.SCENE3D) {
                 // The time delta was determined based on how fast satellites move compared to vehicles near the surface.
                 // Slower moving vehicles will most likely default to east-north-up, while faster ones will be VVLH.
                 deltaTime = JulianDate.addSeconds(time, 0.001, deltaTime);
@@ -133,6 +134,9 @@ define([
                 }
             }
 
+            if (defined(that._boundingSphereOffset)) {
+                Cartesian3.add(that._boundingSphereOffset, cartesian, cartesian);
+            }
             var transform = updateTransformMatrix4Scratch;
             if (hasBasis) {
                 transform[0]  = xBasis.x;
@@ -153,13 +157,10 @@ define([
                 transform[15] = 0.0;
             } else {
                 // Stationary or slow-moving, low-altitude objects use East-North-Up.
-                if(defined(that._boundingSphereOffset)){
-                    Cartesian3.add(that._boundingSphereOffset, cartesian, cartesian);
-                }
                 Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, transform);
             }
 
-            var offset = that.scene.mode === SceneMode.SCENE2D ? that._offset2D : that._offset3D;
+            var offset = mode === SceneMode.SCENE2D ? that._offset2D : that._offset3D;
             if (Cartesian3.equals(offset, Cartesian3.ZERO)) {
                 offset = undefined;
             }
@@ -181,11 +182,9 @@ define([
      * @param {Entity} entity The entity to track with the camera.
      * @param {Scene} scene The scene to use.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use for orienting the camera.
+     * @param {Ellipsoid} [boundingSphere] An initial bounding sphere for setting the default view.
      */
     var EntityView = function(entity, scene, ellipsoid, boundingSphere) {
-
-        this._boundingSphere = BoundingSphere.clone(boundingSphere);
-        this._boundingSphereOffset = undefined;
 
         /**
          * The entity to track with the camera.
@@ -204,6 +203,14 @@ define([
          * @type {Ellipsoid}
          */
         this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+
+        /**
+         * Gets or sets an initial bounding sphere for viewing the entity.
+         * @type {Entity}
+         */
+        this.boundingSphere = BoundingSphere.clone(boundingSphere);
+
+        this._boundingSphereOffset = undefined;
 
         //Shadow copies of the objects so we can detect changes.
         this._lastEntity = undefined;
@@ -280,7 +287,7 @@ define([
         var updateLookAt = objectChanged || sceneModeChanged;
         if (objectChanged) {
             var viewFromProperty = entity.viewFrom;
-            var sphere = this._boundingSphere;
+            var sphere = this.boundingSphere;
             this._boundingSphereOffset = undefined;
             if (defined(sphere)) {
                 var controller = scene.screenSpaceCameraController;

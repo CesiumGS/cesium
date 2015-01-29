@@ -1623,6 +1623,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         var bs = state !== BoundingSphereState.FAILED ? boundingSphereScratch : undefined;
         viewer._entityView = new EntityView(trackedEntity, scene, scene.globe.ellipsoid, bs);
+        viewer._entityView.update(viewer.clock.currentTime);
         viewer._needTrackedEntityUpdate = false;
     }
 
