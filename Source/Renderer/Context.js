@@ -9,6 +9,7 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/FeatureDetection',
         '../Core/Geometry',
         '../Core/GeometryAttribute',
         '../Core/IndexDatatype',
@@ -47,6 +48,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        FeatureDetection,
         Geometry,
         GeometryAttribute,
         IndexDatatype,
@@ -208,9 +210,17 @@ define([
 
         // Override select WebGL defaults
         webglOptions.alpha = defaultValue(webglOptions.alpha, false); // WebGL default is true
-        // TODO: WebGL default is false. This works around a bug in Canary and can be removed when fixed: https://code.google.com/p/chromium/issues/detail?id=335273
-        webglOptions.stencil = defaultValue(webglOptions.stencil, false);
         webglOptions.failIfMajorPerformanceCaveat = defaultValue(webglOptions.failIfMajorPerformanceCaveat, true); // WebGL default is false
+
+        // Firefox 35 with ANGLE has a regression that causes alpha : false to affect all framebuffers
+        // Since we can't detect for ANGLE without a context, we just detect for Windows.
+        // https://github.com/AnalyticalGraphicsInc/cesium/issues/2431
+        if (FeatureDetection.isFirefox() && FeatureDetection.isWindows()) {
+            var firefoxVersion = FeatureDetection.firefoxVersion();
+            if (firefoxVersion[0] === 35) {
+                webglOptions.alpha = true;
+            }
+        }
 
         this._originalGLContext = canvas.getContext('webgl', webglOptions) || canvas.getContext('experimental-webgl', webglOptions) || undefined;
 
