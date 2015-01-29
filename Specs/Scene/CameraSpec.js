@@ -310,6 +310,18 @@ defineSuite([
         expect(camera.roll).toEqual(roll);
     });
 
+    it('get roll returns correct value past 90 degrees', function() {
+        var roll = CesiumMath.toRadians(110.0);
+        camera.setView({
+            position : Cartesian3.fromDegrees(-72.0, 40.0, 20.0),
+            heading : 0.0,
+            pitch : 0.0,
+            roll : roll
+        });
+
+        expect(camera.roll).toEqualEpsilon(roll, CesiumMath.EPSILON14);
+    });
+
     it('set roll in CV', function() {
         camera._mode = SceneMode.COLUMBUS_VIEW;
 
