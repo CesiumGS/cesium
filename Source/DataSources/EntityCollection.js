@@ -227,6 +227,21 @@ define([
     };
 
     /**
+     * Returns true if the provided entity is in this collection, false otherwise.
+     *
+     * @param entity The entity.
+     * @returns {Boolean} true if the provided entity is in this collection, false otherwise.
+     */
+    EntityCollection.prototype.contains = function(entity) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(entity)) {
+            throw new DeveloperError('entity is required');
+        }
+        //>>includeEnd('debug');
+        return this._entities.get(entity.id) === entity;
+    };
+
+    /**
      * Removes an entity with the provided id from the collection.
      *
      * @param {Object} id The id of the entity to remove.
@@ -298,7 +313,6 @@ define([
 
         return this._entities.get(id);
     };
-
 
     /**
      * Gets an entity with the specified id or creates it and adds it to the collection if it does not exist.

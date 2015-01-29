@@ -18,6 +18,7 @@ defineSuite([
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/PrimitiveCollection',
         'Specs/createDynamicProperty',
+        'Specs/createDynamicGeometryBoundingSphereSpecs',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
@@ -39,6 +40,7 @@ defineSuite([
         TimeIntervalCollectionProperty,
         PrimitiveCollection,
         createDynamicProperty,
+        createDynamicGeometryBoundingSphereSpecs,
         createScene,
         destroyScene) {
     "use strict";
@@ -435,5 +437,11 @@ defineSuite([
         expect(function() {
             return new BoxGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
+    });
+
+    var entity = createBasicBox();
+    entity.box.dimensions = createDynamicProperty(new Cartesian3(1, 2, 3));
+    createDynamicGeometryBoundingSphereSpecs(BoxGeometryUpdater, entity, entity.box, function() {
+        return scene;
     });
 });

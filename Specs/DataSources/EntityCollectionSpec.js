@@ -32,6 +32,7 @@ defineSuite([
 
     it('constructor has expected defaults', function() {
         var entityCollection = new EntityCollection();
+        expect(entityCollection.id).toBeDefined();
         expect(entityCollection.entities.length).toEqual(0);
     });
 
@@ -51,6 +52,18 @@ defineSuite([
 
         entityCollection.remove(entity);
         expect(entityCollection.entities.length).toEqual(0);
+    });
+
+    it('add with template', function() {
+        var entityCollection = new EntityCollection();
+
+        var entity = entityCollection.add({
+            id : '1'
+        });
+
+        expect(entityCollection.entities.length).toEqual(1);
+        expect(entity.id).toBe('1');
+        expect(entity.constructor).toBe(Entity);
     });
 
     it('add/remove raises expected events', function() {
@@ -343,6 +356,24 @@ defineSuite([
         expect(function() {
             entityCollection.add(entity2);
         }).toThrowRuntimeError();
+    });
+
+    it('contains returns true if in collection', function() {
+        var entityCollection = new EntityCollection();
+        var entity = entityCollection.getOrCreateEntity('asd');
+        expect(entityCollection.contains(entity)).toBe(true);
+    });
+
+    it('contains returns false if not in collection', function() {
+        var entityCollection = new EntityCollection();
+        expect(entityCollection.contains(new Entity())).toBe(false);
+    });
+
+    it('contains throws with undefined Entity', function() {
+        var entityCollection = new EntityCollection();
+        expect(function() {
+            entityCollection.contains(undefined);
+        }).toThrowDeveloperError();
     });
 
     it('remove returns false with undefined Entity', function() {

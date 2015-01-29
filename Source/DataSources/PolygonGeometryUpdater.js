@@ -20,6 +20,7 @@ define([
         '../Scene/Primitive',
         './ColorMaterialProperty',
         './ConstantProperty',
+        './dynamicGeometryGetBoundingSphere',
         './MaterialProperty',
         './Property'
     ], function(
@@ -43,6 +44,7 @@ define([
         Primitive,
         ColorMaterialProperty,
         ConstantProperty,
+        dynamicGeometryGetBoundingSphere,
         MaterialProperty,
         Property) {
     "use strict";
@@ -452,7 +454,6 @@ define([
         var outlineWidth = polygon.outlineWidth;
         var perPositionHeight = polygon.perPositionHeight;
 
-        this._isClosed = defined(extrudedHeight);
         this._fillEnabled = fillEnabled;
         this._outlineEnabled = outlineEnabled;
 
@@ -470,18 +471,23 @@ define([
         } else {
             var options = this._options;
             options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
+
             var hierarchyValue = hierarchy.getValue(Iso8601.MINIMUM_VALUE);
             if (isArray(hierarchyValue)) {
-                options.polygonHierarchy = new PolygonHierarchy(hierarchyValue);
-            } else {
-                options.polygonHierarchy = hierarchyValue;
+                hierarchyValue = new PolygonHierarchy(hierarchyValue);
             }
-            options.height = defined(height) ? height.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+
+            var heightValue = defined(height) ? height.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            var extrudedHeightValue = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+
+            options.polygonHierarchy = hierarchyValue;
+            options.height = heightValue;
+            options.extrudedHeight = extrudedHeightValue;
             options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.stRotation = defined(stRotation) ? stRotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.perPositionHeight = defined(perPositionHeight) ? perPositionHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             this._outlineWidth = defined(outlineWidth) ? outlineWidth.getValue(Iso8601.MINIMUM_VALUE) : 1.0;
+            this._isClosed = defined(extrudedHeightValue) && extrudedHeightValue !== heightValue;
             this._dynamic = false;
             this._geometryChanged.raiseEvent(this);
         }
@@ -528,8 +534,10 @@ define([
         //>>includeEnd('debug');
 
         var primitives = this._primitives;
-        this._primitive = primitives.removeAndDestroy(this._primitive);
-        this._outlinePrimitive = primitives.removeAndDestroy(this._outlinePrimitive);
+        primitives.removeAndDestroy(this._primitive);
+        primitives.removeAndDestroy(this._outlinePrimitive);
+        this._primitive = undefined;
+        this._outlinePrimitive = undefined;
 
         var geometryUpdater = this._geometryUpdater;
         var entity = geometryUpdater._entity;
@@ -563,7 +571,7 @@ define([
             var appearance = new MaterialAppearance({
                 material : material,
                 translucent : material.isTranslucent(),
-                closed : defined(options.extrudedHeight)
+                closed : defined(options.extrudedHeight) && options.extrudedHeight !== options.height
             });
             options.vertexFormat = appearance.vertexFormat;
 
@@ -602,6 +610,10 @@ define([
                 asynchronous : false
             }));
         }
+    };
+
+    DynamicGeometryUpdater.prototype.getBoundingSphere = function(entity, result) {
+        return dynamicGeometryGetBoundingSphere(entity, this._primitive, this._outlinePrimitive, result);
     };
 
     DynamicGeometryUpdater.prototype.isDestroyed = function() {

@@ -20,6 +20,7 @@ defineSuite([
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/PrimitiveCollection',
         'Specs/createDynamicProperty',
+        'Specs/createDynamicGeometryBoundingSphereSpecs',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
@@ -43,6 +44,7 @@ defineSuite([
         TimeIntervalCollectionProperty,
         PrimitiveCollection,
         createDynamicProperty,
+        createDynamicGeometryBoundingSphereSpecs,
         createScene,
         destroyScene) {
     "use strict";
@@ -518,5 +520,11 @@ defineSuite([
         expect(function() {
             return new CorridorGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
+    });
+
+    var entity = createBasicCorridor();
+    entity.corridor.positions = createDynamicProperty(Cartesian3.fromRadiansArray([0, 0, 1, 0, 1, 1, 0, 1]));
+    createDynamicGeometryBoundingSphereSpecs(CorridorGeometryUpdater, entity, entity.corridor, function() {
+        return scene;
     });
 });

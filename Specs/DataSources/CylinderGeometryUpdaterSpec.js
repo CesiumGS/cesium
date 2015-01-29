@@ -20,6 +20,7 @@ defineSuite([
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/PrimitiveCollection',
         'Specs/createDynamicProperty',
+        'Specs/createDynamicGeometryBoundingSphereSpecs',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
@@ -43,6 +44,7 @@ defineSuite([
         TimeIntervalCollectionProperty,
         PrimitiveCollection,
         createDynamicProperty,
+        createDynamicGeometryBoundingSphereSpecs,
         createScene,
         destroyScene) {
     "use strict";
@@ -67,7 +69,7 @@ defineSuite([
         cylinder.bottomRadius = new ConstantProperty(1000);
 
         var entity = new Entity();
-        entity.position = new ConstantPositionProperty(Cartesian3.ZERO);
+        entity.position = new ConstantPositionProperty(Cartesian3.fromDegrees(0, 0, 0));
         entity.cylinder = cylinder;
         return entity;
     }
@@ -509,5 +511,11 @@ defineSuite([
         expect(function() {
             return new CylinderGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
+    });
+
+    var entity = createBasicCylinder();
+    entity.cylinder.topRadius = createDynamicProperty(4);
+    createDynamicGeometryBoundingSphereSpecs(CylinderGeometryUpdater, entity, entity.cylinder, function() {
+        return scene;
     });
 });

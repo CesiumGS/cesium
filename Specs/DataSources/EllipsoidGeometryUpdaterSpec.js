@@ -19,6 +19,7 @@ defineSuite([
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/PrimitiveCollection',
+        'Specs/createDynamicGeometryBoundingSphereSpecs',
         'Specs/createDynamicProperty',
         'Specs/createScene',
         'Specs/destroyScene'
@@ -42,6 +43,7 @@ defineSuite([
         SampledProperty,
         TimeIntervalCollectionProperty,
         PrimitiveCollection,
+        createDynamicGeometryBoundingSphereSpecs,
         createDynamicProperty,
         createScene,
         destroyScene) {
@@ -62,7 +64,7 @@ defineSuite([
         ellipsoid.radii = new ConstantProperty(new Cartesian3(1, 2, 3));
 
         var entity = new Entity();
-        entity.position = new ConstantPositionProperty(Cartesian3.ZERO);
+        entity.position = new ConstantPositionProperty(Cartesian3.fromDegrees(0, 0, 0));
         entity.ellipsoid = ellipsoid;
         return entity;
     }
@@ -566,5 +568,11 @@ defineSuite([
         expect(function() {
             return new EllipsoidGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
+    });
+
+    var entity = createBasicEllipsoid();
+    entity.ellipsoid.radii = createDynamicProperty(new Cartesian3(1, 2, 3));
+    createDynamicGeometryBoundingSphereSpecs(EllipsoidGeometryUpdater, entity, entity.ellipsoid, function() {
+        return scene;
     });
 });

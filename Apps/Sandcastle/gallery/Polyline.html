@@ -75,8 +75,11 @@ var yellowLine = viewer.entities.add({
         followSurface : false,
         material : Cesium.Color.PURPLE
     }
-});//Sandcastle_End
-    Sandcastle.finishedLoading();
+});
+
+viewer.zoomTo(viewer.entities);
+//Sandcastle_End
+Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
     startup(Cesium);

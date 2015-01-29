@@ -39,8 +39,7 @@ var greenCylinder = viewer.entities.add({
         material : Cesium.Color.GREEN,
         outline : true,
         outlineColor : Cesium.Color.DARK_GREEN
-    },
-    viewFrom : new Cesium.Cartesian3(0.0, -1500000.0, 500000.0)
+    }
 });
 
 var redCone = viewer.entities.add({
@@ -51,11 +50,10 @@ var redCone = viewer.entities.add({
         topRadius : 0.0,
         bottomRadius : 200000.0,
         material : Cesium.Color.RED
-    },
-    viewFrom : new Cesium.Cartesian3(0.0, -1500000.0, 500000.0)
+    }
 });
 
-viewer.trackedEntity = greenCylinder;
+viewer.zoomTo(viewer.entities);
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

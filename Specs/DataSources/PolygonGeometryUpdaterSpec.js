@@ -19,6 +19,7 @@ defineSuite([
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/PrimitiveCollection',
+        'Specs/createDynamicGeometryBoundingSphereSpecs',
         'Specs/createDynamicProperty',
         'Specs/createScene',
         'Specs/destroyScene'
@@ -42,6 +43,7 @@ defineSuite([
         SampledProperty,
         TimeIntervalCollectionProperty,
         PrimitiveCollection,
+        createDynamicGeometryBoundingSphereSpecs,
         createDynamicProperty,
         createScene,
         destroyScene) {
@@ -513,5 +515,11 @@ defineSuite([
         expect(function() {
             return new PolygonGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
+    });
+
+    var entity = createBasicPolygon();
+    entity.polygon.extrudedHeight = createDynamicProperty(2);
+    createDynamicGeometryBoundingSphereSpecs(PolygonGeometryUpdater, entity, entity.polygon, function() {
+        return scene;
     });
 });

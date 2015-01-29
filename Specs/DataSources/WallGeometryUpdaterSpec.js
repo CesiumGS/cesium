@@ -18,6 +18,7 @@ defineSuite([
         'DataSources/TimeIntervalCollectionProperty',
         'DataSources/WallGraphics',
         'Scene/PrimitiveCollection',
+        'Specs/createDynamicGeometryBoundingSphereSpecs',
         'Specs/createDynamicProperty',
         'Specs/createScene',
         'Specs/destroyScene'
@@ -40,6 +41,7 @@ defineSuite([
         TimeIntervalCollectionProperty,
         WallGraphics,
         PrimitiveCollection,
+        createDynamicGeometryBoundingSphereSpecs,
         createDynamicProperty,
         createScene,
         destroyScene) {
@@ -479,5 +481,11 @@ defineSuite([
         expect(function() {
             return new WallGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
+    });
+
+    var entity = createBasicWall();
+    entity.wall.granularity = createDynamicProperty(1);
+    createDynamicGeometryBoundingSphereSpecs(WallGeometryUpdater, entity, entity.wall, function() {
+        return scene;
     });
 });
