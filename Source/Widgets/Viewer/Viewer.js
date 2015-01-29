@@ -1573,6 +1573,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var scene = viewer.scene;
         var camera = scene.camera;
         var boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
+        var controller = scene.screenSpaceCameraController;
+        controller.minimumZoomDistance = Math.min(controller.minimumZoomDistance, boundingSphere.radius * 0.5);
 
         if (!viewer._zoomIsFlight) {
             camera.viewBoundingSphere(boundingSphere, viewer._zoomOptions);
