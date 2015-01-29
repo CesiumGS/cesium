@@ -1,6 +1,3 @@
-// Firefox 33-34 has a regression that prevents the CORDIC implementation from compiling
-#ifndef DISABLE_CORDIC
-
 /**
  * @private
  */
@@ -212,5 +209,3 @@ vec2 czm_cosineAndSine(float angle)
         return cordic(angle);
     }
 }
-
-#endif
