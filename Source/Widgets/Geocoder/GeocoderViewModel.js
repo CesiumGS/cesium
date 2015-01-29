@@ -87,7 +87,8 @@ define([
         });
 
         /**
-         * Gets or sets the text to search for.
+         * Gets or sets the text to search for.  The text can be an address, or longitude, latitude,
+         * and optional height, where longitude and latitude are in degrees and height is in meters.
          *
          * @type {String}
          */
