@@ -556,13 +556,14 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._enableInfoOrSelection = defined(infoBox) || defined(selectionIndicator);
         this._clockTrackedDataSource = undefined;
         this._trackedEntity = undefined;
-        this._needTrackedEntityUpdate = undefined;
+        this._needTrackedEntityUpdate = false;
         this._selectedEntity = undefined;
         this._clockTrackedDataSource = undefined;
         this._forceResize = false;
-        this._zoomIsFlight = undefined;
+        this._zoomIsFlight = false;
         this._zoomTarget = undefined;
         this._zoomPromise = undefined;
+        this._zoomOptions = undefined;
 
         knockout.track(this, ['_trackedEntity', '_selectedEntity', '_clockTrackedDataSource']);
 
@@ -972,6 +973,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                     var scene = this.scene;
                     var sceneMode = scene.mode;
 
+                    //Stop tracking
                     if (!defined(value) || !defined(value.position)) {
                         this._needTrackedEntityUpdate = false;
                         if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
@@ -986,6 +988,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                         this.camera.lookAtTransform(Matrix4.IDENTITY);
                         return;
                     }
+
+                    //We can't start tracking immediately, so we set a flag and start tracking
+                    //when the bounding sphere is ready (most likely next frame).
                     this._needTrackedEntityUpdate = true;
                 }
             }
@@ -1423,24 +1428,50 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * If the data source is still in the process of loading or the visualization is otherwise still loading,
      * this method ways for the data to be ready before performing the zoom.
      *
-     * @param {Entity|Array|EntityCollection|DataSource} zoomTarget The entity, array of entities, entity collection or data source to view.
+     * <p>The offset is heading/pitch/range in the local east-north-up reference frame centered at the center of the bounding sphere.
+     * The heading and the pitch angles are defined in the local east-north-up reference frame.
+     * The heading is the angle from y axis and increasing towards the x axis. Pitch is the rotation from the xy-plane. Positive pitch
+     * angles are above the plane. Negative pitch angles are below the plane. The range is the distance from the center. If the range is
+     * zero, a range will be computed such that the whole bounding sphere is visible.</p>
+     *
+     * <p>In 2D, there must be a top down view. The camera will be placed above the target looking down. The height above the
+     * target will be the range. The heading will be determined from the offset. If the heading cannot be
+     * determined from the offset, the heading will be north.</p>
+     *
+     * @param {Entity|Entity[]|EntityCollection|DataSource} zoomTarget The entity, array of entities, entity collection or data source to view.
+     * @param {HeadingPitchRange} [offset] The offset from the center of the entity in the local east-north-up reference frame.
      * @returns {Promise} A Promise that resolves to true if the zoom was successful or false if the entity is not currently visualized in the scene or the zoom was cancelled.
      */
-    Viewer.prototype.zoomTo = function(zoomTarget) {
-        return zoomToOrFly(this, zoomTarget, false);
+    Viewer.prototype.zoomTo = function(zoomTarget, offset) {
+        return zoomToOrFly(this, zoomTarget, offset, false);
     };
 
     /**
      * Flies the camera to the provided entity, entities, or data source.
+     * If the data source is still in the process of loading or the visualization is otherwise still loading,
+     * this method ways for the data to be ready before performing the flight.
      *
-     * @param {Entity|Array|EntityCollection|DataSource} zoomTarget The entity, array of entities, entity collection or data source to view.
+     * <p>The offset is heading/pitch/range in the local east-north-up reference frame centered at the center of the bounding sphere.
+     * The heading and the pitch angles are defined in the local east-north-up reference frame.
+     * The heading is the angle from y axis and increasing towards the x axis. Pitch is the rotation from the xy-plane. Positive pitch
+     * angles are above the plane. Negative pitch angles are below the plane. The range is the distance from the center. If the range is
+     * zero, a range will be computed such that the whole bounding sphere is visible.</p>
+     *
+     * <p>In 2D, there must be a top down view. The camera will be placed above the target looking down. The height above the
+     * target will be the range. The heading will be determined from the offset. If the heading cannot be
+     * determined from the offset, the heading will be north.</p>
+     *
+     * @param {Entity|Entity[]|EntityCollection|DataSource} zoomTarget The entity, array of entities, entity collection or data source to view.
+     * @param {Object} [options] Object with the following properties:
+     * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
+     * @param {HeadingPitchRange} [options.offset] The offset from the target in the local east-north-up reference frame centered at the target.
      * @returns {Promise} A Promise that resolves to true if the flight was successful or false if the entity is not currently visualized in the scene or the flight was cancelled.
      */
-    Viewer.prototype.flyTo = function(zoomTarget) {
-        return zoomToOrFly(this, zoomTarget, true);
+    Viewer.prototype.flyTo = function(zoomTarget, options) {
+        return zoomToOrFly(this, zoomTarget, options, true);
     };
 
-    function zoomToOrFly(that, zoomTarget, isFlight) {
+    function zoomToOrFly(that, zoomTarget, options, isFlight) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(zoomTarget)) {
             throw new DeveloperError('zoomTarget is required.');
@@ -1448,10 +1479,15 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         //>>includeEnd('debug');
 
         cancelZoom(that);
-        that._zoomIsFlight = isFlight;
 
+        //We can't actually perform the zoom until all visualization is ready and
+        //bounding spheres have been computed.  Therefore we create and return
+        //a deferred which will be resolved as part of the post-render step in the
+        //frame that actually performs the zoom
         var zoomPromise = when.defer();
         that._zoomPromise = zoomPromise;
+        that._zoomIsFlight = isFlight;
+        that._zoomOptions = options;
 
         //If the zoom target is a data source, and it's in the middle of loading, wait for it to finish loading.
         if (zoomTarget.isLoading && defined(zoomTarget.loadingEvent)) {
@@ -1482,11 +1518,16 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         return zoomPromise;
     }
 
+    function clearZoom(viewer) {
+        viewer._zoomPromise = undefined;
+        viewer._zoomTarget = undefined;
+        viewer._zoomOptions = undefined;
+    }
+
     function cancelZoom(viewer) {
         var zoomPromise = viewer._zoomPromise;
         if (defined(zoomPromise)) {
-            viewer._zoomPromise = undefined;
-            viewer._zoomTarget = undefined;
+            clearZoom(viewer);
             zoomPromise.resolve(false);
         }
     }
@@ -1532,18 +1573,28 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var scene = viewer.scene;
         var camera = scene.camera;
         var boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
-        var controller = scene.screenSpaceCameraController;
-        controller.minimumZoomDistance = Math.min(controller.minimumZoomDistance, boundingSphere.radius * 0.5);
-        if (!viewer._zoomIsFlight) {
-            camera.viewBoundingSphere(boundingSphere);
-            camera.lookAtTransform(Matrix4.IDENTITY);
-        } else {
-            camera.flyToBoundingSphere(boundingSphere);
-        }
 
-        viewer._zoomTarget = undefined;
-        viewer._zoomPromise = undefined;
-        zoomPromise.resolve(true);
+        if (!viewer._zoomIsFlight) {
+            camera.viewBoundingSphere(boundingSphere, viewer._zoomOptions);
+            camera.lookAtTransform(Matrix4.IDENTITY);
+            clearZoom(viewer);
+            zoomPromise.resolve(true);
+        } else {
+            var userOptions = defaultValue(viewer._zoomOptions, {});
+            var options = {
+                duration : userOptions.duration,
+                complete : function() {
+                    zoomPromise.resolve(true);
+                },
+                cancel : function() {
+                    zoomPromise.resolve(false);
+                },
+                offset : userOptions.offset
+            };
+
+            clearZoom(viewer);
+            camera.flyToBoundingSphere(boundingSphere, options);
+        }
     }
 
     function updateTrackedEntity(viewer) {
@@ -1552,15 +1603,14 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         }
 
         var scene = viewer.scene;
-        var sceneMode = scene.mode;
         var trackedEntity = viewer._trackedEntity;
 
         var state = viewer._dataSourceDisplay.getBoundingSphere(trackedEntity, false, boundingSphereScratch);
-
         if (state === BoundingSphereState.PENDING) {
             return;
         }
 
+        var sceneMode = scene.mode;
         if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
             scene.screenSpaceCameraController.enableTranslate = false;
         }

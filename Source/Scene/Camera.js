@@ -2497,17 +2497,18 @@ define([
 
     /**
      * Sets the camera so that the current view contains the provided bounding sphere.
-     * The offset is heading/pitch/range in the local east-north-up reference frame centered at the center of the bounding sphere.
+     *
+     * <p>The offset is heading/pitch/range in the local east-north-up reference frame centered at the center of the bounding sphere.
      * The heading and the pitch angles are defined in the local east-north-up reference frame.
      * The heading is the angle from y axis and increasing towards the x axis. Pitch is the rotation from the xy-plane. Positive pitch
      * angles are above the plane. Negative pitch angles are below the plane. The range is the distance from the center. If the range is
-     * zero, a range will be computed such that the whole bounding sphere is visible.
+     * zero, a range will be computed such that the whole bounding sphere is visible.</p>
      *
-     * In 2D, there must be a top down view. The camera will be placed above the target looking down. The height above the
+     * <p>In 2D, there must be a top down view. The camera will be placed above the target looking down. The height above the
      * target will be the range. The heading will be determined from the offset. If the heading cannot be
-     * determined from the offset, the heading will be north.
+     * determined from the offset, the heading will be north.</p>
      *
-     * @param {BoundingSphere} boundingSphere The bounding sphere to view.
+     * @param {BoundingSphere} boundingSphere The bounding sphere to view, in world coordinates.
      * @param {HeadingPitchRange} [offset] The offset from the target in the local east-north-up reference frame centered at the target.
      *
      * @exception {DeveloperError} viewBoundingSphere is not supported while morphing.
@@ -2535,24 +2536,25 @@ define([
 
     /**
      * Flys the camera to a location where the current view contains the provided bounding sphere.
-     * The offset is heading/pitch/range in the local east-north-up reference frame centered at the center of the bounding sphere.
+     *
+     * <p> The offset is heading/pitch/range in the local east-north-up reference frame centered at the center of the bounding sphere.
      * The heading and the pitch angles are defined in the local east-north-up reference frame.
      * The heading is the angle from y axis and increasing towards the x axis. Pitch is the rotation from the xy-plane. Positive pitch
      * angles are above the plane. Negative pitch angles are below the plane. The range is the distance from the center. If the range is
-     * zero, a range will be computed such that the whole bounding sphere is visible.
+     * zero, a range will be computed such that the whole bounding sphere is visible.</p>
      *
-     * In 2D and Columbus View, there must be a top down view. The camera will be placed above the target looking down. The height above the
-     * target will be the range. The heading will be aligned to local north.
+     * <p>In 2D and Columbus View, there must be a top down view. The camera will be placed above the target looking down. The height above the
+     * target will be the range. The heading will be aligned to local north.</p>
      *
-     * @param {BoundingSphere} boundingSphere The bounding sphere to view.
-     * @param {HeadingPitchRange} [offset] The offset from the target in the local east-north-up reference frame centered at the target.
+     * @param {BoundingSphere} boundingSphere The bounding sphere to view, in world coordinates.
      * @param {Object} [options] Object with the following properties:
      * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
+     * @param {HeadingPitchRange} [options.offset] The offset from the target in the local east-north-up reference frame centered at the target.
      * @param {Camera~FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
      * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
      */
-    Camera.prototype.flyToBoundingSphere = function(boundingSphere, offset, options) {
+    Camera.prototype.flyToBoundingSphere = function(boundingSphere, options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(boundingSphere)) {
             throw new DeveloperError('boundingSphere is required.');
@@ -2563,7 +2565,7 @@ define([
 
         var scene2D = this._mode === SceneMode.SCENE2D || this._mode === SceneMode.COLUMBUS_VIEW;
         this._setTransform(Matrix4.IDENTITY);
-        offset = adjustBoundingSphereOffset(this, boundingSphere, offset);
+        var offset = adjustBoundingSphereOffset(this, boundingSphere, options.offset);
 
         var position;
         if (scene2D) {

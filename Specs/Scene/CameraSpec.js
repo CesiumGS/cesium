@@ -1912,7 +1912,7 @@ defineSuite([
         scene.mode = SceneMode.SCENE3D;
 
         var sphere = new BoundingSphere(Cartesian3.fromDegrees(-117.16, 32.71, 0.0), 10000.0);
-        camera.flyToBoundingSphere(sphere, undefined, {
+        camera.flyToBoundingSphere(sphere, {
             duration : 0.0
         });
 
