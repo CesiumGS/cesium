@@ -638,7 +638,7 @@ define([
      * @alias ScreenSpaceEventHandler
      *
      * @param {Canvas} [element=document] The element to add events to.
-     * @param {Boolean} [mouseMoveOnDocument=true] Listen for mouse/pointer/touch down and move events on the document.
+     * @param {Boolean} [mouseMoveOnDocument=true] Listen for mouse/pointer/touch up and move events on the document.
      *
      * @constructor
      */
@@ -663,10 +663,12 @@ define([
 
         this._element = defaultValue(element, document);
 
-        this._mouseMoveOnDocument = defaultValue(mouseMoveOnDocument, true);
-        if (this._mouseMoveOnDocument) {
-            deprecationWarning('ScreenSpaceEventHandler', 'The mouseMoveOnDocument parameter to the ScreenSpaceEventHandler constructor was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. ScreenSpaceEventHandler will be constructed as if mouseMoveOnDocument is false.');
+        if (!defined(mouseMoveOnDocument)) {
+            deprecationWarning('ScreenSpaceEventHandler', 'The default value for the mouseMoveOnDocument parameter to the ScreenSpaceEventHandler constructor was deprecated in Cesium 1.6. The default will change from true to false in Cesium 1.7.');
+            mouseMoveOnDocument = true;
         }
+
+        this._mouseMoveOnDocument = mouseMoveOnDocument;
 
         registerListeners(this);
     };

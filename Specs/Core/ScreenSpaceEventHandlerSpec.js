@@ -81,7 +81,7 @@ defineSuite([
             spyOn(element, 'setPointerCapture');
         }
 
-        handler = new ScreenSpaceEventHandler(element);
+        handler = new ScreenSpaceEventHandler(element, false);
     });
 
     afterEach(function() {
@@ -992,7 +992,7 @@ defineSuite([
         spyOn(element, 'addEventListener').andCallThrough();
         spyOn(element, 'removeEventListener').andCallThrough();
 
-        handler = new ScreenSpaceEventHandler(element);
+        handler = new ScreenSpaceEventHandler(element, false);
 
         expect(element.addEventListener.callCount).not.toEqual(0);
         expect(element.removeEventListener.callCount).toEqual(0);
