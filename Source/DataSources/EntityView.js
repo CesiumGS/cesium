@@ -182,7 +182,7 @@ define([
      * @param {Entity} entity The entity to track with the camera.
      * @param {Scene} scene The scene to use.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use for orienting the camera.
-     * @param {Ellipsoid} [boundingSphere] An initial bounding sphere for setting the default view.
+     * @param {BoundingSphere} [boundingSphere] An initial bounding sphere for setting the default view.
      */
     var EntityView = function(entity, scene, ellipsoid, boundingSphere) {
 
