@@ -84,24 +84,19 @@ Sandcastle.addToolbarButton('Pick Entity', function() {
 });
 
 Sandcastle.addToolbarButton('Drill-Down Picking', function() {
-    //TODO Modify CallbackProperty to make a custom material easier.
-    var pickedIds = {};
-    var pickedColor = new Cesium.ColorMaterialProperty(Cesium.Color.YELLOW.withAlpha(0.5));
+    var pickedEntities = new Cesium.EntityCollection();
+    var pickColor = Cesium.Color.YELLOW.withAlpha(0.5);
     function makeProperty(entity, color) {
-        color = new Cesium.ColorMaterialProperty(color);
-        
-        entity.polygon.material = new Cesium.CallbackProperty(function(time, result) {
-            if (pickedIds[entity.id]) {
-                return pickedColor.getValue(time, result);
+        var colorProperty = new Cesium.CallbackProperty(function(time, result) {
+            if (pickedEntities.contains(entity)) {
+                return pickColor.clone(result);
             }
-            return color.getValue(time, result);
+            return color.clone(result);
         }, false);
-        
-        entity.polygon.material.getType = function() {
-            return 'Color';
-        };
+
+        entity.polygon.material = new Cesium.ColorMaterialProperty(colorProperty);
     }
-    
+
     var red = viewer.entities.add({
         polygon : {
             hierarchy : Cesium.Cartesian3.fromDegreesArray([-70.0, 30.0,
@@ -138,12 +133,11 @@ Sandcastle.addToolbarButton('Drill-Down Picking', function() {
         // get an array of all primitives at the mouse position
         var pickedObjects = scene.drillPick(movement.endPosition);
         if (Cesium.defined(pickedObjects)) {
-            pickedIds = {};
+            //Update the collection of picked entities.
+            pickedEntities.removeAll();
             for (var i = 0; i < pickedObjects.length; ++i) {
-                //id of the primitive is the entity
-                //but we need the entity id
-                //hence the double lookup
-                pickedIds[pickedObjects[i].id.id] = true;
+                var entity = pickedObjects[i].id;
+                pickedEntities.add(entity);
             }
         }
 
@@ -155,7 +149,7 @@ Sandcastle.reset = function() {
     handler = handler && handler.destroy();
 };
 //Sandcastle_End
-    Sandcastle.finishedLoading();
+Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
     startup(Cesium);
