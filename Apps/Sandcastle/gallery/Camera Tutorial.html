@@ -62,7 +62,7 @@ var flags = {
     moveRight : false
 };
 
-var handler = new Cesium.ScreenSpaceEventHandler(canvas, true);
+var handler = new Cesium.ScreenSpaceEventHandler(canvas);
 
 handler.setInputAction(function(movement) {
     flags.looking = true;

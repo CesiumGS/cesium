@@ -69,7 +69,7 @@ function createModel(url, height, heading, pitch, roll) {
     });
 }
 
-var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas, false);
+var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
 handler.setInputAction(function(movement) {
     var pick = scene.pick(movement.endPosition);
     if (Cesium.defined(pick) && Cesium.defined(pick.node) && Cesium.defined(pick.mesh)) {

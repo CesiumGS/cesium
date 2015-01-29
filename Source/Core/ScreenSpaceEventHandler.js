@@ -4,7 +4,6 @@ define([
         './Cartesian2',
         './defaultValue',
         './defined',
-        './deprecationWarning',
         './destroyObject',
         './DeveloperError',
         './KeyboardEventModifier',
@@ -14,7 +13,6 @@ define([
         Cartesian2,
         defaultValue,
         defined,
-        deprecationWarning,
         destroyObject,
         DeveloperError,
         KeyboardEventModifier,
@@ -79,7 +77,7 @@ define([
         // some listeners may be registered on the document, so we still get events even after
         // leaving the bounds of element.
         // this is affected by the existence of an undocumented disableRootEvents property on element.
-        var alternateElement = !defined(element.disableRootEvents) && screenSpaceEventHandler._mouseMoveOnDocument ? document : element;
+        var alternateElement = !defined(element.disableRootEvents) ? document : element;
 
         if (defined(window.PointerEvent)) {
             registerListener(screenSpaceEventHandler, 'pointerdown', element, handlePointerDown);
@@ -638,11 +636,10 @@ define([
      * @alias ScreenSpaceEventHandler
      *
      * @param {Canvas} [element=document] The element to add events to.
-     * @param {Boolean} [mouseMoveOnDocument=true] Listen for mouse/pointer/touch up and move events on the document.
      *
      * @constructor
      */
-    var ScreenSpaceEventHandler = function(element, mouseMoveOnDocument) {
+    var ScreenSpaceEventHandler = function(element) {
         this._inputEvents = {};
         this._buttonDown = undefined;
         this._isPinching = false;
@@ -662,13 +659,6 @@ define([
         this._clickPixelTolerance = 5;
 
         this._element = defaultValue(element, document);
-
-        if (!defined(mouseMoveOnDocument)) {
-            deprecationWarning('ScreenSpaceEventHandler', 'The default value for the mouseMoveOnDocument parameter to the ScreenSpaceEventHandler constructor was deprecated in Cesium 1.6. The default will change from true to false in Cesium 1.7.');
-            mouseMoveOnDocument = true;
-        }
-
-        this._mouseMoveOnDocument = mouseMoveOnDocument;
 
         registerListeners(this);
     };
