@@ -39,11 +39,6 @@ define([
         Cartesian2.clone(pinchMovement.angleAndHeight.endPosition, result.angleAndHeight.endPosition);
     }
 
-    function transformDocumentCoordinatesToCanvasCoordinates(coordinates, canvasBoundingRectangle) {
-        coordinates.x -= canvasBoundingRectangle.left;
-        coordinates.y -= canvasBoundingRectangle.top;
-    }
-
     function listenToPinch(aggregator, modifier, canvas) {
         var key = getKey(CameraEventType.PINCH, modifier);
 
@@ -79,19 +74,13 @@ define([
             Cartesian2.clone(event.position, eventStartPosition[key]);
         }, ScreenSpaceEventType.PINCH_START, modifier);
 
-        aggregator._documentEventHandler.setInputAction(function() {
+        aggregator._eventHandler.setInputAction(function() {
             aggregator._buttonsDown = Math.max(aggregator._buttonsDown - 1, 0);
             isDown[key] = false;
             releaseTime[key] = new Date();
         }, ScreenSpaceEventType.PINCH_END, modifier);
 
-        aggregator._documentEventHandler.setInputAction(function(mouseMovement) {
-            var canvasBoundingRectangle = canvas.getBoundingClientRect();
-            transformDocumentCoordinatesToCanvasCoordinates(mouseMovement.distance.startPosition, canvasBoundingRectangle);
-            transformDocumentCoordinatesToCanvasCoordinates(mouseMovement.distance.endPosition, canvasBoundingRectangle);
-            transformDocumentCoordinatesToCanvasCoordinates(mouseMovement.angleAndHeight.startPosition, canvasBoundingRectangle);
-            transformDocumentCoordinatesToCanvasCoordinates(mouseMovement.angleAndHeight.endPosition, canvasBoundingRectangle);
-
+        aggregator._eventHandler.setInputAction(function(mouseMovement) {
             if (isDown[key]) {
                 // Aggregate several input events into a single animation frame.
                 if (!update[key]) {
@@ -187,7 +176,7 @@ define([
             Cartesian2.clone(event.position, eventStartPosition[key]);
         }, down, modifier);
 
-        aggregator._documentEventHandler.setInputAction(function() {
+        aggregator._eventHandler.setInputAction(function() {
             aggregator._buttonsDown = Math.max(aggregator._buttonsDown - 1, 0);
             isDown[key] = false;
             releaseTime[key] = new Date();
@@ -199,7 +188,7 @@ define([
         Cartesian2.clone(mouseMovement.endPosition, result.endPosition);
     }
 
-    function listenMouseMove(aggregator, modifier, canvas) {
+    function listenMouseMove(aggregator, modifier) {
         var update = aggregator._update;
         var movement = aggregator._movement;
         var lastMovement = aggregator._lastMovement;
@@ -230,16 +219,7 @@ define([
             }
         }
 
-        var mouseMovementScratch = {
-            startPosition : new Cartesian2(),
-            endPosition : new Cartesian2()
-        };
-
-        aggregator._documentEventHandler.setInputAction(function(mouseMovement) {
-            var canvasBoundingRectangle = canvas.getBoundingClientRect();
-            transformDocumentCoordinatesToCanvasCoordinates(mouseMovement.startPosition, canvasBoundingRectangle);
-            transformDocumentCoordinatesToCanvasCoordinates(mouseMovement.endPosition, canvasBoundingRectangle);
-
+        aggregator._eventHandler.setInputAction(function(mouseMovement) {
             for ( var typeName in CameraEventType) {
                 if (CameraEventType.hasOwnProperty(typeName)) {
                     var type = CameraEventType[typeName];
@@ -282,8 +262,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._eventHandler = new ScreenSpaceEventHandler(canvas, false);
-        this._documentEventHandler = new ScreenSpaceEventHandler(document, false);
+        this._eventHandler = new ScreenSpaceEventHandler(canvas, true);
 
         this._update = {};
         this._movement = {};
@@ -302,7 +281,7 @@ define([
         listenMouseButtonDownUp(this, undefined, CameraEventType.LEFT_DRAG);
         listenMouseButtonDownUp(this, undefined, CameraEventType.RIGHT_DRAG);
         listenMouseButtonDownUp(this, undefined, CameraEventType.MIDDLE_DRAG);
-        listenMouseMove(this, undefined, canvas);
+        listenMouseMove(this, undefined);
 
         for ( var modifierName in KeyboardEventModifier) {
             if (KeyboardEventModifier.hasOwnProperty(modifierName)) {
@@ -313,7 +292,7 @@ define([
                     listenMouseButtonDownUp(this, modifier, CameraEventType.LEFT_DRAG);
                     listenMouseButtonDownUp(this, modifier, CameraEventType.RIGHT_DRAG);
                     listenMouseButtonDownUp(this, modifier, CameraEventType.MIDDLE_DRAG);
-                    listenMouseMove(this, modifier, canvas);
+                    listenMouseMove(this, modifier);
                 }
             }
         }
