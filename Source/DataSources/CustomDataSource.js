@@ -17,9 +17,10 @@ define([
      * @alias CustomDataSource
      * @constructor
      *
+     * @param {String} [name] A human-readable name for this instance.
+     *
      * @example
-     * var dataSource = new Cesium.CustomDataSource();
-     * dataSource.name = "myData";
+     * var dataSource = new Cesium.CustomDataSource('myData');
      *
      * var entity = dataSource.entities.add({
      *    position : Cesium.Cartesian3.fromDegrees(1, 2, 0),
@@ -30,8 +31,8 @@ define([
      *
      * viewer.dataSources.add(dataSource);
      */
-    var CustomDataSource = function() {
-        this._name = undefined;
+    var CustomDataSource = function(name) {
+        this._name = name;
         this._clock = undefined;
         this._changed = new Event();
         this._error = new Event();
