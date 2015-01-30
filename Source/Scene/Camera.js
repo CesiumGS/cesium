@@ -770,6 +770,9 @@ define([
                     var right = this.right;
 
                     var roll = Math.acos(-right.z) - CesiumMath.PI_OVER_TWO;
+                    if (-up.z > CesiumMath.EPSILON2) {
+                        roll = CesiumMath.PI - roll;
+                    }
 
                     this._setTransform(oldTransform);
 

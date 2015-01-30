@@ -206,6 +206,27 @@ defineSuite([
         expect(camera.heading).toEqualEpsilon(newHeading, CesiumMath.EPSILON14);
     });
 
+    it('set heading in 3D (2)', function() {
+        camera._mode = SceneMode.SCENE3D;
+
+        camera.position = Cartesian3.fromDegrees(136.0, -24.0, 4500000.0);
+        Cartesian3.negate(camera.position, camera.direction);
+        Cartesian3.normalize(camera.direction, camera.direction);
+        Cartesian3.clone(Cartesian3.UNIT_Z, camera.up);
+        Cartesian3.cross(camera.direction, camera.up, camera.right);
+        Cartesian3.cross(camera.right, camera.direction, camera.up);
+
+        camera.setView({ heading : CesiumMath.PI });
+
+        expect(camera.heading).toEqualEpsilon(CesiumMath.PI, CesiumMath.EPSILON14);
+        expect(camera.up.z).toBeLessThan(0.0);
+
+        camera.setView({ heading : CesiumMath.TWO_PI });
+
+        expect(camera.heading).toEqualEpsilon(CesiumMath.TWO_PI, CesiumMath.EPSILON14);
+        expect(camera.up.z).toBeGreaterThan(0.0);
+    });
+
     it('pitch is undefined when mode is not 3D or Columbus view', function() {
         camera._mode = SceneMode.MORPHING;
         expect(camera.pitch).not.toBeDefined();
