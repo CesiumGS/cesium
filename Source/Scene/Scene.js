@@ -1602,13 +1602,13 @@ define([
             pickedObjects.push(pickedResult);
 
             // hide the picked primitive and call picking again to get the next primitive
-            if (defined(primitive.show)) {
-                primitive.show = false;
-            } else if (typeof primitive.getGeometryInstanceAttributes === 'function') {
+            if (typeof primitive.getGeometryInstanceAttributes === 'function') {
                 var attributes = primitive.getGeometryInstanceAttributes(pickedResult.id);
                 if (defined(attributes) && defined(attributes.show)) {
-                    attributes.show = ShowGeometryInstanceAttribute.toValue(false);
+                    attributes.show = ShowGeometryInstanceAttribute.toValue(false, attributes.show);
                 }
+            } else if (defined(primitive.show)) {
+                primitive.show = false;
             }
 
             pickedResult = this.pick(windowPosition);
@@ -1617,13 +1617,13 @@ define([
         // unhide the picked primitives
         for (var i = 0; i < pickedObjects.length; ++i) {
             var p = pickedObjects[i].primitive;
-            if (defined(p.show)) {
-                p.show = true;
-            } else if (typeof p.getGeometryInstanceAttributes === 'function') {
+            if (typeof p.getGeometryInstanceAttributes === 'function') {
                 var attr = p.getGeometryInstanceAttributes(pickedObjects[i].id);
                 if (defined(attr) && defined(attr.show)) {
-                    attr.show = ShowGeometryInstanceAttribute.toValue(true);
+                    attr.show = ShowGeometryInstanceAttribute.toValue(true, attr.show);
                 }
+            } else if (defined(p.show)) {
+                p.show = true;
             }
         }
 
