@@ -19,7 +19,6 @@ Change Log
    * The `eye`, `target`, and `up` parameters to `Camera.lookAt` were deprecated in Cesium 1.6. It will be removed in Cesium 1.8. Use the `target` and `offset`.
   * `PolygonGraphics.positions` was deprecated and replaced with `PolygonGraphics.hierarchy`, whose value is a `PolygonHierarchy` instead of an array of positions.  `PolygonGraphics.positions` will be removed in Cesium 1.8.
   * The `Model.readyToRender` event was deprecated and will be removed in Cesium 1.9.  Use the new `Model.readyPromise` instead.
-  * The `mouseMoveOnDocument` parameter to the `ScreenSpaceEventHandler` constructor was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. `ScreenSpaceEventHandler` will be constructed as if `mouseMoveOnDocument` is `false`.
   * `ColorMaterialProperty.fromColor(color)` has been deprecated and will be removed in Cesium 1.9. The constructor can now take a Color directly, for example `new ColorMaterialProperty(color)`.
   * `DataSourceDisplay` methods `getScene` and `getDataSources` have been deprecated and replaced with `scene` and `dataSources` properties. They will be removed in Cesium 1.9.
   * The `Entity` constructor taking a single string value for the id has been deprecated. The constructor now takes an options object which allows you to provide any and all `Entity` related properties at construction time. Support for the deprecated behavior will be removed in Cesium 1.9.
