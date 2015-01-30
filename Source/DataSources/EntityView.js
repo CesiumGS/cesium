@@ -12,6 +12,7 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Transforms',
+        '../Scene/HeadingPitchRange',
         '../Scene/SceneMode'
     ], function(
         BoundingSphere,
@@ -26,6 +27,7 @@ define([
         Matrix3,
         Matrix4,
         Transforms,
+        HeadingPitchRange,
         SceneMode) {
     "use strict";
 
@@ -160,9 +162,11 @@ define([
                 Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, transform);
             }
 
-            var offset = mode === SceneMode.SCENE2D ? that._offset2D : that._offset3D;
-            if (Cartesian3.equals(offset, Cartesian3.ZERO)) {
+            var offset;
+            if ((mode === SceneMode.SCENE2D && that._offset2D.range === 0.0) || (mode !== SceneMode.SCENE2D  && Cartesian3.equals(that._offset3D, Cartesian3.ZERO))) {
                 offset = undefined;
+            } else {
+                offset = mode === SceneMode.SCENE2D ? that._offset2D : that._offset3D;
             }
 
             camera.lookAtTransform(transform, offset);
@@ -220,9 +224,7 @@ define([
         this._lastCartesian = new Cartesian3();
 
         this._offset3D = new Cartesian3();
-        this._up3D = new Cartesian3();
-        this._offset2D = new Cartesian3();
-        this._up2D = new Cartesian3();
+        this._offset2D = new HeadingPitchRange();
     };
 
     // STATIC properties defined here, not per-instance.
@@ -239,7 +241,7 @@ define([
             },
             set : function(vector) {
                 this._defaultOffset3D = Cartesian3.clone(vector, new Cartesian3());
-                this._defaultOffset2D = new Cartesian3(0.0, 0.0, Cartesian3.magnitude(this._defaultOffset3D));
+                this._defaultOffset2D = new HeadingPitchRange(0.0, 0.0, Cartesian3.magnitude(this._defaultOffset3D));
             }
         }
     });
@@ -296,16 +298,16 @@ define([
                 this._boundingSphereOffset = Cartesian3.subtract(sphere.center, entity.position.getValue(time), new Cartesian3());
                 updateLookAt = false;
             } else if (!defined(viewFromProperty) || !defined(viewFromProperty.getValue(time, offset3D))) {
-                Cartesian3.clone(EntityView._defaultOffset2D, offset2D);
+                HeadingPitchRange.clone(EntityView._defaultOffset2D, offset2D);
                 Cartesian3.clone(EntityView._defaultOffset3D, offset3D);
             } else {
-                var mag = Cartesian3.magnitude(offset3D);
-                Cartesian3.fromElements(0.0, 0.0, mag, offset2D);
+                offset2D.heading = 0.0;
+                offset2D.range = Cartesian3.magnitude(offset3D);
             }
         } else if (!sceneModeChanged && scene.mode !== SceneMode.MORPHING) {
             if (this._mode === SceneMode.SCENE2D) {
-                var distance = Math.max(camera.frustum.right - camera.frustum.left, camera.frustum.top - camera.frustum.bottom) * 0.5;
-                Cartesian3.fromElements(0.0, 0.0, distance, offset2D);
+                offset2D.heading = camera.heading;
+                offset2D.range = Math.max(camera.frustum.right - camera.frustum.left, camera.frustum.top - camera.frustum.bottom) * 0.5;
             } else if (this._mode === SceneMode.SCENE3D || this._mode === SceneMode.COLUMBUS_VIEW) {
                 Cartesian3.clone(camera.position, offset3D);
             }
