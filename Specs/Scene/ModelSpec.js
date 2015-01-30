@@ -447,12 +447,26 @@ defineSuite([
         expect(boundingSphere.radius).toEqualEpsilon(1.268, CesiumMath.EPSILON3);
     });
 
-    it('boundingSphere returns the bounding sphere when scaled', function() {
+    it('boundingSphere returns the bounding sphere when scale property is set', function() {
+        var originalScale = duckModel.scale;
         duckModel.scale = 10;
+
         var boundingSphere = duckModel.boundingSphere;
-        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(1.343, 0.370, 08.694), CesiumMath.EPSILON3);
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(1.343, 0.370, 8.694), CesiumMath.EPSILON3);
         expect(boundingSphere.radius).toEqualEpsilon(12.688, CesiumMath.EPSILON3);
-        duckModel.scale = 1;
+
+        duckModel.scale = originalScale;
+    });
+
+    it('boundingSphere returns the bounding sphere when modelMatrix has non-uniform scale', function() {
+        var originalMatrix = Matrix4.clone(duckModel.modelMatrix);
+        Matrix4.multiplyByScale(duckModel.modelMatrix, new Cartesian3(2, 5, 10), duckModel.modelMatrix);
+
+        var boundingSphere = duckModel.boundingSphere;
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.268, 0.185, 8.694), CesiumMath.EPSILON3);
+        expect(boundingSphere.radius).toEqualEpsilon(12.688, CesiumMath.EPSILON3);
+
+        duckModel.modelMatrix = originalMatrix;
     });
 
     it('destroys', function() {

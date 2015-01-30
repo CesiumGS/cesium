@@ -87,6 +87,7 @@ define([
     /*global WebGLRenderingContext*/
 
     var yUpToZUp = Matrix4.fromRotationTranslation(Matrix3.fromRotationX(CesiumMath.PI_OVER_TWO));
+    var boundingSphereCartesian3Scratch = new Cartesian3();
 
     var ModelState = {
         NEEDS_LOAD : 0,
@@ -524,10 +525,12 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                var scale = (this.scale * Matrix4.getMaximumScale(this.modelMatrix));
+                var nonUniformScale = Matrix4.getScale(this.modelMatrix, boundingSphereCartesian3Scratch);
+                Cartesian3.multiplyByScalar(nonUniformScale, this.scale, nonUniformScale);
+
                 var scaledBoundingSphere = this._scaledBoundingSphere;
-                scaledBoundingSphere.center = Cartesian3.multiplyByScalar(this._boundingSphere.center, scale, scaledBoundingSphere.center);
-                scaledBoundingSphere.radius = scale * this._initialRadius;
+                scaledBoundingSphere.center = Cartesian3.multiplyComponents(this._boundingSphere.center, nonUniformScale, scaledBoundingSphere.center);
+                scaledBoundingSphere.radius = Cartesian3.maximumComponent(nonUniformScale) * this._initialRadius;
                 return scaledBoundingSphere;
             }
         },
