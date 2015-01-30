@@ -4,9 +4,9 @@ defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Iso8601',
+        'DataSources/BoundingSphereState',
         'DataSources/DataSourceCollection',
         'DataSources/Entity',
-        'DataSources/BoundingSphereState',
         'Specs/createScene',
         'Specs/destroyScene',
         'Specs/MockDataSource'
@@ -15,9 +15,9 @@ defineSuite([
         BoundingSphere,
         Cartesian3,
         Iso8601,
+        BoundingSphereState,
         DataSourceCollection,
         Entity,
-        BoundingSphereState,
         createScene,
         destroyScene,
         MockDataSource) {

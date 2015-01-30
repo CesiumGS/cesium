@@ -1,13 +1,13 @@
 /*global define*/
 define([
         'Core/BoundingSphere',
-        'Core/Math',
         'Core/JulianDate',
+        'Core/Math',
         'DataSources/BoundingSphereState'
     ], function(
         BoundingSphere,
-        CesiumMath,
         JulianDate,
+        CesiumMath,
         BoundingSphereState) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/

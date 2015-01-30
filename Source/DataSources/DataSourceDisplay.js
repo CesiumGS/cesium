@@ -8,8 +8,8 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EventHelper',
-        './BoundingSphereState',
         './BillboardVisualizer',
+        './BoundingSphereState',
         './BoxGeometryUpdater',
         './CorridorGeometryUpdater',
         './CustomDataSource',
@@ -35,8 +35,8 @@ define([
         destroyObject,
         DeveloperError,
         EventHelper,
-        BoundingSphereState,
         BillboardVisualizer,
+        BoundingSphereState,
         BoxGeometryUpdater,
         CorridorGeometryUpdater,
         CustomDataSource,
@@ -52,8 +52,7 @@ define([
         PolylineGeometryUpdater,
         PolylineVolumeGeometryUpdater,
         RectangleGeometryUpdater,
-        WallGeometryUpdater
-        ) {
+        WallGeometryUpdater) {
     "use strict";
 
     /**

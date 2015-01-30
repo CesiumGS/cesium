@@ -19,8 +19,8 @@ defineSuite([
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/PrimitiveCollection',
-        'Specs/createDynamicProperty',
         'Specs/createDynamicGeometryBoundingSphereSpecs',
+        'Specs/createDynamicProperty',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
@@ -43,8 +43,8 @@ defineSuite([
         SampledProperty,
         TimeIntervalCollectionProperty,
         PrimitiveCollection,
-        createDynamicProperty,
         createDynamicGeometryBoundingSphereSpecs,
+        createDynamicProperty,
         createScene,
         destroyScene) {
     "use strict";

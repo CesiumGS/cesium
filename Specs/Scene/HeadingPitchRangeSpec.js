@@ -1,5 +1,8 @@
 /*global defineSuite*/
-defineSuite(['Scene/HeadingPitchRange'], function(HeadingPitchRange) {
+defineSuite([
+        'Scene/HeadingPitchRange'
+    ], function(
+        HeadingPitchRange) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
