@@ -43,6 +43,7 @@ Change Log
 * When you track an entity by clicking on the track button in the `InfoBox`, you can now stop tracking by clicking the button a second time.
 * Setting `viewer.trackedEntity` to `undefined` will now restore the camera controls to their default states.
 * The object returned by `Primitive.getGeometryInstanceAttributes` now contains the instance's bounding sphere.
+* Fixed a bug that caused `Camera.roll` to be around 180 degrees, indicating the camera was upside-down, when in the Southern hemisphere.
 
 ### 1.5 - 2015-01-05
 
