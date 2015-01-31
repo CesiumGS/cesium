@@ -137,6 +137,7 @@ define([
         var value = this.value;
         var _value = this._value;
         var length = value.length;
+/*
         for (var i = 0; i < length; ++i) {
             var v = value[i];
 
@@ -145,6 +146,15 @@ define([
                 gl.uniform1f(locations[i], v);
             }
         }
+*/
+
+// TODO: is typed array faster than JavaScript array?
+debugger;
+        var tmp = new Float32Array(length);
+        for (var i = 0; i < length; ++i) {
+            tmp[i] = value[i];
+        }
+        gl.uniform1fv(locations[0], tmp);
     };
 
     UniformArray.prototype.setFloatVec2 = function() {
