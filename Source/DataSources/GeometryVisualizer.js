@@ -148,7 +148,7 @@ define([
 
         this._entityCollection = entityCollection;
         entityCollection.collectionChanged.addEventListener(GeometryVisualizer.prototype._onCollectionChanged, this);
-        this._onCollectionChanged(entityCollection, entityCollection.entities, emptyArray);
+        this._onCollectionChanged(entityCollection, entityCollection.values, emptyArray);
     };
 
     /**

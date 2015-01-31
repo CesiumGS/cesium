@@ -55,7 +55,7 @@ define([
         this._modelHash = {};
         this._entitiesToVisualize = new AssociativeArray();
         this._modelMatrixScratch = new Matrix4();
-        this._onCollectionChanged(entityCollection, entityCollection.entities, [], []);
+        this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
     };
 
     /**

@@ -55,7 +55,7 @@ Sandcastle.addToolbarButton('Custom styling', function() {
     //Load the document into the data source and then set custom graphics
     dataSource.loadUrl('../../SampleData/ne_10m_us_states.topojson').then(function() {
         //Get the array of entities
-        var entities = dataSource.entities.entities;
+        var entities = dataSource.entities.values;
         
         var colorHash = {};
         for (var i = 0; i < entities.length; i++) {

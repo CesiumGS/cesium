@@ -1497,16 +1497,17 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
                 //Only perform the zoom if it wasn't cancelled before the data source finished.
                 if (that._zoomPromise === zoomPromise) {
-                    that._zoomTarget = zoomTarget.entities.entities.slice(0);
+                    that._zoomTarget = zoomTarget.entities.values.slice(0);
                 }
             });
         } else {
-            //If zoomTarget is a DataSource, this will retrieve the EntityCollection.
-            //If zoomTarget is already an EntityCollection, this will retrieve the array.
-            zoomTarget = defaultValue(zoomTarget.entities, zoomTarget);
+            //zoomTarget is now an EntityCollection, this will retrieve the array
+            zoomTarget = defaultValue(zoomTarget.values, zoomTarget);
 
-            //zoomTarget is now an array or an EntityCollection, this will retrieve the array
-            zoomTarget = defaultValue(zoomTarget.entities, zoomTarget);
+            //If zoomTarget is a DataSource, this will retrieve the EntityCollection.
+            if (defined(zoomTarget.entities)) {
+                zoomTarget = zoomTarget.entities.values;
+            }
 
             if (isArray(zoomTarget)) {
                 that._zoomTarget = zoomTarget.slice(0);

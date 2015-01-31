@@ -42,7 +42,7 @@ defineSuite([
         var composite = new CompositeEntityCollection();
         expect(composite.collectionChanged).toBeDefined();
         expect(composite.getCollectionsLength()).toEqual(0);
-        expect(composite.entities.length).toEqual(0);
+        expect(composite.values.length).toEqual(0);
     });
 
     it('addCollection/removeCollection works', function() {
@@ -55,17 +55,17 @@ defineSuite([
         var composite = new CompositeEntityCollection();
         composite.addCollection(entityCollection);
         expect(composite.getCollectionsLength()).toEqual(1);
-        expect(composite.entities.length).toEqual(1);
+        expect(composite.values.length).toEqual(1);
 
         composite.addCollection(entityCollection2);
         expect(composite.getCollectionsLength()).toEqual(2);
-        expect(composite.entities.length).toEqual(2);
+        expect(composite.values.length).toEqual(2);
 
         expect(composite.removeCollection(entityCollection)).toEqual(true);
-        expect(composite.entities.length).toEqual(1);
+        expect(composite.values.length).toEqual(1);
 
         expect(composite.removeCollection(entityCollection2)).toEqual(true);
-        expect(composite.entities.length).toEqual(0);
+        expect(composite.values.length).toEqual(0);
         expect(composite.getCollectionsLength()).toEqual(0);
 
         expect(composite.removeCollection(entityCollection)).toEqual(false);
@@ -189,16 +189,16 @@ defineSuite([
         var composite = new CompositeEntityCollection([entityCollection]);
 
         entityCollection.add(entity);
-        expect(composite.entities.length).toEqual(1);
+        expect(composite.values.length).toEqual(1);
 
         entityCollection.add(entity2);
-        expect(composite.entities.length).toEqual(2);
+        expect(composite.values.length).toEqual(2);
 
         entityCollection.remove(entity2);
-        expect(composite.entities.length).toEqual(1);
+        expect(composite.values.length).toEqual(1);
 
         entityCollection.remove(entity);
-        expect(composite.entities.length).toEqual(0);
+        expect(composite.values.length).toEqual(0);
     });
 
     it('add/remove raises expected events', function() {
@@ -289,7 +289,7 @@ defineSuite([
         entityCollection.add(entity);
         entityCollection.add(entity2);
         composite.removeAllCollections();
-        expect(composite.entities.length).toEqual(0);
+        expect(composite.values.length).toEqual(0);
     });
 
     it('removeAllCollections raises expected events', function() {
@@ -447,7 +447,7 @@ defineSuite([
         //Initial composite should match both properties
         var compositeObject = composite.getById(entity2.id);
         expect(compositeObject).toBeDefined();
-        expect(composite.entities.length).toEqual(1);
+        expect(composite.values.length).toEqual(1);
         expect(compositeObject.position).toBe(entity2.position);
         expect(compositeObject.orientation).toBe(entity2.orientation);
 
@@ -461,7 +461,7 @@ defineSuite([
 
         //We keep the orientation and position from higher priority entity2
         //But add the viewFrom from 3.
-        expect(composite.entities.length).toEqual(1);
+        expect(composite.values.length).toEqual(1);
         expect(compositeObject.position).toBe(entity2.position);
         expect(compositeObject.orientation).toBe(entity2.orientation);
         expect(compositeObject.viewFrom).toBe(entity3.viewFrom);
@@ -475,7 +475,7 @@ defineSuite([
 
         //We now use the position from the higher priority
         //object with other properties unchanged.
-        expect(composite.entities.length).toEqual(1);
+        expect(composite.values.length).toEqual(1);
         expect(compositeObject.position).toBe(entity1.position);
         expect(compositeObject.orientation).toBe(entity2.orientation);
         expect(compositeObject.viewFrom).toBe(entity3.viewFrom);

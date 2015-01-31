@@ -3,6 +3,7 @@ define([
         '../Core/createGuid',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Math',
         './Entity',
@@ -11,6 +12,7 @@ define([
         createGuid,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         CesiumMath,
         Entity,
@@ -69,7 +71,7 @@ define([
         for (i = 0; i < collectionsCopyLength; i++) {
             collection = collectionsCopy[i];
             collection.collectionChanged.removeEventListener(CompositeEntityCollection.prototype._onCollectionChanged, that);
-            entities = collection.entities;
+            entities = collection.values;
             collectionId = collection.id;
             for (iEntities = entities.length - 1; iEntities > -1; iEntities--) {
                 entity = entities[iEntities];
@@ -82,7 +84,7 @@ define([
             collection.collectionChanged.addEventListener(CompositeEntityCollection.prototype._onCollectionChanged, that);
 
             //Merge all of the existing entities.
-            entities = collection.entities;
+            entities = collection.values;
             collectionId = collection.id;
             for (iEntities = entities.length - 1; iEntities > -1; iEntities--) {
                 entity = entities[iEntities];
@@ -106,7 +108,7 @@ define([
 
         composite.suspendEvents();
         composite.removeAll();
-        var newEntitiesArray = newEntities.entities;
+        var newEntitiesArray = newEntities.values;
         for (i = 0; i < newEntitiesArray.length; i++) {
             composite.add(newEntitiesArray[i]);
         }
@@ -167,10 +169,24 @@ define([
          * @memberof CompositeEntityCollection.prototype
          * @readonly
          * @type {Entity[]}
+         * @deprecated
          */
         entities : {
             get : function() {
-                return this._composite.entities;
+                deprecationWarning('CompositeEntityCollection.entities', 'EntityCollection.entities has been deprecated and will be removed in Cesium 1.9, use EntityCollection.values instead');
+                return this._composite.values;
+            }
+        },
+        /**
+         * Gets the array of Entity instances in the collection.
+         * This array should not be modified directly.
+         * @memberof CompositeEntityCollection.prototype
+         * @readonly
+         * @type {Entity[]}
+         */
+        values : {
+            get : function() {
+                return this._composite.values;
             }
         }
     });

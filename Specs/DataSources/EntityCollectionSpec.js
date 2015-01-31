@@ -33,7 +33,7 @@ defineSuite([
     it('constructor has expected defaults', function() {
         var entityCollection = new EntityCollection();
         expect(entityCollection.id).toBeDefined();
-        expect(entityCollection.entities.length).toEqual(0);
+        expect(entityCollection.values.length).toEqual(0);
     });
 
     it('add/remove works', function() {
@@ -42,16 +42,16 @@ defineSuite([
         var entityCollection = new EntityCollection();
 
         entityCollection.add(entity);
-        expect(entityCollection.entities.length).toEqual(1);
+        expect(entityCollection.values.length).toEqual(1);
 
         entityCollection.add(entity2);
-        expect(entityCollection.entities.length).toEqual(2);
+        expect(entityCollection.values.length).toEqual(2);
 
         entityCollection.remove(entity2);
-        expect(entityCollection.entities.length).toEqual(1);
+        expect(entityCollection.values.length).toEqual(1);
 
         entityCollection.remove(entity);
-        expect(entityCollection.entities.length).toEqual(0);
+        expect(entityCollection.values.length).toEqual(0);
     });
 
     it('add with template', function() {
@@ -61,7 +61,7 @@ defineSuite([
             id : '1'
         });
 
-        expect(entityCollection.entities.length).toEqual(1);
+        expect(entityCollection.values.length).toEqual(1);
         expect(entity.id).toBe('1');
         expect(entity.constructor).toBe(Entity);
     });
@@ -174,7 +174,7 @@ defineSuite([
         entityCollection.add(entity);
         entityCollection.add(entity2);
         entityCollection.removeAll();
-        expect(entityCollection.entities.length).toEqual(0);
+        expect(entityCollection.values.length).toEqual(0);
     });
 
     it('removeAll raises expected events', function() {
@@ -260,21 +260,21 @@ defineSuite([
 
     it('getOrCreateEntity creates a new object if it does not exist.', function() {
         var entityCollection = new EntityCollection();
-        expect(entityCollection.entities.length).toEqual(0);
+        expect(entityCollection.values.length).toEqual(0);
         var testObject = entityCollection.getOrCreateEntity('test');
-        expect(entityCollection.entities.length).toEqual(1);
-        expect(entityCollection.entities[0]).toEqual(testObject);
+        expect(entityCollection.values.length).toEqual(1);
+        expect(entityCollection.values[0]).toEqual(testObject);
     });
 
     it('getOrCreateEntity does not create a new object if it already exists.', function() {
         var entityCollection = new EntityCollection();
-        expect(entityCollection.entities.length).toEqual(0);
+        expect(entityCollection.values.length).toEqual(0);
         var testObject = entityCollection.getOrCreateEntity('test');
-        expect(entityCollection.entities.length).toEqual(1);
-        expect(entityCollection.entities[0]).toEqual(testObject);
+        expect(entityCollection.values.length).toEqual(1);
+        expect(entityCollection.values[0]).toEqual(testObject);
         var testObject2 = entityCollection.getOrCreateEntity('test');
-        expect(entityCollection.entities.length).toEqual(1);
-        expect(entityCollection.entities[0]).toEqual(testObject);
+        expect(entityCollection.values.length).toEqual(1);
+        expect(entityCollection.values[0]).toEqual(testObject);
         expect(testObject2).toEqual(testObject);
     });
 

@@ -83,7 +83,7 @@ define([
         this._entityCollection = entityCollection;
         this._items = new AssociativeArray();
 
-        this._onCollectionChanged(entityCollection, entityCollection.entities, [], []);
+        this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
     };
 
     /**
