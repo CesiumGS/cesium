@@ -87,6 +87,7 @@ define([
     /*global WebGLRenderingContext*/
 
     var yUpToZUp = Matrix4.fromRotationTranslation(Matrix3.fromRotationX(CesiumMath.PI_OVER_TWO));
+    var boundingSphereCartesian3Scratch = new Cartesian3();
 
     var ModelState = {
         NEEDS_LOAD : 0,
@@ -373,6 +374,7 @@ define([
         this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
         this._initialRadius = undefined;           // Radius without model's scale property, model-matrix scale, animations, or skins
         this._boundingSphere = undefined;
+        this._scaledBoundingSphere = new BoundingSphere();
         this._state = ModelState.NEEDS_LOAD;
         this._loadError = undefined;
         this._loadResources = undefined;
@@ -500,7 +502,7 @@ define([
 
         /**
          * The model's bounding sphere in its local coordinate system.  This does not take into
-         * account glTF animation and skins or {@link Model#scale}.
+         * account glTF animations and skins.
          *
          * @memberof Model.prototype
          *
@@ -523,8 +525,13 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                this._boundingSphere.radius = (this.scale * Matrix4.getMaximumScale(this.modelMatrix)) * this._initialRadius;
-                return this._boundingSphere;
+                var nonUniformScale = Matrix4.getScale(this.modelMatrix, boundingSphereCartesian3Scratch);
+                Cartesian3.multiplyByScalar(nonUniformScale, this.scale, nonUniformScale);
+
+                var scaledBoundingSphere = this._scaledBoundingSphere;
+                scaledBoundingSphere.center = Cartesian3.multiplyComponents(this._boundingSphere.center, nonUniformScale, scaledBoundingSphere.center);
+                scaledBoundingSphere.radius = Cartesian3.maximumComponent(nonUniformScale) * this._initialRadius;
+                return scaledBoundingSphere;
             }
         },
 
@@ -898,11 +905,16 @@ define([
         var buffers = model.gltf.buffers;
         for (var name in buffers) {
             if (buffers.hasOwnProperty(name)) {
-                ++model._loadResources.pendingBufferLoads;
                 var buffer = buffers[name];
-                var uri = new Uri(buffer.uri);
-                var bufferPath = uri.resolve(model._baseUri).toString();
-                loadArrayBuffer(bufferPath).then(bufferLoad(model, name)).otherwise(getFailedLoadFunction(model, 'buffer', bufferPath));
+
+                if (buffer.type === 'arraybuffer') {
+                    ++model._loadResources.pendingBufferLoads;
+                    var uri = new Uri(buffer.uri);
+                    var bufferPath = uri.resolve(model._baseUri).toString();
+                    loadArrayBuffer(bufferPath).then(bufferLoad(model, name)).otherwise(getFailedLoadFunction(model, 'buffer', bufferPath));
+                } else if (buffer.type === 'text') {
+                    // GLTF_SPEC: Load compressed .bin with loadText.  https://github.com/KhronosGroup/glTF/issues/230
+                }
             }
         }
     }
@@ -1935,6 +1947,8 @@ define([
                                 jointMatrixUniformName = name;
                             }
                         } else if (defined(parameter.source)) {
+                            // GLTF_SPEC: Use semantic to know which matrix to use from the node, e.g., model vs. model-view
+                            // https://github.com/KhronosGroup/glTF/issues/93
                             uniformMap[name] = getUniformFunctionFromSource(parameter.source, model);
                         } else if (defined(parameter.value)) {
                             // Technique value that isn't overridden by a material
@@ -2040,7 +2054,7 @@ define([
                 var command = new DrawCommand({
                     boundingVolume : new BoundingSphere(), // updated in update()
                     modelMatrix : new Matrix4(),           // computed in update()
-                    primitiveType : primitive.primitive,
+                    primitiveType : primitive.mode,
                     vertexArray : vertexArray,
                     count : count,
                     offset : offset,
@@ -2065,7 +2079,7 @@ define([
                     pickCommand = new DrawCommand({
                         boundingVolume : new BoundingSphere(), // updated in update()
                         modelMatrix : new Matrix4(),           // computed in update()
-                        primitiveType : primitive.primitive,
+                        primitiveType : primitive.mode,
                         vertexArray : vertexArray,
                         count : count,
                         offset : offset,

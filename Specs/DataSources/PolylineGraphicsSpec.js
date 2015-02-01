@@ -16,6 +16,32 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
+    it('creates expected instance from raw assignment and construction', function() {
+        var options = {
+            material : Color.BLUE,
+            positions : [],
+            show : true,
+            width : 1,
+            followSurface : false,
+            granularity : 2
+        };
+
+        var polyline = new PolylineGraphics(options);
+        expect(polyline.material).toBeInstanceOf(ColorMaterialProperty);
+        expect(polyline.positions).toBeInstanceOf(ConstantProperty);
+        expect(polyline.show).toBeInstanceOf(ConstantProperty);
+        expect(polyline.width).toBeInstanceOf(ConstantProperty);
+        expect(polyline.followSurface).toBeInstanceOf(ConstantProperty);
+        expect(polyline.granularity).toBeInstanceOf(ConstantProperty);
+
+        expect(polyline.material.color.getValue()).toEqual(options.material);
+        expect(polyline.positions.getValue()).toEqual(options.positions);
+        expect(polyline.show.getValue()).toEqual(options.show);
+        expect(polyline.width.getValue()).toEqual(options.width);
+        expect(polyline.followSurface.getValue()).toEqual(options.followSurface);
+        expect(polyline.granularity.getValue()).toEqual(options.granularity);
+    });
+
     it('merge assigns unassigned properties', function() {
         var source = new PolylineGraphics();
         source.material = new ColorMaterialProperty();

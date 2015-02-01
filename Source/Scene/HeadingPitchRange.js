@@ -1,5 +1,10 @@
 /*global define*/
-define(['../Core/defaultValue'], function(defaultValue) {
+define([
+        '../Core/defaultValue',
+        '../Core/defined'
+    ], function(
+        defaultValue,
+        defined) {
     "use strict";
 
     /**
@@ -33,6 +38,27 @@ define(['../Core/defaultValue'], function(defaultValue) {
          * @type {Number}
          */
         this.range = defaultValue(range, 0.0);
+    };
+
+    /**
+     * Duplicates a HeadingPitchRange instance.
+     *
+     * @param {HeadingPitchRange} hpr The HeadingPitchRange to duplicate.
+     * @param {HeadingPitchRange} [result] The object onto which to store the result.
+     * @returns {HeadingPitchRange} The modified result parameter or a new HeadingPitchRange instance if one was not provided. (Returns undefined if hpr is undefined)
+     */
+    HeadingPitchRange.clone = function(hpr, result) {
+        if (!defined(hpr)) {
+            return undefined;
+        }
+        if (!defined(result)) {
+            result = new HeadingPitchRange();
+        }
+
+        result.heading = hpr.heading;
+        result.pitch = hpr.pitch;
+        result.range = hpr.range;
+        return result;
     };
 
     return HeadingPitchRange;

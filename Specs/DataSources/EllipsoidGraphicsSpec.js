@@ -18,6 +18,41 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
+    it('creates expected instance from raw assignment and construction', function() {
+        var options = {
+            material : Color.BLUE,
+            show : true,
+            stackPartitions : 1,
+            slicePartitions : 2,
+            subdivisions : 3,
+            fill : false,
+            outline : false,
+            outlineColor : Color.RED,
+            outlineWidth : 4
+        };
+
+        var ellipsoid = new EllipsoidGraphics(options);
+        expect(ellipsoid.material).toBeInstanceOf(ColorMaterialProperty);
+        expect(ellipsoid.show).toBeInstanceOf(ConstantProperty);
+        expect(ellipsoid.stackPartitions).toBeInstanceOf(ConstantProperty);
+        expect(ellipsoid.slicePartitions).toBeInstanceOf(ConstantProperty);
+        expect(ellipsoid.subdivisions).toBeInstanceOf(ConstantProperty);
+        expect(ellipsoid.fill).toBeInstanceOf(ConstantProperty);
+        expect(ellipsoid.outline).toBeInstanceOf(ConstantProperty);
+        expect(ellipsoid.outlineColor).toBeInstanceOf(ConstantProperty);
+        expect(ellipsoid.outlineWidth).toBeInstanceOf(ConstantProperty);
+
+        expect(ellipsoid.material.color.getValue()).toEqual(options.material);
+        expect(ellipsoid.show.getValue()).toEqual(options.show);
+        expect(ellipsoid.stackPartitions.getValue()).toEqual(options.stackPartitions);
+        expect(ellipsoid.slicePartitions.getValue()).toEqual(options.slicePartitions);
+        expect(ellipsoid.subdivisions.getValue()).toEqual(options.subdivisions);
+        expect(ellipsoid.fill.getValue()).toEqual(options.fill);
+        expect(ellipsoid.outline.getValue()).toEqual(options.outline);
+        expect(ellipsoid.outlineColor.getValue()).toEqual(options.outlineColor);
+        expect(ellipsoid.outlineWidth.getValue()).toEqual(options.outlineWidth);
+    });
+
     it('merge assigns unassigned properties', function() {
         var source = new EllipsoidGraphics();
         source.material = new ColorMaterialProperty();

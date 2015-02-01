@@ -150,6 +150,7 @@ define([
             stop(event);
 
             if (clearOnDrop) {
+                viewer.entities.removeAll();
                 viewer.dataSources.removeAll();
             }
 

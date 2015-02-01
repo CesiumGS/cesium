@@ -27,41 +27,40 @@
 function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
-// Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
-var scene = viewer.scene;
 
-// Draw a red box and position it on the globe surface.
-
-var dimensions = new Cesium.Cartesian3(400000.0, 300000.0, 500000.0);
-// Box geometries are initially centered on the origin.
-// We can use a model matrix to position the box on the
-// globe surface.
-var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-105.0, 45.0);
-var boxModelMatrix = Cesium.Matrix4.multiplyByTranslation(
-    Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
-    new Cesium.Cartesian3(0.0, 0.0, dimensions.z * 0.5), new Cesium.Matrix4());
-// Create a box geometry.
-var boxGeometry = Cesium.BoxGeometry.fromDimensions({
-    vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-    dimensions : dimensions
-});
-// Create a geometry instance using the geometry
-// and model matrix created above.
-var boxGeometryInstance = new Cesium.GeometryInstance({
-    geometry : boxGeometry,
-    modelMatrix : boxModelMatrix,
-    attributes : {
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
+var blueBox = viewer.entities.add({
+    name : 'Blue box',
+    position: Cesium.Cartesian3.fromDegrees(-114.0, 40.0, 300000.0),
+    box : {
+        dimensions : new Cesium.Cartesian3(400000.0, 300000.0, 500000.0),
+        material : Cesium.Color.BLUE
     }
 });
-// Add the geometry instance to primitives.
-scene.primitives.add(new Cesium.Primitive({
-    geometryInstances : boxGeometryInstance,
-    appearance : new Cesium.PerInstanceColorAppearance({
-        closed: true
-    })
-}));
+
+var redBox = viewer.entities.add({
+    name : 'Red box with black outline',
+    position: Cesium.Cartesian3.fromDegrees(-107.0, 40.0, 300000.0),
+    box : {
+        dimensions : new Cesium.Cartesian3(400000.0, 300000.0, 500000.0),
+        material : Cesium.Color.RED,
+        outline : true,
+        outlineColor : Cesium.Color.BLACK
+    }
+});
+
+var outlineOnly = viewer.entities.add({
+    name : 'Yellow box outline',
+    position: Cesium.Cartesian3.fromDegrees(-100.0, 40.0, 300000.0),
+    box : {
+        dimensions : new Cesium.Cartesian3(400000.0, 300000.0, 500000.0),
+        fill : false,
+        outline : true,
+        outlineColor : Cesium.Color.YELLOW
+    }
+});
+
+viewer.zoomTo(viewer.entities);
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

@@ -2,6 +2,7 @@
 defineSuite([
         'DataSources/PolygonGraphics',
         'Core/Color',
+        'Core/PolygonHierarchy',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
         'Specs/testDefinitionChanged',
@@ -9,12 +10,57 @@ defineSuite([
     ], function(
         PolygonGraphics,
         Color,
+        PolygonHierarchy,
         ColorMaterialProperty,
         ConstantProperty,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+
+    it('creates expected instance from raw assignment and construction', function() {
+        var options = {
+            material : Color.BLUE,
+            show : true,
+            hierarchy : new PolygonHierarchy(),
+            height : 2,
+            extrudedHeight : 3,
+            granularity : 4,
+            stRotation : 5,
+            perPositionHeight : false,
+            fill : false,
+            outline : false,
+            outlineColor : Color.RED,
+            outlineWidth : 7
+        };
+
+        var polygon = new PolygonGraphics(options);
+        expect(polygon.material).toBeInstanceOf(ColorMaterialProperty);
+        expect(polygon.show).toBeInstanceOf(ConstantProperty);
+        expect(polygon.hierarchy).toBeInstanceOf(ConstantProperty);
+        expect(polygon.height).toBeInstanceOf(ConstantProperty);
+        expect(polygon.extrudedHeight).toBeInstanceOf(ConstantProperty);
+        expect(polygon.granularity).toBeInstanceOf(ConstantProperty);
+        expect(polygon.stRotation).toBeInstanceOf(ConstantProperty);
+        expect(polygon.perPositionHeight).toBeInstanceOf(ConstantProperty);
+        expect(polygon.fill).toBeInstanceOf(ConstantProperty);
+        expect(polygon.outline).toBeInstanceOf(ConstantProperty);
+        expect(polygon.outlineColor).toBeInstanceOf(ConstantProperty);
+        expect(polygon.outlineWidth).toBeInstanceOf(ConstantProperty);
+
+        expect(polygon.material.color.getValue()).toEqual(options.material);
+        expect(polygon.show.getValue()).toEqual(options.show);
+        expect(polygon.hierarchy.getValue()).toEqual(options.hierarchy);
+        expect(polygon.height.getValue()).toEqual(options.height);
+        expect(polygon.extrudedHeight.getValue()).toEqual(options.extrudedHeight);
+        expect(polygon.granularity.getValue()).toEqual(options.granularity);
+        expect(polygon.stRotation.getValue()).toEqual(options.stRotation);
+        expect(polygon.perPositionHeight.getValue()).toEqual(options.perPositionHeight);
+        expect(polygon.fill.getValue()).toEqual(options.fill);
+        expect(polygon.outline.getValue()).toEqual(options.outline);
+        expect(polygon.outlineColor.getValue()).toEqual(options.outlineColor);
+        expect(polygon.outlineWidth.getValue()).toEqual(options.outlineWidth);
+    });
 
     it('merge assigns unassigned properties', function() {
         var source = new PolygonGraphics();
