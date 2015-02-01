@@ -24,7 +24,7 @@ define([
     /**
      * A {@link MaterialProperty} that maps to solid color {@link Material} uniforms.
      *
-     * @param {Color|Property} [color] The {@link Color} to be used.
+     * @param {Property} [color=Color.WHITE] The {@link Color} Property to be used.
      *
      * @alias ColorMaterialProperty
      * @constructor
@@ -41,9 +41,10 @@ define([
      *
      * @param {Color} color The color.
      * @returns {ColorMaterialProperty} A new instance configured to represent the provided color.
+     * @deprecated
      */
     ColorMaterialProperty.fromColor = function(color) {
-        deprecationWarning('ColorMaterialProperty.fromColor', 'ColorMaterialProperty.fromColor was deprecated in Cesium 1.6.  It will be removed in 1.8.  Use "new ColorMaterialProperty(color)" instead.');
+        deprecationWarning('ColorMaterialProperty.fromColor', 'ColorMaterialProperty.fromColor was deprecated in Cesium 1.6.  It will be removed in 1.9.  Use "new ColorMaterialProperty(color)" instead.');
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(color)) {
@@ -82,9 +83,10 @@ define([
             }
         },
         /**
-         * A {@link Color} {@link Property} which determines the material's color.
+         * Gets or sets the {@link Color} {@link Property}.
          * @memberof ColorMaterialProperty.prototype
          * @type {Property}
+         * @default Color.WHITE
          */
         color : createPropertyDescriptor('color')
     });

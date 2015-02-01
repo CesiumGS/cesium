@@ -25,6 +25,11 @@ define([
      * A {@link MaterialProperty} that maps to polyline outline {@link Material} uniforms.
      * @alias PolylineOutlineMaterialProperty
      * @constructor
+     *
+     * @param {Object} [options] Object with the following properties:
+     * @param {Property} [options.color=Color.WHITE] A Property specifying the {@link Color} of the line.
+     * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
+     * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline, in pixels.
      */
     var PolylineOutlineMaterialProperty = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -71,24 +76,24 @@ define([
             }
         },
         /**
-         * Gets or sets {@link Color} property which determines the polyline's color.
+         * Gets or sets the Property specifying the {@link Color} of the line.
          * @memberof PolylineOutlineMaterialProperty.prototype
          * @type {Property}
-         * @default new ConstantProperty(Color.WHITE)
+         * @default Color.WHITE
          */
         color : createPropertyDescriptor('color'),
         /**
-         * Gets or sets the {@link Color} property which determines the polyline's outline color.
+         * Gets or sets the Property specifying the {@link Color} of the outline.
          * @memberof PolylineOutlineMaterialProperty.prototype
          * @type {Property}
-         * @default new ConstantProperty(Color.BLACK)
+         * @default Color.BLACK
          */
         outlineColor : createPropertyDescriptor('outlineColor'),
         /**
-         * Gets or sets the numberic property which determines the polyline's outline width.
+         * Gets or sets the numeric Property specifying the width of the outline.
          * @memberof PolylineOutlineMaterialProperty.prototype
          * @type {Property}
-         * @default new ConstantProperty(0)
+         * @default 1.0
          */
         outlineWidth : createPropertyDescriptor('outlineWidth')
     });

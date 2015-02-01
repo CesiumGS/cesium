@@ -24,6 +24,10 @@ define([
      * A {@link MaterialProperty} that maps to polyline glow {@link Material} uniforms.
      * @alias PolylineGlowProperty
      * @constructor
+     *
+     * @param {Object} [options] Object with the following properties:
+     * @param {Property} [options.color=Color.WHITE] A Property specifying the {@link Color} of the line.
+     * @param {Property} [options.glowPower=0.25] A numeric Property specifying the strength of the glow, as a percentage of the total line width.
      */
     var PolylineGlowProperty = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -65,13 +69,13 @@ define([
             }
         },
         /**
-         * A {@link Color} {@link Property} which determines the line's color.
+         * Gets or sets the Property specifying the {@link Color} of the line.
          * @memberof PolylineGlowProperty.prototype
          * @type {Property}
          */
         color : createPropertyDescriptor('color'),
         /**
-         * A numeric {@link Property} which determines the strength of the glow, as a percentage of the total line width (less than 1.0).
+         * Gets or sets the numeric Property specifying the strength of the glow, as a percentage of the total line width (less than 1.0).
          * @memberof PolylineGlowProperty.prototype
          * @type {Property}
          */

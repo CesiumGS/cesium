@@ -159,7 +159,7 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
             //Iterate over all polylines and set their show property
             //to true only if they are part of the current series.
             var collection = this._entityCollection;
-            var entities = collection.entities;
+            var entities = collection.values;
             collection.suspendEvents();
             for (var i = 0; i < entities.length; i++) {
                 var entity = entities[i];

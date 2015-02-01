@@ -25,9 +25,13 @@ define([
 
     /**
      * A {@link MaterialProperty} that maps to checkerboard {@link Material} uniforms.
-     *
      * @alias CheckerboardMaterialProperty
      * @constructor
+     *
+     * @param {Object} [options] Object with the following properties:
+     * @param {Property} [options.evenColor=Color.WHITE] A Property specifying the first {@link Color}.
+     * @param {Property} [options.oddColor=Color.BLACK] A Property specifying the second {@link Color}.
+     * @param {Property} [options.repeat=new Cartesian2(2.0, 2.0)] A {@link Cartesian2} Property specifying how many times the tiles repeat in each direction.
      */
     var CheckerboardMaterialProperty = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -79,21 +83,24 @@ define([
             }
         },
         /**
-         * Gets or sets the {@link Color} property which determines the first color.
+         * Gets or sets the Property specifying the first {@link Color}.
          * @memberof CheckerboardMaterialProperty.prototype
          * @type {Property}
+         * @default Color.WHITE
          */
         evenColor : createPropertyDescriptor('evenColor'),
         /**
-         * Gets or sets the {@link Color} property which determines the second color.
+         * Gets or sets the Property specifying the second {@link Color}.
          * @memberof CheckerboardMaterialProperty.prototype
          * @type {Property}
+         * @default Color.BLACK
          */
         oddColor : createPropertyDescriptor('oddColor'),
         /**
-         * A {@link Cartesian2} property which determines how many times the checkerboard tiles repeat in each direction.
+         * Gets or sets the {@link Cartesian2} Property specifying how many times the tiles repeat in each direction.
          * @memberof CheckerboardMaterialProperty.prototype
          * @type {Property}
+         * @default new Cartesian2(2.0, 2.0)
          */
         repeat : createPropertyDescriptor('repeat')
     });

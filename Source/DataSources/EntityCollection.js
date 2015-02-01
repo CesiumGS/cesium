@@ -4,6 +4,7 @@ define([
         '../Core/createGuid',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/Iso8601',
@@ -16,6 +17,7 @@ define([
         createGuid,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         Iso8601,
@@ -131,8 +133,22 @@ define([
          * @memberof EntityCollection.prototype
          * @readonly
          * @type {Entity[]}
+         * @deprecated
          */
         entities : {
+            get : function() {
+                deprecationWarning('EntityCollection.entities', 'EntityCollection.entities has been deprecated and will be removed in Cesium 1.9, use EntityCollection.values instead');
+                return this._entities.values;
+            }
+        },
+        /**
+         * Gets the array of Entity instances in the collection.
+         * This array should not be modified directly.
+         * @memberof EntityCollection.prototype
+         * @readonly
+         * @type {Entity[]}
+         */
+        values : {
             get : function() {
                 return this._entities.values;
             }
@@ -227,6 +243,21 @@ define([
     };
 
     /**
+     * Returns true if the provided entity is in this collection, false otherwise.
+     *
+     * @param entity The entity.
+     * @returns {Boolean} true if the provided entity is in this collection, false otherwise.
+     */
+    EntityCollection.prototype.contains = function(entity) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(entity)) {
+            throw new DeveloperError('entity is required');
+        }
+        //>>includeEnd('debug');
+        return this._entities.get(entity.id) === entity;
+    };
+
+    /**
      * Removes an entity with the provided id from the collection.
      *
      * @param {Object} id The id of the entity to remove.
@@ -298,7 +329,6 @@ define([
 
         return this._entities.get(id);
     };
-
 
     /**
      * Gets an entity with the specified id or creates it and adds it to the collection if it does not exist.

@@ -19,6 +19,7 @@ defineSuite([
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/PrimitiveCollection',
+        'Specs/createDynamicGeometryBoundingSphereSpecs',
         'Specs/createDynamicProperty',
         'Specs/createScene',
         'Specs/destroyScene'
@@ -42,6 +43,7 @@ defineSuite([
         SampledProperty,
         TimeIntervalCollectionProperty,
         PrimitiveCollection,
+        createDynamicGeometryBoundingSphereSpecs,
         createDynamicProperty,
         createScene,
         destroyScene) {
@@ -60,6 +62,8 @@ defineSuite([
         destroyScene(scene);
     });
 
+    var shape = [new Cartesian2(-1, -1), new Cartesian2(1, -1), new Cartesian2(1, 1), new Cartesian2(1, -1)];
+
     function createBasicPolylineVolume() {
         var polylineVolume = new PolylineVolumeGraphics();
         polylineVolume.positions = new ConstantProperty(Cartesian3.fromRadiansArray([
@@ -68,7 +72,7 @@ defineSuite([
             1, 1,
             0, 1
         ]));
-        polylineVolume.shape = new ConstantProperty(Cartesian2.fromArray([-1, -1, 1, -1, 1, 1, 1, -1]));
+        polylineVolume.shape = new ConstantProperty(shape);
         var entity = new Entity();
         entity.polylineVolume = polylineVolume;
         return entity;
@@ -154,7 +158,7 @@ defineSuite([
     it('A time-varying shape causes geometry to be dynamic', function() {
         var entity = createBasicPolylineVolume();
         var updater = new PolylineVolumeGeometryUpdater(entity, scene);
-        entity.polylineVolume.shape = createDynamicProperty(Cartesian2.fromArray([-1, -1, 1, -1, 1, 1, 1, -1]));
+        entity.polylineVolume.shape = createDynamicProperty(shape);
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -228,7 +232,7 @@ defineSuite([
         validateGeometryInstance({
             show : true,
             material : new ColorMaterialProperty(Color.RED),
-            shape : Cartesian2.fromArray([-1, -1, 1, -1, 1, 1, 1, -1]),
+            shape : shape,
             granularity : 0.97,
             fill : true,
             outline : true,
@@ -241,7 +245,7 @@ defineSuite([
         validateGeometryInstance({
             show : true,
             material : new GridMaterialProperty(),
-            shape : Cartesian2.fromArray([-1, -1, 1, -1, 1, 1, 1, -1]),
+            shape : shape,
             granularity : 0.97,
             fill : true,
             outline : true,
@@ -327,7 +331,7 @@ defineSuite([
             0, 1
         ]));
         polylineVolume.show = createDynamicProperty(true);
-        polylineVolume.shape = createDynamicProperty(Cartesian2.fromArray([-1, -1, 1, -1, 1, 1, 1, -1]));
+        polylineVolume.shape = createDynamicProperty(shape);
         polylineVolume.outline = createDynamicProperty(true);
         polylineVolume.fill = createDynamicProperty(true);
         polylineVolume.granularity = createDynamicProperty(2);
@@ -379,7 +383,7 @@ defineSuite([
         entity.polylineVolume.positions = new ConstantProperty([]);
         expect(listener.callCount).toEqual(1);
 
-        entity.polylineVolume.shape = new ConstantProperty(Cartesian2.fromArray([-1, -1, 1, -1, 1, 1, 1, -1]));
+        entity.polylineVolume.shape = new ConstantProperty(shape);
         expect(listener.callCount).toEqual(2);
 
         entity.availability = new TimeIntervalCollection();
@@ -468,5 +472,11 @@ defineSuite([
         expect(function() {
             return new PolylineVolumeGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
+    });
+
+    var entity = createBasicPolylineVolume();
+    entity.polylineVolume.shape = createDynamicProperty(shape);
+    createDynamicGeometryBoundingSphereSpecs(PolylineVolumeGeometryUpdater, entity, entity.polylineVolume, function() {
+        return scene;
     });
 });

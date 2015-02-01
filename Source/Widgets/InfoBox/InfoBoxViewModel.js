@@ -84,18 +84,22 @@ define([
             set : function(value) {
                 if (this._descriptionRawHtml !== value) {
                     this._descriptionRawHtml = value;
-                    this._descriptionSanitizedHtml = this.loadingIndicatorHtml;
                     var that = this;
-                    when(this.sanitizer(value), function(sanitized) {
-                        // make sure the raw HTML still matches the input we sanitized,
-                        // in case it was changed again while we were sanitizing.
-                        if (that._descriptionRawHtml === value) {
-                            that._descriptionSanitizedHtml = sanitized;
-                        }
-                    }).otherwise(function(error) {
-                        /*global console*/
-                        console.log('An error occurred while sanitizing HTML: ' + formatError(error));
-                    });
+                    if (defined(this.sanitizer)) {
+                        this._descriptionSanitizedHtml = this.loadingIndicatorHtml;
+                        when(this.sanitizer(value), function(sanitized) {
+                            // make sure the raw HTML still matches the input we sanitized,
+                            // in case it was changed again while we were sanitizing.
+                            if (that._descriptionRawHtml === value) {
+                                that._descriptionSanitizedHtml = sanitized;
+                            }
+                        }).otherwise(function(error) {
+                            /*global console*/
+                            console.log('An error occurred while sanitizing HTML: ' + formatError(error));
+                        });
+                    } else {
+                        that._descriptionSanitizedHtml = value;
+                    }
                 }
             }
         });
