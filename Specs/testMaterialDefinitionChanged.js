@@ -11,7 +11,7 @@ define([
         property.definitionChanged.addEventListener(listener);
 
         var oldValue = property[name];
-        property[name] = ColorMaterialProperty.fromColor(value1);
+        property[name] = new ColorMaterialProperty(value1);
         expect(listener).toHaveBeenCalledWith(property, name, property[name], oldValue);
         listener.reset();
 

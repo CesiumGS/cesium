@@ -1,14 +1,42 @@
 /*global defineSuite*/
 defineSuite([
         'DataSources/PathGraphics',
+        'Core/Color',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty'
     ], function(
         PathGraphics,
+        Color,
         ColorMaterialProperty,
         ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+
+    it('creates expected instance from raw assignment and construction', function() {
+        var options = {
+            material : Color.RED,
+            width : 1,
+            show : false,
+            leadTime : 2,
+            trailTime : 3,
+            resolution : 4
+        };
+
+        var path = new PathGraphics(options);
+        expect(path.material).toBeInstanceOf(ColorMaterialProperty);
+        expect(path.width).toBeInstanceOf(ConstantProperty);
+        expect(path.show).toBeInstanceOf(ConstantProperty);
+        expect(path.leadTime).toBeInstanceOf(ConstantProperty);
+        expect(path.trailTime).toBeInstanceOf(ConstantProperty);
+        expect(path.resolution).toBeInstanceOf(ConstantProperty);
+
+        expect(path.material.color.getValue()).toEqual(options.material);
+        expect(path.width.getValue()).toEqual(options.width);
+        expect(path.show.getValue()).toEqual(options.show);
+        expect(path.leadTime.getValue()).toEqual(options.leadTime);
+        expect(path.trailTime.getValue()).toEqual(options.trailTime);
+        expect(path.resolution.getValue()).toEqual(options.resolution);
+    });
 
     it('merge assigns unassigned properties', function() {
         var source = new PathGraphics();
