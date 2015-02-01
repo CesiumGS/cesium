@@ -72,18 +72,17 @@ function viewRectangle() {
     var east = -72.0;
     var north = 42.0;
 
-    viewer.camera.viewRectangle(Cesium.Rectangle.fromDegrees(west, south, east, north));
+    var rectangle = Cesium.Rectangle.fromDegrees(west, south, east, north);
+    viewer.camera.viewRectangle(rectangle);
 
     // Show the rectangle.  Not required; just for show.
-    var polylines = scene.primitives.add(new Cesium.PolylineCollection());
-    polylines.add({
-        positions : Cesium.Cartesian3.fromDegreesArray([
-            west, south,
-            west, north,
-            east, north,
-            east, south,
-            west, south
-        ])
+    viewer.entities.add({
+        rectangle : {
+            coordinates : rectangle,
+            fill : false,
+            outline : true,
+            outlineColor : Cesium.Color.WHITE
+        }
     });
 }
 
@@ -94,21 +93,20 @@ function flyToRectangle() {
     var south = 38.0;
     var east = -87.0;
     var north = 40.0;
+    var rectangle = Cesium.Rectangle.fromDegrees(west, south, east, north);
 
     viewer.camera.flyTo({
-        destination : Cesium.Rectangle.fromDegrees(west, south, east, north)
+        destination : rectangle
     });
 
     // Show the rectangle.  Not required; just for show.
-    var polylines = scene.primitives.add(new Cesium.PolylineCollection());
-    polylines.add({
-        positions : Cesium.Cartesian3.fromDegreesArray([
-            west, south,
-            west, north,
-            east, north,
-            east, south,
-            west, south
-        ])
+    viewer.entities.add({
+        rectangle : {
+            coordinates : rectangle,
+            fill : false,
+            outline : true,
+            outlineColor : Cesium.Color.WHITE
+        }
     });
 }
 
@@ -226,6 +224,7 @@ Sandcastle.addToolbarMenu([{
 }]);
 
 Sandcastle.reset = function() {
+    viewer.entities.removeAll();
     scene.primitives.removeAll();
     scene.tweens.removeAll();
 

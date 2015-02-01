@@ -38,6 +38,29 @@ defineSuite([
         expect(result.lineOffset).toEqual(new Cartesian2(0.0, 0.0));
     });
 
+    it('constructor sets options and allows raw assignment', function() {
+        var options = {
+            color : Color.RED,
+            cellAlpha : 1,
+            lineCount : new Cartesian2(2, 3),
+            lineThickness : new Cartesian2(4, 5),
+            lineOffset : new Cartesian2(6, 7)
+        };
+
+        var property = new GridMaterialProperty(options);
+        expect(property.color).toBeInstanceOf(ConstantProperty);
+        expect(property.cellAlpha).toBeInstanceOf(ConstantProperty);
+        expect(property.lineCount).toBeInstanceOf(ConstantProperty);
+        expect(property.lineThickness).toBeInstanceOf(ConstantProperty);
+        expect(property.lineOffset).toBeInstanceOf(ConstantProperty);
+
+        expect(property.color.getValue()).toEqual(options.color);
+        expect(property.cellAlpha.getValue()).toEqual(options.cellAlpha);
+        expect(property.lineCount.getValue()).toEqual(options.lineCount);
+        expect(property.lineThickness.getValue()).toEqual(options.lineThickness);
+        expect(property.lineOffset.getValue()).toEqual(options.lineOffset);
+    });
+
     it('works with constant values', function() {
         var property = new GridMaterialProperty();
         property.color = new ConstantProperty(Color.RED);
