@@ -87,6 +87,7 @@ define([
     /*global WebGLRenderingContext*/
 
     var yUpToZUp = Matrix4.fromRotationTranslation(Matrix3.fromRotationX(CesiumMath.PI_OVER_TWO));
+    var boundingSphereCartesian3Scratch = new Cartesian3();
 
     var ModelState = {
         NEEDS_LOAD : 0,
@@ -385,6 +386,7 @@ define([
         this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
         this._initialRadius = undefined;           // Radius without model's scale property, model-matrix scale, animations, or skins
         this._boundingSphere = undefined;
+        this._scaledBoundingSphere = new BoundingSphere();
         this._state = ModelState.NEEDS_LOAD;
         this._loadError = undefined;
         this._loadResources = undefined;
@@ -512,7 +514,7 @@ define([
 
         /**
          * The model's bounding sphere in its local coordinate system.  This does not take into
-         * account glTF animation and skins or {@link Model#scale}.
+         * account glTF animations and skins.
          *
          * @memberof Model.prototype
          *
@@ -535,8 +537,13 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                this._boundingSphere.radius = (this.scale * Matrix4.getMaximumScale(this.modelMatrix)) * this._initialRadius;
-                return this._boundingSphere;
+                var nonUniformScale = Matrix4.getScale(this.modelMatrix, boundingSphereCartesian3Scratch);
+                Cartesian3.multiplyByScalar(nonUniformScale, this.scale, nonUniformScale);
+
+                var scaledBoundingSphere = this._scaledBoundingSphere;
+                scaledBoundingSphere.center = Cartesian3.multiplyComponents(this._boundingSphere.center, nonUniformScale, scaledBoundingSphere.center);
+                scaledBoundingSphere.radius = Cartesian3.maximumComponent(nonUniformScale) * this._initialRadius;
+                return scaledBoundingSphere;
             }
         },
 

@@ -55,7 +55,7 @@ Sandcastle.addToolbarButton('Custom styling', function() {
     //Load the document into the data source and then set custom graphics
     dataSource.loadUrl('../../SampleData/ne_10m_us_states.topojson').then(function() {
         //Get the array of entities
-        var entities = dataSource.entities.entities;
+        var entities = dataSource.entities.values;
         
         var colorHash = {};
         for (var i = 0; i < entities.length; i++) {
@@ -73,14 +73,14 @@ Sandcastle.addToolbarButton('Custom styling', function() {
             }
             
             //Set the polygon material to our random color.
-            entity.polygon.material = Cesium.ColorMaterialProperty.fromColor(color);
+            entity.polygon.material = color;
             //Outline each polygon in black.
-            entity.polygon.outlineColor = new Cesium.ConstantProperty(Cesium.Color.BLACK);
+            entity.polygon.outlineColor = Cesium.Color.BLACK;
 
             //Extrude the polygon based on the state's population.  Each entity
             //stores the properties for the GeoJSON feature it was created from
             //Since the population is a huge number, we divide by 50.
-            entity.polygon.extrudedHeight = new Cesium.ConstantProperty(entity.properties.Population / 50.0);
+            entity.polygon.extrudedHeight = entity.properties.Population / 50.0;
         }
     });
 });
