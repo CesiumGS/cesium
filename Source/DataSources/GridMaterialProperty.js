@@ -2,6 +2,7 @@
 define([
         '../Core/Cartesian2',
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
@@ -10,6 +11,7 @@ define([
     ], function(
         Cartesian2,
         Color,
+        defaultValue,
         defined,
         defineProperties,
         Event,
@@ -26,9 +28,19 @@ define([
     /**
      * A {@link MaterialProperty} that maps to grid {@link Material} uniforms.
      * @alias GridMaterialProperty
+     *
+     * @param {Object} [options] Object with the following properties:
+     * @param {Property} [options.color=Color.WHITE] A Property specifying the grid {@link Color}.
+     * @param {Property} [options.cellAlpha=0.1] A numeric Property specifying cell alpha values.
+     * @param {Property} [options.lineCount=new Cartesian2(8, 8)] A {@link Cartesian2} Property specifying the number of grid lines along each axis.
+     * @param {Property} [options.lineThickness=new Cartesian2(1.0, 1.0)] A {@link Cartesian2} Property specifying the thickness of grid lines along each axis.
+     * @param {Property} [options.lineOffset=new Cartesian2(0.0, 0.0)] A {@link Cartesian2} Property specifying starting offset of grid lines along each axis.
+     *
      * @constructor
      */
-    var GridMaterialProperty = function() {
+    var GridMaterialProperty = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         this._definitionChanged = new Event();
         this._color = undefined;
         this._colorSubscription = undefined;
@@ -41,11 +53,11 @@ define([
         this._lineOffset = undefined;
         this._lineOffsetSubscription = undefined;
 
-        this.color = undefined;
-        this.cellAlpha = undefined;
-        this.lineCount = undefined;
-        this.lineThickness = undefined;
-        this.lineOffset = undefined;
+        this.color = options.color;
+        this.cellAlpha = options.cellAlpha;
+        this.lineCount = options.lineCount;
+        this.lineThickness = options.lineThickness;
+        this.lineOffset = options.lineOffset;
     };
 
     defineProperties(GridMaterialProperty.prototype, {
@@ -81,33 +93,38 @@ define([
             }
         },
         /**
-         * Gets or sets the {@link Color} property which determines the grid's color.
+         * Gets or sets the Property specifying the grid {@link Color}.
          * @memberof GridMaterialProperty.prototype
          * @type {Property}
+         * @default Color.WHITE
          */
         color : createPropertyDescriptor('color'),
         /**
-         * Gets or sets the numeric property which determines the grid cells alpha value, when combined with the color alpha.
+         * Gets or sets the numeric Property specifying cell alpha values.
          * @memberof GridMaterialProperty.prototype
          * @type {Property}
+         * @default 0.1
          */
         cellAlpha : createPropertyDescriptor('cellAlpha'),
         /**
-         * Gets or sets the {@link Cartesian2} property which determines the number of rows and columns in the grid.
+         * Gets or sets the {@link Cartesian2} Property specifying the number of grid lines along each axis.
          * @memberof GridMaterialProperty.prototype
          * @type {Property}
+         * @default new Cartesian2(8.0, 8.0)
          */
         lineCount : createPropertyDescriptor('lineCount'),
         /**
-         * Gets or sets the {@link Cartesian2} property which determines the thickness of rows and columns in the grid.
+         * Gets or sets the {@link Cartesian2} Property specifying the thickness of grid lines along each axis.
          * @memberof GridMaterialProperty.prototype
          * @type {Property}
+         * @default new Cartesian2(1.0, 1.0)
          */
         lineThickness : createPropertyDescriptor('lineThickness'),
         /**
-         * Gets or sets the {@link Cartesian2} property which determines the offset of rows and columns in the grid.
+         * Gets or sets the {@link Cartesian2} Property specifying the starting offset of grid lines along each axis.
          * @memberof GridMaterialProperty.prototype
          * @type {Property}
+         * @default new Cartesian2(0.0, 0.0)
          */
         lineOffset : createPropertyDescriptor('lineOffset')
     });

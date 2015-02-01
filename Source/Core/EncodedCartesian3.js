@@ -25,9 +25,6 @@ define([
     var EncodedCartesian3 = function() {
         /**
          * The high bits for each component.  Bits 0 to 22 store the whole value.  Bits 23 to 31 are not used.
-         * <p>
-         * The default is {@link Cartesian3.ZERO}.
-         * </p>
          *
          * @type {Cartesian3}
          * @default {@link Cartesian3.ZERO}
@@ -36,9 +33,6 @@ define([
 
         /**
          * The low bits for each component.  Bits 7 to 22 store the whole value, and bits 0 to 6 store the fraction.  Bits 23 to 31 are not used.
-         * <p>
-         * The default is {@link Cartesian3.ZERO}.
-         * </p>
          *
          * @type {Cartesian3}
          * @default {@link Cartesian3.ZERO}

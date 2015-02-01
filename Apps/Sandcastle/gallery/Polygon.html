@@ -27,133 +27,86 @@
 function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
-// Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
-var scene = viewer.scene;
 
-// Example 1: Draw a red polygon on the globe surface.
-
-// Create the polygon geometry. The positions here are
-// in counter clockwise order.
-var positions = Cesium.Cartesian3.fromDegreesArray([
-    -115.0, 37.0,
-    -115.0, 32.0,
-    -107.0, 33.0,
-    -102.0, 31.0,
-    -102.0, 35.0
-]);
-// Create a geometry instance using the polygon geometry.
-var redPolygonInstance = new Cesium.GeometryInstance({
-    geometry : Cesium.PolygonGeometry.fromPositions({
-        positions : positions,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-    }),
-    attributes: {
-        color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
+var redPolygon = viewer.entities.add({
+    name : 'Red polygon on surface',
+    polygon : {
+        hierarchy : Cesium.Cartesian3.fromDegreesArray([-115.0, 37.0,
+                                                        -115.0, 32.0,
+                                                        -107.0, 33.0,
+                                                        -102.0, 31.0,
+                                                        -102.0, 35.0]),
+        material : Cesium.Color.RED
     }
 });
 
-// Example 2: Draw a blue polygon with holes.
+var greenPolygon = viewer.entities.add({
+    name : 'Green extruded polygon',
+    polygon : {
+        hierarchy : Cesium.Cartesian3.fromDegreesArray([-108.0, 42.0,
+                                                        -100.0, 42.0,
+                                                        -104.0, 40.0]),
+        extrudedHeight: 500000.0,
+        material : Cesium.Color.GREEN
+    }
+});
 
-// To draw a polygon with holes, create a nested position
-// hierarchy defining the positions of the polygon
-// edges and the positions of the holes.
-var polygonHierarchy = {
-    positions : Cesium.Cartesian3.fromDegreesArray([
-        -99.0, 30.0,
-        -85.0, 30.0,
-        -85.0, 40.0,
-        -99.0, 40.0
-    ]),
-    holes : [{
-        positions : Cesium.Cartesian3.fromDegreesArray([
-            -97.0, 31.0,
-            -97.0, 39.0,
-            -87.0, 39.0,
-            -87.0, 31.0
-        ]),
-        holes : [{
-            positions : Cesium.Cartesian3.fromDegreesArray([
-                -95.0, 33.0,
-                -89.0, 33.0,
-                -89.0, 37.0,
-                -95.0, 37.0
-            ]),
+var orangePolygon = viewer.entities.add({
+    name : 'Orange polygon with per-position heights and outline',
+    polygon : {
+        hierarchy : Cesium.Cartesian3.fromDegreesArrayHeights([-108.0, 25.0, 100000,
+                                                               -100.0, 25.0, 100000,
+                                                               -100.0, 30.0, 100000,
+                                                               -108.0, 30.0, 300000]),
+        extrudedHeight: 0,
+        perPositionHeight : true,
+        material : Cesium.Color.ORANGE,
+        outline : true,
+        outlineColor : Cesium.Color.BLACK
+    }
+});
+
+var bluePolygon = viewer.entities.add({
+    name : 'Blue polygon with holes and outline',
+    polygon : {
+        hierarchy : {
+            positions : Cesium.Cartesian3.fromDegreesArray([-99.0, 30.0,
+                                                            -85.0, 30.0,
+                                                            -85.0, 40.0,
+                                                            -99.0, 40.0]),
             holes : [{
                 positions : Cesium.Cartesian3.fromDegreesArray([
-                    -93.0, 34.0,
-                    -91.0, 34.0,
-                    -91.0, 36.0,
-                    -93.0, 36.0
-                ])
+                    -97.0, 31.0,
+                    -97.0, 39.0,
+                    -87.0, 39.0,
+                    -87.0, 31.0
+                ]),
+                holes : [{
+                    positions : Cesium.Cartesian3.fromDegreesArray([
+                        -95.0, 33.0,
+                        -89.0, 33.0,
+                        -89.0, 37.0,
+                        -95.0, 37.0
+                    ]),
+                    holes : [{
+                        positions : Cesium.Cartesian3.fromDegreesArray([
+                            -93.0, 34.0,
+                            -91.0, 34.0,
+                            -91.0, 36.0,
+                            -93.0, 36.0
+                        ])
+                    }]
+                }]
             }]
-        }]
-    }]
-};
-// Create a geometry instance using the polygon geometry.
-var bluePolygonInstance = new Cesium.GeometryInstance({
-    geometry : new Cesium.PolygonGeometry({
-        polygonHierarchy : polygonHierarchy,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-    }),
-    attributes: {
-        color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
+        },
+        material : Cesium.Color.BLUE,
+        outline : true,
+        outlineColor : Cesium.Color.BLACK
     }
 });
 
-// Example 3: Draw a green extruded polygon.
-
-// To extrude, use the extruded height option to specify
-// the height of the polygon geometry.
-positions = Cesium.Cartesian3.fromDegreesArray([
-    -108.0, 42.0,
-    -100.0, 42.0,
-    -104.0, 40.0
-]);
-var greenPolygonInstance = new Cesium.GeometryInstance({
-    geometry : Cesium.PolygonGeometry.fromPositions({
-        positions : positions,
-        extrudedHeight: 500000.0,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-    }),
-    attributes: {
-        color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.GREEN)
-    }
-});
-
-// Example 4: Draw an orange extruded polygon with
-// per position heights.
-
-positions = Cesium.Cartesian3.fromDegreesArrayHeights([
-    -108.0, 25.0, 100000,
-    -100.0, 25.0, 100000,
-    -100.0, 30.0, 100000,
-    -108.0, 30.0, 300000
-]);
-// Set the perPositionHeight option to true for the polygon
-// to use the heights each position.  In this case, we are
-// also seting extrudedHeight to zero for the polygon
-// to be extruded down to the globe surface.
-var orangePolygonInstance = new Cesium.GeometryInstance({
-    geometry : Cesium.PolygonGeometry.fromPositions({
-        positions : positions,
-        extrudedHeight: 0,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        perPositionHeight : true
-    }),
-    attributes: {
-        color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.ORANGE)
-    }
-});
-
-// Add each polygon instance to primitives.
-scene.primitives.add(new Cesium.Primitive({
-    geometryInstances : [redPolygonInstance, greenPolygonInstance, bluePolygonInstance, orangePolygonInstance],
-    appearance : new Cesium.PerInstanceColorAppearance({
-        closed : true,
-        translucent : false
-    })
-}));
+viewer.zoomTo(viewer.entities);
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

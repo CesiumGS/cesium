@@ -502,7 +502,7 @@ define([
 
         /**
          * The model's bounding sphere in its local coordinate system.  This does not take into
-         * account glTF animation and skins or {@link Model#scale}.
+         * account glTF animations and skins.
          *
          * @memberof Model.prototype
          *
