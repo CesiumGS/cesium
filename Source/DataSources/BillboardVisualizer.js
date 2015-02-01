@@ -12,6 +12,7 @@ define([
         '../Scene/BillboardCollection',
         '../Scene/HorizontalOrigin',
         '../Scene/VerticalOrigin',
+        './BoundingSphereState',
         './Property'
     ], function(
         AssociativeArray,
@@ -26,6 +27,7 @@ define([
         BillboardCollection,
         HorizontalOrigin,
         VerticalOrigin,
+        BoundingSphereState,
         Property) {
     "use strict";
 
@@ -78,7 +80,7 @@ define([
         this._billboardCollection = undefined;
         this._entityCollection = entityCollection;
         this._items = new AssociativeArray();
-        this._onCollectionChanged(entityCollection, entityCollection.entities, [], []);
+        this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
     };
 
     /**
@@ -163,6 +165,37 @@ define([
             }
         }
         return true;
+    };
+
+    /**
+     * Computes a bounding sphere which encloses the visualization produced for the specified entity.
+     * The bounding sphere is in the fixed frame of the scene's globe.
+     *
+     * @param {Entity} entity The entity whose bounding sphere to compute.
+     * @param {BoundingSphere} result The bounding sphere onto which to store the result.
+     * @returns {BoundingSphereState} BoundingSphereState.DONE if the result contains the bounding sphere,
+     *                       BoundingSphereState.PENDING if the result is still being computed, or
+     *                       BoundingSphereState.FAILED if the entity has no visualization in the current scene.
+     * @private
+     */
+    BillboardVisualizer.prototype.getBoundingSphere = function(entity, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(entity)) {
+            throw new DeveloperError('entity is required.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required.');
+        }
+        //>>includeEnd('debug');
+
+        var item = this._items.get(entity.id);
+        if (!defined(item) || !defined(item.billboard)) {
+            return BoundingSphereState.FAILED;
+        }
+
+        result.center = Cartesian3.clone(item.billboard.position, result.center);
+        result.radius = 0;
+        return BoundingSphereState.DONE;
     };
 
     /**

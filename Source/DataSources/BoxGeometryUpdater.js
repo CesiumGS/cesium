@@ -18,6 +18,7 @@ define([
         '../Scene/Primitive',
         './ColorMaterialProperty',
         './ConstantProperty',
+        './dynamicGeometryGetBoundingSphere',
         './MaterialProperty',
         './Property'
     ], function(
@@ -39,11 +40,12 @@ define([
         Primitive,
         ColorMaterialProperty,
         ConstantProperty,
+        dynamicGeometryGetBoundingSphere,
         MaterialProperty,
         Property) {
     "use strict";
 
-    var defaultMaterial = ColorMaterialProperty.fromColor(Color.WHITE);
+    var defaultMaterial = new ColorMaterialProperty(Color.WHITE);
     var defaultShow = new ConstantProperty(true);
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
@@ -499,8 +501,10 @@ define([
         //>>includeEnd('debug');
 
         var primitives = this._primitives;
-        primitives.remove(this._primitive);
-        primitives.remove(this._outlinePrimitive);
+        primitives.removeAndDestroy(this._primitive);
+        primitives.removeAndDestroy(this._outlinePrimitive);
+        this._primitive = undefined;
+        this._outlinePrimitive = undefined;
 
         var geometryUpdater = this._geometryUpdater;
         var entity = geometryUpdater._entity;
@@ -540,11 +544,11 @@ define([
             }));
         }
 
-        if (Property.getValueOrDefault(box.outline, time, true)) {
+        if (Property.getValueOrDefault(box.outline, time, false)) {
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
 
             var outlineColor = Property.getValueOrClonedDefault(box.outlineColor, time, Color.BLACK, scratchColor);
-            var outlineWidth = Property.getValueOrDefault(box.outlineWidth, 1.0);
+            var outlineWidth = Property.getValueOrDefault(box.outlineWidth, time, 1.0);
             var translucent = outlineColor.alpha !== 1.0;
 
             this._outlinePrimitive = primitives.add(new Primitive({
@@ -568,14 +572,18 @@ define([
         }
     };
 
+    DynamicGeometryUpdater.prototype.getBoundingSphere = function(entity, result) {
+        return dynamicGeometryGetBoundingSphere(entity, this._primitive, this._outlinePrimitive, result);
+    };
+
     DynamicGeometryUpdater.prototype.isDestroyed = function() {
         return false;
     };
 
     DynamicGeometryUpdater.prototype.destroy = function() {
         var primitives = this._primitives;
-        primitives.remove(this._primitive);
-        primitives.remove(this._outlinePrimitive);
+        primitives.removeAndDestroy(this._primitive);
+        primitives.removeAndDestroy(this._outlinePrimitive);
         destroyObject(this);
     };
 

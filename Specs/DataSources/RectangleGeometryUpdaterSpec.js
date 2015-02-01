@@ -17,6 +17,7 @@ defineSuite([
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/PrimitiveCollection',
+        'Specs/createDynamicGeometryBoundingSphereSpecs',
         'Specs/createDynamicProperty',
         'Specs/createScene',
         'Specs/destroyScene'
@@ -38,6 +39,7 @@ defineSuite([
         SampledProperty,
         TimeIntervalCollectionProperty,
         PrimitiveCollection,
+        createDynamicGeometryBoundingSphereSpecs,
         createDynamicProperty,
         createScene,
         destroyScene) {
@@ -116,7 +118,7 @@ defineSuite([
 
         expect(updater.isClosed).toBe(false);
         expect(updater.fillEnabled).toBe(true);
-        expect(updater.fillMaterialProperty).toEqual(ColorMaterialProperty.fromColor(Color.WHITE));
+        expect(updater.fillMaterialProperty).toEqual(new ColorMaterialProperty(Color.WHITE));
         expect(updater.outlineEnabled).toBe(false);
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
@@ -273,7 +275,7 @@ defineSuite([
     it('Creates expected per-color geometry', function() {
         validateGeometryInstance({
             show : true,
-            material : ColorMaterialProperty.fromColor(Color.RED),
+            material : new ColorMaterialProperty(Color.RED),
             height : 431,
             extrudedHeight : 123,
             granularity : 0.97,
@@ -514,5 +516,11 @@ defineSuite([
         expect(function() {
             return new RectangleGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
+    });
+
+    var entity = createBasicRectangle();
+    entity.rectangle.extrudedHeight = createDynamicProperty(2);
+    createDynamicGeometryBoundingSphereSpecs(RectangleGeometryUpdater, entity, entity.rectangle, function() {
+        return scene;
     });
 });

@@ -5,6 +5,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
+        './createMaterialPropertyDescriptor',
         './createPropertyDescriptor'
     ], function(
         defaultValue,
@@ -12,15 +13,25 @@ define([
         defineProperties,
         DeveloperError,
         Event,
+        createMaterialPropertyDescriptor,
         createPropertyDescriptor) {
     "use strict";
 
     /**
-     * A time-dynamic path representing the visualization of a moving object.
+     * Describes a polyline defined as the path made by an {@link Entity} as it moves over time.
+     *
      * @alias PathGraphics
      * @constructor
+     *
+     * @param {Object} [options] Object with the following properties:
+     * @param {Property} [options.leadTime] A Property specifying the number of seconds behind the object to show.
+     * @param {Property} [options.trailTime] A Property specifying the number of seconds in front of the object to show.
+     * @param {Property} [options.show=true] A boolean Property specifying the visibility of the path.
+     * @param {Property} [options.width=1.0] A numeric Property specifying the width in pixels.
+     * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to draw the path.
+     * @param {Property} [options.resolution=60] A numeric Property specifying the width in pixels.
      */
-    var PathGraphics = function() {
+    var PathGraphics = function(options) {
         this._material = undefined;
         this._materialSubscription = undefined;
         this._show = undefined;
@@ -33,15 +44,15 @@ define([
         this._leadTimeSubscription = undefined;
         this._trailTime = undefined;
         this._trailTimeSubscription = undefined;
-
         this._definitionChanged = new Event();
+
+        this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     };
 
     defineProperties(PathGraphics.prototype, {
         /**
-         * Gets the event that is raised whenever a new property is assigned.
+         * Gets the event that is raised whenever a property or sub-property is changed or modified.
          * @memberof PathGraphics.prototype
-         *
          * @type {Event}
          * @readonly
          */
@@ -52,42 +63,46 @@ define([
         },
 
         /**
-         * Gets or sets the {@link MaterialProperty} specifying the appearance of the path.
-         * @memberof PathGraphics.prototype
-         * @type {MaterialProperty}
-         */
-        material : createPropertyDescriptor('material'),
-
-        /**
-         * Gets or sets the boolean {@link Property} specifying the path's visibility.
+         * Gets or sets the boolean Property specifying the visibility of the path.
          * @memberof PathGraphics.prototype
          * @type {Property}
+         * @default true
          */
         show : createPropertyDescriptor('show'),
 
         /**
-         * Gets or sets the numeric {@link Property} specifying the the path's width.
+         * Gets or sets the Property specifying the material used to draw the path.
+         * @memberof PathGraphics.prototype
+         * @type {MaterialProperty}
+         * @default Color.WHITE
+         */
+        material : createMaterialPropertyDescriptor('material'),
+
+        /**
+         * Gets or sets the numeric Property specifying the width in pixels.
          * @memberof PathGraphics.prototype
          * @type {Property}
+         * @default 1.0
          */
         width : createPropertyDescriptor('width'),
 
         /**
-         * Gets or sets the numeric {@link Property} specifying the maximum step size, in seconds, to take when sampling the position.
+         * Gets or sets the Property specifying the maximum number of seconds to step when sampling the position.
          * @memberof PathGraphics.prototype
          * @type {Property}
+         * @default 60
          */
         resolution : createPropertyDescriptor('resolution'),
 
         /**
-         * Gets or sets the numeric {@link Property} specifying the number of seconds in front of the object to show.
+         * Gets or sets the Property specifying the number of seconds in front of the object to show.
          * @memberof PathGraphics.prototype
          * @type {Property}
          */
         leadTime : createPropertyDescriptor('leadTime'),
 
         /**
-         * Gets or sets the numeric {@link Property} specifying the number of seconds behind the object to show.
+         * Gets or sets the Property specifying the number of seconds behind the object to show.
          * @memberof PathGraphics.prototype
          * @type {Property}
          */
@@ -95,14 +110,14 @@ define([
     });
 
     /**
-     * Duplicates a PathGraphics instance.
+     * Duplicates this instance.
      *
      * @param {PathGraphics} [result] The object onto which to store the result.
      * @returns {PathGraphics} The modified result parameter or a new instance if one was not provided.
      */
     PathGraphics.prototype.clone = function(result) {
         if (!defined(result)) {
-            result = new PathGraphics();
+            return new PathGraphics(this);
         }
         result.material = this.material;
         result.width = this.width;

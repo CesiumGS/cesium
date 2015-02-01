@@ -243,7 +243,7 @@ define([
 
     function createMorphHandler(transitioner, completeMorphFunction) {
         if (transitioner._scene.completeMorphOnUserInput) {
-            transitioner._morphHandler = new ScreenSpaceEventHandler(transitioner._scene.canvas);
+            transitioner._morphHandler = new ScreenSpaceEventHandler(transitioner._scene.canvas, false);
 
             var completeMorph = function() {
                 transitioner._morphCancelled = true;

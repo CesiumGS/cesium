@@ -42,7 +42,7 @@ defineSuite([
         var composite = new CompositeEntityCollection();
         expect(composite.collectionChanged).toBeDefined();
         expect(composite.getCollectionsLength()).toEqual(0);
-        expect(composite.entities.length).toEqual(0);
+        expect(composite.values.length).toEqual(0);
     });
 
     it('addCollection/removeCollection works', function() {
@@ -55,17 +55,17 @@ defineSuite([
         var composite = new CompositeEntityCollection();
         composite.addCollection(entityCollection);
         expect(composite.getCollectionsLength()).toEqual(1);
-        expect(composite.entities.length).toEqual(1);
+        expect(composite.values.length).toEqual(1);
 
         composite.addCollection(entityCollection2);
         expect(composite.getCollectionsLength()).toEqual(2);
-        expect(composite.entities.length).toEqual(2);
+        expect(composite.values.length).toEqual(2);
 
         expect(composite.removeCollection(entityCollection)).toEqual(true);
-        expect(composite.entities.length).toEqual(1);
+        expect(composite.values.length).toEqual(1);
 
         expect(composite.removeCollection(entityCollection2)).toEqual(true);
-        expect(composite.entities.length).toEqual(0);
+        expect(composite.values.length).toEqual(0);
         expect(composite.getCollectionsLength()).toEqual(0);
 
         expect(composite.removeCollection(entityCollection)).toEqual(false);
@@ -84,6 +84,26 @@ defineSuite([
         expect(composite.getCollection(0)).toBe(entityCollection);
         expect(composite.getCollection(1)).toBe(entityCollection2);
         expect(composite.getCollection(2)).toBe(entityCollection3);
+    });
+
+    it('contains returns true if in collection', function() {
+        var entityCollection = new EntityCollection();
+        var composite = new CompositeEntityCollection();
+        composite.addCollection(entityCollection);
+        var entity = entityCollection.getOrCreateEntity('asd');
+        expect(entityCollection.contains(entity)).toBe(true);
+    });
+
+    it('contains returns false if not in collection', function() {
+        var entityCollection = new CompositeEntityCollection();
+        expect(entityCollection.contains(new Entity())).toBe(false);
+    });
+
+    it('contains throws with undefined Entity', function() {
+        var entityCollection = new CompositeEntityCollection();
+        expect(function() {
+            entityCollection.contains(undefined);
+        }).toThrowDeveloperError();
     });
 
     it('containsCollection works', function() {
@@ -169,16 +189,16 @@ defineSuite([
         var composite = new CompositeEntityCollection([entityCollection]);
 
         entityCollection.add(entity);
-        expect(composite.entities.length).toEqual(1);
+        expect(composite.values.length).toEqual(1);
 
         entityCollection.add(entity2);
-        expect(composite.entities.length).toEqual(2);
+        expect(composite.values.length).toEqual(2);
 
         entityCollection.remove(entity2);
-        expect(composite.entities.length).toEqual(1);
+        expect(composite.values.length).toEqual(1);
 
         entityCollection.remove(entity);
-        expect(composite.entities.length).toEqual(0);
+        expect(composite.values.length).toEqual(0);
     });
 
     it('add/remove raises expected events', function() {
@@ -269,7 +289,7 @@ defineSuite([
         entityCollection.add(entity);
         entityCollection.add(entity2);
         composite.removeAllCollections();
-        expect(composite.entities.length).toEqual(0);
+        expect(composite.values.length).toEqual(0);
     });
 
     it('removeAllCollections raises expected events', function() {
@@ -427,31 +447,35 @@ defineSuite([
         //Initial composite should match both properties
         var compositeObject = composite.getById(entity2.id);
         expect(compositeObject).toBeDefined();
-        expect(composite.entities.length).toEqual(1);
+        expect(composite.values.length).toEqual(1);
         expect(compositeObject.position).toBe(entity2.position);
         expect(compositeObject.orientation).toBe(entity2.orientation);
 
         //Add a lower-priority object with position and viewFrom.
-        var entity3 = new Entity(entity2.id);
+        var entity3 = new Entity({
+            id : entity2.id
+        });
         collection3.add(entity3);
         entity3.position = new CompositePositionProperty();
         entity3.viewFrom = new CompositeProperty();
 
         //We keep the orientation and position from higher priority entity2
         //But add the viewFrom from 3.
-        expect(composite.entities.length).toEqual(1);
+        expect(composite.values.length).toEqual(1);
         expect(compositeObject.position).toBe(entity2.position);
         expect(compositeObject.orientation).toBe(entity2.orientation);
         expect(compositeObject.viewFrom).toBe(entity3.viewFrom);
 
         //Add a higher priority object with position
-        var entity1 = new Entity(entity2.id);
+        var entity1 = new Entity({
+            id : entity2.id
+        });
         collection1.add(entity1);
         entity1.position = new CompositePositionProperty();
 
         //We now use the position from the higher priority
         //object with other properties unchanged.
-        expect(composite.entities.length).toEqual(1);
+        expect(composite.values.length).toEqual(1);
         expect(compositeObject.position).toBe(entity1.position);
         expect(compositeObject.orientation).toBe(entity2.orientation);
         expect(compositeObject.viewFrom).toBe(entity3.viewFrom);
@@ -460,17 +484,23 @@ defineSuite([
     it('sub-property compositing works', function() {
         var id = 'test';
         var collection1 = new EntityCollection();
-        var entity1 = new Entity(id);
+        var entity1 = new Entity({
+            id : id
+        });
         entity1.billboard = new BillboardGraphics();
         collection1.add(entity1);
 
         var collection2 = new EntityCollection();
-        var entity2 = new Entity(id);
+        var entity2 = new Entity({
+            id : id
+        });
         entity2.billboard = new BillboardGraphics();
         collection2.add(entity2);
 
         var collection3 = new EntityCollection();
-        var entity3 = new Entity(id);
+        var entity3 = new Entity({
+            id : id
+        });
         entity3.billboard = new BillboardGraphics();
         collection3.add(entity3);
 
@@ -568,14 +598,18 @@ defineSuite([
 
         // the entity in collection1 has show === true
         var collection1 = new EntityCollection();
-        var entity1 = new Entity(id);
+        var entity1 = new Entity({
+            id : id
+        });
         entity1.billboard = new BillboardGraphics();
         entity1.billboard.show = new ConstantProperty(true);
         collection1.add(entity1);
 
         // the entity in collection1 has show === false
         var collection2 = new EntityCollection();
-        var entity2 = new Entity(id);
+        var entity2 = new Entity({
+            id : id
+        });
         entity2.billboard = new BillboardGraphics();
         entity2.billboard.show = new ConstantProperty(false);
         collection2.add(entity2);
@@ -619,11 +653,15 @@ defineSuite([
     it('suspend events suspends recompositing', function() {
         var id = 'test';
         var collection1 = new EntityCollection();
-        var entity1 = new Entity(id);
+        var entity1 = new Entity({
+            id : id
+        });
         collection1.add(entity1);
 
         var collection2 = new EntityCollection();
-        var entity2 = new Entity(id);
+        var entity2 = new Entity({
+            id : id
+        });
         collection2.add(entity2);
         //Add collections in reverse order to lower numbers of priority
         var composite = new CompositeEntityCollection();
@@ -648,11 +686,15 @@ defineSuite([
     it('prevents names from colliding between property events and object events', function() {
         var id = 'test';
         var collection1 = new EntityCollection();
-        var entity1 = new Entity(id);
+        var entity1 = new Entity({
+            id : id
+        });
         collection1.add(entity1);
 
         var collection2 = new EntityCollection();
-        var entity2 = new Entity(id);
+        var entity2 = new Entity({
+            id : id
+        });
         collection2.add(entity2);
 
         //Add collections in reverse order to lower numbers of priority
@@ -669,7 +711,9 @@ defineSuite([
         expect(compositeObject.billboard.show).toBe(entity1.billboard.show);
 
         // Add a new object
-        var newObject = new Entity(id + 'billboard');
+        var newObject = new Entity({
+            id : id + 'billboard'
+        });
         collection1.add(newObject);
 
         // Replace the billboard on the original object
