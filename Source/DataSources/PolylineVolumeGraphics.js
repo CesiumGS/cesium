@@ -5,6 +5,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
+        './createMaterialPropertyDescriptor',
         './createPropertyDescriptor'
     ], function(
         defaultValue,
@@ -12,16 +13,33 @@ define([
         defineProperties,
         DeveloperError,
         Event,
+        createMaterialPropertyDescriptor,
         createPropertyDescriptor) {
     "use strict";
 
     /**
-     * An optionally time-dynamic polyline volume.
+     * Describes a polyline volume defined as a line strip and corresponding two dimensional shape which is extruded along it.
+     * The resulting volume conforms to the curvature of the globe.
      *
      * @alias PolylineVolumeGraphics
      * @constructor
+     *
+     * @param {Object} [options] Object with the following properties:
+     * @param {Property} [options.positions] A Property specifying the array of {@link Cartesian3} positions which define the line strip.
+     * @param {Property} [options.shape] A Property specifying the array of {@link Cartesian2} positions which define the shape to be extruded.
+     * @param {Property} [options.cornerType=CornerType.ROUNDED] A {@link CornerType} Property specifying the style of the corners.
+     * @param {Property} [options.show=true] A boolean Property specifying the visibility of the volume.
+     * @param {Property} [options.fill=true] A boolean Property specifying whether the volume is filled with the provided material.
+     * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the volume.
+     * @param {Property} [options.outline=false] A boolean Property specifying whether the volume is outlined.
+     * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
+     * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
+     * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude point.
+     *
+     * @see Entity
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline%20Volume.html|Cesium Sandcastle Polyline Volume Demo}
      */
-    var PolylineVolumeGraphics = function() {
+    var PolylineVolumeGraphics = function(options) {
         this._show = undefined;
         this._showSubscription = undefined;
         this._material = undefined;
@@ -43,11 +61,13 @@ define([
         this._outlineWidth = undefined;
         this._outlineWidthSubscription = undefined;
         this._definitionChanged = new Event();
+
+        this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     };
 
     defineProperties(PolylineVolumeGraphics.prototype, {
         /**
-         * Gets the event that is raised whenever a new property is assigned.
+         * Gets the event that is raised whenever a property or sub-property is changed or modified.
          * @memberof PolylineVolumeGraphics.prototype
          *
          * @type {Event}
@@ -60,86 +80,93 @@ define([
         },
 
         /**
-         * Gets or sets the boolean {@link Property} specifying the volumes's visibility.
+         * Gets or sets the boolean Property specifying the visibility of the volume.
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
+         * @default true
          */
         show : createPropertyDescriptor('show'),
 
         /**
-         * Gets or sets the {@link MaterialProperty} specifying the appearance of the volume.
+         * Gets or sets the Property specifying the material used to fill the volume.
          * @memberof PolylineVolumeGraphics.prototype
          * @type {MaterialProperty}
+         * @default Color.WHITE
          */
-        material : createPropertyDescriptor('material'),
+        material : createMaterialPropertyDescriptor('material'),
 
         /**
-         * Gets or sets the positions of the line.
+         * Gets or sets the Property specifying the array of {@link Cartesian3} positions which define the line strip.
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
         positions : createPropertyDescriptor('positions'),
 
         /**
-         * Gets or sets the array of {@link Cartesian2} instances that define the shape to be extruded along the polyline.
+         * Gets or sets the Property specifying the array of {@link Cartesian2} positions which define the shape to be extruded.
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          */
         shape : createPropertyDescriptor('shape'),
 
         /**
-         * Gets or sets the Number {@link Property} specifying the sampling distance, in radians,
-         * between each latitude and longitude point.
+         * Gets or sets the numeric Property specifying the angular distance between points on the volume.
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
+         * @default {CesiumMath.RADIANS_PER_DEGREE}
          */
         granularity : createPropertyDescriptor('granularity'),
 
         /**
-         * Gets or sets the Boolean {@link Property} specifying whether the volume should be filled.
+         * Gets or sets the boolean Property specifying whether the volume is filled with the provided material.
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
+         * @default true
          */
         fill : createPropertyDescriptor('fill'),
 
         /**
-         * Gets or sets the Boolean {@link Property} specifying whether the volume should be outlined.
+         * Gets or sets the Property specifying whether the volume is outlined.
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
+         * @default false
          */
         outline : createPropertyDescriptor('outline'),
 
         /**
-         * Gets or sets the Color {@link Property} specifying whether the color of the outline.
+         * Gets or sets the Property specifying the {@link Color} of the outline.
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
+         * @default Color.BLACK
          */
         outlineColor : createPropertyDescriptor('outlineColor'),
 
         /**
-         * Gets or sets the Number {@link Property} specifying the width of the outline.
+         * Gets or sets the numeric Property specifying the width of the outline.
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
+         * @default 1.0
          */
         outlineWidth : createPropertyDescriptor('outlineWidth'),
 
         /**
-         * Gets or sets the {@link CornerType} {@link Property} specifying how corners are triangulated.
+         * Gets or sets the {@link CornerType} Property specifying the style of the corners.
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
+         * @default CornerType.ROUNDED
          */
         cornerType : createPropertyDescriptor('cornerType')
     });
 
     /**
-     * Duplicates a PolylineVolumeGraphics instance.
+     * Duplicates this instance.
      *
      * @param {PolylineVolumeGraphics} [result] The object onto which to store the result.
      * @returns {PolylineVolumeGraphics} The modified result parameter or a new instance if one was not provided.
      */
     PolylineVolumeGraphics.prototype.clone = function(result) {
         if (!defined(result)) {
-            result = new PolylineVolumeGraphics();
+            return new PolylineVolumeGraphics(this);
         }
         result.show = this.show;
         result.material = this.material;

@@ -6,6 +6,7 @@ var load = Main.global.load;
 load(project.getProperty('tasksDirectory') + '/shared.js'); /*global forEachFile,readFileContents,writeFileContents,File,FileReader,FileWriter,FileUtils*/
 
 var demos = [];
+var output = attributes.get('output');
 
 forEachFile('demos', function(relativePath, file) {
     "use strict";
@@ -16,7 +17,7 @@ forEachFile('demos', function(relativePath, file) {
         date : file.lastModified()
     };
 
-    if (new File(file.getParent(), demo + '.jpg').exists()) {
+    if (new File(new File(output).getParent(), demo + '.jpg').exists()) {
         demoObject.img = demo + '.jpg';
     }
 
@@ -27,4 +28,4 @@ var contents = '\
 // This file is automatically rebuilt by the Cesium build process.\n\
 var gallery_demos = [' + demos.join(', ') + '];';
 
-writeFileContents(attributes.get('output'), contents);
+writeFileContents(output, contents);
