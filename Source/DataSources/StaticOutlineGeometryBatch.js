@@ -6,7 +6,8 @@ define([
         '../Core/defined',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/PerInstanceColorAppearance',
-        '../Scene/Primitive'
+        '../Scene/Primitive',
+        './BoundingSphereState'
     ], function(
         AssociativeArray,
         Color,
@@ -14,7 +15,8 @@ define([
         defined,
         ShowGeometryInstanceAttribute,
         PerInstanceColorAppearance,
-        Primitive) {
+        Primitive,
+        BoundingSphereState) {
     "use strict";
 
     var Batch = function(primitives, translucent, width) {
@@ -118,8 +120,8 @@ define([
 
                 if (!updater.hasConstantOutline) {
                     show = updater.isOutlineVisible(time);
-                    if (show !== attributes._lastShow) {
-                        attributes._lastShow = show;
+                    var currentShow = attributes.show[0] === 1;
+                    if (show !== currentShow) {
                         attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
                     }
                 }
@@ -130,6 +132,24 @@ define([
 
         this.itemsToRemove.length = removedCount;
         return isUpdated;
+    };
+
+    Batch.prototype.contains = function(entity) {
+        return this.updaters.contains(entity.id);
+    };
+
+    Batch.prototype.getBoundingSphere = function(entity, result) {
+        var primitive = this.primitive;
+        if (!primitive.ready) {
+            return BoundingSphereState.PENDING;
+        }
+        var attributes = primitive.getGeometryInstanceAttributes(entity);
+        if (!defined(attributes) || !defined(attributes.boundingSphere) ||//
+            (defined(attributes.show) && attributes.show[0] === 0)) {
+            return BoundingSphereState.FAILED;
+        }
+        attributes.boundingSphere.clone(result);
+        return BoundingSphereState.DONE;
     };
 
     Batch.prototype.removeAllPrimitives = function() {
@@ -250,6 +270,30 @@ define([
         } while (needUpdate);
 
         return isUpdated;
+    };
+
+    StaticOutlineGeometryBatch.prototype.getBoundingSphere = function(entity, result) {
+        var i;
+
+        var solidBatches = this._solidBatches.values;
+        var solidBatchesLength = solidBatches.length;
+        for (i = 0; i < solidBatchesLength; i++) {
+            var solidBatch = solidBatches[i];
+            if(solidBatch.contains(entity)){
+                return solidBatch.getBoundingSphere(entity, result);
+            }
+        }
+
+        var translucentBatches = this._translucentBatches.values;
+        var translucentBatchesLength = translucentBatches.length;
+        for (i = 0; i < translucentBatchesLength; i++) {
+            var translucentBatch = translucentBatches[i];
+            if(translucentBatch.contains(entity)){
+                return translucentBatch.getBoundingSphere(entity, result);
+            }
+        }
+
+        return BoundingSphereState.FAILED;
     };
 
     StaticOutlineGeometryBatch.prototype.removeAllPrimitives = function() {

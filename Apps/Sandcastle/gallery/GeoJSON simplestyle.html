@@ -27,17 +27,21 @@
 function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer', {timeline : false, animation : false});
-
 //Load a GeoJSON file containing simplestyle information.
 //To learn more about simplestyle, see https://github.com/mapbox/simplestyle-spec
-viewer.dataSources.add(Cesium.GeoJsonDataSource.fromUrl('../../SampleData/simplestyles.geojson'));
-
-//Set the camera to view the data.
-viewer.camera.viewRectangle(Cesium.Rectangle.fromDegrees(-0.1, 0.2, 1.5, -1.1));
 
 //In this particular example, the name of each entity is set to its maki icon identifier.
 //Clicking on each billboard will show it's identifier in the InfoBox.
+
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    sceneMode : Cesium.SceneMode.SCENE2D,
+    timeline : false,
+    animation : false
+});
+
+var dataSource = Cesium.GeoJsonDataSource.fromUrl('../../SampleData/simplestyles.geojson');
+viewer.dataSources.add(dataSource);
+viewer.zoomTo(dataSource);
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

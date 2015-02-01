@@ -7,7 +7,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/JulianDate',
-        './createPropertyDescriptor'
+        './createRawPropertyDescriptor'
     ], function(
         Clock,
         defaultValue,
@@ -16,7 +16,7 @@ define([
         DeveloperError,
         Event,
         JulianDate,
-        createPropertyDescriptor) {
+        createRawPropertyDescriptor) {
     "use strict";
 
     /**
@@ -54,35 +54,35 @@ define([
          * @memberof DataSourceClock.prototype
          * @type {JulianDate}
          */
-        startTime : createPropertyDescriptor('startTime'),
+        startTime : createRawPropertyDescriptor('startTime'),
 
         /**
          * Gets or sets the stop time of the clock to use when looping or clamped.
          * @memberof DataSourceClock.prototype
          * @type {JulianDate}
          */
-        stopTime : createPropertyDescriptor('stopTime'),
+        stopTime : createRawPropertyDescriptor('stopTime'),
 
         /**
          * Gets or sets the initial time to use when switching to this clock.
          * @memberof DataSourceClock.prototype
          * @type {JulianDate}
          */
-        currentTime : createPropertyDescriptor('currentTime'),
+        currentTime : createRawPropertyDescriptor('currentTime'),
 
         /**
          * Gets or sets how the clock should behave when <code>startTime</code> or <code>stopTime</code> is reached.
          * @memberof DataSourceClock.prototype
          * @type {ClockRange}
          */
-        clockRange : createPropertyDescriptor('clockRange'),
+        clockRange : createRawPropertyDescriptor('clockRange'),
 
         /**
          * Gets or sets if clock advancement is frame dependent or system clock dependent.
          * @memberof DataSourceClock.prototype
          * @type {ClockStep}
          */
-        clockStep : createPropertyDescriptor('clockStep'),
+        clockStep : createRawPropertyDescriptor('clockStep'),
 
         /**
          * Gets or sets how much time advances with each tick, negative values allow for advancing backwards.
@@ -92,7 +92,7 @@ define([
          * @memberof DataSourceClock.prototype
          * @type {Number}
          */
-        multiplier : createPropertyDescriptor('multiplier')
+        multiplier : createRawPropertyDescriptor('multiplier')
     });
 
     /**

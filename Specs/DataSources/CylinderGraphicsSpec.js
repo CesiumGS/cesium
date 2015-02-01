@@ -16,6 +16,47 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
+    it('creates expected instance from raw assignment and construction', function() {
+        var options = {
+            material : Color.BLUE,
+            show : true,
+            length : 1,
+            topRadius : 2,
+            bottomRadius : 3,
+            numberOfVerticalLines : 4,
+            slices : 5,
+            fill : false,
+            outline : false,
+            outlineColor : Color.RED,
+            outlineWidth : 6
+        };
+
+        var cylinder = new CylinderGraphics(options);
+        expect(cylinder.material).toBeInstanceOf(ColorMaterialProperty);
+        expect(cylinder.show).toBeInstanceOf(ConstantProperty);
+        expect(cylinder.length).toBeInstanceOf(ConstantProperty);
+        expect(cylinder.topRadius).toBeInstanceOf(ConstantProperty);
+        expect(cylinder.bottomRadius).toBeInstanceOf(ConstantProperty);
+        expect(cylinder.numberOfVerticalLines).toBeInstanceOf(ConstantProperty);
+        expect(cylinder.slices).toBeInstanceOf(ConstantProperty);
+        expect(cylinder.fill).toBeInstanceOf(ConstantProperty);
+        expect(cylinder.outline).toBeInstanceOf(ConstantProperty);
+        expect(cylinder.outlineColor).toBeInstanceOf(ConstantProperty);
+        expect(cylinder.outlineWidth).toBeInstanceOf(ConstantProperty);
+
+        expect(cylinder.material.color.getValue()).toEqual(options.material);
+        expect(cylinder.show.getValue()).toEqual(options.show);
+        expect(cylinder.length.getValue()).toEqual(options.length);
+        expect(cylinder.topRadius.getValue()).toEqual(options.topRadius);
+        expect(cylinder.bottomRadius.getValue()).toEqual(options.bottomRadius);
+        expect(cylinder.numberOfVerticalLines.getValue()).toEqual(options.numberOfVerticalLines);
+        expect(cylinder.slices.getValue()).toEqual(options.slices);
+        expect(cylinder.fill.getValue()).toEqual(options.fill);
+        expect(cylinder.outline.getValue()).toEqual(options.outline);
+        expect(cylinder.outlineColor.getValue()).toEqual(options.outlineColor);
+        expect(cylinder.outlineWidth.getValue()).toEqual(options.outlineWidth);
+    });
+
     it('merge assigns unassigned properties', function() {
         var source = new CylinderGraphics();
         source.material = new ColorMaterialProperty();
