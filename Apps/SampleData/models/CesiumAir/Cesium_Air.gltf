@@ -194,8 +194,11 @@
     "asset": {
         "generator": "collada2gltf@df4892809111a8c6dbff4fab6c386a24745d344e",
         "premultipliedAlpha": true,
-        "profile": "WebGL 1.0.2",
-        "version": 0.8
+        "profile": {
+            "api" : "WebGL",
+            "version" : "1.0.2"
+        },
+        "version": "0.9"
     },
     "bufferViews": {
         "bufferView_83": {

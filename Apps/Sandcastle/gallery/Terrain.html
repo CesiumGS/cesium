@@ -111,34 +111,34 @@ Sandcastle.addToolbarButton('San Francisco Bay', function() {
 }, 'zoomButtons');
 
 var terrainSamplePositions;
-var billboards = scene.primitives.add(new Cesium.BillboardCollection());
-var labels = scene.primitives.add(new Cesium.LabelCollection());
 
 function sampleTerrainSuccess() {
     var ellipsoid = Cesium.Ellipsoid.WGS84;
+    viewer.entities.suspendEvents();
+    viewer.entities.removeAll();
 
-    billboards.removeAll();
-    labels.removeAll();
-
-    for( var i = 0; i < terrainSamplePositions.length; ++i ){
+    for (var i = 0; i < terrainSamplePositions.length; ++i) {
         var position = terrainSamplePositions[i];
-        billboards.add({
-            position : ellipsoid.cartographicToCartesian(position),
-            verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
-            scale : 0.7,
-            image : '../images/facility.gif'
-        });
 
-        labels.add({
+        viewer.entities.add({
+            name : position.height.toFixed(1),
             position : ellipsoid.cartographicToCartesian(position),
-            text : position.height.toFixed(1),
-            horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
-            scale : 0.3,
-            pixelOffset : new Cesium.Cartesian2(0,-14),
-            fillColor : new Cesium.Color(1,0,0),
-            outlineColor : Cesium.Color.WHITE
+            billboard : {
+                verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
+                scale : 0.7,
+                image : '../images/facility.gif'
+            },
+            label : {
+                text : position.height.toFixed(1),
+                horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
+                scale : 0.3,
+                pixelOffset : new Cesium.Cartesian2(0, -14),
+                fillColor : Cesium.Color.RED,
+                outlineColor : Cesium.Color.WHITE
+            }
         });
     }
+    viewer.entities.resumeEvents();
 }
 
 Sandcastle.addToolbarButton('Sample Everest Terrain', function() {

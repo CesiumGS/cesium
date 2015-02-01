@@ -18,6 +18,35 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
+    it('creates expected instance from raw assignment and construction', function() {
+        var options = {
+            material : Color.BLUE,
+            show : true,
+            fill : false,
+            outline : false,
+            outlineColor : Color.RED,
+            outlineWidth : 1,
+            dimensions : new Cartesian3(2, 3, 4)
+        };
+
+        var box = new BoxGraphics(options);
+        expect(box.material).toBeInstanceOf(ColorMaterialProperty);
+        expect(box.show).toBeInstanceOf(ConstantProperty);
+        expect(box.fill).toBeInstanceOf(ConstantProperty);
+        expect(box.outline).toBeInstanceOf(ConstantProperty);
+        expect(box.outlineColor).toBeInstanceOf(ConstantProperty);
+        expect(box.outlineWidth).toBeInstanceOf(ConstantProperty);
+        expect(box.dimensions).toBeInstanceOf(ConstantProperty);
+
+        expect(box.material.color.getValue()).toEqual(options.material);
+        expect(box.show.getValue()).toEqual(options.show);
+        expect(box.fill.getValue()).toEqual(options.fill);
+        expect(box.outline.getValue()).toEqual(options.outline);
+        expect(box.outlineColor.getValue()).toEqual(options.outlineColor);
+        expect(box.outlineWidth.getValue()).toEqual(options.outlineWidth);
+        expect(box.dimensions.getValue()).toEqual(options.dimensions);
+    });
+
     it('merge assigns unassigned properties', function() {
         var source = new BoxGraphics();
         source.material = new ColorMaterialProperty();

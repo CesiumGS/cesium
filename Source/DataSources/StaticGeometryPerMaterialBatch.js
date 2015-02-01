@@ -4,12 +4,14 @@ define([
         '../Core/defined',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/Primitive',
+        './BoundingSphereState',
         './MaterialProperty'
     ], function(
         AssociativeArray,
         defined,
         ShowGeometryInstanceAttribute,
         Primitive,
+        BoundingSphereState,
         MaterialProperty) {
     "use strict";
 
@@ -121,8 +123,8 @@ define([
 
                 if (!updater.hasConstantFill) {
                     show = updater.isFilled(time);
-                    if (show !== attributes._lastShow) {
-                        attributes._lastShow = show;
+                    var currentShow = attributes.show[0] === 1;
+                    if (show !== currentShow) {
                         attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
                     }
                 }
@@ -131,6 +133,24 @@ define([
             isUpdated = false;
         }
         return isUpdated;
+    };
+
+    Batch.prototype.contains = function(entity) {
+        return this.updaters.contains(entity.id);
+    };
+
+    Batch.prototype.getBoundingSphere = function(entity, result) {
+        var primitive = this.primitive;
+        if (!primitive.ready) {
+            return BoundingSphereState.PENDING;
+        }
+        var attributes = primitive.getGeometryInstanceAttributes(entity);
+        if (!defined(attributes) || !defined(attributes.boundingSphere) ||//
+            (defined(attributes.show) && attributes.show[0] === 0)) {
+            return BoundingSphereState.FAILED;
+        }
+        attributes.boundingSphere.clone(result);
+        return BoundingSphereState.DONE;
     };
 
     Batch.prototype.destroy = function(time) {
@@ -205,6 +225,18 @@ define([
             isUpdated = items[i].update(time) && isUpdated;
         }
         return isUpdated;
+    };
+
+    StaticGeometryPerMaterialBatch.prototype.getBoundingSphere = function(entity, result) {
+        var items = this._items;
+        var length = items.length;
+        for (var i = 0; i < length; i++) {
+            var item = items[i];
+            if(item.contains(entity)){
+                return item.getBoundingSphere(entity, result);
+            }
+        }
+        return BoundingSphereState.FAILED;
     };
 
     StaticGeometryPerMaterialBatch.prototype.removeAllPrimitives = function() {
