@@ -770,12 +770,10 @@ define([
                     var right = this.right;
                     var direction = this.direction;
 
-                    var roll;
+                    var roll = 0.0;
                     if (!CesiumMath.equalsEpsilon(Math.abs(direction.z), 1.0, CesiumMath.EPSILON3)) {
                         roll = Math.atan2(-right.z, up.z);
                         roll = CesiumMath.zeroToTwoPi(roll + CesiumMath.TWO_PI);
-                    } else {
-                        roll = Math.atan2(up.y, up.x) - CesiumMath.PI_OVER_TWO;
                     }
 
                     this._setTransform(oldTransform);
