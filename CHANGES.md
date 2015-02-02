@@ -23,6 +23,7 @@ Change Log
   * `DataSourceDisplay` methods `getScene` and `getDataSources` have been deprecated and replaced with `scene` and `dataSources` properties. They will be removed in Cesium 1.9.
   * The `Entity` constructor taking a single string value for the id has been deprecated. The constructor now takes an options object which allows you to provide any and all `Entity` related properties at construction time. Support for the deprecated behavior will be removed in Cesium 1.9.
   * The `EntityCollection.entities` and `CompositeEntityCollect.entities` properties have both been renamed to `values`.  Support for the deprecated behavior will be removed in Cesium 1.9.
+* Fixed an issue which caused order independent translucency to be broken on many video cards. Disabling order independent translucency should no longer be necessary. 
 * Improved performance of asynchronous geometry creation (as much as 20% faster in some use cases). [#2342](https://github.com/AnalyticalGraphicsInc/cesium/issues/2342)
 * Added `Color.fromAlpha` and `Color.withAlpha` to make it easy to create translucent colors from constants, i.e. `var translucentRed = Color.RED.withAlpha(0.95)`.
 * Added `PolylineVolumeGraphics` and `Entity.polylineVolume`
