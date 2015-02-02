@@ -59,6 +59,7 @@ Change Log
 * All Entity and related class can now be assigned using anonymous objects as well as be passed template objects. The correct underlying instance is created for you automatically.
 * Many Sandcastle examples have been rewritten to make use of the newly improved Entity API.
 * For a more detailed overview of changes to the Entity API, read [this forum thread](https://groups.google.com/d/msg/cesium-dev/ol7edT6EtZw/a2-gvI4H0IwJ) for details.
+* Fixed picking in 2D. [#2447](https://github.com/AnalyticalGraphicsInc/cesium/issues/2447)
 
 ### 1.5 - 2015-01-05
 
