@@ -1457,6 +1457,8 @@ define([
 
         camera._setTransform(transform);
 
+        Cartesian3.fromElements(origin.z, origin.x, origin.y, origin);
+
         scratchBufferDimensions.x = drawingBufferWidth;
         scratchBufferDimensions.y = drawingBufferHeight;
 
