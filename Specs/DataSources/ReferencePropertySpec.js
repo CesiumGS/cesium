@@ -63,7 +63,9 @@ defineSuite([
     });
 
     it('properly tracks resolved property', function() {
-        var testObject = new Entity('testId');
+        var testObject = new Entity({
+            id : 'testId'
+        });
         testObject.billboard = new BillboardGraphics();
         testObject.billboard.scale = new ConstantProperty(5);
 
@@ -111,7 +113,9 @@ defineSuite([
         listener.reset();
 
         //adding a new object should re-wire the reference.
-        var testObject2 = new Entity('testId');
+        var testObject2 = new Entity({
+            id : 'testId'
+        });
         testObject2.billboard = new BillboardGraphics();
         testObject2.billboard.scale = new ConstantProperty(9);
         collection.add(testObject2);
@@ -121,7 +125,9 @@ defineSuite([
     });
 
     it('works with position properties', function() {
-        var testObject = new Entity('testId');
+        var testObject = new Entity({
+            id : 'testId'
+        });
         testObject.position = new ConstantPositionProperty(new Cartesian3(1, 2, 3), ReferenceFrame.FIXED);
 
         var collection = new EntityCollection();
@@ -136,9 +142,11 @@ defineSuite([
     });
 
     it('works with material properties', function() {
-        var testObject = new Entity('testId');
+        var testObject = new Entity({
+            id : 'testId'
+        });
         testObject.addProperty('testMaterial');
-        testObject.testMaterial = ColorMaterialProperty.fromColor(Color.WHITE);
+        testObject.testMaterial = new ColorMaterialProperty(Color.WHITE);
 
         var collection = new EntityCollection();
         collection.add(testObject);
@@ -175,11 +183,15 @@ defineSuite([
     });
 
     it('does not raise definition changed when target entity has not changed.', function() {
-        var testObject = new Entity('testId');
+        var testObject = new Entity({
+            id : 'testId'
+        });
         testObject.billboard = new BillboardGraphics();
         testObject.billboard.scale = new ConstantProperty(5);
 
-        var otherObject = new Entity('other');
+        var otherObject = new Entity({
+            id : 'other'
+        });
 
         var collection = new EntityCollection();
         collection.add(testObject);
@@ -264,7 +276,9 @@ defineSuite([
     it('throws RuntimeError if property can not be resolved', function() {
         var collection = new EntityCollection();
 
-        var testObject = new Entity('testId');
+        var testObject = new Entity({
+            id : 'testId'
+        });
         collection.add(testObject);
 
         var property = ReferenceProperty.fromString(collection, 'testId#billboard');
@@ -276,7 +290,9 @@ defineSuite([
     it('throws RuntimeError if sub-property can not be resolved', function() {
         var collection = new EntityCollection();
 
-        var testObject = new Entity('testId');
+        var testObject = new Entity({
+            id : 'testId'
+        });
         testObject.billboard = new BillboardGraphics();
         collection.add(testObject);
 

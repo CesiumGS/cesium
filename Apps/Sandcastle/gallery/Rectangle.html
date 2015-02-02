@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Draw a rectangle on the globe surface">
+    <meta name="description" content="Draw a rectangle or extruded rectangle that conforms to the surface of the globe.">
     <meta name="cesium-sandcastle-labels" content="Geometries">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -27,47 +27,32 @@
 function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
-// Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
-var scene = viewer.scene;
 
-// Example 1: Draw a red rectangle on the globe surface.
-var redRectangleInstance = new Cesium.GeometryInstance({
-    geometry : new Cesium.RectangleGeometry({
-        rectangle : Cesium.Rectangle.fromDegrees(-110.0, 20.0, -80.0, 25.0),
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-    }),
-    attributes: {
-        color: Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
+var redRectangle = viewer.entities.add({
+    name : 'Red translucent rectangle with outline',
+    rectangle : {
+        coordinates : Cesium.Rectangle.fromDegrees(-110.0, 20.0, -80.0, 25.0),
+        material : Cesium.Color.RED.withAlpha(0.5),
+        outline : true,
+        outlineColor : Cesium.Color.RED
     }
 });
 
-// Example 2: Draw a green extruded rectangle.
-
-// The extrudedHeight option is used to set the height of the
-// extruded side.  The height option is used to specify the distnace
-// from the globe surface to the rectangle.  The rotation
-// option can also be used to rotate the rectangle.
-var greenRectangleInstance = new Cesium.GeometryInstance({
-    geometry : new Cesium.RectangleGeometry({
-        rectangle : Cesium.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0),
+var greenRectangle = viewer.entities.add({
+    name : 'Green translucent, rotated, and extruded rectangle at height with outline',
+    rectangle : {
+        coordinates : Cesium.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0),
+        material : Cesium.Color.GREEN.withAlpha(0.5),
         rotation : Cesium.Math.toRadians(45),
         extrudedHeight : 300000.0,
         height : 100000.0,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-    }),
-    attributes: {
-        color: Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 1.0, 0.0, 0.5))
+        outline : true,
+        outlineColor : Cesium.Color.GREEN
     }
 });
 
-// Add both rectangle instances to primitives
-scene.primitives.add(new Cesium.Primitive({
-    geometryInstances : [redRectangleInstance, greenRectangleInstance],
-    appearance : new Cesium.PerInstanceColorAppearance({
-        closed : true
-    })
-}));
+viewer.zoomTo(viewer.entities);
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

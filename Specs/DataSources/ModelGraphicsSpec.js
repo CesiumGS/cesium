@@ -8,6 +8,26 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
+    it('creates expected instance from raw assignment and construction', function() {
+        var options = {
+            uri : '0',
+            scale : 1,
+            show : false,
+            minimumPixelSize : 2
+        };
+
+        var model = new ModelGraphics(options);
+        expect(model.uri).toBeInstanceOf(ConstantProperty);
+        expect(model.scale).toBeInstanceOf(ConstantProperty);
+        expect(model.show).toBeInstanceOf(ConstantProperty);
+        expect(model.minimumPixelSize).toBeInstanceOf(ConstantProperty);
+
+        expect(model.uri.getValue()).toEqual(options.uri);
+        expect(model.scale.getValue()).toEqual(options.scale);
+        expect(model.show.getValue()).toEqual(options.show);
+        expect(model.minimumPixelSize.getValue()).toEqual(options.minimumPixelSize);
+    });
+
     it('merge assigns unassigned properties', function() {
         var source = new ModelGraphics();
         source.uri = new ConstantProperty('');

@@ -785,25 +785,35 @@ defineSuite([
         viewer.trackedEntity = entity;
 
         expect(viewer.trackedEntity).toBe(entity);
-        viewer.render();
-        expect(Matrix4.getTranslation(viewer.scene.camera.transform, new Cartesian3())).toEqual(entity.position.getValue());
+        waitsFor(function() {
+            viewer.render();
+            return Cartesian3.equals(Matrix4.getTranslation(viewer.scene.camera.transform, new Cartesian3()), entity.position.getValue());
+        });
 
-        dataSource.entities.remove(entity);
+        runs(function() {
+            dataSource.entities.remove(entity);
 
-        expect(viewer.trackedEntity).toBeUndefined();
-        expect(viewer.scene.camera.transform).toEqual(Matrix4.IDENTITY);
+            expect(viewer.trackedEntity).toBeUndefined();
+            expect(viewer.scene.camera.transform).toEqual(Matrix4.IDENTITY);
 
-        dataSource.entities.add(entity);
-        viewer.trackedEntity = entity;
+            dataSource.entities.add(entity);
+            viewer.trackedEntity = entity;
 
-        expect(viewer.trackedEntity).toBe(entity);
-        viewer.render();
-        expect(Matrix4.getTranslation(viewer.scene.camera.transform, new Cartesian3())).toEqual(entity.position.getValue());
+            expect(viewer.trackedEntity).toBe(entity);
+        });
 
-        viewer.dataSources.remove(dataSource);
+        waitsFor(function() {
+            viewer.render();
+            viewer.render();
+            return Cartesian3.equals(Matrix4.getTranslation(viewer.scene.camera.transform, new Cartesian3()), entity.position.getValue());
+        });
 
-        expect(viewer.trackedEntity).toBeUndefined();
-        expect(viewer.scene.camera.transform).toEqual(Matrix4.IDENTITY);
+        runs(function() {
+            viewer.dataSources.remove(dataSource);
+
+            expect(viewer.trackedEntity).toBeUndefined();
+            expect(viewer.scene.camera.transform).toEqual(Matrix4.IDENTITY);
+        });
     });
 
     it('removes data source listeners when destroyed', function() {

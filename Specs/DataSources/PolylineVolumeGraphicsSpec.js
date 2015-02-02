@@ -18,6 +18,44 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
+    it('creates expected instance from raw assignment and construction', function() {
+        var options = {
+            material : Color.BLUE,
+            positions : [],
+            shape : [],
+            show : true,
+            granularity : 1,
+            fill : false,
+            outline : false,
+            outlineColor : Color.RED,
+            outlineWidth : 2,
+            cornerType : CornerType.BEVELED
+        };
+
+        var polylineVolume = new PolylineVolumeGraphics(options);
+        expect(polylineVolume.material).toBeInstanceOf(ColorMaterialProperty);
+        expect(polylineVolume.positions).toBeInstanceOf(ConstantProperty);
+        expect(polylineVolume.show).toBeInstanceOf(ConstantProperty);
+        expect(polylineVolume.shape).toBeInstanceOf(ConstantProperty);
+        expect(polylineVolume.granularity).toBeInstanceOf(ConstantProperty);
+        expect(polylineVolume.fill).toBeInstanceOf(ConstantProperty);
+        expect(polylineVolume.outline).toBeInstanceOf(ConstantProperty);
+        expect(polylineVolume.outlineColor).toBeInstanceOf(ConstantProperty);
+        expect(polylineVolume.outlineWidth).toBeInstanceOf(ConstantProperty);
+        expect(polylineVolume.cornerType).toBeInstanceOf(ConstantProperty);
+
+        expect(polylineVolume.material.color.getValue()).toEqual(options.material);
+        expect(polylineVolume.positions.getValue()).toEqual(options.positions);
+        expect(polylineVolume.show.getValue()).toEqual(options.show);
+        expect(polylineVolume.shape.getValue()).toEqual(options.shape);
+        expect(polylineVolume.granularity.getValue()).toEqual(options.granularity);
+        expect(polylineVolume.fill.getValue()).toEqual(options.fill);
+        expect(polylineVolume.outline.getValue()).toEqual(options.outline);
+        expect(polylineVolume.outlineColor.getValue()).toEqual(options.outlineColor);
+        expect(polylineVolume.outlineWidth.getValue()).toEqual(options.outlineWidth);
+        expect(polylineVolume.cornerType.getValue()).toEqual(options.cornerType);
+    });
+
     it('merge assigns unassigned properties', function() {
         var source = new PolylineVolumeGraphics();
         source.material = new ColorMaterialProperty();
