@@ -502,7 +502,7 @@ define([
             positions2D = tangentPlane.projectPointsOntoPlane(hole, createGeometryFromPositionsExtrudedPositions);
 
             windingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
-            if (windingOrder === WindingOrder.CLOCKWISE) {
+            if (windingOrder === WindingOrder.COUNTER_CLOCKWISE) {
                 hole.reverse();
             }
 
@@ -529,7 +529,7 @@ define([
      * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instaed of using options.height to determine the height.
+     * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
      *
      * @see PolygonGeometry#createGeometry
      * @see PolygonGeometry#fromPositions

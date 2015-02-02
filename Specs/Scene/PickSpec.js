@@ -45,11 +45,11 @@ defineSuite([
     });
 
     beforeEach(function() {
+        camera.lookAtTransform(Matrix4.IDENTITY);
         camera.position = new Cartesian3(1.03, 0.0, 0.0);
         camera.direction = new Cartesian3(-1.0, 0.0, 0.0);
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         camera.right = Cartesian3.clone(Cartesian3.UNIT_Y);
-        camera.transform = Matrix4.clone(Matrix4.IDENTITY);
 
         camera.frustum = new PerspectiveFrustum();
         camera.frustum.near = 0.01;
@@ -165,6 +165,11 @@ defineSuite([
         var ellipsoid = scene.mapProjection.ellipsoid;
         var maxRadii = ellipsoid.maximumRadius;
 
+        camera.lookAtTransform(new Matrix4(0.0, 0.0, 1.0, 0.0,
+                                           1.0, 0.0, 0.0, 0.0,
+                                           0.0, 1.0, 0.0, 0.0,
+                                           0.0, 0.0, 0.0, 1.0));
+
         camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
         camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position, new Cartesian3()), new Cartesian3());
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
@@ -178,11 +183,6 @@ defineSuite([
         frustum.far = 60.0 * maxRadii;
         camera.frustum = frustum;
 
-        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                                       1.0, 0.0, 0.0, 0.0,
-                                       0.0, 1.0, 0.0, 0.0,
-                                       0.0, 0.0, 0.0, 1.0);
-
         scene.mode = SceneMode.SCENE2D;
         scene.morphTime = SceneMode.getMorphTime(scene.mode);
 
@@ -194,6 +194,11 @@ defineSuite([
     it('pick in 2D when rotated', function() {
         var ellipsoid = scene.mapProjection.ellipsoid;
         var maxRadii = ellipsoid.maximumRadius;
+
+        camera.lookAtTransform(new Matrix4(0.0, 0.0, 1.0, 0.0,
+                                           1.0, 0.0, 0.0, 0.0,
+                                           0.0, 1.0, 0.0, 0.0,
+                                           0.0, 0.0, 0.0, 1.0));
 
         camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
         camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position, new Cartesian3()), new Cartesian3());
@@ -207,11 +212,6 @@ defineSuite([
         frustum.near = 0.01 * maxRadii;
         frustum.far = 60.0 * maxRadii;
         camera.frustum = frustum;
-
-        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                                       1.0, 0.0, 0.0, 0.0,
-                                       0.0, 1.0, 0.0, 0.0,
-                                       0.0, 0.0, 0.0, 1.0);
 
         scene.mode = SceneMode.SCENE2D;
         scene.morphTime = SceneMode.getMorphTime(scene.mode);

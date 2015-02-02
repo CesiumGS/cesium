@@ -55,7 +55,7 @@ Sandcastle.addToolbarButton('Custom styling', function() {
     //Load the document into the data source and then set custom graphics
     dataSource.loadUrl('../../SampleData/ne_10m_us_states.topojson').then(function() {
         //Get the array of entities
-        var entities = dataSource.entities.entities;
+        var entities = dataSource.entities.values;
         
         var colorHash = {};
         for (var i = 0; i < entities.length; i++) {
@@ -73,14 +73,14 @@ Sandcastle.addToolbarButton('Custom styling', function() {
             }
             
             //Set the polygon material to our random color.
-            entity.polygon.material = Cesium.ColorMaterialProperty.fromColor(color);
+            entity.polygon.material = color;
             //Outline each polygon in black.
-            entity.polygon.outlineColor = new Cesium.ConstantProperty(Cesium.Color.BLACK);
+            entity.polygon.outlineColor = Cesium.Color.BLACK;
 
             //Extrude the polygon based on the state's population.  Each entity
             //stores the properties for the GeoJSON feature it was created from
             //Since the population is a huge number, we divide by 50.
-            entity.polygon.extrudedHeight = new Cesium.ConstantProperty(entity.properties.Population / 50.0);
+            entity.polygon.extrudedHeight = entity.properties.Population / 50.0;
         }
     });
 });
@@ -89,9 +89,9 @@ Sandcastle.addToolbarButton('Custom styling', function() {
 Sandcastle.reset = function() {
   viewer.dataSources.removeAll();
   
-  //Set the camera to a US centered tilted view.
-  viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(-98, 15.0, 5000000),
-      Cesium.Cartesian3.fromDegrees(-98, 40.0, 0), Cesium.Cartesian3.UNIT_Z);
+  //Set the camera to a US centered tilted view and switch back to moving in world coordinates.
+  viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(-98.0, 40.0), new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0));
+  viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 };
 //Sandcastle_End
     Sandcastle.finishedLoading();

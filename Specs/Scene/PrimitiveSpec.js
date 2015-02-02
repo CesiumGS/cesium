@@ -783,6 +783,29 @@ defineSuite([
         primitive = primitive && primitive.destroy();
     });
 
+    it('getGeometryInstanceAttributes returns same object each time', function() {
+        var primitive = new Primitive({
+            geometryInstances : rectangleInstance1,
+            appearance : new PerInstanceColorAppearance(),
+            asynchronous : false
+        });
+
+        frameState.camera.viewRectangle(rectangle1);
+        us.update(context, frameState);
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+
+        var attributes = primitive.getGeometryInstanceAttributes('rectangle1');
+        var attributes2 = primitive.getGeometryInstanceAttributes('rectangle1');
+        expect(attributes).toBe(attributes2);
+
+        primitive = primitive && primitive.destroy();
+    });
+
     it('picking', function() {
         var primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
@@ -937,6 +960,32 @@ defineSuite([
         }).toThrowDeveloperError();
 
         primitive = primitive && primitive.destroy();
+    });
+
+    it('can disable picking when asynchronous', function() {
+        var primitive = new Primitive({
+            geometryInstances : rectangleInstance1,
+            appearance : new PerInstanceColorAppearance(),
+            asynchronous : true,
+            allowPicking : false
+        });
+
+        waitsFor(function() {
+            primitive.update(context, frameState, []);
+            if (frameState.afterRender.length > 0) {
+                frameState.afterRender[0]();
+            }
+            return primitive.ready;
+        });
+
+        runs(function() {
+            var attributes = primitive.getGeometryInstanceAttributes('rectangle1');
+            expect(function() {
+                attributes.color = undefined;
+            }).toThrowDeveloperError();
+
+            primitive = primitive && primitive.destroy();
+        });
     });
 
     it('getGeometryInstanceAttributes throws without id', function() {

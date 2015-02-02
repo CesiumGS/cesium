@@ -72,8 +72,8 @@ define([
     var defaultFill = Color.fromBytes(255, 255, 0, 100);
 
     var defaultStrokeWidthProperty = new ConstantProperty(defaultStrokeWidth);
-    var defaultStrokeMaterialProperty = ColorMaterialProperty.fromColor(defaultStroke);
-    var defaultFillMaterialProperty = ColorMaterialProperty.fromColor(defaultFill);
+    var defaultStrokeMaterialProperty = new ColorMaterialProperty(defaultStroke);
+    var defaultFillMaterialProperty = new ColorMaterialProperty(defaultFill);
 
     var sizes = {
         small : 24,
@@ -259,25 +259,18 @@ define([
         stringifyScratch[2] = size;
         var id = JSON.stringify(stringifyScratch);
 
-        var dataURLPromise = dataSource._pinCache[id];
-        if (!defined(dataURLPromise)) {
-            var canvasOrPromise;
-            if (defined(symbol)) {
-                if (symbol.length === 1) {
-                    canvasOrPromise = dataSource._pinBuilder.fromText(symbol.toUpperCase(), color, size);
-                } else {
-                    canvasOrPromise = dataSource._pinBuilder.fromMakiIconId(symbol, color, size);
-                }
+        var canvasOrPromise;
+        if (defined(symbol)) {
+            if (symbol.length === 1) {
+                canvasOrPromise = dataSource._pinBuilder.fromText(symbol.toUpperCase(), color, size);
             } else {
-                canvasOrPromise = dataSource._pinBuilder.fromColor(color, size);
+                canvasOrPromise = dataSource._pinBuilder.fromMakiIconId(symbol, color, size);
             }
-            dataURLPromise = when(canvasOrPromise, function(canvas) {
-                return canvas.toDataURL();
-            });
-            dataSource._pinCache[id] = dataURLPromise;
+        } else {
+            canvasOrPromise = dataSource._pinBuilder.fromColor(color, size);
         }
 
-        dataSource._promises.push(when(dataURLPromise, function(dataUrl) {
+        dataSource._promises.push(when(canvasOrPromise, function(dataUrl) {
             var billboard = new BillboardGraphics();
             billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
             billboard.image = new ConstantProperty(dataUrl);
@@ -323,7 +316,7 @@ define([
                 color.alpha = opacity;
             }
             if (defined(color)) {
-                material = ColorMaterialProperty.fromColor(color);
+                material = new ColorMaterialProperty(color);
             }
         }
 
@@ -394,7 +387,7 @@ define([
                 fillColor.alpha = opacity;
             }
             if (defined(fillColor)) {
-                material = ColorMaterialProperty.fromColor(fillColor);
+                material = new ColorMaterialProperty(fillColor);
             }
         }
 
@@ -496,7 +489,6 @@ define([
         this._loading = new Event();
         this._entityCollection = new EntityCollection();
         this._promises = [];
-        this._pinCache = {};
         this._pinBuilder = new PinBuilder();
     };
 
@@ -606,7 +598,7 @@ define([
             },
             set : function(value) {
                 defaultFill = value;
-                defaultFillMaterialProperty = ColorMaterialProperty.fromColor(defaultFill);
+                defaultFillMaterialProperty = new ColorMaterialProperty(defaultFill);
             }
         },
 
@@ -799,8 +791,8 @@ define([
             markerSymbol : defaultValue(options.markerSymbol, defaultMarkerSymbol),
             markerColor : defaultValue(options.markerColor, defaultMarkerColor),
             strokeWidthProperty : new ConstantProperty(defaultValue(options.strokeWidth, defaultStrokeWidth)),
-            strokeMaterialProperty : ColorMaterialProperty.fromColor(defaultValue(options.stroke, defaultStroke)),
-            fillMaterialProperty : ColorMaterialProperty.fromColor(defaultValue(options.fill, defaultFill))
+            strokeMaterialProperty : new ColorMaterialProperty(defaultValue(options.stroke, defaultStroke)),
+            fillMaterialProperty : new ColorMaterialProperty(defaultValue(options.fill, defaultFill))
         };
 
         var name;
@@ -864,7 +856,6 @@ define([
 
             return when.all(that._promises, function() {
                 that._promises.length = 0;
-                that._pinCache = {};
                 DataSource.setLoading(that, false);
             });
         }).otherwise(function(error) {

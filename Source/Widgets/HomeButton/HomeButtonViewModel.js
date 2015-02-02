@@ -37,7 +37,7 @@ define([
         var up;
 
         if (mode === SceneMode.SCENE2D) {
-            scene.camera.flyToRectangle({
+            scene.camera.flyTo({
                 destination : Rectangle.MAX_VALUE,
                 duration : duration,
                 endTransform : Matrix4.IDENTITY
@@ -57,8 +57,10 @@ define([
 
             scene.camera.flyTo({
                 destination : destination,
-                direction: direction,
-                up : up,
+                orientation : {
+                    direction: direction,
+                    up : up
+                },
                 duration : duration,
                 endTransform : Matrix4.IDENTITY
             });
@@ -74,8 +76,10 @@ define([
             scene.camera.flyTo({
                 destination : position,
                 duration : duration,
-                up : up,
-                direction : direction,
+                orientation : {
+                    direction : direction,
+                    up : up
+                },
                 endTransform : Matrix4.IDENTITY,
                 convert : false
             });

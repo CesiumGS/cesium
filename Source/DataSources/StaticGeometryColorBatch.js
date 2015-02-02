@@ -5,14 +5,16 @@ define([
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defined',
         '../Core/ShowGeometryInstanceAttribute',
-        '../Scene/Primitive'
+        '../Scene/Primitive',
+        './BoundingSphereState'
     ], function(
         AssociativeArray,
         Color,
         ColorGeometryInstanceAttribute,
         defined,
         ShowGeometryInstanceAttribute,
-        Primitive) {
+        Primitive,
+        BoundingSphereState) {
     "use strict";
 
     var colorScratch = new Color();
@@ -114,8 +116,8 @@ define([
 
                 if (!updater.hasConstantFill) {
                     show = updater.isFilled(time);
-                    if (show !== attributes._lastShow) {
-                        attributes._lastShow = show;
+                    var currentShow = attributes.show[0] === 1;
+                    if (show !== currentShow) {
                         attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
                     }
                 }
@@ -125,6 +127,24 @@ define([
         }
         this.itemsToRemove.length = removedCount;
         return isUpdated;
+    };
+
+    Batch.prototype.contains = function(entity) {
+        return this.updaters.contains(entity.id);
+    };
+
+    Batch.prototype.getBoundingSphere = function(entity, result) {
+        var primitive = this.primitive;
+        if (!primitive.ready) {
+            return BoundingSphereState.PENDING;
+        }
+        var attributes = primitive.getGeometryInstanceAttributes(entity);
+        if (!defined(attributes) || !defined(attributes.boundingSphere) ||//
+            (defined(attributes.show) && attributes.show[0] === 0)) {
+            return BoundingSphereState.FAILED;
+        }
+        attributes.boundingSphere.clone(result);
+        return BoundingSphereState.DONE;
     };
 
     Batch.prototype.removeAllPrimitives = function() {
@@ -197,6 +217,15 @@ define([
         }
 
         return isUpdated;
+    };
+
+    StaticGeometryColorBatch.prototype.getBoundingSphere = function(entity, result) {
+        if (this._solidBatch.contains(entity)) {
+            return this._solidBatch.getBoundingSphere(entity, result);
+        } else if (this._translucentBatch.contains(entity)) {
+            return this._translucentBatch.getBoundingSphere(entity, result);
+        }
+        return BoundingSphereState.FAILED;
     };
 
     StaticGeometryColorBatch.prototype.removeAllPrimitives = function() {

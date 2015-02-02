@@ -62,20 +62,9 @@ defineSuite([
 
     function addZoomTo(model) {
         model.zoomTo = function() {
-            var center = Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cartesian3());
-            var transform = Transforms.eastNorthUpToFixedFrame(center);
-
-            // View in east-north-up frame
             var camera = scene.camera;
-            camera.transform = transform;
-            camera.constrainedAxis = Cartesian3.UNIT_Z;
-
-            // Zoom in
             var r = Math.max(model.boundingSphere.radius, camera.frustum.near);
-            camera.lookAt(
-                new Cartesian3(r, -r, -r),
-                Cartesian3.ZERO,
-                Cartesian3.UNIT_Z);
+            camera.lookAt( Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cartesian3()), new Cartesian3(r, -r, -r));
         };
     }
 
@@ -456,6 +445,28 @@ defineSuite([
         var boundingSphere = duckModel.boundingSphere;
         expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.134, 0.037, 0.869), CesiumMath.EPSILON3);
         expect(boundingSphere.radius).toEqualEpsilon(1.268, CesiumMath.EPSILON3);
+    });
+
+    it('boundingSphere returns the bounding sphere when scale property is set', function() {
+        var originalScale = duckModel.scale;
+        duckModel.scale = 10;
+
+        var boundingSphere = duckModel.boundingSphere;
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(1.343, 0.370, 8.694), CesiumMath.EPSILON3);
+        expect(boundingSphere.radius).toEqualEpsilon(12.688, CesiumMath.EPSILON3);
+
+        duckModel.scale = originalScale;
+    });
+
+    it('boundingSphere returns the bounding sphere when modelMatrix has non-uniform scale', function() {
+        var originalMatrix = Matrix4.clone(duckModel.modelMatrix);
+        Matrix4.multiplyByScale(duckModel.modelMatrix, new Cartesian3(2, 5, 10), duckModel.modelMatrix);
+
+        var boundingSphere = duckModel.boundingSphere;
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.268, 0.185, 8.694), CesiumMath.EPSILON3);
+        expect(boundingSphere.radius).toEqualEpsilon(12.688, CesiumMath.EPSILON3);
+
+        duckModel.modelMatrix = originalMatrix;
     });
 
     it('destroys', function() {
