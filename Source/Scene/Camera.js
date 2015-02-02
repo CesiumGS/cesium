@@ -663,14 +663,14 @@ define([
                     var transform = Transforms.eastNorthUpToFixedFrame(this.positionWC, ellipsoid, scratchHPRMatrix2);
                     this._setTransform(transform);
 
-                    var right = this.right;
                     var direction = this.direction;
+                    var up = this.up;
 
                     var heading;
-                    if (Math.abs(direction.z) < Math.abs(right.z)) {
+                    if (!CesiumMath.equalsEpsilon(Math.abs(direction.z), 1.0, CesiumMath.EPSILON3)) {
                         heading = Math.atan2(direction.y, direction.x) - CesiumMath.PI_OVER_TWO;
                     } else {
-                        heading = Math.atan2(right.y, right.x);
+                        heading = Math.atan2(up.y, up.x) - CesiumMath.PI_OVER_TWO;
                     }
 
                     this._setTransform(oldTransform);
@@ -703,7 +703,7 @@ define([
          */
         pitch : {
             get : function() {
-                if (this._mode === SceneMode.COLUMBUS_VIEW || this._mode === SceneMode.SCENE3D) {
+                if (this._mode !== SceneMode.MORPHING) {
                     var origin = this.positionWC;
                     var ellipsoid = this._projection.ellipsoid;
 
@@ -758,7 +758,7 @@ define([
          */
         roll : {
             get : function() {
-                if (this._mode === SceneMode.COLUMBUS_VIEW || this._mode === SceneMode.SCENE3D) {
+                if (this._mode !== SceneMode.MORPHING) {
                     var origin = this.positionWC;
                     var ellipsoid = this._projection.ellipsoid;
 
@@ -768,15 +768,17 @@ define([
 
                     var up = this.up;
                     var right = this.right;
+                    var direction = this.direction;
 
-                    var roll = Math.acos(-right.z) - CesiumMath.PI_OVER_TWO;
-                    if (up.z < 0.0) {
-                        roll = CesiumMath.PI - roll;
+                    var roll = 0.0;
+                    if (!CesiumMath.equalsEpsilon(Math.abs(direction.z), 1.0, CesiumMath.EPSILON3)) {
+                        roll = Math.atan2(-right.z, up.z);
+                        roll = CesiumMath.zeroToTwoPi(roll + CesiumMath.TWO_PI);
                     }
 
                     this._setTransform(oldTransform);
 
-                    return CesiumMath.TWO_PI - CesiumMath.zeroToTwoPi(roll);
+                    return roll;
                 }
 
                 return undefined;

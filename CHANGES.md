@@ -45,6 +45,7 @@ Change Log
 * `WebMapTileServiceImageryProvider` now supports RESTful requests (by accepting a tile-URL template).
 * When you track an entity by clicking on the track button in the `InfoBox`, you can now stop tracking by clicking the button a second time.
 * Setting `viewer.trackedEntity` to `undefined` will now restore the camera controls to their default states.
+* Fixed a bug that caused `Camera.roll` to be around 180 degrees, indicating the camera was upside-down, when in the Southern hemisphere.
 * The object returned by `Primitive.getGeometryInstanceAttributes` now contains the instance's bounding sphere and repeated calls will always now return the same object instance.
 * Fixed a bug that caused dynamic geometry outlines widths to not work on implementations that support them.
 * Added `viewer.zoomTo` and `viewer.flyTo` which takes an entity, array of entities, `EntityCollection`, or `DataSource` as a parameter and zooms or flies to the corresponding visualization.
