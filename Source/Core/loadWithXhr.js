@@ -165,8 +165,12 @@ define([
             if (xhr.status === 200) {
                 if (defined(xhr.response)) {
                     if (weWantXml) {
-                        var parser = new DOMParser();
-                        deferred.resolve(parser.parseFromString(xhr.response, 'text/xml'));
+                        try {
+                            var parser = new DOMParser();
+                            deferred.resolve(parser.parseFromString(xhr.response, 'text/xml'));
+                        } catch (e) {
+                            deferred.reject(e);
+                        }
                     } else {
                         deferred.resolve(xhr.response);
                     }
