@@ -168,8 +168,8 @@ define([
                         try {
                             var parser = new DOMParser();
                             deferred.resolve(parser.parseFromString(xhr.response, 'text/xml'));
-                        } catch (e) {
-                            deferred.reject(e);
+                        } catch (ex) {
+                            deferred.reject(ex);
                         }
                     } else {
                         deferred.resolve(xhr.response);
