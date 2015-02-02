@@ -405,9 +405,9 @@ define([
             var extensionLength = view.getUint32(pos, provider._littleEndianExtensionSize);
             pos += Uint32Array.BYTES_PER_ELEMENT;
 
-            if (extensionId === QuantizedMeshExtensionIds.OCT_VERTEX_NORMALS) {
+            if (extensionId === QuantizedMeshExtensionIds.OCT_VERTEX_NORMALS && provider._requestVertexNormals) {
                 encodedNormalBuffer = new Uint8Array(buffer, pos, vertexCount * 2);
-            } else if (extensionId === QuantizedMeshExtensionIds.WATER_MASK) {
+            } else if (extensionId === QuantizedMeshExtensionIds.WATER_MASK && provider._requestWaterMask) {
                 waterMaskBuffer = new Uint8Array(buffer, pos, extensionLength);
             }
             pos += extensionLength;
