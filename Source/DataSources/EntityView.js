@@ -307,7 +307,7 @@ define([
         } else if (!sceneModeChanged && scene.mode !== SceneMode.MORPHING) {
             if (this._mode === SceneMode.SCENE2D) {
                 offset2D.heading = camera.heading;
-                offset2D.range = Math.max(camera.frustum.right - camera.frustum.left, camera.frustum.top - camera.frustum.bottom) * 0.5;
+                offset2D.range = camera.frustum.right - camera.frustum.left;
             } else if (this._mode === SceneMode.SCENE3D || this._mode === SceneMode.COLUMBUS_VIEW) {
                 Cartesian3.clone(camera.position, offset3D);
             }

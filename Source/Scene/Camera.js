@@ -1743,7 +1743,7 @@ define([
 
             var frustum = this.frustum;
             var ratio = frustum.top / frustum.right;
-            frustum.right = Cartesian3.magnitude(cartesianOffset);
+            frustum.right = Cartesian3.magnitude(cartesianOffset) * 0.5;
             frustum.left = -frustum.right;
             frustum.top = ratio * frustum.right;
             frustum.bottom = -frustum.top;
