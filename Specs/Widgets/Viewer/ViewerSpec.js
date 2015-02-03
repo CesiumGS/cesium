@@ -6,6 +6,7 @@ defineSuite([
         'Core/ClockStep',
         'Core/EllipsoidTerrainProvider',
         'Core/JulianDate',
+        'Core/Matrix4',
         'Core/WebMercatorProjection',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
@@ -36,6 +37,7 @@ defineSuite([
         ClockStep,
         EllipsoidTerrainProvider,
         JulianDate,
+        Matrix4,
         WebMercatorProjection,
         ConstantPositionProperty,
         ConstantProperty,
@@ -770,44 +772,48 @@ defineSuite([
         expect(viewer.trackedEntity).toBeUndefined();
     });
 
-    it('returns to home when a tracked object is removed', function() {
+    it('stops tracking when tracked object is removed', function() {
         viewer = new Viewer(container);
-
-        //one data source that is added before mixing in
-        var preMixinDataSource = new MockDataSource();
-        viewer.dataSources.add(preMixinDataSource);
-
-        var beforeEntity = new Entity();
-        beforeEntity.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
-        preMixinDataSource.entities.add(beforeEntity);
-
-        //one data source that is added after mixing in
-        var postMixinDataSource = new MockDataSource();
-        viewer.dataSources.add(postMixinDataSource);
 
         var entity = new Entity();
         entity.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
-        postMixinDataSource.entities.add(entity);
 
+        var dataSource = new MockDataSource();
+        dataSource.entities.add(entity);
+
+        viewer.dataSources.add(dataSource);
         viewer.trackedEntity = entity;
-        expect(viewer.trackedEntity).toBe(entity);
 
-        // spy on the home button's command
-        Object.defineProperty(viewer.homeButton.viewModel, 'command', {
-            value : jasmine.createSpy('command')
+        expect(viewer.trackedEntity).toBe(entity);
+        waitsFor(function() {
+            viewer.render();
+            return Cartesian3.equals(Matrix4.getTranslation(viewer.scene.camera.transform, new Cartesian3()), entity.position.getValue());
         });
 
-        postMixinDataSource.entities.remove(entity);
+        runs(function() {
+            dataSource.entities.remove(entity);
 
-        expect(viewer.homeButton.viewModel.command).toHaveBeenCalled();
+            expect(viewer.trackedEntity).toBeUndefined();
+            expect(viewer.scene.camera.transform).toEqual(Matrix4.IDENTITY);
 
-        // reset the spy before removing the other entity
-        viewer.homeButton.viewModel.command.reset();
+            dataSource.entities.add(entity);
+            viewer.trackedEntity = entity;
 
-        viewer.trackedEntity = beforeEntity;
-        preMixinDataSource.entities.remove(beforeEntity);
+            expect(viewer.trackedEntity).toBe(entity);
+        });
 
-        expect(viewer.homeButton.viewModel.command).toHaveBeenCalled();
+        waitsFor(function() {
+            viewer.render();
+            viewer.render();
+            return Cartesian3.equals(Matrix4.getTranslation(viewer.scene.camera.transform, new Cartesian3()), entity.position.getValue());
+        });
+
+        runs(function() {
+            viewer.dataSources.remove(dataSource);
+
+            expect(viewer.trackedEntity).toBeUndefined();
+            expect(viewer.scene.camera.transform).toEqual(Matrix4.IDENTITY);
+        });
     });
 
     it('removes data source listeners when destroyed', function() {

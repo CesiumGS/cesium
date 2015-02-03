@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/AssociativeArray',
+        '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/defined',
         '../Core/destroyObject',
@@ -8,9 +9,11 @@ define([
         '../Core/Matrix4',
         '../Scene/Model',
         '../Scene/ModelAnimationLoop',
+        './BoundingSphereState',
         './Property'
     ], function(
         AssociativeArray,
+        BoundingSphere,
         Cartesian3,
         defined,
         destroyObject,
@@ -18,8 +21,10 @@ define([
         Matrix4,
         Model,
         ModelAnimationLoop,
+        BoundingSphereState,
         Property) {
     "use strict";
+    /*global console*/
 
     var defaultScale = 1.0;
     var defaultMinimumPixelSize = 0.0;
@@ -50,7 +55,7 @@ define([
         this._modelHash = {};
         this._entitiesToVisualize = new AssociativeArray();
         this._modelMatrixScratch = new Matrix4();
-        this._onCollectionChanged(entityCollection, entityCollection.entities, [], []);
+        this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
     };
 
     /**
@@ -105,7 +110,7 @@ define([
                     url : uri
                 });
 
-                model.readyToRender.addEventListener(readyToRender, this);
+                model.readyPromise.then(onModelReady).otherwise(onModelError);
 
                 model.id = entity;
                 primitives.add(model);
@@ -149,6 +154,45 @@ define([
     };
 
     /**
+     * Computes a bounding sphere which encloses the visualization produced for the specified entity.
+     * The bounding sphere is in the fixed frame of the scene's globe.
+     *
+     * @param {Entity} entity The entity whose bounding sphere to compute.
+     * @param {BoundingSphere} result The bounding sphere onto which to store the result.
+     * @returns {BoundingSphereState} BoundingSphereState.DONE if the result contains the bounding sphere,
+     *                       BoundingSphereState.PENDING if the result is still being computed, or
+     *                       BoundingSphereState.FAILED if the entity has no visualization in the current scene.
+     * @private
+     */
+    ModelVisualizer.prototype.getBoundingSphere = function(entity, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(entity)) {
+            throw new DeveloperError('entity is required.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required.');
+        }
+        //>>includeEnd('debug');
+
+        var modelData = this._modelHash[entity.id];
+        if (!defined(modelData)) {
+            return BoundingSphereState.FAILED;
+        }
+
+        var model = modelData.modelPrimitive;
+        if (!defined(model) || !model.show) {
+            return BoundingSphereState.FAILED;
+        }
+
+        if (!model.ready) {
+            return BoundingSphereState.PENDING;
+        }
+
+        BoundingSphere.transform(model.boundingSphere, model.modelMatrix, result);
+        return BoundingSphereState.DONE;
+    };
+
+    /**
      * @private
      */
     ModelVisualizer.prototype._onCollectionChanged = function(entityCollection, added, removed, changed) {
@@ -185,17 +229,20 @@ define([
     function removeModel(visualizer, entity, modelHash, primitives) {
         var modelData = modelHash[entity.id];
         if (defined(modelData)) {
-            var model = modelData.modelPrimitive;
-            model.readyToRender.removeEventListener(readyToRender, visualizer);
-            primitives.removeAndDestroy(model);
+            primitives.removeAndDestroy(modelData.modelPrimitive);
             delete modelHash[entity.id];
         }
     }
 
-    function readyToRender(model) {
+    function onModelReady(model) {
         model.activeAnimations.addAll({
             loop : ModelAnimationLoop.REPEAT
         });
     }
+
+    function onModelError(error) {
+        console.error(error);
+    }
+
     return ModelVisualizer;
 });

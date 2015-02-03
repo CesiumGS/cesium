@@ -502,7 +502,7 @@ define([
             positions2D = tangentPlane.projectPointsOntoPlane(hole, createGeometryFromPositionsExtrudedPositions);
 
             windingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
-            if (windingOrder === WindingOrder.CLOCKWISE) {
+            if (windingOrder === WindingOrder.COUNTER_CLOCKWISE) {
                 hole.reverse();
             }
 
@@ -529,7 +529,7 @@ define([
      * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instaed of using options.height to determine the height.
+     * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
      *
      * @see PolygonGeometry#createGeometry
      * @see PolygonGeometry#fromPositions
@@ -604,8 +604,13 @@ define([
      * var geometry = Cesium.PolygonGeometry.createGeometry(extrudedPolygon);
      */
     var PolygonGeometry = function(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(options) || !defined(options.polygonHierarchy)) {
+            throw new DeveloperError('options.polygonHierarchy is required.');
+        }
+        //>>includeEnd('debug');
 
+        var polygonHierarchy = options.polygonHierarchy;
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
@@ -620,13 +625,6 @@ define([
             extrudedHeight = Math.min(h, height);
             height = Math.max(h, height);
         }
-        var polygonHierarchy = options.polygonHierarchy;
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(polygonHierarchy)) {
-            throw new DeveloperError('options.polygonHierarchy is required.');
-        }
-        //>>includeEnd('debug');
 
         this._vertexFormat = VertexFormat.clone(vertexFormat);
         this._ellipsoid = Ellipsoid.clone(ellipsoid);
@@ -643,7 +641,7 @@ define([
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
-        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + VertexFormat.packedLength + 6;
+        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + VertexFormat.packedLength + 7;
     };
 
     /**
@@ -730,20 +728,16 @@ define([
         array[startingIndex++] = value._granularity;
         array[startingIndex++] = value._stRotation;
         array[startingIndex++] = value._extrude ? 1.0 : 0.0;
-        array[startingIndex] = value._perPositionHeight ? 1.0 : 0.0;
+        array[startingIndex++] = value._perPositionHeight ? 1.0 : 0.0;
+        array[startingIndex] = value.packedLength;
     };
 
     var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
     var scratchVertexFormat = new VertexFormat();
-    var scratchOptions = {
-        polygonHierarchy : undefined,
-        ellipsoid : scratchEllipsoid,
-        vertexFormat : scratchVertexFormat,
-        height : undefined,
-        extrudedHeight : undefined,
-        granularity : undefined,
-        stRotation : undefined,
-        perPositionHeight : undefined
+
+    //Only used to avoid inaability to default construct.
+    var dummyOptions = {
+        polygonHierarchy : {}
     };
 
     /**
@@ -777,16 +771,11 @@ define([
         var granularity = array[startingIndex++];
         var stRotation = array[startingIndex++];
         var extrude = array[startingIndex++] === 1.0;
-        var perPositionHeight = array[startingIndex] === 1.0;
+        var perPositionHeight = array[startingIndex++] === 1.0;
+        var packedLength = array[startingIndex];
 
         if (!defined(result)) {
-            scratchOptions.polygonHierarchy = polygonHierarchy;
-            scratchOptions.height = height;
-            scratchOptions.extrudedHeight = extrudedHeight;
-            scratchOptions.granularity = granularity;
-            scratchOptions.stRotation = stRotation;
-            scratchOptions.perPositionHeight = perPositionHeight;
-            return new PolygonGeometry(scratchOptions);
+            result = new PolygonGeometry(dummyOptions);
         }
 
         result._polygonHierarchy = polygonHierarchy;
@@ -798,7 +787,7 @@ define([
         result._stRotation = stRotation;
         result._extrude = extrude;
         result._perPositionHeight = perPositionHeight;
-
+        result.packedLength = packedLength;
         return result;
     };
 

@@ -16,6 +16,7 @@ define([
         './Math',
         './Matrix3',
         './Matrix4',
+        './Quaternion',
         './TimeConstants'
     ], function(
         when,
@@ -34,6 +35,7 @@ define([
         CesiumMath,
         Matrix3,
         Matrix4,
+        Quaternion,
         TimeConstants) {
     "use strict";
 
@@ -344,6 +346,72 @@ define([
         return result;
     };
 
+    var scratchHPRQuaternion = new Quaternion();
+    var scratchScale = new Cartesian3(1.0, 1.0, 1.0);
+    var scratchHPRMatrix4 = new Matrix4();
+
+    /**
+     * Computes a 4x4 transformation matrix from a reference frame with axes computed from the heading-pitch-roll angles
+     * centered at the provided origin to the provided ellipsoid's fixed reference frame. Heading is the rotation from the local north
+     * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
+     * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
+     *
+     * @param {Cartesian3} origin The center point of the local reference frame.
+     * @param {Number} heading The heading angle in radians.
+     * @param {Number} pitch The pitch angle in radians.
+     * @param {Number} roll The roll angle in radians.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
+     * @param {Matrix4} [result] The object onto which to store the result.
+     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
+     *
+     * @example
+     * // Get the transform from local heading-pitch-roll at cartographic (0.0, 0.0) to Earth's fixed frame.
+     * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+     * var heading = -Cesium.Math.PI_OVER_TWO;
+     * var pitch = Cesium.Math.PI_OVER_FOUR;
+     * var roll = 0.0;
+     * var transform = Cesium.Transforms.headingPitchRollToFixedFrame(center, heading, pitch, roll);
+     */
+    Transforms.headingPitchRollToFixedFrame = function(origin, heading, pitch, roll, ellipsoid, result) {
+        // checks for required parameters happen in the called functions
+        var hprQuaternion = Quaternion.fromHeadingPitchRoll(heading, pitch, roll, scratchHPRQuaternion);
+        var hprMatrix = Matrix4.fromTranslationQuaternionRotationScale(Cartesian3.ZERO, hprQuaternion, scratchScale, scratchHPRMatrix4);
+        result = Transforms.eastNorthUpToFixedFrame(origin, ellipsoid, result);
+        return Matrix4.multiply(result, hprMatrix, result);
+    };
+
+    var scratchENUMatrix4 = new Matrix4();
+    var scratchHPRMatrix3 = new Matrix3();
+
+    /**
+     * Computes a quaternion from a reference frame with axes computed from the heading-pitch-roll angles
+     * centered at the provided origin. Heading is the rotation from the local north
+     * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
+     * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
+     *
+     * @param {Cartesian3} origin The center point of the local reference frame.
+     * @param {Number} heading The heading angle in radians.
+     * @param {Number} pitch The pitch angle in radians.
+     * @param {Number} roll The roll angle in radians.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
+     * @param {Quaternion} [result] The object onto which to store the result.
+     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     *
+     * @example
+     * // Get the quaternion from local heading-pitch-roll at cartographic (0.0, 0.0) to Earth's fixed frame.
+     * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+     * var heading = -Cesium.Math.PI_OVER_TWO;
+     * var pitch = Cesium.Math.PI_OVER_FOUR;
+     * var roll = 0.0;
+     * var quaternion = Cesium.Transforms.headingPitchRollQuaternion(center, heading, pitch, roll);
+     */
+    Transforms.headingPitchRollQuaternion = function(origin, heading, pitch, roll, ellipsoid, result) {
+        // checks for required parameters happen in the called functions
+        var transform = Transforms.headingPitchRollToFixedFrame(origin, heading, pitch, roll, ellipsoid, scratchENUMatrix4);
+        var rotation = Matrix4.getRotation(transform, scratchHPRMatrix3);
+        return Quaternion.fromRotationMatrix(rotation, result);
+    };
+
 
     var gmstConstant0 = 6 * 3600 + 41 * 60 + 50.54841;
     var gmstConstant1 = 8640184.812866;
@@ -365,8 +433,12 @@ define([
      * @example
      * //Set the view to in the inertial frame.
      * scene.preRender.addEventListener(function(scene, time) {
-     *   var now = new Cesium.JulianDate();
-     *   viewer.camera.transform = Cesium.Matrix4.fromRotationTranslation(Cesium.Transforms.computeTemeToPseudoFixedMatrix(now));
+     *    var now = new Cesium.JulianDate();
+     *    var offset = Cesium.Matrix4.multiplyByPoint(camera.transform, camera.position, new Cesium.Cartesian3());
+     *    var transform = Cesium.Matrix4.fromRotationTranslation(Cesium.Transforms.computeTemeToPseudoFixedMatrix(now));
+     *    var inverseTransform = Cesium.Matrix4.inverseTransformation(transform, new Cesium.Matrix4());
+     *    Cesium.Matrix4.multiplyByPoint(inverseTransform, offset, offset);
+     *    camera.lookAtTransform(transform, offset);
      * });
      */
     Transforms.computeTemeToPseudoFixedMatrix = function (date, result) {
@@ -495,7 +567,11 @@ define([
      * scene.preRender.addEventListener(function(scene, time) {
      *   var icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(time);
      *   if (Cesium.defined(icrfToFixed)) {
-     *     viewer.camera.transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed);
+     *     var offset = Cesium.Matrix4.multiplyByPoint(camera.transform, camera.position, new Cesium.Cartesian3());
+     *     var transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed)
+     *     var inverseTransform = Cesium.Matrix4.inverseTransformation(transform, new Cesium.Matrix4());
+     *     Cesium.Matrix4.multiplyByPoint(inverseTransform, offset, offset);
+     *     camera.lookAtTransform(transform, offset);
      *   }
      * });
      */

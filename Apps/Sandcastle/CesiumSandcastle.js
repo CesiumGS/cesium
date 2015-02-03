@@ -1079,7 +1079,9 @@ require({
 
         var demos = dom.byId('allDemos');
         for (i = 0; i < len; ++i) {
-            createGalleryButton(i, demos, 'all');
+            if (!/Development/i.test(gallery_demos[i].label)) {
+                createGalleryButton(i, demos, 'all');
+            }
         }
 
         if (!queryInGalleryIndex) {

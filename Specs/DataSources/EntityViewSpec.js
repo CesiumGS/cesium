@@ -50,7 +50,7 @@ defineSuite([
         var sampleOffset = new Cartesian3(1, 2, 3);
         EntityView.defaultOffset3D = sampleOffset;
         var entity = new Entity();
-        entity.position = new ConstantPositionProperty(Cartesian3.ZERO);
+        entity.position = new ConstantPositionProperty(Cartesian3.fromDegrees(0.0, 0.0));
         var view = new EntityView(entity, scene);
         view.update(JulianDate.now());
         expect(Cartesian3.equalsEpsilon(EntityView.defaultOffset3D, sampleOffset, 1e-10)).toBe(true);

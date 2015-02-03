@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../../Core/BoundingSphere',
         '../../Core/Cartesian3',
         '../../Core/defaultValue',
         '../../Core/defined',
@@ -7,7 +8,10 @@ define([
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/EventHelper',
+        '../../Core/isArray',
+        '../../Core/Matrix4',
         '../../Core/ScreenSpaceEventType',
+        '../../DataSources/BoundingSphereState',
         '../../DataSources/ConstantPositionProperty',
         '../../DataSources/DataSourceCollection',
         '../../DataSources/DataSourceDisplay',
@@ -34,6 +38,7 @@ define([
         '../subscribeAndEvaluate',
         '../Timeline/Timeline'
     ], function(
+        BoundingSphere,
         Cartesian3,
         defaultValue,
         defined,
@@ -41,7 +46,10 @@ define([
         destroyObject,
         DeveloperError,
         EventHelper,
+        isArray,
+        Matrix4,
         ScreenSpaceEventType,
+        BoundingSphereState,
         ConstantPositionProperty,
         DataSourceCollection,
         DataSourceDisplay,
@@ -68,6 +76,8 @@ define([
         subscribeAndEvaluate,
         Timeline) {
     "use strict";
+
+    var boundingSphereScratch = new BoundingSphere();
 
     function onTimelineScrubfunction(e) {
         var clock = e.clock;
@@ -382,8 +392,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             infoBox = new InfoBox(infoBoxContainer);
 
             var infoBoxViewModel = infoBox.viewModel;
-            eventHelper.add(infoBoxViewModel.cameraClicked, Viewer.prototype._trackSelectedEntity, this);
-            eventHelper.add(infoBoxViewModel.closeClicked, Viewer.prototype._clearSelectedEntity, this);
+            eventHelper.add(infoBoxViewModel.cameraClicked, Viewer.prototype._onInfoBoxCameraClicked, this);
+            eventHelper.add(infoBoxViewModel.closeClicked, Viewer.prototype._onInfoBoxClockClicked, this);
         }
 
         // Main Toolbar
@@ -546,9 +556,15 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._enableInfoOrSelection = defined(infoBox) || defined(selectionIndicator);
         this._clockTrackedDataSource = undefined;
         this._trackedEntity = undefined;
+        this._needTrackedEntityUpdate = false;
         this._selectedEntity = undefined;
         this._clockTrackedDataSource = undefined;
         this._forceResize = false;
+        this._zoomIsFlight = false;
+        this._zoomTarget = undefined;
+        this._zoomPromise = undefined;
+        this._zoomOptions = undefined;
+
         knockout.track(this, ['_trackedEntity', '_selectedEntity', '_clockTrackedDataSource']);
 
         //Listen to data source events in order to track clock changes.
@@ -557,6 +573,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         // Prior to each render, check if anything needs to be resized.
         eventHelper.add(cesiumWidget.scene.preRender, Viewer.prototype.resize, this);
+        eventHelper.add(cesiumWidget.scene.postRender, Viewer.prototype._postRender, this);
 
         // We need to subscribe to the data sources and collections so that we can clear the
         // tracked object when it is removed from the scene.
@@ -565,6 +582,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         for (var i = 0; i < dataSourceLength; i++) {
             this._dataSourceAdded(dataSourceCollection, dataSourceCollection.get(i));
         }
+        this._dataSourceAdded(undefined, dataSourceDisplay.defaultDataSource);
 
         // Hook up events so that we can subscribe to future sources.
         eventHelper.add(dataSourceCollection.dataSourceAdded, Viewer.prototype._dataSourceAdded, this);
@@ -574,8 +592,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         // Subscribe to left clicks and zoom to the picked object.
         function pickAndTrackObject(e) {
             var entity = pickEntity(that, e);
-            if (defined(entity) && defined(entity.position)) {
-                that.trackedEntity = entity;
+            if (defined(entity)) {
+                if (defined(entity.position)) {
+                    that.trackedEntity = entity;
+                } else {
+                    that.zoomTo(entity);
+                }
             }
         }
 
@@ -729,6 +751,18 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         dataSourceDisplay : {
             get : function() {
                 return this._dataSourceDisplay;
+            }
+        },
+
+        /**
+         * Gets the collection of entities not tied to a particular data source.
+         * This is a shortcut to [dataSourceDisplay.defaultDataSource.entities]{@link Viewer#dataSourceDisplay}.
+         * @memberof Viewer.prototype
+         * @type {EntityCollection}
+         */
+        entities : {
+            get : function() {
+                return this._dataSourceDisplay.defaultDataSource.entities;
             }
         },
 
@@ -933,23 +967,32 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             set : function(value) {
                 if (this._trackedEntity !== value) {
                     this._trackedEntity = value;
+
+                    //Cancel any pending zoom
+                    cancelZoom(this);
+
                     var scene = this.scene;
                     var sceneMode = scene.mode;
-                    var isTracking = defined(value);
 
-                    if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
-                        scene.screenSpaceCameraController.enableTranslate = !isTracking;
-                    }
+                    //Stop tracking
+                    if (!defined(value) || !defined(value.position)) {
+                        this._needTrackedEntityUpdate = false;
+                        if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
+                            scene.screenSpaceCameraController.enableTranslate = true;
+                        }
 
-                    if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE3D) {
-                        scene.screenSpaceCameraController.enableTilt = !isTracking;
-                    }
+                        if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE3D) {
+                            scene.screenSpaceCameraController.enableTilt = true;
+                        }
 
-                    if (isTracking && defined(value.position)) {
-                        this._entityView = new EntityView(value, scene, this.scene.globe.ellipsoid);
-                    } else {
                         this._entityView = undefined;
+                        this.camera.lookAtTransform(Matrix4.IDENTITY);
+                        return;
                     }
+
+                    //We can't start tracking immediately, so we set a flag and start tracking
+                    //when the bounding sphere is ready (most likely next frame).
+                    this._needTrackedEntityUpdate = true;
                 }
             }
         },
@@ -1146,6 +1189,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         for (i = 0; i < dataSourceLength; i++) {
             this._dataSourceRemoved(dataSources, dataSources.get(i));
         }
+        this._dataSourceRemoved(undefined, this._dataSourceDisplay.defaultDataSource);
 
         this._container.removeChild(this._element);
         this._element.removeChild(this._toolbar);
@@ -1223,7 +1267,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         if (defined(this.trackedEntity)) {
             if (entityCollection.getById(this.trackedEntity.id) === this.trackedEntity) {
-                this.homeButton.viewModel.command();
+                this.trackedEntity = undefined;
             }
         }
 
@@ -1239,58 +1283,50 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      */
     Viewer.prototype._onTick = function(clock) {
         var time = clock.currentTime;
-        var entityView = this._entityView;
-        var infoBoxViewModel = defined(this._infoBox) ? this._infoBox.viewModel : undefined;
-        var selectionIndicatorViewModel = defined(this._selectionIndicator) ? this._selectionIndicator.viewModel : undefined;
 
         var isUpdated = this._dataSourceDisplay.update(time);
         if (this._allowDataSourcesToSuspendAnimation) {
             this._clockViewModel.canAnimate = isUpdated;
         }
 
+        var entityView = this._entityView;
         if (defined(entityView)) {
             entityView.update(time);
         }
 
+        var position;
+        var enableCamera = false;
         var selectedEntity = this.selectedEntity;
         var showSelection = defined(selectedEntity) && this._enableInfoOrSelection;
-        if (showSelection) {
-            var oldPosition = defined(selectionIndicatorViewModel) ? selectionIndicatorViewModel.position : undefined;
-            var position;
-            var enableCamera = false;
 
-            if (selectedEntity.isAvailable(time)) {
-                if (defined(selectedEntity.position)) {
-                    position = selectedEntity.position.getValue(time, oldPosition);
-                    enableCamera = defined(position) && (this.trackedEntity !== this.selectedEntity);
-                }
-                // else "position" is undefined and "enableCamera" is false.
+        if (showSelection && selectedEntity.isAvailable(time)) {
+            var state = this._dataSourceDisplay.getBoundingSphere(selectedEntity, true, boundingSphereScratch);
+            if (state !== BoundingSphereState.FAILED) {
+                position = boundingSphereScratch.center;
+            } else if (defined(selectedEntity.position)) {
+                position = selectedEntity.position.getValue(time, position);
             }
-            // else "position" is undefined and "enableCamera" is false.
-
-            if (defined(selectionIndicatorViewModel)) {
-                selectionIndicatorViewModel.position = position;
-            }
-
-            if (defined(infoBoxViewModel)) {
-                infoBoxViewModel.enableCamera = enableCamera;
-                infoBoxViewModel.isCameraTracking = (this.trackedEntity === this.selectedEntity);
-
-                if (defined(selectedEntity.description)) {
-                    infoBoxViewModel.descriptionRawHtml = defaultValue(selectedEntity.description.getValue(time), '');
-                } else {
-                    infoBoxViewModel.descriptionRawHtml = '';
-                }
-            }
+            enableCamera = defined(position);
         }
 
+        var selectionIndicatorViewModel = defined(this._selectionIndicator) ? this._selectionIndicator.viewModel : undefined;
         if (defined(selectionIndicatorViewModel)) {
-            selectionIndicatorViewModel.showSelection = showSelection;
+            selectionIndicatorViewModel.position = Cartesian3.clone(position, selectionIndicatorViewModel.position);
+            selectionIndicatorViewModel.showSelection = showSelection && enableCamera;
             selectionIndicatorViewModel.update();
         }
 
+        var infoBoxViewModel = defined(this._infoBox) ? this._infoBox.viewModel : undefined;
         if (defined(infoBoxViewModel)) {
             infoBoxViewModel.showInfo = showSelection;
+            infoBoxViewModel.enableCamera = enableCamera;
+            infoBoxViewModel.isCameraTracking = (this.trackedEntity === this.selectedEntity);
+
+            if (showSelection && defined(selectedEntity.description)) {
+                infoBoxViewModel.descriptionRawHtml = defaultValue(selectedEntity.description.getValue(time), '');
+            } else {
+                infoBoxViewModel.descriptionRawHtml = '';
+            }
         }
     };
 
@@ -1302,7 +1338,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         for (var i = 0; i < length; i++) {
             var removedObject = removed[i];
             if (this.trackedEntity === removedObject) {
-                this.homeButton.viewModel.command();
+                this.trackedEntity = undefined;
             }
             if (this.selectedEntity === removedObject) {
                 this.selectedEntity = undefined;
@@ -1313,8 +1349,18 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     /**
      * @private
      */
-    Viewer.prototype._trackSelectedEntity = function() {
-        this.trackedEntity = this.selectedEntity;
+    Viewer.prototype._onInfoBoxCameraClicked = function(infoBoxViewModel) {
+        if (infoBoxViewModel.isCameraTracking && (this.trackedEntity === this.selectedEntity)) {
+            this.trackedEntity = undefined;
+        } else {
+            var selectedEntity = this.selectedEntity;
+            var position = selectedEntity.position;
+            if (defined(position)) {
+                this.trackedEntity = this.selectedEntity;
+            } else {
+                this.zoomTo(this.selectedEntity);
+            }
+        }
     };
 
     /**
@@ -1327,7 +1373,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     /**
      * @private
      */
-    Viewer.prototype._clearSelectedEntity = function() {
+    Viewer.prototype._onInfoBoxClockClicked = function(infoBoxViewModel) {
         this.selectedEntity = undefined;
     };
 
@@ -1377,6 +1423,211 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             }
         }
     };
+
+    /**
+     * Asynchronously sets the camera to view the provided entity, entities, or data source.
+     * If the data source is still in the process of loading or the visualization is otherwise still loading,
+     * this method ways for the data to be ready before performing the zoom.
+     *
+     * <p>The offset is heading/pitch/range in the local east-north-up reference frame centered at the center of the bounding sphere.
+     * The heading and the pitch angles are defined in the local east-north-up reference frame.
+     * The heading is the angle from y axis and increasing towards the x axis. Pitch is the rotation from the xy-plane. Positive pitch
+     * angles are above the plane. Negative pitch angles are below the plane. The range is the distance from the center. If the range is
+     * zero, a range will be computed such that the whole bounding sphere is visible.</p>
+     *
+     * <p>In 2D, there must be a top down view. The camera will be placed above the target looking down. The height above the
+     * target will be the range. The heading will be determined from the offset. If the heading cannot be
+     * determined from the offset, the heading will be north.</p>
+     *
+     * @param {Entity|Entity[]|EntityCollection|DataSource} target The entity, array of entities, entity collection or data source to view.
+     * @param {HeadingPitchRange} [offset] The offset from the center of the entity in the local east-north-up reference frame.
+     * @returns {Promise} A Promise that resolves to true if the zoom was successful or false if the entity is not currently visualized in the scene or the zoom was cancelled.
+     */
+    Viewer.prototype.zoomTo = function(target, offset) {
+        return zoomToOrFly(this, target, offset, false);
+    };
+
+    /**
+     * Flies the camera to the provided entity, entities, or data source.
+     * If the data source is still in the process of loading or the visualization is otherwise still loading,
+     * this method ways for the data to be ready before performing the flight.
+     *
+     * <p>The offset is heading/pitch/range in the local east-north-up reference frame centered at the center of the bounding sphere.
+     * The heading and the pitch angles are defined in the local east-north-up reference frame.
+     * The heading is the angle from y axis and increasing towards the x axis. Pitch is the rotation from the xy-plane. Positive pitch
+     * angles are above the plane. Negative pitch angles are below the plane. The range is the distance from the center. If the range is
+     * zero, a range will be computed such that the whole bounding sphere is visible.</p>
+     *
+     * <p>In 2D, there must be a top down view. The camera will be placed above the target looking down. The height above the
+     * target will be the range. The heading will be determined from the offset. If the heading cannot be
+     * determined from the offset, the heading will be north.</p>
+     *
+     * @param {Entity|Entity[]|EntityCollection|DataSource} target The entity, array of entities, entity collection or data source to view.
+     * @param {Object} [options] Object with the following properties:
+     * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
+     * @param {HeadingPitchRange} [options.offset] The offset from the target in the local east-north-up reference frame centered at the target.
+     * @returns {Promise} A Promise that resolves to true if the flight was successful or false if the entity is not currently visualized in the scene or the flight was cancelled.
+     */
+    Viewer.prototype.flyTo = function(target, options) {
+        return zoomToOrFly(this, target, options, true);
+    };
+
+    function zoomToOrFly(that, zoomTarget, options, isFlight) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(zoomTarget)) {
+            throw new DeveloperError('zoomTarget is required.');
+        }
+        //>>includeEnd('debug');
+
+        cancelZoom(that);
+
+        //We can't actually perform the zoom until all visualization is ready and
+        //bounding spheres have been computed.  Therefore we create and return
+        //a deferred which will be resolved as part of the post-render step in the
+        //frame that actually performs the zoom
+        var zoomPromise = when.defer();
+        that._zoomPromise = zoomPromise;
+        that._zoomIsFlight = isFlight;
+        that._zoomOptions = options;
+
+        //If the zoom target is a data source, and it's in the middle of loading, wait for it to finish loading.
+        if (zoomTarget.isLoading && defined(zoomTarget.loadingEvent)) {
+            var removeEvent = zoomTarget.loadingEvent.addEventListener(function() {
+                removeEvent();
+
+                //Only perform the zoom if it wasn't cancelled before the data source finished.
+                if (that._zoomPromise === zoomPromise) {
+                    that._zoomTarget = zoomTarget.entities.values.slice(0);
+                }
+            });
+        } else {
+            //zoomTarget is now an EntityCollection, this will retrieve the array
+            zoomTarget = defaultValue(zoomTarget.values, zoomTarget);
+
+            //If zoomTarget is a DataSource, this will retrieve the EntityCollection.
+            if (defined(zoomTarget.entities)) {
+                zoomTarget = zoomTarget.entities.values;
+            }
+
+            if (isArray(zoomTarget)) {
+                that._zoomTarget = zoomTarget.slice(0);
+            } else {
+                //Single entity
+                that._zoomTarget = [zoomTarget];
+            }
+        }
+
+        return zoomPromise;
+    }
+
+    function clearZoom(viewer) {
+        viewer._zoomPromise = undefined;
+        viewer._zoomTarget = undefined;
+        viewer._zoomOptions = undefined;
+    }
+
+    function cancelZoom(viewer) {
+        var zoomPromise = viewer._zoomPromise;
+        if (defined(zoomPromise)) {
+            clearZoom(viewer);
+            zoomPromise.resolve(false);
+        }
+    }
+
+    /**
+     * @private
+     */
+    Viewer.prototype._postRender = function() {
+        updateZoomTarget(this);
+        updateTrackedEntity(this);
+    };
+
+    function updateZoomTarget(viewer) {
+        var entities = viewer._zoomTarget;
+        if (!defined(entities)) {
+            return;
+        }
+
+        var zoomPromise = viewer._zoomPromise;
+        var boundingSpheres = [];
+        for (var i = 0, len = entities.length; i < len; i++) {
+            var state = viewer._dataSourceDisplay.getBoundingSphere(entities[i], false, boundingSphereScratch);
+
+            if (state === BoundingSphereState.PENDING) {
+                return;
+            } else if (state === BoundingSphereState.FAILED) {
+                cancelZoom(viewer);
+                return;
+            }
+
+            boundingSpheres.push(BoundingSphere.clone(boundingSphereScratch));
+        }
+
+        if (boundingSpheres.length === 0) {
+            cancelZoom(viewer);
+            return;
+        }
+
+        //Stop tracking the current entity.
+        viewer.trackedEntity = undefined;
+
+        //Set camera
+        var scene = viewer.scene;
+        var camera = scene.camera;
+        var boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
+        var controller = scene.screenSpaceCameraController;
+        controller.minimumZoomDistance = Math.min(controller.minimumZoomDistance, boundingSphere.radius * 0.5);
+
+        if (!viewer._zoomIsFlight) {
+            camera.viewBoundingSphere(boundingSphere, viewer._zoomOptions);
+            camera.lookAtTransform(Matrix4.IDENTITY);
+            clearZoom(viewer);
+            zoomPromise.resolve(true);
+        } else {
+            var userOptions = defaultValue(viewer._zoomOptions, {});
+            var options = {
+                duration : userOptions.duration,
+                complete : function() {
+                    zoomPromise.resolve(true);
+                },
+                cancel : function() {
+                    zoomPromise.resolve(false);
+                },
+                offset : userOptions.offset
+            };
+
+            clearZoom(viewer);
+            camera.flyToBoundingSphere(boundingSphere, options);
+        }
+    }
+
+    function updateTrackedEntity(viewer) {
+        if (!viewer._needTrackedEntityUpdate) {
+            return;
+        }
+
+        var scene = viewer.scene;
+        var trackedEntity = viewer._trackedEntity;
+
+        var state = viewer._dataSourceDisplay.getBoundingSphere(trackedEntity, false, boundingSphereScratch);
+        if (state === BoundingSphereState.PENDING) {
+            return;
+        }
+
+        var sceneMode = scene.mode;
+        if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
+            scene.screenSpaceCameraController.enableTranslate = false;
+        }
+
+        if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE3D) {
+            scene.screenSpaceCameraController.enableTilt = false;
+        }
+
+        var bs = state !== BoundingSphereState.FAILED ? boundingSphereScratch : undefined;
+        viewer._entityView = new EntityView(trackedEntity, scene, scene.globe.ellipsoid, bs);
+        viewer._entityView.update(viewer.clock.currentTime);
+        viewer._needTrackedEntityUpdate = false;
+    }
 
     /**
      * A function that augments a Viewer instance with additional functionality.

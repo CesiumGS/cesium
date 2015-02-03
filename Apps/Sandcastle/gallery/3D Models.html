@@ -27,65 +27,46 @@
 function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
-var scene = viewer.scene;
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    infoBox : false,
+    selectionIndicator : false
+});
 
 function createModel(url, height) {
-    height = Cesium.defaultValue(height, 0.0);
+    viewer.entities.removeAll();
 
-    var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height));
+    var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height);
+    var heading = Cesium.Math.toRadians(135);
+    var pitch = 0;
+    var roll = 0;
+    var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, heading, pitch, roll);
 
-    scene.primitives.removeAll(); // Remove previous model
-    var model = scene.primitives.add(Cesium.Model.fromGltf({
-        url : url,
-        modelMatrix : modelMatrix,
-        minimumPixelSize : 128
-    }));
-
-    model.readyToRender.addEventListener(function(model) {
-        // Play and loop all animations at half-speed
-        model.activeAnimations.addAll({
-            speedup : 0.5,
-            loop : Cesium.ModelAnimationLoop.REPEAT
-        });
-
-        // Zoom to model
-        var center = Cesium.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cesium.Cartesian3());
-        var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-        var camera = viewer.camera;
-        camera.transform = transform;
-        var controller = scene.screenSpaceCameraController;
-        var r = 2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
-        controller.minimumZoomDistance = r * 0.5;
-        camera.lookAt(new Cesium.Cartesian3(r, r, r), Cesium.Cartesian3.ZERO, Cesium.Cartesian3.UNIT_Z);
+    var entity = viewer.entities.add({
+        name : url,
+        position : position,
+        orientation : orientation,
+        model : {
+            uri : url,
+            minimumPixelSize : 128
+        }
     });
+    viewer.trackedEntity = entity;
 }
 
-var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-handler.setInputAction(function(movement) {
-    var pick = scene.pick(movement.endPosition);
-    if (Cesium.defined(pick) && Cesium.defined(pick.node) && Cesium.defined(pick.mesh)) {
-        // Output glTF node and mesh under the mouse. 
-        console.log('node: ' + pick.node.name + '. mesh: ' + pick.mesh.name);
-    }
-}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-
-///////////////////////////////////////////////////////////////////////////
-
 var options = [{
-text : 'Aircraft',
-onselect : function() {
-    createModel('../../SampleData/models/CesiumAir/Cesium_Air.gltf', 5000.0);
+    text : 'Aircraft',
+    onselect : function() {
+        createModel('../../SampleData/models/CesiumAir/Cesium_Air.gltf', 5000.0);
     }
 }, {
-text : 'Ground vehicle',
+    text : 'Ground vehicle',
     onselect : function() {
-        createModel('../../SampleData/models/CesiumGround/Cesium_Ground.gltf');
+        createModel('../../SampleData/models/CesiumGround/Cesium_Ground.gltf', 0);
     }
 }, {
     text : 'Skinned character',
     onselect : function() {
-        createModel('../../SampleData/models/CesiumMan/Cesium_Man.gltf');
+        createModel('../../SampleData/models/CesiumMan/Cesium_Man.gltf', 0);
     }
 }];
 

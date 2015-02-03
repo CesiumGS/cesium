@@ -329,6 +329,13 @@ define([
     function computePerInstanceAttributeLocationsForGeometry(instanceIndex, geometry, instanceAttributes, names, attributeLocations, vertexArrays, indices, offsets, vaIndices) {
         var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
 
+        if (!defined(indices[instanceIndex])) {
+            indices[instanceIndex] = {
+                boundingSphere : geometry.boundingSphere,
+                boundingSphereCV : geometry.boundingSphereCV
+            };
+        }
+
         var namesLength = names.length;
         for (var j = 0; j < namesLength; ++j) {
             var name = names[j];
@@ -346,10 +353,6 @@ define([
                     if (attribute.index === index) {
                         break;
                     }
-                }
-
-                if (!defined(indices[instanceIndex])) {
-                    indices[instanceIndex] = {};
                 }
 
                 if (!defined(indices[instanceIndex][name])) {
@@ -856,8 +859,14 @@ define([
         var count = 1 + length;
         for (var i = 0; i < length; i++) {
             var instance = attributeLocations[i];
+
+            count += 2;
+            count += defined(instance.boundingSphere) ? BoundingSphere.packedLength : 0.0;
+            count += defined(instance.boundingSphereCV) ? BoundingSphere.packedLength : 0.0;
+
             for ( var propertyName in instance) {
-                if (instance.hasOwnProperty(propertyName) && defined(instance[propertyName])) {
+                if (instance.hasOwnProperty(propertyName) && defined(instance[propertyName]) &&
+                        propertyName !== 'boundingSphere' && propertyName !== 'boundingSphereCV') {
                     var property = instance[propertyName];
                     count += 4 + (property.indices.length * 3) + property.value.length;
                 }
@@ -878,9 +887,26 @@ define([
         for (var i = 0; i < length; i++) {
             var instance = attributeLocations[i];
 
+            var boundingSphere = instance.boundingSphere;
+            var hasBoundingSphere = defined(boundingSphere);
+            packedData[count++] = hasBoundingSphere ? 1.0 : 0.0;
+            if (hasBoundingSphere) {
+                BoundingSphere.pack(boundingSphere, packedData, count);
+                count += BoundingSphere.packedLength;
+            }
+
+            boundingSphere = instance.boundingSphereCV;
+            hasBoundingSphere = defined(boundingSphere);
+            packedData[count++] = hasBoundingSphere ? 1.0 : 0.0;
+            if (hasBoundingSphere) {
+                BoundingSphere.pack(boundingSphere, packedData, count);
+                count += BoundingSphere.packedLength;
+            }
+
             var propertiesToWrite = [];
             for ( var propertyName in instance) {
-                if (instance.hasOwnProperty(propertyName) && defined(instance[propertyName])) {
+                if (instance.hasOwnProperty(propertyName) && defined(instance[propertyName]) &&
+                        propertyName !== 'boundingSphere' && propertyName !== 'boundingSphereCV') {
                     propertiesToWrite.push(propertyName);
                     if (!defined(stringHash[propertyName])) {
                         stringHash[propertyName] = stringTable.length;
@@ -937,6 +963,19 @@ define([
         var packedDataLength = packedData.length;
         while (i < packedDataLength) {
             var instance = {};
+
+            var hasBoundingSphere = packedData[i++] === 1.0;
+            if (hasBoundingSphere) {
+                instance.boundingSphere = BoundingSphere.unpack(packedData, i);
+                i += BoundingSphere.packedLength;
+            }
+
+            hasBoundingSphere = packedData[i++] === 1.0;
+            if (hasBoundingSphere) {
+                instance.boundingSphereCV = BoundingSphere.unpack(packedData, i);
+                i += BoundingSphere.packedLength;
+            }
+
             var numAttributes = packedData[i++];
             for (var x = 0; x < numAttributes; x++) {
                 var name = stringTable[packedData[i++]];
@@ -1007,7 +1046,8 @@ define([
      */
     PrimitivePipeline.unpackCombineGeometryParameters = function(packedParameters) {
         var instances = unpackInstancesForCombine(packedParameters.packedInstances);
-        var pickIds = packedParameters.allowPicking ? unpackPickIds(packedParameters.packedPickIds) : undefined;
+        var allowPicking = packedParameters.allowPicking;
+        var pickIds = allowPicking ? unpackPickIds(packedParameters.packedPickIds) : undefined;
         var createGeometryResults = packedParameters.createGeometryResults;
         var length = createGeometryResults.length;
         var instanceIndex = 0;
@@ -1029,7 +1069,9 @@ define([
                     instance.geometry = geometry;
                     validInstances.push(instance);
                     validInstancesIndices.push(instanceIndex);
-                    validPickIds.push(pickIds[instanceIndex]);
+                    if (allowPicking) {
+                        validPickIds.push(pickIds[instanceIndex]);
+                    }
                 } else {
                     invalidInstances.push(instance);
                     invalidInstancesIndices.push(instanceIndex);

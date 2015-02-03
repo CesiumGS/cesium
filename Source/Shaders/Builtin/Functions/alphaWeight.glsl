@@ -8,8 +8,8 @@ float czm_alphaWeight(float a)
     {
         float x = 2.0 * (gl_FragCoord.x - czm_viewport.x) / czm_viewport.z - 1.0;
 	    float y = 2.0 * (gl_FragCoord.y - czm_viewport.y) / czm_viewport.w - 1.0;
-	    float z = (gl_FragCoord.z - czm_viewportTransformation[3][2]) / czm_viewportTransformation[2][2];
-	    vec4 q = vec4(x, y, z, 1.0);
+	    z = (gl_FragCoord.z - czm_viewportTransformation[3][2]) / czm_viewportTransformation[2][2];
+	    vec4 q = vec4(x, y, z, 0.0);
 	    q /= gl_FragCoord.w;
 	    z = (czm_inverseProjectionOIT * q).z;
     }

@@ -4,6 +4,7 @@ define([
         '../Core/createGuid',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/Iso8601',
@@ -16,6 +17,7 @@ define([
         createGuid,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         Iso8601,
@@ -24,6 +26,10 @@ define([
         TimeInterval,
         Entity) {
     "use strict";
+
+    var entityOptionsScratch = {
+        id : undefined
+    };
 
     function fireChangedEvent(collection) {
         if (collection._suspendCount === 0) {
@@ -127,8 +133,22 @@ define([
          * @memberof EntityCollection.prototype
          * @readonly
          * @type {Entity[]}
+         * @deprecated
          */
         entities : {
+            get : function() {
+                deprecationWarning('EntityCollection.entities', 'EntityCollection.entities has been deprecated and will be removed in Cesium 1.9, use EntityCollection.values instead');
+                return this._entities.values;
+            }
+        },
+        /**
+         * Gets the array of Entity instances in the collection.
+         * This array should not be modified directly.
+         * @memberof EntityCollection.prototype
+         * @readonly
+         * @type {Entity[]}
+         */
+        values : {
             get : function() {
                 return this._entities.values;
             }
@@ -187,6 +207,10 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (!(entity instanceof Entity)) {
+            entity = new Entity(entity);
+        }
+
         var id = entity.id;
         var entities = this._entities;
         if (entities.contains(id)) {
@@ -202,6 +226,7 @@ define([
         entity.definitionChanged.addEventListener(EntityCollection.prototype._onEntityDefinitionChanged, this);
 
         fireChangedEvent(this);
+        return entity;
     };
 
     /**
@@ -211,13 +236,25 @@ define([
      * @returns {Boolean} true if the item was removed, false if it did not exist in the collection.
      */
     EntityCollection.prototype.remove = function(entity) {
+        if (!defined(entity)) {
+            return false;
+        }
+        return this.removeById(entity.id);
+    };
+
+    /**
+     * Returns true if the provided entity is in this collection, false otherwise.
+     *
+     * @param entity The entity.
+     * @returns {Boolean} true if the provided entity is in this collection, false otherwise.
+     */
+    EntityCollection.prototype.contains = function(entity) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(entity)) {
             throw new DeveloperError('entity is required');
         }
         //>>includeEnd('debug');
-
-        return this.removeById(entity.id);
+        return this._entities.get(entity.id) === entity;
     };
 
     /**
@@ -227,11 +264,9 @@ define([
      * @returns {Boolean} true if the item was removed, false if no item with the provided id existed in the collection.
      */
     EntityCollection.prototype.removeById = function(id) {
-        //>>includeStart('debug', pragmas.debug);
         if (!defined(id)) {
-            throw new DeveloperError('id is required.');
+            return false;
         }
-        //>>includeEnd('debug');
 
         var entities = this._entities;
         var entity = entities.get(id);
@@ -310,7 +345,8 @@ define([
 
         var entity = this._entities.get(id);
         if (!defined(entity)) {
-            entity = new Entity(id);
+            entityOptionsScratch.id = id;
+            entity = new Entity(entityOptionsScratch);
             this.add(entity);
         }
         return entity;

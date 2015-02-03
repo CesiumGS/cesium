@@ -18,6 +18,50 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
+    it('creates expected instance from raw assignment and construction', function() {
+        var options = {
+            material : Color.BLUE,
+            positions : [],
+            show : true,
+            height : 1,
+            extrudedHeight : 2,
+            granularity : 3,
+            width : 4,
+            fill : false,
+            outline : false,
+            outlineColor : Color.RED,
+            outlineWidth : 5,
+            cornerType : CornerType.BEVELED
+        };
+
+        var corridor = new CorridorGraphics(options);
+        expect(corridor.material).toBeInstanceOf(ColorMaterialProperty);
+        expect(corridor.positions).toBeInstanceOf(ConstantProperty);
+        expect(corridor.show).toBeInstanceOf(ConstantProperty);
+        expect(corridor.height).toBeInstanceOf(ConstantProperty);
+        expect(corridor.extrudedHeight).toBeInstanceOf(ConstantProperty);
+        expect(corridor.granularity).toBeInstanceOf(ConstantProperty);
+        expect(corridor.width).toBeInstanceOf(ConstantProperty);
+        expect(corridor.fill).toBeInstanceOf(ConstantProperty);
+        expect(corridor.outline).toBeInstanceOf(ConstantProperty);
+        expect(corridor.outlineColor).toBeInstanceOf(ConstantProperty);
+        expect(corridor.outlineWidth).toBeInstanceOf(ConstantProperty);
+        expect(corridor.cornerType).toBeInstanceOf(ConstantProperty);
+
+        expect(corridor.material.color.getValue()).toEqual(options.material);
+        expect(corridor.positions.getValue()).toEqual(options.positions);
+        expect(corridor.show.getValue()).toEqual(options.show);
+        expect(corridor.height.getValue()).toEqual(options.height);
+        expect(corridor.extrudedHeight.getValue()).toEqual(options.extrudedHeight);
+        expect(corridor.granularity.getValue()).toEqual(options.granularity);
+        expect(corridor.width.getValue()).toEqual(options.width);
+        expect(corridor.fill.getValue()).toEqual(options.fill);
+        expect(corridor.outline.getValue()).toEqual(options.outline);
+        expect(corridor.outlineColor.getValue()).toEqual(options.outlineColor);
+        expect(corridor.outlineWidth.getValue()).toEqual(options.outlineWidth);
+        expect(corridor.cornerType.getValue()).toEqual(options.cornerType);
+    });
+
     it('merge assigns unassigned properties', function() {
         var source = new CorridorGraphics();
         source.material = new ColorMaterialProperty();

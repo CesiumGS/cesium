@@ -16,6 +16,56 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
+    it('creates expected instance from raw assignment and construction', function() {
+        var options = {
+            material : Color.BLUE,
+            show : true,
+            semiMinorAxis : 1,
+            semiMajorAxis : 2,
+            height : 3,
+            extrudedHeight : 4,
+            granularity : 5,
+            rotation : 6,
+            stRotation : 7,
+            numberOfVerticalLines : 8,
+            fill : false,
+            outline : false,
+            outlineColor : Color.RED,
+            outlineWidth : 9
+        };
+
+        var ellipse = new EllipseGraphics(options);
+        expect(ellipse.material).toBeInstanceOf(ColorMaterialProperty);
+        expect(ellipse.show).toBeInstanceOf(ConstantProperty);
+        expect(ellipse.semiMinorAxis).toBeInstanceOf(ConstantProperty);
+        expect(ellipse.semiMajorAxis).toBeInstanceOf(ConstantProperty);
+        expect(ellipse.height).toBeInstanceOf(ConstantProperty);
+        expect(ellipse.extrudedHeight).toBeInstanceOf(ConstantProperty);
+        expect(ellipse.granularity).toBeInstanceOf(ConstantProperty);
+        expect(ellipse.rotation).toBeInstanceOf(ConstantProperty);
+        expect(ellipse.stRotation).toBeInstanceOf(ConstantProperty);
+        expect(ellipse.numberOfVerticalLines).toBeInstanceOf(ConstantProperty);
+        expect(ellipse.fill).toBeInstanceOf(ConstantProperty);
+        expect(ellipse.outline).toBeInstanceOf(ConstantProperty);
+        expect(ellipse.outlineColor).toBeInstanceOf(ConstantProperty);
+        expect(ellipse.outlineWidth).toBeInstanceOf(ConstantProperty);
+
+        expect(ellipse.material.color.getValue()).toEqual(options.material);
+        expect(ellipse.show.getValue()).toEqual(options.show);
+        expect(ellipse.semiMinorAxis.getValue()).toEqual(options.semiMinorAxis);
+        expect(ellipse.semiMajorAxis.getValue()).toEqual(options.semiMajorAxis);
+        expect(ellipse.height.getValue()).toEqual(options.height);
+        expect(ellipse.extrudedHeight.getValue()).toEqual(options.extrudedHeight);
+        expect(ellipse.granularity.getValue()).toEqual(options.granularity);
+        expect(ellipse.rotation.getValue()).toEqual(options.rotation);
+        expect(ellipse.stRotation.getValue()).toEqual(options.stRotation);
+        expect(ellipse.numberOfVerticalLines.getValue()).toEqual(options.numberOfVerticalLines);
+        expect(ellipse.fill.getValue()).toEqual(options.fill);
+        expect(ellipse.outline.getValue()).toEqual(options.outline);
+        expect(ellipse.outlineColor.getValue()).toEqual(options.outlineColor);
+        expect(ellipse.outlineWidth.getValue()).toEqual(options.outlineWidth);
+    });
+
     it('merge assigns unassigned properties', function() {
         var source = new EllipseGraphics();
         source.material = new ColorMaterialProperty();

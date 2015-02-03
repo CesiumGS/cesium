@@ -1,5 +1,8 @@
 /*global define*/
-define(['Core/defined'], function(defined) {
+define([
+        'Core/defined'
+    ], function(
+        defined) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -13,6 +16,13 @@ define(['Core/defined'], function(defined) {
             var packedLength = defined(packable.packedLength) ? packable.packedLength : instance.packedLength;
             expect(packedArray.length).toEqual(packedLength);
             expect(packedArray).toEqual(packedInstance);
+        });
+
+        it('can roundtrip', function() {
+            var packedArray = [];
+            packable.pack(instance, packedArray);
+            var result = packable.unpack(packedArray);
+            expect(instance).toEqual(result);
         });
 
         it('can unpack', function() {
