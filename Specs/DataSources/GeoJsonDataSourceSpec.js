@@ -5,6 +5,7 @@ defineSuite([
         'Core/Color',
         'Core/Event',
         'Core/JulianDate',
+        'Core/PolygonHierarchy',
         'DataSources/EntityCollection',
         'Specs/waitsForPromise',
         'ThirdParty/when'
@@ -14,6 +15,7 @@ defineSuite([
         Color,
         Event,
         JulianDate,
+        PolygonHierarchy,
         EntityCollection,
         waitsForPromise,
         when) {
@@ -69,7 +71,7 @@ defineSuite([
     }
 
     function polygonCoordinatesToCartesian(coordinates) {
-        return coordinatesArrayToCartesian(coordinates[0]);
+        return coordinatesArrayToCartesian(coordinates);
     }
 
     function multiPolygonCoordinatesToCartesian(coordinates) {
@@ -150,7 +152,7 @@ defineSuite([
 
     var multiPolygon = {
         type : 'MultiPolygon',
-        coordinates : [[[[102.0, 2.0], [103.0, 2.0], [103.0, 3.0], [102.0, 3.0], [102.0, 2.0]]], [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]], [[100.2, 0.2], [100.8, 0.2], [100.8, 0.8], [100.2, 0.8], [100.2, 0.2]]]]
+        coordinates : [[[[102.0, 2.0], [103.0, 2.0], [103.0, 3.0], [102.0, 3.0], [102.0, 2.0]]], [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]]]]
     };
 
     var geometryCollection = {
@@ -244,14 +246,14 @@ defineSuite([
         expect(dataSource.clock).toBeUndefined();
         expect(dataSource.name).toBeUndefined();
         expect(dataSource.entities).toBeInstanceOf(EntityCollection);
-        expect(dataSource.entities.entities.length).toEqual(0);
+        expect(dataSource.entities.values.length).toEqual(0);
     });
 
     it('Works with null geometry', function() {
         var dataSource = new GeoJsonDataSource();
         waitsForPromise(dataSource.load(featureNullGeometry), function() {
             var entityCollection = dataSource.entities;
-            var entity = entityCollection.entities[0];
+            var entity = entityCollection.values[0];
             expect(entity.properties).toBe(featureNullGeometry.properties);
             expect(entity.position).toBeUndefined();
         });
@@ -261,7 +263,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         waitsForPromise(dataSource.load(feature), function() {
             var entityCollection = dataSource.entities;
-            var entity = entityCollection.entities[0];
+            var entity = entityCollection.values[0];
             expect(entity.properties).toBe(feature.properties);
             expect(entity.position.getValue(time)).toEqual(coordinatesToCartesian(feature.geometry.coordinates));
             expect(entity.billboard).toBeDefined();
@@ -282,7 +284,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         waitsForPromise(dataSource.load(featureWithProperties), function() {
             var entityCollection = dataSource.entities;
-            var entity = entityCollection.entities[0];
+            var entity = entityCollection.values[0];
             expect(entity.description).toBeDefined();
             var description = entity.description.getValue(time);
             expect(description).toContain('prop1');
@@ -309,7 +311,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         waitsForPromise(dataSource.load(featureWithDescription), function() {
             var entityCollection = dataSource.entities;
-            var entity = entityCollection.entities[0];
+            var entity = entityCollection.values[0];
             expect(entity.description).toBeDefined();
             expect(entity.description.getValue(time)).toEqual(featureWithDescription.properties.description);
         });
@@ -319,7 +321,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         waitsForPromise(dataSource.load(featureWithNullName), function() {
             var entityCollection = dataSource.entities;
-            var entity = entityCollection.entities[0];
+            var entity = entityCollection.values[0];
             expect(entity.name).toBeUndefined();
             expect(entity.properties).toBe(featureWithNullName.properties);
             expect(entity.position.getValue(time)).toEqual(coordinatesToCartesian(featureWithNullName.geometry.coordinates));
@@ -331,9 +333,9 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         waitsForPromise(dataSource.load(featureWithId), function() {
             var entityCollection = dataSource.entities;
-            var entity = entityCollection.entities[0];
+            var entity = entityCollection.values[0];
             expect(entity.id).toEqual(featureWithId.id);
-            entity = entityCollection.entities[1];
+            entity = entityCollection.values[1];
             expect(entity.id).toEqual(featureWithId.id + '_2');
         });
     });
@@ -342,7 +344,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         waitsForPromise(dataSource.load(point), function() {
             var entityCollection = dataSource.entities;
-            var entity = entityCollection.entities[0];
+            var entity = entityCollection.values[0];
             expect(entity.properties).toBe(point.properties);
             expect(entity.position.getValue(time)).toEqual(coordinatesToCartesian(point.coordinates));
             expect(entity.billboard).toBeDefined();
@@ -354,7 +356,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         waitsForPromise(dataSource.load(multiPoint), function() {
             var entityCollection = dataSource.entities;
-            var entities = entityCollection.entities;
+            var entities = entityCollection.values;
             var expectedPositions = coordinatesArrayToCartesian(multiPoint.coordinates);
             for (var i = 0; i < multiPoint.coordinates.length; i++) {
                 var entity = entities[i];
@@ -370,7 +372,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         waitsForPromise(dataSource.load(lineString), function() {
             var entityCollection = dataSource.entities;
-            var entity = entityCollection.entities[0];
+            var entity = entityCollection.values[0];
             expect(entity.properties).toBe(lineString.properties);
             expect(entity.polyline.positions.getValue(time)).toEqual(coordinatesArrayToCartesian(lineString.coordinates));
             expect(entity.polyline.material.color.getValue(time)).toEqual(GeoJsonDataSource.stroke);
@@ -382,7 +384,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         waitsForPromise(dataSource.load(multiLineString), function() {
             var entityCollection = dataSource.entities;
-            var entities = entityCollection.entities;
+            var entities = entityCollection.values;
             var lines = multiLineToCartesian(multiLineString);
             for (var i = 0; i < multiLineString.coordinates.length; i++) {
                 var entity = entities[i];
@@ -398,9 +400,9 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         waitsForPromise(dataSource.load(polygon), function() {
             var entityCollection = dataSource.entities;
-            var entity = entityCollection.entities[0];
+            var entity = entityCollection.values[0];
             expect(entity.properties).toBe(polygon.properties);
-            expect(entity.polygon.positions.getValue(time)).toEqual(polygonCoordinatesToCartesian(polygon.coordinates));
+            expect(entity.polygon.hierarchy.getValue(time)).toEqual(new PolygonHierarchy(polygonCoordinatesToCartesian(polygon.coordinates[0])));
             expect(entity.polygon.perPositionHeight).toBeUndefined();
             expect(entity.polygon.material.color.getValue(time)).toEqual(GeoJsonDataSource.fill);
             expect(entity.polygon.outline.getValue(time)).toEqual(true);
@@ -413,9 +415,9 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         waitsForPromise(dataSource.load(polygonWithHeights), function() {
             var entityCollection = dataSource.entities;
-            var entity = entityCollection.entities[0];
+            var entity = entityCollection.values[0];
             expect(entity.properties).toBe(polygonWithHeights.properties);
-            expect(entity.polygon.positions.getValue(time)).toEqual(polygonCoordinatesToCartesian(polygonWithHeights.coordinates));
+            expect(entity.polygon.hierarchy.getValue(time)).toEqual(new PolygonHierarchy(polygonCoordinatesToCartesian(polygonWithHeights.coordinates[0])));
             expect(entity.polygon.perPositionHeight.getValue(time)).toBe(true);
             expect(entity.polygon.material.color.getValue(time)).toEqual(GeoJsonDataSource.fill);
             expect(entity.polygon.outline.getValue(time)).toEqual(true);
@@ -428,9 +430,9 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         waitsForPromise(dataSource.load(polygonWithHoles), function() {
             var entityCollection = dataSource.entities;
-            var entity = entityCollection.entities[0];
+            var entity = entityCollection.values[0];
             expect(entity.properties).toBe(polygonWithHoles.properties);
-            expect(entity.polygon.positions.getValue(time)).toEqual(polygonCoordinatesToCartesian(polygonWithHoles.coordinates));
+            expect(entity.polygon.hierarchy.getValue(time)).toEqual(new PolygonHierarchy(polygonCoordinatesToCartesian(polygonWithHoles.coordinates[0]), [new PolygonHierarchy(polygonCoordinatesToCartesian(polygonWithHoles.coordinates[1]))]));
         });
     });
 
@@ -438,12 +440,12 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         waitsForPromise(dataSource.load(multiPolygon), function() {
             var entityCollection = dataSource.entities;
-            var entities = entityCollection.entities;
+            var entities = entityCollection.values;
             var positions = multiPolygonCoordinatesToCartesian(multiPolygon.coordinates);
             for (var i = 0; i < multiPolygon.coordinates.length; i++) {
                 var entity = entities[i];
                 expect(entity.properties).toBe(multiPolygon.properties);
-                expect(entity.polygon.positions.getValue(time)).toEqual(positions[i]);
+                expect(entity.polygon.hierarchy.getValue(time)).toEqual(new PolygonHierarchy(positions[i]));
             }
         });
     });
@@ -452,11 +454,11 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         waitsForPromise(dataSource.load(topoJson), function() {
             var entityCollection = dataSource.entities;
-            var entities = entityCollection.entities;
+            var entities = entityCollection.values;
 
             var polygon = entities[0];
             expect(polygon.properties).toBe(topoJson.objects.polygon.properties);
-            expect(polygon.polygon.positions).toBeDefined();
+            expect(polygon.polygon.hierarchy).toBeDefined();
 
             var lineString = entities[1];
             expect(lineString.properties).toBe(topoJson.objects.lineString.properties);
@@ -477,7 +479,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         waitsForPromise(dataSource.load(mixedGeometries, options), function() {
             var entityCollection = dataSource.entities;
-            var entities = entityCollection.entities;
+            var entities = entityCollection.values;
 
             var entity = entities[0];
             expect(entity.polyline.material.color.getValue()).toEqual(options.stroke);
@@ -489,7 +491,7 @@ defineSuite([
             expect(entity.polygon.outlineWidth.getValue()).toEqual(options.strokeWidth);
 
             entity = entities[2];
-            var expectedImage = dataSource._pinBuilder.fromMakiIconId(options.markerSymbol, options.markerColor, options.markerSize).toDataURL();
+            var expectedImage = dataSource._pinBuilder.fromMakiIconId(options.markerSymbol, options.markerColor, options.markerSize);
             expect(entity.billboard.image.getValue()).toEqual(expectedImage);
         });
     });
@@ -505,7 +507,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         waitsForPromise(dataSource.load(mixedGeometries), function() {
             var entityCollection = dataSource.entities;
-            var entities = entityCollection.entities;
+            var entities = entityCollection.values;
 
             var entity = entities[0];
             expect(entity.polyline.material.color.getValue()).toEqual(GeoJsonDataSource.stroke);
@@ -517,7 +519,7 @@ defineSuite([
             expect(entity.polygon.outlineWidth.getValue()).toEqual(GeoJsonDataSource.strokeWidth);
 
             entity = entities[2];
-            var expectedImage = dataSource._pinBuilder.fromMakiIconId(GeoJsonDataSource.markerSymbol, GeoJsonDataSource.markerColor, GeoJsonDataSource.markerSize).toDataURL();
+            var expectedImage = dataSource._pinBuilder.fromMakiIconId(GeoJsonDataSource.markerSymbol, GeoJsonDataSource.markerColor, GeoJsonDataSource.markerSize);
             expect(entity.billboard.image.getValue()).toEqual(expectedImage);
         });
     });
@@ -526,7 +528,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         waitsForPromise(dataSource.load(topoJson), function() {
             var entityCollection = dataSource.entities;
-            var entities = entityCollection.entities;
+            var entities = entityCollection.values;
             var polygon = entities[0];
             expect(polygon.description).toBeDefined();
         });
@@ -536,12 +538,12 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         waitsForPromise(dataSource.load(geometryCollection), function() {
             var entityCollection = dataSource.entities;
-            var entity = entityCollection.entities[0];
+            var entity = entityCollection.values[0];
             expect(entity.properties).toBe(geometryCollection.properties);
             expect(entity.position.getValue(time)).toEqual(coordinatesToCartesian(geometryCollection.geometries[0].coordinates));
             expect(entity.billboard).toBeDefined();
 
-            entity = entityCollection.entities[1];
+            entity = entityCollection.values[1];
             expect(entity.properties).toBe(geometryCollection.properties);
             expect(entity.polyline.positions.getValue(time)).toEqual(coordinatesArrayToCartesian(geometryCollection.geometries[1].coordinates));
         });
@@ -551,7 +553,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         waitsForPromise(dataSource.load(pointNamedCrs), function() {
             var entityCollection = dataSource.entities;
-            var entity = entityCollection.entities[0];
+            var entity = entityCollection.values[0];
             expect(entity.position.getValue(time)).toEqual(coordinatesToCartesian(point.coordinates));
         });
     });
@@ -571,7 +573,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         waitsForPromise(dataSource.load(pointCrsLinkHref), function() {
             var entityCollection = dataSource.entities;
-            var entity = entityCollection.entities[0];
+            var entity = entityCollection.values[0];
             expect(entity.position.getValue(time)).toEqual(projectedPosition);
         });
     });
@@ -581,7 +583,7 @@ defineSuite([
 
         waitsForPromise(dataSource.load(pointCrsEpsg), function() {
             var entityCollection = dataSource.entities;
-            var entity = entityCollection.entities[0];
+            var entity = entityCollection.values[0];
             expect(entity.position.getValue(time)).toEqual(coordinatesToCartesian(point.coordinates));
         });
     });
@@ -605,7 +607,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         waitsForPromise(dataSource.load(geoJson), function() {
             var entityCollection = dataSource.entities;
-            var entity = entityCollection.entities[0];
+            var entity = entityCollection.values[0];
             expect(entity.name).toEqual(geoJson.properties.title);
             expect(entity.description.getValue(time)).toEqual(geoJson.properties.description);
 
@@ -637,7 +639,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         waitsForPromise(dataSource.load(geoJson), function() {
             var entityCollection = dataSource.entities;
-            var entity = entityCollection.entities[0];
+            var entity = entityCollection.values[0];
             expect(entity.name).toEqual(geoJson.properties.title);
             expect(entity.description.getValue(time)).toEqual(geoJson.properties.description);
 

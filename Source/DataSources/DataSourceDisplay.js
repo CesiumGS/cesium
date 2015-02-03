@@ -1,13 +1,18 @@
 /*global define*/
 define([
+        '../Core/BoundingSphere',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EventHelper',
         './BillboardVisualizer',
+        './BoundingSphereState',
         './BoxGeometryUpdater',
         './CorridorGeometryUpdater',
+        './CustomDataSource',
         './CylinderGeometryUpdater',
         './EllipseGeometryUpdater',
         './EllipsoidGeometryUpdater',
@@ -18,17 +23,23 @@ define([
         './PointVisualizer',
         './PolygonGeometryUpdater',
         './PolylineGeometryUpdater',
+        './PolylineVolumeGeometryUpdater',
         './RectangleGeometryUpdater',
         './WallGeometryUpdater'
     ], function(
+        BoundingSphere,
         defaultValue,
         defined,
+        defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         EventHelper,
         BillboardVisualizer,
+        BoundingSphereState,
         BoxGeometryUpdater,
         CorridorGeometryUpdater,
+        CustomDataSource,
         CylinderGeometryUpdater,
         EllipseGeometryUpdater,
         EllipsoidGeometryUpdater,
@@ -39,6 +50,7 @@ define([
         PointVisualizer,
         PolygonGeometryUpdater,
         PolylineGeometryUpdater,
+        PolylineVolumeGeometryUpdater,
         RectangleGeometryUpdater,
         WallGeometryUpdater) {
     "use strict";
@@ -56,9 +68,6 @@ define([
      *        If undefined, all standard visualizers are used.
      */
     var DataSourceDisplay = function(options) {
-        var scene = options.scene;
-        var dataSourceCollection = options.dataSourceCollection;
-
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options)) {
             throw new DeveloperError('options is required.');
@@ -71,6 +80,9 @@ define([
         }
         //>>includeEnd('debug');
 
+        var scene = options.scene;
+        var dataSourceCollection = options.dataSourceCollection;
+
         this._eventHelper = new EventHelper();
         this._eventHelper.add(dataSourceCollection.dataSourceAdded, this._onDataSourceAdded, this);
         this._eventHelper.add(dataSourceCollection.dataSourceRemoved, this._onDataSourceRemoved, this);
@@ -82,6 +94,12 @@ define([
         for (var i = 0, len = dataSourceCollection.length; i < len; i++) {
             this._onDataSourceAdded(dataSourceCollection, dataSourceCollection.get(i));
         }
+
+        var defaultDataSource = new CustomDataSource();
+        var visualizers = this._visualizersCallback(this._scene, defaultDataSource);
+        defaultDataSource._visualizers = visualizers;
+        this._onDataSourceAdded(undefined, defaultDataSource);
+        this._defaultDataSource = defaultDataSource;
     };
 
     /**
@@ -101,6 +119,7 @@ define([
                 new GeometryVisualizer(EllipsoidGeometryUpdater, scene, entities),
                 new GeometryVisualizer(PolygonGeometryUpdater, scene, entities),
                 new GeometryVisualizer(PolylineGeometryUpdater, scene, entities),
+                new GeometryVisualizer(PolylineVolumeGeometryUpdater, scene, entities),
                 new GeometryVisualizer(RectangleGeometryUpdater, scene, entities),
                 new GeometryVisualizer(WallGeometryUpdater, scene, entities),
                 new LabelVisualizer(scene, entities),
@@ -109,22 +128,60 @@ define([
                 new PathVisualizer(scene, entities)];
     };
 
+    defineProperties(DataSourceDisplay.prototype, {
+        /**
+         * Gets the scene associated with this display.
+         * @memberof DataSourceDisplay.prototype
+         * @type {Scene}
+         */
+        scene : {
+            get : function() {
+                return this._scene;
+            }
+        },
+        /**
+         * Gets the collection of data sources to display.
+         * @memberof DataSourceDisplay.prototype
+         * @type {DataSourceCollection}
+         */
+        dataSources : {
+            get : function() {
+                return this._dataSourceCollection;
+            }
+        },
+        /**
+         * Gets the default data source instance which can be used to
+         * manually create and visualize entities not tied to
+         * a specific data source. This instance is always available
+         * and does not appear in the list dataSources collection.
+         * @memberof DataSourceDisplay.prototype
+         * @type {CustomDataSource}
+         */
+        defaultDataSource : {
+            get : function() {
+                return this._defaultDataSource;
+            }
+        }
+    });
+
     /**
      * Gets the scene being used for display.
-     *
+     * @deprecated
      * @returns {Scene} The scene.
      */
     DataSourceDisplay.prototype.getScene = function() {
-        return this._scene;
+        deprecationWarning('DataSourceDisplay.getScene', 'DataSourceDisplay.getScene was deprecated on Cesium 1.5 and will be removed in Cesium 1.7, used the DataSourceDisplay.scene property instead.');
+        return this.scene;
     };
 
     /**
      * Gets the collection of data sources to be displayed.
-     *
+     * @deprecated
      * @returns {DataSourceCollection} The collection of data sources.
      */
     DataSourceDisplay.prototype.getDataSources = function() {
-        return this._dataSourceCollection;
+        deprecationWarning('DataSourceDisplay.getDataSources', 'DataSourceDisplay.getDataSources was deprecated on Cesium 1.5 and will be removed in Cesium 1.7, used the DataSourceDisplay.dataSources property instead.');
+        return this.dataSources;
     };
 
     /**
@@ -165,6 +222,7 @@ define([
         for (var i = 0, length = dataSourceCollection.length; i < length; ++i) {
             this._onDataSourceRemoved(this._dataSourceCollection, dataSourceCollection.get(i));
         }
+        this._onDataSourceRemoved(undefined, this._defaultDataSource);
 
         return destroyObject(this);
     };
@@ -202,7 +260,95 @@ define([
                 result = visualizers[x].update(time) && result;
             }
         }
+
+        visualizers = this._defaultDataSource._visualizers;
+        vLength = visualizers.length;
+        for (x = 0; x < vLength; x++) {
+            result = visualizers[x].update(time) && result;
+        }
+
         return result;
+    };
+
+    var getBoundingSphereArrayScratch = [];
+    var getBoundingSphereBoundingSphereScratch = new BoundingSphere();
+
+    /**
+     * Computes a bounding sphere which encloses the visualization produced for the specified entity.
+     * The bounding sphere is in the fixed frame of the scene's globe.
+     *
+     * @param {Entity} entity The entity whose bounding sphere to compute.
+     * @param {Boolean} allowPartial If true, pending bounding spheres are ignored and an answer will be returned from the currently available data.
+     *                               If false, the the function will halt and return pending if any of the bounding spheres are pending.
+     * @param {BoundingSphere} result The bounding sphere onto which to store the result.
+     * @returns {BoundingSphereState} BoundingSphereState.DONE if the result contains the bounding sphere,
+     *                       BoundingSphereState.PENDING if the result is still being computed, or
+     *                       BoundingSphereState.FAILED if the entity has no visualization in the current scene.
+     * @private
+     */
+    DataSourceDisplay.prototype.getBoundingSphere = function(entity, allowPartial, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(entity)) {
+            throw new DeveloperError('entity is required.');
+        }
+        if (!defined(allowPartial)) {
+            throw new DeveloperError('allowPartial is required.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required.');
+        }
+        //>>includeEnd('debug');
+
+        var i;
+        var length;
+        var dataSource = this._defaultDataSource;
+        if (!dataSource.entities.contains(entity)) {
+            dataSource = undefined;
+
+            var dataSources = this._dataSourceCollection;
+            length = dataSources.length;
+            for (i = 0; i < length; i++) {
+                var d = dataSources.get(i);
+                if (d.entities.contains(entity)) {
+                    dataSource = d;
+                    break;
+                }
+            }
+        }
+
+        if (!defined(dataSource)) {
+            return BoundingSphereState.FAILED;
+        }
+
+        var boundingSpheres = getBoundingSphereArrayScratch;
+        var tmp = getBoundingSphereBoundingSphereScratch;
+
+        var count = 0;
+        var resultState;
+        var state = BoundingSphereState.DONE;
+        var visualizers = dataSource._visualizers;
+        var visualizersLength = visualizers.length;
+
+        for (i = 0; i < visualizersLength; i++) {
+            var visualizer = visualizers[i];
+            if (defined(visualizer.getBoundingSphere)) {
+                state = visualizers[i].getBoundingSphere(entity, tmp);
+                if (!allowPartial && state === BoundingSphereState.PENDING) {
+                    return BoundingSphereState.PENDING;
+                } else if (state === BoundingSphereState.DONE) {
+                    boundingSpheres[count] = BoundingSphere.clone(tmp, boundingSpheres[count]);
+                    count++;
+                }
+            }
+        }
+
+        if (count === 0) {
+            return BoundingSphereState.FAILED;
+        }
+
+        boundingSpheres.length = count;
+        BoundingSphere.fromBoundingSpheres(boundingSpheres, result);
+        return BoundingSphereState.DONE;
     };
 
     DataSourceDisplay.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {

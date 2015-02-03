@@ -107,7 +107,7 @@ define([
      */
     AssociativeArray.prototype.remove = function(key) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof key !== 'string' && typeof key !== 'number') {
+        if (defined(key) && typeof key !== 'string' && typeof key !== 'number') {
             throw new DeveloperError('key is required to be a string or number.');
         }
         //>>includeEnd('debug');

@@ -9,6 +9,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
@@ -31,6 +32,7 @@ define([
         '../Renderer/TextureWrap',
         '../ThirdParty/gltfDefaults',
         '../ThirdParty/Uri',
+        '../ThirdParty/when',
         './getModelAccessor',
         './ModelAnimationCache',
         './ModelAnimationCollection',
@@ -49,6 +51,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         Event,
@@ -71,6 +74,7 @@ define([
         TextureWrap,
         gltfDefaults,
         Uri,
+        when,
         getModelAccessor,
         ModelAnimationCache,
         ModelAnimationCollection,
@@ -83,6 +87,7 @@ define([
     /*global WebGLRenderingContext*/
 
     var yUpToZUp = Matrix4.fromRotationTranslation(Matrix3.fromRotationX(CesiumMath.PI_OVER_TWO));
+    var boundingSphereCartesian3Scratch = new Cartesian3();
 
     var ModelState = {
         NEEDS_LOAD : 0,
@@ -193,7 +198,7 @@ define([
      * <p>
      * An external glTF asset is created with {@link Model.fromGltf}.  glTF JSON can also be
      * created at runtime and passed to this constructor function.  In either case, the
-     * {@link Model#readyToRender} event is fired when the model is ready to render, i.e.,
+     * {@link Model#readyPromise} is resolved when the model is ready to render, i.e.,
      * when the external binary, image, and shader files are downloaded and the WebGL
      * resources are created.
      * </p>
@@ -215,7 +220,7 @@ define([
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      *
      * @see Model.fromGltf
-     * @see Model#readyToRender
+     * @see Model#readyPromise
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
      */
@@ -326,28 +331,9 @@ define([
 
         this._allowPicking = defaultValue(options.allowPicking, true);
 
-        /**
-         * The event fired when this model is ready to render, i.e., when the external binary, image,
-         * and shader files were downloaded and the WebGL resources were created.
-         * <p>
-         * This event is fired at the end of the frame before the first frame the model is rendered in.
-         * </p>
-         *
-         * @type {Event}
-         * @default new Event()
-         *
-         * @example
-         * // Play all animations at half-speed when the model is ready to render
-         * model.readyToRender.addEventListener(function(model) {
-         *   model.activeAnimations.addAll({
-         *     speedup : 0.5
-         *   });
-         * });
-         *
-         * @see Model#ready
-         */
-        this.readyToRender = new Event();
+        this._readyToRender = new Event();
         this._ready = false;
+        this._readyPromise = when.defer();
 
         /**
          * The currently playing glTF animations.
@@ -388,6 +374,7 @@ define([
         this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
         this._initialRadius = undefined;           // Radius without model's scale property, model-matrix scale, animations, or skins
         this._boundingSphere = undefined;
+        this._scaledBoundingSphere = new BoundingSphere();
         this._state = ModelState.NEEDS_LOAD;
         this._loadError = undefined;
         this._loadResources = undefined;
@@ -515,7 +502,7 @@ define([
 
         /**
          * The model's bounding sphere in its local coordinate system.  This does not take into
-         * account glTF animation and skins or {@link Model#scale}.
+         * account glTF animations and skins.
          *
          * @memberof Model.prototype
          *
@@ -524,7 +511,7 @@ define([
          *
          * @default undefined
          *
-         * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event or ready property.
+         * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
          *
          * @example
          * // Center in WGS84 coordinates
@@ -534,19 +521,24 @@ define([
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (this._state !== ModelState.LOADED) {
-                    throw new DeveloperError('The model is not loaded.  Wait for the model\'s readyToRender event or ready property.');
+                    throw new DeveloperError('The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.');
                 }
                 //>>includeEnd('debug');
 
-                this._boundingSphere.radius = (this.scale * Matrix4.getMaximumScale(this.modelMatrix)) * this._initialRadius;
-                return this._boundingSphere;
+                var nonUniformScale = Matrix4.getScale(this.modelMatrix, boundingSphereCartesian3Scratch);
+                Cartesian3.multiplyByScalar(nonUniformScale, this.scale, nonUniformScale);
+
+                var scaledBoundingSphere = this._scaledBoundingSphere;
+                scaledBoundingSphere.center = Cartesian3.multiplyComponents(this._boundingSphere.center, nonUniformScale, scaledBoundingSphere.center);
+                scaledBoundingSphere.radius = Cartesian3.maximumComponent(nonUniformScale) * this._initialRadius;
+                return scaledBoundingSphere;
             }
         },
 
         /**
          * When <code>true</code>, this model is ready to render, i.e., the external binary, image,
          * and shader files were downloaded and the WebGL resources were created.  This is set to
-         * <code>true</code> right before {@link Model#readyToRender} is fired.
+         * <code>true</code> right before {@link Model#readyPromise} is resolved.
          *
          * @memberof Model.prototype
          *
@@ -555,11 +547,70 @@ define([
          *
          * @default false
          *
-         * @see Model#readyToRender
+         * @see Model#readyPromise
          */
         ready : {
             get : function() {
                 return this._ready;
+            }
+        },
+
+        /**
+         * The event fired when this model is ready to render, i.e., when the external binary, image,
+         * and shader files were downloaded and the WebGL resources were created.
+         * <p>
+         * This event is fired at the end of the frame before the first frame the model is rendered in.
+         * </p>
+         *
+         * @memberof Model.prototype
+         * @type {Event}
+         * @readonly
+         *
+         * @example
+         * // Play all animations at half-speed when the model is ready to render
+         * model.readyToRender.addEventListener(function(model) {
+         *   model.activeAnimations.addAll({
+         *     speedup : 0.5
+         *   });
+         * });
+         *
+         * @see Model#ready
+         * @deprecated
+         */
+        readyToRender : {
+            get : function() {
+                deprecationWarning('Model.readyToRender', 'Model.readyToRender was deprecated in Cesium 1.6 and will be removed in Cesium 1.9.  Use Model.readyPromise instead.');
+                return this._readyToRender;
+            }
+        },
+
+        /**
+         * Gets the promise that will be resolved when this model is ready to render, i.e., when the external binary, image,
+         * and shader files were downloaded and the WebGL resources were created.
+         * <p>
+         * This promise is resolved at the end of the frame before the first frame the model is rendered in.
+         * </p>
+         *
+         * @memberof Model.prototype
+         * @type {Promise}
+         * @readonly
+         *
+         * @example
+         * // Play all animations at half-speed when the model is ready to render
+         * Cesium.when(model.readyPromise).then(function(model) {
+         *   model.activeAnimations.addAll({
+         *     speedup : 0.5
+         *   });
+         * }).otherwise(function(error){
+         *   window.alert(error);
+         * });
+         *
+         * @see Model#ready
+         * @deprecated
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise;
             }
         },
 
@@ -599,7 +650,7 @@ define([
 
     /**
      * Creates a model from a glTF asset.  When the model is ready to render, i.e., when the external binary, image,
-     * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyToRender} event is fired.
+     * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyPromise} is resolved.
      *
      * @param {Object} options Object with the following properties:
      * @param {String} options.url The url to the .gltf file.
@@ -614,7 +665,7 @@ define([
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @returns {Model} The newly created model.
      *
-     * @see Model#readyToRender
+     * @see Model#readyPromise
      *
      * @example
      * // Example 1. Create a model from a glTF asset
@@ -638,7 +689,7 @@ define([
      *   debugWireframe : false
      * }));
      *
-     * model.readyToRender.addEventListener(function(model) {
+     * model.readyPromise.then(function(model) {
      *   // Play all animations when the model is ready to render
      *   model.activeAnimations.addAll();
      * });
@@ -715,7 +766,7 @@ define([
     function getRuntime(model, runtimeName, name) {
         //>>includeStart('debug', pragmas.debug);
         if (model._state !== ModelState.LOADED) {
-            throw new DeveloperError('The model is not loaded.  Wait for the model\'s readyToRender event or ready property.');
+            throw new DeveloperError('The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.');
         }
 
         if (!defined(name)) {
@@ -733,7 +784,7 @@ define([
      * @param {String} name The glTF name of the node.
      * @returns {ModelNode} The node or <code>undefined</code> if no node with <code>name</code> exists.
      *
-     * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event or ready property.
+     * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
      *
      * @example
      * // Apply non-uniform scale to node LOD3sp
@@ -752,7 +803,7 @@ define([
      *
      * @returns {ModelMesh} The mesh or <code>undefined</code> if no mesh with <code>name</code> exists.
      *
-     * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event or ready property.
+     * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
      */
     Model.prototype.getMesh = function(name) {
         return getRuntime(this, 'meshesByName', name);
@@ -764,7 +815,7 @@ define([
      * @param {String} name The glTF name of the material.
      * @returns {ModelMaterial} The material or <code>undefined</code> if no material with <code>name</code> exists.
      *
-     * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event or ready property.
+     * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
      */
     Model.prototype.getMaterial = function(name) {
         return getRuntime(this, 'materialsByName', name);
@@ -854,11 +905,16 @@ define([
         var buffers = model.gltf.buffers;
         for (var name in buffers) {
             if (buffers.hasOwnProperty(name)) {
-                ++model._loadResources.pendingBufferLoads;
                 var buffer = buffers[name];
-                var uri = new Uri(buffer.uri);
-                var bufferPath = uri.resolve(model._baseUri).toString();
-                loadArrayBuffer(bufferPath).then(bufferLoad(model, name)).otherwise(getFailedLoadFunction(model, 'buffer', bufferPath));
+
+                if (buffer.type === 'arraybuffer') {
+                    ++model._loadResources.pendingBufferLoads;
+                    var uri = new Uri(buffer.uri);
+                    var bufferPath = uri.resolve(model._baseUri).toString();
+                    loadArrayBuffer(bufferPath).then(bufferLoad(model, name)).otherwise(getFailedLoadFunction(model, 'buffer', bufferPath));
+                } else if (buffer.type === 'text') {
+                    // GLTF_SPEC: Load compressed .bin with loadText.  https://github.com/KhronosGroup/glTF/issues/230
+                }
             }
         }
     }
@@ -1891,6 +1947,8 @@ define([
                                 jointMatrixUniformName = name;
                             }
                         } else if (defined(parameter.source)) {
+                            // GLTF_SPEC: Use semantic to know which matrix to use from the node, e.g., model vs. model-view
+                            // https://github.com/KhronosGroup/glTF/issues/93
                             uniformMap[name] = getUniformFunctionFromSource(parameter.source, model);
                         } else if (defined(parameter.value)) {
                             // Technique value that isn't overridden by a material
@@ -1996,7 +2054,7 @@ define([
                 var command = new DrawCommand({
                     boundingVolume : new BoundingSphere(), // updated in update()
                     modelMatrix : new Matrix4(),           // computed in update()
-                    primitiveType : primitive.primitive,
+                    primitiveType : primitive.mode,
                     vertexArray : vertexArray,
                     count : count,
                     offset : offset,
@@ -2021,7 +2079,7 @@ define([
                     pickCommand = new DrawCommand({
                         boundingVolume : new BoundingSphere(), // updated in update()
                         modelMatrix : new Matrix4(),           // computed in update()
-                        primitiveType : primitive.primitive,
+                        primitiveType : primitive.mode,
                         vertexArray : vertexArray,
                         count : count,
                         offset : offset,
@@ -2604,7 +2662,8 @@ define([
             var model = this;
             frameState.afterRender.push(function() {
                 model._ready = true;
-                model.readyToRender.raiseEvent(model);
+                model._readyToRender.raiseEvent(model);
+                model.readyPromise.resolve(model);
             });
             return;
         }

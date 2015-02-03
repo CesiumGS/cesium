@@ -502,7 +502,7 @@ define([
             positions2D = tangentPlane.projectPointsOntoPlane(hole, createGeometryFromPositionsExtrudedPositions);
 
             windingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
-            if (windingOrder === WindingOrder.CLOCKWISE) {
+            if (windingOrder === WindingOrder.COUNTER_CLOCKWISE) {
                 hole.reverse();
             }
 
@@ -522,14 +522,14 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {Object} options.polygonHierarchy A polygon hierarchy that can include holes.
+     * @param {PolygonHierarchy} options.polygonHierarchy A polygon hierarchy that can include holes.
      * @param {Number} [options.height=0.0] The height of the polygon.
      * @param {Number} [options.extrudedHeight] The height of the polygon.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instaed of using options.height to determine the height.
+     * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
      *
      * @see PolygonGeometry#createGeometry
      * @see PolygonGeometry#fromPositions
@@ -604,8 +604,13 @@ define([
      * var geometry = Cesium.PolygonGeometry.createGeometry(extrudedPolygon);
      */
     var PolygonGeometry = function(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(options) || !defined(options.polygonHierarchy)) {
+            throw new DeveloperError('options.polygonHierarchy is required.');
+        }
+        //>>includeEnd('debug');
 
+        var polygonHierarchy = options.polygonHierarchy;
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
@@ -620,24 +625,23 @@ define([
             extrudedHeight = Math.min(h, height);
             height = Math.max(h, height);
         }
-        var polygonHierarchy = options.polygonHierarchy;
 
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(polygonHierarchy)) {
-            throw new DeveloperError('options.polygonHierarchy is required.');
-        }
-        //>>includeEnd('debug');
-
-        this._vertexFormat = vertexFormat;
-        this._ellipsoid = ellipsoid;
+        this._vertexFormat = VertexFormat.clone(vertexFormat);
+        this._ellipsoid = Ellipsoid.clone(ellipsoid);
         this._granularity = granularity;
         this._stRotation = stRotation;
         this._height = height;
-        this._extrudedHeight = extrudedHeight;
+        this._extrudedHeight = defaultValue(extrudedHeight, 0.0);
         this._extrude = extrude;
         this._polygonHierarchy = polygonHierarchy;
         this._perPositionHeight = perPositionHeight;
         this._workerName = 'createPolygonGeometry';
+
+        /**
+         * The number of elements used to pack the object into an array.
+         * @type {Number}
+         */
+        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + VertexFormat.packedLength + 7;
     };
 
     /**
@@ -692,13 +696,106 @@ define([
     };
 
     /**
+     * Stores the provided instance into the provided array.
+     * @function
+     *
+     * @param {Object} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     */
+    PolygonGeometry.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        startingIndex = PolygonGeometryLibrary.packPolygonHierarchy(value._polygonHierarchy, array, startingIndex);
+
+        Ellipsoid.pack(value._ellipsoid, array, startingIndex);
+        startingIndex += Ellipsoid.packedLength;
+
+        VertexFormat.pack(value._vertexFormat, array, startingIndex);
+        startingIndex += VertexFormat.packedLength;
+
+        array[startingIndex++] = value._height;
+        array[startingIndex++] = value._extrudedHeight;
+        array[startingIndex++] = value._granularity;
+        array[startingIndex++] = value._stRotation;
+        array[startingIndex++] = value._extrude ? 1.0 : 0.0;
+        array[startingIndex++] = value._perPositionHeight ? 1.0 : 0.0;
+        array[startingIndex] = value.packedLength;
+    };
+
+    var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
+    var scratchVertexFormat = new VertexFormat();
+
+    //Only used to avoid inaability to default construct.
+    var dummyOptions = {
+        polygonHierarchy : {}
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {PolygonGeometry} [result] The object into which to store the result.
+     */
+    PolygonGeometry.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        var polygonHierarchy = PolygonGeometryLibrary.unpackPolygonHierarchy(array, startingIndex);
+        startingIndex = polygonHierarchy.startingIndex;
+        delete polygonHierarchy.startingIndex;
+
+        var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
+        startingIndex += Ellipsoid.packedLength;
+
+        var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
+        startingIndex += VertexFormat.packedLength;
+
+        var height = array[startingIndex++];
+        var extrudedHeight = array[startingIndex++];
+        var granularity = array[startingIndex++];
+        var stRotation = array[startingIndex++];
+        var extrude = array[startingIndex++] === 1.0;
+        var perPositionHeight = array[startingIndex++] === 1.0;
+        var packedLength = array[startingIndex];
+
+        if (!defined(result)) {
+            result = new PolygonGeometry(dummyOptions);
+        }
+
+        result._polygonHierarchy = polygonHierarchy;
+        result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
+        result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
+        result._height = height;
+        result._extrudedHeight = extrudedHeight;
+        result._granularity = granularity;
+        result._stRotation = stRotation;
+        result._extrude = extrude;
+        result._perPositionHeight = perPositionHeight;
+        result.packedLength = packedLength;
+        return result;
+    };
+
+    /**
      * Computes the geometric representation of a polygon, including its vertices, indices, and a bounding sphere.
      *
      * @param {PolygonGeometry} polygonGeometry A description of the polygon.
-     * @returns {Geometry} The computed vertices and indices.
-     *
-     * @exception {DeveloperError} At least three positions are required.
-     * @exception {DeveloperError} Duplicate positions result in not enough positions to form a polygon.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     PolygonGeometry.createGeometry = function(polygonGeometry) {
         var vertexFormat = polygonGeometry._vertexFormat;
@@ -728,44 +825,40 @@ define([
             var holes = outerNode.holes;
             outerRing = PolygonPipeline.removeDuplicates(outerRing);
             if (outerRing.length < 3) {
-                throw new DeveloperError('At least three positions are required.');
+                continue;
             }
 
-            var numChildren = holes ? holes.length : 0;
-            if (numChildren === 0) {
-                // The outer polygon is a simple polygon with no nested inner polygon.
-                polygonHierarchy.push({
-                    outerRing : outerRing,
-                    holes : []
-                });
-                polygons.push(outerRing);
-            } else {
-                // The outer polygon contains inner polygons
-                var polygonHoles = [];
-                for (i = 0; i < numChildren; i++) {
-                    var hole = holes[i];
-                    hole.positions = PolygonPipeline.removeDuplicates(hole.positions);
-                    if (hole.positions.length < 3) {
-                        throw new DeveloperError('At least three positions are required.');
-                    }
-                    polygonHoles.push(hole.positions);
-
-                    var numGrandchildren = 0;
-                    if (defined(hole.holes)) {
-                        numGrandchildren = hole.holes.length;
-                    }
-
-                    for ( var j = 0; j < numGrandchildren; j++) {
-                        queue.enqueue(hole.holes[j]);
-                    }
+            var numChildren = defined(holes) ? holes.length : 0;
+            var polygonHoles = [];
+            for (i = 0; i < numChildren; i++) {
+                var hole = holes[i];
+                hole.positions = PolygonPipeline.removeDuplicates(hole.positions);
+                if (hole.positions.length < 3) {
+                    continue;
                 }
-                polygonHierarchy.push({
-                    outerRing : outerRing,
-                    holes : polygonHoles
-                });
-                var combinedPolygon = PolygonPipeline.eliminateHoles(outerRing, polygonHoles);
-                polygons.push(combinedPolygon);
+                polygonHoles.push(hole.positions);
+
+                var numGrandchildren = 0;
+                if (defined(hole.holes)) {
+                    numGrandchildren = hole.holes.length;
+                }
+
+                for ( var j = 0; j < numGrandchildren; j++) {
+                    queue.enqueue(hole.holes[j]);
+                }
             }
+
+            polygonHierarchy.push({
+                outerRing : outerRing,
+                holes : polygonHoles
+            });
+
+            var combinedPolygon = polygonHoles.length > 0 ? PolygonPipeline.eliminateHoles(outerRing, polygonHoles) : outerRing;
+            polygons.push(combinedPolygon);
+        }
+
+        if (polygons.length === 0) {
+            return undefined;
         }
 
         outerPositions = polygons[0];

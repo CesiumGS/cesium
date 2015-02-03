@@ -1,12 +1,15 @@
 /*global defineSuite*/
 defineSuite([
         'DataSources/BillboardVisualizer',
+        'Core/BoundingRectangle',
+        'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
         'Core/JulianDate',
         'Core/NearFarScalar',
         'DataSources/BillboardGraphics',
+        'DataSources/BoundingSphereState',
         'DataSources/ConstantProperty',
         'DataSources/EntityCollection',
         'Scene/BillboardCollection',
@@ -16,12 +19,15 @@ defineSuite([
         'Specs/destroyScene'
     ], function(
         BillboardVisualizer,
+        BoundingRectangle,
+        BoundingSphere,
         Cartesian2,
         Cartesian3,
         Color,
         JulianDate,
         NearFarScalar,
         BillboardGraphics,
+        BoundingSphereState,
         ConstantProperty,
         EntityCollection,
         BillboardCollection,
@@ -129,6 +135,7 @@ defineSuite([
             billboard.show = new ConstantProperty(true);
             billboard.color = new ConstantProperty(new Color(0.5, 0.5, 0.5, 0.5));
             billboard.image = new ConstantProperty('Data/Images/Blue.png');
+            billboard.imageSubRegion = new ConstantProperty(new BoundingRectangle(0, 0, 1, 1));
             billboard.eyeOffset = new ConstantProperty(new Cartesian3(1.0, 2.0, 3.0));
             billboard.scale = new ConstantProperty(12.5);
             billboard.rotation = new ConstantProperty(1.5);
@@ -165,6 +172,7 @@ defineSuite([
                     expect(bb.scaleByDistance).toEqual(testObject.billboard.scaleByDistance.getValue(time));
                     expect(bb.translucencyByDistance).toEqual(testObject.billboard.translucencyByDistance.getValue(time));
                     expect(bb.pixelOffsetScaleByDistance).toEqual(testObject.billboard.pixelOffsetScaleByDistance.getValue(time));
+                    expect(bb._imageSubRegion).toEqual(testObject.billboard.imageSubRegion.getValue(time));
                 }
                 return bb.show; //true once the image is loaded.
             });
@@ -260,5 +268,54 @@ defineSuite([
         expect(billboardCollection.length).toEqual(1);
         var bb = billboardCollection.get(0);
         expect(bb.id).toEqual(testObject);
+    });
+
+    it('Computes bounding sphere.', function() {
+        var entityCollection = new EntityCollection();
+        visualizer = new BillboardVisualizer(scene, entityCollection);
+
+        var testObject = entityCollection.getOrCreateEntity('test');
+        var time = JulianDate.now();
+        var billboard = testObject.billboard = new BillboardGraphics();
+
+        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
+        billboard.show = new ConstantProperty(true);
+        billboard.image = new ConstantProperty('Data/Images/Blue.png');
+        visualizer.update(time);
+
+        var result = new BoundingSphere();
+        var state = visualizer.getBoundingSphere(testObject, result);
+
+        expect(state).toBe(BoundingSphereState.DONE);
+        expect(result.center).toEqual(testObject.position.getValue());
+        expect(result.radius).toEqual(0);
+    });
+
+    it('Fails bounding sphere for entity without billboard.', function() {
+        var entityCollection = new EntityCollection();
+        var testObject = entityCollection.getOrCreateEntity('test');
+        visualizer = new BillboardVisualizer(scene, entityCollection);
+        visualizer.update(JulianDate.now());
+        var result = new BoundingSphere();
+        var state = visualizer.getBoundingSphere(testObject, result);
+        expect(state).toBe(BoundingSphereState.FAILED);
+    });
+
+    it('Compute bounding sphere throws without entity.', function() {
+        var entityCollection = new EntityCollection();
+        visualizer = new BillboardVisualizer(scene, entityCollection);
+        var result = new BoundingSphere();
+        expect(function() {
+            visualizer.getBoundingSphere(undefined, result);
+        }).toThrowDeveloperError();
+    });
+
+    it('Compute bounding sphere throws without result.', function() {
+        var entityCollection = new EntityCollection();
+        var testObject = entityCollection.getOrCreateEntity('test');
+        visualizer = new BillboardVisualizer(scene, entityCollection);
+        expect(function() {
+            visualizer.getBoundingSphere(testObject, undefined);
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

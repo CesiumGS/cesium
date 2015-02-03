@@ -14,8 +14,12 @@
 			<specs dir="${specsDirectory}" includes="**/*.js" excludes="*.js" />
 		</createSpecList>
 
+		<condition property="exclude.development.gallery" value="**/development/*.html">
+			<istrue value="${build.debugUnminified}" />
+		</condition>
+
 		<createGalleryList output="${galleryDirectory}/gallery-index.js">
-			<demos dir="${galleryDirectory}" includes="**/*.html" />
+			<demos dir="${galleryDirectory}" includes="**/*.html" excludes="${exclude.development.gallery}" />
 		</createGalleryList>
 
 		<createSandcastleJsHintOptions output="${sandcastleDirectory}/jsHintOptions.js" jshintoptionspath="${jsHintOptionsPath}" />
@@ -69,6 +73,7 @@
 				<include name="Documentation/**" />
 			</zipfileset>
 			<include name="Apps/**" />
+			<exclude name="Apps/Sandcastle/gallery/development/**" />
 			<include name="Source/**" />
 			<include name="Specs/**" />
 			<include name="ThirdParty/**" />
@@ -107,7 +112,7 @@
 
 	<!-- Inputs -->
 	<!-- this version should be set to the upcoming version, so it can be tagged without requiring a bump first -->
-	<property name="version" value="1.5" />
+	<property name="version" value="1.6" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />

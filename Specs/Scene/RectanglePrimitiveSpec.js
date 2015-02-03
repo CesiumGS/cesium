@@ -49,7 +49,6 @@ defineSuite([
 
     beforeAll(function() {
         context = createContext();
-        frameState = createFrameState();
     });
 
     afterAll(function() {
@@ -59,12 +58,12 @@ defineSuite([
     beforeEach(function() {
         rectangle = new RectanglePrimitive();
 
+        frameState = createFrameState(createCamera({
+            offset : new Cartesian3(1.02, 0.0, 0.0)
+        }));
+
         us = context.uniformState;
-        us.update(context, createFrameState(createCamera({
-            eye : new Cartesian3(1.02, 0.0, 0.0),
-            target : Cartesian3.ZERO,
-            up : Cartesian3.UNIT_Z
-        })));
+        us.update(context, frameState);
     });
 
     afterEach(function() {
@@ -143,11 +142,10 @@ defineSuite([
     });
 
     it('renders bounding volume with debugShowBoundingVolume', function() {
-        var scene = createScene();
-        var rectangle = scene.primitives.add(createRectangle({
+        var rectangle = createRectangle({
             ellipsoid : Ellipsoid.WGS84,
             debugShowBoundingVolume : true
-        }));
+        });
 
         var commandList = [];
         rectangle.update(context, frameState, commandList);
@@ -156,7 +154,7 @@ defineSuite([
         var center = Cartesian3.clone(sphere.center);
         var radius = sphere.radius;
 
-        var camera = scene.camera;
+        var camera = frameState.camera;
         var direction = Ellipsoid.WGS84.geodeticSurfaceNormal(center, camera.direction);
         Cartesian3.negate(direction, direction);
         Cartesian3.normalize(direction, direction);
@@ -168,13 +166,8 @@ defineSuite([
         Cartesian3.normalize(center, center);
         Cartesian3.multiplyByScalar(center, scalar, camera.position);
 
-        var pixels = scene.renderForSpecs();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).toEqual(0);
-        expect(pixels[2]).toEqual(0);
-        expect(pixels[3]).toEqual(255);
-
-        destroyScene(scene);
+        render(context, frameState, rectangle);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('is picked', function() {

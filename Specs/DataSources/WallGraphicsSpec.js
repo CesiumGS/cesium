@@ -16,6 +16,46 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
+    it('creates expected instance from raw assignment and construction', function() {
+        var options = {
+            material : Color.BLUE,
+            positions : [],
+            show : true,
+            granularity : 1,
+            fill : false,
+            outline : false,
+            outlineColor : Color.RED,
+            outlineWidth : 2,
+            minimumHeights : [3, 4, 5],
+            maximumHeights : [6, 7, 8]
+        };
+
+        var wall = new WallGraphics(options);
+        expect(wall.material).toBeInstanceOf(ColorMaterialProperty);
+        expect(wall.positions).toBeInstanceOf(ConstantProperty);
+        expect(wall.show).toBeInstanceOf(ConstantProperty);
+        expect(wall.granularity).toBeInstanceOf(ConstantProperty);
+        expect(wall.granularity).toBeInstanceOf(ConstantProperty);
+        expect(wall.fill).toBeInstanceOf(ConstantProperty);
+        expect(wall.outline).toBeInstanceOf(ConstantProperty);
+        expect(wall.outlineColor).toBeInstanceOf(ConstantProperty);
+        expect(wall.outlineWidth).toBeInstanceOf(ConstantProperty);
+        expect(wall.minimumHeights).toBeInstanceOf(ConstantProperty);
+        expect(wall.maximumHeights).toBeInstanceOf(ConstantProperty);
+
+        expect(wall.material.color.getValue()).toEqual(options.material);
+        expect(wall.positions.getValue()).toEqual(options.positions);
+        expect(wall.show.getValue()).toEqual(options.show);
+        expect(wall.granularity.getValue()).toEqual(options.granularity);
+        expect(wall.granularity.getValue()).toEqual(options.granularity);
+        expect(wall.fill.getValue()).toEqual(options.fill);
+        expect(wall.outline.getValue()).toEqual(options.outline);
+        expect(wall.outlineColor.getValue()).toEqual(options.outlineColor);
+        expect(wall.outlineWidth.getValue()).toEqual(options.outlineWidth);
+        expect(wall.minimumHeights.getValue()).toEqual(options.minimumHeights);
+        expect(wall.maximumHeights.getValue()).toEqual(options.maximumHeights);
+    });
+
     it('merge assigns unassigned properties', function() {
         var source = new WallGraphics();
         source.material = new ColorMaterialProperty();

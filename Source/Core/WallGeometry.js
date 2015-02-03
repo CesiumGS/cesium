@@ -59,6 +59,7 @@ define([
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
+     * @exception {DeveloperError} positions length must be greater than or equal to 2.
      * @exception {DeveloperError} positions and maximumHeights must have the same length.
      * @exception {DeveloperError} positions and minimumHeights must have the same length.
      *
@@ -91,6 +92,9 @@ define([
         if (!defined(wallPositions)) {
             throw new DeveloperError('options.positions is required.');
         }
+        if (wallPositions.length < 2) {
+            throw new DeveloperError('options.positions length must be greater than or equal to 2.');
+        }
         if (defined(maximumHeights) && maximumHeights.length !== wallPositions.length) {
             throw new DeveloperError('options.positions and options.maximumHeights must have the same length.');
         }
@@ -106,10 +110,165 @@ define([
         this._positions = wallPositions;
         this._minimumHeights = minimumHeights;
         this._maximumHeights = maximumHeights;
-        this._vertexFormat = vertexFormat;
+        this._vertexFormat = VertexFormat.clone(vertexFormat);
         this._granularity = granularity;
-        this._ellipsoid = ellipsoid;
+        this._ellipsoid = Ellipsoid.clone(ellipsoid);
         this._workerName = 'createWallGeometry';
+
+        var numComponents = 1 + wallPositions.length * Cartesian3.packedLength + 2;
+        if (defined(minimumHeights)) {
+            numComponents += minimumHeights.length;
+        }
+        if (defined(maximumHeights)) {
+            numComponents += maximumHeights.length;
+        }
+
+        /**
+         * The number of elements used to pack the object into an array.
+         * @type {Number}
+         */
+        this.packedLength = numComponents + Ellipsoid.packedLength + VertexFormat.packedLength + 1;
+    };
+
+    /**
+     * Stores the provided instance into the provided array.
+     * @function
+     *
+     * @param {Object} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     */
+    WallGeometry.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        var i;
+
+        var positions = value._positions;
+        var length = positions.length;
+        array[startingIndex++] = length;
+
+        for (i = 0; i < length; ++i, startingIndex += Cartesian3.packedLength) {
+            Cartesian3.pack(positions[i], array, startingIndex);
+        }
+
+        var minimumHeights = value._minimumHeights;
+        length = defined(minimumHeights) ? minimumHeights.length : 0;
+        array[startingIndex++] = length;
+
+        if (defined(minimumHeights)) {
+            for (i = 0; i < length; ++i) {
+                array[startingIndex++] = minimumHeights[i];
+            }
+        }
+
+        var maximumHeights = value._maximumHeights;
+        length = defined(maximumHeights) ? maximumHeights.length : 0;
+        array[startingIndex++] = length;
+
+        if (defined(maximumHeights)) {
+            for (i = 0; i < length; ++i) {
+                array[startingIndex++] = maximumHeights[i];
+            }
+        }
+
+        Ellipsoid.pack(value._ellipsoid, array, startingIndex);
+        startingIndex += Ellipsoid.packedLength;
+
+        VertexFormat.pack(value._vertexFormat, array, startingIndex);
+        startingIndex += VertexFormat.packedLength;
+
+        array[startingIndex] = value._granularity;
+    };
+
+    var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
+    var scratchVertexFormat = new VertexFormat();
+    var scratchOptions = {
+        positions : undefined,
+        minimumHeights : undefined,
+        maximumHeights : undefined,
+        ellipsoid : scratchEllipsoid,
+        vertexFormat : scratchVertexFormat,
+        granularity : undefined
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {WallGeometry} [result] The object into which to store the result.
+     */
+    WallGeometry.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        var i;
+
+        var length = array[startingIndex++];
+        var positions = new Array(length);
+
+        for (i = 0; i < length; ++i, startingIndex += Cartesian3.packedLength) {
+            positions[i] = Cartesian3.unpack(array, startingIndex);
+        }
+
+        length = array[startingIndex++];
+        var minimumHeights;
+
+        if (length > 0) {
+            minimumHeights = new Array(length);
+            for (i = 0; i < length; ++i) {
+                minimumHeights[i] = array[startingIndex++];
+            }
+        }
+
+        length = array[startingIndex++];
+        var maximumHeights;
+
+        if (length > 0) {
+            maximumHeights = new Array(length);
+            for (i = 0; i < length; ++i) {
+                maximumHeights[i] = array[startingIndex++];
+            }
+        }
+
+        var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
+        startingIndex += Ellipsoid.packedLength;
+
+        var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
+        startingIndex += VertexFormat.packedLength;
+
+        var granularity = array[startingIndex];
+
+        if (!defined(result)) {
+            scratchOptions.positions = positions;
+            scratchOptions.minimumHeights = minimumHeights;
+            scratchOptions.maximumHeights = maximumHeights;
+            scratchOptions.granularity = granularity;
+            return new WallGeometry(scratchOptions);
+        }
+
+        result._positions = positions;
+        result._minimumHeights = minimumHeights;
+        result._maximumHeights = maximumHeights;
+        result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
+        result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
+        result._granularity = granularity;
+
+        return result;
     };
 
     /**
@@ -189,9 +348,7 @@ define([
      * Computes the geometric representation of a wall, including its vertices, indices, and a bounding sphere.
      *
      * @param {WallGeometry} wallGeometry A description of the wall.
-     * @returns {Geometry} The computed vertices and indices.
-     *
-     * @exception {DeveloperError} unique positions must be greater than or equal to 2.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     WallGeometry.createGeometry = function(wallGeometry) {
         var wallPositions = wallGeometry._positions;
@@ -202,6 +359,10 @@ define([
         var ellipsoid = wallGeometry._ellipsoid;
 
         var pos = WallGeometryLibrary.computePositions(ellipsoid, wallPositions, maximumHeights, minimumHeights, granularity, true);
+        if (!defined(pos)) {
+            return undefined;
+        }
+
         var bottomPositions = pos.bottomPositions;
         var topPositions = pos.topPositions;
 

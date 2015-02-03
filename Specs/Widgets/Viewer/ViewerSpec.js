@@ -6,6 +6,7 @@ defineSuite([
         'Core/ClockStep',
         'Core/EllipsoidTerrainProvider',
         'Core/JulianDate',
+        'Core/Matrix4',
         'Core/WebMercatorProjection',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
@@ -27,6 +28,7 @@ defineSuite([
         'Widgets/Geocoder/Geocoder',
         'Widgets/HomeButton/HomeButton',
         'Widgets/SceneModePicker/SceneModePicker',
+        'Widgets/SelectionIndicator/SelectionIndicator',
         'Widgets/Timeline/Timeline'
     ], function(
         Viewer,
@@ -35,6 +37,7 @@ defineSuite([
         ClockStep,
         EllipsoidTerrainProvider,
         JulianDate,
+        Matrix4,
         WebMercatorProjection,
         ConstantPositionProperty,
         ConstantProperty,
@@ -56,6 +59,7 @@ defineSuite([
         Geocoder,
         HomeButton,
         SceneModePicker,
+        SelectionIndicator,
         Timeline) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -106,6 +110,7 @@ defineSuite([
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        expect(viewer.selectionIndicator).toBeInstanceOf(SelectionIndicator);
         expect(viewer.imageryLayers).toBeInstanceOf(ImageryLayerCollection);
         expect(viewer.terrainProvider).toBeInstanceOf(EllipsoidTerrainProvider);
         expect(viewer.camera).toBeInstanceOf(Camera);
@@ -137,6 +142,7 @@ defineSuite([
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        expect(viewer.selectionIndicator).toBeInstanceOf(SelectionIndicator);
         viewer.resize();
         viewer.render();
     });
@@ -154,6 +160,7 @@ defineSuite([
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        expect(viewer.selectionIndicator).toBeInstanceOf(SelectionIndicator);
         viewer.resize();
         viewer.render();
     });
@@ -171,6 +178,7 @@ defineSuite([
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        expect(viewer.selectionIndicator).toBeInstanceOf(SelectionIndicator);
         viewer.resize();
         viewer.render();
     });
@@ -188,6 +196,7 @@ defineSuite([
         expect(viewer.animation).toBeUndefined();
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        expect(viewer.selectionIndicator).toBeInstanceOf(SelectionIndicator);
         viewer.resize();
         viewer.render();
     });
@@ -205,6 +214,7 @@ defineSuite([
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeUndefined();
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        expect(viewer.selectionIndicator).toBeInstanceOf(SelectionIndicator);
         viewer.resize();
         viewer.render();
     });
@@ -222,6 +232,7 @@ defineSuite([
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeUndefined();
+        expect(viewer.selectionIndicator).toBeInstanceOf(SelectionIndicator);
         viewer.resize();
         viewer.render();
     });
@@ -240,6 +251,7 @@ defineSuite([
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeUndefined();
         expect(viewer.fullscreenButton).toBeUndefined();
+        expect(viewer.selectionIndicator).toBeInstanceOf(SelectionIndicator);
         viewer.resize();
         viewer.render();
     });
@@ -259,6 +271,7 @@ defineSuite([
         expect(viewer.animation).toBeUndefined(Animation);
         expect(viewer.timeline).toBeUndefined();
         expect(viewer.fullscreenButton).toBeUndefined();
+        expect(viewer.selectionIndicator).toBeInstanceOf(SelectionIndicator);
         viewer.resize();
         viewer.render();
     });
@@ -276,6 +289,25 @@ defineSuite([
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        expect(viewer.selectionIndicator).toBeInstanceOf(SelectionIndicator);
+        viewer.resize();
+        viewer.render();
+    });
+
+    it('can shut off SelectionIndicator', function() {
+        viewer = new Viewer(container, {
+            selectionIndicator : false
+        });
+        expect(viewer.container).toBe(container);
+        expect(viewer.cesiumWidget).toBeInstanceOf(CesiumWidget);
+        expect(viewer.geocoder).toBeInstanceOf(Geocoder);
+        expect(viewer.homeButton).toBeInstanceOf(HomeButton);
+        expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
+        expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.animation).toBeInstanceOf(Animation);
+        expect(viewer.timeline).toBeInstanceOf(Timeline);
+        expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        expect(viewer.selectionIndicator).toBeUndefined();
         viewer.resize();
         viewer.render();
     });
@@ -740,44 +772,48 @@ defineSuite([
         expect(viewer.trackedEntity).toBeUndefined();
     });
 
-    it('returns to home when a tracked object is removed', function() {
+    it('stops tracking when tracked object is removed', function() {
         viewer = new Viewer(container);
-
-        //one data source that is added before mixing in
-        var preMixinDataSource = new MockDataSource();
-        viewer.dataSources.add(preMixinDataSource);
-
-        var beforeEntity = new Entity();
-        beforeEntity.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
-        preMixinDataSource.entities.add(beforeEntity);
-
-        //one data source that is added after mixing in
-        var postMixinDataSource = new MockDataSource();
-        viewer.dataSources.add(postMixinDataSource);
 
         var entity = new Entity();
         entity.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
-        postMixinDataSource.entities.add(entity);
 
+        var dataSource = new MockDataSource();
+        dataSource.entities.add(entity);
+
+        viewer.dataSources.add(dataSource);
         viewer.trackedEntity = entity;
-        expect(viewer.trackedEntity).toBe(entity);
 
-        // spy on the home button's command
-        Object.defineProperty(viewer.homeButton.viewModel, 'command', {
-            value : jasmine.createSpy('command')
+        expect(viewer.trackedEntity).toBe(entity);
+        waitsFor(function() {
+            viewer.render();
+            return Cartesian3.equals(Matrix4.getTranslation(viewer.scene.camera.transform, new Cartesian3()), entity.position.getValue());
         });
 
-        postMixinDataSource.entities.remove(entity);
+        runs(function() {
+            dataSource.entities.remove(entity);
 
-        expect(viewer.homeButton.viewModel.command).toHaveBeenCalled();
+            expect(viewer.trackedEntity).toBeUndefined();
+            expect(viewer.scene.camera.transform).toEqual(Matrix4.IDENTITY);
 
-        // reset the spy before removing the other entity
-        viewer.homeButton.viewModel.command.reset();
+            dataSource.entities.add(entity);
+            viewer.trackedEntity = entity;
 
-        viewer.trackedEntity = beforeEntity;
-        preMixinDataSource.entities.remove(beforeEntity);
+            expect(viewer.trackedEntity).toBe(entity);
+        });
 
-        expect(viewer.homeButton.viewModel.command).toHaveBeenCalled();
+        waitsFor(function() {
+            viewer.render();
+            viewer.render();
+            return Cartesian3.equals(Matrix4.getTranslation(viewer.scene.camera.transform, new Cartesian3()), entity.position.getValue());
+        });
+
+        runs(function() {
+            viewer.dataSources.remove(dataSource);
+
+            expect(viewer.trackedEntity).toBeUndefined();
+            expect(viewer.scene.camera.transform).toEqual(Matrix4.IDENTITY);
+        });
     });
 
     it('removes data source listeners when destroyed', function() {

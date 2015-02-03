@@ -5,43 +5,126 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Quaternion',
         '../Core/Transforms',
+        './BillboardGraphics',
+        './BoxGraphics',
+        './ConstantPositionProperty',
+        './CorridorGraphics',
         './createPropertyDescriptor',
-        './Property'
+        './createRawPropertyDescriptor',
+        './CylinderGraphics',
+        './EllipseGraphics',
+        './EllipsoidGraphics',
+        './LabelGraphics',
+        './ModelGraphics',
+        './PathGraphics',
+        './PointGraphics',
+        './PolygonGraphics',
+        './PolylineGraphics',
+        './PolylineVolumeGraphics',
+        './Property',
+        './RectangleGraphics',
+        './WallGraphics'
     ], function(
         Cartesian3,
         createGuid,
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         Matrix3,
         Matrix4,
         Quaternion,
         Transforms,
+        BillboardGraphics,
+        BoxGraphics,
+        ConstantPositionProperty,
+        CorridorGraphics,
         createPropertyDescriptor,
-        Property) {
+        createRawPropertyDescriptor,
+        CylinderGraphics,
+        EllipseGraphics,
+        EllipsoidGraphics,
+        LabelGraphics,
+        ModelGraphics,
+        PathGraphics,
+        PointGraphics,
+        PolygonGraphics,
+        PolylineGraphics,
+        PolylineVolumeGraphics,
+        Property,
+        RectangleGraphics,
+        WallGraphics) {
     "use strict";
 
+    function createConstantPositionProperty(value) {
+        return new ConstantPositionProperty(value);
+    }
+
+    function createPositionPropertyDescriptor(name) {
+        return createPropertyDescriptor(name, undefined, createConstantPositionProperty);
+    }
+
+    function createPropertyTypeDescriptor(name, Type) {
+        return createPropertyDescriptor(name, undefined, function(value) {
+            if (value instanceof Type) {
+                return value;
+            }
+            return new Type(value);
+        });
+    }
+
     /**
-     * Entity instances are the primary data store for processed data.
-     * They are used primarily by the visualizers to create and maintain graphic
-     * primitives that represent the Entity's properties at a specific time.
+     * Entity instances aggregate multiple forms of visualization into a single high-level object.
+     * They can be created manually and added to {@link Viewer#entities} or be produced by
+     * data sources, such as {@link CzmlDataSource} and {@link GeoJsonDataSource}.
      * @alias Entity
      * @constructor
      *
-     * @param {String} [id] A unique identifier for this object.  If no id is provided, a GUID is generated.
+     * @param {Object} [options] Object with the following properties:
+     * @param {String} [options.id] A unique identifier for this object. If none is provided, a GUID is generated.
+     * @param {String} [options.name] A human readable name to display to users. It does not have to be unique.
+     * @param {Property} [options.description] A string Property specifying an HTML description for this entity.
+     * @param {PositionProperty} [options.position] A Property specifying the entity position.
+     * @param {Property} [options.orientation] A Property specifying the entity orientation.
+     * @param {Property} [options.viewFrom] A suggested initial offset for viewing this object.
+     * @param {Entity} [options.parent] A parent entity to associate with this entity.
+     * @param {BillboardGraphics} [options.billboard] A billboard to associate with this entity.
+     * @param {BoxGraphics} [options.box] A box to associate with this entity.
+     * @param {CorridorGraphics} [options.corridor] A corridor to associate with this entity.
+     * @param {CylinderGraphics} [options.cylinder] A cylinder to associate with this entity.
+     * @param {EllipseGraphics} [options.ellipse] A ellipse to associate with this entity.
+     * @param {EllipsoidGraphics} [options.ellipsoid] A ellipsoid to associate with this entity.
+     * @param {LabelGraphics} [options.label] A options.label to associate with this entity.
+     * @param {ModelGraphics} [options.model] A model to associate with this entity.
+     * @param {PathGraphics} [options.path] A path to associate with this entity.
+     * @param {PointGraphics} [options.point] A point to associate with this entity.
+     * @param {PolygonGraphics} [options.polygon] A polygon to associate with this entity.
+     * @param {PolylineGraphics} [options.polyline] A polyline to associate with this entity.
+     * @param {PolylineVolumeGraphics} [options.polylineVolume] A polylineVolume to associate with this entity.
+     * @param {RectangleGraphics} [options.rectangle] A rectangle to associate with this entity.
+     * @param {WallGraphics} [options.wall] A wall to associate with this entity.
      *
-     * @see Property
-     * @see EntityCollection
+     * @see {@link http://cesiumjs.org/2015/02/02/Visualizing-Spatial-Data/|Visualizing Special Data}
      */
-    var Entity = function(id) {
+    var Entity = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        var id = options.id;
+        if (typeof options === 'string') {
+            deprecationWarning('Entity', 'The Entity constructor taking a string was deprecated in Cesium 1.5.  It will be removed in 1.7.  Use "new Entity({ id : \'id\'})" instead.');
+            id = options;
+            options = defaultValue.EMPTY_OBJECT;
+        }
+
         if (!defined(id)) {
             id = createGuid();
         }
@@ -50,10 +133,10 @@ define([
         this._id = id;
         this._definitionChanged = new Event();
         this._name = undefined;
-        this._parent = undefined;
+        this._parent = options.parent;
         this._propertyNames = ['billboard', 'box', 'corridor', 'cylinder', 'description', 'ellipse', //
                                'ellipsoid', 'label', 'model', 'orientation', 'path', 'point', 'polygon', //
-                               'polyline', 'position', 'rectangle', 'viewFrom', 'wall'];
+                               'polyline', 'polylineVolume', 'position', 'rectangle', 'viewFrom', 'wall'];
 
         this._billboard = undefined;
         this._billboardSubscription = undefined;
@@ -83,6 +166,8 @@ define([
         this._polygonSubscription = undefined;
         this._polyline = undefined;
         this._polylineSubscription = undefined;
+        this._polylineVolume = undefined;
+        this._polylineVolumeSubscription = undefined;
         this._position = undefined;
         this._positionSubscription = undefined;
         this._rectangle = undefined;
@@ -91,6 +176,8 @@ define([
         this._viewFromSubscription = undefined;
         this._wall = undefined;
         this._wallSubscription = undefined;
+
+        this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     };
 
     defineProperties(Entity.prototype, {
@@ -103,7 +190,7 @@ define([
          * @memberof Entity.prototype
          * @type {TimeIntervalCollection}
          */
-        availability : createPropertyDescriptor('availability'),
+        availability : createRawPropertyDescriptor('availability'),
         /**
          * Gets the unique ID associated with this object.
          * @memberof Entity.prototype
@@ -115,7 +202,7 @@ define([
             }
         },
         /**
-         * Gets the event that is raised whenever a new property is assigned.
+         * Gets the event that is raised whenever a property or sub-property is changed or modified.
          * @memberof Entity.prototype
          *
          * @type {Event}
@@ -150,9 +237,9 @@ define([
          * @memberof Entity.prototype
          * @type {Entity}
          */
-        parent : createPropertyDescriptor('parent'),
+        parent : createRawPropertyDescriptor('parent'),
         /**
-         * Gets the names of all properties registed on this instance.
+         * Gets the names of all properties registered on this instance.
          * @memberof Entity.prototype
          * @type {Event}
          */
@@ -166,25 +253,25 @@ define([
          * @memberof Entity.prototype
          * @type {BillboardGraphics}
          */
-        billboard : createPropertyDescriptor('billboard'),
+        billboard : createPropertyTypeDescriptor('billboard', BillboardGraphics),
         /**
          * Gets or sets the box.
          * @memberof Entity.prototype
          * @type {BoxGraphics}
          */
-        box : createPropertyDescriptor('box'),
+        box : createPropertyTypeDescriptor('box', BoxGraphics),
         /**
          * Gets or sets the corridor.
          * @memberof Entity.prototype
          * @type {CorridorGraphics}
          */
-        corridor : createPropertyDescriptor('corridor'),
+        corridor : createPropertyTypeDescriptor('corridor', CorridorGraphics),
         /**
          * Gets or sets the cylinder.
          * @memberof Entity.prototype
          * @type {CylinderGraphics}
          */
-        cylinder : createPropertyDescriptor('cylinder'),
+        cylinder : createPropertyTypeDescriptor('cylinder', CylinderGraphics),
         /**
          * Gets or sets the description.
          * @memberof Entity.prototype
@@ -196,25 +283,25 @@ define([
          * @memberof Entity.prototype
          * @type {EllipseGraphics}
          */
-        ellipse : createPropertyDescriptor('ellipse'),
+        ellipse : createPropertyTypeDescriptor('ellipse', EllipseGraphics),
         /**
          * Gets or sets the ellipsoid.
          * @memberof Entity.prototype
          * @type {EllipsoidGraphics}
          */
-        ellipsoid : createPropertyDescriptor('ellipsoid'),
+        ellipsoid : createPropertyTypeDescriptor('ellipsoid', EllipsoidGraphics),
         /**
          * Gets or sets the label.
          * @memberof Entity.prototype
          * @type {LabelGraphics}
          */
-        label : createPropertyDescriptor('label'),
+        label : createPropertyTypeDescriptor('label', LabelGraphics),
         /**
          * Gets or sets the model.
          * @memberof Entity.prototype
-         * @type {LabelGraphics}
+         * @type {ModelGraphics}
          */
-        model : createPropertyDescriptor('model'),
+        model : createPropertyTypeDescriptor('model', ModelGraphics),
         /**
          * Gets or sets the orientation.
          * @memberof Entity.prototype
@@ -226,42 +313,48 @@ define([
          * @memberof Entity.prototype
          * @type {PathGraphics}
          */
-        path : createPropertyDescriptor('path'),
+        path : createPropertyTypeDescriptor('path', PathGraphics),
         /**
          * Gets or sets the point graphic.
          * @memberof Entity.prototype
          * @type {PointGraphics}
          */
-        point : createPropertyDescriptor('point'),
+        point : createPropertyTypeDescriptor('point', PointGraphics),
         /**
          * Gets or sets the polygon.
          * @memberof Entity.prototype
          * @type {PolygonGraphics}
          */
-        polygon : createPropertyDescriptor('polygon'),
+        polygon : createPropertyTypeDescriptor('polygon', PolygonGraphics),
         /**
          * Gets or sets the polyline.
          * @memberof Entity.prototype
          * @type {PolylineGraphics}
          */
-        polyline : createPropertyDescriptor('polyline'),
+        polyline : createPropertyTypeDescriptor('polyline', PolylineGraphics),
+        /**
+         * Gets or sets the polyline volume.
+         * @memberof Entity.prototype
+         * @type {PolylineVolumeGraphics}
+         */
+        polylineVolume : createPropertyTypeDescriptor('polylineVolume', PolylineVolumeGraphics),
         /**
          * Gets or sets the position.
          * @memberof Entity.prototype
          * @type {PositionProperty}
          */
-        position : createPropertyDescriptor('position'),
+        position : createPositionPropertyDescriptor('position'),
         /**
          * Gets or sets the rectangle.
          * @memberof Entity.prototype
          * @type {RectangleGraphics}
          */
-        rectangle : createPropertyDescriptor('rectangle'),
+        rectangle : createPropertyTypeDescriptor('rectangle', RectangleGraphics),
         /**
          * Gets or sets the suggested initial offset for viewing this object
          * with the camera.  The offset is defined in the east-north-up reference frame.
          * @memberof Entity.prototype
-         * @type {Cartesian3}
+         * @type {Property}
          */
         viewFrom : createPropertyDescriptor('viewFrom'),
         /**
@@ -269,7 +362,7 @@ define([
          * @memberof Entity.prototype
          * @type {WallGraphics}
          */
-        wall : createPropertyDescriptor('wall')
+        wall : createPropertyTypeDescriptor('wall', WallGraphics)
     });
 
     /**
@@ -315,7 +408,7 @@ define([
         //>>includeEnd('debug');
 
         propertyNames.push(propertyName);
-        Object.defineProperty(this, propertyName, createPropertyDescriptor(propertyName, true));
+        Object.defineProperty(this, propertyName, createRawPropertyDescriptor(propertyName, true));
     };
 
     /**
@@ -360,10 +453,16 @@ define([
         this.availability = defaultValue(source.availability, this.availability);
 
         var propertyNames = this._propertyNames;
-        var sourcePropertyNames = source._propertyNames;
+        var sourcePropertyNames = defined(source._propertyNames) ? source._propertyNames : Object.keys(source);
         var propertyNamesLength = sourcePropertyNames.length;
         for (var i = 0; i < propertyNamesLength; i++) {
             var name = sourcePropertyNames[i];
+
+            //Ignore parent when merging, this only happens at construction time.
+            if (name === 'parent') {
+                continue;
+            }
+
             var targetProperty = this[name];
             var sourceProperty = source[name];
 

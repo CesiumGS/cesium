@@ -2,6 +2,8 @@
 define([
         './BoundingRectangle',
         './BoundingSphere',
+        './Cartesian2',
+        './Cartesian3',
         './ComponentDatatype',
         './CornerType',
         './defaultValue',
@@ -22,6 +24,8 @@ define([
     ], function(
         BoundingRectangle,
         BoundingSphere,
+        Cartesian2,
+        Cartesian3,
         ComponentDatatype,
         CornerType,
         defaultValue,
@@ -180,10 +184,9 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {Cartesian3[]} options.polylinePositions An array of {@link Cartesain3} positions that define the center of the polyline volume.
-     * @param {Number} options.shapePositions An array of {@link Cartesian2} positions that define the shape to be extruded along the polyline
+     * @param {Cartesian2[]} options.shapePositions An array of {@link Cartesian2} positions that define the shape to be extruded along the polyline
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Number} [options.height=0] The distance between the ellipsoid surface and the positions.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {CornerType} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.
      *
@@ -226,12 +229,138 @@ define([
 
         this._positions = positions;
         this._shape = shape;
-        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-        this._height = defaultValue(options.height, 0.0);
+        this._ellipsoid = Ellipsoid.clone(defaultValue(options.ellipsoid, Ellipsoid.WGS84));
         this._cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
-        this._vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+        this._vertexFormat = VertexFormat.clone(defaultValue(options.vertexFormat, VertexFormat.DEFAULT));
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         this._workerName = 'createPolylineVolumeGeometry';
+
+        var numComponents = 1 + positions.length * Cartesian3.packedLength;
+        numComponents += 1 + shape.length * Cartesian2.packedLength;
+
+        /**
+         * The number of elements used to pack the object into an array.
+         * @type {Number}
+         */
+        this.packedLength = numComponents + Ellipsoid.packedLength + VertexFormat.packedLength + 2;
+    };
+
+    /**
+     * Stores the provided instance into the provided array.
+     * @function
+     *
+     * @param {Object} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     */
+    PolylineVolumeGeometry.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        var i;
+
+        var positions = value._positions;
+        var length = positions.length;
+        array[startingIndex++] = length;
+
+        for (i = 0; i < length; ++i, startingIndex += Cartesian3.packedLength) {
+            Cartesian3.pack(positions[i], array, startingIndex);
+        }
+
+        var shape = value._shape;
+        length = shape.length;
+        array[startingIndex++] = length;
+
+        for (i = 0; i < length; ++i, startingIndex += Cartesian2.packedLength) {
+            Cartesian2.pack(shape[i], array, startingIndex);
+        }
+
+        Ellipsoid.pack(value._ellipsoid, array, startingIndex);
+        startingIndex += Ellipsoid.packedLength;
+
+        VertexFormat.pack(value._vertexFormat, array, startingIndex);
+        startingIndex += VertexFormat.packedLength;
+
+        array[startingIndex++] = value._cornerType;
+        array[startingIndex]   = value._granularity;
+    };
+
+    var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
+    var scratchVertexFormat = new VertexFormat();
+    var scratchOptions = {
+        polylinePositions : undefined,
+        shapePositions : undefined,
+        ellipsoid : scratchEllipsoid,
+        vertexFormat : scratchVertexFormat,
+        cornerType : undefined,
+        granularity : undefined
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {PolylineVolumeGeometry} [result] The object into which to store the result.
+     */
+    PolylineVolumeGeometry.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        var i;
+
+        var length = array[startingIndex++];
+        var positions = new Array(length);
+
+        for (i = 0; i < length; ++i, startingIndex += Cartesian3.packedLength) {
+            positions[i] = Cartesian3.unpack(array, startingIndex);
+        }
+
+        length = array[startingIndex++];
+        var shape = new Array(length);
+
+        for (i = 0; i < length; ++i, startingIndex += Cartesian2.packedLength) {
+            shape[i] = Cartesian2.unpack(array, startingIndex);
+        }
+
+        var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
+        startingIndex += Ellipsoid.packedLength;
+
+        var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
+        startingIndex += VertexFormat.packedLength;
+
+        var cornerType = array[startingIndex++];
+        var granularity = array[startingIndex];
+
+        if (!defined(result)) {
+            scratchOptions.polylinePositions = positions;
+            scratchOptions.shapePositions = shape;
+            scratchOptions.cornerType = cornerType;
+            scratchOptions.granularity = granularity;
+            return new PolylineVolumeGeometry(scratchOptions);
+        }
+
+        result._positions = positions;
+        result._shape = shape;
+        result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
+        result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
+        result._cornerType = cornerType;
+        result._granularity = granularity;
+
+        return result;
     };
 
     var brScratch = new BoundingRectangle();
@@ -240,10 +369,7 @@ define([
      * Computes the geometric representation of a polyline with a volume, including its vertices, indices, and a bounding sphere.
      *
      * @param {PolylineVolumeGeometry} polylineVolumeGeometry A description of the polyline volume.
-     * @returns {Geometry} The computed vertices and indices.
-     *
-     * @exception {DeveloperError} Count of unique polyline positions must be greater than 1.
-     * @exception {DeveloperError} Count of unique shape positions must be at least 3.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     PolylineVolumeGeometry.createGeometry = function(polylineVolumeGeometry) {
         var positions = polylineVolumeGeometry._positions;
@@ -251,14 +377,9 @@ define([
         var shape2D = polylineVolumeGeometry._shape;
         shape2D = PolylineVolumeGeometryLibrary.removeDuplicatesFromShape(shape2D);
 
-        //>>includeStart('debug', pragmas.debug);
-        if (cleanPositions.length < 2) {
-            throw new DeveloperError('Count of unique polyline positions must be greater than 1.');
+        if (cleanPositions.length < 2 || shape2D.length < 3) {
+            return undefined;
         }
-        if (shape2D.length < 3) {
-            throw new DeveloperError('Count of unique shape positions must be at least 3.');
-        }
-        //>>includeEnd('debug');
 
         if (PolygonPipeline.computeWindingOrder2D(shape2D) === WindingOrder.CLOCKWISE) {
             shape2D.reverse();

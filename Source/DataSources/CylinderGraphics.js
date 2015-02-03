@@ -5,6 +5,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
+        './createMaterialPropertyDescriptor',
         './createPropertyDescriptor'
     ], function(
         defaultValue,
@@ -12,16 +13,33 @@ define([
         defineProperties,
         DeveloperError,
         Event,
+        createMaterialPropertyDescriptor,
         createPropertyDescriptor) {
     "use strict";
 
     /**
-     * An optionally time-dynamic cylinder.
+     * Describes a cylinder, truncated cone, or cone defined by a length, top radius, and bottom radius.
+     * The center position and orientation are determined by the containing {@link Entity}.
      *
      * @alias CylinderGraphics
      * @constructor
+     *
+     * @param {Object} [options] Object with the following properties:
+     * @param {Property} [options.length] A numeric Property specifying the length of the cylinder.
+     * @param {Property} [options.topRadius] A numeric Property specifying the radius of the top of the cylinder.
+     * @param {Property} [options.bottomRadius] A numeric Property specifying the radius of the bottom of the cylinder.
+     * @param {Property} [options.show=true] A boolean Property specifying the visibility of the cylinder.
+     * @param {Property} [options.fill=true] A boolean Property specifying whether the cylinder is filled with the provided material.
+     * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the cylinder.
+     * @param {Property} [options.outline=false] A boolean Property specifying whether the cylinder is outlined.
+     * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
+     * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
+     * @param {Property} [options.numberOfVerticalLines=16] A numeric Property specifying the number of vertical lines to draw along the perimeter for the outline.
+     * @param {Property} [options.slices=128] The number of edges around perimeter of the cylinder.
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cylinder.html|Cesium Sandcastle Cylinder Demo}
      */
-    var CylinderGraphics = function() {
+    var CylinderGraphics = function(options) {
         this._length = undefined;
         this._lengthSubscription = undefined;
         this._topRadius = undefined;
@@ -36,6 +54,8 @@ define([
         this._showSubscription = undefined;
         this._material = undefined;
         this._materialSubscription = undefined;
+        this._fill = undefined;
+        this._fillSubscription = undefined;
         this._outline = undefined;
         this._outlineSubscription = undefined;
         this._outlineColor = undefined;
@@ -43,11 +63,12 @@ define([
         this._outlineWidth = undefined;
         this._outlineWidthSubscription = undefined;
         this._definitionChanged = new Event();
-    };
 
+        this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
+    };
     defineProperties(CylinderGraphics.prototype, {
         /**
-         * Gets the event that is raised whenever a new property is assigned.
+         * Gets the event that is raised whenever a property or sub-property is changed or modified.
          * @memberof CylinderGraphics.prototype
          *
          * @type {Event}
@@ -60,94 +81,102 @@ define([
         },
 
         /**
-         * Gets or sets the numeric {@link Property} specifying the cylinder's semi-major-axis.
+         * Gets or sets the numeric Property specifying the length of the cylinder.
          * @memberof CylinderGraphics.prototype
          * @type {Property}
          */
         length : createPropertyDescriptor('length'),
 
         /**
-         * Gets or sets the numeric {@link Property} specifying the cylinder's semi-minor-axis.
+         * Gets or sets the numeric Property specifying the radius of the top of the cylinder.
          * @memberof CylinderGraphics.prototype
          * @type {Property}
          */
         topRadius : createPropertyDescriptor('topRadius'),
 
         /**
-         * Gets or sets the numeric {@link Property} specifying the cylinder's bottomRadius.
+         * Gets or sets the numeric Property specifying the radius of the bottom of the cylinder.
          * @memberof CylinderGraphics.prototype
          * @type {Property}
          */
         bottomRadius : createPropertyDescriptor('bottomRadius'),
 
         /**
-         * Gets or sets the Number {@link Property} specifying the number of vertical lines
+         * Gets or sets the Property specifying the number of vertical lines to draw along the perimeter for the outline.
          * to use when outlining the cylinder.
          * @memberof CylinderGraphics.prototype
          * @type {Property}
+         * @default 16
          */
         numberOfVerticalLines : createPropertyDescriptor('numberOfVerticalLines'),
 
         /**
-         * Gets or sets the Number {@link Property} specifying the sampling distance, in radians,
+         * Gets or sets the Property specifying the number of edges around perimeter of the cylinder.
          * between each latitude and longitude point.
          * @memberof CylinderGraphics.prototype
          * @type {Property}
+         * @default 16
          */
         slices : createPropertyDescriptor('slices'),
 
         /**
-         * Gets or sets the boolean {@link Property} specifying the polygon's visibility.
+         * Gets or sets the boolean Property specifying the visibility of the cylinder.
          * @memberof CylinderGraphics.prototype
          * @type {Property}
+         * @default true
          */
         show : createPropertyDescriptor('show'),
 
         /**
-         * Gets or sets the {@link MaterialProperty} specifying the appearance of the polygon.
+         * Gets or sets the Property specifying the material used to fill the cylinder.
          * @memberof CylinderGraphics.prototype
          * @type {MaterialProperty}
+         * @default Color.WHITE
          */
-        material : createPropertyDescriptor('material'),
+        material : createMaterialPropertyDescriptor('material'),
 
         /**
-         * Gets or sets the Boolean {@link Property} specifying whether the cylinder should be filled.
+         * Gets or sets the boolean Property specifying whether the cylinder is filled with the provided material.
          * @memberof CylinderGraphics.prototype
          * @type {Property}
+         * @default true
          */
         fill : createPropertyDescriptor('fill'),
 
         /**
-         * Gets or sets the Boolean {@link Property} specifying whether the cylinder should be outlined.
+         * Gets or sets the boolean Property specifying whether the cylinder is outlined.
          * @memberof CylinderGraphics.prototype
          * @type {Property}
+         * @default false
          */
         outline : createPropertyDescriptor('outline'),
 
         /**
-         * Gets or sets the Color {@link Property} specifying the color of the outline.
+         * Gets or sets the Property specifying the {@link Color} of the outline.
          * @memberof CylinderGraphics.prototype
          * @type {Property}
+         * @default Color.BLACK
          */
         outlineColor : createPropertyDescriptor('outlineColor'),
 
         /**
-         * Gets or sets the Number {@link Property} specifying the width of the outline.
+         * Gets or sets the numeric Property specifying the width of the outline.
          * @memberof CylinderGraphics.prototype
          * @type {Property}
+         * @default 1.0
          */
         outlineWidth : createPropertyDescriptor('outlineWidth')
     });
 
     /**
-     * Duplicates a CylinderGraphics instance.
+     * Duplicates this instance.
      *
      * @param {CylinderGraphics} [result] The object onto which to store the result.
      * @returns {CylinderGraphics} The modified result parameter or a new instance if one was not provided.
      */
     CylinderGraphics.prototype.clone = function(result) {
         if (!defined(result)) {
-            result = new CylinderGraphics();
+            return new CylinderGraphics(this);
         }
         result.bottomRadius = this.bottomRadius;
         result.length = this.length;

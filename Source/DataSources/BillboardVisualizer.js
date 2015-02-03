@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/AssociativeArray',
+        '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
@@ -11,9 +12,11 @@ define([
         '../Scene/BillboardCollection',
         '../Scene/HorizontalOrigin',
         '../Scene/VerticalOrigin',
+        './BoundingSphereState',
         './Property'
     ], function(
         AssociativeArray,
+        BoundingRectangle,
         Cartesian2,
         Cartesian3,
         Color,
@@ -24,6 +27,7 @@ define([
         BillboardCollection,
         HorizontalOrigin,
         VerticalOrigin,
+        BoundingSphereState,
         Property) {
     "use strict";
 
@@ -43,10 +47,12 @@ define([
     var scaleByDistance = new NearFarScalar();
     var translucencyByDistance = new NearFarScalar();
     var pixelOffsetScaleByDistance = new NearFarScalar();
+    var boundingRectangle = new BoundingRectangle();
 
     var EntityData = function(entity) {
         this.entity = entity;
         this.billboard = undefined;
+        this.textureValue = undefined;
     };
 
     /**
@@ -74,7 +80,7 @@ define([
         this._billboardCollection = undefined;
         this._entityCollection = entityCollection;
         this._items = new AssociativeArray();
-        this._onCollectionChanged(entityCollection, entityCollection.entities, [], []);
+        this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
     };
 
     /**
@@ -134,7 +140,10 @@ define([
             }
 
             billboard.show = show;
-            billboard.image = textureValue;
+            if (item.textureValue !== textureValue) {
+                billboard.image = textureValue;
+                item.textureValue = textureValue;
+            }
             billboard.position = position;
             billboard.color = Property.getValueOrDefault(billboardGraphics._color, time, defaultColor, color);
             billboard.eyeOffset = Property.getValueOrDefault(billboardGraphics._eyeOffset, time, defaultEyeOffset, eyeOffset);
@@ -149,8 +158,44 @@ define([
             billboard.scaleByDistance = Property.getValueOrUndefined(billboardGraphics._scaleByDistance, time, scaleByDistance);
             billboard.translucencyByDistance = Property.getValueOrUndefined(billboardGraphics._translucencyByDistance, time, translucencyByDistance);
             billboard.pixelOffsetScaleByDistance = Property.getValueOrUndefined(billboardGraphics._pixelOffsetScaleByDistance, time, pixelOffsetScaleByDistance);
+
+            var subRegion = Property.getValueOrUndefined(billboardGraphics._imageSubRegion, time, boundingRectangle);
+            if (defined(subRegion)) {
+                billboard.setImageSubRegion(billboard._imageId, subRegion);
+            }
         }
         return true;
+    };
+
+    /**
+     * Computes a bounding sphere which encloses the visualization produced for the specified entity.
+     * The bounding sphere is in the fixed frame of the scene's globe.
+     *
+     * @param {Entity} entity The entity whose bounding sphere to compute.
+     * @param {BoundingSphere} result The bounding sphere onto which to store the result.
+     * @returns {BoundingSphereState} BoundingSphereState.DONE if the result contains the bounding sphere,
+     *                       BoundingSphereState.PENDING if the result is still being computed, or
+     *                       BoundingSphereState.FAILED if the entity has no visualization in the current scene.
+     * @private
+     */
+    BillboardVisualizer.prototype.getBoundingSphere = function(entity, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(entity)) {
+            throw new DeveloperError('entity is required.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required.');
+        }
+        //>>includeEnd('debug');
+
+        var item = this._items.get(entity.id);
+        if (!defined(item) || !defined(item.billboard)) {
+            return BoundingSphereState.FAILED;
+        }
+
+        result.center = Cartesian3.clone(item.billboard.position, result.center);
+        result.radius = 0;
+        return BoundingSphereState.DONE;
     };
 
     /**
@@ -209,6 +254,7 @@ define([
         if (defined(item)) {
             var billboard = item.billboard;
             if (defined(billboard)) {
+                item.textureValue = undefined;
                 item.billboard = undefined;
                 billboard.show = false;
                 billboard.image = undefined;

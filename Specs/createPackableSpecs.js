@@ -1,14 +1,28 @@
 /*global define*/
-define(function() {
+define([
+        'Core/defined'
+    ], function(
+        defined) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     function createPackableSpecs(packable, instance, packedInstance) {
+        instance = JSON.parse(JSON.stringify(instance));
+        packedInstance = JSON.parse(JSON.stringify(packedInstance));
+
         it('can pack', function() {
             var packedArray = [];
             packable.pack(instance, packedArray);
-            expect(packedArray.length).toEqual(packable.packedLength);
+            var packedLength = defined(packable.packedLength) ? packable.packedLength : instance.packedLength;
+            expect(packedArray.length).toEqual(packedLength);
             expect(packedArray).toEqual(packedInstance);
+        });
+
+        it('can roundtrip', function() {
+            var packedArray = [];
+            packable.pack(instance, packedArray);
+            var result = packable.unpack(packedArray);
+            expect(instance).toEqual(result);
         });
 
         it('can unpack', function() {

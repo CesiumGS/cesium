@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/BoundingSphere',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
@@ -17,11 +18,13 @@ define([
         '../Scene/PolylineCollection',
         '../Scene/PolylineColorAppearance',
         '../Scene/PolylineMaterialAppearance',
+        './BoundingSphereState',
         './ColorMaterialProperty',
         './ConstantProperty',
         './MaterialProperty',
         './Property'
     ], function(
+        BoundingSphere,
         Color,
         ColorGeometryInstanceAttribute,
         defaultValue,
@@ -39,6 +42,7 @@ define([
         PolylineCollection,
         PolylineColorAppearance,
         PolylineMaterialAppearance,
+        BoundingSphereState,
         ColorMaterialProperty,
         ConstantProperty,
         MaterialProperty,
@@ -48,7 +52,7 @@ define([
     //We use this object to create one polyline collection per-scene.
     var polylineCollections = {};
 
-    var defaultMaterial = ColorMaterialProperty.fromColor(Color.WHITE);
+    var defaultMaterial = new ColorMaterialProperty(Color.WHITE);
     var defaultShow = new ConstantProperty(true);
 
     var GeometryOptions = function(entity) {
@@ -427,9 +431,11 @@ define([
         var sceneId = geometryUpdater._scene.id;
 
         var polylineCollection = polylineCollections[sceneId];
-        if (!defined(polylineCollection)) {
+        if (!defined(polylineCollection) || polylineCollection.isDestroyed()) {
             polylineCollection = new PolylineCollection();
             polylineCollections[sceneId] = polylineCollection;
+            primitives.add(polylineCollection);
+        } else if (!primitives.contains(polylineCollection)) {
             primitives.add(polylineCollection);
         }
 
@@ -470,7 +476,7 @@ define([
         if (followSurface) {
             generateCartesianArcOptions.positions = positions;
             generateCartesianArcOptions.granularity = Property.getValueOrUndefined(polyline._granularity, time);
-            generateCartesianArcOptions.height = PolylinePipeline.extractHeights(positions, Ellipsoid.WGS84);
+            generateCartesianArcOptions.height = PolylinePipeline.extractHeights(positions, this._geometryUpdater._scene.globe.ellipsoid);
             positions = PolylinePipeline.generateCartesianArc(generateCartesianArcOptions);
         }
 
@@ -478,6 +484,24 @@ define([
         line.positions = positions;
         line.material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, line.material);
         line.width = Property.getValueOrDefault(polyline._width, time, 1);
+    };
+
+    DynamicGeometryUpdater.prototype.getBoundingSphere = function(entity, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(entity)) {
+            throw new DeveloperError('entity is required.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required.');
+        }
+        //>>includeEnd('debug');
+
+        var line = this._line;
+        if (line.show && line.positions.length > 0) {
+            BoundingSphere.fromPoints(line.positions, result);
+            return BoundingSphereState.DONE;
+        }
+        return BoundingSphereState.FAILED;
     };
 
     DynamicGeometryUpdater.prototype.isDestroyed = function() {

@@ -298,7 +298,7 @@ define([
                 scene.terrainProvider = options.terrainProvider;
             }
 
-            this._screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas);
+            this._screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas, false);
 
             if (defined(options.sceneMode)) {
                 if (options.sceneMode === SceneMode.SCENE2D) {

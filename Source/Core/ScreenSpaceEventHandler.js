@@ -636,6 +636,7 @@ define([
      * @alias ScreenSpaceEventHandler
      *
      * @param {Canvas} [element=document] The element to add events to.
+     *
      * @constructor
      */
     var ScreenSpaceEventHandler = function(element) {

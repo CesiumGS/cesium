@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
@@ -8,6 +9,7 @@ define([
         './Property'
     ], function(
         Color,
+        defaultValue,
         defined,
         defineProperties,
         Event,
@@ -17,14 +19,21 @@ define([
 
     var defaultColor = Color.WHITE;
     var defaultOutlineColor = Color.BLACK;
-    var defaultOutlineWidth = 0.0;
+    var defaultOutlineWidth = 1.0;
 
     /**
      * A {@link MaterialProperty} that maps to polyline outline {@link Material} uniforms.
      * @alias PolylineOutlineMaterialProperty
      * @constructor
+     *
+     * @param {Object} [options] Object with the following properties:
+     * @param {Property} [options.color=Color.WHITE] A Property specifying the {@link Color} of the line.
+     * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
+     * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline, in pixels.
      */
-    var PolylineOutlineMaterialProperty = function() {
+    var PolylineOutlineMaterialProperty = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         this._definitionChanged = new Event();
         this._color = undefined;
         this._colorSubscription = undefined;
@@ -32,6 +41,10 @@ define([
         this._outlineColorSubscription = undefined;
         this._outlineWidth = undefined;
         this._outlineWidthSubscription = undefined;
+
+        this.color = options.color;
+        this.outlineColor = options.outlineColor;
+        this.outlineWidth = options.outlineWidth;
     };
 
     defineProperties(PolylineOutlineMaterialProperty.prototype, {
@@ -63,24 +76,24 @@ define([
             }
         },
         /**
-         * Gets or sets {@link Color} property which determines the polyline's color.
+         * Gets or sets the Property specifying the {@link Color} of the line.
          * @memberof PolylineOutlineMaterialProperty.prototype
          * @type {Property}
-         * @default new ConstantProperty(Color.WHITE)
+         * @default Color.WHITE
          */
         color : createPropertyDescriptor('color'),
         /**
-         * Gets or sets the {@link Color} property which determines the polyline's outline color.
+         * Gets or sets the Property specifying the {@link Color} of the outline.
          * @memberof PolylineOutlineMaterialProperty.prototype
          * @type {Property}
-         * @default new ConstantProperty(Color.BLACK)
+         * @default Color.BLACK
          */
         outlineColor : createPropertyDescriptor('outlineColor'),
         /**
-         * Gets or sets the numberic property which determines the polyline's outline width.
+         * Gets or sets the numeric Property specifying the width of the outline.
          * @memberof PolylineOutlineMaterialProperty.prototype
          * @type {Property}
-         * @default new ConstantProperty(0)
+         * @default 1.0
          */
         outlineWidth : createPropertyDescriptor('outlineWidth')
     });
