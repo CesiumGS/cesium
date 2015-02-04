@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.7 - 2015-03-02
+
+* Add camera-terrain collision detection/response when the camera reference frame is set.
+
 ### 1.6 - 2015-02-02
 
 * Breaking changes
