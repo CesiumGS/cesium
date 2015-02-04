@@ -235,17 +235,6 @@ defineSuite([
         expect(polygon.positions).not.toBeDefined();
     });
 
-    it('configureFromPolygonHierarchy throws with less than three positions', function() {
-        var hierarchy = {
-                positions : [Cartesian3.fromDegrees(0,0)]
-        };
-        polygon = createPolygon();
-        polygon.configureFromPolygonHierarchy(hierarchy);
-        expect(function() {
-            render(context, frameState, polygon);
-        }).toThrowDeveloperError();
-    });
-
     it('gets the default color', function() {
         polygon = new Polygon();
         expect(polygon.material.uniforms.color).toEqual({
