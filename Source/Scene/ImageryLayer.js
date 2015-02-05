@@ -592,7 +592,8 @@ define([
                     imageryProvider.errorEvent,
                     message,
                     imagery.x, imagery.y, imagery.level,
-                    doRequest);
+                    doRequest,
+                    e);
         }
 
         function doRequest() {
