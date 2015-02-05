@@ -243,6 +243,14 @@ define([
          * @default 7500000.0
          */
         this.minimumTrackBallHeight = 7500000.0;
+        /**
+         * Keeps the camera above terrain when the camera is in a reference frame other than the world frame, i.e.
+         * the camera transform property is not the identity matrix. To re-orient the camera, it is assumed that the camera
+         * is viewing the center of the frame and the the up direction is aligned with the positive z axis in the local frame.
+         * @type {Boolean}
+         * @default true
+         */
+        this.avoidCollisionInReferenceFrame = true;
 
         this._scene = scene;
         this._globe = undefined;
@@ -1561,7 +1569,7 @@ define([
     function adjustHeightForTerrain(controller) {
         var scene = controller._scene;
         var mode = scene.mode;
-        var globe = scene.globe;
+        var globe = controller.avoidCollisionInReferenceFrame ? scene.globe : controller._globe;
 
         if (!defined(globe) || mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
             return;

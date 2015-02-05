@@ -1049,7 +1049,35 @@ defineSuite([
 
         updateController();
 
-        expect(camera.positionWC.z).toBeGreaterThanOrEqualTo(controller.minimumZoomDistance);
+        expect(camera.positionWC.x).toBeGreaterThanOrEqualTo(controller.minimumZoomDistance);
+    });
+
+    it('camera does go below the terrain in 3D with avoidCollisionInReferenceFrame set to false', function() {
+        setUp3D();
+        scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+        controller.avoidCollisionInReferenceFrame = false;
+
+        updateController();
+
+        camera.lookAt(Cartesian3.fromDegrees(-72.0, 40.0, 1.0), new Cartesian3(1.0, 1.0, -10.0));
+
+        updateController();
+
+        expect(camera.positionCartographic.height).toBeLessThan(controller.minimumZoomDistance);
+    });
+
+    it('camera does go below the terrain in CV with avoidCollisionInReferenceFrame set to false', function() {
+        setUpCV();
+        scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+        controller.avoidCollisionInReferenceFrame = false;
+
+        updateController();
+
+        camera.lookAt(Cartesian3.fromDegrees(-72.0, 40.0, 1.0), new Cartesian3(1.0, 1.0, -10.0));
+
+        updateController();
+
+        expect(camera.positionWC.x).toBeLessThan(controller.minimumZoomDistance);
     });
 
     it('is destroyed', function() {
