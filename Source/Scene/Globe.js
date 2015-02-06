@@ -801,11 +801,6 @@ define([
                         enabled : true
                     }
                 });
-                this._depthCommand.renderState = context.createRenderState({
-                    cull : {
-                        enabled : true
-                    }
-                });
             }
         }
 
@@ -935,7 +930,7 @@ define([
             }
         }
 
-        if (pass.pick) {
+        if (pass.pick && mode === SceneMode.SCENE3D) {
             // Not actually pickable, but render depth-only so primitives on the backface
             // of the globe are not picked.
             commandList.push(this._depthCommand);
