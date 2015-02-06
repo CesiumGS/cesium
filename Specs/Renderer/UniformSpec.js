@@ -56,7 +56,7 @@ defineSuite([
         var fs =
             'uniform vec2 u;' +
             'void main() { ' +
-            '  gl_FragColor = vec4((u[0] == 0.25) && (u[1] == 0.5)); ' +
+            '  gl_FragColor = vec4(u == vec2(0.25, 0.5)); ' +
             '}';
 
         context.verifyDrawForSpecs(fs, uniformMap);
@@ -72,7 +72,7 @@ defineSuite([
         var fs =
             'uniform vec3 u;' +
             'void main() { ' +
-            '  gl_FragColor = vec4((u[0] == 0.25) && (u[1] == 0.5) && (u[2] == 0.75)); ' +
+            '  gl_FragColor = vec4(u == vec3(0.25, 0.5, 0.75)); ' +
             '}';
 
         context.verifyDrawForSpecs(fs, uniformMap);
@@ -88,7 +88,7 @@ defineSuite([
         var fs =
             'uniform vec3 u;' +
             'void main() { ' +
-            '  gl_FragColor = vec4((u[0] == 0.25) && (u[1] == 0.5) && (u[2] == 0.75)); ' +
+            '  gl_FragColor = vec4(u == vec3(0.25, 0.5, 0.75)); ' +
             '}';
 
         context.verifyDrawForSpecs(fs, uniformMap);
@@ -104,7 +104,7 @@ defineSuite([
         var fs =
             'uniform vec4 u;' +
             'void main() { ' +
-            '  gl_FragColor = vec4((u[0] == 0.25) && (u[1] == 0.5) && (u[2] == 0.75) && (u[3] == 1.0)); ' +
+            '  gl_FragColor = vec4(u == vec4(0.25, 0.5, 0.75, 1.0)); ' +
             '}';
 
         context.verifyDrawForSpecs(fs, uniformMap);
@@ -120,7 +120,7 @@ defineSuite([
         var fs =
             'uniform vec4 u;' +
             'void main() { ' +
-            '  gl_FragColor = vec4((u[0] == 0.25) && (u[1] == 0.5) && (u[2] == 0.75) && (u[3] == 1.0)); ' +
+            '  gl_FragColor = vec4(u == vec4(0.25, 0.5, 0.75, 1.0)); ' +
             '}';
 
         context.verifyDrawForSpecs(fs, uniformMap);
@@ -152,7 +152,7 @@ defineSuite([
         var fs =
             'uniform ivec2 u;' +
             'void main() { ' +
-            '  gl_FragColor = vec4((u[0] == 1) && (u[1] == 2)); ' +
+            '  gl_FragColor = vec4(u == ivec2(1, 2)); ' +
             '}';
 
         context.verifyDrawForSpecs(fs, uniformMap);
@@ -168,7 +168,7 @@ defineSuite([
         var fs =
             'uniform ivec3 u;' +
             'void main() { ' +
-            '  gl_FragColor = vec4((u[0] == 1) && (u[1] == 2) && (u[2] == 3)); ' +
+            '  gl_FragColor = vec4(u == ivec3(1, 2, 3)); ' +
             '}';
 
         context.verifyDrawForSpecs(fs, uniformMap);
@@ -184,7 +184,7 @@ defineSuite([
         var fs =
             'uniform ivec4 u;' +
             'void main() { ' +
-            '  gl_FragColor = vec4((u[0] == 1) && (u[1] == 2) && (u[2] == 3) && (u[3] == 4)); ' +
+            '  gl_FragColor = vec4(u == ivec4(1, 2, 3, 4)); ' +
             '}';
 
         context.verifyDrawForSpecs(fs, uniformMap);
@@ -216,7 +216,7 @@ defineSuite([
         var fs =
             'uniform bvec2 u;' +
             'void main() { ' +
-            '  gl_FragColor = vec4(u[0] && !u[1]); ' +
+            '  gl_FragColor = vec4(u == bvec2(true, false)); ' +
             '}';
 
         context.verifyDrawForSpecs(fs, uniformMap);
@@ -232,7 +232,7 @@ defineSuite([
         var fs =
             'uniform bvec3 u;' +
             'void main() { ' +
-            '  gl_FragColor = vec4(u[0] && !u[1] && u[2]); ' +
+            '  gl_FragColor = vec4(u == bvec3(true, false, true)); ' +
             '}';
 
         context.verifyDrawForSpecs(fs, uniformMap);
@@ -248,7 +248,7 @@ defineSuite([
         var fs =
             'uniform bvec4 u;' +
             'void main() { ' +
-            '  gl_FragColor = vec4(u[0] && !u[1] && u[2] && !u[3]); ' +
+            '  gl_FragColor = vec4(u == bvec4(true, false, true, false)); ' +
             '}';
 
         context.verifyDrawForSpecs(fs, uniformMap);
@@ -323,6 +323,25 @@ defineSuite([
         context.verifyDrawForSpecs(fs, uniformMap);
     });
 
+    it('sets a struct uniform', function() {
+        var uniformMap = {
+            'u.f' : function() {
+                return 2.5;
+            },
+            'u.v' : function() {
+                return new Cartesian4(0.25, 0.5, 0.75, 1.0);
+            }
+        };
+
+        var fs =
+            'uniform struct { float f; vec4 v; } u;' +
+            'void main() { ' +
+            '  gl_FragColor = vec4((u.f == 2.5) && (u.v == vec4(0.25, 0.5, 0.75, 1.0))); ' +
+            '}';
+
+        context.verifyDrawForSpecs(fs, uniformMap);
+    });
+
     it('sets float uniform array', function() {
         var uniformMap = {
             u : function() {
@@ -360,8 +379,8 @@ defineSuite([
             'uniform vec2 u[2];' +
             'void main() { ' +
             '  gl_FragColor = vec4(' +
-            '    (u[0].x == 0.25) && (u[0].y == 0.5) &&' +
-            '    (u[1].x == 1.25) && (u[1].y == 1.5)' +
+            '    (u[0] == vec2(0.25, 0.5)) &&' +
+            '    (u[1] == vec2(1.25, 1.5))' +
             '  ); ' +
             '}';
 
@@ -382,8 +401,8 @@ defineSuite([
             'uniform vec3 u[2];' +
             'void main() { ' +
             '  gl_FragColor = vec4(' +
-            '    (u[0].x == 0.25) && (u[0].y == 0.5) && (u[0].z == 0.75) &&' +
-            '    (u[1].x == 1.25) && (u[1].y == 1.5) && (u[1].z == 1.75)' +
+            '    (u[0] == vec3(0.25, 0.5, 0.75)) &&' +
+            '    (u[1] == vec3(1.25, 1.5, 1.75))' +
             '  ); ' +
             '}';
 
@@ -404,8 +423,8 @@ defineSuite([
             'uniform vec4 u[2];' +
             'void main() { ' +
             '  gl_FragColor = vec4(' +
-            '    (u[0].x == 0.25) && (u[0].y == 0.5) && (u[0].z == 0.75) && (u[0].w == 1.0) &&' +
-            '    (u[1].x == 1.25) && (u[1].y == 1.5) && (u[1].z == 1.75) && (u[1].w == 2.0)' +
+            '    (u[0] == vec4(0.25, 0.5, 0.75, 1.0)) &&' +
+            '    (u[1] == vec4(1.25, 1.5, 1.75, 2.0))' +
             '  ); ' +
             '}';
 
@@ -449,8 +468,8 @@ defineSuite([
             'uniform ivec2 u[2];' +
             'void main() { ' +
             '  gl_FragColor = vec4(' +
-            '    (u[0].x == 1) && (u[0].y == 2) &&' +
-            '    (u[1].x == 3) && (u[1].y == 4)' +
+            '    (u[0] == ivec2(1, 2)) &&' +
+            '    (u[1] == ivec2(3, 4))' +
             '  ); ' +
             '}';
 
@@ -471,8 +490,8 @@ defineSuite([
             'uniform ivec3 u[2];' +
             'void main() { ' +
             '  gl_FragColor = vec4(' +
-            '    (u[0].x == 1) && (u[0].y == 2) && (u[0].z == 3) &&' +
-            '    (u[1].x == 4) && (u[1].y == 5) && (u[1].z == 6)' +
+            '    (u[0] == ivec3(1, 2, 3)) &&' +
+            '    (u[1] == ivec3(4, 5, 6))' +
             '  ); ' +
             '}';
 
@@ -493,8 +512,8 @@ defineSuite([
             'uniform ivec4 u[2];' +
             'void main() { ' +
             '  gl_FragColor = vec4(' +
-            '    (u[0].x == 1) && (u[0].y == 2) && (u[0].z == 3) && (u[0].w == 4) &&' +
-            '    (u[1].x == 5) && (u[1].y == 6) && (u[1].z == 7) && (u[1].w == 8)' +
+            '    (u[0] == ivec4(1, 2, 3, 4)) &&' +
+            '    (u[1] == ivec4(5, 6, 7, 8))' +
             '  ); ' +
             '}';
 
@@ -538,8 +557,8 @@ defineSuite([
             'uniform bvec2 u[2];' +
             'void main() { ' +
             '  gl_FragColor = vec4(' +
-            '    u[0].x && !u[0].y &&' +
-            '    !u[1].x && u[1].y' +
+            '    (u[0] == bvec2(true, false)) &&' +
+            '    (u[1] == bvec2(false, true))' +
             '  ); ' +
             '}';
 
@@ -560,8 +579,8 @@ defineSuite([
             'uniform bvec3 u[2];' +
             'void main() { ' +
             '  gl_FragColor = vec4(' +
-            '    u[0].x && !u[0].y && u[0].z &&' +
-            '    !u[1].x && u[1].y && !u[1].z' +
+            '    (u[0] == bvec3(true, false, true)) &&' +
+            '    (u[1] == bvec3(false, true, false))' +
             '  ); ' +
             '}';
 
@@ -582,8 +601,8 @@ defineSuite([
             'uniform bvec4 u[2];' +
             'void main() { ' +
             '  gl_FragColor = vec4(' +
-            '    u[0].x && !u[0].y && u[0].z && !u[0].w &&' +
-            '    !u[1].x && u[1].y && !u[1].z && u[1].w' +
+            '    (u[0] == bvec4(true, false, true, false)) &&' +
+            '    (u[1] == bvec4(false, true, false, true))' +
             '  ); ' +
             '}';
 
@@ -688,5 +707,4 @@ defineSuite([
 
         context.verifyDrawForSpecs(fs, uniformMap);
     });
-
 }, 'WebGL');
