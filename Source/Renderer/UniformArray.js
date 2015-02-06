@@ -1,6 +1,5 @@
 /*global define*/
 define([
-// TODO: remove most of these
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
@@ -39,8 +38,7 @@ define([
         this._activeUniform = activeUniform;
         this._uniformName = uniformName;
         this.value = new Array(length);
-// TODO: only need locations[0]
-        this._locations = locations;
+        this._location = locations[0];
 
 // TODO: default value for these?
         this._scratchFloat = undefined;
@@ -155,7 +153,7 @@ define([
         }
 
         if (changed) {
-            this._gl.uniform1fv(this._locations[0], scratch);
+            this._gl.uniform1fv(this._location, scratch);
         }
     };
 
@@ -177,7 +175,7 @@ define([
         }
 
         if (changed) {
-            this._gl.uniform2fv(this._locations[0], scratch);
+            this._gl.uniform2fv(this._location, scratch);
         }
     };
 
@@ -214,7 +212,7 @@ define([
         }
 
         if (changed) {
-            this._gl.uniform3fv(this._locations[0], scratch);
+            this._gl.uniform3fv(this._location, scratch);
         }
     };
 
@@ -253,7 +251,7 @@ define([
         }
 
         if (changed) {
-            this._gl.uniform4fv(this._locations[0], scratch);
+            this._gl.uniform4fv(this._location, scratch);
         }
     };
 
@@ -287,7 +285,7 @@ define([
         }
 
         if (changed) {
-            this._gl.uniform1iv(this._locations[0], scratch);
+            this._gl.uniform1iv(this._location, scratch);
         }
     };
 
@@ -309,7 +307,7 @@ define([
         }
 
         if (changed) {
-            this._gl.uniform2iv(this._locations[0], scratch);
+            this._gl.uniform2iv(this._location, scratch);
         }
     };
 
@@ -331,7 +329,7 @@ define([
         }
 
         if (changed) {
-            this._gl.uniform3iv(this._locations[0], scratch);
+            this._gl.uniform3iv(this._location, scratch);
         }
     };
 
@@ -353,7 +351,7 @@ define([
         }
 
         if (changed) {
-            this._gl.uniform4iv(this._locations[0], scratch);
+            this._gl.uniform4iv(this._location, scratch);
         }
     };
 
@@ -375,7 +373,7 @@ define([
         }
 
         if (changed) {
-            this._gl.uniformMatrix2fv(this._locations[0], false, scratch);
+            this._gl.uniformMatrix2fv(this._location, false, scratch);
         }
     };
 
@@ -397,7 +395,7 @@ define([
         }
 
         if (changed) {
-            this._gl.uniformMatrix3fv(this._locations[0], false, scratch);
+            this._gl.uniformMatrix3fv(this._location, false, scratch);
         }
     };
 
@@ -419,7 +417,7 @@ define([
         }
 
         if (changed) {
-            this._gl.uniformMatrix4fv(this._locations[0], false, scratch);
+            this._gl.uniformMatrix4fv(this._location, false, scratch);
         }
     };
 
