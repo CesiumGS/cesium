@@ -100,7 +100,7 @@ defineSuite([
 
     function simulateMouseUp(options) {
         if (usePointerEvents) {
-            DomEventSimulator.firePointerUp(document, combine(options, {
+            DomEventSimulator.firePointerUp(canvas, combine(options, {
                 pointerType : 'mouse'
             }));
         } else {
@@ -110,7 +110,7 @@ defineSuite([
 
     function simulateMouseMove(options) {
         if (usePointerEvents) {
-            DomEventSimulator.firePointerMove(document, combine(options, {
+            DomEventSimulator.firePointerMove(canvas, combine(options, {
                 pointerType : 'mouse'
             }));
         } else {
