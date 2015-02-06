@@ -39,6 +39,35 @@ define([
     };
 
     /**
+     * DOC_TBA
+     */
+    Matrix2.packedLength = 4;
+
+    /**
+     * DOC_TBA
+     */
+    Matrix2.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        array[startingIndex++] = value[0];
+        array[startingIndex++] = value[1];
+        array[startingIndex++] = value[2];
+        array[startingIndex++] = value[3];
+    };
+
+// TODO: unpack
+
+    /**
      * Duplicates a Matrix2 instance.
      *
      * @param {Matrix2} matrix The matrix to duplicate.
@@ -706,6 +735,16 @@ define([
                 left[1] === right[1] &&
                 left[2] === right[2] &&
                 left[3] === right[3]);
+    };
+
+    /**
+     * @private
+     */
+    Matrix2.equalsArray = function(matrix, array, offset) {
+        return matrix[0] === array[offset] &&
+               matrix[1] === array[offset + 1] &&
+               matrix[2] === array[offset + 2] &&
+               matrix[3] === array[offset + 3];
     };
 
     /**
