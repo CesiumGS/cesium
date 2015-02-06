@@ -1432,6 +1432,7 @@ define([
     var scratchDirection = new Cartesian3();
     var scratchBufferDimensions = new Cartesian2();
     var scratchPixelSize = new Cartesian2();
+    var scratchPickVolumeMatrix4 = new Matrix4();
 
     function getPickOrthographicCullingVolume(scene, drawingBufferPosition, width, height) {
         var camera = scene._camera;
@@ -1445,11 +1446,16 @@ define([
         var y = (2.0 / drawingBufferHeight) * (drawingBufferHeight - drawingBufferPosition.y) - 1.0;
         y *= (frustum.top - frustum.bottom) * 0.5;
 
+        var transform = Matrix4.clone(camera.transform, scratchPickVolumeMatrix4);
+        camera._setTransform(Matrix4.IDENTITY);
+
         var origin = Cartesian3.clone(camera.position, scratchOrigin);
         Cartesian3.multiplyByScalar(camera.right, x, scratchDirection);
         Cartesian3.add(scratchDirection, origin, origin);
         Cartesian3.multiplyByScalar(camera.up, y, scratchDirection);
         Cartesian3.add(scratchDirection, origin, origin);
+
+        camera._setTransform(transform);
 
         Cartesian3.fromElements(origin.z, origin.x, origin.y, origin);
 
