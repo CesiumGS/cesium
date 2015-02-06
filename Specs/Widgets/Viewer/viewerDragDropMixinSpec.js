@@ -78,7 +78,7 @@ defineSuite([
     });
 
     it('mixin works with dropTarget id string', function() {
-        viewer = new Viewer(document.body);
+        viewer = new Viewer(container);
         viewer.extend(viewerDragDropMixin, {
             dropTarget : 'container'
         });
