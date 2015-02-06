@@ -11,8 +11,7 @@ defineSuite([
         'DataSources/EntityCollection',
         'DataSources/PointGraphics',
         'Scene/BillboardCollection',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], function(
         PointVisualizer,
         BoundingSphere,
@@ -25,8 +24,7 @@ defineSuite([
         EntityCollection,
         PointGraphics,
         BillboardCollection,
-        createScene,
-        destroyScene) {
+        createScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -38,7 +36,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     afterEach(function() {

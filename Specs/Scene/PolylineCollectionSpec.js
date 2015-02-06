@@ -12,7 +12,6 @@ defineSuite([
         'Specs/createContext',
         'Specs/createFrameState',
         'Specs/createScene',
-        'Specs/destroyScene',
         'Specs/pick',
         'Specs/render'
     ], function(
@@ -28,7 +27,6 @@ defineSuite([
         createContext,
         createFrameState,
         createScene,
-        destroyScene,
         pick,
         render) {
     "use strict";
@@ -880,7 +878,7 @@ defineSuite([
 
         expect(scene.renderForSpecs()).toNotEqual([0, 0, 0, 0]);
 
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     it('does not render', function() {

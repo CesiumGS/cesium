@@ -16,8 +16,7 @@ defineSuite([
         'DataSources/ReferenceProperty',
         'DataSources/SampledPositionProperty',
         'DataSources/TimeIntervalCollectionPositionProperty',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], function(
         PathVisualizer,
         Cartesian3,
@@ -35,8 +34,7 @@ defineSuite([
         ReferenceProperty,
         SampledPositionProperty,
         TimeIntervalCollectionPositionProperty,
-        createScene,
-        destroyScene) {
+        createScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -48,7 +46,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     afterEach(function() {

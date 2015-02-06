@@ -26,7 +26,6 @@ defineSuite([
         'Specs/createContext',
         'Specs/createFrameState',
         'Specs/createScene',
-        'Specs/destroyScene',
         'Specs/pick',
         'Specs/render',
         'Specs/waitsForPromise'
@@ -57,7 +56,6 @@ defineSuite([
         createContext,
         createFrameState,
         createScene,
-        destroyScene,
         pick,
         render,
         waitsForPromise) {
@@ -602,8 +600,6 @@ defineSuite([
         expect(pixels[1]).toBeGreaterThanOrEqualTo(0);
         expect(pixels[2]).toBeGreaterThanOrEqualTo(0);
         expect(pixels[3]).toEqual(255);
-
-        destroyScene(scene);
     });
 
     it('transforms to world coordinates', function() {

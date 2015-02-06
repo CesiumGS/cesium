@@ -15,7 +15,6 @@ defineSuite([
         'Specs/createContext',
         'Specs/createFrameState',
         'Specs/createScene',
-        'Specs/destroyScene',
         'Specs/pick',
         'Specs/render'
     ], function(
@@ -34,7 +33,6 @@ defineSuite([
         createContext,
         createFrameState,
         createScene,
-        destroyScene,
         pick,
         render) {
     "use strict";

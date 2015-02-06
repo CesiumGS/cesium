@@ -13,7 +13,6 @@ defineSuite([
         'Specs/createContext',
         'Specs/createFrameState',
         'Specs/createScene',
-        'Specs/destroyScene',
         'Specs/pick',
         'Specs/render'
     ], function(
@@ -30,7 +29,6 @@ defineSuite([
         createContext,
         createFrameState,
         createScene,
-        destroyScene,
         pick,
         render) {
     "use strict";
@@ -308,7 +306,7 @@ defineSuite([
         expect(pixels[2]).toEqual(0);
         expect(pixels[3]).toEqual(255);
 
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     it('is picked', function() {

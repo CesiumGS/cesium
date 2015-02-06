@@ -19,8 +19,7 @@ defineSuite([
         'Scene/PrimitiveCollection',
         'Specs/createDynamicGeometryBoundingSphereSpecs',
         'Specs/createDynamicProperty',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], function(
         RectangleGeometryUpdater,
         Cartesian3,
@@ -41,8 +40,7 @@ defineSuite([
         PrimitiveCollection,
         createDynamicGeometryBoundingSphereSpecs,
         createDynamicProperty,
-        createScene,
-        destroyScene) {
+        createScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -59,7 +57,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     function createBasicRectangle() {
