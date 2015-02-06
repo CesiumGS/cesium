@@ -26,7 +26,6 @@ defineSuite([
         'Specs/createContext',
         'Specs/createFrameState',
         'Specs/createScene',
-        'Specs/destroyContext',
         'Specs/destroyScene',
         'Specs/pick',
         'Specs/render',
@@ -58,7 +57,6 @@ defineSuite([
         createContext,
         createFrameState,
         createScene,
-        destroyContext,
         destroyScene,
         pick,
         render,
@@ -89,7 +87,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     beforeEach(function() {

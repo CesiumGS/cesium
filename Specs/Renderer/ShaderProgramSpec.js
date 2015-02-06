@@ -13,8 +13,7 @@ defineSuite([
         'Renderer/ClearCommand',
         'Renderer/DrawCommand',
         'Renderer/ShaderSource',
-        'Specs/createContext',
-        'Specs/destroyContext'
+        'Specs/createContext'
     ], function(
         ShaderProgram,
         Cartesian2,
@@ -29,8 +28,7 @@ defineSuite([
         ClearCommand,
         DrawCommand,
         ShaderSource,
-        createContext,
-        destroyContext) {
+        createContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,WebGLRenderingContext*/
 
@@ -66,7 +64,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
 
         for ( var functionName in injectedTestFunctions) {
             if (injectedTestFunctions.hasOwnProperty(functionName)) {

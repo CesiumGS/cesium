@@ -7,8 +7,7 @@ defineSuite([
         'Core/Matrix2',
         'Core/Matrix3',
         'Core/Matrix4',
-        'Specs/createContext',
-        'Specs/destroyContext'
+        'Specs/createContext'
     ], 'Renderer/Uniform', function(
         Cartesian2,
         Cartesian3,
@@ -17,8 +16,7 @@ defineSuite([
         Matrix2,
         Matrix3,
         Matrix4,
-        createContext,
-        destroyContext) {
+        createContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -29,7 +27,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     it('sets float uniform', function() {

@@ -13,7 +13,6 @@ defineSuite([
         'Scene/QuadtreeTileLoadState',
         'Scene/TerrainState',
         'Specs/createContext',
-        'Specs/destroyContext',
         'ThirdParty/when'
     ], function(
         GlobeSurfaceTile,
@@ -29,7 +28,6 @@ defineSuite([
         QuadtreeTileLoadState,
         TerrainState,
         createContext,
-        destroyContext,
         when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -82,7 +80,7 @@ defineSuite([
         });
 
         afterAll(function() {
-            destroyContext(context);
+            context.destroyForSpecs();
         });
 
         beforeEach(function() {
@@ -502,7 +500,7 @@ defineSuite([
         });
 
         afterAll(function() {
-            destroyContext(context);
+            context.destroyForSpecs();
         });
 
         it('gets correct results even when the mesh includes normals', function() {

@@ -1,10 +1,8 @@
 /*global defineSuite*/
 defineSuite([
-        'Specs/createContext',
-        'Specs/destroyContext'
+        'Specs/createContext'
     ], 'Renderer/Sampler', function(
-        createContext,
-        destroyContext) {
+        createContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -15,7 +13,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     it('throws when creating a sampler with invalid wrapS', function() {

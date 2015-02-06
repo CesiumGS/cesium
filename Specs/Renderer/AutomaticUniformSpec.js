@@ -8,8 +8,7 @@ defineSuite([
         'Scene/SceneMode',
         'Specs/createCamera',
         'Specs/createContext',
-        'Specs/createFrameState',
-        'Specs/destroyContext'
+        'Specs/createFrameState'
     ], 'Renderer/AutomaticUniforms', function(
         Cartesian2,
         Cartesian3,
@@ -19,8 +18,7 @@ defineSuite([
         SceneMode,
         createCamera,
         createContext,
-        createFrameState,
-        destroyContext) {
+        createFrameState) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -31,7 +29,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     function createMockCamera(view, projection, infiniteProjection, position, direction, right, up) {

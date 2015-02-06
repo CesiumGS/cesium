@@ -5,16 +5,14 @@ defineSuite([
         'Core/EncodedCartesian3',
         'Specs/createCamera',
         'Specs/createContext',
-        'Specs/createFrameState',
-        'Specs/destroyContext'
+        'Specs/createFrameState'
     ], 'Renderer/BuiltinFunctions', function(
         BoundingRectangle,
         Cartesian3,
         EncodedCartesian3,
         createCamera,
         createContext,
-        createFrameState,
-        destroyContext) {
+        createFrameState) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -25,7 +23,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     it('has czm_tranpose (2x2)', function() {

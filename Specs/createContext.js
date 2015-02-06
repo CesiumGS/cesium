@@ -10,7 +10,8 @@ define([
         'Renderer/Context',
         'Renderer/DrawCommand',
         'Specs/createCanvas',
-        'Specs/createFrameState'
+        'Specs/createFrameState',
+        'Specs/destroyCanvas'
     ], function(
         clone,
         defaultValue,
@@ -22,7 +23,8 @@ define([
         Context,
         DrawCommand,
         createCanvas,
-        createFrameState) {
+        createFrameState,
+        destroyCanvas) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -48,6 +50,11 @@ define([
         us.update(context, createFrameState());
 
         // Add function for test
+        context.destroyForSpecs = function() {
+            destroyCanvas(context.canvas);
+            return context.destroy();
+        };
+
         context.verifyDrawForSpecs = function(fs, uniformMap, modelMatrix) {
             var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
             var sp = context.createShaderProgram(vs, fs);
