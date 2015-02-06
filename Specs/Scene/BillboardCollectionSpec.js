@@ -36,7 +36,7 @@ defineSuite([
         VerticalOrigin,
         createCamera,
         createContext,
-        createFrameState
+        createFrameState,
         pick,
         render) {
     "use strict";
