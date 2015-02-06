@@ -3,10 +3,6 @@ defineSuite([
         'Core/BoundingRectangle',
         'Core/Cartesian3',
         'Core/EncodedCartesian3',
-        'Core/PrimitiveType',
-        'Renderer/BufferUsage',
-        'Renderer/ClearCommand',
-        'Renderer/DrawCommand',
         'Specs/createCamera',
         'Specs/createContext',
         'Specs/createFrameState',
@@ -15,10 +11,6 @@ defineSuite([
         BoundingRectangle,
         Cartesian3,
         EncodedCartesian3,
-        PrimitiveType,
-        BufferUsage,
-        ClearCommand,
-        DrawCommand,
         createCamera,
         createContext,
         createFrameState,
@@ -36,32 +28,6 @@ defineSuite([
         destroyContext(context);
     });
 
-    var verifyDraw = function(fs, uniformMap) {
-        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
-        var sp = context.createShaderProgram(vs, fs);
-
-        var va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        var command = new DrawCommand({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va,
-            uniformMap : uniformMap
-        });
-        command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
-
-        sp = sp.destroy();
-        va = va.destroy();
-    };
-
     it('has czm_tranpose (2x2)', function() {
         var fs =
             'void main() { ' +
@@ -70,7 +36,7 @@ defineSuite([
             '  gl_FragColor = vec4(czm_transpose(m) == mt); ' +
             '}';
 
-        verifyDraw(fs);
+        context.verifyDrawForSpecs(fs);
     });
 
     it('has czm_tranpose (3x3)', function() {
@@ -81,7 +47,7 @@ defineSuite([
             '  gl_FragColor = vec4(czm_transpose(m) == mt); ' +
             '}';
 
-        verifyDraw(fs);
+        context.verifyDrawForSpecs(fs);
     });
 
     it('has czm_tranpose (4x4)', function() {
@@ -92,7 +58,7 @@ defineSuite([
             '  gl_FragColor = vec4(czm_transpose(m) == mt); ' +
             '}';
 
-        verifyDraw(fs);
+        context.verifyDrawForSpecs(fs);
     });
 
     it('has czm_eyeToWindowCoordinates', function() {
@@ -118,7 +84,7 @@ defineSuite([
             '  gl_FragColor = vec4(all(lessThan(diff, vec2(czm_epsilon6))));' +
             '}';
 
-        verifyDraw(fs);
+        context.verifyDrawForSpecs(fs);
     });
 
     it('has czm_windowToEyeCoordinates', function() {
@@ -144,7 +110,7 @@ defineSuite([
             '  gl_FragColor = vec4(all(lessThan(diff, vec3(czm_epsilon6))));' +
             '}';
 
-        verifyDraw(fs);
+        context.verifyDrawForSpecs(fs);
     });
 
     it('has czm_tangentToEyeSpaceMatrix', function() {
@@ -157,7 +123,7 @@ defineSuite([
             '  mat3 actual = czm_tangentToEyeSpaceMatrix(normal, tangent, binormal); ' +
             '  gl_FragColor = vec4(actual == expected); ' +
             '}';
-        verifyDraw(fs);
+        context.verifyDrawForSpecs(fs);
     });
 
     it('has czm_translateRelativeToEye', function() {
@@ -186,7 +152,7 @@ defineSuite([
             '  gl_FragColor = vec4(p == vec4(5.0, 3.0, 1.0, 1.0)); ' +
             '}';
 
-        verifyDraw(fs, uniformMap);
+        context.verifyDrawForSpecs(fs, uniformMap);
     });
 
     it('has czm_antialias', function() {
@@ -197,7 +163,7 @@ defineSuite([
             '  vec4 result = czm_antialias(color0, color1, color1, 0.5);' +
             ' gl_FragColor = vec4(result == color1);' +
             '}';
-        verifyDraw(fs);
+        context.verifyDrawForSpecs(fs);
     });
 
     it('czm_pointAlongRay: point at ray origin', function() {
@@ -205,7 +171,7 @@ defineSuite([
             'void main() { ' +
             '  gl_FragColor = vec4(czm_pointAlongRay(czm_ray(vec3(0.0), vec3(1.0, 0.0, 0.0)), 0.0) == vec3(0.0)); ' +
             '}';
-        verifyDraw(fs);
+        context.verifyDrawForSpecs(fs);
     });
 
     it('czm_pointAlongRay: point in front of ray origin', function() {
@@ -213,7 +179,7 @@ defineSuite([
             'void main() { ' +
             '  gl_FragColor = vec4(czm_pointAlongRay(czm_ray(vec3(0.0), vec3(1.0, 0.0, 0.0)), 2.0) == vec3(2.0, 0.0, 0.0)); ' +
             '}';
-        verifyDraw(fs);
+        context.verifyDrawForSpecs(fs);
     });
 
     it('czm_pointAlongRay: point behind ray origin', function() {
@@ -221,7 +187,7 @@ defineSuite([
             'void main() { ' +
             '  gl_FragColor = vec4(czm_pointAlongRay(czm_ray(vec3(0.0), vec3(0.0, 1.0, 0.0)), -2.0) == vec3(0.0, -2.0, 0.0)); ' +
             '}';
-        verifyDraw(fs);
+        context.verifyDrawForSpecs(fs);
     });
 
     it('has czm_octDecode(vec2)', function() {
@@ -229,7 +195,7 @@ defineSuite([
             'void main() { ' +
             '  gl_FragColor = vec4(all(lessThanEqual(abs(czm_octDecode(vec2(128.0, 128.0)) - vec3(0.0, 0.0, 1.0)), vec3(0.01)))); ' +
             '}';
-        verifyDraw(fs);
+        context.verifyDrawForSpecs(fs);
     });
 
     it('has czm_octDecode(float)', function() {
@@ -237,7 +203,7 @@ defineSuite([
             'void main() { ' +
             '  gl_FragColor = vec4(all(lessThanEqual(abs(czm_octDecode(32896.0) - vec3(0.0, 0.0, 1.0)), vec3(0.01)))); ' +
             '}';
-        verifyDraw(fs);
+        context.verifyDrawForSpecs(fs);
     });
 
     it('has czm_octDecode(vec2, vec3, vec3, vec3)', function() {
@@ -250,7 +216,7 @@ defineSuite([
             '  decoded = decoded && all(lessThanEqual(abs(c - vec3(0.0, 0.0, 1.0)), vec3(0.01)));' +
             '  gl_FragColor = vec4(decoded);' +
             '}';
-        verifyDraw(fs);
+        context.verifyDrawForSpecs(fs);
     });
 
     it('has czm_decompressTextureCoordinates', function() {
@@ -258,7 +224,7 @@ defineSuite([
             'void main() { ' +
             '  gl_FragColor = vec4(czm_decompressTextureCoordinates(8390656.0) == vec2(0.5, 0.5)); ' +
             '}';
-        verifyDraw(fs);
+        context.verifyDrawForSpecs(fs);
     });
 
     it('has signNotZero : float', function() {
@@ -268,7 +234,7 @@ defineSuite([
             '                      czm_signNotZero(5.0) == 1.0, ' +
             '                      czm_signNotZero(-5.0) == -1.0, 1.0); ' +
             '}';
-        verifyDraw(fs);
+        context.verifyDrawForSpecs(fs);
     });
 
     it('has signNotZero : vec2', function() {
@@ -279,7 +245,7 @@ defineSuite([
             '                      czm_signNotZero(vec2(-1.0, -1.0)) == vec2(-1.0, -1.0), ' +
             '                      czm_signNotZero(vec2(-1.0, 0.0)) == vec2(-1.0, 1.0)); ' +
             '}';
-        verifyDraw(fs);
+        context.verifyDrawForSpecs(fs);
     });
 
     it('has signNotZero : vec3', function() {
@@ -290,7 +256,7 @@ defineSuite([
             '                      czm_signNotZero(vec3(-1.0, -1.0, -1.0)) == vec3(-1.0, -1.0, -1.0), ' +
             '                      czm_signNotZero(vec3(-1.0, 0.0, 1.0)) == vec3(-1.0, 1.0, 1.0)); ' +
             '}';
-        verifyDraw(fs);
+        context.verifyDrawForSpecs(fs);
     });
 
     it('has signNotZero : vec4', function() {
@@ -301,7 +267,7 @@ defineSuite([
             '                      czm_signNotZero(vec4(-1.0, -1.0, -1.0, -1.0)) == vec4(-1.0), ' +
             '                      czm_signNotZero(vec4(-1.0, 0.0, 1.0, -10.0)) == vec4(-1.0, 1.0, 1.0, -1.0)); ' +
             '}';
-        verifyDraw(fs);
+        context.verifyDrawForSpecs(fs);
     });
 
     it('has czm_cosineAndSine in all 4 quadrants', function() {
@@ -315,6 +281,6 @@ defineSuite([
             '                      isBounded(czm_cosineAndSine(-czm_piOverFour).x, 0.707106, 0.707107) && isBounded(czm_cosineAndSine(-czm_piOverFour).y, -0.707107, -0.707106), ' +
             '                      isBounded(czm_cosineAndSine(-czm_pi + czm_piOverFour).x, -0.707107, -0.707106) && isBounded(czm_cosineAndSine(-czm_pi + czm_piOverFour).y, -0.707107, -0.707106)); ' +
             '}';
-        verifyDraw(fs);
+        context.verifyDrawForSpecs(fs);
     });
 }, 'WebGL');
