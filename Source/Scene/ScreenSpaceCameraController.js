@@ -251,6 +251,12 @@ define([
          * @default true
          */
         this.avoidCollisionInReferenceFrame = true;
+        /**
+         * Enables or disables camera collision detection with terrain both when the camera is in a local reference frame or the world frame.
+         * @type {Boolean}
+         * @default true
+         */
+        this.enableCollisionDetection = true;
 
         this._scene = scene;
         this._globe = undefined;
@@ -1567,6 +1573,10 @@ define([
     var scratchAdjustHeightCartographic = new Cartographic();
 
     function adjustHeightForTerrain(controller) {
+        if (!controller.enableCollisionDetection) {
+            return;
+        }
+
         var scene = controller._scene;
         var mode = scene.mode;
         var globe = controller.avoidCollisionInReferenceFrame ? scene.globe : controller._globe;
