@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+### 1.7 - 2015-03-02
+
+* Breaking changes
+   *
+* Deprecated
+   *
+* Added `pack` and `unpack` functions to `Matrix2`, `Matrix3`, and TODO.
+
 ### 1.6 - 2015-02-02
 
 * Breaking changes

@@ -54,12 +54,17 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * The number of elements used to pack the object into an array.
+     * @type {Number}
      */
-    Matrix3.packedLength = 16;
+    Matrix3.packedLength = 9;
 
     /**
-     * DOC_TBA
+     * Stores the provided instance into the provided array.
+     *
+     * @param {Matrix3} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
     Matrix3.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -85,7 +90,37 @@ define([
         array[startingIndex++] = value[8];
     };
 
-// TODO: unpack
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {Matrix3} [result] The object into which to store the result.
+     */
+    Matrix3.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        if (!defined(result)) {
+            result = new Matrix3();
+        }
+
+        result[0] = array[startingIndex++];
+        result[1] = array[startingIndex++];
+        result[2] = array[startingIndex++];
+        result[3] = array[startingIndex++];
+        result[4] = array[startingIndex++];
+        result[5] = array[startingIndex++];
+        result[6] = array[startingIndex++];
+        result[7] = array[startingIndex++];
+        result[8] = array[startingIndex++];
+        return result;
+    };
 
     /**
      * Duplicates a Matrix3 instance.

@@ -39,12 +39,17 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * The number of elements used to pack the object into an array.
+     * @type {Number}
      */
     Matrix2.packedLength = 4;
 
     /**
-     * DOC_TBA
+     * Stores the provided instance into the provided array.
+     *
+     * @param {Matrix2} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
     Matrix2.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -65,7 +70,32 @@ define([
         array[startingIndex++] = value[3];
     };
 
-// TODO: unpack
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {Matrix2} [result] The object into which to store the result.
+     */
+    Matrix2.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        if (!defined(result)) {
+            result = new Matrix2();
+        }
+
+        result[0] = array[startingIndex++];
+        result[1] = array[startingIndex++];
+        result[2] = array[startingIndex++];
+        result[3] = array[startingIndex++];
+        return result;
+    };
 
     /**
      * Duplicates a Matrix2 instance.
