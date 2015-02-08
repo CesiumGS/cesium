@@ -1463,6 +1463,21 @@ define([
     };
 
     /**
+     * @private
+     */
+    Matrix3.equalsToArray = function(matrix, array) {
+        // Copy matrix to an array and return true if the matrix
+        // and array were already equal.
+        var equals = true;
+        for (var i = 0; i < 9; ++i) {
+            equals = equals && (matrix[i] === array[i]);
+            array[i] = matrix[i];
+        }
+
+        return equals;
+    };
+
+    /**
      * Compares this matrix to the provided matrix componentwise and returns
      * <code>true</code> if they are within the provided epsilon,
      * <code>false</code> otherwise.
