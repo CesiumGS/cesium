@@ -33,14 +33,14 @@ define([
      */
     var UniformArray = function(gl, activeUniform, uniformName, locations) {
         var length = locations.length;
+        var type = activeUniform.type;
 
         this._gl = gl;
-        this._activeUniform = activeUniform;
-        this._uniformName = uniformName;
+        this._type = type;
+        this._name = uniformName;
         this.value = new Array(length);
         this._location = locations[0];
 
-// TODO: default value for these?
         this._scratchFloat = undefined;
         this._scratchInt = undefined;
 
@@ -50,7 +50,7 @@ define([
         this.textureUnitIndex = undefined;
 
         var set;
-        switch (activeUniform.type) {
+        switch (type) {
             case gl.FLOAT:
                 set = this.setFloat;
                 this._scratchFloat = new Float32Array(length);
@@ -104,12 +104,12 @@ define([
                 set = this.setMat4;
                 break;
             default:
-                throw new RuntimeError('Unrecognized uniform type: ' + activeUniform.type + ' for uniform "' + uniformName + '".');
+                throw new RuntimeError('Unrecognized uniform type: ' + type + ' for uniform "' + uniformName + '".');
         }
 
         this._set = set;
 
-        if ((activeUniform.type === gl.SAMPLER_2D) || (activeUniform.type === gl.SAMPLER_CUBE)) {
+        if ((type === gl.SAMPLER_2D) || (type === gl.SAMPLER_CUBE)) {
             this._setSampler = function(textureUnitIndex) {
                 this.textureUnitIndex = textureUnitIndex;
 
@@ -127,12 +127,12 @@ define([
     defineProperties(UniformArray.prototype, {
         name : {
             get : function() {
-                return this._uniformName;
+                return this._name;
             }
         },
         datatype : {
             get : function() {
-                return this._activeUniform.type;
+                return this._type;
             }
         }
     });
@@ -205,7 +205,7 @@ define([
                     changed = true;
                 }
             } else {
-                throw new DeveloperError('Invalid vec4 value.');
+                throw new DeveloperError('Invalid vec3 value.');
             }
 
             j += 3;
