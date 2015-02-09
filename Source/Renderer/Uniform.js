@@ -38,10 +38,7 @@ define([
         this.value = undefined;
         this._value = undefined;
 
-        var type = activeUniform.type;
-
         this._gl = gl;
-        this._type = type;
         this._name = uniformName;
         this._location = location;
 
@@ -50,6 +47,7 @@ define([
          */
         this.textureUnitIndex = undefined;
 
+        var type = activeUniform.type;
         var set;
         switch (type) {
             case gl.FLOAT:
@@ -112,11 +110,6 @@ define([
         name : {
             get : function() {
                 return this._name;
-            }
-        },
-        datatype : {
-            get : function() {
-                return this._type;
             }
         }
     });

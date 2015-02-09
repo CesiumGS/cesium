@@ -33,10 +33,8 @@ define([
      */
     var UniformArray = function(gl, activeUniform, uniformName, locations) {
         var length = locations.length;
-        var type = activeUniform.type;
 
         this._gl = gl;
-        this._type = type;
         this._name = uniformName;
         this.value = new Array(length);
         this._location = locations[0];
@@ -49,6 +47,7 @@ define([
          */
         this.textureUnitIndex = undefined;
 
+        var type = activeUniform.type;
         var set;
         switch (type) {
             case gl.FLOAT:
@@ -128,11 +127,6 @@ define([
         name : {
             get : function() {
                 return this._name;
-            }
-        },
-        datatype : {
-            get : function() {
-                return this._type;
             }
         }
     });
