@@ -8,7 +8,8 @@ Change Log
   * `Camera.tilt` was deprecated in Cesium 1.6. Use `Camera.pitch`.
   * `Camera.heading` and `Camera.tilt` were deprecated in Cesium 1.6. Use `Camera.setView`.
   * `Camera.setPositionCartographic` was deprecated in Cesium 1.6. Use `Camera.setView`.
-  
+* Fixed incorrect ellipse texture coordinates. [#2363](https://github.com/AnalyticalGraphicsInc/cesium/issues/2363) and [#2465](https://github.com/AnalyticalGraphicsInc/cesium/issues/2465)
+
 ### 1.6 - 2015-02-02
 
 * Breaking changes
