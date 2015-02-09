@@ -7,6 +7,11 @@ Change Log
    *
 * Deprecated
    *
+  * Removed `viewerEntityMixin`, which was deprecated in Cesium 1.5. Its functionality is now directly part of the `Viewer` widget.
+  * Removed `Camera.tilt`, which was deprecated in Cesium 1.6. Use `Camera.pitch`.
+  * Removed `Camera.heading` and `Camera.tilt`. They were deprecated in Cesium 1.6. Use `Camera.setView`.
+  * Removed `Camera.setPositionCartographic`, which was was deprecated in Cesium 1.6. Use `Camera.setView`.
+* Fixed incorrect ellipse texture coordinates. [#2363](https://github.com/AnalyticalGraphicsInc/cesium/issues/2363) and [#2465](https://github.com/AnalyticalGraphicsInc/cesium/issues/2465)
 * Added `pack` and `unpack` functions to `Matrix2`, `Matrix3`, and TODO.
 
 ### 1.6 - 2015-02-02
