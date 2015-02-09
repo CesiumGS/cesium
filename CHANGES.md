@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.7 - 2015-03-02
+
+* Fixed incorrect ellipse texture coordinates. [#2363](https://github.com/AnalyticalGraphicsInc/cesium/issues/2363) and [#2465](https://github.com/AnalyticalGraphicsInc/cesium/issues/2465)
+
 ### 1.6 - 2015-02-02
 
 * Breaking changes
