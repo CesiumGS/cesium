@@ -62,10 +62,14 @@ define([
     var scratchCartographic = new Cartographic();
     var projectedCenterScratch = new Cartesian3();
 
+    var scratchMinTexCoord = new Cartesian2();
+    var scratchMaxTexCoord = new Cartesian2();
+
     function computeTopBottomAttributes(positions, options, extrude) {
         var vertexFormat = options.vertexFormat;
         var center = options.center;
         var semiMajorAxis = options.semiMajorAxis;
+        var semiMinorAxis = options.semiMinorAxis;
         var ellipsoid = options.ellipsoid;
         var stRotation = options.stRotation;
         var size = (extrude) ? positions.length / 3 * 2 : positions.length / 3;
@@ -91,6 +95,9 @@ define([
         var rotation = Quaternion.fromAxisAngle(geodeticNormal, stRotation, quaternionScratch);
         var textureMatrix = Matrix3.fromQuaternion(rotation, textureMatrixScratch);
 
+        var minTexCoord = Cartesian2.fromElements(Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, scratchMinTexCoord);
+        var maxTexCoord = Cartesian2.fromElements(Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, scratchMaxTexCoord);
+
         var length = positions.length;
         var bottomOffset = (extrude) ? length : 0;
         var stOffset = bottomOffset / 3 * 2;
@@ -105,7 +112,12 @@ define([
                 Cartesian3.subtract(projectedPoint, projectedCenter, projectedPoint);
 
                 texCoordScratch.x = (projectedPoint.x + semiMajorAxis) / (2.0 * semiMajorAxis);
-                texCoordScratch.y = (projectedPoint.y + semiMajorAxis) / (2.0 * semiMajorAxis);
+                texCoordScratch.y = (projectedPoint.y + semiMinorAxis) / (2.0 * semiMinorAxis);
+
+                minTexCoord.x = Math.min(texCoordScratch.x, minTexCoord.x);
+                minTexCoord.y = Math.min(texCoordScratch.y, minTexCoord.y);
+                maxTexCoord.x = Math.max(texCoordScratch.x, maxTexCoord.x);
+                maxTexCoord.y = Math.max(texCoordScratch.y, maxTexCoord.y);
 
                 if (extrude) {
                     textureCoordinates[textureCoordIndex + stOffset] = texCoordScratch.x;
@@ -156,6 +168,14 @@ define([
                         binormals[i2 + bottomOffset] = binormal.z;
                     }
                 }
+            }
+        }
+
+        if (vertexFormat.st) {
+            length = textureCoordinates.length;
+            for (var k = 0; k < length; k += 2) {
+                textureCoordinates[k] = (textureCoordinates[k] - minTexCoord.x) / (maxTexCoord.x - minTexCoord.x);
+                textureCoordinates[k + 1] = (textureCoordinates[k + 1] - minTexCoord.y) / (maxTexCoord.y - minTexCoord.y);
             }
         }
 
@@ -311,6 +331,7 @@ define([
         var vertexFormat = options.vertexFormat;
         var center = options.center;
         var semiMajorAxis = options.semiMajorAxis;
+        var semiMinorAxis = options.semiMinorAxis;
         var ellipsoid = options.ellipsoid;
         var height = options.height;
         var extrudedHeight = options.extrudedHeight;
@@ -339,6 +360,9 @@ define([
         var rotation = Quaternion.fromAxisAngle(geodeticNormal, stRotation, quaternionScratch);
         var textureMatrix = Matrix3.fromQuaternion(rotation, textureMatrixScratch);
 
+        var minTexCoord = Cartesian2.fromElements(Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, scratchMinTexCoord);
+        var maxTexCoord = Cartesian2.fromElements(Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, scratchMaxTexCoord);
+
         var length = positions.length;
         var stOffset = length / 3 * 2;
         for ( var i = 0; i < length; i += 3) {
@@ -353,7 +377,12 @@ define([
                 Cartesian3.subtract(projectedPoint, projectedCenter, projectedPoint);
 
                 texCoordScratch.x = (projectedPoint.x + semiMajorAxis) / (2.0 * semiMajorAxis);
-                texCoordScratch.y = (projectedPoint.y + semiMajorAxis) / (2.0 * semiMajorAxis);
+                texCoordScratch.y = (projectedPoint.y + semiMinorAxis) / (2.0 * semiMinorAxis);
+
+                minTexCoord.x = Math.min(texCoordScratch.x, minTexCoord.x);
+                minTexCoord.y = Math.min(texCoordScratch.y, minTexCoord.y);
+                maxTexCoord.x = Math.max(texCoordScratch.x, maxTexCoord.x);
+                maxTexCoord.y = Math.max(texCoordScratch.y, maxTexCoord.y);
 
                 textureCoordinates[textureCoordIndex + stOffset] = texCoordScratch.x;
                 textureCoordinates[textureCoordIndex + 1 + stOffset] = texCoordScratch.y;
@@ -419,6 +448,14 @@ define([
                     binormals[i1 + length] = binormal.y;
                     binormals[i2 + length] = binormal.z;
                 }
+            }
+        }
+
+        if (vertexFormat.st) {
+            length = textureCoordinates.length;
+            for (var k = 0; k < length; k += 2) {
+                textureCoordinates[k] = (textureCoordinates[k] - minTexCoord.x) / (maxTexCoord.x - minTexCoord.x);
+                textureCoordinates[k + 1] = (textureCoordinates[k + 1] - minTexCoord.y) / (maxTexCoord.y - minTexCoord.y);
             }
         }
 
