@@ -211,7 +211,7 @@ define([
 
     Uniform.prototype.setMat2 = function() {
         if (!defined(this._value)) {
-            this._value = new Array(4);
+            this._value = new Float32Array(4);
         }
 
         if (!Matrix2.equalsToArray(this.value, this._value)) {
@@ -221,7 +221,7 @@ define([
 
     Uniform.prototype.setMat3 = function() {
         if (!defined(this._value)) {
-            this._value = new Array(9);
+            this._value = new Float32Array(9);
         }
 
         if (!Matrix3.equalsToArray(this.value, this._value)) {
@@ -231,7 +231,7 @@ define([
 
     Uniform.prototype.setMat4 = function() {
         if (!defined(this._value)) {
-            this._value = new Array(16);
+            this._value = new Float32Array(16);
         }
 
         if (!Matrix4.equalsToArray(this.value, this._value)) {
