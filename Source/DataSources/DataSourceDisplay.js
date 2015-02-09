@@ -170,7 +170,7 @@ define([
      * @returns {Scene} The scene.
      */
     DataSourceDisplay.prototype.getScene = function() {
-        deprecationWarning('DataSourceDisplay.getScene', 'DataSourceDisplay.getScene was deprecated on Cesium 1.5 and will be removed in Cesium 1.7, used the DataSourceDisplay.scene property instead.');
+        deprecationWarning('DataSourceDisplay.getScene', 'DataSourceDisplay.getScene was deprecated on Cesium 1.5 and will be removed in Cesium 1.9, used the DataSourceDisplay.scene property instead.');
         return this.scene;
     };
 
@@ -180,7 +180,7 @@ define([
      * @returns {DataSourceCollection} The collection of data sources.
      */
     DataSourceDisplay.prototype.getDataSources = function() {
-        deprecationWarning('DataSourceDisplay.getDataSources', 'DataSourceDisplay.getDataSources was deprecated on Cesium 1.5 and will be removed in Cesium 1.7, used the DataSourceDisplay.dataSources property instead.');
+        deprecationWarning('DataSourceDisplay.getDataSources', 'DataSourceDisplay.getDataSources was deprecated on Cesium 1.5 and will be removed in Cesium 1.9, used the DataSourceDisplay.dataSources property instead.');
         return this.dataSources;
     };
 
