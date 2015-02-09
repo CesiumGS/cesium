@@ -5,9 +5,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Color',
         '../Core/defined',
-        '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/FeatureDetection',
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
@@ -18,9 +16,7 @@ define([
         Cartesian4,
         Color,
         defined,
-        defineProperties,
         DeveloperError,
-        FeatureDetection,
         Matrix2,
         Matrix3,
         Matrix4,
@@ -31,97 +27,81 @@ define([
     /**
      * @private
      */
-    var Uniform = function(gl, activeUniform, uniformName, location) {
-        // PERFORMANCE_IDEA: the type of value and _value depend on the
-        // uniform's type.  We should have a different class per type,
-        // not just change the set function depending on the type.
-        this.value = undefined;
-        this._value = undefined;
-
-        this._gl = gl;
-        this._name = uniformName;
-        this._location = location;
-
-        /**
-         * @private
-         */
-        this.textureUnitIndex = undefined;
-
-        var type = activeUniform.type;
-        var set;
-        switch (type) {
+    var getUniform = function(gl, activeUniform, uniformName, location) {
+        switch (activeUniform.type) {
             case gl.FLOAT:
-                set = this.setFloat;
-                break;
+                return new UniformFloat(gl, activeUniform, uniformName, location);
             case gl.FLOAT_VEC2:
-                set = this.setFloatVec2;
-                break;
+                return new UniformFloatVec2(gl, activeUniform, uniformName, location);
             case gl.FLOAT_VEC3:
-                set = this.setFloatVec3;
-                break;
+                return new UniformFloatVec3(gl, activeUniform, uniformName, location);
             case gl.FLOAT_VEC4:
-                set = this.setFloatVec4;
-                break;
+                return new UniformFloatVec4(gl, activeUniform, uniformName, location);
             case gl.SAMPLER_2D:
             case gl.SAMPLER_CUBE:
-                set = this.setSampler;
-                break;
+                return new UniformSampler(gl, activeUniform, uniformName, location);
             case gl.INT:
             case gl.BOOL:
-                set = this.setInt;
-                break;
+                return new UniformInt(gl, activeUniform, uniformName, location);
             case gl.INT_VEC2:
             case gl.BOOL_VEC2:
-                set = this.setIntVec2;
-                break;
+                return new UniformIntVec2(gl, activeUniform, uniformName, location);
             case gl.INT_VEC3:
             case gl.BOOL_VEC3:
-                set = this.setIntVec3;
-                break;
+                return new UniformIntVec3(gl, activeUniform, uniformName, location);
             case gl.INT_VEC4:
             case gl.BOOL_VEC4:
-                set = this.setIntVec4;
-                break;
+                return new UniformIntVec4(gl, activeUniform, uniformName, location);
             case gl.FLOAT_MAT2:
-                set = this.setMat2;
-                break;
+                return new UniformMat2(gl, activeUniform, uniformName, location);
             case gl.FLOAT_MAT3:
-                set = this.setMat3;
-                break;
+                return new UniformMat3(gl, activeUniform, uniformName, location);
             case gl.FLOAT_MAT4:
-                set = this.setMat4;
-                break;
+                return new UniformMat4(gl, activeUniform, uniformName, location);
             default:
-                throw new RuntimeError('Unrecognized uniform type: ' + type + ' for uniform "' + uniformName + '".');
-        }
-
-        this._set = set;
-
-        if ((type === gl.SAMPLER_2D) || (type === gl.SAMPLER_CUBE)) {
-            this._setSampler = function(textureUnitIndex) {
-                this.textureUnitIndex = textureUnitIndex;
-                gl.uniform1i(location, textureUnitIndex);
-                return textureUnitIndex + 1;
-            };
+                throw new RuntimeError('Unrecognized uniform type: ' + activeUniform.type + ' for uniform "' + uniformName + '".');
         }
     };
 
-    defineProperties(Uniform.prototype, {
-        name : {
-            get : function() {
-                return this._name;
-            }
-        }
-    });
+    ///////////////////////////////////////////////////////////////////////////
 
-    Uniform.prototype.setFloat = function() {
+    function UniformFloat(gl, activeUniform, uniformName, location) {
+        /**
+         * @readonly
+         */
+        this.name = uniformName;
+
+        this.value = undefined;
+// TODO: not set this to undefined
+        this._value = undefined;
+
+        this._gl = gl;
+        this._location = location;
+    }
+
+    UniformFloat.prototype.set = function() {
         if (this.value !== this._value) {
             this._value = this.value;
             this._gl.uniform1f(this._location, this.value);
         }
     };
 
-    Uniform.prototype.setFloatVec2 = function() {
+    ///////////////////////////////////////////////////////////////////////////
+
+    function UniformFloatVec2(gl, activeUniform, uniformName, location) {
+        /**
+         * @readonly
+         */
+        this.name = uniformName;
+
+        this.value = undefined;
+        this._value = undefined;
+
+        this._gl = gl;
+        this._location = location;
+    }
+
+    UniformFloatVec2.prototype.set = function() {
         var v = this.value;
         if (!Cartesian2.equals(v, this._value)) {
             this._value = Cartesian2.clone(v, this._value);
@@ -129,7 +109,22 @@ define([
         }
     };
 
-    Uniform.prototype.setFloatVec3 = function() {
+    ///////////////////////////////////////////////////////////////////////////
+
+    function UniformFloatVec3(gl, activeUniform, uniformName, location) {
+        /**
+         * @readonly
+         */
+        this.name = uniformName;
+
+        this.value = undefined;
+        this._value = undefined;
+
+        this._gl = gl;
+        this._location = location;
+    }
+
+    UniformFloatVec3.prototype.set = function() {
         var v = this.value;
 
         if (defined(v.red)) {
@@ -147,7 +142,22 @@ define([
         }
     };
 
-    Uniform.prototype.setFloatVec4 = function() {
+    ///////////////////////////////////////////////////////////////////////////
+
+    function UniformFloatVec4(gl, activeUniform, uniformName, location) {
+        /**
+         * @readonly
+         */
+        this.name = uniformName;
+
+        this.value = undefined;
+        this._value = undefined;
+
+        this._gl = gl;
+        this._location = location;
+    }
+
+    UniformFloatVec4.prototype.set = function() {
         var v = this.value;
 
         if (defined(v.red)) {
@@ -165,20 +175,73 @@ define([
         }
     };
 
-    Uniform.prototype.setSampler = function() {
+    ///////////////////////////////////////////////////////////////////////////
+
+    function UniformSampler(gl, activeUniform, uniformName, location) {
+        /**
+         * @readonly
+         */
+        this.name = uniformName;
+
+        this.value = undefined;
+        this._value = undefined;
+
+        this._gl = gl;
+        this._location = location;
+
+        this.textureUnitIndex = undefined;
+    }
+
+    UniformSampler.prototype.set = function() {
         var gl = this._gl;
         gl.activeTexture(gl.TEXTURE0 + this.textureUnitIndex);
         gl.bindTexture(this.value._target, this.value._texture);
     };
 
-    Uniform.prototype.setInt = function() {
+    UniformSampler.prototype._setSampler = function(textureUnitIndex) {
+        this.textureUnitIndex = textureUnitIndex;
+        this._gl.uniform1i(this._location, textureUnitIndex);
+        return textureUnitIndex + 1;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    function UniformInt(gl, activeUniform, uniformName, location) {
+        /**
+         * @readonly
+         */
+        this.name = uniformName;
+
+        this.value = undefined;
+        this._value = undefined;
+
+        this._gl = gl;
+        this._location = location;
+    }
+
+    UniformInt.prototype.set = function() {
         if (this.value !== this._value) {
             this._value = this.value;
             this._gl.uniform1i(this._location, this.value);
         }
     };
 
-    Uniform.prototype.setIntVec2 = function() {
+    ///////////////////////////////////////////////////////////////////////////
+
+    function UniformIntVec2(gl, activeUniform, uniformName, location) {
+        /**
+         * @readonly
+         */
+        this.name = uniformName;
+
+        this.value = undefined;
+        this._value = undefined;
+
+        this._gl = gl;
+        this._location = location;
+    }
+
+    UniformIntVec2.prototype.set = function() {
         var v = this.value;
         if (!Cartesian2.equals(v, this._value)) {
             this._value = Cartesian2.clone(v, this._value);
@@ -186,7 +249,22 @@ define([
         }
     };
 
-    Uniform.prototype.setIntVec3 = function() {
+    ///////////////////////////////////////////////////////////////////////////
+
+    function UniformIntVec3(gl, activeUniform, uniformName, location) {
+        /**
+         * @readonly
+         */
+        this.name = uniformName;
+
+        this.value = undefined;
+        this._value = undefined;
+
+        this._gl = gl;
+        this._location = location;
+    }
+
+    UniformIntVec3.prototype.set = function() {
         var v = this.value;
         if (!Cartesian3.equals(v, this._value)) {
             this._value = Cartesian3.clone(v, this._value);
@@ -194,7 +272,22 @@ define([
         }
     };
 
-    Uniform.prototype.setIntVec4 = function() {
+    ///////////////////////////////////////////////////////////////////////////
+
+    function UniformIntVec4(gl, activeUniform, uniformName, location) {
+        /**
+         * @readonly
+         */
+        this.name = uniformName;
+
+        this.value = undefined;
+        this._value = undefined;
+
+        this._gl = gl;
+        this._location = location;
+    }
+
+    UniformIntVec4.prototype.set = function() {
         var v = this.value;
         if (!Cartesian4.equals(v, this._value)) {
             this._value = Cartesian4.clone(v, this._value);
@@ -202,7 +295,22 @@ define([
         }
     };
 
-    Uniform.prototype.setMat2 = function() {
+    ///////////////////////////////////////////////////////////////////////////
+
+    function UniformMat2(gl, activeUniform, uniformName, location) {
+        /**
+         * @readonly
+         */
+        this.name = uniformName;
+
+        this.value = undefined;
+        this._value = undefined;
+
+        this._gl = gl;
+        this._location = location;
+    }
+
+    UniformMat2.prototype.set = function() {
         if (!defined(this._value)) {
             this._value = new Float32Array(4);
         }
@@ -213,7 +321,22 @@ define([
         }
     };
 
-    Uniform.prototype.setMat3 = function() {
+    ///////////////////////////////////////////////////////////////////////////
+
+    function UniformMat3(gl, activeUniform, uniformName, location) {
+        /**
+         * @readonly
+         */
+        this.name = uniformName;
+
+        this.value = undefined;
+        this._value = undefined;
+
+        this._gl = gl;
+        this._location = location;
+    }
+
+    UniformMat3.prototype.set = function() {
         if (!defined(this._value)) {
             this._value = new Float32Array(9);
         }
@@ -224,7 +347,22 @@ define([
         }
     };
 
-    Uniform.prototype.setMat4 = function() {
+    ///////////////////////////////////////////////////////////////////////////
+
+    function UniformMat4(gl, activeUniform, uniformName, location) {
+        /**
+         * @readonly
+         */
+        this.name = uniformName;
+
+        this.value = undefined;
+        this._value = undefined;
+
+        this._gl = gl;
+        this._location = location;
+    }
+
+    UniformMat4.prototype.set = function() {
         if (!defined(this._value)) {
             this._value = new Float32Array(16);
         }
@@ -235,5 +373,5 @@ define([
         }
     };
 
-    return Uniform;
+    return getUniform;
 });

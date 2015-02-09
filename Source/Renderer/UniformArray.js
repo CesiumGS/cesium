@@ -7,7 +7,6 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/FeatureDetection',
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
@@ -20,7 +19,6 @@ define([
         defined,
         defineProperties,
         DeveloperError,
-        FeatureDetection,
         Matrix2,
         Matrix3,
         Matrix4,
@@ -106,7 +104,7 @@ define([
                 throw new RuntimeError('Unrecognized uniform type: ' + type + ' for uniform "' + uniformName + '".');
         }
 
-        this._set = set;
+        this.set = set;
 
         if ((type === gl.SAMPLER_2D) || (type === gl.SAMPLER_CUBE)) {
             this._setSampler = function(textureUnitIndex) {
