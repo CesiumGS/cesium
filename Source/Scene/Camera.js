@@ -679,19 +679,6 @@ define([
                 }
 
                 return undefined;
-            },
-            set : function (angle) {
-                deprecationWarning('Camera.heading', 'Camera.heading was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. Use Camera.setView.');
-
-                //>>includeStart('debug', pragmas.debug);
-                if (!defined(angle)) {
-                    throw new DeveloperError('angle is required.');
-                }
-                //>>includeEnd('debug');
-
-                if (this._mode !== SceneMode.MORPHING) {
-                    this.setView({ heading : angle });
-                }
             }
         },
 
@@ -719,34 +706,6 @@ define([
                 }
 
                 return undefined;
-            }
-        },
-
-        /**
-         * Gets or sets the camera tilt in radians.
-         * @memberof Camera.prototype
-         *
-         * @type {Number}
-         *
-         * @deprecated
-         */
-        tilt : {
-            get : function() {
-                deprecationWarning('Camera.tilt', 'Camera.tilt was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. Use Camera.pitch.');
-                return this.pitch;
-            },
-            set : function(angle) {
-                deprecationWarning('Camera.tilt', 'Camera.tilt was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. Use Camera.setView.');
-
-                //>>includeStart('debug', pragmas.debug);
-                if (!defined(angle)) {
-                    throw new DeveloperError('angle is required.');
-                }
-                //>>includeEnd('debug');
-
-                if (this._mode === SceneMode.COLUMBUS_VIEW || this._mode === SceneMode.SCENE3D) {
-                    this.setView({ pitch : angle });
-                }
             }
         },
 
@@ -1521,30 +1480,6 @@ define([
         } else if (this._mode === SceneMode.SCENE2D) {
             return  Math.max(this.frustum.right - this.frustum.left, this.frustum.top - this.frustum.bottom);
         }
-    };
-
-    /**
-     * Moves the camera to the provided cartographic position.
-     *
-     * @deprecated
-     *
-     * @param {Cartographic} cartographic The new camera position.
-     */
-    Camera.prototype.setPositionCartographic = function(cartographic) {
-        deprecationWarning('Camera.setPositionCartographic', 'Camera.setPositionCartographic was deprecated in Cesium 1.6. It will be removed in Cesium 1.7. Use Camera.setView.');
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartographic)) {
-            throw new DeveloperError('cartographic is required.');
-        }
-        //>>includeEnd('debug');
-
-        this.setView({
-            cartographic : cartographic,
-            heading : 0.0,
-            pitch : -CesiumMath.PI_OVER_TWO,
-            roll : 0.0
-        });
     };
 
     var scratchLookAtMatrix4 = new Matrix4();
