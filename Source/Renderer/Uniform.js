@@ -214,7 +214,8 @@ define([
             this._value = new Float32Array(4);
         }
 
-        if (!Matrix2.equalsToArray(this.value, this._value)) {
+        if (!Matrix2.equalsArray(this.value, this._value, 0)) {
+            Matrix2.toArray(this.value, this._value);
             this._gl.uniformMatrix2fv(this._location, false, this._value);
         }
     };
@@ -224,7 +225,8 @@ define([
             this._value = new Float32Array(9);
         }
 
-        if (!Matrix3.equalsToArray(this.value, this._value)) {
+        if (!Matrix3.equalsArray(this.value, this._value, 0)) {
+            Matrix3.toArray(this.value, this._value);
             this._gl.uniformMatrix3fv(this._location, false, this._value);
         }
     };
@@ -234,7 +236,8 @@ define([
             this._value = new Float32Array(16);
         }
 
-        if (!Matrix4.equalsToArray(this.value, this._value)) {
+        if (!Matrix4.equalsArray(this.value, this._value, 0)) {
+            Matrix4.toArray(this.value, this._value);
             this._gl.uniformMatrix4fv(this._location, false, this._value);
         }
     };
