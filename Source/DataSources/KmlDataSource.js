@@ -32,14 +32,10 @@ define([
         '../ThirdParty/when',
         '../ThirdParty/zip',
         './BillboardGraphics',
-        './ColorMaterialProperty',
-        './ConstantPositionProperty',
-        './ConstantProperty',
         './DataSource',
         './DataSourceClock',
         './Entity',
         './EntityCollection',
-        './ImageMaterialProperty',
         './LabelGraphics',
         './PolygonGraphics',
         './PolylineGraphics',
@@ -79,14 +75,10 @@ define([
         when,
         zip,
         BillboardGraphics,
-        ColorMaterialProperty,
-        ConstantPositionProperty,
-        ConstantProperty,
         DataSource,
         DataSourceClock,
         Entity,
         EntityCollection,
-        ImageMaterialProperty,
         LabelGraphics,
         PolygonGraphics,
         PolylineGraphics,
@@ -361,21 +353,21 @@ define([
 
     function createDefaultBillboard(dataSource) {
         var billboard = new BillboardGraphics();
-        billboard.width = new ConstantProperty(32);
-        billboard.height = new ConstantProperty(32);
-        billboard.scaleByDistance = new ConstantProperty(new NearFarScalar(2414016, 1.0, 1.6093e+7, 0.1));
+        billboard.width = 32;
+        billboard.height = 32;
+        billboard.scaleByDistance = new NearFarScalar(2414016, 1.0, 1.6093e+7, 0.1);
         return billboard;
     }
 
     function createDefaultLabel() {
         var label = new LabelGraphics();
-        label.translucencyByDistance = new ConstantProperty(new NearFarScalar(1500000, 1.0, 3400000, 0.0));
-        label.scale = new ConstantProperty(1.0);
-        label.fillColor = new ConstantProperty(Color.WHITE);
-        label.pixelOffset = new ConstantProperty(new Cartesian2(0, -16));
-        label.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
-        label.font = new ConstantProperty('16pt sans-serif');
-        label.style = new ConstantProperty(LabelStyle.FILL_AND_OUTLINE);
+        label.translucencyByDistance = new NearFarScalar(1500000, 1.0, 3400000, 0.0);
+        label.scale = 1.0;
+        label.fillColor = Color.WHITE;
+        label.pixelOffset = new Cartesian2(0, -16);
+        label.verticalOrigin = VerticalOrigin.BOTTOM;
+        label.font = '16pt sans-serif';
+        label.style = LabelStyle.FILL_AND_OUTLINE;
         return label;
     }
 
@@ -398,13 +390,13 @@ define([
                     targetEntity.billboard = billboard;
                 }
                 if (defined(icon)) {
-                    billboard.image = new ConstantProperty(icon);
+                    billboard.image = icon;
                 }
                 if (defined(scale)) {
-                    billboard.scale = new ConstantProperty(scale);
+                    billboard.scale = scale;
                 }
                 if (defined(color)) {
-                    billboard.color = new ConstantProperty(color);
+                    billboard.color = color;
                 }
             } else if (node.nodeName === 'LabelStyle') {
                 //Map style to label properties
@@ -412,14 +404,14 @@ define([
                 var labelScale = queryNumericValue(node, 'scale', namespaces.kml);
                 var labelColor = queryColorValue(node, 'color', namespaces.kml);
 
-                label.translucencyByDistance = new ConstantProperty(new NearFarScalar(1500000, 1.0, 3400000, 0.0));
-                label.scale = defined(labelScale) ? new ConstantProperty(labelScale) : new ConstantProperty(1.0);
-                label.fillColor = defined(labelColor) ? new ConstantProperty(labelColor) : new ConstantProperty(Color.WHITE);
-                label.text = defined(targetEntity.name) ? new ConstantProperty(targetEntity.name) : undefined;
-                label.pixelOffset = new ConstantProperty(new Cartesian2(0, -16));
-                label.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
-                label.font = new ConstantProperty('16pt sans-serif');
-                label.style = new ConstantProperty(LabelStyle.FILL_AND_OUTLINE);
+                label.translucencyByDistance = new NearFarScalar(1500000, 1.0, 3400000, 0.0);
+                label.scale = defined(labelScale) ? labelScale : 1.0;
+                label.fillColor = defined(labelColor) ? labelColor : Color.WHITE;
+                label.text = defined(targetEntity.name) ? targetEntity.name : undefined;
+                label.pixelOffset = new Cartesian2(0, -16);
+                label.verticalOrigin = VerticalOrigin.BOTTOM;
+                label.font = '16pt sans-serif';
+                label.style = LabelStyle.FILL_AND_OUTLINE;
                 targetEntity.label = label;
             } else if (node.nodeName === 'LineStyle') {
                 //Map style to line properties
@@ -434,28 +426,25 @@ define([
 //                    throw new RuntimeError('gx:outerWidth must be a value between 0 and 1.0');
 //                }
 
-                polyline.width = defined(lineWidth) ? new ConstantProperty(Math.max(lineWidth, 1.0)) : new ConstantProperty(1.0);
+                polyline.width = defaultValue(lineWidth, 1.0);
                 material = new PolylineOutlineMaterialProperty();
-                material.color = defined(lineColor) ? new ConstantProperty(lineColor) : new ConstantProperty(Color.WHITE);
+                material.color = defaultValue(lineColor, Color.WHITE);
 //                material.outlineColor = defined(lineOuterColor) ? new ConstantProperty(lineOuterColor) : new ConstantProperty(new Color(0, 0, 0, 1));
-                material.outlineWidth = new ConstantProperty(0);//defined(lineOuterWidth) ? new ConstantProperty(lineOuterWidth) : new ConstantProperty(0);
+                material.outlineWidth = 0;//defined(lineOuterWidth) ? new ConstantProperty(lineOuterWidth) : new ConstantProperty(0);
                 polyline.material = material;
                 targetEntity.polyline = polyline;
             } else if (node.nodeName === 'PolyStyle') {
                 targetEntity.polygon = defined(targetEntity.polygon) ? targetEntity.polygon : new PolygonGraphics();
                 var polygonColor = queryColorValue(node, 'color', namespaces.kml);
-                polygonColor = defined(polygonColor) ? polygonColor : Color.WHITE;
-                material = new ColorMaterialProperty();
-                material.color = new ConstantProperty(polygonColor);
-                targetEntity.polygon.material = material;
+                targetEntity.polygon.material = defaultValue(polygonColor, Color.WHITE);
 
                 var fill = queryBooleanValue(node, 'fill', namespaces.kml);
                 if (defined(fill)) {
-                    targetEntity.polygon.fill = new ConstantProperty(fill);
+                    targetEntity.polygon.fill = fill;
                 }
                 var outline = queryBooleanValue(node, 'outline', namespaces.kml);
                 if (defined(outline)) {
-                    targetEntity.polygon.outline = new ConstantProperty(outline);
+                    targetEntity.polygon.outline = outline;
                 }
             }
         }
@@ -485,12 +474,12 @@ define([
         }
 
         if (!defined(result.billboard.image)) {
-            result.billboard.image = new ConstantProperty(dataSource._pinBuilder.fromColor(Color.YELLOW, 64).toDataURL());
+            result.billboard.image = dataSource._pinBuilder.fromColor(Color.YELLOW, 64);
         }
 
         if (defined(entity.name)) {
-            entity.label = result.label ? result.label.clone() : createDefaultLabel();
-            entity.label.text = new ConstantProperty(entity.name);
+            entity.label = defined(result.label) ? result.label.clone() : createDefaultLabel();
+            entity.label.text = entity.name;
         }
 
         return result;
@@ -592,9 +581,7 @@ define([
         var coordinatesNode = queryFirstNode(geometryNode, 'coordinates', namespaces.kml);
         if (defined(coordinatesNode)) {
             var position = readCoordinate(coordinatesNode, queryStringValue(geometryNode, 'altitudeMode', namespaces.kml));
-            if (defined(position)) {
-                entity.position = new ConstantPositionProperty(position);
-            }
+            entity.position = position;
         }
         entity.billboard = styleEntity.billboard;
     }
@@ -606,25 +593,25 @@ define([
         if (defined(coordinatesNode)) {
             var coordinates = readCoordinates(coordinatesNode);
             if (defined(coordinates)) {
-                polyline.positions = new ConstantProperty(coordinates);
+                polyline.positions = coordinates;
             }
         }
     }
 
     function processPolygon(dataSource, geometryNode, entity, styleEntity) {
         var polygon = defined(styleEntity.polygon) ? styleEntity.polygon.clone() : new PolygonGraphics();
-        polygon.outline = new ConstantProperty(true);
-        polygon.outlineColor = defined(styleEntity.polyline) ? styleEntity.polyline.material.color : new ConstantProperty(Color.WHITE);
+        polygon.outline = true;
+        polygon.outlineColor = defined(styleEntity.polyline) ? styleEntity.polyline.material.color : Color.WHITE;
         polygon.outlineWidth = defined(styleEntity.polyline) ? styleEntity.polyline.width : undefined;
         entity.polygon = polygon;
 
         var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
         if (defined(altitudeMode) && (altitudeMode !== 'clampToGround') && (altitudeMode !== 'clampToSeaFloor')) {
-            polygon.perPositionHeight = new ConstantProperty(true);
+            polygon.perPositionHeight = true;
         }
 
         if (defaultValue(queryBooleanValue(geometryNode, 'extrude', namespaces.kml), false)) {
-            polygon.extrudedHeight = new ConstantProperty(0);
+            polygon.extrudedHeight = 0;
         }
 
         var outerBoundaryIsNode = queryFirstNode(geometryNode, 'outerBoundaryIs', namespaces.kml);
@@ -648,7 +635,7 @@ define([
                         }
                     }
                 }
-                polygon.hierarchy = new ConstantProperty(hierarchy);
+                polygon.hierarchy = hierarchy;
             }
         }
     }
@@ -770,7 +757,7 @@ define([
         entity.parent = parent;
         //entity.uiShow = defaultValue(visibility, true);
         entity.availability = defined(timeSpanNode) ? processTimeSpan(timeSpanNode) : undefined;
-        entity.description = defined(description) ? new ConstantProperty(description) : undefined;
+        entity.description = description;
         var styleEntity = computeFinalStyle(entity, dataSource, placemark, styleCollection, sourceUri, uriResolver);
 
         var hasGeometry = false;
@@ -811,7 +798,7 @@ define([
         }
 
         var description = queryStringValue(groundOverlay, 'description', namespaces.kml);
-        entity.description = defined(description) ? new ConstantProperty(description) : undefined;
+        entity.description = description;
 
         //var visibility = queryBooleanValue(groundOverlay, 'visibility', namespaces.kml);
         //entity.uiShow = defined(visibility) ? visibility : true;
@@ -825,36 +812,31 @@ define([
             var east = Math.max(-180, Math.min(180, queryNumericValue(latLonBox, 'east', namespaces.kml)));
             var north = Math.max(-90, Math.min(90, queryNumericValue(latLonBox, 'north', namespaces.kml)));
 
-            var cb = Ellipsoid.WGS84;
-
             var rectangle = entity.rectangle;
             if (!defined(rectangle)) {
                 rectangle = new RectangleGraphics();
                 entity.rectangle = rectangle;
             }
             var extent = Rectangle.fromDegrees(west, south, east, north);
-            rectangle.coordinates = new ConstantProperty(extent);
-            entity.position = new ConstantPositionProperty(Ellipsoid.WGS84.cartographicToCartesian(
-                    Rectangle.center(extent, scratchCartesian), scratchCartographic));
+            rectangle.coordinates = extent;
 
             var material;
             var iconNode = queryFirstNode(groundOverlay, 'Icon', namespaces.kml);
             var href = defined(iconNode) ? queryStringValue(iconNode, 'href', namespaces.kml) : undefined;
             if (defined(href)) {
                 var icon = resolveHref(href, dataSource, sourceUri, uriResolver);
-                material = new ImageMaterialProperty();
-                material.image = new ConstantProperty(icon);
+                material = icon;
             } else {
                 var color = queryColorValue(groundOverlay, 'color', namespaces.kml);
                 if (defined(color)) {
-                    material = ColorMaterialProperty.fromColor(color);
+                    material = color;
                 }
             }
             rectangle.material = material;
 
             var rotation = queryNumericValue(latLonBox, 'rotation', namespaces.kml);
             if (defined(rotation)) {
-                rectangle.rotation = new ConstantProperty(CesiumMath.toRadians(rotation));
+                rectangle.rotation = CesiumMath.toRadians(rotation);
             }
 
             var altitudeMode = queryStringValue(groundOverlay, 'altitudeMode', namespaces.kml);
@@ -862,7 +844,7 @@ define([
                 if (altitudeMode === 'absolute') {
                     //TODO absolute means relative to sea level, not the ellipsoid.
                     var altitude = queryNumericValue(groundOverlay, 'altitude', namespaces.kml);
-                    rectangle.height = new ConstantProperty(defined(altitude) ? altitude : 0);
+                    rectangle.height = defaultValue(altitude, 0);
                 } else if (altitudeMode === 'clampToGround') {
                     //TODO conform to terrain.
                 } else {
