@@ -48,20 +48,7 @@ define([
         var loadingImagery = this.loadingImagery;
         var imageryLayer = loadingImagery.imageryLayer;
 
-        if (loadingImagery.state === ImageryState.UNLOADED) {
-            loadingImagery.state = ImageryState.TRANSITIONING;
-            imageryLayer._requestImagery(loadingImagery);
-        }
-
-        if (loadingImagery.state === ImageryState.RECEIVED) {
-            loadingImagery.state = ImageryState.TRANSITIONING;
-            imageryLayer._createTexture(context, loadingImagery);
-        }
-
-        if (loadingImagery.state === ImageryState.TEXTURE_LOADED) {
-            loadingImagery.state = ImageryState.TRANSITIONING;
-            imageryLayer._reprojectTexture(context, loadingImagery);
-        }
+        loadingImagery.processStateMachine(context);
 
         if (loadingImagery.state === ImageryState.READY) {
             if (defined(this.readyImagery)) {
@@ -75,9 +62,12 @@ define([
 
         // Find some ancestor imagery we can use while this imagery is still loading.
         var ancestor = loadingImagery.parent;
-        var ancestorsAreStillLoading = false;
+        var closestAncestorThatNeedsLoading;
         while (defined(ancestor) && ancestor.state !== ImageryState.READY) {
-            ancestorsAreStillLoading = ancestorsAreStillLoading || (ancestor.state !== ImageryState.FAILED && ancestor.state !== ImageryState.INVALID);
+            if (ancestor.state !== ImageryState.FAILED && ancestor.state !== ImageryState.INVALID) {
+                // ancestor is still loading
+                closestAncestorThatNeedsLoading = closestAncestorThatNeedsLoading || ancestor;
+            }
             ancestor = ancestor.parent;
         }
 
@@ -94,9 +84,18 @@ define([
             }
         }
 
-        if (!ancestorsAreStillLoading && (loadingImagery.state === ImageryState.FAILED || loadingImagery.state === ImageryState.INVALID)) {
-            // This imagery tile is failed or invalid, and we have the "best available" substitute.  So we're done loading.
-            return true; // done loading
+        if (loadingImagery.state === ImageryState.FAILED || loadingImagery.state === ImageryState.INVALID) {
+            // The imagery tile is failed or invalid, so we'd like to use an ancestor instead.
+            if (defined(closestAncestorThatNeedsLoading)) {
+                // Push the ancestor's load process along a bit.  This is necessary because some ancestor imagery
+                // tiles may not be attached directly to a terrain tile.  Such tiles will never load if
+                // we don't do it here.
+                closestAncestorThatNeedsLoading.processStateMachine(context);
+                return false; // not done loading
+            } else {
+                // This imagery tile is failed or invalid, and we have the "best available" substitute.
+                return true; // done loading
+            }
         }
 
         return false; // not done loading
