@@ -74,13 +74,13 @@ define([
             Cartesian2.clone(event.position, eventStartPosition[key]);
         }, ScreenSpaceEventType.PINCH_START, modifier);
 
-        aggregator._documentEventHandler.setInputAction(function() {
+        aggregator._eventHandler.setInputAction(function() {
             aggregator._buttonsDown = Math.max(aggregator._buttonsDown - 1, 0);
             isDown[key] = false;
             releaseTime[key] = new Date();
         }, ScreenSpaceEventType.PINCH_END, modifier);
 
-        aggregator._documentEventHandler.setInputAction(function(mouseMovement) {
+        aggregator._eventHandler.setInputAction(function(mouseMovement) {
             if (isDown[key]) {
                 // Aggregate several input events into a single animation frame.
                 if (!update[key]) {
@@ -176,7 +176,7 @@ define([
             Cartesian2.clone(event.position, eventStartPosition[key]);
         }, down, modifier);
 
-        aggregator._documentEventHandler.setInputAction(function() {
+        aggregator._eventHandler.setInputAction(function() {
             aggregator._buttonsDown = Math.max(aggregator._buttonsDown - 1, 0);
             isDown[key] = false;
             releaseTime[key] = new Date();
@@ -219,7 +219,7 @@ define([
             }
         }
 
-        aggregator._documentEventHandler.setInputAction(function(mouseMovement) {
+        aggregator._eventHandler.setInputAction(function(mouseMovement) {
             for ( var typeName in CameraEventType) {
                 if (CameraEventType.hasOwnProperty(typeName)) {
                     var type = CameraEventType[typeName];
@@ -262,8 +262,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._eventHandler = new ScreenSpaceEventHandler(canvas, false);
-        this._documentEventHandler = new ScreenSpaceEventHandler(document, false);
+        this._eventHandler = new ScreenSpaceEventHandler(canvas, true);
 
         this._update = {};
         this._movement = {};

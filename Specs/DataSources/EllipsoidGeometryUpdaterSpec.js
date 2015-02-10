@@ -19,6 +19,7 @@ defineSuite([
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/PrimitiveCollection',
+        'Specs/createDynamicGeometryBoundingSphereSpecs',
         'Specs/createDynamicProperty',
         'Specs/createScene',
         'Specs/destroyScene'
@@ -42,6 +43,7 @@ defineSuite([
         SampledProperty,
         TimeIntervalCollectionProperty,
         PrimitiveCollection,
+        createDynamicGeometryBoundingSphereSpecs,
         createDynamicProperty,
         createScene,
         destroyScene) {
@@ -62,7 +64,7 @@ defineSuite([
         ellipsoid.radii = new ConstantProperty(new Cartesian3(1, 2, 3));
 
         var entity = new Entity();
-        entity.position = new ConstantPositionProperty(Cartesian3.ZERO);
+        entity.position = new ConstantPositionProperty(Cartesian3.fromDegrees(0, 0, 0));
         entity.ellipsoid = ellipsoid;
         return entity;
     }
@@ -124,7 +126,7 @@ defineSuite([
         var updater = new EllipsoidGeometryUpdater(entity, scene);
 
         expect(updater.fillEnabled).toBe(true);
-        expect(updater.fillMaterialProperty).toEqual(ColorMaterialProperty.fromColor(Color.WHITE));
+        expect(updater.fillMaterialProperty).toEqual(new ColorMaterialProperty(Color.WHITE));
         expect(updater.outlineEnabled).toBe(false);
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
@@ -249,7 +251,7 @@ defineSuite([
             orientation : Quaternion.IDENTITY,
             radii : new Cartesian3(1, 2, 3),
             show : true,
-            material : ColorMaterialProperty.fromColor(Color.RED),
+            material : new ColorMaterialProperty(Color.RED),
             fill : true,
             outline : true,
             outlineColor : Color.BLUE,
@@ -433,7 +435,7 @@ defineSuite([
         ellipsoid.outline = createDynamicProperty(true);
         ellipsoid.fill = createDynamicProperty(true);
         ellipsoid.outlineColor = createDynamicProperty(Color.BLUE);
-        ellipsoid.material = ColorMaterialProperty.fromColor(Color.RED);
+        ellipsoid.material = new ColorMaterialProperty(Color.RED);
 
         var entity = new Entity();
         entity.position = createDynamicProperty(Cartesian3.fromDegrees(0, 0, 0));
@@ -453,7 +455,7 @@ defineSuite([
         ellipsoid.fill.setValue(false);
         ellipsoid.outline.setValue(false);
         ellipsoid.outlineColor = createDynamicProperty(Color.YELLOW);
-        ellipsoid.material = ColorMaterialProperty.fromColor(Color.ORANGE);
+        ellipsoid.material = new ColorMaterialProperty(Color.ORANGE);
         dynamicUpdater.update(time);
 
         var attributes = primitives.get(0).getGeometryInstanceAttributes(entity);
@@ -566,5 +568,11 @@ defineSuite([
         expect(function() {
             return new EllipsoidGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
+    });
+
+    var entity = createBasicEllipsoid();
+    entity.ellipsoid.radii = createDynamicProperty(new Cartesian3(1, 2, 3));
+    createDynamicGeometryBoundingSphereSpecs(EllipsoidGeometryUpdater, entity, entity.ellipsoid, function() {
+        return scene;
     });
 });

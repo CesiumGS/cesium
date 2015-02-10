@@ -1447,6 +1447,7 @@ define([
     var scratchDirection = new Cartesian3();
     var scratchBufferDimensions = new Cartesian2();
     var scratchPixelSize = new Cartesian2();
+    var scratchPickVolumeMatrix4 = new Matrix4();
 
     function getPickOrthographicCullingVolume(scene, drawingBufferPosition, width, height) {
         var camera = scene._camera;
@@ -1460,11 +1461,16 @@ define([
         var y = (2.0 / drawingBufferHeight) * (drawingBufferHeight - drawingBufferPosition.y) - 1.0;
         y *= (frustum.top - frustum.bottom) * 0.5;
 
+        var transform = Matrix4.clone(camera.transform, scratchPickVolumeMatrix4);
+        camera._setTransform(Matrix4.IDENTITY);
+
         var origin = Cartesian3.clone(camera.position, scratchOrigin);
         Cartesian3.multiplyByScalar(camera.right, x, scratchDirection);
         Cartesian3.add(scratchDirection, origin, origin);
         Cartesian3.multiplyByScalar(camera.up, y, scratchDirection);
         Cartesian3.add(scratchDirection, origin, origin);
+
+        camera._setTransform(transform);
 
         Cartesian3.fromElements(origin.z, origin.x, origin.y, origin);
 
@@ -1617,13 +1623,13 @@ define([
             pickedObjects.push(pickedResult);
 
             // hide the picked primitive and call picking again to get the next primitive
-            if (defined(primitive.show)) {
-                primitive.show = false;
-            } else if (typeof primitive.getGeometryInstanceAttributes === 'function') {
+            if (typeof primitive.getGeometryInstanceAttributes === 'function') {
                 var attributes = primitive.getGeometryInstanceAttributes(pickedResult.id);
                 if (defined(attributes) && defined(attributes.show)) {
-                    attributes.show = ShowGeometryInstanceAttribute.toValue(false);
+                    attributes.show = ShowGeometryInstanceAttribute.toValue(false, attributes.show);
                 }
+            } else if (defined(primitive.show)) {
+                primitive.show = false;
             }
 
             pickedResult = this.pick(windowPosition);
@@ -1632,13 +1638,13 @@ define([
         // unhide the picked primitives
         for (var i = 0; i < pickedObjects.length; ++i) {
             var p = pickedObjects[i].primitive;
-            if (defined(p.show)) {
-                p.show = true;
-            } else if (typeof p.getGeometryInstanceAttributes === 'function') {
+            if (typeof p.getGeometryInstanceAttributes === 'function') {
                 var attr = p.getGeometryInstanceAttributes(pickedObjects[i].id);
                 if (defined(attr) && defined(attr.show)) {
-                    attr.show = ShowGeometryInstanceAttribute.toValue(true);
+                    attr.show = ShowGeometryInstanceAttribute.toValue(true, attr.show);
                 }
+            } else if (defined(p.show)) {
+                p.show = true;
             }
         }
 

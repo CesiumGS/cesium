@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Draw a polyline with a set width.">
+    <meta name="description" content="Draw polylines with various widths and materials.">
     <meta name="cesium-sandcastle-labels" content="Geometries">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -27,54 +27,59 @@
 function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
-// Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
-var scene = viewer.scene;
-      
-// Example 1: Draw a red polyline on the globe surface
 
-scene.primitives.add(new Cesium.Primitive({
-    geometryInstances : new Cesium.GeometryInstance({
-        geometry : new Cesium.PolylineGeometry({
-            positions : Cesium.Cartesian3.fromDegreesArray([
-                -124.0, 40.0,
-                -80.0, 40.0
-            ]),
-            width : 5.0,
-            vertexFormat : Cesium.PolylineColorAppearance.VERTEX_FORMAT
-        }),
-        attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.8))
-        }
-    }),
-    appearance : new Cesium.PolylineColorAppearance()
-}));
+var redLine = viewer.entities.add({
+    name : 'Red line on the surface',
+    polyline : {
+        positions : Cesium.Cartesian3.fromDegreesArray([-75, 35,
+                                                        -125, 35]),
+        width : 5,
+        material : Cesium.Color.RED
+    }
+});
 
+var glowingLine = viewer.entities.add({
+    name : 'Glowing blue line on the surface',
+    polyline : {
+        positions : Cesium.Cartesian3.fromDegreesArray([-75, 37,
+                                                        -125, 37]),
+        width : 10,
+        material : new Cesium.PolylineGlowMaterialProperty({
+            glowPower : 0.2,
+            color : Cesium.Color.BLUE
+        })
+    }
+});
 
-// Example 2: Draw a straight blue polyline
+var orangeOutlined = viewer.entities.add({
+    name : 'Orange line with black outline at height and following the surface',
+    polyline : {
+        positions : Cesium.Cartesian3.fromDegreesArrayHeights([-75, 39, 250000,
+                                                               -125, 39, 250000]),
+        width : 5,
+        material : new Cesium.PolylineOutlineMaterialProperty({
+            color : Cesium.Color.ORANGE,
+            outlineWidth : 2,
+            outlineColor : Cesium.Color.BLACK
+        })
+    }
+});
 
-// Setting the followSurface option to false will allow
-// you to draw a straight polyline.  Otherwise, it will
-// curve to the globe surface.
-scene.primitives.add(new Cesium.Primitive({
-    geometryInstances : new Cesium.GeometryInstance({
-        geometry : new Cesium.PolylineGeometry({
-            positions : Cesium.Cartesian3.fromDegreesArrayHeights([
-                -84.0, 50.0, 0.0,
-                -100.0, 30.0, 1000000.0
-            ]),
-            width : 5.0,
-            vertexFormat : Cesium.PolylineColorAppearance.VERTEX_FORMAT,
-            followSurface: false
-        }),
-        attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
-        }
-    }),
-    appearance : new Cesium.PolylineColorAppearance()
-}));
+var yellowLine = viewer.entities.add({
+    name : 'Purple straight line at height',
+    polyline : {
+        positions : Cesium.Cartesian3.fromDegreesArrayHeights([-75, 43, 500000,
+                                                               -125, 43, 500000]),
+        width : 3,
+        followSurface : false,
+        material : Cesium.Color.PURPLE
+    }
+});
+
+viewer.zoomTo(viewer.entities);
 //Sandcastle_End
-    Sandcastle.finishedLoading();
+Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
     startup(Cesium);

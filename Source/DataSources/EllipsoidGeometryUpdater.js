@@ -21,6 +21,7 @@ define([
         '../Scene/SceneMode',
         './ColorMaterialProperty',
         './ConstantProperty',
+        './dynamicGeometryGetBoundingSphere',
         './MaterialProperty',
         './Property'
     ], function(
@@ -45,11 +46,12 @@ define([
         SceneMode,
         ColorMaterialProperty,
         ConstantProperty,
+        dynamicGeometryGetBoundingSphere,
         MaterialProperty,
         Property) {
     "use strict";
 
-    var defaultMaterial = ColorMaterialProperty.fromColor(Color.WHITE);
+    var defaultMaterial = new ColorMaterialProperty(Color.WHITE);
     var defaultShow = new ConstantProperty(true);
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
@@ -586,6 +588,8 @@ define([
             var primitives = this._primitives;
             primitives.removeAndDestroy(this._primitive);
             primitives.removeAndDestroy(this._outlinePrimitive);
+            this._primitive = undefined;
+            this._outlinePrimitive = undefined;
             this._lastSceneMode = sceneMode;
             this._lastOutlineWidth = outlineWidth;
 
@@ -690,6 +694,10 @@ define([
             this._primitive.modelMatrix = modelMatrix;
             this._outlinePrimitive.modelMatrix = modelMatrix;
         }
+    };
+
+    DynamicGeometryUpdater.prototype.getBoundingSphere = function(entity, result) {
+        return dynamicGeometryGetBoundingSphere(entity, this._primitive, this._outlinePrimitive, result);
     };
 
     DynamicGeometryUpdater.prototype.isDestroyed = function() {
