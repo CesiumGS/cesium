@@ -72,8 +72,7 @@ define([
         this.name = uniformName;
 
         this.value = undefined;
-// TODO: not set this to undefined
-        this._value = undefined;
+        this._value = 0.0;
 
         this._gl = gl;
         this._location = location;
@@ -95,7 +94,7 @@ define([
         this.name = uniformName;
 
         this.value = undefined;
-        this._value = undefined;
+        this._value = new Cartesian2();
 
         this._gl = gl;
         this._location = location;
@@ -104,7 +103,7 @@ define([
     UniformFloatVec2.prototype.set = function() {
         var v = this.value;
         if (!Cartesian2.equals(v, this._value)) {
-            this._value = Cartesian2.clone(v, this._value);
+            Cartesian2.clone(v, this._value);
             this._gl.uniform2f(this._location, v.x, v.y);
         }
     };
@@ -184,7 +183,6 @@ define([
         this.name = uniformName;
 
         this.value = undefined;
-        this._value = undefined;
 
         this._gl = gl;
         this._location = location;
@@ -195,7 +193,9 @@ define([
     UniformSampler.prototype.set = function() {
         var gl = this._gl;
         gl.activeTexture(gl.TEXTURE0 + this.textureUnitIndex);
-        gl.bindTexture(this.value._target, this.value._texture);
+
+        var v = this.value;
+        gl.bindTexture(v._target, v._texture);
     };
 
     UniformSampler.prototype._setSampler = function(textureUnitIndex) {
@@ -213,7 +213,7 @@ define([
         this.name = uniformName;
 
         this.value = undefined;
-        this._value = undefined;
+        this._value = 0.0;
 
         this._gl = gl;
         this._location = location;
@@ -235,7 +235,7 @@ define([
         this.name = uniformName;
 
         this.value = undefined;
-        this._value = undefined;
+        this._value = new Cartesian2();
 
         this._gl = gl;
         this._location = location;
@@ -244,7 +244,7 @@ define([
     UniformIntVec2.prototype.set = function() {
         var v = this.value;
         if (!Cartesian2.equals(v, this._value)) {
-            this._value = Cartesian2.clone(v, this._value);
+            Cartesian2.clone(v, this._value);
             this._gl.uniform2i(this._location, v.x, v.y);
         }
     };
@@ -258,7 +258,7 @@ define([
         this.name = uniformName;
 
         this.value = undefined;
-        this._value = undefined;
+        this._value = new Cartesian3();
 
         this._gl = gl;
         this._location = location;
@@ -267,7 +267,7 @@ define([
     UniformIntVec3.prototype.set = function() {
         var v = this.value;
         if (!Cartesian3.equals(v, this._value)) {
-            this._value = Cartesian3.clone(v, this._value);
+            Cartesian3.clone(v, this._value);
             this._gl.uniform3i(this._location, v.x, v.y, v.z);
         }
     };
@@ -281,7 +281,7 @@ define([
         this.name = uniformName;
 
         this.value = undefined;
-        this._value = undefined;
+        this._value = new Cartesian4();
 
         this._gl = gl;
         this._location = location;
@@ -290,7 +290,7 @@ define([
     UniformIntVec4.prototype.set = function() {
         var v = this.value;
         if (!Cartesian4.equals(v, this._value)) {
-            this._value = Cartesian4.clone(v, this._value);
+            Cartesian4.clone(v, this._value);
             this._gl.uniform4i(this._location, v.x, v.y, v.z, v.w);
         }
     };
@@ -304,17 +304,13 @@ define([
         this.name = uniformName;
 
         this.value = undefined;
-        this._value = undefined;
+        this._value = new Float32Array(4);
 
         this._gl = gl;
         this._location = location;
     }
 
     UniformMat2.prototype.set = function() {
-        if (!defined(this._value)) {
-            this._value = new Float32Array(4);
-        }
-
         if (!Matrix2.equalsArray(this.value, this._value, 0)) {
             Matrix2.toArray(this.value, this._value);
             this._gl.uniformMatrix2fv(this._location, false, this._value);
@@ -330,17 +326,13 @@ define([
         this.name = uniformName;
 
         this.value = undefined;
-        this._value = undefined;
+        this._value = new Float32Array(9);
 
         this._gl = gl;
         this._location = location;
     }
 
     UniformMat3.prototype.set = function() {
-        if (!defined(this._value)) {
-            this._value = new Float32Array(9);
-        }
-
         if (!Matrix3.equalsArray(this.value, this._value, 0)) {
             Matrix3.toArray(this.value, this._value);
             this._gl.uniformMatrix3fv(this._location, false, this._value);
@@ -356,17 +348,13 @@ define([
         this.name = uniformName;
 
         this.value = undefined;
-        this._value = undefined;
+        this._value = new Float32Array(16);
 
         this._gl = gl;
         this._location = location;
     }
 
     UniformMat4.prototype.set = function() {
-        if (!defined(this._value)) {
-            this._value = new Float32Array(16);
-        }
-
         if (!Matrix4.equalsArray(this.value, this._value, 0)) {
             Matrix4.toArray(this.value, this._value);
             this._gl.uniformMatrix4fv(this._location, false, this._value);
