@@ -168,7 +168,7 @@ defineSuite([
         property.intervals.addInterval(interval2);
         expect(listener.calls.count()).toBe(2);
 
-        //interval2 overwrites interval1, so callCount should not increase.
+        //interval2 overwrites interval1, so calls.count() should not increase.
         interval1.data.color.setValue(Color.BLUE);
         expect(listener.calls.count()).toBe(2);
     });

@@ -162,7 +162,7 @@ defineSuite([
         property.intervals.addInterval(interval2);
         expect(listener.calls.count()).toBe(2);
 
-        //interval2 overwrites interval1, so callCount should not increase.
+        //interval2 overwrites interval1, so calls.count() should not increase.
         interval1.data.setValue(new Cartesian3());
         expect(listener.calls.count()).toBe(2);
     });
