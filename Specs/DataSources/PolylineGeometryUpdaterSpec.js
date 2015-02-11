@@ -22,8 +22,7 @@ defineSuite([
         'Scene/Globe',
         'Scene/PrimitiveCollection',
         'Specs/createDynamicProperty',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], function(
         PolylineGeometryUpdater,
         BoundingSphere,
@@ -47,8 +46,7 @@ defineSuite([
         Globe,
         PrimitiveCollection,
         createDynamicProperty,
-        createScene,
-        destroyScene) {
+        createScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -59,7 +57,7 @@ defineSuite([
     });
 
     afterAll(function(){
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     beforeEach(function() {

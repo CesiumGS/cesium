@@ -3,14 +3,12 @@ defineSuite([
         'Widgets/Geocoder/GeocoderViewModel',
         'Core/Cartesian3',
         'Scene/Camera',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], function(
         GeocoderViewModel,
         Cartesian3,
         Camera,
-        createScene,
-        destroyScene) {
+        createScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -20,7 +18,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     it('constructor sets expected properties', function() {
