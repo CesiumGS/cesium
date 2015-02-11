@@ -44,11 +44,6 @@ var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
     requestVertexNormals : true
 });
 
-var cesiumTerrainProviderHeightmaps = new Cesium.CesiumTerrainProvider({
-    url : '//cesiumjs.org/smallterrain',
-    credit : 'Terrain data courtesy Analytical Graphics, Inc.'
-});
-
 var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
 
 var vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
@@ -87,11 +82,6 @@ Sandcastle.addToolbarMenu([{
             url : '//assets.agi.com/stk-terrain/world',
             requestWaterMask : true
         });
-    }
-}, {
-    text : 'CesiumTerrainProvider - Small Terrain heightmaps',
-    onselect : function() {
-        viewer.terrainProvider = cesiumTerrainProviderHeightmaps;
     }
 }, {
     text : 'EllipsoidTerrainProvider',
