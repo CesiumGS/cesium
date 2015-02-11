@@ -147,33 +147,9 @@ defineSuite([
             debugShowBoundingVolume : true
         });
 
-        var commandList = [];
-        rectangle.update(context, frameState, commandList);
-
-        var sphere = commandList[0].boundingVolume;
-        var center = Cartesian3.clone(sphere.center);
-        var radius = sphere.radius;
-
-        var camera = frameState.camera;
-        var direction = Ellipsoid.WGS84.geodeticSurfaceNormal(center, camera.direction);
-        Cartesian3.negate(direction, direction);
-        Cartesian3.normalize(direction, direction);
-        var right = Cartesian3.cross(direction, Cartesian3.UNIT_Z, camera.right);
-        Cartesian3.normalize(right, right);
-        Cartesian3.cross(right, direction, camera.up);
-
-        var scalar = Cartesian3.magnitude(center) + radius;
-        Cartesian3.normalize(center, center);
-        Cartesian3.multiplyByScalar(center, scalar, camera.position);
-
-        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
-        context.uniformState.update(context, frameState);
-
         var commands = [];
-        render(context, frameState, rectangle, commands);
+        rectangle.update(context, frameState, commands);
 
-        // Our spec render function doesn't honor the debugShowBoundingVolume flag.  So just verify that it
-        // was set.
         expect(commands.length).toBeGreaterThan(0);
         for (var i = 0; i < commands.length; ++i) {
             expect(commands[i].debugShowBoundingVolume).toBe(true);
