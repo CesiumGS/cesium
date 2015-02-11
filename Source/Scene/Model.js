@@ -158,6 +158,7 @@ define([
     // are cached per context.
     var CachedGltf = function(options) {
         this._gltf = gltfDefaults(options.gltf);
+        this._bgltf = options.bgltf;
         this.ready = options.ready;
         this.modelsToLoad = [];
         this.count = 0;
@@ -172,11 +173,19 @@ define([
             get : function() {
                 return this._gltf;
             }
+        },
+
+        bgltf : {
+            get : function() {
+                return this._bgltf;
+            }
         }
     });
 
-    CachedGltf.prototype.makeReady = function(gltfJson) {
+    CachedGltf.prototype.makeReady = function(gltfJson, bgltf) {
         this.gltf = gltfJson;
+        this._bgltf = bgltf;
+
         var models = this.modelsToLoad;
         var length = models.length;
         for (var i = 0; i < length; ++i) {
@@ -449,6 +458,7 @@ define([
             }
         },
 
+// TODO: update doc and maybe rename this since it is more than JSON
         /**
          * When <code>true</code>, the glTF JSON is not stored with the model once the model is
          * loaded (when {@link Model#ready} is <code>true</code>).  This saves memory when
@@ -691,6 +701,7 @@ define([
 
     var sizeOfUnit32 = Uint32Array.BYTES_PER_ELEMENT;
 
+// TODO: update doc to include .gltf
     /**
      * Creates a model from a glTF asset.  When the model is ready to render, i.e., when the external binary, image,
      * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyPromise} is resolved.
@@ -785,7 +796,7 @@ define([
                     byteOffset += sizeOfUnit32;
 
                     var jsonString = getStringFromTypedArray(arrayBuffer, jsonOffset, jsonLength);
-                    cachedGltf.makeReady(JSON.parse(jsonString));
+                    cachedGltf.makeReady(JSON.parse(jsonString), arrayBuffer);
                 }).otherwise(getFailedLoadFunction(model, 'bgltf', url));
             } else {
                 // Load text (JSON) glTF
@@ -955,7 +966,14 @@ define([
             if (buffers.hasOwnProperty(name)) {
                 var buffer = buffers[name];
 
-                if (buffer.type === 'arraybuffer') {
+// TODO: Best semantic for this?
+                if (name === 'self') {
+debugger;
+                    // Buffer is the binary glTF file itself that is already loaded
+                    var loadResources = model._loadResources;
+                    loadResources.buffers[name] = model._cachedGltf.bgltf;
+                }
+                else if (buffer.type === 'arraybuffer') {
                     ++model._loadResources.pendingBufferLoads;
                     var uri = new Uri(buffer.uri);
                     var bufferPath = uri.resolve(model._baseUri).toString();
