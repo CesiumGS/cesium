@@ -384,8 +384,9 @@ define([
 
     function processBillboardIcon(dataSource, node, targetEntity, sourceUri, uriResolver) {
         //Map style to billboard properties
-        //TODO heading, hotSpot
+        //TODO hotSpot
         var scale = queryNumericValue(node, 'scale', namespaces.kml);
+        var heading = queryNumericValue(node, 'heading', namespaces.kml);
         var color = queryColorValue(node, 'color', namespaces.kml);
         var iconNode = queryFirstNode(node, 'Icon', namespaces.kml);
         var href = queryStringValue(iconNode, 'href', namespaces.kml);
@@ -400,15 +401,26 @@ define([
             billboard = createDefaultBillboard(dataSource);
             targetEntity.billboard = billboard;
         }
+
         if (defined(icon)) {
             billboard.image = icon;
         }
+
         if (defined(x) || defined(y) || defined(w) || defined(h)) {
             billboard.imageSubRegion = new BoundingRectangle(x, y, w, h);
         }
+
         if (defined(scale)) {
             billboard.scale = scale;
         }
+
+        //GE treats a heading of zero as no heading
+        //Yes, this means it's impossible to actually point north in KML
+        if (defined(heading) && heading !== 0) {
+            billboard.rotation = CesiumMath.toRadians(-heading);
+            billboard.alignedAxis = Cartesian3.UNIT_Z;
+        }
+
         if (defined(color)) {
             billboard.color = color;
         }

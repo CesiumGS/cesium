@@ -648,6 +648,7 @@ defineSuite([
                 <color>00000000</color>\
                 <colorMode>normal</colorMode>\
                 <scale>1.1</scale>\
+                <heading>-90</heading>\
                 <Icon>\
                     <href>http://maps.google.com/mapfiles/kml/pal3/icon21.png</href>\
                 </Icon>\
@@ -666,6 +667,8 @@ defineSuite([
         expect(entities.length).toEqual(1);
         expect(entities[0].billboard.scale.getValue()).toEqual(scale.getValue());
         expect(entities[0].billboard.color).toEqual(color);
+        expect(entities[0].billboard.rotation.getValue()).toEqual(Math.PI / 2.0);
+        expect(entities[0].billboard.alignedAxis.getValue()).toEqual(Cartesian3.UNIT_Z);
         expect(entities[0].billboard.subRegion).toBeUndefined();
     });
 
