@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
@@ -43,6 +44,7 @@ define([
         './RectangleGraphics',
         './SampledPositionProperty'
     ], function(
+        BoundingRectangle,
         Cartesian2,
         Cartesian3,
         Cartographic,
@@ -199,6 +201,9 @@ define([
     };
 
     function queryFirstNode(node, tagName, namespace) {
+        if (!defined(node)) {
+            return undefined;
+        }
         var childNodes = node.childNodes;
         var length = childNodes.length;
         for (var q = 0; q < length; q++) {
@@ -211,6 +216,9 @@ define([
     }
 
     function queryNodes(node, tagName, namespace) {
+        if (!defined(node)) {
+            return [];
+        }
         var result = [];
         var childNodes = node.getElementsByTagName(tagName);
         var length = childNodes.length;
@@ -224,6 +232,9 @@ define([
     }
 
     function queryChildNodes(node, tagName, namespace) {
+        if (!defined(node)) {
+            return [];
+        }
         var result = [];
         var childNodes = node.childNodes;
         var length = childNodes.length;
@@ -255,13 +266,13 @@ define([
 
     function queryBooleanValue(node, tagName, namespace) {
         var result = queryFirstNode(node, tagName, namespace);
-        if (defined(result)) {
-            return result.textContent === '1';
-        }
-        return undefined;
+        return defined(result) ? result.textContent === '1' : undefined;
     }
 
     function resolveHref(href, dataSource, sourceUri, uriResolver) {
+        if (!defined(href)) {
+            return undefined;
+        }
         var hrefResolved = false;
         if (defined(uriResolver)) {
             var blob = uriResolver[href];
@@ -283,7 +294,7 @@ define([
     function queryColorValue(node, tagName, namespace) {
         var colorString = queryStringValue(node, tagName, namespace);
         if (!defined(colorString)) {
-            return;
+            return undefined;
         }
 
         var alpha = parseInt(colorString.substring(0, 2), 16) / 255.0;
@@ -371,33 +382,44 @@ define([
         return label;
     }
 
+    function processBillboardIcon(dataSource, node, targetEntity, sourceUri, uriResolver) {
+        //Map style to billboard properties
+        //TODO heading, hotSpot
+        var scale = queryNumericValue(node, 'scale', namespaces.kml);
+        var color = queryColorValue(node, 'color', namespaces.kml);
+        var iconNode = queryFirstNode(node, 'Icon', namespaces.kml);
+        var href = queryStringValue(iconNode, 'href', namespaces.kml);
+        var icon = resolveHref(href, dataSource, sourceUri, uriResolver);
+        var x = queryNumericValue(iconNode, 'x', namespaces.gx);
+        var y = queryNumericValue(iconNode, 'y', namespaces.gx);
+        var w = queryNumericValue(iconNode, 'w', namespaces.gx);
+        var h = queryNumericValue(iconNode, 'h', namespaces.gx);
+
+        var billboard = targetEntity.billboard;
+        if (!defined(billboard)) {
+            billboard = createDefaultBillboard(dataSource);
+            targetEntity.billboard = billboard;
+        }
+        if (defined(icon)) {
+            billboard.image = icon;
+        }
+        if (defined(x) || defined(y) || defined(w) || defined(h)) {
+            billboard.imageSubRegion = new BoundingRectangle(x, y, w, h);
+        }
+        if (defined(scale)) {
+            billboard.scale = scale;
+        }
+        if (defined(color)) {
+            billboard.color = color;
+        }
+    }
+
     function applyStyle(dataSource, styleNode, targetEntity, sourceUri, uriResolver) {
         for (var i = 0, len = styleNode.childNodes.length; i < len; i++) {
             var node = styleNode.childNodes.item(i);
             var material;
             if (node.nodeName === 'IconStyle') {
-                //Map style to billboard properties
-                //TODO heading, hotSpot
-                var scale = queryNumericValue(node, 'scale', namespaces.kml);
-                var color = queryColorValue(node, 'color', namespaces.kml);
-                var iconNode = queryFirstNode(node, 'Icon', namespaces.kml);
-                var href = defined(iconNode) ? queryStringValue(iconNode, 'href', namespaces.kml) : undefined;
-                var icon = defined(href) ? resolveHref(href, dataSource, sourceUri, uriResolver) : undefined;
-
-                var billboard = targetEntity.billboard;
-                if (!defined(billboard)) {
-                    billboard = createDefaultBillboard(dataSource);
-                    targetEntity.billboard = billboard;
-                }
-                if (defined(icon)) {
-                    billboard.image = icon;
-                }
-                if (defined(scale)) {
-                    billboard.scale = scale;
-                }
-                if (defined(color)) {
-                    billboard.color = color;
-                }
+                processBillboardIcon(dataSource, node, targetEntity, sourceUri, uriResolver);
             } else if (node.nodeName === 'LabelStyle') {
                 //Map style to label properties
                 var label = defined(targetEntity.label) ? targetEntity.label : new LabelGraphics();
