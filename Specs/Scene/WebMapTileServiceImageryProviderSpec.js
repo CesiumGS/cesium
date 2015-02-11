@@ -109,7 +109,7 @@ defineSuite([
         var tilerow = 5;
         var level = 1;
         provider.requestImage(tilecol, tilerow, level);
-        var uri = new Uri(ImageryProvider.loadImage.mostRecentCall.args[1]);
+        var uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1]);
         expect(uri.toString()).toEqual('http://wmts.invalid/someStyle/someTMS/second/5/12.png');
     });
 

@@ -96,10 +96,10 @@ defineSuite([
 
     function verifyRender(model) {
         expect(model.ready).toBe(true);
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene.renderForSpecs()).toEqual(new Uint8Array([0, 0, 0, 255]));
         model.show = true;
         model.zoomTo();
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene.renderForSpecs()).not.toEqual(new Uint8Array([0, 0, 0, 255]));
         model.show = false;
     }
 
@@ -140,7 +140,7 @@ defineSuite([
     });
 
     it('resolves readyPromise', function() {
-        waitsForPromise(duckModel.readyPromise, function(model) {
+        return duckModel.readyPromise.then(function(model) {
             verifyRender(model);
         });
     });

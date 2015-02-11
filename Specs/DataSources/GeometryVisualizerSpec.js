@@ -446,15 +446,14 @@ defineSuite([
 
         var state;
         var result = new BoundingSphere();
-        waitsFor(function() {
+
+        return pollToPromise(function() {
             scene.initializeFrame();
             scene.render();
             visualizer.update(time);
             state = visualizer.getBoundingSphere(entity, result);
             return state !== BoundingSphereState.PENDING;
-        });
-
-        runs(function() {
+        }).then(function() {
             var primitive = scene.primitives.get(0);
             expect(state).toBe(BoundingSphereState.DONE);
             var attributes = primitive.getGeometryInstanceAttributes(entity);

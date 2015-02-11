@@ -425,7 +425,8 @@ defineSuite([
         expect(viewer.scene.imageryLayers.length).toEqual(1);
         expect(viewer.scene.imageryLayers.get(0).imageryProvider).toBe(testProvider);
         expect(viewer.baseLayerPicker.viewModel.selectedImagery).toBe(testProviderViewModel);
-        expect(viewer.baseLayerPicker.viewModel.imageryProviderViewModels).toEqual(models);
+        expect(viewer.baseLayerPicker.viewModel.imageryProviderViewModels.length).toBe(models.length);
+        expect(viewer.baseLayerPicker.viewModel.imageryProviderViewModels[0]).toEqual(models[0]);
     });
 
     it('can disable render loop', function() {
@@ -783,12 +784,11 @@ defineSuite([
         viewer.trackedEntity = entity;
 
         expect(viewer.trackedEntity).toBe(entity);
-        waitsFor(function() {
+
+        return pollToPromise(function() {
             viewer.render();
             return Cartesian3.equals(Matrix4.getTranslation(viewer.scene.camera.transform, new Cartesian3()), entity.position.getValue());
-        });
-
-        runs(function() {
+        }).then(function() {
             dataSource.entities.remove(entity);
 
             expect(viewer.trackedEntity).toBeUndefined();
@@ -798,19 +798,17 @@ defineSuite([
             viewer.trackedEntity = entity;
 
             expect(viewer.trackedEntity).toBe(entity);
-        });
 
-        waitsFor(function() {
-            viewer.render();
-            viewer.render();
-            return Cartesian3.equals(Matrix4.getTranslation(viewer.scene.camera.transform, new Cartesian3()), entity.position.getValue());
-        });
+            return pollToPromise(function() {
+                viewer.render();
+                viewer.render();
+                return Cartesian3.equals(Matrix4.getTranslation(viewer.scene.camera.transform, new Cartesian3()), entity.position.getValue());
+            }).then(function() {
+                viewer.dataSources.remove(dataSource);
 
-        runs(function() {
-            viewer.dataSources.remove(dataSource);
-
-            expect(viewer.trackedEntity).toBeUndefined();
-            expect(viewer.scene.camera.transform).toEqual(Matrix4.IDENTITY);
+                expect(viewer.trackedEntity).toBeUndefined();
+                expect(viewer.scene.camera.transform).toEqual(Matrix4.IDENTITY);
+            });
         });
     });
 

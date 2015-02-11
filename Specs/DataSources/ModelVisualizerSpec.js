@@ -13,7 +13,7 @@ defineSuite([
         'Scene/Globe',
         'Specs/createScene',
         'Specs/destroyScene',
-        'Specs/waitsForPromise'
+        'Specs/pollToPromise'
     ], function(
         ModelVisualizer,
         BoundingSphere,
@@ -28,9 +28,9 @@ defineSuite([
         Globe,
         createScene,
         destroyScene,
-        waitsForPromise) {
+        pollToPromise) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var duckUrl = 'Data/Models/duck/duck.gltf';
 
@@ -185,13 +185,11 @@ defineSuite([
         var state = visualizer.getBoundingSphere(testObject, result);
         expect(state).toBe(BoundingSphereState.PENDING);
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             scene.render();
             state = visualizer.getBoundingSphere(testObject, result);
             return state !== BoundingSphereState.PENDING;
-        });
-
-        runs(function() {
+        }).then(function() {
             expect(state).toBe(BoundingSphereState.DONE);
             var expected = BoundingSphere.transform(modelPrimitive.boundingSphere, modelPrimitive.modelMatrix, new BoundingSphere());
             expect(result).toEqual(expected);

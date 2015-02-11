@@ -479,7 +479,7 @@ defineSuite([
 
             expect(imagery.parent.state).toBe(ImageryState.UNLOADED);
 
-            waitsFor(function() {
+            return pollToPromise(function() {
                 GlobeSurfaceTile.processStateMachine(tile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
                 return imagery.parent.state !== ImageryState.UNLOADED;
             });
