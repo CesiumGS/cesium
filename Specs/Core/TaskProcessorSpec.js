@@ -23,7 +23,7 @@ defineSuite([
         }
 
         TaskProcessor._loaderConfig = {
-            baseUrl : absolutize(require.toUrl('Specs/../Source'))
+            baseUrl : '../../Source'
         };
     });
 

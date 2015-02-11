@@ -13,7 +13,7 @@ define([
 		options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
 		var pollInterval = defaultValue(options.pollInterval, 1);
-		var timeout = defaultValue(options.timeout, 5000);
+		var timeout = defaultValue(options.timeout, 4000);
 
 		var deferred = when.defer();
 
