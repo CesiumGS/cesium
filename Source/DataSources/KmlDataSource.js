@@ -27,6 +27,7 @@ define([
         '../Core/RuntimeError',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
+        '../Scene/HorizontalOrigin',
         '../Scene/LabelStyle',
         '../Scene/VerticalOrigin',
         '../ThirdParty/Uri',
@@ -71,6 +72,7 @@ define([
         RuntimeError,
         TimeInterval,
         TimeIntervalCollection,
+        HorizontalOrigin,
         LabelStyle,
         VerticalOrigin,
         Uri,
@@ -90,6 +92,8 @@ define([
     "use strict";
 
     var parser = new DOMParser();
+    var BILLBOARD_SIZE = 32;
+
     var scratchCartographic = new Cartographic();
     var scratchCartesian = new Cartesian3();
 
@@ -199,6 +203,38 @@ define([
         gx : ['http://www.google.com/kml/ext/2.2'],
         atom : ['http://www.w3.org/2005/Atom']
     };
+
+    function queryAttributeValue(node, attributeName, namespace) {
+        if (!defined(node)) {
+            return undefined;
+        }
+        var attributes = node.attributes;
+        var length = attributes.length;
+        for (var q = 0; q < length; q++) {
+            var child = attributes[q];
+            if (child.name === attributeName && namespace.indexOf(child.namespaceURI) !== -1) {
+                return child;
+            }
+        }
+        return undefined;
+    }
+
+    function queryNumericAttribute(node, attributeName, namespace) {
+        var resultNode = queryAttributeValue(node, attributeName, namespace);
+        if (defined(resultNode)) {
+            var result = parseFloat(resultNode.value);
+            return !isNaN(result) ? result : undefined;
+        }
+        return undefined;
+    }
+
+    function queryStringAttribute(node, attributeName, namespace) {
+        var result = queryAttributeValue(node, attributeName, namespace);
+        if (defined(result)) {
+            return result.value;
+        }
+        return undefined;
+    }
 
     function queryFirstNode(node, tagName, namespace) {
         if (!defined(node)) {
@@ -364,8 +400,8 @@ define([
 
     function createDefaultBillboard(dataSource) {
         var billboard = new BillboardGraphics();
-        billboard.width = 32;
-        billboard.height = 32;
+        billboard.width = BILLBOARD_SIZE;
+        billboard.height = BILLBOARD_SIZE;
         billboard.scaleByDistance = new NearFarScalar(2414016, 1.0, 1.6093e+7, 0.1);
         return billboard;
     }
@@ -384,10 +420,10 @@ define([
 
     function processBillboardIcon(dataSource, node, targetEntity, sourceUri, uriResolver) {
         //Map style to billboard properties
-        //TODO hotSpot
         var scale = queryNumericValue(node, 'scale', namespaces.kml);
         var heading = queryNumericValue(node, 'heading', namespaces.kml);
         var color = queryColorValue(node, 'color', namespaces.kml);
+
         var iconNode = queryFirstNode(node, 'Icon', namespaces.kml);
         var href = queryStringValue(iconNode, 'href', namespaces.kml);
         var icon = resolveHref(href, dataSource, sourceUri, uriResolver);
@@ -395,6 +431,12 @@ define([
         var y = queryNumericValue(iconNode, 'y', namespaces.gx);
         var w = queryNumericValue(iconNode, 'w', namespaces.gx);
         var h = queryNumericValue(iconNode, 'h', namespaces.gx);
+
+        var hotSpotNode = queryFirstNode(node, 'hotSpot', namespaces.kml);
+        var hotSpotX = queryNumericAttribute(hotSpotNode, 'x', namespaces.kml);
+        var hotSpotY = queryNumericAttribute(hotSpotNode, 'y', namespaces.kml);
+        var hotSpotXUnit = queryStringAttribute(hotSpotNode, 'xunits', namespaces.kml);
+        var hotSpotYUnit = queryStringAttribute(hotSpotNode, 'yunits', namespaces.kml);
 
         var billboard = targetEntity.billboard;
         if (!defined(billboard)) {
@@ -423,6 +465,46 @@ define([
 
         if (defined(color)) {
             billboard.color = color;
+        }
+
+        var xOffset;
+        var yOffset;
+        if (defined(hotSpotX)) {
+            if (hotSpotXUnit === 'pixels') {
+                billboard.horizontalOrigin = HorizontalOrigin.LEFT;
+                xOffset = hotSpotX / 2;
+            } else if (hotSpotXUnit === 'insetPixels') {
+                billboard.horizontalOrigin = HorizontalOrigin.RIGHT;
+                xOffset = hotSpotX / 2;
+            } else if (hotSpotXUnit === 'fraction') {
+                billboard.horizontalOrigin = HorizontalOrigin.LEFT;
+                xOffset = hotSpotX * BILLBOARD_SIZE;
+            }
+        }
+
+        if (defined(hotSpotY)) {
+            if (hotSpotYUnit === 'pixels') {
+                billboard.verticalOrigin = VerticalOrigin.BOTTOM;
+                yOffset = -hotSpotY;
+            } else if (hotSpotYUnit === 'insetPixels') {
+                billboard.verticalOrigin = VerticalOrigin.TOP;
+                yOffset = hotSpotY;
+            } else if (hotSpotYUnit === 'fraction') {
+                billboard.verticalOrigin = VerticalOrigin.BOTTOM;
+                yOffset = -hotSpotY * BILLBOARD_SIZE;
+            }
+        }
+
+        if (defined(xOffset) || defined(yOffset)) {
+            if (defined(scale)) {
+                if (defined(xOffset)) {
+                    xOffset *= scale;
+                }
+                if (defined(yOffset)) {
+                    yOffset *= scale;
+                }
+            }
+            billboard.pixelOffset = new Cartesian2(xOffset, yOffset);
         }
     }
 
