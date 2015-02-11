@@ -7,7 +7,6 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/FeatureDetection',
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
@@ -20,7 +19,6 @@ define([
         defined,
         defineProperties,
         DeveloperError,
-        FeatureDetection,
         Matrix2,
         Matrix3,
         Matrix4,
@@ -28,25 +26,21 @@ define([
     "use strict";
     /*global console*/
 
-    var scratchUniformMatrix2;
-    var scratchUniformMatrix3;
-    var scratchUniformMatrix4;
-    if (FeatureDetection.supportsTypedArrays()) {
-        scratchUniformMatrix2 = new Float32Array(4);
-        scratchUniformMatrix3 = new Float32Array(9);
-        scratchUniformMatrix4 = new Float32Array(16);
-    }
-
     /**
      * @private
      */
     var Uniform = function(gl, activeUniform, uniformName, location) {
+        // PERFORMANCE_IDEA: the type of value and _value depend on the
+        // uniform's type.  We should have a different class per type,
+        // not just change the set function depending on the type.
         this.value = undefined;
         this._value = undefined;
 
+        var type = activeUniform.type;
+
         this._gl = gl;
-        this._activeUniform = activeUniform;
-        this._uniformName = uniformName;
+        this._type = type;
+        this._name = uniformName;
         this._location = location;
 
         /**
@@ -55,7 +49,7 @@ define([
         this.textureUnitIndex = undefined;
 
         var set;
-        switch (activeUniform.type) {
+        switch (type) {
             case gl.FLOAT:
                 set = this.setFloat;
                 break;
@@ -98,12 +92,12 @@ define([
                 set = this.setMat4;
                 break;
             default:
-                throw new RuntimeError('Unrecognized uniform type: ' + activeUniform.type + ' for uniform "' + uniformName + '".');
+                throw new RuntimeError('Unrecognized uniform type: ' + type + ' for uniform "' + uniformName + '".');
         }
 
         this._set = set;
 
-        if ((activeUniform.type === gl.SAMPLER_2D) || (activeUniform.type === gl.SAMPLER_CUBE)) {
+        if ((type === gl.SAMPLER_2D) || (type === gl.SAMPLER_CUBE)) {
             this._setSampler = function(textureUnitIndex) {
                 this.textureUnitIndex = textureUnitIndex;
                 gl.uniform1i(location, textureUnitIndex);
@@ -115,12 +109,12 @@ define([
     defineProperties(Uniform.prototype, {
         name : {
             get : function() {
-                return this._uniformName;
+                return this._name;
             }
         },
         datatype : {
             get : function() {
-                return this._activeUniform.type;
+                return this._type;
             }
         }
     });
@@ -214,26 +208,35 @@ define([
     };
 
     Uniform.prototype.setMat2 = function() {
-        var v = this.value;
-        if (!Matrix2.equals(v, this._value)) {
-            this._value = Matrix2.clone(v, this._value);
-            this._gl.uniformMatrix2fv(this._location, false, Matrix2.toArray(this.value, scratchUniformMatrix2));
+        if (!defined(this._value)) {
+            this._value = new Float32Array(4);
+        }
+
+        if (!Matrix2.equalsArray(this.value, this._value, 0)) {
+            Matrix2.toArray(this.value, this._value);
+            this._gl.uniformMatrix2fv(this._location, false, this._value);
         }
     };
 
     Uniform.prototype.setMat3 = function() {
-        var v = this.value;
-        if (!Matrix3.equals(v, this._value)) {
-            this._value = Matrix3.clone(v, this._value);
-            this._gl.uniformMatrix3fv(this._location, false, Matrix3.toArray(this.value, scratchUniformMatrix3));
+        if (!defined(this._value)) {
+            this._value = new Float32Array(9);
+        }
+
+        if (!Matrix3.equalsArray(this.value, this._value, 0)) {
+            Matrix3.toArray(this.value, this._value);
+            this._gl.uniformMatrix3fv(this._location, false, this._value);
         }
     };
 
     Uniform.prototype.setMat4 = function() {
-        var v = this.value;
-        if (!Matrix4.equals(v, this._value)) {
-            this._value = Matrix4.clone(v, this._value);
-            this._gl.uniformMatrix4fv(this._location, false, Matrix4.toArray(this.value, scratchUniformMatrix4));
+        if (!defined(this._value)) {
+            this._value = new Float32Array(16);
+        }
+
+        if (!Matrix4.equalsArray(this.value, this._value, 0)) {
+            Matrix4.toArray(this.value, this._value);
+            this._gl.uniformMatrix4fv(this._location, false, this._value);
         }
     };
 

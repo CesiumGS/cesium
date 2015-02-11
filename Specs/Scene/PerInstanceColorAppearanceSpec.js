@@ -10,7 +10,6 @@ defineSuite([
         'Scene/Primitive',
         'Specs/createContext',
         'Specs/createFrameState',
-        'Specs/destroyContext',
         'Specs/render'
     ], function(
         PerInstanceColorAppearance,
@@ -23,7 +22,6 @@ defineSuite([
         Primitive,
         createContext,
         createFrameState,
-        destroyContext,
         render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -57,7 +55,7 @@ defineSuite([
 
     afterAll(function() {
         primitive = primitive && primitive.destroy();
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     it('constructor', function() {

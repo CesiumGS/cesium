@@ -18,8 +18,7 @@ defineSuite([
         'DataSources/GridMaterialProperty',
         'DataSources/SampledProperty',
         'DataSources/StaticGeometryPerMaterialBatch',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], function(
         GeometryVisualizer,
         BoundingSphere,
@@ -39,8 +38,7 @@ defineSuite([
         GridMaterialProperty,
         SampledProperty,
         StaticGeometryPerMaterialBatch,
-        createScene,
-        destroyScene) {
+        createScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -52,7 +50,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     it('Can create and destroy', function() {

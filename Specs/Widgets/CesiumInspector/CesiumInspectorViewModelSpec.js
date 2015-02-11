@@ -10,8 +10,7 @@ defineSuite([
         'Scene/Material',
         'Scene/QuadtreeTile',
         'Scene/RectanglePrimitive',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], function(
         CesiumInspectorViewModel,
         defined,
@@ -23,8 +22,7 @@ defineSuite([
         Material,
         QuadtreeTile,
         RectanglePrimitive,
-        createScene,
-        destroyScene) {
+        createScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -37,7 +35,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     beforeEach(function() {

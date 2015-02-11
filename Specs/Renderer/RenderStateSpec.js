@@ -2,13 +2,11 @@
 defineSuite([
         'Renderer/RenderState',
         'Core/WindingOrder',
-        'Specs/createContext',
-        'Specs/destroyContext'
+        'Specs/createContext'
     ], function(
         RenderState,
         WindingOrder,
-        createContext,
-        destroyContext) {
+        createContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
     /*global WebGLRenderingContext*/
@@ -20,7 +18,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     it('creates with defaults', function() {
