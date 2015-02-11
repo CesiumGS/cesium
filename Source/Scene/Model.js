@@ -13,6 +13,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/getStringFromTypedArray',
         '../Core/IndexDatatype',
         '../Core/loadArrayBuffer',
         '../Core/loadImage',
@@ -55,6 +56,7 @@ define([
         destroyObject,
         DeveloperError,
         Event,
+        getStringFromTypedArray,
         IndexDatatype,
         loadArrayBuffer,
         loadImage,
@@ -672,17 +674,6 @@ define([
         }
     });
 
-    function getStringFromTypedArray(buffer, byteOffset, length) {
-        var view = new Uint8Array(buffer, byteOffset, length);
-
-        if (typeof TextDecoder !== 'undefined') {
-            var decoder = new TextDecoder('utf-8');
-            return decoder.decode(view);
-        }
-
-        return String.fromCharCode.apply(String, view);
-    }
-
     function getBasePath(url) {
         var basePath = '';
         var i = url.lastIndexOf('/');
@@ -968,7 +959,6 @@ define([
 
 // TODO: Best semantic for this?
                 if (name === 'self') {
-debugger;
                     // Buffer is the binary glTF file itself that is already loaded
                     var loadResources = model._loadResources;
                     loadResources.buffers[name] = model._cachedGltf.bgltf;
@@ -997,7 +987,9 @@ debugger;
     function shaderLoad(model, name) {
         return function(source) {
             var loadResources = model._loadResources;
-            loadResources.shaders[name] = source;
+            loadResources.shaders[name] = {
+                source : source
+            };
             --loadResources.pendingShaderLoads;
          };
     }
@@ -1008,9 +1000,18 @@ debugger;
             if (shaders.hasOwnProperty(name)) {
                 ++model._loadResources.pendingShaderLoads;
                 var shader = shaders[name];
-                var uri = new Uri(shader.uri);
-                var shaderPath = uri.resolve(model._baseUri).toString();
-                loadText(shaderPath).then(shaderLoad(model, name)).otherwise(getFailedLoadFunction(model, 'shader', shaderPath));
+
+                // Shader references either uri (external or base64-encoded) or bufferView
+                if (defined(shader.uri)) {
+                    var uri = new Uri(shader.uri);
+                    var shaderPath = uri.resolve(model._baseUri).toString();
+                    loadText(shaderPath).then(shaderLoad(model, name)).otherwise(getFailedLoadFunction(model, 'shader', shaderPath));
+                } else if (defined(shader.bufferView)) {
+                    var loadResources = model._loadResources;
+                    loadResources.shaders[name] = {
+                        bufferView : shader.bufferView
+                    };
+                }
             }
         }
     }
@@ -1214,6 +1215,7 @@ debugger;
 
             // bufferViews referencing animations are ignored here and handled in createRuntimeAnimations.
             // bufferViews referencing skins are ignored here and handled in createSkins.
+            // bufferViews reference shader sources are ignored here and handled in createPrograms.
         }
 
         // The Cesium Renderer requires knowing the datatype for an index buffer
@@ -1249,14 +1251,27 @@ debugger;
         return attributeLocations;
     }
 
+    function getShaderSource(model, shader) {
+        if (defined(shader.source)) {
+            return shader.source;
+        }
+
+debugger;
+        var buffers = model._loadResources.buffers;
+        var gltf = model.gltf;
+        var bufferView = gltf.bufferViews[shader.bufferView];
+
+        return getStringFromTypedArray(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
+    }
+
     function createProgram(name, model, context) {
         var programs = model.gltf.programs;
         var shaders = model._loadResources.shaders;
         var program = programs[name];
 
         var attributeLocations = createAttributeLocations(program.attributes);
-        var vs = shaders[program.vertexShader];
-        var fs = shaders[program.fragmentShader];
+        var vs = getShaderSource(model, shaders[program.vertexShader]);
+        var fs = getShaderSource(model, shaders[program.fragmentShader]);
 
         model._rendererResources.programs[name] = context.createShaderProgram(vs, fs, attributeLocations);
 
@@ -1275,6 +1290,12 @@ debugger;
         var name;
 
         if (loadResources.pendingShaderLoads !== 0) {
+            return;
+        }
+
+        // PERFORMANCE_IDEA: this could be more fine-grained by looking
+        // at the shader's bufferView's to determine the buffer dependencies.
+        if (loadResources.pendingBufferLoads !== 0) {
             return;
         }
 
