@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Cartesian2',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
@@ -8,6 +9,7 @@ define([
         './Property'
     ], function(
         Cartesian2,
+        defaultValue,
         defined,
         defineProperties,
         Event,
@@ -21,13 +23,22 @@ define([
      * A {@link MaterialProperty} that maps to image {@link Material} uniforms.
      * @alias ImageMaterialProperty
      * @constructor
+     *
+     * @param {Object} [options] Object with the following properties:
+     * @param {Property} [options.image] A Property specifying the Image, URL, or Canvas.
+     * @param {Property} [options.repeat=new Cartesian2(1.0, 1.0)] A {@link Cartesian2} Property specifying the number of times the image repeats in each direction.
      */
-    var ImageMaterialProperty = function() {
+    var ImageMaterialProperty = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         this._definitionChanged = new Event();
         this._image = undefined;
         this._imageSubscription = undefined;
         this._repeat = undefined;
         this._repeatSubscription = undefined;
+
+        this.image = options.image;
+        this.repeat = options.repeat;
     };
 
     defineProperties(ImageMaterialProperty.prototype, {
@@ -59,16 +70,16 @@ define([
             }
         },
         /**
-         * Gets or sets the Image, URL, or Canvas {@link Property} specifying the material's texture.
+         * Gets or sets the Property specifying Image, URL, or Canvas.
          * @memberof ImageMaterialProperty.prototype
          * @type {Property}
          */
         image : createPropertyDescriptor('image'),
         /**
-         * Gets or sets the {@link Cartesian2} property which determines the number of times the image repeats in each direction.
+         * Gets or sets the {@link Cartesian2} Property specifying the number of times the image repeats in each direction.
          * @memberof ImageMaterialProperty.prototype
          * @type {Property}
-         * @default new ConstantProperty(new Cartesian2(1, 1))
+         * @default new Cartesian2(1, 1)
          */
         repeat : createPropertyDescriptor('repeat')
     });

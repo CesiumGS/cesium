@@ -20,9 +20,61 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
+    it('creates expected instance from raw assignment and construction', function() {
+        var options = {
+            image : '0',
+            rotation : 1,
+            alignedAxis : new Cartesian3(2, 3, 4),
+            color : Color.RED,
+            horizontalOrigin : HorizontalOrigin.LEFT,
+            verticalOrigin : VerticalOrigin.BOTTOM,
+            eyeOffset : new Cartesian3(5, 6, 7),
+            pixelOffset : new Cartesian2(8, 9),
+            scale : 10,
+            show : true,
+            width : 11,
+            height : 12,
+            scaleByDistance : new NearFarScalar(13, 14, 15, 16),
+            translucencyByDistance : new NearFarScalar(17, 18, 19, 20),
+            pixelOffsetScaleByDistance : new NearFarScalar(21, 22, 23, 24)
+        };
+
+        var billboard = new BillboardGraphics(options);
+        expect(billboard.image).toBeInstanceOf(ConstantProperty);
+        expect(billboard.rotation).toBeInstanceOf(ConstantProperty);
+        expect(billboard.alignedAxis).toBeInstanceOf(ConstantProperty);
+        expect(billboard.color).toBeInstanceOf(ConstantProperty);
+        expect(billboard.horizontalOrigin).toBeInstanceOf(ConstantProperty);
+        expect(billboard.verticalOrigin).toBeInstanceOf(ConstantProperty);
+        expect(billboard.eyeOffset).toBeInstanceOf(ConstantProperty);
+        expect(billboard.scale).toBeInstanceOf(ConstantProperty);
+        expect(billboard.show).toBeInstanceOf(ConstantProperty);
+        expect(billboard.width).toBeInstanceOf(ConstantProperty);
+        expect(billboard.height).toBeInstanceOf(ConstantProperty);
+        expect(billboard.scaleByDistance).toBeInstanceOf(ConstantProperty);
+        expect(billboard.translucencyByDistance).toBeInstanceOf(ConstantProperty);
+        expect(billboard.pixelOffsetScaleByDistance).toBeInstanceOf(ConstantProperty);
+
+        expect(billboard.image.getValue()).toEqual(options.image);
+        expect(billboard.rotation.getValue()).toEqual(options.rotation);
+        expect(billboard.alignedAxis.getValue()).toEqual(options.alignedAxis);
+        expect(billboard.color.getValue()).toEqual(options.color);
+        expect(billboard.horizontalOrigin.getValue()).toEqual(options.horizontalOrigin);
+        expect(billboard.verticalOrigin.getValue()).toEqual(options.verticalOrigin);
+        expect(billboard.eyeOffset.getValue()).toEqual(options.eyeOffset);
+        expect(billboard.scale.getValue()).toEqual(options.scale);
+        expect(billboard.show.getValue()).toEqual(options.show);
+        expect(billboard.width.getValue()).toEqual(options.width);
+        expect(billboard.height.getValue()).toEqual(options.height);
+        expect(billboard.scaleByDistance.getValue()).toEqual(options.scaleByDistance);
+        expect(billboard.translucencyByDistance.getValue()).toEqual(options.translucencyByDistance);
+        expect(billboard.pixelOffsetScaleByDistance.getValue()).toEqual(options.pixelOffsetScaleByDistance);
+    });
+
     it('merge assigns unassigned properties', function() {
         var source = new BillboardGraphics();
         source.image = new ConstantProperty('');
+        source.imageSubRegion = new ConstantProperty();
         source.rotation = new ConstantProperty(5);
         source.alignedAxis = new ConstantProperty(new Cartesian3());
         source.color = new ConstantProperty(Color.BLACK);
@@ -42,6 +94,7 @@ defineSuite([
         target.merge(source);
 
         expect(target.image).toBe(source.image);
+        expect(target.imageSubRegion).toBe(source.imageSubRegion);
         expect(target.rotation).toBe(source.rotation);
         expect(target.alignedAxis).toBe(source.alignedAxis);
         expect(target.color).toBe(source.color);
@@ -61,6 +114,7 @@ defineSuite([
     it('merge does not assign assigned properties', function() {
         var source = new BillboardGraphics();
         source.image = new ConstantProperty('');
+        source.imageSubRegion = new ConstantProperty();
         source.rotation = new ConstantProperty(5);
         source.alignedAxis = new ConstantProperty(new Cartesian3());
         source.color = new ConstantProperty(Color.BLACK);
@@ -77,6 +131,7 @@ defineSuite([
         source.pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar(1.0, 0.0, 3.0e9, 0.0));
 
         var image = new ConstantProperty('');
+        var imageSubRegion = new ConstantProperty();
         var rotation = new ConstantProperty(5);
         var alignedAxis = new ConstantProperty(new Cartesian3());
         var color = new ConstantProperty(Color.BLACK);
@@ -94,6 +149,7 @@ defineSuite([
 
         var target = new BillboardGraphics();
         target.image = image;
+        target.imageSubRegion = imageSubRegion;
         target.rotation = rotation;
         target.alignedAxis = alignedAxis;
         target.color = color;
@@ -112,6 +168,7 @@ defineSuite([
         target.merge(source);
 
         expect(target.image).toBe(image);
+        expect(target.imageSubRegion).toBe(imageSubRegion);
         expect(target.rotation).toBe(rotation);
         expect(target.alignedAxis).toBe(alignedAxis);
         expect(target.color).toBe(color);
@@ -131,6 +188,7 @@ defineSuite([
     it('clone works', function() {
         var source = new BillboardGraphics();
         source.image = new ConstantProperty('');
+        source.imageSubRegion = new ConstantProperty();
         source.rotation = new ConstantProperty(5);
         source.alignedAxis = new ConstantProperty(new Cartesian3());
         source.color = new ConstantProperty(Color.BLACK);
@@ -148,6 +206,7 @@ defineSuite([
 
         var result = source.clone();
         expect(result.image).toBe(source.image);
+        expect(result.imageSubRegion).toBe(source.imageSubRegion);
         expect(result.rotation).toBe(source.rotation);
         expect(result.alignedAxis).toBe(source.alignedAxis);
         expect(result.color).toBe(source.color);

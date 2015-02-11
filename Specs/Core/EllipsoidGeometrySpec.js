@@ -3,12 +3,14 @@ defineSuite([
         'Core/EllipsoidGeometry',
         'Core/Cartesian3',
         'Core/Math',
-        'Core/VertexFormat'
+        'Core/VertexFormat',
+        'Specs/createPackableSpecs'
     ], function(
         EllipsoidGeometry,
         Cartesian3,
         CesiumMath,
-        VertexFormat) {
+        VertexFormat,
+        createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -79,4 +81,13 @@ defineSuite([
             expect(binormal).toEqualEpsilon(Cartesian3.cross(normal, tangent, new Cartesian3()), CesiumMath.EPSILON7);
         }
     });
+
+    var ellipsoidgeometry = new EllipsoidGeometry({
+        vertexFormat : VertexFormat.POSITION_ONLY,
+        radii : new Cartesian3(1.0, 2.0, 3.0),
+        slicePartitions: 3,
+        stackPartitions: 3
+    });
+    var packedInstance = [1.0, 2.0, 3.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 3.0];
+    createPackableSpecs(EllipsoidGeometry, ellipsoidgeometry, packedInstance);
 });

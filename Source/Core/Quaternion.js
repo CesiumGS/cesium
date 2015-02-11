@@ -175,6 +175,39 @@ define([
         return result;
     };
 
+    var scratchHPRQuaternion = new Quaternion();
+
+    /**
+     * Computes a rotation from the given heading, pitch and roll angles. Heading is the rotation about the
+     * negative z axis. Pitch is the rotation about the negative y axis. Roll is the rotation about
+     * the positive x axis.
+     *
+     * @param {Number} heading The heading angle in radians.
+     * @param {Number} pitch The pitch angle in radians.
+     * @param {Number} roll The roll angle in radians.
+     * @param {Quaternion} result The object onto which to store the result.
+     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     */
+    Quaternion.fromHeadingPitchRoll = function(heading, pitch, roll, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(heading)) {
+            throw new DeveloperError('heading is required.');
+        }
+        if (!defined(pitch)) {
+            throw new DeveloperError('pitch is required.');
+        }
+        if (!defined(roll)) {
+            throw new DeveloperError('roll is required.');
+        }
+        //>>includeEnd('debug');
+
+        var rollQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, roll, scratchHPRQuaternion);
+        var pitchQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, -pitch, result);
+        result = Quaternion.multiply(pitchQuaternion, rollQuaternion, pitchQuaternion);
+        var headingQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, -heading, scratchHPRQuaternion);
+        return Quaternion.multiply(headingQuaternion, result, result);
+    };
+
     var sampledQuaternionAxis = new Cartesian3();
     var sampledQuaternionRotation = new Cartesian3();
     var sampledQuaternionTempQuaternion = new Quaternion();

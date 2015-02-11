@@ -10,7 +10,8 @@ defineSuite([
         'Core/Interval',
         'Core/Math',
         'Core/Matrix4',
-        'Core/Rectangle'
+        'Core/Rectangle',
+        'Specs/createPackableSpecs'
     ], function(
         BoundingSphere,
         Cartesian3,
@@ -22,7 +23,8 @@ defineSuite([
         Interval,
         CesiumMath,
         Matrix4,
-        Rectangle) {
+        Rectangle,
+        createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -343,6 +345,43 @@ defineSuite([
         expect(function() {
             BoundingSphere.fromEllipsoid();
         }).toThrowDeveloperError();
+    });
+
+    it('fromBoundingSpheres with undefined returns an empty sphere', function() {
+        var sphere = BoundingSphere.fromBoundingSpheres();
+        expect(sphere.center).toEqual(Cartesian3.ZERO);
+        expect(sphere.radius).toEqual(0.0);
+    });
+
+    it('fromBoundingSpheres with empty array returns an empty sphere', function() {
+        var sphere = BoundingSphere.fromBoundingSpheres([]);
+        expect(sphere.center).toEqual(Cartesian3.ZERO);
+        expect(sphere.radius).toEqual(0.0);
+    });
+
+    it('fromBoundingSpheres works with 1 sphere', function() {
+        var one = new BoundingSphere(new Cartesian3(1, 2, 3), 4);
+
+        var sphere = BoundingSphere.fromBoundingSpheres([one]);
+        expect(sphere).toEqual(one);
+    });
+
+    it('fromBoundingSpheres works with 2 spheres', function() {
+        var one = new BoundingSphere(new Cartesian3(1, 2, 3), 4);
+        var two = new BoundingSphere(new Cartesian3(5, 6, 7), 8);
+
+        var sphere = BoundingSphere.fromBoundingSpheres([one, two]);
+        expect(sphere).toEqual(BoundingSphere.union(one, two, new BoundingSphere()));
+    });
+
+    it('fromBoundingSpheres works with 3 spheres', function() {
+        var one = new BoundingSphere(new Cartesian3(0, 0, 0), 1);
+        var two = new BoundingSphere(new Cartesian3(0, 3, 0), 1);
+        var three = new BoundingSphere(new Cartesian3(0, 0, 4), 1);
+
+        var expected = new BoundingSphere(new Cartesian3(0.0, 1.5, 2.0), 3.5);
+        var sphere = BoundingSphere.fromBoundingSpheres([one, two, three]);
+        expect(sphere).toEqual(expected);
     });
 
     it('sphere on the positive side of a plane', function() {
@@ -717,4 +756,6 @@ defineSuite([
         point = new Cartographic(rectangle.east, Rectangle.center(rectangle).latitude, maxHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
     });
+
+    createPackableSpecs(BoundingSphere, new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 4.0), [1.0, 2.0, 3.0, 4.0]);
 });

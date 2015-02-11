@@ -5,6 +5,7 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/Event',
         'Core/GeographicTilingScheme',
+        'Core/Matrix4',
         'Core/Ray',
         'Core/Rectangle',
         'Scene/Globe',
@@ -21,6 +22,7 @@ defineSuite([
         Ellipsoid,
         Event,
         GeographicTilingScheme,
+        Matrix4,
         Ray,
         Rectangle,
         Globe,
@@ -308,18 +310,18 @@ defineSuite([
 
         it('returns undefined when pick ray does not intersect surface', function() {
             var ellipsoid = Ellipsoid.WGS84;
-            camera.lookAt(new Cartesian3(ellipsoid.maximumRadius + 100.0, 0.0, 0.0), new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0), Cartesian3.UNIT_Z);
+            camera.lookAt(new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0), new Cartesian3(0.0, 0.0, 100.0));
 
-            var ray = new Ray(new Cartesian3(ellipsoid.maximumRadius + 100.0, 0.0, 0.0), new Cartesian3(1.0, 0.0, 0.0));
+            var ray = new Ray(camera.position, Cartesian3.negate(camera.direction, new Cartesian3()));
             var featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(ray, scene);
             expect(featuresPromise).toBeUndefined();
         });
 
         it('returns undefined when globe has no pickable layers', function() {
             var ellipsoid = Ellipsoid.WGS84;
-            camera.lookAt(new Cartesian3(ellipsoid.maximumRadius + 100.0, 0.0, 0.0), new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0), Cartesian3.UNIT_Z);
+            camera.lookAt(new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0), new Cartesian3(0.0, 0.0, 100.0));
 
-            var ray = new Ray(new Cartesian3(ellipsoid.maximumRadius + 100.0, 0.0, 0.0), new Cartesian3(-1.0, 0.0, 0.0));
+            var ray = new Ray(camera.position, camera.direction);
             var featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(ray, scene);
             expect(featuresPromise).toBeUndefined();
         });
@@ -345,9 +347,9 @@ defineSuite([
 
             return updateUntilDone(globe).then(function() {
                 var ellipsoid = Ellipsoid.WGS84;
-                camera.lookAt(new Cartesian3(ellipsoid.maximumRadius + 100.0, 0.0, 0.0), new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0), Cartesian3.UNIT_Z);
+                camera.lookAt(new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0), new Cartesian3(0.0, 0.0, 100.0));
 
-                var ray = new Ray(new Cartesian3(ellipsoid.maximumRadius + 100.0, 0.0, 0.0), new Cartesian3(-1.0, 0.0, 0.0));
+                var ray = new Ray(camera.position, camera.direction);
                 var featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(ray, scene);
                 expect(featuresPromise).toBeUndefined();
             });
@@ -378,9 +380,9 @@ defineSuite([
 
             return updateUntilDone(globe).then(function() {
                 var ellipsoid = Ellipsoid.WGS84;
-                camera.lookAt(new Cartesian3(ellipsoid.maximumRadius + 100.0, 0.0, 0.0), new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0), Cartesian3.UNIT_Z);
+                camera.lookAt(new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0), new Cartesian3(0.0, 0.0, 100.0));
 
-                var ray = new Ray(new Cartesian3(ellipsoid.maximumRadius + 100.0, 0.0, 0.0), new Cartesian3(-1.0, 0.0, 0.0));
+                var ray = new Ray(camera.position, camera.direction);
                 var featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(ray, scene);
                 expect(featuresPromise).toBeUndefined();
             });
@@ -418,9 +420,10 @@ defineSuite([
 
             return updateUntilDone(globe).then(function() {
                 var ellipsoid = Ellipsoid.WGS84;
-                camera.lookAt(new Cartesian3(ellipsoid.maximumRadius + 100.0, 0.0, 0.0), new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0), Cartesian3.UNIT_Z);
+                camera.lookAt(new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0), new Cartesian3(0.0, 0.0, 100.0));
+                camera.lookAtTransform(Matrix4.IDENTITY);
 
-                var ray = new Ray(new Cartesian3(ellipsoid.maximumRadius + 100.0, 0.0, 0.0), new Cartesian3(-1.0, 0.0, 0.0));
+                var ray = new Ray(camera.position, camera.direction);
                 var featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(ray, scene);
 
                 expect(featuresPromise).toBeDefined();
@@ -494,9 +497,10 @@ defineSuite([
 
             return updateUntilDone(globe).then(function() {
                 var ellipsoid = Ellipsoid.WGS84;
-                camera.lookAt(new Cartesian3(ellipsoid.maximumRadius + 100.0, 0.0, 0.0), new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0), Cartesian3.UNIT_Z);
+                camera.lookAt(new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0), new Cartesian3(0.0, 0.0, 100.0));
+                camera.lookAtTransform(Matrix4.IDENTITY);
 
-                var ray = new Ray(new Cartesian3(ellipsoid.maximumRadius + 100.0, 0.0, 0.0), new Cartesian3(-1.0, 0.0, 0.0));
+                var ray = new Ray(camera.position, camera.direction);
                 var featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(ray, scene);
 
                 expect(featuresPromise).toBeDefined();

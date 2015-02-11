@@ -6,12 +6,12 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/getFilenameFromUri',
         '../Core/loadJson',
         '../Core/PinBuilder',
+        '../Core/PolygonHierarchy',
         '../Core/RuntimeError',
         '../Scene/VerticalOrigin',
         '../ThirdParty/topojson',
@@ -32,12 +32,12 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Event,
         getFilenameFromUri,
         loadJson,
         PinBuilder,
+        PolygonHierarchy,
         RuntimeError,
         VerticalOrigin,
         topojson,
@@ -72,8 +72,8 @@ define([
     var defaultFill = Color.fromBytes(255, 255, 0, 100);
 
     var defaultStrokeWidthProperty = new ConstantProperty(defaultStrokeWidth);
-    var defaultStrokeMaterialProperty = ColorMaterialProperty.fromColor(defaultStroke);
-    var defaultFillMaterialProperty = ColorMaterialProperty.fromColor(defaultFill);
+    var defaultStrokeMaterialProperty = new ColorMaterialProperty(defaultStroke);
+    var defaultFillMaterialProperty = new ColorMaterialProperty(defaultFill);
 
     var sizes = {
         small : 24,
@@ -259,25 +259,18 @@ define([
         stringifyScratch[2] = size;
         var id = JSON.stringify(stringifyScratch);
 
-        var dataURLPromise = dataSource._pinCache[id];
-        if (!defined(dataURLPromise)) {
-            var canvasOrPromise;
-            if (defined(symbol)) {
-                if (symbol.length === 1) {
-                    canvasOrPromise = dataSource._pinBuilder.fromText(symbol.toUpperCase(), color, size);
-                } else {
-                    canvasOrPromise = dataSource._pinBuilder.fromMakiIconId(symbol, color, size);
-                }
+        var canvasOrPromise;
+        if (defined(symbol)) {
+            if (symbol.length === 1) {
+                canvasOrPromise = dataSource._pinBuilder.fromText(symbol.toUpperCase(), color, size);
             } else {
-                canvasOrPromise = dataSource._pinBuilder.fromColor(color, size);
+                canvasOrPromise = dataSource._pinBuilder.fromMakiIconId(symbol, color, size);
             }
-            dataURLPromise = when(canvasOrPromise, function(canvas) {
-                return canvas.toDataURL();
-            });
-            dataSource._pinCache[id] = dataURLPromise;
+        } else {
+            canvasOrPromise = dataSource._pinBuilder.fromColor(color, size);
         }
 
-        dataSource._promises.push(when(dataURLPromise, function(dataUrl) {
+        dataSource._promises.push(when(canvasOrPromise, function(dataUrl) {
             var billboard = new BillboardGraphics();
             billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
             billboard.image = new ConstantProperty(dataUrl);
@@ -323,7 +316,7 @@ define([
                 color.alpha = opacity;
             }
             if (defined(color)) {
-                material = ColorMaterialProperty.fromColor(color);
+                material = new ColorMaterialProperty(color);
             }
         }
 
@@ -348,6 +341,10 @@ define([
     }
 
     function createPolygon(dataSource, geoJson, crsFunction, coordinates, options) {
+        if (coordinates.length === 0 || coordinates[0].length === 0) {
+            return;
+        }
+
         var outlineColorProperty = options.strokeMaterialProperty.color;
         var material = options.fillMaterialProperty;
         var widthProperty = options.strokeWidthProperty;
@@ -390,7 +387,7 @@ define([
                 fillColor.alpha = opacity;
             }
             if (defined(fillColor)) {
-                material = ColorMaterialProperty.fromColor(fillColor);
+                material = new ColorMaterialProperty(fillColor);
             }
         }
 
@@ -399,8 +396,15 @@ define([
         polygon.outlineColor = outlineColorProperty;
         polygon.outlineWidth = widthProperty;
         polygon.material = material;
-        polygon.positions = new ConstantProperty(coordinatesArrayToCartesianArray(coordinates, crsFunction));
-        if (coordinates.length > 0 && coordinates[0].length > 2) {
+
+        var holes = [];
+        for (var i = 1, len = coordinates.length; i < len; i++) {
+            holes.push(new PolygonHierarchy(coordinatesArrayToCartesianArray(coordinates[i], crsFunction)));
+        }
+
+        var positions = coordinates[0];
+        polygon.hierarchy = new ConstantProperty(new PolygonHierarchy(coordinatesArrayToCartesianArray(positions, crsFunction), holes));
+        if (positions[0].length > 2) {
             polygon.perPositionHeight = new ConstantProperty(true);
         }
 
@@ -409,13 +413,13 @@ define([
     }
 
     function processPolygon(dataSource, geoJson, geometry, crsFunction, options) {
-        createPolygon(dataSource, geoJson, crsFunction, geometry.coordinates[0], options);
+        createPolygon(dataSource, geoJson, crsFunction, geometry.coordinates, options);
     }
 
     function processMultiPolygon(dataSource, geoJson, geometry, crsFunction, options) {
         var polygons = geometry.coordinates;
         for (var i = 0; i < polygons.length; i++) {
-            createPolygon(dataSource, geoJson, crsFunction, polygons[i][0], options);
+            createPolygon(dataSource, geoJson, crsFunction, polygons[i], options);
         }
     }
 
@@ -485,7 +489,6 @@ define([
         this._loading = new Event();
         this._entityCollection = new EntityCollection();
         this._promises = [];
-        this._pinCache = {};
         this._pinBuilder = new PinBuilder();
     };
 
@@ -595,7 +598,7 @@ define([
             },
             set : function(value) {
                 defaultFill = value;
-                defaultFillMaterialProperty = ColorMaterialProperty.fromColor(defaultFill);
+                defaultFillMaterialProperty = new ColorMaterialProperty(defaultFill);
             }
         },
 
@@ -776,27 +779,20 @@ define([
         }
         //>>includeEnd('debug');
 
-        var sourceUri = options;
-        if (typeof options === 'string') {
-            sourceUri = options;
-            deprecationWarning('GeoJsonDataSource.load', 'GeoJsonDataSource.load now takes an options object instead of a string as its second parameter.  Support for passing a string parameter will be removed in Cesium 1.6');
-        } else if (defined(options)) {
-            sourceUri = options.sourceUri;
-        }
-
-        return load(this, geoJson, sourceUri, options);
+        return load(this, geoJson, undefined, options);
     };
 
     function load(that, geoJson, sourceUri, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        sourceUri = defaultValue(sourceUri, options.sourceUri);
 
         options = {
             markerSize : defaultValue(options.markerSize, defaultMarkerSize),
             markerSymbol : defaultValue(options.markerSymbol, defaultMarkerSymbol),
             markerColor : defaultValue(options.markerColor, defaultMarkerColor),
             strokeWidthProperty : new ConstantProperty(defaultValue(options.strokeWidth, defaultStrokeWidth)),
-            strokeMaterialProperty : ColorMaterialProperty.fromColor(defaultValue(options.stroke, defaultStroke)),
-            fillMaterialProperty : ColorMaterialProperty.fromColor(defaultValue(options.fill, defaultFill))
+            strokeMaterialProperty : new ColorMaterialProperty(defaultValue(options.stroke, defaultStroke)),
+            fillMaterialProperty : new ColorMaterialProperty(defaultValue(options.fill, defaultFill))
         };
 
         var name;
@@ -860,7 +856,6 @@ define([
 
             return when.all(that._promises, function() {
                 that._promises.length = 0;
-                that._pinCache = {};
                 DataSource.setLoading(that, false);
             });
         }).otherwise(function(error) {

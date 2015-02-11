@@ -9,8 +9,10 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/GeometryInstance',
+        '../Core/isArray',
         '../Core/Iso8601',
         '../Core/PolygonGeometry',
+        '../Core/PolygonHierarchy',
         '../Core/PolygonOutlineGeometry',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/MaterialAppearance',
@@ -18,6 +20,7 @@ define([
         '../Scene/Primitive',
         './ColorMaterialProperty',
         './ConstantProperty',
+        './dynamicGeometryGetBoundingSphere',
         './MaterialProperty',
         './Property'
     ], function(
@@ -30,8 +33,10 @@ define([
         DeveloperError,
         Event,
         GeometryInstance,
+        isArray,
         Iso8601,
         PolygonGeometry,
+        PolygonHierarchy,
         PolygonOutlineGeometry,
         ShowGeometryInstanceAttribute,
         MaterialAppearance,
@@ -39,11 +44,12 @@ define([
         Primitive,
         ColorMaterialProperty,
         ConstantProperty,
+        dynamicGeometryGetBoundingSphere,
         MaterialProperty,
         Property) {
     "use strict";
 
-    var defaultMaterial = ColorMaterialProperty.fromColor(Color.WHITE);
+    var defaultMaterial = new ColorMaterialProperty(Color.WHITE);
     var defaultShow = new ConstantProperty(true);
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
@@ -53,9 +59,7 @@ define([
     var GeometryOptions = function(entity) {
         this.id = entity;
         this.vertexFormat = undefined;
-        this.polygonHierarchy = {
-            positions : undefined
-        };
+        this.polygonHierarchy = undefined;
         this.perPositionHeight = undefined;
         this.height = undefined;
         this.extrudedHeight = undefined;
@@ -422,11 +426,11 @@ define([
             return;
         }
 
-        var positions = polygon.positions;
+        var hierarchy = polygon.hierarchy;
 
         var show = polygon.show;
         if ((defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE)) || //
-            (!defined(positions))) {
+            (!defined(hierarchy))) {
             if (this._fillEnabled || this._outlineEnabled) {
                 this._fillEnabled = false;
                 this._outlineEnabled = false;
@@ -450,11 +454,10 @@ define([
         var outlineWidth = polygon.outlineWidth;
         var perPositionHeight = polygon.perPositionHeight;
 
-        this._isClosed = defined(extrudedHeight);
         this._fillEnabled = fillEnabled;
         this._outlineEnabled = outlineEnabled;
 
-        if (!positions.isConstant || //
+        if (!hierarchy.isConstant || //
             !Property.isConstant(height) || //
             !Property.isConstant(extrudedHeight) || //
             !Property.isConstant(granularity) || //
@@ -468,13 +471,23 @@ define([
         } else {
             var options = this._options;
             options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
-            options.polygonHierarchy.positions = positions.getValue(Iso8601.MINIMUM_VALUE, options.polygonHierarchy.positions);
-            options.height = defined(height) ? height.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+
+            var hierarchyValue = hierarchy.getValue(Iso8601.MINIMUM_VALUE);
+            if (isArray(hierarchyValue)) {
+                hierarchyValue = new PolygonHierarchy(hierarchyValue);
+            }
+
+            var heightValue = defined(height) ? height.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            var extrudedHeightValue = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+
+            options.polygonHierarchy = hierarchyValue;
+            options.height = heightValue;
+            options.extrudedHeight = extrudedHeightValue;
             options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.stRotation = defined(stRotation) ? stRotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.perPositionHeight = defined(perPositionHeight) ? perPositionHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             this._outlineWidth = defined(outlineWidth) ? outlineWidth.getValue(Iso8601.MINIMUM_VALUE) : 1.0;
+            this._isClosed = defined(extrudedHeightValue) && extrudedHeightValue !== heightValue;
             this._dynamic = false;
             this._geometryChanged.raiseEvent(this);
         }
@@ -521,8 +534,10 @@ define([
         //>>includeEnd('debug');
 
         var primitives = this._primitives;
-        primitives.remove(this._primitive);
-        primitives.remove(this._outlinePrimitive);
+        primitives.removeAndDestroy(this._primitive);
+        primitives.removeAndDestroy(this._outlinePrimitive);
+        this._primitive = undefined;
+        this._outlinePrimitive = undefined;
 
         var geometryUpdater = this._geometryUpdater;
         var entity = geometryUpdater._entity;
@@ -532,12 +547,17 @@ define([
         }
 
         var options = this._options;
-        var positions = Property.getValueOrUndefined(polygon.positions, time, options.polygonHierarchy.positions);
-        if (!defined(positions)) {
+        var hierarchy = Property.getValueOrUndefined(polygon.hierarchy, time);
+        if (!defined(hierarchy)) {
             return;
         }
 
-        options.polygonHierarchy.positions = positions;
+        if (isArray(hierarchy)) {
+            options.polygonHierarchy = new PolygonHierarchy(hierarchy);
+        } else {
+            options.polygonHierarchy = hierarchy;
+        }
+
         options.height = Property.getValueOrUndefined(polygon.height, time);
         options.extrudedHeight = Property.getValueOrUndefined(polygon.extrudedHeight, time);
         options.granularity = Property.getValueOrUndefined(polygon.granularity, time);
@@ -551,7 +571,7 @@ define([
             var appearance = new MaterialAppearance({
                 material : material,
                 translucent : material.isTranslucent(),
-                closed : defined(options.extrudedHeight)
+                closed : defined(options.extrudedHeight) && options.extrudedHeight !== options.height
             });
             options.vertexFormat = appearance.vertexFormat;
 
@@ -569,7 +589,7 @@ define([
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
 
             var outlineColor = Property.getValueOrClonedDefault(polygon.outlineColor, time, Color.BLACK, scratchColor);
-            var outlineWidth = Property.getValueOrDefault(polygon.outlineWidth, 1.0);
+            var outlineWidth = Property.getValueOrDefault(polygon.outlineWidth, time, 1.0);
             var translucent = outlineColor.alpha !== 1.0;
 
             this._outlinePrimitive = primitives.add(new Primitive({
@@ -592,13 +612,18 @@ define([
         }
     };
 
+    DynamicGeometryUpdater.prototype.getBoundingSphere = function(entity, result) {
+        return dynamicGeometryGetBoundingSphere(entity, this._primitive, this._outlinePrimitive, result);
+    };
+
     DynamicGeometryUpdater.prototype.isDestroyed = function() {
         return false;
     };
 
     DynamicGeometryUpdater.prototype.destroy = function() {
-        this._primitives.remove(this._primitive);
-        this._primitives.remove(this._outlinePrimitive);
+        var primitives = this._primitives;
+        primitives.removeAndDestroy(this._primitive);
+        primitives.removeAndDestroy(this._outlinePrimitive);
         destroyObject(this);
     };
 

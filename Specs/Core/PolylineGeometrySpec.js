@@ -5,14 +5,16 @@ defineSuite([
         'Core/Color',
         'Core/Ellipsoid',
         'Core/Math',
-        'Core/VertexFormat'
+        'Core/VertexFormat',
+        'Specs/createPackableSpecs'
     ], function(
         PolylineGeometry,
         Cartesian3,
         Color,
         Ellipsoid,
         CesiumMath,
-        VertexFormat) {
+        VertexFormat,
+        createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -146,17 +148,27 @@ defineSuite([
         expect(line.attributes.position.values.length).toEqual(numVertices * 3);
     });
 
-    it('throws without at least 2 unique positions', function() {
+    it('createGeometry returns undefined without at least 2 unique positions', function() {
         var position = new Cartesian3(100000.0, -200000.0, 300000.0);
         var positions = [position, Cartesian3.clone(position)];
 
-        expect(function() {
-            PolylineGeometry.createGeometry(new PolylineGeometry({
-                positions : positions,
-                width : 10.0,
-                vertexFormat : VertexFormat.POSITION_ONLY,
-                followSurface : false
-            }));
-        }).toThrowDeveloperError();
+        var geometry = PolylineGeometry.createGeometry(new PolylineGeometry({
+            positions : positions,
+            width : 10.0,
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            followSurface : false
+        }));
+        expect(geometry).not.toBeDefined();
     });
+
+    var positions = [new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(0.0, 1.0, 0.0), new Cartesian3(0.0, 0.0, 1.0)];
+    var line = new PolylineGeometry({
+        positions : positions,
+        width : 10.0,
+        vertexFormat : VertexFormat.POSITION_ONLY,
+        granularity : Math.PI,
+        ellipsoid: Ellipsoid.UNIT_SPHERE
+    });
+    var packedInstance = [3.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 10.0, 0.0, 1.0, Math.PI];
+    createPackableSpecs(PolylineGeometry, line, packedInstance);
 });

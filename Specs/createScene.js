@@ -16,9 +16,15 @@ define([
     "use strict";
 
     function createScene(options) {
-        options = clone(defaultValue(options, {}), true);
+        options = defaultValue(options, {});
 
-        options.canvas = defaultValue(options.canvas, createCanvas());
+        // save the canvas so we don't try to clone an HTMLCanvasElement
+        var canvas = defined(options.canvas) ? options.canvas : createCanvas();
+        options.canvas = undefined;
+
+        options = clone(options, true);
+
+        options.canvas = canvas;
         options.contextOptions = defaultValue(options.contextOptions, {});
 
         var contextOptions = options.contextOptions;

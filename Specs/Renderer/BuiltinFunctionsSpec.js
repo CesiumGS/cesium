@@ -162,7 +162,7 @@ defineSuite([
 
     it('has czm_translateRelativeToEye', function() {
         var camera = createCamera({
-            eye : new Cartesian3(1.0, 2.0, 3.0)
+            offset : new Cartesian3(1.0, 2.0, 3.0)
         });
         context.uniformState.update(context, createFrameState(camera));
 

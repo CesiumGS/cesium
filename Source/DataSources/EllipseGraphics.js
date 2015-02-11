@@ -5,6 +5,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
+        './createMaterialPropertyDescriptor',
         './createPropertyDescriptor'
     ], function(
         defaultValue,
@@ -12,16 +13,38 @@ define([
         defineProperties,
         DeveloperError,
         Event,
+        createMaterialPropertyDescriptor,
         createPropertyDescriptor) {
     "use strict";
 
     /**
-     * An optionally time-dynamic ellipse.
+     * Describes an ellipse defined by a center point and semi-major and semi-minor axes.
+     * The ellipse conforms to the curvature of the globe and can be placed on the surface or
+     * at altitude and can optionally be extruded into a volume.
+     * The center point is determined by the containing {@link Entity}.
      *
      * @alias EllipseGraphics
      * @constructor
+     *
+     * @param {Object} [options] Object with the following properties:
+     * @param {Property} [options.semiMajorAxis] The numeric Property specifying the semi-major axis.
+     * @param {Property} [options.semiMinorAxis] The numeric Property specifying the semi-minor axis.
+     * @param {Property} [options.height=0] A numeric Property specifying the altitude of the ellipse.
+     * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the ellipse extrusion.
+     * @param {Property} [options.show=true] A boolean Property specifying the visibility of the ellipse.
+     * @param {Property} [options.fill=true] A boolean Property specifying whether the ellipse is filled with the provided material.
+     * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the ellipse.
+     * @param {Property} [options.outline=false] A boolean Property specifying whether the ellipse is outlined.
+     * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
+     * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
+     * @param {Property} [options.numberOfVerticalLines=16] A numeric Property specifying the number of vertical lines to draw along the perimeter for the outline.
+     * @param {Property} [options.rotation=0.0] A numeric property specifying the rotation of the ellipse clockwise from north.
+     * @param {Property} [options.stRotation=0.0] A numeric property specifying the rotation of the ellipse texture counter-clockwise from north.
+     * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between points on the ellipse.
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Circles and Ellipses.html|Cesium Sandcastle Circles and Ellipses Demo}
      */
-    var EllipseGraphics = function() {
+    var EllipseGraphics = function(options) {
         this._semiMajorAxis = undefined;
         this._semiMajorAxisSubscription = undefined;
         this._semiMinorAxis = undefined;
@@ -40,6 +63,8 @@ define([
         this._granularitySubscription = undefined;
         this._stRotation = undefined;
         this._stRotationSubscription = undefined;
+        this._fill = undefined;
+        this._fillSubscription = undefined;
         this._outline = undefined;
         this._outlineSubscription = undefined;
         this._outlineColor = undefined;
@@ -49,11 +74,13 @@ define([
         this._numberOfVerticalLines = undefined;
         this._numberOfVerticalLinesSubscription = undefined;
         this._definitionChanged = new Event();
+
+        this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     };
 
     defineProperties(EllipseGraphics.prototype, {
         /**
-         * Gets the event that is raised whenever a new property is assigned.
+         * Gets the event that is raised whenever a property or sub-property is changed or modified.
          * @memberof EllipseGraphics.prototype
          *
          * @type {Event}
@@ -66,119 +93,125 @@ define([
         },
 
         /**
-         * Gets or sets the numeric {@link Property} specifying the ellipse's semi-major-axis.
+         * Gets or sets the numeric Property specifying the semi-major axis.
          * @memberof EllipseGraphics.prototype
          * @type {Property}
          */
         semiMajorAxis : createPropertyDescriptor('semiMajorAxis'),
 
         /**
-         * Gets or sets the numeric {@link Property} specifying the ellipse's semi-minor-axis.
+         * Gets or sets the numeric Property specifying the semi-minor axis.
          * @memberof EllipseGraphics.prototype
          * @type {Property}
          */
         semiMinorAxis : createPropertyDescriptor('semiMinorAxis'),
 
         /**
-         * Gets or sets the numeric {@link Property} specifying the ellipse's rotation.
+         * Gets or sets the numeric property specifying the rotation of the ellipse clockwise from north.
          * @memberof EllipseGraphics.prototype
          * @type {Property}
+         * @default 0
          */
         rotation : createPropertyDescriptor('rotation'),
 
         /**
-         * Gets or sets the boolean {@link Property} specifying the polygon's visibility.
+         * Gets or sets the boolean Property specifying the visibility of the ellipse.
          * @memberof EllipseGraphics.prototype
          * @type {Property}
+         * @default true
          */
         show : createPropertyDescriptor('show'),
 
         /**
-         * Gets or sets the {@link MaterialProperty} specifying the appearance of the polygon.
+         * Gets or sets the Property specifying the material used to fill the ellipse.
          * @memberof EllipseGraphics.prototype
          * @type {MaterialProperty}
+         * @default Color.WHITE
          */
-        material : createPropertyDescriptor('material'),
+        material : createMaterialPropertyDescriptor('material'),
 
         /**
-         * Gets or sets the Number {@link Property} specifying the height of the polygon.
-         * If undefined, the polygon will be on the surface.
+         * Gets or sets the numeric Property specifying the altitude of the ellipse.
          * @memberof EllipseGraphics.prototype
          * @type {Property}
+         * @default 0.0
          */
         height : createPropertyDescriptor('height'),
 
         /**
-         * Gets or sets the Number {@link Property} specifying the extruded height of the polygon.
-         * Setting this property creates a polygon shaped volume starting at height and ending
-         * at the extruded height.
+         * Gets or sets the numeric Property specifying the altitude of the ellipse extrusion.
+         * Setting this property creates volume starting at height and ending at this altitude.
          * @memberof EllipseGraphics.prototype
          * @type {Property}
          */
         extrudedHeight : createPropertyDescriptor('extrudedHeight'),
 
         /**
-         * Gets or sets the Number {@link Property} specifying the sampling distance, in radians,
-         * between each latitude and longitude point.
+         * Gets or sets the numeric Property specifying the angular distance between points on the ellipse.
          * @memberof EllipseGraphics.prototype
          * @type {Property}
+         * @default {CesiumMath.RADIANS_PER_DEGREE}
          */
         granularity : createPropertyDescriptor('granularity'),
 
         /**
-         * Gets or sets the Number {@link Property} specifying the rotation of the texture coordinates,
-         * in radians. A positive rotation is counter-clockwise.
+         * Gets or sets the numeric property specifying the rotation of the ellipse texture counter-clockwise from north.
          * @memberof EllipseGraphics.prototype
          * @type {Property}
+         * @default 0
          */
         stRotation : createPropertyDescriptor('stRotation'),
 
         /**
-         * Gets or sets the Boolean {@link Property} specifying whether the ellipse should be filled.
+         * Gets or sets the boolean Property specifying whether the ellipse is filled with the provided material.
          * @memberof EllipseGraphics.prototype
          * @type {Property}
+         * @default true
          */
         fill : createPropertyDescriptor('fill'),
 
         /**
-         * Gets or sets the Boolean {@link Property} specifying whether the ellipse should be outlined.
+         * Gets or sets the Property specifying whether the ellipse is outlined.
          * @memberof EllipseGraphics.prototype
          * @type {Property}
+         * @default false
          */
         outline : createPropertyDescriptor('outline'),
 
         /**
-         * Gets or sets the Color {@link Property} specifying the color of the outline.
+         * Gets or sets the Property specifying the {@link Color} of the outline.
          * @memberof EllipseGraphics.prototype
          * @type {Property}
+         * @default Color.BLACK
          */
         outlineColor : createPropertyDescriptor('outlineColor'),
 
         /**
-         * Gets or sets the Number {@link Property} specifying the width of the outline.
+         * Gets or sets the numeric Property specifying the width of the outline.
          * @memberof EllipseGraphics.prototype
          * @type {Property}
+         * @default 1.0
          */
         outlineWidth : createPropertyDescriptor('outlineWidth'),
 
         /**
-         * Gets or sets the Number {@link Property} specifying the number of vertical lines
-         * to use when outlining the ellipse.
+         * Gets or sets the numeric Property specifying the number of vertical lines to draw along the perimeter for the outline.
          * @memberof EllipseGraphics.prototype
          * @type {Property}
+         * @default 16
          */
         numberOfVerticalLines : createPropertyDescriptor('numberOfVerticalLines')
     });
 
     /**
-     * Duplicates a EllipseGraphics instance.
+     * Duplicates this instance.
      *
      * @param {EllipseGraphics} [result] The object onto which to store the result.
      * @returns {EllipseGraphics} The modified result parameter or a new instance if one was not provided.
      */
     EllipseGraphics.prototype.clone = function(result) {
         if (!defined(result)) {
-            result = new EllipseGraphics();
+            return new EllipseGraphics(this);
         }
         result.rotation = this.rotation;
         result.semiMajorAxis = this.semiMajorAxis;

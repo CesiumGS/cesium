@@ -30,6 +30,20 @@ defineSuite([
         expect(result.glowPower).toEqual(0.25);
     });
 
+    it('constructor sets options and allows raw assignment', function() {
+        var options = {
+            color : Color.RED,
+            glowPower : 1
+        };
+
+        var property = new PolylineGlowMaterialProperty(options);
+        expect(property.color).toBeInstanceOf(ConstantProperty);
+        expect(property.glowPower).toBeInstanceOf(ConstantProperty);
+
+        expect(property.color.getValue()).toEqual(options.color);
+        expect(property.glowPower.getValue()).toEqual(options.glowPower);
+    });
+
     it('works with constant values', function() {
         var property = new PolylineGlowMaterialProperty();
         property.color = new ConstantProperty(Color.RED);

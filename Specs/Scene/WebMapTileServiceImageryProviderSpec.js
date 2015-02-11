@@ -91,6 +91,28 @@ defineSuite([
         expect(parseInt(queryObject.tilerow, 10)).toEqual(tilerow);
     });
 
+    it('generates expected tile urls from template', function() {
+        var options = {
+            url : 'http://wmts.invalid/{style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png',
+            format : 'image/png',
+            layer : 'someLayer',
+            style : 'someStyle',
+            tileMatrixSetID : 'someTMS',
+            tileMatrixLabels : ['first', 'second', 'third']
+        };
+
+        var provider = new WebMapTileServiceImageryProvider(options);
+
+        var loadImageSpy = spyOn(ImageryProvider, 'loadImage');
+
+        var tilecol = 12;
+        var tilerow = 5;
+        var level = 1;
+        provider.requestImage(tilecol, tilerow, level);
+        var uri = new Uri(ImageryProvider.loadImage.mostRecentCall.args[1]);
+        expect(uri.toString()).toEqual('http://wmts.invalid/someStyle/someTMS/second/5/12.png');
+    });
+
     it('requires the url to be specified', function() {
         function createWithoutUrl() {
             return new WebMapTileServiceImageryProvider({

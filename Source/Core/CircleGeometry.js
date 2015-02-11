@@ -1,14 +1,20 @@
 /*global define*/
 define([
+        './Cartesian3',
         './defaultValue',
         './defined',
         './DeveloperError',
-        './EllipseGeometry'
+        './EllipseGeometry',
+        './Ellipsoid',
+        './VertexFormat'
     ], function(
+        Cartesian3,
         defaultValue,
         defined,
         DeveloperError,
-        EllipseGeometry) {
+        EllipseGeometry,
+        Ellipsoid,
+        VertexFormat) {
     "use strict";
 
     /**
@@ -31,6 +37,7 @@ define([
      * @exception {DeveloperError} granularity must be greater than zero.
      *
      * @see CircleGeometry.createGeometry
+     * @see Packable
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Circle.html|Cesium Sandcastle Circle Demo}
      *
@@ -68,6 +75,75 @@ define([
         };
         this._ellipseGeometry = new EllipseGeometry(ellipseGeometryOptions);
         this._workerName = 'createCircleGeometry';
+    };
+
+    /**
+     * The number of elements used to pack the object into an array.
+     * @type {Number}
+     */
+    CircleGeometry.packedLength = EllipseGeometry.packedLength;
+
+    /**
+     * Stores the provided instance into the provided array.
+     * @function
+     *
+     * @param {Object} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     */
+    CircleGeometry.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+        //>>includeEnd('debug');
+        EllipseGeometry.pack(value._ellipseGeometry, array, startingIndex);
+    };
+
+    var scratchEllipseGeometry = new EllipseGeometry({
+        center : new Cartesian3(),
+        semiMajorAxis : 1.0,
+        semiMinorAxis : 1.0
+    });
+    var scratchOptions = {
+        center : new Cartesian3(),
+        radius : undefined,
+        ellipsoid : Ellipsoid.clone(Ellipsoid.UNIT_SPHERE),
+        height : undefined,
+        extrudedHeight : undefined,
+        granularity : undefined,
+        vertexFormat : new VertexFormat(),
+        stRotation : undefined,
+        semiMajorAxis : undefined,
+        semiMinorAxis : undefined
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {CircleGeometry} [result] The object into which to store the result.
+     */
+    CircleGeometry.unpack = function(array, startingIndex, result) {
+        var ellipseGeometry = EllipseGeometry.unpack(array, startingIndex, scratchEllipseGeometry);
+        scratchOptions.center = Cartesian3.clone(ellipseGeometry._center, scratchOptions.center);
+        scratchOptions.ellipsoid = Ellipsoid.clone(ellipseGeometry._ellipsoid, scratchOptions.ellipsoid);
+        scratchOptions.height = ellipseGeometry._height;
+        scratchOptions.extrudedHeight = ellipseGeometry._extrudedHeight;
+        scratchOptions.granularity = ellipseGeometry._granularity;
+        scratchOptions.vertexFormat = VertexFormat.clone(ellipseGeometry._vertexFormat, scratchOptions.vertexFormat);
+        scratchOptions.stRotation = ellipseGeometry._stRotation;
+
+        if (!defined(result)) {
+            scratchOptions.radius = ellipseGeometry._semiMajorAxis;
+            return new CircleGeometry(scratchOptions);
+        }
+
+        scratchOptions.semiMajorAxis = ellipseGeometry._semiMajorAxis;
+        scratchOptions.semiMinorAxis = ellipseGeometry._semiMinorAxis;
+        result._ellipseGeometry = new EllipseGeometry(scratchOptions);
+        return result;
     };
 
     /**

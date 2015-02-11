@@ -2,6 +2,7 @@
 defineSuite([
         'DataSources/PolygonGraphics',
         'Core/Color',
+        'Core/PolygonHierarchy',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
         'Specs/testDefinitionChanged',
@@ -9,6 +10,7 @@ defineSuite([
     ], function(
         PolygonGraphics,
         Color,
+        PolygonHierarchy,
         ColorMaterialProperty,
         ConstantProperty,
         testDefinitionChanged,
@@ -16,10 +18,54 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
+    it('creates expected instance from raw assignment and construction', function() {
+        var options = {
+            material : Color.BLUE,
+            show : true,
+            hierarchy : new PolygonHierarchy(),
+            height : 2,
+            extrudedHeight : 3,
+            granularity : 4,
+            stRotation : 5,
+            perPositionHeight : false,
+            fill : false,
+            outline : false,
+            outlineColor : Color.RED,
+            outlineWidth : 7
+        };
+
+        var polygon = new PolygonGraphics(options);
+        expect(polygon.material).toBeInstanceOf(ColorMaterialProperty);
+        expect(polygon.show).toBeInstanceOf(ConstantProperty);
+        expect(polygon.hierarchy).toBeInstanceOf(ConstantProperty);
+        expect(polygon.height).toBeInstanceOf(ConstantProperty);
+        expect(polygon.extrudedHeight).toBeInstanceOf(ConstantProperty);
+        expect(polygon.granularity).toBeInstanceOf(ConstantProperty);
+        expect(polygon.stRotation).toBeInstanceOf(ConstantProperty);
+        expect(polygon.perPositionHeight).toBeInstanceOf(ConstantProperty);
+        expect(polygon.fill).toBeInstanceOf(ConstantProperty);
+        expect(polygon.outline).toBeInstanceOf(ConstantProperty);
+        expect(polygon.outlineColor).toBeInstanceOf(ConstantProperty);
+        expect(polygon.outlineWidth).toBeInstanceOf(ConstantProperty);
+
+        expect(polygon.material.color.getValue()).toEqual(options.material);
+        expect(polygon.show.getValue()).toEqual(options.show);
+        expect(polygon.hierarchy.getValue()).toEqual(options.hierarchy);
+        expect(polygon.height.getValue()).toEqual(options.height);
+        expect(polygon.extrudedHeight.getValue()).toEqual(options.extrudedHeight);
+        expect(polygon.granularity.getValue()).toEqual(options.granularity);
+        expect(polygon.stRotation.getValue()).toEqual(options.stRotation);
+        expect(polygon.perPositionHeight.getValue()).toEqual(options.perPositionHeight);
+        expect(polygon.fill.getValue()).toEqual(options.fill);
+        expect(polygon.outline.getValue()).toEqual(options.outline);
+        expect(polygon.outlineColor.getValue()).toEqual(options.outlineColor);
+        expect(polygon.outlineWidth.getValue()).toEqual(options.outlineWidth);
+    });
+
     it('merge assigns unassigned properties', function() {
         var source = new PolygonGraphics();
         source.material = new ColorMaterialProperty();
-        source.positions = new ConstantProperty();
+        source.hierarchy = new ConstantProperty();
         source.show = new ConstantProperty();
         source.height = new ConstantProperty();
         source.extrudedHeight = new ConstantProperty();
@@ -35,7 +81,7 @@ defineSuite([
         target.merge(source);
 
         expect(target.material).toBe(source.material);
-        expect(target.positions).toBe(source.positions);
+        expect(target.hierarchy).toBe(source.hierarchy);
         expect(target.show).toBe(source.show);
         expect(target.height).toBe(source.height);
         expect(target.extrudedHeight).toBe(source.extrudedHeight);
@@ -66,7 +112,7 @@ defineSuite([
 
         var target = new PolygonGraphics();
         target.material = material;
-        target.positions = positions;
+        target.hierarchy = positions;
         target.show = show;
         target.height = height;
         target.extrudedHeight = extrudedHeight;
@@ -81,7 +127,7 @@ defineSuite([
         target.merge(source);
 
         expect(target.material).toBe(material);
-        expect(target.positions).toBe(positions);
+        expect(target.hierarchy).toBe(positions);
         expect(target.show).toBe(show);
         expect(target.height).toBe(height);
         expect(target.extrudedHeight).toBe(extrudedHeight);
@@ -97,7 +143,7 @@ defineSuite([
     it('clone works', function() {
         var source = new PolygonGraphics();
         source.material = new ColorMaterialProperty();
-        source.positions = new ConstantProperty();
+        source.hierarchy = new ConstantProperty();
         source.show = new ConstantProperty();
         source.height = new ConstantProperty();
         source.extrudedHeight = new ConstantProperty();
@@ -111,7 +157,7 @@ defineSuite([
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
-        expect(result.positions).toBe(source.positions);
+        expect(result.hierarchy).toBe(source.hierarchy);
         expect(result.show).toBe(source.show);
         expect(result.height).toBe(source.height);
         expect(result.extrudedHeight).toBe(source.extrudedHeight);
@@ -134,7 +180,7 @@ defineSuite([
     it('raises definitionChanged when a property is assigned or modified', function() {
         var property = new PolygonGraphics();
         testMaterialDefinitionChanged(property, 'material', Color.RED, Color.BLUE);
-        testDefinitionChanged(property, 'positions', [], []);
+        testDefinitionChanged(property, 'hierarchy', [], []);
         testDefinitionChanged(property, 'show', true, false);
         testDefinitionChanged(property, 'height', 3, 4);
         testDefinitionChanged(property, 'extrudedHeight', 4, 3);

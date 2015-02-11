@@ -5,6 +5,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
+        './createMaterialPropertyDescriptor',
         './createPropertyDescriptor'
     ], function(
         defaultValue,
@@ -12,16 +13,31 @@ define([
         defineProperties,
         DeveloperError,
         Event,
+        createMaterialPropertyDescriptor,
         createPropertyDescriptor) {
     "use strict";
 
     /**
-     * An optionally time-dynamic ellipsoid.
+     * Describe an ellipsoid or sphere.  The center position and orientation are determined by the containing {@link Entity}.
      *
      * @alias EllipsoidGraphics
      * @constructor
+     *
+     * @param {Object} [options] Object with the following properties:
+     * @param {Property} [options.radii] A {@link Cartesian3} Property specifying the radii of the ellipsoid.
+     * @param {Property} [options.show=true] A boolean Property specifying the visibility of the ellipsoid.
+     * @param {Property} [options.fill=true] A boolean Property specifying whether the ellipsoid is filled with the provided material.
+     * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the ellipsoid.
+     * @param {Property} [options.outline=false] A boolean Property specifying whether the ellipsoid is outlined.
+     * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
+     * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
+     * @param {Property} [options.subdivisions=128] A Property specifying the number of samples per outline ring, determining the granularity of the curvature.
+     * @param {Property} [options.stackPartitions=64] A Property specifying the number of stacks.
+     * @param {Property} [options.slicePartitions=64] A Property specifying the number of radial slices.
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Spheres%20and%20Ellipsoids.html|Cesium Sandcastle Spheres and Ellipsoids Demo}
      */
-    var EllipsoidGraphics = function() {
+    var EllipsoidGraphics = function(options) {
         this._show = undefined;
         this._showSubscription = undefined;
         this._radii = undefined;
@@ -34,6 +50,8 @@ define([
         this._slicePartitionsSubscription = undefined;
         this._subdivisions = undefined;
         this._subdivisionsSubscription = undefined;
+        this._fill = undefined;
+        this._fillSubscription = undefined;
         this._outline = undefined;
         this._outlineSubscription = undefined;
         this._outlineColor = undefined;
@@ -41,11 +59,13 @@ define([
         this._outlineWidth = undefined;
         this._outlineWidthSubscription = undefined;
         this._definitionChanged = new Event();
+
+        this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     };
 
     defineProperties(EllipsoidGraphics.prototype, {
         /**
-         * Gets the event that is raised whenever a new property is assigned.
+         * Gets the event that is raised whenever a property or sub-property is changed or modified.
          * @memberof EllipsoidGraphics.prototype
          *
          * @type {Event}
@@ -58,9 +78,10 @@ define([
         },
 
         /**
-         * Gets or sets the boolean {@link Property} specifying the visibility of the ellipsoid.
+         * Gets or sets the boolean Property specifying the visibility of the ellipsoid.
          * @memberof EllipsoidGraphics.prototype
          * @type {Property}
+         * @default true
          */
         show : createPropertyDescriptor('show'),
 
@@ -72,71 +93,79 @@ define([
         radii : createPropertyDescriptor('radii'),
 
         /**
-         * Gets or sets the {@link MaterialProperty} specifying the appearance of the ellipsoid.
+         * Gets or sets the Property specifying the material used to fill the ellipsoid.
          * @memberof EllipsoidGraphics.prototype
          * @type {MaterialProperty}
+         * @default Color.WHITE
          */
-        material : createPropertyDescriptor('material'),
+        material : createMaterialPropertyDescriptor('material'),
 
         /**
-         * Gets or sets the Boolean {@link Property} specifying whether the ellipsoid should be filled.
+         * Gets or sets the boolean Property specifying whether the ellipsoid is filled with the provided material.
          * @memberof EllipsoidGraphics.prototype
          * @type {Property}
+         * @default true
          */
         fill : createPropertyDescriptor('fill'),
 
         /**
-         * Gets or sets the Boolean {@link Property} specifying whether the ellipsoid should be outlined.
+         * Gets or sets the Property specifying whether the ellipsoid is outlined.
          * @memberof EllipsoidGraphics.prototype
          * @type {Property}
+         * @default false
          */
         outline : createPropertyDescriptor('outline'),
 
         /**
-         * Gets or sets the Color {@link Property} specifying whether the color of the outline.
+         * Gets or sets the Property specifying the {@link Color} of the outline.
          * @memberof EllipsoidGraphics.prototype
          * @type {Property}
+         * @default Color.BLACK
          */
         outlineColor : createPropertyDescriptor('outlineColor'),
 
         /**
-         * Gets or sets the Number {@link Property} specifying the width of the outline.
+         * Gets or sets the numeric Property specifying the width of the outline.
          * @memberof EllipsoidGraphics.prototype
          * @type {Property}
+         * @default 1.0
          */
         outlineWidth : createPropertyDescriptor('outlineWidth'),
 
         /**
-         * Gets or sets the Number {@link Property} specifying the number of times to partition the ellipsoid into stacks.
+         * Gets or sets the Property specifying the number of stacks.
          * @memberof EllipsoidGraphics.prototype
          * @type {Property}
+         * @default 64
          */
         stackPartitions : createPropertyDescriptor('stackPartitions'),
 
         /**
-         * Gets or sets the Number {@link Property} specifying the number of times to partition the ellipsoid into radial slices.
+         * Gets or sets the Property specifying the number of radial slices.
          * @memberof EllipsoidGraphics.prototype
          * @type {Property}
+         * @default 64
          */
         slicePartitions : createPropertyDescriptor('slicePartitions'),
 
         /**
-         * Gets or sets the Number {@link Property} specifying the number of points per line, determining the granularity of the curvature .
+         * Gets or sets the Property specifying the number of samples per outline ring, determining the granularity of the curvature.
          * @memberof EllipsoidGraphics.prototype
          * @type {Property}
+         * @default 128
          */
         subdivisions : createPropertyDescriptor('subdivisions')
     });
 
     /**
-     * Duplicates a EllipsoidGraphics instance.
+     * Duplicates this instance.
      *
      * @param {EllipsoidGraphics} [result] The object onto which to store the result.
      * @returns {EllipsoidGraphics} The modified result parameter or a new instance if one was not provided.
      */
     EllipsoidGraphics.prototype.clone = function(result) {
         if (!defined(result)) {
-            result = new EllipsoidGraphics();
+            return new EllipsoidGraphics(this);
         }
         result.show = this.show;
         result.radii = this.radii;

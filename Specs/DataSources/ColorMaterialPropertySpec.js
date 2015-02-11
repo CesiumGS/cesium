@@ -25,11 +25,17 @@ defineSuite([
         var result = property.getValue();
         expect(result.color).toEqual(Color.WHITE);
 
+        property = ColorMaterialProperty.fromColor(Color.BLUE);
+        expect(property.color).toBeInstanceOf(ConstantProperty);
+        expect(property.color.getValue()).toEqual(Color.BLUE);
+
         var colorProperty = new ConstantProperty(Color.BLUE);
         property = new ColorMaterialProperty(colorProperty);
         expect(property.color).toBe(colorProperty);
-        expect(property.getType()).toEqual('Color');
-        expect(property.isConstant).toBe(true);
+
+        property = new ColorMaterialProperty(Color.BLUE);
+        expect(property.color).toBeInstanceOf(ConstantProperty);
+        expect(property.color.getValue()).toEqual(Color.BLUE);
     });
 
     it('works with constant values', function() {

@@ -55,9 +55,7 @@ defineSuite([
     beforeEach(function() {
         us = context.uniformState;
         us.update(context, createFrameState(createCamera({
-            eye : new Cartesian3(1.02, 0.0, 0.0),
-            target : Cartesian3.ZERO,
-            up : Cartesian3.UNIT_Z
+            offset : new Cartesian3(1.02, 0.0, 0.0)
         })));
     });
 
@@ -237,17 +235,6 @@ defineSuite([
         expect(polygon.positions).not.toBeDefined();
     });
 
-    it('configureFromPolygonHierarchy throws with less than three positions', function() {
-        var hierarchy = {
-                positions : [Cartesian3.fromDegrees(0,0)]
-        };
-        polygon = createPolygon();
-        polygon.configureFromPolygonHierarchy(hierarchy);
-        expect(function() {
-            render(context, frameState, polygon);
-        }).toThrowDeveloperError();
-    });
-
     it('gets the default color', function() {
         polygon = new Polygon();
         expect(polygon.material.uniforms.color).toEqual({
@@ -324,50 +311,6 @@ defineSuite([
         expect(pixels[3]).toEqual(255);
 
         destroyScene(scene);
-    });
-
-    it('throws without positions due to duplicates', function() {
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
-
-        polygon = new Polygon();
-        polygon.ellipsoid = ellipsoid;
-        polygon.positions = Cartesian3.fromDegreesArray([
-            0.0, 0.0,
-            0.0, 0.0,
-            0.0, 0.0
-        ], ellipsoid);
-        polygon.asynchronous = false;
-
-        expect(function() {
-            render(context, frameState, polygon);
-        }).toThrowDeveloperError();
-    });
-
-    it('throws without hierarchy positions due to duplicates', function() {
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        var hierarchy = {
-                positions : Cartesian3.fromDegreesArray([
-                    1.0, 1.0,
-                    1.0, 1.0,
-                    1.0, 1.0
-                ], ellipsoid),
-                holes : [{
-                        positions : Cartesian3.fromDegreesArray([
-                            0.0, 0.0,
-                            0.0, 0.0,
-                            0.0, 0.0
-                        ], ellipsoid)
-                }]
-        };
-
-        polygon = new Polygon();
-        polygon.ellipsoid = ellipsoid;
-        polygon.configureFromPolygonHierarchy(hierarchy);
-        polygon.asynchronous = false;
-
-        expect(function () {
-            render(context, frameState, polygon);
-        }).toThrowDeveloperError();
     });
 
     it('is picked', function() {

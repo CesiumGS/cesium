@@ -23,7 +23,24 @@ defineSuite([
         var result = property.getValue();
         expect(result.color).toEqual(Color.WHITE);
         expect(result.outlineColor).toEqual(Color.BLACK);
-        expect(result.outlineWidth).toEqual(0.0);
+        expect(result.outlineWidth).toEqual(1.0);
+    });
+
+    it('constructor sets options and allows raw assignment', function() {
+        var options = {
+            color : Color.RED,
+            outlineColor : Color.BLUE,
+            outlineWidth : 5
+        };
+
+        var property = new PolylineOutlineMaterialProperty(options);
+        expect(property.color).toBeInstanceOf(ConstantProperty);
+        expect(property.outlineColor).toBeInstanceOf(ConstantProperty);
+        expect(property.outlineWidth).toBeInstanceOf(ConstantProperty);
+
+        expect(property.color.getValue()).toEqual(options.color);
+        expect(property.outlineColor.getValue()).toEqual(options.outlineColor);
+        expect(property.outlineWidth.getValue()).toEqual(options.outlineWidth);
     });
 
     it('works with constant values', function() {
