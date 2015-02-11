@@ -166,8 +166,18 @@ defineSuite([
         Cartesian3.normalize(center, center);
         Cartesian3.multiplyByScalar(center, scalar, camera.position);
 
-        render(context, frameState, rectangle);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
+        context.uniformState.update(context, frameState);
+
+        var commands = [];
+        render(context, frameState, rectangle, commands);
+
+        // Our spec render function doesn't honor the debugShowBoundingVolume flag.  So just verify that it
+        // was set.
+        expect(commands.length).toBeGreaterThan(0);
+        for (var i = 0; i < commands.length; ++i) {
+            expect(commands[i].debugShowBoundingVolume).toBe(true);
+        }
     });
 
     it('is picked', function() {
