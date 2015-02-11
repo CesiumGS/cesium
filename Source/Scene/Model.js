@@ -84,7 +84,7 @@ define([
         Pass,
         SceneMode) {
     "use strict";
-    /*global WebGLRenderingContext*/
+    /*global WebGLRenderingContext,TextDecoder*/
 
     var yUpToZUp = Matrix4.fromRotationTranslation(Matrix3.fromRotationX(CesiumMath.PI_OVER_TWO));
     var boundingSphereCartesian3Scratch = new Cartesian3();
@@ -145,6 +145,11 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    function setCachedGltf(model, cachedGltf) {
+        model._cachedGltf = cachedGltf;
+        model._animationIds = getAnimationIds(cachedGltf);
+    }
+
     // glTF JSON can be big given embedded geometry, textures, and animations, so we
     // cache it across all models using the same url/cache-key.  This also reduces the
     // slight overhead in assigning defaults to missing values.
@@ -170,7 +175,19 @@ define([
         }
     });
 
-    var gltfCache = {};
+    CachedGltf.prototype.makeReady = function(gltfJson) {
+        this.gltf = gltfJson;
+        var models = this.modelsToLoad;
+        var length = models.length;
+        for (var i = 0; i < length; ++i) {
+            var m = models[i];
+            if (!m.isDestroyed()) {
+                setCachedGltf(m, this);
+            }
+        }
+        this.modelsToLoad = undefined;
+        this.ready = true;
+    };
 
     function getAnimationIds(cachedGltf) {
         var animationIds = [];
@@ -185,6 +202,8 @@ define([
 
         return animationIds;
     }
+
+    var gltfCache = {};
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -411,11 +430,6 @@ define([
         this._nodeCommands = [];
         this._pickIds = [];
     };
-
-    function setCachedGltf(model, cachedGltf) {
-        model._cachedGltf = cachedGltf;
-        model._animationIds = getAnimationIds(cachedGltf);
-    }
 
     defineProperties(Model.prototype, {
         /**
@@ -648,6 +662,35 @@ define([
         }
     });
 
+    function getStringFromTypedArray(buffer, byteOffset, length) {
+        var view = new Uint8Array(buffer, byteOffset, length);
+
+        if (typeof TextDecoder !== 'undefined') {
+            var decoder = new TextDecoder('utf-8');
+            return decoder.decode(view);
+        }
+
+        return String.fromCharCode.apply(String, view);
+    }
+
+    function getBasePath(url) {
+        var basePath = '';
+        var i = url.lastIndexOf('/');
+        if (i !== -1) {
+            basePath = url.substring(0, i + 1);
+        }
+
+        return basePath;
+    }
+
+    function getAbsoluteURL(url) {
+        var docUri = new Uri(document.location.href);
+        var modelUri = new Uri(url);
+        return modelUri.resolve(docUri).toString();
+    }
+
+    var sizeOfUnit32 = Uint32Array.BYTES_PER_ELEMENT;
+
     /**
      * Creates a model from a glTF asset.  When the model is ready to render, i.e., when the external binary, image,
      * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyPromise} is resolved.
@@ -702,22 +745,12 @@ define([
         //>>includeEnd('debug');
 
         var url = options.url;
-        var basePath = '';
-        var i = url.lastIndexOf('/');
-        if (i !== -1) {
-            basePath = url.substring(0, i + 1);
-        }
-
-        var cacheKey = options.cacheKey;
-        if (!defined(cacheKey)) {
-            // Use absolute URL, since two URLs with different relative paths could point to the same model.
-            var docUri = new Uri(document.location.href);
-            var modelUri = new Uri(url);
-            cacheKey = modelUri.resolve(docUri).toString();
-        }
+        // If no cache key is provided, use the absolute URL, since two URLs with
+        // different relative paths could point to the same model.
+        var cacheKey = defaultValue(options.cacheKey, getAbsoluteURL(url));
 
         options = clone(options);
-        options.basePath = basePath;
+        options.basePath = getBasePath(url);
         options.cacheKey = cacheKey;
         var model = new Model(options);
 
@@ -731,22 +764,37 @@ define([
             setCachedGltf(model, cachedGltf);
             gltfCache[cacheKey] = cachedGltf;
 
-            loadText(url, options.headers).then(function(data) {
-                cachedGltf.gltf = JSON.parse(data);
-                var models = cachedGltf.modelsToLoad;
-                var length = models.length;
-                for (var i = 0; i < length; ++i) {
-                    var m = models[i];
-                    if (!m.isDestroyed()) {
-                        setCachedGltf(m, cachedGltf);
+            if (url.toLowerCase().indexOf('.bgltf', url.length - 6) !== -1) {
+                // Load binary glTF
+                loadArrayBuffer(url, options.headers).then(function(arrayBuffer) {
+                    var magic = getStringFromTypedArray(arrayBuffer, 0, 4);
+                    if (magic !== 'glTF') {
+                        throw new RuntimeError('bgltf is not a valid binary glTF file.');
                     }
-                }
-                cachedGltf.modelsToLoad = undefined;
-                cachedGltf.ready = true;
-            }).otherwise(getFailedLoadFunction(model, 'gltf', url));
 
+                    var view = new DataView(arrayBuffer);
+                    var byteOffset = 0;
+
+                    byteOffset += sizeOfUnit32;  // Skip magic number
+                    byteOffset += sizeOfUnit32;  // Skip version
+
+                    var jsonOffset = view.getUint32(byteOffset, true);
+                    byteOffset += sizeOfUnit32;
+
+                    var jsonLength = view.getUint32(byteOffset, true);
+                    byteOffset += sizeOfUnit32;
+
+                    var jsonString = getStringFromTypedArray(arrayBuffer, jsonOffset, jsonLength);
+                    cachedGltf.makeReady(JSON.parse(jsonString));
+                }).otherwise(getFailedLoadFunction(model, 'bgltf', url));
+            } else {
+                // Load text (JSON) glTF
+                loadText(url, options.headers).then(function(data) {
+                    cachedGltf.makeReady(JSON.parse(data));
+                }).otherwise(getFailedLoadFunction(model, 'gltf', url));
+            }
         } else if (!cachedGltf.ready) {
-            // Cache hit but the loadText() request is still pending
+            // Cache hit but the loadArrayBuffer() or loadText() request is still pending
             ++cachedGltf.count;
             cachedGltf.modelsToLoad.push(model);
         }
