@@ -19,7 +19,12 @@ require.config({
     }
 });
 
-require(['./ThirdParty/when'], function(when) {
+require([
+        'Specs/CesiumJasmineHtml',
+        './ThirdParty/when'
+    ], function(
+        CesiumJasmineHtml,
+        when) {
     'use strict';
 
     /*global jasmineRequire,jasmine,exports,specs*/
@@ -53,7 +58,7 @@ require(['./ThirdParty/when'], function(when) {
     /**
      * Since this is being run in a browser and the results should populate to an HTML page, require the HTML-specific Jasmine code, injecting the same reference.
      */
-    jasmineRequire.html(jasmine);
+    CesiumJasmineHtml(jasmine);
 
     /**
      * Create the Jasmine environment. This is used to run all specs in a project.
