@@ -13,8 +13,6 @@ defineSuite([
         'Specs/createContext',
         'Specs/createFrameState',
         'Specs/createScene',
-        'Specs/destroyContext',
-        'Specs/destroyScene',
         'Specs/pick',
         'Specs/render'
     ], function(
@@ -31,8 +29,6 @@ defineSuite([
         createContext,
         createFrameState,
         createScene,
-        destroyContext,
-        destroyScene,
         pick,
         render) {
     "use strict";
@@ -49,7 +45,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     beforeEach(function() {
@@ -235,17 +231,6 @@ defineSuite([
         expect(polygon.positions).not.toBeDefined();
     });
 
-    it('configureFromPolygonHierarchy throws with less than three positions', function() {
-        var hierarchy = {
-                positions : [Cartesian3.fromDegrees(0,0)]
-        };
-        polygon = createPolygon();
-        polygon.configureFromPolygonHierarchy(hierarchy);
-        expect(function() {
-            render(context, frameState, polygon);
-        }).toThrowDeveloperError();
-    });
-
     it('gets the default color', function() {
         polygon = new Polygon();
         expect(polygon.material.uniforms.color).toEqual({
@@ -321,7 +306,7 @@ defineSuite([
         expect(pixels[2]).toEqual(0);
         expect(pixels[3]).toEqual(255);
 
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     it('is picked', function() {

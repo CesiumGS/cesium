@@ -113,14 +113,14 @@ define([
      * @param {RectangleGraphics} [options.rectangle] A rectangle to associate with this entity.
      * @param {WallGraphics} [options.wall] A wall to associate with this entity.
      *
-     * @see {@link http://cesiumjs.org/2015/02/02/Working-with-Spatial-Data/|Working with Special Data}
+     * @see {@link http://cesiumjs.org/2015/02/02/Visualizing-Spatial-Data/|Visualizing Special Data}
      */
     var Entity = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var id = options.id;
         if (typeof options === 'string') {
-            deprecationWarning('Entity', 'The Entity constructor taking a string was deprecated in Cesium 1.5.  It will be removed in 1.7.  Use "new Entity({ id : \'id\'})" instead.');
+            deprecationWarning('Entity', 'The Entity constructor taking a string was deprecated in Cesium 1.5.  It will be removed in 1.9.  Use "new Entity({ id : \'id\'})" instead.');
             id = options;
             options = defaultValue.EMPTY_OBJECT;
         }

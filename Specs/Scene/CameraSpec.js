@@ -1097,8 +1097,8 @@ defineSuite([
         expect(tempCamera.direction).toEqual(Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()));
         expect(tempCamera.up).toEqualEpsilon(Cartesian3.normalize(Cartesian3.fromElements(-offset.x, -offset.y, 0.0), new Cartesian3()), CesiumMath.EPSILON11);
         expect(tempCamera.right).toEqualEpsilon(Cartesian3.cross(tempCamera.direction, tempCamera.up, new Cartesian3()), CesiumMath.EPSILON11);
-        expect(tempCamera.frustum.right).toEqual(Cartesian3.magnitude(offset));
-        expect(tempCamera.frustum.left).toEqual(-Cartesian3.magnitude(offset));
+        expect(tempCamera.frustum.right).toEqual(Cartesian3.magnitude(offset) * 0.5);
+        expect(tempCamera.frustum.left).toEqual(-Cartesian3.magnitude(offset) * 0.5);
     });
 
     it('lookAt in 2D mode with heading, pitch and range', function() {
@@ -1126,8 +1126,8 @@ defineSuite([
         tempCamera.lookAtTransform(Matrix4.IDENTITY);
         expect(tempCamera.direction).toEqual(Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()));
         expect(tempCamera.heading).toEqualEpsilon(heading, CesiumMath.EPSILON6);
-        expect(tempCamera.frustum.right).toEqual(range);
-        expect(tempCamera.frustum.left).toEqual(-range);
+        expect(tempCamera.frustum.right).toEqual(range * 0.5);
+        expect(tempCamera.frustum.left).toEqual(-range * 0.5);
     });
 
     it('lookAt throws when morphing', function() {
@@ -1226,8 +1226,8 @@ defineSuite([
         expect(tempCamera.direction).toEqual(Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()));
         expect(tempCamera.up).toEqualEpsilon(Cartesian3.normalize(Cartesian3.fromElements(-offset.x, -offset.y, 0.0), new Cartesian3()), CesiumMath.EPSILON11);
         expect(tempCamera.right).toEqualEpsilon(Cartesian3.cross(tempCamera.direction, tempCamera.up, new Cartesian3()), CesiumMath.EPSILON11);
-        expect(tempCamera.frustum.right).toEqual(Cartesian3.magnitude(offset));
-        expect(tempCamera.frustum.left).toEqual(-Cartesian3.magnitude(offset));
+        expect(tempCamera.frustum.right).toEqual(Cartesian3.magnitude(offset) * 0.5);
+        expect(tempCamera.frustum.left).toEqual(-Cartesian3.magnitude(offset) * 0.5);
     });
 
     it('lookAtTransform in 2D mode with heading, pitch and range', function() {
@@ -1256,8 +1256,8 @@ defineSuite([
         tempCamera.lookAtTransform(Matrix4.IDENTITY);
         expect(tempCamera.direction).toEqual(Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()));
         expect(tempCamera.heading).toEqualEpsilon(heading, CesiumMath.EPSILON6);
-        expect(tempCamera.frustum.right).toEqual(range);
-        expect(tempCamera.frustum.left).toEqual(-range);
+        expect(tempCamera.frustum.right).toEqual(range * 0.5);
+        expect(tempCamera.frustum.left).toEqual(-range * 0.5);
     });
 
     it('lookAtTransform throws when morphing', function() {

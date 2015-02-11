@@ -7,8 +7,7 @@ defineSuite([
         'Core/Rectangle',
         'Scene/OrthographicFrustum',
         'Scene/SceneMode',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], function(
         CameraFlightPath,
         Cartesian3,
@@ -17,8 +16,7 @@ defineSuite([
         Rectangle,
         OrthographicFrustum,
         SceneMode,
-        createScene,
-        destroyScene) {
+        createScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -29,7 +27,7 @@ defineSuite([
     });
 
     afterEach(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     function createOrthographicFrustum() {

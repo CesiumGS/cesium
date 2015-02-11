@@ -5,7 +5,6 @@ defineSuite([
         'Core/IndexDatatype',
         'Renderer/BufferUsage',
         'Specs/createContext',
-        'Specs/destroyContext',
         'Specs/renderFragment'
     ], function(
         Context,
@@ -13,7 +12,6 @@ defineSuite([
         IndexDatatype,
         BufferUsage,
         createContext,
-        destroyContext,
         renderFragment) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -25,14 +23,14 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     it('has a unique ID', function() {
         var c = createContext();
         expect(c.id).toBeDefined();
         expect(c.id).not.toEqual(context.id);
-        destroyContext(c);
+        c.destroyForSpecs();
     });
 
     it('get canvas', function() {
@@ -150,7 +148,7 @@ defineSuite([
             }
         });
         expect(c.antialias).toEqual(false);
-        destroyContext(c);
+        c.destroyForSpecs();
     });
 
     it('gets the standard derivatives extension', function() {
@@ -296,7 +294,7 @@ defineSuite([
     it('isDestroyed', function() {
         var c = createContext();
         expect(c.isDestroyed()).toEqual(false);
-        destroyContext(c);
+        c.destroyForSpecs();
         expect(c.isDestroyed()).toEqual(true);
     });
 
@@ -304,7 +302,7 @@ defineSuite([
         var c = createContext();
         var destroyableObject = jasmine.createSpyObj('destroyableObject', ['destroy']);
         c.cache.foo = destroyableObject;
-        destroyContext(c);
+        c.destroyForSpecs();
         expect(destroyableObject.destroy).toHaveBeenCalled();
     });
 
@@ -312,18 +310,18 @@ defineSuite([
         var c = createContext();
         var nonDestroyableObject = {};
         c.cache.foo = nonDestroyableObject;
-        destroyContext(c);
+        c.destroyForSpecs();
     });
 
     it('returns the underling drawingBufferWidth', function() {
         var c = createContext(undefined, 1024, 768);
         expect(c.drawingBufferWidth).toBe(1024);
-        destroyContext(c);
+        c.destroyForSpecs();
     });
 
     it('returns the underling drawingBufferHeight', function() {
         var c = createContext(undefined, 1024, 768);
         expect(c.drawingBufferHeight).toBe(768);
-        destroyContext(c);
+        c.destroyForSpecs();
     });
 }, 'WebGL');

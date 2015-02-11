@@ -13,7 +13,6 @@ defineSuite([
         'Core/Transforms',
         'Scene/ModelAnimationLoop',
         'Specs/createScene',
-        'Specs/destroyScene',
         'Specs/waitsForPromise'
     ], function(
         Model,
@@ -29,7 +28,6 @@ defineSuite([
         Transforms,
         ModelAnimationLoop,
         createScene,
-        destroyScene,
         waitsForPromise) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,WebGLRenderingContext*/
@@ -57,7 +55,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     function addZoomTo(model) {

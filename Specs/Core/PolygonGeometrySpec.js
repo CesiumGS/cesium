@@ -31,20 +31,18 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws with less than three positions', function() {
-        expect(function() {
-            return PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({ positions : [new Cartesian3()] }));
-        }).toThrowDeveloperError();
+    it('returns undefined with less than three positions', function() {
+        expect(PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
+            positions : [new Cartesian3()]
+        }))).toBeUndefined();
     });
 
-    it('throws with polygon hierarchy with less than three positions', function() {
-        var hierarchy = {
-            positions : [Cartesian3.fromDegrees(0,0)]
-        };
-
-        expect(function() {
-            return PolygonGeometry.createGeometry(new PolygonGeometry({ polygonHierarchy : hierarchy }));
-        }).toThrowDeveloperError();
+    it('returns undefined with polygon hierarchy with less than three positions', function() {
+        expect(PolygonGeometry.createGeometry(new PolygonGeometry({
+            polygonHierarchy : {
+                positions : [Cartesian3.fromDegrees(0, 0)]
+            }
+        }))).toBeUndefined();
     });
 
     it('createGeometry returns undefined due to duplicate positions', function() {

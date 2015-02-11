@@ -11,8 +11,7 @@ defineSuite([
         'Scene/PerspectiveFrustum',
         'Scene/RectanglePrimitive',
         'Scene/SceneMode',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], 'Scene/Pick', function(
         Cartesian2,
         Cartesian3,
@@ -25,8 +24,7 @@ defineSuite([
         PerspectiveFrustum,
         RectanglePrimitive,
         SceneMode,
-        createScene,
-        destroyScene) {
+        createScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -41,7 +39,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     beforeEach(function() {
@@ -165,14 +163,11 @@ defineSuite([
         var ellipsoid = scene.mapProjection.ellipsoid;
         var maxRadii = ellipsoid.maximumRadius;
 
-        camera.lookAtTransform(new Matrix4(0.0, 0.0, 1.0, 0.0,
-                                           1.0, 0.0, 0.0, 0.0,
-                                           0.0, 1.0, 0.0, 0.0,
-                                           0.0, 0.0, 0.0, 1.0));
-
         camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
-        camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position, new Cartesian3()), new Cartesian3());
-        camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
+        Cartesian3.clone(Cartesian3.UNIT_Z, camera.direction);
+        Cartesian3.negate(camera.direction, camera.direction);
+        Cartesian3.negate(Cartesian3.UNIT_X, camera.up);
+        Cartesian3.clone(Cartesian3.UNIT_Y, camera.right);
 
         var frustum = new OrthographicFrustum();
         frustum.right = maxRadii * Math.PI;
@@ -187,6 +182,7 @@ defineSuite([
         scene.morphTime = SceneMode.getMorphTime(scene.mode);
 
         var rectangle = createRectangle();
+        scene.initializeFrame();
         var pickedObject = scene.pick(new Cartesian2(0, 0));
         expect(pickedObject.primitive).toEqual(rectangle);
     });
@@ -195,14 +191,11 @@ defineSuite([
         var ellipsoid = scene.mapProjection.ellipsoid;
         var maxRadii = ellipsoid.maximumRadius;
 
-        camera.lookAtTransform(new Matrix4(0.0, 0.0, 1.0, 0.0,
-                                           1.0, 0.0, 0.0, 0.0,
-                                           0.0, 1.0, 0.0, 0.0,
-                                           0.0, 0.0, 0.0, 1.0));
-
         camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
-        camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position, new Cartesian3()), new Cartesian3());
-        camera.up = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
+        Cartesian3.clone(Cartesian3.UNIT_Z, camera.direction);
+        Cartesian3.negate(camera.direction, camera.direction);
+        Cartesian3.negate(Cartesian3.UNIT_X, camera.up);
+        Cartesian3.clone(Cartesian3.UNIT_Y, camera.right);
 
         var frustum = new OrthographicFrustum();
         frustum.right = maxRadii * Math.PI;
@@ -217,7 +210,8 @@ defineSuite([
         scene.morphTime = SceneMode.getMorphTime(scene.mode);
 
         var rectangle = createRectangle();
-        var pickedObject = scene.pick(new Cartesian2(0, 0));
+        scene.initializeFrame();
+        var pickedObject = scene.pick(new Cartesian2(0.0, 0.0));
         expect(pickedObject.primitive).toEqual(rectangle);
     });
 }, 'WebGL');

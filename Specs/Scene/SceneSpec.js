@@ -21,7 +21,6 @@ defineSuite([
         'Scene/ScreenSpaceCameraController',
         'Scene/TweenCollection',
         'Specs/createScene',
-        'Specs/destroyScene',
         'Specs/equals',
         'Specs/render'
     ], 'Scene/Scene', function(
@@ -46,7 +45,6 @@ defineSuite([
         ScreenSpaceCameraController,
         TweenCollection,
         createScene,
-        destroyScene,
         equals,
         render) {
     "use strict";
@@ -67,7 +65,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     it('constructor has expected defaults', function() {
@@ -114,7 +112,7 @@ defineSuite([
         expect(contextAttributes.preserveDrawingBuffer).toEqual(webglOptions.preserveDrawingBuffer);
         expect(s.mapProjection).toEqual(mapProjection);
 
-        destroyScene(s);
+        s.destroyForSpecs();
     });
 
     it('constructor throws without options', function() {
@@ -399,7 +397,7 @@ defineSuite([
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
 
-        destroyScene(s);
+        s.destroyForSpecs();
     });
 
     it('setting a central body', function() {
@@ -410,7 +408,7 @@ defineSuite([
 
         expect(scene.globe).toBe(globe);
 
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     it('destroys primitive on set globe', function() {
@@ -423,7 +421,7 @@ defineSuite([
         scene.globe = null;
         expect(globe.isDestroyed()).toEqual(true);
 
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     it('renders a central body', function() {
@@ -467,7 +465,7 @@ defineSuite([
             expect(pixels[1]).toEqual(0);
             expect(pixels[2]).toEqual(0);
 
-            destroyScene(s);
+            s.destroyForSpecs();
         }
     });
 
@@ -496,14 +494,14 @@ defineSuite([
             expect(pixels[1]).toEqual(0);
             expect(pixels[2]).toEqual(0);
 
-            destroyScene(s);
+            s.destroyForSpecs();
         }
     });
 
     it('isDestroyed', function() {
         var s = createScene();
         expect(s.isDestroyed()).toEqual(false);
-        destroyScene(s);
+        s.destroyForSpecs();
         expect(s.isDestroyed()).toEqual(true);
     });
 
@@ -524,7 +522,7 @@ defineSuite([
 
         expect(spyListener).toHaveBeenCalledWith(s, error);
 
-        destroyScene(s);
+        s.destroyForSpecs();
     });
 
     it('a render error is rethrown if rethrowRenderErrors is true', function() {
@@ -545,7 +543,7 @@ defineSuite([
 
         expect(spyListener).toHaveBeenCalledWith(s, error);
 
-        destroyScene(s);
+        s.destroyForSpecs();
     });
 
     it('raises the preRender event prior to rendering', function() {
@@ -558,7 +556,7 @@ defineSuite([
 
         expect(spyListener.callCount).toBe(1);
 
-        destroyScene(s);
+        s.destroyForSpecs();
     });
 
     it('raises the postRender event after rendering', function() {
@@ -571,6 +569,18 @@ defineSuite([
 
         expect(spyListener.callCount).toBe(1);
 
-        destroyScene(s);
+        s.destroyForSpecs();
+    });
+
+    it('get maximumAliasedLineWidth', function() {
+        var s = createScene();
+        expect(s.maximumAliasedLineWidth).toBeGreaterThanOrEqualTo(1);
+        s.destroyForSpecs();
+    });
+
+    it('get maximumCubeMapSize', function() {
+        var s = createScene();
+        expect(s.maximumCubeMapSize).toBeGreaterThanOrEqualTo(16);
+        s.destroyForSpecs();
     });
 }, 'WebGL');

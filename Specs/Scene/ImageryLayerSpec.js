@@ -16,8 +16,7 @@ defineSuite([
         'Scene/SingleTileImageryProvider',
         'Scene/TileMapServiceImageryProvider',
         'Scene/WebMapServiceImageryProvider',
-        'Specs/createContext',
-        'Specs/destroyContext'
+        'Specs/createContext'
     ], function(
         ImageryLayer,
         EllipsoidTerrainProvider,
@@ -35,8 +34,7 @@ defineSuite([
         SingleTileImageryProvider,
         TileMapServiceImageryProvider,
         WebMapServiceImageryProvider,
-        createContext,
-        destroyContext) {
+        createContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -47,7 +45,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     afterEach(function() {
