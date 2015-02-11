@@ -8,8 +8,7 @@ defineSuite([
         'Specs/createCamera',
         'Specs/createCanvas',
         'Specs/createFrameState',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], function(
         Sun,
         Cartesian3,
@@ -19,8 +18,7 @@ defineSuite([
         createCamera,
         createCanvas,
         createFrameState,
-        createScene,
-        destroyScene) {
+        createScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -36,7 +34,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     function viewSun(camera, uniformState) {

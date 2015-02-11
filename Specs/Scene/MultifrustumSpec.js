@@ -19,8 +19,7 @@ defineSuite([
         'Scene/BlendingState',
         'Scene/Pass',
         'Scene/TextureAtlas',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], 'Scene/Multifrustum', function(
         BoundingSphere,
         BoxGeometry,
@@ -41,8 +40,7 @@ defineSuite([
         BlendingState,
         Pass,
         TextureAtlas,
-        createScene,
-        destroyScene) {
+        createScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -87,7 +85,7 @@ defineSuite([
 
     afterEach(function() {
         atlas = atlas && atlas.destroy();
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     var billboard0;

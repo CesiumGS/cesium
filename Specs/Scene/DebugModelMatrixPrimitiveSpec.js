@@ -4,15 +4,13 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Matrix4',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], function(
         DebugModelMatrixPrimitive,
         Cartesian2,
         Cartesian3,
         Matrix4,
-        createScene,
-        destroyScene) {
+        createScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -27,7 +25,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     afterEach(function() {
