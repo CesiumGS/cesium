@@ -512,6 +512,21 @@ define([
         },
 
         /**
+         * The maximum length in pixels of one edge of a cube map, supported by this WebGL implementation.  It will be at least 16.
+         * @memberof Scene.prototype
+         *
+         * @type {Number}
+         * @readonly
+         *
+         * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>GL_MAX_CUBE_MAP_TEXTURE_SIZE</code>.
+         */
+        maximumCubeMapSize : {
+            get : function() {
+                return this._context.maximumCubeMapSize;
+            }
+        },
+
+        /**
          * Gets or sets the depth-test ellipsoid.
          * @memberof Scene.prototype
          *
