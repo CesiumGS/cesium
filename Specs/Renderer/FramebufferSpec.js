@@ -8,8 +8,7 @@ defineSuite([
         'Renderer/DrawCommand',
         'Renderer/PixelDatatype',
         'Renderer/RenderbufferFormat',
-        'Specs/createContext',
-        'Specs/destroyContext'
+        'Specs/createContext'
     ], 'Renderer/Framebuffer', function(
         Color,
         PixelFormat,
@@ -19,8 +18,7 @@ defineSuite([
         DrawCommand,
         PixelDatatype,
         RenderbufferFormat,
-        createContext,
-        destroyContext) {
+        createContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,WebGLRenderingContext*/
 
@@ -34,7 +32,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     afterEach(function() {

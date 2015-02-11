@@ -2,13 +2,11 @@
 defineSuite([
         'Core/EllipsoidTerrainProvider',
         'Core/TerrainProvider',
-        'Specs/createContext',
-        'Specs/destroyContext'
+        'Specs/createContext'
     ], function(
         EllipsoidTerrainProvider,
         TerrainProvider,
-        createContext,
-        destroyContext) {
+        createContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -19,7 +17,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     it('conforms to TerrainProvider interface', function() {

@@ -3,14 +3,12 @@ defineSuite([
         'Scene/FrameRateMonitor',
         'Core/defined',
         'Core/getTimestamp',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], function(
         FrameRateMonitor,
         defined,
         getTimestamp,
-        createScene,
-        destroyScene) {
+        createScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -20,7 +18,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     var monitor;
