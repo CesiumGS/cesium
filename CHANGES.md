@@ -4,8 +4,6 @@ Change Log
 ### 1.7 - 2015-03-02
 
 * Breaking changes
-   *
-* Deprecated
   * Removed `viewerEntityMixin`, which was deprecated in Cesium 1.5. Its functionality is now directly part of the `Viewer` widget.
   * Removed `Camera.tilt`, which was deprecated in Cesium 1.6. Use `Camera.pitch`.
   * Removed `Camera.heading` and `Camera.tilt`. They were deprecated in Cesium 1.6. Use `Camera.setView`.
