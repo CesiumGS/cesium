@@ -1,0 +1,6 @@
+.progress {
+    position: relative;
+    background: linear-gradient(to bottom, #67addf 0%,#ffffff 50%,#5c8727 100%);
+    height: 40px;
+    margin-top: 20px;
+}
