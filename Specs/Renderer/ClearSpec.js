@@ -3,14 +3,12 @@ defineSuite([
         'Core/BoundingRectangle',
         'Core/Color',
         'Renderer/ClearCommand',
-        'Specs/createContext',
-        'Specs/destroyContext'
+        'Specs/createContext'
     ], 'Renderer/Clear', function(
         BoundingRectangle,
         Color,
         ClearCommand,
-        createContext,
-        destroyContext) {
+        createContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -21,7 +19,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     it('default clear', function() {

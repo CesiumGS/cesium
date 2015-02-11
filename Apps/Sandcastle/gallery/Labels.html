@@ -32,7 +32,7 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 function addLabel() {
     Sandcastle.declare(addLabel);
     viewer.entities.add({
-        position : Cesium.Cartesian3.fromDegrees(-75.10, 39.57),
+        position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
         label : {
             text : 'Philadelphia'
         }
@@ -42,7 +42,7 @@ function addLabel() {
 function setFont() {
     Sandcastle.declare(setFont);
     viewer.entities.add({
-        position : Cesium.Cartesian3.fromDegrees(-75.10, 39.57),
+        position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
         label : {
             text : 'Philadelphia',
             font : '24px Helvetica',
@@ -57,7 +57,7 @@ function setFont() {
 function setProperties() {
     Sandcastle.declare(setProperties);
     var entity = viewer.entities.add({
-        position : Cesium.Cartesian3.fromDegrees(-75.10, 39.57, 300000.0),
+        position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222, 300000.0),
         label : {
             text : 'Philadelphia'
         }
@@ -71,9 +71,9 @@ function offsetByDistance() {
     var image = new Image();
     image.onload = function() {
         viewer.entities.add({
-            position : Cesium.Cartesian3.fromDegrees(-75.10, 39.57),
+            position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
             billboard : {
-                position : Cesium.Cartesian3.fromDegrees(-75.10, 39.57),
+                position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
                 scaleByDistance : new Cesium.NearFarScalar(1.5e2, 5.0, 1.5e7, 0.5),
                 image : image
             },
