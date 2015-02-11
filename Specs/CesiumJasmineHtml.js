@@ -147,6 +147,8 @@ define([], function() {
         };
 
         this.jasmineDone = function() {
+          progress.style.display = 'none';
+
           var banner = find('.banner');
           banner.appendChild(createDom('span', {className: 'duration'}, 'finished in ' + timer.elapsed() / 1000 + 's'));
 
