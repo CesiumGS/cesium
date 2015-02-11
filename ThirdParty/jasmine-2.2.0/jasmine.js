@@ -302,6 +302,8 @@ getJasmineRequireObj().Spec = function(j$) {
     this.expectationResultFactory = attrs.expectationResultFactory || function() { };
     this.queueRunnerFactory = attrs.queueRunnerFactory || function() {};
     this.catchingExceptions = attrs.catchingExceptions || function() { return true; };
+    this.parentSuite = attrs.parentSuite;
+    this.categories = attrs.categories;
 
     if (!this.queueableFn.fn) {
       this.pend();
@@ -660,7 +662,7 @@ getJasmineRequireObj().Env = function(j$) {
       return spyRegistry.spyOn.apply(spyRegistry, arguments);
     };
 
-    var suiteFactory = function(description) {
+    var suiteFactory = function(description, categories) {
       var suite = new j$.Suite({
         env: self,
         id: getNextSuiteId(),
@@ -677,7 +679,8 @@ getJasmineRequireObj().Env = function(j$) {
           }
           currentlyExecutingSuites.pop();
           reporter.suiteDone(attrs);
-        }
+        },
+        categories: categories
       });
 
       runnableLookupTable[suite.id] = suite;
@@ -690,8 +693,8 @@ getJasmineRequireObj().Env = function(j$) {
       }
     };
 
-    this.describe = function(description, specDefinitions) {
-      var suite = suiteFactory(description);
+    this.describe = function(description, specDefinitions, categories) {
+      var suite = suiteFactory(description, categories);
       addSpecsToSuite(suite, specDefinitions);
       return suite;
     };
@@ -765,10 +768,11 @@ getJasmineRequireObj().Env = function(j$) {
       return runnablesExplictlySet;
     };
 
-    var specFactory = function(description, fn, suite, timeout) {
+    var specFactory = function(description, fn, suite, timeout, categories) {
       totalSpecsDefined++;
       var spec = new j$.Spec({
         id: getNextSpecId(),
+        parentSuite: suite,
         beforeAndAfterFns: beforeAndAfterFns(suite, runnablesExplictlySetGetter),
         expectationFactory: expectationFactory,
         resultCallback: specResultCallback,
@@ -783,7 +787,8 @@ getJasmineRequireObj().Env = function(j$) {
         queueableFn: {
           fn: fn,
           timeout: function() { return timeout || j$.DEFAULT_TIMEOUT_INTERVAL; }
-        }
+        },
+        categories: categories
       });
 
       runnableLookupTable[spec.id] = spec;
@@ -807,8 +812,12 @@ getJasmineRequireObj().Env = function(j$) {
       }
     };
 
-    this.it = function(description, fn, timeout) {
-      var spec = specFactory(description, fn, currentDeclarationSuite, timeout);
+    this.it = function(description, fn, timeout, categories) {
+      if (typeof timeout !== 'undefined' && (typeof timeout === 'string' || typeof timeout.length !== 'undefined')) {
+        categories = timeout;
+        timeout = undefined;
+      }
+      var spec = specFactory(description, fn, currentDeclarationSuite, timeout, categories);
       currentDeclarationSuite.addChild(spec);
       return spec;
     };
@@ -1950,6 +1959,7 @@ getJasmineRequireObj().Suite = function() {
     this.expectationFactory = attrs.expectationFactory;
     this.expectationResultFactory = attrs.expectationResultFactory;
     this.runnablesExplictlySetGetter = attrs.runnablesExplictlySetGetter || function() {};
+    this.categories = attrs.categories;
 
     this.beforeFns = [];
     this.afterFns = [];
@@ -2965,16 +2975,16 @@ getJasmineRequireObj().toThrowError = function(j$) {
 
 getJasmineRequireObj().interface = function(jasmine, env) {
   var jasmineInterface = {
-    describe: function(description, specDefinitions) {
-      return env.describe(description, specDefinitions);
+    describe: function(description, specDefinitions, categories) {
+      return env.describe(description, specDefinitions, categories);
     },
 
-    xdescribe: function(description, specDefinitions) {
-      return env.xdescribe(description, specDefinitions);
+    xdescribe: function(description, specDefinitions, categories) {
+      return env.xdescribe(description, specDefinitions, categories);
     },
 
-    fdescribe: function(description, specDefinitions) {
-      return env.fdescribe(description, specDefinitions);
+    fdescribe: function(description, specDefinitions, categories) {
+      return env.fdescribe(description, specDefinitions, categories);
     },
 
     it: function() {

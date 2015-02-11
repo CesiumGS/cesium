@@ -97,7 +97,7 @@ require([
     // call done() when a returned promise resolves.
     var originalIt = window.it;
 
-    window.it = function(description, f) {
+    window.it = function(description, f, timeout, categories) {
         originalIt(description, function(done) {
             var result = f();
             when(result, function() {
@@ -105,7 +105,7 @@ require([
             }, function(e) {
                 done.fail('promise rejected: ' + e.toString());
             });
-        });
+        }, timeout, categories);
     };
 
     var originalBeforeEach = window.beforeEach;
@@ -203,6 +203,13 @@ require([
     env.addReporter(jasmineInterface.jsApiReporter);
     env.addReporter(htmlReporter);
 
+    var categoryString = queryString.getParam("category");
+
+    var categories;
+    if (categoryString) {
+        categories = categoryString.split(',');
+    }
+
     /**
      * Filter which specs will be run by matching the start of the full name against the `spec` query param.
      */
@@ -213,7 +220,35 @@ require([
     });
 
     env.specFilter = function(spec) {
-        return specFilter.matches(spec.getFullName());
+        if (!specFilter.matches(spec.getFullName())) {
+            return false;
+        }
+
+        // If we're not filtering by category, include this spec.
+        if (!categories) {
+            return true;
+        }
+
+        // At least one of this spec's categories must match one of the selected categories.
+        var toCheck = spec;
+        while (toCheck) {
+            if (toCheck.categories) {
+                if (categories.indexOf(toCheck.categories) >= 0) {
+                    return true;
+                }
+
+                for (var i = 0; i < toCheck.categories.length; ++i) {
+                    if (categories.indexOf(toCheck.categories[i]) >= 0) {
+                        return true;
+                    }
+                }
+            }
+
+            toCheck = toCheck.parentSuite;
+        }
+
+        // No matching categories, so filter out this spec.
+        return false;
     };
 
     /**
