@@ -535,7 +535,9 @@ define([
                     id = sourceUri + id;
                 }
                 if (!defined(styleCollection.getById(id))) {
-                    styleEntity = new Entity(id);
+                    styleEntity = new Entity({
+                        id : id
+                    });
                     styleCollection.add(styleEntity);
                     applyStyle(dataSource, node, styleEntity, sourceUri, uriResolver);
                 }
@@ -801,10 +803,6 @@ define([
         var id = createId(groundOverlay.id);
         var entity = entityCollection.getOrCreateEntity(id);
 
-        //TODO
-        //<gx:altitudeMode>
-        //<gx:LatLonQuad>
-        //drawOrder
         if (defined(parent)) {
             entity.parent = parent;
         }
@@ -825,53 +823,57 @@ define([
         //var visibility = queryBooleanValue(groundOverlay, 'visibility', namespaces.kml);
         //entity.uiShow = defined(visibility) ? visibility : true;
 
+        var rectangle = entity.rectangle;
+        if (!defined(rectangle)) {
+            rectangle = new RectangleGraphics();
+            entity.rectangle = rectangle;
+        }
+
         var latLonBox = queryFirstNode(groundOverlay, 'LatLonBox', namespaces.kml);
         if (defined(latLonBox)) {
-            //TODO: Apparently values beyond the global extent are valid
-            //and should wrap around; which we currently don't handle.
-            var west = Math.max(-180, Math.min(180, queryNumericValue(latLonBox, 'west', namespaces.kml)));
-            var south = Math.max(-90, Math.min(90, queryNumericValue(latLonBox, 'south', namespaces.kml)));
-            var east = Math.max(-180, Math.min(180, queryNumericValue(latLonBox, 'east', namespaces.kml)));
-            var north = Math.max(-90, Math.min(90, queryNumericValue(latLonBox, 'north', namespaces.kml)));
+            var west = queryNumericValue(latLonBox, 'west', namespaces.kml);
+            var south = queryNumericValue(latLonBox, 'south', namespaces.kml);
+            var east = queryNumericValue(latLonBox, 'east', namespaces.kml);
+            var north = queryNumericValue(latLonBox, 'north', namespaces.kml);
 
-            var rectangle = entity.rectangle;
-            if (!defined(rectangle)) {
-                rectangle = new RectangleGraphics();
-                entity.rectangle = rectangle;
+            if (defined(west)) {
+                west = CesiumMath.convertLongitudeRange(CesiumMath.toRadians(west));
             }
-            var extent = Rectangle.fromDegrees(west, south, east, north);
-            rectangle.coordinates = extent;
-
-            var material;
-            var iconNode = queryFirstNode(groundOverlay, 'Icon', namespaces.kml);
-            var href = defined(iconNode) ? queryStringValue(iconNode, 'href', namespaces.kml) : undefined;
-            if (defined(href)) {
-                var icon = resolveHref(href, dataSource, sourceUri, uriResolver);
-                material = icon;
-            } else {
-                var color = queryColorValue(groundOverlay, 'color', namespaces.kml);
-                if (defined(color)) {
-                    material = color;
-                }
+            if (defined(south)) {
+                south = CesiumMath.negativePiToPi(CesiumMath.toRadians(south));
             }
-            rectangle.material = material;
-
-            var rotation = queryNumericValue(latLonBox, 'rotation', namespaces.kml);
-            if (defined(rotation)) {
-                rectangle.rotation = CesiumMath.toRadians(rotation);
+            if (defined(east)) {
+                east = CesiumMath.convertLongitudeRange(CesiumMath.toRadians(east));
+            }
+            if (defined(north)) {
+                north = CesiumMath.negativePiToPi(CesiumMath.toRadians(north));
             }
 
-            var altitudeMode = queryStringValue(groundOverlay, 'altitudeMode', namespaces.kml);
-            if (defined(altitudeMode)) {
-                if (altitudeMode === 'absolute') {
-                    //TODO absolute means relative to sea level, not the ellipsoid.
-                    var altitude = queryNumericValue(groundOverlay, 'altitude', namespaces.kml);
-                    rectangle.height = defaultValue(altitude, 0);
-                } else if (altitudeMode === 'clampToGround') {
-                    //TODO conform to terrain.
-                } else {
-                    throw new RuntimeError('Unknown enumeration: ' + altitudeMode);
-                }
+            rectangle.coordinates = new Rectangle(west, south, east, north);
+        }
+
+        var material;
+        var iconNode = queryFirstNode(groundOverlay, 'Icon', namespaces.kml);
+        var href = queryStringValue(iconNode, 'href', namespaces.kml);
+        if (defined(href)) {
+            rectangle.material = resolveHref(href, dataSource, sourceUri, uriResolver);
+        } else {
+            rectangle.material = queryColorValue(groundOverlay, 'color', namespaces.kml);
+        }
+
+        var rotation = queryNumericValue(latLonBox, 'rotation', namespaces.kml);
+        if (defined(rotation)) {
+            rectangle.rotation = CesiumMath.toRadians(rotation);
+        }
+
+        var altitudeMode = queryStringValue(groundOverlay, 'altitudeMode', namespaces.kml);
+        if (defined(altitudeMode)) {
+            if (altitudeMode === 'absolute') {
+                //TODO absolute means relative to sea level, not the ellipsoid.
+                var altitude = queryNumericValue(groundOverlay, 'altitude', namespaces.kml);
+                rectangle.height = defaultValue(altitude, 0);
+            } else if (altitudeMode !== 'clampToGround') {
+                throw new RuntimeError('Unknown enumeration: ' + altitudeMode);
             }
         }
     }
@@ -926,7 +928,7 @@ define([
         dataSource._promises = [];
 
         var docElement = queryFirstNode(kml.documentElement, 'Document', namespaces.kml);
-        var name = docElement ? queryStringValue(docElement, 'name', namespaces.kml) : undefined;
+        var name = queryStringValue(docElement, 'name', namespaces.kml);
         if (!defined(name) && defined(sourceUri)) {
             name = getFilenameFromUri(sourceUri);
         }
@@ -939,7 +941,11 @@ define([
         var styleCollection = new EntityCollection();
         return when.all(processStyles(dataSource, kml, styleCollection, sourceUri, false, uriResolver), function() {
             var entityCollection = dataSource._entityCollection;
-            processFeatureNode(dataSource, kml.documentElement.firstElementChild, undefined, entityCollection, styleCollection, sourceUri, uriResolver);
+            var element = kml.documentElement;
+            if (element.nodeName === 'kml') {
+                element = element.firstElementChild;
+            }
+            processFeatureNode(dataSource, element, undefined, entityCollection, styleCollection, sourceUri, uriResolver);
 
             var availability = entityCollection.computeAvailability();
             if (availability.equals(Iso8601.MAXIMUM_INTERVAL)) {

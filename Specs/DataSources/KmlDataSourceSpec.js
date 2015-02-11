@@ -12,10 +12,12 @@ defineSuite([
         'Core/loadBlob',
         'Core/loadXML',
         'Core/Math',
+        'Core/Rectangle',
         'Core/RuntimeError',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
         'DataSources/EntityCollection',
+        'DataSources/ImageMaterialProperty',
         'Specs/waitsForPromise'
     ], function(
         KmlDataSource,
@@ -30,10 +32,12 @@ defineSuite([
         loadBlob,
         loadXML,
         CesiumMath,
+        Rectangle,
         RuntimeError,
         ColorMaterialProperty,
         ConstantProperty,
         EntityCollection,
+        ImageMaterialProperty,
         waitsForPromise) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -1056,5 +1060,136 @@ defineSuite([
         expect(entity.availability).toBeDefined();
         expect(entity.availability.start).toEqual(beginDate);
         expect(entity.availability.stop).toEqual(endDate);
+    });
+
+    it('GroundOverlay: Sets defaults', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <GroundOverlay>\
+        </GroundOverlay>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.name).toBeUndefined();
+        expect(entity.availability).toBeUndefined();
+        expect(entity.description).toBeUndefined();
+        expect(entity.rectangle).toBeDefined();
+        expect(entity.rectangle.height).toBeUndefined();
+        expect(entity.rectangle.rotation).toBeUndefined();
+        expect(entity.rectangle.coordinates).toBeUndefined();
+        expect(entity.rectangle.material).toBeUndefined();
+    });
+
+    it('GroundOverlay: Sets entity name', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <GroundOverlay>\
+            <name>Name</name>\
+        </GroundOverlay>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.name).toEqual('Name');
+    });
+
+    it('GroundOverlay: Sets entity description', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <GroundOverlay>\
+            <description>Here I am!</description>\
+        </GroundOverlay>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.description.getValue()).toEqual('Here I am!');
+    });
+
+    it('GroundOverlay: Sets rectangle image material', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <GroundOverlay>\
+            <Icon>\
+                <href>http://test.invalid/image.png</href>\
+            </Icon>\
+        </GroundOverlay>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.rectangle.material).toBeInstanceOf(ImageMaterialProperty);
+        expect(entity.rectangle.material.image.getValue()).toEqual('http://test.invalid/image.png');
+    });
+
+    it('GroundOverlay: Sets rectangle color material', function() {
+        var color = Color.fromBytes(0xcc, 0xdd, 0xee, 0xff);
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <GroundOverlay>\
+            <color>ffeeddcc</color>\
+        </GroundOverlay>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.rectangle.material).toBeInstanceOf(ColorMaterialProperty);
+        expect(entity.rectangle.material.color.getValue()).toEqual(color);
+    });
+
+    it('GroundOverlay: Sets rectangle coordinates and rotation', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <GroundOverlay>\
+            <LatLonBox>\
+                <west>3</west>\
+                <south>1</south>\
+                <east>4</east>\
+                <north>2</north>\
+                <rotation>45</rotation>\
+            </LatLonBox>\
+        </GroundOverlay>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.rectangle.coordinates.getValue()).toEqualEpsilon(Rectangle.fromDegrees(3, 1, 4, 2), CesiumMath.EPSILON14);
+        expect(entity.rectangle.rotation.getValue()).toEqual(Math.PI / 4);
+    });
+
+    it('GroundOverlay: Sets entity availability', function() {
+        var endDate = JulianDate.fromIso8601('1945-08-06');
+        var beginDate = JulianDate.fromIso8601('1941-12-07');
+
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <GroundOverlay>\
+            <TimeSpan>\
+              <begin>1945-08-06</begin>\
+              <end>1941-12-07</end>\
+            </TimeSpan>\
+        </GroundOverlay>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.availability).toBeDefined();
+        expect(entity.availability.start).toEqual(beginDate);
+        expect(entity.availability.stop).toEqual(endDate);
+    });
+
+    it('GroundOverlay: Sets rectangle absolute height', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <GroundOverlay>\
+            <altitudeMode>absolute</altitudeMode>\
+            <altitude>23</altitude>\
+        </GroundOverlay>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.rectangle.height.getValue()).toEqual(23);
     });
 });
