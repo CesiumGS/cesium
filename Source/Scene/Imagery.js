@@ -80,5 +80,22 @@ define([
         return this.referenceCount;
     };
 
+    Imagery.prototype.processStateMachine = function(context) {
+        if (this.state === ImageryState.UNLOADED) {
+            this.state = ImageryState.TRANSITIONING;
+            this.imageryLayer._requestImagery(this);
+        }
+
+        if (this.state === ImageryState.RECEIVED) {
+            this.state = ImageryState.TRANSITIONING;
+            this.imageryLayer._createTexture(context, this);
+        }
+
+        if (this.state === ImageryState.TEXTURE_LOADED) {
+            this.state = ImageryState.TRANSITIONING;
+            this.imageryLayer._reprojectTexture(context, this);
+        }
+    };
+
     return Imagery;
 });

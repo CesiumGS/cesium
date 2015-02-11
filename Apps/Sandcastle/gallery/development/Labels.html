@@ -35,7 +35,7 @@ function addLabel() {
     scene.primitives.removeAll();
     var labels = scene.primitives.add(new Cesium.LabelCollection());
     labels.add({
-        position : Cesium.Cartesian3.fromDegrees(-75.10, 39.57),
+        position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
         text     : 'Philadelphia'
     });
 }
@@ -45,7 +45,7 @@ function setFont() {
     scene.primitives.removeAll();
     var labels = scene.primitives.add(new Cesium.LabelCollection());
     labels.add({
-        position  : Cesium.Cartesian3.fromDegrees(-75.10, 39.57),
+        position  : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
         text      : 'Philadelphia',
         // CSS font-family
         font      : '24px Helvetica',
@@ -61,11 +61,11 @@ function setProperties() {
     scene.primitives.removeAll();
     var labels = scene.primitives.add(new Cesium.LabelCollection());
     var l = labels.add({
-        position : Cesium.Cartesian3.fromDegrees(-75.10, 39.57),
+        position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
         text     : 'Philadelphia'
     });
 
-    l.position = Cesium.Cartesian3.fromDegrees(-75.10, 39.57, 300000.0);
+    l.position = Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222, 300000.0);
     l.scale = 2.0;
 }
 
@@ -100,14 +100,14 @@ function offsetByDistance() {
     image.onload = function() {
         var billboards = scene.primitives.add(new Cesium.BillboardCollection());
         billboards.add({
-            position : Cesium.Cartesian3.fromDegrees(-75.10, 39.57),
+            position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
             scaleByDistance : new Cesium.NearFarScalar(1.5e2, 5.0, 1.5e7, 0.5),
             image : image
         });
 
         var labels = scene.primitives.add(new Cesium.LabelCollection());
         labels.add({
-            position : Cesium.Cartesian3.fromDegrees(-75.10, 39.57),
+            position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
             text     : 'Label on top of scaling billboard',
             font : '20px sans-serif',
             horizontalOrigin : Cesium.HorizontalOrigin.CENTER,

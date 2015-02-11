@@ -571,4 +571,16 @@ defineSuite([
 
         s.destroyForSpecs();
     });
+
+    it('get maximumAliasedLineWidth', function() {
+        var s = createScene();
+        expect(s.maximumAliasedLineWidth).toBeGreaterThanOrEqualTo(1);
+        s.destroyForSpecs();
+    });
+
+    it('get maximumCubeMapSize', function() {
+        var s = createScene();
+        expect(s.maximumCubeMapSize).toBeGreaterThanOrEqualTo(16);
+        s.destroyForSpecs();
+    });
 }, 'WebGL');
