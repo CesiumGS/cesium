@@ -10,8 +10,7 @@ defineSuite([
         'Core/Transforms',
         'Specs/createCamera',
         'Specs/createFrameState',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], function(
         Moon,
         Cartesian3,
@@ -23,8 +22,7 @@ defineSuite([
         Transforms,
         createCamera,
         createFrameState,
-        createScene,
-        destroyScene) {
+        createScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -35,7 +33,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     function lookAtMoon(camera, date) {

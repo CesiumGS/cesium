@@ -62,21 +62,21 @@ defineSuite([
 
     function simulateMouseUp(options) {
         if (usePointerEvents) {
-            DomEventSimulator.firePointerUp(document, combine(options, {
+            DomEventSimulator.firePointerUp(canvas, combine(options, {
                 pointerType : 'mouse'
             }));
         } else {
-            DomEventSimulator.fireMouseUp(document, options);
+            DomEventSimulator.fireMouseUp(canvas, options);
         }
     }
 
     function simulateMouseMove(options) {
         if (usePointerEvents) {
-            DomEventSimulator.firePointerMove(document, combine(options, {
+            DomEventSimulator.firePointerMove(canvas, combine(options, {
                 pointerType : 'mouse'
             }));
         } else {
-            DomEventSimulator.fireMouseMove(document, options);
+            DomEventSimulator.fireMouseMove(canvas, options);
         }
     }
 

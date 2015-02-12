@@ -16,7 +16,6 @@ defineSuite([
         'Specs/createCamera',
         'Specs/createContext',
         'Specs/createFrameState',
-        'Specs/destroyContext',
         'Specs/pick',
         'Specs/render'
     ], function(
@@ -36,7 +35,6 @@ defineSuite([
         createCamera,
         createContext,
         createFrameState,
-        destroyContext,
         pick,
         render) {
     "use strict";
@@ -64,7 +62,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     beforeEach(function() {

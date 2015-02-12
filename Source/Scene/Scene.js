@@ -512,6 +512,21 @@ define([
         },
 
         /**
+         * The maximum length in pixels of one edge of a cube map, supported by this WebGL implementation.  It will be at least 16.
+         * @memberof Scene.prototype
+         *
+         * @type {Number}
+         * @readonly
+         *
+         * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>GL_MAX_CUBE_MAP_TEXTURE_SIZE</code>.
+         */
+        maximumCubeMapSize : {
+            get : function() {
+                return this._context.maximumCubeMapSize;
+            }
+        },
+
+        /**
          * Gets or sets the depth-test ellipsoid.
          * @memberof Scene.prototype
          *
@@ -1432,6 +1447,7 @@ define([
     var scratchDirection = new Cartesian3();
     var scratchBufferDimensions = new Cartesian2();
     var scratchPixelSize = new Cartesian2();
+    var scratchPickVolumeMatrix4 = new Matrix4();
 
     function getPickOrthographicCullingVolume(scene, drawingBufferPosition, width, height) {
         var camera = scene._camera;
@@ -1445,11 +1461,16 @@ define([
         var y = (2.0 / drawingBufferHeight) * (drawingBufferHeight - drawingBufferPosition.y) - 1.0;
         y *= (frustum.top - frustum.bottom) * 0.5;
 
+        var transform = Matrix4.clone(camera.transform, scratchPickVolumeMatrix4);
+        camera._setTransform(Matrix4.IDENTITY);
+
         var origin = Cartesian3.clone(camera.position, scratchOrigin);
         Cartesian3.multiplyByScalar(camera.right, x, scratchDirection);
         Cartesian3.add(scratchDirection, origin, origin);
         Cartesian3.multiplyByScalar(camera.up, y, scratchDirection);
         Cartesian3.add(scratchDirection, origin, origin);
+
+        camera._setTransform(transform);
 
         Cartesian3.fromElements(origin.z, origin.x, origin.y, origin);
 
