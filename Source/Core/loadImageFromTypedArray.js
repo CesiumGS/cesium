@@ -10,7 +10,7 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * @private
      */
     var loadImageFromTypedArray = function(buffer, byteOffset, length, format) {
         //>>includeStart('debug', pragmas.debug);
