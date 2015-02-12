@@ -42,8 +42,11 @@ define([
         './PolygonGraphics',
         './PolylineGraphics',
         './PolylineOutlineMaterialProperty',
+        './PositionPropertyArray',
         './RectangleGraphics',
-        './SampledPositionProperty'
+        './ReferenceProperty',
+        './SampledPositionProperty',
+        './SurfacePositionProperty'
     ], function(
         BoundingRectangle,
         Cartesian2,
@@ -87,8 +90,11 @@ define([
         PolygonGraphics,
         PolylineGraphics,
         PolylineOutlineMaterialProperty,
+        PositionPropertyArray,
         RectangleGraphics,
-        SampledPositionProperty) {
+        ReferenceProperty,
+        SampledPositionProperty,
+        SurfacePositionProperty) {
     "use strict";
 
     var parser = new DOMParser();
@@ -179,7 +185,7 @@ define([
             break;
         }
         var digits = element.textContent.trim().split(/[\s,\n]+/g);
-        scratchCartographic = Cartographic.fromDegrees(digits[0], digits[1], defined(digits[2]) ? parseFloat(digits[2]) : 0, scratchCartographic);
+        Cartographic.fromDegrees(digits[0], digits[1], defined(digits[2]) ? parseFloat(digits[2]) : 0, scratchCartographic);
         return Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic);
     }
 
@@ -695,13 +701,30 @@ define([
         return promises;
     }
 
+    function createDropLine(dataSource, entity, styleEntity) {
+        var entityPosition = new ReferenceProperty(dataSource._entityCollection, entity.id, ['position']);
+        var surfacePosition = new SurfacePositionProperty(entity.position, Ellipsoid.WGS84);
+        entity.polyline = new PolylineGraphics();
+
+        entity.polyline.positions = new PositionPropertyArray([entityPosition, surfacePosition]);
+        if (defined(styleEntity.polyline)) {
+            entity.polyline.merge(styleEntity.polyline);
+        }
+    }
+
     function processPoint(dataSource, geometryNode, entity, styleEntity) {
         var coordinatesNode = queryFirstNode(geometryNode, 'coordinates', namespaces.kml);
-        if (defined(coordinatesNode)) {
-            var position = readCoordinate(coordinatesNode, queryStringValue(geometryNode, 'altitudeMode', namespaces.kml));
-            entity.position = position;
-        }
+        var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
+        var position = readCoordinate(coordinatesNode, altitudeMode);
+        entity.position = position;
         entity.billboard = styleEntity.billboard;
+
+        if (altitudeMode !== 'clampToGround ' && altitudeMode !== 'clampToSeaFloor' && defined(position)) {
+            var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
+            if (extrude) {
+                createDropLine(dataSource, entity, styleEntity);
+            }
+        }
     }
 
     function processLineStringOrLinearRing(dataSource, geometryNode, entity, styleEntity) {
@@ -773,6 +796,18 @@ define([
         property.addSamples(times, coordinates);
         entity.position = property;
         entity.billboard = styleEntity.billboard;
+        entity.availability = new TimeIntervalCollection();
+        entity.availability.addInterval(new TimeInterval({
+            start : times[0],
+            stop : times[times.length - 1]
+        }));
+
+        if (altitudeMode !== 'clampToGround ' && altitudeMode !== 'clampToSeaFloor') {
+            var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
+            if (extrude) {
+                createDropLine(dataSource, entity, styleEntity);
+            }
+        }
     }
 
     function processMultiTrack(dataSource, geometryNode, entity, styleEntity) {
