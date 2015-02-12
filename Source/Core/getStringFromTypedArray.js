@@ -1,6 +1,7 @@
 /*global define*/
 define(function() {
     "use strict";
+    /*global TextDecoder*/
 
     /**
      * @private
@@ -14,7 +15,7 @@ define(function() {
         }
 
         return String.fromCharCode.apply(String, view);
-    }
+    };
 
     return getStringFromTypedArray;
 });
