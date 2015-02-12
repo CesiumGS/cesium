@@ -702,7 +702,7 @@ define([
 
     var sizeOfUnit32 = Uint32Array.BYTES_PER_ELEMENT;
 
-// TODO: update doc to include .gltf
+// TODO: update doc to include .bgltf
     /**
      * Creates a model from a glTF asset.  When the model is ready to render, i.e., when the external binary, image,
      * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyPromise} is resolved.
@@ -1328,6 +1328,43 @@ define([
                 name = loadResources.programsToCreate.dequeue();
                 createProgram(name, model, context);
             }
+        }
+    }
+
+    function getOnImageCreatedFromTypedArray(loadResources, gltfTexture) {
+        return function(image) {
+            loadResources.texturesToCreate.enqueue({
+                name : gltfTexture.name,
+                image : image,
+                bufferView : undefined
+            });
+
+            --loadResources.pendingBufferViewToImage;
+        };
+    }
+
+    function loadTexturesFromBufferViews(model) {
+        var loadResources = model._loadResources;
+
+        if (loadResources.pendingBufferLoads !== 0) {
+            return;
+        }
+
+        while (loadResources.texturesToCreateFromBufferView.length > 0) {
+            var gltfTexture = loadResources.texturesToCreateFromBufferView.dequeue();
+
+            var buffers = loadResources.buffers;
+            var gltf = model.gltf;
+            var bufferView = gltf.bufferViews[gltfTexture.bufferView];
+
+// TODO: include mime type metadata?
+// TODO: include width/height to use canvas?
+            var onload = getOnImageCreatedFromTypedArray(loadResources, gltfTexture);
+            var onerror = getFailedLoadFunction(model, 'image', 'name: ' + gltfTexture.name + ', bufferView: ' + gltfTexture.bufferView);
+            loadImageFromTypedArray(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength, 'image/png').
+                then(onload).otherwise(onerror);
+
+            ++loadResources.pendingBufferViewToImage;
         }
     }
 
@@ -2286,43 +2323,6 @@ define([
         model._runtime.nodes = runtimeNodes;
     }
 
-    function getOnImageCreatedFromTypedArray(loadResources, gltfTexture) {
-        return function(image) {
-            loadResources.texturesToCreate.enqueue({
-                name : gltfTexture.name,
-                image : image,
-                bufferView : undefined
-            });
-
-            --loadResources.pendingBufferViewToImage;
-        };
-    }
-
-    function foo(model) {
-        var loadResources = model._loadResources;
-
-        if (loadResources.pendingBufferLoads !== 0) {
-            return;
-        }
-
-        while (loadResources.texturesToCreateFromBufferView.length > 0) {
-            var gltfTexture = loadResources.texturesToCreateFromBufferView.dequeue();
-
-            var buffers = loadResources.buffers;
-            var gltf = model.gltf;
-            var bufferView = gltf.bufferViews[gltfTexture.bufferView];
-
-// TODO: include mime type metadata?
-// TODO: include width/height to use canvas?
-            var onload = getOnImageCreatedFromTypedArray(loadResources, gltfTexture);
-            var onerror = getFailedLoadFunction(model, 'image', 'name: ' + gltfTexture.name + ', bufferView: ' + gltfTexture.bufferView);
-            loadImageFromTypedArray(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength, 'image/png').
-                then(onload).otherwise(onerror);
-
-            ++loadResources.pendingBufferViewToImage;
-        }
-    }
-
     function createResources(model, context) {
         if (model._loadRendererResourcesFromCache) {
             var resources = model._rendererResources;
@@ -2336,12 +2336,10 @@ define([
             resources.samplers = cachedResources.samplers;
             resources.renderStates = cachedResources.renderStates;
         } else {
-
-            foo(model);
-
             createBuffers(model, context);      // using glTF bufferViews
             createPrograms(model, context);
             createSamplers(model, context);
+            loadTexturesFromBufferViews(model);
             createTextures(model, context);
         }
 
