@@ -17,6 +17,7 @@ define([
         '../Core/IndexDatatype',
         '../Core/loadArrayBuffer',
         '../Core/loadImage',
+        '../Core/loadImageFromTypedArray',
         '../Core/loadText',
         '../Core/Math',
         '../Core/Matrix2',
@@ -60,6 +61,7 @@ define([
         IndexDatatype,
         loadArrayBuffer,
         loadImage,
+        loadImageFromTypedArray,
         loadText,
         CesiumMath,
         Matrix2,
@@ -86,7 +88,7 @@ define([
         Pass,
         SceneMode) {
     "use strict";
-    /*global WebGLRenderingContext,TextDecoder*/
+    /*global WebGLRenderingContext*/
 
     var yUpToZUp = Matrix4.fromRotationTranslation(Matrix3.fromRotationX(CesiumMath.PI_OVER_TWO));
     var boundingSphereCartesian3Scratch = new Cartesian3();
@@ -946,7 +948,7 @@ define([
 
     function getFailedLoadFunction(model, type, path) {
         return function() {
-            model._loadError = new RuntimeError('Failed to load external ' + type + ': ' + path);
+            model._loadError = new RuntimeError('Failed to load ' + type + ': ' + path);
             model._state = ModelState.FAILED;
         };
     }
@@ -983,7 +985,6 @@ define([
         }
     }
 
-// TODO: remove this?
     function parseBufferViews(model) {
         var bufferViews = model.gltf.bufferViews;
         for (var name in bufferViews) {
@@ -2285,32 +2286,6 @@ define([
         model._runtime.nodes = runtimeNodes;
     }
 
-// TODO: put this elsewhere
-// TODO: use promise
-    function loadImageFromTypedArray(buffer, byteOffset, length, format, onload) {
-        var bytes = new Uint8Array(buffer, byteOffset, length);
-
-// TODO: include mime type metadata?
-// TODO: include width/height to use canvas?
-         var blob = new Blob([bytes], {
-             type : format
-         });
-
-         var url = URL.createObjectURL(blob);
-// TODO: URL.revokeObjectURL()
-
-         var image = new Image();
-
-          image.onload = function() {
-              onload(image);
-          };
-          image.onerror = function(e) {
-// TODO
-          };
-
-          image.src = url;
-    }
-
     function getOnImageCreatedFromTypedArray(loadResources, gltfTexture) {
         return function(image) {
             loadResources.texturesToCreate.enqueue({
@@ -2337,8 +2312,12 @@ define([
             var gltf = model.gltf;
             var bufferView = gltf.bufferViews[gltfTexture.bufferView];
 
-            loadImageFromTypedArray(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength,
-                'image/png', getOnImageCreatedFromTypedArray(loadResources, gltfTexture));
+// TODO: include mime type metadata?
+// TODO: include width/height to use canvas?
+            var onload = getOnImageCreatedFromTypedArray(loadResources, gltfTexture);
+            var onerror = getFailedLoadFunction(model, 'image', 'name: ' + gltfTexture.name + ', bufferView: ' + gltfTexture.bufferView);
+            loadImageFromTypedArray(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength, 'image/png').
+                then(onload).otherwise(onerror);
 
             ++loadResources.pendingBufferViewToImage;
         }
