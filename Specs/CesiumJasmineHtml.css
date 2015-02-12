@@ -8,3 +8,7 @@
 .jasmine_html-reporter .banner {
     margin: 14px 0;
 }
+
+.jasmine_html-reporter .results {
+    display: block;
+}

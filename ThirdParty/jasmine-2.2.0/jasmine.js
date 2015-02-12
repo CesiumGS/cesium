@@ -354,6 +354,7 @@ getJasmineRequireObj().Spec = function(j$) {
 
     function complete() {
       self.result.status = self.status();
+      self.result.domNode = self.domNode;
       self.resultCallback(self.result);
 
       if (onComplete) {
@@ -641,7 +642,8 @@ getJasmineRequireObj().Env = function(j$) {
       }
 
       reporter.jasmineStarted({
-        totalSpecsDefined: totalSpecsDefined
+        totalSpecsDefined: totalSpecsDefined,
+        topSuite: topSuite
       });
 
       queueRunnerFactory({queueableFns: allFns, onComplete: reporter.jasmineDone});
@@ -2058,6 +2060,7 @@ getJasmineRequireObj().Suite = function() {
 
     function complete() {
       self.result.status = self.status();
+      self.result.domNode = self.domNode;
       self.resultCallback(self.result);
 
       if (onComplete) {

@@ -72,6 +72,43 @@ define([], function() {
         var totalSpecsDefined;
         this.jasmineStarted = function(options) {
           totalSpecsDefined = options.totalSpecsDefined || 0;
+
+          function summaryList(resultsTree, domParent) {
+            var specListNode;
+            for (var i = 0; i < resultsTree.children.length; i++) {
+              var result = resultsTree.children[i];
+              if (result instanceof j$.Suite) {
+                var suiteListNode = createDom('ul', {className: 'suite', id: 'suite-' + result.id},
+                  createDom('li', {className: 'suite-detail'},
+                    createDom('a', {href: specHref(result)}, result.description)
+                  )
+                );
+
+                summaryList(result, suiteListNode);
+                domParent.appendChild(suiteListNode);
+              }
+              if (result instanceof j$.Spec) {
+                if (domParent.getAttribute('class') != 'specs') {
+                  specListNode = createDom('ul', {className: 'specs'});
+                  domParent.appendChild(specListNode);
+                }
+                var specDescription = result.description;
+                var domNode = createDom('li', {
+                  className: result.status,
+                  id: 'spec-' + result.id
+                }, createDom('a', {href: specHref(result)}, specDescription));
+                result.domNode = domNode;
+                specListNode.appendChild(domNode);
+              }
+            }
+          }
+
+          var summary = createDom('div', {className: 'summary'});
+          var results = find('.results');
+          results.appendChild(summary);
+
+          summaryList(options.topSuite, summary)
+
           timer.start();
         };
 
@@ -110,6 +147,8 @@ define([], function() {
           if (result.status != 'disabled') {
             specsExecuted++;
           }
+
+          result.domNode.className = result.status;
 
           progress.style.width = (100 * specsExecuted / totalSpecsDefined) + '%';
 
@@ -199,9 +238,9 @@ define([], function() {
           }
 
           var results = find('.results');
-          results.appendChild(summary);
+          //results.appendChild(summary);
 
-          summaryList(topResults, summary);
+          //summaryList(topResults, summary);
 
           function summaryList(resultsTree, domParent) {
             var specListNode;
@@ -315,7 +354,11 @@ define([], function() {
         }
 
         function specHref(result) {
-          return addToExistingQueryString('spec', result.fullName);
+          if (typeof result.fullName !== 'undefined') {
+            return addToExistingQueryString('spec', result.fullName);
+          } else {
+            return addToExistingQueryString('spec', result.getFullName());
+          }
         }
 
         function defaultQueryString(key, value) {
