@@ -26,15 +26,24 @@ define([
         }
         //>>includeEnd('debug');
 
-        var view = new Uint8Array(buffer, byteOffset, length);
+        return getStringFromTypedArray.decode(new Uint8Array(buffer, byteOffset, length));
+    };
 
-        if (typeof TextDecoder !== 'undefined') {
-            var decoder = new TextDecoder('utf-8');
-            return decoder.decode(view);
-        }
+    // Exposed functions for testing
+    getStringFromTypedArray.decodeWithTextDecoder = function(view) {
+        var decoder = new TextDecoder('utf-8');
+        return decoder.decode(view);
+    };
 
+    getStringFromTypedArray.decodeWithFromCharCode = function(view) {
         return String.fromCharCode.apply(String, view);
     };
+
+    if (typeof TextDecoder !== 'undefined') {
+        getStringFromTypedArray.decode = getStringFromTypedArray.decodeWithTextDecoder;
+    } else {
+        getStringFromTypedArray.decode = getStringFromTypedArray.decodeWithFromCharCode;
+    }
 
     return getStringFromTypedArray;
 });
