@@ -1067,7 +1067,8 @@ define([
                     model._loadResources.texturesToCreateFromBufferView.enqueue({
                          name : name,
                          image : undefined,
-                         bufferView : gltfImage.bufferView
+                         bufferView : gltfImage.bufferView,
+                         mimeType : gltfImage.mimeType
                      });
                 }
             }
@@ -1357,11 +1358,9 @@ define([
             var gltf = model.gltf;
             var bufferView = gltf.bufferViews[gltfTexture.bufferView];
 
-// TODO: include mime type metadata?
-// TODO: include width/height to use canvas?
             var onload = getOnImageCreatedFromTypedArray(loadResources, gltfTexture);
             var onerror = getFailedLoadFunction(model, 'image', 'name: ' + gltfTexture.name + ', bufferView: ' + gltfTexture.bufferView);
-            loadImageFromTypedArray(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength, 'image/png').
+            loadImageFromTypedArray(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength, gltfTexture.mimeType).
                 then(onload).otherwise(onerror);
 
             ++loadResources.pendingBufferViewToImage;
