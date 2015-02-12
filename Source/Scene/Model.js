@@ -1551,8 +1551,7 @@ define([
     function createSkins(model) {
         var loadResources = model._loadResources;
 
-// TODO: doesn't need to wait for GL buffers
-        if (!loadResources.finishedBuffersCreation()) {
+        if (loadResources.pendingBufferLoads !== 0) {
             return;
         }
 
