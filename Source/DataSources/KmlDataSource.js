@@ -46,7 +46,8 @@ define([
         './RectangleGraphics',
         './ReferenceProperty',
         './SampledPositionProperty',
-        './SurfacePositionProperty'
+        './SurfacePositionProperty',
+        './WallGraphics'
     ], function(
         BoundingRectangle,
         Cartesian2,
@@ -94,7 +95,8 @@ define([
         RectangleGraphics,
         ReferenceProperty,
         SampledPositionProperty,
-        SurfacePositionProperty) {
+        SurfacePositionProperty,
+        WallGraphics) {
     "use strict";
 
     var parser = new DOMParser();
@@ -190,6 +192,9 @@ define([
     }
 
     function readCoordinates(element) {
+        if(!defined(element)){
+            return undefined;
+        }
         //TODO: height is referenced to altitude mode
         var tuples = element.textContent.trim().split(/[\s\n]+/g);
         var numberOfCoordinates = tuples.length;
@@ -728,56 +733,70 @@ define([
     }
 
     function processLineStringOrLinearRing(dataSource, geometryNode, entity, styleEntity) {
-        var polyline = defined(styleEntity.polyline) ? styleEntity.polyline.clone() : new PolylineGraphics();
-        entity.polyline = polyline;
         var coordinatesNode = queryFirstNode(geometryNode, 'coordinates', namespaces.kml);
-        if (defined(coordinatesNode)) {
-            var coordinates = readCoordinates(coordinatesNode);
-            if (defined(coordinates)) {
-                polyline.positions = coordinates;
+        var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
+        var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
+        var tessellate = queryBooleanValue(geometryNode, 'tessellate', namespaces.kml);
+        var clamped = altitudeMode === 'clampToGround ' || altitudeMode === 'clampToSeaFloor';
+
+        var coordinates = readCoordinates(coordinatesNode);
+        var polyline = styleEntity.polyline;
+        if (extrude && !clamped) {
+            var wall = new WallGraphics();
+            entity.wall = wall;
+            wall.positions = coordinates;
+            var polygon = styleEntity.polygon;
+
+            if (defined(polyline)) {
+                wall.material = polygon.material;
+                wall.outline = true;
+                wall.outlineColor = polyline.material.color;
+                wall.outlineWidth = polyline.width;
             }
+        } else {
+            polyline = defined(polyline) ? polyline.clone() : new PolylineGraphics();
+            entity.polyline = polyline;
+            polyline.positions = coordinates;
+            polyline.followSurface = tessellate && !clamped;
         }
     }
 
     function processPolygon(dataSource, geometryNode, entity, styleEntity) {
+        var outerBoundaryIsNode = queryFirstNode(geometryNode, 'outerBoundaryIs', namespaces.kml);
+        var linearRingNode = queryFirstNode(outerBoundaryIsNode, 'LinearRing', namespaces.kml);
+        var coordinatesNode = queryFirstNode(linearRingNode, 'coordinates', namespaces.kml);
+        var coordinates = readCoordinates(coordinatesNode);
+        var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
+        var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
+
         var polygon = defined(styleEntity.polygon) ? styleEntity.polygon.clone() : new PolygonGraphics();
         polygon.outline = true;
         polygon.outlineColor = defined(styleEntity.polyline) ? styleEntity.polyline.material.color : Color.WHITE;
         polygon.outlineWidth = defined(styleEntity.polyline) ? styleEntity.polyline.width : undefined;
         entity.polygon = polygon;
 
-        var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
         if (defined(altitudeMode) && (altitudeMode !== 'clampToGround') && (altitudeMode !== 'clampToSeaFloor')) {
             polygon.perPositionHeight = true;
         }
 
-        if (defaultValue(queryBooleanValue(geometryNode, 'extrude', namespaces.kml), false)) {
+        if (extrude) {
             polygon.extrudedHeight = 0;
         }
 
-        var outerBoundaryIsNode = queryFirstNode(geometryNode, 'outerBoundaryIs', namespaces.kml);
-        var linearRingNode = queryFirstNode(outerBoundaryIsNode, 'LinearRing', namespaces.kml);
-        var coordinatesNode = queryFirstNode(linearRingNode, 'coordinates', namespaces.kml);
-        if (defined(coordinatesNode)) {
-            var coordinates = readCoordinates(coordinatesNode);
-            if (defined(coordinates)) {
-                var hierarchy = new PolygonHierarchy(coordinates);
-
-                var innerBoundaryIsNodes = queryChildNodes(geometryNode, 'innerBoundaryIs', namespaces.kml);
-                for (var j = 0; j < innerBoundaryIsNodes.length; j++) {
-                    linearRingNode = queryChildNodes(innerBoundaryIsNodes[j], 'LinearRing', namespaces.kml);
-                    for (var k = 0; k < linearRingNode.length; k++) {
-                        coordinatesNode = queryFirstNode(linearRingNode[k], 'coordinates', namespaces.kml);
-                        if (defined(coordinatesNode)) {
-                            coordinates = readCoordinates(coordinatesNode);
-                            if (defined(coordinates)) {
-                                hierarchy.holes.push(new PolygonHierarchy(coordinates));
-                            }
-                        }
+        if (defined(coordinates)) {
+            var hierarchy = new PolygonHierarchy(coordinates);
+            var innerBoundaryIsNodes = queryChildNodes(geometryNode, 'innerBoundaryIs', namespaces.kml);
+            for (var j = 0; j < innerBoundaryIsNodes.length; j++) {
+                linearRingNode = queryChildNodes(innerBoundaryIsNodes[j], 'LinearRing', namespaces.kml);
+                for (var k = 0; k < linearRingNode.length; k++) {
+                    coordinatesNode = queryFirstNode(linearRingNode[k], 'coordinates', namespaces.kml);
+                    coordinates = readCoordinates(coordinatesNode);
+                    if (defined(coordinates)) {
+                        hierarchy.holes.push(new PolygonHierarchy(coordinates));
                     }
                 }
-                polygon.hierarchy = hierarchy;
             }
+            polygon.hierarchy = hierarchy;
         }
     }
 
