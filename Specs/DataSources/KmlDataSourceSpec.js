@@ -15,6 +15,7 @@ defineSuite([
         'Core/Rectangle',
         'Core/RuntimeError',
         'DataSources/ColorMaterialProperty',
+        'DataSources/CompositeProperty',
         'DataSources/ConstantProperty',
         'DataSources/EntityCollection',
         'DataSources/ImageMaterialProperty',
@@ -35,6 +36,7 @@ defineSuite([
         Rectangle,
         RuntimeError,
         ColorMaterialProperty,
+        CompositeProperty,
         ConstantProperty,
         EntityCollection,
         ImageMaterialProperty,
@@ -513,13 +515,7 @@ defineSuite([
 
         var error;
         var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(trackKml, "text/xml")).otherwise(function(e) {
-            error = e;
-        });
-
-        waitsFor(function() {
-            return error instanceof DeveloperError;
-        });
+        waitsForPromise.toReject(dataSource.load(parser.parseFromString(trackKml, "text/xml")));
     });
 
     it('handles gx:MultiTrack', function() {
@@ -546,11 +542,8 @@ defineSuite([
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(trackKml, "text/xml"));
 
-        var entities = dataSource.entities.values;
-        var entity0 = entities[1];
-        var entity1 = entities[2];
-        expect(entities.length).toEqual(3);
-        expect(entity0.position.getValue(time)).toEqual(entity1.position.getValue(time));
+        var entity = dataSource.entities.values[0];
+        expect(entity.position).toBeInstanceOf(CompositeProperty);
     });
 
     it('handles MultiGeometry', function() {

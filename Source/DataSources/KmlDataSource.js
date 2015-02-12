@@ -47,6 +47,7 @@ define([
         './ReferenceProperty',
         './SampledPositionProperty',
         './SurfacePositionProperty',
+        './CompositeProperty',
         './WallGraphics'
     ], function(
         BoundingRectangle,
@@ -96,6 +97,7 @@ define([
         ReferenceProperty,
         SampledPositionProperty,
         SurfacePositionProperty,
+        CompositeProperty,
         WallGraphics) {
     "use strict";
 
@@ -709,26 +711,22 @@ define([
     function createDropLine(dataSource, entity, styleEntity) {
         var entityPosition = new ReferenceProperty(dataSource._entityCollection, entity.id, ['position']);
         var surfacePosition = new SurfacePositionProperty(entity.position, Ellipsoid.WGS84);
-        entity.polyline = new PolylineGraphics();
-
+        entity.polyline = defined(styleEntity.polyline) ? styleEntity.polyline.clone() : new PolylineGraphics();
         entity.polyline.positions = new PositionPropertyArray([entityPosition, surfacePosition]);
-        if (defined(styleEntity.polyline)) {
-            entity.polyline.merge(styleEntity.polyline);
-        }
     }
 
     function processPoint(dataSource, geometryNode, entity, styleEntity) {
         var coordinatesNode = queryFirstNode(geometryNode, 'coordinates', namespaces.kml);
         var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
+        var clamped = !defined(altitudeMode) || altitudeMode === 'clampToGround ' || altitudeMode === 'clampToSeaFloor';
+        var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
+
         var position = readCoordinate(coordinatesNode, altitudeMode);
         entity.position = position;
         entity.billboard = styleEntity.billboard;
 
-        if (altitudeMode !== 'clampToGround ' && altitudeMode !== 'clampToSeaFloor' && defined(position)) {
-            var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
-            if (extrude) {
-                createDropLine(dataSource, entity, styleEntity);
-            }
+        if (extrude && !clamped && defined(position)) {
+            createDropLine(dataSource, entity, styleEntity);
         }
     }
 
@@ -737,7 +735,7 @@ define([
         var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
         var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
         var tessellate = queryBooleanValue(geometryNode, 'tessellate', namespaces.kml);
-        var clamped = altitudeMode === 'clampToGround ' || altitudeMode === 'clampToSeaFloor';
+        var clamped = !defined(altitudeMode) || altitudeMode === 'clampToGround ' || altitudeMode === 'clampToSeaFloor';
 
         var coordinates = readCoordinates(coordinatesNode);
         var polyline = styleEntity.polyline;
@@ -768,19 +766,27 @@ define([
         var coordinates = readCoordinates(coordinatesNode);
         var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
         var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
+        var clamped = !defined(altitudeMode) || altitudeMode === 'clampToGround ' || altitudeMode === 'clampToSeaFloor';
 
+        var polyline = styleEntity.polyline;
         var polygon = defined(styleEntity.polygon) ? styleEntity.polygon.clone() : new PolygonGraphics();
         polygon.outline = true;
-        polygon.outlineColor = defined(styleEntity.polyline) ? styleEntity.polyline.material.color : Color.WHITE;
-        polygon.outlineWidth = defined(styleEntity.polyline) ? styleEntity.polyline.width : undefined;
+        if (defined(polyline)) {
+            if (defined(polyline.material)) {
+                polygon.outlineColor = polyline.material.color;
+            }
+            polygon.outlineWidth = polyline.width;
+        }
         entity.polygon = polygon;
 
-        if (defined(altitudeMode) && (altitudeMode !== 'clampToGround') && (altitudeMode !== 'clampToSeaFloor')) {
-            polygon.perPositionHeight = true;
-        }
+        if (!clamped) {
+            if (defined(altitudeMode)) {
+                polygon.perPositionHeight = true;
+            }
 
-        if (extrude) {
-            polygon.extrudedHeight = 0;
+            if (extrude) {
+                polygon.extrudedHeight = 0;
+            }
         }
 
         if (defined(coordinates)) {
@@ -804,26 +810,31 @@ define([
         var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
         var coordNodes = queryChildNodes(geometryNode, 'coord', namespaces.gx);
         var timeNodes = queryChildNodes(geometryNode, 'when', namespaces.kml);
+        var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
+        var clamped = !defined(altitudeMode) || altitudeMode === 'clampToGround ' || altitudeMode === 'clampToSeaFloor';
 
-        var coordinates = new Array(coordNodes.length);
-        var times = new Array(timeNodes.length);
-        for (var i = 0; i < times.length; i++) {
-            coordinates[i] = readCoordinate(coordNodes[i], altitudeMode);
-            times[i] = JulianDate.fromIso8601(timeNodes[i].textContent);
+        if (coordNodes.length !== timeNodes.length) {
+            throw new RuntimeError();
         }
-        var property = new SampledPositionProperty();
-        property.addSamples(times, coordinates);
-        entity.position = property;
-        entity.billboard = styleEntity.billboard;
-        entity.availability = new TimeIntervalCollection();
-        entity.availability.addInterval(new TimeInterval({
-            start : times[0],
-            stop : times[times.length - 1]
-        }));
 
-        if (altitudeMode !== 'clampToGround ' && altitudeMode !== 'clampToSeaFloor') {
-            var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
-            if (extrude) {
+        if (coordNodes.length > 0) {
+            var coordinates = new Array(coordNodes.length);
+            var times = new Array(timeNodes.length);
+            for (var i = 0; i < times.length; i++) {
+                coordinates[i] = readCoordinate(coordNodes[i], altitudeMode);
+                times[i] = JulianDate.fromIso8601(timeNodes[i].textContent);
+            }
+            var property = new SampledPositionProperty();
+            property.addSamples(times, coordinates);
+            entity.position = property;
+            entity.billboard = styleEntity.billboard;
+            entity.availability = new TimeIntervalCollection();
+            entity.availability.addInterval(new TimeInterval({
+                start : times[0],
+                stop : times[times.length - 1]
+            }));
+
+            if (!clamped && extrude) {
                 createDropLine(dataSource, entity, styleEntity);
             }
         }
@@ -831,25 +842,66 @@ define([
 
     function processMultiTrack(dataSource, geometryNode, entity, styleEntity) {
         var trackNodes = queryChildNodes(geometryNode, 'Track', namespaces.gx);
+        var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
+        var interpolate = queryBooleanValue(geometryNode, 'interpolate', namespaces.gx);
+        var clamped = !defined(altitudeMode) || altitudeMode === 'clampToGround ' || altitudeMode === 'clampToSeaFloor';
+        var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
+
+        var times;
+        var availability = new TimeIntervalCollection();
+        var property = interpolate ? new SampledPositionProperty() : new CompositeProperty();
+        entity.position = property;
         for (var i = 0, len = trackNodes.length; i < len; i++) {
             var trackNode = trackNodes[i];
-            var trackEntity = dataSource._entityCollection.getOrCreateEntity(createId(trackNode));
-            trackEntity.parent = entity;
-
-            var altitudeMode = queryStringValue(trackNode, 'altitudeMode', namespaces.kml);
-            var coordNodes = queryChildNodes(trackNode, 'coord', namespaces.gx);
             var timeNodes = queryChildNodes(trackNode, 'when', namespaces.kml);
+            var coordNodes = queryChildNodes(trackNode, 'coord', namespaces.gx);
 
-            var coordinates = new Array(coordNodes.length);
-            var times = new Array(timeNodes.length);
-            for (var x = 0; x < times.length; x++) {
-                coordinates[x] = readCoordinate(coordNodes[x], altitudeMode);
-                times[x] = JulianDate.fromIso8601(timeNodes[x].textContent);
+            if (coordNodes.length !== timeNodes.length) {
+                throw new RuntimeError();
             }
-            var property = new SampledPositionProperty();
-            property.addSamples(times, coordinates);
-            trackEntity.position = property;
-            trackEntity.billboard = styleEntity.billboard;
+
+            if (coordNodes.length > 0) {
+                var coordinates = new Array(coordNodes.length);
+                times = new Array(timeNodes.length);
+                for (var x = 0; x < times.length; x++) {
+                    coordinates[x] = readCoordinate(coordNodes[x], altitudeMode);
+                    times[x] = JulianDate.fromIso8601(timeNodes[x].textContent);
+                }
+                if (interpolate) {
+                    property.addSamples(times, coordinates);
+                } else {
+                    var data = new SampledPositionProperty();
+                    property.addSamples(times, coordinates);
+                    property.intervals.addInteval({
+                        start : times[0],
+                        stop : times[times.length - 1],
+                        data : property
+                    });
+                    availability.addInterval({
+                        start : times[0],
+                        stop : times[times.length - 1]
+                    });
+                }
+            }
+        }
+
+        if (interpolate) {
+            times = property._times;
+            availability.addInterval({
+                start : times[0],
+                stop : times[times.length - 1]
+            });
+        }
+
+        if (defined(entity.availability)) {
+            entity.availability = entity.availability.intersect(availability);
+        } else {
+            entity.availability = availability;
+        }
+
+        entity.billboard = styleEntity.billboard;
+        if (!clamped && extrude) {
+            createDropLine(dataSource, entity, styleEntity);
         }
     }
 
