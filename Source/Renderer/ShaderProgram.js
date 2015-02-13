@@ -6,8 +6,7 @@ define([
         '../Core/DeveloperError',
         '../Core/RuntimeError',
         './AutomaticUniforms',
-// TODO: rename file:
-        './Uniform',
+        './getUniform',
         './UniformArray'
     ], function(
         defined,
