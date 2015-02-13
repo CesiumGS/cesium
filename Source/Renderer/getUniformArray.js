@@ -76,7 +76,7 @@ define([
         this.name = uniformName;
 
         this.value = new Array(length);
-        this._scratchFloat = new Float32Array(length);
+        this._value = new Float32Array(length);
 
         this._gl = gl;
         this._location = locations[0];
@@ -85,20 +85,20 @@ define([
     UniformArrayFloat.prototype.set = function() {
         var value = this.value;
         var length = value.length;
-        var scratch = this._scratchFloat;
+        var arraybuffer = this._value;
         var changed = false;
 
         for (var i = 0; i < length; ++i) {
             var v = value[i];
 
-            if (v !== scratch[i]) {
-                scratch[i] = v;
+            if (v !== arraybuffer[i]) {
+                arraybuffer[i] = v;
                 changed = true;
             }
         }
 
         if (changed) {
-            this._gl.uniform1fv(this._location, scratch);
+            this._gl.uniform1fv(this._location, arraybuffer);
         }
     };
 
@@ -113,7 +113,7 @@ define([
         this.name = uniformName;
 
         this.value = new Array(length);
-        this._scratchFloat = new Float32Array(length * 2);
+        this._value = new Float32Array(length * 2);
 
         this._gl = gl;
         this._location = locations[0];
@@ -122,22 +122,22 @@ define([
     UniformArrayFloatVec2.prototype.set = function() {
         var value = this.value;
         var length = value.length;
-        var scratch = this._scratchFloat;
+        var arraybuffer = this._value;
         var changed = false;
         var j = 0;
 
         for (var i = 0; i < length; ++i) {
             var v = value[i];
 
-            if (!Cartesian2.equalsArray(v, scratch, j)) {
-                Cartesian2.pack(v, scratch, j);
+            if (!Cartesian2.equalsArray(v, arraybuffer, j)) {
+                Cartesian2.pack(v, arraybuffer, j);
                 changed = true;
             }
             j += 2;
         }
 
         if (changed) {
-            this._gl.uniform2fv(this._location, scratch);
+            this._gl.uniform2fv(this._location, arraybuffer);
         }
     };
 
@@ -152,7 +152,7 @@ define([
         this.name = uniformName;
 
         this.value = new Array(length);
-        this._scratchFloat = new Float32Array(length * 3);
+        this._value = new Float32Array(length * 3);
 
         this._gl = gl;
         this._location = locations[0];
@@ -161,7 +161,7 @@ define([
     UniformArrayFloatVec3.prototype.set = function() {
         var value = this.value;
         var length = value.length;
-        var scratch = this._scratchFloat;
+        var arraybuffer = this._value;
         var changed = false;
         var j = 0;
 
@@ -169,18 +169,18 @@ define([
             var v = value[i];
 
             if (defined(v.red)) {
-                if ((v.red !== scratch[j]) ||
-                    (v.green !== scratch[j + 1]) ||
-                    (v.blue !== scratch[j + 2])) {
+                if ((v.red !== arraybuffer[j]) ||
+                    (v.green !== arraybuffer[j + 1]) ||
+                    (v.blue !== arraybuffer[j + 2])) {
 
-                    scratch[j] = v.red;
-                    scratch[j + 1] = v.green;
-                    scratch[j + 2] = v.blue;
+                    arraybuffer[j] = v.red;
+                    arraybuffer[j + 1] = v.green;
+                    arraybuffer[j + 2] = v.blue;
                     changed = true;
                 }
             } else if (defined(v.x)) {
-                if (!Cartesian3.equalsArray(v, scratch, j)) {
-                    Cartesian3.pack(v, scratch, j);
+                if (!Cartesian3.equalsArray(v, arraybuffer, j)) {
+                    Cartesian3.pack(v, arraybuffer, j);
                     changed = true;
                 }
             } else {
@@ -191,7 +191,7 @@ define([
         }
 
         if (changed) {
-            this._gl.uniform3fv(this._location, scratch);
+            this._gl.uniform3fv(this._location, arraybuffer);
         }
     };
 
@@ -206,7 +206,7 @@ define([
         this.name = uniformName;
 
         this.value = new Array(length);
-        this._scratchFloat = new Float32Array(length * 4);
+        this._value = new Float32Array(length * 4);
 
         this._gl = gl;
         this._location = locations[0];
@@ -222,7 +222,7 @@ define([
 
         var value = this.value;
         var length = value.length;
-        var scratch = this._scratchFloat;
+        var arraybuffer = this._value;
         var changed = false;
         var j = 0;
 
@@ -230,13 +230,13 @@ define([
             var v = value[i];
 
             if (defined(v.red)) {
-                if (!Color.equalsArray(v, scratch, j)) {
-                    Color.pack(v, scratch, j);
+                if (!Color.equalsArray(v, arraybuffer, j)) {
+                    Color.pack(v, arraybuffer, j);
                     changed = true;
                 }
             } else if (defined(v.x)) {
-                if (!Cartesian4.equalsArray(v, scratch, j)) {
-                    Cartesian4.pack(v, scratch, j);
+                if (!Cartesian4.equalsArray(v, arraybuffer, j)) {
+                    Cartesian4.pack(v, arraybuffer, j);
                     changed = true;
                 }
             } else {
@@ -247,7 +247,7 @@ define([
         }
 
         if (changed) {
-            this._gl.uniform4fv(this._location, scratch);
+            this._gl.uniform4fv(this._location, arraybuffer);
         }
     };
 
@@ -262,7 +262,7 @@ define([
         this.name = uniformName;
 
         this.value = new Array(length);
-        this._scratchFloat = new Float32Array(length);
+        this._value = new Float32Array(length);
 
         this._gl = gl;
         this._locations = locations;
@@ -307,7 +307,7 @@ define([
         this.name = uniformName;
 
         this.value = new Array(length);
-        this._scratchInt = new Int32Array(length);
+        this._value = new Int32Array(length);
 
         this._gl = gl;
         this._location = locations[0];
@@ -316,20 +316,20 @@ define([
     UniformArrayInt.prototype.set = function() {
         var value = this.value;
         var length = value.length;
-        var scratch = this._scratchInt;
+        var arraybuffer = this._value;
         var changed = false;
 
         for (var i = 0; i < length; ++i) {
             var v = value[i];
 
-            if (v !== scratch[i]) {
-                scratch[i] = v;
+            if (v !== arraybuffer[i]) {
+                arraybuffer[i] = v;
                 changed = true;
             }
         }
 
         if (changed) {
-            this._gl.uniform1iv(this._location, scratch);
+            this._gl.uniform1iv(this._location, arraybuffer);
         }
     };
 
@@ -344,7 +344,7 @@ define([
         this.name = uniformName;
 
         this.value = new Array(length);
-        this._scratchInt = new Int32Array(length * 2);
+        this._value = new Int32Array(length * 2);
 
         this._gl = gl;
         this._location = locations[0];
@@ -353,22 +353,22 @@ define([
     UniformArrayIntVec2.prototype.set = function() {
         var value = this.value;
         var length = value.length;
-        var scratch = this._scratchInt;
+        var arraybuffer = this._value;
         var changed = false;
         var j = 0;
 
         for (var i = 0; i < length; ++i) {
             var v = value[i];
 
-            if (!Cartesian2.equalsArray(v, scratch, j)) {
-                Cartesian2.pack(v, scratch, j);
+            if (!Cartesian2.equalsArray(v, arraybuffer, j)) {
+                Cartesian2.pack(v, arraybuffer, j);
                 changed = true;
             }
             j += 2;
         }
 
         if (changed) {
-            this._gl.uniform2iv(this._location, scratch);
+            this._gl.uniform2iv(this._location, arraybuffer);
         }
     };
 
@@ -383,7 +383,7 @@ define([
         this.name = uniformName;
 
         this.value = new Array(length);
-        this._scratchInt = new Int32Array(length * 3);
+        this._value = new Int32Array(length * 3);
 
         this._gl = gl;
         this._location = locations[0];
@@ -392,22 +392,22 @@ define([
     UniformArrayIntVec3.prototype.set = function() {
         var value = this.value;
         var length = value.length;
-        var scratch = this._scratchInt;
+        var arraybuffer = this._value;
         var changed = false;
         var j = 0;
 
         for (var i = 0; i < length; ++i) {
             var v = value[i];
 
-            if (!Cartesian3.equalsArray(v, scratch, j)) {
-                Cartesian3.pack(v, scratch, j);
+            if (!Cartesian3.equalsArray(v, arraybuffer, j)) {
+                Cartesian3.pack(v, arraybuffer, j);
                 changed = true;
             }
             j += 3;
         }
 
         if (changed) {
-            this._gl.uniform3iv(this._location, scratch);
+            this._gl.uniform3iv(this._location, arraybuffer);
         }
     };
 
@@ -422,7 +422,7 @@ define([
         this.name = uniformName;
 
         this.value = new Array(length);
-        this._scratchInt = new Int32Array(length * 4);
+        this._value = new Int32Array(length * 4);
 
         this._gl = gl;
         this._location = locations[0];
@@ -431,22 +431,22 @@ define([
     UniformArrayIntVec4.prototype.set = function() {
         var value = this.value;
         var length = value.length;
-        var scratch = this._scratchInt;
+        var arraybuffer = this._value;
         var changed = false;
         var j = 0;
 
         for (var i = 0; i < length; ++i) {
             var v = value[i];
 
-            if (!Cartesian4.equalsArray(v, scratch, j)) {
-                Cartesian4.pack(v, scratch, j);
+            if (!Cartesian4.equalsArray(v, arraybuffer, j)) {
+                Cartesian4.pack(v, arraybuffer, j);
                 changed = true;
             }
             j += 4;
         }
 
         if (changed) {
-            this._gl.uniform4iv(this._location, scratch);
+            this._gl.uniform4iv(this._location, arraybuffer);
         }
     };
 
@@ -461,7 +461,7 @@ define([
         this.name = uniformName;
 
         this.value = new Array(length);
-        this._scratchFloat = new Float32Array(length * 4);
+        this._value = new Float32Array(length * 4);
 
         this._gl = gl;
         this._location = locations[0];
@@ -470,22 +470,22 @@ define([
     UniformArrayMat2.prototype.set = function() {
         var value = this.value;
         var length = value.length;
-        var scratch = this._scratchFloat;
+        var arraybuffer = this._value;
         var changed = false;
         var j = 0;
 
         for (var i = 0; i < length; ++i) {
             var v = value[i];
 
-            if (!Matrix2.equalsArray(v, scratch, j)) {
-                Matrix2.pack(v, scratch, j);
+            if (!Matrix2.equalsArray(v, arraybuffer, j)) {
+                Matrix2.pack(v, arraybuffer, j);
                 changed = true;
             }
             j += 4;
         }
 
         if (changed) {
-            this._gl.uniformMatrix2fv(this._location, false, scratch);
+            this._gl.uniformMatrix2fv(this._location, false, arraybuffer);
         }
     };
 
@@ -500,7 +500,7 @@ define([
         this.name = uniformName;
 
         this.value = new Array(length);
-        this._scratchFloat = new Float32Array(length * 9);
+        this._value = new Float32Array(length * 9);
 
         this._gl = gl;
         this._location = locations[0];
@@ -509,22 +509,22 @@ define([
     UniformArrayMat3.prototype.set = function() {
         var value = this.value;
         var length = value.length;
-        var scratch = this._scratchFloat;
+        var arraybuffer = this._value;
         var changed = false;
         var j = 0;
 
         for (var i = 0; i < length; ++i) {
             var v = value[i];
 
-            if (!Matrix3.equalsArray(v, scratch, j)) {
-                Matrix3.pack(v, scratch, j);
+            if (!Matrix3.equalsArray(v, arraybuffer, j)) {
+                Matrix3.pack(v, arraybuffer, j);
                 changed = true;
             }
             j += 9;
         }
 
         if (changed) {
-            this._gl.uniformMatrix3fv(this._location, false, scratch);
+            this._gl.uniformMatrix3fv(this._location, false, arraybuffer);
         }
     };
 
@@ -539,7 +539,7 @@ define([
         this.name = uniformName;
 
         this.value = new Array(length);
-        this._scratchFloat = new Float32Array(length * 16);
+        this._value = new Float32Array(length * 16);
 
         this._gl = gl;
         this._location = locations[0];
@@ -548,22 +548,22 @@ define([
     UniformArrayMat4.prototype.set = function() {
         var value = this.value;
         var length = value.length;
-        var scratch = this._scratchFloat;
+        var arraybuffer = this._value;
         var changed = false;
         var j = 0;
 
         for (var i = 0; i < length; ++i) {
             var v = value[i];
 
-            if (!Matrix4.equalsArray(v, scratch, j)) {
-                Matrix4.pack(v, scratch, j);
+            if (!Matrix4.equalsArray(v, arraybuffer, j)) {
+                Matrix4.pack(v, arraybuffer, j);
                 changed = true;
             }
             j += 16;
         }
 
         if (changed) {
-            this._gl.uniformMatrix4fv(this._location, false, scratch);
+            this._gl.uniformMatrix4fv(this._location, false, arraybuffer);
         }
     };
 
