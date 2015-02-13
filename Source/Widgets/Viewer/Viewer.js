@@ -251,8 +251,7 @@ define([
      *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
      *     //Use standard Cesium terrain
      *     terrainProvider : new Cesium.CesiumTerrainProvider({
-     *         url : '//cesiumjs.org/smallterrain',
-     *         credit : 'Terrain data courtesy Analytical Graphics, Inc.'
+     *         url : '//cesiumjs.org/stk-terrain/world'
      *     }),
      *     //Hide the base layer picker
      *     baseLayerPicker : false,
