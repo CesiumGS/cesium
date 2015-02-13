@@ -7,7 +7,7 @@ define([
         '../Core/RuntimeError',
         './AutomaticUniforms',
         './getUniform',
-        './UniformArray'
+        './getUniformArray'
     ], function(
         defined,
         defineProperties,
