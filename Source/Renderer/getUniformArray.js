@@ -29,107 +29,60 @@ define([
     /**
      * @private
      */
-    var UniformArray = function(gl, activeUniform, uniformName, locations) {
-        var length = locations.length;
-
-        this._gl = gl;
-        this._name = uniformName;
-        this.value = new Array(length);
-        this._location = locations[0];
-
-        this._scratchFloat = undefined;
-        this._scratchInt = undefined;
-
-        /**
-         * @private
-         */
-        this.textureUnitIndex = undefined;
-
-        var type = activeUniform.type;
-        var set;
-        switch (type) {
+    var getUniformArray = function(gl, activeUniform, uniformName, locations) {
+        switch (activeUniform.type) {
             case gl.FLOAT:
-                set = this.setFloat;
-                this._scratchFloat = new Float32Array(length);
-                break;
+                return new UniformArrayFloat(gl, activeUniform, uniformName, locations);
             case gl.FLOAT_VEC2:
-                set = this.setFloatVec2;
-                this._scratchFloat = new Float32Array(length * 2);
-                break;
+                return new UniformArrayFloatVec2(gl, activeUniform, uniformName, locations);
             case gl.FLOAT_VEC3:
-                set = this.setFloatVec3;
-                this._scratchFloat = new Float32Array(length * 3);
-                break;
+                return new UniformArrayFloatVec3(gl, activeUniform, uniformName, locations);
             case gl.FLOAT_VEC4:
-                this._scratchFloat = new Float32Array(length * 4);
-                set = this.setFloatVec4;
-                break;
+                return new UniformArrayFloatVec4(gl, activeUniform, uniformName, locations);
             case gl.SAMPLER_2D:
             case gl.SAMPLER_CUBE:
-                set = this.setSampler;
-                break;
+                return new UniformArraySampler(gl, activeUniform, uniformName, locations);
             case gl.INT:
             case gl.BOOL:
-                set = this.setInt;
-                this._scratchInt = new Int32Array(length);
-                break;
+                return new UniformArrayInt(gl, activeUniform, uniformName, locations);
             case gl.INT_VEC2:
             case gl.BOOL_VEC2:
-                set = this.setIntVec2;
-                this._scratchInt = new Int32Array(length * 2);
-                break;
+                return new UniformArrayIntVec2(gl, activeUniform, uniformName, locations);
             case gl.INT_VEC3:
             case gl.BOOL_VEC3:
-                this._scratchInt = new Int32Array(length * 3);
-                set = this.setIntVec3;
-                break;
+                return new UniformArrayIntVec3(gl, activeUniform, uniformName, locations);
             case gl.INT_VEC4:
             case gl.BOOL_VEC4:
-                this._scratchInt = new Int32Array(length * 4);
-                set = this.setIntVec4;
-                break;
+                return new UniformArrayIntVec4(gl, activeUniform, uniformName, locations);
             case gl.FLOAT_MAT2:
-                this._scratchFloat = new Float32Array(length * 4);
-                set = this.setMat2;
-                break;
+                return new UniformArrayMat2(gl, activeUniform, uniformName, locations);
             case gl.FLOAT_MAT3:
-                this._scratchFloat = new Float32Array(length * 9);
-                set = this.setMat3;
-                break;
+                return new UniformArrayMat3(gl, activeUniform, uniformName, locations);
             case gl.FLOAT_MAT4:
-                this._scratchFloat = new Float32Array(length * 16);
-                set = this.setMat4;
-                break;
+                return new UniformArrayMat4(gl, activeUniform, uniformName, locations);
             default:
-                throw new RuntimeError('Unrecognized uniform type: ' + type + ' for uniform "' + uniformName + '".');
-        }
-
-        this.set = set;
-
-        if ((type === gl.SAMPLER_2D) || (type === gl.SAMPLER_CUBE)) {
-            this._setSampler = function(textureUnitIndex) {
-                this.textureUnitIndex = textureUnitIndex;
-
-                var length = locations.length;
-                for (var i = 0; i < length; ++i) {
-                    var index = textureUnitIndex + i;
-                    gl.uniform1i(locations[i], index);
-                }
-
-                return textureUnitIndex + length;
-            };
+                throw new RuntimeError('Unrecognized uniform type: ' + activeUniform.type + ' for uniform "' + uniformName + '".');
         }
     };
 
-    defineProperties(UniformArray.prototype, {
-        name : {
-            get : function() {
-                return this._name;
-            }
-        }
-    });
+    ///////////////////////////////////////////////////////////////////////////
 
-    UniformArray.prototype.setFloat = function() {
+    function UniformArrayFloat(gl, activeUniform, uniformName, locations) {
+        var length = locations.length;
+
+        /**
+         * @readonly
+         */
+        this.name = uniformName;
+
+        this.value = new Array(length);
+        this._scratchFloat = new Float32Array(length);
+
+        this._gl = gl;
+        this._location = locations[0];
+    }
+
+    UniformArrayFloat.prototype.set = function() {
         var value = this.value;
         var length = value.length;
         var scratch = this._scratchFloat;
@@ -149,7 +102,24 @@ define([
         }
     };
 
-    UniformArray.prototype.setFloatVec2 = function() {
+    ///////////////////////////////////////////////////////////////////////////
+
+    function UniformArrayFloatVec2(gl, activeUniform, uniformName, locations) {
+        var length = locations.length;
+
+        /**
+         * @readonly
+         */
+        this.name = uniformName;
+
+        this.value = new Array(length);
+        this._scratchFloat = new Float32Array(length * 2);
+
+        this._gl = gl;
+        this._location = locations[0];
+    }
+
+    UniformArrayFloatVec2.prototype.set = function() {
         var value = this.value;
         var length = value.length;
         var scratch = this._scratchFloat;
@@ -171,7 +141,24 @@ define([
         }
     };
 
-    UniformArray.prototype.setFloatVec3 = function() {
+    ///////////////////////////////////////////////////////////////////////////
+
+    function UniformArrayFloatVec3(gl, activeUniform, uniformName, locations) {
+        var length = locations.length;
+
+        /**
+         * @readonly
+         */
+        this.name = uniformName;
+
+        this.value = new Array(length);
+        this._scratchFloat = new Float32Array(length * 3);
+
+        this._gl = gl;
+        this._location = locations[0];
+    }
+
+    UniformArrayFloatVec3.prototype.set = function() {
         var value = this.value;
         var length = value.length;
         var scratch = this._scratchFloat;
@@ -208,7 +195,24 @@ define([
         }
     };
 
-    UniformArray.prototype.setFloatVec4 = function() {
+    ///////////////////////////////////////////////////////////////////////////
+
+    function UniformArrayFloatVec4(gl, activeUniform, uniformName, locations) {
+        var length = locations.length;
+
+        /**
+         * @readonly
+         */
+        this.name = uniformName;
+
+        this.value = new Array(length);
+        this._scratchFloat = new Float32Array(length * 4);
+
+        this._gl = gl;
+        this._location = locations[0];
+    }
+
+    UniformArrayFloatVec4.prototype.set = function() {
         // PERFORMANCE_IDEA: if it is a common case that only a few elements
         // in a uniform array change, we could use heuristics to determine
         // when it is better to call uniform4f for each element that changed
@@ -247,7 +251,26 @@ define([
         }
     };
 
-    UniformArray.prototype.setSampler = function() {
+    ///////////////////////////////////////////////////////////////////////////
+
+    function UniformArraySampler(gl, activeUniform, uniformName, locations) {
+        var length = locations.length;
+
+        /**
+         * @readonly
+         */
+        this.name = uniformName;
+
+        this.value = new Array(length);
+        this._scratchFloat = new Float32Array(length);
+
+        this._gl = gl;
+        this._location = locations[0];
+
+        this.textureUnitIndex = undefined;
+    }
+
+    UniformArraySampler.prototype.set = function() {
         var gl = this._gl;
         var locations = this._locations;
         var textureUnitIndex = gl.TEXTURE0 + this.textureUnitIndex;
@@ -261,7 +284,37 @@ define([
         }
     };
 
-    UniformArray.prototype.setInt = function() {
+    UniformArraySampler._setSampler = function(textureUnitIndex) {
+        this.textureUnitIndex = textureUnitIndex;
+
+        var locations = this._locations;
+        var length = locations.length;
+        for (var i = 0; i < length; ++i) {
+            var index = textureUnitIndex + i;
+            this._gl.uniform1i(locations[i], index);
+        }
+
+        return textureUnitIndex + length;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    function UniformArrayInt(gl, activeUniform, uniformName, locations) {
+        var length = locations.length;
+
+        /**
+         * @readonly
+         */
+        this.name = uniformName;
+
+        this.value = new Array(length);
+        this._scratchInt = new Int32Array(length);
+
+        this._gl = gl;
+        this._location = locations[0];
+    }
+
+    UniformArrayInt.prototype.set = function() {
         var value = this.value;
         var length = value.length;
         var scratch = this._scratchInt;
@@ -281,7 +334,24 @@ define([
         }
     };
 
-    UniformArray.prototype.setIntVec2 = function() {
+    ///////////////////////////////////////////////////////////////////////////
+
+    function UniformArrayIntVec2(gl, activeUniform, uniformName, locations) {
+        var length = locations.length;
+
+        /**
+         * @readonly
+         */
+        this.name = uniformName;
+
+        this.value = new Array(length);
+        this._scratchInt = new Int32Array(length * 2);
+
+        this._gl = gl;
+        this._location = locations[0];
+    }
+
+    UniformArrayIntVec2.prototype.set = function() {
         var value = this.value;
         var length = value.length;
         var scratch = this._scratchInt;
@@ -303,7 +373,24 @@ define([
         }
     };
 
-    UniformArray.prototype.setIntVec3 = function() {
+    ///////////////////////////////////////////////////////////////////////////
+
+    function UniformArrayIntVec3(gl, activeUniform, uniformName, locations) {
+        var length = locations.length;
+
+        /**
+         * @readonly
+         */
+        this.name = uniformName;
+
+        this.value = new Array(length);
+        this._scratchInt = new Int32Array(length * 3);
+
+        this._gl = gl;
+        this._location = locations[0];
+    }
+
+    UniformArrayIntVec3.prototype.set = function() {
         var value = this.value;
         var length = value.length;
         var scratch = this._scratchInt;
@@ -325,7 +412,24 @@ define([
         }
     };
 
-    UniformArray.prototype.setIntVec4 = function() {
+    ///////////////////////////////////////////////////////////////////////////
+
+    function UniformArrayIntVec4(gl, activeUniform, uniformName, locations) {
+        var length = locations.length;
+
+        /**
+         * @readonly
+         */
+        this.name = uniformName;
+
+        this.value = new Array(length);
+        this._scratchInt = new Int32Array(length * 4);
+
+        this._gl = gl;
+        this._location = locations[0];
+    }
+
+    UniformArrayIntVec4.prototype.set = function() {
         var value = this.value;
         var length = value.length;
         var scratch = this._scratchInt;
@@ -347,7 +451,24 @@ define([
         }
     };
 
-    UniformArray.prototype.setMat2 = function() {
+    ///////////////////////////////////////////////////////////////////////////
+
+    function UniformArrayMat2(gl, activeUniform, uniformName, locations) {
+        var length = locations.length;
+
+        /**
+         * @readonly
+         */
+        this.name = uniformName;
+
+        this.value = new Array(length);
+        this._scratchFloat = new Float32Array(length * 4);
+
+        this._gl = gl;
+        this._location = locations[0];
+    }
+
+    UniformArrayMat2.prototype.set = function() {
         var value = this.value;
         var length = value.length;
         var scratch = this._scratchFloat;
@@ -369,7 +490,24 @@ define([
         }
     };
 
-    UniformArray.prototype.setMat3 = function() {
+    ///////////////////////////////////////////////////////////////////////////
+
+    function UniformArrayMat3(gl, activeUniform, uniformName, locations) {
+        var length = locations.length;
+
+        /**
+         * @readonly
+         */
+        this.name = uniformName;
+
+        this.value = new Array(length);
+        this._scratchFloat = new Float32Array(length * 9);
+
+        this._gl = gl;
+        this._location = locations[0];
+    }
+
+    UniformArrayMat3.prototype.set = function() {
         var value = this.value;
         var length = value.length;
         var scratch = this._scratchFloat;
@@ -391,7 +529,24 @@ define([
         }
     };
 
-    UniformArray.prototype.setMat4 = function() {
+    ///////////////////////////////////////////////////////////////////////////
+
+    function UniformArrayMat4(gl, activeUniform, uniformName, locations) {
+        var length = locations.length;
+
+        /**
+         * @readonly
+         */
+        this.name = uniformName;
+
+        this.value = new Array(length);
+        this._scratchFloat = new Float32Array(length * 16);
+
+        this._gl = gl;
+        this._location = locations[0];
+    }
+
+    UniformArrayMat4.prototype.set = function() {
         var value = this.value;
         var length = value.length;
         var scratch = this._scratchFloat;
@@ -413,5 +568,5 @@ define([
         }
     };
 
-    return UniformArray;
+    return getUniformArray;
 });

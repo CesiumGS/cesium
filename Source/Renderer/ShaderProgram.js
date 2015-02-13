@@ -16,7 +16,7 @@ define([
         RuntimeError,
         AutomaticUniforms,
         getUniform,
-        UniformArray) {
+        getUniformArray) {
     "use strict";
     /*global console*/
 
@@ -300,7 +300,7 @@ define([
                                 locations.push(loc);
                             }
                         }
-                        uniformArray = new UniformArray(gl, activeUniform, uniformName, locations);
+                        uniformArray = getUniformArray(gl, activeUniform, uniformName, locations);
 
                         uniformsByName[uniformName] = uniformArray;
                         uniforms.push(uniformArray);
