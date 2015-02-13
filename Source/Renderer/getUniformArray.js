@@ -220,6 +220,10 @@ define([
         // to all uniform array types, not just vec4.  We might not care
         // once we have uniform buffers since that will be the fast path.
 
+        // PERFORMANCE_IDEA: Micro-optimization (I bet it works though):
+        // As soon as changed is true, break into a separate loop that
+        // does the copy without the equals check.
+
         var value = this.value;
         var length = value.length;
         var arraybuffer = this._value;
