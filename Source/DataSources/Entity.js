@@ -30,6 +30,7 @@ define([
         './PolylineVolumeGraphics',
         './Property',
         './RectangleGraphics',
+        './ScreenOverlay',
         './WallGraphics'
     ], function(
         Cartesian3,
@@ -62,6 +63,7 @@ define([
         PolylineVolumeGraphics,
         Property,
         RectangleGraphics,
+        ScreenOverlay,
         WallGraphics) {
     "use strict";
 
@@ -111,6 +113,7 @@ define([
      * @param {PolylineGraphics} [options.polyline] A polyline to associate with this entity.
      * @param {PolylineVolumeGraphics} [options.polylineVolume] A polylineVolume to associate with this entity.
      * @param {RectangleGraphics} [options.rectangle] A rectangle to associate with this entity.
+     * @param {ScreenOverlay} [options.screenOverlay] A screen overlay to associate with this entity.
      * @param {WallGraphics} [options.wall] A wall to associate with this entity.
      *
      * @see {@link http://cesiumjs.org/2015/02/02/Visualizing-Spatial-Data/|Visualizing Special Data}
@@ -136,7 +139,7 @@ define([
         this._parent = options.parent;
         this._propertyNames = ['billboard', 'box', 'corridor', 'cylinder', 'description', 'ellipse', //
                                'ellipsoid', 'label', 'model', 'orientation', 'path', 'point', 'polygon', //
-                               'polyline', 'polylineVolume', 'position', 'rectangle', 'viewFrom', 'wall'];
+                               'polyline', 'polylineVolume', 'position', 'rectangle', 'screenOverlay', 'viewFrom', 'wall'];
 
         this._billboard = undefined;
         this._billboardSubscription = undefined;
@@ -172,6 +175,8 @@ define([
         this._positionSubscription = undefined;
         this._rectangle = undefined;
         this._rectangleSubscription = undefined;
+        this._screenOverlay = undefined;
+        this._screenOverlaySubscription = undefined;
         this._viewFrom = undefined;
         this._viewFromSubscription = undefined;
         this._wall = undefined;
@@ -350,6 +355,12 @@ define([
          * @type {RectangleGraphics}
          */
         rectangle : createPropertyTypeDescriptor('rectangle', RectangleGraphics),
+        /**
+         * Gets or sets the screen overlay.
+         * @memberof Entity.prototype
+         * @type {ScreenOverlay}
+         */
+        screenOverlay : createPropertyTypeDescriptor('screenOverlay', ScreenOverlay),
         /**
          * Gets or sets the suggested initial offset for viewing this object
          * with the camera.  The offset is defined in the east-north-up reference frame.

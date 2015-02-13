@@ -25,6 +25,7 @@ define([
         './PolylineGeometryUpdater',
         './PolylineVolumeGeometryUpdater',
         './RectangleGeometryUpdater',
+        './ScreenOverlayVisualizer',
         './WallGeometryUpdater'
     ], function(
         BoundingSphere,
@@ -52,6 +53,7 @@ define([
         PolylineGeometryUpdater,
         PolylineVolumeGeometryUpdater,
         RectangleGeometryUpdater,
+        ScreenOverlayVisualizer,
         WallGeometryUpdater) {
     "use strict";
 
@@ -63,6 +65,7 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {Scene} options.scene The scene in which to display the data.
      * @param {DataSourceCollection} options.dataSourceCollection The data sources to display.
+     * @param {Node} options.screenOverlayContainer The container to be used for ScreenOverlayVisualizer.
      * @param {DataSourceDisplay~VisualizersCallback} [options.visualizersCallback=DataSourceDisplay.defaultVisualizersCallback]
      *        A function which creates an array of visualizers used for visualization.
      *        If undefined, all standard visualizers are used.
@@ -96,7 +99,7 @@ define([
         }
 
         var defaultDataSource = new CustomDataSource();
-        var visualizers = this._visualizersCallback(this._scene, defaultDataSource);
+        var visualizers = this._visualizersCallback(this._scene, defaultDataSource, options.screenOverlayContainer);
         defaultDataSource._visualizers = visualizers;
         this._onDataSourceAdded(undefined, defaultDataSource);
         this._defaultDataSource = defaultDataSource;
@@ -109,7 +112,7 @@ define([
      * @member
      * @type {DataSourceDisplay~VisualizersCallback}
      */
-    DataSourceDisplay.defaultVisualizersCallback = function(scene, dataSource) {
+    DataSourceDisplay.defaultVisualizersCallback = function(scene, dataSource, overlay) {
         var entities = dataSource.entities;
         return [new BillboardVisualizer(scene, entities),
                 new GeometryVisualizer(BoxGeometryUpdater, scene, entities),
@@ -125,6 +128,7 @@ define([
                 new LabelVisualizer(scene, entities),
                 new ModelVisualizer(scene, entities),
                 new PointVisualizer(scene, entities),
+                new ScreenOverlayVisualizer(scene, entities, defaultValue(overlay, document.body)),
                 new PathVisualizer(scene, entities)];
     };
 

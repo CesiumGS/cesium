@@ -365,7 +365,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         var dataSourceDisplay = new DataSourceDisplay({
             scene : cesiumWidget.scene,
-            dataSourceCollection : dataSourceCollection
+            dataSourceCollection : dataSourceCollection,
+            screenOverlayContainer : container
         });
 
         var clock = cesiumWidget.clock;
