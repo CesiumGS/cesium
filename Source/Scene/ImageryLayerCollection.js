@@ -362,9 +362,8 @@ define([
      *     });
      * }
      */
-    ImageryLayerCollection.prototype.pickImageryLayerFeatures = function(ray, scene) {
-        // Find the picked location on the globe.
-        var pickedPosition = scene.globe.pick(ray, scene);
+    ImageryLayerCollection.prototype.pickImageryLayerFeatures = function(windowPosition, scene) {
+        var pickedPosition = scene._camera.pickEllipsoid(windowPosition, scene.globe.ellipsoid);
         if (!defined(pickedPosition)) {
             return undefined;
         }
