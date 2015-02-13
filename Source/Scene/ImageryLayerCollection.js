@@ -365,11 +365,12 @@ define([
      * }
      */
     ImageryLayerCollection.prototype.pickImageryLayerFeatures = function(windowPosition, scene) {
-        if (scene.mode == SceneMode.SCENE3D) {
+        var pickedPosition;
+        if (scene.mode === SceneMode.SCENE3D) {
             var pickRay = scene.camera.getPickRay(windowPosition);
-            var pickedPosition = scene.globe.pick(pickRay, scene);
+            pickedPosition = scene.globe.pick(pickRay, scene);
         } else {
-            var pickedPosition = scene._camera.pickEllipsoid(windowPosition, scene.globe.ellipsoid);
+            pickedPosition = scene._camera.pickEllipsoid(windowPosition, scene.globe.ellipsoid);
         }
         if (!defined(pickedPosition)) {
             return undefined;
