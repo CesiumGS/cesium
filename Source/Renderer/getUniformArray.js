@@ -265,14 +265,13 @@ define([
         this._scratchFloat = new Float32Array(length);
 
         this._gl = gl;
-        this._location = locations[0];
+        this._locations = locations;
 
         this.textureUnitIndex = undefined;
     }
 
     UniformArraySampler.prototype.set = function() {
         var gl = this._gl;
-        var locations = this._locations;
         var textureUnitIndex = gl.TEXTURE0 + this.textureUnitIndex;
 
         var value = this.value;
@@ -284,7 +283,7 @@ define([
         }
     };
 
-    UniformArraySampler._setSampler = function(textureUnitIndex) {
+    UniformArraySampler.prototype._setSampler = function(textureUnitIndex) {
         this.textureUnitIndex = textureUnitIndex;
 
         var locations = this._locations;
