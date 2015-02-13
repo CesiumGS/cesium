@@ -9,7 +9,8 @@ define([
         '../Core/Math',
         '../Core/Rectangle',
         '../ThirdParty/when',
-        './ImageryLayer'
+        './ImageryLayer',
+        './SceneMode'
     ], function(
         defaultValue,
         defined,
@@ -20,7 +21,8 @@ define([
         CesiumMath,
         Rectangle,
         when,
-        ImageryLayer) {
+        ImageryLayer,
+        SceneMode) {
     "use strict";
 
     /**
@@ -363,7 +365,12 @@ define([
      * }
      */
     ImageryLayerCollection.prototype.pickImageryLayerFeatures = function(windowPosition, scene) {
-        var pickedPosition = scene._camera.pickEllipsoid(windowPosition, scene.globe.ellipsoid);
+        if (scene.mode == SceneMode.SCENE3D) {
+            var pickRay = scene.camera.getPickRay(windowPosition);
+            var pickedPosition = scene.globe.pick(pickRay, scene);
+        } else {
+            var pickedPosition = scene._camera.pickEllipsoid(windowPosition, scene.globe.ellipsoid);
+        }
         if (!defined(pickedPosition)) {
             return undefined;
         }
