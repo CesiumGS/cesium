@@ -787,6 +787,7 @@ define([
                     var view = new DataView(arrayBuffer);
                     var byteOffset = 0;
 
+// TODO: no need for version since it is in JSON.
                     byteOffset += sizeOfUnit32;  // Skip magic number
                     byteOffset += sizeOfUnit32;  // Skip version
 
