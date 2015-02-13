@@ -422,8 +422,6 @@ define([
     function createDefaultLabel() {
         var label = new LabelGraphics();
         label.translucencyByDistance = new NearFarScalar(1500000, 1.0, 3400000, 0.0);
-        label.scale = 1.0;
-        label.fillColor = Color.WHITE;
         label.pixelOffset = new Cartesian2(0, -16);
         label.verticalOrigin = VerticalOrigin.BOTTOM;
         label.font = '16pt sans-serif';
@@ -457,16 +455,12 @@ define([
             targetEntity.billboard = billboard;
         }
 
-        if (defined(icon)) {
-            billboard.image = icon;
-        }
+        billboard.image = icon;
+        billboard.scale = scale;
+        billboard.color = color;
 
         if (defined(x) || defined(y) || defined(w) || defined(h)) {
             billboard.imageSubRegion = new BoundingRectangle(x, y, w, h);
-        }
-
-        if (defined(scale)) {
-            billboard.scale = scale;
         }
 
         //GE treats a heading of zero as no heading
@@ -474,10 +468,6 @@ define([
         if (defined(heading) && heading !== 0) {
             billboard.rotation = CesiumMath.toRadians(-heading);
             billboard.alignedAxis = Cartesian3.UNIT_Z;
-        }
-
-        if (defined(color)) {
-            billboard.color = color;
         }
 
         var xOffset;
@@ -528,53 +518,31 @@ define([
             if (node.nodeName === 'IconStyle') {
                 processBillboardIcon(dataSource, node, targetEntity, sourceUri, uriResolver);
             } else if (node.nodeName === 'LabelStyle') {
-                //Map style to label properties
-                var label = defined(targetEntity.label) ? targetEntity.label : new LabelGraphics();
-                var labelScale = queryNumericValue(node, 'scale', namespaces.kml);
-                var labelColor = queryColorValue(node, 'color', namespaces.kml);
-
-                label.translucencyByDistance = new NearFarScalar(1500000, 1.0, 3400000, 0.0);
-                label.scale = defined(labelScale) ? labelScale : 1.0;
-                label.fillColor = defined(labelColor) ? labelColor : Color.WHITE;
-                label.text = defined(targetEntity.name) ? targetEntity.name : undefined;
-                label.pixelOffset = new Cartesian2(0, -16);
-                label.verticalOrigin = VerticalOrigin.BOTTOM;
-                label.font = '16pt sans-serif';
-                label.style = LabelStyle.FILL_AND_OUTLINE;
-                targetEntity.label = label;
+                var label = targetEntity.label;
+                if (!defined(label)) {
+                    label = createDefaultLabel();
+                    targetEntity.label = label;
+                }
+                label.scale = queryNumericValue(node, 'scale', namespaces.kml);
+                label.fillColor = queryColorValue(node, 'color', namespaces.kml);
+                label.text = targetEntity.name;
             } else if (node.nodeName === 'LineStyle') {
-                //Map style to line properties
-                //TODO PhysicalWidth, labelVisibility
-                var polyline = defined(targetEntity.polyline) ? targetEntity.polyline : new PolylineGraphics();
-                var lineColor = queryColorValue(node, 'color', namespaces.kml);
-                var lineWidth = queryNumericValue(node, 'width', namespaces.kml);
-//                var outerColorString = queryStringValue(node, 'outerColor', namespace.gx);
-//                var lineOuterColor = Color.fromCssColorString(outerColorString);
-//                var lineOuterWidth = queryNumericValue(node, 'outerWidth', namespace.gx);
-//                if (defined(lineOuterWidth) && (lineOuterWidth < 0 || lineOuterWidth > 1.0)) {
-//                    throw new RuntimeError('gx:outerWidth must be a value between 0 and 1.0');
-//                }
-
-                polyline.width = defaultValue(lineWidth, 1.0);
-                material = new PolylineOutlineMaterialProperty();
-                material.color = defaultValue(lineColor, Color.WHITE);
-//                material.outlineColor = defined(lineOuterColor) ? new ConstantProperty(lineOuterColor) : new ConstantProperty(new Color(0, 0, 0, 1));
-                material.outlineWidth = 0;//defined(lineOuterWidth) ? new ConstantProperty(lineOuterWidth) : new ConstantProperty(0);
-                polyline.material = material;
-                targetEntity.polyline = polyline;
+                var polyline = targetEntity.polyline;
+                if (!defined(polyline)) {
+                    polyline = new PolylineGraphics();
+                    targetEntity.polyline = polyline;
+                }
+                polyline.width = queryNumericValue(node, 'width', namespaces.kml);
+                polyline.material = queryColorValue(node, 'color', namespaces.kml);
             } else if (node.nodeName === 'PolyStyle') {
-                targetEntity.polygon = defined(targetEntity.polygon) ? targetEntity.polygon : new PolygonGraphics();
-                var polygonColor = queryColorValue(node, 'color', namespaces.kml);
-                targetEntity.polygon.material = defaultValue(polygonColor, Color.WHITE);
-
-                var fill = queryBooleanValue(node, 'fill', namespaces.kml);
-                if (defined(fill)) {
-                    targetEntity.polygon.fill = fill;
+                var polygon = targetEntity.polygon;
+                if (!defined(polygon)) {
+                    polygon = new PolygonGraphics();
+                    targetEntity.polygon = polygon;
                 }
-                var outline = queryBooleanValue(node, 'outline', namespaces.kml);
-                if (defined(outline)) {
-                    targetEntity.polygon.outline = outline;
-                }
+                polygon.material = queryColorValue(node, 'color', namespaces.kml);
+                polygon.fill = queryBooleanValue(node, 'fill', namespaces.kml);
+                polygon.outline = queryBooleanValue(node, 'outline', namespaces.kml);
             }
         }
     }
@@ -582,6 +550,7 @@ define([
     //Processes and merges any inline styles for the provided node into the provided entity.
     function computeFinalStyle(entity, dataSource, placeMark, styleCollection, sourceUri, uriResolver) {
         var result = new Entity();
+
         var inlineStyles = queryChildNodes(placeMark, 'Style', namespaces.kml);
         var inlineStylesLength = inlineStyles.length;
         if (inlineStylesLength > 0) {
@@ -596,19 +565,6 @@ define([
             if (typeof styleEntity !== 'undefined') {
                 result.merge(styleEntity);
             }
-        }
-
-        if (!defined(result.billboard)) {
-            result.billboard = createDefaultBillboard();
-        }
-
-        if (!defined(result.billboard.image)) {
-            result.billboard.image = dataSource._pinBuilder.fromColor(Color.YELLOW, 64);
-        }
-
-        if (defined(entity.name)) {
-            entity.label = defined(result.label) ? result.label.clone() : createDefaultLabel();
-            entity.label.text = entity.name;
         }
 
         return result;
@@ -996,6 +952,25 @@ define([
         }
         if (!hasGeometry) {
             entity.merge(styleEntity);
+        } else if (defined(entity.position)) {
+            //TODO Should this all really happen here?
+            if (!defined(entity.billboard)) {
+                entity.billboard = defined(styleEntity.billboard) ? styleEntity.billboard.clone() : createDefaultBillboard();
+            }
+
+            if (!defined(entity.billboard.image)) {
+                entity.billboard.image = dataSource._pinBuilder.fromColor(Color.YELLOW, 64);
+            }
+
+            var label = entity.label;
+            if (!defined(label)) {
+                label = defined(styleEntity.label) ? styleEntity.label.clone() : createDefaultLabel();
+                entity.label = label;
+            }
+
+            if (defined(entity.name)) {
+                label.text = entity.name;
+            }
         }
     }
 

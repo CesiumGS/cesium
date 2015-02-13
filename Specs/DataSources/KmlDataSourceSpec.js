@@ -357,7 +357,6 @@ defineSuite([
         var entities = dataSource.entities.values;
         expect(entities.length).toEqual(1);
         expect(entities[0].label.text.getValue()).toEqual(name.getValue());
-        expect(entities[0].label.scale.getValue()).toEqual(scale.getValue());
         expect(entities[0].label.fillColor.red).toEqual(color.red);
         expect(entities[0].label.fillColor.green).toEqual(color.green);
         expect(entities[0].label.fillColor.blue).toEqual(color.blue);
@@ -759,9 +758,7 @@ defineSuite([
 
         var entities = dataSource.entities.values;
         expect(entities.length).toEqual(1);
-        var label = entities[0].label;
-        expect(label.fillColor).toEqual(new ConstantProperty(new Color(1, 1, 1, 1)));
-        expect(label.scale.getValue()).toEqual(1.0);
+        expect(entities[0].label).toBeDefined();
     });
 
     it('handles LineStyle', function() {
@@ -895,9 +892,7 @@ defineSuite([
 
         var entities = dataSource.entities.values;
         expect(entities.length).toEqual(1);
-        var polygon = entities[0].polygon;
-        var generatedColor = polygon.material.color;
-        expect(generatedColor).toEqual(new ConstantProperty(new Color(1, 1, 1, 1)));
+        expect(entities[0].polygon).toBeDefined();
     });
 
     it('handles Color in normal mode', function() {
