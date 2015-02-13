@@ -38,32 +38,24 @@ define([
 
         return when(blob, function(blob) {
             var deferred = when.defer();
+            var blobUrl = window.URL.createObjectURL(blob);
+            var image = new Image();
 
-            loadImageFromTypedArray.createImage(blob, deferred);
+            image.onload = function() {
+                window.URL.revokeObjectURL(blobUrl);
+                deferred.resolve(image);
+            };
+
+            image.onerror = function(e) {
+                window.URL.revokeObjectURL(blobUrl);
+                deferred.reject(e);
+            };
+
+            image.src = blobUrl;
 
             return deferred.promise;
         });
     };
-
-    // This is broken out into a separate function so that it can be mocked for testing.
-    loadImageFromTypedArray.createImage = function(blob, deferred) {
-        var blobUrl = window.URL.createObjectURL(blob);
-        var image = new Image();
-
-        image.onload = function() {
-            window.URL.revokeObjectURL(blobUrl);
-            deferred.resolve(image);
-        };
-
-        image.onerror = function(e) {
-            window.URL.revokeObjectURL(blobUrl);
-            deferred.reject(e);
-        };
-
-        image.src = blobUrl;
-    };
-
-    loadImageFromTypedArray.defaultCreateImage = loadImageFromTypedArray.createImage;
 
     return loadImageFromTypedArray;
 });
