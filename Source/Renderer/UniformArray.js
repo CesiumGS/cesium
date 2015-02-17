@@ -31,10 +31,8 @@ define([
      */
     var UniformArray = function(gl, activeUniform, uniformName, locations) {
         var length = locations.length;
-        var type = activeUniform.type;
 
         this._gl = gl;
-        this._type = type;
         this._name = uniformName;
         this.value = new Array(length);
         this._location = locations[0];
@@ -47,6 +45,7 @@ define([
          */
         this.textureUnitIndex = undefined;
 
+        var type = activeUniform.type;
         var set;
         switch (type) {
             case gl.FLOAT:
@@ -105,7 +104,7 @@ define([
                 throw new RuntimeError('Unrecognized uniform type: ' + type + ' for uniform "' + uniformName + '".');
         }
 
-        this._set = set;
+        this.set = set;
 
         if ((type === gl.SAMPLER_2D) || (type === gl.SAMPLER_CUBE)) {
             this._setSampler = function(textureUnitIndex) {
@@ -126,11 +125,6 @@ define([
         name : {
             get : function() {
                 return this._name;
-            }
-        },
-        datatype : {
-            get : function() {
-                return this._type;
             }
         }
     });

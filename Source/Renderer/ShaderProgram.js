@@ -6,7 +6,7 @@ define([
         '../Core/DeveloperError',
         '../Core/RuntimeError',
         './AutomaticUniforms',
-        './Uniform',
+        './createUniform',
         './UniformArray'
     ], function(
         defined,
@@ -15,7 +15,7 @@ define([
         DeveloperError,
         RuntimeError,
         AutomaticUniforms,
-        Uniform,
+        createUniform,
         UniformArray) {
     "use strict";
     /*global console*/
@@ -245,7 +245,7 @@ define([
                     // if the uniform is not active (e.g., it is optimized out).  Looks like
                     // getActiveUniform() above returns uniforms that are not actually active.
                     if (location !== null) {
-                        var uniform = new Uniform(gl, activeUniform, uniformName, location);
+                        var uniform = createUniform(gl, activeUniform, uniformName, location);
 
                         uniformsByName[uniformName] = uniform;
                         uniforms.push(uniform);
@@ -414,7 +414,7 @@ define([
         var uniforms = this._uniforms;
         len = uniforms.length;
         for (i = 0; i < len; ++i) {
-            uniforms[i]._set();
+            uniforms[i].set();
         }
 
         if (validate) {

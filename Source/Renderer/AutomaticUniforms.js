@@ -1,11 +1,9 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
-        '../Core/defineProperties',
         '../Core/Matrix4'
     ], function(
         Cartesian3,
-        defineProperties,
         Matrix4) {
     "use strict";
     /*global WebGLRenderingContext*/
@@ -17,19 +15,6 @@ define([
         this._datatype = options.datatype;
         this.getValue = options.getValue;
     };
-
-    defineProperties(AutomaticUniform.prototype, {
-        size: {
-            get : function() {
-                return this._size;
-            }
-        },
-        datatype : {
-            get : function() {
-                return this._datatype;
-            }
-        }
-    });
 
     // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
     if (typeof WebGLRenderingContext === 'undefined') {
