@@ -563,6 +563,8 @@ define([
                 var textColor = queryColorValue(node, 'textColor', namespaces.kml);
                 var text = queryStringValue(node, 'text', namespaces.kml);
 
+                //This is purely an internal property used in style processing,
+                //it never ends up on the final entity.
                 targetEntity.addProperty('balloonStyle');
                 targetEntity.balloonStyle = {
                     bgColor : bgColor,
@@ -895,6 +897,10 @@ define([
             if (defined(geometryProcessor)) {
                 var childNodeId = createId(childNode);
                 var childEntity = dataSource._entityCollection.getOrCreateEntity(childNodeId);
+                if (!defined(entity.kml)) {
+                    entity.addProperty('kml');
+                    entity.kml = {};
+                }
                 childEntity.parent = entity;
                 childEntity.name = entity.name;
                 childEntity.availability = entity.availability;
@@ -927,12 +933,11 @@ define([
                 }
             }
         }
-        entity.addProperty('extendedData');
-        entity.extendedData = result;
+        entity.kml.extendedData = result;
     }
 
     function processDescription(node, entity, styleEntity) {
-        var extendedData = entity.extendedData;
+        var extendedData = entity.kml.extendedData;
         var description = queryStringValue(node, 'description', namespaces.kml);
 
         var balloonStyle = defaultValue(entity.balloonStyle, styleEntity.balloonStyle);
@@ -959,8 +964,8 @@ define([
             if (defined(text)) {
                 text = text.replace('$[name]', defaultValue(entity.name, ''));
                 text = text.replace('$[description]', defaultValue(description, ''));
-                text = text.replace('$[address]', defaultValue(entity.address, ''));
-                text = text.replace('$[Snippet]', defaultValue(entity.Snippet, ''));
+                text = text.replace('$[address]', defaultValue(entity.kml.address, ''));
+                text = text.replace('$[Snippet]', defaultValue(entity.kml.Snippet, ''));
                 text = text.replace('$[id]', entity.id);
 
                 //While not explicitly defined by the OGC spec, in Google Earth
@@ -1053,7 +1058,9 @@ define([
             //return;
         //}
 
-        parent = new Entity(createId(node));
+        parent = new Entity({
+            id : createId(node)
+        });
         parent.name = queryStringValue(node, 'name', namespaces.kml);
         entityCollection.add(parent);
         processDocument(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
@@ -1071,6 +1078,11 @@ define([
         //}
 
         var entity = entityCollection.getOrCreateEntity(id);
+        if (!defined(entity.kml)) {
+            entity.addProperty('kml');
+            entity.kml = {};
+        }
+
         entity.name = name;
         entity.parent = parent;
         //entity.uiShow = defaultValue(visibility, true);
@@ -1117,6 +1129,10 @@ define([
     function processGroundOverlay(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver) {
         var id = createId(groundOverlay.id);
         var entity = entityCollection.getOrCreateEntity(id);
+        if (!defined(entity.kml)) {
+            entity.addProperty('kml');
+            entity.kml = {};
+        }
 
         if (defined(parent)) {
             entity.parent = parent;
