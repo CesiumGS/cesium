@@ -12,10 +12,10 @@ define([
      */
     var Pass = {
         GLOBE : 0,
-        GROUND : 1,
-        OPAQUE : 2,
-        TRANSLUCENT : 3,
-        OVERLAY : 4
+        OPAQUE : 1,
+        TRANSLUCENT : 2,
+        OVERLAY : 3,
+        NUMBER_OF_PASSES : 4
     };
 
     return freezeObject(Pass);

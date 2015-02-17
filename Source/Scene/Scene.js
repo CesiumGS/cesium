@@ -868,15 +868,9 @@ define([
                 break;
             }
 
-            if (command.pass === Pass.GLOBE) {
-                frustumCommands.globeCommands[frustumCommands.globeIndex++] = command;
-            } else if (command.pass === Pass.GROUND) {
-                frustumCommands.groundCommands[frustumCommands.groundIndex++] = command;
-            } else if (command.pass === Pass.OPAQUE || command instanceof ClearCommand) {
-                frustumCommands.opaqueCommands[frustumCommands.opaqueIndex++] = command;
-            } else if (command.pass === Pass.TRANSLUCENT){
-                frustumCommands.translucentCommands[frustumCommands.translucentIndex++] = command;
-            }
+            var pass = command instanceof ClearCommand ? Pass.OPAQUE : command.pass;
+            var index = frustumCommands.indices[pass]++;
+            frustumCommands.commands[pass][index] = command;
 
             if (scene.debugShowFrustums) {
                 command.debugOverlappingFrustums |= (1 << i);
@@ -916,11 +910,11 @@ define([
 
         var frustumCommandsList = scene._frustumCommandsList;
         var numberOfFrustums = frustumCommandsList.length;
+        var numberOfPasses = Pass.NUMBER_OF_PASSES;
         for (var n = 0; n < numberOfFrustums; ++n) {
-            frustumCommandsList[n].globeIndex = 0;
-            frustumCommandsList[n].groundIndex = 0;
-            frustumCommandsList[n].opaqueIndex = 0;
-            frustumCommandsList[n].translucentIndex = 0;
+            for (var p = 0; p < numberOfPasses; ++p) {
+                frustumCommandsList[n].indices[p] = 0;
+            }
         }
 
         var near = Number.MAX_VALUE;
@@ -1282,6 +1276,7 @@ define([
             executeTranslucentCommands = executeTranslucentCommandsSorted;
         }
 
+        // Execute commands in each frustum in back to front order
         for (i = 0; i < numFrustums; ++i) {
             var index = numFrustums - i - 1;
             var frustumCommands = frustumCommandsList[index];
@@ -1296,29 +1291,25 @@ define([
             us.updateFrustum(frustum);
             clearDepth.execute(context, passState);
 
-            var commands = frustumCommands.globeCommands;
-            var length = frustumCommands.globeIndex;
-            for (j = 0; j < length; ++j) {
-                executeCommand(commands[j], scene, context, passState);
-            }
+            var commands;
+            var length;
 
-            commands = frustumCommands.groundCommands;
-            length = frustumCommands.groundIndex;
-            for (j = 0; j < length; ++j) {
-                executeCommand(commands[j], scene, context, passState);
-            }
-
-            commands = frustumCommands.opaqueCommands;
-            length = frustumCommands.opaqueIndex;
-            for (j = 0; j < length; ++j) {
-                executeCommand(commands[j], scene, context, passState);
+            // Execute commands in order by pass up to the translucent pass.
+            // Translucent geometry needs special handling (sorting/OIT).
+            var numPasses = Pass.TRANSLUCENT;
+            for (var pass = 0; pass < numPasses; ++pass) {
+                commands = frustumCommands.commands[pass];
+                length = frustumCommands.indices[pass];
+                for (j = 0; j < length; ++j) {
+                    executeCommand(commands[j], scene, context, passState);
+                }
             }
 
             frustum.near = frustumCommands.near;
             us.updateFrustum(frustum);
 
-            commands = frustumCommands.translucentCommands;
-            commands.length = frustumCommands.translucentIndex;
+            commands = frustumCommands.commands[Pass.TRANSLUCENT];
+            commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
             executeTranslucentCommands(scene, executeCommand, passState, commands);
         }
 
