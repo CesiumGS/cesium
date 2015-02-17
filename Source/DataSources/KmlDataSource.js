@@ -890,22 +890,101 @@ define([
         }
     }
 
-    function createDescription(description, entity, styleEntity) {
+    function processExtendedData(node, entity) {
+        var extendedDataNode = queryFirstNode(node, 'ExtendedData', namespaces.kml);
+
+        if (!defined(extendedDataNode)) {
+            return undefined;
+        }
+
+        var result = {};
+        var dataNodes = queryChildNodes(extendedDataNode, 'Data', namespaces.kml);
+        if (defined(dataNodes)) {
+            var length = dataNodes.length;
+            for (var i = 0; i < length; i++) {
+                var dataNode = dataNodes[i];
+                var name = queryStringAttribute(dataNode, 'name', namespaces.kml);
+                if (defined(name)) {
+                    result[name] = {
+                        displayName : queryStringValue(dataNode, 'displayName', namespaces.kml),
+                        value : queryStringValue(dataNode, 'value', namespaces.kml)
+                    };
+                }
+            }
+        }
+        entity.addProperty('extendedData');
+        entity.extendedData = result;
+    }
+
+    function processDescription(node, entity, styleEntity) {
+        var extendedData = entity.extendedData;
+        var description = queryStringValue(node, 'description', namespaces.kml);
+
         var balloonStyle = defaultValue(entity.balloonStyle, styleEntity.balloonStyle);
+
+        var background = Color.WHITE;
+        var foreground = Color.BLACK;
+        var text = description;
+
         if (defined(balloonStyle)) {
-            var background = defaultValue(balloonStyle.bgColor, Color.WHITE);
-            var foreground = defaultValue(balloonStyle.textColor, Color.BLACK);
-            var text = defaultValue(balloonStyle.text, description);
+            background = defaultValue(balloonStyle.bgColor, Color.WHITE);
+            foreground = defaultValue(balloonStyle.textColor, Color.BLACK);
+            text = defaultValue(balloonStyle.text, description);
+        }
+
+        if (defined(text) || defined(extendedData)) {
+            var value;
 
             var tmp = '<div style="';
             tmp += 'background-color:' + background.toCssColorString() + ';';
             tmp += 'color:' + foreground.toCssColorString() + ';';
             tmp += '">';
-            tmp = tmp + text + '</div>';
-            tmp = tmp.replace('$[name]', entity.name);
-            description = tmp.replace('$[description]', description);
+
+            if (defined(text)) {
+                text = text.replace('$[name]', defaultValue(entity.name, ''));
+                text = text.replace('$[description]', defaultValue(description, ''));
+                text = text.replace('$[address]', defaultValue(entity.address, ''));
+                text = text.replace('$[Snippet]', defaultValue(entity.Snippet, ''));
+                text = text.replace('$[id]', entity.id);
+
+                //While not explicitly defined by the OGC spec, in Google Earth
+                //The appearance of geDirections adds the directions to/from links
+                //We simply replace this string with nothing.
+                text = text.replace('$[geDirections]', '');
+
+                if (defined(extendedData)) {
+                    var matches = text.match(/\$\[.+?\]/g);
+                    if (matches !== null) {
+                        for (var i = 0; i < matches.length; i++) {
+                            var token = matches[i];
+                            var propertyName = token.substr(2, token.length - 3);
+                            var isDisplayName = /\/displayName$/.test(propertyName);
+                            propertyName = propertyName.replace(/\/displayName$/, '');
+
+                            value = extendedData[propertyName];
+                            if (defined(value)) {
+                                value = isDisplayName ? value.displayName : value.value;
+                            }
+                            if (defined(value)) {
+                                text = text.replace(token, defaultValue(value, ''));
+                            }
+                        }
+                    }
+                }
+                tmp = tmp + text + '</div>';
+            } else {
+                //If no description exists, build a table out of the extended data
+                tmp += '<table class="cesium-infoBox-defaultTable"><tbody>';
+                for ( var key in extendedData) {
+                    if (extendedData.hasOwnProperty(key)) {
+                        value = extendedData[key];
+                        tmp += '<tr><th>' + defaultValue(value.displayName, key) + '</th><td>' + defaultValue(value.value, '') + '</td></tr>';
+                    }
+                }
+                tmp += '</tbody></table></div>';
+            }
+            entity.description = tmp;
         }
-        entity.description = description;
     }
 
     var geometryTypes = {
@@ -968,7 +1047,8 @@ define([
         entity.availability = defined(timeSpanNode) ? processTimeSpan(timeSpanNode) : undefined;
         var styleEntity = computeFinalStyle(entity, dataSource, placemark, styleCollection, sourceUri, uriResolver);
 
-        createDescription(description, entity, styleEntity);
+        processExtendedData(placemark, entity);
+        processDescription(placemark, entity, styleEntity);
 
         var hasGeometry = false;
         var childNodes = placemark.childNodes;
@@ -1022,8 +1102,8 @@ define([
             entity.availability = processTimeSpan(timeSpan);
         }
 
-        var description = queryStringValue(groundOverlay, 'description', namespaces.kml);
-        createDescription(description, entity, styleEntity);
+        processExtendedData(groundOverlay, entity);
+        processDescription(groundOverlay, entity, styleEntity);
 
         //var visibility = queryBooleanValue(groundOverlay, 'visibility', namespaces.kml);
         //entity.uiShow = defined(visibility) ? visibility : true;

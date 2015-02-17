@@ -1095,7 +1095,7 @@ defineSuite([
         dataSource.load(parser.parseFromString(kml, "text/xml"));
 
         var entity = dataSource.entities.values[0];
-        expect(entity.description.getValue()).toEqual('Here I am!');
+        expect(entity.description.getValue()).toEqual('<div style="background-color:rgb(255,255,255);color:rgb(0,0,0);">Here I am!</div>');
     });
 
     it('GroundOverlay: Sets rectangle image material', function() {
