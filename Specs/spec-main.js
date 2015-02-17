@@ -249,6 +249,13 @@
             categories = categoryString.split(',');
         }
 
+        var notCategoryString = queryString.getParam("not");
+
+        var notCategories;
+        if (notCategoryString) {
+            notCategories = notCategoryString.split(',');
+        }
+
         /**
          * Filter which specs will be run by matching the start of the full name against the `spec` query param.
          */
@@ -264,30 +271,56 @@
             }
 
             // If we're not filtering by category, include this spec.
-            if (!categories) {
+            if (!categories && !notCategories) {
                 return true;
             }
 
             // At least one of this spec's categories must match one of the selected categories.
-            var toCheck = spec;
-            while (toCheck) {
-                if (toCheck.categories) {
-                    if (categories.indexOf(toCheck.categories) >= 0) {
-                        return true;
-                    }
+            var keep = false;
+            var toCheck;
+            var i;
 
-                    for (var i = 0; i < toCheck.categories.length; ++i) {
-                        if (categories.indexOf(toCheck.categories[i]) >= 0) {
-                            return true;
+            if (categories && categories.indexOf('All') < 0) {
+                toCheck = spec;
+                while (!keep && toCheck) {
+                    if (toCheck.categories) {
+                        if (categories.indexOf(toCheck.categories) >= 0) {
+                            keep = true;
+                        }
+
+                        for (i = 0; !keep && i < toCheck.categories.length; ++i) {
+                            if (categories.indexOf(toCheck.categories[i]) >= 0) {
+                                keep = true;
+                            }
                         }
                     }
-                }
 
-                toCheck = toCheck.parentSuite;
+                    toCheck = toCheck.parentSuite;
+                }
+            } else {
+                keep = true;
             }
 
-            // No matching categories, so filter out this spec.
-            return false;
+            if (notCategories) {
+                toCheck = spec;
+                while (keep && toCheck) {
+                    if (toCheck.categories) {
+                        if (notCategories.indexOf(toCheck.categories) >= 0) {
+                            keep = false;
+                        }
+
+                        for (i = 0; keep && i < toCheck.categories.length; ++i) {
+                            if (categories.indexOf(toCheck.categories[i]) >= 0) {
+                                keep = false;
+                            }
+                        }
+                    }
+
+                    toCheck = toCheck.parentSuite;
+                }
+            }
+
+            return keep;
         };
 
         /**
@@ -307,7 +340,8 @@
         require(modules, function(addDefaultMatchers, equalsMethodEqualityTester) {
             htmlReporter.initialize();
 
-            env.beforeEach(function() { addDefaultMatchers(true).call(env); });
+            var release = getQueryParameter('release');
+            env.beforeEach(function() { addDefaultMatchers(!release).call(env); });
             env.beforeEach(function() { env.addCustomEqualityTester(equalsMethodEqualityTester); });
 
             env.execute();

@@ -57,7 +57,14 @@ define([
         }
 
         return function() {
-            return this.isNot ? false : true;
+            return {
+                compare : function(actual, expected) {
+                    return { pass : true  };
+                },
+                negativeCompare : function(actual, expected) {
+                    return { pass : true };
+                }
+            };
         };
     }
 
