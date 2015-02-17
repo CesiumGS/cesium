@@ -19,7 +19,6 @@ defineSuite([
         'Scene/TerrainState',
         'Scene/TileImagery',
         'Specs/createContext',
-        'Specs/destroyContext',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
@@ -42,7 +41,6 @@ defineSuite([
         TerrainState,
         TileImagery,
         createContext,
-        destroyContext,
         pollToPromise,
         when) {
     "use strict";
@@ -96,7 +94,7 @@ defineSuite([
         });
 
         afterAll(function() {
-            destroyContext(context);
+            context.destroyForSpecs();
         });
 
         beforeEach(function() {
@@ -494,7 +492,7 @@ defineSuite([
         });
 
         afterAll(function() {
-            destroyContext(context);
+            context.destroyForSpecs();
         });
 
         it('gets correct results even when the mesh includes normals', function() {

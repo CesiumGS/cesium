@@ -100,6 +100,12 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('unpack throws with undefined array', function() {
+        expect(function() {
+            Matrix4.unpack(undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('fromArray works without a result parameter', function() {
         var expected = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
         var matrix = Matrix4.fromArray([1.0, 5.0, 9.0, 13.0, 2.0, 6.0, 10.0, 14.0, 3.0, 7.0, 11.0, 15.0, 4.0, 8.0, 12.0, 16.0]);

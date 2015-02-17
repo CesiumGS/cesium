@@ -24,7 +24,6 @@ defineSuite([
         'Specs/createCamera',
         'Specs/createContext',
         'Specs/createFrameState',
-        'Specs/destroyContext',
         'Specs/render'
     ], 'Scene/PrimitiveCulling', function(
         BoundingSphere,
@@ -51,7 +50,6 @@ defineSuite([
         createCamera,
         createContext,
         createFrameState,
-        destroyContext,
         render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
@@ -73,7 +71,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     beforeEach(function() {

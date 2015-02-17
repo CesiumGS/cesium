@@ -15,7 +15,7 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var terrainProvider = new CesiumTerrainProvider({
-        url : 'http://cesiumjs.org/smallterrain'
+        url : '//cesiumjs.org/stk-terrain/world'
     });
 
     it('queries heights', function() {
@@ -33,9 +33,9 @@ defineSuite([
         });
     });
 
-    it('queries heights from STK World Terrain', function() {
-        var stkWorldTerrain = new CesiumTerrainProvider({
-            url : 'http://cesiumjs.org/stk-terrain/tilesets/world/tiles'
+    it('queries heights from Small Terrain', function() {
+        var terrainProvider = new CesiumTerrainProvider({
+            url : '//cesiumjs.org/smallterrain'
         });
 
         var positions = [
@@ -43,7 +43,7 @@ defineSuite([
                          Cartographic.fromDegrees(87.0, 28.0)
                      ];
 
-        return sampleTerrain(stkWorldTerrain, 11, positions).then(function(passedPositions) {
+        return sampleTerrain(terrainProvider, 11, positions).then(function(passedPositions) {
             expect(passedPositions).toBe(positions);
             expect(positions[0].height).toBeGreaterThan(5000);
             expect(positions[0].height).toBeLessThan(10000);
@@ -57,7 +57,7 @@ defineSuite([
                          Cartographic.fromDegrees(0.0, 0.0, 0.0)
                      ];
 
-        return sampleTerrain(terrainProvider, 11, positions).then(function() {
+        return sampleTerrain(terrainProvider, 18, positions).then(function() {
             expect(positions[0].height).toBeUndefined();
         });
     });
@@ -65,11 +65,11 @@ defineSuite([
     it('fills in what it can when given a mix of positions with and without valid tiles', function() {
         var positions = [
                          Cartographic.fromDegrees(86.925145, 27.988257),
-                         Cartographic.fromDegrees(0.0, 0.0, 0.0),
+                         Cartographic.fromDegrees(0.0, 89.0, 0.0),
                          Cartographic.fromDegrees(87.0, 28.0)
                      ];
 
-        return sampleTerrain(terrainProvider, 11, positions).then(function() {
+        return sampleTerrain(terrainProvider, 12, positions).then(function() {
             expect(positions[0].height).toBeGreaterThan(5000);
             expect(positions[0].height).toBeLessThan(10000);
             expect(positions[1].height).toBeUndefined();

@@ -13,7 +13,6 @@ defineSuite([
         'Core/Transforms',
         'Scene/ModelAnimationLoop',
         'Specs/createScene',
-        'Specs/destroyScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
@@ -30,7 +29,6 @@ defineSuite([
         Transforms,
         ModelAnimationLoop,
         createScene,
-        destroyScene,
         pollToPromise,
         when) {
     "use strict";
@@ -58,7 +56,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     function addZoomTo(model) {

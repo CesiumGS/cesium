@@ -13,7 +13,6 @@ defineSuite([
         'Scene/ImageryLayerFeatureInfo',
         'Scene/ImageryProvider',
         'Specs/createScene',
-        'Specs/destroyScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
@@ -30,7 +29,6 @@ defineSuite([
         ImageryLayerFeatureInfo,
         ImageryProvider,
         createScene,
-        destroyScene,
         pollToPromise,
         when) {
     "use strict";
@@ -287,7 +285,7 @@ defineSuite([
         });
 
         afterAll(function() {
-            destroyScene(scene);
+            scene.destroyForSpecs();
         });
 
         beforeEach(function() {

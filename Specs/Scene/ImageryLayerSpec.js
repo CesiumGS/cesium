@@ -17,7 +17,6 @@ defineSuite([
         'Scene/TileMapServiceImageryProvider',
         'Scene/WebMapServiceImageryProvider',
         'Specs/createContext',
-        'Specs/destroyContext',
         'Specs/pollToPromise'
     ], function(
         ImageryLayer,
@@ -37,7 +36,6 @@ defineSuite([
         TileMapServiceImageryProvider,
         WebMapServiceImageryProvider,
         createContext,
-        destroyContext,
         pollToPromise) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
@@ -49,7 +47,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     afterEach(function() {

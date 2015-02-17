@@ -11,7 +11,6 @@ defineSuite([
         'Renderer/ClearCommand',
         'Renderer/DrawCommand',
         'Specs/createScene',
-        'Specs/destroyScene',
         'Specs/waitsForPromise',
         'ThirdParty/when'
     ], function(
@@ -26,7 +25,6 @@ defineSuite([
         ClearCommand,
         DrawCommand,
         createScene,
-        destroyScene,
         waitsForPromise,
         when) {
     "use strict";
@@ -46,7 +44,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     beforeEach(function() {

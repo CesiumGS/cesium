@@ -26,6 +26,52 @@ defineSuite([
         expect(matrix[Matrix2.COLUMN1ROW1]).toEqual(4.0);
     });
 
+    it('can pack and unpack', function() {
+        var array = [];
+        var matrix = new Matrix2(
+                1.0, 2.0,
+                3.0, 4.0);
+        Matrix2.pack(matrix, array);
+        expect(array.length).toEqual(Matrix2.packedLength);
+        expect(Matrix2.unpack(array)).toEqual(matrix);
+    });
+
+    it('can pack and unpack with offset', function() {
+        var packed = new Array(3);
+        var offset = 3;
+        var matrix = new Matrix2(
+                1.0, 2.0,
+                3.0, 4.0);
+
+        Matrix2.pack(matrix, packed, offset);
+        expect(packed.length).toEqual(offset + Matrix2.packedLength);
+
+        var result = new Matrix2();
+        var returnedResult = Matrix2.unpack(packed, offset, result);
+        expect(returnedResult).toBe(result);
+        expect(result).toEqual(matrix);
+    });
+
+    it('pack throws with undefined matrix', function() {
+        var array = [];
+        expect(function() {
+            Matrix2.pack(undefined, array);
+        }).toThrowDeveloperError();
+    });
+
+    it('pack throws with undefined array', function() {
+        var matrix = new Matrix2();
+        expect(function() {
+            Matrix2.pack(matrix, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('unpack throws with undefined array', function() {
+        expect(function() {
+            Matrix2.unpack(undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('fromArray works without a result parameter', function() {
         var expected = new Matrix2(1.0, 2.0, 3.0, 4.0);
         var matrix = Matrix2.fromArray([1.0, 3.0, 2.0, 4.0]);

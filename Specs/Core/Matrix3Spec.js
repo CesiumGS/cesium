@@ -38,6 +38,55 @@ defineSuite([
         expect(matrix[Matrix3.COLUMN2ROW2]).toEqual(9.0);
     });
 
+
+    it('can pack and unpack', function() {
+        var array = [];
+        var matrix = new Matrix3(
+                1.0, 2.0, 3.0,
+                4.0, 5.0, 6.0,
+                7.0, 8.0, 9.0);
+        Matrix3.pack(matrix, array);
+        expect(array.length).toEqual(Matrix3.packedLength);
+        expect(Matrix3.unpack(array)).toEqual(matrix);
+    });
+
+    it('can pack and unpack with offset', function() {
+        var packed = new Array(3);
+        var offset = 3;
+        var matrix = new Matrix3(
+                1.0, 2.0, 3.0,
+                4.0, 5.0, 6.0,
+                7.0, 8.0, 9.0);
+
+        Matrix3.pack(matrix, packed, offset);
+        expect(packed.length).toEqual(offset + Matrix3.packedLength);
+
+        var result = new Matrix3();
+        var returnedResult = Matrix3.unpack(packed, offset, result);
+        expect(returnedResult).toBe(result);
+        expect(result).toEqual(matrix);
+    });
+
+    it('pack throws with undefined matrix', function() {
+        var array = [];
+        expect(function() {
+            Matrix3.pack(undefined, array);
+        }).toThrowDeveloperError();
+    });
+
+    it('pack throws with undefined array', function() {
+        var matrix = new Matrix3();
+        expect(function() {
+            Matrix3.pack(matrix, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('unpack throws with undefined array', function() {
+        expect(function() {
+            Matrix3.unpack(undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('fromQuaternion works without a result parameter', function() {
         var sPiOver4 = Math.sin(CesiumMath.PI_OVER_FOUR);
         var cPiOver4 = Math.cos(CesiumMath.PI_OVER_FOUR);

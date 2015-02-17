@@ -18,7 +18,6 @@ defineSuite([
         'Specs/createCamera',
         'Specs/createContext',
         'Specs/createFrameState',
-        'Specs/destroyContext',
         'Specs/pick',
         'Specs/pollToPromise',
         'Specs/render',
@@ -42,7 +41,6 @@ defineSuite([
         createCamera,
         createContext,
         createFrameState,
-        destroyContext,
         pick,
         pollToPromise,
         render,
@@ -75,7 +73,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     beforeEach(function() {

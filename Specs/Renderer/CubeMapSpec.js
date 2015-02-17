@@ -13,7 +13,6 @@ defineSuite([
         'Renderer/TextureMinificationFilter',
         'Renderer/TextureWrap',
         'Specs/createContext',
-        'Specs/destroyContext',
         'ThirdParty/when'
     ], 'Renderer/CubeMap', function(
         Cartesian3,
@@ -29,7 +28,6 @@ defineSuite([
         TextureMinificationFilter,
         TextureWrap,
         createContext,
-        destroyContext,
         when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
@@ -65,7 +63,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     afterEach(function() {

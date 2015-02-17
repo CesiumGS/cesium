@@ -19,7 +19,6 @@ defineSuite([
         'DataSources/SampledProperty',
         'DataSources/StaticGeometryPerMaterialBatch',
         'Specs/createScene',
-        'Specs/destroyScene',
         'Specs/pollToPromise'
     ], function(
         GeometryVisualizer,
@@ -41,7 +40,6 @@ defineSuite([
         SampledProperty,
         StaticGeometryPerMaterialBatch,
         createScene,
-        destroyScene,
         pollToPromise) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
@@ -54,7 +52,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     it('Can create and destroy', function() {

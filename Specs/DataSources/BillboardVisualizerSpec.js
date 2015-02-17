@@ -16,7 +16,6 @@ defineSuite([
         'Scene/HorizontalOrigin',
         'Scene/VerticalOrigin',
         'Specs/createScene',
-        'Specs/destroyScene',
         'Specs/pollToPromise'
     ], function(
         BillboardVisualizer,
@@ -35,7 +34,6 @@ defineSuite([
         HorizontalOrigin,
         VerticalOrigin,
         createScene,
-        destroyScene,
         pollToPromise) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
@@ -48,7 +46,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     afterEach(function() {

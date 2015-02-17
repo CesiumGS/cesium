@@ -40,7 +40,6 @@ defineSuite([
         'Scene/SceneMode',
         'Specs/createContext',
         'Specs/createFrameState',
-        'Specs/destroyContext',
         'Specs/pick',
         'Specs/pollToPromise',
         'Specs/render'
@@ -85,7 +84,6 @@ defineSuite([
         SceneMode,
         createContext,
         createFrameState,
-        destroyContext,
         pick,
         pollToPromise,
         render) {
@@ -101,7 +99,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     function viewSphere3D(camera, sphere, modelMatrix) {

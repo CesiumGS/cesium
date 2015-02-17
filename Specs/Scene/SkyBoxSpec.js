@@ -7,8 +7,7 @@ defineSuite([
         'Scene/SceneMode',
         'Specs/createCamera',
         'Specs/createContext',
-        'Specs/createFrameState',
-        'Specs/destroyContext'
+        'Specs/createFrameState'
     ], function(
         SkyBox,
         Cartesian3,
@@ -17,8 +16,7 @@ defineSuite([
         SceneMode,
         createCamera,
         createContext,
-        createFrameState,
-        destroyContext) {
+        createFrameState) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
@@ -34,7 +32,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     it('draws a sky box from Images', function() {

@@ -11,8 +11,7 @@ defineSuite([
         'Scene/PerspectiveFrustum',
         'Scene/RectanglePrimitive',
         'Scene/SceneMode',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], 'Scene/Pick', function(
         Cartesian2,
         Cartesian3,
@@ -25,8 +24,7 @@ defineSuite([
         PerspectiveFrustum,
         RectanglePrimitive,
         SceneMode,
-        createScene,
-        destroyScene) {
+        createScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -41,7 +39,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     beforeEach(function() {

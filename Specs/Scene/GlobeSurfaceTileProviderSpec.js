@@ -24,7 +24,6 @@ defineSuite([
         'Scene/WebMapServiceImageryProvider',
         'Specs/createContext',
         'Specs/createFrameState',
-        'Specs/destroyContext',
         'Specs/pollToPromise',
         'Specs/render'
     ], function(
@@ -52,7 +51,6 @@ defineSuite([
         WebMapServiceImageryProvider,
         createContext,
         createFrameState,
-        destroyContext,
         pollToPromise,
         render) {
     "use strict";
@@ -110,7 +108,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     beforeEach(function() {

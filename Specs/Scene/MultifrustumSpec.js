@@ -21,7 +21,6 @@ defineSuite([
         'Scene/Pass',
         'Scene/TextureAtlas',
         'Specs/createScene',
-        'Specs/destroyScene',
         'ThirdParty/when'
     ], 'Scene/Multifrustum', function(
         BoundingSphere,
@@ -45,7 +44,6 @@ defineSuite([
         Pass,
         TextureAtlas,
         createScene,
-        destroyScene,
         when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
@@ -89,7 +87,7 @@ defineSuite([
 
     afterEach(function() {
         atlas = atlas && atlas.destroy();
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     var billboard0;

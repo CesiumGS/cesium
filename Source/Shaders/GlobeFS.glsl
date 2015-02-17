@@ -134,9 +134,6 @@ void main()
 #if defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_DAYNIGHT_SHADING)
     vec3 normalMC = normalize(czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));   // normalized surface normal in model coordinates
     vec3 normalEC = normalize(czm_normal3D * normalMC);                                         // normalized surface normal in eye coordiantes
-#elif defined(ENABLE_VERTEX_LIGHTING)
-    vec3 normalMC = normalize(v_normalMC);														// normalized surface normal in model coordinates
-    vec3 normalEC = normalize(v_normalEC);                                                      // normalized surface normal in eye coordiantes
 #endif
 
 #ifdef SHOW_REFLECTIVE_OCEAN
@@ -160,7 +157,7 @@ void main()
 #endif
 
 #ifdef ENABLE_VERTEX_LIGHTING
-    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * 0.9 + 0.3, 0.0, 1.0);
+    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalize(v_normalEC)) * 0.9 + 0.3, 0.0, 1.0);
     gl_FragColor = vec4(color.rgb * diffuseIntensity, color.a);
 #elif defined(ENABLE_DAYNIGHT_SHADING)
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);
@@ -202,7 +199,7 @@ const float oceanFrequencyHighAltitude = 125000.0;
 const float oceanAnimationSpeedHighAltitude = 0.008;
 const float oceanOneOverAmplitudeHighAltitude = 1.0 / 2.0;
 
-vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec4 imageryColor, float specularMapValue)
+vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec4 imageryColor, float maskValue)
 {
     vec3 positionToEyeEC = -positionEyeCoordinates;
     float positionToEyeECLength = length(positionToEyeEC);
@@ -244,7 +241,7 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
     const vec3 waveHighlightColor = vec3(0.3, 0.45, 0.6);
     
     // Use diffuse light to highlight the waves
-    float diffuseIntensity = czm_getLambertDiffuse(czm_sunDirectionEC, normalEC);
+    float diffuseIntensity = czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * maskValue;
     vec3 diffuseHighlight = waveHighlightColor * diffuseIntensity;
     
 #ifdef SHOW_OCEAN_WAVES
@@ -258,7 +255,7 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
 
     // Add specular highlights in 3D, and in all modes when zoomed in.
     float specularIntensity = czm_getSpecular(czm_sunDirectionEC, normalizedpositionToEyeEC, normalEC, 10.0) + 0.25 * czm_getSpecular(czm_moonDirectionEC, normalizedpositionToEyeEC, normalEC, 10.0);
-    float surfaceReflectance = mix(0.0, mix(u_zoomedOutOceanSpecularIntensity, oceanSpecularIntensity, waveIntensity), specularMapValue);
+    float surfaceReflectance = mix(0.0, mix(u_zoomedOutOceanSpecularIntensity, oceanSpecularIntensity, waveIntensity), maskValue);
     float specular = specularIntensity * surfaceReflectance;
     
     return vec4(imageryColor.rgb + diffuseHighlight + nonDiffuseHighlight + specular, imageryColor.a); 
