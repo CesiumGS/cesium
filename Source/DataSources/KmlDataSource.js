@@ -30,6 +30,7 @@ define([
         '../Scene/HorizontalOrigin',
         '../Scene/LabelStyle',
         '../Scene/VerticalOrigin',
+        '../ThirdParty/AutoLinker',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         '../ThirdParty/zip',
@@ -80,6 +81,7 @@ define([
         HorizontalOrigin,
         LabelStyle,
         VerticalOrigin,
+        AutoLinker,
         Uri,
         when,
         zip,
@@ -102,6 +104,19 @@ define([
     "use strict";
 
     var parser = new DOMParser();
+    var autoLinker = new AutoLinker({
+        stripPrefix : false,
+        twitter : false,
+        email : false,
+        replaceFn : function(linker, match) {
+            if (!match.protocolUrlMatch) {
+                //Prevent matching of non-explicit urls.
+                //i.e. foo.id won't match but http://foo.id will
+                return false;
+            }
+        }
+    });
+
     var BILLBOARD_SIZE = 32;
 
     var scratchCartographic = new Cartographic();
@@ -936,6 +951,7 @@ define([
             var value;
 
             var tmp = '<div style="';
+            tmp += 'overflow-wrap:break-word;';
             tmp += 'background-color:' + background.toCssColorString() + ';';
             tmp += 'color:' + foreground.toCssColorString() + ';';
             tmp += '">';
@@ -983,7 +999,21 @@ define([
                 }
                 tmp += '</tbody></table></div>';
             }
-            entity.description = tmp;
+
+            //Turns non-explicit links into clickable links.
+            tmp = autoLinker.link(tmp);
+
+            //Use a temporary div to manipulate the links
+            //so that they open in a new window.
+            var div = document.createElement('div');
+            div.innerHTML = tmp;
+            var links = div.querySelectorAll('a');
+            for (var q = 0; q < links.length; q++) {
+                links[q].setAttribute('target', '_blank');
+            }
+
+            //Set the final HTML as the description.
+            entity.description = div.innerHTML;
         }
     }
 
