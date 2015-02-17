@@ -335,7 +335,7 @@
          *
          * Load the modules via AMD, and then run all of the loaded specs. This includes initializing the `HtmlReporter` instance and then executing the loaded Jasmine environment.
          */
-        var modules = ['Specs/addDefaultMatchers-2.1', 'Specs/equalsMethodEqualityTester-2.1'].concat(specs);
+        var modules = ['Specs/addDefaultMatchers', 'Specs/equalsMethodEqualityTester'].concat(specs);
         require(modules, function(addDefaultMatchers, equalsMethodEqualityTester) {
             htmlReporter.initialize();
 
