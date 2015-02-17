@@ -1615,40 +1615,49 @@ define([
         }
         //>>includeEnd('debug');
 
-        var pickedObjects = [];
+        var i;
+        var attributes;
+        var result = [];
+        var pickedPrimitives = [];
+        var pickedAttributes = [];
 
         var pickedResult = this.pick(windowPosition);
         while (defined(pickedResult) && defined(pickedResult.primitive)) {
-            var primitive = pickedResult.primitive;
-            pickedObjects.push(pickedResult);
+            result.push(pickedResult);
 
-            // hide the picked primitive and call picking again to get the next primitive
+            var primitive = pickedResult.primitive;
+            var hasShowAttribute = false;
+
+            //If the picked object has a show attribute, use it.
             if (typeof primitive.getGeometryInstanceAttributes === 'function') {
-                var attributes = primitive.getGeometryInstanceAttributes(pickedResult.id);
+                attributes = primitive.getGeometryInstanceAttributes(pickedResult.id);
                 if (defined(attributes) && defined(attributes.show)) {
+                    hasShowAttribute = true;
                     attributes.show = ShowGeometryInstanceAttribute.toValue(false, attributes.show);
+                    pickedAttributes.push(attributes);
                 }
-            } else if (defined(primitive.show)) {
+            }
+
+            //Otherwise, hide the entire primitive
+            if (!hasShowAttribute) {
                 primitive.show = false;
+                pickedPrimitives.push(primitive);
             }
 
             pickedResult = this.pick(windowPosition);
         }
 
-        // unhide the picked primitives
-        for (var i = 0; i < pickedObjects.length; ++i) {
-            var p = pickedObjects[i].primitive;
-            if (typeof p.getGeometryInstanceAttributes === 'function') {
-                var attr = p.getGeometryInstanceAttributes(pickedObjects[i].id);
-                if (defined(attr) && defined(attr.show)) {
-                    attr.show = ShowGeometryInstanceAttribute.toValue(true, attr.show);
-                }
-            } else if (defined(p.show)) {
-                p.show = true;
-            }
+        // unhide everything we hid while drill picking
+        for (i = 0; i < pickedPrimitives.length; ++i) {
+            pickedPrimitives[i].show = true;
         }
 
-        return pickedObjects;
+        for (i = 0; i < pickedAttributes.length; ++i) {
+            attributes = pickedAttributes[i];
+            attributes.show = ShowGeometryInstanceAttribute.toValue(true, attributes.show);
+        }
+
+        return result;
     };
 
     /**
