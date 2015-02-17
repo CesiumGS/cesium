@@ -543,6 +543,17 @@ define([
                 polygon.material = queryColorValue(node, 'color', namespaces.kml);
                 polygon.fill = queryBooleanValue(node, 'fill', namespaces.kml);
                 polygon.outline = queryBooleanValue(node, 'outline', namespaces.kml);
+            } else if (node.nodeName === 'BalloonStyle') {
+                var bgColor = queryColorValue(node, 'bgColor', namespaces.kml);
+                var textColor = queryColorValue(node, 'textColor', namespaces.kml);
+                var text = queryStringValue(node, 'text', namespaces.kml);
+
+                targetEntity.addProperty('balloonStyle');
+                targetEntity.balloonStyle = {
+                    bgColor : bgColor,
+                    textColor : textColor,
+                    text : text
+                };
             }
         }
     }
@@ -879,6 +890,24 @@ define([
         }
     }
 
+    function createDescription(description, entity, styleEntity) {
+        var balloonStyle = defaultValue(entity.balloonStyle, styleEntity.balloonStyle);
+        if (defined(balloonStyle)) {
+            var background = defaultValue(balloonStyle.bgColor, Color.WHITE);
+            var foreground = defaultValue(balloonStyle.textColor, Color.BLACK);
+            var text = defaultValue(balloonStyle.text, description);
+
+            var tmp = '<div style="';
+            tmp += 'background-color:' + background.toCssColorString() + ';';
+            tmp += 'color:' + foreground.toCssColorString() + ';';
+            tmp += '">';
+            tmp = tmp + text + '</div>';
+            tmp = tmp.replace('$[name]', entity.name);
+            description = tmp.replace('$[description]', description);
+        }
+        entity.description = description;
+    }
+
     var geometryTypes = {
         Point : processPoint,
         LineString : processLineStringOrLinearRing,
@@ -937,8 +966,9 @@ define([
         entity.parent = parent;
         //entity.uiShow = defaultValue(visibility, true);
         entity.availability = defined(timeSpanNode) ? processTimeSpan(timeSpanNode) : undefined;
-        entity.description = description;
         var styleEntity = computeFinalStyle(entity, dataSource, placemark, styleCollection, sourceUri, uriResolver);
+
+        createDescription(description, entity, styleEntity);
 
         var hasGeometry = false;
         var childNodes = placemark.childNodes;
@@ -993,7 +1023,7 @@ define([
         }
 
         var description = queryStringValue(groundOverlay, 'description', namespaces.kml);
-        entity.description = description;
+        createDescription(description, entity, styleEntity);
 
         //var visibility = queryBooleanValue(groundOverlay, 'visibility', namespaces.kml);
         //entity.uiShow = defined(visibility) ? visibility : true;
