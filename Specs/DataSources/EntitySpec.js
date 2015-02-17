@@ -54,7 +54,7 @@ defineSuite([
         RectangleGraphics,
         WallGraphics) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('constructor sets expected properties.', function() {
         var entity = new Entity();

@@ -4,7 +4,7 @@ defineSuite([
     ], function(
         InfoBox) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('constructor sets expected values', function() {
         var testElement = document.createElement('span');

@@ -4,7 +4,7 @@ defineSuite([
     ], function(
         FullscreenButton) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('constructor sets default values', function() {
         var fullscreenButton = new FullscreenButton(document.body);

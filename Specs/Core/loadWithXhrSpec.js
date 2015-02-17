@@ -8,7 +8,7 @@ defineSuite([
         loadImage,
         waitsForPromise) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     describe('data URI loading', function() {
         it('can load URI escaped text with default response type', function() {

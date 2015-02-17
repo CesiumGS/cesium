@@ -20,7 +20,7 @@ defineSuite([
         GeometryAttributes,
         PrimitiveType) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('can pack and unpack geometry', function() {
         var boxGeometry = BoxGeometry.createGeometry(BoxGeometry.fromDimensions({

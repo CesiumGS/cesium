@@ -18,7 +18,7 @@ defineSuite([
         PrimitiveType,
         createPackableSpecs) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('constructor throws with no positions', function() {
         expect(function() {

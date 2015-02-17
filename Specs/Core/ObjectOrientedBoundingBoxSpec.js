@@ -14,7 +14,7 @@ defineSuite([
         Matrix3,
         Quaternion) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var positions = [
         new Cartesian3(2.0, 0.0, 0.0),

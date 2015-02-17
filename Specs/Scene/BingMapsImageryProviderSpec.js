@@ -30,7 +30,7 @@ defineSuite([
         ImageryState,
         pollToPromise) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     afterEach(function() {
         jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
