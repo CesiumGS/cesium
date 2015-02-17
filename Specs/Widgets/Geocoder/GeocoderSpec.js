@@ -1,12 +1,10 @@
 /*global defineSuite*/
 defineSuite([
         'Widgets/Geocoder/Geocoder',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], function(
         Geocoder,
-        createScene,
-        destroyScene) {
+        createScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -16,7 +14,7 @@ defineSuite([
     });
 
     afterEach(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     it('constructor sets expected properties', function() {

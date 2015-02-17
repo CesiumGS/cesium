@@ -7,7 +7,6 @@ defineSuite([
         'Renderer/BufferUsage',
         'Renderer/DrawCommand',
         'Specs/createContext',
-        'Specs/destroyContext',
         'ThirdParty/when'
     ], function(
         loadCubeMap,
@@ -17,7 +16,6 @@ defineSuite([
         BufferUsage,
         DrawCommand,
         createContext,
-        destroyContext,
         when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -29,7 +27,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     it('loads a cube map', function() {

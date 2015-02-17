@@ -10,7 +10,6 @@ defineSuite([
         'Scene/SingleTileImageryProvider',
         'Specs/createContext',
         'Specs/createFrameState',
-        'Specs/destroyContext',
         'Specs/render'
     ], function(
         Globe,
@@ -23,7 +22,6 @@ defineSuite([
         SingleTileImageryProvider,
         createContext,
         createFrameState,
-        destroyContext,
         render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -37,7 +35,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     beforeEach(function() {

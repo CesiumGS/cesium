@@ -12,7 +12,6 @@ defineSuite([
         'DataSources/ModelGraphics',
         'Scene/Globe',
         'Specs/createScene',
-        'Specs/destroyScene',
         'Specs/waitsForPromise'
     ], function(
         ModelVisualizer,
@@ -27,7 +26,6 @@ defineSuite([
         ModelGraphics,
         Globe,
         createScene,
-        destroyScene,
         waitsForPromise) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -43,7 +41,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     afterEach(function() {
