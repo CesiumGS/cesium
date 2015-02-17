@@ -243,6 +243,12 @@ define([
          * @default 7500000.0
          */
         this.minimumTrackBallHeight = 7500000.0;
+        /**
+         * Enables or disables camera collision detection with terrain.
+         * @type {Boolean}
+         * @default true
+         */
+        this.enableCollisionDetection = true;
 
         this._scene = scene;
         this._globe = undefined;
@@ -1559,17 +1565,29 @@ define([
     var scratchAdjustHeightCartographic = new Cartographic();
 
     function adjustHeightForTerrain(controller) {
+        if (!controller.enableCollisionDetection) {
+            return;
+        }
+
         var scene = controller._scene;
         var mode = scene.mode;
-        var globe = controller._globe;
+        var globe = scene.globe;
 
         if (!defined(globe) || mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
             return;
         }
 
         var camera = scene.camera;
-        var ellipsoid = controller._ellipsoid;
+        var ellipsoid = globe.ellipsoid;
         var projection = scene.mapProjection;
+
+        var transform;
+        var mag;
+        if (!Matrix4.equals(camera.transform, Matrix4.IDENTITY)) {
+            transform = Matrix4.clone(camera.transform);
+            mag = Cartesian3.magnitude(camera.position);
+            camera._setTransform(Matrix4.IDENTITY);
+        }
 
         var cartographic = scratchAdjustHeightCartographic;
         if (mode === SceneMode.SCENE3D) {
@@ -1578,25 +1596,29 @@ define([
             projection.unproject(camera.position, cartographic);
         }
 
-        if (cartographic.height > controller.minimumCollisionTerrainHeight) {
-            return;
+        if (cartographic.height < controller.minimumCollisionTerrainHeight) {
+            var height = globe.getHeight(cartographic);
+            if (defined(height)) {
+                height += controller.minimumZoomDistance;
+                if (cartographic.height < height) {
+                    cartographic.height = height;
+                    if (mode === SceneMode.SCENE3D) {
+                        ellipsoid.cartographicToCartesian(cartographic, camera.position);
+                    } else {
+                        projection.project(cartographic, camera.position);
+                    }
+                }
+            }
         }
 
-        var height = globe.getHeight(cartographic);
-        if (!defined(height)) {
-            return;
-        }
-
-        height += controller.minimumZoomDistance;
-        if (cartographic.height >= height) {
-            return;
-        }
-
-        cartographic.height = height;
-        if (mode === SceneMode.SCENE3D) {
-            ellipsoid.cartographicToCartesian(cartographic, camera.position);
-        } else {
-            projection.project(cartographic, camera.position);
+        if (defined(transform)) {
+            camera._setTransform(transform);
+            Cartesian3.normalize(camera.position, camera.position);
+            Cartesian3.negate(camera.position, camera.direction);
+            Cartesian3.multiplyByScalar(camera.position, Math.max(mag, controller.minimumZoomDistance), camera.position);
+            Cartesian3.normalize(camera.direction, camera.direction);
+            Cartesian3.cross(camera.direction, camera.up, camera.right);
+            Cartesian3.cross(camera.right, camera.direction, camera.up);
         }
     }
 
