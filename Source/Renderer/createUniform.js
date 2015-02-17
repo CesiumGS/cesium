@@ -27,7 +27,7 @@ define([
     /**
      * @private
      */
-    var getUniform = function(gl, activeUniform, uniformName, location) {
+    var createUniform = function(gl, activeUniform, uniformName, location) {
         switch (activeUniform.type) {
             case gl.FLOAT:
                 return new UniformFloat(gl, activeUniform, uniformName, location);
@@ -361,5 +361,5 @@ define([
         }
     };
 
-    return getUniform;
+    return createUniform;
 });
