@@ -868,7 +868,11 @@ define([
                 break;
             }
 
-            if (command.pass === Pass.OPAQUE || command instanceof ClearCommand) {
+            if (command.pass === Pass.GLOBE) {
+                frustumCommands.globeCommands[frustumCommands.globeIndex++] = command;
+            } else if (command.pass === Pass.GROUND) {
+                frustumCommands.groundCommands[frustumCommands.groundIndex++] = command;
+            } else if (command.pass === Pass.OPAQUE || command instanceof ClearCommand) {
                 frustumCommands.opaqueCommands[frustumCommands.opaqueIndex++] = command;
             } else if (command.pass === Pass.TRANSLUCENT){
                 frustumCommands.translucentCommands[frustumCommands.translucentIndex++] = command;
@@ -913,6 +917,8 @@ define([
         var frustumCommandsList = scene._frustumCommandsList;
         var numberOfFrustums = frustumCommandsList.length;
         for (var n = 0; n < numberOfFrustums; ++n) {
+            frustumCommandsList[n].globeIndex = 0;
+            frustumCommandsList[n].groundIndex = 0;
             frustumCommandsList[n].opaqueIndex = 0;
             frustumCommandsList[n].translucentIndex = 0;
         }
@@ -1053,6 +1059,7 @@ define([
                                         0.0, 1.0, 0.0, 0.0,
                                         0.0, 0.0, 0.0, 1.0);
     transformFrom2D = Matrix4.inverseTransformation(transformFrom2D, transformFrom2D);
+
     function executeCommand(command, scene, context, passState, renderState, shaderProgram, debugFramebuffer) {
         if ((defined(scene.debugCommandFilter)) && !scene.debugCommandFilter(command)) {
             return;
@@ -1169,6 +1176,9 @@ define([
         var context = scene.context;
         var us = context.uniformState;
 
+        var i;
+        var j;
+
         var frustum;
         if (defined(camera.frustum.fov)) {
             frustum = camera.frustum.clone(scratchPerspectiveFrustum);
@@ -1201,7 +1211,6 @@ define([
         clear.execute(context, passState);
 
         var renderTranslucentCommands = false;
-        var i;
         var frustumCommandsList = scene._frustumCommandsList;
         var numFrustums = frustumCommandsList.length;
         for (i = 0; i < numFrustums; ++i) {
@@ -1287,9 +1296,21 @@ define([
             us.updateFrustum(frustum);
             clearDepth.execute(context, passState);
 
-            var commands = frustumCommands.opaqueCommands;
-            var length = frustumCommands.opaqueIndex;
-            for (var j = 0; j < length; ++j) {
+            var commands = frustumCommands.globeCommands;
+            var length = frustumCommands.globeIndex;
+            for (j = 0; j < length; ++j) {
+                executeCommand(commands[j], scene, context, passState);
+            }
+
+            commands = frustumCommands.groundCommands;
+            length = frustumCommands.groundIndex;
+            for (j = 0; j < length; ++j) {
+                executeCommand(commands[j], scene, context, passState);
+            }
+
+            commands = frustumCommands.opaqueCommands;
+            length = frustumCommands.opaqueIndex;
+            for (j = 0; j < length; ++j) {
                 executeCommand(commands[j], scene, context, passState);
             }
 

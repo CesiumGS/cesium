@@ -11,9 +11,11 @@ define([
      * @private
      */
     var Pass = {
-        OPAQUE : 0,
-        TRANSLUCENT : 1,
-        OVERLAY : 2
+        GLOBE : 0,
+        GROUND : 1,
+        OPAQUE : 2,
+        TRANSLUCENT : 3,
+        OVERLAY : 4
     };
 
     return freezeObject(Pass);
