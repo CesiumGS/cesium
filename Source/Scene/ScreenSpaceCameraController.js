@@ -244,15 +244,7 @@ define([
          */
         this.minimumTrackBallHeight = 7500000.0;
         /**
-         * Keeps the camera above terrain when the camera is in a reference frame other than the world frame, i.e.
-         * the camera transform property is not the identity matrix. To re-orient the camera, it is assumed that the camera
-         * is viewing the center of the frame and the the up direction is aligned with the positive z axis in the local frame.
-         * @type {Boolean}
-         * @default true
-         */
-        this.avoidCollisionInReferenceFrame = true;
-        /**
-         * Enables or disables camera collision detection with terrain both when the camera is in a local reference frame or the world frame.
+         * Enables or disables camera collision detection with terrain.
          * @type {Boolean}
          * @default true
          */
@@ -1579,7 +1571,7 @@ define([
 
         var scene = controller._scene;
         var mode = scene.mode;
-        var globe = controller.avoidCollisionInReferenceFrame ? scene.globe : controller._globe;
+        var globe = scene.globe;
 
         if (!defined(globe) || mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
             return;
