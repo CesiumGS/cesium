@@ -125,7 +125,15 @@ getJasmineRequireObj().base = function(j$, jasmineGlobal) {
   };
 
   j$.isArray_ = function(value) {
-    return j$.isA_('Array', value);
+    if (j$.isA_('Array', value)) {
+      return true;
+    } else if (typeof value.byteLength !== 'undefined') {
+      return j$.isA_('Int8Array', value) || j$.isA_('Uint8Array', value) || j$.isA_('Uint8ClampedArray', value) ||
+             j$.isA_('Int16Array', value) || j$.isA_('Uint16Array', value) || j$.isA_('Int32Array', value) ||
+             j$.isA_('Uint32Array', value) || j$.isA_('Float32Array', value) || j$.isA_('Float64Array', value);
+    } else {
+      return false;
+    }
   };
 
   j$.isString_ = function(value) {
