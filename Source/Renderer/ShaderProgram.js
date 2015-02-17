@@ -7,7 +7,7 @@ define([
         '../Core/RuntimeError',
         './AutomaticUniforms',
         './createUniform',
-        './getUniformArray'
+        './createUniformArray'
     ], function(
         defined,
         defineProperties,
@@ -16,7 +16,7 @@ define([
         RuntimeError,
         AutomaticUniforms,
         createUniform,
-        getUniformArray) {
+        createUniformArray) {
     "use strict";
     /*global console*/
 
@@ -300,7 +300,7 @@ define([
                                 locations.push(loc);
                             }
                         }
-                        uniformArray = getUniformArray(gl, activeUniform, uniformName, locations);
+                        uniformArray = createUniformArray(gl, activeUniform, uniformName, locations);
 
                         uniformsByName[uniformName] = uniformArray;
                         uniforms.push(uniformArray);

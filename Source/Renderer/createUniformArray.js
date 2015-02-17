@@ -29,7 +29,7 @@ define([
     /**
      * @private
      */
-    var getUniformArray = function(gl, activeUniform, uniformName, locations) {
+    var createUniformArray = function(gl, activeUniform, uniformName, locations) {
         switch (activeUniform.type) {
             case gl.FLOAT:
                 return new UniformArrayFloat(gl, activeUniform, uniformName, locations);
@@ -571,5 +571,5 @@ define([
         }
     };
 
-    return getUniformArray;
+    return createUniformArray;
 });
