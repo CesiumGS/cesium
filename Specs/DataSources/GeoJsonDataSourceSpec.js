@@ -7,7 +7,6 @@ defineSuite([
         'Core/JulianDate',
         'Core/PolygonHierarchy',
         'DataSources/EntityCollection',
-        'Specs/waitsForPromise',
         'ThirdParty/when'
     ], function(
         GeoJsonDataSource,
@@ -17,7 +16,6 @@ defineSuite([
         JulianDate,
         PolygonHierarchy,
         EntityCollection,
-        waitsForPromise,
         when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/

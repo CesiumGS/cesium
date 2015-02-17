@@ -11,7 +11,6 @@ defineSuite([
         'Renderer/ClearCommand',
         'Renderer/DrawCommand',
         'Specs/createScene',
-        'Specs/waitsForPromise',
         'ThirdParty/when'
     ], function(
         TextureAtlas,
@@ -25,7 +24,6 @@ defineSuite([
         ClearCommand,
         DrawCommand,
         createScene,
-        waitsForPromise,
         when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/

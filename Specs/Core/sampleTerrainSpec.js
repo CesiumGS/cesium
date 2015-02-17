@@ -3,13 +3,11 @@ defineSuite([
         'Core/sampleTerrain',
         'Core/Cartographic',
         'Core/CesiumTerrainProvider',
-        'Specs/waitsForPromise',
         'ThirdParty/when'
     ], function(
         sampleTerrain,
         Cartographic,
         CesiumTerrainProvider,
-        waitsForPromise,
         when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
