@@ -13,6 +13,7 @@ Change Log
 * Added support for rendering a water effect on Quantized-Mesh terrain tiles.
 * Added `pack` and `unpack` functions to `Matrix2` and `Matrix3`.
 * Added camera-terrain collision detection/response when the camera reference frame is set.
+* Added `enableCollisionDetection` to enable/disable camera collision detection with terrain.
 
 ### 1.6 - 2015-02-02
 
