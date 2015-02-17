@@ -47,7 +47,7 @@ jasmineRequire.HtmlReporter = function(j$) {
       failureCount = 0,
       pendingSpecCount = 0,
       htmlReporterMain,
-      symbols,
+      progress,
       failedSuites = [];
 
     this.initialize = function() {
@@ -57,7 +57,7 @@ jasmineRequire.HtmlReporter = function(j$) {
           createDom('a', {className: 'title', href: 'http://jasmine.github.io/', target: '_blank'}),
           createDom('span', {className: 'version'}, j$.version)
         ),
-        createDom('ul', {className: 'symbol-summary'}),
+        createDom('div', {className: 'progress'}),
         createDom('div', {className: 'alert'}),
         createDom('div', {className: 'results'},
           createDom('div', {className: 'failures'})
@@ -65,12 +65,49 @@ jasmineRequire.HtmlReporter = function(j$) {
       );
       getContainer().appendChild(htmlReporterMain);
 
-      symbols = find('.symbol-summary');
+      progress = find('.progress');
     };
 
     var totalSpecsDefined;
     this.jasmineStarted = function(options) {
       totalSpecsDefined = options.totalSpecsDefined || 0;
+
+      function summaryList(resultsTree, domParent) {
+        var specListNode;
+        for (var i = 0; i < resultsTree.children.length; i++) {
+          var result = resultsTree.children[i];
+          if (result instanceof j$.Suite) {
+            var suiteListNode = createDom('ul', {className: 'suite', id: 'suite-' + result.id},
+              createDom('li', {className: 'suite-detail'},
+                createDom('a', {href: specHref(result)}, result.description)
+              )
+            );
+
+            summaryList(result, suiteListNode);
+            domParent.appendChild(suiteListNode);
+          }
+          if (result instanceof j$.Spec) {
+            if (domParent.getAttribute('class') != 'specs') {
+              specListNode = createDom('ul', {className: 'specs'});
+              domParent.appendChild(specListNode);
+            }
+            var specDescription = result.description;
+            var domNode = createDom('li', {
+              className: result.status,
+              id: 'spec-' + result.id
+            }, createDom('a', {href: specHref(result)}, specDescription));
+            result.domNode = domNode;
+            specListNode.appendChild(domNode);
+          }
+        }
+      }
+
+      var summary = createDom('div', {className: 'summary'});
+      var results = find('.results');
+      results.appendChild(summary);
+
+      summaryList(options.topSuite, summary)
+
       timer.start();
     };
 
@@ -110,12 +147,9 @@ jasmineRequire.HtmlReporter = function(j$) {
         specsExecuted++;
       }
 
-      symbols.appendChild(createDom('li', {
-          className: noExpectations(result) ? 'empty' : result.status,
-          id: 'spec_' + result.id,
-          title: result.fullName
-        }
-      ));
+      result.domNode.className = result.status;
+
+      progress.style.width = (100 * specsExecuted / totalSpecsDefined) + '%';
 
       if (result.status == 'failed') {
         failureCount++;
@@ -144,6 +178,8 @@ jasmineRequire.HtmlReporter = function(j$) {
     };
 
     this.jasmineDone = function() {
+      progress.style.display = 'none';
+
       var banner = find('.banner');
       banner.appendChild(createDom('span', {className: 'duration'}, 'finished in ' + timer.elapsed() / 1000 + 's'));
 
@@ -194,47 +230,6 @@ jasmineRequire.HtmlReporter = function(j$) {
       }
 
       var results = find('.results');
-      results.appendChild(summary);
-
-      summaryList(topResults, summary);
-
-      function summaryList(resultsTree, domParent) {
-        var specListNode;
-        for (var i = 0; i < resultsTree.children.length; i++) {
-          var resultNode = resultsTree.children[i];
-          if (resultNode.type == 'suite') {
-            var suiteListNode = createDom('ul', {className: 'suite', id: 'suite-' + resultNode.result.id},
-              createDom('li', {className: 'suite-detail'},
-                createDom('a', {href: specHref(resultNode.result)}, resultNode.result.description)
-              )
-            );
-
-            summaryList(resultNode, suiteListNode);
-            domParent.appendChild(suiteListNode);
-          }
-          if (resultNode.type == 'spec') {
-            if (domParent.getAttribute('class') != 'specs') {
-              specListNode = createDom('ul', {className: 'specs'});
-              domParent.appendChild(specListNode);
-            }
-            var specDescription = resultNode.result.description;
-            if(noExpectations(resultNode.result)) {
-              specDescription = 'SPEC HAS NO EXPECTATIONS ' + specDescription;
-            }
-            if(resultNode.result.status === 'pending' && resultNode.result.pendingReason !== '') {
-              specDescription = specDescription + ' PENDING WITH MESSAGE: ' + resultNode.result.pendingReason;
-            }
-            specListNode.appendChild(
-              createDom('li', {
-                  className: resultNode.result.status,
-                  id: 'spec-' + resultNode.result.id
-                },
-                createDom('a', {href: specHref(resultNode.result)}, specDescription)
-              )
-            );
-          }
-        }
-      }
 
       if (failures.length) {
         alert.appendChild(
@@ -310,7 +305,11 @@ jasmineRequire.HtmlReporter = function(j$) {
     }
 
     function specHref(result) {
-      return addToExistingQueryString('spec', result.fullName);
+      if (typeof result.fullName !== 'undefined') {
+        return addToExistingQueryString('spec', result.fullName);
+      } else {
+        return addToExistingQueryString('spec', result.getFullName());
+      }
     }
 
     function defaultQueryString(key, value) {
