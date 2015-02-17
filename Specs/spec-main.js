@@ -13,6 +13,8 @@
 /*global define,require*/
 
 (function() {
+    'use strict';
+
     function getQueryParameter(name) {
         var match = new RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
         return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
@@ -21,7 +23,7 @@
     var built = getQueryParameter('built');
 
     var toRequire = [
-        'Specs/CesiumJasmineHtml',
+        'Specs/jasmineHtml',
         'Cesium'
     ];
 
@@ -40,7 +42,7 @@
             }
         });
 
-        toRequire.push('./Stubs/Cesium');
+        toRequire.push('./Stubs/paths');
     } else {
         require.config({
             waitSeconds: 30,
@@ -52,13 +54,19 @@
     }
 
     require(toRequire, function(
-            CesiumJasmineHtml,
-            Cesium) {
-        'use strict';
+            jasmineHtml,
+            Cesium,
+            paths) {
 
         /*global jasmineRequire,jasmine,exports,specs*/
 
         var when = Cesium.when;
+
+        if (typeof paths !== 'undefined') {
+            require.config({
+                paths : paths
+            });
+        }
 
         /**
          * ## Require &amp; Instantiate
@@ -89,7 +97,7 @@
         /**
          * Since this is being run in a browser and the results should populate to an HTML page, require the HTML-specific Jasmine code, injecting the same reference.
          */
-        CesiumJasmineHtml(jasmine);
+        jasmineHtml(jasmine);
 
         /**
          * Create the Jasmine environment. This is used to run all specs in a project.
