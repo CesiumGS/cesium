@@ -224,6 +224,9 @@
             onRaiseExceptionsClick: function() {
                 queryString.setParam("catch", !env.catchingExceptions());
             },
+            addToExistingQueryString: function(key, value) {
+                return queryString.fullStringWithNewParam(key, value);
+            },
             getContainer: function() {
                 return document.body;
             },
