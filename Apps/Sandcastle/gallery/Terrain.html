@@ -34,24 +34,25 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
-var scene = viewer.scene;
-var globe = scene.globe;
-globe.depthTestAgainstTerrain = true;
-
 var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
     url : '//assets.agi.com/stk-terrain/world',
     requestWaterMask : true,
     requestVertexNormals : true
 });
+viewer.terrainProvider = cesiumTerrainProviderMeshes;
 
+var mountEverest = new Cesium.Cartesian3(300770.50872389384, 5634912.131394585, 2978152.2865545116);
+var cameraOffset = new Cesium.Cartesian3(6344.974098678562, -793.3419798081741, 2499.9508860763162);
+viewer.camera.lookAt(mountEverest, cameraOffset);
+viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+
+// setup alternative terrain providers
 var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
 
 var vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
     url : '//www.vr-theworld.com/vr-theworld/tiles1.0.0/73/',
     credit : 'Terrain data courtesy VT MÄK'
 });
-
-viewer.terrainProvider = cesiumTerrainProviderMeshes;
 
 Sandcastle.addToolbarMenu([{
     text : 'CesiumTerrainProvider - STK World Terrain',
@@ -98,7 +99,7 @@ Sandcastle.addToolbarMenu([{
 Sandcastle.addToolbarMenu([{
     text : 'Mount Everest',
     onselect : function() {
-        if (scene.mode === Cesium.SceneMode.SCENE3D || scene.mode === Cesium.SceneMode.COLUMBUS_VIEW) {
+        if (viewer.scene.mode === Cesium.SceneMode.SCENE3D || viewer.scene.mode === Cesium.SceneMode.COLUMBUS_VIEW) {
             var target = new Cesium.Cartesian3(300770.50872389384, 5634912.131394585, 2978152.2865545116);
             var offset = new Cesium.Cartesian3(6344.974098678562, -793.3419798081741, 2499.9508860763162);
             viewer.camera.lookAt(target, offset);
@@ -110,7 +111,7 @@ Sandcastle.addToolbarMenu([{
 }, {
     text : 'Half Dome',
     onselect : function() {
-        if (scene.mode === Cesium.SceneMode.SCENE3D || scene.mode === Cesium.SceneMode.COLUMBUS_VIEW) {
+        if (viewer.scene.mode === Cesium.SceneMode.SCENE3D || viewer.scene.mode === Cesium.SceneMode.COLUMBUS_VIEW) {
             var target = new Cesium.Cartesian3(-2489625.0836225147, -4393941.44443024, 3882535.9454173897);
             var offset = new Cesium.Cartesian3(-6857.40902037546, 412.3284835694358, 2147.5545426812023);
             viewer.camera.lookAt(target, offset);
@@ -122,7 +123,7 @@ Sandcastle.addToolbarMenu([{
 }, {
     text : 'San Francisco Bay',
     onselect : function() {
-        if (scene.mode === Cesium.SceneMode.SCENE3D || scene.mode === Cesium.SceneMode.COLUMBUS_VIEW) {
+        if (viewer.scene.mode === Cesium.SceneMode.SCENE3D || viewer.scene.mode === Cesium.SceneMode.COLUMBUS_VIEW) {
             var target = new Cesium.Cartesian3(-2708814.85583248, -4254159.450845907, 3891403.9457429945);
             var offset = new Cesium.Cartesian3(70642.66030209465, -31661.517948317807, 35505.179997143336);
             viewer.camera.lookAt(target, offset);
@@ -136,6 +137,7 @@ Sandcastle.addToolbarMenu([{
 var terrainSamplePositions;
 
 function sampleTerrainSuccess() {
+    viewer.scene.globe.depthTestAgainstTerrain = true;
     var ellipsoid = Cesium.Ellipsoid.WGS84;
     viewer.entities.suspendEvents();
     viewer.entities.removeAll();
