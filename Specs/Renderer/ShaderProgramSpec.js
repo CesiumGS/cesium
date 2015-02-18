@@ -195,24 +195,6 @@ defineSuite([
         expect(sp.allUniforms.u_mat4.name).toEqual('u_mat4');
         expect(sp.allUniforms.u_sampler2D.name).toEqual('u_sampler2D');
         expect(sp.allUniforms.u_samplerCube.name).toEqual('u_samplerCube');
-
-        expect(sp.allUniforms.u_float.datatype).toEqual(WebGLRenderingContext.FLOAT);
-        expect(sp.allUniforms.u_vec2.datatype).toEqual(WebGLRenderingContext.FLOAT_VEC2);
-        expect(sp.allUniforms.u_vec3.datatype).toEqual(WebGLRenderingContext.FLOAT_VEC3);
-        expect(sp.allUniforms.u_vec4.datatype).toEqual(WebGLRenderingContext.FLOAT_VEC4);
-        expect(sp.allUniforms.u_int.datatype).toEqual(WebGLRenderingContext.INT);
-        expect(sp.allUniforms.u_ivec2.datatype).toEqual(WebGLRenderingContext.INT_VEC2);
-        expect(sp.allUniforms.u_ivec3.datatype).toEqual(WebGLRenderingContext.INT_VEC3);
-        expect(sp.allUniforms.u_ivec4.datatype).toEqual(WebGLRenderingContext.INT_VEC4);
-        expect(sp.allUniforms.u_bool.datatype).toEqual(WebGLRenderingContext.BOOL);
-        expect(sp.allUniforms.u_bvec2.datatype).toEqual(WebGLRenderingContext.BOOL_VEC2);
-        expect(sp.allUniforms.u_bvec3.datatype).toEqual(WebGLRenderingContext.BOOL_VEC3);
-        expect(sp.allUniforms.u_bvec4.datatype).toEqual(WebGLRenderingContext.BOOL_VEC4);
-        expect(sp.allUniforms.u_mat2.datatype).toEqual(WebGLRenderingContext.FLOAT_MAT2);
-        expect(sp.allUniforms.u_mat3.datatype).toEqual(WebGLRenderingContext.FLOAT_MAT3);
-        expect(sp.allUniforms.u_mat4.datatype).toEqual(WebGLRenderingContext.FLOAT_MAT4);
-        expect(sp.allUniforms.u_sampler2D.datatype).toEqual(WebGLRenderingContext.SAMPLER_2D);
-        expect(sp.allUniforms.u_samplerCube.datatype).toEqual(WebGLRenderingContext.SAMPLER_CUBE);
     });
 
     it('has a struct uniform', function() {
@@ -266,24 +248,6 @@ defineSuite([
         expect(sp.allUniforms.u_mat4.name).toEqual('u_mat4');
         expect(sp.allUniforms.u_sampler2D.name).toEqual('u_sampler2D');
         expect(sp.allUniforms.u_samplerCube.name).toEqual('u_samplerCube');
-
-        expect(sp.allUniforms.u_float.datatype).toEqual(WebGLRenderingContext.FLOAT);
-        expect(sp.allUniforms.u_vec2.datatype).toEqual(WebGLRenderingContext.FLOAT_VEC2);
-        expect(sp.allUniforms.u_vec3.datatype).toEqual(WebGLRenderingContext.FLOAT_VEC3);
-        expect(sp.allUniforms.u_vec4.datatype).toEqual(WebGLRenderingContext.FLOAT_VEC4);
-        expect(sp.allUniforms.u_int.datatype).toEqual(WebGLRenderingContext.INT);
-        expect(sp.allUniforms.u_ivec2.datatype).toEqual(WebGLRenderingContext.INT_VEC2);
-        expect(sp.allUniforms.u_ivec3.datatype).toEqual(WebGLRenderingContext.INT_VEC3);
-        expect(sp.allUniforms.u_ivec4.datatype).toEqual(WebGLRenderingContext.INT_VEC4);
-        expect(sp.allUniforms.u_bool.datatype).toEqual(WebGLRenderingContext.BOOL);
-        expect(sp.allUniforms.u_bvec2.datatype).toEqual(WebGLRenderingContext.BOOL_VEC2);
-        expect(sp.allUniforms.u_bvec3.datatype).toEqual(WebGLRenderingContext.BOOL_VEC3);
-        expect(sp.allUniforms.u_bvec4.datatype).toEqual(WebGLRenderingContext.BOOL_VEC4);
-        expect(sp.allUniforms.u_mat2.datatype).toEqual(WebGLRenderingContext.FLOAT_MAT2);
-        expect(sp.allUniforms.u_mat3.datatype).toEqual(WebGLRenderingContext.FLOAT_MAT3);
-        expect(sp.allUniforms.u_mat4.datatype).toEqual(WebGLRenderingContext.FLOAT_MAT4);
-        expect(sp.allUniforms.u_sampler2D.datatype).toEqual(WebGLRenderingContext.SAMPLER_2D);
-        expect(sp.allUniforms.u_samplerCube.datatype).toEqual(WebGLRenderingContext.SAMPLER_CUBE);
 
         expect(sp.allUniforms.u_float.value.length).toEqual(2);
         expect(sp.allUniforms.u_vec2.value.length).toEqual(2);
