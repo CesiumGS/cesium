@@ -961,7 +961,7 @@ define([
             var value;
 
             var tmp = '<div style="';
-            tmp += 'overflow-wrap:break-word;';
+            tmp += 'word-wrap:break-word;';
             tmp += 'background-color:' + background.toCssColorString() + ';';
             tmp += 'color:' + foreground.toCssColorString() + ';';
             tmp += '">';

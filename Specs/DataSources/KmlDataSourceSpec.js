@@ -866,7 +866,7 @@ defineSuite([
         element.innerHTML = entity.description.getValue();
 
         var div = element.firstChild;
-        expect(div.style['overflow-wrap']).toEqual('break-word');
+        expect(div.style['word-wrap']).toEqual('break-word');
         expect(div.style['background-color']).toEqual('rgba(102, 68, 34, 0)');
         expect(div.style.color).toEqual('rgba(0, 34, 68, 0.4)');
         expect(div.textContent).toEqual('The Name The Description The Address The Snippet The ID The Property The Value $[prop2/displayName] $[prop2]');
@@ -909,7 +909,7 @@ defineSuite([
         element.innerHTML = entity.description.getValue();
 
         var div = element.firstChild;
-        expect(div.style['overflow-wrap']).toEqual('break-word');
+        expect(div.style['word-wrap']).toEqual('break-word');
         expect(div.style['background-color']).toEqual('rgb(255, 255, 255)');
         expect(div.style.color).toEqual('rgb(0, 0, 0)');
         expect(div.textContent).toEqual('The Description');
@@ -941,7 +941,7 @@ defineSuite([
         element.innerHTML = entity.description.getValue();
 
         var div = element.firstChild;
-        expect(div.style['overflow-wrap']).toEqual('break-word');
+        expect(div.style['word-wrap']).toEqual('break-word');
         expect(div.style['background-color']).toEqual('rgb(255, 255, 255)');
         expect(div.style.color).toEqual('rgb(0, 0, 0)');
 
