@@ -1708,16 +1708,6 @@ getJasmineRequireObj().pp = function(j$) {
 
 getJasmineRequireObj().QueueRunner = function(j$) {
 
-  function once(fn) {
-    var called = false;
-    return function() {
-      if (!called) {
-        called = true;
-        fn();
-      }
-    };
-  }
-
   function QueueRunner(attrs) {
     this.queueableFns = attrs.queueableFns || [];
     this.onComplete = attrs.onComplete || function() {};
@@ -1742,8 +1732,12 @@ getJasmineRequireObj().QueueRunner = function(j$) {
     for(iterativeIndex = recursiveIndex; iterativeIndex < length; iterativeIndex++) {
       var queueableFn = queueableFns[iterativeIndex];
       if (queueableFn.fn.length > 0) {
-        attemptAsync(queueableFn);
-        return;
+        // Call the function asynchronously, but if it calls done() before this function returns,
+        // it ended up being asynchronous so treat it as such.
+        var doneCalled = attemptAsync(queueableFn);
+        if (!doneCalled) {
+          return;
+        }
       } else {
         attemptSync(queueableFn);
       }
@@ -1764,13 +1758,21 @@ getJasmineRequireObj().QueueRunner = function(j$) {
     }
 
     function attemptAsync(queueableFn) {
+      var doneCalled = false;
+      var functionReturned = false;
+
       var clearTimeout = function () {
           Function.prototype.apply.apply(self.timer.clearTimeout, [j$.getGlobal(), [timeoutId]]);
         },
-        next = once(function () {
-          clearTimeout(timeoutId);
-          self.run(queueableFns, iterativeIndex + 1);
-        }),
+        next = function () {
+          if (!doneCalled) {
+            doneCalled = true;
+            if (functionReturned) {
+              clearTimeout(timeoutId);
+              self.run(queueableFns, iterativeIndex + 1);
+            }
+          }
+        },
         timeoutId;
 
       next.fail = function() {
@@ -1778,7 +1780,15 @@ getJasmineRequireObj().QueueRunner = function(j$) {
         next();
       };
 
-      if (queueableFn.timeout) {
+      try {
+        queueableFn.fn.call(self.userContext, next);
+      } catch (e) {
+        handleException(e, queueableFn);
+      }
+
+      functionReturned = true;
+
+      if (!doneCalled && queueableFn.timeout) {
         timeoutId = Function.prototype.apply.apply(self.timer.setTimeout, [j$.getGlobal(), [function() {
           var error = new Error('Timeout - Async callback was not invoked within timeout specified by jasmine.DEFAULT_TIMEOUT_INTERVAL.');
           onException(error, queueableFn);
@@ -1786,12 +1796,7 @@ getJasmineRequireObj().QueueRunner = function(j$) {
         }, queueableFn.timeout()]]);
       }
 
-      try {
-        queueableFn.fn.call(self.userContext, next);
-      } catch (e) {
-        handleException(e, queueableFn);
-        next();
-      }
+      return doneCalled;
     }
 
     function onException(e, queueableFn) {
