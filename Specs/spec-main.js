@@ -209,7 +209,7 @@
             delete queryStringForSpecFocus.category;
          }
 
-        var catchingExceptions = queryString.catch;
+        var catchingExceptions = queryString['catch'];
         env.catchExceptions(typeof catchingExceptions === "undefined" ? true : catchingExceptions);
 
         /**
@@ -219,7 +219,7 @@
         var htmlReporter = new jasmine.HtmlReporter({
             env: env,
             onRaiseExceptionsClick: function() {
-                queryString.catch = !env.catchingExceptions();
+                queryString['catch'] = !env.catchingExceptions();
             },
             addToExistingQueryString: function(key, value) {
                 queryStringForSpecFocus[key] = value;
