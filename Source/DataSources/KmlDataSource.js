@@ -489,43 +489,37 @@ define([
             billboard.alignedAxis = Cartesian3.UNIT_Z;
         }
 
+        //Hotpot is the KML equivalent of pixel offset
+        //The hotspot origin is the lower left, but we leave
+        //our billboard origin at the center and simply
+        //modify the pixel offset to take this into account
+        scale = defaultValue(scale, 1.0);
+
         var xOffset;
         var yOffset;
         if (defined(hotSpotX)) {
             if (hotSpotXUnit === 'pixels') {
-                billboard.horizontalOrigin = HorizontalOrigin.LEFT;
-                xOffset = hotSpotX / 2;
+                xOffset = -hotSpotX * scale;
             } else if (hotSpotXUnit === 'insetPixels') {
-                billboard.horizontalOrigin = HorizontalOrigin.RIGHT;
-                xOffset = hotSpotX / 2;
+                xOffset = (hotSpotX - BILLBOARD_SIZE) * scale;
             } else if (hotSpotXUnit === 'fraction') {
-                billboard.horizontalOrigin = HorizontalOrigin.LEFT;
-                xOffset = hotSpotX * BILLBOARD_SIZE;
+                xOffset = -BILLBOARD_SIZE * scale * hotSpotX;
             }
+            xOffset += BILLBOARD_SIZE * 0.5 * scale;
         }
 
         if (defined(hotSpotY)) {
             if (hotSpotYUnit === 'pixels') {
-                billboard.verticalOrigin = VerticalOrigin.BOTTOM;
-                yOffset = -hotSpotY;
-            } else if (hotSpotYUnit === 'insetPixels') {
-                billboard.verticalOrigin = VerticalOrigin.TOP;
                 yOffset = hotSpotY;
+            } else if (hotSpotYUnit === 'insetPixels') {
+                yOffset = -hotSpotY;
             } else if (hotSpotYUnit === 'fraction') {
-                billboard.verticalOrigin = VerticalOrigin.BOTTOM;
-                yOffset = -hotSpotY * BILLBOARD_SIZE;
+                yOffset = hotSpotY * BILLBOARD_SIZE;
             }
+            yOffset -= BILLBOARD_SIZE * 0.5 * scale;
         }
 
         if (defined(xOffset) || defined(yOffset)) {
-            if (defined(scale)) {
-                if (defined(xOffset)) {
-                    xOffset *= scale;
-                }
-                if (defined(yOffset)) {
-                    yOffset *= scale;
-                }
-            }
             billboard.pixelOffset = new Cartesian2(xOffset, yOffset);
         }
     }
@@ -1155,57 +1149,77 @@ define([
         var entity = r.entity;
         var styleEntity = r.stylEntity;
 
-        var rectangle = entity.rectangle;
-        if (!defined(rectangle)) {
-            rectangle = new RectangleGraphics();
-            entity.rectangle = rectangle;
-        }
+        var geometry;
+        var isLatLonQuad = false;
 
-        var latLonBox = queryFirstNode(groundOverlay, 'LatLonBox', namespaces.kml);
-        if (defined(latLonBox)) {
-            var west = queryNumericValue(latLonBox, 'west', namespaces.kml);
-            var south = queryNumericValue(latLonBox, 'south', namespaces.kml);
-            var east = queryNumericValue(latLonBox, 'east', namespaces.kml);
-            var north = queryNumericValue(latLonBox, 'north', namespaces.kml);
+        var positions = readCoordinates(queryFirstNode(groundOverlay, 'LatLonQuad', namespaces.gx));
+        if (defined(positions)) {
+            geometry = new PolygonGraphics();
+            geometry.hierarchy = new PolygonHierarchy(positions);
+            entity.polygon = geometry;
+            isLatLonQuad = true;
+        } else {
+            geometry = new RectangleGraphics();
+            entity.rectangle = geometry;
 
-            if (defined(west)) {
-                west = CesiumMath.convertLongitudeRange(CesiumMath.toRadians(west));
-            }
-            if (defined(south)) {
-                south = CesiumMath.negativePiToPi(CesiumMath.toRadians(south));
-            }
-            if (defined(east)) {
-                east = CesiumMath.convertLongitudeRange(CesiumMath.toRadians(east));
-            }
-            if (defined(north)) {
-                north = CesiumMath.negativePiToPi(CesiumMath.toRadians(north));
-            }
+            var latLonBox = queryFirstNode(groundOverlay, 'LatLonBox', namespaces.kml);
+            if (defined(latLonBox)) {
+                var west = queryNumericValue(latLonBox, 'west', namespaces.kml);
+                var south = queryNumericValue(latLonBox, 'south', namespaces.kml);
+                var east = queryNumericValue(latLonBox, 'east', namespaces.kml);
+                var north = queryNumericValue(latLonBox, 'north', namespaces.kml);
 
-            rectangle.coordinates = new Rectangle(west, south, east, north);
+                if (defined(west)) {
+                    west = CesiumMath.convertLongitudeRange(CesiumMath.toRadians(west));
+                }
+                if (defined(south)) {
+                    south = CesiumMath.negativePiToPi(CesiumMath.toRadians(south));
+                }
+                if (defined(east)) {
+                    east = CesiumMath.convertLongitudeRange(CesiumMath.toRadians(east));
+                }
+                if (defined(north)) {
+                    north = CesiumMath.negativePiToPi(CesiumMath.toRadians(north));
+                }
+                geometry.coordinates = new Rectangle(west, south, east, north);
+
+                var rotation = queryNumericValue(latLonBox, 'rotation', namespaces.kml);
+                if (defined(rotation)) {
+                    geometry.rotation = CesiumMath.toRadians(rotation);
+                }
+            }
         }
 
         var material;
         var iconNode = queryFirstNode(groundOverlay, 'Icon', namespaces.kml);
         var href = queryStringValue(iconNode, 'href', namespaces.kml);
         if (defined(href)) {
-            rectangle.material = resolveHref(href, dataSource, sourceUri, uriResolver);
+            if (isLatLonQuad) {
+                window.console.log('gx:LatLonQuad Icon does not support texture projection.');
+            }
+            geometry.material = resolveHref(href, dataSource, sourceUri, uriResolver);
         } else {
-            rectangle.material = queryColorValue(groundOverlay, 'color', namespaces.kml);
-        }
-
-        var rotation = queryNumericValue(latLonBox, 'rotation', namespaces.kml);
-        if (defined(rotation)) {
-            rectangle.rotation = CesiumMath.toRadians(rotation);
+            geometry.material = queryColorValue(groundOverlay, 'color', namespaces.kml);
         }
 
         var altitudeMode = queryStringValue(groundOverlay, 'altitudeMode', namespaces.kml);
+
+        var altitude;
         if (defined(altitudeMode)) {
             if (altitudeMode === 'absolute') {
                 //TODO absolute means relative to sea level, not the ellipsoid.
-                var altitude = queryNumericValue(groundOverlay, 'altitude', namespaces.kml);
-                rectangle.height = defaultValue(altitude, 0);
+                geometry.height = queryNumericValue(groundOverlay, 'altitude', namespaces.kml);
             } else if (altitudeMode !== 'clampToGround') {
-                throw new RuntimeError('Unknown enumeration: ' + altitudeMode);
+                window.console.log('Unknown altitudeMode: ' + altitudeMode);
+            }
+        } else {
+            altitudeMode = queryStringValue(groundOverlay, 'altitudeMode', namespaces.gx);
+            if (altitudeMode === 'relativeToSeaFloor') {
+                window.console.log('altitudeMode relativeToSeaFloor is currently not supported');
+            } else if (altitudeMode === 'clampToSeaFloor') {
+                window.console.log('altitudeMode clampToSeaFloor is currently not supported');
+            } else if (defined(altitudeMode)) {
+                window.console.log('Unknown altitudeMode: ' + altitudeMode);
             }
         }
     }

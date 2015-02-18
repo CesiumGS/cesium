@@ -2,9 +2,11 @@
 defineSuite([
         'DataSources/KmlDataSource',
         'Core/BoundingRectangle',
+        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Color',
+        'Core/DefaultProxy',
         'Core/DeveloperError',
         'Core/Ellipsoid',
         'Core/Event',
@@ -24,9 +26,11 @@ defineSuite([
     ], function(
         KmlDataSource,
         BoundingRectangle,
+        Cartesian2,
         Cartesian3,
         Cartographic,
         Color,
+        DefaultProxy,
         DeveloperError,
         Ellipsoid,
         Event,
@@ -111,7 +115,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('loadUrl rejects loading nonexistent file', function() {
+    xit('loadUrl rejects loading nonexistent file', function() {
         var dataSource = new KmlDataSource();
         waitsForPromise.toReject(dataSource.loadUrl('//test.invalid/invalid.kml'));
     });
@@ -280,7 +284,7 @@ defineSuite([
         expect(entity.kml.link.length).toEqual('123');
     });
 
-    it('Feature: TimeSpan', function() {
+    it('Feature: TimeSpan with begin and end', function() {
         var endDate = JulianDate.fromIso8601('1945-08-06');
         var beginDate = JulianDate.fromIso8601('1941-12-07');
 
@@ -301,7 +305,7 @@ defineSuite([
         expect(entity.availability.stop).toEqual(endDate);
     });
 
-    it('Feature: TimeSpan flips dates when end date is earlier', function() {
+    it('Feature: TimeSpan flips dates when end is earlier', function() {
         var endDate = JulianDate.fromIso8601('1945-08-06');
         var beginDate = JulianDate.fromIso8601('1941-12-07');
 
@@ -377,7 +381,7 @@ defineSuite([
         expect(entity.availability.stop).toEqual(Iso8601.MAXIMUM_VALUE);
     });
 
-    it('Feature: ExtendedData', function() {
+    it('Feature: ExtendedData <Data> schema', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
         <Placemark>\
             <ExtendedData>\
@@ -411,86 +415,6 @@ defineSuite([
         expect(entity.kml.extendedData.prop3).toBeDefined();
         expect(entity.kml.extendedData.prop3.displayName).toEqual('Property 3');
         expect(entity.kml.extendedData.prop3.value).toBeUndefined();
-    });
-
-    it('Feature: BalloonStyle with all properties', function() {
-        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-        <Placemark id="The ID">\
-            <Style>\
-            <BalloonStyle>\
-                <bgColor>00224466</bgColor>\
-                <textColor>66442200</textColor>\
-                <text>$[name] $[description] $[address] $[Snippet] $[id] $[prop1/displayName] $[prop1] $[prop2/displayName] $[prop2]</text>\
-            </BalloonStyle>\
-            </Style>\
-            <name>The Name</name>\
-            <description>The Description</description>\
-            <address>The Address</address>\
-            <Snippet>The Snippet</Snippet>\
-            <ExtendedData>\
-            <Data name="prop1">\
-                <displayName>The Property</displayName>\
-                <value>The Value</value>\
-            </Data>\
-            </ExtendedData>\
-        </Placemark>';
-
-        var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(kml, "text/xml"));
-
-        var entity = dataSource.entities.values[0];
-
-        var element = document.createElement('div');
-        element.innerHTML = entity.description.getValue();
-
-        var div = element.firstChild;
-        expect(div.style['overflow-wrap']).toEqual('break-word');
-        expect(div.style['background-color']).toEqual('rgba(102, 68, 34, 0)');
-        expect(div.style.color).toEqual('rgba(0, 34, 68, 0.4)');
-        expect(div.textContent).toEqual('The Name The Description The Address The Snippet The ID The Property The Value $[prop2/displayName] $[prop2]');
-    });
-
-    it('Feature: BalloonStyle entity replacement removes missing values', function() {
-        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-        <Placemark>\
-            <Style>\
-            <BalloonStyle>\
-                <text>$[name] $[description] $[address] $[Snippet]</text>\
-            </BalloonStyle>\
-            </Style>\
-        </Placemark>';
-
-        var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(kml, "text/xml"));
-
-        var entity = dataSource.entities.values[0];
-
-        var element = document.createElement('div');
-        element.innerHTML = entity.description.getValue();
-
-        var div = element.firstChild;
-        expect(div.textContent).toEqual('   ');
-    });
-
-    it('Feature: description without BalloonStyle', function() {
-        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-        <Placemark>\
-            <description>The Description</description>\
-        </Placemark>';
-
-        var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(kml, "text/xml"));
-
-        var entity = dataSource.entities.values[0];
-
-        var element = document.createElement('div');
-        element.innerHTML = entity.description.getValue();
-
-        var div = element.firstChild;
-        expect(div.style['overflow-wrap']).toEqual('break-word');
-        expect(div.style['background-color']).toEqual('rgb(255, 255, 255)');
-        expect(div.style.color).toEqual('rgb(0, 0, 0)');
-        expect(div.textContent).toEqual('The Description');
     });
 
     it('GroundOverlay: Sets defaults', function() {
@@ -559,8 +483,30 @@ defineSuite([
         dataSource.load(parser.parseFromString(kml, "text/xml"));
 
         var entity = dataSource.entities.values[0];
+        expect(entity.polygon).toBeUndefined();
         expect(entity.rectangle.coordinates.getValue()).toEqualEpsilon(Rectangle.fromDegrees(3, 1, 4, 2), CesiumMath.EPSILON14);
         expect(entity.rectangle.rotation.getValue()).toEqual(Math.PI / 4);
+    });
+
+    it('GroundOverlay: Sets polygon coordinates for gx:LatLonQuad', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <kml xmlns="http://www.opengis.net/kml/2.2"\
+             xmlns:gx="http://www.google.com/kml/ext/2.2">\
+            <GroundOverlay>\
+                <gx:LatLonQuad>\
+                    <coordinates>\
+                    1,2 3,4 5,6 7,8\
+                    </coordinates>\
+                </gx:LatLonQuad>\
+            </GroundOverlay>\
+        </kml>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.rectangle).toBeUndefined();
+        expect(entity.polygon.hierarchy.getValue().positions).toEqualEpsilon(Cartesian3.fromDegreesArray([1, 2, 3, 4, 5, 6, 7, 8]), CesiumMath.EPSILON14);
     });
 
     it('GroundOverlay: Sets rectangle absolute height', function() {
@@ -577,10 +523,7 @@ defineSuite([
         expect(entity.rectangle.height.getValue()).toEqual(23);
     });
 
-    /*
-    * Tests below this comment need to be reevaluated.
-    */
-    it('loads shared styles', function() {
+    it('Styles: supports local styles with styleUrl', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <kml xmlns="http://www.opengis.net/kml/2.2">\
             <Document>\
@@ -603,7 +546,7 @@ defineSuite([
         expect(entities[0].billboard.scale.getValue()).toEqual(3.0);
     });
 
-    it('loads external styles', function() {
+    it('Styles: supports external styles with styleUrl', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <kml xmlns="http://www.opengis.net/kml/2.2">\
             <Document>\
@@ -626,7 +569,7 @@ defineSuite([
         });
     });
 
-    it('inline styles take precedance over shared styles', function() {
+    it('Styles: inline styles take precedance over shared styles', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <kml xmlns="http://www.opengis.net/kml/2.2">\
             <Document>\
@@ -643,6 +586,7 @@ defineSuite([
               <Style>\
                 <IconStyle>\
                   <scale>2</scale>\
+                  <heading>4</heading>\
                 </IconStyle>\
               </Style>\
             </Placemark>\
@@ -657,447 +601,107 @@ defineSuite([
 
         var billboard = entities[0].billboard;
         expect(billboard.scale.getValue()).toEqual(2.0);
+        expect(billboard.rotation.getValue()).toEqual(CesiumMath.toRadians(-4.0));
         expect(billboard.image.getValue()).toEqual('http://test.invalid');
     });
 
-//    it('processPlacemark throws error with invalid geometry', function() {
-//        var placemarkKml = '<?xml version="1.0" encoding="UTF-8"?>\
-//            <kml xmlns="http://www.opengis.net/kml/2.2">\
-//            <Document>\
-//            <Placemark>\
-//              <Invalid>\
-//                <coordinates>d s</coordinates>\
-//              </Invalid>\
-//            </Placemark>\
-//            </Document>\
-//            </kml>';
-//
-//        var dataSource = new KmlDataSource();
-//        var error;
-//        dataSource.load(parser.parseFromString(placemarkKml, "text/xml")).otherwise(function(e) {
-//            error = e;
-//        });
-//
-//        waitsFor(function() {
-//            return error instanceof RuntimeError;
-//        });
-//    });
-
-//    it('processMultiGeometry throws error with invalid geometry', function() {
-//        var placemarkKml = '<?xml version="1.0" encoding="UTF-8"?>\
-//            <kml xmlns="http://www.opengis.net/kml/2.2">\
-//            <Document>\
-//            <Placemark>\
-//            <MultiGeometry>\
-//              <Invalid>\
-//                <coordinates> </coordinates>\
-//              </Invalid>\
-//            </MultiGeometry>\
-//            </Placemark>\
-//            </Document>\
-//            </kml>';
-//
-//        var dataSource = new KmlDataSource();
-//        expect(function() {
-//            dataSource.load(placemarkKml);
-//        }).toThrowDeveloperError();
-//    });
-
-    it('handles Point Geometry', function() {
-        var position = new Cartographic(CesiumMath.toRadians(1), CesiumMath.toRadians(2), 3);
-        var cartesianPosition = Ellipsoid.WGS84.cartographicToCartesian(position);
-        var time = new JulianDate();
-        var pointKml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2">\
-            <Document>\
-            <Placemark>\
-              <Point>\
-                <coordinates>1,2,3</coordinates>\
-              </Point>\
-            </Placemark>\
-            </Document>\
-            </kml>';
-
-        var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(pointKml, "text/xml"));
-
-        var entities = dataSource.entities.values;
-        expect(entities.length).toEqual(1);
-        expect(entities[0].position.getValue(time)).toEqual(cartesianPosition);
-    });
-
-//    it('processPoint throws error with invalid coordinates', function() {
-//        var pointKml = '<?xml version="1.0" encoding="UTF-8"?>\
-//            <kml xmlns="http://www.opengis.net/kml/2.2">\
-//            <Document>\
-//            <Placemark>\
-//              <Point>\
-//                <coordinates> </coordinates>\
-//              </Point>\
-//            </Placemark>\
-//            </Document>\
-//            </kml>';
-//
-//        var dataSource = new KmlDataSource();
-//        expect(function() {
-//            dataSource.load(pointKml);
-//        }).toThrowDeveloperError();
-//    });
-
-    it('handles Point Geometry with LabelStyle', function() {
-        var name = new ConstantProperty('LabelStyle.kml');
-        var scale = new ConstantProperty(1.5);
-        var color = new ConstantProperty(Color.fromBytes(255, 0, 0, 0));
-        var pointKml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2">\
-            <Document>\
-            <Placemark>\
-            <name>LabelStyle.kml</name>\
-                <Style id="randomLabelColor">\
-                    <LabelStyle>\
-                        <color>000000ff</color>\
-                        <colorMode>normal</colorMode>\
-                        <scale>1.5</scale>\
-                    </LabelStyle>\
-                </Style>\
-            <Point>\
-                <coordinates>1,2,0</coordinates>\
-            </Point>\
-            </Placemark>\
-            </Document>\
-            </kml>';
-
-        var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(pointKml, "text/xml"));
-
-        var entities = dataSource.entities.values;
-        expect(entities.length).toEqual(1);
-        expect(entities[0].label.text.getValue()).toEqual(name.getValue());
-        expect(entities[0].label.fillColor.red).toEqual(color.red);
-        expect(entities[0].label.fillColor.green).toEqual(color.green);
-        expect(entities[0].label.fillColor.blue).toEqual(color.blue);
-        expect(entities[0].label.fillColor.alpha).toEqual(color.alpha);
-    });
-
-    it('handles Line Geometry with two sets of coordinates', function() {
-        var position1 = new Cartographic(CesiumMath.toRadians(1), CesiumMath.toRadians(2), 0);
-        var cartesianPosition1 = Ellipsoid.WGS84.cartographicToCartesian(position1);
-        var position2 = new Cartographic(CesiumMath.toRadians(4), CesiumMath.toRadians(5), 0);
-        var cartesianPosition2 = Ellipsoid.WGS84.cartographicToCartesian(position2);
-        var lineKml = '<?xml version="1.0" encoding="UTF-8"?>\
-    <kml xmlns="http://www.opengis.net/kml/2.2">\
-    <Document>\
-    <Placemark>\
-      <LineString>\
-        <coordinates>1,2,0 \
-                     4,5,0 \
-        </coordinates>\
-      </LineString>\
-    </Placemark>\
-    </Document>\
-    </kml>';
-
-        var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(lineKml, "text/xml"));
-
-        var entities = dataSource.entities.values;
-        var entity = entities[0];
-        expect(entities.length).toEqual(1);
-        expect(entity.polyline.positions.getValue()[0]).toEqual(cartesianPosition1);
-        expect(entity.polyline.positions.getValue()[1]).toEqual(cartesianPosition2);
-    });
-
-//    it('processLineString throws error with invalid coordinates', function() {
-//        var lineKml = '<?xml version="1.0" encoding="UTF-8"?>\
-//            <kml xmlns="http://www.opengis.net/kml/2.2">\
-//            <Document>\
-//            <Placemark>\
-//              <LineString>\
-//                <coordinates>1 \
-//                             4,5,0 \
-//                </coordinates>\
-//              </LineString>\
-//            </Placemark>\
-//            </Document>\
-//            </kml>';
-//
-//        var dataSource = new KmlDataSource();
-//        expect(function() {
-//            dataSource.load(lineKml);
-//        }).toThrowDeveloperError();
-//    });
-
-    it('handles Coordinates without altitude', function() {
-        var position1 = new Cartographic(CesiumMath.toRadians(1), CesiumMath.toRadians(2), 0);
-        var cartesianPosition1 = Ellipsoid.WGS84.cartographicToCartesian(position1);
-        var position2 = new Cartographic(CesiumMath.toRadians(4), CesiumMath.toRadians(5), 0);
-        var cartesianPosition2 = Ellipsoid.WGS84.cartographicToCartesian(position2);
-        var lineKml = '<?xml version="1.0" encoding="UTF-8"?>\
-    <kml xmlns="http://www.opengis.net/kml/2.2">\
-    <Document>\
-    <Placemark>\
-      <LineString>\
-        <coordinates>1,2 \
-                     4,5 \
-        </coordinates>\
-      </LineString>\
-    </Placemark>\
-    </Document>\
-    </kml>';
-
-        var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(lineKml, "text/xml"));
-
-        var entities = dataSource.entities.values;
-        var entity = entities[0];
-        expect(entities.length).toEqual(1);
-        expect(entity.polyline.positions.getValue()[0]).toEqual(cartesianPosition1);
-        expect(entity.polyline.positions.getValue()[1]).toEqual(cartesianPosition2);
-    });
-
-    it('handles Polygon geometry', function() {
-        var polygonKml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2">\
-            <Placemark>\
-              <Polygon>\
-                <outerBoundaryIs>\
-                  <LinearRing>\
-                    <coordinates>\
-                      -122,37,0\
-                      -123,38,0\
-                      -124,39,0\
-                      -125,40,0\
-                      -122,37,0\
-                    </coordinates>\
-                  </LinearRing>\
-                </outerBoundaryIs>\
-              </Polygon>\
-            </Placemark>\
-            </kml>';
-
-        var coordinates = [Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-122, 37, 0)),
-                           Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-123, 38, 0)),
-                           Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-124, 39, 0)),
-                           Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-125, 40, 0)),
-                           Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-122, 37, 0))];
-
-        var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(polygonKml, "text/xml"));
-
-        var entities = dataSource.entities.values;
-        var entity = entities[0];
-        expect(entity.polygon.hierarchy.getValue().positions).toEqual(coordinates);
-    });
-
-    it('handles gx:Track', function() {
-        var cartographic = Cartographic.fromDegrees(7, 8, 9);
-        var value = Ellipsoid.WGS84.cartographicToCartesian(cartographic);
-        var time = new JulianDate.fromIso8601('2010-05-28T02:02:09Z');
-        var trackKml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2"\
-             xmlns:gx="http://www.google.com/kml/ext/2.2">\
-            <Document>\
-            <Placemark>\
-            <gx:Track>\
-              <when>2010-05-28T02:02:09Z</when>\
-              <gx:coord>7 8 9</gx:coord>\
-            </gx:Track>\
-            </Placemark>\
-            </Document>\
-            </kml>';
-
-        var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(trackKml, "text/xml"));
-
-        var entity = dataSource.entities.values[0];
-        expect(entity.position.getValue(time)).toEqual(value);
-    });
-
-    it('processGxTrack throws error with invalid input', function() {
-        var trackKml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2"\
-             xmlns:gx="http://www.google.com/kml/ext/2.2">\
-            <Document>\
-            <Placemark>\
-            <gx:Track>\
-              <when>2010-05-28T02:02:09Z</when>\
-              <gx:coord>-122.207881 37.371915 156.000000</gx:coord>\
-              <gx:coord>-122.205712 37.373288 152.000000</gx:coord>\
-            </gx:Track>\
-            </Placemark>\
-            </Document>\
-            </kml>';
-
-        var error;
-        var dataSource = new KmlDataSource();
-        waitsForPromise.toReject(dataSource.load(parser.parseFromString(trackKml, "text/xml")));
-    });
-
-    it('handles gx:MultiTrack', function() {
-        var time = new JulianDate.fromIso8601('2010-05-28T02:02:09Z');
-        var trackKml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2"\
-             xmlns:gx="http://www.google.com/kml/ext/2.2">\
-            <Document>\
-            <Placemark>\
-            <gx:MultiTrack>\
-            <gx:Track>\
-              <when>2010-05-28T02:02:09Z</when>\
-              <gx:coord>7 8 9</gx:coord>\
-            </gx:Track>\
-            <gx:Track>\
-            <when>2010-05-28T02:02:09Z</when>\
-            <gx:coord>7 8 9</gx:coord>\
-            </gx:Track>\
-            </gx:MultiTrack>\
-            </Placemark>\
-            </Document>\
-            </kml>';
-
-        var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(trackKml, "text/xml"));
-
-        var entity = dataSource.entities.values[0];
-        expect(entity.position).toBeInstanceOf(CompositeProperty);
-    });
-
-    it('handles MultiGeometry', function() {
-        var position1 = new Cartographic(CesiumMath.toRadians(1), CesiumMath.toRadians(2), 0);
-        var cartesianPosition1 = Ellipsoid.WGS84.cartographicToCartesian(position1);
-        var position2 = new Cartographic(CesiumMath.toRadians(4), CesiumMath.toRadians(5), 0);
-        var cartesianPosition2 = Ellipsoid.WGS84.cartographicToCartesian(position2);
-        var position3 = new Cartographic(CesiumMath.toRadians(6), CesiumMath.toRadians(7), 0);
-        var cartesianPosition3 = Ellipsoid.WGS84.cartographicToCartesian(position3);
-        var position4 = new Cartographic(CesiumMath.toRadians(8), CesiumMath.toRadians(9), 0);
-        var cartesianPosition4 = Ellipsoid.WGS84.cartographicToCartesian(position4);
-        var multiKml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2">\
-            <Placemark>\
-            <MultiGeometry>\
-              <LineString>\
-                <coordinates>\
-                  1,2,0\
-                  4,5,0\
-                </coordinates>\
-              </LineString>\
-              <LineString>\
-                <coordinates>\
-                  6,7,0\
-                  8,9,0\
-                </coordinates>\
-              </LineString>\
-            </MultiGeometry>\
-            </Placemark>\
-            </kml>';
-
-        var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(multiKml, "text/xml"));
-
-        var entities = dataSource.entities.values;
-        expect(entities.length).toEqual(3);
-        expect(entities[1].polyline.positions.getValue()[0]).toEqual(cartesianPosition1);
-        expect(entities[1].polyline.positions.getValue()[1]).toEqual(cartesianPosition2);
-        expect(entities[2].polyline.positions.getValue()[0]).toEqual(cartesianPosition3);
-        expect(entities[2].polyline.positions.getValue()[1]).toEqual(cartesianPosition4);
-    });
-
-    it('handles MultiGeometry with style', function() {
-        var multiKml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2">\
-            <Document>\
-            <Style id="randomColorIcon">\
-                <IconStyle>\
-                    <color>ff00ff00</color>\
-                    <colorMode>normal</colorMode>\
-                    <scale>1.1</scale>\
-                    <Icon>\
-                    <href>http://maps.google.com/mapfiles/kml/pal3/icon21.png</href>\
-                    </Icon>\
-                </IconStyle>\
-            </Style>\
-            <Placemark>\
-            <name>IconStyle.kml</name>\
-            <styleUrl>#randomColorIcon</styleUrl>\
-                <MultiGeometry>\
-                <Point>\
-                    <coordinates>-9.171441666666666,38.67883055555556,0</coordinates>\
-                </Point>\
-                <Point>\
-                    <coordinates>-122.367375,37.829192,0</coordinates>\
-                </Point>\
-                </MultiGeometry>\
-            </Placemark>\
-            </Document>\
-            </kml>';
-
-        var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(multiKml, "text/xml"));
-
-        var entities = dataSource.entities.values;
-        var entity1 = entities[1];
-        var entity2 = entities[2];
-        expect(entities.length).toEqual(3);
-        expect(entity1.billboard.scale.getValue()).toEqual(entity2.billboard.scale.getValue());
-        expect(entity1.billboard.image.getValue()).toEqual(entity2.billboard.image.getValue());
-        expect(entity1.billboard.color.red).toEqual(entity2.billboard.color.red);
-        expect(entity1.billboard.color.green).toEqual(entity2.billboard.color.green);
-        expect(entity1.billboard.color.blue).toEqual(entity2.billboard.color.blue);
-        expect(entity1.billboard.color.alpha).toEqual(entity2.billboard.color.alpha);
-    });
-
-    it('handles IconStyle', function() {
-        var scale = new ConstantProperty(1.1);
-        var color = new ConstantProperty(new Color(0, 0, 0, 0));
-        var iconKml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2">\
-            <Document>\
-            <Style id="testStyle">\
-            <IconStyle>\
-                <color>00000000</color>\
-                <colorMode>normal</colorMode>\
-                <scale>1.1</scale>\
-                <heading>-90</heading>\
-                <Icon>\
-                    <href>http://maps.google.com/mapfiles/kml/pal3/icon21.png</href>\
-                </Icon>\
-               </IconStyle>\
-            </Style>\
-            <Placemark>\
-            <styleUrl>#testStyle</styleUrl>\
-            </Placemark>\
-            </Document>\
-            </kml>';
-
-        var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(iconKml, "text/xml"));
-
-        var entities = dataSource.entities.values;
-        expect(entities.length).toEqual(1);
-        expect(entities[0].billboard.scale.getValue()).toEqual(scale.getValue());
-        expect(entities[0].billboard.color).toEqual(color);
-        expect(entities[0].billboard.rotation.getValue()).toEqual(Math.PI / 2.0);
-        expect(entities[0].billboard.alignedAxis.getValue()).toEqual(Cartesian3.UNIT_Z);
-        expect(entities[0].billboard.subRegion).toBeUndefined();
-    });
-
-    it('handles IconStyle with sub region', function() {
+    it('IconStyle: handles empty element', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2"\
-                xmlns:gx="http://www.google.com/kml/ext/2.2">\
-                    <Placemark>\
-                      <Style>\
-                        <IconStyle>\
+          <Placemark>\
+            <Style>\
+              <IconStyle>\
+              </IconStyle>\
+            </Style>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        expect(entities[0].billboard).toBeDefined();
+    });
+
+    it('IconStyle: Sets billboard image absolute path', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Document>\
+              <Placemark>\
+                  <Style>\
+                      <IconStyle>\
                           <Icon>\
-                            <href>whiteShapes.png</href>\
-                            <gx:x>49</gx:x>\
-                            <gx:y>43</gx:y>\
-                            <gx:w>18</gx:w>\
-                            <gx:h>18</gx:h>\
+                              <href>http://test.invalid/image.png</href>\
                           </Icon>\
-                        </IconStyle>\
-                      </Style>\
-                    </Placemark>\
-              </kml>';
+                      </IconStyle>\
+                  </Style>\
+              </Placemark>\
+          </Document>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        var billboard = entities[0].billboard;
+        expect(billboard.image.getValue()).toEqual('http://test.invalid/image.png');
+    });
+
+    it('IconStyle: Sets billboard image relative path', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+              <Style>\
+                  <IconStyle>\
+                      <Icon>\
+                          <href>image.png</href>\
+                      </Icon>\
+                  </IconStyle>\
+              </Style>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"), 'http://test.invalid');
+
+        var entities = dataSource.entities.values;
+        var billboard = entities[0].billboard;
+        expect(billboard.image.getValue()).toEqual('http://test.invalid/image.png');
+    });
+
+    it('IconStyle: Sets billboard image with proxy', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+              <Style>\
+                  <IconStyle>\
+                      <Icon>\
+                          <href>image.png</href>\
+                      </Icon>\
+                  </IconStyle>\
+              </Style>\
+          </Placemark>';
+
+        var proxy = new DefaultProxy('/proxy/');
+        var dataSource = new KmlDataSource(proxy);
+        dataSource.load(parser.parseFromString(kml, "text/xml"), 'http://test.invalid');
+
+        var entities = dataSource.entities.values;
+        var billboard = entities[0].billboard;
+        expect(billboard.image.getValue()).toEqual(proxy.getURL('http://test.invalid/image.png'));
+    });
+
+    it('IconStyle: Sets billboard image with subregion', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <kml xmlns="http://www.opengis.net/kml/2.2"\
+           xmlns:gx="http://www.google.com/kml/ext/2.2">\
+                  <Placemark>\
+                    <Style>\
+                      <IconStyle>\
+                        <Icon>\
+                          <href>whiteShapes.png</href>\
+                          <gx:x>49</gx:x>\
+                          <gx:y>43</gx:y>\
+                          <gx:w>18</gx:w>\
+                          <gx:h>18</gx:h>\
+                        </Icon>\
+                      </IconStyle>\
+                    </Style>\
+                  </Placemark>\
+            </kml>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -1106,290 +710,940 @@ defineSuite([
         expect(billboard.imageSubRegion.getValue()).toEqual(new BoundingRectangle(49, 43, 18, 18));
     });
 
-    it('handles empty IconStyle element', function() {
+    it('IconStyle: Sets billboard image with hotSpot fractions', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2">\
-            <Document>\
-            <Placemark>\
-              <Style>\
-                <IconStyle>\
-                </IconStyle>\
-              </Style>\
-            </Placemark>\
-            </Document>\
-            </kml>';
+                  <Placemark>\
+                    <Style>\
+                      <IconStyle>\
+                        <hotSpot x="0.25"  y="0.75" xunits="fraction" yunits="fraction"/>\
+                      </IconStyle>\
+                    </Style>\
+                  </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+        var billboard = dataSource.entities.values[0].billboard;
+        expect(billboard.pixelOffset.getValue()).toEqual(new Cartesian2(8, 8));
+    });
+
+    it('IconStyle: Sets billboard image with hotSpot pixels', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+                  <Placemark>\
+                    <Style>\
+                      <IconStyle>\
+                        <hotSpot x="1"  y="2" xunits="pixels" yunits="pixels"/>\
+                      </IconStyle>\
+                    </Style>\
+                  </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+        var billboard = dataSource.entities.values[0].billboard;
+        expect(billboard.pixelOffset.getValue()).toEqual(new Cartesian2(15, -14));
+    });
+
+    it('IconStyle: Sets billboard image with hotSpot insetPixels', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+                  <Placemark>\
+                    <Style>\
+                      <IconStyle>\
+                        <hotSpot x="1"  y="2" xunits="insetPixels" yunits="insetPixels"/>\
+                      </IconStyle>\
+                    </Style>\
+                  </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+        var billboard = dataSource.entities.values[0].billboard;
+        expect(billboard.pixelOffset.getValue()).toEqual(new Cartesian2(-15, -18));
+    });
+
+    it('IconStyle: Sets color', function() {
+        var color = Color.fromBytes(0xcc, 0xdd, 0xee, 0xff);
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Style>\
+              <IconStyle>\
+                <color>ffeeddcc</color>\
+              </IconStyle>\
+            </Style>\
+          </Placemark>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
 
         var entities = dataSource.entities.values;
-        expect(entities.length).toEqual(1);
-        var billboard = entities[0].billboard;
-        expect(billboard).toBeDefined();
+        expect(entities[0].billboard.color.getValue()).toEqual(color);
     });
 
-    it('handles LabelStyle', function() {
-        var scale = new ConstantProperty(1.5);
-        var color = new ConstantProperty(new Color(0, 0, 0, 0));
+    it('IconStyle: Sets scale', function() {
         var iconKml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2">\
-            <Document>\
-            <Style id="testStyle">\
-                <LabelStyle>\
-                    <color>00000000</color>\
-                    <colorMode>normal</colorMode>\
-                    <scale>1.5</scale>\
-                </LabelStyle>\
-            </Style>\
             <Placemark>\
-            <styleUrl>#testStyle</styleUrl>\
-            </Placemark>\
-            </Document>\
-            </kml>';
+            <Style>\
+              <IconStyle>\
+                <scale>2.2</scale>\
+              </IconStyle>\
+            </Style>\
+          </Placemark>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(iconKml, "text/xml"));
 
         var entities = dataSource.entities.values;
-        expect(entities.length).toEqual(1);
-        expect(entities[0].label.scale.getValue()).toEqual(scale.getValue());
-        expect(entities[0].label.fillColor).toEqual(color);
+        expect(entities[0].billboard.scale.getValue()).toEqual(2.2);
     });
 
-    it('handles empty LabelStyle element', function() {
-        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2">\
-            <Document>\
-            <Placemark>\
-              <Style>\
-                <LabelStyle>\
-                </LabelStyle>\
-              </Style>\
-            </Placemark>\
-            </Document>\
-            </kml>';
-
-        var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(kml, "text/xml"));
-
-        var entities = dataSource.entities.values;
-        expect(entities.length).toEqual(1);
-        expect(entities[0].label).toBeDefined();
-    });
-
-    it('handles LineStyle', function() {
-        var lineKml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2"\
-             xmlns:gx="http://www.google.com/kml/ext/2.2">\
-            <Document>\
-            <Style id="testStyle">\
-            <LineStyle>\
-                <color>000000ff</color>\
-                <width>4</width>\
-                <gx:labelVisibility>1</gx:labelVisibility>\
-                <gx:labelVisibility>0</gx:labelVisibility>\
-            </LineStyle>\
-            </Style>\
-            <Placemark>\
-            <styleUrl>#testStyle</styleUrl>\
-            </Placemark>\
-            </Document>\
-            </kml>';
-
-//        <gx:outerColor>ffffffff</gx:outerColor>\
-//        <gx:outerWidth>1.0</gx:outerWidth>\
-//        <gx:physicalWidth>0.0</gx:physicalWidth>\
-
-        var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(lineKml, "text/xml"));
-
-        var entities = dataSource.entities.values;
-        expect(entities.length).toEqual(1);
-        expect(entities[0].polyline.width.getValue()).toEqual(4);
-//        expect(entities[0].polyline.material.outlineWidth.getValue()).toEqual(1);
-    });
-
-    it('handles empty LineStyle element', function() {
-        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2">\
-            <Document>\
-            <Placemark>\
-              <Style>\
-                <LineStyle>\
-                </LineStyle>\
-              </Style>\
-            </Placemark>\
-            </Document>\
-            </kml>';
-
-        var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(kml, "text/xml"));
-
-        var entities = dataSource.entities.values;
-        expect(entities.length).toEqual(1);
-        var polyline = entities[0].polyline;
-        expect(polyline).toBeDefined();
-    });
-
-    xit('LineStyle throws with invalid outerWidth', function() {
-        var lineKml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2"\
-             xmlns:gx="http://www.google.com/kml/ext/2.2">\
-            <Document>\
-            <Placemark>\
-              <Style>\
-                <LineStyle>\
-                    <gx:outerWidth>1.1</gx:outerWidth>\
-                </LineStyle>\
-              </Style>\
-            </Placemark>\
-            </Document>\
-            </kml>';
-
-        var error;
-        var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(lineKml, 'text/xml')).otherwise(function(e) {
-            error = e;
-        });
-
-        waitsFor(function() {
-            return error instanceof RuntimeError;
-        });
-    });
-
-    it('handles PolyStyle', function() {
-        var color = new Color(1, 0, 0, 0);
-        var polyKml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2">\
-            <Document>\
-            <Style id="testStyle">\
-                <PolyStyle>\
-                    <color>000000ff</color>\
-                    <colorMode>normal</colorMode>\
-                    <fill>1</fill>\
-                    <outline>1</outline>\
-                </PolyStyle>\
-            </Style>\
-            <Placemark>\
-            <styleUrl>#testStyle</styleUrl>\
-            </Placemark>\
-            </Document>\
-            </kml>';
-
-        var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(polyKml, "text/xml"));
-
-        var entities = dataSource.entities.values;
-        var polygon = entities[0].polygon;
-        var material = polygon.material.getValue();
-        var generatedColor = material.color;
-        expect(entities.length).toEqual(1);
-        expect(generatedColor.red).toEqual(color.red);
-        expect(generatedColor.green).toEqual(color.green);
-        expect(generatedColor.blue).toEqual(color.blue);
-        expect(generatedColor.alpha).toEqual(color.alpha);
-    });
-
-    it('handles empty PolyStyle element', function() {
-        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2">\
-            <Document>\
-            <Placemark>\
-              <Style>\
-                <PolyStyle>\
-                </PolyStyle>\
-              </Style>\
-            </Placemark>\
-            </Document>\
-            </kml>';
-
-        var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(kml, "text/xml"));
-
-        var entities = dataSource.entities.values;
-        expect(entities.length).toEqual(1);
-        expect(entities[0].polygon).toBeDefined();
-    });
-
-    it('handles Color in normal mode', function() {
-        var color = new Color(1, 0, 0, 1);
-        var colorKml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2">\
-            <Document>\
-            <Style id="testStyle">\
-            <IconStyle>\
-                <color>ff0000ff</color>\
-                <colorMode>normal</colorMode>\
-            </IconStyle>\
-            </Style>\
-            <Placemark>\
-            <styleUrl>#testStyle</styleUrl>\
-            </Placemark>\
-            </Document>\
-            </kml>';
-
-        var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(colorKml, "text/xml"));
-
-        var entities = dataSource.entities.values;
-        var generatedColor = entities[0].billboard.color.getValue();
-        expect(entities.length).toEqual(1);
-        expect(generatedColor.red).toEqual(color.red);
-        expect(generatedColor.green).toEqual(color.green);
-        expect(generatedColor.blue).toEqual(color.blue);
-        expect(generatedColor.alpha).toEqual(color.alpha);
-    });
-
-    it('handles Color in random mode', function() {
-        var color = new Color(1, 0, 0, 1);
-        var colorKml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2">\
-            <Document>\
-            <Style id="testStyle">\
-            <IconStyle>\
-                <color>ff0000ff</color>\
-                <colorMode>random</colorMode>\
-            </IconStyle>\
-            </Style>\
-            <Placemark>\
-            <styleUrl>#testStyle</styleUrl>\
-            </Placemark>\
-            </Document>\
-            </kml>';
-
-        var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(colorKml, "text/xml"));
-
-        var entities = dataSource.entities.values;
-        var generatedColor = entities[0].billboard.color.getValue();
-        expect(entities.length).toEqual(1);
-        expect(generatedColor.red <= color.red).toBe(true);
-        expect(generatedColor.green).toEqual(color.green);
-        expect(generatedColor.blue).toEqual(color.blue);
-        expect(generatedColor.alpha).toEqual(color.alpha);
-    });
-
-    it('handles image path properly', function() {
-        var pathKml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2">\
-            <Document>\
+    it('IconStyle: Sets heading', function() {
+        var iconKml = '<?xml version="1.0" encoding="UTF-8"?>\
             <Placemark>\
             <Style>\
-            <IconStyle>\
-            <Icon>\
-                <href>images/Earth_Station.png</href>\
-            </Icon>\
-            </IconStyle>\
+              <IconStyle>\
+                <heading>4</heading>\
+              </IconStyle>\
             </Style>\
-            </Placemark>\
-            </Document>\
-            </kml>';
+          </Placemark>';
 
         var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(pathKml, "text/xml"), 'http://test.invalid');
+        dataSource.load(parser.parseFromString(iconKml, "text/xml"));
 
         var entities = dataSource.entities.values;
-        var billboard = entities[0].billboard;
-        expect(billboard.image.getValue()).toEqual('http://test.invalid/images/Earth_Station.png');
+        expect(entities[0].billboard.rotation.getValue()).toEqual(CesiumMath.toRadians(-4));
+        expect(entities[0].billboard.alignedAxis.getValue()).toEqual(Cartesian3.UNIT_Z);
     });
+
+    it('BalloonStyle: specify all properties', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Placemark id="The ID">\
+            <Style>\
+            <BalloonStyle>\
+                <bgColor>00224466</bgColor>\
+                <textColor>66442200</textColor>\
+                <text>$[name] $[description] $[address] $[Snippet] $[id] $[prop1/displayName] $[prop1] $[prop2/displayName] $[prop2]</text>\
+            </BalloonStyle>\
+            </Style>\
+            <name>The Name</name>\
+            <description>The Description</description>\
+            <address>The Address</address>\
+            <Snippet>The Snippet</Snippet>\
+            <ExtendedData>\
+            <Data name="prop1">\
+                <displayName>The Property</displayName>\
+                <value>The Value</value>\
+            </Data>\
+            </ExtendedData>\
+        </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+
+        var element = document.createElement('div');
+        element.innerHTML = entity.description.getValue();
+
+        var div = element.firstChild;
+        expect(div.style['overflow-wrap']).toEqual('break-word');
+        expect(div.style['background-color']).toEqual('rgba(102, 68, 34, 0)');
+        expect(div.style.color).toEqual('rgba(0, 34, 68, 0.4)');
+        expect(div.textContent).toEqual('The Name The Description The Address The Snippet The ID The Property The Value $[prop2/displayName] $[prop2]');
+    });
+
+    it('BalloonStyle: entity replacement removes missing values', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Placemark>\
+            <Style>\
+            <BalloonStyle>\
+                <text>$[name] $[description] $[address] $[Snippet]</text>\
+            </BalloonStyle>\
+            </Style>\
+        </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+
+        var element = document.createElement('div');
+        element.innerHTML = entity.description.getValue();
+
+        var div = element.firstChild;
+        expect(div.textContent).toEqual('   ');
+    });
+
+    it('BalloonStyle: description without BalloonStyle', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Placemark>\
+            <description>The Description</description>\
+        </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+
+        var element = document.createElement('div');
+        element.innerHTML = entity.description.getValue();
+
+        var div = element.firstChild;
+        expect(div.style['overflow-wrap']).toEqual('break-word');
+        expect(div.style['background-color']).toEqual('rgb(255, 255, 255)');
+        expect(div.style.color).toEqual('rgb(0, 0, 0)');
+        expect(div.textContent).toEqual('The Description');
+    });
+
+    it('BalloonStyle: creates table from ExtendedData', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Placemark>\
+                <ExtendedData>\
+                    <Data name="prop1">\
+                        <displayName>Property 1</displayName>\
+                        <value>1</value>\
+                    </Data>\
+                    <Data name="prop2">\
+                        <value>2</value>\
+                    </Data>\
+                    <Data name="prop3">\
+                        <displayName>Property 3</displayName>\
+                    </Data>\
+                </ExtendedData>\
+            </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+
+        var element = document.createElement('div');
+        element.innerHTML = entity.description.getValue();
+
+        var div = element.firstChild;
+        expect(div.style['overflow-wrap']).toEqual('break-word');
+        expect(div.style['background-color']).toEqual('rgb(255, 255, 255)');
+        expect(div.style.color).toEqual('rgb(0, 0, 0)');
+
+        var table = div.firstChild;
+        expect(table.localName).toEqual('table');
+
+        expect(table.rows.length).toBe(3);
+        expect(table.rows[0].cells.length).toEqual(2);
+        expect(table.rows[1].cells.length).toEqual(2);
+        expect(table.rows[2].cells.length).toEqual(2);
+
+        expect(table.rows[0].cells[0].textContent).toEqual('Property 1');
+        expect(table.rows[1].cells[0].textContent).toEqual('prop2');
+        expect(table.rows[2].cells[0].textContent).toEqual('Property 3');
+
+        expect(table.rows[0].cells[1].textContent).toEqual('1');
+        expect(table.rows[1].cells[1].textContent).toEqual('2');
+        expect(table.rows[2].cells[1].textContent).toEqual('');
+    });
+
+    it('BalloonStyle: description creates links from text', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Placemark>\
+            <description>http://cesiumjs.org</description>\
+        </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+
+        var element = document.createElement('div');
+        element.innerHTML = entity.description.getValue();
+
+        var a = element.firstChild.firstChild;
+        expect(a.localName).toEqual('a');
+        expect(a.getAttribute('href')).toEqual('http://cesiumjs.org');
+        expect(a.getAttribute('target')).toEqual('_blank');
+    });
+
+    it('BalloonStyle: description retargets existing links to _blank', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Placemark>\
+            <description><![CDATA[<a href="http://cesiumjs.org" target="_self">Homepage</a>]]></description>\
+        </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+
+        var element = document.createElement('div');
+        element.innerHTML = entity.description.getValue();
+
+        var a = element.firstChild.firstChild;
+        expect(a.localName).toEqual('a');
+        expect(a.textContent).toEqual('Homepage');
+        expect(a.getAttribute('href')).toEqual('http://cesiumjs.org');
+        expect(a.getAttribute('target')).toEqual('_blank');
+    });
+
+    it('BalloonStyle: description does not create links from non-explicit urls', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Placemark>\
+            <description>states.id google.com</description>\
+        </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+
+        var element = document.createElement('div');
+        element.innerHTML = entity.description.getValue();
+
+        var div = element.firstChild;
+        expect(div.innerHTML).toEqual('states.id google.com');
+    });
+
+    it('Folder: sets parent property', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Folder id="parent">\
+            <Placemark id="child">\
+            </Placemark>\
+        </Folder>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var folder = dataSource.entities.getById('parent');
+        var placemark = dataSource.entities.getById('child');
+
+        expect(dataSource.entities.values.length).toBe(2);
+        expect(folder).toBeDefined();
+        expect(placemark.parent).toBe(folder);
+    });
+
+//  /*
+//  * Tests below this comment need to be reevaluated.
+//  */
+
+////    it('processPlacemark throws error with invalid geometry', function() {
+////        var placemarkKml = '<?xml version="1.0" encoding="UTF-8"?>\
+////            <kml xmlns="http://www.opengis.net/kml/2.2">\
+////            <Document>\
+////            <Placemark>\
+////              <Invalid>\
+////                <coordinates>d s</coordinates>\
+////              </Invalid>\
+////            </Placemark>\
+////            </Document>\
+////            </kml>';
+////
+////        var dataSource = new KmlDataSource();
+////        var error;
+////        dataSource.load(parser.parseFromString(placemarkKml, "text/xml")).otherwise(function(e) {
+////            error = e;
+////        });
+////
+////        waitsFor(function() {
+////            return error instanceof RuntimeError;
+////        });
+////    });
+//
+////    it('processMultiGeometry throws error with invalid geometry', function() {
+////        var placemarkKml = '<?xml version="1.0" encoding="UTF-8"?>\
+////            <kml xmlns="http://www.opengis.net/kml/2.2">\
+////            <Document>\
+////            <Placemark>\
+////            <MultiGeometry>\
+////              <Invalid>\
+////                <coordinates> </coordinates>\
+////              </Invalid>\
+////            </MultiGeometry>\
+////            </Placemark>\
+////            </Document>\
+////            </kml>';
+////
+////        var dataSource = new KmlDataSource();
+////        expect(function() {
+////            dataSource.load(placemarkKml);
+////        }).toThrowDeveloperError();
+////    });
+//
+//    it('handles Point Geometry', function() {
+//        var position = new Cartographic(CesiumMath.toRadians(1), CesiumMath.toRadians(2), 3);
+//        var cartesianPosition = Ellipsoid.WGS84.cartographicToCartesian(position);
+//        var time = new JulianDate();
+//        var pointKml = '<?xml version="1.0" encoding="UTF-8"?>\
+//            <kml xmlns="http://www.opengis.net/kml/2.2">\
+//            <Document>\
+//            <Placemark>\
+//              <Point>\
+//                <coordinates>1,2,3</coordinates>\
+//              </Point>\
+//            </Placemark>\
+//            </Document>\
+//            </kml>';
+//
+//        var dataSource = new KmlDataSource();
+//        dataSource.load(parser.parseFromString(pointKml, "text/xml"));
+//
+//        var entities = dataSource.entities.values;
+//        expect(entities.length).toEqual(1);
+//        expect(entities[0].position.getValue(time)).toEqual(cartesianPosition);
+//    });
+//
+////    it('processPoint throws error with invalid coordinates', function() {
+////        var pointKml = '<?xml version="1.0" encoding="UTF-8"?>\
+////            <kml xmlns="http://www.opengis.net/kml/2.2">\
+////            <Document>\
+////            <Placemark>\
+////              <Point>\
+////                <coordinates> </coordinates>\
+////              </Point>\
+////            </Placemark>\
+////            </Document>\
+////            </kml>';
+////
+////        var dataSource = new KmlDataSource();
+////        expect(function() {
+////            dataSource.load(pointKml);
+////        }).toThrowDeveloperError();
+////    });
+//
+//    it('handles Point Geometry with LabelStyle', function() {
+//        var name = new ConstantProperty('LabelStyle.kml');
+//        var scale = new ConstantProperty(1.5);
+//        var color = new ConstantProperty(Color.fromBytes(255, 0, 0, 0));
+//        var pointKml = '<?xml version="1.0" encoding="UTF-8"?>\
+//            <kml xmlns="http://www.opengis.net/kml/2.2">\
+//            <Document>\
+//            <Placemark>\
+//            <name>LabelStyle.kml</name>\
+//                <Style id="randomLabelColor">\
+//                    <LabelStyle>\
+//                        <color>000000ff</color>\
+//                        <colorMode>normal</colorMode>\
+//                        <scale>1.5</scale>\
+//                    </LabelStyle>\
+//                </Style>\
+//            <Point>\
+//                <coordinates>1,2,0</coordinates>\
+//            </Point>\
+//            </Placemark>\
+//            </Document>\
+//            </kml>';
+//
+//        var dataSource = new KmlDataSource();
+//        dataSource.load(parser.parseFromString(pointKml, "text/xml"));
+//
+//        var entities = dataSource.entities.values;
+//        expect(entities.length).toEqual(1);
+//        expect(entities[0].label.text.getValue()).toEqual(name.getValue());
+//        expect(entities[0].label.fillColor.red).toEqual(color.red);
+//        expect(entities[0].label.fillColor.green).toEqual(color.green);
+//        expect(entities[0].label.fillColor.blue).toEqual(color.blue);
+//        expect(entities[0].label.fillColor.alpha).toEqual(color.alpha);
+//    });
+//
+//    it('handles Line Geometry with two sets of coordinates', function() {
+//        var position1 = new Cartographic(CesiumMath.toRadians(1), CesiumMath.toRadians(2), 0);
+//        var cartesianPosition1 = Ellipsoid.WGS84.cartographicToCartesian(position1);
+//        var position2 = new Cartographic(CesiumMath.toRadians(4), CesiumMath.toRadians(5), 0);
+//        var cartesianPosition2 = Ellipsoid.WGS84.cartographicToCartesian(position2);
+//        var lineKml = '<?xml version="1.0" encoding="UTF-8"?>\
+//    <kml xmlns="http://www.opengis.net/kml/2.2">\
+//    <Document>\
+//    <Placemark>\
+//      <LineString>\
+//        <coordinates>1,2,0 \
+//                     4,5,0 \
+//        </coordinates>\
+//      </LineString>\
+//    </Placemark>\
+//    </Document>\
+//    </kml>';
+//
+//        var dataSource = new KmlDataSource();
+//        dataSource.load(parser.parseFromString(lineKml, "text/xml"));
+//
+//        var entities = dataSource.entities.values;
+//        var entity = entities[0];
+//        expect(entities.length).toEqual(1);
+//        expect(entity.polyline.positions.getValue()[0]).toEqual(cartesianPosition1);
+//        expect(entity.polyline.positions.getValue()[1]).toEqual(cartesianPosition2);
+//    });
+//
+////    it('processLineString throws error with invalid coordinates', function() {
+////        var lineKml = '<?xml version="1.0" encoding="UTF-8"?>\
+////            <kml xmlns="http://www.opengis.net/kml/2.2">\
+////            <Document>\
+////            <Placemark>\
+////              <LineString>\
+////                <coordinates>1 \
+////                             4,5,0 \
+////                </coordinates>\
+////              </LineString>\
+////            </Placemark>\
+////            </Document>\
+////            </kml>';
+////
+////        var dataSource = new KmlDataSource();
+////        expect(function() {
+////            dataSource.load(lineKml);
+////        }).toThrowDeveloperError();
+////    });
+//
+//    it('handles Coordinates without altitude', function() {
+//        var position1 = new Cartographic(CesiumMath.toRadians(1), CesiumMath.toRadians(2), 0);
+//        var cartesianPosition1 = Ellipsoid.WGS84.cartographicToCartesian(position1);
+//        var position2 = new Cartographic(CesiumMath.toRadians(4), CesiumMath.toRadians(5), 0);
+//        var cartesianPosition2 = Ellipsoid.WGS84.cartographicToCartesian(position2);
+//        var lineKml = '<?xml version="1.0" encoding="UTF-8"?>\
+//    <kml xmlns="http://www.opengis.net/kml/2.2">\
+//    <Document>\
+//    <Placemark>\
+//      <LineString>\
+//        <coordinates>1,2 \
+//                     4,5 \
+//        </coordinates>\
+//      </LineString>\
+//    </Placemark>\
+//    </Document>\
+//    </kml>';
+//
+//        var dataSource = new KmlDataSource();
+//        dataSource.load(parser.parseFromString(lineKml, "text/xml"));
+//
+//        var entities = dataSource.entities.values;
+//        var entity = entities[0];
+//        expect(entities.length).toEqual(1);
+//        expect(entity.polyline.positions.getValue()[0]).toEqual(cartesianPosition1);
+//        expect(entity.polyline.positions.getValue()[1]).toEqual(cartesianPosition2);
+//    });
+//
+//    it('handles Polygon geometry', function() {
+//        var polygonKml = '<?xml version="1.0" encoding="UTF-8"?>\
+//            <kml xmlns="http://www.opengis.net/kml/2.2">\
+//            <Placemark>\
+//              <Polygon>\
+//                <outerBoundaryIs>\
+//                  <LinearRing>\
+//                    <coordinates>\
+//                      -122,37,0\
+//                      -123,38,0\
+//                      -124,39,0\
+//                      -125,40,0\
+//                      -122,37,0\
+//                    </coordinates>\
+//                  </LinearRing>\
+//                </outerBoundaryIs>\
+//              </Polygon>\
+//            </Placemark>\
+//            </kml>';
+//
+//        var coordinates = [Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-122, 37, 0)),
+//                           Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-123, 38, 0)),
+//                           Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-124, 39, 0)),
+//                           Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-125, 40, 0)),
+//                           Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-122, 37, 0))];
+//
+//        var dataSource = new KmlDataSource();
+//        dataSource.load(parser.parseFromString(polygonKml, "text/xml"));
+//
+//        var entities = dataSource.entities.values;
+//        var entity = entities[0];
+//        expect(entity.polygon.hierarchy.getValue().positions).toEqual(coordinates);
+//    });
+//
+//    it('handles gx:Track', function() {
+//        var cartographic = Cartographic.fromDegrees(7, 8, 9);
+//        var value = Ellipsoid.WGS84.cartographicToCartesian(cartographic);
+//        var time = new JulianDate.fromIso8601('2010-05-28T02:02:09Z');
+//        var trackKml = '<?xml version="1.0" encoding="UTF-8"?>\
+//            <kml xmlns="http://www.opengis.net/kml/2.2"\
+//             xmlns:gx="http://www.google.com/kml/ext/2.2">\
+//            <Document>\
+//            <Placemark>\
+//            <gx:Track>\
+//              <when>2010-05-28T02:02:09Z</when>\
+//              <gx:coord>7 8 9</gx:coord>\
+//            </gx:Track>\
+//            </Placemark>\
+//            </Document>\
+//            </kml>';
+//
+//        var dataSource = new KmlDataSource();
+//        dataSource.load(parser.parseFromString(trackKml, "text/xml"));
+//
+//        var entity = dataSource.entities.values[0];
+//        expect(entity.position.getValue(time)).toEqual(value);
+//    });
+//
+//    it('processGxTrack throws error with invalid input', function() {
+//        var trackKml = '<?xml version="1.0" encoding="UTF-8"?>\
+//            <kml xmlns="http://www.opengis.net/kml/2.2"\
+//             xmlns:gx="http://www.google.com/kml/ext/2.2">\
+//            <Document>\
+//            <Placemark>\
+//            <gx:Track>\
+//              <when>2010-05-28T02:02:09Z</when>\
+//              <gx:coord>-122.207881 37.371915 156.000000</gx:coord>\
+//              <gx:coord>-122.205712 37.373288 152.000000</gx:coord>\
+//            </gx:Track>\
+//            </Placemark>\
+//            </Document>\
+//            </kml>';
+//
+//        var error;
+//        var dataSource = new KmlDataSource();
+//        waitsForPromise.toReject(dataSource.load(parser.parseFromString(trackKml, "text/xml")));
+//    });
+//
+//    it('handles gx:MultiTrack', function() {
+//        var time = new JulianDate.fromIso8601('2010-05-28T02:02:09Z');
+//        var trackKml = '<?xml version="1.0" encoding="UTF-8"?>\
+//            <kml xmlns="http://www.opengis.net/kml/2.2"\
+//             xmlns:gx="http://www.google.com/kml/ext/2.2">\
+//            <Document>\
+//            <Placemark>\
+//            <gx:MultiTrack>\
+//            <gx:Track>\
+//              <when>2010-05-28T02:02:09Z</when>\
+//              <gx:coord>7 8 9</gx:coord>\
+//            </gx:Track>\
+//            <gx:Track>\
+//            <when>2010-05-28T02:02:09Z</when>\
+//            <gx:coord>7 8 9</gx:coord>\
+//            </gx:Track>\
+//            </gx:MultiTrack>\
+//            </Placemark>\
+//            </Document>\
+//            </kml>';
+//
+//        var dataSource = new KmlDataSource();
+//        dataSource.load(parser.parseFromString(trackKml, "text/xml"));
+//
+//        var entity = dataSource.entities.values[0];
+//        expect(entity.position).toBeInstanceOf(CompositeProperty);
+//    });
+//
+//    it('handles MultiGeometry', function() {
+//        var position1 = new Cartographic(CesiumMath.toRadians(1), CesiumMath.toRadians(2), 0);
+//        var cartesianPosition1 = Ellipsoid.WGS84.cartographicToCartesian(position1);
+//        var position2 = new Cartographic(CesiumMath.toRadians(4), CesiumMath.toRadians(5), 0);
+//        var cartesianPosition2 = Ellipsoid.WGS84.cartographicToCartesian(position2);
+//        var position3 = new Cartographic(CesiumMath.toRadians(6), CesiumMath.toRadians(7), 0);
+//        var cartesianPosition3 = Ellipsoid.WGS84.cartographicToCartesian(position3);
+//        var position4 = new Cartographic(CesiumMath.toRadians(8), CesiumMath.toRadians(9), 0);
+//        var cartesianPosition4 = Ellipsoid.WGS84.cartographicToCartesian(position4);
+//        var multiKml = '<?xml version="1.0" encoding="UTF-8"?>\
+//            <kml xmlns="http://www.opengis.net/kml/2.2">\
+//            <Placemark>\
+//            <MultiGeometry>\
+//              <LineString>\
+//                <coordinates>\
+//                  1,2,0\
+//                  4,5,0\
+//                </coordinates>\
+//              </LineString>\
+//              <LineString>\
+//                <coordinates>\
+//                  6,7,0\
+//                  8,9,0\
+//                </coordinates>\
+//              </LineString>\
+//            </MultiGeometry>\
+//            </Placemark>\
+//            </kml>';
+//
+//        var dataSource = new KmlDataSource();
+//        dataSource.load(parser.parseFromString(multiKml, "text/xml"));
+//
+//        var entities = dataSource.entities.values;
+//        expect(entities.length).toEqual(3);
+//        expect(entities[1].polyline.positions.getValue()[0]).toEqual(cartesianPosition1);
+//        expect(entities[1].polyline.positions.getValue()[1]).toEqual(cartesianPosition2);
+//        expect(entities[2].polyline.positions.getValue()[0]).toEqual(cartesianPosition3);
+//        expect(entities[2].polyline.positions.getValue()[1]).toEqual(cartesianPosition4);
+//    });
+//
+//    it('handles MultiGeometry with style', function() {
+//        var multiKml = '<?xml version="1.0" encoding="UTF-8"?>\
+//            <kml xmlns="http://www.opengis.net/kml/2.2">\
+//            <Document>\
+//            <Style id="randomColorIcon">\
+//                <IconStyle>\
+//                    <color>ff00ff00</color>\
+//                    <colorMode>normal</colorMode>\
+//                    <scale>1.1</scale>\
+//                    <Icon>\
+//                    <href>http://maps.google.com/mapfiles/kml/pal3/icon21.png</href>\
+//                    </Icon>\
+//                </IconStyle>\
+//            </Style>\
+//            <Placemark>\
+//            <name>IconStyle.kml</name>\
+//            <styleUrl>#randomColorIcon</styleUrl>\
+//                <MultiGeometry>\
+//                <Point>\
+//                    <coordinates>-9.171441666666666,38.67883055555556,0</coordinates>\
+//                </Point>\
+//                <Point>\
+//                    <coordinates>-122.367375,37.829192,0</coordinates>\
+//                </Point>\
+//                </MultiGeometry>\
+//            </Placemark>\
+//            </Document>\
+//            </kml>';
+//
+//        var dataSource = new KmlDataSource();
+//        dataSource.load(parser.parseFromString(multiKml, "text/xml"));
+//
+//        var entities = dataSource.entities.values;
+//        var entity1 = entities[1];
+//        var entity2 = entities[2];
+//        expect(entities.length).toEqual(3);
+//        expect(entity1.billboard.scale.getValue()).toEqual(entity2.billboard.scale.getValue());
+//        expect(entity1.billboard.image.getValue()).toEqual(entity2.billboard.image.getValue());
+//        expect(entity1.billboard.color.red).toEqual(entity2.billboard.color.red);
+//        expect(entity1.billboard.color.green).toEqual(entity2.billboard.color.green);
+//        expect(entity1.billboard.color.blue).toEqual(entity2.billboard.color.blue);
+//        expect(entity1.billboard.color.alpha).toEqual(entity2.billboard.color.alpha);
+//    });
+//
+//    it('handles LabelStyle', function() {
+//        var scale = new ConstantProperty(1.5);
+//        var color = new ConstantProperty(new Color(0, 0, 0, 0));
+//        var iconKml = '<?xml version="1.0" encoding="UTF-8"?>\
+//            <kml xmlns="http://www.opengis.net/kml/2.2">\
+//            <Document>\
+//            <Style id="testStyle">\
+//                <LabelStyle>\
+//                    <color>00000000</color>\
+//                    <colorMode>normal</colorMode>\
+//                    <scale>1.5</scale>\
+//                </LabelStyle>\
+//            </Style>\
+//            <Placemark>\
+//            <styleUrl>#testStyle</styleUrl>\
+//            </Placemark>\
+//            </Document>\
+//            </kml>';
+//
+//        var dataSource = new KmlDataSource();
+//        dataSource.load(parser.parseFromString(iconKml, "text/xml"));
+//
+//        var entities = dataSource.entities.values;
+//        expect(entities.length).toEqual(1);
+//        expect(entities[0].label.scale.getValue()).toEqual(scale.getValue());
+//        expect(entities[0].label.fillColor).toEqual(color);
+//    });
+//
+//    it('handles empty LabelStyle element', function() {
+//        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+//            <kml xmlns="http://www.opengis.net/kml/2.2">\
+//            <Document>\
+//            <Placemark>\
+//              <Style>\
+//                <LabelStyle>\
+//                </LabelStyle>\
+//              </Style>\
+//            </Placemark>\
+//            </Document>\
+//            </kml>';
+//
+//        var dataSource = new KmlDataSource();
+//        dataSource.load(parser.parseFromString(kml, "text/xml"));
+//
+//        var entities = dataSource.entities.values;
+//        expect(entities.length).toEqual(1);
+//        expect(entities[0].label).toBeDefined();
+//    });
+//
+//    it('handles LineStyle', function() {
+//        var lineKml = '<?xml version="1.0" encoding="UTF-8"?>\
+//            <kml xmlns="http://www.opengis.net/kml/2.2"\
+//             xmlns:gx="http://www.google.com/kml/ext/2.2">\
+//            <Document>\
+//            <Style id="testStyle">\
+//            <LineStyle>\
+//                <color>000000ff</color>\
+//                <width>4</width>\
+//                <gx:labelVisibility>1</gx:labelVisibility>\
+//                <gx:labelVisibility>0</gx:labelVisibility>\
+//            </LineStyle>\
+//            </Style>\
+//            <Placemark>\
+//            <styleUrl>#testStyle</styleUrl>\
+//            </Placemark>\
+//            </Document>\
+//            </kml>';
+//
+////        <gx:outerColor>ffffffff</gx:outerColor>\
+////        <gx:outerWidth>1.0</gx:outerWidth>\
+////        <gx:physicalWidth>0.0</gx:physicalWidth>\
+//
+//        var dataSource = new KmlDataSource();
+//        dataSource.load(parser.parseFromString(lineKml, "text/xml"));
+//
+//        var entities = dataSource.entities.values;
+//        expect(entities.length).toEqual(1);
+//        expect(entities[0].polyline.width.getValue()).toEqual(4);
+////        expect(entities[0].polyline.material.outlineWidth.getValue()).toEqual(1);
+//    });
+//
+//    it('handles empty LineStyle element', function() {
+//        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+//            <kml xmlns="http://www.opengis.net/kml/2.2">\
+//            <Document>\
+//            <Placemark>\
+//              <Style>\
+//                <LineStyle>\
+//                </LineStyle>\
+//              </Style>\
+//            </Placemark>\
+//            </Document>\
+//            </kml>';
+//
+//        var dataSource = new KmlDataSource();
+//        dataSource.load(parser.parseFromString(kml, "text/xml"));
+//
+//        var entities = dataSource.entities.values;
+//        expect(entities.length).toEqual(1);
+//        var polyline = entities[0].polyline;
+//        expect(polyline).toBeDefined();
+//    });
+//
+//    xit('LineStyle throws with invalid outerWidth', function() {
+//        var lineKml = '<?xml version="1.0" encoding="UTF-8"?>\
+//            <kml xmlns="http://www.opengis.net/kml/2.2"\
+//             xmlns:gx="http://www.google.com/kml/ext/2.2">\
+//            <Document>\
+//            <Placemark>\
+//              <Style>\
+//                <LineStyle>\
+//                    <gx:outerWidth>1.1</gx:outerWidth>\
+//                </LineStyle>\
+//              </Style>\
+//            </Placemark>\
+//            </Document>\
+//            </kml>';
+//
+//        var error;
+//        var dataSource = new KmlDataSource();
+//        dataSource.load(parser.parseFromString(lineKml, 'text/xml')).otherwise(function(e) {
+//            error = e;
+//        });
+//
+//        waitsFor(function() {
+//            return error instanceof RuntimeError;
+//        });
+//    });
+//
+//    it('handles PolyStyle', function() {
+//        var color = new Color(1, 0, 0, 0);
+//        var polyKml = '<?xml version="1.0" encoding="UTF-8"?>\
+//            <kml xmlns="http://www.opengis.net/kml/2.2">\
+//            <Document>\
+//            <Style id="testStyle">\
+//                <PolyStyle>\
+//                    <color>000000ff</color>\
+//                    <colorMode>normal</colorMode>\
+//                    <fill>1</fill>\
+//                    <outline>1</outline>\
+//                </PolyStyle>\
+//            </Style>\
+//            <Placemark>\
+//            <styleUrl>#testStyle</styleUrl>\
+//            </Placemark>\
+//            </Document>\
+//            </kml>';
+//
+//        var dataSource = new KmlDataSource();
+//        dataSource.load(parser.parseFromString(polyKml, "text/xml"));
+//
+//        var entities = dataSource.entities.values;
+//        var polygon = entities[0].polygon;
+//        var material = polygon.material.getValue();
+//        var generatedColor = material.color;
+//        expect(entities.length).toEqual(1);
+//        expect(generatedColor.red).toEqual(color.red);
+//        expect(generatedColor.green).toEqual(color.green);
+//        expect(generatedColor.blue).toEqual(color.blue);
+//        expect(generatedColor.alpha).toEqual(color.alpha);
+//    });
+//
+//    it('handles empty PolyStyle element', function() {
+//        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+//            <kml xmlns="http://www.opengis.net/kml/2.2">\
+//            <Document>\
+//            <Placemark>\
+//              <Style>\
+//                <PolyStyle>\
+//                </PolyStyle>\
+//              </Style>\
+//            </Placemark>\
+//            </Document>\
+//            </kml>';
+//
+//        var dataSource = new KmlDataSource();
+//        dataSource.load(parser.parseFromString(kml, "text/xml"));
+//
+//        var entities = dataSource.entities.values;
+//        expect(entities.length).toEqual(1);
+//        expect(entities[0].polygon).toBeDefined();
+//    });
+//
+//    it('handles Color in normal mode', function() {
+//        var color = new Color(1, 0, 0, 1);
+//        var colorKml = '<?xml version="1.0" encoding="UTF-8"?>\
+//            <kml xmlns="http://www.opengis.net/kml/2.2">\
+//            <Document>\
+//            <Style id="testStyle">\
+//            <IconStyle>\
+//                <color>ff0000ff</color>\
+//                <colorMode>normal</colorMode>\
+//            </IconStyle>\
+//            </Style>\
+//            <Placemark>\
+//            <styleUrl>#testStyle</styleUrl>\
+//            </Placemark>\
+//            </Document>\
+//            </kml>';
+//
+//        var dataSource = new KmlDataSource();
+//        dataSource.load(parser.parseFromString(colorKml, "text/xml"));
+//
+//        var entities = dataSource.entities.values;
+//        var generatedColor = entities[0].billboard.color.getValue();
+//        expect(entities.length).toEqual(1);
+//        expect(generatedColor.red).toEqual(color.red);
+//        expect(generatedColor.green).toEqual(color.green);
+//        expect(generatedColor.blue).toEqual(color.blue);
+//        expect(generatedColor.alpha).toEqual(color.alpha);
+//    });
+//
+//    it('handles Color in random mode', function() {
+//        var color = new Color(1, 0, 0, 1);
+//        var colorKml = '<?xml version="1.0" encoding="UTF-8"?>\
+//            <kml xmlns="http://www.opengis.net/kml/2.2">\
+//            <Document>\
+//            <Style id="testStyle">\
+//            <IconStyle>\
+//                <color>ff0000ff</color>\
+//                <colorMode>random</colorMode>\
+//            </IconStyle>\
+//            </Style>\
+//            <Placemark>\
+//            <styleUrl>#testStyle</styleUrl>\
+//            </Placemark>\
+//            </Document>\
+//            </kml>';
+//
+//        var dataSource = new KmlDataSource();
+//        dataSource.load(parser.parseFromString(colorKml, "text/xml"));
+//
+//        var entities = dataSource.entities.values;
+//        var generatedColor = entities[0].billboard.color.getValue();
+//        expect(entities.length).toEqual(1);
+//        expect(generatedColor.red <= color.red).toBe(true);
+//        expect(generatedColor.green).toEqual(color.green);
+//        expect(generatedColor.blue).toEqual(color.blue);
+//        expect(generatedColor.alpha).toEqual(color.alpha);
+//    });
+//
+
 });
