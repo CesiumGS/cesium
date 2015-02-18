@@ -202,13 +202,14 @@
          * More browser specific code - wrap the query string in an object and to allow for getting/setting parameters from the runner user interface.
          */
 
-        var queryString = new jasmine.QueryString({
-            getWindowLocation: function() {
-                return window.location;
-            }
-        });
+         var queryString = Cesium.queryToObject(window.location.search.substring(1));
 
-        var catchingExceptions = queryString.getParam("catch");
+         var queryStringForSpecFocus = Cesium.clone(queryString);
+         if (queryStringForSpecFocus.category === 'none') {
+            delete queryStringForSpecFocus.category;
+         }
+
+        var catchingExceptions = queryString.catch;
         env.catchExceptions(typeof catchingExceptions === "undefined" ? true : catchingExceptions);
 
         /**
@@ -218,10 +219,11 @@
         var htmlReporter = new jasmine.HtmlReporter({
             env: env,
             onRaiseExceptionsClick: function() {
-                queryString.setParam("catch", !env.catchingExceptions());
+                queryString.catch = !env.catchingExceptions();
             },
             addToExistingQueryString: function(key, value) {
-                return queryString.fullStringWithNewParam(key, value);
+                queryStringForSpecFocus[key] = value;
+                return '?' + Cesium.objectToQuery(queryStringForSpecFocus);
             },
             getContainer: function() {
                 return document.body;
@@ -241,14 +243,14 @@
         env.addReporter(jasmineInterface.jsApiReporter);
         env.addReporter(htmlReporter);
 
-        var categoryString = queryString.getParam("category");
+        var categoryString = queryString.category;
 
         var categories;
         if (categoryString) {
             categories = categoryString.split(',');
         }
 
-        var notCategoryString = queryString.getParam("not");
+        var notCategoryString = queryString.not;
 
         var notCategories;
         if (notCategoryString) {
@@ -260,7 +262,7 @@
          */
         var specFilter = new jasmine.HtmlSpecFilter({
             filterString: function() {
-                return queryString.getParam("spec");
+                return queryString.spec;
             }
         });
 
