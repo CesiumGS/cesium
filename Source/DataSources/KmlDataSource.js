@@ -1028,7 +1028,7 @@ define([
     }
 
     function processFeature(dataSource, parent, featureNode, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var id = createId(featureNode.id);
+        var id = createId(featureNode);
         var entity = entityCollection.getOrCreateEntity(id);
         var kmlData = {};
         if (!defined(entity.kml)) {
