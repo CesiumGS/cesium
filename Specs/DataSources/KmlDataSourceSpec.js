@@ -509,6 +509,30 @@ defineSuite([
         expect(entity.polygon.hierarchy.getValue().positions).toEqualEpsilon(Cartesian3.fromDegreesArray([1, 2, 3, 4, 5, 6, 7, 8]), CesiumMath.EPSILON14);
     });
 
+    it('GroundOverlay: Sets polygon image for gx:LatLonQuad', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2"\
+                 xmlns:gx="http://www.google.com/kml/ext/2.2">\
+                <GroundOverlay>\
+                    <Icon>\
+                        <href>http://test.invalid/image.png</href>\
+                    </Icon>\
+                    <gx:LatLonQuad>\
+                        <coordinates>\
+                        1,2 3,4 5,6 7,8\
+                        </coordinates>\
+                    </gx:LatLonQuad>\
+                </GroundOverlay>\
+            </kml>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.polygon.material).toBeInstanceOf(ImageMaterialProperty);
+        expect(entity.polygon.material.image.getValue()).toEqual('http://test.invalid/image.png');
+    });
+
     it('GroundOverlay: Sets rectangle absolute height', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
         <GroundOverlay>\
@@ -777,7 +801,7 @@ defineSuite([
     });
 
     it('IconStyle: Sets scale', function() {
-        var iconKml = '<?xml version="1.0" encoding="UTF-8"?>\
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <Placemark>\
             <Style>\
               <IconStyle>\
@@ -787,14 +811,14 @@ defineSuite([
           </Placemark>';
 
         var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(iconKml, "text/xml"));
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
 
         var entities = dataSource.entities.values;
         expect(entities[0].billboard.scale.getValue()).toEqual(2.2);
     });
 
     it('IconStyle: Sets heading', function() {
-        var iconKml = '<?xml version="1.0" encoding="UTF-8"?>\
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <Placemark>\
             <Style>\
               <IconStyle>\
@@ -804,7 +828,7 @@ defineSuite([
           </Placemark>';
 
         var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(iconKml, "text/xml"));
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
 
         var entities = dataSource.entities.values;
         expect(entities[0].billboard.rotation.getValue()).toEqual(CesiumMath.toRadians(-4));
@@ -1015,6 +1039,181 @@ defineSuite([
         expect(placemark.parent).toBe(folder);
     });
 
+    it('Geometry Point: handles empty coordinates', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Point>\
+              <coordinates></coordinates>\
+            </Point>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        expect(entities.length).toEqual(1);
+        expect(entities[0].position).toBeUndefined();
+        expect(entities[0].polyline).toBeUndefined();
+    });
+
+    it('Geometry Point: sets position clampToGround (the default)', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Point>\
+              <coordinates>1,2,3</coordinates>\
+            </Point>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        expect(entities.length).toEqual(1);
+        expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2, 0));
+        expect(entities[0].polyline).toBeUndefined();
+    });
+
+    it('Geometry Point: sets position altitudeMode absolute', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Point>\
+              <altitudeMode>absolute</altitudeMode>\
+              <coordinates>1,2,3</coordinates>\
+            </Point>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        expect(entities.length).toEqual(1);
+        expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2, 3));
+        expect(entities[0].polyline).toBeUndefined();
+    });
+
+    it('Geometry Point: sets position altitudeMode relativeToGround', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Point>\
+              <altitudeMode>absolute</altitudeMode>\
+              <coordinates>1,2,3</coordinates>\
+            </Point>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        expect(entities.length).toEqual(1);
+        expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2, 3));
+        expect(entities[0].polyline).toBeUndefined();
+    });
+
+    it('Geometry Point: does not extrude when altitdeMode is clampToGround', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Point>\
+              <altitudeMode>clampToGround</altitudeMode>\
+              <coordinates>1,2</coordinates>\
+              <extrude>1</extrude>\
+            </Point>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        expect(entities.length).toEqual(1);
+        expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2));
+        expect(entities[0].polyline).toBeUndefined();
+    });
+
+    it('Geometry Point: does not extrude when altitdeMode is clampToSeaFloor', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Point>\
+              <altitudeMode>clampToSeaFloor</altitudeMode>\
+              <coordinates>1,2</coordinates>\
+              <extrude>1</extrude>\
+            </Point>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        expect(entities.length).toEqual(1);
+        expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2));
+        expect(entities[0].polyline).toBeUndefined();
+    });
+
+    it('Geometry Point: extrudes when altitudeMode is relativeToGround', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Point>\
+              <altitudeMode>relativeToGround</altitudeMode>\
+              <coordinates>1,2,3</coordinates>\
+              <extrude>1</extrude>\
+            </Point>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        expect(entities.length).toEqual(1);
+        expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2, 3));
+        expect(entities[0].polyline).toBeDefined();
+
+        var positions = entities[0].polyline.positions.getValue(Iso8601.MINIMUM_VALUE);
+        expect(positions).toEqualEpsilon([Cartesian3.fromDegrees(1, 2, 3), Cartesian3.fromDegrees(1, 2, 0)], CesiumMath.EPSILON13);
+    });
+
+    it('Geometry Point: extrudes when altitudeMode is relativeToSeaFloor', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Point>\
+              <altitudeMode>relativeToSeaFloor</altitudeMode>\
+              <coordinates>1,2,3</coordinates>\
+              <extrude>1</extrude>\
+            </Point>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        expect(entities.length).toEqual(1);
+        expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2, 3));
+        expect(entities[0].polyline).toBeDefined();
+
+        var positions = entities[0].polyline.positions.getValue(Iso8601.MINIMUM_VALUE);
+        expect(positions).toEqualEpsilon([Cartesian3.fromDegrees(1, 2, 3), Cartesian3.fromDegrees(1, 2, 0)], CesiumMath.EPSILON13);
+    });
+
+    it('Geometry Point: extrudes when altitudeMode is absolute', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Point>\
+              <altitudeMode>absolute</altitudeMode>\
+              <coordinates>1,2,3</coordinates>\
+              <extrude>1</extrude>\
+            </Point>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        expect(entities.length).toEqual(1);
+        expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2, 3));
+        expect(entities[0].polyline).toBeDefined();
+
+        var positions = entities[0].polyline.positions.getValue(Iso8601.MINIMUM_VALUE);
+        expect(positions).toEqualEpsilon([Cartesian3.fromDegrees(1, 2, 3), Cartesian3.fromDegrees(1, 2, 0)], CesiumMath.EPSILON13);
+    });
+
+
 //  /*
 //  * Tests below this comment need to be reevaluated.
 //  */
@@ -1062,46 +1261,6 @@ defineSuite([
 ////        }).toThrowDeveloperError();
 ////    });
 //
-//    it('handles Point Geometry', function() {
-//        var position = new Cartographic(CesiumMath.toRadians(1), CesiumMath.toRadians(2), 3);
-//        var cartesianPosition = Ellipsoid.WGS84.cartographicToCartesian(position);
-//        var time = new JulianDate();
-//        var pointKml = '<?xml version="1.0" encoding="UTF-8"?>\
-//            <kml xmlns="http://www.opengis.net/kml/2.2">\
-//            <Document>\
-//            <Placemark>\
-//              <Point>\
-//                <coordinates>1,2,3</coordinates>\
-//              </Point>\
-//            </Placemark>\
-//            </Document>\
-//            </kml>';
-//
-//        var dataSource = new KmlDataSource();
-//        dataSource.load(parser.parseFromString(pointKml, "text/xml"));
-//
-//        var entities = dataSource.entities.values;
-//        expect(entities.length).toEqual(1);
-//        expect(entities[0].position.getValue(time)).toEqual(cartesianPosition);
-//    });
-//
-////    it('processPoint throws error with invalid coordinates', function() {
-////        var pointKml = '<?xml version="1.0" encoding="UTF-8"?>\
-////            <kml xmlns="http://www.opengis.net/kml/2.2">\
-////            <Document>\
-////            <Placemark>\
-////              <Point>\
-////                <coordinates> </coordinates>\
-////              </Point>\
-////            </Placemark>\
-////            </Document>\
-////            </kml>';
-////
-////        var dataSource = new KmlDataSource();
-////        expect(function() {
-////            dataSource.load(pointKml);
-////        }).toThrowDeveloperError();
-////    });
 //
 //    it('handles Point Geometry with LabelStyle', function() {
 //        var name = new ConstantProperty('LabelStyle.kml');

@@ -183,29 +183,32 @@ define([
     }
 
     function createId(node) {
-        return defined(node) && defined(node.id) && node.id.length !== 0 ? node.id : createGuid();
+        var id = queryStringAttribute(node, 'id');
+        return defined(id) ? id : createGuid();
     }
 
-    //Helper functions
     function readCoordinate(element, altitudeMode) {
-        var baseHeight = 0;
-        switch (altitudeMode) {
-        case 'absolute':
-            //TODO MSL + height
-            break;
-        case 'relativeToGround':
-            //TODO Terrain + height
-            break;
-        case 'clampToGround ':
-            //TODO on terrain, ignore altitude
-            break;
-        default:
-            //TODO Same as clampToGround
-            break;
-        }
         var digits = element.textContent.trim().split(/[\s,\n]+/g);
-        Cartographic.fromDegrees(digits[0], digits[1], defined(digits[2]) ? parseFloat(digits[2]) : 0, scratchCartographic);
+
+        //This shouldn't happen here.
+        var height = defined(digits[2]) ? parseFloat(digits[2]) : 0;
+        if (altitudeMode === 'absolute') {
+            //TODO
+        } else if (altitudeMode === 'relativeToGround') {
+            //TODO
+        } else if (!defined(altitudeMode) || altitudeMode === 'clampToGround') {
+            //TODO: clamp on terrain
+            height = 0;
+        } else {
+            window.console.log('Unknown altitudeMode: ' + altitudeMode);
+        }
+
+        Cartographic.fromDegrees(digits[0], digits[1], height, scratchCartographic);
         return Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic);
+    }
+
+    function isExtrudable(altitudeMode) {
+        return altitudeMode === 'absolute' || altitudeMode === 'relativeToGround' || altitudeMode === 'relativeToSeaFloor';
     }
 
     function readCoordinates(element) {
@@ -281,7 +284,7 @@ define([
 
     function queryNodes(node, tagName, namespace) {
         if (!defined(node)) {
-            return [];
+            return undefined;
         }
         var result = [];
         var childNodes = node.getElementsByTagName(tagName);
@@ -613,52 +616,56 @@ define([
         var styleEntity;
 
         var styleNodes = queryNodes(kml, 'Style', namespaces.kml);
-        var styleNodesLength = styleNodes.length;
-        for (i = 0; i < styleNodesLength; i++) {
-            var node = styleNodes[i];
-            var attributes = node.attributes;
-            id = defined(attributes.id) ? attributes.id.value : undefined;
-            if (defined(id)) {
-                id = '#' + id;
-                if (isExternal && defined(sourceUri)) {
-                    id = sourceUri + id;
-                }
-                if (!defined(styleCollection.getById(id))) {
-                    styleEntity = new Entity({
-                        id : id
-                    });
-                    styleCollection.add(styleEntity);
-                    applyStyle(dataSource, node, styleEntity, sourceUri, uriResolver);
+        if (defined(styleNodes)) {
+            var styleNodesLength = styleNodes.length;
+            for (i = 0; i < styleNodesLength; i++) {
+                var node = styleNodes[i];
+                var attributes = node.attributes;
+                id = defined(attributes.id) ? attributes.id.value : undefined;
+                if (defined(id)) {
+                    id = '#' + id;
+                    if (isExternal && defined(sourceUri)) {
+                        id = sourceUri + id;
+                    }
+                    if (!defined(styleCollection.getById(id))) {
+                        styleEntity = new Entity({
+                            id : id
+                        });
+                        styleCollection.add(styleEntity);
+                        applyStyle(dataSource, node, styleEntity, sourceUri, uriResolver);
+                    }
                 }
             }
         }
 
         var styleMaps = queryNodes(kml, 'StyleMap', namespaces.kml);
-        var styleMapsLength = styleMaps.length;
-        for (i = 0; i < styleMapsLength; i++) {
-            var styleMap = styleMaps[i];
-            id = defined(styleMap.attributes.id) ? styleMap.attributes.id.value : undefined;
-            if (defined(id)) {
-                var pairs = styleMap.childNodes;
-                for (var p = 0; p < pairs.length; p++) {
-                    var pair = pairs[p];
-                    if (pair.nodeName !== 'Pair') {
-                        continue;
-                    }
-                    if (queryStringValue(pair, 'key', namespaces.kml) === 'normal') {
-                        var styleUrl = queryStringValue(pair, 'styleUrl', namespaces.kml);
-                        id = '#' + id;
-                        if (isExternal && defined(sourceUri)) {
-                            id = sourceUri + id;
+        if (defined(styleMaps)) {
+            var styleMapsLength = styleMaps.length;
+            for (i = 0; i < styleMapsLength; i++) {
+                var styleMap = styleMaps[i];
+                id = defined(styleMap.attributes.id) ? styleMap.attributes.id.value : undefined;
+                if (defined(id)) {
+                    var pairs = styleMap.childNodes;
+                    for (var p = 0; p < pairs.length; p++) {
+                        var pair = pairs[p];
+                        if (pair.nodeName !== 'Pair') {
+                            continue;
                         }
-                        if (!defined(styleCollection.getById(id))) {
-                            styleEntity = styleCollection.getOrCreateEntity(id);
-                            var base = styleCollection.getOrCreateEntity(styleUrl);
-                            if (defined(base)) {
-                                styleEntity.merge(base);
+                        if (queryStringValue(pair, 'key', namespaces.kml) === 'normal') {
+                            var styleUrl = queryStringValue(pair, 'styleUrl', namespaces.kml);
+                            id = '#' + id;
+                            if (isExternal && defined(sourceUri)) {
+                                id = sourceUri + id;
                             }
+                            if (!defined(styleCollection.getById(id))) {
+                                styleEntity = styleCollection.getOrCreateEntity(id);
+                                var base = styleCollection.getOrCreateEntity(styleUrl);
+                                if (defined(base)) {
+                                    styleEntity.merge(base);
+                                }
+                            }
+                            break;
                         }
-                        break;
                     }
                 }
             }
@@ -700,14 +707,13 @@ define([
     function processPoint(dataSource, geometryNode, entity, styleEntity) {
         var coordinatesNode = queryFirstNode(geometryNode, 'coordinates', namespaces.kml);
         var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
-        var clamped = !defined(altitudeMode) || altitudeMode === 'clampToGround ' || altitudeMode === 'clampToSeaFloor';
         var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
 
         var position = readCoordinate(coordinatesNode, altitudeMode);
         entity.position = position;
         entity.billboard = styleEntity.billboard;
 
-        if (extrude && !clamped && defined(position)) {
+        if (extrude && isExtrudable(altitudeMode) && defined(position)) {
             createDropLine(dataSource, entity, styleEntity);
         }
     }
@@ -717,11 +723,11 @@ define([
         var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
         var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
         var tessellate = queryBooleanValue(geometryNode, 'tessellate', namespaces.kml);
-        var clamped = !defined(altitudeMode) || altitudeMode === 'clampToGround ' || altitudeMode === 'clampToSeaFloor';
+        var canExtrude = isExtrudable(altitudeMode);
 
         var coordinates = readCoordinates(coordinatesNode);
         var polyline = styleEntity.polyline;
-        if (extrude && !clamped) {
+        if (extrude && canExtrude) {
             var wall = new WallGraphics();
             entity.wall = wall;
             wall.positions = coordinates;
@@ -737,7 +743,7 @@ define([
             polyline = defined(polyline) ? polyline.clone() : new PolylineGraphics();
             entity.polyline = polyline;
             polyline.positions = coordinates;
-            polyline.followSurface = tessellate && !clamped;
+            polyline.followSurface = tessellate && canExtrude;
         }
     }
 
@@ -748,7 +754,7 @@ define([
         var coordinates = readCoordinates(coordinatesNode);
         var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
         var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
-        var clamped = !defined(altitudeMode) || altitudeMode === 'clampToGround ' || altitudeMode === 'clampToSeaFloor';
+        var canExtrude = isExtrudable(altitudeMode);
 
         var polyline = styleEntity.polyline;
         var polygon = defined(styleEntity.polygon) ? styleEntity.polygon.clone() : new PolygonGraphics();
@@ -761,7 +767,7 @@ define([
         }
         entity.polygon = polygon;
 
-        if (!clamped) {
+        if (canExtrude) {
             if (defined(altitudeMode)) {
                 polygon.perPositionHeight = true;
             }
@@ -793,7 +799,7 @@ define([
         var coordNodes = queryChildNodes(geometryNode, 'coord', namespaces.gx);
         var timeNodes = queryChildNodes(geometryNode, 'when', namespaces.kml);
         var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
-        var clamped = !defined(altitudeMode) || altitudeMode === 'clampToGround ' || altitudeMode === 'clampToSeaFloor';
+        var canExtrude = isExtrudable(altitudeMode);
 
         if (coordNodes.length !== timeNodes.length) {
             throw new RuntimeError();
@@ -816,7 +822,7 @@ define([
                 stop : times[times.length - 1]
             }));
 
-            if (!clamped && extrude) {
+            if (canExtrude && extrude) {
                 createDropLine(dataSource, entity, styleEntity);
             }
         }
@@ -826,7 +832,7 @@ define([
         var trackNodes = queryChildNodes(geometryNode, 'Track', namespaces.gx);
         var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
         var interpolate = queryBooleanValue(geometryNode, 'interpolate', namespaces.gx);
-        var clamped = !defined(altitudeMode) || altitudeMode === 'clampToGround ' || altitudeMode === 'clampToSeaFloor';
+        var canExtrude = isExtrudable(altitudeMode);
         var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
 
         var times;
@@ -882,7 +888,7 @@ define([
         }
 
         entity.billboard = styleEntity.billboard;
-        if (!clamped && extrude) {
+        if (canExtrude && extrude) {
             createDropLine(dataSource, entity, styleEntity);
         }
     }
