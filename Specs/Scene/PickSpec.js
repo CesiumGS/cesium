@@ -4,11 +4,16 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/FeatureDetection',
+        'Core/GeometryInstance',
         'Core/Math',
         'Core/Matrix4',
         'Core/Rectangle',
+        'Core/RectangleGeometry',
+        'Core/ShowGeometryInstanceAttribute',
         'Scene/OrthographicFrustum',
+        'Scene/EllipsoidSurfaceAppearance',
         'Scene/PerspectiveFrustum',
+        'Scene/Primitive',
         'Scene/RectanglePrimitive',
         'Scene/SceneMode',
         'Specs/createScene'
@@ -17,11 +22,16 @@ defineSuite([
         Cartesian3,
         Ellipsoid,
         FeatureDetection,
+        GeometryInstance,
         CesiumMath,
         Matrix4,
         Rectangle,
+        RectangleGeometry,
+        ShowGeometryInstanceAttribute,
         OrthographicFrustum,
+        EllipsoidSurfaceAppearance,
         PerspectiveFrustum,
+        Primitive,
         RectanglePrimitive,
         SceneMode,
         createScene) {
@@ -157,6 +167,103 @@ defineSuite([
         var pickedObjects = scene.drillPick(new Cartesian2(0, 0));
         expect(pickedObjects.length).toEqual(1);
         expect(pickedObjects[0].primitive).toEqual(rectangle1);
+    });
+
+    it('drill pick batched Primitives with show attribute', function() {
+        var geometry = new RectangleGeometry({
+            rectangle : Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
+            ellipsoid : Ellipsoid.UNIT_SPHERE,
+            granularity : CesiumMath.toRadians(20.0),
+            vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT
+        });
+
+        var geometryWithHeight = new RectangleGeometry({
+            rectangle : Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
+            ellipsoid : Ellipsoid.UNIT_SPHERE,
+            granularity : CesiumMath.toRadians(20.0),
+            vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+            height : 0.01
+        });
+
+        var instance1 = new GeometryInstance({
+            id : 1,
+            geometry : geometry,
+            attributes : {
+                show : new ShowGeometryInstanceAttribute(true)
+            }
+        });
+
+        var instance2 = new GeometryInstance({
+            id : 2,
+            geometry : geometry,
+            attributes : {
+                show : new ShowGeometryInstanceAttribute(false)
+            }
+        });
+
+        var instance3 = new GeometryInstance({
+            id : 3,
+            geometry : geometryWithHeight,
+            attributes : {
+                show : new ShowGeometryInstanceAttribute(true)
+            }
+        });
+
+        var primitive = primitives.add(new Primitive({
+            geometryInstances : [instance1, instance2, instance3],
+            asynchronous : false,
+            appearance : new EllipsoidSurfaceAppearance()
+        }));
+
+        var pickedObjects = scene.drillPick(new Cartesian2(0, 0));
+        expect(pickedObjects.length).toEqual(2);
+        expect(pickedObjects[0].primitive).toEqual(primitive);
+        expect(pickedObjects[0].id).toEqual(3);
+        expect(pickedObjects[1].primitive).toEqual(primitive);
+        expect(pickedObjects[1].id).toEqual(1);
+    });
+
+    it('drill pick batched Primitives without show attribute', function() {
+        var geometry = new RectangleGeometry({
+            rectangle : Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
+            ellipsoid : Ellipsoid.UNIT_SPHERE,
+            granularity : CesiumMath.toRadians(20.0),
+            vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT
+        });
+
+        var geometryWithHeight = new RectangleGeometry({
+            rectangle : Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
+            ellipsoid : Ellipsoid.UNIT_SPHERE,
+            granularity : CesiumMath.toRadians(20.0),
+            vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+            height : 0.01
+        });
+
+        var instance1 = new GeometryInstance({
+            id : 1,
+            geometry : geometry
+        });
+
+        var instance2 = new GeometryInstance({
+            id : 2,
+            geometry : geometry
+        });
+
+        var instance3 = new GeometryInstance({
+            id : 3,
+            geometry : geometryWithHeight
+        });
+
+        var primitive = primitives.add(new Primitive({
+            geometryInstances : [instance1, instance2, instance3],
+            asynchronous : false,
+            appearance : new EllipsoidSurfaceAppearance()
+        }));
+
+        var pickedObjects = scene.drillPick(new Cartesian2(0, 0));
+        expect(pickedObjects.length).toEqual(1);
+        expect(pickedObjects[0].primitive).toEqual(primitive);
+        expect(pickedObjects[0].id).toEqual(3);
     });
 
     it('pick in 2D', function() {

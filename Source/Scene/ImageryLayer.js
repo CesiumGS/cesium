@@ -344,7 +344,7 @@ define([
      *
      * @param {Tile} tile The terrain tile.
      * @param {TerrainProvider} terrainProvider The terrain provider associated with the terrain tile.
-     * @param {Number} insertionPoint The position to insert new skeletons before in the tile's imagery lsit.
+     * @param {Number} insertionPoint The position to insert new skeletons before in the tile's imagery list.
      * @returns {Boolean} true if this layer overlaps any portion of the terrain tile; otherwise, false.
      */
     ImageryLayer.prototype._createTileImagerySkeletons = function(tile, terrainProvider, insertionPoint) {
