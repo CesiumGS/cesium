@@ -39,34 +39,30 @@ defineSuite([
 
     beforeAll(function() {
         scene = createScene();
+
+        return when.join(
+            loadImage('./Data/Images/Green.png').then(function(image) {
+                greenImage = image;
+            }),
+            loadImage('./Data/Images/Green1x4.png').then(function(image) {
+                tallGreenImage = image;
+            }),
+            loadImage('./Data/Images/Blue.png').then(function(image) {
+                blueImage = image;
+            }),
+            loadImage('./Data/Images/Red16x16.png').then(function(image) {
+                bigRedImage = image;
+            }),
+            loadImage('./Data/Images/Blue10x10.png').then(function(image) {
+                bigBlueImage = image;
+            }),
+            loadImage('./Data/Images/Green4x4.png').then(function(image) {
+                bigGreenImage = image;
+            }));
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
-    });
-
-    beforeEach(function() {
-        if (!greenImage) {
-            return when.join(
-                loadImage('./Data/Images/Green.png').then(function(image) {
-                    greenImage = image;
-                }),
-                loadImage('./Data/Images/Green1x4.png').then(function(image) {
-                    tallGreenImage = image;
-                }),
-                loadImage('./Data/Images/Blue.png').then(function(image) {
-                    blueImage = image;
-                }),
-                loadImage('./Data/Images/Red16x16.png').then(function(image) {
-                    bigRedImage = image;
-                }),
-                loadImage('./Data/Images/Blue10x10.png').then(function(image) {
-                    bigBlueImage = image;
-                }),
-                loadImage('./Data/Images/Green4x4.png').then(function(image) {
-                    bigGreenImage = image;
-                }));
-        }
     });
 
     afterEach(function() {

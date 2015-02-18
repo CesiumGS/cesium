@@ -57,6 +57,19 @@ defineSuite([
     var blueImage;
     var whiteImage;
 
+    beforeAll(function() {
+        return when.join(
+            loadImage('./Data/Images/Green.png').then(function(image) {
+                greenImage = image;
+            }),
+            loadImage('./Data/Images/Blue.png').then(function(image) {
+                blueImage = image;
+            }),
+            loadImage('./Data/Images/White.png').then(function(image) {
+                whiteImage = image;
+            }));
+    });
+
     beforeEach(function() {
         scene = createScene();
         context = scene.context;
@@ -72,17 +85,6 @@ defineSuite([
         camera.frustum.far = 1000000000.0;
         camera.frustum.fov = CesiumMath.toRadians(60.0);
         camera.frustum.aspectRatio = 1.0;
-
-        return when.join(
-            loadImage('./Data/Images/Green.png').then(function(image) {
-                greenImage = image;
-            }),
-            loadImage('./Data/Images/Blue.png').then(function(image) {
-                blueImage = image;
-            }),
-            loadImage('./Data/Images/White.png').then(function(image) {
-                whiteImage = image;
-            }));
     });
 
     afterEach(function() {

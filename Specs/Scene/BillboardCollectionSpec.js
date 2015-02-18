@@ -70,6 +70,20 @@ defineSuite([
             camera : frameState.camera,
             frameState : frameState
         };
+
+        return when.join(
+            loadImage('./Data/Images/Green.png').then(function(result) {
+                greenImage = result;
+            }),
+            loadImage('./Data/Images/Blue.png').then(function(result) {
+                blueImage = result;
+            }),
+            loadImage('./Data/Images/White.png').then(function(result) {
+                whiteImage = result;
+            }),
+            loadImage('./Data/Images/Blue10x10.png').then(function(result) {
+                largeBlueImage = result;
+            }));
     });
 
     afterAll(function() {
@@ -78,22 +92,6 @@ defineSuite([
 
     beforeEach(function() {
         billboards = new BillboardCollection();
-
-        if (!greenImage) {
-            return when.join(
-                loadImage('./Data/Images/Green.png').then(function(result) {
-                    greenImage = result;
-                }),
-                loadImage('./Data/Images/Blue.png').then(function(result) {
-                    blueImage = result;
-                }),
-                loadImage('./Data/Images/White.png').then(function(result) {
-                    whiteImage = result;
-                }),
-                loadImage('./Data/Images/Blue10x10.png').then(function(result) {
-                    largeBlueImage = result;
-                }));
-        }
     });
 
     afterEach(function() {
