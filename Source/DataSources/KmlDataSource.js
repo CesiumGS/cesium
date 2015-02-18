@@ -232,7 +232,7 @@ define([
         atom : ['http://www.w3.org/2005/Atom']
     };
 
-    function queryAttributeValue(node, attributeName, namespace) {
+    function queryAttributeValue(node, attributeName) {
         if (!defined(node)) {
             return undefined;
         }
@@ -240,15 +240,15 @@ define([
         var length = attributes.length;
         for (var q = 0; q < length; q++) {
             var child = attributes[q];
-            if (child.name === attributeName && namespace.indexOf(child.namespaceURI) !== -1) {
+            if (child.name === attributeName) {
                 return child;
             }
         }
         return undefined;
     }
 
-    function queryNumericAttribute(node, attributeName, namespace) {
-        var resultNode = queryAttributeValue(node, attributeName, namespace);
+    function queryNumericAttribute(node, attributeName) {
+        var resultNode = queryAttributeValue(node, attributeName);
         if (defined(resultNode)) {
             var result = parseFloat(resultNode.value);
             return !isNaN(result) ? result : undefined;
@@ -256,8 +256,8 @@ define([
         return undefined;
     }
 
-    function queryStringAttribute(node, attributeName, namespace) {
-        var result = queryAttributeValue(node, attributeName, namespace);
+    function queryStringAttribute(node, attributeName) {
+        var result = queryAttributeValue(node, attributeName);
         if (defined(result)) {
             return result.value;
         }
@@ -389,7 +389,11 @@ define([
         return Color.fromRandom(colorOptions);
     }
 
-    function processTimeSpan(node) {
+    function processTimeSpan(featureNode) {
+        var node = queryFirstNode(featureNode, 'TimeSpan', namespaces.kml);
+        if (!defined(node)) {
+            return undefined;
+        }
         var result;
 
         var beginNode = queryFirstNode(node, 'begin', namespaces.kml);
@@ -459,10 +463,10 @@ define([
         var h = queryNumericValue(iconNode, 'h', namespaces.gx);
 
         var hotSpotNode = queryFirstNode(node, 'hotSpot', namespaces.kml);
-        var hotSpotX = queryNumericAttribute(hotSpotNode, 'x', namespaces.kml);
-        var hotSpotY = queryNumericAttribute(hotSpotNode, 'y', namespaces.kml);
-        var hotSpotXUnit = queryStringAttribute(hotSpotNode, 'xunits', namespaces.kml);
-        var hotSpotYUnit = queryStringAttribute(hotSpotNode, 'yunits', namespaces.kml);
+        var hotSpotX = queryNumericAttribute(hotSpotNode, 'x');
+        var hotSpotY = queryNumericAttribute(hotSpotNode, 'y');
+        var hotSpotXUnit = queryStringAttribute(hotSpotNode, 'xunits');
+        var hotSpotYUnit = queryStringAttribute(hotSpotNode, 'yunits');
 
         var billboard = targetEntity.billboard;
         if (!defined(billboard)) {
@@ -924,7 +928,7 @@ define([
             var length = dataNodes.length;
             for (var i = 0; i < length; i++) {
                 var dataNode = dataNodes[i];
-                var name = queryStringAttribute(dataNode, 'name', namespaces.kml);
+                var name = queryStringAttribute(dataNode, 'name');
                 if (defined(name)) {
                     result[name] = {
                         displayName : queryStringValue(dataNode, 'displayName', namespaces.kml),
@@ -937,7 +941,8 @@ define([
     }
 
     function processDescription(node, entity, styleEntity) {
-        var extendedData = entity.kml.extendedData;
+        var kmlData = entity.kml;
+        var extendedData = kmlData.extendedData;
         var description = queryStringValue(node, 'description', namespaces.kml);
 
         var balloonStyle = defaultValue(entity.balloonStyle, styleEntity.balloonStyle);
@@ -964,8 +969,8 @@ define([
             if (defined(text)) {
                 text = text.replace('$[name]', defaultValue(entity.name, ''));
                 text = text.replace('$[description]', defaultValue(description, ''));
-                text = text.replace('$[address]', defaultValue(entity.kml.address, ''));
-                text = text.replace('$[Snippet]', defaultValue(entity.kml.Snippet, ''));
+                text = text.replace('$[address]', defaultValue(kmlData.address, ''));
+                text = text.replace('$[Snippet]', defaultValue(kmlData.Snippet, ''));
                 text = text.replace('$[id]', entity.id);
 
                 //While not explicitly defined by the OGC spec, in Google Earth
@@ -1022,6 +1027,56 @@ define([
         }
     }
 
+    function processFeature(dataSource, parent, featureNode, entityCollection, styleCollection, sourceUri, uriResolver) {
+        var id = createId(featureNode.id);
+        var entity = entityCollection.getOrCreateEntity(id);
+        var kmlData = {};
+        if (!defined(entity.kml)) {
+            entity.addProperty('kml');
+            entity.kml = kmlData;
+        }
+
+        var styleEntity = computeFinalStyle(entity, dataSource, featureNode, styleCollection, sourceUri, uriResolver);
+
+        var name = queryStringValue(featureNode, 'name', namespaces.kml);
+        entity.name = name;
+        entity.parent = parent;
+        entity.availability = processTimeSpan(featureNode);
+
+        //var visibility = queryBooleanValue(featureNode, 'visibility', namespaces.kml);
+        //entity.uiShow = defaultValue(visibility, true);
+        //var open = queryBooleanValue(featureNode, 'open', namespaces.kml);
+
+        var authorNode = queryFirstNode(featureNode, 'author', namespaces.atom);
+        kmlData.author = {
+            name : queryStringValue(authorNode, 'name', namespaces.atom),
+            uri : queryStringValue(authorNode, 'uri', namespaces.atom),
+            email : queryStringValue(authorNode, 'email', namespaces.atom)
+        };
+
+        var linkNode = queryFirstNode(featureNode, 'link', namespaces.atom);
+        kmlData.link = {
+            href : queryStringAttribute(linkNode, 'href'),
+            hreflang : queryStringAttribute(linkNode, 'hreflang'),
+            rel : queryStringAttribute(linkNode, 'rel'),
+            type : queryStringAttribute(linkNode, 'type'),
+            title : queryStringAttribute(linkNode, 'title'),
+            length : queryStringAttribute(linkNode, 'length')
+        };
+
+        kmlData.address = queryStringValue(featureNode, 'address', namespaces.kml);
+        kmlData.phoneNumber = queryStringValue(featureNode, 'phoneNumber', namespaces.kml);
+        kmlData.Snippet = queryStringValue(featureNode, 'Snippet', namespaces.kml);
+
+        processExtendedData(featureNode, entity);
+        processDescription(featureNode, entity, styleEntity);
+
+        return {
+            entity : entity,
+            styleEntity : styleEntity
+        };
+    }
+
     var geometryTypes = {
         Point : processPoint,
         LineString : processLineStringOrLinearRing,
@@ -1052,45 +1107,14 @@ define([
     }
 
     function processFolder(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
-        //var visibility = queryBooleanValue(node, 'visibility', namespaces.kml);
-        //entity.uiShow = defined(visibility) ? visibility : true;
-        //if (defined(visibility) && !visibility) {
-            //return;
-        //}
-
-        parent = new Entity({
-            id : createId(node)
-        });
-        parent.name = queryStringValue(node, 'name', namespaces.kml);
-        entityCollection.add(parent);
-        processDocument(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
+        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
+        processDocument(dataSource, r.entity, node, entityCollection, styleCollection, sourceUri, uriResolver);
     }
 
     function processPlacemark(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var id = createId(placemark.id);
-        var name = queryStringValue(placemark, 'name', namespaces.kml);
-        var description = queryStringValue(placemark, 'description', namespaces.kml);
-        //var visibility = queryBooleanValue(placemark, 'visibility', namespaces.kml);
-        var timeSpanNode = queryFirstNode(placemark, 'TimeSpan', namespaces.kml);
-
-        //if (defined(visibility) && !visibility) {
-            //return;
-        //}
-
-        var entity = entityCollection.getOrCreateEntity(id);
-        if (!defined(entity.kml)) {
-            entity.addProperty('kml');
-            entity.kml = {};
-        }
-
-        entity.name = name;
-        entity.parent = parent;
-        //entity.uiShow = defaultValue(visibility, true);
-        entity.availability = defined(timeSpanNode) ? processTimeSpan(timeSpanNode) : undefined;
-        var styleEntity = computeFinalStyle(entity, dataSource, placemark, styleCollection, sourceUri, uriResolver);
-
-        processExtendedData(placemark, entity);
-        processDescription(placemark, entity, styleEntity);
+        var r = processFeature(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver);
+        var entity = r.entity;
+        var styleEntity = r.styleEntity;
 
         var hasGeometry = false;
         var childNodes = placemark.childNodes;
@@ -1127,32 +1151,9 @@ define([
     }
 
     function processGroundOverlay(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var id = createId(groundOverlay.id);
-        var entity = entityCollection.getOrCreateEntity(id);
-        if (!defined(entity.kml)) {
-            entity.addProperty('kml');
-            entity.kml = {};
-        }
-
-        if (defined(parent)) {
-            entity.parent = parent;
-        }
-
-        var styleEntity = computeFinalStyle(entity, dataSource, groundOverlay, styleCollection, sourceUri, uriResolver);
-
-        entity.name = queryStringValue(groundOverlay, 'name', namespaces.kml);
-        var nodes = groundOverlay.childNodes;
-
-        var timeSpan = queryFirstNode(groundOverlay, 'TimeSpan', namespaces.kml);
-        if (defined(timeSpan)) {
-            entity.availability = processTimeSpan(timeSpan);
-        }
-
-        processExtendedData(groundOverlay, entity);
-        processDescription(groundOverlay, entity, styleEntity);
-
-        //var visibility = queryBooleanValue(groundOverlay, 'visibility', namespaces.kml);
-        //entity.uiShow = defined(visibility) ? visibility : true;
+        var r = processFeature(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver);
+        var entity = r.entity;
+        var styleEntity = r.stylEntity;
 
         var rectangle = entity.rectangle;
         if (!defined(rectangle)) {
@@ -1214,6 +1215,9 @@ define([
     }
 
     function processNetworkLink(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
+        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
+        var networkEntity = r.entity;
+
         var link = queryFirstNode(node, 'Link', namespaces.kml);
         if (defined(link)) {
             var linkUrl = queryStringValue(link, 'href', namespaces.kml);
@@ -1223,6 +1227,7 @@ define([
                     var entities = networkLinkSource.entities.entities;
                     for (var i = 0; i < entities.length; i++) {
                         dataSource._entityCollection.suspendEvents();
+                        entities[i].parent = networkEntity;
                         dataSource._entityCollection.add(entities[i]);
                         dataSource._entityCollection.resumeEvents();
                     }

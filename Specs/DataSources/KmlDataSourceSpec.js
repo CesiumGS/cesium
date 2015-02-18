@@ -1053,6 +1053,111 @@ defineSuite([
         expect(entity.availability.stop).toEqual(endDate);
     });
 
+    it('Feature: name', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Placemark>\
+            <name>bob</name>\
+        </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.name).toBe('bob');
+    });
+
+    it('Feature: address', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Placemark>\
+            <address>1826 South 16th Street</address>\
+        </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.kml.address).toBe('1826 South 16th Street');
+    });
+
+    it('Feature: phoneNumber', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Placemark>\
+            <phoneNumber>555-555-5555</phoneNumber>\
+        </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.kml.phoneNumber).toBe('555-555-5555');
+    });
+
+    it('Feature: Snippet', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Placemark>\
+            <Snippet>Hey!</Snippet>\
+        </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.kml.Snippet).toBe('Hey!');
+    });
+
+    it('Feature: atom:author', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <kml xmlns="http://www.opengis.net/kml/2.2"\
+         xmlns:atom="http://www.w3.org/2005/Atom">\
+        <Placemark>\
+            <atom:author>\
+                <atom:name>J.R.R. Tolkien</atom:name>\
+                <atom:email>gandalf@greyhavens.invalid</atom:email>\
+                <atom:uri>http://greyhavens.invalid</atom:uri>\
+            </atom:author>\
+        </Placemark>\
+        </kml>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.kml).toBeDefined();
+        expect(entity.kml.author).toBeDefined();
+        expect(entity.kml.author.name).toBe('J.R.R. Tolkien');
+        expect(entity.kml.author.email).toBe('gandalf@greyhavens.invalid');
+        expect(entity.kml.author.uri).toBe('http://greyhavens.invalid');
+    });
+
+    it('Feature: atom:link', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <kml xmlns="http://www.opengis.net/kml/2.2"\
+         xmlns:atom="http://www.w3.org/2005/Atom">\
+        <Placemark>\
+            <atom:link\
+                href="http://test.invalid"\
+                hreflang="en-US"\
+                rel="alternate"\
+                type="text/plain"\
+                title="Invalid!"\
+                length="123"/>\
+        </Placemark>\
+        </kml>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.kml).toBeDefined();
+        expect(entity.kml.link).toBeDefined();
+        expect(entity.kml.link.href).toEqual('http://test.invalid');
+        expect(entity.kml.link.hreflang).toEqual('en-US');
+        expect(entity.kml.link.rel).toEqual('alternate');
+        expect(entity.kml.link.type).toEqual('text/plain');
+        expect(entity.kml.link.title).toEqual('Invalid!');
+        expect(entity.kml.link.length).toEqual('123');
+    });
+
     it('GroundOverlay: Sets defaults', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
         <GroundOverlay>\
@@ -1095,7 +1200,13 @@ defineSuite([
         dataSource.load(parser.parseFromString(kml, "text/xml"));
 
         var entity = dataSource.entities.values[0];
-        expect(entity.description.getValue()).toEqual('<div style="background-color:rgb(255,255,255);color:rgb(0,0,0);">Here I am!</div>');
+        var element = document.createElement('div');
+        element.innerHTML = entity.description.getValue();
+        var div = element.firstChild;
+        expect(div.style['overflow-wrap']).toEqual('break-word');
+        expect(div.style['background-color']).toEqual('rgb(255, 255, 255)');
+        expect(div.style.color).toEqual('rgb(0, 0, 0)');
+        expect(div.textContent).toEqual('Here I am!');
     });
 
     it('GroundOverlay: Sets rectangle image material', function() {
