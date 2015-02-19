@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        '../Core/defaultValue'
+        '../Core/defaultValue',
+        './Pass'
     ], function(
-        defaultValue) {
+        defaultValue,
+        Pass) {
     "use strict";
 
     /**
@@ -18,8 +20,18 @@ define([
     var FrustumCommands = function(near, far) {
         this.near = defaultValue(near, 0.0);
         this.far = defaultValue(far, 0.0);
-        this.opaqueCommands = [];
-        this.translucentCommands = [];
+
+        var numPasses = Pass.NUMBER_OF_PASSES;
+        var commands = new Array(numPasses);
+        var indices = new Array(numPasses);
+
+        for (var i = 0; i < numPasses; ++i) {
+            commands[i] = [];
+            indices[i] = 0;
+        }
+
+        this.commands = commands;
+        this.indices = indices;
     };
 
     return FrustumCommands;
