@@ -17,6 +17,7 @@ defineSuite([
         'Core/Rectangle',
         'Core/RuntimeError',
         'DataSources/ColorMaterialProperty',
+        'DataSources/CompositePositionProperty',
         'DataSources/CompositeProperty',
         'DataSources/ConstantProperty',
         'DataSources/EntityCollection',
@@ -40,6 +41,7 @@ defineSuite([
         Rectangle,
         RuntimeError,
         ColorMaterialProperty,
+        CompositePositionProperty,
         CompositeProperty,
         ConstantProperty,
         EntityCollection,
@@ -1709,27 +1711,134 @@ defineSuite([
         expect(entity.availability.stop).toEqual(time2);
     });
 
-////    it('processMultiGeometry throws error with invalid geometry', function() {
-////        var placemarkKml = '<?xml version="1.0" encoding="UTF-8"?>\
-////            <kml xmlns="http://www.opengis.net/kml/2.2">\
-////            <Document>\
-////            <Placemark>\
-////            <MultiGeometry>\
-////              <Invalid>\
-////                <coordinates> </coordinates>\
-////              </Invalid>\
-////            </MultiGeometry>\
-////            </Placemark>\
-////            </Document>\
-////            </kml>';
-////
-////        var dataSource = new KmlDataSource();
-////        expect(function() {
-////            dataSource.load(placemarkKml);
-////        }).toThrowDeveloperError();
-////    });
-//
-//
+    it('Geometry gx:MultiTrack: sets position and availability without interpolate', function() {
+        var time = new JulianDate.fromIso8601('2010-05-28T02:02:09Z');
+        var trackKml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark xmlns="http://www.opengis.net/kml/2.2"\
+                     xmlns:gx="http://www.google.com/kml/ext/2.2">\
+              <gx:MultiTrack>\
+                  <gx:Track>\
+                    <when>2000-01-01T00:00:00Z</when>\
+                    <gx:coord>1 2 3</gx:coord>\
+                    <when>2000-01-01T00:00:01Z</when>\
+                    <gx:coord>4 5 6</gx:coord>\
+                  </gx:Track>\
+                  <gx:Track>\
+                    <when>2000-01-01T00:00:02Z</when>\
+                    <gx:coord>6 5 4</gx:coord>\
+                    <when>2000-01-01T00:00:03Z</when>\
+                    <gx:coord>3 2 1</gx:coord>\
+                  </gx:Track>\
+              </gx:MultiTrack>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(trackKml, "text/xml"));
+
+        var time1 = JulianDate.fromIso8601('2000-01-01T00:00:00Z');
+        var time2 = JulianDate.fromIso8601('2000-01-01T00:00:01Z');
+        var time3 = JulianDate.fromIso8601('2000-01-01T00:00:02Z');
+        var time4 = JulianDate.fromIso8601('2000-01-01T00:00:03Z');
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.availability.length).toEqual(2);
+        expect(entity.availability.get(0).start).toEqual(time1);
+        expect(entity.availability.get(0).stop).toEqual(time2);
+        expect(entity.availability.get(1).start).toEqual(time3);
+        expect(entity.availability.get(1).stop).toEqual(time4);
+
+        expect(entity.position.getValue(time1)).toEqualEpsilon(Cartesian3.fromDegrees(1, 2), CesiumMath.EPSILON12);
+        expect(entity.position.getValue(time2)).toEqualEpsilon(Cartesian3.fromDegrees(4, 5), CesiumMath.EPSILON12);
+        expect(entity.position.getValue(time3)).toEqualEpsilon(Cartesian3.fromDegrees(6, 5), CesiumMath.EPSILON12);
+        expect(entity.position.getValue(time4)).toEqualEpsilon(Cartesian3.fromDegrees(3, 2), CesiumMath.EPSILON12);
+    });
+
+    it('Geometry gx:MultiTrack: sets position and availability with interpolate', function() {
+        var time = new JulianDate.fromIso8601('2010-05-28T02:02:09Z');
+        var trackKml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark xmlns="http://www.opengis.net/kml/2.2"\
+                     xmlns:gx="http://www.google.com/kml/ext/2.2">\
+              <gx:MultiTrack>\
+                  <gx:interpolate>1</gx:interpolate>\
+                  <gx:Track>\
+                    <when>2000-01-01T00:00:00Z</when>\
+                    <gx:coord>1 2 3</gx:coord>\
+                    <when>2000-01-01T00:00:01Z</when>\
+                    <gx:coord>4 5 6</gx:coord>\
+                  </gx:Track>\
+                  <gx:Track>\
+                    <when>2000-01-01T00:00:02Z</when>\
+                    <gx:coord>6 5 4</gx:coord>\
+                    <when>2000-01-01T00:00:03Z</when>\
+                    <gx:coord>3 2 1</gx:coord>\
+                  </gx:Track>\
+              </gx:MultiTrack>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(trackKml, "text/xml"));
+
+        var time1 = JulianDate.fromIso8601('2000-01-01T00:00:00Z');
+        var time2 = JulianDate.fromIso8601('2000-01-01T00:00:01Z');
+        var time3 = JulianDate.fromIso8601('2000-01-01T00:00:02Z');
+        var time4 = JulianDate.fromIso8601('2000-01-01T00:00:03Z');
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.availability.length).toEqual(1);
+        expect(entity.availability.get(0).start).toEqual(time1);
+        expect(entity.availability.get(0).stop).toEqual(time4);
+
+        expect(entity.position.getValue(time1)).toEqualEpsilon(Cartesian3.fromDegrees(1, 2), CesiumMath.EPSILON12);
+        expect(entity.position.getValue(time2)).toEqualEpsilon(Cartesian3.fromDegrees(4, 5), CesiumMath.EPSILON12);
+        expect(entity.position.getValue(time3)).toEqualEpsilon(Cartesian3.fromDegrees(6, 5), CesiumMath.EPSILON12);
+        expect(entity.position.getValue(time4)).toEqualEpsilon(Cartesian3.fromDegrees(3, 2), CesiumMath.EPSILON12);
+    });
+
+    it('Geometry gx:MultiTrack: sets position and availability altitudeMode absolute, extrude, with interpolate', function() {
+        var time = new JulianDate.fromIso8601('2010-05-28T02:02:09Z');
+        var trackKml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark xmlns="http://www.opengis.net/kml/2.2"\
+                     xmlns:gx="http://www.google.com/kml/ext/2.2">\
+              <gx:MultiTrack>\
+                  <gx:interpolate>1</gx:interpolate>\
+                  <gx:Track>\
+                    <altitudeMode>absolute</altitudeMode>\
+                    <extrude>1</extrude>\
+                    <when>2000-01-01T00:00:00Z</when>\
+                    <gx:coord>1 2 3</gx:coord>\
+                    <when>2000-01-01T00:00:01Z</when>\
+                    <gx:coord>4 5 6</gx:coord>\
+                  </gx:Track>\
+                  <gx:Track>\
+                    <altitudeMode>absolute</altitudeMode>\
+                    <extrude>1</extrude>\
+                    <when>2000-01-01T00:00:02Z</when>\
+                    <gx:coord>6 5 4</gx:coord>\
+                    <when>2000-01-01T00:00:03Z</when>\
+                    <gx:coord>3 2 1</gx:coord>\
+                  </gx:Track>\
+              </gx:MultiTrack>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(trackKml, "text/xml"));
+
+        var time1 = JulianDate.fromIso8601('2000-01-01T00:00:00Z');
+        var time2 = JulianDate.fromIso8601('2000-01-01T00:00:01Z');
+        var time3 = JulianDate.fromIso8601('2000-01-01T00:00:02Z');
+        var time4 = JulianDate.fromIso8601('2000-01-01T00:00:03Z');
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.availability.length).toEqual(1);
+        expect(entity.availability.get(0).start).toEqual(time1);
+        expect(entity.availability.get(0).stop).toEqual(time4);
+
+        expect(entity.position.getValue(time1)).toEqual(Cartesian3.fromDegrees(1, 2, 3));
+        expect(entity.position.getValue(time2)).toEqual(Cartesian3.fromDegrees(4, 5, 6));
+        expect(entity.position.getValue(time3)).toEqual(Cartesian3.fromDegrees(6, 5, 4));
+        expect(entity.position.getValue(time4)).toEqual(Cartesian3.fromDegrees(3, 2, 1));
+    });
+
 //    it('handles Point Geometry with LabelStyle', function() {
 //        var name = new ConstantProperty('LabelStyle.kml');
 //        var scale = new ConstantProperty(1.5);
@@ -1767,33 +1876,6 @@ defineSuite([
 //
 //
 //
-//    it('handles gx:MultiTrack', function() {
-//        var time = new JulianDate.fromIso8601('2010-05-28T02:02:09Z');
-//        var trackKml = '<?xml version="1.0" encoding="UTF-8"?>\
-//            <kml xmlns="http://www.opengis.net/kml/2.2"\
-//             xmlns:gx="http://www.google.com/kml/ext/2.2">\
-//            <Document>\
-//            <Placemark>\
-//            <gx:MultiTrack>\
-//            <gx:Track>\
-//              <when>2010-05-28T02:02:09Z</when>\
-//              <gx:coord>7 8 9</gx:coord>\
-//            </gx:Track>\
-//            <gx:Track>\
-//            <when>2010-05-28T02:02:09Z</when>\
-//            <gx:coord>7 8 9</gx:coord>\
-//            </gx:Track>\
-//            </gx:MultiTrack>\
-//            </Placemark>\
-//            </Document>\
-//            </kml>';
-//
-//        var dataSource = new KmlDataSource();
-//        dataSource.load(parser.parseFromString(trackKml, "text/xml"));
-//
-//        var entity = dataSource.entities.values[0];
-//        expect(entity.position).toBeInstanceOf(CompositeProperty);
-//    });
 //
 //    it('handles MultiGeometry', function() {
 //        var position1 = new Cartographic(CesiumMath.toRadians(1), CesiumMath.toRadians(2), 0);

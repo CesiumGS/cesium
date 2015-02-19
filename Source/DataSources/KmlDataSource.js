@@ -49,7 +49,8 @@ define([
         './ReferenceProperty',
         './SampledPositionProperty',
         './SurfacePositionProperty',
-        './CompositeProperty',
+        './TimeIntervalCollectionProperty',
+        './CompositePositionProperty',
         './WallGraphics'
     ], function(
         BoundingRectangle,
@@ -101,7 +102,8 @@ define([
         ReferenceProperty,
         SampledPositionProperty,
         SurfacePositionProperty,
-        CompositeProperty,
+        TimeIntervalCollectionProperty,
+        CompositePositionProperty,
         WallGraphics) {
     "use strict";
 
@@ -716,12 +718,12 @@ define([
 
         } else if (gxAltitudeMode === 'clampToSeaFloor') {
             property = new SurfacePositionProperty(property, Ellipsoid.WGS84);
+        } else if (!defined(altitudeMode) || altitudeMode === 'clampToGround') {
+            property = new SurfacePositionProperty(property, Ellipsoid.WGS84);
         } else if (altitudeMode === 'absolute') {
 
         } else if (altitudeMode === 'relativeToGround') {
 
-        } else if (!defined(altitudeMode) || altitudeMode === 'clampToGround') {
-            property = new SurfacePositionProperty(property, Ellipsoid.WGS84);
         } else {
             window.console.log('Unknown altitudeMode: ' + altitudeMode);
         }
@@ -893,69 +895,96 @@ define([
         }
     }
 
+    function addToMultiTrack(times, positions, composite, availability, dropShowProperty, extrude, altitudeMode, gxAltitudeMode, includeEndPoints) {
+        var start = times[0];
+        var stop = times[times.length - 1];
+
+        var data = new SampledPositionProperty();
+        data.addSamples(times, positions);
+
+        composite.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            isStartIncluded : includeEndPoints,
+            isStopIncluded : includeEndPoints,
+            data : createPositionPropertyFromAltitudeMode(data, altitudeMode, gxAltitudeMode)
+        }));
+        availability.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            isStartIncluded : includeEndPoints,
+            isStopIncluded : includeEndPoints
+        }));
+        dropShowProperty.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            isStartIncluded : includeEndPoints,
+            isStopIncluded : includeEndPoints,
+            data : extrude
+        }));
+    }
+
     function processMultiTrack(dataSource, geometryNode, entity, styleEntity) {
-        var trackNodes = queryChildNodes(geometryNode, 'Track', namespaces.gx);
-        var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
-        var gxAltitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.gx);
+        // Multitrack options do not work in GE as detailed in the spec,
+        // rather than altitudeMode being at the MultiTrack level,
+        // GE just defers all settings to the underlying track.
+
         var interpolate = queryBooleanValue(geometryNode, 'interpolate', namespaces.gx);
-        var canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
-        var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
+        var trackNodes = queryChildNodes(geometryNode, 'Track', namespaces.gx);
 
         var times;
+        var data;
+        var lastStop;
+        var lastStopPosition;
+        var needDropLine = false;
+        var dropShowProperty = new TimeIntervalCollectionProperty();
         var availability = new TimeIntervalCollection();
-        var property = interpolate ? new SampledPositionProperty() : new CompositeProperty();
-        entity.position = createPositionPropertyFromAltitudeMode(property, altitudeMode, gxAltitudeMode);
-
+        var composite = new CompositePositionProperty();
         for (var i = 0, len = trackNodes.length; i < len; i++) {
             var trackNode = trackNodes[i];
             var timeNodes = queryChildNodes(trackNode, 'when', namespaces.kml);
             var coordNodes = queryChildNodes(trackNode, 'coord', namespaces.gx);
+            var altitudeMode = queryStringValue(trackNode, 'altitudeMode', namespaces.kml);
+            var gxAltitudeMode = queryStringValue(trackNode, 'altitudeMode', namespaces.gx);
+            var canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
+            var extrude = queryBooleanValue(trackNode, 'extrude', namespaces.kml);
 
-            var length = Math.min(length, timeNodes.length);
+            var length = Math.min(coordNodes.length, timeNodes.length);
 
-            var coordinates = [];
+            var positions = [];
             times = [];
             for (var x = 0; x < length; x++) {
                 //An empty position is OK according to the spec
                 var position = readCoordinate(coordNodes[x].textContent);
                 if (defined(position)) {
-                    coordinates.push(position);
+                    positions.push(position);
                     times.push(JulianDate.fromIso8601(timeNodes[x].textContent));
                 }
             }
 
             if (interpolate) {
-                property.addSamples(times, coordinates);
-            } else {
-                var data = new SampledPositionProperty();
-                property.addSamples(times, coordinates);
-                property.intervals.addInteval({
-                    start : times[0],
-                    stop : times[length - 1],
-                    data : property
-                });
-                availability.addInterval(new TimeInterval({
-                    start : times[0],
-                    stop : times[length - 1]
-                }));
+                //If we are interpolating, then we need to fill in the end of
+                //the last track and the beginning of this one with a sampled
+                //property.  From testing in Google Earth, this property
+                //is never extruded and always absolute.
+                if (defined(lastStop)) {
+                    addToMultiTrack([lastStop, times[0]], [lastStopPosition, positions[0]], composite, availability, dropShowProperty, false, 'absolute', undefined, false);
+                }
+                lastStop = times[length - 1];
+                lastStopPosition = positions[positions.length - 1];
             }
-        }
 
-        if (interpolate) {
-            times = property._times;
-            if (times.length > 0) {
-                availability.addInterval({
-                    start : times[0],
-                    stop : times[times.length - 1]
-                });
-            }
+            addToMultiTrack(times, positions, composite, availability, dropShowProperty, canExtrude && extrude, altitudeMode, gxAltitudeMode, true);
+            needDropLine = needDropLine || (canExtrude && extrude);
         }
 
         entity.availability = availability;
-        entity.billboard = styleEntity.billboard.clone();
+        entity.position = composite;
+        entity.billboard = defined(styleEntity.billboard) ? styleEntity.billboard.clone() : createDefaultBillboard();
 
-        if (canExtrude && extrude) {
+        if (needDropLine) {
             createDropLine(dataSource, entity, styleEntity);
+            entity.polyline.show = dropShowProperty;
         }
     }
 
@@ -1281,15 +1310,18 @@ define([
             if (altitudeMode === 'absolute') {
                 //TODO absolute means relative to sea level, not the ellipsoid.
                 geometry.height = queryNumericValue(groundOverlay, 'altitude', namespaces.kml);
-            } else if (altitudeMode !== 'clampToGround') {
+            } else if (altitudeMode === 'clampToGround') {
+                //TODO polygons on terrain
+            } else {
                 window.console.log('Unknown altitudeMode: ' + altitudeMode);
             }
         } else {
             altitudeMode = queryStringValue(groundOverlay, 'altitudeMode', namespaces.gx);
             if (altitudeMode === 'relativeToSeaFloor') {
-                window.console.log('altitudeMode relativeToSeaFloor is currently not supported');
+                window.console.log('altitudeMode relativeToSeaFloor is currently not supported, treating as absolute');
+                geometry.height = queryNumericValue(groundOverlay, 'altitude', namespaces.kml);
             } else if (altitudeMode === 'clampToSeaFloor') {
-                window.console.log('altitudeMode clampToSeaFloor is currently not supported');
+                window.console.log('altitudeMode clampToSeaFloor is currently not supported, treating as clampToGround');
             } else if (defined(altitudeMode)) {
                 window.console.log('Unknown altitudeMode: ' + altitudeMode);
             }
