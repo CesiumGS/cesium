@@ -1069,7 +1069,7 @@ defineSuite([
 
         var entities = dataSource.entities.values;
         expect(entities.length).toEqual(1);
-        expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2, 0));
+        expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqualEpsilon(Cartesian3.fromDegrees(1, 2, 0), CesiumMath.EPSILON13);
         expect(entities[0].polyline).toBeUndefined();
     });
 
@@ -1109,7 +1109,7 @@ defineSuite([
         expect(entities[0].polyline).toBeUndefined();
     });
 
-    it('Geometry Point: does not extrude when altitdeMode is clampToGround', function() {
+    it('Geometry Point: does not extrude when altitudeMode is clampToGround', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark>\
             <Point>\
@@ -1128,15 +1128,18 @@ defineSuite([
         expect(entities[0].polyline).toBeUndefined();
     });
 
-    it('Geometry Point: does not extrude when altitdeMode is clampToSeaFloor', function() {
+    it('Geometry Point: does not extrude when gx:altitudeMode is clampToSeaFloor', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <kml xmlns="http://www.opengis.net/kml/2.2"\
+               xmlns:gx="http://www.google.com/kml/ext/2.2">\
           <Placemark>\
             <Point>\
-              <altitudeMode>clampToSeaFloor</altitudeMode>\
+              <gx:altitudeMode>clampToSeaFloor</gx:altitudeMode>\
               <coordinates>1,2</coordinates>\
               <extrude>1</extrude>\
             </Point>\
-          </Placemark>';
+          </Placemark>\
+        </kml>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -1169,15 +1172,18 @@ defineSuite([
         expect(positions).toEqualEpsilon([Cartesian3.fromDegrees(1, 2, 3), Cartesian3.fromDegrees(1, 2, 0)], CesiumMath.EPSILON13);
     });
 
-    it('Geometry Point: extrudes when altitudeMode is relativeToSeaFloor', function() {
+    it('Geometry Point: extrudes when gx:altitudeMode is relativeToSeaFloor', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <kml xmlns="http://www.opengis.net/kml/2.2"\
+             xmlns:gx="http://www.google.com/kml/ext/2.2">\
           <Placemark>\
             <Point>\
-              <altitudeMode>relativeToSeaFloor</altitudeMode>\
+              <gx:altitudeMode>relativeToSeaFloor</gx:altitudeMode>\
               <coordinates>1,2,3</coordinates>\
               <extrude>1</extrude>\
             </Point>\
-          </Placemark>';
+          </Placemark>\
+        </kml>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));

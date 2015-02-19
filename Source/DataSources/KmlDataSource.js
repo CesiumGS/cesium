@@ -35,6 +35,7 @@ define([
         '../ThirdParty/when',
         '../ThirdParty/zip',
         './BillboardGraphics',
+        './ConstantPositionProperty',
         './DataSource',
         './DataSourceClock',
         './Entity',
@@ -86,6 +87,7 @@ define([
         when,
         zip,
         BillboardGraphics,
+        ConstantPositionProperty,
         DataSource,
         DataSourceClock,
         Entity,
@@ -187,32 +189,30 @@ define([
         return defined(id) ? id : createGuid();
     }
 
-    function readCoordinate(element, altitudeMode) {
+    function readCoordinate(element) {
         var digits = element.textContent.trim().split(/[\s,\n]+/g);
-
-        //This shouldn't happen here.
-        var height = defined(digits[2]) ? parseFloat(digits[2]) : 0;
-        if (altitudeMode === 'absolute') {
-            //TODO
-        } else if (altitudeMode === 'relativeToGround') {
-            //TODO
-        } else if (!defined(altitudeMode) || altitudeMode === 'clampToGround') {
-            //TODO: clamp on terrain
-            height = 0;
-        } else {
-            window.console.log('Unknown altitudeMode: ' + altitudeMode);
+        if (digits.length !== 2 && digits.length !== 3) {
+            return undefined;
         }
 
-        Cartographic.fromDegrees(digits[0], digits[1], height, scratchCartographic);
+        var longitude = parseFloat(digits[0]);
+        var latitude = parseFloat(digits[1]);
+        var height = parseFloat(digits[2]);
+
+        longitude = isNaN(longitude) ? 0.0 : longitude;
+        latitude = isNaN(latitude) ? 0.0 : latitude;
+        height = isNaN(height) ? 0.0 : height;
+
+        Cartographic.fromDegrees(longitude, latitude, height, scratchCartographic);
         return Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic);
     }
 
-    function isExtrudable(altitudeMode) {
-        return altitudeMode === 'absolute' || altitudeMode === 'relativeToGround' || altitudeMode === 'relativeToSeaFloor';
+    function isExtrudable(altitudeMode, gxAltitudeMode) {
+        return altitudeMode === 'absolute' || altitudeMode === 'relativeToGround' || gxAltitudeMode === 'relativeToSeaFloor';
     }
 
     function readCoordinates(element) {
-        if(!defined(element)){
+        if (!defined(element)) {
             return undefined;
         }
         //TODO: height is referenced to altitude mode
@@ -222,8 +222,17 @@ define([
         var resultIndex = 0;
 
         for (var i = 0; i < tuples.length; i++) {
-            var coordinates = tuples[i].split(/[\s,\n]+/g);
-            scratchCartographic = Cartographic.fromDegrees(parseFloat(coordinates[0]), parseFloat(coordinates[1]), defined(coordinates[2]) ? parseFloat(coordinates[2]) : 0, scratchCartographic);
+            var digits = tuples[i].split(/[\s,\n]+/g);
+
+            var longitude = parseFloat(digits[0]);
+            var latitude = parseFloat(digits[1]);
+            var height = parseFloat(digits[2]);
+
+            longitude = isNaN(longitude) ? 0.0 : longitude;
+            latitude = isNaN(latitude) ? 0.0 : latitude;
+            height = isNaN(height) ? 0.0 : height;
+
+            scratchCartographic = Cartographic.fromDegrees(longitude, latitude, height, scratchCartographic);
             result[resultIndex++] = Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic);
         }
         return result;
@@ -704,16 +713,39 @@ define([
         entity.polyline.positions = new PositionPropertyArray([entityPosition, surfacePosition]);
     }
 
+    function createPositionPropertyFromAltitudeMode(property, altitudeMode, gxAltitudeMode) {
+        if (gxAltitudeMode === 'relativeToSeaFloor') {
+            //TODO Adjust for sea floor
+        } else if (gxAltitudeMode === 'clampToSeaFloor') {
+            property = new SurfacePositionProperty(property, Ellipsoid.WGS84);
+        } else if (altitudeMode === 'absolute') {
+            //TODO Adjust for MSL
+        } else if (altitudeMode === 'relativeToGround') {
+            //TODO Adjust for terrain
+        } else if (!defined(altitudeMode) || altitudeMode === 'clampToGround') {
+            property = new SurfacePositionProperty(property, Ellipsoid.WGS84);
+        } else {
+            window.console.log('Unknown altitudeMode: ' + altitudeMode);
+        }
+        return property;
+    }
+
     function processPoint(dataSource, geometryNode, entity, styleEntity) {
         var coordinatesNode = queryFirstNode(geometryNode, 'coordinates', namespaces.kml);
         var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
+        var gxAltitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.gx);
         var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
 
-        var position = readCoordinate(coordinatesNode, altitudeMode);
-        entity.position = position;
         entity.billboard = styleEntity.billboard;
 
-        if (extrude && isExtrudable(altitudeMode) && defined(position)) {
+        var position = readCoordinate(coordinatesNode);
+        if (!defined(position)) {
+            return;
+        }
+
+        entity.position = createPositionPropertyFromAltitudeMode(new ConstantPositionProperty(position), altitudeMode, gxAltitudeMode);
+
+        if (extrude && isExtrudable(altitudeMode, gxAltitudeMode)) {
             createDropLine(dataSource, entity, styleEntity);
         }
     }
@@ -721,9 +753,10 @@ define([
     function processLineStringOrLinearRing(dataSource, geometryNode, entity, styleEntity) {
         var coordinatesNode = queryFirstNode(geometryNode, 'coordinates', namespaces.kml);
         var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
+        var gxAltitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.gx);
         var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
         var tessellate = queryBooleanValue(geometryNode, 'tessellate', namespaces.kml);
-        var canExtrude = isExtrudable(altitudeMode);
+        var canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
 
         var coordinates = readCoordinates(coordinatesNode);
         var polyline = styleEntity.polyline;
@@ -754,7 +787,8 @@ define([
         var coordinates = readCoordinates(coordinatesNode);
         var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
         var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
-        var canExtrude = isExtrudable(altitudeMode);
+        var gxAltitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.gx);
+        var canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
 
         var polyline = styleEntity.polyline;
         var polygon = defined(styleEntity.polygon) ? styleEntity.polygon.clone() : new PolygonGraphics();
@@ -796,10 +830,11 @@ define([
 
     function processTrack(dataSource, geometryNode, entity, styleEntity) {
         var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
+        var gxAltitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.gx);
         var coordNodes = queryChildNodes(geometryNode, 'coord', namespaces.gx);
         var timeNodes = queryChildNodes(geometryNode, 'when', namespaces.kml);
         var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
-        var canExtrude = isExtrudable(altitudeMode);
+        var canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
 
         if (coordNodes.length !== timeNodes.length) {
             throw new RuntimeError();
@@ -809,12 +844,12 @@ define([
             var coordinates = new Array(coordNodes.length);
             var times = new Array(timeNodes.length);
             for (var i = 0; i < times.length; i++) {
-                coordinates[i] = readCoordinate(coordNodes[i], altitudeMode);
+                coordinates[i] = readCoordinate(coordNodes[i]);
                 times[i] = JulianDate.fromIso8601(timeNodes[i].textContent);
             }
             var property = new SampledPositionProperty();
             property.addSamples(times, coordinates);
-            entity.position = property;
+            entity.position = createPositionPropertyFromAltitudeMode(property, altitudeMode, gxAltitudeMode);
             entity.billboard = styleEntity.billboard;
             entity.availability = new TimeIntervalCollection();
             entity.availability.addInterval(new TimeInterval({
@@ -831,14 +866,16 @@ define([
     function processMultiTrack(dataSource, geometryNode, entity, styleEntity) {
         var trackNodes = queryChildNodes(geometryNode, 'Track', namespaces.gx);
         var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
+        var gxAltitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.gx);
         var interpolate = queryBooleanValue(geometryNode, 'interpolate', namespaces.gx);
-        var canExtrude = isExtrudable(altitudeMode);
+        var canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
         var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
 
         var times;
         var availability = new TimeIntervalCollection();
         var property = interpolate ? new SampledPositionProperty() : new CompositeProperty();
-        entity.position = property;
+        entity.position = createPositionPropertyFromAltitudeMode(property, altitudeMode, gxAltitudeMode);
+
         for (var i = 0, len = trackNodes.length; i < len; i++) {
             var trackNode = trackNodes[i];
             var timeNodes = queryChildNodes(trackNode, 'when', namespaces.kml);
@@ -852,7 +889,7 @@ define([
                 var coordinates = new Array(coordNodes.length);
                 times = new Array(timeNodes.length);
                 for (var x = 0; x < times.length; x++) {
-                    coordinates[x] = readCoordinate(coordNodes[x], altitudeMode);
+                    coordinates[x] = readCoordinate(coordNodes[x]);
                     times[x] = JulianDate.fromIso8601(timeNodes[x].textContent);
                 }
                 if (interpolate) {
