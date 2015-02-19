@@ -6,7 +6,11 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/Math',
+        '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/Transforms',
+        '../Scene/DistanceDisplayCondition',
         '../Scene/Model',
         '../Scene/ModelAnimationLoop',
         './BoundingSphereState',
@@ -18,7 +22,11 @@ define([
         defined,
         destroyObject,
         DeveloperError,
+        CesiumMath,
+        Matrix3,
         Matrix4,
+        Transforms,
+        DistanceDisplayCondition,
         Model,
         ModelAnimationLoop,
         BoundingSphereState,
@@ -107,7 +115,9 @@ define([
                     delete modelHash[entity.id];
                 }
                 model = Model.fromGltf({
-                    url : uri
+                    url : uri,
+                    displayCondition : new DistanceDisplayCondition(0, 2000.0),
+                    loadOnlyIfDisplayCondition : true
                 });
 
                 model.readyPromise.then(onModelReady).otherwise(onModelError);
