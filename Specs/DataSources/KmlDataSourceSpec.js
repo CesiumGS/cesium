@@ -69,6 +69,16 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('loadKmz works with a KMZ file', function() {
+        var dataSource = new KmlDataSource();
+        waitsForPromise(loadBlob('Data/KML/simple.kmz').then(function(blob) {
+            return dataSource.loadKmz(blob);
+        }).then(function(source) {
+            expect(source).toBe(dataSource);
+            expect(source.entities.values.length).toEqual(1);
+        }));
+    });
+
     it('loadKmz throws with undefined blob', function() {
         var dataSource = new KmlDataSource();
         expect(function() {
@@ -1396,9 +1406,30 @@ defineSuite([
         expect(entity.polygon.extrudedHeight).toBeUndefined();
     });
 
-    //  /*
-    //  * Tests below this comment need to be reevaluated.
-    //  */
+    it('Geometry LineString: sets positions', function() {
+        var lineKml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Document>\
+            <Placemark>\
+            <LineString>\
+              <coordinates>1,2,3 \
+                           4,5,6 \
+              </coordinates>\
+            </LineString>\
+            </Placemark>\
+            </Document>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(lineKml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        expect(entities.length).toEqual(1);
+
+        var entity = entities[0];
+        expect(entity.wall).toBeUndefined();
+        expect(entity.polyline).toBeDefined();
+        expect(entity.polyline.positions.getValue()[0]).toEqual(Cartesian3.fromDegrees(1, 2, 3));
+        expect(entity.polyline.positions.getValue()[1]).toEqual(Cartesian3.fromDegrees(4, 5, 6));
+    });
 
 ////    it('processMultiGeometry throws error with invalid geometry', function() {
 ////        var placemarkKml = '<?xml version="1.0" encoding="UTF-8"?>\
@@ -1455,54 +1486,6 @@ defineSuite([
 //        expect(entities[0].label.fillColor.blue).toEqual(color.blue);
 //        expect(entities[0].label.fillColor.alpha).toEqual(color.alpha);
 //    });
-//
-//    it('handles Line Geometry with two sets of coordinates', function() {
-//        var position1 = new Cartographic(CesiumMath.toRadians(1), CesiumMath.toRadians(2), 0);
-//        var cartesianPosition1 = Ellipsoid.WGS84.cartographicToCartesian(position1);
-//        var position2 = new Cartographic(CesiumMath.toRadians(4), CesiumMath.toRadians(5), 0);
-//        var cartesianPosition2 = Ellipsoid.WGS84.cartographicToCartesian(position2);
-//        var lineKml = '<?xml version="1.0" encoding="UTF-8"?>\
-//    <kml xmlns="http://www.opengis.net/kml/2.2">\
-//    <Document>\
-//    <Placemark>\
-//      <LineString>\
-//        <coordinates>1,2,0 \
-//                     4,5,0 \
-//        </coordinates>\
-//      </LineString>\
-//    </Placemark>\
-//    </Document>\
-//    </kml>';
-//
-//        var dataSource = new KmlDataSource();
-//        dataSource.load(parser.parseFromString(lineKml, "text/xml"));
-//
-//        var entities = dataSource.entities.values;
-//        var entity = entities[0];
-//        expect(entities.length).toEqual(1);
-//        expect(entity.polyline.positions.getValue()[0]).toEqual(cartesianPosition1);
-//        expect(entity.polyline.positions.getValue()[1]).toEqual(cartesianPosition2);
-//    });
-//
-////    it('processLineString throws error with invalid coordinates', function() {
-////        var lineKml = '<?xml version="1.0" encoding="UTF-8"?>\
-////            <kml xmlns="http://www.opengis.net/kml/2.2">\
-////            <Document>\
-////            <Placemark>\
-////              <LineString>\
-////                <coordinates>1 \
-////                             4,5,0 \
-////                </coordinates>\
-////              </LineString>\
-////            </Placemark>\
-////            </Document>\
-////            </kml>';
-////
-////        var dataSource = new KmlDataSource();
-////        expect(function() {
-////            dataSource.load(lineKml);
-////        }).toThrowDeveloperError();
-////    });
 //
 //
 //    it('handles gx:Track', function() {

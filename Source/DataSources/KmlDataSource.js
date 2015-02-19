@@ -142,20 +142,18 @@ define([
         return deferred;
     }
 
-    var readBlob = {
-        asText : function(blob) {
-            var deferred = when.defer();
-            var reader = new FileReader();
-            reader.addEventListener('load', function() {
-                deferred.resolve(reader.result);
-            });
-            reader.addEventListener('error', function() {
-                deferred.reject(new RuntimeError('Error reading blob as text.'));
-            });
-            reader.readAsText(blob);
-            return deferred;
-        }
-    };
+    function readBlobAsText(blob) {
+        var deferred = when.defer();
+        var reader = new FileReader();
+        reader.addEventListener('load', function() {
+            deferred.resolve(reader.result);
+        });
+        reader.addEventListener('error', function() {
+            deferred.reject(reader.error);
+        });
+        reader.readAsText(blob);
+        return deferred;
+    }
 
     function loadXmlFromZip(reader, entry, uriResolver, deferred) {
         entry.getData(new zip.TextWriter(), function(text) {
@@ -764,10 +762,13 @@ define([
             wall.positions = coordinates;
             var polygon = styleEntity.polygon;
 
-            if (defined(polyline)) {
+            if (defined(polygon)) {
                 wall.material = polygon.material;
+            }
+
+            if (defined(polyline)) {
                 wall.outline = true;
-                wall.outlineColor = defined(polyline.material) ? polyline.material.color : undefined;
+                wall.outlineColor = defined(polyline.material) ? polyline.material.color : Color.WHITE;
                 wall.outlineWidth = polyline.width;
             }
         } else {
@@ -792,9 +793,7 @@ define([
         var polygon = defined(styleEntity.polygon) ? styleEntity.polygon.clone() : createDefaultPolygon();
         polygon.outline = true;
         if (defined(polyline)) {
-            if (defined(polyline.material)) {
-                polygon.outlineColor = polyline.material.color;
-            }
+            polygon.outlineColor = defined(polyline.material) ? polyline.material.color : Color.WHITE;
             polygon.outlineWidth = polyline.width;
         }
         entity.polygon = polygon;
@@ -1547,7 +1546,7 @@ define([
         var that = this;
         return isZipFile(kmz).then(function(isZip) {
             if (isZip) {
-                return loadKmz(this, kmz, sourceUri);
+                return loadKmz(that, kmz, sourceUri);
             }
             return when.reject(new RuntimeError('KMZ file is not a valid zip file.'));
         }).otherwise(function(error) {
@@ -1576,7 +1575,7 @@ define([
                 if (isZip) {
                     return loadKmz(that, blob, url);
                 }
-                return when(readBlob.asText(blob)).then(function(text) {
+                return when(readBlobAsText(blob)).then(function(text) {
                     var kml = parser.parseFromString(text, 'application/xml');
                     //There's no official way to validate if the parse was successful.
                     //The following if check seems to detect the error on all supported browsers.
