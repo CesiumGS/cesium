@@ -125,7 +125,7 @@ defineSuite([
 
     it('loadUrl rejects loading nonexistent file', function() {
         var dataSource = new KmlDataSource();
-        waitsForPromise.toReject(dataSource.loadUrl('//test.invalid/invalid.kml'));
+        waitsForPromise.toReject(dataSource.loadUrl('test.invalid'));
     });
 
     it('loadUrl rejects loading non-KML file', function() {
@@ -152,7 +152,18 @@ defineSuite([
 
     it('sets DataSource name from Document', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <name>NameInKml</name>\
+            </Document>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"), 'NameFromUri.kml');
+        expect(dataSource.name).toEqual('NameInKml');
+    });
+
+    it('sets DataSource name from Document with KML element', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml>\
             <Document>\
             <name>NameInKml</name>\
             </Document>\
@@ -165,10 +176,8 @@ defineSuite([
 
     it('sets DataSource name from sourceUri when not in file', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2">\
             <Document>\
-            </Document>\
-            </kml>';
+            </Document>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"), 'NameFromUri.kml');
@@ -241,16 +250,14 @@ defineSuite([
 
     it('Feature: atom:author', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-        <kml xmlns="http://www.opengis.net/kml/2.2"\
-         xmlns:atom="http://www.w3.org/2005/Atom">\
-        <Placemark>\
+        <Placemark xmlns="http://www.opengis.net/kml/2.2"\
+            xmlns:atom="http://www.w3.org/2005/Atom">\
             <atom:author>\
                 <atom:name>J.R.R. Tolkien</atom:name>\
                 <atom:email>gandalf@greyhavens.invalid</atom:email>\
                 <atom:uri>http://greyhavens.invalid</atom:uri>\
             </atom:author>\
-        </Placemark>\
-        </kml>';
+        </Placemark>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -265,9 +272,8 @@ defineSuite([
 
     it('Feature: atom:link', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-        <kml xmlns="http://www.opengis.net/kml/2.2"\
-         xmlns:atom="http://www.w3.org/2005/Atom">\
-        <Placemark>\
+        <Placemark xmlns="http://www.opengis.net/kml/2.2"\
+                   xmlns:atom="http://www.w3.org/2005/Atom">\
             <atom:link\
                 href="http://test.invalid"\
                 hreflang="en-US"\
@@ -275,8 +281,7 @@ defineSuite([
                 type="text/plain"\
                 title="Invalid!"\
                 length="123"/>\
-        </Placemark>\
-        </kml>';
+        </Placemark>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -498,16 +503,14 @@ defineSuite([
 
     it('GroundOverlay: Sets polygon coordinates for gx:LatLonQuad', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-        <kml xmlns="http://www.opengis.net/kml/2.2"\
-             xmlns:gx="http://www.google.com/kml/ext/2.2">\
-            <GroundOverlay>\
-                <gx:LatLonQuad>\
-                    <coordinates>\
-                    1,2 3,4 5,6 7,8\
-                    </coordinates>\
-                </gx:LatLonQuad>\
-            </GroundOverlay>\
-        </kml>';
+        <GroundOverlay xmlns="http://www.opengis.net/kml/2.2"\
+                       xmlns:gx="http://www.google.com/kml/ext/2.2">\
+            <gx:LatLonQuad>\
+                <coordinates>\
+                1,2 3,4 5,6 7,8\
+                </coordinates>\
+            </gx:LatLonQuad>\
+        </GroundOverlay>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -519,19 +522,17 @@ defineSuite([
 
     it('GroundOverlay: Sets polygon image for gx:LatLonQuad', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2"\
-                 xmlns:gx="http://www.google.com/kml/ext/2.2">\
-                <GroundOverlay>\
-                    <Icon>\
-                        <href>http://test.invalid/image.png</href>\
-                    </Icon>\
-                    <gx:LatLonQuad>\
-                        <coordinates>\
-                        1,2 3,4 5,6 7,8\
-                        </coordinates>\
-                    </gx:LatLonQuad>\
-                </GroundOverlay>\
-            </kml>';
+        <GroundOverlay xmlns="http://www.opengis.net/kml/2.2"\
+                       xmlns:gx="http://www.google.com/kml/ext/2.2">\
+            <Icon>\
+                <href>http://test.invalid/image.png</href>\
+            </Icon>\
+            <gx:LatLonQuad>\
+                <coordinates>\
+                1,2 3,4 5,6 7,8\
+                </coordinates>\
+            </gx:LatLonQuad>\
+        </GroundOverlay>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -557,7 +558,6 @@ defineSuite([
 
     it('Styles: supports local styles with styleUrl', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2">\
             <Document>\
             <Style id="testStyle">\
               <IconStyle>\
@@ -567,8 +567,7 @@ defineSuite([
             <Placemark>\
               <styleUrl>#testStyle</styleUrl>\
             </Placemark>\
-            </Document>\
-            </kml>';
+            </Document>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -580,13 +579,10 @@ defineSuite([
 
     it('Styles: supports external styles with styleUrl', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2">\
-            <Document>\
             <Placemark>\
               <styleUrl>Data/KML/externalStyle.kml#testStyle</styleUrl>\
             </Placemark>\
-            </Document>\
-            </kml>';
+            </Document>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -603,7 +599,6 @@ defineSuite([
 
     it('Styles: inline styles take precedance over shared styles', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2">\
             <Document>\
             <Style id="testStyle">\
               <IconStyle>\
@@ -622,8 +617,7 @@ defineSuite([
                 </IconStyle>\
               </Style>\
             </Placemark>\
-            </Document>\
-            </kml>';
+            </Document>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -655,17 +649,15 @@ defineSuite([
 
     it('IconStyle: Sets billboard image absolute path', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-          <Document>\
-              <Placemark>\
-                  <Style>\
-                      <IconStyle>\
-                          <Icon>\
-                              <href>http://test.invalid/image.png</href>\
-                          </Icon>\
-                      </IconStyle>\
-                  </Style>\
-              </Placemark>\
-          </Document>';
+          <Placemark>\
+              <Style>\
+                  <IconStyle>\
+                      <Icon>\
+                          <href>http://test.invalid/image.png</href>\
+                      </Icon>\
+                  </IconStyle>\
+              </Style>\
+          </Placemark>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -718,22 +710,20 @@ defineSuite([
 
     it('IconStyle: Sets billboard image with subregion', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-          <kml xmlns="http://www.opengis.net/kml/2.2"\
-           xmlns:gx="http://www.google.com/kml/ext/2.2">\
-                  <Placemark>\
-                    <Style>\
-                      <IconStyle>\
-                        <Icon>\
-                          <href>whiteShapes.png</href>\
-                          <gx:x>49</gx:x>\
-                          <gx:y>43</gx:y>\
-                          <gx:w>18</gx:w>\
-                          <gx:h>18</gx:h>\
-                        </Icon>\
-                      </IconStyle>\
-                    </Style>\
-                  </Placemark>\
-            </kml>';
+          <Placemark xmlns="http://www.opengis.net/kml/2.2"\
+                     xmlns:gx="http://www.google.com/kml/ext/2.2">\
+            <Style>\
+              <IconStyle>\
+                <Icon>\
+                  <href>whiteShapes.png</href>\
+                  <gx:x>49</gx:x>\
+                  <gx:y>43</gx:y>\
+                  <gx:w>18</gx:w>\
+                  <gx:h>18</gx:h>\
+                </Icon>\
+              </IconStyle>\
+            </Style>\
+          </Placemark>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -1138,16 +1128,14 @@ defineSuite([
 
     it('Geometry Point: does not extrude when gx:altitudeMode is clampToSeaFloor', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-          <kml xmlns="http://www.opengis.net/kml/2.2"\
-               xmlns:gx="http://www.google.com/kml/ext/2.2">\
-          <Placemark>\
+          <Placemark xmlns="http://www.opengis.net/kml/2.2"\
+                     xmlns:gx="http://www.google.com/kml/ext/2.2">\
             <Point>\
               <gx:altitudeMode>clampToSeaFloor</gx:altitudeMode>\
               <coordinates>1,2</coordinates>\
               <extrude>1</extrude>\
             </Point>\
-          </Placemark>\
-        </kml>';
+          </Placemark>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -1182,16 +1170,14 @@ defineSuite([
 
     it('Geometry Point: extrudes when gx:altitudeMode is relativeToSeaFloor', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-        <kml xmlns="http://www.opengis.net/kml/2.2"\
-             xmlns:gx="http://www.google.com/kml/ext/2.2">\
-          <Placemark>\
+          <Placemark xmlns="http://www.opengis.net/kml/2.2"\
+                     xmlns:gx="http://www.google.com/kml/ext/2.2">\
             <Point>\
               <gx:altitudeMode>relativeToSeaFloor</gx:altitudeMode>\
               <coordinates>1,2,3</coordinates>\
               <extrude>1</extrude>\
             </Point>\
-          </Placemark>\
-        </kml>';
+          </Placemark>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -1229,7 +1215,6 @@ defineSuite([
 
     it('Geometry Polygon: without holes', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-          <kml xmlns="http://www.opengis.net/kml/2.2">\
           <Placemark>\
             <Polygon>\
               <outerBoundaryIs>\
@@ -1242,8 +1227,7 @@ defineSuite([
                 </LinearRing>\
               </outerBoundaryIs>\
             </Polygon>\
-          </Placemark>\
-          </kml>';
+          </Placemark>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -1255,7 +1239,6 @@ defineSuite([
 
     it('Geometry Polygon: with holes', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-          <kml xmlns="http://www.opengis.net/kml/2.2">\
           <Placemark>\
             <Polygon>\
             <outerBoundaryIs>\
@@ -1286,8 +1269,7 @@ defineSuite([
             </LinearRing>\
             </innerBoundaryIs>\
             </Polygon>\
-          </Placemark>\
-          </kml>';
+          </Placemark>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -1310,14 +1292,12 @@ defineSuite([
 
     it('Geometry Polygon: altitudeMode relativeToGround and can extrude', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-          <kml xmlns="http://www.opengis.net/kml/2.2">\
           <Placemark>\
             <Polygon>\
               <altitudeMode>relativeToGround</altitudeMode>\
               <extrude>1</extrude>\
             </Polygon>\
-          </Placemark>\
-          </kml>';
+          </Placemark>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -1329,14 +1309,12 @@ defineSuite([
 
     it('Geometry Polygon: altitudeMode absolute and can extrude', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-          <kml xmlns="http://www.opengis.net/kml/2.2">\
           <Placemark>\
             <Polygon>\
               <altitudeMode>absolute</altitudeMode>\
               <extrude>1</extrude>\
             </Polygon>\
-          </Placemark>\
-          </kml>';
+          </Placemark>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -1348,15 +1326,13 @@ defineSuite([
 
     it('Geometry Polygon: altitudeMode clampToGround and cannot extrude', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-          <kml xmlns="http://www.opengis.net/kml/2.2"\
-               xmlns:gx="http://www.google.com/kml/ext/2.2">\
-          <Placemark>\
+          <Placemark xmlns="http://www.opengis.net/kml/2.2"\
+                     xmlns:gx="http://www.google.com/kml/ext/2.2">\
             <Polygon>\
               <altitudeMode>clampToGround</altitudeMode>\
               <extrude>1</extrude>\
             </Polygon>\
-          </Placemark>\
-          </kml>';
+          </Placemark>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -1368,15 +1344,13 @@ defineSuite([
 
     it('Geometry Polygon: gx:altitudeMode relativeToSeaFloor and can extrude', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-          <kml xmlns="http://www.opengis.net/kml/2.2"\
-               xmlns:gx="http://www.google.com/kml/ext/2.2">\
-          <Placemark>\
+          <Placemark xmlns="http://www.opengis.net/kml/2.2"\
+                     xmlns:gx="http://www.google.com/kml/ext/2.2">\
             <Polygon>\
               <gx:altitudeMode>relativeToSeaFloor</gx:altitudeMode>\
               <extrude>1</extrude>\
             </Polygon>\
-          </Placemark>\
-          </kml>';
+          </Placemark>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -1388,15 +1362,13 @@ defineSuite([
 
     it('Geometry Polygon: gx:altitudeMode clampToSeaFloor and can extrude', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-          <kml xmlns="http://www.opengis.net/kml/2.2"\
-               xmlns:gx="http://www.google.com/kml/ext/2.2">\
-          <Placemark>\
+          <Placemark xmlns="http://www.opengis.net/kml/2.2"\
+                     xmlns:gx="http://www.google.com/kml/ext/2.2">\
             <Polygon>\
               <gx:altitudeMode>clampToSeaFloor</gx:altitudeMode>\
               <extrude>1</extrude>\
             </Polygon>\
-          </Placemark>\
-          </kml>';
+          </Placemark>';
 
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
@@ -1406,20 +1378,15 @@ defineSuite([
         expect(entity.polygon.extrudedHeight).toBeUndefined();
     });
 
-    it('Geometry LineString: sets positions', function() {
-        var lineKml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <Document>\
+    it('Geometry LineString: handles empty element', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <Placemark>\
             <LineString>\
-              <coordinates>1,2,3 \
-                           4,5,6 \
-              </coordinates>\
             </LineString>\
-            </Placemark>\
-            </Document>';
+            </Placemark>';
 
         var dataSource = new KmlDataSource();
-        dataSource.load(parser.parseFromString(lineKml, "text/xml"));
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
 
         var entities = dataSource.entities.values;
         expect(entities.length).toEqual(1);
@@ -1427,8 +1394,319 @@ defineSuite([
         var entity = entities[0];
         expect(entity.wall).toBeUndefined();
         expect(entity.polyline).toBeDefined();
-        expect(entity.polyline.positions.getValue()[0]).toEqual(Cartesian3.fromDegrees(1, 2, 3));
-        expect(entity.polyline.positions.getValue()[1]).toEqual(Cartesian3.fromDegrees(4, 5, 6));
+        expect(entity.polyline.followSurface.getValue()).toEqual(false);
+    });
+
+    it('Geometry LineString: sets positions (clampToGround default)', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Placemark>\
+            <LineString>\
+              <coordinates>1,2,3 \
+                           4,5,6 \
+              </coordinates>\
+            </LineString>\
+            </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        expect(entities.length).toEqual(1);
+
+        var entity = entities[0];
+        expect(entity.wall).toBeUndefined();
+        expect(entity.polyline).toBeDefined();
+
+        var positions = entity.polyline.positions.getValue(Iso8601.MINIMUM_VALUE);
+        expect(positions).toEqualEpsilon([Cartesian3.fromDegrees(1, 2), Cartesian3.fromDegrees(4, 5)], CesiumMath.EPSILON10);
+        expect(entity.polyline.followSurface.getValue()).toEqual(false);
+    });
+
+    it('Geometry LineString: sets wall positions when extruded', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Placemark>\
+            <LineString>\
+              <altitudeMode>absolute</altitudeMode>\
+              <extrude>1</extrude>\
+              <coordinates>1,2,3 \
+                           4,5,6 \
+              </coordinates>\
+            </LineString>\
+            </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        expect(entities.length).toEqual(1);
+
+        var entity = entities[0];
+        expect(entity.polyline).toBeUndefined();
+        expect(entity.wall).toBeDefined();
+
+        var positions = entity.wall.positions.getValue(Iso8601.MINIMUM_VALUE);
+        expect(positions).toEqualEpsilon([Cartesian3.fromDegrees(1, 2, 3), Cartesian3.fromDegrees(4, 5, 6)], CesiumMath.EPSILON10);
+    });
+
+    it('Geometry LineString: sets positions altitudeMode clampToGround, cannot extrude, can tessellate', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Placemark>\
+            <LineString>\
+                <altitudeMode>clampToGround</altitudeMode>\
+                <extrude>1</extrude>\
+                <tessellate>1</tessellate>\
+            </LineString>\
+            </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        expect(entities.length).toEqual(1);
+
+        var entity = entities[0];
+        expect(entity.polyline.followSurface).toBeUndefined();
+    });
+
+    it('Geometry LineString: sets positions altitudeMode gx:clampToSeaFloor, cannot extrude, can tessellate', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Placemark xmlns="http://www.opengis.net/kml/2.2"\
+                       xmlns:gx="http://www.google.com/kml/ext/2.2">\
+            <LineString>\
+                <gx:altitudeMode>clampToSeaFloor</gx:altitudeMode>\
+                <extrude>1</extrude>\
+                <tessellate>1</tessellate>\
+            </LineString>\
+            </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        expect(entities.length).toEqual(1);
+
+        var entity = entities[0];
+        expect(entity.polyline.followSurface).toBeUndefined();
+    });
+
+    it('Geometry LineString: sets positions altitudeMode gx:relativeToSeaFloor, can extrude, cannot tessellate', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Placemark xmlns="http://www.opengis.net/kml/2.2"\
+                   xmlns:gx="http://www.google.com/kml/ext/2.2">\
+        <LineString>\
+            <gx:altitudeMode>relativeToSeaFloor</gx:altitudeMode>\
+            <extrude>1</extrude>\
+            <tessellate>1</tessellate>\
+        </LineString>\
+        </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        expect(entities.length).toEqual(1);
+
+        var entity = entities[0];
+        expect(entity.polyline).toBeUndefined(true);
+        expect(entity.wall).toBeDefined();
+    });
+
+    it('Geometry LineString: sets positions altitudeMode relativeToGround, can extrude, cannot tessellate', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Placemark>\
+            <LineString>\
+                <altitudeMode>relativeToGround</altitudeMode>\
+                <extrude>1</extrude>\
+                <tessellate>1</tessellate>\
+            </LineString>\
+            </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        expect(entities.length).toEqual(1);
+
+        var entity = entities[0];
+        expect(entity.polyline).toBeUndefined();
+        expect(entity.wall).toBeDefined();
+    });
+
+    it('Geometry LineString: sets positions altitudeMode absolute, can extrude, cannot tessellate', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Placemark>\
+            <LineString>\
+                <altitudeMode>absolute</altitudeMode>\
+                <extrude>1</extrude>\
+                <tessellate>1</tessellate>\
+            </LineString>\
+            </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        expect(entities.length).toEqual(1);
+
+        var entity = entities[0];
+        expect(entity.polyline).toBeUndefined();
+        expect(entity.wall).toBeDefined();
+    });
+
+    it('Geometry gx:Track: sets position and availability (clampToGround default)', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Placemark xmlns="http://www.opengis.net/kml/2.2"\
+                       xmlns:gx="http://www.google.com/kml/ext/2.2">\
+              <gx:Track>\
+                <when>2000-01-01T00:00:00Z</when>\
+                <gx:coord>1 2 3</gx:coord>\
+                <when>2000-01-01T00:00:01Z</when>\
+                <gx:coord>4 5 6</gx:coord>\
+                <when>2000-01-01T00:00:02Z</when>\
+                <gx:coord>7 8 9</gx:coord>\
+              </gx:Track>\
+            </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var time1 = JulianDate.fromIso8601('2000-01-01T00:00:00Z');
+        var time2 = JulianDate.fromIso8601('2000-01-01T00:00:01Z');
+        var time3 = JulianDate.fromIso8601('2000-01-01T00:00:02Z');
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.position.getValue(time1)).toEqualEpsilon(Cartesian3.fromDegrees(1, 2), CesiumMath.EPSILON12);
+        expect(entity.position.getValue(time2)).toEqualEpsilon(Cartesian3.fromDegrees(4, 5), CesiumMath.EPSILON12);
+        expect(entity.position.getValue(time3)).toEqualEpsilon(Cartesian3.fromDegrees(7, 8), CesiumMath.EPSILON12);
+        expect(entity.polyline).toBeUndefined();
+
+        expect(entity.availability.start).toEqual(time1);
+        expect(entity.availability.stop).toEqual(time3);
+    });
+
+    it('Geometry gx:Track: sets position clampToGround, cannot extrude', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Placemark xmlns="http://www.opengis.net/kml/2.2"\
+                       xmlns:gx="http://www.google.com/kml/ext/2.2">\
+              <gx:Track>\
+                <altitudeMode>clampToGround</altitudeMode>\
+                <extrude>1</extrude>\
+                <when>2000-01-01T00:00:00Z</when>\
+                <gx:coord>1 2 3</gx:coord>\
+                <when>2000-01-01T00:00:01Z</when>\
+                <gx:coord>4 5 6</gx:coord>\
+                <when>2000-01-01T00:00:02Z</when>\
+                <gx:coord>7 8 9</gx:coord>\
+              </gx:Track>\
+            </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var time1 = JulianDate.fromIso8601('2000-01-01T00:00:00Z');
+        var time2 = JulianDate.fromIso8601('2000-01-01T00:00:01Z');
+        var time3 = JulianDate.fromIso8601('2000-01-01T00:00:02Z');
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.position.getValue(time1)).toEqualEpsilon(Cartesian3.fromDegrees(1, 2), CesiumMath.EPSILON12);
+        expect(entity.position.getValue(time2)).toEqualEpsilon(Cartesian3.fromDegrees(4, 5), CesiumMath.EPSILON12);
+        expect(entity.position.getValue(time3)).toEqualEpsilon(Cartesian3.fromDegrees(7, 8), CesiumMath.EPSILON12);
+        expect(entity.polyline).toBeUndefined();
+    });
+
+    it('Geometry gx:Track: sets position altitudeMode absolute, can extrude', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Placemark xmlns="http://www.opengis.net/kml/2.2"\
+                       xmlns:gx="http://www.google.com/kml/ext/2.2">\
+              <gx:Track>\
+                <altitudeMode>absolute</altitudeMode>\
+                <extrude>1</extrude>\
+                <when>2000-01-01T00:00:00Z</when>\
+                <gx:coord>1 2 3</gx:coord>\
+                <when>2000-01-01T00:00:01Z</when>\
+                <gx:coord>4 5 6</gx:coord>\
+                <when>2000-01-01T00:00:02Z</when>\
+                <gx:coord>7 8 9</gx:coord>\
+              </gx:Track>\
+            </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var time1 = JulianDate.fromIso8601('2000-01-01T00:00:00Z');
+        var time2 = JulianDate.fromIso8601('2000-01-01T00:00:01Z');
+        var time3 = JulianDate.fromIso8601('2000-01-01T00:00:02Z');
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.position.getValue(time1)).toEqualEpsilon(Cartesian3.fromDegrees(1, 2, 3), CesiumMath.EPSILON12);
+        expect(entity.position.getValue(time2)).toEqualEpsilon(Cartesian3.fromDegrees(4, 5, 6), CesiumMath.EPSILON12);
+        expect(entity.position.getValue(time3)).toEqualEpsilon(Cartesian3.fromDegrees(7, 8, 9), CesiumMath.EPSILON12);
+
+        expect(entity.polyline.positions.getValue(time1)).toEqualEpsilon([Cartesian3.fromDegrees(1, 2, 3), Cartesian3.fromDegrees(1, 2)], CesiumMath.EPSILON12);
+        expect(entity.polyline.positions.getValue(time2)).toEqualEpsilon([Cartesian3.fromDegrees(4, 5, 6), Cartesian3.fromDegrees(4, 5)], CesiumMath.EPSILON12);
+        expect(entity.polyline.positions.getValue(time3)).toEqualEpsilon([Cartesian3.fromDegrees(7, 8, 9), Cartesian3.fromDegrees(7, 8)], CesiumMath.EPSILON12);
+    });
+
+    it('Geometry gx:Track: sets position altitudeMode relativeToGround, can extrude', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Placemark xmlns="http://www.opengis.net/kml/2.2"\
+                       xmlns:gx="http://www.google.com/kml/ext/2.2">\
+              <gx:Track>\
+                <altitudeMode>relativeToGround</altitudeMode>\
+                <extrude>1</extrude>\
+                <when>2000-01-01T00:00:00Z</when>\
+                <gx:coord>1 2 3</gx:coord>\
+                <when>2000-01-01T00:00:01Z</when>\
+                <gx:coord>4 5 6</gx:coord>\
+                <when>2000-01-01T00:00:02Z</when>\
+                <gx:coord>7 8 9</gx:coord>\
+              </gx:Track>\
+            </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var time1 = JulianDate.fromIso8601('2000-01-01T00:00:00Z');
+        var time2 = JulianDate.fromIso8601('2000-01-01T00:00:01Z');
+        var time3 = JulianDate.fromIso8601('2000-01-01T00:00:02Z');
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.position.getValue(time1)).toEqualEpsilon(Cartesian3.fromDegrees(1, 2, 3), CesiumMath.EPSILON12);
+        expect(entity.position.getValue(time2)).toEqualEpsilon(Cartesian3.fromDegrees(4, 5, 6), CesiumMath.EPSILON12);
+        expect(entity.position.getValue(time3)).toEqualEpsilon(Cartesian3.fromDegrees(7, 8, 9), CesiumMath.EPSILON12);
+
+        expect(entity.polyline.positions.getValue(time1)).toEqualEpsilon([Cartesian3.fromDegrees(1, 2, 3), Cartesian3.fromDegrees(1, 2)], CesiumMath.EPSILON12);
+        expect(entity.polyline.positions.getValue(time2)).toEqualEpsilon([Cartesian3.fromDegrees(4, 5, 6), Cartesian3.fromDegrees(4, 5)], CesiumMath.EPSILON12);
+        expect(entity.polyline.positions.getValue(time3)).toEqualEpsilon([Cartesian3.fromDegrees(7, 8, 9), Cartesian3.fromDegrees(7, 8)], CesiumMath.EPSILON12);
+    });
+
+    it('Geometry gx:Track: sets position and availability when missing values', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark xmlns="http://www.opengis.net/kml/2.2"\
+                     xmlns:gx="http://www.google.com/kml/ext/2.2">\
+                <gx:Track>\
+                    <when>2000-01-01T00:00:00Z</when>\
+                    <gx:coord>1 2 3</gx:coord>\
+                    <when>2000-01-01T00:00:01Z</when>\
+                    <gx:coord>4 5 6</gx:coord>\
+                    <when>2000-01-01T00:00:02Z</when>\
+                </gx:Track>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var time1 = JulianDate.fromIso8601('2000-01-01T00:00:00Z');
+        var time2 = JulianDate.fromIso8601('2000-01-01T00:00:01Z');
+        var time3 = JulianDate.fromIso8601('2000-01-01T00:00:02Z');
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.position.getValue(time1)).toEqualEpsilon(Cartesian3.fromDegrees(1, 2), CesiumMath.EPSILON12);
+        expect(entity.position.getValue(time2)).toEqualEpsilon(Cartesian3.fromDegrees(4, 5), CesiumMath.EPSILON12);
+        expect(entity.position.getValue(time3)).toBeUndefined();
+
+        expect(entity.availability.start).toEqual(time1);
+        expect(entity.availability.stop).toEqual(time2);
     });
 
 ////    it('processMultiGeometry throws error with invalid geometry', function() {
@@ -1488,49 +1766,6 @@ defineSuite([
 //    });
 //
 //
-//    it('handles gx:Track', function() {
-//        var cartographic = Cartographic.fromDegrees(7, 8, 9);
-//        var value = Ellipsoid.WGS84.cartographicToCartesian(cartographic);
-//        var time = new JulianDate.fromIso8601('2010-05-28T02:02:09Z');
-//        var trackKml = '<?xml version="1.0" encoding="UTF-8"?>\
-//            <kml xmlns="http://www.opengis.net/kml/2.2"\
-//             xmlns:gx="http://www.google.com/kml/ext/2.2">\
-//            <Document>\
-//            <Placemark>\
-//            <gx:Track>\
-//              <when>2010-05-28T02:02:09Z</when>\
-//              <gx:coord>7 8 9</gx:coord>\
-//            </gx:Track>\
-//            </Placemark>\
-//            </Document>\
-//            </kml>';
-//
-//        var dataSource = new KmlDataSource();
-//        dataSource.load(parser.parseFromString(trackKml, "text/xml"));
-//
-//        var entity = dataSource.entities.values[0];
-//        expect(entity.position.getValue(time)).toEqual(value);
-//    });
-//
-//    it('processGxTrack throws error with invalid input', function() {
-//        var trackKml = '<?xml version="1.0" encoding="UTF-8"?>\
-//            <kml xmlns="http://www.opengis.net/kml/2.2"\
-//             xmlns:gx="http://www.google.com/kml/ext/2.2">\
-//            <Document>\
-//            <Placemark>\
-//            <gx:Track>\
-//              <when>2010-05-28T02:02:09Z</when>\
-//              <gx:coord>-122.207881 37.371915 156.000000</gx:coord>\
-//              <gx:coord>-122.205712 37.373288 152.000000</gx:coord>\
-//            </gx:Track>\
-//            </Placemark>\
-//            </Document>\
-//            </kml>';
-//
-//        var error;
-//        var dataSource = new KmlDataSource();
-//        waitsForPromise.toReject(dataSource.load(parser.parseFromString(trackKml, "text/xml")));
-//    });
 //
 //    it('handles gx:MultiTrack', function() {
 //        var time = new JulianDate.fromIso8601('2010-05-28T02:02:09Z');
@@ -1694,7 +1929,7 @@ defineSuite([
 //    });
 //
 //    it('handles LineStyle', function() {
-//        var lineKml = '<?xml version="1.0" encoding="UTF-8"?>\
+//        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
 //            <kml xmlns="http://www.opengis.net/kml/2.2"\
 //             xmlns:gx="http://www.google.com/kml/ext/2.2">\
 //            <Document>\
@@ -1717,7 +1952,7 @@ defineSuite([
 ////        <gx:physicalWidth>0.0</gx:physicalWidth>\
 //
 //        var dataSource = new KmlDataSource();
-//        dataSource.load(parser.parseFromString(lineKml, "text/xml"));
+//        dataSource.load(parser.parseFromString(kml, "text/xml"));
 //
 //        var entities = dataSource.entities.values;
 //        expect(entities.length).toEqual(1);

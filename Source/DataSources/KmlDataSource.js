@@ -546,8 +546,8 @@ define([
                     label = createDefaultLabel();
                     targetEntity.label = label;
                 }
-                label.scale = queryNumericValue(node, 'scale', namespaces.kml);
-                label.fillColor = queryColorValue(node, 'color', namespaces.kml);
+                label.scale = defaultValue(queryNumericValue(node, 'scale', namespaces.kml), label.scale);
+                label.fillColor = defaultValue(queryColorValue(node, 'color', namespaces.kml), label.fillColor);
                 label.text = targetEntity.name;
             } else if (node.nodeName === 'LineStyle') {
                 var polyline = targetEntity.polyline;
@@ -563,9 +563,9 @@ define([
                     polygon = createDefaultPolygon();
                     targetEntity.polygon = polygon;
                 }
-                polygon.material = queryColorValue(node, 'color', namespaces.kml);
-                polygon.fill = queryBooleanValue(node, 'fill', namespaces.kml);
-                polygon.outline = queryBooleanValue(node, 'outline', namespaces.kml);
+                polygon.material = defaultValue(queryColorValue(node, 'color', namespaces.kml), polygon.material);
+                polygon.fill = defaultValue(queryBooleanValue(node, 'fill', namespaces.kml), polygon.fill);
+                polygon.outline = defaultValue(queryBooleanValue(node, 'outline', namespaces.kml), polygon.outline);
             } else if (node.nodeName === 'BalloonStyle') {
                 var bgColor = queryColorValue(node, 'bgColor', namespaces.kml);
                 var textColor = queryColorValue(node, 'textColor', namespaces.kml);
@@ -713,19 +713,52 @@ define([
 
     function createPositionPropertyFromAltitudeMode(property, altitudeMode, gxAltitudeMode) {
         if (gxAltitudeMode === 'relativeToSeaFloor') {
-            //TODO Adjust for sea floor
+
         } else if (gxAltitudeMode === 'clampToSeaFloor') {
             property = new SurfacePositionProperty(property, Ellipsoid.WGS84);
         } else if (altitudeMode === 'absolute') {
-            //TODO Adjust for MSL
+
         } else if (altitudeMode === 'relativeToGround') {
-            //TODO Adjust for terrain
+
         } else if (!defined(altitudeMode) || altitudeMode === 'clampToGround') {
             property = new SurfacePositionProperty(property, Ellipsoid.WGS84);
         } else {
             window.console.log('Unknown altitudeMode: ' + altitudeMode);
         }
         return property;
+    }
+
+    function createPositionPropertyArrayFromAltitudeMode(properties, altitudeMode, gxAltitudeMode) {
+        if (!defined(properties)) {
+            return undefined;
+        }
+
+        var i;
+        var resultArray;
+        var propertiesLength = properties.length;
+
+        if (gxAltitudeMode === 'relativeToSeaFloor') {
+            return properties;
+        } else if (gxAltitudeMode === 'clampToSeaFloor') {
+            resultArray = new Array(propertiesLength);
+            for (i = 0; i < propertiesLength; i++) {
+                resultArray[i] = new SurfacePositionProperty(new ConstantPositionProperty(properties[i]), Ellipsoid.WGS84);
+            }
+            return new PositionPropertyArray(resultArray);
+        } else if (altitudeMode === 'absolute') {
+            return properties;
+        } else if (altitudeMode === 'relativeToGround') {
+            return properties;
+        } else if (!defined(altitudeMode) || altitudeMode === 'clampToGround') {
+            resultArray = new Array(propertiesLength);
+            for (i = 0; i < propertiesLength; i++) {
+                resultArray[i] = new SurfacePositionProperty(new ConstantPositionProperty(properties[i]), Ellipsoid.WGS84);
+            }
+            return new PositionPropertyArray(resultArray);
+        }
+
+        window.console.log('Unknown altitudeMode: ' + altitudeMode);
+        return properties;
     }
 
     function processPoint(dataSource, geometryNode, entity, styleEntity) {
@@ -756,26 +789,29 @@ define([
 
         var coordinates = readCoordinates(coordinatesNode);
         var polyline = styleEntity.polyline;
-        if (extrude && canExtrude) {
+        if (canExtrude && extrude) {
             var wall = new WallGraphics();
             entity.wall = wall;
             wall.positions = coordinates;
             var polygon = styleEntity.polygon;
 
             if (defined(polygon)) {
+                wall.fill = polygon.fill;
+                wall.outline = polygon.outline;
                 wall.material = polygon.material;
             }
 
             if (defined(polyline)) {
-                wall.outline = true;
                 wall.outlineColor = defined(polyline.material) ? polyline.material.color : Color.WHITE;
                 wall.outlineWidth = polyline.width;
             }
         } else {
             polyline = defined(polyline) ? polyline.clone() : new PolylineGraphics();
             entity.polyline = polyline;
-            polyline.positions = coordinates;
-            polyline.followSurface = tessellate && canExtrude;
+            polyline.positions = createPositionPropertyArrayFromAltitudeMode(coordinates, altitudeMode, gxAltitudeMode);
+            if (!tessellate || canExtrude) {
+                polyline.followSurface = false;
+            }
         }
     }
 
@@ -828,30 +864,32 @@ define([
         var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
         var canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
 
-        if (coordNodes.length !== timeNodes.length) {
-            throw new RuntimeError();
-        }
-
-        if (coordNodes.length > 0) {
-            var coordinates = new Array(coordNodes.length);
-            var times = new Array(timeNodes.length);
-            for (var i = 0; i < times.length; i++) {
-                coordinates[i] = readCoordinate(coordNodes[i].textContent);
-                times[i] = JulianDate.fromIso8601(timeNodes[i].textContent);
+        var length = Math.min(coordNodes.length, timeNodes.length);
+        var coordinates = [];
+        var times = [];
+        for (var i = 0; i < length; i++) {
+            //An empty position is OK according to the spec
+            var position = readCoordinate(coordNodes[i].textContent);
+            if (defined(position)) {
+                coordinates.push(position);
+                times.push(JulianDate.fromIso8601(timeNodes[i].textContent));
             }
-            var property = new SampledPositionProperty();
-            property.addSamples(times, coordinates);
-            entity.position = createPositionPropertyFromAltitudeMode(property, altitudeMode, gxAltitudeMode);
-            entity.billboard = styleEntity.billboard;
-            entity.availability = new TimeIntervalCollection();
+        }
+        var property = new SampledPositionProperty();
+        property.addSamples(times, coordinates);
+        entity.position = createPositionPropertyFromAltitudeMode(property, altitudeMode, gxAltitudeMode);
+        entity.billboard = styleEntity.billboard;
+        entity.availability = new TimeIntervalCollection();
+
+        if (timeNodes.length > 0) {
             entity.availability.addInterval(new TimeInterval({
                 start : times[0],
                 stop : times[times.length - 1]
             }));
+        }
 
-            if (canExtrude && extrude) {
-                createDropLine(dataSource, entity, styleEntity);
-            }
+        if (canExtrude && extrude) {
+            createDropLine(dataSource, entity, styleEntity);
         }
     }
 
@@ -873,50 +911,49 @@ define([
             var timeNodes = queryChildNodes(trackNode, 'when', namespaces.kml);
             var coordNodes = queryChildNodes(trackNode, 'coord', namespaces.gx);
 
-            if (coordNodes.length !== timeNodes.length) {
-                throw new RuntimeError();
+            var length = Math.min(length, timeNodes.length);
+
+            var coordinates = [];
+            times = [];
+            for (var x = 0; x < length; x++) {
+                //An empty position is OK according to the spec
+                var position = readCoordinate(coordNodes[x].textContent);
+                if (defined(position)) {
+                    coordinates.push(position);
+                    times.push(JulianDate.fromIso8601(timeNodes[x].textContent));
+                }
             }
 
-            if (coordNodes.length > 0) {
-                var coordinates = new Array(coordNodes.length);
-                times = new Array(timeNodes.length);
-                for (var x = 0; x < times.length; x++) {
-                    coordinates[x] = readCoordinate(coordNodes[x].textContent);
-                    times[x] = JulianDate.fromIso8601(timeNodes[x].textContent);
-                }
-                if (interpolate) {
-                    property.addSamples(times, coordinates);
-                } else {
-                    var data = new SampledPositionProperty();
-                    property.addSamples(times, coordinates);
-                    property.intervals.addInteval({
-                        start : times[0],
-                        stop : times[times.length - 1],
-                        data : property
-                    });
-                    availability.addInterval({
-                        start : times[0],
-                        stop : times[times.length - 1]
-                    });
-                }
+            if (interpolate) {
+                property.addSamples(times, coordinates);
+            } else {
+                var data = new SampledPositionProperty();
+                property.addSamples(times, coordinates);
+                property.intervals.addInteval({
+                    start : times[0],
+                    stop : times[length - 1],
+                    data : property
+                });
+                availability.addInterval(new TimeInterval({
+                    start : times[0],
+                    stop : times[length - 1]
+                }));
             }
         }
 
         if (interpolate) {
             times = property._times;
-            availability.addInterval({
-                start : times[0],
-                stop : times[times.length - 1]
-            });
+            if (times.length > 0) {
+                availability.addInterval({
+                    start : times[0],
+                    stop : times[times.length - 1]
+                });
+            }
         }
 
-        if (defined(entity.availability)) {
-            entity.availability = entity.availability.intersect(availability);
-        } else {
-            entity.availability = availability;
-        }
+        entity.availability = availability;
+        entity.billboard = styleEntity.billboard.clone();
 
-        entity.billboard = styleEntity.billboard;
         if (canExtrude && extrude) {
             createDropLine(dataSource, entity, styleEntity);
         }
@@ -1312,8 +1349,9 @@ define([
     function loadKml(dataSource, kml, sourceUri, uriResolver) {
         dataSource._promises = [];
 
-        var docElement = queryFirstNode(kml.documentElement, 'Document', namespaces.kml);
-        var name = queryStringValue(docElement, 'name', namespaces.kml);
+        var documentElement = kml.documentElement;
+        var document = documentElement.localName === 'Document' ? documentElement : queryFirstNode(documentElement, 'Document', namespaces.kml);
+        var name = queryStringValue(document, 'name', namespaces.kml);
         if (!defined(name) && defined(sourceUri)) {
             name = getFilenameFromUri(sourceUri);
         }
