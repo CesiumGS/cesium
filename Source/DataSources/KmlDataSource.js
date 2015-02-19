@@ -775,6 +775,9 @@ define([
         }
 
         entity.position = createPositionPropertyFromAltitudeMode(new ConstantPositionProperty(position), altitudeMode, gxAltitudeMode);
+        entity.billboard = defined(styleEntity.billboard) ? styleEntity.billboard.clone() : createDefaultBillboard();
+        entity.label = defined(styleEntity.label) ? styleEntity.label.clone() : createDefaultLabel();
+        entity.label.text = entity.name;
 
         if (extrude && isExtrudable(altitudeMode, gxAltitudeMode)) {
             createDropLine(dataSource, entity, styleEntity);
@@ -827,9 +830,10 @@ define([
         var gxAltitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.gx);
         var canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
 
-        var polyline = styleEntity.polyline;
         var polygon = defined(styleEntity.polygon) ? styleEntity.polygon.clone() : createDefaultPolygon();
         polygon.outline = true;
+
+        var polyline = styleEntity.polyline;
         if (defined(polyline)) {
             polygon.outlineColor = defined(polyline.material) ? polyline.material.color : Color.WHITE;
             polygon.outlineWidth = polyline.width;
@@ -880,7 +884,7 @@ define([
         var property = new SampledPositionProperty();
         property.addSamples(times, coordinates);
         entity.position = createPositionPropertyFromAltitudeMode(property, altitudeMode, gxAltitudeMode);
-        entity.billboard = styleEntity.billboard;
+        entity.billboard = defined(styleEntity.billboard) ? styleEntity.billboard.clone() : createDefaultBillboard();
         entity.availability = new TimeIntervalCollection();
 
         if (timeNodes.length > 0) {
