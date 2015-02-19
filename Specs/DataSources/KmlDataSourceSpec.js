@@ -4,7 +4,6 @@ defineSuite([
         'Core/BoundingRectangle',
         'Core/Cartesian2',
         'Core/Cartesian3',
-        'Core/Cartographic',
         'Core/Color',
         'Core/DefaultProxy',
         'Core/DeveloperError',
@@ -28,7 +27,6 @@ defineSuite([
         BoundingRectangle,
         Cartesian2,
         Cartesian3,
-        Cartographic,
         Color,
         DefaultProxy,
         DeveloperError,
@@ -78,18 +76,18 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    xit('loadKmz rejects loading non-KMZ file', function() {
+    it('loadKmz rejects loading non-KMZ file', function() {
         var dataSource = new KmlDataSource();
-        waitsForPromise(loadBlob('Data/Images/Blue.png'), function(blob) {
-            waitsForPromise.toReject(dataSource.loadKmz(blob));
-        });
+        waitsForPromise.toReject(loadBlob('Data/Images/Blue.png').then(function(blob) {
+            return dataSource.loadKmz(blob);
+        }));
     });
 
     it('loadKmz rejects KMZ file with no KML contained', function() {
         var dataSource = new KmlDataSource();
-        waitsForPromise(loadBlob('Data/KML/empty.zip'), function(blob) {
-            waitsForPromise.toReject(dataSource.loadKmz(blob));
-        });
+        waitsForPromise.toReject(loadBlob('Data/KML/empty.zip').then(function(blob) {
+            return dataSource.loadKmz(blob);
+        }));
     });
 
     it('loadUrl works with a KML file', function() {
@@ -115,7 +113,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    xit('loadUrl rejects loading nonexistent file', function() {
+    it('loadUrl rejects loading nonexistent file', function() {
         var dataSource = new KmlDataSource();
         waitsForPromise.toReject(dataSource.loadUrl('//test.invalid/invalid.kml'));
     });
@@ -1219,34 +1217,189 @@ defineSuite([
         expect(positions).toEqualEpsilon([Cartesian3.fromDegrees(1, 2, 3), Cartesian3.fromDegrees(1, 2, 0)], CesiumMath.EPSILON13);
     });
 
+    it('Geometry Polygon: without holes', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <kml xmlns="http://www.opengis.net/kml/2.2">\
+          <Placemark>\
+            <Polygon>\
+              <outerBoundaryIs>\
+                <LinearRing>\
+                  <coordinates>\
+                    1,2,3\
+                    4,5,6\
+                    7,8,9\
+                 </coordinates>\
+                </LinearRing>\
+              </outerBoundaryIs>\
+            </Polygon>\
+          </Placemark>\
+          </kml>';
 
-//  /*
-//  * Tests below this comment need to be reevaluated.
-//  */
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
 
-////    it('processPlacemark throws error with invalid geometry', function() {
-////        var placemarkKml = '<?xml version="1.0" encoding="UTF-8"?>\
-////            <kml xmlns="http://www.opengis.net/kml/2.2">\
-////            <Document>\
-////            <Placemark>\
-////              <Invalid>\
-////                <coordinates>d s</coordinates>\
-////              </Invalid>\
-////            </Placemark>\
-////            </Document>\
-////            </kml>';
-////
-////        var dataSource = new KmlDataSource();
-////        var error;
-////        dataSource.load(parser.parseFromString(placemarkKml, "text/xml")).otherwise(function(e) {
-////            error = e;
-////        });
-////
-////        waitsFor(function() {
-////            return error instanceof RuntimeError;
-////        });
-////    });
-//
+        var entity = dataSource.entities.values[0];
+        var coordinates = [Cartesian3.fromDegrees(1, 2, 3), Cartesian3.fromDegrees(4, 5, 6), Cartesian3.fromDegrees(7, 8, 9)];
+        expect(entity.polygon.hierarchy.getValue().positions).toEqual(coordinates);
+    });
+
+    it('Geometry Polygon: with holes', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <kml xmlns="http://www.opengis.net/kml/2.2">\
+          <Placemark>\
+            <Polygon>\
+            <outerBoundaryIs>\
+            <LinearRing>\
+              <coordinates>\
+                1,2,3\
+                4,5,6\
+                7,8,9\
+             </coordinates>\
+            </LinearRing>\
+            </outerBoundaryIs>\
+            <innerBoundaryIs>\
+            <LinearRing>\
+              <coordinates>\
+                1.1,2.1,3.1\
+                4.1,5.1,6.1\
+                7.1,8.1,9.1\
+             </coordinates>\
+            </LinearRing>\
+            </innerBoundaryIs>\
+            <innerBoundaryIs>\
+            <LinearRing>\
+              <coordinates>\
+                1.2,2.2,3.2\
+                4.2,5.2,6.2\
+                7.2,8.2,9.2\
+             </coordinates>\
+            </LinearRing>\
+            </innerBoundaryIs>\
+            </Polygon>\
+          </Placemark>\
+          </kml>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+        var coordinates = [Cartesian3.fromDegrees(1, 2, 3), Cartesian3.fromDegrees(4, 5, 6), Cartesian3.fromDegrees(7, 8, 9)];
+        var holeCoordinates = [Cartesian3.fromDegrees(1.1, 2.1, 3.1), Cartesian3.fromDegrees(4.1, 5.1, 6.1), Cartesian3.fromDegrees(7.1, 8.1, 9.1)];
+        var holeCoordinates2 = [Cartesian3.fromDegrees(1.2, 2.2, 3.2), Cartesian3.fromDegrees(4.2, 5.2, 6.2), Cartesian3.fromDegrees(7.2, 8.2, 9.2)];
+
+        var hierarchy = entity.polygon.hierarchy.getValue();
+        expect(hierarchy.positions).toEqual(coordinates);
+        expect(hierarchy.holes.length).toEqual(2);
+
+        expect(hierarchy.holes[0].positions).toEqual(holeCoordinates);
+        expect(hierarchy.holes[0].holes).toEqual([]);
+
+        expect(hierarchy.holes[1].positions).toEqual(holeCoordinates2);
+        expect(hierarchy.holes[1].holes).toEqual([]);
+    });
+
+    it('Geometry Polygon: altitudeMode relativeToGround and can extrude', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <kml xmlns="http://www.opengis.net/kml/2.2">\
+          <Placemark>\
+            <Polygon>\
+              <altitudeMode>relativeToGround</altitudeMode>\
+              <extrude>1</extrude>\
+            </Polygon>\
+          </Placemark>\
+          </kml>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.polygon.perPositionHeight.getValue()).toEqual(true);
+        expect(entity.polygon.extrudedHeight.getValue()).toEqual(0);
+    });
+
+    it('Geometry Polygon: altitudeMode absolute and can extrude', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <kml xmlns="http://www.opengis.net/kml/2.2">\
+          <Placemark>\
+            <Polygon>\
+              <altitudeMode>absolute</altitudeMode>\
+              <extrude>1</extrude>\
+            </Polygon>\
+          </Placemark>\
+          </kml>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.polygon.perPositionHeight.getValue()).toEqual(true);
+        expect(entity.polygon.extrudedHeight.getValue()).toEqual(0);
+    });
+
+    it('Geometry Polygon: altitudeMode clampToGround and cannot extrude', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <kml xmlns="http://www.opengis.net/kml/2.2"\
+               xmlns:gx="http://www.google.com/kml/ext/2.2">\
+          <Placemark>\
+            <Polygon>\
+              <altitudeMode>clampToGround</altitudeMode>\
+              <extrude>1</extrude>\
+            </Polygon>\
+          </Placemark>\
+          </kml>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.polygon.perPositionHeight).toBeUndefined();
+        expect(entity.polygon.extrudedHeight).toBeUndefined();
+    });
+
+    it('Geometry Polygon: gx:altitudeMode relativeToSeaFloor and can extrude', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <kml xmlns="http://www.opengis.net/kml/2.2"\
+               xmlns:gx="http://www.google.com/kml/ext/2.2">\
+          <Placemark>\
+            <Polygon>\
+              <gx:altitudeMode>relativeToSeaFloor</gx:altitudeMode>\
+              <extrude>1</extrude>\
+            </Polygon>\
+          </Placemark>\
+          </kml>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.polygon.perPositionHeight.getValue()).toEqual(true);
+        expect(entity.polygon.extrudedHeight.getValue()).toEqual(0);
+    });
+
+    it('Geometry Polygon: gx:altitudeMode clampToSeaFloor and can extrude', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <kml xmlns="http://www.opengis.net/kml/2.2"\
+               xmlns:gx="http://www.google.com/kml/ext/2.2">\
+          <Placemark>\
+            <Polygon>\
+              <gx:altitudeMode>clampToSeaFloor</gx:altitudeMode>\
+              <extrude>1</extrude>\
+            </Polygon>\
+          </Placemark>\
+          </kml>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entity = dataSource.entities.values[0];
+        expect(entity.polygon.perPositionHeight).toBeUndefined();
+        expect(entity.polygon.extrudedHeight).toBeUndefined();
+    });
+
+    //  /*
+    //  * Tests below this comment need to be reevaluated.
+    //  */
+
 ////    it('processMultiGeometry throws error with invalid geometry', function() {
 ////        var placemarkKml = '<?xml version="1.0" encoding="UTF-8"?>\
 ////            <kml xmlns="http://www.opengis.net/kml/2.2">\
@@ -1351,67 +1504,6 @@ defineSuite([
 ////        }).toThrowDeveloperError();
 ////    });
 //
-//    it('handles Coordinates without altitude', function() {
-//        var position1 = new Cartographic(CesiumMath.toRadians(1), CesiumMath.toRadians(2), 0);
-//        var cartesianPosition1 = Ellipsoid.WGS84.cartographicToCartesian(position1);
-//        var position2 = new Cartographic(CesiumMath.toRadians(4), CesiumMath.toRadians(5), 0);
-//        var cartesianPosition2 = Ellipsoid.WGS84.cartographicToCartesian(position2);
-//        var lineKml = '<?xml version="1.0" encoding="UTF-8"?>\
-//    <kml xmlns="http://www.opengis.net/kml/2.2">\
-//    <Document>\
-//    <Placemark>\
-//      <LineString>\
-//        <coordinates>1,2 \
-//                     4,5 \
-//        </coordinates>\
-//      </LineString>\
-//    </Placemark>\
-//    </Document>\
-//    </kml>';
-//
-//        var dataSource = new KmlDataSource();
-//        dataSource.load(parser.parseFromString(lineKml, "text/xml"));
-//
-//        var entities = dataSource.entities.values;
-//        var entity = entities[0];
-//        expect(entities.length).toEqual(1);
-//        expect(entity.polyline.positions.getValue()[0]).toEqual(cartesianPosition1);
-//        expect(entity.polyline.positions.getValue()[1]).toEqual(cartesianPosition2);
-//    });
-//
-//    it('handles Polygon geometry', function() {
-//        var polygonKml = '<?xml version="1.0" encoding="UTF-8"?>\
-//            <kml xmlns="http://www.opengis.net/kml/2.2">\
-//            <Placemark>\
-//              <Polygon>\
-//                <outerBoundaryIs>\
-//                  <LinearRing>\
-//                    <coordinates>\
-//                      -122,37,0\
-//                      -123,38,0\
-//                      -124,39,0\
-//                      -125,40,0\
-//                      -122,37,0\
-//                    </coordinates>\
-//                  </LinearRing>\
-//                </outerBoundaryIs>\
-//              </Polygon>\
-//            </Placemark>\
-//            </kml>';
-//
-//        var coordinates = [Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-122, 37, 0)),
-//                           Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-123, 38, 0)),
-//                           Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-124, 39, 0)),
-//                           Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-125, 40, 0)),
-//                           Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-122, 37, 0))];
-//
-//        var dataSource = new KmlDataSource();
-//        dataSource.load(parser.parseFromString(polygonKml, "text/xml"));
-//
-//        var entities = dataSource.entities.values;
-//        var entity = entities[0];
-//        expect(entity.polygon.hierarchy.getValue().positions).toEqual(coordinates);
-//    });
 //
 //    it('handles gx:Track', function() {
 //        var cartographic = Cartographic.fromDegrees(7, 8, 9);
@@ -1670,32 +1762,6 @@ defineSuite([
 //        expect(entities.length).toEqual(1);
 //        var polyline = entities[0].polyline;
 //        expect(polyline).toBeDefined();
-//    });
-//
-//    xit('LineStyle throws with invalid outerWidth', function() {
-//        var lineKml = '<?xml version="1.0" encoding="UTF-8"?>\
-//            <kml xmlns="http://www.opengis.net/kml/2.2"\
-//             xmlns:gx="http://www.google.com/kml/ext/2.2">\
-//            <Document>\
-//            <Placemark>\
-//              <Style>\
-//                <LineStyle>\
-//                    <gx:outerWidth>1.1</gx:outerWidth>\
-//                </LineStyle>\
-//              </Style>\
-//            </Placemark>\
-//            </Document>\
-//            </kml>';
-//
-//        var error;
-//        var dataSource = new KmlDataSource();
-//        dataSource.load(parser.parseFromString(lineKml, 'text/xml')).otherwise(function(e) {
-//            error = e;
-//        });
-//
-//        waitsFor(function() {
-//            return error instanceof RuntimeError;
-//        });
 //    });
 //
 //    it('handles PolyStyle', function() {

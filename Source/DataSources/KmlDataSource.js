@@ -189,9 +189,14 @@ define([
         return defined(id) ? id : createGuid();
     }
 
-    function readCoordinate(element) {
-        var digits = element.textContent.trim().split(/[\s,\n]+/g);
+    function readCoordinate(value) {
+        if (!defined(value)) {
+            return undefined;
+        }
+
+        var digits = value.trim().split(/[\s,\n]+/g);
         if (digits.length !== 2 && digits.length !== 3) {
+            window.console.log('invalid coordinates.');
             return undefined;
         }
 
@@ -215,25 +220,13 @@ define([
         if (!defined(element)) {
             return undefined;
         }
-        //TODO: height is referenced to altitude mode
+
         var tuples = element.textContent.trim().split(/[\s\n]+/g);
-        var numberOfCoordinates = tuples.length;
-        var result = new Array(numberOfCoordinates);
+        var length = tuples.length;
+        var result = new Array(length);
         var resultIndex = 0;
-
-        for (var i = 0; i < tuples.length; i++) {
-            var digits = tuples[i].split(/[\s,\n]+/g);
-
-            var longitude = parseFloat(digits[0]);
-            var latitude = parseFloat(digits[1]);
-            var height = parseFloat(digits[2]);
-
-            longitude = isNaN(longitude) ? 0.0 : longitude;
-            latitude = isNaN(latitude) ? 0.0 : latitude;
-            height = isNaN(height) ? 0.0 : height;
-
-            scratchCartographic = Cartographic.fromDegrees(longitude, latitude, height, scratchCartographic);
-            result[resultIndex++] = Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic);
+        for (var i = 0; i < length; i++) {
+            result[resultIndex++] = readCoordinate(tuples[i]);
         }
         return result;
     }
@@ -442,12 +435,19 @@ define([
         return result;
     }
 
-    function createDefaultBillboard(dataSource) {
+    function createDefaultBillboard() {
         var billboard = new BillboardGraphics();
         billboard.width = BILLBOARD_SIZE;
         billboard.height = BILLBOARD_SIZE;
         billboard.scaleByDistance = new NearFarScalar(2414016, 1.0, 1.6093e+7, 0.1);
         return billboard;
+    }
+
+    function createDefaultPolygon() {
+        var polygon = new PolygonGraphics();
+        polygon.outline = true;
+        polygon.outlineColor = Color.WHITE;
+        return polygon;
     }
 
     function createDefaultLabel() {
@@ -562,7 +562,7 @@ define([
             } else if (node.nodeName === 'PolyStyle') {
                 var polygon = targetEntity.polygon;
                 if (!defined(polygon)) {
-                    polygon = new PolygonGraphics();
+                    polygon = createDefaultPolygon();
                     targetEntity.polygon = polygon;
                 }
                 polygon.material = queryColorValue(node, 'color', namespaces.kml);
@@ -731,14 +731,12 @@ define([
     }
 
     function processPoint(dataSource, geometryNode, entity, styleEntity) {
-        var coordinatesNode = queryFirstNode(geometryNode, 'coordinates', namespaces.kml);
+        var coordinatesString = queryStringValue(geometryNode, 'coordinates', namespaces.kml);
         var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
         var gxAltitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.gx);
         var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
 
-        entity.billboard = styleEntity.billboard;
-
-        var position = readCoordinate(coordinatesNode);
+        var position = readCoordinate(coordinatesString);
         if (!defined(position)) {
             return;
         }
@@ -769,7 +767,7 @@ define([
             if (defined(polyline)) {
                 wall.material = polygon.material;
                 wall.outline = true;
-                wall.outlineColor = polyline.material.color;
+                wall.outlineColor = defined(polyline.material) ? polyline.material.color : undefined;
                 wall.outlineWidth = polyline.width;
             }
         } else {
@@ -791,7 +789,7 @@ define([
         var canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
 
         var polyline = styleEntity.polyline;
-        var polygon = defined(styleEntity.polygon) ? styleEntity.polygon.clone() : new PolygonGraphics();
+        var polygon = defined(styleEntity.polygon) ? styleEntity.polygon.clone() : createDefaultPolygon();
         polygon.outline = true;
         if (defined(polyline)) {
             if (defined(polyline.material)) {
@@ -802,13 +800,8 @@ define([
         entity.polygon = polygon;
 
         if (canExtrude) {
-            if (defined(altitudeMode)) {
-                polygon.perPositionHeight = true;
-            }
-
-            if (extrude) {
-                polygon.extrudedHeight = 0;
-            }
+            polygon.perPositionHeight = true;
+            polygon.extrudedHeight = extrude ? 0 : undefined;
         }
 
         if (defined(coordinates)) {
@@ -844,7 +837,7 @@ define([
             var coordinates = new Array(coordNodes.length);
             var times = new Array(timeNodes.length);
             for (var i = 0; i < times.length; i++) {
-                coordinates[i] = readCoordinate(coordNodes[i]);
+                coordinates[i] = readCoordinate(coordNodes[i].textContent);
                 times[i] = JulianDate.fromIso8601(timeNodes[i].textContent);
             }
             var property = new SampledPositionProperty();
@@ -889,7 +882,7 @@ define([
                 var coordinates = new Array(coordNodes.length);
                 times = new Array(timeNodes.length);
                 for (var x = 0; x < times.length; x++) {
-                    coordinates[x] = readCoordinate(coordNodes[x]);
+                    coordinates[x] = readCoordinate(coordNodes[x].textContent);
                     times[x] = JulianDate.fromIso8601(timeNodes[x].textContent);
                 }
                 if (interpolate) {
@@ -1197,7 +1190,7 @@ define([
 
         var positions = readCoordinates(queryFirstNode(groundOverlay, 'LatLonQuad', namespaces.gx));
         if (defined(positions)) {
-            geometry = new PolygonGraphics();
+            geometry = createDefaultPolygon();
             geometry.hierarchy = new PolygonHierarchy(positions);
             entity.polygon = geometry;
             isLatLonQuad = true;
@@ -1552,7 +1545,12 @@ define([
 
         DataSource.setLoading(this, true);
         var that = this;
-        return when(loadKmz(this, kmz, sourceUri)).otherwise(function(error) {
+        return isZipFile(kmz).then(function(isZip) {
+            if (isZip) {
+                return loadKmz(this, kmz, sourceUri);
+            }
+            return when.reject(new RuntimeError('KMZ file is not a valid zip file.'));
+        }).otherwise(function(error) {
             DataSource.setLoading(that, false);
             that._error.raiseEvent(that, error);
             return when.reject(error);
