@@ -1,11 +1,13 @@
 /*global defineSuite*/
 defineSuite([
         'DataSources/GeometryVisualizer',
+        'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
         'Core/JulianDate',
         'Core/ShowGeometryInstanceAttribute',
+        'DataSources/BoundingSphereState',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
@@ -16,15 +18,16 @@ defineSuite([
         'DataSources/GridMaterialProperty',
         'DataSources/SampledProperty',
         'DataSources/StaticGeometryPerMaterialBatch',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], function(
         GeometryVisualizer,
+        BoundingSphere,
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
         JulianDate,
         ShowGeometryInstanceAttribute,
+        BoundingSphereState,
         ColorMaterialProperty,
         ConstantPositionProperty,
         ConstantProperty,
@@ -35,8 +38,7 @@ defineSuite([
         GridMaterialProperty,
         SampledProperty,
         StaticGeometryPerMaterialBatch,
-        createScene,
-        destroyScene) {
+        createScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -48,7 +50,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     it('Can create and destroy', function() {
@@ -455,5 +457,63 @@ defineSuite([
             expect(scene.primitives.length).toEqual(2);
             batch.removeAllPrimitives();
         });
+    });
+
+    it('Computes dynamic geometry bounding sphere.', function() {
+        var entityCollection = new EntityCollection();
+        var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, entityCollection);
+
+        var ellipse = new EllipseGraphics();
+        ellipse.semiMajorAxis = new ConstantProperty(2);
+        ellipse.semiMinorAxis = new ConstantProperty(1);
+
+        var entity = new Entity();
+        entity.position = Cartesian3.fromDegrees(0, 0, 0);
+        entity.ellipse = ellipse;
+        entityCollection.add(entity);
+
+        var state;
+        var result = new BoundingSphere();
+        waitsFor(function() {
+            scene.initializeFrame();
+            scene.render();
+            visualizer.update(time);
+            state = visualizer.getBoundingSphere(entity, result);
+            return state !== BoundingSphereState.PENDING;
+        });
+
+        runs(function() {
+            var primitive = scene.primitives.get(0);
+            expect(state).toBe(BoundingSphereState.DONE);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(result).toEqual(BoundingSphere.transform(attributes.boundingSphere, primitive.modelMatrix, new BoundingSphere()));
+
+            visualizer.destroy();
+        });
+    });
+
+    it('Compute dynamic geometry bounding sphere throws without entity.', function() {
+        var entityCollection = new EntityCollection();
+        var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, entityCollection);
+
+        var result = new BoundingSphere();
+        expect(function() {
+            visualizer.getBoundingSphere(undefined, result);
+        }).toThrowDeveloperError();
+
+        visualizer.destroy();
+    });
+
+    it('Compute dynamic geometry bounding sphere throws without result.', function() {
+        var entityCollection = new EntityCollection();
+        var entity = new Entity();
+        entityCollection.add(entity);
+        var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, entityCollection);
+
+        expect(function() {
+            visualizer.getBoundingSphere(entity, undefined);
+        }).toThrowDeveloperError();
+
+        visualizer.destroy();
     });
 }, 'WebGL');

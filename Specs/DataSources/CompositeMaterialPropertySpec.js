@@ -113,13 +113,13 @@ defineSuite([
         var interval1 = new TimeInterval({
             start : new JulianDate(10, 0),
             stop : new JulianDate(12, 0),
-            data : ColorMaterialProperty.fromColor(Color.RED)
+            data : new ColorMaterialProperty(Color.RED)
         });
         var interval2 = new TimeInterval({
             start : new JulianDate(12, 0),
             stop : new JulianDate(14, 0),
             isStartIncluded : false,
-            data : ColorMaterialProperty.fromColor(Color.YELLOW)
+            data : new ColorMaterialProperty(Color.YELLOW)
         });
 
         var property = new CompositeMaterialProperty();
@@ -151,13 +151,13 @@ defineSuite([
         var interval1 = new TimeInterval({
             start : new JulianDate(11, 0),
             stop : new JulianDate(13, 0),
-            data : ColorMaterialProperty.fromColor(Color.RED)
+            data : new ColorMaterialProperty(Color.RED)
         });
         var interval2 = new TimeInterval({
             start : new JulianDate(10, 0),
             stop : new JulianDate(14, 0),
             isStartIncluded : false,
-            data : ColorMaterialProperty.fromColor(Color.YELLOW)
+            data : new ColorMaterialProperty(Color.YELLOW)
         });
 
         var property = new CompositeMaterialProperty();

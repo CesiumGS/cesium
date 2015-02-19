@@ -5,14 +5,16 @@ define([
         'Core/defined',
         'Core/queryToObject',
         'Scene/Scene',
-        'Specs/createCanvas'
+        'Specs/createCanvas',
+        'Specs/destroyCanvas'
     ], function(
         clone,
         defaultValue,
         defined,
         queryToObject,
         Scene,
-        createCanvas) {
+        createCanvas,
+        destroyCanvas) {
     "use strict";
 
     function createScene(options) {
@@ -43,6 +45,12 @@ define([
         }
 
         // Add functions for test
+        scene.destroyForSpecs = function() {
+            var canvas = scene.canvas;
+            scene.destroy();
+            destroyCanvas(canvas);
+        };
+
         scene.renderForSpecs = function(time) {
             scene.initializeFrame();
             scene.render(time);

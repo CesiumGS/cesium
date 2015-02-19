@@ -9,6 +9,7 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/FeatureDetection',
         '../Core/Geometry',
         '../Core/GeometryAttribute',
         '../Core/IndexDatatype',
@@ -47,6 +48,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        FeatureDetection,
         Geometry,
         GeometryAttribute,
         IndexDatatype,
@@ -208,9 +210,17 @@ define([
 
         // Override select WebGL defaults
         webglOptions.alpha = defaultValue(webglOptions.alpha, false); // WebGL default is true
-        // TODO: WebGL default is false. This works around a bug in Canary and can be removed when fixed: https://code.google.com/p/chromium/issues/detail?id=335273
-        webglOptions.stencil = defaultValue(webglOptions.stencil, false);
         webglOptions.failIfMajorPerformanceCaveat = defaultValue(webglOptions.failIfMajorPerformanceCaveat, true); // WebGL default is false
+
+        // Firefox 35 with ANGLE has a regression that causes alpha : false to affect all framebuffers
+        // Since we can't detect for ANGLE without a context, we just detect for Windows.
+        // https://github.com/AnalyticalGraphicsInc/cesium/issues/2431
+        if (FeatureDetection.isFirefox() && FeatureDetection.isWindows()) {
+            var firefoxVersion = FeatureDetection.firefoxVersion();
+            if (firefoxVersion[0] === 35) {
+                webglOptions.alpha = true;
+            }
+        }
 
         this._originalGLContext = canvas.getContext('webgl', webglOptions) || canvas.getContext('experimental-webgl', webglOptions) || undefined;
 
@@ -695,7 +705,7 @@ define([
 
         /**
          * <code>true</code> if the OES_standard_derivatives extension is supported.  This
-         * extension provides access to <code>dFdx<code>, <code>dFdy<code>, and <code>fwidth<code>
+         * extension provides access to <code>dFdx</code>, <code>dFdy</code>, and <code>fwidth</code>
          * functions from GLSL.  A shader using these functions still needs to explicitly enable the
          * extension with <code>#extension GL_OES_standard_derivatives : enable</code>.
          * @memberof Context.prototype
@@ -776,7 +786,7 @@ define([
 
         /**
          * <code>true</code> if the EXT_frag_depth extension is supported.  This
-         * extension provides access to the <code>gl_FragDepthEXT<code> built-in output variable
+         * extension provides access to the <code>gl_FragDepthEXT</code> built-in output variable
          * from GLSL fragment shaders.  A shader using these functions still needs to explicitly enable the
          * extension with <code>#extension GL_EXT_frag_depth : enable</code>.
          * @memberof Context.prototype

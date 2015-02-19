@@ -38,8 +38,9 @@ globe.depthTestAgainstTerrain = true;
 var ellipsoid = globe.ellipsoid;
 
 var cesiumTerrainProviderHeightmaps = new Cesium.CesiumTerrainProvider({
-    url : '//cesiumjs.org/smallterrain',
-    credit : 'Terrain data courtesy Analytical Graphics, Inc.'
+    url : '//assets.agi.com/stk-terrain/world',
+    requestWaterMask: true,
+    requestVertexNormals: true
 });
 
 viewer.terrainProvider = cesiumTerrainProviderHeightmaps;
@@ -58,7 +59,7 @@ scene.primitives.add(new Cesium.Primitive({
             Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-105.0, 45.0)),
             new Cesium.Cartesian3(0.0, 0.0, 250000), new Cesium.Matrix4()),
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED.withAlpha(0.5))
         }
     }),
     appearance : new Cesium.PerInstanceColorAppearance({

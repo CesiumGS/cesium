@@ -19,9 +19,9 @@ defineSuite([
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/PrimitiveCollection',
+        'Specs/createDynamicGeometryBoundingSphereSpecs',
         'Specs/createDynamicProperty',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], function(
         PolygonGeometryUpdater,
         Cartesian3,
@@ -42,9 +42,9 @@ defineSuite([
         SampledProperty,
         TimeIntervalCollectionProperty,
         PrimitiveCollection,
+        createDynamicGeometryBoundingSphereSpecs,
         createDynamicProperty,
-        createScene,
-        destroyScene) {
+        createScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -57,7 +57,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     function createBasicPolygon() {
@@ -121,7 +121,7 @@ defineSuite([
 
         expect(updater.isClosed).toBe(false);
         expect(updater.fillEnabled).toBe(true);
-        expect(updater.fillMaterialProperty).toEqual(ColorMaterialProperty.fromColor(Color.WHITE));
+        expect(updater.fillMaterialProperty).toEqual(new ColorMaterialProperty(Color.WHITE));
         expect(updater.outlineEnabled).toBe(false);
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
@@ -262,7 +262,7 @@ defineSuite([
     it('Creates expected per-color geometry', function() {
         validateGeometryInstance({
             show : true,
-            material : ColorMaterialProperty.fromColor(Color.RED),
+            material : new ColorMaterialProperty(Color.RED),
             height : 431,
             extrudedHeight : 123,
             granularity : 0.97,
@@ -513,5 +513,11 @@ defineSuite([
         expect(function() {
             return new PolygonGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
+    });
+
+    var entity = createBasicPolygon();
+    entity.polygon.extrudedHeight = createDynamicProperty(2);
+    createDynamicGeometryBoundingSphereSpecs(PolygonGeometryUpdater, entity, entity.polygon, function() {
+        return scene;
     });
 });

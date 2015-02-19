@@ -2,34 +2,44 @@
 defineSuite([
         'Scene/GlobeSurfaceTile',
         'Core/Cartesian3',
+        'Core/Cartesian4',
         'Core/CesiumTerrainProvider',
         'Core/defined',
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
         'Core/Ray',
+        'Core/Rectangle',
         'Core/WebMercatorTilingScheme',
+        'Scene/Imagery',
+        'Scene/ImageryLayer',
         'Scene/ImageryLayerCollection',
+        'Scene/ImageryState',
         'Scene/QuadtreeTile',
         'Scene/QuadtreeTileLoadState',
         'Scene/TerrainState',
+        'Scene/TileImagery',
         'Specs/createContext',
-        'Specs/destroyContext',
         'ThirdParty/when'
     ], function(
         GlobeSurfaceTile,
         Cartesian3,
+        Cartesian4,
         CesiumTerrainProvider,
         defined,
         Ellipsoid,
         GeographicTilingScheme,
         Ray,
+        Rectangle,
         WebMercatorTilingScheme,
+        Imagery,
+        ImageryLayer,
         ImageryLayerCollection,
+        ImageryState,
         QuadtreeTile,
         QuadtreeTileLoadState,
         TerrainState,
+        TileImagery,
         createContext,
-        destroyContext,
         when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -82,7 +92,7 @@ defineSuite([
         });
 
         afterAll(function() {
-            destroyContext(context);
+            context.destroyForSpecs();
         });
 
         beforeEach(function() {
@@ -492,6 +502,34 @@ defineSuite([
                 expect(childTile.data.waterMaskTexture).toBeUndefined();
             });
         });
+
+        it('loads parent imagery tile even for root terrain tiles', function() {
+            var tile = new QuadtreeTile({
+                tilingScheme : new GeographicTilingScheme(),
+                level : 0,
+                x : 1,
+                y : 0
+            });
+
+            var imageryLayerCollection = new ImageryLayerCollection();
+
+            GlobeSurfaceTile.processStateMachine(tile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
+
+            var layer = new ImageryLayer({
+                requestImage : function() {
+                    return when.reject();
+                }
+            });
+            var imagery = new Imagery(layer, 0, 0, 1, Rectangle.MAX_VALUE);
+            tile.data.imagery.push(new TileImagery(imagery, new Cartesian4()));
+
+            expect(imagery.parent.state).toBe(ImageryState.UNLOADED);
+
+            waitsFor(function() {
+                GlobeSurfaceTile.processStateMachine(tile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
+                return imagery.parent.state !== ImageryState.UNLOADED;
+            });
+        });
     }, 'WebGL');
 
     describe('pick', function() {
@@ -502,7 +540,7 @@ defineSuite([
         });
 
         afterAll(function() {
-            destroyContext(context);
+            context.destroyForSpecs();
         });
 
         it('gets correct results even when the mesh includes normals', function() {

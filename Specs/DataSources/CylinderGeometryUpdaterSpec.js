@@ -19,9 +19,9 @@ defineSuite([
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/PrimitiveCollection',
+        'Specs/createDynamicGeometryBoundingSphereSpecs',
         'Specs/createDynamicProperty',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], function(
         CylinderGeometryUpdater,
         Cartesian3,
@@ -42,9 +42,9 @@ defineSuite([
         SampledProperty,
         TimeIntervalCollectionProperty,
         PrimitiveCollection,
+        createDynamicGeometryBoundingSphereSpecs,
         createDynamicProperty,
-        createScene,
-        destroyScene) {
+        createScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -57,7 +57,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     function createBasicCylinder() {
@@ -67,7 +67,7 @@ defineSuite([
         cylinder.bottomRadius = new ConstantProperty(1000);
 
         var entity = new Entity();
-        entity.position = new ConstantPositionProperty(Cartesian3.ZERO);
+        entity.position = new ConstantPositionProperty(Cartesian3.fromDegrees(0, 0, 0));
         entity.cylinder = cylinder;
         return entity;
     }
@@ -140,7 +140,7 @@ defineSuite([
 
         expect(updater.isClosed).toBe(true);
         expect(updater.fillEnabled).toBe(true);
-        expect(updater.fillMaterialProperty).toEqual(ColorMaterialProperty.fromColor(Color.WHITE));
+        expect(updater.fillMaterialProperty).toEqual(new ColorMaterialProperty(Color.WHITE));
         expect(updater.outlineEnabled).toBe(false);
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
@@ -265,7 +265,7 @@ defineSuite([
             topRadius : 3,
             bottomRadius : 2,
             show : true,
-            material : ColorMaterialProperty.fromColor(Color.RED),
+            material : new ColorMaterialProperty(Color.RED),
             fill : true,
             outline : true,
             outlineColor : Color.BLUE,
@@ -509,5 +509,11 @@ defineSuite([
         expect(function() {
             return new CylinderGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
+    });
+
+    var entity = createBasicCylinder();
+    entity.cylinder.topRadius = createDynamicProperty(4);
+    createDynamicGeometryBoundingSphereSpecs(CylinderGeometryUpdater, entity, entity.cylinder, function() {
+        return scene;
     });
 });

@@ -18,9 +18,9 @@ defineSuite([
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/PrimitiveCollection',
+        'Specs/createDynamicGeometryBoundingSphereSpecs',
         'Specs/createDynamicProperty',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], function(
         EllipseGeometryUpdater,
         Cartesian3,
@@ -40,9 +40,9 @@ defineSuite([
         SampledProperty,
         TimeIntervalCollectionProperty,
         PrimitiveCollection,
+        createDynamicGeometryBoundingSphereSpecs,
         createDynamicProperty,
-        createScene,
-        destroyScene) {
+        createScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -55,7 +55,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     function createBasicEllipse() {
@@ -64,7 +64,7 @@ defineSuite([
         ellipse.semiMinorAxis = new ConstantProperty(1);
 
         var entity = new Entity();
-        entity.position = new ConstantPositionProperty(Cartesian3.ZERO);
+        entity.position = new ConstantPositionProperty(Cartesian3.fromDegrees(0, 0, 0));
         entity.ellipse = ellipse;
         return entity;
     }
@@ -137,7 +137,7 @@ defineSuite([
 
         expect(updater.isClosed).toBe(false);
         expect(updater.fillEnabled).toBe(true);
-        expect(updater.fillMaterialProperty).toEqual(ColorMaterialProperty.fromColor(Color.WHITE));
+        expect(updater.fillMaterialProperty).toEqual(new ColorMaterialProperty(Color.WHITE));
         expect(updater.outlineEnabled).toBe(false);
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
@@ -312,7 +312,7 @@ defineSuite([
             semiMajorAxis : 3,
             semiMinorAxis : 2,
             show : true,
-            material : ColorMaterialProperty.fromColor(Color.RED),
+            material : new ColorMaterialProperty(Color.RED),
             height : 123,
             extrudedHeight : 431,
             granularity : 0.97,
@@ -561,5 +561,11 @@ defineSuite([
         expect(function() {
             return new EllipseGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
+    });
+
+    var entity = createBasicEllipse();
+    entity.ellipse.semiMajorAxis = createDynamicProperty(4);
+    createDynamicGeometryBoundingSphereSpecs(EllipseGeometryUpdater, entity, entity.ellipse, function() {
+        return scene;
     });
 });

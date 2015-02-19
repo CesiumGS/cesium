@@ -1,18 +1,22 @@
 /*global define*/
 define([
         '../Core/AssociativeArray',
+        '../Core/BoundingSphere',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        './BoundingSphereState',
         './ColorMaterialProperty',
         './StaticGeometryColorBatch',
         './StaticGeometryPerMaterialBatch',
         './StaticOutlineGeometryBatch'
     ], function(
         AssociativeArray,
+        BoundingSphere,
         defined,
         destroyObject,
         DeveloperError,
+        BoundingSphereState,
         ColorMaterialProperty,
         StaticGeometryColorBatch,
         StaticGeometryPerMaterialBatch,
@@ -55,14 +59,21 @@ define([
         this._dynamicUpdaters.removeAll();
     };
 
+    DynamicGeometryBatch.prototype.getBoundingSphere = function(entity, result) {
+        var updater = this._dynamicUpdaters.get(entity.id);
+        if (defined(updater) && defined(updater.getBoundingSphere)) {
+            return updater.getBoundingSphere(entity, result);
+        }
+        return BoundingSphereState.FAILED;
+    };
+
     function removeUpdater(that, updater) {
         //We don't keep track of which batch an updater is in, so just remove it from all of them.
-        that._outlineBatch.remove(updater);
-        that._closedColorBatch.remove(updater);
-        that._closedMaterialBatch.remove(updater);
-        that._openColorBatch.remove(updater);
-        that._openMaterialBatch.remove(updater);
-        that._dynamicBatch.remove(updater);
+        var batches = that._batches;
+        var length = batches.length;
+        for (var i = 0; i < length; i++) {
+            batches[i].remove(updater);
+        }
     }
 
     function insertUpdaterIntoBatch(that, time, updater) {
@@ -130,13 +141,14 @@ define([
         this._openColorBatch = new StaticGeometryColorBatch(primitives, type.perInstanceColorAppearanceType, false);
         this._openMaterialBatch = new StaticGeometryPerMaterialBatch(primitives, type.materialAppearanceType, false);
         this._dynamicBatch = new DynamicGeometryBatch(primitives);
+        this._batches = [this._closedColorBatch, this._closedMaterialBatch, this._openColorBatch, this._openMaterialBatch, this._dynamicBatch, this._outlineBatch];
 
         this._subscriptions = new AssociativeArray();
         this._updaters = new AssociativeArray();
 
         this._entityCollection = entityCollection;
         entityCollection.collectionChanged.addEventListener(GeometryVisualizer.prototype._onCollectionChanged, this);
-        this._onCollectionChanged(entityCollection, entityCollection.entities, emptyArray);
+        this._onCollectionChanged(entityCollection, entityCollection.values, emptyArray);
     };
 
     /**
@@ -198,13 +210,66 @@ define([
         removedObjects.removeAll();
         changedObjects.removeAll();
 
-        var isUpdated = this._closedColorBatch.update(time);
-        isUpdated = this._closedMaterialBatch.update(time) && isUpdated;
-        isUpdated = this._openColorBatch.update(time) && isUpdated;
-        isUpdated = this._openMaterialBatch.update(time) && isUpdated;
-        isUpdated = this._dynamicBatch.update(time) && isUpdated;
-        isUpdated = this._outlineBatch.update(time) && isUpdated;
+        var isUpdated = true;
+        var batches = this._batches;
+        var length = batches.length;
+        for (i = 0; i < length; i++) {
+            isUpdated = batches[i].update(time) && isUpdated;
+        }
+
         return isUpdated;
+    };
+
+    var getBoundingSphereArrayScratch = [];
+    var getBoundingSphereBoundingSphereScratch = new BoundingSphere();
+
+    /**
+     * Computes a bounding sphere which encloses the visualization produced for the specified entity.
+     * The bounding sphere is in the fixed frame of the scene's globe.
+     *
+     * @param {Entity} entity The entity whose bounding sphere to compute.
+     * @param {BoundingSphere} result The bounding sphere onto which to store the result.
+     * @returns {BoundingSphereState} BoundingSphereState.DONE if the result contains the bounding sphere,
+     *                       BoundingSphereState.PENDING if the result is still being computed, or
+     *                       BoundingSphereState.FAILED if the entity has no visualization in the current scene.
+     * @private
+     */
+    GeometryVisualizer.prototype.getBoundingSphere = function(entity, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(entity)) {
+            throw new DeveloperError('entity is required.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required.');
+        }
+        //>>includeEnd('debug');
+
+        var boundingSpheres = getBoundingSphereArrayScratch;
+        var tmp = getBoundingSphereBoundingSphereScratch;
+
+        var count = 0;
+        var resultState;
+        var state = BoundingSphereState.DONE;
+        var batches = this._batches;
+        var batchesLength = batches.length;
+
+        for (var i = 0; i < batchesLength; i++) {
+            state = batches[i].getBoundingSphere(entity, tmp);
+            if (state === BoundingSphereState.PENDING) {
+                return BoundingSphereState.PENDING;
+            } else if (state === BoundingSphereState.DONE) {
+                boundingSpheres[count] = BoundingSphere.clone(tmp, boundingSpheres[count]);
+                count++;
+            }
+        }
+
+        if (count === 0) {
+            return BoundingSphereState.FAILED;
+        }
+
+        boundingSpheres.length = count;
+        BoundingSphere.fromBoundingSpheres(boundingSpheres, result);
+        return BoundingSphereState.DONE;
     };
 
     /**
@@ -224,16 +289,16 @@ define([
         this._addedObjects.removeAll();
         this._removedObjects.removeAll();
 
-        this._outlineBatch.removeAllPrimitives();
-        this._closedColorBatch.removeAllPrimitives();
-        this._closedMaterialBatch.removeAllPrimitives();
-        this._openColorBatch.removeAllPrimitives();
-        this._openMaterialBatch.removeAllPrimitives();
-        this._dynamicBatch.removeAllPrimitives();
+        var i;
+        var batches = this._batches;
+        var length = batches.length;
+        for (i = 0; i < length; i++) {
+            batches[i].removeAllPrimitives();
+        }
 
         var subscriptions = this._subscriptions.values;
-        var len = subscriptions.length;
-        for (var i = 0; i < len; i++) {
+        length = subscriptions.length;
+        for (i = 0; i < length; i++) {
             subscriptions[i]();
         }
         this._subscriptions.removeAll();

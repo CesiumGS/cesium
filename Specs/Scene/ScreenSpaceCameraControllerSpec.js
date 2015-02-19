@@ -55,6 +55,13 @@ defineSuite([
         this.mapProjection = new GeographicProjection(ellipsoid);
     };
 
+    var MockGlobe = function(ellipsoid) {
+        this.ellipsoid = ellipsoid;
+        this.getHeight = function(cartographic) {
+            return 0.0;
+        };
+    };
+
     beforeAll(function() {
         canvas = createCanvas(1024, 768);
     });
@@ -100,7 +107,7 @@ defineSuite([
 
     function simulateMouseUp(options) {
         if (usePointerEvents) {
-            DomEventSimulator.firePointerUp(document, combine(options, {
+            DomEventSimulator.firePointerUp(canvas, combine(options, {
                 pointerType : 'mouse'
             }));
         } else {
@@ -110,7 +117,7 @@ defineSuite([
 
     function simulateMouseMove(options) {
         if (usePointerEvents) {
-            DomEventSimulator.firePointerMove(document, combine(options, {
+            DomEventSimulator.firePointerMove(canvas, combine(options, {
                 pointerType : 'mouse'
             }));
         } else {
@@ -131,15 +138,17 @@ defineSuite([
     }
 
     function moveMouse(button, startPosition, endPosition, shiftKey) {
+        var canvasRect = canvas.getBoundingClientRect();
+
         var options = {
             button : button,
-            clientX : startPosition.x,
-            clientY : startPosition.y,
+            clientX : startPosition.x + canvasRect.left,
+            clientY : startPosition.y + canvasRect.top,
             shiftKey : shiftKey
         };
         simulateMouseDown(options);
-        options.clientX = endPosition.x;
-        options.clientY = endPosition.y;
+        options.clientX = endPosition.x + canvasRect.left;
+        options.clientY = endPosition.y + canvasRect.top;
         simulateMouseMove(options);
         simulateMouseUp(options);
     }
@@ -985,6 +994,94 @@ defineSuite([
         moveMouse(MouseButtons.LEFT, endPosition, startPosition, true);
         updateController();
         expect(Cartesian3.magnitude(camera.position)).toBeGreaterThan(Cartesian3.magnitude(position));
+    });
+
+    it('camera does not go below the terrain in 3D', function() {
+        setUp3D();
+        scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+
+        updateController();
+
+        camera.setView({
+            position : Cartesian3.fromDegrees(-72.0, 40.0, 1.0)
+        });
+
+        updateController();
+
+        expect(camera.positionCartographic.height).toEqualEpsilon(controller.minimumZoomDistance, CesiumMath.EPSILON7);
+    });
+
+    it('camera does not go below the terrain in CV', function() {
+        setUpCV();
+        scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+
+        updateController();
+
+        camera.setView({
+            position : Cartesian3.fromDegrees(-72.0, 40.0, 1.0)
+        });
+
+        updateController();
+
+        expect(camera.position.z).toEqualEpsilon(controller.minimumZoomDistance, CesiumMath.EPSILON7);
+    });
+
+    it('camera does go below the terrain in 3D when collision detection is disabled', function() {
+        setUp3D();
+        scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+        controller.enableCollisionDetection = false;
+
+        updateController();
+
+        camera.setView({
+            position : Cartesian3.fromDegrees(-72.0, 40.0, 1.0)
+        });
+
+        updateController();
+
+        expect(camera.positionCartographic.height).toBeLessThan(controller.minimumZoomDistance);
+    });
+
+    it('camera does go below the terrain in CV when collision detection is disabled', function() {
+        setUpCV();
+        scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+        controller.enableCollisionDetection = false;
+
+        updateController();
+
+        camera.setView({
+            position : Cartesian3.fromDegrees(-72.0, 40.0, 1.0)
+        });
+
+        updateController();
+
+        expect(camera.position.z).toBeLessThan(controller.minimumZoomDistance);
+    });
+
+    it('camera does not go below the terrain in 3D with the transform set', function() {
+        setUp3D();
+        scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+
+        updateController();
+
+        camera.lookAt(Cartesian3.fromDegrees(-72.0, 40.0, 1.0), new Cartesian3(1.0, 1.0, -10.0));
+
+        updateController();
+
+        expect(camera.positionCartographic.height).toBeGreaterThanOrEqualTo(controller.minimumZoomDistance);
+    });
+
+    it('camera does not go below the terrain in CV with the transform set', function() {
+        setUpCV();
+        scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+
+        updateController();
+
+        camera.lookAt(Cartesian3.fromDegrees(-72.0, 40.0, 1.0), new Cartesian3(1.0, 1.0, -10.0));
+
+        updateController();
+
+        expect(camera.positionWC.x).toBeGreaterThanOrEqualTo(controller.minimumZoomDistance);
     });
 
     it('is destroyed', function() {

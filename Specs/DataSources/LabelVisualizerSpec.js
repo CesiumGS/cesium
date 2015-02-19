@@ -1,11 +1,13 @@
 /*global defineSuite*/
 defineSuite([
         'DataSources/LabelVisualizer',
+        'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
         'Core/JulianDate',
         'Core/NearFarScalar',
+        'DataSources/BoundingSphereState',
         'DataSources/ConstantProperty',
         'DataSources/EntityCollection',
         'DataSources/LabelGraphics',
@@ -13,15 +15,16 @@ defineSuite([
         'Scene/LabelCollection',
         'Scene/LabelStyle',
         'Scene/VerticalOrigin',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], function(
         LabelVisualizer,
+        BoundingSphere,
         Cartesian2,
         Cartesian3,
         Color,
         JulianDate,
         NearFarScalar,
+        BoundingSphereState,
         ConstantProperty,
         EntityCollection,
         LabelGraphics,
@@ -29,8 +32,7 @@ defineSuite([
         LabelCollection,
         LabelStyle,
         VerticalOrigin,
-        createScene,
-        destroyScene) {
+        createScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -42,7 +44,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     afterEach(function() {
@@ -277,5 +279,54 @@ defineSuite([
         expect(labelCollection.length).toEqual(1);
         var l = labelCollection.get(0);
         expect(l.id).toEqual(testObject);
+    });
+
+    it('Computes bounding sphere.', function() {
+        var entityCollection = new EntityCollection();
+        visualizer = new LabelVisualizer(scene, entityCollection);
+
+        var testObject = entityCollection.getOrCreateEntity('test');
+        var time = JulianDate.now();
+        var label = testObject.label = new LabelGraphics();
+
+        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
+        label.show = new ConstantProperty(true);
+        label.text = new ConstantProperty('lorum ipsum');
+        visualizer.update(time);
+
+        var result = new BoundingSphere();
+        var state = visualizer.getBoundingSphere(testObject, result);
+
+        expect(state).toBe(BoundingSphereState.DONE);
+        expect(result.center).toEqual(testObject.position.getValue());
+        expect(result.radius).toEqual(0);
+    });
+
+    it('Fails bounding sphere for entity without billboard.', function() {
+        var entityCollection = new EntityCollection();
+        var testObject = entityCollection.getOrCreateEntity('test');
+        visualizer = new LabelVisualizer(scene, entityCollection);
+        visualizer.update(JulianDate.now());
+        var result = new BoundingSphere();
+        var state = visualizer.getBoundingSphere(testObject, result);
+        expect(state).toBe(BoundingSphereState.FAILED);
+    });
+
+    it('Compute bounding sphere throws without entity.', function() {
+        var entityCollection = new EntityCollection();
+        visualizer = new LabelVisualizer(scene, entityCollection);
+        var result = new BoundingSphere();
+        expect(function() {
+            visualizer.getBoundingSphere(undefined, result);
+        }).toThrowDeveloperError();
+    });
+
+    it('Compute bounding sphere throws without result.', function() {
+        var entityCollection = new EntityCollection();
+        var testObject = entityCollection.getOrCreateEntity('test');
+        visualizer = new LabelVisualizer(scene, entityCollection);
+        expect(function() {
+            visualizer.getBoundingSphere(testObject, undefined);
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

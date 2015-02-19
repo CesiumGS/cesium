@@ -1,30 +1,43 @@
 /*global defineSuite*/
 defineSuite([
         'DataSources/DataSourceDisplay',
+        'Core/BoundingSphere',
+        'Core/Cartesian3',
         'Core/Iso8601',
+        'DataSources/BoundingSphereState',
         'DataSources/DataSourceCollection',
+        'DataSources/Entity',
         'Specs/createScene',
-        'Specs/destroyScene',
         'Specs/MockDataSource'
     ], function(
         DataSourceDisplay,
+        BoundingSphere,
+        Cartesian3,
         Iso8601,
+        BoundingSphereState,
         DataSourceCollection,
+        Entity,
         createScene,
-        destroyScene,
         MockDataSource) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var dataSourceCollection;
     var scene;
+    var display;
     beforeAll(function() {
         scene = createScene();
         dataSourceCollection = new DataSourceCollection();
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
+    });
+
+    afterEach(function() {
+        if (!display.isDestroyed()) {
+            display.destroy();
+        }
     });
 
     var MockVisualizer = function(scene, entityCollection) {
@@ -33,11 +46,19 @@ defineSuite([
         this.updatesCalled = 0;
         this.lastUpdateTime = undefined;
         this.destroyed = false;
+
+        this.getBoundingSphereResult = undefined;
+        this.getBoundingSphereState = undefined;
     };
 
     MockVisualizer.prototype.update = function(time) {
         this.lastUpdateTime = time;
         this.updatesCalled++;
+    };
+
+    MockVisualizer.prototype.getBoundingSphere = function(entity, result) {
+        this.getBoundingSphereResult.clone(result);
+        return this.getBoundingSphereState;
     };
 
     MockVisualizer.prototype.isDestroyed = function() {
@@ -53,22 +74,177 @@ defineSuite([
     };
 
     it('constructor sets expected values', function() {
-        var display = new DataSourceDisplay({
+        display = new DataSourceDisplay({
             scene : scene,
             dataSourceCollection : dataSourceCollection,
             visualizersCallback : visualizersCallback
         });
+
+        expect(display.scene).toBe(scene);
+        expect(display.dataSources).toBe(dataSourceCollection);
+        expect(display.isDestroyed()).toEqual(false);
+        expect(display.defaultDataSource).toBeDefined();
+
+        //deprecated
         expect(display.getScene()).toBe(scene);
         expect(display.getDataSources()).toBe(dataSourceCollection);
-        expect(display.isDestroyed()).toEqual(false);
+
         display.destroy();
+    });
+
+    it('Computes complete bounding sphere.', function() {
+        var visualizer1 = new MockVisualizer();
+        visualizer1.getBoundingSphereResult = new BoundingSphere(new Cartesian3(1, 2, 3), 456);
+        visualizer1.getBoundingSphereState = BoundingSphereState.DONE;
+
+        var visualizer2 = new MockVisualizer();
+        visualizer2.getBoundingSphereResult = new BoundingSphere(new Cartesian3(7, 8, 9), 1011);
+        visualizer2.getBoundingSphereState = BoundingSphereState.DONE;
+
+        display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : function() {
+                return [visualizer1, visualizer2];
+            }
+        });
+
+        var entity = new Entity();
+        var dataSource = new MockDataSource();
+        dataSource.entities.add(entity);
+        display.dataSources.add(dataSource);
+
+        var result = new BoundingSphere();
+        var state = display.getBoundingSphere(entity, true, result);
+
+        var expected = BoundingSphere.union(visualizer1.getBoundingSphereResult, visualizer2.getBoundingSphereResult);
+
+        expect(state).toBe(BoundingSphereState.DONE);
+        expect(result).toEqual(expected);
+    });
+
+    it('Computes partial bounding sphere.', function() {
+        var visualizer1 = new MockVisualizer();
+        visualizer1.getBoundingSphereResult = new BoundingSphere(new Cartesian3(1, 2, 3), 456);
+        visualizer1.getBoundingSphereState = BoundingSphereState.PENDING;
+
+        var visualizer2 = new MockVisualizer();
+        visualizer2.getBoundingSphereResult = new BoundingSphere(new Cartesian3(7, 8, 9), 1011);
+        visualizer2.getBoundingSphereState = BoundingSphereState.DONE;
+
+        display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : function() {
+                return [visualizer1, visualizer2];
+            }
+        });
+
+        var entity = new Entity();
+        var dataSource = new MockDataSource();
+        dataSource.entities.add(entity);
+        display.dataSources.add(dataSource);
+
+        var result = new BoundingSphere();
+        var state = display.getBoundingSphere(entity, true, result);
+
+        expect(state).toBe(BoundingSphereState.DONE);
+        expect(result).toEqual(visualizer2.getBoundingSphereResult);
+    });
+
+    it('Fails complete bounding sphere if allowPartial false.', function() {
+        var visualizer1 = new MockVisualizer();
+        visualizer1.getBoundingSphereResult = new BoundingSphere(new Cartesian3(1, 2, 3), 456);
+        visualizer1.getBoundingSphereState = BoundingSphereState.PENDING;
+
+        var visualizer2 = new MockVisualizer();
+        visualizer2.getBoundingSphereResult = new BoundingSphere(new Cartesian3(7, 8, 9), 1011);
+        visualizer2.getBoundingSphereState = BoundingSphereState.DONE;
+
+        display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : function() {
+                return [visualizer1, visualizer2];
+            }
+        });
+
+        var entity = new Entity();
+        display.defaultDataSource.entities.add(entity);
+
+        var result = new BoundingSphere();
+        var state = display.getBoundingSphere(entity, false, result);
+
+        expect(state).toBe(BoundingSphereState.PENDING);
+    });
+
+    it('Fails bounding sphere for entity without visualization.', function() {
+        display = new DataSourceDisplay({
+            dataSourceCollection : dataSourceCollection,
+            scene : scene
+        });
+        var entity = new Entity();
+        var dataSource = new MockDataSource();
+        dataSource.entities.add(entity);
+        display.dataSources.add(dataSource);
+        var result = new BoundingSphere();
+        var state = display.getBoundingSphere(entity, false, result);
+        expect(state).toBe(BoundingSphereState.FAILED);
+        display.destroy();
+    });
+
+    it('Fails bounding sphere for entity not in a data source.', function() {
+        display = new DataSourceDisplay({
+            dataSourceCollection : dataSourceCollection,
+            scene : scene
+        });
+        var entity = new Entity();
+        var result = new BoundingSphere();
+        var state = display.getBoundingSphere(entity, false, result);
+        expect(state).toBe(BoundingSphereState.FAILED);
+        display.destroy();
+    });
+
+    it('Compute bounding sphere throws without entity.', function() {
+        display = new DataSourceDisplay({
+            dataSourceCollection : dataSourceCollection,
+            scene : scene
+        });
+        var entity = new Entity();
+        var result = new BoundingSphere();
+        expect(function() {
+            display.getBoundingSphere(undefined, false, result);
+        }).toThrowDeveloperError();
+    });
+
+    it('Compute bounding sphere throws without result.', function() {
+        display = new DataSourceDisplay({
+            dataSourceCollection : dataSourceCollection,
+            scene : scene
+        });
+        var entity = new Entity();
+        expect(function() {
+            display.getBoundingSphere(entity, false, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('Compute bounding sphere throws without allowPartial.', function() {
+        display = new DataSourceDisplay({
+            dataSourceCollection : dataSourceCollection,
+            scene : scene
+        });
+        var entity = new Entity();
+        var result = new BoundingSphere();
+        expect(function() {
+            display.getBoundingSphere(entity, undefined, result);
+        }).toThrowDeveloperError();
     });
 
     it('destroy does not destroy underlying data sources', function() {
         var dataSource = new MockDataSource();
         dataSourceCollection.add(dataSource);
 
-        var display = new DataSourceDisplay({
+        display = new DataSourceDisplay({
             scene : scene,
             dataSourceCollection : dataSourceCollection
         });
@@ -85,7 +261,7 @@ defineSuite([
         var source1 = new MockDataSource();
         var source2 = new MockDataSource();
 
-        var display = new DataSourceDisplay({
+        display = new DataSourceDisplay({
             scene : scene,
             dataSourceCollection : dataSourceCollection,
             visualizersCallback : visualizersCallback
@@ -109,8 +285,6 @@ defineSuite([
         expect(source1Visualizer.updatesCalled).toEqual(1);
         expect(source2Visualizer.lastUpdateTime).toEqual(Iso8601.MINIMUM_VALUE);
         expect(source2Visualizer.updatesCalled).toEqual(1);
-
-        display.destroy();
     });
 
     it('constructor throws if scene undefined', function() {
@@ -120,6 +294,12 @@ defineSuite([
                 dataSourceCollection : dataSourceCollection,
                 visualizersCallback : visualizersCallback
             });
+        }).toThrowDeveloperError();
+    });
+
+    it('constructor throws if options undefined', function() {
+        expect(function(){
+            return new DataSourceDisplay(undefined);
         }).toThrowDeveloperError();
     });
 
@@ -134,7 +314,7 @@ defineSuite([
     });
 
     it('update throws if time undefined', function() {
-        var display = new DataSourceDisplay({
+        display = new DataSourceDisplay({
             scene : scene,
             dataSourceCollection : dataSourceCollection,
             visualizersCallback : visualizersCallback
@@ -142,6 +322,5 @@ defineSuite([
         expect(function(){
             return display.update();
         }).toThrowDeveloperError();
-        display.destroy();
     });
 }, 'WebGL');

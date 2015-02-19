@@ -6,8 +6,7 @@ defineSuite([
         'Core/Visibility',
         'Scene/QuadtreeTileLoadState',
         'Specs/createContext',
-        'Specs/createFrameState',
-        'Specs/destroyContext'
+        'Specs/createFrameState'
     ], function(
         QuadtreePrimitive,
         defineProperties,
@@ -15,8 +14,7 @@ defineSuite([
         Visibility,
         QuadtreeTileLoadState,
         createContext,
-        createFrameState,
-        destroyContext) {
+        createFrameState) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -28,7 +26,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     beforeEach(function() {

@@ -28,91 +28,62 @@ function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
-var scene = viewer.scene;
 
 function addLabel() {
     Sandcastle.declare(addLabel);
-    scene.primitives.removeAll();
-    var labels = scene.primitives.add(new Cesium.LabelCollection());
-    labels.add({
-        position : Cesium.Cartesian3.fromDegrees(-75.10, 39.57),
-        text     : 'Philadelphia'
+    viewer.entities.add({
+        position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
+        label : {
+            text : 'Philadelphia'
+        }
     });
 }
 
 function setFont() {
     Sandcastle.declare(setFont);
-    scene.primitives.removeAll();
-    var labels = scene.primitives.add(new Cesium.LabelCollection());
-    labels.add({
-        position  : Cesium.Cartesian3.fromDegrees(-75.10, 39.57),
-        text      : 'Philadelphia',
-        // CSS font-family
-        font      : '24px Helvetica',
-        fillColor : new Cesium.Color(0.6, 0.9, 1.0),
-        outlineColor : Cesium.Color.BLACK,
-        outlineWidth : 2,
-        style : Cesium.LabelStyle.FILL_AND_OUTLINE
+    viewer.entities.add({
+        position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
+        label : {
+            text : 'Philadelphia',
+            font : '24px Helvetica',
+            fillColor : Cesium.Color.SKYBLUE,
+            outlineColor : Cesium.Color.BLACK,
+            outlineWidth : 2,
+            style : Cesium.LabelStyle.FILL_AND_OUTLINE
+        }
     });
 }
 
 function setProperties() {
     Sandcastle.declare(setProperties);
-    scene.primitives.removeAll();
-    var labels = scene.primitives.add(new Cesium.LabelCollection());
-    var l = labels.add({
-        position : Cesium.Cartesian3.fromDegrees(-75.10, 39.57),
-        text     : 'Philadelphia'
+    var entity = viewer.entities.add({
+        position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222, 300000.0),
+        label : {
+            text : 'Philadelphia'
+        }
     });
 
-    l.position = Cesium.Cartesian3.fromDegrees(-75.10, 39.57, 300000.0);
-    l.scale = 2.0;
-}
-
-function inReferenceFrame() {
-    Sandcastle.declare(inReferenceFrame);
-    scene.primitives.removeAll();
-    var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
-    var labels = scene.primitives.add(new Cesium.LabelCollection());
-    labels.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-    labels.add({
-        position : new Cesium.Cartesian3(0.0, 0.0, 0.0),
-        text     : 'Center'
-    });
-    labels.add({
-        position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0),
-        text     : 'East'
-    });
-    labels.add({
-        position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0),
-        text     : 'North'
-    });
-    labels.add({
-        position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0),
-        text     : 'Up'
-    });
+    entity.label.scale = 2.0;
 }
 
 function offsetByDistance() {
     Sandcastle.declare(offsetByDistance);
-    scene.primitives.removeAll();
     var image = new Image();
     image.onload = function() {
-        var billboards = scene.primitives.add(new Cesium.BillboardCollection());
-        billboards.add({
-            position : Cesium.Cartesian3.fromDegrees(-75.10, 39.57),
-            scaleByDistance : new Cesium.NearFarScalar(1.5e2, 5.0, 1.5e7, 0.5),
-            image : image
-        });
-
-        var labels = scene.primitives.add(new Cesium.LabelCollection());
-        labels.add({
-            position : Cesium.Cartesian3.fromDegrees(-75.10, 39.57),
-            text     : 'Label on top of scaling billboard',
-            font : '20px sans-serif',
-            horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
-            pixelOffset : new Cesium.Cartesian2(0.0, -image.height),
-            pixelOffsetScaleByDistance : new Cesium.NearFarScalar(1.5e2, 3.0, 1.5e7, 0.5)
+        viewer.entities.add({
+            position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
+            billboard : {
+                position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
+                scaleByDistance : new Cesium.NearFarScalar(1.5e2, 5.0, 1.5e7, 0.5),
+                image : image
+            },
+            label : {
+                text : 'Label on top of scaling billboard',
+                font : '20px sans-serif',
+                horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
+                pixelOffset : new Cesium.Cartesian2(0.0, -image.height),
+                pixelOffsetScaleByDistance : new Cesium.NearFarScalar(1.5e2, 3.0, 1.5e7, 0.5)
+            }
         });
     };
     image.src = '../images/facility.gif';
@@ -120,17 +91,19 @@ function offsetByDistance() {
 
 function fadeByDistance() {
     Sandcastle.declare(fadeByDistance);
-    scene.primitives.removeAll();
-    var labels = scene.primitives.add(new Cesium.LabelCollection());
-    labels.add({
+    viewer.entities.add({
         position : Cesium.Cartesian3.fromDegrees(-73.94, 40.67),
-        text     : 'New York',
-        translucencyByDistance : new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e8, 0.0)
+        label : {
+            text : 'New York',
+            translucencyByDistance : new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e8, 0.0)
+        }
     });
-    labels.add({
+    viewer.entities.add({
         position : Cesium.Cartesian3.fromDegrees(-84.39, 33.75),
-        text     : 'Atlanta',
-        translucencyByDistance : new Cesium.NearFarScalar(1.5e5, 1.0, 1.5e7, 0.0)
+        label : {
+            text : 'Atlanta',
+            translucencyByDistance : new Cesium.NearFarScalar(1.5e5, 1.0, 1.5e7, 0.0)
+        }
     });
 }
 
@@ -153,12 +126,6 @@ Sandcastle.addToolbarMenu([{
         Sandcastle.highlight(setProperties);
     }
 }, {
-    text : 'Add labels in reference frame',
-    onselect : function() {
-        inReferenceFrame();
-        Sandcastle.highlight(inReferenceFrame);
-    }
-}, {
     text : 'Offset label by distance',
     onselect : function() {
         offsetByDistance();
@@ -171,6 +138,10 @@ Sandcastle.addToolbarMenu([{
         Sandcastle.highlight(fadeByDistance);
     }
 }]);
+
+Sandcastle.reset = function() {
+    viewer.entities.removeAll();
+};
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

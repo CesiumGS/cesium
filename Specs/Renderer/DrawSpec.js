@@ -8,8 +8,7 @@ defineSuite([
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
         'Renderer/DrawCommand',
-        'Specs/createContext',
-        'Specs/destroyContext'
+        'Specs/createContext'
     ], 'Renderer/Draw', function(
         BoundingRectangle,
         Color,
@@ -19,8 +18,7 @@ defineSuite([
         BufferUsage,
         ClearCommand,
         DrawCommand,
-        createContext,
-        destroyContext) {
+        createContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,WebGLRenderingContext*/
 
@@ -37,7 +35,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     afterEach(function() {
@@ -99,7 +97,7 @@ defineSuite([
 
         sp = sp.destroy();
         va = va.destroy();
-        destroyContext(cxt);
+        cxt.destroyForSpecs();
     });
 
     it('draws a red point with two vertex buffers', function() {

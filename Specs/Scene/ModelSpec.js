@@ -13,7 +13,6 @@ defineSuite([
         'Core/Transforms',
         'Scene/ModelAnimationLoop',
         'Specs/createScene',
-        'Specs/destroyScene',
         'Specs/waitsForPromise'
     ], function(
         Model,
@@ -29,7 +28,6 @@ defineSuite([
         Transforms,
         ModelAnimationLoop,
         createScene,
-        destroyScene,
         waitsForPromise) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,WebGLRenderingContext*/
@@ -57,7 +55,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     function addZoomTo(model) {
@@ -445,6 +443,28 @@ defineSuite([
         var boundingSphere = duckModel.boundingSphere;
         expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.134, 0.037, 0.869), CesiumMath.EPSILON3);
         expect(boundingSphere.radius).toEqualEpsilon(1.268, CesiumMath.EPSILON3);
+    });
+
+    it('boundingSphere returns the bounding sphere when scale property is set', function() {
+        var originalScale = duckModel.scale;
+        duckModel.scale = 10;
+
+        var boundingSphere = duckModel.boundingSphere;
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(1.343, 0.370, 8.694), CesiumMath.EPSILON3);
+        expect(boundingSphere.radius).toEqualEpsilon(12.688, CesiumMath.EPSILON3);
+
+        duckModel.scale = originalScale;
+    });
+
+    it('boundingSphere returns the bounding sphere when modelMatrix has non-uniform scale', function() {
+        var originalMatrix = Matrix4.clone(duckModel.modelMatrix);
+        Matrix4.multiplyByScale(duckModel.modelMatrix, new Cartesian3(2, 5, 10), duckModel.modelMatrix);
+
+        var boundingSphere = duckModel.boundingSphere;
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.268, 0.185, 8.694), CesiumMath.EPSILON3);
+        expect(boundingSphere.radius).toEqualEpsilon(12.688, CesiumMath.EPSILON3);
+
+        duckModel.modelMatrix = originalMatrix;
     });
 
     it('destroys', function() {

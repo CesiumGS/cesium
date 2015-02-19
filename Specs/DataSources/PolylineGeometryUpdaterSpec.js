@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
         'DataSources/PolylineGeometryUpdater',
+        'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
@@ -8,6 +9,7 @@ defineSuite([
         'Core/ShowGeometryInstanceAttribute',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
+        'DataSources/BoundingSphereState',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
         'DataSources/Entity',
@@ -17,11 +19,13 @@ defineSuite([
         'DataSources/SampledPositionProperty',
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
+        'Scene/Globe',
         'Scene/PrimitiveCollection',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createDynamicProperty',
+        'Specs/createScene'
     ], function(
         PolylineGeometryUpdater,
+        BoundingSphere,
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
@@ -29,6 +33,7 @@ defineSuite([
         ShowGeometryInstanceAttribute,
         TimeInterval,
         TimeIntervalCollection,
+        BoundingSphereState,
         ColorMaterialProperty,
         ConstantProperty,
         Entity,
@@ -38,19 +43,25 @@ defineSuite([
         SampledPositionProperty,
         SampledProperty,
         TimeIntervalCollectionProperty,
+        Globe,
         PrimitiveCollection,
-        createScene,
-        destroyScene) {
+        createDynamicProperty,
+        createScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var scene;
     beforeAll(function(){
         scene = createScene();
+        scene.globe = new Globe();
     });
 
     afterAll(function(){
-        destroyScene(scene);
+        scene.destroyForSpecs();
+    });
+
+    beforeEach(function() {
+        scene.primitives.removeAll();
     });
 
     var time = JulianDate.now();
@@ -114,7 +125,7 @@ defineSuite([
 
         expect(updater.isClosed).toBe(false);
         expect(updater.fillEnabled).toBe(true);
-        expect(updater.fillMaterialProperty).toEqual(ColorMaterialProperty.fromColor(Color.WHITE));
+        expect(updater.fillMaterialProperty).toEqual(new ColorMaterialProperty(Color.WHITE));
         expect(updater.outlineEnabled).toBe(false);
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
@@ -208,7 +219,7 @@ defineSuite([
     it('Creates expected per-color geometry', function() {
         validateGeometryInstance({
             show : true,
-            material : ColorMaterialProperty.fromColor(Color.RED),
+            material : new ColorMaterialProperty(Color.RED),
             width : 3,
             followSurface : false,
             granularity : 1.0
@@ -278,7 +289,7 @@ defineSuite([
         polyline.show = new ConstantProperty(true);
         polyline.width = width;
         polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0, 0, 0), Cartesian3.fromDegrees(0, 1, 0)]);
-        polyline.material = ColorMaterialProperty.fromColor(Color.RED);
+        polyline.material = new ColorMaterialProperty(Color.RED);
         polyline.followSurface = new ConstantProperty(false);
         polyline.granularity = new ConstantProperty(0.001);
 
@@ -370,8 +381,9 @@ defineSuite([
         var entity = createBasicPolyline();
         var updater = new PolylineGeometryUpdater(entity, scene);
         expect(function() {
-            return updater.createDynamicUpdater(new PrimitiveCollection());
+            return updater.createDynamicUpdater(scene.primitives);
         }).toThrowDeveloperError();
+        updater.destroy();
     });
 
     it('createDynamicUpdater throws if primitives undefined', function() {
@@ -383,6 +395,7 @@ defineSuite([
         expect(function() {
             return updater.createDynamicUpdater(undefined);
         }).toThrowDeveloperError();
+        updater.destroy();
     });
 
     it('dynamicUpdater.update throws if no time specified', function() {
@@ -390,10 +403,11 @@ defineSuite([
         entity.polyline.width = new SampledProperty(Number);
         entity.polyline.width.addSample(time, 4);
         var updater = new PolylineGeometryUpdater(entity, scene);
-        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
+        var dynamicUpdater = updater.createDynamicUpdater(scene.primitives);
         expect(function() {
             dynamicUpdater.update(undefined);
         }).toThrowDeveloperError();
+        updater.destroy();
     });
 
     it('Constructor throws if no entity supplied', function() {
@@ -407,5 +421,68 @@ defineSuite([
         expect(function() {
             return new PolylineGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
+    });
+
+    it('Computes dynamic geometry bounding sphere for fill.', function() {
+        var entity = createBasicPolyline();
+        entity.polyline.width = createDynamicProperty(1);
+
+        var updater = new PolylineGeometryUpdater(entity, scene);
+        var dynamicUpdater = updater.createDynamicUpdater(scene.primitives);
+        dynamicUpdater.update(time);
+
+        var result = new BoundingSphere(0);
+        var state = dynamicUpdater.getBoundingSphere(entity, result);
+        expect(state).toBe(BoundingSphereState.DONE);
+
+        var primitive = scene.primitives.get(0);
+        var line = primitive.get(0);
+        expect(result).toEqual(BoundingSphere.fromPoints(line.positions));
+
+        updater.destroy();
+        scene.primitives.removeAll();
+    });
+
+    it('Fails dynamic geometry bounding sphere for entity without billboard.', function() {
+        var entity = createBasicPolyline();
+        entity.polyline.width = createDynamicProperty(1);
+        var updater = new PolylineGeometryUpdater(entity, scene);
+        var dynamicUpdater = updater.createDynamicUpdater(scene.primitives);
+
+        var result = new BoundingSphere();
+        var state = dynamicUpdater.getBoundingSphere(entity, result);
+        expect(state).toBe(BoundingSphereState.FAILED);
+
+        updater.destroy();
+        scene.primitives.removeAll();
+    });
+
+    it('Compute dynamic geometry bounding sphere throws without entity.', function() {
+        var entity = createBasicPolyline();
+        entity.polyline.width = createDynamicProperty(1);
+        var updater = new PolylineGeometryUpdater(entity, scene);
+        var dynamicUpdater = updater.createDynamicUpdater(scene.primitives);
+
+        var result = new BoundingSphere();
+        expect(function() {
+            dynamicUpdater.getBoundingSphere(undefined, result);
+        }).toThrowDeveloperError();
+
+        updater.destroy();
+        scene.primitives.removeAll();
+    });
+
+    it('Compute dynamic geometry bounding sphere throws without result.', function() {
+        var entity = createBasicPolyline();
+        entity.polyline.width = createDynamicProperty(1);
+        var updater = new PolylineGeometryUpdater(entity, scene);
+        var dynamicUpdater = updater.createDynamicUpdater(scene.primitives);
+
+        expect(function() {
+            dynamicUpdater.getBoundingSphere(entity, undefined);
+        }).toThrowDeveloperError();
+
+        updater.destroy();
+        scene.primitives.removeAll();
     });
 });

@@ -56,12 +56,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('removeDuplicates throws without three positions', function() {
-        expect(function() {
-            PolygonPipeline.removeDuplicates([Cartesian3.ZERO, Cartesian3.ZERO]);
-        }).toThrowDeveloperError();
-    });
-
     it('computeArea2D computes a positive area', function() {
         var area = PolygonPipeline.computeArea2D([
                                                   new Cartesian2(0.0, 0.0),

@@ -19,9 +19,9 @@ defineSuite([
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/PrimitiveCollection',
+        'Specs/createDynamicGeometryBoundingSphereSpecs',
         'Specs/createDynamicProperty',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], function(
         CorridorGeometryUpdater,
         Cartesian3,
@@ -42,9 +42,9 @@ defineSuite([
         SampledProperty,
         TimeIntervalCollectionProperty,
         PrimitiveCollection,
+        createDynamicGeometryBoundingSphereSpecs,
         createDynamicProperty,
-        createScene,
-        destroyScene) {
+        createScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -57,7 +57,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     function createBasicCorridor() {
@@ -122,7 +122,7 @@ defineSuite([
 
         expect(updater.isClosed).toBe(false);
         expect(updater.fillEnabled).toBe(true);
-        expect(updater.fillMaterialProperty).toEqual(ColorMaterialProperty.fromColor(Color.WHITE));
+        expect(updater.fillMaterialProperty).toEqual(new ColorMaterialProperty(Color.WHITE));
         expect(updater.outlineEnabled).toBe(false);
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
@@ -267,7 +267,7 @@ defineSuite([
     it('Creates expected per-color geometry', function() {
         validateGeometryInstance({
             show : true,
-            material : ColorMaterialProperty.fromColor(Color.RED),
+            material : new ColorMaterialProperty(Color.RED),
             height : 431,
             extrudedHeight : 123,
             granularity : 0.97,
@@ -518,5 +518,11 @@ defineSuite([
         expect(function() {
             return new CorridorGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
+    });
+
+    var entity = createBasicCorridor();
+    entity.corridor.positions = createDynamicProperty(Cartesian3.fromRadiansArray([0, 0, 1, 0, 1, 1, 0, 1]));
+    createDynamicGeometryBoundingSphereSpecs(CorridorGeometryUpdater, entity, entity.corridor, function() {
+        return scene;
     });
 });
