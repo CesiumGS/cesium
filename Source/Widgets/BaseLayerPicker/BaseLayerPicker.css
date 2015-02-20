@@ -10,6 +10,7 @@
 .cesium-baseLayerPicker-dropDown {
     display: block;
     position: absolute;
+    box-sizing: content-box;
     top: auto;
     right: 0;
     width: 320px;  /* Includes space needed for scrollbar */

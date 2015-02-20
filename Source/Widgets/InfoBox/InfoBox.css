@@ -43,6 +43,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+    box-sizing: content-box;
 }
 
 .cesium-infoBox-bodyless .cesium-infoBox-title {
