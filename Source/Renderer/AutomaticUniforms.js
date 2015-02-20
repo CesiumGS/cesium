@@ -161,6 +161,29 @@ define([
         }),
 
         /**
+         * An automatic GLSL uniform representing a the depth texture after
+         * after only the globe has been rendered.
+         *
+         * @alias czm_globeDepthTexture
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform sampler2D czm_globeDepthTexture;
+         *
+         * // Get the depth at the current fragment
+         * vec2 coords = gl_FragCoord.xy / czm_viewport.zw;
+         * float depth = texture2D(czm_globeDepthTexture, coords).r;
+         */
+        czm_globeDepthTexture : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLRenderingContext.SAMPLER_2D,
+            getValue : function(uniformState) {
+                return uniformState.globeDepthTexture;
+            }
+        }),
+
+        /**
          * An automatic GLSL uniform representing a 4x4 model transformation matrix that
          * transforms model coordinates to world coordinates.
          *

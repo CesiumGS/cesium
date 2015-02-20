@@ -41,6 +41,8 @@ define([
         this._viewportOrthographicMatrix = Matrix4.clone(Matrix4.IDENTITY);
         this._viewportTransformation = Matrix4.clone(Matrix4.IDENTITY);
 
+        this._globeDepthTexture = undefined;
+
         this._model = Matrix4.clone(Matrix4.IDENTITY);
         this._view = Matrix4.clone(Matrix4.IDENTITY);
         this._inverseView = Matrix4.clone(Matrix4.IDENTITY);
@@ -198,6 +200,19 @@ define([
             get : function() {
                 cleanViewport(this);
                 return this._viewportTransformation;
+            }
+        },
+
+        /**
+         * @memberof UniformState.prototype
+         * @type {Texture}
+         */
+        globeDepthTexture : {
+            get : function() {
+                return this._globeDepthTexture;
+            },
+            set : function(texture) {
+                this._globeDepthTexture = texture;
             }
         },
 
