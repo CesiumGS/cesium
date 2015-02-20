@@ -3,7 +3,6 @@ define([
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
-        '../Core/Cartographic',
         '../Core/ClockRange',
         '../Core/ClockStep',
         '../Core/Color',
@@ -34,6 +33,7 @@ define([
         '../ThirdParty/when',
         '../ThirdParty/zip',
         './BillboardGraphics',
+        './CompositePositionProperty',
         './ConstantPositionProperty',
         './DataSource',
         './DataSourceClock',
@@ -42,20 +42,17 @@ define([
         './LabelGraphics',
         './PolygonGraphics',
         './PolylineGraphics',
-        './PolylineOutlineMaterialProperty',
         './PositionPropertyArray',
         './RectangleGraphics',
         './ReferenceProperty',
         './SampledPositionProperty',
         './SurfacePositionProperty',
         './TimeIntervalCollectionProperty',
-        './CompositePositionProperty',
         './WallGraphics'
     ], function(
         BoundingRectangle,
         Cartesian2,
         Cartesian3,
-        Cartographic,
         ClockRange,
         ClockStep,
         Color,
@@ -86,6 +83,7 @@ define([
         when,
         zip,
         BillboardGraphics,
+        CompositePositionProperty,
         ConstantPositionProperty,
         DataSource,
         DataSourceClock,
@@ -94,15 +92,14 @@ define([
         LabelGraphics,
         PolygonGraphics,
         PolylineGraphics,
-        PolylineOutlineMaterialProperty,
         PositionPropertyArray,
         RectangleGraphics,
         ReferenceProperty,
         SampledPositionProperty,
         SurfacePositionProperty,
         TimeIntervalCollectionProperty,
-        CompositePositionProperty,
-        WallGraphics) {
+        WallGraphics
+        ) {
     "use strict";
 
     var parser = new DOMParser();
@@ -121,7 +118,6 @@ define([
 
     var BILLBOARD_SIZE = 32;
 
-    var scratchCartographic = new Cartographic();
     var scratchCartesian = new Cartesian3();
 
     function isZipFile(blob) {
@@ -206,8 +202,7 @@ define([
         latitude = isNaN(latitude) ? 0.0 : latitude;
         height = isNaN(height) ? 0.0 : height;
 
-        Cartographic.fromDegrees(longitude, latitude, height, scratchCartographic);
-        return Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic);
+        return Cartesian3.fromDegrees(longitude, latitude, height);
     }
 
     function isExtrudable(altitudeMode, gxAltitudeMode) {
