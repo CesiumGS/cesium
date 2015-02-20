@@ -998,11 +998,10 @@ define([
             var childNode = childNodes.item(i);
             var geometryProcessor = geometryTypes[childNode.localName];
             if (defined(geometryProcessor)) {
-                var childNodeId = createId(childNode);
-                var childEntity = dataSource._entityCollection.getOrCreateEntity(childNodeId);
-                if (!defined(entity.kml)) {
-                    entity.addProperty('kml');
-                    entity.kml = {};
+                var childEntity = dataSource._entityCollection.getOrCreateEntity(createId(childNode));
+                if (!defined(childEntity.kml)) {
+                    childEntity.addProperty('kml');
+                    childEntity.kml = {};
                 }
                 childEntity.parent = entity;
                 childEntity.name = entity.name;
@@ -1039,7 +1038,11 @@ define([
         entity.kml.extendedData = result;
     }
 
-    function processDescription(node, entity, styleEntity) {
+    function processDescription(node, entity, styleEntity, uriResolver) {
+        var i;
+        var key;
+        var keys;
+
         var kmlData = entity.kml;
         var extendedData = kmlData.extendedData;
         var description = queryStringValue(node, 'description', namespaces.kml);
@@ -1060,6 +1063,7 @@ define([
             var value;
 
             var tmp = '<div style="';
+            tmp += 'overflow:auto;';
             tmp += 'word-wrap:break-word;';
             tmp += 'background-color:' + background.toCssColorString() + ';';
             tmp += 'color:' + foreground.toCssColorString() + ';';
@@ -1080,7 +1084,7 @@ define([
                 if (defined(extendedData)) {
                     var matches = text.match(/\$\[.+?\]/g);
                     if (matches !== null) {
-                        for (var i = 0; i < matches.length; i++) {
+                        for (i = 0; i < matches.length; i++) {
                             var token = matches[i];
                             var propertyName = token.substr(2, token.length - 3);
                             var isDisplayName = /\/displayName$/.test(propertyName);
@@ -1100,13 +1104,25 @@ define([
             } else {
                 //If no description exists, build a table out of the extended data
                 tmp += '<table class="cesium-infoBox-defaultTable"><tbody>';
-                for ( var key in extendedData) {
-                    if (extendedData.hasOwnProperty(key)) {
-                        value = extendedData[key];
-                        tmp += '<tr><th>' + defaultValue(value.displayName, key) + '</th><td>' + defaultValue(value.value, '') + '</td></tr>';
-                    }
+                keys = Object.keys(extendedData);
+                for (i = 0; i < keys.length; i++) {
+                    key = keys[i];
+                    value = extendedData[key];
+                    tmp += '<tr><th>' + defaultValue(value.displayName, key) + '</th><td>' + defaultValue(value.value, '') + '</td></tr>';
                 }
                 tmp += '</tbody></table></div>';
+            }
+
+            //Replace any references to embedded KMZ
+            //data with their data URI equivalent.
+            if (defined(uriResolver)) {
+                keys = Object.keys(uriResolver);
+                for (i = 0; i < keys.length; i++) {
+                    key = keys[i];
+                    if (key !== 'kml') {
+                        tmp = tmp.replace(key, uriResolver[key]);
+                    }
+                }
             }
 
             //Turns non-explicit links into clickable links.
@@ -1117,8 +1133,8 @@ define([
             var div = document.createElement('div');
             div.innerHTML = tmp;
             var links = div.querySelectorAll('a');
-            for (var q = 0; q < links.length; q++) {
-                links[q].setAttribute('target', '_blank');
+            for (i = 0; i < links.length; i++) {
+                links[i].setAttribute('target', '_blank');
             }
 
             //Set the final HTML as the description.
@@ -1168,7 +1184,7 @@ define([
         kmlData.Snippet = queryStringValue(featureNode, 'Snippet', namespaces.kml);
 
         processExtendedData(featureNode, entity);
-        processDescription(featureNode, entity, styleEntity);
+        processDescription(featureNode, entity, styleEntity, uriResolver);
 
         return {
             entity : entity,
@@ -1225,6 +1241,7 @@ define([
                 hasGeometry = true;
             }
         }
+
         if (!hasGeometry) {
             entity.merge(styleEntity);
         } else if (defined(entity.position)) {

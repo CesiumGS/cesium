@@ -2,6 +2,13 @@
 <kml xmlns="http://www.opengis.net/kml/2.2">
 <Document>
 	<Placemark>
+		<Style>
+			<IconStyle>
+			  <Icon>
+				  <href>image.png</href>
+			  </Icon>
+			</IconStyle>
+		</Style>
 		<Point>
 			<coordinates>1,2,3</coordinates>
 		</Point>

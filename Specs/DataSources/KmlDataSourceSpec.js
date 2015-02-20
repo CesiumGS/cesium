@@ -689,6 +689,16 @@ defineSuite([
         expect(billboard.image.getValue()).toEqual('http://test.invalid/image.png');
     });
 
+    it('IconStyle: Sets billboard image inside KMZ', function() {
+        var dataSource = new KmlDataSource();
+        var image = 'data:;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAMAAAAoyzS7AAADAFBMVEUAAP8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADHM2paAAAAGHRFWHRTb2Z0d2FyZQBQYWludC5ORVQgdjMuMzap5+IlAAAACklEQVQI12NgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==';
+        waitsForPromise(dataSource.loadUrl('Data/KML/simple.kmz'), function(source) {
+            var entities = dataSource.entities.values;
+            var billboard = entities[0].billboard;
+            expect(billboard.image.getValue()).toEqual(image);
+        });
+    });
+
     it('IconStyle: Sets billboard image with proxy', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark>\
@@ -1839,6 +1849,39 @@ defineSuite([
         expect(entity.position.getValue(time4)).toEqual(Cartesian3.fromDegrees(3, 2, 1));
     });
 
+    it('Geometry MultiGeometry: processes geometry', function() {
+        var multiKml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark id="testID">\
+          <MultiGeometry>\
+              <Point id="point1">\
+                <coordinates>1,2</coordinates>\
+              </Point>\
+              <Point id="point2">\
+                <coordinates>3,4</coordinates>\
+              </Point>\
+          </MultiGeometry>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(multiKml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        expect(entities.length).toEqual(3);
+
+        var multi = dataSource.entities.getById('testID');
+        expect(multi).toBeDefined();
+
+        var point1 = dataSource.entities.getById('point1');
+        expect(point1).toBeDefined();
+        expect(point1.parent).toBe(multi);
+        expect(point1.position.getValue(Iso8601.MINIMUM_VALUE)).toEqualEpsilon(Cartesian3.fromDegrees(1, 2), CesiumMath.EPSILON13);
+
+        var point2 = dataSource.entities.getById('point2');
+        expect(point2).toBeDefined();
+        expect(point2.parent).toBe(multi);
+        expect(point2.position.getValue(Iso8601.MINIMUM_VALUE)).toEqualEpsilon(Cartesian3.fromDegrees(3, 4), CesiumMath.EPSILON13);
+    });
+
 //    it('handles Point Geometry with LabelStyle', function() {
 //        var name = new ConstantProperty('LabelStyle.kml');
 //        var scale = new ConstantProperty(1.5);
@@ -1872,49 +1915,6 @@ defineSuite([
 //        expect(entities[0].label.fillColor.green).toEqual(color.green);
 //        expect(entities[0].label.fillColor.blue).toEqual(color.blue);
 //        expect(entities[0].label.fillColor.alpha).toEqual(color.alpha);
-//    });
-//
-//
-//
-//
-//    it('handles MultiGeometry', function() {
-//        var position1 = new Cartographic(CesiumMath.toRadians(1), CesiumMath.toRadians(2), 0);
-//        var cartesianPosition1 = Ellipsoid.WGS84.cartographicToCartesian(position1);
-//        var position2 = new Cartographic(CesiumMath.toRadians(4), CesiumMath.toRadians(5), 0);
-//        var cartesianPosition2 = Ellipsoid.WGS84.cartographicToCartesian(position2);
-//        var position3 = new Cartographic(CesiumMath.toRadians(6), CesiumMath.toRadians(7), 0);
-//        var cartesianPosition3 = Ellipsoid.WGS84.cartographicToCartesian(position3);
-//        var position4 = new Cartographic(CesiumMath.toRadians(8), CesiumMath.toRadians(9), 0);
-//        var cartesianPosition4 = Ellipsoid.WGS84.cartographicToCartesian(position4);
-//        var multiKml = '<?xml version="1.0" encoding="UTF-8"?>\
-//            <kml xmlns="http://www.opengis.net/kml/2.2">\
-//            <Placemark>\
-//            <MultiGeometry>\
-//              <LineString>\
-//                <coordinates>\
-//                  1,2,0\
-//                  4,5,0\
-//                </coordinates>\
-//              </LineString>\
-//              <LineString>\
-//                <coordinates>\
-//                  6,7,0\
-//                  8,9,0\
-//                </coordinates>\
-//              </LineString>\
-//            </MultiGeometry>\
-//            </Placemark>\
-//            </kml>';
-//
-//        var dataSource = new KmlDataSource();
-//        dataSource.load(parser.parseFromString(multiKml, "text/xml"));
-//
-//        var entities = dataSource.entities.values;
-//        expect(entities.length).toEqual(3);
-//        expect(entities[1].polyline.positions.getValue()[0]).toEqual(cartesianPosition1);
-//        expect(entities[1].polyline.positions.getValue()[1]).toEqual(cartesianPosition2);
-//        expect(entities[2].polyline.positions.getValue()[0]).toEqual(cartesianPosition3);
-//        expect(entities[2].polyline.positions.getValue()[1]).toEqual(cartesianPosition4);
 //    });
 //
 //    it('handles MultiGeometry with style', function() {
