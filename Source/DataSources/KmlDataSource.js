@@ -1050,6 +1050,7 @@ define([
 
             var tmp = '<div style="';
             tmp += 'overflow:auto;';
+            tmp += 'padding: 4px 5px;';
             tmp += 'word-wrap:break-word;';
             tmp += 'background-color:' + background.toCssColorString() + ';';
             tmp += 'color:' + foreground.toCssColorString() + ';';
