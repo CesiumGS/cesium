@@ -28,6 +28,8 @@ define([
      *
      * @param {PositionProperty} [value] The property value.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid onto which the position will be projected.
+     *
+     * @private
      */
     var SurfacePositionProperty = function(value, ellipsoid) {
         this._definitionChanged = new Event();

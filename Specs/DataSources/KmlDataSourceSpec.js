@@ -49,7 +49,6 @@ defineSuite([
         expect(dataSource.name).toBeUndefined();
         expect(dataSource.clock).toBeUndefined();
         expect(dataSource.entities).toBeInstanceOf(EntityCollection);
-        expect(dataSource.changedEvent).toBeInstanceOf(Event);
         expect(dataSource.isLoading).toBe(false);
         expect(dataSource.changedEvent).toBeInstanceOf(Event);
         expect(dataSource.errorEvent).toBeInstanceOf(Event);
