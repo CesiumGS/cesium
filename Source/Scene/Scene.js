@@ -904,6 +904,10 @@ define([
     }
 
     function updateCopyCommands(scene) {
+        if (!defined(scene._framebuffer)) {
+            return;
+        }
+
         var context = scene._context;
 
         if (!defined(scene._copyDepthCommand)) {
@@ -1444,7 +1448,9 @@ define([
                 executeCommand(commands[j], scene, context, passState);
             }
 
-            scene._copyDepthCommand.execute(context, passState);
+            if (defined(scene._copyDepthCommand)) {
+                scene._copyDepthCommand.execute(context, passState);
+            }
 
             // Execute commands in order by pass up to the translucent pass.
             // Translucent geometry needs special handling (sorting/OIT).
@@ -1472,7 +1478,7 @@ define([
         }
 
         if (useFXAA) {
-            if (!useOIT) {
+            if (!useOIT && defined(scene._copyColorCommand)) {
                 passState.framebuffer = scene._fxaa.getColorFramebuffer();
                 scene._copyColorCommand.execute(context, passState);
             }
@@ -1481,7 +1487,7 @@ define([
             scene._fxaa.execute(context, passState);
         }
 
-        if (!useOIT && !useFXAA) {
+        if (!useOIT && !useFXAA && defined(scene._copyColorCommand)) {
             passState.framebuffer = originalFramebuffer;
             scene._copyColorCommand.execute(context, passState);
         }

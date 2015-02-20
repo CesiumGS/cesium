@@ -96,6 +96,21 @@ defineSuite([
         context.verifyDrawForSpecs(fs);
     });
 
+    it('has czm_globeDepthTexture', function() {
+        context.uniformState.globeDepthTexture = context.createTexture2D({
+            source : {
+                width : 1,
+                height : 1,
+                arrayBufferView : new Uint8Array([255, 255, 255, 255])
+            }
+        });
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(texture2D(czm_globeDepthTexture, vec2(0.5, 0.5)).r == 1.0);' +
+            '}';
+        context.verifyDrawForSpecs(fs);
+    });
+
     it('has czm_model', function() {
         var fs =
             'void main() { ' +
