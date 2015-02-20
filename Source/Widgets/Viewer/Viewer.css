@@ -32,7 +32,7 @@
     padding-right: 0;
     color: #ffffff;
     font-size: 10px;
-    text-shadow: 0px 0px 2px #000000;
+    text-shadow: 0 0 2px #000000;
 }
 
 .cesium-viewer-timelineContainer {

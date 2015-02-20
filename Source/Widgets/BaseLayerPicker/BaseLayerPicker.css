@@ -10,10 +10,12 @@
 .cesium-baseLayerPicker-dropDown {
     display: block;
     position: absolute;
+    -moz-box-sizing: content-box;
+    -webkit-box-sizing: content-box;
     box-sizing: content-box;
     top: auto;
     right: 0;
-    width: 320px;  /* Includes space needed for scrollbar */
+    width: 320px; /* Includes space needed for scrollbar */
     max-height: 500px;
     margin-top: 5px;
     background-color: rgba(38, 38, 38, 0.75);
@@ -23,25 +25,32 @@
     border-radius: 10px;
     -moz-user-select: none;
     -webkit-user-select: none;
+    -ms-user-select: none;
     user-select: none;
     -webkit-transform: translate(0, -20%);
     -moz-transform: translate(0, -20%);
+    -ms-transform: translate(0, -20%);
+    -o-transform: translate(0, -20%);
     transform: translate(0, -20%);
     visibility: hidden;
     opacity: 0;
     -webkit-transition: visibility 0s 0.2s, opacity 0.2s ease-in, -webkit-transform 0.2s ease-in;
     -moz-transition: visibility 0s 0.2s, opacity 0.2s ease-in, -moz-transform 0.2s ease-in;
+    -o-transition: visibility 0s 0.2s, opacity 0.2s ease-in, transform 0.2s ease-in;
     transition: visibility 0s 0.2s, opacity 0.2s ease-in, transform 0.2s ease-in;
 }
 
 .cesium-baseLayerPicker-dropDown-visible {
     -webkit-transform: translate(0, 0);
     -moz-transform: translate(0, 0);
+    -ms-transform: translate(0, 0);
+    -o-transform: translate(0, 0);
     transform: translate(0, 0);
     visibility: visible;
     opacity: 1;
     -webkit-transition: opacity 0.2s ease-out, -webkit-transform 0.2s ease-out;
     -moz-transition: opacity 0.2s ease-out, -moz-transform 0.2s ease-out;
+    -o-transition: opacity 0.2s ease-out, transform 0.2s ease-out;
     transition: opacity 0.2s ease-out, transform 0.2s ease-out;
 }
 
@@ -79,6 +88,7 @@
     vertical-align: middle;
     color: #edffff;
     cursor: pointer;
+    -ms-word-wrap: break-word;
     word-wrap: break-word;
 }
 
@@ -99,6 +109,7 @@
     padding: 0;
     cursor: pointer;
     -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
     box-sizing: border-box;
 }
 
