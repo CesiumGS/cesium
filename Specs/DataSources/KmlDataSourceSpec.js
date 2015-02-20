@@ -14,6 +14,7 @@ defineSuite([
         'Core/loadBlob',
         'Core/loadXML',
         'Core/Math',
+        'Core/NearFarScalar',
         'Core/Rectangle',
         'Core/RuntimeError',
         'DataSources/ColorMaterialProperty',
@@ -22,6 +23,8 @@ defineSuite([
         'DataSources/ConstantProperty',
         'DataSources/EntityCollection',
         'DataSources/ImageMaterialProperty',
+        'Scene/HorizontalOrigin',
+        'Scene/LabelStyle',
         'Specs/waitsForPromise'
     ], function(
         KmlDataSource,
@@ -38,6 +41,7 @@ defineSuite([
         loadBlob,
         loadXML,
         CesiumMath,
+        NearFarScalar,
         Rectangle,
         RuntimeError,
         ColorMaterialProperty,
@@ -46,6 +50,8 @@ defineSuite([
         ConstantProperty,
         EntityCollection,
         ImageMaterialProperty,
+        HorizontalOrigin,
+        LabelStyle,
         waitsForPromise) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -1077,6 +1083,225 @@ defineSuite([
         expect(div.innerHTML).toEqual('states.id google.com');
     });
 
+    it('LabelStyle: Sets defaults', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Style>\
+              <LabelStyle>\
+              </LabelStyle>\
+            </Style>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        var label = entities[0].label;
+        expect(label).toBeDefined();
+
+        expect(label.text).toBeUndefined();
+        expect(label.fillColor).toBeUndefined();
+        expect(label.outlineColor).toBeUndefined();
+        expect(label.outlineWidth).toBeUndefined();
+        expect(label.show).toBeUndefined();
+        expect(label.scale).toBeUndefined();
+        expect(label.verticalOrigin).toBeUndefined();
+        expect(label.eyeOffset).toBeUndefined();
+        expect(label.pixelOffsetScaleByDistance).toBeUndefined();
+
+        expect(label.font.getValue()).toEqual('14pt sans-serif');
+        expect(label.style.getValue()).toEqual(LabelStyle.FILL_AND_OUTLINE);
+        expect(label.horizontalOrigin.getValue()).toEqual(HorizontalOrigin.LEFT);
+        expect(label.pixelOffset.getValue()).toEqual(new Cartesian2(16, 0));
+        expect(label.translucencyByDistance.getValue()).toEqual(new NearFarScalar(1500000, 1.0, 3400000, 0.0));
+    });
+
+    it('LabelStyle: Sets color', function() {
+        var color = Color.fromBytes(0xcc, 0xdd, 0xee, 0xff);
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Style>\
+              <LabelStyle>\
+                <color>ffeeddcc</color>\
+              </LabelStyle>\
+            </Style>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        expect(entities[0].label.fillColor.getValue()).toEqual(color);
+    });
+
+    it('LabelStyle: Sets scale', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Style>\
+              <LabelStyle>\
+                <scale>2.75</scale>\
+              </LabelStyle>\
+            </Style>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        expect(entities[0].label.scale.getValue()).toEqual(2.75);
+    });
+
+    it('LineStyle: Sets defaults', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Style>\
+              <LineStyle>\
+              </LineStyle>\
+            </Style>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        var polyline = entities[0].polyline;
+        expect(polyline).toBeDefined();
+
+        expect(polyline.positions).toBeUndefined();
+        expect(polyline.followSurface).toBeUndefined();
+        expect(polyline.width).toBeUndefined();
+        expect(polyline.show).toBeUndefined();
+        expect(polyline.material).toBeUndefined();
+        expect(polyline.granularity).toBeUndefined();
+    });
+
+    it('LineStyle: Sets color', function() {
+        var color = Color.fromBytes(0xcc, 0xdd, 0xee, 0xff);
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Style>\
+              <LineStyle>\
+                <color>ffeeddcc</color>\
+              </LineStyle>\
+            </Style>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        var polyline = entities[0].polyline;
+        expect(polyline.material).toBeInstanceOf(ColorMaterialProperty);
+        expect(polyline.material.color.getValue()).toEqual(color);
+    });
+
+    it('LineStyle: Sets width', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Style>\
+              <LineStyle>\
+                <width>2.75</width>\
+              </LineStyle>\
+            </Style>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        var polyline = entities[0].polyline;
+        expect(polyline.width.getValue()).toEqual(2.75);
+    });
+
+    it('PolyStyle: Sets defaults', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Style>\
+              <PolyStyle>\
+              </PolyStyle>\
+            </Style>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        var polygon = entities[0].polygon;
+        expect(polygon).toBeDefined();
+
+        expect(polygon.hierarchy).toBeUndefined();
+        expect(polygon.height).toBeUndefined();
+        expect(polygon.extrudedHeight).toBeUndefined();
+        expect(polygon.show).toBeUndefined();
+        expect(polygon.fill).toBeUndefined();
+        expect(polygon.material).toBeUndefined();
+        expect(polygon.outlineWidth).toBeUndefined();
+        expect(polygon.stRotation).toBeUndefined();
+        expect(polygon.granularity).toBeUndefined();
+        expect(polygon.perPositionHeight).toBeUndefined();
+
+        expect(polygon.outline.getValue()).toBe(true);
+        expect(polygon.outlineColor.getValue()).toEqual(Color.WHITE);
+    });
+
+    it('PolyStyle: Sets color', function() {
+        var color = Color.fromBytes(0xcc, 0xdd, 0xee, 0xff);
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Style>\
+              <PolyStyle>\
+                <color>ffeeddcc</color>\
+              </PolyStyle>\
+            </Style>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        var polygon = entities[0].polygon;
+        expect(polygon.material).toBeInstanceOf(ColorMaterialProperty);
+        expect(polygon.material.color.getValue()).toEqual(color);
+    });
+
+    it('PolyStyle: Sets fill', function() {
+        var color = Color.fromBytes(0xcc, 0xdd, 0xee, 0xff);
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Style>\
+              <PolyStyle>\
+                <fill>0</fill>\
+              </PolyStyle>\
+            </Style>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        var polygon = entities[0].polygon;
+        expect(polygon.fill.getValue()).toEqual(false);
+    });
+
+    it('PolyStyle: Sets outline', function() {
+        var color = Color.fromBytes(0xcc, 0xdd, 0xee, 0xff);
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Style>\
+              <PolyStyle>\
+                <outline>0</outline>\
+              </PolyStyle>\
+            </Style>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var entities = dataSource.entities.values;
+        var polygon = entities[0].polygon;
+        expect(polygon.outline.getValue()).toEqual(false);
+    });
+
     it('Folder: sets parent property', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
         <Folder id="parent">\
@@ -1938,93 +2163,4 @@ defineSuite([
             expect(entities[1].parent).toBe(entities[0]);
         }));
     });
-
-//    it('handles LabelStyle', function() {
-//        var scale = new ConstantProperty(1.5);
-//        var color = new ConstantProperty(new Color(0, 0, 0, 0));
-//        var iconKml = '<?xml version="1.0" encoding="UTF-8"?>\
-//            <kml xmlns="http://www.opengis.net/kml/2.2">\
-//            <Document>\
-//            <Style id="testStyle">\
-//                <LabelStyle>\
-//                    <color>00000000</color>\
-//                    <colorMode>normal</colorMode>\
-//                    <scale>1.5</scale>\
-//                </LabelStyle>\
-//            </Style>\
-//            <Placemark>\
-//            <styleUrl>#testStyle</styleUrl>\
-//            </Placemark>\
-//            </Document>\
-//            </kml>';
-//
-//        var dataSource = new KmlDataSource();
-//        dataSource.load(parser.parseFromString(iconKml, "text/xml"));
-//
-//        var entities = dataSource.entities.values;
-//        expect(entities.length).toEqual(1);
-//        expect(entities[0].label.scale.getValue()).toEqual(scale.getValue());
-//        expect(entities[0].label.fillColor).toEqual(color);
-//    });
-//
-//    it('handles LineStyle', function() {
-//        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-//            <kml xmlns="http://www.opengis.net/kml/2.2"\
-//             xmlns:gx="http://www.google.com/kml/ext/2.2">\
-//            <Document>\
-//            <Style id="testStyle">\
-//            <LineStyle>\
-//                <color>000000ff</color>\
-//                <width>4</width>\
-//                <gx:labelVisibility>1</gx:labelVisibility>\
-//                <gx:labelVisibility>0</gx:labelVisibility>\
-//            </LineStyle>\
-//            </Style>\
-//            <Placemark>\
-//            <styleUrl>#testStyle</styleUrl>\
-//            </Placemark>\
-//            </Document>\
-//            </kml>';
-//
-//        var dataSource = new KmlDataSource();
-//        dataSource.load(parser.parseFromString(kml, "text/xml"));
-//
-//        var entities = dataSource.entities.values;
-//        expect(entities.length).toEqual(1);
-//        expect(entities[0].polyline.width.getValue()).toEqual(4);
-//        expect(entities[0].polyline.material.outlineWidth.getValue()).toEqual(1);
-//    });
-//
-//    it('handles PolyStyle', function() {
-//        var color = new Color(1, 0, 0, 0);
-//        var polyKml = '<?xml version="1.0" encoding="UTF-8"?>\
-//            <kml xmlns="http://www.opengis.net/kml/2.2">\
-//            <Document>\
-//            <Style id="testStyle">\
-//                <PolyStyle>\
-//                    <color>000000ff</color>\
-//                    <colorMode>normal</colorMode>\
-//                    <fill>1</fill>\
-//                    <outline>1</outline>\
-//                </PolyStyle>\
-//            </Style>\
-//            <Placemark>\
-//            <styleUrl>#testStyle</styleUrl>\
-//            </Placemark>\
-//            </Document>\
-//            </kml>';
-//
-//        var dataSource = new KmlDataSource();
-//        dataSource.load(parser.parseFromString(polyKml, "text/xml"));
-//
-//        var entities = dataSource.entities.values;
-//        var polygon = entities[0].polygon;
-//        var material = polygon.material.getValue();
-//        var generatedColor = material.color;
-//        expect(entities.length).toEqual(1);
-//        expect(generatedColor.red).toEqual(color.red);
-//        expect(generatedColor.green).toEqual(color.green);
-//        expect(generatedColor.blue).toEqual(color.blue);
-//        expect(generatedColor.alpha).toEqual(color.alpha);
-//    });
 });

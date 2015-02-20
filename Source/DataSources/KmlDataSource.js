@@ -29,7 +29,6 @@ define([
         '../Core/TimeIntervalCollection',
         '../Scene/HorizontalOrigin',
         '../Scene/LabelStyle',
-        '../Scene/VerticalOrigin',
         '../ThirdParty/AutoLinker',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
@@ -82,7 +81,6 @@ define([
         TimeIntervalCollection,
         HorizontalOrigin,
         LabelStyle,
-        VerticalOrigin,
         AutoLinker,
         Uri,
         when,
@@ -453,9 +451,9 @@ define([
     function createDefaultLabel() {
         var label = new LabelGraphics();
         label.translucencyByDistance = new NearFarScalar(1500000, 1.0, 3400000, 0.0);
-        label.pixelOffset = new Cartesian2(0, -16);
-        label.verticalOrigin = VerticalOrigin.BOTTOM;
-        label.font = '16pt sans-serif';
+        label.pixelOffset = new Cartesian2(16, 0);
+        label.horizontalOrigin = HorizontalOrigin.LEFT;
+        label.font = '14pt sans-serif';
         label.style = LabelStyle.FILL_AND_OUTLINE;
         return label;
     }
@@ -1364,7 +1362,7 @@ define([
                 linkUrl = resolveHref(linkUrl, undefined, sourceUri, uriResolver);
                 var networkLinkSource = new KmlDataSource(dataSource._proxy);
                 var promise = when(networkLinkSource.loadUrl(linkUrl), function() {
-                    var entities = networkLinkSource.entities.entities;
+                    var entities = networkLinkSource.entities.values;
                     for (var i = 0; i < entities.length; i++) {
                         dataSource._entityCollection.suspendEvents();
                         entities[i].parent = networkEntity;
